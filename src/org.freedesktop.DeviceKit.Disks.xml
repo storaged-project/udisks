@@ -1,0 +1,37 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/">
+
+  <interface name="org.freedesktop.DeviceKit.Disks">
+
+    <!-- Keep the daemon from exiting on inactivity; this is useful for
+         automounters that wants the daemon around to keep polling devices -->
+    <method name="InhibitShutdown">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="cookie" direction="out" type="s"/>
+    </method>
+
+    <!-- Allow the daemon from exiting when inactive -->
+    <method name="UninhibitShutdown">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="cookie" direction="in" type="s"/>
+    </method>
+
+    <!-- Enumerate all devices -->
+    <method name="EnumerateDevices">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="devices" direction="out" type="ao"/>
+    </method>
+
+    <!-- A device was added -->
+    <signal name="DeviceAdded">
+      <arg name="device" type="o"/>
+    </signal>
+
+    <!-- A device was removed -->
+    <signal name="DeviceRemoved">
+      <arg name="device" type="o"/>
+    </signal>
+
+  </interface>
+
+</node>

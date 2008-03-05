@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
+
+<!-- 
+Policy definitions for DeviceKit-disks
+
+Copyright (c) 2008 David Zeuthen <david@fubar.dk>
+
+NOTE: If you make changes to this file, make sure to validate the file
+using the polkit-policy-file-validate(1) tool. Changes made to this
+file are instantly applied.
+-->
+
+<policyconfig>
+  <vendor>The DeviceKit Project</vendor>
+  <vendor_url>http://hal.freedesktop.org/docs/DeviceKit/</vendor_url>
+</policyconfig>

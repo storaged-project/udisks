@@ -1,0 +1,5 @@
+[D-BUS Service]
+Name=org.freedesktop.DeviceKit.Disks
+Exec=@libexecdir@/devkit-disks-daemon
+User=root
+

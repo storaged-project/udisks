@@ -1,0 +1,13 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/">
+
+  <interface name="org.freedesktop.DeviceKit.Disks.Device">
+
+    <method name="GetDeviceFile">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="device_file" direction="out" type="s"/>
+    </method>
+
+  </interface>
+
+</node>
