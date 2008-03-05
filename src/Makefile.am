@@ -61,7 +61,11 @@ udevrules_DATA = 99-devkit-disks.rules
 
 CLEANFILES = $(BUILT_SOURCES)
 
-EXTRA_DIST = org.freedesktop.DeviceKit.Disks.xml 99-devkit-disks.rules $(service_in_files) $(dbusconf_in_files)
+EXTRA_DIST = org.freedesktop.DeviceKit.Disks.xml        \
+	     org.freedesktop.DeviceKit.Disks.Device.xml \
+	     99-devkit-disks.rules                      \
+	     $(service_in_files)                        \
+	     $(dbusconf_in_files)
 
 clean-local :
 	rm -f *~ $(service_DATA) $(dbusconf_DATA)
