@@ -1,0 +1,2 @@
+# pass all events to the DeviceKit disks daemon
+SUBSYSTEM=="block", RUN+="socket:/org/freedesktop/devicekit/disks/udev_event"
