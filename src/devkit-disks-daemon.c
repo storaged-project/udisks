@@ -182,6 +182,7 @@ devkit_disks_daemon_error_get_type (void)
                 static const GEnumValue values[] =
                         {
                                 ENUM_ENTRY (DEVKIT_DISKS_DAEMON_ERROR_GENERAL, "GeneralError"),
+                                ENUM_ENTRY (DEVKIT_DISKS_DAEMON_ERROR_NOT_SUPPORTED, "NotSupported"),
                                 ENUM_ENTRY (DEVKIT_DISKS_DAEMON_ERROR_NOT_AUTHORIZED, "NotAuthorized"),
                                 { 0, 0, 0 }
                         };

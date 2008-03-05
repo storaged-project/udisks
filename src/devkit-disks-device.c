@@ -88,6 +88,7 @@ devkit_disks_device_error_get_type (void)
                 static const GEnumValue values[] =
                         {
                                 ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_GENERAL, "GeneralError"),
+                                ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_SUPPORTED, "NotSupported"),
                                 ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_AUTHORIZED, "NotAuthorized"),
                                 { 0, 0, 0 }
                         };
@@ -278,8 +279,12 @@ gboolean
 devkit_disks_device_get_device_file (DevkitDisksDevice     *device,
                                      DBusGMethodInvocation *context)
 {
-        /* TODO */
-        dbus_g_method_return (context, "/dev/disk/something");
+        GError *error;
+        error = g_error_new (DEVKIT_DISKS_DEVICE_ERROR,
+                             DEVKIT_DISKS_DEVICE_ERROR_NOT_SUPPORTED,
+                             "Not Supported");
+        dbus_g_method_return_error (context, error);
+        g_error_free (error);
         return TRUE;
 }
 
