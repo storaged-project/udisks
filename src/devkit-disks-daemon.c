@@ -176,7 +176,7 @@ GType
 devkit_disks_daemon_error_get_type (void)
 {
         static GType etype = 0;
-        
+
         if (etype == 0)
         {
                 static const GEnumValue values[] =
@@ -186,12 +186,9 @@ devkit_disks_daemon_error_get_type (void)
                                 ENUM_ENTRY (DEVKIT_DISKS_DAEMON_ERROR_NOT_AUTHORIZED, "NotAuthorized"),
                                 { 0, 0, 0 }
                         };
-                
                 g_assert (DEVKIT_DISKS_DAEMON_NUM_ERRORS == G_N_ELEMENTS (values) - 1);
-                
                 etype = g_enum_register_static ("DevkitDisksDaemonError", values);
         }
-        
         return etype;
 }
 
@@ -210,7 +207,6 @@ devkit_disks_daemon_constructor (GType                  type,
                 G_OBJECT_CLASS (devkit_disks_daemon_parent_class)->constructor (type,
                                                                                 n_construct_properties,
                                                                                 construct_properties));
-        
         return G_OBJECT (daemon);
 }
 
@@ -312,7 +308,7 @@ pk_io_watch_have_data (GIOChannel *channel, GIOCondition condition, gpointer use
         return TRUE;
 }
 
-static int 
+static int
 pk_io_add_watch (PolKitContext *pk_context, int fd)
 {
         guint id = 0;
@@ -330,7 +326,7 @@ out:
         return id;
 }
 
-static void 
+static void
 pk_io_remove_watch (PolKitContext *pk_context, int watch_id)
 {
         g_source_remove (watch_id);
@@ -365,13 +361,11 @@ _filter (DBusConnection *connection, DBusMessage *message, void *user_data)
                                 for (l = daemon->priv->inhibitors; l != NULL; l = l->next) {
                                         Inhibitor *inhibitor = l->data;
                                         if (strcmp (system_bus_name, inhibitor->system_bus_name) == 0) {
-                                                
-                                                daemon->priv->inhibitors = g_list_remove (daemon->priv->inhibitors, 
+                                                daemon->priv->inhibitors = g_list_remove (daemon->priv->inhibitors,
                                                                                           inhibitor);
                                                 inhibitor_list_changed (daemon);
-                                                
-                                                g_debug ("removed inhibitor %s %s (disconnected from the bus)", 
-                                                         inhibitor->cookie, inhibitor->system_bus_name);
+                                                //g_debug ("removed inhibitor %s %s (disconnected from the bus)",
+                                                //inhibitor->cookie, inhibitor->system_bus_name);
                                                 break;
                                         }
                                 }
@@ -389,25 +383,25 @@ _filter (DBusConnection *connection, DBusMessage *message, void *user_data)
 }
 
 static void
-device_add (DevkitDisksDaemon *daemon, const char *device_path, gboolean emit_event)
+device_add (DevkitDisksDaemon *daemon, const char *native_path, gboolean emit_event)
 {
         DevkitDisksDevice *device;
-        device = devkit_disks_device_new (daemon, device_path);
+        device = devkit_disks_device_new (daemon, native_path);
         daemon->priv->devices = g_list_prepend (daemon->priv->devices, device);
-        g_signal_emit (daemon, signals[DEVICE_ADDED_SIGNAL], 0, 
-                       devkit_disks_device_get_object_path (device));
+        g_signal_emit (daemon, signals[DEVICE_ADDED_SIGNAL], 0,
+                       devkit_disks_device_local_get_object_path (device));
 }
 
 static void
-device_remove (DevkitDisksDaemon *daemon, const char *device_path)
+device_remove (DevkitDisksDaemon *daemon, const char *native_path)
 {
         GList *l;
         for (l = daemon->priv->devices; l != NULL; l = l->next) {
                 DevkitDisksDevice *device = l->data;
-                if (strcmp (device_path, devkit_disks_device_get_device_path (device)) == 0) {
+                if (strcmp (native_path, devkit_disks_device_local_get_native_path (device)) == 0) {
                         daemon->priv->devices = g_list_remove (daemon->priv->devices, device);
                         g_signal_emit (daemon, signals[DEVICE_REMOVED_SIGNAL], 0,
-                                       devkit_disks_device_get_object_path (device));
+                                       devkit_disks_device_local_get_object_path (device));
                         g_object_unref (device);
                         break;
                 }
@@ -415,7 +409,7 @@ device_remove (DevkitDisksDaemon *daemon, const char *device_path)
 }
 
 static void
-device_changed (DevkitDisksDaemon *daemon, const char *device_path)
+device_changed (DevkitDisksDaemon *daemon, const char *native_path)
 {
         /* TODO */
 }
@@ -497,16 +491,16 @@ receive_udev_data (GIOChannel *source, GIOCondition condition, gpointer user_dat
 
 	if (action != NULL && devpath != NULL && subsystem != NULL) {
                 if (strcmp (subsystem, "block") == 0) {
-                        char *device_path;
-                        device_path = g_build_filename ("/sys", devpath, NULL);
+                        char *native_path;
+                        native_path = g_build_filename ("/sys", devpath, NULL);
                         if (strcmp (action, "add") == 0) {
-                                device_add (daemon, device_path, TRUE);
+                                device_add (daemon, native_path, TRUE);
                         } else if (strcmp (action, "remove") == 0) {
-                                device_remove (daemon, device_path);
+                                device_remove (daemon, native_path);
                         } else if (strcmp (action, "changed") == 0) {
-                                device_changed (daemon, device_path);
+                                device_changed (daemon, native_path);
                         }
-                        g_free (device_path);
+                        g_free (native_path);
                 }
 
 	} else {
@@ -591,13 +585,13 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
                 goto error;
         }
 
-        if (!dbus_connection_add_filter (connection, 
-                                         _filter, 
-                                         daemon, 
+        if (!dbus_connection_add_filter (connection,
+                                         _filter,
+                                         daemon,
                                          NULL)) {
                 g_warning ("Cannot add D-Bus filter: %s: %s", dbus_error.name, dbus_error.message);
                 goto error;
-        }        
+        }
 
 	/* setup socket for listening from messages from udev */
 
@@ -636,7 +630,7 @@ devkit_disks_daemon_new (gboolean no_exit)
 {
         gboolean res;
         DevkitDisksDaemon *daemon;
-        GList *device_paths;
+        GList *native_paths;
         GList *l;
 
         daemon = DEVKIT_DISKS_DAEMON (g_object_new (DEVKIT_TYPE_DISKS_DAEMON, NULL));
@@ -648,13 +642,13 @@ devkit_disks_daemon_new (gboolean no_exit)
                 return NULL;
         }
 
-        device_paths = devkit_disks_enumerate_devices ();
-        for (l = device_paths; l != NULL; l = l->next) {
-                char *device_path = l->data;
-                device_add (daemon, device_path, FALSE);
-                g_free (device_path);
+        native_paths = devkit_disks_enumerate_native_paths ();
+        for (l = native_paths; l != NULL; l = l->next) {
+                char *native_path = l->data;
+                device_add (daemon, native_path, FALSE);
+                g_free (native_path);
         }
-        g_list_free (device_paths);
+        g_list_free (native_paths);
 
         return daemon;
 }
@@ -742,11 +736,10 @@ devkit_disks_daemon_enumerate_devices (DevkitDisksDaemon     *daemon,
         object_paths = g_ptr_array_new ();
         for (l = daemon->priv->devices; l != NULL; l = l->next) {
                 DevkitDisksDevice *device = l->data;
-                g_ptr_array_add (object_paths, g_strdup (devkit_disks_device_get_object_path (device)));
+                g_ptr_array_add (object_paths, g_strdup (devkit_disks_device_local_get_object_path (device)));
         }
 
         dbus_g_method_return (context, object_paths);
-
         g_ptr_array_foreach (object_paths, (GFunc) g_free, NULL);
         g_ptr_array_free (object_paths, TRUE);
         return TRUE;

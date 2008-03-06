@@ -3,10 +3,53 @@
 
   <interface name="org.freedesktop.DeviceKit.Disks.Device">
 
-    <method name="GetDeviceFile">
-      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="device_file" direction="out" type="s"/>
-    </method>
+    <!-- the OS native path; on Linux this is the sysfs path -->
+    <property name="native-path" type="s" access="read"/>
+
+    <!-- block special device file for access the device -->
+    <property name="device-file" type="s" access="read"/>
+
+    <!-- if set, a (unique) stable path to the device in question -->
+    <property name="device-file-by-id" type="s" access="read"/>
+
+    <!-- if set, a stable path to the port the device is connected to -->
+    <property name="device-file-by-path" type="s" access="read"/>
+
+    <!-- A result of probing for signatures on the block device; known 
+         values are
+
+           filesystem      - the device contains a file system
+           crypto          - the device contains encrypted data)
+           partitiontable  - the device is partitioned into other devices
+           raid            - the device is member of a RAID set or other
+                             schemes requiring device assembly
+           other           - other signature found on the device
+      -->
+    <property name="id-usage" type="s" access="read"/>
+
+    <!-- More detailed result of signature probing. The value depends
+         on the value of 'id-usage'
+
+           filesystem      - the filesystem type e.g. vfat, ext3 and so forth
+           crypto          - the crypto type; only known value is crypto_LUKS
+           partitiontable  - the partition table type; known values
+                              mbr  - Master Boot Record
+                              embr - Extended Master Boot Record
+                              apm  - Apple Partitoning Map
+                              gpt  - GUID Partition Table
+           raid            - the type of raid (TODO)
+           other           - known types are: swap
+      -->
+    <property name="id-type" type="s" access="read"/>
+
+    <!-- The version of the format specified by 'id-type' -->
+    <property name="id-version" type="s" access="read"/>
+
+    <!-- If set, an UUID for the format specified by 'id-type' -->
+    <property name="id-uuid" type="s" access="read"/>
+
+    <!-- If set, a label for the format specified by 'id-type' -->
+    <property name="id-label" type="s" access="read"/>
 
   </interface>
 

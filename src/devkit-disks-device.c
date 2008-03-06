@@ -51,13 +51,40 @@ struct DevkitDisksDevicePrivate
         DBusGConnection *system_bus_connection;
         DBusGProxy      *system_bus_proxy;
         DevkitDisksDaemon *daemon;
-        char *device_path;
         char *object_path;
+
+        char *native_path;
+
+        char *device_file;
+        char *device_file_by_id;
+        char *device_file_by_path;
+
+        char *id_usage;
+        char *id_type;
+        char *id_version;
+        char *id_uuid;
+        char *id_label;
 };
 
 static void     devkit_disks_device_class_init  (DevkitDisksDeviceClass *klass);
 static void     devkit_disks_device_init        (DevkitDisksDevice      *seat);
 static void     devkit_disks_device_finalize    (GObject     *object);
+
+enum
+{
+        PROP_0,
+        PROP_NATIVE_PATH,
+
+        PROP_DEVICE_FILE,
+        PROP_DEVICE_FILE_BY_ID,
+        PROP_DEVICE_FILE_BY_PATH,
+
+        PROP_ID_USAGE,
+        PROP_ID_TYPE,
+        PROP_ID_VERSION,
+        PROP_ID_UUID,
+        PROP_ID_LABEL,
+};
 
 G_DEFINE_TYPE (DevkitDisksDevice, devkit_disks_device, G_TYPE_OBJECT)
 
@@ -82,7 +109,7 @@ GType
 devkit_disks_device_error_get_type (void)
 {
         static GType etype = 0;
-        
+
         if (etype == 0)
         {
                 static const GEnumValue values[] =
@@ -92,12 +119,9 @@ devkit_disks_device_error_get_type (void)
                                 ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_AUTHORIZED, "NotAuthorized"),
                                 { 0, 0, 0 }
                         };
-                
                 g_assert (DEVKIT_DISKS_DEVICE_NUM_ERRORS == G_N_ELEMENTS (values) - 1);
-                
                 etype = g_enum_register_static ("DevkitDisksDeviceError", values);
         }
-        
         return etype;
 }
 
@@ -116,8 +140,107 @@ devkit_disks_device_constructor (GType                  type,
                 G_OBJECT_CLASS (devkit_disks_device_parent_class)->constructor (type,
                                                                                 n_construct_properties,
                                                                                 construct_properties));
-        
         return G_OBJECT (device);
+}
+
+
+static void
+set_property (GObject         *object,
+              guint            prop_id,
+              const GValue    *value,
+              GParamSpec      *pspec)
+{
+        DevkitDisksDevice *device = DEVKIT_DISKS_DEVICE (object);
+
+        switch (prop_id) {
+        case PROP_NATIVE_PATH:
+                g_free (device->priv->native_path);
+                device->priv->native_path = g_strdup (g_value_get_string (value));
+                break;
+
+        case PROP_DEVICE_FILE:
+                g_free (device->priv->device_file);
+                device->priv->device_file = g_strdup (g_value_get_string (value));
+                break;
+        case PROP_DEVICE_FILE_BY_ID:
+                g_free (device->priv->device_file_by_id);
+                device->priv->device_file_by_id = g_strdup (g_value_get_string (value));
+                break;
+        case PROP_DEVICE_FILE_BY_PATH:
+                g_free (device->priv->device_file_by_path);
+                device->priv->device_file_by_path = g_strdup (g_value_get_string (value));
+                break;
+
+        case PROP_ID_USAGE:
+                g_free (device->priv->id_usage);
+                device->priv->id_usage = g_strdup (g_value_get_string (value));
+                break;
+        case PROP_ID_TYPE:
+                g_free (device->priv->id_type);
+                device->priv->id_type = g_strdup (g_value_get_string (value));
+                break;
+        case PROP_ID_VERSION:
+                g_free (device->priv->id_version);
+                device->priv->id_version = g_strdup (g_value_get_string (value));
+                break;
+        case PROP_ID_UUID:
+                g_free (device->priv->id_uuid);
+                device->priv->id_uuid = g_strdup (g_value_get_string (value));
+                break;
+        case PROP_ID_LABEL:
+                g_free (device->priv->id_label);
+                device->priv->id_label = g_strdup (g_value_get_string (value));
+                break;
+
+        default:
+                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+                break;
+        }
+}
+
+static void
+get_property (GObject         *object,
+              guint            prop_id,
+              GValue          *value,
+              GParamSpec      *pspec)
+{
+        DevkitDisksDevice *device = DEVKIT_DISKS_DEVICE (object);
+
+        switch (prop_id) {
+        case PROP_NATIVE_PATH:
+                g_value_set_string (value, device->priv->native_path);
+                break;
+
+        case PROP_DEVICE_FILE:
+                g_value_set_string (value, device->priv->device_file);
+                break;
+        case PROP_DEVICE_FILE_BY_ID:
+                g_value_set_string (value, device->priv->device_file_by_id);
+                break;
+        case PROP_DEVICE_FILE_BY_PATH:
+                g_value_set_string (value, device->priv->device_file_by_path);
+                break;
+
+        case PROP_ID_USAGE:
+                g_value_set_string (value, device->priv->id_usage);
+                break;
+        case PROP_ID_TYPE:
+                g_value_set_string (value, device->priv->id_type);
+                break;
+        case PROP_ID_VERSION:
+                g_value_set_string (value, device->priv->id_version);
+                break;
+        case PROP_ID_UUID:
+                g_value_set_string (value, device->priv->id_uuid);
+                break;
+        case PROP_ID_LABEL:
+                g_value_set_string (value, device->priv->id_label);
+                break;
+
+        default:
+                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+                break;
+        }
 }
 
 static void
@@ -127,12 +250,61 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
 
         object_class->constructor = devkit_disks_device_constructor;
         object_class->finalize = devkit_disks_device_finalize;
+        object_class->set_property = set_property;
+        object_class->get_property = get_property;
 
         g_type_class_add_private (klass, sizeof (DevkitDisksDevicePrivate));
 
         dbus_g_object_type_install_info (DEVKIT_TYPE_DISKS_DEVICE, &dbus_glib_devkit_disks_device_object_info);
 
         dbus_g_error_domain_register (DEVKIT_DISKS_DEVICE_ERROR, NULL, DEVKIT_DISKS_DEVICE_TYPE_ERROR);
+
+        g_object_class_install_property (
+                object_class,
+                PROP_NATIVE_PATH,
+                g_param_spec_string ("native-path", NULL, NULL, NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_FILE,
+                g_param_spec_string ("device-file", NULL, NULL, NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_FILE_BY_ID,
+                g_param_spec_string ("device-file-by-id", NULL, NULL, NULL, G_PARAM_READWRITE |G_PARAM_CONSTRUCT_ONLY));
+
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_FILE_BY_PATH,
+                g_param_spec_string (
+                        "device-file-by-path", NULL, NULL, NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+
+        g_object_class_install_property (
+                object_class,
+                PROP_ID_USAGE,
+                g_param_spec_string ("id-usage", NULL, NULL, NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+
+        g_object_class_install_property (
+                object_class,
+                PROP_ID_TYPE,
+                g_param_spec_string ("id-type", NULL, NULL, NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+
+        g_object_class_install_property (
+                object_class,
+                PROP_ID_VERSION,
+                g_param_spec_string ("id-version", NULL, NULL, NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+
+        g_object_class_install_property (
+                object_class,
+                PROP_ID_UUID,
+                g_param_spec_string ("id-uuid", NULL, NULL, NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+
+        g_object_class_install_property (
+                object_class,
+                PROP_ID_LABEL,
+                g_param_spec_string ("id-label", NULL, NULL, NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+
 
 }
 
@@ -155,8 +327,19 @@ devkit_disks_device_finalize (GObject *object)
         g_return_if_fail (device->priv != NULL);
 
         g_object_unref (device->priv->daemon);
-        g_free (device->priv->device_path);
         g_free (device->priv->object_path);
+
+        g_free (device->priv->native_path);
+
+        g_free (device->priv->device_file);
+        g_free (device->priv->device_file_by_id);
+        g_free (device->priv->device_file_by_path);
+
+        g_free (device->priv->id_usage);
+        g_free (device->priv->id_type);
+        g_free (device->priv->id_version);
+        g_free (device->priv->id_uuid);
+        g_free (device->priv->id_label);
 
         G_OBJECT_CLASS (devkit_disks_device_parent_class)->finalize (object);
 }
@@ -178,12 +361,12 @@ register_disks_device (DevkitDisksDevice *device)
         }
         connection = dbus_g_connection_get_connection (device->priv->system_bus_connection);
 
-        basename = g_path_get_basename (device->priv->device_path);
+        basename = g_path_get_basename (device->priv->native_path);
         device->priv->object_path = g_build_filename ("/devices/", basename, NULL);
         g_free (basename);
 
-        dbus_g_connection_register_g_object (device->priv->system_bus_connection, 
-                                             device->priv->object_path, 
+        dbus_g_connection_register_g_object (device->priv->system_bus_connection,
+                                             device->priv->object_path,
                                              G_OBJECT (device));
 
         device->priv->system_bus_proxy = dbus_g_proxy_new_for_name (device->priv->system_bus_connection,
@@ -197,16 +380,85 @@ error:
         return FALSE;
 }
 
+static gboolean
+query_info (DevkitDisksDevice *device)
+{
+        gboolean ret;
+        int exit_status;
+        char *command_line;
+        char *standard_output = NULL;
+        char **lines;
+        unsigned int n;
+
+        ret = FALSE;
+
+        /* TODO: this needs to use a faster interface to the udev database. This is SLOOOW! */
+        command_line = g_strdup_printf ("udevinfo -q all --path %s", device->priv->native_path);
+        if (!g_spawn_command_line_sync (command_line,
+                                        &standard_output,
+                                        NULL,
+                                        &exit_status,
+                                        NULL)) {
+                goto out;
+        }
+
+        lines = g_strsplit (standard_output, "\n", 0);
+        for (n = 0; lines[n] != NULL; n++) {
+                char *line = lines[n];
+
+                if (g_str_has_prefix (line, "N: ")) {
+                        device->priv->device_file = g_build_filename ("/dev", line + 3, NULL);
+                } else if (g_str_has_prefix (line, "S: ")) {
+                        /* TODO: crap, there may be more than one symlink in by-id and by-path. For
+                         *       stability, probably have to sort them and get the first. For now 
+                         *       we just punt on this.
+                         */
+                        if (g_str_has_prefix (line + 3, "disk/by-id/") &&
+                            device->priv->device_file_by_id == NULL) {
+                                device->priv->device_file_by_id = g_build_filename ("/dev", line + 3, NULL);
+                        } else if (g_str_has_prefix (line + 3, "disk/by-path/") &&
+                                   device->priv->device_file_by_path == NULL) {
+                                device->priv->device_file_by_path = g_build_filename ("/dev", line + 3, NULL);
+                        }
+
+                } else if (g_str_has_prefix (line, "E: ")) {
+                        if (g_str_has_prefix (line + 3, "ID_FS_USAGE="))
+                                device->priv->id_usage   = g_strdup (line + 3 + sizeof ("ID_FS_USAGE=") - 1);
+                        if (g_str_has_prefix (line + 3, "ID_FS_TYPE="))
+                                device->priv->id_type    = g_strdup (line + 3 + sizeof ("ID_FS_TYPE=") - 1);
+                        if (g_str_has_prefix (line + 3, "ID_FS_VERSION="))
+                                device->priv->id_version = g_strdup (line + 3 + sizeof ("ID_FS_VERSION=") - 1);
+                        if (g_str_has_prefix (line + 3, "ID_FS_UUID="))
+                                device->priv->id_uuid    = g_strdup (line + 3 + sizeof ("ID_FS_UUID=") - 1);
+                        if (g_str_has_prefix (line + 3, "ID_FS_LABEL="))
+                                device->priv->id_label   = g_strdup (line + 3 + sizeof ("ID_FS_LABEL=") - 1);
+                }
+        }
+        g_strfreev (lines);
+
+        /* check for required keys */
+        if (device->priv->device_file == NULL)
+                goto out;
+
+        ret = TRUE;
+
+out:
+        g_free (command_line);
+        g_free (standard_output);
+        return ret;
+}
 
 DevkitDisksDevice *
-devkit_disks_device_new (DevkitDisksDaemon *daemon, const char *device_path)
+devkit_disks_device_new (DevkitDisksDaemon *daemon, const char *native_path)
 {
         DevkitDisksDevice *device;
         gboolean res;
 
         device = DEVKIT_DISKS_DEVICE (g_object_new (DEVKIT_TYPE_DISKS_DEVICE, NULL));
         device->priv->daemon = g_object_ref (daemon);
-        device->priv->device_path = g_strdup (device_path);
+        device->priv->native_path = g_strdup (native_path);
+
+        query_info (device);
 
         res = register_disks_device (DEVKIT_DISKS_DEVICE (device));
         if (! res) {
@@ -220,22 +472,29 @@ devkit_disks_device_new (DevkitDisksDaemon *daemon, const char *device_path)
 /*--------------------------------------------------------------------------------------------------------------*/
 
 /**
- * devkit_disks_enumerate_devices:
+ * devkit_disks_enumerate_native_paths:
  *
  * Enumerates all block devices on the system.
  *
- * Returns: A #GList of device paths (on Linux the sysfs path)
+ * Returns: A #GList of native paths for devices (on Linux the sysfs path)
  */
 GList *
-devkit_disks_enumerate_devices (void)
+devkit_disks_enumerate_native_paths (void)
 {
         GList *ret;
         GDir *dir;
+        gboolean have_class_block;
         const char *name;
 
         ret = 0;
 
-        dir = g_dir_open ("/sys/class/block", 0, NULL);
+        /* TODO: rip out support for running without /sys/class/block */
+
+        have_class_block = FALSE;
+        if (g_file_test ("/sys/class/block", G_FILE_TEST_EXISTS))
+                have_class_block = TRUE;
+
+        dir = g_dir_open (have_class_block ? "/sys/class/block" : "/sys/block", 0, NULL);
         if (dir == NULL)
                 goto out;
 
@@ -243,7 +502,7 @@ devkit_disks_enumerate_devices (void)
                 char *s;
                 char sysfs_path[PATH_MAX];
 
-                s = g_build_filename ("/sys/class/block", name, NULL);
+                s = g_build_filename (have_class_block ? "/sys/class/block" : "/sys/block", name, NULL);
                 if (realpath (s, sysfs_path) == NULL) {
                         g_free (s);
                         continue;
@@ -251,6 +510,23 @@ devkit_disks_enumerate_devices (void)
                 g_free (s);
 
                 ret = g_list_prepend (ret, g_strdup (sysfs_path));
+
+                if (!have_class_block) {
+                        GDir *part_dir;
+                        const char *part_name;
+
+                        if((part_dir = g_dir_open (sysfs_path, 0, NULL)) != NULL) {
+                                while ((part_name = g_dir_read_name (part_dir)) != NULL) {
+                                        if (g_str_has_prefix (part_name, name)) {
+                                                char *part_sysfs_path;
+                                                part_sysfs_path = g_build_filename (sysfs_path, part_name, NULL);
+                                                ret = g_list_prepend (ret, part_sysfs_path);
+                                        }
+                                }
+                                g_dir_close (part_dir);
+                        }
+                }
+
         }
         g_dir_close (dir);
 
@@ -258,26 +534,8 @@ out:
         return ret;
 }
 
-/*--------------------------------------------------------------------------------------------------------------*/
-
-const char *
-devkit_disks_device_get_object_path (DevkitDisksDevice *device)
-{
-        return device->priv->object_path;
-}
-
-const char *
-devkit_disks_device_get_device_path (DevkitDisksDevice *device)
-{
-        return device->priv->device_path;
-}
-
-/*--------------------------------------------------------------------------------------------------------------*/
-/* exported methods */
-
-gboolean
-devkit_disks_device_get_device_file (DevkitDisksDevice     *device,
-                                     DBusGMethodInvocation *context)
+static void
+_throw_not_supported (DBusGMethodInvocation *context)
 {
         GError *error;
         error = g_error_new (DEVKIT_DISKS_DEVICE_ERROR,
@@ -285,7 +543,21 @@ devkit_disks_device_get_device_file (DevkitDisksDevice     *device,
                              "Not Supported");
         dbus_g_method_return_error (context, error);
         g_error_free (error);
-        return TRUE;
 }
 
+/*--------------------------------------------------------------------------------------------------------------*/
 
+const char *
+devkit_disks_device_local_get_object_path (DevkitDisksDevice *device)
+{
+        return device->priv->object_path;
+}
+
+const char *
+devkit_disks_device_local_get_native_path (DevkitDisksDevice *device)
+{
+        return device->priv->native_path;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+/* exported methods */

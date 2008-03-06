@@ -63,17 +63,23 @@ GType devkit_disks_device_error_get_type (void);
 
 GQuark             devkit_disks_device_error_quark         (void);
 GType              devkit_disks_device_get_type            (void);
-DevkitDisksDevice *devkit_disks_device_new                 (DevkitDisksDaemon *daemon, const char *device_path);
+DevkitDisksDevice *devkit_disks_device_new                 (DevkitDisksDaemon *daemon, const char *native_path);
 
-const char        *devkit_disks_device_get_object_path     (DevkitDisksDevice *device);
-const char        *devkit_disks_device_get_device_path     (DevkitDisksDevice *device);
+const char        *devkit_disks_device_local_get_object_path     (DevkitDisksDevice *device);
+const char        *devkit_disks_device_local_get_native_path     (DevkitDisksDevice *device);
 
-GList *devkit_disks_enumerate_devices (void);
+GList *devkit_disks_enumerate_native_paths (void);
 
 /* exported methods */
 
+gboolean devkit_disks_device_get_native_path (DevkitDisksDevice     *device,
+                                              DBusGMethodInvocation *context);
+
 gboolean devkit_disks_device_get_device_file (DevkitDisksDevice     *device,
                                               DBusGMethodInvocation *context);
+
+gboolean devkit_disks_device_get_device_file_symlinks (DevkitDisksDevice     *device,
+                                                       DBusGMethodInvocation *context);
 
 G_END_DECLS
 

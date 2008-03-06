@@ -15,10 +15,14 @@ INCLUDES = \
 	@GLIB_CFLAGS@
 
 BUILT_SOURCES =						\
-	devkit-disks-client-glue.h
+	devkit-disks-daemon-glue.h			\
+	devkit-disks-device-glue.h
 
-devkit-disks-client-glue.h: $(top_srcdir)/src/org.freedesktop.DeviceKit.Disks.xml Makefile.am
-	dbus-binding-tool --prefix=devkit_disks_daemon --mode=glib-client --output=devkit-disks-client-glue.h $(top_srcdir)/src/org.freedesktop.DeviceKit.Disks.xml
+devkit-disks-daemon-glue.h: $(top_srcdir)/src/org.freedesktop.DeviceKit.Disks.xml Makefile.am
+	dbus-binding-tool --prefix=devkit_disks_daemon --mode=glib-client --output=devkit-disks-daemon-glue.h $(top_srcdir)/src/org.freedesktop.DeviceKit.Disks.xml
+
+devkit-disks-device-glue.h: $(top_srcdir)/src/org.freedesktop.DeviceKit.Disks.Device.xml Makefile.am
+	dbus-binding-tool --prefix=devkit_disks_daemon --mode=glib-client --output=devkit-disks-device-glue.h $(top_srcdir)/src/org.freedesktop.DeviceKit.Disks.Device.xml
 
 bin_PROGRAMS = devkit-disks
 
@@ -36,6 +40,11 @@ devkit_disks_LDADD = 					\
 	$(POLKIT_DBUS_LIBS)
 
 CLEANFILES = $(BUILT_SOURCES)
+
+profiledir = $(sysconfdir)/profile.d
+profile_SCRIPTS = devkit-disks-bash-completion.sh
+
+EXTRA_DIST = $(profile_SCRIPTS)
 
 clean-local :
 	rm -f *~ $(service_DATA) $(dbusconf_DATA)
