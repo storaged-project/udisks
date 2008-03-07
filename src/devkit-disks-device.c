@@ -438,8 +438,7 @@ set_info (DevkitDisksDevice *device)
                         device->priv->device_file = g_build_filename ("/dev", line + 3, NULL);
                 } else if (g_str_has_prefix (line, "S: ")) {
                         if (g_str_has_prefix (line + 3, "disk/by-id/") ||
-                            g_str_has_prefix (line + 3, "disk/by-uuid/") ||
-                            g_str_has_prefix (line + 3, "disk/by-label/")) {
+                            g_str_has_prefix (line + 3, "disk/by-uuid/")) {
                                 g_ptr_array_add (device->priv->device_file_by_id,
                                                  g_build_filename ("/dev", line + 3, NULL));
                         } else if (g_str_has_prefix (line + 3, "disk/by-path/")) {
