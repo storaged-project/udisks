@@ -90,10 +90,55 @@ get_property_string (DBusGConnection *bus,
                 goto out;
         }
 
-        ret = g_strdup (g_value_get_string (&value));
-        g_value_unset (&value);
+        ret = (char *) g_value_get_string (&value);
 
 out:
+        g_object_unref (proxy);
+        return ret;
+}
+
+static char **
+get_property_strlist (DBusGConnection *bus,
+                      const char *svc_name,
+                      const char *obj_path,
+                      const char *if_name,
+                      const char *prop_name)
+{
+        char **ret;
+        DBusGProxy *proxy;
+        GValue value = { 0 };
+        GError *error = NULL;
+
+        ret = NULL;
+	proxy = dbus_g_proxy_new_for_name (bus,
+                                           svc_name,
+                                           obj_path,
+                                           "org.freedesktop.DBus.Properties");
+        if (!dbus_g_proxy_call (proxy,
+                                "Get",
+                                &error,
+                                G_TYPE_STRING,
+                                if_name,
+                                G_TYPE_STRING,
+                                prop_name,
+                                G_TYPE_INVALID,
+                                G_TYPE_VALUE,
+                                &value,
+                                G_TYPE_INVALID)) {
+                g_warning ("error: %s\n", error->message);
+                g_error_free (error);
+                goto out;
+        }
+
+        ret = (char **) g_value_get_boxed (&value);
+
+out:
+        /* don't crash; return an empty list */
+        if (ret == NULL) {
+                ret = g_new0 (char *,  1);
+                *ret = NULL;
+        }
+
         g_object_unref (proxy);
         return ret;
 }
@@ -103,8 +148,10 @@ typedef struct
         char *native_path;
 
         char *device_file;
-        char *device_file_by_id;
-        char *device_file_by_path;
+        char **device_file_by_id;
+        char **device_file_by_path;
+        char **device_holders;
+        char **device_slaves;
 
         char *id_usage;
         char *id_type;
@@ -132,18 +179,30 @@ device_properties_get (DBusGConnection *bus, const char *object_path)
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "device-file");
-        props->device_file_by_id = get_property_string (
+        props->device_file_by_id = get_property_strlist (
                 bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "device-file-by-id");
-        props->device_file_by_path = get_property_string (
+        props->device_file_by_path = get_property_strlist (
                 bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "device-file-by-path");
+        props->device_holders = get_property_strlist (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "device-holders");
+        props->device_slaves = get_property_strlist (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "device-slaves");
 
         props->id_usage = get_property_string (
                 bus,
@@ -183,6 +242,15 @@ device_properties_free (DeviceProperties *props)
 {
         g_free (props->native_path);
         g_free (props->device_file);
+        g_strfreev (props->device_file_by_id);
+        g_strfreev (props->device_file_by_path);
+        g_strfreev (props->device_holders);
+        g_strfreev (props->device_slaves);
+        g_free (props->id_usage);
+        g_free (props->id_type);
+        g_free (props->id_version);
+        g_free (props->id_uuid);
+        g_free (props->id_label);
         g_free (props);
 }
 
@@ -271,9 +339,15 @@ main (int argc, char **argv)
                 props = device_properties_get (bus, show_info);
                 g_print ("Showing information for %s\n", show_info);
                 g_print ("  native-path: %s\n", props->native_path);
+                for (n = 0; props->device_holders[n] != NULL; n++)
+                        g_print ("  holder:      %s\n", (char *) props->device_holders[n]);
+                for (n = 0; props->device_slaves[n] != NULL; n++)
+                        g_print ("  slave:       %s\n", (char *) props->device_slaves[n]);
                 g_print ("  device-file: %s\n", props->device_file);
-                g_print ("    by-id:     %s\n", props->device_file_by_id);
-                g_print ("    by-path:   %s\n", props->device_file_by_path);
+                for (n = 0; props->device_file_by_id[n] != NULL; n++)
+                        g_print ("    by-id:     %s\n", (char *) props->device_file_by_id[n]);
+                for (n = 0; props->device_file_by_path[n] != NULL; n++)
+                        g_print ("    by-path:   %s\n", (char *) props->device_file_by_path[n]);
                 g_print ("  id-usage:    %s\n", props->id_usage);
                 g_print ("  id-type:     %s\n", props->id_type);
                 g_print ("  id-version:  %s\n", props->id_version);

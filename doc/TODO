@@ -1,0 +1,77 @@
+
+=====================
+Planned API additions
+=====================
+
+org.freedesktop.DeviceKit.Disks.Device.xml:
+
+    <!-- these properties are only set if the enclosing drive of the
+         device could be identified; drive-media-compatibility is a
+         whitespace separated list of media types; known media types
+         are
+
+           disc_cd_rom
+           disc_cd_r
+           disc_cd_rw
+           disc_dvd_rom
+           disc_dvd_r
+           disc_dvd_rw
+           disc_dvd_plus_r
+           disc_dvd_plus_rw
+           disc_dvd_ram
+           disc_bd_rom
+           disc_bd_r
+           disc_bd_re
+           disc_hddvd_rom
+           disc_hddvd_r
+           disc_hddvd_rw
+           flash_thumb_drive
+           flash_compact_flash
+           flash_memory_stick
+           flash_smart_media
+           flash_secure_digital
+           flash_mmc
+           floppy
+           floppy_zip
+           floppy_jaz
+
+         The drive-media-type property will only contain one of these
+         types. Known values for the drive-connection-type are
+
+           ata
+           sata
+           scsi
+           iscsi
+           usb
+           firewire
+
+         The property drive-connection-version may not be set.
+      -->
+    <property name="drive-vendor" type="s" access="read"/>
+    <property name="drive-model" type="s" access="read"/>
+    <property name="drive-revision" type="s" access="read"/>
+    <property name="drive-serial" type="s" access="read"/>
+    <property name="drive-removable" type="b" access="read"/>
+    <property name="drive-connection-type" type="s" access="read"/>
+    <property name="drive-connection-version" type="s" access="read"/>
+    <property name="drive-media-compatibility" type="s" access="read"/>
+    <property name="drive-media-is-available" type="b" access="read"/>
+    <property name="drive-media-type" type="s" access="read"/>
+    <property name="drive-media-disc-has-audio" type="b" access="read"/>
+    <property name="drive-media-disc-is-blank" type="b" access="read"/>
+
+    <!-- the following properties are only set if the device is
+         a partition. Known values for the partitioning scheme are
+           mbr  - Master Boot Record
+           embr - Extended Master Boot Record
+           apm  - Apple Partitoning Map
+           gpt  - GUID Partition Table -->
+    <property name="partition-scheme" type="s" access="read"/>
+    <property name="partition-type" type="s" access="read"/>
+    <property name="partition-label" type="s" access="read"/>
+    <property name="partition-uuid" type="s" access="read"/>
+    <property name="partition-flags" type="s" access="read"/>
+
+    <!-- whether the device is currently mounted anf if so, where -->
+    <property name="state-is-mounted" type="b" access="read"/>
+    <property name="state-mount-point" type="s" access="read"/>
