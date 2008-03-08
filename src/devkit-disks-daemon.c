@@ -388,8 +388,10 @@ device_add (DevkitDisksDaemon *daemon, const char *native_path, gboolean emit_ev
         DevkitDisksDevice *device;
         device = devkit_disks_device_new (daemon, native_path);
         daemon->priv->devices = g_list_prepend (daemon->priv->devices, device);
-        g_signal_emit (daemon, signals[DEVICE_ADDED_SIGNAL], 0,
-                       devkit_disks_device_local_get_object_path (device));
+        if (emit_event) {
+                g_signal_emit (daemon, signals[DEVICE_ADDED_SIGNAL], 0,
+                               devkit_disks_device_local_get_object_path (device));
+        }
 }
 
 static void
