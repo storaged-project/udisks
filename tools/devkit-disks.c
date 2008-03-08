@@ -564,7 +564,17 @@ main (int argc, char **argv)
                 g_ptr_array_foreach (devices, (GFunc) g_free, NULL);
                 g_ptr_array_free (devices, TRUE);
         } else if (monitor) {
+                char *cookie;
+
                 g_print ("Monitoring activity from the disks daemon. Press Ctrl+C to cancel.\n");
+
+                if (!org_freedesktop_DeviceKit_Disks_inhibit_shutdown (disks_proxy, &cookie, &error)) {
+                        g_warning ("Couldn't inhibit shutdown on disks daemon: %s", error->message);
+                        g_error_free (error);
+                        goto out;
+                }
+                g_free (cookie);
+
                 dbus_g_proxy_connect_signal (disks_proxy, "DeviceAdded",
                                              G_CALLBACK (device_added_signal_handler), NULL, NULL);
                 dbus_g_proxy_connect_signal (disks_proxy, "DeviceRemoved",
