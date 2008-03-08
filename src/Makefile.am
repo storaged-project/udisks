@@ -26,6 +26,15 @@ devkit-disks-device-glue.h: org.freedesktop.DeviceKit.Disks.Device.xml Makefile.
 
 libexec_PROGRAMS = devkit-disks-daemon
 
+# TODO: move to udev
+udevhelper_PROGRAMS = part_id
+udevhelperdir = /lib/udev
+
+part_id_SOURCES = part-id.c partutil.c partutil.h
+part_id_CPPFLAGS = $(AM_CPPFLAGS)
+part_id_LDADD = $(GLIB_LIBS)
+# end move to udev
+
 devkit_disks_daemon_SOURCES = 						\
 	devkit-disks-daemon.h		devkit-disks-daemon.c		\
 	devkit-disks-device.h		devkit-disks-device.c		\

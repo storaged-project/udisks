@@ -38,6 +38,12 @@
     <!-- holders -->
     <property name="device-holders" type="as" access="read"/>
 
+    <!-- true if the device is a partition -->
+    <property name="device-is-partition" type="b" access="read"/>
+
+    <!-- true if the device contains a partition table -->
+    <property name="device-is-partition-table" type="b" access="read"/>
+
     <!-- the usage is a result of probing for signatures on the block
          device; known values are
 
@@ -49,7 +55,7 @@
            other           - other signature found on the device -->
     <property name="id-usage" type="s" access="read"/>
 
-    <!-- More detailed result of signature probing. The value depends
+    <!-- more detailed result of signature probing. The value depends
          on the value of 'id-usage'
 
            filesystem      - the filesystem type e.g. vfat, ext3 and so forth
@@ -63,14 +69,54 @@
            other           - known types are: swap -->
     <property name="id-type" type="s" access="read"/>
 
-    <!-- If set, the version of the format specified by 'id-type' -->
+    <!-- the version of the format specified by 'id-type' -->
     <property name="id-version" type="s" access="read"/>
 
-    <!-- If set, an UUID for the format specified by 'id-type' -->
+    <!-- an UUID for the format specified by 'id-type' -->
     <property name="id-uuid" type="s" access="read"/>
 
-    <!-- If set, a label for the format specified by 'id-type' -->
+    <!-- a label for the format specified by 'id-type' -->
     <property name="id-label" type="s" access="read"/>
+
+    <!-- the following properties are only set if the device is
+         a partition (see 'device-is-partition'). Known values
+         for the partitioning scheme are
+
+           mbr  - Master Boot Record
+           embr - Extended Master Boot Record
+           apm  - Apple Partitoning Map
+           gpt  - GUID Partition Table
+
+         The 'partition-slave' property specifies what device
+         the device in question is a partition of. The property
+         'partition-number' is the number of the partition starting
+         from 1 -->
+    <property name="partition-slave" type="s" access="read"/>
+    <property name="partition-scheme" type="s" access="read"/>
+    <property name="partition-type" type="s" access="read"/>
+    <property name="partition-label" type="s" access="read"/>
+    <property name="partition-uuid" type="s" access="read"/>
+    <property name="partition-flags" type="as" access="read"/>
+    <property name="partition-number" type="i" access="read"/>
+    <property name="partition-offset" type="t" access="read"/>
+    <property name="partition-size" type="t" access="read"/>
+
+    <!-- the type of partition table the deice contains; only set if
+         'device-is-partition-table' is true. Known values are
+
+           mbr  - Master Boot Record
+           embr - Extended Master Boot Record
+           apm  - Apple Partitoning Map
+           gpt  - GUID Partition Table
+
+         The 'partition-table-count' property specifies the number
+         of partitions in the partition table. The property
+         'partition-table-holders' specifies what devices is
+         part of the device in question.
+      -->
+    <property name="partition-table-scheme" type="s" access="read"/>
+    <property name="partition-table-count" type="i" access="read"/>
+    <property name="partition-table-holders" type="as" access="read"/>
 
   </interface>
 

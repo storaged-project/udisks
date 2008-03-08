@@ -57,6 +57,12 @@ device_removed_signal_handler (DBusGProxy *proxy, const char *object_path, gpoin
   g_print ("removed: %s\n", object_path);
 }
 
+/* --- SUCKY CODE BEGIN --- */
+
+/* This totally sucks; dbus-bindings-tool and dbus-glib should be able
+ * to do this for us.
+ */
+
 static char *
 get_property_string (DBusGConnection *bus,
                      const char *svc_name,
@@ -91,6 +97,126 @@ get_property_string (DBusGConnection *bus,
         }
 
         ret = (char *) g_value_get_string (&value);
+
+out:
+        g_object_unref (proxy);
+        return ret;
+}
+
+static gboolean
+get_property_boolean (DBusGConnection *bus,
+                      const char *svc_name,
+                      const char *obj_path,
+                      const char *if_name,
+                      const char *prop_name)
+{
+        gboolean ret;
+        DBusGProxy *proxy;
+        GValue value = { 0 };
+        GError *error = NULL;
+
+        ret = FALSE;
+	proxy = dbus_g_proxy_new_for_name (bus,
+                                           svc_name,
+                                           obj_path,
+                                           "org.freedesktop.DBus.Properties");
+        if (!dbus_g_proxy_call (proxy,
+                                "Get",
+                                &error,
+                                G_TYPE_STRING,
+                                if_name,
+                                G_TYPE_STRING,
+                                prop_name,
+                                G_TYPE_INVALID,
+                                G_TYPE_VALUE,
+                                &value,
+                                G_TYPE_INVALID)) {
+                g_warning ("error: %s\n", error->message);
+                g_error_free (error);
+                goto out;
+        }
+
+        ret = (gboolean) g_value_get_boolean (&value);
+
+out:
+        g_object_unref (proxy);
+        return ret;
+}
+
+static guint64
+get_property_uint64 (DBusGConnection *bus,
+                     const char *svc_name,
+                     const char *obj_path,
+                     const char *if_name,
+                     const char *prop_name)
+{
+        guint64 ret;
+        DBusGProxy *proxy;
+        GValue value = { 0 };
+        GError *error = NULL;
+
+        ret = 0;
+	proxy = dbus_g_proxy_new_for_name (bus,
+                                           svc_name,
+                                           obj_path,
+                                           "org.freedesktop.DBus.Properties");
+        if (!dbus_g_proxy_call (proxy,
+                                "Get",
+                                &error,
+                                G_TYPE_STRING,
+                                if_name,
+                                G_TYPE_STRING,
+                                prop_name,
+                                G_TYPE_INVALID,
+                                G_TYPE_VALUE,
+                                &value,
+                                G_TYPE_INVALID)) {
+                g_warning ("error: %s\n", error->message);
+                g_error_free (error);
+                goto out;
+        }
+
+        ret = (guint64) g_value_get_uint64 (&value);
+
+out:
+        g_object_unref (proxy);
+        return ret;
+}
+
+static int
+get_property_int (DBusGConnection *bus,
+                  const char *svc_name,
+                  const char *obj_path,
+                  const char *if_name,
+                  const char *prop_name)
+{
+        int ret;
+        DBusGProxy *proxy;
+        GValue value = { 0 };
+        GError *error = NULL;
+
+        ret = 0;
+	proxy = dbus_g_proxy_new_for_name (bus,
+                                           svc_name,
+                                           obj_path,
+                                           "org.freedesktop.DBus.Properties");
+        if (!dbus_g_proxy_call (proxy,
+                                "Get",
+                                &error,
+                                G_TYPE_STRING,
+                                if_name,
+                                G_TYPE_STRING,
+                                prop_name,
+                                G_TYPE_INVALID,
+                                G_TYPE_VALUE,
+                                &value,
+                                G_TYPE_INVALID)) {
+                g_warning ("error: %s\n", error->message);
+                g_error_free (error);
+                goto out;
+        }
+
+        ret = (guint64) g_value_get_int (&value);
 
 out:
         g_object_unref (proxy);
@@ -147,17 +273,33 @@ typedef struct
 {
         char *native_path;
 
-        char *device_file;
-        char **device_file_by_id;
-        char **device_file_by_path;
-        char **device_holders;
-        char **device_slaves;
+        char    *device_file;
+        char   **device_file_by_id;
+        char   **device_file_by_path;
+        char   **device_holders;
+        char   **device_slaves;
+        gboolean device_is_partition;
+        gboolean device_is_partition_table;
 
-        char *id_usage;
-        char *id_type;
-        char *id_version;
-        char *id_uuid;
-        char *id_label;
+        char    *id_usage;
+        char    *id_type;
+        char    *id_version;
+        char    *id_uuid;
+        char    *id_label;
+
+        char    *partition_slave;
+        char    *partition_scheme;
+        int      partition_number;
+        char    *partition_type;
+        char    *partition_label;
+        char    *partition_uuid;
+        char   **partition_flags;
+        guint64  partition_offset;
+        guint64  partition_size;
+
+        char    *partition_table_scheme;
+        int      partition_table_count;
+        char   **partition_table_holders;
 } DeviceProperties;
 
 static DeviceProperties *
@@ -203,6 +345,18 @@ device_properties_get (DBusGConnection *bus, const char *object_path)
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "device-slaves");
+        props->device_is_partition = get_property_boolean (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "device-is-partition");
+        props->device_is_partition_table = get_property_boolean (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "device-is-partition-table");
 
         props->id_usage = get_property_string (
                 bus,
@@ -234,6 +388,80 @@ device_properties_get (DBusGConnection *bus, const char *object_path)
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "id-label");
+
+        props->partition_slave = get_property_string (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "partition-slave");
+        props->partition_scheme = get_property_string (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "partition-scheme");
+        props->partition_number = get_property_int (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "partition-number");
+        props->partition_type = get_property_string (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "partition-type");
+        props->partition_label = get_property_string (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "partition-label");
+        props->partition_uuid = get_property_string (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "partition-uuid");
+        props->partition_flags = get_property_strlist (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "partition-flags");
+        props->partition_offset = get_property_uint64 (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "partition-offset");
+        props->partition_size = get_property_uint64 (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "partition-size");
+
+        props->partition_table_scheme = get_property_string (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "partition-table-scheme");
+        props->partition_table_count = get_property_int (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "partition-table-count");
+        props->partition_table_holders = get_property_strlist (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "partition-table-holders");
         return props;
 }
 
@@ -251,8 +479,17 @@ device_properties_free (DeviceProperties *props)
         g_free (props->id_version);
         g_free (props->id_uuid);
         g_free (props->id_label);
+        g_free (props->partition_slave);
+        g_free (props->partition_type);
+        g_free (props->partition_label);
+        g_free (props->partition_uuid);
+        g_strfreev (props->partition_flags);
+        g_free (props->partition_table_scheme);
+        g_strfreev (props->partition_table_holders);
         g_free (props);
 }
+
+/* --- SUCKY CODE END --- */
 
 int
 main (int argc, char **argv)
@@ -338,21 +575,45 @@ main (int argc, char **argv)
 
                 props = device_properties_get (bus, show_info);
                 g_print ("Showing information for %s\n", show_info);
-                g_print ("  native-path: %s\n", props->native_path);
+                g_print ("  native-path:   %s\n", props->native_path);
                 for (n = 0; props->device_holders[n] != NULL; n++)
-                        g_print ("  holder:      %s\n", (char *) props->device_holders[n]);
+                        g_print ("  holder:        %s\n", (char *) props->device_holders[n]);
                 for (n = 0; props->device_slaves[n] != NULL; n++)
-                        g_print ("  slave:       %s\n", (char *) props->device_slaves[n]);
-                g_print ("  device-file: %s\n", props->device_file);
+                        g_print ("  slave:         %s\n", (char *) props->device_slaves[n]);
+                g_print ("  device-file:   %s\n", props->device_file);
                 for (n = 0; props->device_file_by_id[n] != NULL; n++)
-                        g_print ("    by-id:     %s\n", (char *) props->device_file_by_id[n]);
+                        g_print ("    by-id:       %s\n", (char *) props->device_file_by_id[n]);
                 for (n = 0; props->device_file_by_path[n] != NULL; n++)
-                        g_print ("    by-path:   %s\n", (char *) props->device_file_by_path[n]);
-                g_print ("  id-usage:    %s\n", props->id_usage);
-                g_print ("  id-type:     %s\n", props->id_type);
-                g_print ("  id-version:  %s\n", props->id_version);
-                g_print ("  id-uuid:     %s\n", props->id_uuid);
-                g_print ("  id-label:    %s\n", props->id_label);
+                        g_print ("    by-path:     %s\n", (char *) props->device_file_by_path[n]);
+                g_print ("  usage:         %s\n", props->id_usage);
+                g_print ("  type:          %s\n", props->id_type);
+                g_print ("  version:       %s\n", props->id_version);
+                g_print ("  uuid:          %s\n", props->id_uuid);
+                g_print ("  label:         %s\n", props->id_label);
+                if (props->device_is_partition_table) {
+                        g_print ("  partition table:\n");
+                        g_print ("    scheme:      %s\n", props->partition_table_scheme);
+                        g_print ("    count:       %d\n", props->partition_table_count);
+                        for (n = 0; props->partition_table_holders[n] != NULL; n++)
+                                g_print ("    partition:   %s\n", (char *) props->partition_table_holders[n]);
+
+                }
+                if (props->device_is_partition) {
+                        g_print ("  partition:\n");
+                        g_print ("    part of:     %s\n", props->partition_slave);
+                        g_print ("    scheme:      %s\n", props->partition_scheme);
+                        g_print ("    number:      %d\n", props->partition_number);
+                        g_print ("    type:        %s\n", props->partition_type);
+                        g_print ("    flags:      ");
+                        for (n = 0; props->partition_flags[n] != NULL; n++)
+                                g_print (" %s", (char *) props->partition_flags[n]);
+                        g_print ("\n");
+                        g_print ("    offset:      %lld\n", props->partition_offset);
+                        g_print ("    size:        %lld\n", props->partition_size);
+                        g_print ("    label:       %s\n", props->partition_label);
+                        g_print ("    uuid:        %s\n", props->partition_uuid);
+
+                }
                 device_properties_free (props);
         }
 

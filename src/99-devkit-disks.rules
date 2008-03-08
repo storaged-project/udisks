@@ -1,2 +1,18 @@
+
+ACTION!="add", GOTO="probe_parttable_end"
+SUBSYSTEM!="block", GOTO="probe_parttable_end"
+
+# ignore partitions that span the entire disk
+ATTR{whole_disk}=="*", GOTO="persistent_storage_end"
+
+# ignore non-cdrom ide drivers; these causes loops
+KERNEL=="hd*[!0-9]", ATTR{removable}=="1", DRIVERS=="ide-cs|ide-floppy", GOTO="probe_parttable_end"
+KERNEL=="hd*[0-9]", ATTR{removable}=="1", GOTO="probe_parttable_end"
+
+# scan for partition table only on if we're not a partition
+ATTR{range}=="[0-9]*", IMPORT{program}="part_id $tempnode"
+
+LABEL="probe_parttable_end"
+
 # pass all events to the DeviceKit disks daemon
 SUBSYSTEM=="block", RUN+="socket:/org/freedesktop/devicekit/disks/udev_event"

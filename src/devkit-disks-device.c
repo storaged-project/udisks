@@ -61,16 +61,35 @@ struct DevkitDisksDevicePrivate
         GPtrArray *device_holders;
         GPtrArray *device_slaves;
 
+        gboolean device_is_partition;
+        gboolean device_is_partition_table;
+
         char *id_usage;
         char *id_type;
         char *id_version;
         char *id_uuid;
         char *id_label;
+
+        char *partition_slave;
+        char *partition_scheme;
+        char *partition_type;
+        char *partition_label;
+        char *partition_uuid;
+        GPtrArray *partition_flags;
+        int partition_number;
+        guint64 partition_offset;
+        guint64 partition_size;
+
+        char *partition_table_scheme;
+        int partition_table_count;
+        GPtrArray *partition_table_holders;
 };
 
 static void     devkit_disks_device_class_init  (DevkitDisksDeviceClass *klass);
 static void     devkit_disks_device_init        (DevkitDisksDevice      *seat);
 static void     devkit_disks_device_finalize    (GObject     *object);
+
+static void     set_info_clear                  (DevkitDisksDevice *device);
 
 enum
 {
@@ -84,11 +103,28 @@ enum
         PROP_DEVICE_HOLDERS,
         PROP_DEVICE_SLAVES,
 
+        PROP_DEVICE_IS_PARTITION,
+        PROP_DEVICE_IS_PARTITION_TABLE,
+
         PROP_ID_USAGE,
         PROP_ID_TYPE,
         PROP_ID_VERSION,
         PROP_ID_UUID,
         PROP_ID_LABEL,
+
+        PROP_PARTITION_SLAVE,
+        PROP_PARTITION_SCHEME,
+        PROP_PARTITION_TYPE,
+        PROP_PARTITION_LABEL,
+        PROP_PARTITION_UUID,
+        PROP_PARTITION_FLAGS,
+        PROP_PARTITION_NUMBER,
+        PROP_PARTITION_OFFSET,
+        PROP_PARTITION_SIZE,
+
+        PROP_PARTITION_TABLE_SCHEME,
+        PROP_PARTITION_TABLE_COUNT,
+        PROP_PARTITION_TABLE_HOLDERS,
 };
 
 G_DEFINE_TYPE (DevkitDisksDevice, devkit_disks_device, G_TYPE_OBJECT)
@@ -177,6 +213,13 @@ get_property (GObject         *object,
 		g_value_set_boxed (value, device->priv->device_slaves);
 		break;
 
+	case PROP_DEVICE_IS_PARTITION:
+		g_value_set_boolean (value, device->priv->device_is_partition);
+		break;
+	case PROP_DEVICE_IS_PARTITION_TABLE:
+		g_value_set_boolean (value, device->priv->device_is_partition_table);
+		break;
+
         case PROP_ID_USAGE:
                 g_value_set_string (value, device->priv->id_usage);
                 break;
@@ -192,6 +235,44 @@ get_property (GObject         *object,
         case PROP_ID_LABEL:
                 g_value_set_string (value, device->priv->id_label);
                 break;
+
+	case PROP_PARTITION_SLAVE:
+		g_value_set_string (value, device->priv->partition_slave);
+		break;
+	case PROP_PARTITION_SCHEME:
+		g_value_set_string (value, device->priv->partition_scheme);
+		break;
+	case PROP_PARTITION_TYPE:
+		g_value_set_string (value, device->priv->partition_type);
+		break;
+	case PROP_PARTITION_LABEL:
+		g_value_set_string (value, device->priv->partition_label);
+		break;
+	case PROP_PARTITION_UUID:
+		g_value_set_string (value, device->priv->partition_uuid);
+		break;
+	case PROP_PARTITION_FLAGS:
+		g_value_set_boxed (value, device->priv->partition_flags);
+		break;
+	case PROP_PARTITION_NUMBER:
+		g_value_set_int (value, device->priv->partition_number);
+		break;
+	case PROP_PARTITION_OFFSET:
+		g_value_set_uint64 (value, device->priv->partition_offset);
+		break;
+	case PROP_PARTITION_SIZE:
+		g_value_set_uint64 (value, device->priv->partition_size);
+		break;
+
+	case PROP_PARTITION_TABLE_SCHEME:
+		g_value_set_string (value, device->priv->partition_table_scheme);
+		break;
+	case PROP_PARTITION_TABLE_COUNT:
+		g_value_set_int (value, device->priv->partition_table_count);
+		break;
+	case PROP_PARTITION_TABLE_HOLDERS:
+		g_value_set_boxed (value, device->priv->partition_table_holders);
+		break;
 
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -254,6 +335,16 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
 
         g_object_class_install_property (
                 object_class,
+                PROP_DEVICE_IS_PARTITION,
+                g_param_spec_boolean ("device-is-partition", NULL, NULL, FALSE, G_PARAM_READABLE));
+
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_IS_PARTITION_TABLE,
+                g_param_spec_boolean ("device-is-partition-table", NULL, NULL, FALSE, G_PARAM_READABLE));
+
+        g_object_class_install_property (
+                object_class,
                 PROP_ID_USAGE,
                 g_param_spec_string ("id-usage", NULL, NULL, NULL, G_PARAM_READABLE));
 
@@ -277,7 +368,59 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 PROP_ID_LABEL,
                 g_param_spec_string ("id-label", NULL, NULL, NULL, G_PARAM_READABLE));
 
+        g_object_class_install_property (
+                object_class,
+                PROP_PARTITION_SLAVE,
+                g_param_spec_string ("partition-slave", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_PARTITION_SCHEME,
+                g_param_spec_string ("partition-scheme", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_PARTITION_TYPE,
+                g_param_spec_string ("partition-type", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_PARTITION_LABEL,
+                g_param_spec_string ("partition-label", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_PARTITION_UUID,
+                g_param_spec_string ("partition-uuid", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_PARTITION_FLAGS,
+                g_param_spec_boxed ("partition-flags", NULL, NULL,
+                                    dbus_g_type_get_collection ("GPtrArray", G_TYPE_STRING),
+                                    G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_PARTITION_NUMBER,
+                g_param_spec_int ("partition-number", NULL, NULL, 0, G_MAXINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_PARTITION_OFFSET,
+                g_param_spec_uint64 ("partition-offset", NULL, NULL, 0, G_MAXUINT64, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_PARTITION_SIZE,
+                g_param_spec_uint64 ("partition-size", NULL, NULL, 0, G_MAXUINT64, 0, G_PARAM_READABLE));
 
+        g_object_class_install_property (
+                object_class,
+                PROP_PARTITION_TABLE_SCHEME,
+                g_param_spec_string ("partition-table-scheme", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_PARTITION_TABLE_COUNT,
+                g_param_spec_int ("partition-table-count", NULL, NULL, 0, G_MAXINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_PARTITION_TABLE_HOLDERS,
+                g_param_spec_boxed ("partition-table-holders", NULL, NULL,
+                                    dbus_g_type_get_collection ("GPtrArray", G_TYPE_STRING),
+                                    G_PARAM_READABLE));
 }
 
 static void
@@ -288,6 +431,8 @@ devkit_disks_device_init (DevkitDisksDevice *device)
         device->priv->device_file_by_path = g_ptr_array_new ();
         device->priv->device_holders = g_ptr_array_new ();
         device->priv->device_slaves = g_ptr_array_new ();
+        device->priv->partition_flags = g_ptr_array_new ();
+        device->priv->partition_table_holders = g_ptr_array_new ();
 }
 
 static void
@@ -306,23 +451,7 @@ devkit_disks_device_finalize (GObject *object)
 
         g_free (device->priv->native_path);
 
-        g_free (device->priv->device_file);
-
-        g_ptr_array_foreach (device->priv->device_file_by_id, (GFunc) g_free, NULL);
-        g_ptr_array_foreach (device->priv->device_file_by_path, (GFunc) g_free, NULL);
-        g_ptr_array_foreach (device->priv->device_holders, (GFunc) g_free, NULL);
-        g_ptr_array_foreach (device->priv->device_slaves, (GFunc) g_free, NULL);
-        g_ptr_array_free (device->priv->device_file_by_id, TRUE);
-        g_ptr_array_free (device->priv->device_file_by_path, TRUE);
-        g_ptr_array_free (device->priv->device_holders, TRUE);
-        g_ptr_array_free (device->priv->device_slaves, TRUE);
-
-        g_free (device->priv->id_usage);
-        g_free (device->priv->id_type);
-        g_free (device->priv->id_version);
-        g_free (device->priv->id_uuid);
-        g_free (device->priv->id_label);
-
+        set_info_clear (device);
 
         G_OBJECT_CLASS (devkit_disks_device_parent_class)->finalize (object);
 }
@@ -393,6 +522,58 @@ error:
         return FALSE;
 }
 
+static int
+sysfs_get_int (const char *dir, const char *attribute)
+{
+        int result;
+        char *contents;
+        char *filename;
+
+        result = 0;
+        filename = g_build_filename (dir, attribute, NULL);
+        if (g_file_get_contents (filename, &contents, NULL, NULL)) {
+                result = atoi (contents);
+                g_free (contents);
+        }
+        g_free (filename);
+
+
+        return result;
+}
+
+static void
+set_info_clear (DevkitDisksDevice *device)
+{
+        g_free (device->priv->device_file);
+
+        g_ptr_array_foreach (device->priv->device_file_by_id, (GFunc) g_free, NULL);
+        g_ptr_array_foreach (device->priv->device_file_by_path, (GFunc) g_free, NULL);
+        g_ptr_array_foreach (device->priv->device_holders, (GFunc) g_free, NULL);
+        g_ptr_array_foreach (device->priv->device_slaves, (GFunc) g_free, NULL);
+        g_ptr_array_free (device->priv->device_file_by_id, TRUE);
+        g_ptr_array_free (device->priv->device_file_by_path, TRUE);
+        g_ptr_array_free (device->priv->device_holders, TRUE);
+        g_ptr_array_free (device->priv->device_slaves, TRUE);
+
+        g_free (device->priv->id_usage);
+        g_free (device->priv->id_type);
+        g_free (device->priv->id_version);
+        g_free (device->priv->id_uuid);
+        g_free (device->priv->id_label);
+
+        g_free (device->priv->partition_slave);
+        g_free (device->priv->partition_scheme);
+        g_free (device->priv->partition_type);
+        g_free (device->priv->partition_label);
+        g_free (device->priv->partition_uuid);
+        g_ptr_array_foreach (device->priv->partition_flags, (GFunc) g_free, NULL);
+        g_ptr_array_free (device->priv->partition_flags, TRUE);
+
+        g_free (device->priv->partition_table_scheme);
+        g_ptr_array_foreach (device->priv->partition_table_holders, (GFunc) g_free, NULL);
+        g_ptr_array_free (device->priv->partition_table_holders, TRUE);
+}
+
 static gboolean
 set_info (DevkitDisksDevice *device)
 {
@@ -402,11 +583,14 @@ set_info (DevkitDisksDevice *device)
         char *standard_output;
         char **lines;
         unsigned int n;
+        unsigned int m;
         GDir *dir;
         char *path;
-        gboolean is_partition;
         char *s;
+        int range;
         const char *name;
+        gboolean is_partitioned_by_kernel;
+        gboolean is_partitioned_by_kernel_and_is_partition;
 
         ret = FALSE;
 
@@ -420,15 +604,89 @@ set_info (DevkitDisksDevice *device)
                 goto out;
         }
 
-        g_ptr_array_foreach (device->priv->device_file_by_id, (GFunc) g_free, NULL);
-        g_ptr_array_foreach (device->priv->device_file_by_path, (GFunc) g_free, NULL);
-        g_ptr_array_foreach (device->priv->device_holders, (GFunc) g_free, NULL);
-        g_ptr_array_foreach (device->priv->device_slaves, (GFunc) g_free, NULL);
+        /* free all info and prepare arrays for new info */
+        set_info_clear (device);
         device->priv->device_file_by_id = g_ptr_array_new ();
         device->priv->device_file_by_path = g_ptr_array_new ();
         device->priv->device_holders = g_ptr_array_new ();
         device->priv->device_slaves = g_ptr_array_new ();
+        device->priv->partition_flags = g_ptr_array_new ();
+        device->priv->partition_table_holders = g_ptr_array_new ();
 
+        is_partitioned_by_kernel = FALSE;
+        is_partitioned_by_kernel_and_is_partition = FALSE;
+
+        /* devices partitioned by in-kernel partioning have range
+         * set to > 1 - that's how we identify them
+         */
+        range = sysfs_get_int (device->priv->native_path, "range");
+        if (range > 1)
+                is_partitioned_by_kernel = TRUE;
+
+        path = g_build_filename (device->priv->native_path, "holders", NULL);
+        dir = g_dir_open (path, 0, NULL);
+        while (dir != NULL && (name = g_dir_read_name (dir)) != NULL) {
+                g_ptr_array_add (device->priv->device_holders, compute_object_path_from_basename (name));
+        }
+        g_free (path);
+
+        path = g_build_filename (device->priv->native_path, "slaves", NULL);
+        /* block devices created by in-kernel partioning don't have
+         * the slaves/ directory; that's how we identify them
+         */
+        dir = g_dir_open (path, 0, NULL);
+        is_partitioned_by_kernel_and_is_partition = (dir == NULL);
+        while (dir != NULL && (name = g_dir_read_name (dir)) != NULL) {
+                g_ptr_array_add (device->priv->device_slaves, compute_object_path_from_basename (name));
+        }
+        g_free (path);
+
+        /* In-kernel partitioning doesn't set slaves and holders; if
+         * you do userspace partitioning, via kpartx(8), then you get
+         * these. So manually add this ourselves to be consistent.
+         */
+        if (is_partitioned_by_kernel_and_is_partition) {
+                /* cut the number off */
+                s = g_path_get_basename (device->priv->native_path);
+                for (n = strlen (s) - 1; g_ascii_isdigit (s[n]) && n >= 0; n--)
+                        s[n] = '\0';
+                g_ptr_array_add (device->priv->device_slaves, compute_object_path_from_basename (s));
+                device->priv->partition_slave = compute_object_path_from_basename (s);
+                g_free (s);
+
+                n = strlen (device->priv->native_path) - 1;
+                while (g_ascii_isdigit (device->priv->native_path[n]))
+                        n--;
+                device->priv->partition_number = atoi (device->priv->native_path + n + 1);
+                device->priv->device_is_partition = TRUE;
+
+        } else if (is_partitioned_by_kernel) {
+                s = g_path_get_basename (device->priv->native_path);
+                dir = g_dir_open (device->priv->native_path, 0, NULL);
+                while (dir != NULL && (name = g_dir_read_name (dir)) != NULL) {
+                        if (g_str_has_prefix (name, s) && g_ascii_isdigit (name[strlen (s)])) {
+                                g_ptr_array_add (device->priv->device_holders,
+                                                 compute_object_path_from_basename (name));
+
+                                g_ptr_array_add (device->priv->partition_table_holders,
+                                                 compute_object_path_from_basename (name));
+                        }
+                }
+                g_free (s);
+
+                device->priv->device_is_partition_table = TRUE;
+        }
+
+        /* TODO: right now we only support partitions and partition tables
+         *       created by the kernel; it's a bit hard to determine in the
+         *       general (kpartx) case
+         */
+        if (is_partitioned_by_kernel) {
+
+        } else if (is_partitioned_by_kernel_and_is_partition) {
+        }
+
+        /* set other properties from the udev database */
         lines = g_strsplit (standard_output, "\n", 0);
         for (n = 0; lines[n] != NULL; n++) {
                 char *line = lines[n];
@@ -462,55 +720,52 @@ set_info (DevkitDisksDevice *device)
                         } else if (g_str_has_prefix (line + 3, "ID_FS_LABEL=")) {
                                 g_free (device->priv->id_label);
                                 device->priv->id_label   = g_strdup (line + 3 + sizeof ("ID_FS_LABEL=") - 1);
+                        } else if (g_str_has_prefix (line + 3, "ID_PART_SCHEME")) {
+                                if (device->priv->device_is_partition_table) {
+                                        device->priv->partition_table_scheme =
+                                                g_strdup (line + 3 + sizeof ("ID_PART_SCHEME=") - 1);
+                                } else if (device->priv->device_is_partition) {
+                                        device->priv->partition_scheme =
+                                                g_strdup (line + 3 + sizeof ("ID_PART_SCHEME=") - 1);
+                                }
+                        } else if (g_str_has_prefix (line + 3, "ID_PART_COUNT")) {
+                                if (device->priv->device_is_partition_table) {
+                                        device->priv->partition_table_count =
+                                                atoi (line + 3 + sizeof ("ID_PART_COUNT=") - 1);
+                                }
+                        } else if (device->priv->device_is_partition &&
+                                   g_str_has_prefix (line + 3, "ID_PART_P")) {
+                                char *endp;
+                                int given_part = strtol (line + 3 + sizeof ("ID_PART_P") - 1, &endp, 10);
+                                if (given_part == device->priv->partition_number && *endp == '_') {
+                                        if (g_str_has_prefix (endp, "_TYPE="))
+                                                device->priv->partition_type =
+                                                        g_strdup (endp + sizeof ("_TYPE=") - 1);
+                                        else if (g_str_has_prefix (endp, "_LABEL="))
+                                                device->priv->partition_label =
+                                                        g_strdup (endp + sizeof ("_LABEL=") - 1);
+                                        else if (g_str_has_prefix (endp, "_UUID="))
+                                                device->priv->partition_uuid =
+                                                        g_strdup (endp + sizeof ("_UUID=") - 1);
+                                        else if (g_str_has_prefix (endp, "_FLAGS=")) {
+                                                char **tokens;
+                                                tokens = g_strsplit (endp + sizeof ("_FLAGS=") - 1, " ", 0);
+                                                for (m = 0; tokens[m] != NULL; m++)
+                                                        g_ptr_array_add (device->priv->partition_flags, tokens[m]);
+                                                g_free (tokens); /* ptrarray takes ownership of strings */
+                                        }
+                                        else if (g_str_has_prefix (endp, "_OFFSET="))
+                                                device->priv->partition_offset =
+                                                        atoll (endp + sizeof ("_OFFSET=") - 1);
+                                        else if (g_str_has_prefix (endp, "_SIZE="))
+                                                device->priv->partition_size =
+                                                        atoll (endp + sizeof ("_SIZE=") - 1);
+                                        /* TODO: slave */
+                                }
                         }
                 }
         }
         g_strfreev (lines);
-
-        path = g_build_filename (device->priv->native_path, "holders", NULL);
-        dir = g_dir_open (path, 0, NULL);
-        while (dir != NULL && (name = g_dir_read_name (dir)) != NULL) {
-                g_ptr_array_add (device->priv->device_holders, compute_object_path_from_basename (name));
-        }
-        g_free (path);
-
-        /* block devices created by in-kernel partioning don't have
-         * the slaves/ directory; that's one way to identify them
-         */
-        path = g_build_filename (device->priv->native_path, "slaves", NULL);
-        dir = g_dir_open (path, 0, NULL);
-        is_partition = (dir == NULL);
-        while (dir != NULL && (name = g_dir_read_name (dir)) != NULL) {
-                g_ptr_array_add (device->priv->device_slaves, compute_object_path_from_basename (name));
-        }
-        g_free (path);
-
-        /* In-kernel partitioning doesn't set slaves and holders; if
-         * you do userspace partitioning, via kpartx(8), then you get
-         * these. So manually add this ourselves to be consistent.
-         */
-        if (is_partition) {
-                /* cut the number off */
-                s = g_path_get_basename (device->priv->native_path);
-                for (n = strlen (s) - 1; g_ascii_isdigit (s[n]) && n >= 0; n--)
-                        s[n] = '\0';
-                g_ptr_array_add (device->priv->device_slaves,
-                                 compute_object_path_from_basename (s));
-                g_free (s);
-        } else {
-                char *s;
-                s = g_path_get_basename (device->priv->native_path);
-                dir = g_dir_open (device->priv->native_path, 0, NULL);
-                is_partition = (dir != NULL);
-                while (dir != NULL && (name = g_dir_read_name (dir)) != NULL) {
-                        if (g_str_has_prefix (name, s) && g_ascii_isdigit (name[strlen (s)])) {
-                                g_ptr_array_add (device->priv->device_holders,
-                                                 compute_object_path_from_basename (name));
-                        }
-                }
-                g_free (s);
-
-        }
 
 
         /* check for required keys */
