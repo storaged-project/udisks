@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -40,6 +41,7 @@
 #include <glib-object.h>
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
+#include <devkit/devkit.h>
 
 #include "devkit-disks-device.h"
 
@@ -574,29 +576,94 @@ init_info (DevkitDisksDevice *device)
         device->priv->info.partition_flags = g_ptr_array_new ();
 }
 
+
+static devkit_bool_t
+update_info_add_ptr (DevKitInfo *info, const char *str, void *user_data)
+{
+        GPtrArray *ptr_array = user_data;
+        g_ptr_array_add (ptr_array, g_strdup (str));
+        return FALSE;
+}
+
+static devkit_bool_t
+update_info_properties_cb (DevKitInfo *info, const char *key, void *user_data)
+{
+        DevkitDisksDevice *device = user_data;
+
+        if (strcmp (key, "ID_FS_USAGE") == 0) {
+                device->priv->info.id_usage   = g_strdup (devkit_info_property_get_string (info, key));
+        } else if (strcmp (key, "ID_FS_TYPE") == 0) {
+                device->priv->info.id_type    = g_strdup (devkit_info_property_get_string (info, key));
+        } else if (strcmp (key, "ID_FS_VERSION") == 0) {
+                device->priv->info.id_version = g_strdup (devkit_info_property_get_string (info, key));
+        } else if (strcmp (key, "ID_FS_UUID") == 0) {
+                device->priv->info.id_uuid    = g_strdup (devkit_info_property_get_string (info, key));
+        } else if (strcmp (key, "ID_FS_LABEL") == 0) {
+                device->priv->info.id_label   = g_strdup (devkit_info_property_get_string (info, key));
+
+
+        } if (strcmp (key, "PART_SCHEME") == 0) {
+                device->priv->info.device_is_partition_table = TRUE;
+                device->priv->info.partition_table_scheme = g_strdup (devkit_info_property_get_string (info, key));
+        } else if (strcmp (key, "PART_COUNT") == 0) {
+                device->priv->info.partition_table_count = devkit_info_property_get_int (info, key);
+
+
+        } else if (strcmp (key, "PART_ENTRY_SLAVE") == 0) {
+                char *s;
+                device->priv->info.device_is_partition = TRUE;
+                s = g_path_get_basename (devkit_info_property_get_string (info, key));
+                device->priv->info.partition_slave = compute_object_path_from_basename (s);
+                g_free (s);
+        } else if (strcmp (key, "PART_ENTRY_SCHEME") == 0) {
+                device->priv->info.partition_scheme = g_strdup (devkit_info_property_get_string (info, key));
+        } else if (strcmp (key, "PART_ENTRY_TYPE") == 0) {
+                device->priv->info.partition_type = g_strdup (devkit_info_property_get_string (info, key));
+        } else if (strcmp (key, "PART_ENTRY_NUMBER") == 0) {
+                device->priv->info.partition_number = devkit_info_property_get_int (info, key);
+        } else if (strcmp (key, "PART_ENTRY_LABEL") == 0) {
+                device->priv->info.partition_label = g_strdup (devkit_info_property_get_string (info, key));
+        } else if (strcmp (key, "PART_ENTRY_UUID") == 0) {
+                device->priv->info.partition_uuid = g_strdup (devkit_info_property_get_string (info, key));
+        } else if (strcmp (key, "PART_ENTRY_FLAGS") == 0) {
+                devkit_info_property_strlist_foreach (info, key, update_info_add_ptr,
+                                                      device->priv->info.partition_flags);
+        } else if (strcmp (key, "PART_ENTRY_OFFSET") == 0) {
+                device->priv->info.partition_offset = devkit_info_property_get_uint64 (info, key);
+        } else if (strcmp (key, "PART_ENTRY_SIZE") == 0) {
+                device->priv->info.partition_size = devkit_info_property_get_uint64 (info, key);
+
+
+        } else if (strcmp (key, "MEDIA_AVAILABLE") == 0) {
+                if (device->priv->info.drive_removable) {
+                        device->priv->info.drive_removable_media_available = devkit_info_property_get_bool (info, key);
+                }
+        }
+
+        return FALSE;
+}
+
+static gboolean
+update_info_symlinks_cb (DevKitInfo *info, const char *value, void *user_data)
+{
+        DevkitDisksDevice *device = user_data;
+
+        if (g_str_has_prefix (value, "/dev/disk/by-id/") || g_str_has_prefix (value, "/dev/disk/by-uuid/")) {
+                g_ptr_array_add (device->priv->info.device_file_by_id, g_strdup (value));
+        } else if (g_str_has_prefix (value, "/dev/disk/by-path/")) {
+                g_ptr_array_add (device->priv->info.device_file_by_path, g_strdup (value));
+        }
+
+        return FALSE;
+}
+
 static gboolean
 update_info (DevkitDisksDevice *device)
 {
         gboolean ret;
-        int exit_status;
-        char *command_line;
-        char *standard_output;
-        char **lines;
-        unsigned int n;
-        unsigned int m;
-        char *s;
+        DevKitInfo *info;
 
         ret = FALSE;
-
-        /* TODO: this needs to use a faster interface to the udev database. This is SLOOOW! */
-        command_line = g_strdup_printf ("udevinfo -q all --path %s", device->priv->native_path);
-        if (!g_spawn_command_line_sync (command_line,
-                                        &standard_output,
-                                        NULL,
-                                        &exit_status,
-                                        NULL)) {
-                goto out;
-        }
 
         /* free all info and prep for new info */
         free_info (device);
@@ -612,99 +679,19 @@ update_info (DevkitDisksDevice *device)
                 device->priv->info.device_has_drive = FALSE;
         }
 
-        /* set other properties from the udev database */
-        lines = g_strsplit (standard_output, "\n", 0);
-        for (n = 0; lines[n] != NULL; n++) {
-                char *line = lines[n];
-
-                if (g_str_has_prefix (line, "N: ")) {
-                        device->priv->info.device_file = g_build_filename ("/dev", line + 3, NULL);
-                } else if (g_str_has_prefix (line, "S: ")) {
-                        if (g_str_has_prefix (line + 3, "disk/by-id/") ||
-                            g_str_has_prefix (line + 3, "disk/by-uuid/")) {
-                                g_ptr_array_add (device->priv->info.device_file_by_id,
-                                                 g_build_filename ("/dev", line + 3, NULL));
-                        } else if (g_str_has_prefix (line + 3, "disk/by-path/")) {
-                                g_ptr_array_add (device->priv->info.device_file_by_path,
-                                                 g_build_filename ("/dev", line + 3, NULL));
-                        }
-
-                } else if (g_str_has_prefix (line, "E: ")) {
-                        if (g_str_has_prefix (line + 3, "ID_FS_USAGE=")) {
-                                device->priv->info.id_usage   = g_strdup (line + 3 + sizeof ("ID_FS_USAGE=") - 1);
-                        } else if (g_str_has_prefix (line + 3, "ID_FS_TYPE=")) {
-                                device->priv->info.id_type    = g_strdup (line + 3 + sizeof ("ID_FS_TYPE=") - 1);
-                        } else if (g_str_has_prefix (line + 3, "ID_FS_VERSION=")) {
-                                device->priv->info.id_version = g_strdup (line + 3 + sizeof ("ID_FS_VERSION=") - 1);
-                        } else if (g_str_has_prefix (line + 3, "ID_FS_UUID=")) {
-                                device->priv->info.id_uuid    = g_strdup (line + 3 + sizeof ("ID_FS_UUID=") - 1);
-                        } else if (g_str_has_prefix (line + 3, "ID_FS_LABEL=")) {
-                                device->priv->info.id_label   = g_strdup (line + 3 + sizeof ("ID_FS_LABEL=") - 1);
-
-
-                        } if (g_str_has_prefix (line + 3, "PART_SCHEME=")) {
-                                device->priv->info.device_is_partition_table = TRUE;
-                                device->priv->info.partition_table_scheme =
-                                        g_strdup (line + 3 + sizeof ("PART_SCHEME=") - 1);
-                        } else if (g_str_has_prefix (line + 3, "PART_COUNT=")) {
-                                device->priv->info.partition_table_count =
-                                        atoi (line + 3 + sizeof ("PART_COUNT=") - 1);
-
-
-                        } else if (g_str_has_prefix (line + 3, "PART_ENTRY_SLAVE=")) {
-                                device->priv->info.device_is_partition = TRUE;
-                                s = g_path_get_basename (line + 3 + sizeof ("PART_ENTRY_SLAVE=") - 1);
-                                device->priv->info.partition_slave = compute_object_path_from_basename (s);
-                                g_free (s);
-                        } else if (g_str_has_prefix (line + 3, "PART_ENTRY_SCHEME=")) {
-                                device->priv->info.partition_scheme =
-                                        g_strdup (line + 3 + sizeof ("PART_ENTRY_SCHEME=") - 1);
-                        } else if (g_str_has_prefix (line + 3, "PART_ENTRY_TYPE=")) {
-                                device->priv->info.partition_type =
-                                        g_strdup (line + 3 + sizeof ("PART_ENTRY_TYPE=") - 1);
-                        } else if (g_str_has_prefix (line + 3, "PART_ENTRY_NUMBER=")) {
-                                device->priv->info.partition_table_count =
-                                        atoi (line + 3 + sizeof ("PART_ENTRY_NUMBER=") - 1);
-                        } else if (g_str_has_prefix (line + 3, "PART_ENTRY_LABEL=")) {
-                                device->priv->info.partition_label =
-                                        g_strdup (line + 3 + sizeof ("PART_ENTRY_LABEL=") - 1);
-                        } else if (g_str_has_prefix (line + 3, "PART_ENTRY_UUID=")) {
-                                device->priv->info.partition_uuid =
-                                        g_strdup (line + 3 + sizeof ("PART_ENTRY_UUID=") - 1);
-                        } else if (g_str_has_prefix (line + 3, "PART_ENTRY_FLAGS=")) {
-                                char **tokens;
-                                tokens = g_strsplit (line + 3 + sizeof ("PART_ENTRY_FLAGS=") - 1, " ", 0);
-                                for (m = 0; tokens[m] != NULL; m++)
-                                        g_ptr_array_add (device->priv->info.partition_flags, tokens[m]);
-                                g_free (tokens); /* ptrarray takes ownership of strings */
-                        } else if (g_str_has_prefix (line + 3, "PART_ENTRY_OFFSET=")) {
-                                device->priv->info.partition_offset =
-                                        atoll (line + 3 + sizeof ("PART_ENTRY_OFFSET=") - 1);
-                        } else if (g_str_has_prefix (line + 3, "PART_ENTRY_SIZE=")) {
-                                device->priv->info.partition_size =
-                                        atoll (line + 3 + sizeof ("PART_ENTRY_SIZE=") - 1);
-
-
-                        } else if (g_str_has_prefix (line + 3, "MEDIA_AVAILABLE")) {
-                                if (device->priv->info.drive_removable) {
-                                        device->priv->info.drive_removable_media_available =
-                                                (atoi (line + 3 + sizeof ("MEDIA_AVAILABLE=") - 1) != 0);
-                                }
-                        }
-                }
-        }
-        g_strfreev (lines);
-
-
-        /* check for required keys */
-        if (device->priv->info.device_file == NULL)
+        info = devkit_info_new (device->priv->native_path);
+        if (info == NULL) {
                 goto out;
+        }
+
+        device->priv->info.device_file = g_strdup (devkit_info_get_device_file (info));
+        devkit_info_device_file_symlinks_foreach (info, update_info_symlinks_cb, device);
+        devkit_info_property_foreach (info, update_info_properties_cb, device);
+        devkit_info_unref (info);
 
         ret = TRUE;
 
 out:
-        g_free (command_line);
-        g_free (standard_output);
         return ret;
 }
 

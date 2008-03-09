@@ -12,6 +12,7 @@ INCLUDES = \
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT	\
 	$(DBUS_GLIB_CFLAGS) \
 	$(POLKIT_DBUS_CFLAGS) \
+	$(DEVKIT_CFLAGS) \
 	@GLIB_CFLAGS@
 
 BUILT_SOURCES =						\
@@ -49,7 +50,8 @@ devkit_disks_daemon_CPPFLAGS = 				\
 
 devkit_disks_daemon_LDADD = 				\
 	$(DBUS_GLIB_LIBS)				\
-	$(POLKIT_DBUS_LIBS)
+	$(POLKIT_DBUS_LIBS)				\
+	$(DEVKIT_LIBS)
 
 servicedir       = $(datadir)/dbus-1/system-services
 service_in_files = org.freedesktop.DeviceKit.Disks.service.in
