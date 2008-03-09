@@ -45,10 +45,38 @@
 #include "devkit-disks-daemon-glue.h"
 #include "devkit-disks-device-glue.h"
 
+static DBusGConnection     *bus = NULL;
+static DBusGProxy          *disks_proxy = NULL;
+static GMainLoop           *loop;
+
+static gboolean      inhibit        = FALSE;
+static gboolean      enumerate      = FALSE;
+static gboolean      monitor        = FALSE;
+static gboolean      monitor_detail = FALSE;
+static char         *show_info      = NULL;
+
+static gboolean do_monitor (void);
+static void do_show_info (const char *object_path);
+
 static void
 device_added_signal_handler (DBusGProxy *proxy, const char *object_path, gpointer user_data)
 {
   g_print ("added:   %s\n", object_path);
+  if (monitor_detail) {
+          do_show_info (object_path);
+          g_print ("\n");
+  }
+}
+
+static void
+device_changed_signal_handler (DBusGProxy *proxy, const char *object_path, gpointer user_data)
+{
+  g_print ("changed:   %s\n", object_path);
+  if (monitor_detail) {
+          /* TODO: would be nice to just show the diff */
+          do_show_info (object_path);
+          g_print ("\n");
+  }
 }
 
 static void
@@ -64,8 +92,7 @@ device_removed_signal_handler (DBusGProxy *proxy, const char *object_path, gpoin
  */
 
 static char *
-get_property_string (DBusGConnection *bus,
-                     const char *svc_name,
+get_property_string (const char *svc_name,
                      const char *obj_path,
                      const char *if_name,
                      const char *prop_name)
@@ -104,8 +131,7 @@ out:
 }
 
 static gboolean
-get_property_boolean (DBusGConnection *bus,
-                      const char *svc_name,
+get_property_boolean (const char *svc_name,
                       const char *obj_path,
                       const char *if_name,
                       const char *prop_name)
@@ -144,8 +170,7 @@ out:
 }
 
 static guint64
-get_property_uint64 (DBusGConnection *bus,
-                     const char *svc_name,
+get_property_uint64 (const char *svc_name,
                      const char *obj_path,
                      const char *if_name,
                      const char *prop_name)
@@ -184,8 +209,7 @@ out:
 }
 
 static int
-get_property_int (DBusGConnection *bus,
-                  const char *svc_name,
+get_property_int (const char *svc_name,
                   const char *obj_path,
                   const char *if_name,
                   const char *prop_name)
@@ -224,8 +248,7 @@ out:
 }
 
 static char **
-get_property_strlist (DBusGConnection *bus,
-                      const char *svc_name,
+get_property_strlist (const char *svc_name,
                       const char *obj_path,
                       const char *if_name,
                       const char *prop_name)
@@ -276,10 +299,9 @@ typedef struct
         char    *device_file;
         char   **device_file_by_id;
         char   **device_file_by_path;
-        char   **device_holders;
-        char   **device_slaves;
         gboolean device_is_partition;
         gboolean device_is_partition_table;
+        gboolean device_has_drive;
 
         char    *id_usage;
         char    *id_type;
@@ -299,169 +321,147 @@ typedef struct
 
         char    *partition_table_scheme;
         int      partition_table_count;
-        char   **partition_table_holders;
+
+        gboolean drive_removable;
+        gboolean drive_removable_media_available;
 } DeviceProperties;
 
 static DeviceProperties *
-device_properties_get (DBusGConnection *bus, const char *object_path)
+device_properties_get (const char *object_path)
 {
         DeviceProperties *props;
 
         props = g_new0 (DeviceProperties, 1);
         props->native_path = get_property_string (
-                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "native-path");
 
         props->device_file = get_property_string (
-                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "device-file");
         props->device_file_by_id = get_property_strlist (
-                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "device-file-by-id");
         props->device_file_by_path = get_property_strlist (
-                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "device-file-by-path");
-        props->device_holders = get_property_strlist (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "device-holders");
-        props->device_slaves = get_property_strlist (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "device-slaves");
         props->device_is_partition = get_property_boolean (
-                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "device-is-partition");
         props->device_is_partition_table = get_property_boolean (
-                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "device-is-partition-table");
+        props->device_has_drive = get_property_boolean (
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "device-has-drive");
 
         props->id_usage = get_property_string (
-                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "id-usage");
         props->id_type = get_property_string (
-                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "id-type");
         props->id_version = get_property_string (
-                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "id-version");
         props->id_uuid = get_property_string (
-                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "id-uuid");
         props->id_label = get_property_string (
-                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "id-label");
 
         props->partition_slave = get_property_string (
-                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "partition-slave");
         props->partition_scheme = get_property_string (
-                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "partition-scheme");
         props->partition_number = get_property_int (
-                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "partition-number");
         props->partition_type = get_property_string (
-                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "partition-type");
         props->partition_label = get_property_string (
-                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "partition-label");
         props->partition_uuid = get_property_string (
-                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "partition-uuid");
         props->partition_flags = get_property_strlist (
-                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "partition-flags");
         props->partition_offset = get_property_uint64 (
-                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "partition-offset");
         props->partition_size = get_property_uint64 (
-                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "partition-size");
 
         props->partition_table_scheme = get_property_string (
-                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "partition-table-scheme");
         props->partition_table_count = get_property_int (
-                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "partition-table-count");
-        props->partition_table_holders = get_property_strlist (
-                bus,
+
+        props->drive_removable = get_property_boolean (
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
-                "partition-table-holders");
+                "drive-removable");
+        props->drive_removable_media_available = get_property_boolean (
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "drive-removable-media-available");
         return props;
 }
 
@@ -472,8 +472,6 @@ device_properties_free (DeviceProperties *props)
         g_free (props->device_file);
         g_strfreev (props->device_file_by_id);
         g_strfreev (props->device_file_by_path);
-        g_strfreev (props->device_holders);
-        g_strfreev (props->device_slaves);
         g_free (props->id_usage);
         g_free (props->id_type);
         g_free (props->id_version);
@@ -485,11 +483,85 @@ device_properties_free (DeviceProperties *props)
         g_free (props->partition_uuid);
         g_strfreev (props->partition_flags);
         g_free (props->partition_table_scheme);
-        g_strfreev (props->partition_table_holders);
         g_free (props);
 }
 
 /* --- SUCKY CODE END --- */
+
+static gboolean
+do_monitor (void)
+{
+        char *cookie;
+        GError *error;
+
+        g_print ("Monitoring activity from the disks daemon. Press Ctrl+C to cancel.\n");
+
+        error = NULL;
+        if (!org_freedesktop_DeviceKit_Disks_inhibit_shutdown (disks_proxy, &cookie, &error)) {
+                g_warning ("Couldn't inhibit shutdown on disks daemon: %s", error->message);
+                g_error_free (error);
+                goto out;
+        }
+        g_free (cookie);
+
+        dbus_g_proxy_connect_signal (disks_proxy, "DeviceAdded",
+                                     G_CALLBACK (device_added_signal_handler), NULL, NULL);
+        dbus_g_proxy_connect_signal (disks_proxy, "DeviceRemoved",
+                                     G_CALLBACK (device_removed_signal_handler), NULL, NULL);
+        dbus_g_proxy_connect_signal (disks_proxy, "DeviceChanged",
+                                     G_CALLBACK (device_changed_signal_handler), NULL, NULL);
+        g_main_loop_run (loop);
+
+out:
+        return FALSE;
+}
+
+static void
+do_show_info (const char *object_path)
+{
+        unsigned int n;
+        DeviceProperties *props;
+
+        props = device_properties_get (object_path);
+        g_print ("Showing information for %s\n", object_path);
+        g_print ("  native-path:   %s\n", props->native_path);
+        g_print ("  device-file:   %s\n", props->device_file);
+        for (n = 0; props->device_file_by_id[n] != NULL; n++)
+                g_print ("    by-id:       %s\n", (char *) props->device_file_by_id[n]);
+        for (n = 0; props->device_file_by_path[n] != NULL; n++)
+                g_print ("    by-path:     %s\n", (char *) props->device_file_by_path[n]);
+        g_print ("  usage:         %s\n", props->id_usage);
+        g_print ("  type:          %s\n", props->id_type);
+        g_print ("  version:       %s\n", props->id_version);
+        g_print ("  uuid:          %s\n", props->id_uuid);
+        g_print ("  label:         %s\n", props->id_label);
+        if (props->device_is_partition_table) {
+                g_print ("  partition table:\n");
+                g_print ("    scheme:      %s\n", props->partition_table_scheme);
+                g_print ("    count:       %d\n", props->partition_table_count);
+        }
+        if (props->device_is_partition) {
+                g_print ("  partition:\n");
+                g_print ("    part of:     %s\n", props->partition_slave);
+                g_print ("    scheme:      %s\n", props->partition_scheme);
+                g_print ("    number:      %d\n", props->partition_number);
+                g_print ("    type:        %s\n", props->partition_type);
+                g_print ("    flags:      ");
+                for (n = 0; props->partition_flags[n] != NULL; n++)
+                        g_print (" %s", (char *) props->partition_flags[n]);
+                g_print ("\n");
+                g_print ("    offset:      %lld\n", props->partition_offset);
+                g_print ("    size:        %lld\n", props->partition_size);
+                g_print ("    label:       %s\n", props->partition_label);
+                g_print ("    uuid:        %s\n", props->partition_uuid);
+        }
+        if (props->device_has_drive) {
+                g_print ("  drive:\n");
+                g_print ("    removable:   %d\n", props->drive_removable);
+                g_print ("    has media:   %d\n", props->drive_removable_media_available);
+        }
+        device_properties_free (props);
+}
 
 int
 main (int argc, char **argv)
@@ -497,18 +569,12 @@ main (int argc, char **argv)
         int                  ret;
         GOptionContext      *context;
         GError              *error = NULL;
-        DBusGConnection     *bus = NULL;
-        DBusGProxy          *disks_proxy = NULL;
-        GMainLoop           *loop;
         unsigned int         n;
-        static gboolean      inhibit      = FALSE;
-        static gboolean      enumerate    = FALSE;
-        static gboolean      monitor      = FALSE;
-        static char         *show_info    = NULL;
-        static GOptionEntry  entries []   = {
+        static GOptionEntry  entries []     = {
                 { "inhibit", 0, 0, G_OPTION_ARG_NONE, &inhibit, "Inhibit the disks daemon from exiting", NULL },
                 { "enumerate", 0, 0, G_OPTION_ARG_NONE, &enumerate, "Enumerate objects paths for devices", NULL },
                 { "monitor", 0, 0, G_OPTION_ARG_NONE, &monitor, "Monitor activity from the disk daemon", NULL },
+                { "monitor-detail", 0, 0, G_OPTION_ARG_NONE, &monitor_detail, "Monitor with detail", NULL },
                 { "show-info", 0, 0, G_OPTION_ARG_STRING, &show_info, "Show information about object path", NULL },
                 { NULL }
         };
@@ -531,13 +597,13 @@ main (int argc, char **argv)
                 goto out;
         }
 
-
 	disks_proxy = dbus_g_proxy_new_for_name (bus,
                                                  "org.freedesktop.DeviceKit.Disks",
                                                  "/",
                                                  "org.freedesktop.DeviceKit.Disks");
         dbus_g_proxy_add_signal (disks_proxy, "DeviceAdded", G_TYPE_STRING, G_TYPE_INVALID);
         dbus_g_proxy_add_signal (disks_proxy, "DeviceRemoved", G_TYPE_STRING, G_TYPE_INVALID);
+        dbus_g_proxy_add_signal (disks_proxy, "DeviceChanged", G_TYPE_STRING, G_TYPE_INVALID);
 
         if (inhibit) {
                 char *cookie;
@@ -563,68 +629,11 @@ main (int argc, char **argv)
                 }
                 g_ptr_array_foreach (devices, (GFunc) g_free, NULL);
                 g_ptr_array_free (devices, TRUE);
-        } else if (monitor) {
-                char *cookie;
-
-                g_print ("Monitoring activity from the disks daemon. Press Ctrl+C to cancel.\n");
-
-                if (!org_freedesktop_DeviceKit_Disks_inhibit_shutdown (disks_proxy, &cookie, &error)) {
-                        g_warning ("Couldn't inhibit shutdown on disks daemon: %s", error->message);
-                        g_error_free (error);
+        } else if (monitor || monitor_detail) {
+                if (!do_monitor ())
                         goto out;
-                }
-                g_free (cookie);
-
-                dbus_g_proxy_connect_signal (disks_proxy, "DeviceAdded",
-                                             G_CALLBACK (device_added_signal_handler), NULL, NULL);
-                dbus_g_proxy_connect_signal (disks_proxy, "DeviceRemoved",
-                                             G_CALLBACK (device_removed_signal_handler), NULL, NULL);
-                g_main_loop_run (loop);
         } else if (show_info != NULL) {
-                DeviceProperties *props;
-
-                props = device_properties_get (bus, show_info);
-                g_print ("Showing information for %s\n", show_info);
-                g_print ("  native-path:   %s\n", props->native_path);
-                for (n = 0; props->device_holders[n] != NULL; n++)
-                        g_print ("  holder:        %s\n", (char *) props->device_holders[n]);
-                for (n = 0; props->device_slaves[n] != NULL; n++)
-                        g_print ("  slave:         %s\n", (char *) props->device_slaves[n]);
-                g_print ("  device-file:   %s\n", props->device_file);
-                for (n = 0; props->device_file_by_id[n] != NULL; n++)
-                        g_print ("    by-id:       %s\n", (char *) props->device_file_by_id[n]);
-                for (n = 0; props->device_file_by_path[n] != NULL; n++)
-                        g_print ("    by-path:     %s\n", (char *) props->device_file_by_path[n]);
-                g_print ("  usage:         %s\n", props->id_usage);
-                g_print ("  type:          %s\n", props->id_type);
-                g_print ("  version:       %s\n", props->id_version);
-                g_print ("  uuid:          %s\n", props->id_uuid);
-                g_print ("  label:         %s\n", props->id_label);
-                if (props->device_is_partition_table) {
-                        g_print ("  partition table:\n");
-                        g_print ("    scheme:      %s\n", props->partition_table_scheme);
-                        g_print ("    count:       %d\n", props->partition_table_count);
-                        for (n = 0; props->partition_table_holders[n] != NULL; n++)
-                                g_print ("    partition:   %s\n", (char *) props->partition_table_holders[n]);
-
-                }
-                if (props->device_is_partition) {
-                        g_print ("  partition:\n");
-                        g_print ("    part of:     %s\n", props->partition_slave);
-                        g_print ("    scheme:      %s\n", props->partition_scheme);
-                        g_print ("    number:      %d\n", props->partition_number);
-                        g_print ("    type:        %s\n", props->partition_type);
-                        g_print ("    flags:      ");
-                        for (n = 0; props->partition_flags[n] != NULL; n++)
-                                g_print (" %s", (char *) props->partition_flags[n]);
-                        g_print ("\n");
-                        g_print ("    offset:      %lld\n", props->partition_offset);
-                        g_print ("    size:        %lld\n", props->partition_size);
-                        g_print ("    label:       %s\n", props->partition_label);
-                        g_print ("    uuid:        %s\n", props->partition_uuid);
-
-                }
-                device_properties_free (props);
+                do_show_info (show_info);
         }
 
         ret = 0;

@@ -37,11 +37,11 @@ G_BEGIN_DECLS
 
 typedef struct DevkitDisksDevicePrivate DevkitDisksDevicePrivate;
 
-typedef struct
+struct DevkitDisksDevice
 {
         GObject        parent;
         DevkitDisksDevicePrivate *priv;
-} DevkitDisksDevice;
+};
 
 typedef struct
 {
@@ -61,14 +61,18 @@ typedef enum
 GType devkit_disks_device_error_get_type (void);
 #define DEVKIT_DISKS_DEVICE_TYPE_ERROR (devkit_disks_device_error_get_type ())
 
-GQuark             devkit_disks_device_error_quark         (void);
-GType              devkit_disks_device_get_type            (void);
-DevkitDisksDevice *devkit_disks_device_new                 (DevkitDisksDaemon *daemon, const char *native_path);
+GQuark             devkit_disks_device_error_quark           (void);
+GType              devkit_disks_device_get_type              (void);
 
-const char        *devkit_disks_device_local_get_object_path     (DevkitDisksDevice *device);
-const char        *devkit_disks_device_local_get_native_path     (DevkitDisksDevice *device);
+DevkitDisksDevice *devkit_disks_device_new                   (DevkitDisksDaemon *daemon, const char *native_path);
+void               devkit_disks_device_changed               (DevkitDisksDevice *device);
 
 GList *devkit_disks_enumerate_native_paths (void);
+
+/* local methods */
+
+const char        *devkit_disks_device_local_get_object_path (DevkitDisksDevice *device);
+const char        *devkit_disks_device_local_get_native_path (DevkitDisksDevice *device);
 
 /* exported methods */
 

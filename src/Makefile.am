@@ -66,13 +66,13 @@ $(dbusconf_DATA): $(dbusconf_in_files) Makefile
 	cp $< $@
 
 udevrulesdir = $(sysconfdir)/udev/rules.d
-udevrules_DATA = 99-devkit-disks.rules
+udevrules_DATA = 95-devkit-disks.rules
 
 CLEANFILES = $(BUILT_SOURCES)
 
 EXTRA_DIST = org.freedesktop.DeviceKit.Disks.xml        \
 	     org.freedesktop.DeviceKit.Disks.Device.xml \
-	     99-devkit-disks.rules                      \
+	     95-devkit-disks.rules                      \
 	     $(service_in_files)                        \
 	     $(dbusconf_in_files)
 

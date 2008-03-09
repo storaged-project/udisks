@@ -67,6 +67,16 @@ void               devkit_disks_daemon_inhibit_killtimer   (DevkitDisksDaemon *d
 void               devkit_disks_daemon_uninhibit_killtimer (DevkitDisksDaemon *daemon);
 void               devkit_disks_daemon_reset_killtimer     (DevkitDisksDaemon *daemon);
 
+/* local methods */
+
+struct DevkitDisksDevice;
+typedef struct DevkitDisksDevice DevkitDisksDevice;
+
+DevkitDisksDevice *devkit_disks_daemon_local_find_by_native_path (DevkitDisksDaemon *daemon,
+                                                                  const char *native_path);
+DevkitDisksDevice *devkit_disks_daemon_local_find_by_object_path (DevkitDisksDaemon *daemon,
+                                                                  const char *object_path);
+
 /* exported methods */
 
 gboolean devkit_disks_daemon_inhibit_shutdown (DevkitDisksDaemon     *daemon,

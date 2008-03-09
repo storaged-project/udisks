@@ -1,0 +1,31 @@
+
+ACTION!="add|change", GOTO="probe_parttable_end"
+SUBSYSTEM!="block", GOTO="probe_parttable_end"
+
+# ignore non-cdrom ide drivers; these causes loops
+KERNEL=="hd*[!0-9]", ATTR{removable}=="1", DRIVERS=="ide-cs|ide-floppy", GOTO="probe_parttable_end"
+KERNEL=="hd*[0-9]", ATTR{removable}=="1", GOTO="probe_parttable_end"
+
+# scan for partition table only if we're not a partition
+ATTR{range}=="[0-9]*", IMPORT{program}="part_id $tempnode"
+
+# scan for partition table entry only if we're a partition
+ATTR{start}=="[0-9]*", IMPORT{program}="part_id --entry $tempnode"
+
+#PROGRAM="/bin/sh -c '/bin/env | /bin/sort >> /tmp/foo.txt'"
+#PROGRAM="/bin/sh -c '/bin/echo tempnode=$tempnode >> /tmp/foo.txt'"
+#PROGRAM="/bin/sh -c '/bin/echo parent=$parent >> /tmp/foo.txt'"
+
+LABEL="probe_parttable_end"
+
+
+# pass all events to the DeviceKit disks daemon
+SUBSYSTEM=="block", RUN+="socket:/org/freedesktop/devicekit/disks/udev_event"
+
+# Temp hack because of jgarzik bug.. credit goes to Kay
+# Sievers for this. Thanks.
+#
+# See http://marc.info/?l=linux-scsi&m=120479575414508&w=2
+#
+ACTION=="change", SUBSYSTEM=="scsi", ENV{DEVTYPE}=="scsi_device", PROGRAM="/bin/sh -c 'for i in /sys%p/block/*/uevent; do echo -n change > $$i; done'"
+ACTION=="add", SUBSYSTEM=="scsi", ENV{DEVTYPE}=="scsi_device", PROGRAM="/bin/chmod 0644 /sys%p/evt_media_change", ATTR{evt_media_change}="1"

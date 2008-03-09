@@ -60,18 +60,6 @@ org.freedesktop.DeviceKit.Disks.Device.xml:
     <property name="drive-media-disc-has-audio" type="b" access="read"/>
     <property name="drive-media-disc-is-blank" type="b" access="read"/>
 
-    <!-- the following properties are only set if the device is
-         a partition. Known values for the partitioning scheme are
-           mbr  - Master Boot Record
-           embr - Extended Master Boot Record
-           apm  - Apple Partitoning Map
-           gpt  - GUID Partition Table -->
-    <property name="partition-scheme" type="s" access="read"/>
-    <property name="partition-type" type="s" access="read"/>
-    <property name="partition-label" type="s" access="read"/>
-    <property name="partition-uuid" type="s" access="read"/>
-    <property name="partition-flags" type="s" access="read"/>
-
     <!-- whether the device is currently mounted anf if so, where -->
     <property name="state-is-mounted" type="b" access="read"/>
     <property name="state-mount-point" type="s" access="read"/>

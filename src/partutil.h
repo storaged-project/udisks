@@ -56,13 +56,13 @@ typedef struct PartitionTable_s PartitionTable;
 
 /**
  * part_table_load_from_disk:
- * @device: name of device file for entire disk, e.g. /dev/sda
+ * @fd: a file descriptor for the disk
  *
  * Scans a disk and collect all partition entries and nested partition tables.
  *
  * Returns: A partition table object. Use part_table_free() to free this object.
  */
-PartitionTable       *part_table_load_from_disk   (char *device);
+PartitionTable       *part_table_load_from_disk   (int fd);
 
 /**
  * part_table_free:
@@ -157,6 +157,23 @@ void                  part_table_find (PartitionTable *part_table,
  *          freeing the root object.
  */
 PartitionTable       *part_table_entry_get_nested (PartitionTable *part_table, int entry);
+
+/**
+ * part_table_entry_is_in_use:
+ * @part_table: the partition table
+ * @entry: zero-based index of entry in partition table
+ *
+ * Some partition table formats, notably PART_TYPE_MSDOS, has the
+ * notion of unused partition table entries. For example it's
+ * perfectly fine to only have /dev/sda being partitioned into
+ * /dev/sda1 and /dev/sda3.
+ *
+ * This function determines whether a partition table entry is in use
+ * or not.
+ *
+ * Returns: Whether the partition table entry is in use
+ */
+gboolean             part_table_entry_is_in_use (PartitionTable *part_table, int entry);
 
 /**
  * part_table_entry_get_type:

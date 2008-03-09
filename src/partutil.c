@@ -123,7 +123,7 @@ part_table_find (PartitionTable *p, guint64 offset,
 	int n;
 	int num_entries;
 
-	*out_part_table = p;
+        *out_part_table = p;
 	*out_entry = -1;
 
 	num_entries = part_table_get_num_entries (p);
@@ -853,20 +853,13 @@ out:
 }
 
 PartitionTable *
-part_table_load_from_disk (char *device)
+part_table_load_from_disk (int fd)
 {
-	int fd;
 	guint64 size;
 	PartitionTable *p;
 	gboolean found_gpt;
 
 	p = NULL;
-
-	fd = open (device, O_RDONLY);
-	if (fd < 0) {
-		DEBUG ("Cannot open device %s", device);
-		goto out;
-	}
 
 	if (ioctl (fd, BLKGETSIZE64, &size) != 0) {
 		DEBUG ("Cannot determine size of device");
@@ -897,9 +890,6 @@ part_table_load_from_disk (char *device)
 
 
 out:
-	if (fd >= 0)
-		close (fd);
-
 	return p;
 }
 
@@ -947,6 +937,41 @@ part_table_entry_get_nested (PartitionTable *p, int entry)
 }
 
 /**************************************************************************/
+
+gboolean
+part_table_entry_is_in_use (PartitionTable *p, int entry)
+{
+        gboolean ret;
+	PartitionEntry *pe;
+
+        ret = FALSE;
+
+	if (p == NULL)
+		goto out;
+
+	if ((pe = g_slist_nth_data (p->entries, entry)) == NULL)
+		goto out;
+
+	switch (p->scheme) {
+	case PART_TYPE_GPT:
+                ret = TRUE;
+		break;
+	case PART_TYPE_MSDOS:
+	case PART_TYPE_MSDOS_EXTENDED:
+                if (pe->data[4] == 0)
+                        ret = FALSE;
+                else
+                        ret = TRUE;
+		break;
+	case PART_TYPE_APPLE:
+                ret = TRUE;
+		break;
+	default:
+		break;
+	}
+out:
+	return ret;
+}
 
 char *
 part_table_entry_get_type (PartitionTable *p, int entry)

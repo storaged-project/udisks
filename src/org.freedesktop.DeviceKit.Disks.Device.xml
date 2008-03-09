@@ -13,7 +13,7 @@
 
     <!-- BEGIN LIST OF PROPERTIES
 
-         A general note about properties: the set of valus returned
+         A general note about properties: the set of values returned
          can be expected to grow in the future as hardware evolves.
          Care has been taken to both namespace some values (so
          applications can make educated guesses) and export both
@@ -32,17 +32,14 @@
     <!-- array of stable paths to the port the device is connected to -->
     <property name="device-file-by-path" type="as" access="read"/>
 
-    <!-- slaves -->
-    <property name="device-slaves" type="as" access="read"/>
-
-    <!-- holders -->
-    <property name="device-holders" type="as" access="read"/>
-
     <!-- true if the device is a partition -->
     <property name="device-is-partition" type="b" access="read"/>
 
     <!-- true if the device contains a partition table -->
     <property name="device-is-partition-table" type="b" access="read"/>
+
+    <!-- true if an enclosing drive for the device could be identified -->
+    <property name="device-has-drive" type="b" access="read"/>
 
     <!-- the usage is a result of probing for signatures on the block
          device; known values are
@@ -110,13 +107,18 @@
            gpt  - GUID Partition Table
 
          The 'partition-table-count' property specifies the number
-         of partitions in the partition table. The property
-         'partition-table-holders' specifies what devices is
-         part of the device in question.
+         of partitions in the partition table. Note that the
+         partitions may not be sequentially numbered (e.g.
+         it's fine for 'partition-table-count' to report 2
+         and 'partition-number' for the associated paritions
+         report 1 resp. 4).
       -->
     <property name="partition-table-scheme" type="s" access="read"/>
     <property name="partition-table-count" type="i" access="read"/>
-    <property name="partition-table-holders" type="as" access="read"/>
+
+    <!-- whether the device uses removable media -->
+    <property name="drive-removable" type="b" access="read"/>
+    <property name="drive-removable-media-available" type="b" access="read"/>
 
   </interface>
 
