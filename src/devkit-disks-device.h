@@ -74,6 +74,12 @@ GList *devkit_disks_enumerate_native_paths (void);
 const char        *devkit_disks_device_local_get_object_path (DevkitDisksDevice *device);
 const char        *devkit_disks_device_local_get_native_path (DevkitDisksDevice *device);
 
+const char        *devkit_disks_device_local_get_device_file (DevkitDisksDevice *device);
+const char        *devkit_disks_device_local_get_mount_path (DevkitDisksDevice *device);
+
+void               devkit_disks_device_local_set_mounted (DevkitDisksDevice *device, const char *mount_path);
+void               devkit_disks_device_local_set_unmounted (DevkitDisksDevice *device);
+
 /* exported methods */
 
 gboolean devkit_disks_device_get_native_path (DevkitDisksDevice     *device,

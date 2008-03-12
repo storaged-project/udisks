@@ -10,6 +10,8 @@
 
     <!-- BEGIN LIST OF SIGNALS -->
 
+    <!-- Something about the device changed -->
+    <signal name="Changed"/>
 
     <!-- BEGIN LIST OF PROPERTIES
 
@@ -35,6 +37,8 @@
     <property name="device-is-removable" type="b" access="read"/>
     <property name="device-is-media-available" type="b" access="read"/>
     <property name="device-is-drive" type="b" access="read"/>
+    <property name="device-is-mounted" type="b" access="read"/>
+    <property name="device-mount-path" type="s" access="read"/>
     <property name="device-size" type="t" access="read"/>
     <property name="device-block-size" type="t" access="read"/>
 

@@ -13,7 +13,8 @@ INCLUDES = \
 	$(DBUS_GLIB_CFLAGS) \
 	$(POLKIT_DBUS_CFLAGS) \
 	$(DEVKIT_CFLAGS) \
-	@GLIB_CFLAGS@
+	$(GLIB_CFLAGS) \
+	$(GIO_CFLAGS)
 
 BUILT_SOURCES =						\
 	devkit-disks-daemon-glue.h			\
@@ -53,6 +54,7 @@ devkit_disks_daemon_CPPFLAGS = 				\
 	$(AM_CPPFLAGS)
 
 devkit_disks_daemon_LDADD = 				\
+	$(GIO_LIBS)					\
 	$(DBUS_GLIB_LIBS)				\
 	$(POLKIT_DBUS_LIBS)				\
 	$(DEVKIT_LIBS)

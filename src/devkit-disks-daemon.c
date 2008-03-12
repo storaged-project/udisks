@@ -45,6 +45,7 @@
 #include <glib.h>
 #include <glib/gi18n-lib.h>
 #include <glib-object.h>
+#include <gio/gunixmounts.h>
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
@@ -59,28 +60,30 @@ enum
         DEVICE_ADDED_SIGNAL,
         DEVICE_REMOVED_SIGNAL,
         DEVICE_CHANGED_SIGNAL,
-        LAST_SIGNAL
+        LAST_SIGNAL,
 };
 
 static guint signals[LAST_SIGNAL] = { 0 };
 
 struct DevkitDisksDaemonPrivate
 {
-        DBusGConnection *system_bus_connection;
-        DBusGProxy      *system_bus_proxy;
-        PolKitContext   *pk_context;
-        PolKitTracker   *pk_tracker;
+        DBusGConnection   *system_bus_connection;
+        DBusGProxy        *system_bus_proxy;
+        PolKitContext     *pk_context;
+        PolKitTracker     *pk_tracker;
 
-	int              udev_socket;
-	GIOChannel      *udev_channel;
+	int                udev_socket;
+	GIOChannel        *udev_channel;
 
-        GList           *inhibitors;
-        guint            killtimer_id;
-        int              num_local_inhibitors;
-        gboolean         no_exit;
+        GList             *inhibitors;
+        guint              killtimer_id;
+        int                num_local_inhibitors;
+        gboolean           no_exit;
 
-        GHashTable      *map_native_path_to_device;
-        GHashTable      *map_object_path_to_device;
+        GHashTable        *map_native_path_to_device;
+        GHashTable        *map_object_path_to_device;
+
+        GUnixMountMonitor *mount_monitor;
 };
 
 static void     devkit_disks_daemon_class_init  (DevkitDisksDaemonClass *klass);
@@ -158,6 +161,85 @@ devkit_disks_daemon_reset_killtimer (DevkitDisksDaemon *daemon)
         daemon->priv->killtimer_id = g_timeout_add (30 * 1000, killtimer_do_exit, NULL);
 }
 
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+update_mount_state  (DevkitDisksDaemon *daemon, GList *devices)
+{
+        GList *l;
+        GList *mounts;
+        GList *devices_copy;
+        GList *j;
+        GList *jj;
+
+        devices_copy = g_list_copy (devices);
+
+        /* TODO: cache the mounts list to avoid rereading every time */
+        mounts = g_unix_mounts_get (NULL);
+
+        for (l = mounts; l != NULL; l = l->next) {
+                GUnixMountEntry *mount_entry = l->data;
+                const char *device_file;
+                const char *mount_path;
+
+                /* TODO: maybe use realpath() on the device_path */
+                device_file = g_unix_mount_get_device_path (mount_entry);
+                mount_path = g_unix_mount_get_mount_path (mount_entry);
+
+                for (j = devices_copy; j != NULL; j = jj) {
+                        DevkitDisksDevice *device = j->data;
+                        const char *device_device_file;
+                        const char *device_mount_path;
+
+                        jj = j->next;
+
+                        device_device_file = devkit_disks_device_local_get_device_file (device);
+                        device_mount_path = devkit_disks_device_local_get_mount_path (device);
+
+                        if (strcmp (device_device_file, device_file) == 0) {
+                                /* is mounted */
+                                if (device_mount_path != NULL && strcmp (device_mount_path, mount_path) == 0) {
+                                        /* same mount path; no changes */
+                                } else {
+                                        /* device was just mounted... or the mount path changed */
+                                        devkit_disks_device_local_set_mounted (device, mount_path);
+                                }
+
+                                /* we're mounted so remove from list of devices (see below) */
+                                devices_copy = g_list_delete_link (devices_copy, j);
+
+                                /* no other devices can be mounted at this path so break
+                                 * out and process the next mount entry
+                                 */
+                                break;
+                        }
+
+
+                        if (device_mount_path == NULL) {
+                        }
+                }
+        }
+        g_list_foreach (mounts, (GFunc) g_unix_mount_free, NULL);
+        g_list_free (mounts);
+
+        /* Since we've removed mounted devices from the devices_copy
+         * list the remaining devices in the list are not mounted.
+         * Update their state to say so.
+         */
+        for (j = devices_copy; j != NULL; j = j->next) {
+                DevkitDisksDevice *device = j->data;
+                const char *device_mount_path;
+
+                device_mount_path = devkit_disks_device_local_get_mount_path (device);
+                if (device_mount_path != NULL) {
+                        devkit_disks_device_local_set_unmounted (device);
+                }
+        }
+
+        g_list_free (devices_copy);
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
 
 GQuark
 devkit_disks_daemon_error_quark (void)
@@ -316,6 +398,10 @@ devkit_disks_daemon_finalize (GObject *object)
                 g_hash_table_unref (daemon->priv->map_object_path_to_device);
         }
 
+        if (daemon->priv->mount_monitor != NULL) {
+                g_object_unref (daemon->priv->mount_monitor);
+        }
+
         G_OBJECT_CLASS (devkit_disks_daemon_parent_class)->finalize (object);
 }
 
@@ -454,6 +540,7 @@ static void
 device_add (DevkitDisksDaemon *daemon, const char *native_path, gboolean emit_event)
 {
         DevkitDisksDevice *device;
+        GList *l;
 
         device = g_hash_table_lookup (daemon->priv->map_native_path_to_device, native_path);
         if (device != NULL) {
@@ -462,6 +549,12 @@ device_add (DevkitDisksDaemon *daemon, const char *native_path, gboolean emit_ev
                 device_changed (daemon, native_path);
         } else {
                 device = devkit_disks_device_new (daemon, native_path);
+
+                /* update whether device is mounted */
+                l = g_list_prepend (NULL, device);
+                update_mount_state (daemon, l);
+                g_list_free (l);
+
                 if (device != NULL) {
                         /* only take a weak ref; the device will stay on the bus until
                          * it's unreffed. So if we ref it, it'll never go away. Stupid
@@ -610,6 +703,16 @@ out:
 	return TRUE;
 }
 
+static void
+mounts_changed (GUnixMountMonitor *monitor, gpointer user_data)
+{
+        DevkitDisksDaemon *daemon = DEVKIT_DISKS_DAEMON (user_data);
+        GList *devices;
+
+        devices = g_hash_table_get_values (daemon->priv->map_native_path_to_device);
+        update_mount_state (daemon, devices);
+        g_list_free (devices);
+}
 
 static gboolean
 register_disks_daemon (DevkitDisksDaemon *daemon)
@@ -714,6 +817,10 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
 	daemon->priv->udev_channel = g_io_channel_unix_new (daemon->priv->udev_socket);
 	g_io_add_watch (daemon->priv->udev_channel, G_IO_IN, receive_udev_data, daemon);
 	g_io_channel_unref (daemon->priv->udev_channel);
+
+        /* monitor mounts */
+        daemon->priv->mount_monitor = g_unix_mount_monitor_new ();
+        g_signal_connect (daemon->priv->mount_monitor, "mounts-changed", (GCallback) mounts_changed, daemon);
 
         devkit_disks_daemon_reset_killtimer (daemon);
 

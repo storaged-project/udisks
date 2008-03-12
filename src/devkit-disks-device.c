@@ -68,6 +68,8 @@ struct DevkitDisksDevicePrivate
                 gboolean device_is_drive;
                 guint64 device_size;
                 guint64 device_block_size;
+                gboolean device_is_mounted;
+                char *device_mount_path;
 
                 char *id_usage;
                 char *id_type;
@@ -121,6 +123,8 @@ enum
         PROP_DEVICE_IS_DRIVE,
         PROP_DEVICE_SIZE,
         PROP_DEVICE_BLOCK_SIZE,
+        PROP_DEVICE_IS_MOUNTED,
+        PROP_DEVICE_MOUNT_PATH,
 
         PROP_ID_USAGE,
         PROP_ID_TYPE,
@@ -149,6 +153,14 @@ enum
         PROP_DRIVE_REVISION,
         PROP_DRIVE_SERIAL,
 };
+
+enum
+{
+        CHANGED_SIGNAL,
+        LAST_SIGNAL,
+};
+
+static guint signals[LAST_SIGNAL] = { 0 };
 
 G_DEFINE_TYPE (DevkitDisksDevice, devkit_disks_device, G_TYPE_OBJECT)
 
@@ -250,6 +262,12 @@ get_property (GObject         *object,
 	case PROP_DEVICE_BLOCK_SIZE:
 		g_value_set_uint64 (value, device->priv->info.device_block_size);
 		break;
+	case PROP_DEVICE_IS_MOUNTED:
+		g_value_set_boolean (value, device->priv->info.device_is_mounted);
+		break;
+	case PROP_DEVICE_MOUNT_PATH:
+		g_value_set_string (value, device->priv->info.device_mount_path);
+		break;
 
         case PROP_ID_USAGE:
                 g_value_set_string (value, device->priv->info.id_usage);
@@ -343,6 +361,15 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
 
         g_type_class_add_private (klass, sizeof (DevkitDisksDevicePrivate));
 
+        signals[CHANGED_SIGNAL] =
+                g_signal_new ("changed",
+                              G_OBJECT_CLASS_TYPE (klass),
+                              G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                              0,
+                              NULL, NULL,
+                              g_cclosure_marshal_VOID__VOID,
+                              G_TYPE_NONE, 0);
+
         dbus_g_object_type_install_info (DEVKIT_TYPE_DISKS_DEVICE, &dbus_glib_devkit_disks_device_object_info);
 
         dbus_g_error_domain_register (DEVKIT_DISKS_DEVICE_ERROR, NULL, DEVKIT_DISKS_DEVICE_TYPE_ERROR);
@@ -395,6 +422,14 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DEVICE_BLOCK_SIZE,
                 g_param_spec_uint64 ("device-block-size", NULL, NULL, 0, G_MAXUINT64, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_IS_MOUNTED,
+                g_param_spec_boolean ("device-is-mounted", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_MOUNT_PATH,
+                g_param_spec_string ("device-mount-path", NULL, NULL, NULL, G_PARAM_READABLE));
 
         g_object_class_install_property (
                 object_class,
@@ -927,22 +962,23 @@ out:
         return device;
 }
 
+static void
+emit_changed (DevkitDisksDevice *device)
+{
+        g_print ("emitting changed on %s\n", device->priv->native_path);
+        g_signal_emit_by_name (device->priv->daemon,
+                               "device-changed",
+                               device->priv->object_path,
+                               NULL);
+        g_signal_emit (device, signals[CHANGED_SIGNAL], 0);
+}
+
 void
 devkit_disks_device_changed (DevkitDisksDevice *device)
 {
-        gboolean changed;
-
         /* TODO: fix up update_info to return TRUE iff something has changed */
-        changed = update_info (device);
-
-        if (changed) {
-                g_print ("emitting changed on %s\n", device->priv->native_path);
-                g_signal_emit_by_name (device->priv->daemon,
-                                       "device-changed",
-                                       device->priv->object_path,
-                                       NULL);
-                /* TODO: emit changed on the object itself */
-        }
+        if (update_info (device))
+                emit_changed (device);
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/
@@ -1042,6 +1078,36 @@ const char *
 devkit_disks_device_local_get_native_path (DevkitDisksDevice *device)
 {
         return device->priv->native_path;
+}
+
+const char *
+devkit_disks_device_local_get_device_file (DevkitDisksDevice *device)
+{
+        return device->priv->info.device_file;
+}
+
+const char *
+devkit_disks_device_local_get_mount_path (DevkitDisksDevice *device)
+{
+        return device->priv->info.device_mount_path;
+}
+
+void
+devkit_disks_device_local_set_mounted (DevkitDisksDevice *device, const char *mount_path)
+{
+        g_free (device->priv->info.device_mount_path);
+        device->priv->info.device_mount_path = g_strdup (mount_path);
+        device->priv->info.device_is_mounted = TRUE;
+        emit_changed (device);
+}
+
+void
+devkit_disks_device_local_set_unmounted (DevkitDisksDevice *device)
+{
+        g_free (device->priv->info.device_mount_path);
+        device->priv->info.device_mount_path = NULL;
+        device->priv->info.device_is_mounted = FALSE;
+        emit_changed (device);
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/

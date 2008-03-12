@@ -391,8 +391,10 @@ typedef struct
         gboolean device_is_removable;
         gboolean device_is_media_available;
         gboolean device_is_drive;
-        guint64 device_size;
-        guint64 device_block_size;
+        gboolean device_is_mounted;
+        char    *device_mount_path;
+        guint64  device_size;
+        guint64  device_block_size;
 
         char    *id_usage;
         char    *id_type;
@@ -484,6 +486,18 @@ device_properties_get (DBusGConnection *bus,
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "device-is-drive");
+        props->device_is_mounted = get_property_boolean (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "device-is-mounted");
+        props->device_mount_path = get_property_string (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "device-mount-path");
         props->device_size = get_property_uint64 (
                 bus,
                 "org.freedesktop.DeviceKit.Disks",
@@ -649,6 +663,7 @@ device_properties_free (DeviceProperties *props)
         g_free (props->device_file);
         g_strfreev (props->device_file_by_id);
         g_strfreev (props->device_file_by_path);
+        g_free (props->device_mount_path);
         g_free (props->id_usage);
         g_free (props->id_type);
         g_free (props->id_version);
@@ -715,6 +730,8 @@ do_show_info (const char *object_path)
                 g_print ("    by-path:     %s\n", (char *) props->device_file_by_path[n]);
         g_print ("  removable:     %d\n", props->device_is_removable);
         g_print ("  has media:     %d\n", props->device_is_media_available);
+        g_print ("  is mounted:    %d\n", props->device_is_mounted);
+        g_print ("  mount path:    %s\n", props->device_mount_path);
         g_print ("  size:          %lld\n", props->device_size);
         g_print ("  block size:    %lld\n", props->device_block_size);
         g_print ("  usage:         %s\n", props->id_usage);
