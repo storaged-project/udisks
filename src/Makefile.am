@@ -27,6 +27,10 @@ devkit-disks-device-glue.h: org.freedesktop.DeviceKit.Disks.Device.xml Makefile.
 
 libexec_PROGRAMS = devkit-disks-daemon
 
+dbusifdir = $(datadir)/dbus-1/interfaces
+dbusif_DATA = org.freedesktop.DeviceKit.Disks.xml org.freedesktop.DeviceKit.Disks.Device.xml
+
+
 # TODO: move to udev
 udevhelper_PROGRAMS = part_id
 udevhelperdir = /lib/udev
