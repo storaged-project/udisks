@@ -820,6 +820,8 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
 
         /* monitor mounts */
         daemon->priv->mount_monitor = g_unix_mount_monitor_new ();
+        // See http://bugzilla.gnome.org/show_bug.cgi?id=521946
+        //g_unix_mount_monitor_set_rate_limit (daemon->priv->mount_monitor, 50);
         g_signal_connect (daemon->priv->mount_monitor, "mounts-changed", (GCallback) mounts_changed, daemon);
 
         devkit_disks_daemon_reset_killtimer (daemon);
