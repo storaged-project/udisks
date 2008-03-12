@@ -18,61 +18,56 @@
          Care has been taken to both namespace some values (so
          applications can make educated guesses) and export both
          general and specific properties (such as id_usage
-         vs. id_type). In general an empty property means "not set" -->
+         vs. id_type).
 
-    <!-- the OS native path; on Linux this is the sysfs path -->
+         In general an empty string properties means "not set"; as the
+         empty string "" is not a valid object we use the object path
+         "/" to mean "not set" for object paths. -->
+
+    <!-- The 'native-path' property is the OS native path for the
+         device; on Linux this is the sysfs path. -->
     <property name="native-path" type="s" access="read"/>
-
-    <!-- block special device file for access the device -->
     <property name="device-file" type="s" access="read"/>
-
-    <!-- array of stable paths to the device file in question -->
     <property name="device-file-by-id" type="as" access="read"/>
-
-    <!-- array of stable paths to the port the device is connected to -->
     <property name="device-file-by-path" type="as" access="read"/>
-
-    <!-- true if the device is a partition -->
     <property name="device-is-partition" type="b" access="read"/>
-
-    <!-- true if the device contains a partition table -->
     <property name="device-is-partition-table" type="b" access="read"/>
-
-    <!-- true if an enclosing drive for the device could be identified -->
-    <property name="device-has-drive" type="b" access="read"/>
+    <property name="device-is-removable" type="b" access="read"/>
+    <property name="device-is-media-available" type="b" access="read"/>
+    <property name="device-is-drive" type="b" access="read"/>
+    <property name="device-size" type="t" access="read"/>
+    <property name="device-block-size" type="t" access="read"/>
 
     <!-- the usage is a result of probing for signatures on the block
          device; known values are
 
-           filesystem      - the device contains a file system
-           crypto          - the device contains encrypted data
-           partitiontable  - the device is partitioned into other devices
-           raid            - the device is member of a RAID set or another
-                             scheme that requires device assembly
-           other           - other signature found on the device -->
-    <property name="id-usage" type="s" access="read"/>
+           filesystem      - the device contains a file system; known
+                             values for 'id-type' is the same as the
+                             name of the OS fs driver e.g. 'vfat',
+                             'ext3' and so on.
 
-    <!-- more detailed result of signature probing. The value depends
-         on the value of 'id-usage'
+           crypto          - the device contains encrypted data. Known
+                             values for 'id-type' are 'crypto_LUKS'.
 
-           filesystem      - the filesystem type e.g. vfat, ext3 and so forth
-           crypto          - the crypto type; only known value is crypto_LUKS
-           partitiontable  - the partition table type; known values
+           partitiontable  - the device is partitioned into other devices.
+                             Known values for 'id-type' are
                               mbr  - Master Boot Record
                               embr - Extended Master Boot Record
                               apm  - Apple Partitoning Map
                               gpt  - GUID Partition Table
-           raid            - the type of raid (TODO)
-           other           - known types are: swap -->
+
+           raid            - the device is member of a RAID set or another
+                             scheme that requires device assembly. Known
+                             values for 'id-type' are TODO.
+
+           other           - other signature found on the device
+
+         The 'id-uuid' and 'id-label' properties, if set, are dependent
+         on the 'id-type' property -->
+    <property name="id-usage" type="s" access="read"/>
     <property name="id-type" type="s" access="read"/>
-
-    <!-- the version of the format specified by 'id-type' -->
     <property name="id-version" type="s" access="read"/>
-
-    <!-- an UUID for the format specified by 'id-type' -->
     <property name="id-uuid" type="s" access="read"/>
-
-    <!-- a label for the format specified by 'id-type' -->
     <property name="id-label" type="s" access="read"/>
 
     <!-- the following properties are only set if the device is
@@ -88,7 +83,7 @@
          the device in question is a partition of. The property
          'partition-number' is the number of the partition starting
          from 1 -->
-    <property name="partition-slave" type="s" access="read"/>
+    <property name="partition-slave" type="o" access="read"/>
     <property name="partition-scheme" type="s" access="read"/>
     <property name="partition-type" type="s" access="read"/>
     <property name="partition-label" type="s" access="read"/>
@@ -111,14 +106,25 @@
          partitions may not be sequentially numbered (e.g.
          it's fine for 'partition-table-count' to report 2
          and 'partition-number' for the associated paritions
-         report 1 resp. 4).
-      -->
+         report 1 resp. 4). The property 'partition-table-max-number'
+         will contain the maximum value for 'partition-number'
+         of any partitions.
+
+         The 'partition-table-offsets' and 'partition-table-sizes'
+         properties are arrays indexed by 'partition-number' and
+         are of size 'partition-table-max-number'. It may contain
+         holes in which case the offset will be 0. -->
     <property name="partition-table-scheme" type="s" access="read"/>
     <property name="partition-table-count" type="i" access="read"/>
+    <property name="partition-table-max-number" type="i" access="read"/>
+    <property name="partition-table-offsets" type="ai" access="read"/>
+    <property name="partition-table-sizes" type="ai" access="read"/>
 
-    <!-- whether the device uses removable media -->
-    <property name="drive-removable" type="b" access="read"/>
-    <property name="drive-removable-media-available" type="b" access="read"/>
+    <!-- properties for the drive -->
+    <property name="drive-vendor" type="s" access="read"/>
+    <property name="drive-model" type="s" access="read"/>
+    <property name="drive-revision" type="s" access="read"/>
+    <property name="drive-serial" type="s" access="read"/>
 
   </interface>
 

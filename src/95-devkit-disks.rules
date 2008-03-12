@@ -6,15 +6,20 @@ SUBSYSTEM!="block", GOTO="probe_parttable_end"
 KERNEL=="hd*[!0-9]", ATTR{removable}=="1", DRIVERS=="ide-cs|ide-floppy", GOTO="probe_parttable_end"
 KERNEL=="hd*[0-9]", ATTR{removable}=="1", GOTO="probe_parttable_end"
 
+
 # scan for partition table only if we're not a partition
+#
 ATTR{range}=="[0-9]*", IMPORT{program}="part_id $tempnode"
 
-# scan for partition table entry only if we're a partition
-ATTR{start}=="[0-9]*", IMPORT{program}="part_id --entry $tempnode"
+# for partitions, import parent information
+#
+#ATTR{start}=="[0-9]*", IMPORT{parent}="PART_*"
 
-#PROGRAM="/bin/sh -c '/bin/env | /bin/sort >> /tmp/foo.txt'"
-#PROGRAM="/bin/sh -c '/bin/echo tempnode=$tempnode >> /tmp/foo.txt'"
-#PROGRAM="/bin/sh -c '/bin/echo parent=$parent >> /tmp/foo.txt'"
+# However.. right now we're not getting change events on media changes
+# *until* all the partitions are added.. so importing parent information
+# won't work; therefore, probe the partition table for each partition.
+#
+ATTR{start}=="[0-9]*", IMPORT{program}="part_id $tempnode"
 
 LABEL="probe_parttable_end"
 

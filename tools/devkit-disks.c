@@ -89,10 +89,53 @@ device_removed_signal_handler (DBusGProxy *proxy, const char *object_path, gpoin
 
 /* This totally sucks; dbus-bindings-tool and dbus-glib should be able
  * to do this for us.
+ *
+ * TODO: keep in sync with code in tools/devkit-disks in DeviceKit-disks.
  */
 
 static char *
-get_property_string (const char *svc_name,
+get_property_object_path (DBusGConnection *bus,
+                          const char *svc_name,
+                          const char *obj_path,
+                          const char *if_name,
+                          const char *prop_name)
+{
+        char *ret;
+        DBusGProxy *proxy;
+        GValue value = { 0 };
+        GError *error = NULL;
+
+        ret = NULL;
+	proxy = dbus_g_proxy_new_for_name (bus,
+                                           svc_name,
+                                           obj_path,
+                                           "org.freedesktop.DBus.Properties");
+        if (!dbus_g_proxy_call (proxy,
+                                "Get",
+                                &error,
+                                G_TYPE_STRING,
+                                if_name,
+                                G_TYPE_STRING,
+                                prop_name,
+                                G_TYPE_INVALID,
+                                G_TYPE_VALUE,
+                                &value,
+                                G_TYPE_INVALID)) {
+                g_warning ("error: %s\n", error->message);
+                g_error_free (error);
+                goto out;
+        }
+
+        ret = (char *) g_value_get_boxed (&value);
+
+out:
+        g_object_unref (proxy);
+        return ret;
+}
+
+static char *
+get_property_string (DBusGConnection *bus,
+                     const char *svc_name,
                      const char *obj_path,
                      const char *if_name,
                      const char *prop_name)
@@ -131,7 +174,8 @@ out:
 }
 
 static gboolean
-get_property_boolean (const char *svc_name,
+get_property_boolean (DBusGConnection *bus,
+                      const char *svc_name,
                       const char *obj_path,
                       const char *if_name,
                       const char *prop_name)
@@ -170,7 +214,8 @@ out:
 }
 
 static guint64
-get_property_uint64 (const char *svc_name,
+get_property_uint64 (DBusGConnection *bus,
+                     const char *svc_name,
                      const char *obj_path,
                      const char *if_name,
                      const char *prop_name)
@@ -208,8 +253,49 @@ out:
         return ret;
 }
 
+static GArray *
+get_property_uint64_array (DBusGConnection *bus,
+                           const char *svc_name,
+                           const char *obj_path,
+                           const char *if_name,
+                           const char *prop_name)
+{
+        GArray *ret;
+        DBusGProxy *proxy;
+        GValue value = { 0 };
+        GError *error = NULL;
+
+        ret = 0;
+	proxy = dbus_g_proxy_new_for_name (bus,
+                                           svc_name,
+                                           obj_path,
+                                           "org.freedesktop.DBus.Properties");
+        if (!dbus_g_proxy_call (proxy,
+                                "Get",
+                                &error,
+                                G_TYPE_STRING,
+                                if_name,
+                                G_TYPE_STRING,
+                                prop_name,
+                                G_TYPE_INVALID,
+                                G_TYPE_VALUE,
+                                &value,
+                                G_TYPE_INVALID)) {
+                g_warning ("error: %s\n", error->message);
+                g_error_free (error);
+                goto out;
+        }
+
+        ret = (GArray*) g_value_get_boxed (&value);
+
+out:
+        g_object_unref (proxy);
+        return ret;
+}
+
 static int
-get_property_int (const char *svc_name,
+get_property_int (DBusGConnection *bus,
+                  const char *svc_name,
                   const char *obj_path,
                   const char *if_name,
                   const char *prop_name)
@@ -248,7 +334,8 @@ out:
 }
 
 static char **
-get_property_strlist (const char *svc_name,
+get_property_strlist (DBusGConnection *bus,
+                      const char *svc_name,
                       const char *obj_path,
                       const char *if_name,
                       const char *prop_name)
@@ -301,7 +388,11 @@ typedef struct
         char   **device_file_by_path;
         gboolean device_is_partition;
         gboolean device_is_partition_table;
-        gboolean device_has_drive;
+        gboolean device_is_removable;
+        gboolean device_is_media_available;
+        gboolean device_is_drive;
+        guint64 device_size;
+        guint64 device_block_size;
 
         char    *id_usage;
         char    *id_type;
@@ -321,147 +412,233 @@ typedef struct
 
         char    *partition_table_scheme;
         int      partition_table_count;
+        int      partition_table_max_number;
+        GArray  *partition_table_offsets;
+        GArray  *partition_table_sizes;
 
-        gboolean drive_removable;
-        gboolean drive_removable_media_available;
+        char    *drive_vendor;
+        char    *drive_model;
+        char    *drive_revision;
+        char    *drive_serial;
 } DeviceProperties;
 
 static DeviceProperties *
-device_properties_get (const char *object_path)
+device_properties_get (DBusGConnection *bus,
+                       const char *object_path)
 {
         DeviceProperties *props;
 
         props = g_new0 (DeviceProperties, 1);
         props->native_path = get_property_string (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "native-path");
 
         props->device_file = get_property_string (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "device-file");
         props->device_file_by_id = get_property_strlist (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "device-file-by-id");
         props->device_file_by_path = get_property_strlist (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "device-file-by-path");
         props->device_is_partition = get_property_boolean (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "device-is-partition");
         props->device_is_partition_table = get_property_boolean (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "device-is-partition-table");
-        props->device_has_drive = get_property_boolean (
+        props->device_is_removable = get_property_boolean (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
-                "device-has-drive");
+                "device-is-removable");
+        props->device_is_media_available = get_property_boolean (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "device-is-media-available");
+        props->device_is_drive = get_property_boolean (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "device-is-drive");
+        props->device_size = get_property_uint64 (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "device-size");
+        props->device_block_size = get_property_uint64 (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "device-block-size");
 
         props->id_usage = get_property_string (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "id-usage");
         props->id_type = get_property_string (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "id-type");
         props->id_version = get_property_string (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "id-version");
         props->id_uuid = get_property_string (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "id-uuid");
         props->id_label = get_property_string (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "id-label");
 
-        props->partition_slave = get_property_string (
+        props->partition_slave = get_property_object_path (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "partition-slave");
         props->partition_scheme = get_property_string (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "partition-scheme");
         props->partition_number = get_property_int (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "partition-number");
         props->partition_type = get_property_string (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "partition-type");
         props->partition_label = get_property_string (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "partition-label");
         props->partition_uuid = get_property_string (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "partition-uuid");
         props->partition_flags = get_property_strlist (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "partition-flags");
         props->partition_offset = get_property_uint64 (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "partition-offset");
         props->partition_size = get_property_uint64 (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "partition-size");
 
         props->partition_table_scheme = get_property_string (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "partition-table-scheme");
         props->partition_table_count = get_property_int (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
                 "partition-table-count");
+        props->partition_table_max_number = get_property_int (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "partition-table-max-number");
+        props->partition_table_offsets = get_property_uint64_array (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "partition-table-offsets");
+        props->partition_table_sizes = get_property_uint64_array (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "partition-table-sizes");
 
-        props->drive_removable = get_property_boolean (
+        props->drive_vendor = get_property_string (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
-                "drive-removable");
-        props->drive_removable_media_available = get_property_boolean (
+                "drive-vendor");
+        props->drive_model = get_property_string (
+                bus,
                 "org.freedesktop.DeviceKit.Disks",
                 object_path,
                 "org.freedesktop.DeviceKit.Disks.Device",
-                "drive-removable-media-available");
+                "drive-model");
+        props->drive_revision = get_property_string (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "drive-revision");
+        props->drive_serial = get_property_string (
+                bus,
+                "org.freedesktop.DeviceKit.Disks",
+                object_path,
+                "org.freedesktop.DeviceKit.Disks.Device",
+                "drive-serial");
+
         return props;
 }
 
@@ -483,6 +660,12 @@ device_properties_free (DeviceProperties *props)
         g_free (props->partition_uuid);
         g_strfreev (props->partition_flags);
         g_free (props->partition_table_scheme);
+        g_array_free (props->partition_table_offsets, TRUE);
+        g_array_free (props->partition_table_sizes, TRUE);
+        g_free (props->drive_model);
+        g_free (props->drive_vendor);
+        g_free (props->drive_revision);
+        g_free (props->drive_serial);
         g_free (props);
 }
 
@@ -522,7 +705,7 @@ do_show_info (const char *object_path)
         unsigned int n;
         DeviceProperties *props;
 
-        props = device_properties_get (object_path);
+        props = device_properties_get (bus, object_path);
         g_print ("Showing information for %s\n", object_path);
         g_print ("  native-path:   %s\n", props->native_path);
         g_print ("  device-file:   %s\n", props->device_file);
@@ -530,6 +713,10 @@ do_show_info (const char *object_path)
                 g_print ("    by-id:       %s\n", (char *) props->device_file_by_id[n]);
         for (n = 0; props->device_file_by_path[n] != NULL; n++)
                 g_print ("    by-path:     %s\n", (char *) props->device_file_by_path[n]);
+        g_print ("  removable:     %d\n", props->device_is_removable);
+        g_print ("  has media:     %d\n", props->device_is_media_available);
+        g_print ("  size:          %lld\n", props->device_size);
+        g_print ("  block size:    %lld\n", props->device_block_size);
         g_print ("  usage:         %s\n", props->id_usage);
         g_print ("  type:          %s\n", props->id_type);
         g_print ("  version:       %s\n", props->id_version);
@@ -539,6 +726,7 @@ do_show_info (const char *object_path)
                 g_print ("  partition table:\n");
                 g_print ("    scheme:      %s\n", props->partition_table_scheme);
                 g_print ("    count:       %d\n", props->partition_table_count);
+                g_print ("    max number:  %d\n", props->partition_table_max_number);
         }
         if (props->device_is_partition) {
                 g_print ("  partition:\n");
@@ -555,10 +743,12 @@ do_show_info (const char *object_path)
                 g_print ("    label:       %s\n", props->partition_label);
                 g_print ("    uuid:        %s\n", props->partition_uuid);
         }
-        if (props->device_has_drive) {
+        if (props->device_is_drive) {
                 g_print ("  drive:\n");
-                g_print ("    removable:   %d\n", props->drive_removable);
-                g_print ("    has media:   %d\n", props->drive_removable_media_available);
+                g_print ("    vendor:      %s\n", props->drive_vendor);
+                g_print ("    model:       %s\n", props->drive_model);
+                g_print ("    revision:    %s\n", props->drive_revision);
+                g_print ("    serial:      %s\n", props->drive_serial);
         }
         device_properties_free (props);
 }

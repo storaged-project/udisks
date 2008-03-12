@@ -63,7 +63,11 @@ struct DevkitDisksDevicePrivate
                 GPtrArray *device_file_by_path;
                 gboolean device_is_partition;
                 gboolean device_is_partition_table;
-                gboolean device_has_drive;
+                gboolean device_is_removable;
+                gboolean device_is_media_available;
+                gboolean device_is_drive;
+                guint64 device_size;
+                guint64 device_block_size;
 
                 char *id_usage;
                 char *id_type;
@@ -83,9 +87,14 @@ struct DevkitDisksDevicePrivate
 
                 char *partition_table_scheme;
                 int partition_table_count;
+                int partition_table_max_number;
+                GArray *partition_table_offsets;
+                GArray *partition_table_sizes;
 
-                gboolean drive_removable;
-                gboolean drive_removable_media_available;
+                char *drive_vendor;
+                char *drive_model;
+                char *drive_revision;
+                char *drive_serial;
         } info;
 };
 
@@ -107,7 +116,11 @@ enum
         PROP_DEVICE_FILE_BY_PATH,
         PROP_DEVICE_IS_PARTITION,
         PROP_DEVICE_IS_PARTITION_TABLE,
-        PROP_DEVICE_HAS_DRIVE,
+        PROP_DEVICE_IS_REMOVABLE,
+        PROP_DEVICE_IS_MEDIA_AVAILABLE,
+        PROP_DEVICE_IS_DRIVE,
+        PROP_DEVICE_SIZE,
+        PROP_DEVICE_BLOCK_SIZE,
 
         PROP_ID_USAGE,
         PROP_ID_TYPE,
@@ -127,9 +140,14 @@ enum
 
         PROP_PARTITION_TABLE_SCHEME,
         PROP_PARTITION_TABLE_COUNT,
+        PROP_PARTITION_TABLE_MAX_NUMBER,
+        PROP_PARTITION_TABLE_OFFSETS,
+        PROP_PARTITION_TABLE_SIZES,
 
-        PROP_DRIVE_REMOVABLE,
-        PROP_DRIVE_REMOVABLE_MEDIA_AVAILABLE,
+        PROP_DRIVE_VENDOR,
+        PROP_DRIVE_MODEL,
+        PROP_DRIVE_REVISION,
+        PROP_DRIVE_SERIAL,
 };
 
 G_DEFINE_TYPE (DevkitDisksDevice, devkit_disks_device, G_TYPE_OBJECT)
@@ -217,8 +235,20 @@ get_property (GObject         *object,
 	case PROP_DEVICE_IS_PARTITION_TABLE:
 		g_value_set_boolean (value, device->priv->info.device_is_partition_table);
 		break;
-	case PROP_DEVICE_HAS_DRIVE:
-		g_value_set_boolean (value, device->priv->info.device_has_drive);
+	case PROP_DEVICE_IS_REMOVABLE:
+		g_value_set_boolean (value, device->priv->info.device_is_removable);
+		break;
+	case PROP_DEVICE_IS_MEDIA_AVAILABLE:
+		g_value_set_boolean (value, device->priv->info.device_is_media_available);
+		break;
+	case PROP_DEVICE_IS_DRIVE:
+		g_value_set_boolean (value, device->priv->info.device_is_drive);
+		break;
+	case PROP_DEVICE_SIZE:
+		g_value_set_uint64 (value, device->priv->info.device_size);
+		break;
+	case PROP_DEVICE_BLOCK_SIZE:
+		g_value_set_uint64 (value, device->priv->info.device_block_size);
 		break;
 
         case PROP_ID_USAGE:
@@ -238,7 +268,10 @@ get_property (GObject         *object,
                 break;
 
 	case PROP_PARTITION_SLAVE:
-		g_value_set_string (value, device->priv->info.partition_slave);
+                if (device->priv->info.partition_slave != NULL)
+                        g_value_set_boxed (value, device->priv->info.partition_slave);
+                else
+                        g_value_set_boxed (value, "/");
 		break;
 	case PROP_PARTITION_SCHEME:
 		g_value_set_string (value, device->priv->info.partition_scheme);
@@ -271,12 +304,27 @@ get_property (GObject         *object,
 	case PROP_PARTITION_TABLE_COUNT:
 		g_value_set_int (value, device->priv->info.partition_table_count);
 		break;
-
-	case PROP_DRIVE_REMOVABLE:
-		g_value_set_boolean (value, device->priv->info.drive_removable);
+	case PROP_PARTITION_TABLE_MAX_NUMBER:
+		g_value_set_int (value, device->priv->info.partition_table_max_number);
 		break;
-	case PROP_DRIVE_REMOVABLE_MEDIA_AVAILABLE:
-		g_value_set_boolean (value, device->priv->info.drive_removable_media_available);
+	case PROP_PARTITION_TABLE_OFFSETS:
+		g_value_set_boxed (value, device->priv->info.partition_table_offsets);
+		break;
+	case PROP_PARTITION_TABLE_SIZES:
+		g_value_set_boxed (value, device->priv->info.partition_table_sizes);
+		break;
+
+	case PROP_DRIVE_VENDOR:
+		g_value_set_string (value, device->priv->info.drive_vendor);
+		break;
+	case PROP_DRIVE_MODEL:
+		g_value_set_string (value, device->priv->info.drive_model);
+		break;
+	case PROP_DRIVE_REVISION:
+		g_value_set_string (value, device->priv->info.drive_revision);
+		break;
+	case PROP_DRIVE_SERIAL:
+		g_value_set_string (value, device->priv->info.drive_serial);
 		break;
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -329,9 +377,24 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 g_param_spec_boolean ("device-is-partition-table", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
-                PROP_DEVICE_HAS_DRIVE,
-                g_param_spec_boolean ("device-has-drive", NULL, NULL, FALSE, G_PARAM_READABLE));
-
+                PROP_DEVICE_IS_REMOVABLE,
+                g_param_spec_boolean ("device-is-removable", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_IS_MEDIA_AVAILABLE,
+                g_param_spec_boolean ("device-is-media-available", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_IS_DRIVE,
+                g_param_spec_boolean ("device-is-drive", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_SIZE,
+                g_param_spec_uint64 ("device-size", NULL, NULL, 0, G_MAXUINT64, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_BLOCK_SIZE,
+                g_param_spec_uint64 ("device-block-size", NULL, NULL, 0, G_MAXUINT64, 0, G_PARAM_READABLE));
 
         g_object_class_install_property (
                 object_class,
@@ -357,7 +420,7 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
         g_object_class_install_property (
                 object_class,
                 PROP_PARTITION_SLAVE,
-                g_param_spec_string ("partition-slave", NULL, NULL, NULL, G_PARAM_READABLE));
+                g_param_spec_boxed ("partition-slave", NULL, NULL, DBUS_TYPE_G_OBJECT_PATH, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_PARTITION_SCHEME,
@@ -401,15 +464,39 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_PARTITION_TABLE_COUNT,
                 g_param_spec_int ("partition-table-count", NULL, NULL, 0, G_MAXINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_PARTITION_TABLE_MAX_NUMBER,
+                g_param_spec_int ("partition-table-max-number", NULL, NULL, 0, G_MAXINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_PARTITION_TABLE_OFFSETS,
+                g_param_spec_boxed ("partition-table-offsets", NULL, NULL,
+                                    dbus_g_type_get_collection ("GArray", G_TYPE_UINT64),
+                                    G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_PARTITION_TABLE_SIZES,
+                g_param_spec_boxed ("partition-table-sizes", NULL, NULL,
+                                    dbus_g_type_get_collection ("GArray", G_TYPE_UINT64),
+                                    G_PARAM_READABLE));
 
         g_object_class_install_property (
                 object_class,
-                PROP_DRIVE_REMOVABLE,
-                g_param_spec_boolean ("drive-removable", NULL, NULL, FALSE, G_PARAM_READABLE));
+                PROP_DRIVE_VENDOR,
+                g_param_spec_string ("drive-vendor", NULL, NULL, NULL, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
-                PROP_DRIVE_REMOVABLE_MEDIA_AVAILABLE,
-                g_param_spec_boolean ("drive-removable-media-available", NULL, NULL, FALSE, G_PARAM_READABLE));
+                PROP_DRIVE_MODEL,
+                g_param_spec_string ("drive-model", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_REVISION,
+                g_param_spec_string ("drive-revision", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_SERIAL,
+                g_param_spec_string ("drive-serial", NULL, NULL, NULL, G_PARAM_READABLE));
 }
 
 static void
@@ -525,6 +612,25 @@ sysfs_get_int (const char *dir, const char *attribute)
         return result;
 }
 
+static int
+sysfs_get_uint64 (const char *dir, const char *attribute)
+{
+        guint64 result;
+        char *contents;
+        char *filename;
+
+        result = 0;
+        filename = g_build_filename (dir, attribute, NULL);
+        if (g_file_get_contents (filename, &contents, NULL, NULL)) {
+                result = atoll (contents);
+                g_free (contents);
+        }
+        g_free (filename);
+
+
+        return result;
+}
+
 static gboolean
 sysfs_file_exists (const char *dir, const char *attribute)
 {
@@ -563,8 +669,15 @@ free_info (DevkitDisksDevice *device)
         g_free (device->priv->info.partition_uuid);
         g_ptr_array_foreach (device->priv->info.partition_flags, (GFunc) g_free, NULL);
         g_ptr_array_free (device->priv->info.partition_flags, TRUE);
+        g_array_free (device->priv->info.partition_table_offsets, TRUE);
+        g_array_free (device->priv->info.partition_table_sizes, TRUE);
 
         g_free (device->priv->info.partition_table_scheme);
+
+        g_free (device->priv->info.drive_vendor);
+        g_free (device->priv->info.drive_model);
+        g_free (device->priv->info.drive_revision);
+        g_free (device->priv->info.drive_serial);
 }
 
 static void
@@ -574,6 +687,8 @@ init_info (DevkitDisksDevice *device)
         device->priv->info.device_file_by_id = g_ptr_array_new ();
         device->priv->info.device_file_by_path = g_ptr_array_new ();
         device->priv->info.partition_flags = g_ptr_array_new ();
+        device->priv->info.partition_table_offsets = g_array_new (FALSE, TRUE, sizeof (guint64));
+        device->priv->info.partition_table_sizes = g_array_new (FALSE, TRUE, sizeof (guint64));
 }
 
 
@@ -601,42 +716,88 @@ update_info_properties_cb (DevKitInfo *info, const char *key, void *user_data)
         } else if (strcmp (key, "ID_FS_LABEL") == 0) {
                 device->priv->info.id_label   = g_strdup (devkit_info_property_get_string (info, key));
 
+        } else if (strcmp (key, "ID_VENDOR") == 0) {
+                if (device->priv->info.device_is_drive && device->priv->info.drive_vendor == NULL)
+                        device->priv->info.drive_vendor = g_strdup (devkit_info_property_get_string (info, key));
+        } else if (strcmp (key, "ID_MODEL") == 0) {
+                if (device->priv->info.device_is_drive && device->priv->info.drive_model == NULL)
+                        device->priv->info.drive_model = g_strdup (devkit_info_property_get_string (info, key));
+        } else if (strcmp (key, "ID_REVISION") == 0) {
+                if (device->priv->info.device_is_drive && device->priv->info.drive_revision == NULL)
+                        device->priv->info.drive_revision = g_strdup (devkit_info_property_get_string (info, key));
+        } else if (strcmp (key, "ID_SERIAL_SHORT") == 0) {
+                if (device->priv->info.device_is_drive && device->priv->info.drive_serial == NULL)
+                        device->priv->info.drive_serial = g_strdup (devkit_info_property_get_string (info, key));
 
-        } if (strcmp (key, "PART_SCHEME") == 0) {
-                device->priv->info.device_is_partition_table = TRUE;
-                device->priv->info.partition_table_scheme = g_strdup (devkit_info_property_get_string (info, key));
+
+        } else if (strcmp (key, "PART_SCHEME") == 0) {
+
+                if (device->priv->info.device_is_partition) {
+                        device->priv->info.partition_scheme =
+                                g_strdup (devkit_info_property_get_string (info, key));
+                } else {
+                        device->priv->info.device_is_partition_table = TRUE;
+                        device->priv->info.partition_table_scheme =
+                                g_strdup (devkit_info_property_get_string (info, key));
+                }
         } else if (strcmp (key, "PART_COUNT") == 0) {
                 device->priv->info.partition_table_count = devkit_info_property_get_int (info, key);
+        } else if (g_str_has_prefix (key, "PART_P") && g_ascii_isdigit (key[6])) {
+                char *endp;
+                int part_number = strtol (key + 6, &endp, 10);
+                if (*endp == '_') {
 
+                        if (!device->priv->info.device_is_partition) {
+                                guint64 value;
+                                unsigned int index;
+                                GArray *array;
 
-        } else if (strcmp (key, "PART_ENTRY_SLAVE") == 0) {
-                char *s;
-                device->priv->info.device_is_partition = TRUE;
-                s = g_path_get_basename (devkit_info_property_get_string (info, key));
-                device->priv->info.partition_slave = compute_object_path_from_basename (s);
-                g_free (s);
-        } else if (strcmp (key, "PART_ENTRY_SCHEME") == 0) {
-                device->priv->info.partition_scheme = g_strdup (devkit_info_property_get_string (info, key));
-        } else if (strcmp (key, "PART_ENTRY_TYPE") == 0) {
-                device->priv->info.partition_type = g_strdup (devkit_info_property_get_string (info, key));
-        } else if (strcmp (key, "PART_ENTRY_NUMBER") == 0) {
-                device->priv->info.partition_number = devkit_info_property_get_int (info, key);
-        } else if (strcmp (key, "PART_ENTRY_LABEL") == 0) {
-                device->priv->info.partition_label = g_strdup (devkit_info_property_get_string (info, key));
-        } else if (strcmp (key, "PART_ENTRY_UUID") == 0) {
-                device->priv->info.partition_uuid = g_strdup (devkit_info_property_get_string (info, key));
-        } else if (strcmp (key, "PART_ENTRY_FLAGS") == 0) {
-                devkit_info_property_strlist_foreach (info, key, update_info_add_ptr,
-                                                      device->priv->info.partition_flags);
-        } else if (strcmp (key, "PART_ENTRY_OFFSET") == 0) {
-                device->priv->info.partition_offset = devkit_info_property_get_uint64 (info, key);
-        } else if (strcmp (key, "PART_ENTRY_SIZE") == 0) {
-                device->priv->info.partition_size = devkit_info_property_get_uint64 (info, key);
+                                if (part_number > device->priv->info.partition_table_max_number)
+                                        device->priv->info.partition_table_max_number = part_number;
 
+                                array = NULL;
+                                index = 0;
+                                value = devkit_info_property_get_uint64 (info, key);
+                                if (g_str_has_prefix (endp, "_OFFSET")) {
+                                        array = device->priv->info.partition_table_offsets;
+                                        index = part_number - 1;
+                                } else if (g_str_has_prefix (endp, "_SIZE")) {
+                                        array = device->priv->info.partition_table_sizes;
+                                        index = part_number - 1;
+                                }
+                                if (array != NULL) {
+                                        g_array_set_size (array, index + 1 > array->len ? index + 1 : array->len);
+                                        g_array_index (array, guint64, index) = value;
+                                }
+
+                        } else if (device->priv->info.device_is_partition &&
+                                   part_number == device->priv->info.partition_number) {
+
+                                if (g_str_has_prefix (endp, "_LABEL")) {
+                                        device->priv->info.partition_label =
+                                                g_strdup (devkit_info_property_get_string (info, key));
+                                } else if (g_str_has_prefix (endp, "_UUID")) {
+                                        device->priv->info.partition_uuid =
+                                                g_strdup (devkit_info_property_get_string (info, key));
+                                } else if (g_str_has_prefix (endp, "_TYPE")) {
+                                        device->priv->info.partition_type =
+                                                g_strdup (devkit_info_property_get_string (info, key));
+                                } else if (g_str_has_prefix (endp, "_OFFSET")) {
+                                        device->priv->info.partition_offset =
+                                                devkit_info_property_get_uint64 (info, key);
+                                } else if (g_str_has_prefix (endp, "_SIZE")) {
+                                        device->priv->info.partition_size =
+                                                devkit_info_property_get_uint64 (info, key);
+                                } else if (g_str_has_prefix (endp, "_FLAGS")) {
+                                        devkit_info_property_strlist_foreach (info, key, update_info_add_ptr,
+                                                                              device->priv->info.partition_flags);
+                                }
+                        }
+                }
 
         } else if (strcmp (key, "MEDIA_AVAILABLE") == 0) {
-                if (device->priv->info.drive_removable) {
-                        device->priv->info.drive_removable_media_available = devkit_info_property_get_bool (info, key);
+                if (device->priv->info.device_is_removable) {
+                        device->priv->info.device_is_media_available = devkit_info_property_get_bool (info, key);
                 }
         }
 
@@ -671,13 +832,57 @@ update_info (DevkitDisksDevice *device)
 
         /* fill in drive information */
         if (sysfs_file_exists (device->priv->native_path, "device")) {
-                device->priv->info.device_has_drive = TRUE;
-                device->priv->info.drive_removable = (sysfs_get_int (device->priv->native_path, "removable") != 0);
-                if (!device->priv->info.drive_removable)
-                        device->priv->info.drive_removable_media_available = TRUE;
+                device->priv->info.device_is_drive = TRUE;
+                /* TODO: fill in drive props */
         } else {
-                device->priv->info.device_has_drive = FALSE;
+                device->priv->info.device_is_drive = FALSE;
         }
+
+        device->priv->info.device_is_removable =
+                (sysfs_get_int (device->priv->native_path, "removable") != 0);
+        if (!device->priv->info.device_is_removable)
+                device->priv->info.device_is_media_available = TRUE;
+        /* TODO: FIXME; need to get the block size */
+        device->priv->info.device_block_size = 512;
+        device->priv->info.device_size =
+                sysfs_get_uint64 (device->priv->native_path, "size") * device->priv->info.device_block_size;
+
+        /* figure out if we're a partition and, if so, who our slave is */
+        if (sysfs_file_exists (device->priv->native_path, "start")) {
+                guint64 start, size;
+                char *s;
+                char *p;
+                int n;
+
+                /* we're partitioned by the kernel */
+                device->priv->info.device_is_partition = TRUE;
+                start = sysfs_get_uint64 (device->priv->native_path, "start");
+                size = sysfs_get_uint64 (device->priv->native_path, "size");
+                device->priv->info.partition_offset = start * device->priv->info.device_block_size;
+                device->priv->info.partition_size = size * device->priv->info.device_block_size;
+
+                s = device->priv->native_path;
+                for (n = strlen (s) - 1; n >= 0 && g_ascii_isdigit (s[n]); n--)
+                        ;
+                device->priv->info.partition_number = atoi (s + n + 1);
+
+                s = g_strdup (device->priv->native_path);
+                for (n = strlen (s) - 1; n >= 0 && s[n] != '/'; n--)
+                        s[n] = '\0';
+                s[n] = '\0';
+                p = g_path_get_basename (s);
+                device->priv->info.partition_slave = compute_object_path_from_basename (p);
+                g_free (p);
+                g_free (s);
+
+                /* since the env from the parent is imported, we'll
+                 * add partition table information from enclosing
+                 * device by matching on partition number
+                 */
+        } else {
+                /* TODO: handle partitions created by kpartx / dm-linear */
+        }
+
 
         info = devkit_info_new (device->priv->native_path);
         if (info == NULL) {
