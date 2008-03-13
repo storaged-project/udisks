@@ -51,6 +51,8 @@
 
 #include "devkit-disks-daemon.h"
 #include "devkit-disks-device.h"
+#include "mounts-file.h"
+
 #include "devkit-disks-daemon-glue.h"
 
 /*--------------------------------------------------------------------------------------------------------------*/
@@ -333,8 +335,9 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
 
         dbus_g_object_type_install_info (DEVKIT_TYPE_DISKS_DAEMON, &dbus_glib_devkit_disks_daemon_object_info);
 
-        dbus_g_error_domain_register (DEVKIT_DISKS_DAEMON_ERROR, NULL, DEVKIT_DISKS_DAEMON_TYPE_ERROR);
-
+        dbus_g_error_domain_register (DEVKIT_DISKS_DAEMON_ERROR,
+                                      NULL,
+                                      DEVKIT_DISKS_DAEMON_TYPE_ERROR);
 }
 
 static void
@@ -858,8 +861,81 @@ devkit_disks_daemon_new (gboolean no_exit)
         }
         g_list_free (native_paths);
 
+        /* clean stale directories in /media as well as stale
+         * entries in /var/lib/DeviceKit-disks/mtab
+         */
+        l = g_hash_table_get_values (daemon->priv->map_native_path_to_device);
+        mounts_file_clean_stale (l);
+        g_list_free (l);
+
         return daemon;
 }
+
+PolKitCaller *
+devkit_disks_damon_local_get_caller_for_context (DevkitDisksDaemon *daemon,
+                                                 DBusGMethodInvocation *context)
+{
+        const char *sender;
+        GError *error;
+        DBusError dbus_error;
+        PolKitCaller *pk_caller;
+
+        sender = dbus_g_method_get_sender (context);
+        dbus_error_init (&dbus_error);
+        pk_caller = polkit_tracker_get_caller_from_dbus_name (daemon->priv->pk_tracker,
+                                                              sender,
+                                                              &dbus_error);
+        if (pk_caller == NULL) {
+                error = g_error_new (DEVKIT_DISKS_DAEMON_ERROR,
+                                     DEVKIT_DISKS_DAEMON_ERROR_GENERAL,
+                                     "Error getting information about caller: %s: %s",
+                                     dbus_error.name, dbus_error.message);
+                dbus_error_free (&dbus_error);
+                dbus_g_method_return_error (context, error);
+                g_error_free (error);
+                return NULL;
+        }
+
+        return pk_caller;
+}
+
+gboolean
+devkit_disks_damon_local_check_auth (DevkitDisksDaemon     *daemon,
+                                     PolKitCaller          *pk_caller,
+                                     const char            *action_id,
+                                     DBusGMethodInvocation *context)
+{
+        gboolean ret;
+        GError *error;
+        DBusError d_error;
+        PolKitAction *pk_action;
+        PolKitResult pk_result;
+
+        ret = FALSE;
+
+        pk_action = polkit_action_new ();
+        polkit_action_set_action_id (pk_action, action_id);
+        pk_result = polkit_context_is_caller_authorized (daemon->priv->pk_context,
+                                                         pk_action,
+                                                         pk_caller,
+                                                         TRUE,
+                                                         NULL);
+        if (pk_result == POLKIT_RESULT_YES) {
+                ret = TRUE;
+        } else {
+
+                dbus_error_init (&d_error);
+                polkit_dbus_error_generate (pk_action, pk_result, &d_error);
+                error = NULL;
+                dbus_set_g_error (&error, &d_error);
+                dbus_g_method_return_error (context, error);
+                g_error_free (error);
+                dbus_error_free (&d_error);
+        }
+        polkit_action_unref (pk_action);
+        return ret;
+}
+
 
 /*--------------------------------------------------------------------------------------------------------------*/
 /* exported methods */

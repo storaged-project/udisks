@@ -52,7 +52,11 @@ typedef enum
 {
         DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
         DEVKIT_DISKS_DEVICE_ERROR_NOT_SUPPORTED,
-        DEVKIT_DISKS_DEVICE_ERROR_NOT_AUTHORIZED,
+        DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTABLE,
+        DEVKIT_DISKS_DEVICE_ERROR_ALREADY_MOUNTED,
+        DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTED,
+        DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTED_BY_DK,
+        DEVKIT_DISKS_DEVICE_ERROR_FSTAB_ENTRY,
         DEVKIT_DISKS_DEVICE_NUM_ERRORS
 } DevkitDisksDeviceError;
 
@@ -82,14 +86,14 @@ void               devkit_disks_device_local_set_unmounted (DevkitDisksDevice *d
 
 /* exported methods */
 
-gboolean devkit_disks_device_get_native_path (DevkitDisksDevice     *device,
-                                              DBusGMethodInvocation *context);
+gboolean devkit_disks_device_mount (DevkitDisksDevice     *device,
+                                    const char            *filesystem_type,
+                                    char                 **options,
+                                    DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_get_device_file (DevkitDisksDevice     *device,
-                                              DBusGMethodInvocation *context);
-
-gboolean devkit_disks_device_get_device_file_symlinks (DevkitDisksDevice     *device,
-                                                       DBusGMethodInvocation *context);
+gboolean devkit_disks_device_unmount (DevkitDisksDevice     *device,
+                                      char                 **options,
+                                      DBusGMethodInvocation *context);
 
 G_END_DECLS
 

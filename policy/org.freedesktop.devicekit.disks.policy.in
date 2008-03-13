@@ -17,4 +17,26 @@ file are instantly applied.
 <policyconfig>
   <vendor>The DeviceKit Project</vendor>
   <vendor_url>http://hal.freedesktop.org/docs/DeviceKit/</vendor_url>
+  <icon_name>drive-removable-media</icon_name>
+
+  <action id="org.freedesktop.devicekit.disks.mount">
+    <_description>Mount a disk</_description>
+    <_message>Authentication is required to mount disks</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.devicekit.disks.unmount-others">
+    <_description>Unmount a disk mounted by another user</_description>
+    <_message>Authentication is required to unmount disks mounted by others than yourself</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep_always</allow_active>
+    </defaults>
+  </action>
+
 </policyconfig>

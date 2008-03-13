@@ -7,6 +7,19 @@
 
     <!-- BEGIN LIST OF METHODS -->
 
+    <!-- TODO: docs -->
+    <method name="Mount">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="filesystem_type" direction="in" type="s"/>
+      <arg name="options" direction="in" type="as"/>
+      <arg name="mount_path" direction="out" type="s"/>
+    </method>
+
+    <!-- TODO: docs -->
+    <method name="Unmount">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="options" direction="in" type="as"/>
+    </method>
 
     <!-- BEGIN LIST OF SIGNALS -->
 

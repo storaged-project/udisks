@@ -23,6 +23,7 @@
 
 #include <glib-object.h>
 #include <polkit-dbus/polkit-dbus.h>
+#include <dbus/dbus-glib.h>
 
 G_BEGIN_DECLS
 
@@ -63,20 +64,24 @@ GQuark             devkit_disks_daemon_error_quark         (void);
 GType              devkit_disks_daemon_get_type            (void);
 DevkitDisksDaemon *devkit_disks_daemon_new                 (gboolean no_exit);
 
-void               devkit_disks_daemon_inhibit_killtimer   (DevkitDisksDaemon *daemon);
-void               devkit_disks_daemon_uninhibit_killtimer (DevkitDisksDaemon *daemon);
-void               devkit_disks_daemon_reset_killtimer     (DevkitDisksDaemon *daemon);
-
 /* local methods */
 
 struct DevkitDisksDevice;
 typedef struct DevkitDisksDevice DevkitDisksDevice;
 
-DevkitDisksDevice *devkit_disks_daemon_local_find_by_native_path (DevkitDisksDaemon *daemon,
-                                                                  const char *native_path);
-DevkitDisksDevice *devkit_disks_daemon_local_find_by_object_path (DevkitDisksDaemon *daemon,
-                                                                  const char *object_path);
-
+void               devkit_disks_daemon_inhibit_killtimer         (DevkitDisksDaemon       *daemon);
+void               devkit_disks_daemon_uninhibit_killtimer       (DevkitDisksDaemon       *daemon);
+void               devkit_disks_daemon_reset_killtimer           (DevkitDisksDaemon       *daemon);
+DevkitDisksDevice *devkit_disks_daemon_local_find_by_native_path (DevkitDisksDaemon       *daemon,
+                                                                  const char              *native_path);
+DevkitDisksDevice *devkit_disks_daemon_local_find_by_object_path (DevkitDisksDaemon       *daemon,
+                                                                  const char              *object_path);
+PolKitCaller      *devkit_disks_damon_local_get_caller_for_context (DevkitDisksDaemon     *daemon,
+                                                                    DBusGMethodInvocation *context);
+gboolean           devkit_disks_damon_local_check_auth             (DevkitDisksDaemon     *daemon,
+                                                                    PolKitCaller          *pk_caller,
+                                                                    const char            *action_id,
+                                                                    DBusGMethodInvocation *context);
 /* exported methods */
 
 gboolean devkit_disks_daemon_inhibit_shutdown (DevkitDisksDaemon     *daemon,

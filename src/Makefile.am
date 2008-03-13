@@ -44,6 +44,8 @@ part_id_LDADD = $(GLIB_LIBS)
 devkit_disks_daemon_SOURCES = 						\
 	devkit-disks-daemon.h		devkit-disks-daemon.c		\
 	devkit-disks-device.h		devkit-disks-device.c		\
+	devkit-disks-device-private.h					\
+	mounts-file.h			mounts-file.c			\
 	main.c								\
 	$(BUILT_SOURCES)
 
@@ -86,3 +88,7 @@ EXTRA_DIST = org.freedesktop.DeviceKit.Disks.xml        \
 
 clean-local :
 	rm -f *~ $(service_DATA) $(dbusconf_DATA)
+
+install-data-local:
+	-$(mkdir_p) $(DESTDIR)$(localstatedir)/lib/DeviceKit-disks
+	-chmod 0755 $(DESTDIR)$(localstatedir)/lib/DeviceKit-disks

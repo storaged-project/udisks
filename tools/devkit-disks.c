@@ -38,9 +38,10 @@
 #include <glib/gi18n-lib.h>
 #include <glib-object.h>
 
-#define DBUS_API_SUBJECT_TO_CHANGE
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
+
+#include <polkit-dbus/polkit-dbus.h>
 
 #include "devkit-disks-daemon-glue.h"
 #include "devkit-disks-device-glue.h"
@@ -49,20 +50,160 @@ static DBusGConnection     *bus = NULL;
 static DBusGProxy          *disks_proxy = NULL;
 static GMainLoop           *loop;
 
-static gboolean      inhibit        = FALSE;
-static gboolean      enumerate      = FALSE;
-static gboolean      monitor        = FALSE;
-static gboolean      monitor_detail = FALSE;
-static char         *show_info      = NULL;
+static gboolean      opt_inhibit         = FALSE;
+static gboolean      opt_enumerate       = FALSE;
+static gboolean      opt_monitor         = FALSE;
+static gboolean      opt_monitor_detail  = FALSE;
+static char         *opt_show_info       = NULL;
+static char         *opt_mount           = NULL;
+static char         *opt_mount_fstype    = NULL;
+static char         *opt_mount_options   = NULL;
+static char         *opt_unmount         = NULL;
+static char         *opt_unmount_options = NULL;
 
 static gboolean do_monitor (void);
 static void do_show_info (const char *object_path);
+
+static gboolean
+polkit_dbus_gerror_parse (GError *error,
+                          PolKitAction **action,
+                          PolKitResult *result)
+{
+        gboolean ret;
+        const char *name;
+
+        ret = FALSE;
+        if (error->domain != DBUS_GERROR || error->code != DBUS_GERROR_REMOTE_EXCEPTION)
+                goto out;
+
+        name = dbus_g_error_get_name (error);
+
+        ret = polkit_dbus_error_parse_from_strings (name,
+                                                    error->message,
+                                                    action,
+                                                    result);
+out:
+        return ret;
+}
+
+static void
+do_mount (const char *object_path,
+          const char *filesystem_type,
+          const char *options)
+{
+        char *mount_path;
+        DBusGProxy *proxy;
+        GError *error;
+
+	proxy = dbus_g_proxy_new_for_name (bus,
+                                           "org.freedesktop.DeviceKit.Disks",
+                                           object_path,
+                                           "org.freedesktop.DeviceKit.Disks.Device");
+
+try_again:
+        error = NULL;
+        if (!org_freedesktop_DeviceKit_Disks_Device_mount (proxy,
+                                                           filesystem_type,
+                                                           NULL,
+                                                           &mount_path,
+                                                           &error)) {
+                PolKitAction *pk_action;
+                PolKitResult pk_result;
+
+                if (polkit_dbus_gerror_parse (error, &pk_action, &pk_result)) {
+                        if (pk_result != POLKIT_RESULT_NO) {
+                                char *action_id;
+                                DBusError d_error;
+
+                                polkit_action_get_action_id (pk_action, &action_id);
+                                dbus_error_init (&d_error);
+                                if (polkit_auth_obtain (action_id,
+                                                        0,
+                                                        getpid (),
+                                                        &d_error)) {
+                                        polkit_action_unref (pk_action);
+                                        goto try_again;
+                                } else {
+                                        g_print ("Obtaining authorization failed: %s: %s\n",
+                                                 d_error.name, d_error.message);
+                                        dbus_error_free (&d_error);
+                                        goto out;
+                                }
+                        }
+                        polkit_action_unref (pk_action);
+                        g_error_free (error);
+                        goto out;
+                } else {
+                        g_print ("Mount failed: %s\n", error->message);
+                        g_error_free (error);
+                        goto out;
+                }
+        }
+
+        g_print ("Mounted %s at %s\n", object_path, mount_path);
+        g_free (mount_path);
+out:
+        ;
+}
+
+static void
+do_unmount (const char *object_path,
+            const char *options)
+{
+        DBusGProxy *proxy;
+        GError *error;
+
+	proxy = dbus_g_proxy_new_for_name (bus,
+                                           "org.freedesktop.DeviceKit.Disks",
+                                           object_path,
+                                           "org.freedesktop.DeviceKit.Disks.Device");
+
+try_again:
+        error = NULL;
+        if (!org_freedesktop_DeviceKit_Disks_Device_unmount (proxy,
+                                                             NULL,
+                                                             &error)) {
+                PolKitAction *pk_action;
+                PolKitResult pk_result;
+
+                if (polkit_dbus_gerror_parse (error, &pk_action, &pk_result)) {
+                        if (pk_result != POLKIT_RESULT_NO) {
+                                char *action_id;
+                                DBusError d_error;
+
+                                polkit_action_get_action_id (pk_action, &action_id);
+                                dbus_error_init (&d_error);
+                                if (polkit_auth_obtain (action_id,
+                                                        0,
+                                                        getpid (),
+                                                        &d_error)) {
+                                        polkit_action_unref (pk_action);
+                                        goto try_again;
+                                } else {
+                                        g_print ("Obtaining authorization failed: %s: %s\n",
+                                                 d_error.name, d_error.message);
+                                        dbus_error_free (&d_error);
+                                        goto out;
+                                }
+                        }
+                        polkit_action_unref (pk_action);
+                        g_error_free (error);
+                        goto out;
+                } else {
+                        g_print ("Unmount failed: %s\n", error->message);
+                        g_error_free (error);
+                        goto out;
+                }
+        }
+out:
+        ;
+}
 
 static void
 device_added_signal_handler (DBusGProxy *proxy, const char *object_path, gpointer user_data)
 {
   g_print ("added:   %s\n", object_path);
-  if (monitor_detail) {
+  if (opt_monitor_detail) {
           do_show_info (object_path);
           g_print ("\n");
   }
@@ -72,7 +213,7 @@ static void
 device_changed_signal_handler (DBusGProxy *proxy, const char *object_path, gpointer user_data)
 {
   g_print ("changed:   %s\n", object_path);
-  if (monitor_detail) {
+  if (opt_monitor_detail) {
           /* TODO: would be nice to just show the diff */
           do_show_info (object_path);
           g_print ("\n");
@@ -778,11 +919,16 @@ main (int argc, char **argv)
         GError              *error = NULL;
         unsigned int         n;
         static GOptionEntry  entries []     = {
-                { "inhibit", 0, 0, G_OPTION_ARG_NONE, &inhibit, "Inhibit the disks daemon from exiting", NULL },
-                { "enumerate", 0, 0, G_OPTION_ARG_NONE, &enumerate, "Enumerate objects paths for devices", NULL },
-                { "monitor", 0, 0, G_OPTION_ARG_NONE, &monitor, "Monitor activity from the disk daemon", NULL },
-                { "monitor-detail", 0, 0, G_OPTION_ARG_NONE, &monitor_detail, "Monitor with detail", NULL },
-                { "show-info", 0, 0, G_OPTION_ARG_STRING, &show_info, "Show information about object path", NULL },
+                { "inhibit", 0, 0, G_OPTION_ARG_NONE, &opt_inhibit, "Inhibit the disks daemon from exiting", NULL },
+                { "enumerate", 0, 0, G_OPTION_ARG_NONE, &opt_enumerate, "Enumerate objects paths for devices", NULL },
+                { "monitor", 0, 0, G_OPTION_ARG_NONE, &opt_monitor, "Monitor activity from the disk daemon", NULL },
+                { "monitor-detail", 0, 0, G_OPTION_ARG_NONE, &opt_monitor_detail, "Monitor with detail", NULL },
+                { "show-info", 0, 0, G_OPTION_ARG_STRING, &opt_show_info, "Show information about object path", NULL },
+                { "mount", 0, 0, G_OPTION_ARG_STRING, &opt_mount, "Mount the device given by the object path", NULL },
+                { "mount-fstype", 0, 0, G_OPTION_ARG_STRING, &opt_mount_fstype, "Specify file system type", NULL },
+                { "mount-options", 0, 0, G_OPTION_ARG_STRING, &opt_mount_options, "Mount options separated by comma", NULL },
+                { "unmount", 0, 0, G_OPTION_ARG_STRING, &opt_unmount, "Unmount the device given by the object path", NULL },
+                { "unmount-options", 0, 0, G_OPTION_ARG_STRING, &opt_unmount_options, "Unmount options separated by comma", NULL },
                 { NULL }
         };
 
@@ -812,7 +958,7 @@ main (int argc, char **argv)
         dbus_g_proxy_add_signal (disks_proxy, "DeviceRemoved", G_TYPE_STRING, G_TYPE_INVALID);
         dbus_g_proxy_add_signal (disks_proxy, "DeviceChanged", G_TYPE_STRING, G_TYPE_INVALID);
 
-        if (inhibit) {
+        if (opt_inhibit) {
                 char *cookie;
                 if (!org_freedesktop_DeviceKit_Disks_inhibit_shutdown (disks_proxy, &cookie, &error)) {
                         g_warning ("Couldn't inhibit disk daemon: %s", error->message);
@@ -823,7 +969,7 @@ main (int argc, char **argv)
                 g_print ("Disks daemon is now inhibited from exiting. Press Ctrl+C to cancel.\n");
                 /* spin forever */
                 g_main_loop_run (loop);
-        } else if (enumerate) {
+        } else if (opt_enumerate) {
                 GPtrArray *devices;
                 if (!org_freedesktop_DeviceKit_Disks_enumerate_devices (disks_proxy, &devices, &error)) {
                         g_warning ("Couldn't enumerate devices: %s", error->message);
@@ -836,11 +982,15 @@ main (int argc, char **argv)
                 }
                 g_ptr_array_foreach (devices, (GFunc) g_free, NULL);
                 g_ptr_array_free (devices, TRUE);
-        } else if (monitor || monitor_detail) {
+        } else if (opt_monitor || opt_monitor_detail) {
                 if (!do_monitor ())
                         goto out;
-        } else if (show_info != NULL) {
-                do_show_info (show_info);
+        } else if (opt_show_info != NULL) {
+                do_show_info (opt_show_info);
+        } else if (opt_mount != NULL) {
+                do_mount (opt_mount, opt_mount_fstype, opt_mount_options);
+        } else if (opt_unmount != NULL) {
+                do_unmount (opt_unmount, opt_unmount_options);
         }
 
         ret = 0;
