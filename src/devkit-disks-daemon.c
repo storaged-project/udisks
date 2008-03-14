@@ -269,7 +269,7 @@ devkit_disks_daemon_error_get_type (void)
                         {
                                 ENUM_ENTRY (DEVKIT_DISKS_DAEMON_ERROR_GENERAL, "GeneralError"),
                                 ENUM_ENTRY (DEVKIT_DISKS_DAEMON_ERROR_NOT_SUPPORTED, "NotSupported"),
-                                ENUM_ENTRY (DEVKIT_DISKS_DAEMON_ERROR_NOT_AUTHORIZED, "NotAuthorized"),
+                                ENUM_ENTRY (DEVKIT_DISKS_DAEMON_ERROR_NO_SUCH_DEVICE, "NoSuchDevice"),
                                 { 0, 0, 0 }
                         };
                 g_assert (DEVKIT_DISKS_DAEMON_NUM_ERRORS == G_N_ELEMENTS (values) - 1);
@@ -938,6 +938,28 @@ devkit_disks_damon_local_check_auth (DevkitDisksDaemon     *daemon,
 
 
 /*--------------------------------------------------------------------------------------------------------------*/
+
+static gboolean
+throw_error (DBusGMethodInvocation *context, int error_code, const char *format, ...)
+{
+        GError *error;
+        va_list args;
+        char *message;
+
+        va_start (args, format);
+        message = g_strdup_vprintf (format, args);
+        va_end (args);
+
+        error = g_error_new (DEVKIT_DISKS_DAEMON_ERROR,
+                             error_code,
+                             message);
+        dbus_g_method_return_error (context, error);
+        g_error_free (error);
+        g_free (message);
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
 /* exported methods */
 
 gboolean
@@ -1032,4 +1054,34 @@ devkit_disks_daemon_enumerate_devices (DevkitDisksDaemon     *daemon,
         return TRUE;
 }
 
+/*--------------------------------------------------------------------------------------------------------------*/
+
+gboolean
+devkit_disks_daemon_find_device_by_device_file (DevkitDisksDaemon     *daemon,
+                                                const char            *device_file,
+                                                DBusGMethodInvocation *context)
+{
+        const char *object_path;
+        GHashTableIter iter;
+        DevkitDisksDevice *device;
+
+        object_path = NULL;
+        g_hash_table_iter_init (&iter, daemon->priv->map_native_path_to_device);
+        while (g_hash_table_iter_next (&iter, NULL, (gpointer *) &device)) {
+                if (strcmp (devkit_disks_device_local_get_device_file (device), device_file) == 0) {
+                        object_path = devkit_disks_device_local_get_object_path (device);
+                        goto out;
+                }
+        }
+
+out:
+        if (object_path != NULL) {
+                dbus_g_method_return (context, object_path);
+        } else {
+                throw_error (context,
+                             DEVKIT_DISKS_DAEMON_ERROR_NO_SUCH_DEVICE,
+                             "No such device");
+        }
+        return TRUE;
+}
 /*--------------------------------------------------------------------------------------------------------------*/

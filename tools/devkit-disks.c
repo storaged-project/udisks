@@ -94,17 +94,21 @@ do_mount (const char *object_path,
         char *mount_path;
         DBusGProxy *proxy;
         GError *error;
+        char **mount_options;
+
+        mount_options = NULL;
+        if (options != NULL)
+                mount_options = g_strsplit (options, ",", 0);
 
 	proxy = dbus_g_proxy_new_for_name (bus,
                                            "org.freedesktop.DeviceKit.Disks",
                                            object_path,
                                            "org.freedesktop.DeviceKit.Disks.Device");
-
 try_again:
         error = NULL;
         if (!org_freedesktop_DeviceKit_Disks_Device_mount (proxy,
                                                            filesystem_type,
-                                                           NULL,
+                                                           (const char **) mount_options,
                                                            &mount_path,
                                                            &error)) {
                 PolKitAction *pk_action;
@@ -143,7 +147,7 @@ try_again:
         g_print ("Mounted %s at %s\n", object_path, mount_path);
         g_free (mount_path);
 out:
-        ;
+        g_strfreev (mount_options);
 }
 
 static void
@@ -152,6 +156,11 @@ do_unmount (const char *object_path,
 {
         DBusGProxy *proxy;
         GError *error;
+        char **unmount_options;
+
+        unmount_options = NULL;
+        if (options != NULL)
+                unmount_options = g_strsplit (options, ",", 0);
 
 	proxy = dbus_g_proxy_new_for_name (bus,
                                            "org.freedesktop.DeviceKit.Disks",
@@ -161,7 +170,7 @@ do_unmount (const char *object_path,
 try_again:
         error = NULL;
         if (!org_freedesktop_DeviceKit_Disks_Device_unmount (proxy,
-                                                             NULL,
+                                                             (const char **) unmount_options,
                                                              &error)) {
                 PolKitAction *pk_action;
                 PolKitResult pk_result;
@@ -196,7 +205,7 @@ try_again:
                 }
         }
 out:
-        ;
+        g_strfreev (unmount_options);
 }
 
 static void

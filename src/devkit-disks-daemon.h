@@ -51,7 +51,7 @@ typedef enum
 {
         DEVKIT_DISKS_DAEMON_ERROR_GENERAL,
         DEVKIT_DISKS_DAEMON_ERROR_NOT_SUPPORTED,
-        DEVKIT_DISKS_DAEMON_ERROR_NOT_AUTHORIZED,
+        DEVKIT_DISKS_DAEMON_ERROR_NO_SUCH_DEVICE,
         DEVKIT_DISKS_DAEMON_NUM_ERRORS
 } DevkitDisksDaemonError;
 
@@ -93,6 +93,10 @@ gboolean devkit_disks_daemon_uninhibit_shutdown (DevkitDisksDaemon     *daemon,
 
 gboolean devkit_disks_daemon_enumerate_devices (DevkitDisksDaemon     *daemon,
                                                 DBusGMethodInvocation *context);
+
+gboolean devkit_disks_daemon_find_device_by_device_file (DevkitDisksDaemon     *daemon,
+                                                         const char            *device_file,
+                                                         DBusGMethodInvocation *context);
 
 G_END_DECLS
 

@@ -12,7 +12,7 @@ INCLUDES = \
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT	\
 	$(DBUS_GLIB_CFLAGS) \
 	$(POLKIT_DBUS_CFLAGS) \
-	@GLIB_CFLAGS@
+	$(GLIB_CFLAGS)
 
 BUILT_SOURCES =						\
 	devkit-disks-daemon-glue.h			\
@@ -30,6 +30,7 @@ devkit_disks_SOURCES = 					\
 				devkit-disks.c		\
 	$(BUILT_SOURCES)
 
+
 devkit_disks_CPPFLAGS = 				\
 	-DG_LOG_DOMAIN=\"devkit-disks\"		        \
 	$(DISABLE_DEPRECATED)				\
@@ -38,6 +39,11 @@ devkit_disks_CPPFLAGS = 				\
 devkit_disks_LDADD = 					\
 	$(DBUS_GLIB_LIBS)				\
 	$(POLKIT_DBUS_LIBS)
+
+slashsbindir = /sbin
+slashsbin_PROGRAMS = umount.devkit
+umount_devkit_SOURCES = umount-devkit.c
+umount_devkit_LDADD = $(DBUS_GLIB_LIBS) $(POLKIT_DBUS_LIBS)
 
 CLEANFILES = $(BUILT_SOURCES)
 

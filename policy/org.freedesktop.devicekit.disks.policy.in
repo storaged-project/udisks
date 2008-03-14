@@ -4,7 +4,7 @@
  "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
  "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
 
-<!-- 
+<!--
 Policy definitions for DeviceKit-disks
 
 Copyright (c) 2008 David Zeuthen <david@fubar.dk>

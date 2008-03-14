@@ -1,7 +1,9 @@
 
 devkit_policydir = $(datadir)/PolicyKit/policy
 
-dist_devkit_policy_DATA = org.freedesktop.devicekit.disks.policy
+dist_devkit_policy_DATA = 					\
+	org.freedesktop.devicekit.disks.policy			\
+	org.freedesktop.devicekit.disks.mount-option.policy
 
 @INTLTOOL_POLICY_RULE@
 
@@ -11,6 +13,6 @@ check:
 clean-local :
 	rm -f *~
 
-DISTCLEANFILES = org.freedesktop.devicekit.disks.policy
+DISTCLEANFILES = $(dist_devkit_policy_DATA)
 
-EXTRA_DIST = org.freedesktop.devicekit.disks.policy.in
+EXTRA_DIST = $(dist_devkit_policy_DATA:.policy=.policy.in)

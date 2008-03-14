@@ -24,6 +24,13 @@
       <arg name="devices" direction="out" type="ao"/>
     </method>
 
+    <!-- Find device by device file -->
+    <method name="FindDeviceByDeviceFile">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="device_file" direction="in" type="s"/>
+      <arg name="device" direction="out" type="o"/>
+    </method>
+
     <!-- A device was added -->
     <signal name="DeviceAdded">
       <arg name="device" type="o"/>
