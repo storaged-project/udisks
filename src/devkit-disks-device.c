@@ -784,14 +784,12 @@ update_info_properties_cb (DevKitInfo *info, const char *key, void *user_data)
                                 } else if (g_str_has_prefix (endp, "_TYPE")) {
                                         device->priv->info.partition_type =
                                                 g_strdup (devkit_info_property_get_string (info, key));
-#if 0
                                 } else if (g_str_has_prefix (endp, "_OFFSET")) {
                                         device->priv->info.partition_offset =
                                                 devkit_info_property_get_uint64 (info, key);
                                 } else if (g_str_has_prefix (endp, "_SIZE")) {
                                         device->priv->info.partition_size =
                                                 devkit_info_property_get_uint64 (info, key);
-#endif
                                 } else if (g_str_has_prefix (endp, "_FLAGS")) {
                                         devkit_info_property_strlist_foreach (info, key, update_info_add_ptr,
                                                                               device->priv->info.partition_flags);
