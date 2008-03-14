@@ -784,12 +784,14 @@ update_info_properties_cb (DevKitInfo *info, const char *key, void *user_data)
                                 } else if (g_str_has_prefix (endp, "_TYPE")) {
                                         device->priv->info.partition_type =
                                                 g_strdup (devkit_info_property_get_string (info, key));
+#if 0
                                 } else if (g_str_has_prefix (endp, "_OFFSET")) {
                                         device->priv->info.partition_offset =
                                                 devkit_info_property_get_uint64 (info, key);
                                 } else if (g_str_has_prefix (endp, "_SIZE")) {
                                         device->priv->info.partition_size =
                                                 devkit_info_property_get_uint64 (info, key);
+#endif
                                 } else if (g_str_has_prefix (endp, "_FLAGS")) {
                                         devkit_info_property_strlist_foreach (info, key, update_info_add_ptr,
                                                                               device->priv->info.partition_flags);
@@ -875,8 +877,9 @@ update_info (DevkitDisksDevice *device)
                 (sysfs_get_int (device->priv->native_path, "removable") != 0);
         if (!device->priv->info.device_is_removable)
                 device->priv->info.device_is_media_available = TRUE;
+        /* Weird. Does the kernel use 512 byte sectors for "size" and "start"? */
         device->priv->info.device_size =
-                sysfs_get_uint64 (device->priv->native_path, "size") * device->priv->info.device_block_size;
+                sysfs_get_uint64 (device->priv->native_path, "size") * ((guint64) 512); /* device->priv->info.device_block_size; */
 
         /* figure out if we're a partition and, if so, who our slave is */
         if (sysfs_file_exists (device->priv->native_path, "start")) {
@@ -889,8 +892,8 @@ update_info (DevkitDisksDevice *device)
                 device->priv->info.device_is_partition = TRUE;
                 start = sysfs_get_uint64 (device->priv->native_path, "start");
                 size = sysfs_get_uint64 (device->priv->native_path, "size");
-                device->priv->info.partition_offset = start * device->priv->info.device_block_size;
-                device->priv->info.partition_size = size * device->priv->info.device_block_size;
+                device->priv->info.partition_offset = start * 512; /* device->priv->info.device_block_size; */
+                device->priv->info.partition_size = size * 512; /* device->priv->info.device_block_size; */
 
                 s = device->priv->native_path;
                 for (n = strlen (s) - 1; n >= 0 && g_ascii_isdigit (s[n]); n--)
