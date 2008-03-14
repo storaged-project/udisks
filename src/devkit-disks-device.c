@@ -37,6 +37,8 @@
 #include <signal.h>
 #include <pwd.h>
 #include <grp.h>
+#include <linux/fs.h>
+#include <sys/ioctl.h>
 
 #include <glib.h>
 #include <glib/gstdio.h>
@@ -822,9 +824,12 @@ static gboolean
 update_info (DevkitDisksDevice *device)
 {
         gboolean ret;
+        int fd;
+        int block_size;
         DevKitInfo *info;
 
         ret = FALSE;
+        info = NULL;
 
         /* free all info and prep for new info */
         free_info (device);
@@ -838,12 +843,38 @@ update_info (DevkitDisksDevice *device)
                 device->priv->info.device_is_drive = FALSE;
         }
 
+        info = devkit_info_new (device->priv->native_path);
+        if (info == NULL) {
+                goto out;
+        }
+
+        device->priv->info.device_file = g_strdup (devkit_info_get_device_file (info));
+        devkit_info_device_file_symlinks_foreach (info, update_info_symlinks_cb, device);
+
+        /* TODO: hmm.. it would be really nice if sysfs could export this. There's a
+         *       queue/hw_sector_size in sysfs but that's not available for e.g. RAID
+         */
+        errno = 0;
+        fd = open (devkit_info_get_device_file (info), O_RDONLY);
+        if (fd < 0 && errno != ENOMEDIUM) {
+		g_warning ("Cannot open %s read only", devkit_info_get_device_file (info));
+                goto out;
+        }
+        if (errno == ENOMEDIUM) {
+                block_size = 0;
+        } else {
+                if (ioctl (fd, BLKSSZGET, &block_size) != 0) {
+                        g_warning ("Cannot determine block size for %s", devkit_info_get_device_file (info));
+                        goto out;
+                }
+                close (fd);
+        }
+        device->priv->info.device_block_size = block_size;
+
         device->priv->info.device_is_removable =
                 (sysfs_get_int (device->priv->native_path, "removable") != 0);
         if (!device->priv->info.device_is_removable)
                 device->priv->info.device_is_media_available = TRUE;
-        /* TODO: FIXME; need to get the block size */
-        device->priv->info.device_block_size = 512;
         device->priv->info.device_size =
                 sysfs_get_uint64 (device->priv->native_path, "size") * device->priv->info.device_block_size;
 
@@ -883,20 +914,13 @@ update_info (DevkitDisksDevice *device)
                 /* TODO: handle partitions created by kpartx / dm-linear */
         }
 
-
-        info = devkit_info_new (device->priv->native_path);
-        if (info == NULL) {
-                goto out;
-        }
-
-        device->priv->info.device_file = g_strdup (devkit_info_get_device_file (info));
-        devkit_info_device_file_symlinks_foreach (info, update_info_symlinks_cb, device);
         devkit_info_property_foreach (info, update_info_properties_cb, device);
-        devkit_info_unref (info);
 
         ret = TRUE;
 
 out:
+        if (info != NULL)
+                devkit_info_unref (info);
         return ret;
 }
 

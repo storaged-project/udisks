@@ -30,20 +30,22 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 #include <ctype.h>
+#include <linux/fs.h>
 
 #include <linux/hdreg.h>
 
 #define BLKGETSIZE64 _IOR(0x12,114,size_t)
 
+#include <glib/gstdio.h>
 #include "partutil.h"
 
 static void
-DEBUG (const gchar *essage, ...)
+DEBUG (const gchar *format, ...)
 {
-#if 0
+#if 1
   va_list args;
-  va_start (args, message);
-  g_vfprintf (stderr, message, args);
+  va_start (args, format);
+  g_vfprintf (stderr, format, args);
   va_end (args);
   g_fprintf (stderr, "\n");
   fflush (stderr);
@@ -111,6 +113,9 @@ struct PartitionTable_s
 	/* offset of table on disk */
 	guint64 offset;
 	guint64 size;
+
+        /* block size */
+        guint64 block_size;
 
 	/* entries in partition table */
 	GSList *entries;
@@ -319,7 +324,7 @@ part_entry_free (PartitionEntry *pe)
 }
 
 static PartitionTable *
-part_table_new_empty (PartitionScheme scheme)
+part_table_new_empty (PartitionScheme scheme, int block_size)
 {
 	PartitionTable *p;
 
@@ -327,6 +332,7 @@ part_table_new_empty (PartitionScheme scheme)
 	p->scheme = scheme;
 	p->offset = 0;
 	p->entries = NULL;
+        p->block_size = block_size;
 
 	return p;
 }
@@ -349,7 +355,7 @@ part_table_free (PartitionTable *p)
 
 #if 0
 static PartitionTable *
-part_table_parse_bsd (int fd, guint64 offset, guint64 size)
+part_table_parse_bsd (int fd, guint64 offset, guint64 size, int block_size)
 {
 	PartitionTable *p;
 
@@ -411,7 +417,7 @@ hexdump (const guint8 *mem, int size)
 #endif
 
 static PartitionTable *
-part_table_parse_msdos_extended (int fd, guint64 offset, guint64 size)
+part_table_parse_msdos_extended (int fd, guint64 offset, guint64 size, int block_size)
 {
 	int n;
 	PartitionTable *p;
@@ -451,7 +457,7 @@ part_table_parse_msdos_extended (int fd, guint64 offset, guint64 size)
 		DEBUG ("MSDOS_MAGIC found");
 
 		if (p == NULL) {
-			p = part_table_new_empty (PART_TYPE_MSDOS_EXTENDED);
+			p = part_table_new_empty (PART_TYPE_MSDOS_EXTENDED, block_size);
 			p->offset = offset;
 			p->size = size;
 		}
@@ -462,8 +468,8 @@ part_table_parse_msdos_extended (int fd, guint64 offset, guint64 size)
 			guint64 pstart;
 			guint64 psize;
 
-			pstart = 0x200 * ((guint64) get_le32 (&(embr[MSDOS_PARTTABLE_OFFSET + n * 16 + 8])));
-			psize  = 0x200 * ((guint64) get_le32 (&(embr[MSDOS_PARTTABLE_OFFSET + n * 16 + 12])));
+			pstart = block_size * ((guint64) get_le32 (&(embr[MSDOS_PARTTABLE_OFFSET + n * 16 + 8])));
+			psize  = block_size * ((guint64) get_le32 (&(embr[MSDOS_PARTTABLE_OFFSET + n * 16 + 12])));
 
 			if (psize == 0)
 				continue;
@@ -504,7 +510,7 @@ out:
 }
 
 static PartitionTable *
-part_table_parse_msdos (int fd, guint64 offset, guint64 size, gboolean *found_gpt)
+part_table_parse_msdos (int fd, guint64 offset, guint64 size, int block_size, gboolean *found_gpt)
 {
 	int n;
 	const guint8 mbr[512] __attribute__ ((aligned));
@@ -549,7 +555,7 @@ part_table_parse_msdos (int fd, guint64 offset, guint64 size, gboolean *found_gp
 		}
 	}
 
-	p = part_table_new_empty (PART_TYPE_MSDOS);
+	p = part_table_new_empty (PART_TYPE_MSDOS, block_size);
 	p->offset = offset;
 	p->size = size;
 
@@ -561,8 +567,8 @@ part_table_parse_msdos (int fd, guint64 offset, guint64 size, gboolean *found_gp
 		guint8 ptype;
 		PartitionTable *e_part_table;
 
-		pstart = 0x200 * ((guint64) get_le32 (&(mbr[MSDOS_PARTTABLE_OFFSET + n * 16 + 8])));
-		psize  = 0x200 * ((guint64) get_le32 (&(mbr[MSDOS_PARTTABLE_OFFSET + n * 16 + 12])));
+		pstart = block_size * ((guint64) get_le32 (&(mbr[MSDOS_PARTTABLE_OFFSET + n * 16 + 8])));
+		psize  = block_size * ((guint64) get_le32 (&(mbr[MSDOS_PARTTABLE_OFFSET + n * 16 + 12])));
 		ptype = mbr[MSDOS_PARTTABLE_OFFSET + n * 16 + 4];
 
 		DEBUG ("looking at part %d (offset %lld, size %lld, type 0x%02x)", n, pstart, psize, ptype);
@@ -577,7 +583,7 @@ part_table_parse_msdos (int fd, guint64 offset, guint64 size, gboolean *found_gp
 		case 0x05: /* MS-DOS */
 		case 0x0f: /* Win95 */
 		case 0x85: /* Linux */
-			e_part_table = part_table_parse_msdos_extended (fd, pstart, psize);
+			e_part_table = part_table_parse_msdos_extended (fd, pstart, psize, block_size);
 			if (e_part_table != NULL) {
 				pe = part_entry_new (e_part_table,
 						     &(mbr[MSDOS_PARTTABLE_OFFSET + n * 16]),
@@ -589,7 +595,7 @@ part_table_parse_msdos (int fd, guint64 offset, guint64 size, gboolean *found_gp
 		case 0xa5: /* FreeBSD */
 		case 0xa6: /* OpenBSD */
 		case 0xa9: /* NetBSD */
-			//e_part_table = part_table_parse_bsd (fd, pstart, psize);
+			//e_part_table = part_table_parse_bsd (fd, pstart, psize, block_size);
 			//break;
 
 		default:
@@ -618,7 +624,7 @@ out:
 #define GPT_PART_TYPE_GUID_EMPTY "00000000-0000-0000-0000-000000000000"
 
 static PartitionTable *
-part_table_parse_gpt (int fd, guint64 offset, guint64 size)
+part_table_parse_gpt (int fd, guint64 offset, guint64 size, int block_size)
 {
 	int n;
 	PartitionTable *p;
@@ -691,7 +697,7 @@ part_table_parse_gpt (int fd, guint64 offset, guint64 size)
 	size_of_entry = get_le32(buf);
 
 
-	p = part_table_new_empty (PART_TYPE_GPT);
+	p = part_table_new_empty (PART_TYPE_GPT, block_size);
 	p->offset = offset;
 	p->size = size;
 
@@ -747,7 +753,7 @@ out:
 #define MAC_PART_MAGIC "PM"
 
 static PartitionTable *
-part_table_parse_apple (int fd, guint64 offset, guint64 size)
+part_table_parse_apple (int fd, guint64 offset, guint64 size, int device_block_size)
 {
 	int n;
 	PartitionTable *p;
@@ -805,7 +811,7 @@ part_table_parse_apple (int fd, guint64 offset, guint64 size)
 
 	DEBUG ("Mac MAGIC found, block_size=%d", block_size);
 
-	p = part_table_new_empty (PART_TYPE_APPLE);
+	p = part_table_new_empty (PART_TYPE_APPLE, block_size);
 	p->offset = offset;
 	p->size = size;
 
@@ -855,6 +861,7 @@ out:
 PartitionTable *
 part_table_load_from_disk (int fd)
 {
+        int block_size;
 	guint64 size;
 	PartitionTable *p;
 	gboolean found_gpt;
@@ -866,21 +873,26 @@ part_table_load_from_disk (int fd)
 		goto out;
 	}
 
-	p = part_table_parse_msdos (fd, 0, size, &found_gpt);
+	if (ioctl (fd, BLKSSZGET, &block_size) != 0) {
+		DEBUG ("Cannot determine block size");
+		goto out;
+	}
+
+	p = part_table_parse_msdos (fd, 0, size, block_size, &found_gpt);
 	if (p != NULL) {
 		DEBUG ("MSDOS partition table detected");
 		goto out;
 	}
 
 	if (found_gpt) {
-		p = part_table_parse_gpt (fd, 0, size);
+		p = part_table_parse_gpt (fd, 0, size, block_size);
 		if (p != NULL) {
 			DEBUG ("EFI GPT partition table detected");
 			goto out;
 		}
 	}
 
-	p = part_table_parse_apple (fd, 0, size);
+	p = part_table_parse_apple (fd, 0, size, block_size);
 	if (p != NULL) {
 		DEBUG ("Apple partition table detected");
 		goto out;
@@ -958,7 +970,7 @@ part_table_entry_is_in_use (PartitionTable *p, int entry)
 		break;
 	case PART_TYPE_MSDOS:
 	case PART_TYPE_MSDOS_EXTENDED:
-                if (pe->data[4] == 0)
+                if (part_table_entry_get_offset (p, entry) == 0)
                         ret = FALSE;
                 else
                         ret = TRUE;
@@ -1159,21 +1171,21 @@ part_table_entry_get_offset (PartitionTable *p, int entry)
 
 	switch (p->scheme) {
 	case PART_TYPE_GPT:
-		val = 0x200 * ((guint64) get_le64 (pe->data + 32));
+		val = p->block_size * ((guint64) get_le64 (pe->data + 32));
 		break;
 
 	case PART_TYPE_MSDOS:
-		val = 0x200 * ((guint64) get_le32 (pe->data + 8));
+		val = p->block_size * ((guint64) get_le32 (pe->data + 8));
 		break;
 	case PART_TYPE_MSDOS_EXTENDED:
 		/* tricky here.. the offset in the EMBR is from the start of the EMBR and they are
 		 * scattered around the ext partition... Hence, just use the entry's offset and subtract
 		 * it's offset from the EMBR..
 		 */
-		val = 0x200 * ((guint64) get_le32 (pe->data + 8)) + pe->offset - MSDOS_PARTTABLE_OFFSET;
+		val = p->block_size * ((guint64) get_le32 (pe->data + 8)) + pe->offset - MSDOS_PARTTABLE_OFFSET;
 		break;
 	case PART_TYPE_APPLE:
-		val = 0x200 * ((guint64) get_be32 (pe->data + 2*2 + 1*4));
+		val = p->block_size * ((guint64) get_be32 (pe->data + 2*2 + 1*4));
 		break;
 	default:
 		break;
@@ -1197,14 +1209,14 @@ part_table_entry_get_size (PartitionTable *p, int entry)
 
 	switch (p->scheme) {
 	case PART_TYPE_GPT:
-		val = 0x200 * (((guint64) get_le64 (pe->data + 40)) - ((guint64) get_le64 (pe->data + 32)) + 1);
+		val = p->block_size * (((guint64) get_le64 (pe->data + 40)) - ((guint64) get_le64 (pe->data + 32)) + 1);
 		break;
 	case PART_TYPE_MSDOS:
 	case PART_TYPE_MSDOS_EXTENDED:
-		val = 0x200 * ((guint64) get_le32 (pe->data + 12));
+		val = p->block_size * ((guint64) get_le32 (pe->data + 12));
 		break;
 	case PART_TYPE_APPLE:
-		val = 0x200 * ((guint64) get_be32 (pe->data + 2*2 + 2*4));
+		val = p->block_size * ((guint64) get_be32 (pe->data + 2*2 + 2*4));
 		break;
 	default:
 		break;
