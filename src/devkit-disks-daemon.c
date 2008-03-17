@@ -54,6 +54,7 @@
 #include "mounts-file.h"
 
 #include "devkit-disks-daemon-glue.h"
+#include "devkit-disks-marshal.h"
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
@@ -62,6 +63,7 @@ enum
         DEVICE_ADDED_SIGNAL,
         DEVICE_REMOVED_SIGNAL,
         DEVICE_CHANGED_SIGNAL,
+        DEVICE_JOB_CHANGED_SIGNAL,
         LAST_SIGNAL,
 };
 
@@ -332,6 +334,25 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
                               NULL, NULL,
                               g_cclosure_marshal_VOID__STRING,
                               G_TYPE_NONE, 1, G_TYPE_STRING);
+
+        signals[DEVICE_JOB_CHANGED_SIGNAL] =
+                g_signal_new ("device-job-changed",
+                              G_OBJECT_CLASS_TYPE (klass),
+                              G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                              0,
+                              NULL, NULL,
+                              devkit_disks_marshal_VOID__STRING_BOOLEAN_STRING_BOOLEAN_INT_INT_STRING_DOUBLE,
+                              G_TYPE_NONE,
+                              8,
+                              G_TYPE_STRING,
+                              G_TYPE_BOOLEAN,
+                              G_TYPE_STRING,
+                              G_TYPE_BOOLEAN,
+                              G_TYPE_INT,
+                              G_TYPE_INT,
+                              G_TYPE_STRING,
+                              G_TYPE_DOUBLE);
+
 
         dbus_g_object_type_install_info (DEVKIT_TYPE_DISKS_DAEMON, &dbus_glib_devkit_disks_daemon_object_info);
 

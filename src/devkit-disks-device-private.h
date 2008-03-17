@@ -28,14 +28,27 @@
 
 G_BEGIN_DECLS
 
+struct Job;
+typedef struct Job Job;
+
 struct DevkitDisksDevicePrivate
 {
         DBusGConnection *system_bus_connection;
         DBusGProxy      *system_bus_proxy;
         DevkitDisksDaemon *daemon;
-        char *object_path;
 
+        Job *job;
+
+        char *object_path;
         char *native_path;
+
+        gboolean job_in_progress;
+        char *job_id;
+        gboolean job_is_cancellable;
+        int job_num_tasks;
+        int job_cur_task;
+        char *job_cur_task_id;
+        double job_cur_task_percentage;
 
         struct {
                 char *device_file;

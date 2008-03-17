@@ -53,7 +53,7 @@ typedef enum
         DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
         DEVKIT_DISKS_DEVICE_ERROR_NOT_SUPPORTED,
         DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTABLE,
-        DEVKIT_DISKS_DEVICE_ERROR_ALREADY_MOUNTED,
+        DEVKIT_DISKS_DEVICE_ERROR_MOUNTED,
         DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTED,
         DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTED_BY_DK,
         DEVKIT_DISKS_DEVICE_ERROR_FSTAB_ENTRY,
@@ -61,6 +61,10 @@ typedef enum
         DEVKIT_DISKS_DEVICE_ERROR_FILESYSTEM_BUSY,
         DEVKIT_DISKS_DEVICE_ERROR_CANNOT_REMOUNT,
         DEVKIT_DISKS_DEVICE_ERROR_UNMOUNT_OPTION_NOT_ALLOWED,
+        DEVKIT_DISKS_DEVICE_ERROR_NO_JOB_IN_PROGRESS,
+        DEVKIT_DISKS_DEVICE_ERROR_JOB_ALREADY_IN_PROGRESS,
+        DEVKIT_DISKS_DEVICE_ERROR_JOB_CANNOT_BE_CANCELLED,
+        DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
         DEVKIT_DISKS_DEVICE_NUM_ERRORS
 } DevkitDisksDeviceError;
 
@@ -90,6 +94,9 @@ void               devkit_disks_device_local_set_unmounted (DevkitDisksDevice *d
 
 /* exported methods */
 
+gboolean devkit_disks_device_cancel_job (DevkitDisksDevice     *device,
+                                         DBusGMethodInvocation *context);
+
 gboolean devkit_disks_device_mount (DevkitDisksDevice     *device,
                                     const char            *filesystem_type,
                                     char                 **options,
@@ -98,6 +105,15 @@ gboolean devkit_disks_device_mount (DevkitDisksDevice     *device,
 gboolean devkit_disks_device_unmount (DevkitDisksDevice     *device,
                                       char                 **options,
                                       DBusGMethodInvocation *context);
+
+gboolean devkit_disks_device_erase (DevkitDisksDevice     *device,
+                                    char                 **options,
+                                    DBusGMethodInvocation *context);
+
+gboolean devkit_disks_device_create_filesystem (DevkitDisksDevice     *device,
+                                                const char            *fstype,
+                                                char                 **options,
+                                                DBusGMethodInvocation *context);
 
 G_END_DECLS
 

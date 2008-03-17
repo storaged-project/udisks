@@ -34,7 +34,6 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <fcntl.h>
-#include <signal.h>
 #include <pwd.h>
 #include <grp.h>
 #include <linux/fs.h>
@@ -52,6 +51,7 @@
 
 #include "devkit-disks-device.h"
 #include "devkit-disks-device-private.h"
+#include "devkit-disks-marshal.h"
 #include "mounts-file.h"
 
 /*--------------------------------------------------------------------------------------------------------------*/
@@ -84,6 +84,14 @@ enum
         PROP_DEVICE_IS_MOUNTED,
         PROP_DEVICE_MOUNT_PATH,
 
+        PROP_JOB_IN_PROGRESS,
+        PROP_JOB_ID,
+        PROP_JOB_IS_CANCELLABLE,
+        PROP_JOB_NUM_TASKS,
+        PROP_JOB_CUR_TASK,
+        PROP_JOB_CUR_TASK_ID,
+        PROP_JOB_CUR_TASK_PERCENTAGE,
+
         PROP_ID_USAGE,
         PROP_ID_TYPE,
         PROP_ID_VERSION,
@@ -115,6 +123,7 @@ enum
 enum
 {
         CHANGED_SIGNAL,
+        JOB_CHANGED_SIGNAL,
         LAST_SIGNAL,
 };
 
@@ -150,7 +159,7 @@ devkit_disks_device_error_get_type (void)
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_GENERAL, "GeneralError"),
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_SUPPORTED, "NotSupported"),
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTABLE, "NotMountable"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_ALREADY_MOUNTED, "AlreadyMounted"),
+                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_MOUNTED, "Mounted"),
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTED, "NotMounted"),
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTED_BY_DK, "NotMountedByDeviceKit"),
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_FSTAB_ENTRY, "FstabEntry"),
@@ -158,6 +167,10 @@ devkit_disks_device_error_get_type (void)
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_FILESYSTEM_BUSY, "FilesystemBusy"),
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_CANNOT_REMOUNT, "CannotRemount"),
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_UNMOUNT_OPTION_NOT_ALLOWED, "UnmountOptionNotAllowed"),
+                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NO_JOB_IN_PROGRESS, "NoJobInProgress"),
+                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_JOB_ALREADY_IN_PROGRESS, "JobAlreadyInProgress"),
+                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_JOB_CANNOT_BE_CANCELLED, "JobCannotBeCancelled"),
+                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED, "JobWasCancelled"),
                         { 0, 0, 0 }
                 };
                 g_assert (DEVKIT_DISKS_DEVICE_NUM_ERRORS == G_N_ELEMENTS (values) - 1);
@@ -232,6 +245,28 @@ get_property (GObject         *object,
 		break;
 	case PROP_DEVICE_MOUNT_PATH:
 		g_value_set_string (value, device->priv->info.device_mount_path);
+		break;
+
+	case PROP_JOB_IN_PROGRESS:
+		g_value_set_boolean (value, device->priv->job_in_progress);
+		break;
+	case PROP_JOB_ID:
+		g_value_set_string (value, device->priv->job_id);
+		break;
+	case PROP_JOB_IS_CANCELLABLE:
+		g_value_set_boolean (value, device->priv->job_is_cancellable);
+		break;
+	case PROP_JOB_NUM_TASKS:
+		g_value_set_int (value, device->priv->job_num_tasks);
+		break;
+	case PROP_JOB_CUR_TASK:
+		g_value_set_int (value, device->priv->job_cur_task);
+		break;
+	case PROP_JOB_CUR_TASK_ID:
+		g_value_set_string (value, device->priv->job_cur_task_id);
+		break;
+	case PROP_JOB_CUR_TASK_PERCENTAGE:
+		g_value_set_double (value, device->priv->job_cur_task_percentage);
 		break;
 
         case PROP_ID_USAGE:
@@ -335,6 +370,23 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                               g_cclosure_marshal_VOID__VOID,
                               G_TYPE_NONE, 0);
 
+        signals[JOB_CHANGED_SIGNAL] =
+                g_signal_new ("job-changed",
+                              G_OBJECT_CLASS_TYPE (klass),
+                              G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                              0,
+                              NULL, NULL,
+                              devkit_disks_marshal_VOID__BOOLEAN_STRING_BOOLEAN_INT_INT_STRING_DOUBLE,
+                              G_TYPE_NONE,
+                              7,
+                              G_TYPE_BOOLEAN,
+                              G_TYPE_STRING,
+                              G_TYPE_BOOLEAN,
+                              G_TYPE_INT,
+                              G_TYPE_INT,
+                              G_TYPE_STRING,
+                              G_TYPE_DOUBLE);
+
         dbus_g_object_type_install_info (DEVKIT_TYPE_DISKS_DEVICE, &dbus_glib_devkit_disks_device_object_info);
 
         dbus_g_error_domain_register (DEVKIT_DISKS_DEVICE_ERROR,
@@ -397,6 +449,35 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DEVICE_MOUNT_PATH,
                 g_param_spec_string ("device-mount-path", NULL, NULL, NULL, G_PARAM_READABLE));
+
+        g_object_class_install_property (
+                object_class,
+                PROP_JOB_IN_PROGRESS,
+                g_param_spec_boolean ("job-in-progress", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_JOB_ID,
+                g_param_spec_string ("job-id", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_JOB_IS_CANCELLABLE,
+                g_param_spec_boolean ("job-is-cancellable", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_JOB_NUM_TASKS,
+                g_param_spec_int ("job-num-tasks", NULL, NULL, 0, G_MAXINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_JOB_CUR_TASK,
+                g_param_spec_int ("job-cur-task", NULL, NULL, 0, G_MAXINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_JOB_CUR_TASK_ID,
+                g_param_spec_string ("job-cur-task-id", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_JOB_CUR_TASK_PERCENTAGE,
+                g_param_spec_double ("job-cur-task-percentage", NULL, NULL, -1, 100, -1, G_PARAM_READABLE));
 
         g_object_class_install_property (
                 object_class,
@@ -647,6 +728,26 @@ sysfs_file_exists (const char *dir, const char *attribute)
         g_free (filename);
 
         return result;
+}
+
+static void
+devkit_device_emit_changed_to_kernel (DevkitDisksDevice *device)
+{
+        FILE *f;
+        char *filename;
+
+        filename = g_build_filename (device->priv->native_path, "uevent", NULL);
+        f = fopen (filename, "w");
+        if (f == NULL) {
+                g_warning ("error opening %s for writing: %m", filename);
+        } else {
+                /* TODO: change 'add' to 'change' when new udev rules are released */
+                if (fputs ("add", f) == EOF) {
+                        g_warning ("error writing 'add' to %s: %m", filename);
+                }
+                fclose (f);
+        }
+        g_free (filename);
 }
 
 static void
@@ -953,6 +1054,31 @@ out:
 }
 
 static void
+emit_job_changed (DevkitDisksDevice *device)
+{
+        g_print ("emitting job-changed on %s\n", device->priv->native_path);
+        g_signal_emit_by_name (device->priv->daemon,
+                               "device-job-changed",
+                               device->priv->object_path,
+                               device->priv->job_in_progress,
+                               device->priv->job_id,
+                               device->priv->job_is_cancellable,
+                               device->priv->job_num_tasks,
+                               device->priv->job_cur_task,
+                               device->priv->job_cur_task_id,
+                               device->priv->job_cur_task_percentage,
+                               NULL);
+        g_signal_emit (device, signals[JOB_CHANGED_SIGNAL], 0,
+                       device->priv->job_in_progress,
+                       device->priv->job_id,
+                       device->priv->job_is_cancellable,
+                       device->priv->job_num_tasks,
+                       device->priv->job_cur_task,
+                       device->priv->job_cur_task_id,
+                       device->priv->job_cur_task_percentage);
+}
+
+static void
 emit_changed (DevkitDisksDevice *device)
 {
         g_print ("emitting changed on %s\n", device->priv->native_path);
@@ -1137,11 +1263,12 @@ throw_error (DBusGMethodInvocation *context, int error_code, const char *format,
 typedef void (*JobCompletedFunc) (DBusGMethodInvocation *context,
                                   DevkitDisksDevice *device,
                                   PolKitCaller *caller,
+                                  gboolean was_cancelled,
                                   int status,
                                   const char *stderr,
                                   gpointer user_data);
 
-typedef struct {
+struct Job {
         DevkitDisksDevice *device;
         PolKitCaller *pk_caller;
         DBusGMethodInvocation *context;
@@ -1149,24 +1276,35 @@ typedef struct {
         GPid pid;
         gpointer user_data;
         GDestroyNotify user_data_destroy_func;
+        gboolean was_cancelled;
 
         int stderr_fd;
         GIOChannel *error_channel;
         guint error_channel_source_id;
         GString *error_string;
-} Job;
+
+        int stdout_fd;
+        GIOChannel *out_channel;
+        guint out_channel_source_id;
+};
 
 static void
 job_free (Job *job)
 {
+        if (job->user_data_destroy_func != NULL)
+                job->user_data_destroy_func (job->user_data);
         if (job->device != NULL)
                 g_object_unref (job->device);
         if (job->pk_caller != NULL)
                 polkit_caller_unref (job->pk_caller);
         if (job->stderr_fd >= 0)
                 close (job->stderr_fd);
+        if (job->stdout_fd >= 0)
+                close (job->stdout_fd);
         g_source_remove (job->error_channel_source_id);
+        g_source_remove (job->out_channel_source_id);
         g_io_channel_unref (job->error_channel);
+        g_io_channel_unref (job->out_channel);
         g_string_free (job->error_string, TRUE);
         g_free (job);
 }
@@ -1176,13 +1314,42 @@ job_child_watch_cb (GPid pid, int status, gpointer user_data)
 {
         Job *job = user_data;
 
+        g_print ("helper(pid %5d): completed with exit code %d\n", job->pid, WEXITSTATUS (status));
+
         job->job_completed_func (job->context,
                                  job->device,
                                  job->pk_caller,
+                                 job->was_cancelled,
                                  status,
                                  job->error_string->str,
                                  job->user_data);
+
+        job->device->priv->job_in_progress = FALSE;
+        g_free (job->device->priv->job_id);
+        job->device->priv->job_id = NULL;
+        job->device->priv->job_is_cancellable = FALSE;
+        job->device->priv->job_num_tasks = 0;
+        job->device->priv->job_cur_task = 0;
+        g_free (job->device->priv->job_cur_task_id);
+        job->device->priv->job_cur_task_id = NULL;
+        job->device->priv->job_cur_task_percentage = -1.0;
+
+        job->device->priv->job = NULL;
+
+        emit_job_changed (job->device);
+
         job_free (job);
+}
+
+static void
+job_cancel (DevkitDisksDevice *device)
+{
+        g_return_if_fail (device->priv->job != NULL);
+
+        device->priv->job->was_cancelled = TRUE;
+
+        /* TODO: maybe wait and user a bigger hammer? (SIGKILL) */
+        kill (device->priv->job->pid, SIGTERM);
 }
 
 static gboolean
@@ -1201,19 +1368,65 @@ job_read_error (GIOChannel *channel,
 }
 
 static gboolean
+job_read_out (GIOChannel *channel,
+              GIOCondition condition,
+              gpointer user_data)
+{
+  char *str;
+  gsize str_len;
+  Job *job = user_data;
+
+  g_io_channel_read_line (channel, &str, &str_len, NULL, NULL);
+  g_print ("helper(pid %5d): %s", job->pid, str);
+
+  if (strlen (str) < 256) {
+          int cur_task;
+          int num_tasks;
+          double cur_task_percentage;;
+          char cur_task_id[256];
+
+          if (sscanf (str, "progress: %d %d %lg %s",
+                      &cur_task,
+                      &num_tasks,
+                      &cur_task_percentage,
+                      (char *) &cur_task_id) == 4) {
+                  job->device->priv->job_num_tasks = num_tasks;
+                  job->device->priv->job_cur_task = cur_task;
+                  g_free (job->device->priv->job_cur_task_id);
+                  job->device->priv->job_cur_task_id = g_strdup (cur_task_id);
+                  job->device->priv->job_cur_task_percentage = cur_task_percentage;
+                  emit_job_changed (job->device);
+          }
+  }
+
+  g_free (str);
+  return TRUE;
+}
+
+static gboolean
 job_new (DBusGMethodInvocation *context,
-         DevkitDisksDevice *device,
-         PolKitCaller *pk_caller,
-         char **argv,
-         JobCompletedFunc job_completed_func,
-         GError **error,
-         gpointer user_data,
-         GDestroyNotify user_data_destroy_func)
+         const char            *job_id,
+         gboolean               is_cancellable,
+         DevkitDisksDevice     *device,
+         PolKitCaller          *pk_caller,
+         char                 **argv,
+         JobCompletedFunc       job_completed_func,
+         gpointer               user_data,
+         GDestroyNotify         user_data_destroy_func)
 {
         Job *job;
         gboolean ret;
+        GError *error;
 
         ret = FALSE;
+        job = NULL;
+
+        if (device->priv->job != NULL) {
+                throw_error (context,
+                             DEVKIT_DISKS_DEVICE_ERROR_JOB_ALREADY_IN_PROGRESS,
+                             "There is already a job running");
+                goto out;
+        }
 
         job = g_new0 (Job, 1);
         job->context = context;
@@ -1223,7 +1436,11 @@ job_new (DBusGMethodInvocation *context,
         job->user_data = user_data;
         job->user_data_destroy_func = user_data_destroy_func;
         job->stderr_fd = -1;
+        job->stdout_fd = -1;
+        g_free (job->device->priv->job_id);
+        job->device->priv->job_id = g_strdup (job_id);
 
+        error = NULL;
         if (!g_spawn_async_with_pipes (NULL,
                                        argv,
                                        NULL,
@@ -1232,10 +1449,11 @@ job_new (DBusGMethodInvocation *context,
                                        NULL,
                                        &(job->pid),
                                        NULL,
-                                       NULL,
+                                       &(job->stdout_fd),
                                        &(job->stderr_fd),
-                                       error)) {
-                job->user_data_destroy_func (job->user_data);
+                                       &error)) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_GENERAL, "Error starting job: %s", error->message);
+                g_error_free (error);
                 goto out;
         }
 
@@ -1245,10 +1463,27 @@ job_new (DBusGMethodInvocation *context,
         job->error_channel = g_io_channel_unix_new (job->stderr_fd);
         job->error_channel_source_id = g_io_add_watch (job->error_channel, G_IO_IN, job_read_error, job);
 
+        job->out_channel = g_io_channel_unix_new (job->stdout_fd);
+        job->out_channel_source_id = g_io_add_watch (job->out_channel, G_IO_IN, job_read_out, job);
+
         ret = TRUE;
 
+        device->priv->job_in_progress = TRUE;
+        device->priv->job_is_cancellable = is_cancellable;
+        device->priv->job_num_tasks = 0;
+        device->priv->job_cur_task = 0;
+        g_free (device->priv->job_cur_task_id);
+        device->priv->job_cur_task_id = NULL;
+        device->priv->job_cur_task_percentage = -1.0;
+
+        device->priv->job = job;
+
+        emit_job_changed (device);
+
+        g_print ("helper(pid %5d): launched job %s on %s\n", job->pid, argv[0], device->priv->info.device_file);
+
 out:
-        if (!ret)
+        if (!ret && job != NULL)
                 job_free (job);
         return ret;
 }
@@ -1627,6 +1862,7 @@ static void
 mount_completed_cb (DBusGMethodInvocation *context,
                     DevkitDisksDevice *device,
                     PolKitCaller *pk_caller,
+                    gboolean job_was_cancelled,
                     int status,
                     const char *stderr,
                     gpointer user_data)
@@ -1638,7 +1874,7 @@ mount_completed_cb (DBusGMethodInvocation *context,
         if (pk_caller != NULL)
                 polkit_caller_get_uid (pk_caller, &uid);
 
-        if (WEXITSTATUS (status) == 0) {
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
                 if (!data->is_remount) {
                         devkit_disks_device_local_set_mounted (device, data->mount_point);
                         mounts_file_add (device, uid, data->remove_dir_on_unmount);
@@ -1650,9 +1886,17 @@ mount_completed_cb (DBusGMethodInvocation *context,
                                 g_warning ("Error removing dir in late mount error path: %m");
                         }
                 }
-                throw_error (context,
-                             DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
-                             "Error mounting: mount exited with exit code %d: %s", WEXITSTATUS (status), stderr);
+
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Error mounting: mount exited with exit code %d: %s",
+                                     WEXITSTATUS (status), stderr);
+                }
         }
 }
 
@@ -1726,8 +1970,8 @@ devkit_disks_device_mount (DevkitDisksDevice     *device,
 
         fsmo = find_mount_options_for_fs (fstype);
 
-        /* always prepend some reasonable default mount options; these should be
-         * chosen here so the user can override them later on.
+        /* always prepend some reasonable default mount options; these are
+         * chosen here; the user can override them if he wants to
          */
         options = prepend_default_mount_options (fsmo, caller_uid, given_options);
 
@@ -1776,7 +2020,7 @@ devkit_disks_device_mount (DevkitDisksDevice     *device,
 
         if (device->priv->info.device_is_mounted) {
                 if (!is_remount) {
-                        throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_ALREADY_MOUNTED,
+                        throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_MOUNTED,
                                      "Device is already mounted");
                         goto out;
                 }
@@ -1853,15 +2097,14 @@ try_another_mount_point:
 
         error = NULL;
         if (!job_new (context,
+                      "Mount",
+                      FALSE,
                       device,
                       pk_caller,
                       argv,
                       mount_completed_cb,
-                      &error,
                       mount_data_new (mount_point, remove_dir_on_unmount, is_remount),
                       (GDestroyNotify) mount_data_free)) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_GENERAL, "Error mounting: %s", error->message);
-                g_error_free (error);
                 if (!is_remount) {
                         if (g_rmdir (mount_point) != 0) {
                                 g_warning ("Error removing dir in early mount error path: %m");
@@ -1886,27 +2129,34 @@ static void
 unmount_completed_cb (DBusGMethodInvocation *context,
                       DevkitDisksDevice *device,
                       PolKitCaller *pk_caller,
+                      gboolean job_was_cancelled,
                       int status,
                       const char *stderr,
                       gpointer user_data)
 {
         char *mount_path = user_data;
 
-        if (WEXITSTATUS (status) == 0) {
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
                 devkit_disks_device_local_set_unmounted (device);
                 mounts_file_remove (device, mount_path);
                 dbus_g_method_return (context);
         } else {
-                if (strstr (stderr, "device is busy") != NULL) {
+                if (job_was_cancelled) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_FILESYSTEM_BUSY,
-                                     "Cannot unmount because file system on device is busy");
+                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     "Job was cancelled");
                 } else {
-                        throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
-                                     "Error unmounting: umount exited with exit code %d: %s",
-                                     WEXITSTATUS (status),
-                                     stderr);
+                        if (strstr (stderr, "device is busy") != NULL) {
+                                throw_error (context,
+                                             DEVKIT_DISKS_DEVICE_ERROR_FILESYSTEM_BUSY,
+                                             "Cannot unmount because file system on device is busy");
+                        } else {
+                                throw_error (context,
+                                             DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                             "Error unmounting: umount exited with exit code %d: %s",
+                                             WEXITSTATUS (status),
+                                             stderr);
+                        }
                 }
         }
 }
@@ -1962,7 +2212,7 @@ devkit_disks_device_unmount (DevkitDisksDevice     *device,
                 } else {
                         throw_error (context,
                                      DEVKIT_DISKS_DEVICE_ERROR_UNMOUNT_OPTION_NOT_ALLOWED,
-                                     "Device is not mounted by DeviceKit-disks");
+                                     "Unknown option %s", option);
                 }
         }
 
@@ -1977,15 +2227,14 @@ devkit_disks_device_unmount (DevkitDisksDevice     *device,
 
         error = NULL;
         if (!job_new (context,
+                      "Unmount",
+                      FALSE,
                       device,
                       pk_caller,
                       argv,
                       unmount_completed_cb,
-                      &error,
                       g_strdup (device->priv->info.device_mount_path),
                       g_free)) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_GENERAL, "Error unmounting: %s", error->message);
-                g_error_free (error);
                 goto out;
         }
 
@@ -1995,3 +2244,219 @@ out:
         return TRUE;
 }
 
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+erase_completed_cb (DBusGMethodInvocation *context,
+                    DevkitDisksDevice *device,
+                    PolKitCaller *pk_caller,
+                    gboolean job_was_cancelled,
+                    int status,
+                    const char *stderr,
+                    gpointer user_data)
+{
+        /* either way, poke the kernel so we can reread the data */
+        devkit_device_emit_changed_to_kernel (device);
+
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+                dbus_g_method_return (context);
+        } else {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Error erasing: helper exited with exit code %d: %s",
+                                     WEXITSTATUS (status),
+                                     stderr);
+                }
+        }
+}
+
+gboolean
+devkit_disks_device_erase (DevkitDisksDevice     *device,
+                           char                 **options,
+                           DBusGMethodInvocation *context)
+{
+        int n;
+        char *argv[16];
+        GError *error;
+        PolKitCaller *pk_caller;
+
+        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
+                goto out;
+
+        if (device->priv->info.device_is_mounted) {
+                throw_error (context,
+                             DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTED,
+                             "Device is mounted");
+                goto out;
+        }
+
+        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                  pk_caller,
+                                                  /* TODO: revisit authorization */
+                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  context))
+                goto out;
+
+        /* TODO: options: quick, full, secure_gutmann_35pass etc. */
+
+        n = 0;
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-erase";
+        argv[n++] = device->priv->info.device_file;
+        argv[n++] = NULL;
+
+        error = NULL;
+        if (!job_new (context,
+                      "Erase",
+                      TRUE,
+                      device,
+                      pk_caller,
+                      argv,
+                      erase_completed_cb,
+                      NULL,
+                      NULL)) {
+                goto out;
+        }
+
+out:
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+create_filesystem_completed_cb (DBusGMethodInvocation *context,
+                                DevkitDisksDevice *device,
+                                PolKitCaller *pk_caller,
+                                gboolean job_was_cancelled,
+                                int status,
+                                const char *stderr,
+                                gpointer user_data)
+{
+        /* either way, poke the kernel so we can reread the data */
+        devkit_device_emit_changed_to_kernel (device);
+
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+                dbus_g_method_return (context);
+        } else {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Error creating file system: helper exited with exit code %d: %s",
+                                     WEXITSTATUS (status),
+                                     stderr);
+                }
+        }
+}
+
+gboolean
+devkit_disks_device_create_filesystem (DevkitDisksDevice     *device,
+                                       const char            *fstype,
+                                       char                 **options,
+                                       DBusGMethodInvocation *context)
+{
+        int n;
+        int m;
+        char *argv[128];
+        GError *error;
+        PolKitCaller *pk_caller;
+
+        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
+                goto out;
+
+        if (device->priv->info.device_is_mounted) {
+                throw_error (context,
+                             DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTED,
+                             "Device is mounted");
+                goto out;
+        }
+
+        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                  pk_caller,
+                                                  /* TODO: revisit authorization */
+                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  context))
+                goto out;
+
+        if (strlen (fstype) == 0) {
+                throw_error (context,
+                             DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                             "fstype not specified");
+                goto out;
+        }
+
+        n = 0;
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-mkfs";
+        argv[n++] = (char *) fstype;
+        argv[n++] = device->priv->info.device_file;
+        for (m = 0; options[m] != NULL; m++) {
+                if (n >= (int) sizeof (argv) - 1) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Too many options");
+                        goto out;
+                }
+                /* the helper will validate each option */
+                argv[n++] = (char *) options[m];
+        }
+        argv[n++] = NULL;
+
+        error = NULL;
+        if (!job_new (context,
+                      "CreateFilesystem",
+                      TRUE,
+                      device,
+                      pk_caller,
+                      argv,
+                      create_filesystem_completed_cb,
+                      NULL,
+                      NULL)) {
+                goto out;
+        }
+
+out:
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+gboolean
+devkit_disks_device_cancel_job (DevkitDisksDevice     *device,
+                                DBusGMethodInvocation *context)
+{
+        if (!device->priv->job_in_progress) {
+                throw_error (context,
+                             DEVKIT_DISKS_DEVICE_ERROR_NO_JOB_IN_PROGRESS,
+                             "There is no job to cancel");
+                goto out;
+        }
+
+        if (!device->priv->job_is_cancellable) {
+                throw_error (context,
+                             DEVKIT_DISKS_DEVICE_ERROR_JOB_CANNOT_BE_CANCELLED,
+                             "Job cannot be cancelled");
+                goto out;
+        }
+
+        /* TODO: check authorization */
+
+        job_cancel (device);
+
+        /* TODO: wait returning once the job is actually cancelled? */
+        dbus_g_method_return (context);
+
+out:
+        return TRUE;
+}

@@ -16,9 +16,16 @@ INCLUDES = \
 	$(GLIB_CFLAGS) \
 	$(GIO_CFLAGS)
 
-BUILT_SOURCES =						\
-	devkit-disks-daemon-glue.h			\
-	devkit-disks-device-glue.h
+BUILT_SOURCES =							\
+	devkit-disks-daemon-glue.h				\
+	devkit-disks-device-glue.h				\
+	devkit-disks-marshal.h		devkit-disks-marshal.c
+
+devkit-disks-marshal.h: devkit-disks-marshal.list
+	glib-genmarshal $< --prefix=devkit_disks_marshal --header > $@
+
+devkit-disks-marshal.c: devkit-disks-marshal.list
+	echo "#include \"devkit-disks-marshal.h\"" > $@ && glib-genmarshal $< --prefix=devkit_disks_marshal --body >> $@
 
 devkit-disks-daemon-glue.h: org.freedesktop.DeviceKit.Disks.xml Makefile.am
 	dbus-binding-tool --prefix=devkit_disks_daemon --mode=glib-server --output=devkit-disks-daemon-glue.h org.freedesktop.DeviceKit.Disks.xml
@@ -26,7 +33,7 @@ devkit-disks-daemon-glue.h: org.freedesktop.DeviceKit.Disks.xml Makefile.am
 devkit-disks-device-glue.h: org.freedesktop.DeviceKit.Disks.Device.xml Makefile.am
 	dbus-binding-tool --prefix=devkit_disks_device --mode=glib-server --output=devkit-disks-device-glue.h org.freedesktop.DeviceKit.Disks.Device.xml
 
-libexec_PROGRAMS = devkit-disks-daemon
+libexec_PROGRAMS = devkit-disks-daemon devkit-disks-helper-erase devkit-disks-helper-mkfs
 
 dbusifdir = $(datadir)/dbus-1/interfaces
 dbusif_DATA = org.freedesktop.DeviceKit.Disks.xml org.freedesktop.DeviceKit.Disks.Device.xml
@@ -59,6 +66,14 @@ devkit_disks_daemon_LDADD = 				\
 	$(DBUS_GLIB_LIBS)				\
 	$(POLKIT_DBUS_LIBS)				\
 	$(DEVKIT_LIBS)
+
+devkit_disks_helper_erase_SOURCES = job-shared.h job-erase.c
+devkit_disks_helper_erase_CPPFLAGS = $(AM_CPPFLAGS)
+devkit_disks_helper_erase_LDADD = $(GLIB_LIBS)
+
+devkit_disks_helper_mkfs_SOURCES = job-shared.h job-mkfs.c
+devkit_disks_helper_mkfs_CPPFLAGS = $(AM_CPPFLAGS)
+devkit_disks_helper_mkfs_LDADD = $(GLIB_LIBS)
 
 servicedir       = $(datadir)/dbus-1/system-services
 service_in_files = org.freedesktop.DeviceKit.Disks.service.in

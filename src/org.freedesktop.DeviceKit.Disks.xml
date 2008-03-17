@@ -46,6 +46,18 @@
       <arg name="device" type="o"/>
     </signal>
 
+    <!-- Job state on a device was changed -->
+    <signal name="DeviceJobChanged">
+      <arg name="device" type="o"/>
+      <arg name="job-in-progress" type="b"/>
+      <arg name="job-is-cancellable" type="b"/>
+      <arg name="job-id" type="s"/>
+      <arg name="job-num-tasks" type="i"/>
+      <arg name="job-cur-task" type="i"/>
+      <arg name="job-cur-task-id" type="s"/>
+      <arg name="job-cur-task-percentage" type="d"/>
+    </signal>
+
   </interface>
 
 </node>

@@ -14,9 +14,16 @@ INCLUDES = \
 	$(POLKIT_DBUS_CFLAGS) \
 	$(GLIB_CFLAGS)
 
-BUILT_SOURCES =						\
-	devkit-disks-daemon-glue.h			\
-	devkit-disks-device-glue.h
+BUILT_SOURCES =							\
+	devkit-disks-daemon-glue.h				\
+	devkit-disks-device-glue.h				\
+	devkit-disks-marshal.h		devkit-disks-marshal.c
+
+devkit-disks-marshal.h: $(top_srcdir)/src/devkit-disks-marshal.list
+	glib-genmarshal $< --prefix=devkit_disks_marshal --header > $@
+
+devkit-disks-marshal.c: $(top_srcdir)/src/devkit-disks-marshal.list
+	echo "#include \"devkit-disks-marshal.h\"" > $@ && glib-genmarshal $< --prefix=devkit_disks_marshal --body >> $@
 
 devkit-disks-daemon-glue.h: $(top_srcdir)/src/org.freedesktop.DeviceKit.Disks.xml Makefile.am
 	dbus-binding-tool --prefix=devkit_disks_daemon --mode=glib-client --output=devkit-disks-daemon-glue.h $(top_srcdir)/src/org.freedesktop.DeviceKit.Disks.xml

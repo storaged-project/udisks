@@ -45,21 +45,27 @@
 
 #include "devkit-disks-daemon-glue.h"
 #include "devkit-disks-device-glue.h"
+#include "devkit-disks-marshal.h"
 
 static DBusGConnection     *bus = NULL;
 static DBusGProxy          *disks_proxy = NULL;
 static GMainLoop           *loop;
 
-static gboolean      opt_inhibit         = FALSE;
-static gboolean      opt_enumerate       = FALSE;
-static gboolean      opt_monitor         = FALSE;
-static gboolean      opt_monitor_detail  = FALSE;
-static char         *opt_show_info       = NULL;
-static char         *opt_mount           = NULL;
-static char         *opt_mount_fstype    = NULL;
-static char         *opt_mount_options   = NULL;
-static char         *opt_unmount         = NULL;
-static char         *opt_unmount_options = NULL;
+static gboolean      opt_inhibit           = FALSE;
+static gboolean      opt_enumerate         = FALSE;
+static gboolean      opt_monitor           = FALSE;
+static gboolean      opt_monitor_detail    = FALSE;
+static char         *opt_show_info         = NULL;
+static char         *opt_mount             = NULL;
+static char         *opt_mount_fstype      = NULL;
+static char         *opt_mount_options     = NULL;
+static char         *opt_unmount           = NULL;
+static char         *opt_unmount_options   = NULL;
+static char         *opt_erase             = NULL;
+static char         *opt_erase_options     = NULL;
+static char         *opt_create_fs         = NULL;
+static char         *opt_create_fs_type    = NULL;
+static char         *opt_create_fs_options = NULL;
 
 static gboolean do_monitor (void);
 static void do_show_info (const char *object_path);
@@ -209,9 +215,140 @@ out:
 }
 
 static void
+do_create_fs (const char *object_path,
+              const char *fs_type,
+              const char *options)
+{
+        DBusGProxy *proxy;
+        GError *error;
+        char **split_options;
+
+        split_options = NULL;
+        if (options != NULL)
+                split_options = g_strsplit (options, ",", 0);
+
+	proxy = dbus_g_proxy_new_for_name (bus,
+                                           "org.freedesktop.DeviceKit.Disks",
+                                           object_path,
+                                           "org.freedesktop.DeviceKit.Disks.Device");
+
+try_again:
+        error = NULL;
+        /* Stupid glue don't let me tweak the timeout */
+        if (!dbus_g_proxy_call_with_timeout (proxy,
+                                             "CreateFilesystem",
+                                             INT_MAX,
+                                             &error,
+                                             G_TYPE_STRING,
+                                             fs_type,
+                                             G_TYPE_STRV,
+                                             split_options,
+                                             G_TYPE_INVALID,
+                                             G_TYPE_INVALID)) {
+                PolKitAction *pk_action;
+                PolKitResult pk_result;
+
+                if (polkit_dbus_gerror_parse (error, &pk_action, &pk_result)) {
+                        if (pk_result != POLKIT_RESULT_NO) {
+                                char *action_id;
+                                DBusError d_error;
+
+                                polkit_action_get_action_id (pk_action, &action_id);
+                                dbus_error_init (&d_error);
+                                if (polkit_auth_obtain (action_id,
+                                                        0,
+                                                        getpid (),
+                                                        &d_error)) {
+                                        polkit_action_unref (pk_action);
+                                        goto try_again;
+                                } else {
+                                        g_print ("Obtaining authorization failed: %s: %s\n",
+                                                 d_error.name, d_error.message);
+                                        dbus_error_free (&d_error);
+                                        goto out;
+                                }
+                        }
+                        polkit_action_unref (pk_action);
+                        g_error_free (error);
+                        goto out;
+                } else {
+                        g_print ("CreateFilesystem failed: %s\n", error->message);
+                        g_error_free (error);
+                        goto out;
+                }
+        }
+out:
+        g_strfreev (split_options);
+}
+
+static void
+do_erase (const char *object_path,
+          const char *options)
+{
+        DBusGProxy *proxy;
+        GError *error;
+        char **split_options;
+
+        split_options = NULL;
+        if (options != NULL)
+                split_options = g_strsplit (options, ",", 0);
+
+	proxy = dbus_g_proxy_new_for_name (bus,
+                                           "org.freedesktop.DeviceKit.Disks",
+                                           object_path,
+                                           "org.freedesktop.DeviceKit.Disks.Device");
+
+try_again:
+        error = NULL;
+        /* Stupid glue don't let me tweak the timeout */
+        if (!dbus_g_proxy_call_with_timeout (proxy,
+                                             "Erase",
+                                             INT_MAX,
+                                             &error,
+                                             G_TYPE_STRV,
+                                             split_options,
+                                             G_TYPE_INVALID,
+                                             G_TYPE_INVALID)) {
+                PolKitAction *pk_action;
+                PolKitResult pk_result;
+
+                if (polkit_dbus_gerror_parse (error, &pk_action, &pk_result)) {
+                        if (pk_result != POLKIT_RESULT_NO) {
+                                char *action_id;
+                                DBusError d_error;
+
+                                polkit_action_get_action_id (pk_action, &action_id);
+                                dbus_error_init (&d_error);
+                                if (polkit_auth_obtain (action_id,
+                                                        0,
+                                                        getpid (),
+                                                        &d_error)) {
+                                        polkit_action_unref (pk_action);
+                                        goto try_again;
+                                } else {
+                                        g_print ("Obtaining authorization failed: %s: %s\n",
+                                                 d_error.name, d_error.message);
+                                        dbus_error_free (&d_error);
+                                        goto out;
+                                }
+                        }
+                        polkit_action_unref (pk_action);
+                        g_error_free (error);
+                        goto out;
+                } else {
+                        g_print ("Erase failed: %s\n", error->message);
+                        g_error_free (error);
+                        goto out;
+                }
+        }
+out:
+        g_strfreev (split_options);
+}
+
+static void
 device_added_signal_handler (DBusGProxy *proxy, const char *object_path, gpointer user_data)
 {
-  g_print ("added:   %s\n", object_path);
+  g_print ("added:     %s\n", object_path);
   if (opt_monitor_detail) {
           do_show_info (object_path);
           g_print ("\n");
@@ -221,7 +358,7 @@ device_added_signal_handler (DBusGProxy *proxy, const char *object_path, gpointe
 static void
 device_changed_signal_handler (DBusGProxy *proxy, const char *object_path, gpointer user_data)
 {
-  g_print ("changed:   %s\n", object_path);
+  g_print ("changed:     %s\n", object_path);
   if (opt_monitor_detail) {
           /* TODO: would be nice to just show the diff */
           do_show_info (object_path);
@@ -230,9 +367,65 @@ device_changed_signal_handler (DBusGProxy *proxy, const char *object_path, gpoin
 }
 
 static void
+print_job (gboolean    job_in_progress,
+           const char *job_id,
+           gboolean    job_is_cancellable,
+           int         job_num_tasks,
+           int         job_cur_task,
+           const char *job_cur_task_id,
+           double      job_cur_task_percentage)
+{
+        if (job_in_progress) {
+                if (job_num_tasks > 0) {
+                        g_print ("  job underway:  %s: %d/%d tasks (%s",
+                                 job_id,
+                                 job_cur_task + 1,
+                                 job_num_tasks,
+                                 job_cur_task_id);
+                        if (job_cur_task_percentage >= 0)
+                                g_print (" @ %3.0lf%%", job_cur_task_percentage);
+                        if (job_is_cancellable)
+                                g_print (", cancellable");
+                        g_print (")\n");
+                } else {
+                        g_print ("  job underway:  %s: unknown progress", job_id);
+                        if (job_is_cancellable)
+                                g_print (", cancellable");
+                        g_print ("\n");
+                }
+        } else {
+                g_print ("  job underway:  no\n");
+        }
+}
+
+static void
+device_job_changed_signal_handler (DBusGProxy *proxy,
+                                   const char *object_path,
+                                   gboolean    job_in_progress,
+                                   const char *job_id,
+                                   gboolean    job_is_cancellable,
+                                   int         job_num_tasks,
+                                   int         job_cur_task,
+                                   const char *job_cur_task_id,
+                                   double      job_cur_task_percentage,
+                                   gpointer    user_data)
+{
+  g_print ("job-changed: %s\n", object_path);
+  if (opt_monitor_detail) {
+          print_job (job_in_progress,
+                     job_id,
+                     job_is_cancellable,
+                     job_num_tasks,
+                     job_cur_task,
+                     job_cur_task_id,
+                     job_cur_task_percentage);
+  }
+}
+
+static void
 device_removed_signal_handler (DBusGProxy *proxy, const char *object_path, gpointer user_data)
 {
-  g_print ("removed: %s\n", object_path);
+  g_print ("removed:   %s\n", object_path);
 }
 
 /* --- SUCKY CODE BEGIN --- */
@@ -242,292 +435,6 @@ device_removed_signal_handler (DBusGProxy *proxy, const char *object_path, gpoin
  *
  * TODO: keep in sync with code in tools/devkit-disks in DeviceKit-disks.
  */
-
-static char *
-get_property_object_path (DBusGConnection *bus,
-                          const char *svc_name,
-                          const char *obj_path,
-                          const char *if_name,
-                          const char *prop_name)
-{
-        char *ret;
-        DBusGProxy *proxy;
-        GValue value = { 0 };
-        GError *error = NULL;
-
-        ret = NULL;
-	proxy = dbus_g_proxy_new_for_name (bus,
-                                           svc_name,
-                                           obj_path,
-                                           "org.freedesktop.DBus.Properties");
-        if (!dbus_g_proxy_call (proxy,
-                                "Get",
-                                &error,
-                                G_TYPE_STRING,
-                                if_name,
-                                G_TYPE_STRING,
-                                prop_name,
-                                G_TYPE_INVALID,
-                                G_TYPE_VALUE,
-                                &value,
-                                G_TYPE_INVALID)) {
-                g_warning ("error: %s\n", error->message);
-                g_error_free (error);
-                goto out;
-        }
-
-        ret = (char *) g_value_get_boxed (&value);
-
-out:
-        g_object_unref (proxy);
-        return ret;
-}
-
-static char *
-get_property_string (DBusGConnection *bus,
-                     const char *svc_name,
-                     const char *obj_path,
-                     const char *if_name,
-                     const char *prop_name)
-{
-        char *ret;
-        DBusGProxy *proxy;
-        GValue value = { 0 };
-        GError *error = NULL;
-
-        ret = NULL;
-	proxy = dbus_g_proxy_new_for_name (bus,
-                                           svc_name,
-                                           obj_path,
-                                           "org.freedesktop.DBus.Properties");
-        if (!dbus_g_proxy_call (proxy,
-                                "Get",
-                                &error,
-                                G_TYPE_STRING,
-                                if_name,
-                                G_TYPE_STRING,
-                                prop_name,
-                                G_TYPE_INVALID,
-                                G_TYPE_VALUE,
-                                &value,
-                                G_TYPE_INVALID)) {
-                g_warning ("error: %s\n", error->message);
-                g_error_free (error);
-                goto out;
-        }
-
-        ret = (char *) g_value_get_string (&value);
-
-out:
-        g_object_unref (proxy);
-        return ret;
-}
-
-static gboolean
-get_property_boolean (DBusGConnection *bus,
-                      const char *svc_name,
-                      const char *obj_path,
-                      const char *if_name,
-                      const char *prop_name)
-{
-        gboolean ret;
-        DBusGProxy *proxy;
-        GValue value = { 0 };
-        GError *error = NULL;
-
-        ret = FALSE;
-	proxy = dbus_g_proxy_new_for_name (bus,
-                                           svc_name,
-                                           obj_path,
-                                           "org.freedesktop.DBus.Properties");
-        if (!dbus_g_proxy_call (proxy,
-                                "Get",
-                                &error,
-                                G_TYPE_STRING,
-                                if_name,
-                                G_TYPE_STRING,
-                                prop_name,
-                                G_TYPE_INVALID,
-                                G_TYPE_VALUE,
-                                &value,
-                                G_TYPE_INVALID)) {
-                g_warning ("error: %s\n", error->message);
-                g_error_free (error);
-                goto out;
-        }
-
-        ret = (gboolean) g_value_get_boolean (&value);
-
-out:
-        g_object_unref (proxy);
-        return ret;
-}
-
-static guint64
-get_property_uint64 (DBusGConnection *bus,
-                     const char *svc_name,
-                     const char *obj_path,
-                     const char *if_name,
-                     const char *prop_name)
-{
-        guint64 ret;
-        DBusGProxy *proxy;
-        GValue value = { 0 };
-        GError *error = NULL;
-
-        ret = 0;
-	proxy = dbus_g_proxy_new_for_name (bus,
-                                           svc_name,
-                                           obj_path,
-                                           "org.freedesktop.DBus.Properties");
-        if (!dbus_g_proxy_call (proxy,
-                                "Get",
-                                &error,
-                                G_TYPE_STRING,
-                                if_name,
-                                G_TYPE_STRING,
-                                prop_name,
-                                G_TYPE_INVALID,
-                                G_TYPE_VALUE,
-                                &value,
-                                G_TYPE_INVALID)) {
-                g_warning ("error: %s\n", error->message);
-                g_error_free (error);
-                goto out;
-        }
-
-        ret = (guint64) g_value_get_uint64 (&value);
-
-out:
-        g_object_unref (proxy);
-        return ret;
-}
-
-static GArray *
-get_property_uint64_array (DBusGConnection *bus,
-                           const char *svc_name,
-                           const char *obj_path,
-                           const char *if_name,
-                           const char *prop_name)
-{
-        GArray *ret;
-        DBusGProxy *proxy;
-        GValue value = { 0 };
-        GError *error = NULL;
-
-        ret = 0;
-	proxy = dbus_g_proxy_new_for_name (bus,
-                                           svc_name,
-                                           obj_path,
-                                           "org.freedesktop.DBus.Properties");
-        if (!dbus_g_proxy_call (proxy,
-                                "Get",
-                                &error,
-                                G_TYPE_STRING,
-                                if_name,
-                                G_TYPE_STRING,
-                                prop_name,
-                                G_TYPE_INVALID,
-                                G_TYPE_VALUE,
-                                &value,
-                                G_TYPE_INVALID)) {
-                g_warning ("error: %s\n", error->message);
-                g_error_free (error);
-                goto out;
-        }
-
-        ret = (GArray*) g_value_get_boxed (&value);
-
-out:
-        g_object_unref (proxy);
-        return ret;
-}
-
-static int
-get_property_int (DBusGConnection *bus,
-                  const char *svc_name,
-                  const char *obj_path,
-                  const char *if_name,
-                  const char *prop_name)
-{
-        int ret;
-        DBusGProxy *proxy;
-        GValue value = { 0 };
-        GError *error = NULL;
-
-        ret = 0;
-	proxy = dbus_g_proxy_new_for_name (bus,
-                                           svc_name,
-                                           obj_path,
-                                           "org.freedesktop.DBus.Properties");
-        if (!dbus_g_proxy_call (proxy,
-                                "Get",
-                                &error,
-                                G_TYPE_STRING,
-                                if_name,
-                                G_TYPE_STRING,
-                                prop_name,
-                                G_TYPE_INVALID,
-                                G_TYPE_VALUE,
-                                &value,
-                                G_TYPE_INVALID)) {
-                g_warning ("error: %s\n", error->message);
-                g_error_free (error);
-                goto out;
-        }
-
-        ret = (guint64) g_value_get_int (&value);
-
-out:
-        g_object_unref (proxy);
-        return ret;
-}
-
-static char **
-get_property_strlist (DBusGConnection *bus,
-                      const char *svc_name,
-                      const char *obj_path,
-                      const char *if_name,
-                      const char *prop_name)
-{
-        char **ret;
-        DBusGProxy *proxy;
-        GValue value = { 0 };
-        GError *error = NULL;
-
-        ret = NULL;
-	proxy = dbus_g_proxy_new_for_name (bus,
-                                           svc_name,
-                                           obj_path,
-                                           "org.freedesktop.DBus.Properties");
-        if (!dbus_g_proxy_call (proxy,
-                                "Get",
-                                &error,
-                                G_TYPE_STRING,
-                                if_name,
-                                G_TYPE_STRING,
-                                prop_name,
-                                G_TYPE_INVALID,
-                                G_TYPE_VALUE,
-                                &value,
-                                G_TYPE_INVALID)) {
-                g_warning ("error: %s\n", error->message);
-                g_error_free (error);
-                goto out;
-        }
-
-        ret = (char **) g_value_get_boxed (&value);
-
-out:
-        /* don't crash; return an empty list */
-        if (ret == NULL) {
-                ret = g_new0 (char *,  1);
-                *ret = NULL;
-        }
-
-        g_object_unref (proxy);
-        return ret;
-}
 
 typedef struct
 {
@@ -545,6 +452,14 @@ typedef struct
         char    *device_mount_path;
         guint64  device_size;
         guint64  device_block_size;
+
+        gboolean job_in_progress;
+        char    *job_id;
+        gboolean job_is_cancellable;
+        int      job_num_tasks;
+        int      job_cur_task;
+        char    *job_cur_task_id;
+        double   job_cur_task_percentage;
 
         char    *id_usage;
         char    *id_type;
@@ -574,235 +489,155 @@ typedef struct
         char    *drive_serial;
 } DeviceProperties;
 
+static void
+collect_props (const char *key, const GValue *value, DeviceProperties *props)
+{
+        gboolean handled = TRUE;
+
+        if (strcmp (key, "native-path") == 0)
+                props->native_path = g_strdup (g_value_get_string (value));
+
+        else if (strcmp (key, "device-file") == 0)
+                props->device_file = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "device-file-by-id") == 0)
+                props->device_file_by_id = g_strdupv (g_value_get_boxed (value));
+        else if (strcmp (key, "device-file-by-path") == 0)
+                props->device_file_by_path = g_strdupv (g_value_get_boxed (value));
+        else if (strcmp (key, "device-is-partition") == 0)
+                props->device_is_partition = g_value_get_boolean (value);
+        else if (strcmp (key, "device-is-partition-table") == 0)
+                props->device_is_partition_table = g_value_get_boolean (value);
+        else if (strcmp (key, "device-is-removable") == 0)
+                props->device_is_removable = g_value_get_boolean (value);
+        else if (strcmp (key, "device-is-media-available") == 0)
+                props->device_is_media_available = g_value_get_boolean (value);
+        else if (strcmp (key, "device-is-drive") == 0)
+                props->device_is_drive = g_value_get_boolean (value);
+        else if (strcmp (key, "device-is-mounted") == 0)
+                props->device_is_mounted = g_value_get_boolean (value);
+        else if (strcmp (key, "device-mount-path") == 0)
+                props->device_mount_path = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "device-size") == 0)
+                props->device_size = g_value_get_uint64 (value);
+        else if (strcmp (key, "device-block-size") == 0)
+                props->device_block_size = g_value_get_uint64 (value);
+
+        else if (strcmp (key, "job-in-progress") == 0)
+                props->job_in_progress = g_value_get_boolean (value);
+        else if (strcmp (key, "job-id") == 0)
+                props->job_id = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "job-is-cancellable") == 0)
+                props->job_is_cancellable = g_value_get_boolean (value);
+        else if (strcmp (key, "job-num-tasks") == 0)
+                props->job_num_tasks = g_value_get_int (value);
+        else if (strcmp (key, "job-cur-task") == 0)
+                props->job_cur_task = g_value_get_int (value);
+        else if (strcmp (key, "job-cur-task-id") == 0)
+                props->job_cur_task_id = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "job-cur-task-percentage") == 0)
+                props->job_cur_task_percentage = g_value_get_double (value);
+
+        else if (strcmp (key, "id-usage") == 0)
+                props->id_usage = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "id-type") == 0)
+                props->id_type = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "id-version") == 0)
+                props->id_version = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "id-uuid") == 0)
+                props->id_uuid = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "id-label") == 0)
+                props->id_label = g_strdup (g_value_get_string (value));
+
+        else if (strcmp (key, "partition-slave") == 0)
+                props->partition_slave = g_strdup (g_value_get_boxed (value));
+        else if (strcmp (key, "partition-scheme") == 0)
+                props->partition_scheme = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "partition-number") == 0)
+                props->partition_number = g_value_get_int (value);
+        else if (strcmp (key, "partition-type") == 0)
+                props->partition_type = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "partition-label") == 0)
+                props->partition_label = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "partition-uuid") == 0)
+                props->partition_uuid = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "partition-flags") == 0)
+                props->partition_flags = g_strdupv (g_value_get_boxed (value));
+        else if (strcmp (key, "partition-offset") == 0)
+                props->partition_offset = g_value_get_uint64 (value);
+        else if (strcmp (key, "partition-size") == 0)
+                props->partition_size = g_value_get_uint64 (value);
+
+        else if (strcmp (key, "partition-table-scheme") == 0)
+                props->partition_table_scheme = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "partition-table-count") == 0)
+                props->partition_table_count = g_value_get_int (value);
+        else if (strcmp (key, "partition-table-max-number") == 0)
+                props->partition_table_max_number = g_value_get_int (value);
+        else if (strcmp (key, "partition-table-offsets") == 0) {
+                GValue dest_value = {0,};
+                g_value_init (&dest_value, dbus_g_type_get_collection ("GArray", G_TYPE_UINT64));
+                g_value_copy (value, &dest_value);
+                props->partition_table_offsets = g_value_get_boxed (&dest_value);
+        } else if (strcmp (key, "partition-table-sizes") == 0) {
+                GValue dest_value = {0,};
+                g_value_init (&dest_value, dbus_g_type_get_collection ("GArray", G_TYPE_UINT64));
+                g_value_copy (value, &dest_value);
+                props->partition_table_sizes = g_value_get_boxed (&dest_value);
+        }
+
+        else if (strcmp (key, "drive-vendor") == 0)
+                props->drive_vendor = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "drive-model") == 0)
+                props->drive_model = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "drive-revision") == 0)
+                props->drive_revision = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "drive-serial") == 0)
+                props->drive_serial = g_strdup (g_value_get_string (value));
+
+        else
+                handled = FALSE;
+
+        if (!handled)
+                g_warning ("unhandled property '%s'", key);
+}
+
 static DeviceProperties *
 device_properties_get (DBusGConnection *bus,
                        const char *object_path)
 {
         DeviceProperties *props;
+        GError *error;
+        GHashTable *hash_table;
+        DBusGProxy *prop_proxy;
+        const char *ifname = "org.freedesktop.DeviceKit.Disks.Device";
 
         props = g_new0 (DeviceProperties, 1);
-        props->native_path = get_property_string (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "native-path");
 
-        props->device_file = get_property_string (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "device-file");
-        props->device_file_by_id = get_property_strlist (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "device-file-by-id");
-        props->device_file_by_path = get_property_strlist (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "device-file-by-path");
-        props->device_is_partition = get_property_boolean (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "device-is-partition");
-        props->device_is_partition_table = get_property_boolean (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "device-is-partition-table");
-        props->device_is_removable = get_property_boolean (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "device-is-removable");
-        props->device_is_media_available = get_property_boolean (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "device-is-media-available");
-        props->device_is_drive = get_property_boolean (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "device-is-drive");
-        props->device_is_mounted = get_property_boolean (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "device-is-mounted");
-        props->device_mount_path = get_property_string (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "device-mount-path");
-        props->device_size = get_property_uint64 (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "device-size");
-        props->device_block_size = get_property_uint64 (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "device-block-size");
+	prop_proxy = dbus_g_proxy_new_for_name (bus,
+                                                "org.freedesktop.DeviceKit.Disks",
+                                                object_path,
+                                                "org.freedesktop.DBus.Properties");
+        error = NULL;
+        if (!dbus_g_proxy_call (prop_proxy,
+                                "GetAll",
+                                &error,
+                                G_TYPE_STRING,
+                                ifname,
+                                G_TYPE_INVALID,
+                                dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_VALUE),
+                                &hash_table,
+                                G_TYPE_INVALID)) {
+                g_warning ("Couldn't call GetAll() to get properties for %s: %s", object_path, error->message);
+                g_error_free (error);
+                goto out;
+        }
 
-        props->id_usage = get_property_string (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "id-usage");
-        props->id_type = get_property_string (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "id-type");
-        props->id_version = get_property_string (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "id-version");
-        props->id_uuid = get_property_string (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "id-uuid");
-        props->id_label = get_property_string (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "id-label");
+        g_hash_table_foreach (hash_table, (GHFunc) collect_props, props);
 
-        props->partition_slave = get_property_object_path (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "partition-slave");
-        props->partition_scheme = get_property_string (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "partition-scheme");
-        props->partition_number = get_property_int (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "partition-number");
-        props->partition_type = get_property_string (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "partition-type");
-        props->partition_label = get_property_string (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "partition-label");
-        props->partition_uuid = get_property_string (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "partition-uuid");
-        props->partition_flags = get_property_strlist (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "partition-flags");
-        props->partition_offset = get_property_uint64 (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "partition-offset");
-        props->partition_size = get_property_uint64 (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "partition-size");
+        g_hash_table_unref (hash_table);
 
-        props->partition_table_scheme = get_property_string (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "partition-table-scheme");
-        props->partition_table_count = get_property_int (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "partition-table-count");
-        props->partition_table_max_number = get_property_int (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "partition-table-max-number");
-        props->partition_table_offsets = get_property_uint64_array (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "partition-table-offsets");
-        props->partition_table_sizes = get_property_uint64_array (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "partition-table-sizes");
-
-        props->drive_vendor = get_property_string (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "drive-vendor");
-        props->drive_model = get_property_string (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "drive-model");
-        props->drive_revision = get_property_string (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "drive-revision");
-        props->drive_serial = get_property_string (
-                bus,
-                "org.freedesktop.DeviceKit.Disks",
-                object_path,
-                "org.freedesktop.DeviceKit.Disks.Device",
-                "drive-serial");
-
+out:
+        g_object_unref (prop_proxy);
         return props;
 }
 
@@ -814,6 +649,8 @@ device_properties_free (DeviceProperties *props)
         g_strfreev (props->device_file_by_id);
         g_strfreev (props->device_file_by_path);
         g_free (props->device_mount_path);
+        g_free (props->job_id);
+        g_free (props->job_cur_task_id);
         g_free (props->id_usage);
         g_free (props->id_type);
         g_free (props->id_version);
@@ -858,6 +695,8 @@ do_monitor (void)
                                      G_CALLBACK (device_removed_signal_handler), NULL, NULL);
         dbus_g_proxy_connect_signal (disks_proxy, "DeviceChanged",
                                      G_CALLBACK (device_changed_signal_handler), NULL, NULL);
+        dbus_g_proxy_connect_signal (disks_proxy, "DeviceJobChanged",
+                                     G_CALLBACK (device_job_changed_signal_handler), NULL, NULL);
         g_main_loop_run (loop);
 
 out:
@@ -884,6 +723,14 @@ do_show_info (const char *object_path)
         g_print ("  mount path:    %s\n", props->device_mount_path);
         g_print ("  size:          %lld\n", props->device_size);
         g_print ("  block size:    %lld\n", props->device_block_size);
+
+        print_job (props->job_in_progress,
+                   props->job_id,
+                   props->job_is_cancellable,
+                   props->job_num_tasks,
+                   props->job_cur_task,
+                   props->job_cur_task_id,
+                   props->job_cur_task_percentage);
         g_print ("  usage:         %s\n", props->id_usage);
         g_print ("  type:          %s\n", props->id_type);
         g_print ("  version:       %s\n", props->id_version);
@@ -933,11 +780,20 @@ main (int argc, char **argv)
                 { "monitor", 0, 0, G_OPTION_ARG_NONE, &opt_monitor, "Monitor activity from the disk daemon", NULL },
                 { "monitor-detail", 0, 0, G_OPTION_ARG_NONE, &opt_monitor_detail, "Monitor with detail", NULL },
                 { "show-info", 0, 0, G_OPTION_ARG_STRING, &opt_show_info, "Show information about object path", NULL },
+
                 { "mount", 0, 0, G_OPTION_ARG_STRING, &opt_mount, "Mount the device given by the object path", NULL },
                 { "mount-fstype", 0, 0, G_OPTION_ARG_STRING, &opt_mount_fstype, "Specify file system type", NULL },
                 { "mount-options", 0, 0, G_OPTION_ARG_STRING, &opt_mount_options, "Mount options separated by comma", NULL },
+
                 { "unmount", 0, 0, G_OPTION_ARG_STRING, &opt_unmount, "Unmount the device given by the object path", NULL },
                 { "unmount-options", 0, 0, G_OPTION_ARG_STRING, &opt_unmount_options, "Unmount options separated by comma", NULL },
+
+                { "erase", 0, 0, G_OPTION_ARG_STRING, &opt_erase, "Erase a device", NULL },
+                { "erase-options", 0, 0, G_OPTION_ARG_STRING, &opt_erase_options, "Erase options", NULL },
+
+                { "create-fs", 0, 0, G_OPTION_ARG_STRING, &opt_create_fs, "Create a file system", NULL },
+                { "create-fs-type", 0, 0, G_OPTION_ARG_STRING, &opt_create_fs_type, "File system type to create", NULL },
+                { "create-fs-options", 0, 0, G_OPTION_ARG_STRING, &opt_create_fs_options, "File system create options", NULL },
                 { NULL }
         };
 
@@ -959,6 +815,19 @@ main (int argc, char **argv)
                 goto out;
         }
 
+        dbus_g_object_register_marshaller (
+                devkit_disks_marshal_VOID__STRING_BOOLEAN_STRING_BOOLEAN_INT_INT_STRING_DOUBLE,
+                G_TYPE_NONE,
+                G_TYPE_STRING,
+                G_TYPE_BOOLEAN,
+                G_TYPE_STRING,
+                G_TYPE_BOOLEAN,
+                G_TYPE_INT,
+                G_TYPE_INT,
+                G_TYPE_STRING,
+                G_TYPE_DOUBLE,
+                G_TYPE_INVALID);
+
 	disks_proxy = dbus_g_proxy_new_for_name (bus,
                                                  "org.freedesktop.DeviceKit.Disks",
                                                  "/",
@@ -966,6 +835,17 @@ main (int argc, char **argv)
         dbus_g_proxy_add_signal (disks_proxy, "DeviceAdded", G_TYPE_STRING, G_TYPE_INVALID);
         dbus_g_proxy_add_signal (disks_proxy, "DeviceRemoved", G_TYPE_STRING, G_TYPE_INVALID);
         dbus_g_proxy_add_signal (disks_proxy, "DeviceChanged", G_TYPE_STRING, G_TYPE_INVALID);
+        dbus_g_proxy_add_signal (disks_proxy,
+                                 "DeviceJobChanged",
+                                 G_TYPE_STRING,
+                                 G_TYPE_BOOLEAN,
+                                 G_TYPE_STRING,
+                                 G_TYPE_BOOLEAN,
+                                 G_TYPE_INT,
+                                 G_TYPE_INT,
+                                 G_TYPE_STRING,
+                                 G_TYPE_DOUBLE,
+                                 G_TYPE_INVALID);
 
         if (opt_inhibit) {
                 char *cookie;
@@ -1000,6 +880,10 @@ main (int argc, char **argv)
                 do_mount (opt_mount, opt_mount_fstype, opt_mount_options);
         } else if (opt_unmount != NULL) {
                 do_unmount (opt_unmount, opt_unmount_options);
+        } else if (opt_erase != NULL) {
+                do_erase (opt_erase, opt_erase_options);
+        } else if (opt_create_fs != NULL && opt_create_fs_type != NULL) {
+                do_create_fs (opt_create_fs, opt_create_fs_type, opt_create_fs_options);
         }
 
         ret = 0;

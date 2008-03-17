@@ -16,15 +16,60 @@
     </method>
 
     <!-- TODO: docs -->
+    <method name="CancelJob">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+    </method>
+
+    <!-- TODO: docs -->
     <method name="Unmount">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="options" direction="in" type="as"/>
     </method>
 
+    <!-- TODO: docs -->
+    <method name="Erase">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="options" direction="in" type="as"/>
+    </method>
+
+    <!-- CreateFilesystem:
+         @fstype:   the of file system to create. Pass "empty" to
+                    not create a file system. Use @TODO@ to get
+                    a list of file systems that can be created.
+
+         @options:  List of options. Known options that are file system
+                    independent are:
+                     - label=: for setting the file system label
+                     - erase=: whether to erase the device before
+                               creating a file system. Valid values
+                               include "none", "full", "full7pass" and
+                               "full35pass".
+
+         Create a file system on a device.
+     -->
+    <method name="CreateFilesystem">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="fstype" direction="in" type="s"/>
+      <arg name="options" direction="in" type="as"/>
+    </method>
+
     <!-- BEGIN LIST OF SIGNALS -->
 
-    <!-- Something about the device changed -->
+    <!-- Something about the device changed. Changes in job state
+         wont trigger this signal; see the 'JobChanged' signal -->
     <signal name="Changed"/>
+
+    <!-- Job state changed; clients should listen to this signal
+         to avoid polling the daemon for job state -->
+    <signal name="JobChanged">
+      <arg name="job-in-progress" type="b"/>
+      <arg name="job-is-cancellable" type="b"/>
+      <arg name="job-id" type="s"/>
+      <arg name="job-num-tasks" type="i"/>
+      <arg name="job-cur-task" type="i"/>
+      <arg name="job-cur-task-id" type="s"/>
+      <arg name="job-cur-task-percentage" type="d"/>
+    </signal>
 
     <!-- BEGIN LIST OF PROPERTIES
 
@@ -54,6 +99,34 @@
     <property name="device-mount-path" type="s" access="read"/>
     <property name="device-size" type="t" access="read"/>
     <property name="device-block-size" type="t" access="read"/>
+
+    <!-- The job properties specify if a job initiated via the
+         DeviceKit-disks daemon is currently in progress.  A job may
+         be split into several sequential tasks; in that case
+         'job-num-tasks' will be greater than zero. If it is 0 none
+         of the 'job-cur-*' properties will be set.
+
+         The 'job-id' property is used to identify the job and maps
+         1-1 with the names of the method calls on this interface,
+         e.g. 'Erase', 'CreateFilesystem' and so on.
+
+         Note that the 'job-cur-task' percentage starts at 0.  The
+         percentage is a number between -1 and 100. If set to -1 it
+         means the progress of the current is unknown. The task id is
+         a well-defined name defining the current subtask of the job;
+         known tasks id's are
+
+          - zeroing: zeroing data on the device
+          - sync:    flushing data to the device
+          - mkfs:    creating file system
+      -->
+    <property name="job-in-progress" type="b" access="read"/>
+    <property name="job-id" type="s" access="read"/>
+    <property name="job-is-cancellable" type="b" access="read"/>
+    <property name="job-num-tasks" type="i" access="read"/>
+    <property name="job-cur-task" type="i" access="read"/>
+    <property name="job-cur-task-id" type="s" access="read"/>
+    <property name="job-cur-task-percentage" type="d" access="read"/>
 
     <!-- the usage is a result of probing for signatures on the block
          device; known values are

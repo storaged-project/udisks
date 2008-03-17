@@ -39,4 +39,14 @@ file are instantly applied.
     </defaults>
   </action>
 
+  <action id="org.freedesktop.devicekit.disks.erase">
+    <_description>Erase a disk</_description>
+    <_message>Authentication is required to erase a disk</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  </action>
+
 </policyconfig>
