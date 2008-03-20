@@ -65,6 +65,8 @@ typedef enum
         DEVKIT_DISKS_DEVICE_ERROR_JOB_ALREADY_IN_PROGRESS,
         DEVKIT_DISKS_DEVICE_ERROR_JOB_CANNOT_BE_CANCELLED,
         DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+        DEVKIT_DISKS_DEVICE_ERROR_NOT_PARTITION,
+        DEVKIT_DISKS_DEVICE_ERROR_NOT_PARTITIONED,
         DEVKIT_DISKS_DEVICE_NUM_ERRORS
 } DevkitDisksDeviceError;
 
@@ -114,6 +116,21 @@ gboolean devkit_disks_device_create_filesystem (DevkitDisksDevice     *device,
                                                 const char            *fstype,
                                                 char                 **options,
                                                 DBusGMethodInvocation *context);
+
+gboolean devkit_disks_device_delete_partition (DevkitDisksDevice     *device,
+                                               char                 **options,
+                                               DBusGMethodInvocation *context);
+
+gboolean devkit_disks_device_create_partition (DevkitDisksDevice     *device,
+                                               guint64                offset,
+                                               guint64                size,
+                                               const char            *type,
+                                               const char            *label,
+                                               char                 **flags,
+                                               char                 **options,
+                                               const char            *fstype,
+                                               char                 **fsoptions,
+                                               DBusGMethodInvocation *context);
 
 G_END_DECLS
 

@@ -32,6 +32,56 @@
       <arg name="options" direction="in" type="as"/>
     </method>
 
+    <!-- TODO: docs -->
+    <method name="DeletePartition">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="options" direction="in" type="as"/>
+    </method>
+
+    <!-- CreatePartition:
+         @offset:    Where to create the partition.
+
+         @size:      Size of the partitition to create.
+
+         @type:      The type of the partition to create. Depends
+                     on the partitioning scheme.
+
+         @label:     The label to use for the partition. Leave
+                     blank if the partition table scheme doesn't
+                     support labels.
+
+         @flags:     Flags to use for the partition. (TODO)
+
+         @options:   Options for partition creation. Currently
+                     no options are supported.
+
+         @fstype:    The file system to create in new partition. Leave
+                     blank to skip creating a file system. See the
+                     CreateFilesystem() method for details.
+
+         @fsoptions: Options to use for file system creation. See
+                     the CreateFilesystem() method for details.
+
+         Create a new partition and, optionally, create a file system
+         on it. The partition won't necessarily be created at the
+         exact location requested.
+
+         Returns: the object path of the newly added partition.
+      -->
+    <method name="CreatePartition">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="offset" direction="in" type="t"/>
+      <arg name="size" direction="in" type="t"/>
+      <arg name="type" direction="in" type="s"/>
+      <arg name="label" direction="in" type="s"/>
+      <arg name="flags" direction="in" type="as"/>
+      <arg name="options" direction="in" type="as"/>
+      <arg name="fstype" direction="in" type="s"/>
+      <arg name="fsoptions" direction="in" type="as"/>
+
+      <arg name="created_device" direction="out" type="o"/>
+    </method>
+
     <!-- CreateFilesystem:
          @fstype:   the of file system to create. Pass "empty" to
                     not create a file system. Use @TODO@ to get

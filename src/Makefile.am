@@ -33,19 +33,10 @@ devkit-disks-daemon-glue.h: org.freedesktop.DeviceKit.Disks.xml Makefile.am
 devkit-disks-device-glue.h: org.freedesktop.DeviceKit.Disks.Device.xml Makefile.am
 	dbus-binding-tool --prefix=devkit_disks_device --mode=glib-server --output=devkit-disks-device-glue.h org.freedesktop.DeviceKit.Disks.Device.xml
 
-libexec_PROGRAMS = devkit-disks-daemon devkit-disks-helper-erase devkit-disks-helper-mkfs
+libexec_PROGRAMS = devkit-disks-daemon
 
 dbusifdir = $(datadir)/dbus-1/interfaces
 dbusif_DATA = org.freedesktop.DeviceKit.Disks.xml org.freedesktop.DeviceKit.Disks.Device.xml
-
-# TODO: move to udev
-udevhelperdir = /lib/udev
-udevhelper_PROGRAMS = part_id
-
-part_id_SOURCES = part-id.c partutil.c partutil.h
-part_id_CPPFLAGS = $(AM_CPPFLAGS)
-part_id_LDADD = $(GLIB_LIBS)
-# end move to udev
 
 devkit_disks_daemon_SOURCES = 						\
 	devkit-disks-daemon.h		devkit-disks-daemon.c		\
@@ -67,6 +58,16 @@ devkit_disks_daemon_LDADD = 				\
 	$(POLKIT_DBUS_LIBS)				\
 	$(DEVKIT_LIBS)
 
+noinst_LTLIBRARIES = libpartutil.la
+libpartutil_la_SOURCES = partutil.h partutil.c
+libpartutil_la_CPPFLAGS = $(LIBPARTED_CFLAGS)
+libpartutil_la_LIBADD = $(LIBPARTED_LIBS)
+
+libexec_PROGRAMS += devkit-disks-helper-erase             \
+		    devkit-disks-helper-mkfs              \
+		    devkit-disks-helper-delete-partition  \
+		    devkit-disks-helper-create-partition
+
 devkit_disks_helper_erase_SOURCES = job-shared.h job-erase.c
 devkit_disks_helper_erase_CPPFLAGS = $(AM_CPPFLAGS)
 devkit_disks_helper_erase_LDADD = $(GLIB_LIBS)
@@ -74,6 +75,24 @@ devkit_disks_helper_erase_LDADD = $(GLIB_LIBS)
 devkit_disks_helper_mkfs_SOURCES = job-shared.h job-mkfs.c
 devkit_disks_helper_mkfs_CPPFLAGS = $(AM_CPPFLAGS)
 devkit_disks_helper_mkfs_LDADD = $(GLIB_LIBS)
+
+devkit_disks_helper_delete_partition_SOURCES = job-shared.h job-delete-partition.c
+devkit_disks_helper_delete_partition_CPPFLAGS = $(AM_CPPFLAGS)
+devkit_disks_helper_delete_partition_LDADD = $(GLIB_LIBS) $(top_builddir)/src/libpartutil.la
+
+devkit_disks_helper_create_partition_SOURCES = job-shared.h job-create-partition.c
+devkit_disks_helper_create_partition_CPPFLAGS = $(AM_CPPFLAGS)
+devkit_disks_helper_create_partition_LDADD = $(GLIB_LIBS) $(top_builddir)/src/libpartutil.la
+
+# TODO: move to udev
+udevhelperdir = /lib/udev
+udevhelper_PROGRAMS = part_id
+
+part_id_SOURCES = part-id.c
+part_id_CPPFLAGS = $(AM_CPPFLAGS)
+part_id_LDADD = $(GLIB_LIBS) $(top_builddir)/src/libpartutil.la
+# end move to udev
+
 
 servicedir       = $(datadir)/dbus-1/system-services
 service_in_files = org.freedesktop.DeviceKit.Disks.service.in

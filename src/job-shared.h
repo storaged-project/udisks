@@ -18,6 +18,8 @@
  *
  */
 
+#define _LARGEFILE64_SOURCE
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -165,7 +167,7 @@ task_zero_device (const char *device, int num_passes, int cur_task, int num_task
                 if (!do_write (fd, buf, wipe_size))
                         goto out;
 
-                if (lseek (fd, size - wipe_size, SEEK_SET) == (off_t) -1) {
+                if (lseek64 (fd, size - wipe_size, SEEK_SET) == (off64_t) -1) {
                         g_printerr ("cannot seek to %lld: %m", size - wipe_size);
                         goto out;
                 }
@@ -206,6 +208,56 @@ task_zero_device (const char *device, int num_passes, int cur_task, int num_task
                 g_printerr ("only 0 and 1 erase passes is implemented for now\n");
                 goto out;
         }
+
+        ret = TRUE;
+
+out:
+        if (fd >= 0)
+                close (fd);
+        return ret;
+}
+
+static inline gboolean
+zero_signatures (const char *device, guint64 offset, guint64 size, int cur_task, int num_tasks)
+{
+        int fd;
+        gboolean ret;
+        guint64 wipe_size;
+        char buf[ERASE_SIZE];
+
+        ret = FALSE;
+
+        fd = open (device, O_WRONLY);
+        if (fd < 0) {
+                g_printerr ("cannot open device: %m\n");
+                goto out;
+        }
+
+        g_print ("progress: %d %d 0 zeroing\n", cur_task, num_tasks);
+
+        /* wipe first and last 16kb. TODO: check 16kb is the right number */
+        wipe_size = 16 * 1024;
+        g_assert (sizeof (buf) >= wipe_size);
+
+        if (wipe_size > size) {
+                wipe_size = size;
+        }
+
+        if (lseek64 (fd, offset, SEEK_SET) == (off64_t) -1) {
+                g_printerr ("cannot seek to %lld: %m", offset + size - wipe_size);
+                goto out;
+        }
+
+        if (!do_write (fd, buf, wipe_size))
+                goto out;
+
+        if (lseek64 (fd, offset + size - wipe_size, SEEK_SET) == (off64_t) -1) {
+                g_printerr ("cannot seek to %lld: %m", size - wipe_size);
+                goto out;
+        }
+
+        if (!do_write (fd, buf, wipe_size))
+                goto out;
 
         ret = TRUE;
 

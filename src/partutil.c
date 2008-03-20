@@ -21,6 +21,8 @@
  *
  **************************************************************************/
 
+#define _LARGEFILE64_SOURCE
+
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -57,6 +59,8 @@ DEBUG (const gchar *format, ...)
 #  include <config.h>
 #endif
 
+
+#define USE_PARTED
 #ifdef USE_PARTED
 #include <parted/parted.h>
 #endif
@@ -385,31 +389,31 @@ hexdump (const guint8 *mem, int size)
 	printf ("Dumping %d=0x%x bytes\n", size, size);
 	while (n < size) {
 
-		printf ("0x%04x: ", n);
+		fprintf (stderr, "0x%04x: ", n);
 
 		j = n;
 		for (i = 0; i < 16; i++) {
 			if (j >= size)
 				break;
-			printf ("%02x ", buf[j]);
+			fprintf (stderr, "%02x ", buf[j]);
 			j++;
 		}
 
 		for ( ; i < 16; i++) {
-			printf ("   ");
+			fprintf (stderr, "   ");
 		}
 
-		printf ("   ");
+		fprintf (stderr, "   ");
 
 		j = n;
 		for (i = 0; i < 16; i++) {
 			if (j >= size)
 				break;
-			printf ("%c", isprint(buf[j]) ? buf[j] : '.');
+			fprintf (stderr, "%c", isprint(buf[j]) ? buf[j] : '.');
 			j++;
 		}
 
-		printf ("\n");
+		fprintf (stderr, "\n");
 
 		n += 16;
 	}
@@ -430,7 +434,7 @@ part_table_parse_msdos_extended (int fd, guint64 offset, guint64 size, int block
 	next = offset;
 
 	while (next != 0) {
-		guint64 readfrom;
+                guint64 readfrom;
 		const guint8 embr[512];
 
 		readfrom = next;
@@ -438,7 +442,7 @@ part_table_parse_msdos_extended (int fd, guint64 offset, guint64 size, int block
 
 		DEBUG ("readfrom = %lld", readfrom);
 
-		if (lseek (fd, readfrom, SEEK_SET) < 0) {
+		if (lseek64 (fd, readfrom, SEEK_SET) != readfrom) {
 			DEBUG ("lseek failed (%s)", strerror (errno));
 			goto out;
 		}
@@ -522,7 +526,7 @@ part_table_parse_msdos (int fd, guint64 offset, guint64 size, int block_size, gb
 
 	p = NULL;
 
-	if (lseek (fd, offset, SEEK_SET) < 0) {
+	if (lseek64 (fd, offset, SEEK_SET) < 0) {
 		DEBUG ("lseek failed (%s)", strerror (errno));
 		goto out;
 	}
@@ -640,7 +644,7 @@ part_table_parse_gpt (int fd, guint64 offset, guint64 size, int block_size)
 	p = NULL;
 
 	/* Check GPT signature */
-	if (lseek (fd, offset + 512 + 0, SEEK_SET) < 0) {
+	if (lseek64 (fd, offset + 512 + 0, SEEK_SET) < 0) {
 		DEBUG ("lseek failed (%s)", strerror (errno));
 		goto out;
 	}
@@ -656,7 +660,7 @@ part_table_parse_gpt (int fd, guint64 offset, guint64 size, int block_size)
 	DEBUG ("GPT magic found");
 
 	/* Disk UUID */
-	if (lseek (fd, offset + 512 + 56, SEEK_SET) < 0) {
+	if (lseek64 (fd, offset + 512 + 56, SEEK_SET) < 0) {
 		DEBUG ("lseek failed (%s)", strerror (errno));
 		goto out;
 	}
@@ -666,7 +670,7 @@ part_table_parse_gpt (int fd, guint64 offset, guint64 size, int block_size)
 	}
 	//hexdump ((guint8*) buf, 16);
 
-	if (lseek (fd, offset + 512 + 72, SEEK_SET) < 0) {
+	if (lseek64 (fd, offset + 512 + 72, SEEK_SET) < 0) {
 		DEBUG ("lseek failed (%s)", strerror (errno));
 		goto out;
 	}
@@ -676,7 +680,7 @@ part_table_parse_gpt (int fd, guint64 offset, guint64 size, int block_size)
 	}
 	partition_entry_lba = get_le64 (buf);
 
-	if (lseek (fd, offset + 512 + 80, SEEK_SET) < 0) {
+	if (lseek64 (fd, offset + 512 + 80, SEEK_SET) < 0) {
 		DEBUG ("lseek failed (%s)", strerror (errno));
 		goto out;
 	}
@@ -686,7 +690,7 @@ part_table_parse_gpt (int fd, guint64 offset, guint64 size, int block_size)
 	}
 	num_entries = get_le32 (buf);
 
-	if (lseek (fd, offset + 512 + 84, SEEK_SET) < 0) {
+	if (lseek64 (fd, offset + 512 + 84, SEEK_SET) < 0) {
 		DEBUG ("lseek failed (%s)", strerror (errno));
 		goto out;
 	}
@@ -717,7 +721,7 @@ part_table_parse_gpt (int fd, guint64 offset, guint64 size, int block_size)
 		} gpt_part_entry;
 		char *partition_type_guid;
 
-		if (lseek (fd, offset + partition_entry_lba * 512 + n * size_of_entry, SEEK_SET) < 0) {
+		if (lseek64 (fd, offset + partition_entry_lba * 512 + n * size_of_entry, SEEK_SET) < 0) {
 			DEBUG ("lseek failed (%s)", strerror (errno));
 			goto out;
 		}
@@ -793,7 +797,7 @@ part_table_parse_apple (int fd, guint64 offset, guint64 size, int device_block_s
 	p = NULL;
 
 	/* Check Mac start of disk signature */
-	if (lseek (fd, offset + 0, SEEK_SET) < 0) {
+	if (lseek64 (fd, offset + 0, SEEK_SET) < 0) {
 		DEBUG ("lseek failed (%s)", strerror (errno));
 		goto out;
 	}
@@ -816,7 +820,7 @@ part_table_parse_apple (int fd, guint64 offset, guint64 size, int device_block_s
 	p->size = size;
 
 	/* get number of entries from first entry   */
-	if (lseek (fd, offset + block_size, SEEK_SET) < 0) {
+	if (lseek64 (fd, offset + block_size, SEEK_SET) < 0) {
 		DEBUG ("lseek failed (%s)", strerror (errno));
 		goto out;
 	}
@@ -836,7 +840,7 @@ part_table_parse_apple (int fd, guint64 offset, guint64 size, int device_block_s
 			break;
 		}
 
-		if (lseek (fd, offset + (n + 1) * block_size, SEEK_SET) < 0) {
+		if (lseek64 (fd, offset + (n + 1) * block_size, SEEK_SET) < 0) {
 			DEBUG ("lseek failed (%s)", strerror (errno));
 			goto out;
 		}
@@ -856,6 +860,26 @@ part_table_parse_apple (int fd, guint64 offset, guint64 size, int device_block_s
 out:
 	DEBUG ("Leaving Apple parser");
 	return p;
+}
+
+static PartitionTable *
+part_table_load_from_disk_from_file (char *device_file)
+{
+        int fd;
+        PartitionTable *ret;
+
+        ret = NULL;
+
+        fd = open (device_file, O_RDONLY);
+        if (fd < 0) {
+                DEBUG ("Cannot open '%s': %m", device_file);
+                goto out;
+        }
+
+        ret = part_table_load_from_disk (fd);
+        close (fd);
+out:
+        return ret;
 }
 
 PartitionTable *
@@ -1277,7 +1301,7 @@ part_add_change_partition (char *device_file,
 	}
 
 	/* first, find the kind of (embedded) partition table the new partition is going to be part of */
-	p = part_table_load_from_disk (device_file);
+	p = part_table_load_from_disk_from_file (device_file);
 	if (p == NULL) {
 		DEBUG ("Cannot load partition table from %s", device_file);
 		goto out;
@@ -1717,7 +1741,7 @@ part_del_partition (char *device_file, guint64 offset)
 	 * partition table...
 	 */
 	is_extended = FALSE;
-	p = part_table_load_from_disk (device_file);
+	p = part_table_load_from_disk_from_file (device_file);
 	if (p == NULL) {
 		DEBUG ("Cannot load partition table from %s", device_file);
 		goto out;

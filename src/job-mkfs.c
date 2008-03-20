@@ -22,6 +22,8 @@
 #  include "config.h"
 #endif
 
+#define _LARGEFILE64_SOURCE
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -66,6 +68,7 @@ validate_and_escape_label (char **label, int max_len)
 out:
         return ret;
 }
+
 
 int
 main (int argc, char **argv)

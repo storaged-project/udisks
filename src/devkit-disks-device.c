@@ -171,6 +171,8 @@ devkit_disks_device_error_get_type (void)
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_JOB_ALREADY_IN_PROGRESS, "JobAlreadyInProgress"),
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_JOB_CANNOT_BE_CANCELLED, "JobCannotBeCancelled"),
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED, "JobWasCancelled"),
+                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_PARTITION, "NotPartition"),
+                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_PARTITIONED, "NotPartitioned"),
                         { 0, 0, 0 }
                 };
                 g_assert (DEVKIT_DISKS_DEVICE_NUM_ERRORS == G_N_ELEMENTS (values) - 1);
@@ -2290,7 +2292,7 @@ devkit_disks_device_erase (DevkitDisksDevice     *device,
 
         if (device->priv->info.device_is_mounted) {
                 throw_error (context,
-                             DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTED,
+                             DEVKIT_DISKS_DEVICE_ERROR_MOUNTED,
                              "Device is mounted");
                 goto out;
         }
@@ -2331,16 +2333,18 @@ out:
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static void
-create_filesystem_completed_cb (DBusGMethodInvocation *context,
-                                DevkitDisksDevice *device,
-                                PolKitCaller *pk_caller,
-                                gboolean job_was_cancelled,
-                                int status,
-                                const char *stderr,
-                                gpointer user_data)
+delete_partition_completed_cb (DBusGMethodInvocation *context,
+                               DevkitDisksDevice *device,
+                               PolKitCaller *pk_caller,
+                               gboolean job_was_cancelled,
+                               int status,
+                               const char *stderr,
+                               gpointer user_data)
 {
-        /* either way, poke the kernel so we can reread the data */
-        devkit_device_emit_changed_to_kernel (device);
+        DevkitDisksDevice *enclosing_device = DEVKIT_DISKS_DEVICE (user_data);
+
+        /* either way, poke the kernel about the enclosing disk so we can reread the partitioning table */
+        devkit_device_emit_changed_to_kernel (enclosing_device);
 
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
                 dbus_g_method_return (context);
@@ -2352,7 +2356,7 @@ create_filesystem_completed_cb (DBusGMethodInvocation *context,
                 } else {
                         throw_error (context,
                                      DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
-                                     "Error creating file system: helper exited with exit code %d: %s",
+                                     "Error erasing: helper exited with exit code %d: %s",
                                      WEXITSTATUS (status),
                                      stderr);
                 }
@@ -2360,10 +2364,125 @@ create_filesystem_completed_cb (DBusGMethodInvocation *context,
 }
 
 gboolean
-devkit_disks_device_create_filesystem (DevkitDisksDevice     *device,
-                                       const char            *fstype,
-                                       char                 **options,
-                                       DBusGMethodInvocation *context)
+devkit_disks_device_delete_partition (DevkitDisksDevice     *device,
+                                      char                 **options,
+                                      DBusGMethodInvocation *context)
+{
+        int n;
+        char *argv[16];
+        GError *error;
+        char *offset_as_string;
+        PolKitCaller *pk_caller;
+        DevkitDisksDevice *enclosing_device;
+
+        offset_as_string = NULL;
+
+        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
+                goto out;
+
+        if (device->priv->info.device_is_mounted) {
+                throw_error (context,
+                             DEVKIT_DISKS_DEVICE_ERROR_MOUNTED,
+                             "Device is mounted");
+                goto out;
+        }
+
+        if (!device->priv->info.device_is_partition) {
+                throw_error (context,
+                             DEVKIT_DISKS_DEVICE_ERROR_NOT_PARTITION,
+                             "Device is not a partition");
+                goto out;
+        }
+
+        enclosing_device = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon,
+                                                                          device->priv->info.partition_slave);
+        if (enclosing_device == NULL) {
+                throw_error (context,
+                             DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                             "Cannot find enclosing device");
+                goto out;
+        }
+
+        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                  pk_caller,
+                                                  /* TODO: revisit authorization */
+                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  context))
+                goto out;
+
+        offset_as_string = g_strdup_printf ("%lld", device->priv->info.partition_offset);
+
+        /* TODO: options: quick, full, secure_gutmann_35pass etc. */
+
+        n = 0;
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-delete-partition";
+        argv[n++] = enclosing_device->priv->info.device_file;
+        argv[n++] = offset_as_string;
+        argv[n++] = NULL;
+
+        error = NULL;
+        if (!job_new (context,
+                      "DeletePartition",
+                      TRUE,
+                      device,
+                      pk_caller,
+                      argv,
+                      delete_partition_completed_cb,
+                      g_object_ref (enclosing_device),
+                      g_object_unref)) {
+                goto out;
+        }
+
+out:
+        g_free (offset_as_string);
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+create_filesystem_completed_cb (DBusGMethodInvocation *context,
+                                DevkitDisksDevice *device,
+                                PolKitCaller *pk_caller,
+                                gboolean job_was_cancelled,
+                                int status,
+                                const char *stderr,
+                                gpointer user_data)
+{
+        JobCompletedFunc override_job_completed = user_data;
+
+        if (override_job_completed != NULL) {
+                override_job_completed (context, device, pk_caller, job_was_cancelled, status, stderr, user_data);
+        } else {
+                /* either way, poke the kernel so we can reread the data */
+                devkit_device_emit_changed_to_kernel (device);
+
+                if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+                        dbus_g_method_return (context);
+                } else {
+                        if (job_was_cancelled) {
+                                throw_error (context,
+                                             DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                             "Job was cancelled");
+                        } else {
+                                throw_error (context,
+                                             DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                             "Error creating file system: helper exited with exit code %d: %s",
+                                             WEXITSTATUS (status),
+                                             stderr);
+                        }
+                }
+        }
+}
+
+static gboolean
+devkit_disks_device_create_filesystem_internal (DevkitDisksDevice     *device,
+                                                const char            *fstype,
+                                                char                 **options,
+                                                JobCompletedFunc       override_job_completed,
+                                                DBusGMethodInvocation *context)
 {
         int n;
         int m;
@@ -2419,7 +2538,7 @@ devkit_disks_device_create_filesystem (DevkitDisksDevice     *device,
                       pk_caller,
                       argv,
                       create_filesystem_completed_cb,
-                      NULL,
+                      override_job_completed,
                       NULL)) {
                 goto out;
         }
@@ -2428,6 +2547,15 @@ out:
         if (pk_caller != NULL)
                 polkit_caller_unref (pk_caller);
         return TRUE;
+}
+
+gboolean
+devkit_disks_device_create_filesystem (DevkitDisksDevice     *device,
+                                       const char            *fstype,
+                                       char                 **options,
+                                       DBusGMethodInvocation *context)
+{
+        return devkit_disks_device_create_filesystem_internal (device, fstype, options, NULL, context);
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/
@@ -2460,3 +2588,338 @@ devkit_disks_device_cancel_job (DevkitDisksDevice     *device,
 out:
         return TRUE;
 }
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+typedef struct {
+        int refcount;
+
+        guint device_added_signal_handler_id;
+        guint device_added_timeout_id;
+
+        DBusGMethodInvocation *context;
+        DevkitDisksDevice *device;
+        guint64 offset;
+        guint64 size;
+
+        guint64 created_offset;
+        guint64 created_size;
+
+        char *fstype;
+        char **fsoptions;
+
+} CreatePartitionData;
+
+static CreatePartitionData *
+create_partition_data_new (DBusGMethodInvocation *context,
+                           DevkitDisksDevice *device,
+                           guint64 offset,
+                           guint64 size,
+                           const char *fstype,
+                           char **fsoptions)
+{
+        CreatePartitionData *data;
+
+        data = g_new0 (CreatePartitionData, 1);
+        data->refcount = 1;
+
+        data->context = context;
+        data->device = g_object_ref (device);
+        data->offset = offset;
+        data->size = size;
+        data->fstype = g_strdup (fstype);
+        data->fsoptions = g_strdupv (fsoptions);
+
+        return data;
+}
+
+static CreatePartitionData *
+create_partition_data_ref (CreatePartitionData *data)
+{
+        data->refcount++;
+        return data;
+}
+
+static void
+create_partition_data_unref (CreatePartitionData *data)
+{
+        data->refcount--;
+        if (data->refcount == 0) {
+                g_object_unref (data->device);
+                g_free (data->fstype);
+                g_strfreev (data->fsoptions);
+                g_free (data);
+        }
+}
+
+static void
+create_partition_create_filesystem_completed_cb (DBusGMethodInvocation *context,
+                                                 DevkitDisksDevice *device,
+                                                 PolKitCaller *pk_caller,
+                                                 gboolean job_was_cancelled,
+                                                 int status,
+                                                 const char *stderr,
+                                                 gpointer user_data)
+{
+        /* poke the kernel so we can reread the data */
+        devkit_device_emit_changed_to_kernel (device);
+
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+                dbus_g_method_return (context, device->priv->object_path);
+        } else {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Error creating file system: helper exited with exit code %d: %s",
+                                     WEXITSTATUS (status),
+                                     stderr);
+                }
+        }
+}
+
+static void
+create_partition_device_added_cb (DevkitDisksDaemon *daemon,
+                                  const char *object_path,
+                                  gpointer user_data)
+{
+        CreatePartitionData *data = user_data;
+        DevkitDisksDevice *device;
+
+        /* check the device added is the partition we've created */
+        device = devkit_disks_daemon_local_find_by_object_path (daemon, object_path);
+        if (device != NULL &&
+            device->priv->info.device_is_partition &&
+            strcmp (device->priv->info.partition_slave, data->device->priv->object_path) == 0 &&
+            data->created_offset == device->priv->info.partition_offset &&
+            data->created_size == device->priv->info.partition_size) {
+
+                /* yay! it is.. now create the file system if requested */
+                if (strlen (data->fstype) > 0) {
+                        devkit_disks_device_create_filesystem_internal (device,
+                                                                        data->fstype,
+                                                                        data->fsoptions,
+                                                                        create_partition_create_filesystem_completed_cb,
+                                                                        data->context);
+                } else {
+                        dbus_g_method_return (data->context, device->priv->object_path);
+                }
+
+                g_signal_handler_disconnect (daemon, data->device_added_signal_handler_id);
+                create_partition_data_unref (data);
+
+                g_source_remove (data->device_added_timeout_id);
+        }
+}
+
+static gboolean
+create_partition_device_not_seen_cb (gpointer user_data)
+{
+        CreatePartitionData *data = user_data;
+
+        throw_error (data->context,
+                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                     "Error creating partition: timeout (10s) waiting for partition to show up");
+
+        g_signal_handler_disconnect (data->device->priv->daemon, data->device_added_signal_handler_id);
+        create_partition_data_unref (data);
+
+        return FALSE;
+}
+
+static void
+create_partition_completed_cb (DBusGMethodInvocation *context,
+                               DevkitDisksDevice *device,
+                               PolKitCaller *pk_caller,
+                               gboolean job_was_cancelled,
+                               int status,
+                               const char *stderr,
+                               gpointer user_data)
+{
+        CreatePartitionData *data = user_data;
+
+        /* either way, poke the kernel so we can reread the data */
+        devkit_device_emit_changed_to_kernel (device);
+
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+                int n;
+                int m;
+                guint64 offset;
+                guint64 size;
+                char **tokens;
+
+                /* Find the
+                 *
+                 *   job-create-partition-offset:
+                 *   job-create-partition-size:
+                 *
+                 * lines and parse the new start and end. We need this
+                 * to waiting on the created partition since the requested
+                 * start and size passed may not be honored due to alignment
+                 * reasons.
+                 */
+                offset = 0;
+                size = 0;
+                m = 0;
+                tokens = g_strsplit (stderr, "\n", 0);
+                for (n = 0; tokens[n] != NULL; n++) {
+                        char *line = tokens[n];
+                        char *endp;
+
+                        if (m == 2)
+                                break;
+
+                        if (g_str_has_prefix (line, "job-create-partition-offset: ")) {
+                                offset = strtoll (line + sizeof ("job-create-partition-offset: ") - 1, &endp, 10);
+                                if (*endp == '\0')
+                                        m++;
+                        } else if (g_str_has_prefix (line, "job-create-partition-size: ")) {
+                                size = strtoll (line + sizeof ("job-create-partition-size: ") - 1, &endp, 10);
+                                if (*endp == '\0')
+                                        m++;
+                        }
+                }
+                g_strfreev (tokens);
+
+                if (m != 2) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Error creating partition: internal error, expected to find new "
+                                     "start and end but m=%d", m);
+                } else {
+                        data->created_offset = offset;
+                        data->created_size = size;
+
+                        /* sit around and wait for the new partition to appear */
+                        data->device_added_signal_handler_id = g_signal_connect_after (
+                                device->priv->daemon,
+                                "device-added",
+                                (GCallback) create_partition_device_added_cb,
+                                create_partition_data_ref (data));
+
+                        /* set up timeout for error reporting if waiting failed
+                         *
+                         * (the signal handler and the timeout handler share the ref to data
+                         * as one will cancel the other)
+                         */
+                        data->device_added_timeout_id = g_timeout_add (10 * 1000,
+                                                                       create_partition_device_not_seen_cb,
+                                                                       data);
+                }
+        } else {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Error creating partition: helper exited with exit code %d: %s",
+                                     WEXITSTATUS (status),
+                                     stderr);
+                }
+        }
+}
+
+gboolean
+devkit_disks_device_create_partition (DevkitDisksDevice     *device,
+                                      guint64                offset,
+                                      guint64                size,
+                                      const char            *type,
+                                      const char            *label,
+                                      char                 **flags,
+                                      char                 **options,
+                                      const char            *fstype,
+                                      char                 **fsoptions,
+                                      DBusGMethodInvocation *context)
+{
+        int n;
+        int m;
+        char *argv[128];
+        GError *error;
+        PolKitCaller *pk_caller;
+        char *offset_as_string;
+        char *size_as_string;
+        char *flags_as_string;
+
+        offset_as_string = NULL;
+        size_as_string = NULL;
+        flags_as_string = NULL;
+
+        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
+                goto out;
+
+        if (!device->priv->info.device_is_partition_table) {
+                throw_error (context,
+                             DEVKIT_DISKS_DEVICE_ERROR_NOT_PARTITIONED,
+                             "Device is not partitioned");
+                goto out;
+        }
+
+        /* TODO: check there are no partitions in the requested slice */
+
+        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                  pk_caller,
+                                                  /* TODO: revisit authorization */
+                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  context))
+                goto out;
+
+        if (strlen (type) == 0) {
+                throw_error (context,
+                             DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                             "fstype not specified");
+                goto out;
+        }
+
+        offset_as_string = g_strdup_printf ("%lld", offset);
+        size_as_string = g_strdup_printf ("%lld", size);
+        /* TODO: check that neither of the flags include ',' */
+        flags_as_string = g_strjoinv (",", flags);
+
+        n = 0;
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-create-partition";
+        argv[n++] = device->priv->info.device_file;;
+        argv[n++] = offset_as_string;
+        argv[n++] = size_as_string;
+        argv[n++] = (char *) type;
+        argv[n++] = (char *) label;
+        argv[n++] = (char *) flags_as_string;
+        for (m = 0; options[m] != NULL; m++) {
+                if (n >= (int) sizeof (argv) - 1) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Too many options");
+                        goto out;
+                }
+                /* the helper will validate each option */
+                argv[n++] = (char *) options[m];
+        }
+        argv[n++] = NULL;
+
+        error = NULL;
+        if (!job_new (context,
+                      "CreatePartition",
+                      TRUE,
+                      device,
+                      pk_caller,
+                      argv,
+                      create_partition_completed_cb,
+                      create_partition_data_new (context, device, offset, size, fstype, fsoptions),
+                      (GDestroyNotify) create_partition_data_unref)) {
+                goto out;
+        }
+
+out:
+        g_free (offset_as_string);
+        g_free (size_as_string);
+        g_free (flags_as_string);
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
