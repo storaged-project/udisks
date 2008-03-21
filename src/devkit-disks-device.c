@@ -3098,12 +3098,30 @@ devkit_disks_device_create_partition_table (DevkitDisksDevice     *device,
         int m;
         char *argv[128];
         GError *error;
+        GList *l;
+        GList *devices;
         PolKitCaller *pk_caller;
+
+        devices = NULL;
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
 
-        /* TODO: check that enclosed devices aren't busy or mounted */
+        /* check that enclosed devices aren't busy or mounted */
+        devices = devkit_disks_daemon_local_get_all_devices (device->priv->daemon);
+        for (l = devices; l != NULL; l = l->next) {
+                DevkitDisksDevice *d = DEVKIT_DISKS_DEVICE (l->data);
+                if (d->priv->info.device_is_partition &&
+                    d->priv->info.partition_slave != NULL &&
+                    strcmp (d->priv->info.partition_slave, device->priv->object_path) == 0) {
+                        if (d->priv->info.device_is_mounted) {
+                                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_MOUNTED,
+                                             "A partition on the device is mounted");
+                                goto out;
+                        }
+                        /* TODO: other checks (holders/slaves) */
+                }
+        }
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
@@ -3149,6 +3167,7 @@ devkit_disks_device_create_partition_table (DevkitDisksDevice     *device,
         }
 
 out:
+        g_list_free (devices);
         if (pk_caller != NULL)
                 polkit_caller_unref (pk_caller);
         return TRUE;

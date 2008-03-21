@@ -72,6 +72,8 @@ typedef struct DevkitDisksDevice DevkitDisksDevice;
 void               devkit_disks_daemon_inhibit_killtimer         (DevkitDisksDaemon       *daemon);
 void               devkit_disks_daemon_uninhibit_killtimer       (DevkitDisksDaemon       *daemon);
 void               devkit_disks_daemon_reset_killtimer           (DevkitDisksDaemon       *daemon);
+
+GList             *devkit_disks_daemon_local_get_all_devices     (DevkitDisksDaemon       *daemon);
 DevkitDisksDevice *devkit_disks_daemon_local_find_by_native_path (DevkitDisksDaemon       *daemon,
                                                                   const char              *native_path);
 DevkitDisksDevice *devkit_disks_daemon_local_find_by_object_path (DevkitDisksDaemon       *daemon,

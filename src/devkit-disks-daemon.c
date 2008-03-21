@@ -630,6 +630,12 @@ devkit_disks_daemon_local_find_by_object_path (DevkitDisksDaemon *daemon,
         return g_hash_table_lookup (daemon->priv->map_object_path_to_device, object_path);
 }
 
+GList *
+devkit_disks_daemon_local_get_all_devices (DevkitDisksDaemon *daemon)
+{
+        return g_hash_table_get_values (daemon->priv->map_native_path_to_device);
+}
+
 static gboolean
 receive_udev_data (GIOChannel *source, GIOCondition condition, gpointer user_data)
 {
