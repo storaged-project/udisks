@@ -2369,6 +2369,7 @@ devkit_disks_device_delete_partition (DevkitDisksDevice     *device,
                                       DBusGMethodInvocation *context)
 {
         int n;
+        int m;
         char *argv[16];
         GError *error;
         char *offset_as_string;
@@ -2417,7 +2418,18 @@ devkit_disks_device_delete_partition (DevkitDisksDevice     *device,
         n = 0;
         argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-delete-partition";
         argv[n++] = enclosing_device->priv->info.device_file;
+        argv[n++] = device->priv->info.device_file;
         argv[n++] = offset_as_string;
+        for (m = 0; options[m] != NULL; m++) {
+                if (n >= (int) sizeof (argv) - 1) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Too many options");
+                        goto out;
+                }
+                /* the helper will validate each option */
+                argv[n++] = (char *) options[m];
+        }
         argv[n++] = NULL;
 
         error = NULL;
@@ -3044,3 +3056,101 @@ out:
                 polkit_caller_unref (pk_caller);
         return TRUE;
 }
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+create_partition_table_completed_cb (DBusGMethodInvocation *context,
+                                     DevkitDisksDevice *device,
+                                     PolKitCaller *pk_caller,
+                                     gboolean job_was_cancelled,
+                                     int status,
+                                     const char *stderr,
+                                     gpointer user_data)
+{
+        /* either way, poke the kernel so we can reread the data */
+        devkit_device_emit_changed_to_kernel (device);
+
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+                dbus_g_method_return (context);
+        } else {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Error creating partition table: helper exited with exit code %d: %s",
+                                     WEXITSTATUS (status),
+                                     stderr);
+                }
+        }
+}
+
+gboolean
+devkit_disks_device_create_partition_table (DevkitDisksDevice     *device,
+                                            const char            *scheme,
+                                            char                 **options,
+                                            DBusGMethodInvocation *context)
+{
+        int n;
+        int m;
+        char *argv[128];
+        GError *error;
+        PolKitCaller *pk_caller;
+
+        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
+                goto out;
+
+        /* TODO: check that enclosed devices aren't busy or mounted */
+
+        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                  pk_caller,
+                                                  /* TODO: revisit authorization */
+                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  context))
+                goto out;
+
+        if (strlen (scheme) == 0) {
+                throw_error (context,
+                             DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                             "type not specified");
+                goto out;
+        }
+
+        n = 0;
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-create-partition-table";
+        argv[n++] = device->priv->info.device_file;
+        argv[n++] = (char *) scheme;
+        for (m = 0; options[m] != NULL; m++) {
+                if (n >= (int) sizeof (argv) - 1) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Too many options");
+                        goto out;
+                }
+                /* the helper will validate each option */
+                argv[n++] = (char *) options[m];
+        }
+        argv[n++] = NULL;
+
+        error = NULL;
+        if (!job_new (context,
+                      "CreatePartitionTable",
+                      TRUE,
+                      device,
+                      pk_caller,
+                      argv,
+                      create_partition_table_completed_cb,
+                      NULL,
+                      NULL)) {
+                goto out;
+        }
+
+out:
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
+        return TRUE;
+}
+

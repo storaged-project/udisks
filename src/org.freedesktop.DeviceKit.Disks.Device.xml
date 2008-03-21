@@ -32,7 +32,36 @@
       <arg name="options" direction="in" type="as"/>
     </method>
 
-    <!-- TODO: docs -->
+    <!-- CreatePartitionTable:
+         @scheme:   The type of partition table to create. Currently
+                    the types 'mbr', 'gpt' and 'apm' are supported.
+
+         @options:  Supported options are:
+                     - erase=: whether to erase the contents of the
+                               device before creating a new partition
+                               table. Valid values include "none",
+                               "full", "full7pass" and "full35pass".
+
+         Creates a new partition table. Optionally deletes all data
+         on the device before doing so.
+      -->
+    <method name="CreatePartitionTable">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="scheme" direction="in" type="s"/>
+      <arg name="options" direction="in" type="as"/>
+    </method>
+
+    <!-- DeletePartition:
+
+         @options:  Supported options are:
+                     - erase=: whether to erase the contents of the
+                               partition before deleting the entry.
+                               Valid values include "none", "full",
+                               "full7pass" and "full35pass".
+
+         Deletes an entry from the partition table; optionally
+         erasing the space before doing so.
+      -->
     <method name="DeletePartition">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="options" direction="in" type="as"/>

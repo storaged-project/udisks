@@ -46,30 +46,23 @@ main (int argc, char **argv)
         int fd;
         int ret;
         const char *device;
-        const char *partition_device;
+        const char *scheme;
         char **options;
         char *erase;
         int num_erase_passes;
         int n;
-        guint64 offset;
-        char *endp;
+        PartitionScheme pscheme;
 
         ret = 1;
         erase = NULL;
-
 
         if (argc < 3) {
                 g_printerr ("wrong usage\n");
                 goto out;
         }
         device = argv[1];
-        partition_device = argv[2];
-        offset = strtoll (argv[3], &endp, 10);
-        if (*endp != '\0') {
-                g_printerr ("malformed offset '%s'\n", argv[3]);
-                goto out;
-        }
-        options = argv + 4;
+        scheme = argv[2];
+        options = argv + 3;
 
         for (n = 0; options[n] != NULL; n++) {
                 if (g_str_has_prefix (options[n], "erase=")) {
@@ -80,20 +73,30 @@ main (int argc, char **argv)
                 }
         }
 
+        if (strcmp (scheme, "mbr") == 0) {
+                pscheme = PART_TYPE_MSDOS;
+        } else if (strcmp (scheme, "gpt") == 0) {
+                pscheme = PART_TYPE_GPT;
+        } else if (strcmp (scheme, "apm") == 0) {
+                pscheme = PART_TYPE_APPLE;
+        } else {
+                g_printerr ("partitioning scheme %s not supported\n", scheme);
+                goto out;
+        }
+
         num_erase_passes = -1;
 
-        /* zero the _partition_, not the disk */
         num_erase_passes = task_zero_device_parse_option (erase);
         if (num_erase_passes == -1) {
                 g_printerr ("invalid erase=%s option\n", erase);
                 goto out;
         }
-        if (!task_zero_device (partition_device, num_erase_passes, 0, num_erase_passes + 2))
+        if (!task_zero_device (device, num_erase_passes, 0, num_erase_passes + 2))
                 goto out;
 
         g_print ("progress: %d %d -1 partitioning\n", num_erase_passes + 1, num_erase_passes + 2);
 
-        if (part_del_partition ((char *) device, offset))
+        if (part_create_partition_table ((char *) device, pscheme))
                 ret = 0;
 
         /* either way, we've got this far.. signal the kernel to reread the partition table */
