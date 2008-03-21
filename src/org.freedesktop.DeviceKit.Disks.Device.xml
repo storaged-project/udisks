@@ -38,6 +38,29 @@
       <arg name="options" direction="in" type="as"/>
     </method>
 
+    <!-- ModifyPartition:
+         @type:      The type of the partition to create. Depends
+                     on the partitioning scheme.
+
+         @label:     The label to use for the partition. Leave
+                     blank if the partition table scheme doesn't
+                     support labels.
+
+         @flags:     Flags to use for the partition. (TODO)
+
+         Modifies the meta data such as label and flags for a
+         partition.
+
+         TODO: Consider allowing changing offset and size. Or
+               maybe that should be a separate method.
+      -->
+    <method name="ModifyPartition">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="type" direction="in" type="s"/>
+      <arg name="label" direction="in" type="s"/>
+      <arg name="flags" direction="in" type="as"/>
+    </method>
+
     <!-- CreatePartition:
          @offset:    Where to create the partition.
 
@@ -53,7 +76,7 @@
          @flags:     Flags to use for the partition. (TODO)
 
          @options:   Options for partition creation. Currently
-                     no options are supported.
+                     this is unused, no options are supported.
 
          @fstype:    The file system to create in new partition. Leave
                      blank to skip creating a file system. See the

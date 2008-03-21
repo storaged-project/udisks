@@ -132,6 +132,12 @@ gboolean devkit_disks_device_create_partition (DevkitDisksDevice     *device,
                                                char                 **fsoptions,
                                                DBusGMethodInvocation *context);
 
+gboolean devkit_disks_device_modify_partition (DevkitDisksDevice     *device,
+                                               const char            *type,
+                                               const char            *label,
+                                               char                 **flags,
+                                               DBusGMethodInvocation *context);
+
 G_END_DECLS
 
 #endif /* __DEVKIT_DISKS_DEVICE_H__ */

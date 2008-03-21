@@ -2871,7 +2871,7 @@ devkit_disks_device_create_partition (DevkitDisksDevice     *device,
         if (strlen (type) == 0) {
                 throw_error (context,
                              DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
-                             "fstype not specified");
+                             "type not specified");
                 goto out;
         }
 
@@ -2923,3 +2923,124 @@ out:
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+modify_partition_completed_cb (DBusGMethodInvocation *context,
+                               DevkitDisksDevice *device,
+                               PolKitCaller *pk_caller,
+                               gboolean job_was_cancelled,
+                               int status,
+                               const char *stderr,
+                               gpointer user_data)
+{
+        DevkitDisksDevice *enclosing_device = DEVKIT_DISKS_DEVICE (user_data);
+
+        /* either way, poke the kernel so we can reread the data */
+        devkit_device_emit_changed_to_kernel (enclosing_device);
+
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+                dbus_g_method_return (context);
+        } else {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Error modifying partition: helper exited with exit code %d: %s",
+                                     WEXITSTATUS (status),
+                                     stderr);
+                }
+        }
+}
+
+gboolean
+devkit_disks_device_modify_partition (DevkitDisksDevice     *device,
+                                      const char            *type,
+                                      const char            *label,
+                                      char                 **flags,
+                                      DBusGMethodInvocation *context)
+{
+        int n;
+        char *argv[128];
+        GError *error;
+        PolKitCaller *pk_caller;
+        char *offset_as_string;
+        char *size_as_string;
+        char *flags_as_string;
+        DevkitDisksDevice *enclosing_device;
+
+        offset_as_string = NULL;
+        size_as_string = NULL;
+        flags_as_string = NULL;
+
+        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
+                goto out;
+
+        if (!device->priv->info.device_is_partition) {
+                throw_error (context,
+                             DEVKIT_DISKS_DEVICE_ERROR_NOT_PARTITION,
+                             "Device is not a partition");
+                goto out;
+        }
+
+        enclosing_device = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon,
+                                                                          device->priv->info.partition_slave);
+        if (enclosing_device == NULL) {
+                throw_error (context,
+                             DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                             "Cannot find enclosing device");
+                goto out;
+        }
+
+        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                  pk_caller,
+                                                  /* TODO: revisit authorization */
+                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  context))
+                goto out;
+
+        if (strlen (type) == 0) {
+                throw_error (context,
+                             DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                             "type not specified");
+                goto out;
+        }
+
+        offset_as_string = g_strdup_printf ("%lld", device->priv->info.partition_offset);
+        size_as_string = g_strdup_printf ("%lld", device->priv->info.partition_size);
+        /* TODO: check that neither of the flags include ',' */
+        flags_as_string = g_strjoinv (",", flags);
+
+        n = 0;
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-modify-partition";
+        argv[n++] = enclosing_device->priv->info.device_file;
+        argv[n++] = offset_as_string;
+        argv[n++] = size_as_string;
+        argv[n++] = (char *) type;
+        argv[n++] = (char *) label;
+        argv[n++] = (char *) flags_as_string;
+        argv[n++] = NULL;
+
+        error = NULL;
+        if (!job_new (context,
+                      "ModifyPartition",
+                      TRUE,
+                      device,
+                      pk_caller,
+                      argv,
+                      modify_partition_completed_cb,
+                      g_object_ref (enclosing_device),
+                      g_object_unref)) {
+                goto out;
+        }
+
+out:
+        g_free (offset_as_string);
+        g_free (size_as_string);
+        g_free (flags_as_string);
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
+        return TRUE;
+}
