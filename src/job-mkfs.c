@@ -103,6 +103,7 @@ main (int argc, char **argv)
         /* TODO: clean out metadata in start and beginning */
 
         if (strcmp (fstype, "vfat") == 0) {
+
                 s = g_string_new ("mkfs.vfat");
                 for (n = 0; options[n] != NULL; n++) {
                         if (g_str_has_prefix (options[n], "label=")) {
@@ -122,6 +123,7 @@ main (int argc, char **argv)
                 }
                 g_string_append_printf (s, " %s", device);
                 command_line = g_string_free (s, FALSE);
+
         } else if (strcmp (fstype, "ext3") == 0) {
 
                 s = g_string_new ("mkfs.ext3");
@@ -135,6 +137,45 @@ main (int argc, char **argv)
                                 g_string_append_printf (s, " -L \"%s\"", label);
                                 g_free (label);
                         } else if (g_str_has_prefix (options[n], "erase=")) {
+                                erase = strdup (options[n] + sizeof ("erase=") - 1);
+                        } else {
+                                g_printerr ("option %s not supported\n", options[n]);
+                                goto out;
+                        }
+                }
+                g_string_append_printf (s, " %s", device);
+                command_line = g_string_free (s, FALSE);
+
+        } else if (strcmp (fstype, "ntfs") == 0) {
+
+                /* skip zeroing (we do that ourselves) and bad sector checking (will 
+                 * eventually be handled on a higher level)
+                 */
+                s = g_string_new ("mkntfs -f");
+                for (n = 0; options[n] != NULL; n++) {
+                        if (g_str_has_prefix (options[n], "label=")) {
+                                label = strdup (options[n] + sizeof ("label=") - 1);
+                                if (!validate_and_escape_label (&label, 255)) {
+                                        g_string_free (s, TRUE);
+                                        goto out;
+                                }
+                                g_string_append_printf (s, " -L \"%s\"", label);
+                                g_free (label);
+                        } else if (g_str_has_prefix (options[n], "erase=")) {
+                                erase = strdup (options[n] + sizeof ("erase=") - 1);
+                        } else {
+                                g_printerr ("option %s not supported\n", options[n]);
+                                goto out;
+                        }
+                }
+                g_string_append_printf (s, " %s", device);
+                command_line = g_string_free (s, FALSE);
+
+        } else if (strcmp (fstype, "swap") == 0) {
+
+                s = g_string_new ("mkswap");
+                for (n = 0; options[n] != NULL; n++) {
+                        if (g_str_has_prefix (options[n], "erase=")) {
                                 erase = strdup (options[n] + sizeof ("erase=") - 1);
                         } else {
                                 g_printerr ("option %s not supported\n", options[n]);

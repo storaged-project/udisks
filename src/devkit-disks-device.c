@@ -1378,6 +1378,7 @@ job_read_out (GIOChannel *channel,
   gsize str_len;
   Job *job = user_data;
 
+  /* TODO: this blocks */
   g_io_channel_read_line (channel, &str, &str_len, NULL, NULL);
   g_print ("helper(pid %5d): %s", job->pid, str);
 
