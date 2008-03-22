@@ -1073,6 +1073,11 @@ devkit_disks_daemon_enumerate_devices (DevkitDisksDaemon     *daemon,
 {
         GPtrArray *object_paths;
 
+        /* TODO: enumerate in the right order wrt. dm/md..
+         *
+         * see also gdu_pool_new() in src/gdu-pool.c in g-d-u
+         */
+
         object_paths = g_ptr_array_new ();
         g_hash_table_foreach (daemon->priv->map_native_path_to_device, enumerate_cb, object_paths);
         dbus_g_method_return (context, object_paths);

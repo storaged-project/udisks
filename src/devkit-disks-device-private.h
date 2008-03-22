@@ -59,6 +59,7 @@ struct DevkitDisksDevicePrivate
                 gboolean device_is_removable;
                 gboolean device_is_media_available;
                 gboolean device_is_drive;
+                gboolean device_is_crypto_cleartext;
                 guint64 device_size;
                 guint64 device_block_size;
                 gboolean device_is_mounted;
@@ -90,6 +91,8 @@ struct DevkitDisksDevicePrivate
                 char *drive_model;
                 char *drive_revision;
                 char *drive_serial;
+
+                char *crypto_cleartext_slave;
         } info;
 };
 

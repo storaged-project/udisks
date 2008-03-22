@@ -79,6 +79,7 @@ enum
         PROP_DEVICE_IS_REMOVABLE,
         PROP_DEVICE_IS_MEDIA_AVAILABLE,
         PROP_DEVICE_IS_DRIVE,
+        PROP_DEVICE_IS_CRYPTO_CLEARTEXT,
         PROP_DEVICE_SIZE,
         PROP_DEVICE_BLOCK_SIZE,
         PROP_DEVICE_IS_MOUNTED,
@@ -113,6 +114,8 @@ enum
         PROP_PARTITION_TABLE_MAX_NUMBER,
         PROP_PARTITION_TABLE_OFFSETS,
         PROP_PARTITION_TABLE_SIZES,
+
+        PROP_CRYPTO_CLEARTEXT_SLAVE,
 
         PROP_DRIVE_VENDOR,
         PROP_DRIVE_MODEL,
@@ -236,6 +239,9 @@ get_property (GObject         *object,
 	case PROP_DEVICE_IS_DRIVE:
 		g_value_set_boolean (value, device->priv->info.device_is_drive);
 		break;
+	case PROP_DEVICE_IS_CRYPTO_CLEARTEXT:
+		g_value_set_boolean (value, device->priv->info.device_is_crypto_cleartext);
+		break;
 	case PROP_DEVICE_SIZE:
 		g_value_set_uint64 (value, device->priv->info.device_size);
 		break;
@@ -332,6 +338,13 @@ get_property (GObject         *object,
 		break;
 	case PROP_PARTITION_TABLE_SIZES:
 		g_value_set_boxed (value, device->priv->info.partition_table_sizes);
+		break;
+
+	case PROP_CRYPTO_CLEARTEXT_SLAVE:
+                if (device->priv->info.crypto_cleartext_slave != NULL)
+                        g_value_set_boxed (value, device->priv->info.crypto_cleartext_slave);
+                else
+                        g_value_set_boxed (value, "/");
 		break;
 
 	case PROP_DRIVE_VENDOR:
@@ -435,6 +448,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DEVICE_IS_DRIVE,
                 g_param_spec_boolean ("device-is-drive", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_IS_CRYPTO_CLEARTEXT,
+                g_param_spec_boolean ("device-is-crypto-cleartext", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_DEVICE_SIZE,
@@ -565,6 +582,11 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 g_param_spec_boxed ("partition-table-sizes", NULL, NULL,
                                     dbus_g_type_get_collection ("GArray", G_TYPE_UINT64),
                                     G_PARAM_READABLE));
+
+        g_object_class_install_property (
+                object_class,
+                PROP_CRYPTO_CLEARTEXT_SLAVE,
+                g_param_spec_boxed ("crypto-cleartext-slave", NULL, NULL, DBUS_TYPE_G_OBJECT_PATH, G_PARAM_READABLE));
 
         g_object_class_install_property (
                 object_class,
@@ -779,6 +801,8 @@ free_info (DevkitDisksDevice *device)
 
         g_free (device->priv->info.partition_table_scheme);
 
+        g_free (device->priv->info.crypto_cleartext_slave);
+
         g_free (device->priv->info.drive_vendor);
         g_free (device->priv->info.drive_model);
         g_free (device->priv->info.drive_revision);
@@ -819,6 +843,47 @@ _dupv8 (const char *s)
                 return g_strdup (s);
         }
 }
+
+#if 0
+// Oh well, may come in handy later
+static char *
+sysfs_resolve_link (const char *sysfs_path, const char *name)
+{
+        char *full_path;
+        char link_path[PATH_MAX];
+        char resolved_path[PATH_MAX];
+        ssize_t num;
+        gboolean found_it;
+
+        found_it = FALSE;
+
+        full_path = g_build_filename (sysfs_path, name, NULL);
+
+        //g_warning ("name='%s'", name);
+        //g_warning ("full_path='%s'", full_path);
+        num = readlink (full_path, link_path, sizeof (link_path) - 1);
+        if (num != -1) {
+                char *absolute_path;
+
+                link_path[num] = '\0';
+
+                //g_warning ("link_path='%s'", link_path);
+                absolute_path = g_build_filename (sysfs_path, link_path, NULL);
+                //g_warning ("absolute_path='%s'", absolute_path);
+                if (realpath (absolute_path, resolved_path) != NULL) {
+                        //g_warning ("resolved_path='%s'", resolved_path);
+                        found_it = TRUE;
+                }
+                g_free (absolute_path);
+        }
+        g_free (full_path);
+
+        if (found_it)
+                return g_strdup (resolved_path);
+        else
+                return NULL;
+}
+#endif
 
 static devkit_bool_t
 update_info_properties_cb (DevKitInfo *info, const char *key, void *user_data)
@@ -912,6 +977,26 @@ update_info_properties_cb (DevKitInfo *info, const char *key, void *user_data)
                                                                               device->priv->info.partition_flags);
                                 }
                         }
+                }
+
+        } else if (strcmp (key, "DM_TARGET_TYPES") == 0) {
+                if (strcmp (devkit_info_property_get_string (info, key), "crypt") == 0) {
+                        char *slaves_path;
+                        GDir *slaves_dir;
+                        const char *slave_name;
+
+                        /* we're a dm-crypt target, find our slave */
+                        slaves_path = g_build_filename (device->priv->native_path, "slaves", NULL);
+                        if((slaves_dir = g_dir_open (slaves_path, 0, NULL)) != NULL) {
+                                while ((slave_name = g_dir_read_name (slaves_dir)) != NULL) {
+                                        device->priv->info.device_is_crypto_cleartext = TRUE;
+                                        device->priv->info.crypto_cleartext_slave =
+                                                compute_object_path_from_basename (slave_name);
+                                }
+                                g_dir_close (slaves_dir);
+                        }
+                        g_free (slaves_path);
+
                 }
 
         } else if (strcmp (key, "MEDIA_AVAILABLE") == 0) {

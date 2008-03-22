@@ -448,6 +448,7 @@ typedef struct
         gboolean device_is_removable;
         gboolean device_is_media_available;
         gboolean device_is_drive;
+        gboolean device_is_crypto_cleartext;
         gboolean device_is_mounted;
         char    *device_mount_path;
         guint64  device_size;
@@ -483,6 +484,8 @@ typedef struct
         GArray  *partition_table_offsets;
         GArray  *partition_table_sizes;
 
+        char    *crypto_cleartext_slave;
+
         char    *drive_vendor;
         char    *drive_model;
         char    *drive_revision;
@@ -513,6 +516,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->device_is_media_available = g_value_get_boolean (value);
         else if (strcmp (key, "device-is-drive") == 0)
                 props->device_is_drive = g_value_get_boolean (value);
+        else if (strcmp (key, "device-is-crypto-cleartext") == 0)
+                props->device_is_crypto_cleartext = g_value_get_boolean (value);
         else if (strcmp (key, "device-is-mounted") == 0)
                 props->device_is_mounted = g_value_get_boolean (value);
         else if (strcmp (key, "device-mount-path") == 0)
@@ -584,6 +589,9 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 g_value_copy (value, &dest_value);
                 props->partition_table_sizes = g_value_get_boxed (&dest_value);
         }
+
+        else if (strcmp (key, "crypto-cleartext-slave") == 0)
+                props->crypto_cleartext_slave = g_strdup (g_value_get_boxed (value));
 
         else if (strcmp (key, "drive-vendor") == 0)
                 props->drive_vendor = g_strdup (g_value_get_string (value));
@@ -664,6 +672,7 @@ device_properties_free (DeviceProperties *props)
         g_free (props->partition_table_scheme);
         g_array_free (props->partition_table_offsets, TRUE);
         g_array_free (props->partition_table_sizes, TRUE);
+        g_free (props->crypto_cleartext_slave);
         g_free (props->drive_model);
         g_free (props->drive_vendor);
         g_free (props->drive_revision);
@@ -736,6 +745,10 @@ do_show_info (const char *object_path)
         g_print ("  version:       %s\n", props->id_version);
         g_print ("  uuid:          %s\n", props->id_uuid);
         g_print ("  label:         %s\n", props->id_label);
+        if (props->device_is_crypto_cleartext) {
+                g_print ("  cleartext crypto device:\n");
+                g_print ("    backed by:   %s\n", props->crypto_cleartext_slave);
+        }
         if (props->device_is_partition_table) {
                 g_print ("  partition table:\n");
                 g_print ("    scheme:      %s\n", props->partition_table_scheme);

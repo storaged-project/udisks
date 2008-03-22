@@ -198,6 +198,7 @@
     <property name="device-is-media-available" type="b" access="read"/>
     <property name="device-is-drive" type="b" access="read"/>
     <property name="device-is-mounted" type="b" access="read"/>
+    <property name="device-is-crypto-cleartext" type="b" access="read"/>
     <property name="device-mount-path" type="s" access="read"/>
     <property name="device-size" type="t" access="read"/>
     <property name="device-block-size" type="t" access="read"/>
@@ -261,6 +262,15 @@
     <property name="id-version" type="s" access="read"/>
     <property name="id-uuid" type="s" access="read"/>
     <property name="id-label" type="s" access="read"/>
+
+    <!-- The following properties are only set if the device is
+         a clear text device for an encrypted block device (see
+         the property 'device-is-crypto-cleartext').
+
+         The property 'crypto-cleartext-slave' is a reference to the
+         encrypted block device.
+      -->
+    <property name="crypto-cleartext-slave" type="o" access="read"/>
 
     <!-- the following properties are only set if the device is
          a partition (see 'device-is-partition'). Known values
