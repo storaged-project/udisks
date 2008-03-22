@@ -194,7 +194,7 @@ out:
 }
 
 static int
-open_device (const char *given_device_file)
+open_device (const char *given_device_file, gboolean *is_part)
 {
         int fd;
         const char *devpath;
@@ -209,6 +209,7 @@ open_device (const char *given_device_file)
 
         fd = -1;
         device_file = NULL;
+        *is_part = FALSE;
 
         /* if we're called for a partition by udev, scan the parent */
         devpath = get_devpath (given_device_file);
@@ -219,6 +220,8 @@ open_device (const char *given_device_file)
                 goto not_part;
 
         /* we're a partition */
+
+        *is_part = TRUE;
 
         s = g_strdup (devpath);
         for (n = strlen (s) - 1; n >= 0 && s[n] != '/'; n--)
@@ -280,6 +283,7 @@ main (int argc, char *argv[])
         int n;
         int fd;
         char *device_file;
+        gboolean is_part;
 
         device_file = NULL;
         for (n = 1; n < argc; n++) {
@@ -298,11 +302,22 @@ main (int argc, char *argv[])
                 goto out;
         }
 
-        fd = open_device (device_file);
+        fd = open_device (device_file, &is_part);
         if (fd >= 0) {
-                if (getenv ("ID_FS_USAGE") == NULL) {
-                        do_table (fd);
+                char *usage;
+
+                if (!is_part) {
+                        /* we currently errornously detect a vfat fs on the whole disk as a partition table.
+                         * Avoid doing that.
+                         */
+                        usage = getenv ("ID_FS_USAGE");
+                        if (usage != NULL && strcmp (usage, "filesystem") == 0) {
+                                close (fd);
+                                goto out;
+                        }
                 }
+
+                do_table (fd);
                 close (fd);
         }
 
