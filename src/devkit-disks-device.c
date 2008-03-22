@@ -2373,10 +2373,12 @@ devkit_disks_device_delete_partition (DevkitDisksDevice     *device,
         char *argv[16];
         GError *error;
         char *offset_as_string;
+        char *size_as_string;
         PolKitCaller *pk_caller;
         DevkitDisksDevice *enclosing_device;
 
         offset_as_string = NULL;
+        size_as_string = NULL;
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
@@ -2412,6 +2414,7 @@ devkit_disks_device_delete_partition (DevkitDisksDevice     *device,
                 goto out;
 
         offset_as_string = g_strdup_printf ("%lld", device->priv->info.partition_offset);
+        size_as_string = g_strdup_printf ("%lld", device->priv->info.partition_size);
 
         /* TODO: options: quick, full, secure_gutmann_35pass etc. */
 
@@ -2420,6 +2423,7 @@ devkit_disks_device_delete_partition (DevkitDisksDevice     *device,
         argv[n++] = enclosing_device->priv->info.device_file;
         argv[n++] = device->priv->info.device_file;
         argv[n++] = offset_as_string;
+        argv[n++] = size_as_string;
         for (m = 0; options[m] != NULL; m++) {
                 if (n >= (int) sizeof (argv) - 1) {
                         throw_error (context,
@@ -2447,6 +2451,7 @@ devkit_disks_device_delete_partition (DevkitDisksDevice     *device,
 
 out:
         g_free (offset_as_string);
+        g_free (size_as_string);
         if (pk_caller != NULL)
                 polkit_caller_unref (pk_caller);
         return TRUE;

@@ -100,6 +100,8 @@ out:
 /**
  * task_zero_device:
  * @device: device to zero
+ * @offset: the offset to start zeroing the device
+ * @size: if zero is passed, the whole device is zeroed; otherwise size of slice to zero
  * @num_passes: number of passes, 0, 1, 3, 7 and 35 supported. See
  * the function task_zero_device_parse_option() for details.
  * @cur_task: current task
@@ -124,11 +126,10 @@ out:
  * invalid.
  **/
 static inline gboolean
-task_zero_device (const char *device, int num_passes, int cur_task, int num_tasks)
+task_zero_device (const char *device, guint64 offset, guint64 size, int num_passes, int cur_task, int num_tasks)
 {
         int fd;
         gboolean ret;
-        guint64 size;
         guint64 cursor;
         int percent;
         int old_percent;
@@ -143,10 +144,12 @@ task_zero_device (const char *device, int num_passes, int cur_task, int num_task
                 goto out;
         }
 
-	if (ioctl (fd, BLKGETSIZE64, &size) != 0) {
-		g_printerr ("cannot determine size of device: %m\n");
-		goto out;
-	}
+        if (size == 0) {
+                if (ioctl (fd, BLKGETSIZE64, &size) != 0) {
+                        g_printerr ("cannot determine size of device: %m\n");
+                        goto out;
+                }
+        }
 
         memset (buf, '\0', sizeof (buf));
 
@@ -164,11 +167,16 @@ task_zero_device (const char *device, int num_passes, int cur_task, int num_task
                         wipe_size = size;
                 }
 
+                if (lseek64 (fd, offset, SEEK_SET) == (off64_t) -1) {
+                        g_printerr ("cannot seek to %lld: %m", offset);
+                        goto out;
+                }
+
                 if (!do_write (fd, buf, wipe_size))
                         goto out;
 
-                if (lseek64 (fd, size - wipe_size, SEEK_SET) == (off64_t) -1) {
-                        g_printerr ("cannot seek to %lld: %m", size - wipe_size);
+                if (lseek64 (fd, offset + size - wipe_size, SEEK_SET) == (off64_t) -1) {
+                        g_printerr ("cannot seek to %lld: %m", offset + size - wipe_size);
                         goto out;
                 }
 
@@ -176,6 +184,12 @@ task_zero_device (const char *device, int num_passes, int cur_task, int num_task
                         goto out;
 
         } else if (num_passes == 1) {
+
+                if (lseek64 (fd, offset, SEEK_SET) == (off64_t) -1) {
+                        g_printerr ("cannot seek to %lld: %m", offset);
+                        goto out;
+                }
+
                 cursor = 0;
                 old_percent = 0;
                 g_print ("progress: %d %d 0 zeroing\n", cur_task, num_tasks);

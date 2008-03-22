@@ -52,13 +52,14 @@ main (int argc, char **argv)
         int num_erase_passes;
         int n;
         guint64 offset;
+        guint64 size;
         char *endp;
 
         ret = 1;
         erase = NULL;
 
 
-        if (argc < 3) {
+        if (argc < 4) {
                 g_printerr ("wrong usage\n");
                 goto out;
         }
@@ -69,7 +70,12 @@ main (int argc, char **argv)
                 g_printerr ("malformed offset '%s'\n", argv[3]);
                 goto out;
         }
-        options = argv + 4;
+        size = strtoll (argv[4], &endp, 10);
+        if (*endp != '\0') {
+                g_printerr ("malformed size '%s'\n", argv[4]);
+                goto out;
+        }
+        options = argv + 5;
 
         for (n = 0; options[n] != NULL; n++) {
                 if (g_str_has_prefix (options[n], "erase=")) {
@@ -80,21 +86,27 @@ main (int argc, char **argv)
                 }
         }
 
-        num_erase_passes = -1;
-
-        /* zero the _partition_, not the disk */
         num_erase_passes = task_zero_device_parse_option (erase);
         if (num_erase_passes == -1) {
                 g_printerr ("invalid erase=%s option\n", erase);
                 goto out;
         }
-        if (!task_zero_device (partition_device, num_erase_passes, 0, num_erase_passes + 2))
-                goto out;
 
-        g_print ("progress: %d %d -1 partitioning\n", num_erase_passes + 1, num_erase_passes + 2);
+        g_print ("progress: %d %d -1 partitioning\n", num_erase_passes, num_erase_passes + 2);
 
-        if (part_del_partition ((char *) device, offset))
-                ret = 0;
+        if (part_del_partition ((char *) device, offset)) {
+
+                /* zero the contents of what was the _partition_
+                 *
+                 *... but only after removing it from the partition table
+                 *    (since it may contain meta data if it's an extended partition)
+                 */
+                if (!task_zero_device (device, offset, size, num_erase_passes, 1, num_erase_passes + 2)) {
+                        g_printerr ("error zeroing the device\n");
+                } else {
+                        ret = 0;
+                }
+        }
 
         /* either way, we've got this far.. signal the kernel to reread the partition table */
         fd = open (device, O_RDONLY);

@@ -41,7 +41,7 @@ main (int argc, char **argv)
 
         /* TODO: parse options etc. */
         num_passes = 1;
-        if (!task_zero_device (device, num_passes, 0, 2))
+        if (!task_zero_device (device, 0, 0, num_passes, 0, 2))
                 goto out;
 
         ret = 0;

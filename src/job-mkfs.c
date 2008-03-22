@@ -165,7 +165,7 @@ main (int argc, char **argv)
                 g_printerr ("invalid erase=%s option\n", erase);
                 goto out;
         }
-        if (!task_zero_device (device, num_erase_passes, 0, num_erase_passes + 2))
+        if (!task_zero_device (device, 0, 0, num_erase_passes, 0, num_erase_passes + 2))
                 goto out;
 
         g_print ("progress: %d %d -1 mkfs\n", num_erase_passes + 1, num_erase_passes + 2);
