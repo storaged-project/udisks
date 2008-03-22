@@ -2550,6 +2550,7 @@ devkit_disks_device_create_filesystem_internal (DevkitDisksDevice     *device,
         argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-mkfs";
         argv[n++] = (char *) fstype;
         argv[n++] = device->priv->info.device_file;
+        argv[n++] = device->priv->info.device_is_partition_table ? "1" : "0";
         for (m = 0; options[m] != NULL; m++) {
                 if (n >= (int) sizeof (argv) - 1) {
                         throw_error (context,

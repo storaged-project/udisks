@@ -73,6 +73,7 @@ out:
 int
 main (int argc, char **argv)
 {
+        int fd;
         int ret;
         int exit_status;
         GError *error;
@@ -86,25 +87,28 @@ main (int argc, char **argv)
         char *erase;
         int num_erase_passes;
         int n;
+        gboolean is_kernel_partitioned;
 
         ret = 1;
         command_line = NULL;
         standard_error = NULL;
         erase = NULL;
 
-        if (argc < 3) {
+        if (argc < 4) {
                 g_printerr ("wrong usage\n");
                 goto out;
         }
         fstype = argv[1];
         device = argv[2];
-        options = argv + 3;
+        is_kernel_partitioned = (strcmp (argv[3], "1") == 0);
+        options = argv + 4;
 
         /* TODO: clean out metadata in start and beginning */
 
         if (strcmp (fstype, "vfat") == 0) {
 
-                s = g_string_new ("mkfs.vfat");
+                /* allow to create an fs on the main block device */
+                s = g_string_new ("mkfs.vfat -I");
                 for (n = 0; options[n] != NULL; n++) {
                         if (g_str_has_prefix (options[n], "label=")) {
                                 label = strdup (options[n] + sizeof ("label=") - 1);
@@ -224,6 +228,25 @@ main (int argc, char **argv)
                         g_printerr ("helper failed with:\n%s", standard_error);
                         goto out;
                 }
+        }
+
+        /* If we've created an fs on a partitioned device, then signal the
+         * kernel to reread the (now missing) partition table.
+         */
+        if (is_kernel_partitioned) {
+                fd = open (device, O_RDONLY);
+                if (fd < 0) {
+                        g_printerr ("cannot open %s (for BLKRRPART): %m\n", device);
+                        ret = 1;
+                        goto out;
+                }
+                if (ioctl (fd, BLKRRPART) != 0) {
+                        close (fd);
+                        g_printerr ("BLKRRPART ioctl failed for %s: %m\n", device);
+                        ret = 1;
+                        goto out;
+                }
+                close (fd);
         }
 
         ret = 0;
