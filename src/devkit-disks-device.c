@@ -805,45 +805,59 @@ update_info_add_ptr (DevKitInfo *info, const char *str, void *user_data)
         return FALSE;
 }
 
+static char *
+_dupv8 (const char *s)
+{
+        const char *end_valid;
+
+        if (!g_utf8_validate (s,
+                             -1,
+                             &end_valid)) {
+                g_warning ("The string '%s' is not valid UTF-8. Invalid characters begins at '%s'", s, end_valid);
+                return g_strndup (s, end_valid - s);
+        } else {
+                return g_strdup (s);
+        }
+}
+
 static devkit_bool_t
 update_info_properties_cb (DevKitInfo *info, const char *key, void *user_data)
 {
         DevkitDisksDevice *device = user_data;
 
         if (strcmp (key, "ID_FS_USAGE") == 0) {
-                device->priv->info.id_usage   = g_strdup (devkit_info_property_get_string (info, key));
+                device->priv->info.id_usage   = _dupv8 (devkit_info_property_get_string (info, key));
         } else if (strcmp (key, "ID_FS_TYPE") == 0) {
-                device->priv->info.id_type    = g_strdup (devkit_info_property_get_string (info, key));
+                device->priv->info.id_type    = _dupv8 (devkit_info_property_get_string (info, key));
         } else if (strcmp (key, "ID_FS_VERSION") == 0) {
-                device->priv->info.id_version = g_strdup (devkit_info_property_get_string (info, key));
+                device->priv->info.id_version = _dupv8 (devkit_info_property_get_string (info, key));
         } else if (strcmp (key, "ID_FS_UUID") == 0) {
-                device->priv->info.id_uuid    = g_strdup (devkit_info_property_get_string (info, key));
+                device->priv->info.id_uuid    = _dupv8 (devkit_info_property_get_string (info, key));
         } else if (strcmp (key, "ID_FS_LABEL") == 0) {
-                device->priv->info.id_label   = g_strdup (devkit_info_property_get_string (info, key));
+                device->priv->info.id_label   = _dupv8 (devkit_info_property_get_string (info, key));
 
         } else if (strcmp (key, "ID_VENDOR") == 0) {
                 if (device->priv->info.device_is_drive && device->priv->info.drive_vendor == NULL)
-                        device->priv->info.drive_vendor = g_strdup (devkit_info_property_get_string (info, key));
+                        device->priv->info.drive_vendor = _dupv8 (devkit_info_property_get_string (info, key));
         } else if (strcmp (key, "ID_MODEL") == 0) {
                 if (device->priv->info.device_is_drive && device->priv->info.drive_model == NULL)
-                        device->priv->info.drive_model = g_strdup (devkit_info_property_get_string (info, key));
+                        device->priv->info.drive_model = _dupv8 (devkit_info_property_get_string (info, key));
         } else if (strcmp (key, "ID_REVISION") == 0) {
                 if (device->priv->info.device_is_drive && device->priv->info.drive_revision == NULL)
-                        device->priv->info.drive_revision = g_strdup (devkit_info_property_get_string (info, key));
+                        device->priv->info.drive_revision = _dupv8 (devkit_info_property_get_string (info, key));
         } else if (strcmp (key, "ID_SERIAL_SHORT") == 0) {
                 if (device->priv->info.device_is_drive && device->priv->info.drive_serial == NULL)
-                        device->priv->info.drive_serial = g_strdup (devkit_info_property_get_string (info, key));
-
+                        device->priv->info.drive_serial = _dupv8 (devkit_info_property_get_string (info, key));
 
         } else if (strcmp (key, "PART_SCHEME") == 0) {
 
                 if (device->priv->info.device_is_partition) {
                         device->priv->info.partition_scheme =
-                                g_strdup (devkit_info_property_get_string (info, key));
+                                _dupv8 (devkit_info_property_get_string (info, key));
                 } else {
                         device->priv->info.device_is_partition_table = TRUE;
                         device->priv->info.partition_table_scheme =
-                                g_strdup (devkit_info_property_get_string (info, key));
+                                _dupv8 (devkit_info_property_get_string (info, key));
                 }
         } else if (strcmp (key, "PART_COUNT") == 0) {
                 device->priv->info.partition_table_count = devkit_info_property_get_int (info, key);
@@ -880,13 +894,13 @@ update_info_properties_cb (DevKitInfo *info, const char *key, void *user_data)
 
                                 if (g_str_has_prefix (endp, "_LABEL")) {
                                         device->priv->info.partition_label =
-                                                g_strdup (devkit_info_property_get_string (info, key));
+                                                _dupv8 (devkit_info_property_get_string (info, key));
                                 } else if (g_str_has_prefix (endp, "_UUID")) {
                                         device->priv->info.partition_uuid =
-                                                g_strdup (devkit_info_property_get_string (info, key));
+                                                _dupv8 (devkit_info_property_get_string (info, key));
                                 } else if (g_str_has_prefix (endp, "_TYPE")) {
                                         device->priv->info.partition_type =
-                                                g_strdup (devkit_info_property_get_string (info, key));
+                                                _dupv8 (devkit_info_property_get_string (info, key));
                                 } else if (g_str_has_prefix (endp, "_OFFSET")) {
                                         device->priv->info.partition_offset =
                                                 devkit_info_property_get_uint64 (info, key);
@@ -915,9 +929,9 @@ update_info_symlinks_cb (DevKitInfo *info, const char *value, void *user_data)
         DevkitDisksDevice *device = user_data;
 
         if (g_str_has_prefix (value, "/dev/disk/by-id/") || g_str_has_prefix (value, "/dev/disk/by-uuid/")) {
-                g_ptr_array_add (device->priv->info.device_file_by_id, g_strdup (value));
+                g_ptr_array_add (device->priv->info.device_file_by_id, _dupv8 (value));
         } else if (g_str_has_prefix (value, "/dev/disk/by-path/")) {
-                g_ptr_array_add (device->priv->info.device_file_by_path, g_strdup (value));
+                g_ptr_array_add (device->priv->info.device_file_by_path, _dupv8 (value));
         }
 
         return FALSE;
@@ -951,7 +965,7 @@ update_info (DevkitDisksDevice *device)
                 goto out;
         }
 
-        device->priv->info.device_file = g_strdup (devkit_info_get_device_file (info));
+        device->priv->info.device_file = _dupv8 (devkit_info_get_device_file (info));
         devkit_info_device_file_symlinks_foreach (info, update_info_symlinks_cb, device);
 
         /* TODO: hmm.. it would be really nice if sysfs could export this. There's a
