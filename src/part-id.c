@@ -300,7 +300,9 @@ main (int argc, char *argv[])
 
         fd = open_device (device_file);
         if (fd >= 0) {
-                do_table (fd);
+                if (getenv ("ID_FS_USAGE") == NULL) {
+                        do_table (fd);
+                }
                 close (fd);
         }
 
