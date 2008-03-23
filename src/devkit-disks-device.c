@@ -1442,14 +1442,6 @@ job_child_watch_cb (GPid pid, int status, gpointer user_data)
 
         g_print ("helper(pid %5d): completed with exit code %d\n", job->pid, WEXITSTATUS (status));
 
-        job->job_completed_func (job->context,
-                                 job->device,
-                                 job->pk_caller,
-                                 job->was_cancelled,
-                                 status,
-                                 job->error_string->str,
-                                 job->user_data);
-
         job->device->priv->job_in_progress = FALSE;
         g_free (job->device->priv->job_id);
         job->device->priv->job_id = NULL;
@@ -1460,9 +1452,17 @@ job_child_watch_cb (GPid pid, int status, gpointer user_data)
         job->device->priv->job_cur_task_id = NULL;
         job->device->priv->job_cur_task_percentage = -1.0;
 
-        job->device->priv->job = NULL;
-
         emit_job_changed (job->device);
+
+        job->job_completed_func (job->context,
+                                 job->device,
+                                 job->pk_caller,
+                                 job->was_cancelled,
+                                 status,
+                                 job->error_string->str,
+                                 job->user_data);
+
+        job->device->priv->job = NULL;
 
         job_free (job);
 }
