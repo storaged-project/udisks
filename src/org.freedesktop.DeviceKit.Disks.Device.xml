@@ -8,6 +8,20 @@
     <!-- BEGIN LIST OF METHODS -->
 
     <!-- TODO: docs -->
+    <method name="UnlockEncrypted">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="secret" direction="in" type="s"/>
+      <arg name="options" direction="in" type="as"/>
+      <arg name="cleartext_device" direction="out" type="o"/>
+    </method>
+
+    <!-- TODO: docs -->
+    <method name="LockEncrypted">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="options" direction="in" type="as"/>
+    </method>
+
+    <!-- TODO: docs -->
     <method name="Mount">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="filesystem_type" direction="in" type="s"/>

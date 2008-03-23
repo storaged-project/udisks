@@ -67,6 +67,9 @@ typedef enum
         DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
         DEVKIT_DISKS_DEVICE_ERROR_NOT_PARTITION,
         DEVKIT_DISKS_DEVICE_ERROR_NOT_PARTITIONED,
+        DEVKIT_DISKS_DEVICE_ERROR_NOT_CRYPTO,
+        DEVKIT_DISKS_DEVICE_ERROR_CRYPTO_ALREADY_UNLOCKED,
+        DEVKIT_DISKS_DEVICE_ERROR_CRYPTO_NOT_UNLOCKED,
         DEVKIT_DISKS_DEVICE_NUM_ERRORS
 } DevkitDisksDeviceError;
 
@@ -142,6 +145,15 @@ gboolean devkit_disks_device_create_partition_table (DevkitDisksDevice     *devi
                                                      const char            *scheme,
                                                      char                 **options,
                                                      DBusGMethodInvocation *context);
+
+gboolean devkit_disks_device_unlock_encrypted (DevkitDisksDevice     *device,
+                                               const char            *secret,
+                                               char                 **options,
+                                               DBusGMethodInvocation *context);
+
+gboolean devkit_disks_device_lock_encrypted (DevkitDisksDevice     *device,
+                                             char                 **options,
+                                             DBusGMethodInvocation *context);
 
 G_END_DECLS
 

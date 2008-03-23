@@ -93,6 +93,9 @@ struct DevkitDisksDevicePrivate
                 char *drive_serial;
 
                 char *crypto_cleartext_slave;
+
+                /* not exported */
+                char *dm_name;
         } info;
 };
 

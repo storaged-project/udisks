@@ -176,6 +176,9 @@ devkit_disks_device_error_get_type (void)
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED, "JobWasCancelled"),
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_PARTITION, "NotPartition"),
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_PARTITIONED, "NotPartitioned"),
+                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_CRYPTO, "NotCrypto"),
+                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_CRYPTO_ALREADY_UNLOCKED, "CryptoAlreadyUnlocked"),
+                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_CRYPTO_NOT_UNLOCKED, "CryptoNotUnlocked"),
                         { 0, 0, 0 }
                 };
                 g_assert (DEVKIT_DISKS_DEVICE_NUM_ERRORS == G_N_ELEMENTS (values) - 1);
@@ -807,6 +810,8 @@ free_info (DevkitDisksDevice *device)
         g_free (device->priv->info.drive_model);
         g_free (device->priv->info.drive_revision);
         g_free (device->priv->info.drive_serial);
+
+        g_free (device->priv->info.dm_name);
 }
 
 static void
@@ -978,6 +983,10 @@ update_info_properties_cb (DevKitInfo *info, const char *key, void *user_data)
                                 }
                         }
                 }
+
+        } else if (strcmp (key, "DM_NAME") == 0) {
+                /* TODO: export this at some point */
+                device->priv->info.dm_name = g_strdup (devkit_info_property_get_string (info, key));
 
         } else if (strcmp (key, "DM_TARGET_TYPES") == 0) {
                 if (strcmp (devkit_info_property_get_string (info, key), "crypt") == 0) {
@@ -1387,6 +1396,12 @@ struct Job {
         int stdout_fd;
         GIOChannel *out_channel;
         guint out_channel_source_id;
+
+        char *stdin_str;
+        char *stdin_cursor;
+        int stdin_fd;
+        GIOChannel *in_channel;
+        guint in_channel_source_id;
 };
 
 static void
@@ -1402,11 +1417,21 @@ job_free (Job *job)
                 close (job->stderr_fd);
         if (job->stdout_fd >= 0)
                 close (job->stdout_fd);
+        if (job->stdin_fd >= 0) {
+                close (job->stdin_fd);
+                g_source_remove (job->in_channel_source_id);
+                g_io_channel_unref (job->in_channel);
+        }
         g_source_remove (job->error_channel_source_id);
         g_source_remove (job->out_channel_source_id);
         g_io_channel_unref (job->error_channel);
         g_io_channel_unref (job->out_channel);
         g_string_free (job->error_string, TRUE);
+        /* scrub stdin (may contain secrets) */
+        if (job->stdin_str != NULL) {
+                memset (job->stdin_str, '\0', strlen (job->stdin_str));
+        }
+        g_free (job->stdin_str);
         g_free (job);
 }
 
@@ -1458,14 +1483,34 @@ job_read_error (GIOChannel *channel,
                 GIOCondition condition,
                 gpointer user_data)
 {
-  char *str;
-  gsize str_len;
-  Job *job = user_data;
+        char *str;
+        gsize str_len;
+        Job *job = user_data;
 
-  g_io_channel_read_to_end (channel, &str, &str_len, NULL);
-  g_string_append (job->error_string, str);
-  g_free (str);
-  return TRUE;
+        g_io_channel_read_to_end (channel, &str, &str_len, NULL);
+        g_string_append (job->error_string, str);
+        g_free (str);
+        return TRUE;
+}
+
+static gboolean
+job_write_in (GIOChannel *channel,
+              GIOCondition condition,
+              gpointer user_data)
+{
+        Job *job = user_data;
+        gsize bytes_written;
+
+        if (job->stdin_cursor == NULL || job->stdin_cursor[0] == '\0') {
+                /* nothing left to write; remove ourselves */
+                return FALSE;
+        }
+
+        g_io_channel_write_chars (channel, job->stdin_cursor, strlen (job->stdin_cursor),
+                                  &bytes_written, NULL);
+        g_io_channel_flush (channel, NULL);
+        job->stdin_cursor += bytes_written;
+        return TRUE;
 }
 
 static gboolean
@@ -1473,36 +1518,36 @@ job_read_out (GIOChannel *channel,
               GIOCondition condition,
               gpointer user_data)
 {
-  char *str;
-  gsize str_len;
-  Job *job = user_data;
+        char *str;
+        gsize str_len;
+        Job *job = user_data;
 
-  /* TODO: this blocks */
-  g_io_channel_read_line (channel, &str, &str_len, NULL, NULL);
-  g_print ("helper(pid %5d): %s", job->pid, str);
+        /* TODO: this blocks */
+        g_io_channel_read_line (channel, &str, &str_len, NULL, NULL);
+        g_print ("helper(pid %5d): %s", job->pid, str);
 
-  if (strlen (str) < 256) {
-          int cur_task;
-          int num_tasks;
-          double cur_task_percentage;;
-          char cur_task_id[256];
+        if (strlen (str) < 256) {
+                int cur_task;
+                int num_tasks;
+                double cur_task_percentage;;
+                char cur_task_id[256];
 
-          if (sscanf (str, "progress: %d %d %lg %s",
-                      &cur_task,
-                      &num_tasks,
-                      &cur_task_percentage,
-                      (char *) &cur_task_id) == 4) {
-                  job->device->priv->job_num_tasks = num_tasks;
-                  job->device->priv->job_cur_task = cur_task;
-                  g_free (job->device->priv->job_cur_task_id);
-                  job->device->priv->job_cur_task_id = g_strdup (cur_task_id);
-                  job->device->priv->job_cur_task_percentage = cur_task_percentage;
-                  emit_job_changed (job->device);
-          }
-  }
+                if (sscanf (str, "progress: %d %d %lg %s",
+                            &cur_task,
+                            &num_tasks,
+                            &cur_task_percentage,
+                            (char *) &cur_task_id) == 4) {
+                        job->device->priv->job_num_tasks = num_tasks;
+                        job->device->priv->job_cur_task = cur_task;
+                        g_free (job->device->priv->job_cur_task_id);
+                        job->device->priv->job_cur_task_id = g_strdup (cur_task_id);
+                        job->device->priv->job_cur_task_percentage = cur_task_percentage;
+                        emit_job_changed (job->device);
+                }
+        }
 
-  g_free (str);
-  return TRUE;
+        g_free (str);
+        return TRUE;
 }
 
 static gboolean
@@ -1512,6 +1557,7 @@ job_new (DBusGMethodInvocation *context,
          DevkitDisksDevice     *device,
          PolKitCaller          *pk_caller,
          char                 **argv,
+         const char            *stdin_str,
          JobCompletedFunc       job_completed_func,
          gpointer               user_data,
          GDestroyNotify         user_data_destroy_func)
@@ -1539,6 +1585,9 @@ job_new (DBusGMethodInvocation *context,
         job->user_data_destroy_func = user_data_destroy_func;
         job->stderr_fd = -1;
         job->stdout_fd = -1;
+        job->stdin_fd = -1;
+        job->stdin_str = g_strdup (stdin_str);
+        job->stdin_cursor = job->stdin_str;
         g_free (job->device->priv->job_id);
         job->device->priv->job_id = g_strdup (job_id);
 
@@ -1550,7 +1599,7 @@ job_new (DBusGMethodInvocation *context,
                                        NULL,
                                        NULL,
                                        &(job->pid),
-                                       NULL,
+                                       stdin_str != NULL ? &(job->stdin_fd) : NULL,
                                        &(job->stdout_fd),
                                        &(job->stderr_fd),
                                        &error)) {
@@ -1567,6 +1616,11 @@ job_new (DBusGMethodInvocation *context,
 
         job->out_channel = g_io_channel_unix_new (job->stdout_fd);
         job->out_channel_source_id = g_io_add_watch (job->out_channel, G_IO_IN, job_read_out, job);
+
+        if (job->stdin_fd >= 0) {
+                job->in_channel = g_io_channel_unix_new (job->stdin_fd);
+                job->in_channel_source_id = g_io_add_watch (job->in_channel, G_IO_OUT, job_write_in, job);
+        }
 
         ret = TRUE;
 
@@ -2204,6 +2258,7 @@ try_another_mount_point:
                       device,
                       pk_caller,
                       argv,
+                      NULL,
                       mount_completed_cb,
                       mount_data_new (mount_point, remove_dir_on_unmount, is_remount),
                       (GDestroyNotify) mount_data_free)) {
@@ -2334,6 +2389,7 @@ devkit_disks_device_unmount (DevkitDisksDevice     *device,
                       device,
                       pk_caller,
                       argv,
+                      NULL,
                       unmount_completed_cb,
                       g_strdup (device->priv->info.device_mount_path),
                       g_free)) {
@@ -2418,6 +2474,7 @@ devkit_disks_device_erase (DevkitDisksDevice     *device,
                       device,
                       pk_caller,
                       argv,
+                      NULL,
                       erase_completed_cb,
                       NULL,
                       NULL)) {
@@ -2543,6 +2600,7 @@ devkit_disks_device_delete_partition (DevkitDisksDevice     *device,
                       device,
                       pk_caller,
                       argv,
+                      NULL,
                       delete_partition_completed_cb,
                       g_object_ref (enclosing_device),
                       g_object_unref)) {
@@ -2655,6 +2713,7 @@ devkit_disks_device_create_filesystem_internal (DevkitDisksDevice     *device,
                       device,
                       pk_caller,
                       argv,
+                      NULL,
                       create_filesystem_completed_cb,
                       override_job_completed,
                       NULL)) {
@@ -3025,6 +3084,7 @@ devkit_disks_device_create_partition (DevkitDisksDevice     *device,
                       device,
                       pk_caller,
                       argv,
+                      NULL,
                       create_partition_completed_cb,
                       create_partition_data_new (context, device, offset, size, fstype, fsoptions),
                       (GDestroyNotify) create_partition_data_unref)) {
@@ -3148,6 +3208,7 @@ devkit_disks_device_modify_partition (DevkitDisksDevice     *device,
                       device,
                       pk_caller,
                       argv,
+                      NULL,
                       modify_partition_completed_cb,
                       g_object_ref (enclosing_device),
                       g_object_unref)) {
@@ -3266,6 +3327,7 @@ devkit_disks_device_create_partition_table (DevkitDisksDevice     *device,
                       device,
                       pk_caller,
                       argv,
+                      NULL,
                       create_partition_table_completed_cb,
                       NULL,
                       NULL)) {
@@ -3279,3 +3341,332 @@ out:
         return TRUE;
 }
 
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static DevkitDisksDevice *
+find_cleartext_device (DevkitDisksDevice *device)
+{
+        GList *devices;
+        GList *l;
+        DevkitDisksDevice *ret;
+
+        ret = NULL;
+
+        /* check that there isn't a cleartext device already  */
+        devices = devkit_disks_daemon_local_get_all_devices (device->priv->daemon);
+        for (l = devices; l != NULL; l = l->next) {
+                DevkitDisksDevice *d = DEVKIT_DISKS_DEVICE (l->data);
+                if (d->priv->info.device_is_crypto_cleartext &&
+                    d->priv->info.crypto_cleartext_slave != NULL &&
+                    strcmp (d->priv->info.crypto_cleartext_slave, device->priv->object_path) == 0) {
+                        ret = d;
+                        goto out;
+                }
+        }
+
+out:
+        return ret;
+}
+
+typedef struct {
+        int refcount;
+
+        guint device_added_signal_handler_id;
+        guint device_added_timeout_id;
+
+        DBusGMethodInvocation *context;
+        DevkitDisksDevice *device;
+} UnlockEncryptionData;
+
+static UnlockEncryptionData *
+unlock_encryption_data_new (DBusGMethodInvocation *context,
+                            DevkitDisksDevice *device)
+{
+        UnlockEncryptionData *data;
+
+        data = g_new0 (UnlockEncryptionData, 1);
+        data->refcount = 1;
+
+        data->context = context;
+        data->device = g_object_ref (device);
+        return data;
+}
+
+static UnlockEncryptionData *
+unlock_encryption_data_ref (UnlockEncryptionData *data)
+{
+        data->refcount++;
+        return data;
+}
+
+static void
+unlock_encryption_data_unref (UnlockEncryptionData *data)
+{
+        data->refcount--;
+        if (data->refcount == 0) {
+                g_object_unref (data->device);
+                g_free (data);
+        }
+}
+
+
+static void
+unlock_encrypted_device_added_cb (DevkitDisksDaemon *daemon,
+                                  const char *object_path,
+                                  gpointer user_data)
+{
+        UnlockEncryptionData *data = user_data;
+        DevkitDisksDevice *device;
+
+        /* check the device is a cleartext partition for us */
+        device = devkit_disks_daemon_local_find_by_object_path (daemon, object_path);
+
+        if (device != NULL &&
+            device->priv->info.device_is_crypto_cleartext &&
+            strcmp (device->priv->info.crypto_cleartext_slave, data->device->priv->object_path) == 0) {
+
+                /* yay! it is.. return value to the user */
+                dbus_g_method_return (data->context, object_path);
+
+                g_signal_handler_disconnect (daemon, data->device_added_signal_handler_id);
+                g_source_remove (data->device_added_timeout_id);
+                unlock_encryption_data_unref (data);
+        }
+}
+
+static gboolean
+unlock_encrypted_device_not_seen_cb (gpointer user_data)
+{
+        UnlockEncryptionData *data = user_data;
+
+        throw_error (data->context,
+                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                     "Error unlocking device: timeout (10s) waiting for cleartext device to show up");
+
+        g_signal_handler_disconnect (data->device->priv->daemon, data->device_added_signal_handler_id);
+        unlock_encryption_data_unref (data);
+        return FALSE;
+}
+
+static void
+unlock_encrypted_completed_cb (DBusGMethodInvocation *context,
+                               DevkitDisksDevice *device,
+                               PolKitCaller *pk_caller,
+                               gboolean job_was_cancelled,
+                               int status,
+                               const char *stderr,
+                               gpointer user_data)
+{
+        UnlockEncryptionData *data = user_data;
+        DevkitDisksDevice *cleartext_device;
+
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+
+                cleartext_device = find_cleartext_device (device);
+                if (cleartext_device != NULL) {
+                        dbus_g_method_return (data->context, cleartext_device->priv->object_path);
+                } else {
+                        /* sit around wait for the cleartext device to appear */
+                        data->device_added_signal_handler_id = g_signal_connect_after (
+                                device->priv->daemon,
+                                "device-added",
+                                (GCallback) unlock_encrypted_device_added_cb,
+                                unlock_encryption_data_ref (data));
+
+                        /* set up timeout for error reporting if waiting failed
+                         *
+                         * (the signal handler and the timeout handler share the ref to data
+                         * as one will cancel the other)
+                         */
+                        data->device_added_timeout_id = g_timeout_add (10 * 1000,
+                                                                       unlock_encrypted_device_not_seen_cb,
+                                                                       data);
+                }
+        } else {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Error unlocking device: cryptsetup exited with exit code %d: %s",
+                                     WEXITSTATUS (status), stderr);
+                }
+        }
+}
+
+
+gboolean
+devkit_disks_device_unlock_encrypted (DevkitDisksDevice     *device,
+                                      const char            *secret,
+                                      char                 **options,
+                                      DBusGMethodInvocation *context)
+{
+        int n;
+        char *argv[10];
+        char *luks_name;
+        GError *error;
+        PolKitCaller *pk_caller;
+        char *secret_as_stdin;
+
+        luks_name = NULL;
+        secret_as_stdin = NULL;
+
+        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
+                goto out;
+
+        if (device->priv->info.id_usage == NULL ||
+            strcmp (device->priv->info.id_usage, "crypto") != 0) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_CRYPTO,
+                             "Not a crypto device");
+                goto out;
+        }
+
+        if (find_cleartext_device (device) != NULL) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_CRYPTO_ALREADY_UNLOCKED,
+                             "Cleartext device is already unlocked");
+                goto out;
+        }
+
+        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                  pk_caller,
+                                                  /* TODO: revisit auth */
+                                                  "org.freedesktop.devicekit.disks.mount",
+                                                  context)) {
+                goto out;
+        }
+
+        /* TODO: use same naming scheme as hal */
+        luks_name = g_strdup_printf ("devkit-disks-luks-uuid-%s", device->priv->info.id_uuid);
+        secret_as_stdin = g_strdup_printf ("%s\n", secret);
+
+        n = 0;
+        argv[n++] = "cryptsetup";
+        argv[n++] = "luksOpen";
+        argv[n++] = device->priv->info.device_file;
+        argv[n++] = luks_name;
+        argv[n++] = NULL;
+
+        error = NULL;
+        if (!job_new (context,
+                      "UnlockEncrypted",
+                      FALSE,
+                      device,
+                      pk_caller,
+                      argv,
+                      secret_as_stdin,
+                      unlock_encrypted_completed_cb,
+                      unlock_encryption_data_new (context, device),
+                      (GDestroyNotify) unlock_encryption_data_unref)) {
+                    goto out;
+        }
+
+out:
+        /* scrub the secret */
+        if (secret_as_stdin != NULL) {
+                memset (secret_as_stdin, '\0', strlen (secret_as_stdin));
+        }
+        g_free (secret_as_stdin);
+        g_free (luks_name);
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+lock_encrypted_completed_cb (DBusGMethodInvocation *context,
+                             DevkitDisksDevice *device,
+                             PolKitCaller *pk_caller,
+                             gboolean job_was_cancelled,
+                             int status,
+                             const char *stderr,
+                             gpointer user_data)
+{
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+                dbus_g_method_return (context);
+        } else {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Error locking device: cryptsetup exited with exit code %d: %s",
+                                     WEXITSTATUS (status), stderr);
+                }
+        }
+}
+
+gboolean
+devkit_disks_device_lock_encrypted (DevkitDisksDevice     *device,
+                                    char                 **options,
+                                    DBusGMethodInvocation *context)
+{
+        int n;
+        char *argv[10];
+        GError *error;
+        PolKitCaller *pk_caller;
+        DevkitDisksDevice *cleartext_device;
+
+        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
+                goto out;
+
+        if (device->priv->info.id_usage == NULL ||
+            strcmp (device->priv->info.id_usage, "crypto") != 0) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_CRYPTO,
+                             "Not a crypto device");
+                goto out;
+        }
+
+        cleartext_device = find_cleartext_device (device);
+        if (cleartext_device == NULL) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_CRYPTO_NOT_UNLOCKED,
+                             "Cleartext device is not unlocked");
+                goto out;
+        }
+
+        if (cleartext_device->priv->info.dm_name == NULL || strlen (cleartext_device->priv->info.dm_name) == 0) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                             "Cannot determine device-mapper name");
+                goto out;
+        }
+
+        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                  pk_caller,
+                                                  /* TODO: revisit auth */
+                                                  "org.freedesktop.devicekit.disks.mount",
+                                                  context)) {
+                goto out;
+        }
+
+        n = 0;
+        argv[n++] = "cryptsetup";
+        argv[n++] = "luksClose";
+        argv[n++] = cleartext_device->priv->info.dm_name;
+        argv[n++] = NULL;
+
+        error = NULL;
+        if (!job_new (context,
+                      "LockEncrypted",
+                      FALSE,
+                      device,
+                      pk_caller,
+                      argv,
+                      NULL,
+                      lock_encrypted_completed_cb,
+                      NULL,
+                      NULL)) {
+                    goto out;
+        }
+
+out:
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
