@@ -893,7 +893,10 @@ sysfs_resolve_link (const char *sysfs_path, const char *name)
 static devkit_bool_t
 update_info_properties_cb (DevKitInfo *info, const char *key, void *user_data)
 {
+        gboolean ignore_device;
         DevkitDisksDevice *device = user_data;
+
+        ignore_device = FALSE;
 
         if (strcmp (key, "ID_FS_USAGE") == 0) {
                 device->priv->info.id_usage   = _dupv8 (devkit_info_property_get_string (info, key));
@@ -985,8 +988,17 @@ update_info_properties_cb (DevKitInfo *info, const char *key, void *user_data)
                 }
 
         } else if (strcmp (key, "DM_NAME") == 0) {
-                /* TODO: export this at some point */
-                device->priv->info.dm_name = g_strdup (devkit_info_property_get_string (info, key));
+                const char *dm_name;
+                dm_name = devkit_info_property_get_string (info, key);
+
+                if (g_str_has_prefix (dm_name, "temporary-cryptsetup-")) {
+                        /* ignore temporary devices created by /sbin/cryptsetup */
+                        ignore_device = TRUE;
+                        goto out;
+                } else {
+                        /* TODO: export this at some point */
+                        device->priv->info.dm_name = g_strdup (dm_name);
+                }
 
         } else if (strcmp (key, "DM_TARGET_TYPES") == 0) {
                 if (strcmp (devkit_info_property_get_string (info, key), "crypt") == 0) {
@@ -1014,7 +1026,8 @@ update_info_properties_cb (DevKitInfo *info, const char *key, void *user_data)
                 }
         }
 
-        return FALSE;
+out:
+        return ignore_device;
 }
 
 static gboolean
@@ -1126,7 +1139,9 @@ update_info (DevkitDisksDevice *device)
                 /* TODO: handle partitions created by kpartx / dm-linear */
         }
 
-        devkit_info_property_foreach (info, update_info_properties_cb, device);
+        if (devkit_info_property_foreach (info, update_info_properties_cb, device)) {
+                goto out;
+        }
 
         ret = TRUE;
 
