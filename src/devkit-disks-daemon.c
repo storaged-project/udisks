@@ -574,12 +574,12 @@ device_add (DevkitDisksDaemon *daemon, const char *native_path, gboolean emit_ev
         } else {
                 device = devkit_disks_device_new (daemon, native_path);
 
-                /* update whether device is mounted */
-                l = g_list_prepend (NULL, device);
-                update_mount_state (daemon, l);
-                g_list_free (l);
-
                 if (device != NULL) {
+                        /* update whether device is mounted */
+                        l = g_list_prepend (NULL, device);
+                        update_mount_state (daemon, l);
+                        g_list_free (l);
+
                         /* only take a weak ref; the device will stay on the bus until
                          * it's unreffed. So if we ref it, it'll never go away. Stupid
                          * dbus-glib, no cookie for you.
@@ -714,6 +714,7 @@ receive_udev_data (GIOChannel *source, GIOCondition condition, gpointer user_dat
 	if (action != NULL && devpath != NULL && subsystem != NULL) {
                 if (strcmp (subsystem, "block") == 0) {
                         char *native_path;
+
                         native_path = g_build_filename ("/sys", devpath, NULL);
                         if (strcmp (action, "add") == 0) {
                                 device_add (daemon, native_path, TRUE);

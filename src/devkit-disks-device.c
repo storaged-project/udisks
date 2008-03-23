@@ -3670,3 +3670,94 @@ out:
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+change_secret_for_encrypted_completed_cb (DBusGMethodInvocation *context,
+                                          DevkitDisksDevice *device,
+                                          PolKitCaller *pk_caller,
+                                          gboolean job_was_cancelled,
+                                          int status,
+                                          const char *stderr,
+                                          gpointer user_data)
+{
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+                dbus_g_method_return (context);
+        } else {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Error changing secret on device: helper exited with exit code %d: %s",
+                                     WEXITSTATUS (status), stderr);
+                }
+        }
+}
+
+gboolean
+devkit_disks_device_change_secret_for_encrypted (DevkitDisksDevice     *device,
+                                                 const char            *old_secret,
+                                                 const char            *new_secret,
+                                                 DBusGMethodInvocation *context)
+{
+        int n;
+        char *argv[10];
+        GError *error;
+        PolKitCaller *pk_caller;
+        char *secrets_as_stdin;
+
+        secrets_as_stdin = NULL;
+
+        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
+                goto out;
+
+        if (device->priv->info.id_usage == NULL ||
+            strcmp (device->priv->info.id_usage, "crypto") != 0) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_CRYPTO,
+                             "Not a crypto device");
+                goto out;
+        }
+
+        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                  pk_caller,
+                                                  /* TODO: revisit auth */
+                                                  "org.freedesktop.devicekit.disks.mount",
+                                                  context)) {
+                goto out;
+        }
+
+        secrets_as_stdin = g_strdup_printf ("%s\n%s\n", old_secret, new_secret);
+
+        n = 0;
+        argv[n++] = "devkit-disks-helper-change-luks-password";
+        argv[n++] = device->priv->info.device_file;
+        argv[n++] = NULL;
+
+        error = NULL;
+        if (!job_new (context,
+                      "ChangeSecretForEncrypted",
+                      FALSE,
+                      device,
+                      pk_caller,
+                      argv,
+                      secrets_as_stdin,
+                      change_secret_for_encrypted_completed_cb,
+                      NULL,
+                      NULL)) {
+                goto out;
+        }
+
+out:
+        /* scrub the secrets */
+        if (secrets_as_stdin != NULL) {
+                memset (secrets_as_stdin, '\0', strlen (secrets_as_stdin));
+        }
+        g_free (secrets_as_stdin);
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/

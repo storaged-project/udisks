@@ -119,6 +119,12 @@ main (int argc, char **argv)
 
         ret = 1;
 
+        /* run with a controlled path */
+        if (!g_setenv ("PATH", PACKAGE_LIBEXEC_DIR ":/sbin:/bin:/usr/sbin:/usr/bin", TRUE)) {
+                g_warning ("Couldn't set PATH");
+                goto out;
+        }
+
         g_type_init ();
 
         context = g_option_context_new ("DeviceKit Disks Daemon");

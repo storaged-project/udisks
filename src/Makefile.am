@@ -70,6 +70,8 @@ libexec_PROGRAMS += devkit-disks-helper-erase                   \
 		    devkit-disks-helper-modify-partition        \
 		    devkit-disks-helper-create-partition-table
 
+libexec_SCRIPTS = devkit-disks-helper-change-luks-password
+
 devkit_disks_helper_erase_SOURCES = job-shared.h job-erase.c
 devkit_disks_helper_erase_CPPFLAGS = $(AM_CPPFLAGS)
 devkit_disks_helper_erase_LDADD = $(GLIB_LIBS)

@@ -155,6 +155,11 @@ gboolean devkit_disks_device_lock_encrypted (DevkitDisksDevice     *device,
                                              char                 **options,
                                              DBusGMethodInvocation *context);
 
+gboolean devkit_disks_device_change_secret_for_encrypted (DevkitDisksDevice     *device,
+                                                          const char            *old_secret,
+                                                          const char            *new_secret,
+                                                          DBusGMethodInvocation *context);
+
 G_END_DECLS
 
 #endif /* __DEVKIT_DISKS_DEVICE_H__ */

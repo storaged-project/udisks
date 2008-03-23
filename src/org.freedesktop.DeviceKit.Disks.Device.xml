@@ -22,6 +22,13 @@
     </method>
 
     <!-- TODO: docs -->
+    <method name="ChangeSecretForEncrypted">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="current_secret" direction="in" type="s"/>
+      <arg name="new_secret" direction="in" type="s"/>
+    </method>
+
+    <!-- TODO: docs -->
     <method name="Mount">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="filesystem_type" direction="in" type="s"/>
