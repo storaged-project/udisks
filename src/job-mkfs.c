@@ -88,22 +88,43 @@ main (int argc, char **argv)
         int num_erase_passes;
         int n;
         gboolean is_kernel_partitioned;
+        GIOChannel *stdin_channel;
+        GPtrArray *options_array;
+        char *option;
+        gsize option_len;
 
         ret = 1;
         command_line = NULL;
         standard_error = NULL;
         erase = NULL;
 
-        if (argc < 4) {
+        if (argc != 4) {
                 g_printerr ("wrong usage\n");
                 goto out;
         }
         fstype = argv[1];
         device = argv[2];
         is_kernel_partitioned = (strcmp (argv[3], "1") == 0);
-        options = argv + 4;
 
-        /* TODO: clean out metadata in start and beginning */
+        options_array = g_ptr_array_new ();
+        stdin_channel = g_io_channel_unix_new (0);
+        if (stdin_channel == NULL) {
+                g_printerr ("cannot open stdin\n");
+                goto out;
+        }
+        while (g_io_channel_read_line (stdin_channel,
+                                       &option,
+                                       &option_len,
+                                       NULL,
+                                       NULL) == G_IO_STATUS_NORMAL) {
+                option[option_len - 1] = '\0';
+                if (strlen (option) == 0)
+                        break;
+                g_ptr_array_add (options_array, option);
+        }
+        g_io_channel_unref (stdin_channel);
+        g_ptr_array_add (options_array, NULL);
+        options = (char **) g_ptr_array_free (options_array, FALSE);
 
         if (strcmp (fstype, "vfat") == 0) {
 
@@ -204,7 +225,7 @@ main (int argc, char **argv)
                 goto out;
         }
 
-        /* TODO: do erase */
+        /* erase */
         num_erase_passes = task_zero_device_parse_option (erase);
         if (num_erase_passes == -1) {
                 g_printerr ("invalid erase=%s option\n", erase);

@@ -162,11 +162,21 @@
 
          @options:  List of options. Known options that are file system
                     independent are:
-                     - label=: for setting the file system label
-                     - erase=: whether to erase the device before
-                               creating a file system. Valid values
-                               include "none", "full", "full7pass" and
-                               "full35pass".
+
+                     - label=:   For setting the file system label. May not
+                                 be support for all file systems and the
+                                 allowed length varies. See @TODO@ for the
+                                 file systems supported by the system.
+
+                     - erase=:   whether to erase the device before
+                                 creating a file system. Valid values
+                                 include "none", "full", "full7pass" and
+                                 "full35pass".
+
+                     - encrypt=: If this option is used, the file system
+                                 will be created on an encrypted block device
+                                 that will be setup. The passphrase used is
+                                 the value following the '=' character.
 
          Create a file system on a device.
      -->

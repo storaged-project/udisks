@@ -65,6 +65,33 @@ static void     init_info                  (DevkitDisksDevice *device);
 static void     free_info                  (DevkitDisksDevice *device);
 static gboolean update_info                (DevkitDisksDevice *device);
 
+/* Returns the cleartext device. If device==NULL, unlocking failed and an error has
+ * been reported back to the caller
+ */
+typedef void (*UnlockEncryptionHookFunc) (DBusGMethodInvocation *context,
+                                          DevkitDisksDevice *device,
+                                          gpointer user_data);
+
+static gboolean devkit_disks_device_unlock_encrypted_internal (DevkitDisksDevice        *device,
+                                                               const char               *secret,
+                                                               char                    **options,
+                                                               UnlockEncryptionHookFunc  hook_func,
+                                                               gpointer                  hook_user_data,
+                                                               DBusGMethodInvocation    *context);
+
+/* if create_filesystem_succeeded==FALSE, mkfs failed and an error has been reported back to the caller */
+typedef void (*CreateFilesystemHookFunc) (DBusGMethodInvocation *context,
+                                          DevkitDisksDevice *device,
+                                          gboolean create_filesystem_succeeded,
+                                          gpointer user_data);
+
+static gboolean
+devkit_disks_device_create_filesystem_internal (DevkitDisksDevice       *device,
+                                                const char              *fstype,
+                                                char                   **options,
+                                                CreateFilesystemHookFunc hook_func,
+                                                gpointer                 hook_user_data,
+                                                DBusGMethodInvocation *context);
 
 enum
 {
@@ -2632,6 +2659,17 @@ out:
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
+typedef struct {
+        CreateFilesystemHookFunc hook_func;
+        gpointer                 hook_user_data;
+} MkfsData;
+
+static void
+mkfs_data_unref (MkfsData *data)
+{
+        g_free (data);
+}
+
 static void
 create_filesystem_completed_cb (DBusGMethodInvocation *context,
                                 DevkitDisksDevice *device,
@@ -2641,44 +2679,217 @@ create_filesystem_completed_cb (DBusGMethodInvocation *context,
                                 const char *stderr,
                                 gpointer user_data)
 {
-        JobCompletedFunc override_job_completed = user_data;
+        MkfsData *data = user_data;
 
-        if (override_job_completed != NULL) {
-                override_job_completed (context, device, pk_caller, job_was_cancelled, status, stderr, user_data);
-        } else {
-                /* either way, poke the kernel so we can reread the data */
-                devkit_device_emit_changed_to_kernel (device);
+        /* either way, poke the kernel so we can reread the data */
+        devkit_device_emit_changed_to_kernel (device);
 
-                if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+                if (data->hook_func != NULL)
+                        data->hook_func (context, device, TRUE, data->hook_user_data);
+                else
                         dbus_g_method_return (context);
+        } else {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     "Job was cancelled");
                 } else {
-                        if (job_was_cancelled) {
-                                throw_error (context,
-                                             DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
-                                             "Job was cancelled");
-                        } else {
-                                throw_error (context,
-                                             DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
-                                             "Error creating file system: helper exited with exit code %d: %s",
-                                             WEXITSTATUS (status),
-                                             stderr);
-                        }
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Error creating file system: helper exited with exit code %d: %s",
+                                     WEXITSTATUS (status),
+                                     stderr);
+                }
+
+                if (data->hook_func != NULL)
+                        data->hook_func (context, device, FALSE, data->hook_user_data);
+        }
+}
+
+typedef struct {
+        int refcount;
+
+        DBusGMethodInvocation *context;
+        DevkitDisksDevice *device;
+
+        char *passphrase;
+
+        char **options;
+        char *fstype;
+
+        CreateFilesystemHookFunc mkfs_hook_func;
+        gpointer                 mkfs_hook_user_data;
+
+        guint device_changed_signal_handler_id;
+        guint device_changed_timeout_id;
+} MkfsEncryptedData;
+
+static MkfsEncryptedData *
+mkfse_data_ref (MkfsEncryptedData *data)
+{
+        data->refcount++;
+        return data;
+}
+
+static void
+mkfse_data_unref (MkfsEncryptedData *data)
+{
+        data->refcount--;
+        if (data->refcount == 0) {
+                if (data->passphrase != NULL) {
+                        memset (data->passphrase, '\0', strlen (data->passphrase));
+                        g_free (data->passphrase);
+                }
+                if (data->device != NULL)
+                        g_object_unref (data->device);
+                g_strfreev (data->options);
+                g_free (data->fstype);
+                g_free (data);
+        }
+}
+
+static void
+create_filesystem_wait_for_cleartext_device_hook (DBusGMethodInvocation *context,
+                                                  DevkitDisksDevice *device,
+                                                  gpointer user_data)
+{
+        MkfsEncryptedData *data = user_data;
+
+        if (device == NULL) {
+                /* Dang, unlocking failed. The unlock method have already thrown an exception for us. */
+        } else {
+                /* We're unlocked.. awesome.. Now we can _finally_ create the file system.
+                 * What a ride. We're returning to exactly to where we came from. Back to
+                 * the source. Only the device is different.
+                 */
+
+                devkit_disks_device_create_filesystem_internal (device,
+                                                                data->fstype,
+                                                                data->options,
+                                                                data->mkfs_hook_func,
+                                                                data->mkfs_hook_user_data,
+                                                                data->context);
+                mkfse_data_unref (data);
+        }
+}
+
+static void
+create_filesystem_wait_for_encrypted_device_changed_cb (DevkitDisksDaemon *daemon,
+                                                        const char *object_path,
+                                                        gpointer user_data)
+{
+        MkfsEncryptedData *data = user_data;
+        DevkitDisksDevice *device;
+
+        /* check if we're now a LUKS crypto device */
+        device = devkit_disks_daemon_local_find_by_object_path (daemon, object_path);
+        if (device == data->device &&
+            (device->priv->info.id_usage != NULL && strcmp (device->priv->info.id_usage, "crypto") == 0) &&
+            (device->priv->info.id_type != NULL && strcmp (device->priv->info.id_type, "crypto_LUKS") == 0)) {
+
+                /* yay! we are now set up the corresponding cleartext device */
+
+                devkit_disks_device_unlock_encrypted_internal (data->device,
+                                                               data->passphrase,
+                                                               NULL,
+                                                               create_filesystem_wait_for_cleartext_device_hook,
+                                                               data,
+                                                               data->context);
+
+                g_signal_handler_disconnect (daemon, data->device_changed_signal_handler_id);
+                g_source_remove (data->device_changed_timeout_id);
+        }
+}
+
+static gboolean
+create_filesystem_wait_for_encrypted_device_not_seen_cb (gpointer user_data)
+{
+        MkfsEncryptedData *data = user_data;
+
+        throw_error (data->context,
+                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                     "Error creating encrypted file system: timeout (10s) waiting for encrypted device to show up");
+
+        g_signal_handler_disconnect (data->device->priv->daemon, data->device_changed_signal_handler_id);
+        mkfse_data_unref (data);
+
+        return FALSE;
+}
+
+
+
+static void
+create_filesystem_create_encrypted_device_completed_cb (DBusGMethodInvocation *context,
+                                                        DevkitDisksDevice *device,
+                                                        PolKitCaller *pk_caller,
+                                                        gboolean job_was_cancelled,
+                                                        int status,
+                                                        const char *stderr,
+                                                        gpointer user_data)
+{
+        MkfsEncryptedData *data = user_data;
+
+        /* either way, poke the kernel so we can reread the data (new uuid etc.) */
+        devkit_device_emit_changed_to_kernel (device);
+
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+
+                /* OK! So we've got ourselves an encrypted device. Let's set it up so we can create a file
+                 * system. Sit and wait for the change event to appear so we can setup with the right UUID.
+                 */
+
+                data->device_changed_signal_handler_id = g_signal_connect_after (
+                        device->priv->daemon,
+                        "device-changed",
+                        (GCallback) create_filesystem_wait_for_encrypted_device_changed_cb,
+                        mkfse_data_ref (data));
+
+                /* set up timeout for error reporting if waiting failed
+                 *
+                 * (the signal handler and the timeout handler share the ref to data
+                 * as one will cancel the other)
+                 */
+                data->device_changed_timeout_id = g_timeout_add (
+                        10 * 1000,
+                        create_filesystem_wait_for_encrypted_device_not_seen_cb,
+                        data);
+
+
+        } else {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Error creating file system: cryptsetup exited with exit code %d: %s",
+                                     WEXITSTATUS (status),
+                                     stderr);
                 }
         }
 }
 
 static gboolean
-devkit_disks_device_create_filesystem_internal (DevkitDisksDevice     *device,
-                                                const char            *fstype,
-                                                char                 **options,
-                                                JobCompletedFunc       override_job_completed,
+devkit_disks_device_create_filesystem_internal (DevkitDisksDevice       *device,
+                                                const char              *fstype,
+                                                char                   **options,
+                                                CreateFilesystemHookFunc hook_func,
+                                                gpointer                 hook_user_data,
                                                 DBusGMethodInvocation *context)
 {
-        int n;
-        int m;
+        int n, m;
         char *argv[128];
         GError *error;
         PolKitCaller *pk_caller;
+        char *s;
+        char *options_for_stdin;
+        char *passphrase_stdin;
+        MkfsData *mkfs_data;
+
+        options_for_stdin = NULL;
+        passphrase_stdin = NULL;
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
@@ -2704,21 +2915,71 @@ devkit_disks_device_create_filesystem_internal (DevkitDisksDevice     *device,
                 goto out;
         }
 
+        /* search for encrypt=<passphrase> and do a detour if that's specified */
+        for (n = 0; options[n] != NULL; n++) {
+                if (g_str_has_prefix (options[n], "encrypt=")) {
+                        MkfsEncryptedData *mkfse_data;
+
+                        /* So this is a request to create an encrypted device to put the
+                         * file system on; save all options for mkfs (except encrypt=) for
+                         * later invocation once we have a cleartext device.
+                         */
+
+                        mkfse_data = g_new0 (MkfsEncryptedData, 1);
+                        mkfse_data->refcount = 1;
+                        mkfse_data->context = context;
+                        mkfse_data->device = g_object_ref (device);
+                        mkfse_data->passphrase = g_strdup (options[n] + sizeof ("encrypt=") - 1);
+                        mkfse_data->mkfs_hook_func = hook_func;
+                        mkfse_data->mkfs_hook_user_data = hook_user_data;
+                        mkfse_data->fstype = g_strdup (fstype);
+                        mkfse_data->options = g_strdupv (options);
+                        g_free (mkfse_data->options[n]);
+                        for (m = n; mkfse_data->options[m] != NULL; m++) {
+                                mkfse_data->options[m] = mkfse_data->options[m + 1];
+                        }
+
+                        passphrase_stdin = g_strdup_printf ("%s\n", mkfse_data->passphrase);
+
+                        n = 0;
+                        argv[n++] = "cryptsetup";
+                        argv[n++] = "-q";
+                        argv[n++] = "luksFormat";
+                        argv[n++] = device->priv->info.device_file;
+                        argv[n++] = NULL;
+
+                        error = NULL;
+                        if (!job_new (context,
+                                      "CreateEncryptedDevice",
+                                      TRUE,
+                                      device,
+                                      pk_caller,
+                                      argv,
+                                      passphrase_stdin,
+                                      create_filesystem_create_encrypted_device_completed_cb,
+                                      mkfse_data,
+                                      (GDestroyNotify) mkfse_data_unref)) {
+                                goto out;
+                        }
+
+                        goto out;
+                }
+        }
+
+        mkfs_data = g_new (MkfsData, 1);
+        mkfs_data->hook_func = hook_func;
+        mkfs_data->hook_user_data = hook_user_data;
+
+        /* pass options on stdin as it may contain secrets */
+        s = g_strjoinv ("\n", options);
+        options_for_stdin = g_strconcat (s, "\n\n", NULL);
+        g_free (s);
+
         n = 0;
         argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-mkfs";
         argv[n++] = (char *) fstype;
         argv[n++] = device->priv->info.device_file;
         argv[n++] = device->priv->info.device_is_partition_table ? "1" : "0";
-        for (m = 0; options[m] != NULL; m++) {
-                if (n >= (int) sizeof (argv) - 1) {
-                        throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
-                                     "Too many options");
-                        goto out;
-                }
-                /* the helper will validate each option */
-                argv[n++] = (char *) options[m];
-        }
         argv[n++] = NULL;
 
         error = NULL;
@@ -2728,16 +2989,21 @@ devkit_disks_device_create_filesystem_internal (DevkitDisksDevice     *device,
                       device,
                       pk_caller,
                       argv,
-                      NULL,
+                      options_for_stdin,
                       create_filesystem_completed_cb,
-                      override_job_completed,
-                      NULL)) {
+                      mkfs_data,
+                      (GDestroyNotify) mkfs_data_unref)) {
                 goto out;
         }
 
 out:
         if (pk_caller != NULL)
                 polkit_caller_unref (pk_caller);
+        g_free (options_for_stdin);
+        if (passphrase_stdin != NULL) {
+                memset (passphrase_stdin, '\0', strlen (passphrase_stdin));
+                g_free (passphrase_stdin);
+        }
         return TRUE;
 }
 
@@ -2747,7 +3013,7 @@ devkit_disks_device_create_filesystem (DevkitDisksDevice     *device,
                                        char                 **options,
                                        DBusGMethodInvocation *context)
 {
-        return devkit_disks_device_create_filesystem_internal (device, fstype, options, NULL, context);
+        return devkit_disks_device_create_filesystem_internal (device, fstype, options, NULL, NULL, context);
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/
@@ -2845,31 +3111,16 @@ create_partition_data_unref (CreatePartitionData *data)
 }
 
 static void
-create_partition_create_filesystem_completed_cb (DBusGMethodInvocation *context,
-                                                 DevkitDisksDevice *device,
-                                                 PolKitCaller *pk_caller,
-                                                 gboolean job_was_cancelled,
-                                                 int status,
-                                                 const char *stderr,
-                                                 gpointer user_data)
+create_partition_create_filesystem_hook (DBusGMethodInvocation *context,
+                                         DevkitDisksDevice *device,
+                                         gboolean create_filesystem_succeeded,
+                                         gpointer user_data)
 {
-        /* poke the kernel so we can reread the data */
-        devkit_device_emit_changed_to_kernel (device);
-
-        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
-                dbus_g_method_return (context, device->priv->object_path);
+        if (!create_filesystem_succeeded) {
+                /* dang.. CreateFilesystem already reported an error */
         } else {
-                if (job_was_cancelled) {
-                        throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
-                                     "Job was cancelled");
-                } else {
-                        throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
-                                     "Error creating file system: helper exited with exit code %d: %s",
-                                     WEXITSTATUS (status),
-                                     stderr);
-                }
+                /* it worked.. */
+                dbus_g_method_return (context, device->priv->object_path);
         }
 }
 
@@ -2894,16 +3145,16 @@ create_partition_device_added_cb (DevkitDisksDaemon *daemon,
                         devkit_disks_device_create_filesystem_internal (device,
                                                                         data->fstype,
                                                                         data->fsoptions,
-                                                                        create_partition_create_filesystem_completed_cb,
+                                                                        create_partition_create_filesystem_hook,
+                                                                        NULL,
                                                                         data->context);
                 } else {
                         dbus_g_method_return (data->context, device->priv->object_path);
                 }
 
                 g_signal_handler_disconnect (daemon, data->device_added_signal_handler_id);
-                create_partition_data_unref (data);
-
                 g_source_remove (data->device_added_timeout_id);
+                create_partition_data_unref (data);
         }
 }
 
@@ -3391,11 +3642,16 @@ typedef struct {
 
         DBusGMethodInvocation *context;
         DevkitDisksDevice *device;
+
+        UnlockEncryptionHookFunc    hook_func;
+        gpointer                    hook_user_data;
 } UnlockEncryptionData;
 
 static UnlockEncryptionData *
-unlock_encryption_data_new (DBusGMethodInvocation *context,
-                            DevkitDisksDevice *device)
+unlock_encryption_data_new (DBusGMethodInvocation      *context,
+                            DevkitDisksDevice          *device,
+                            UnlockEncryptionHookFunc    hook_func,
+                            gpointer                    hook_user_data)
 {
         UnlockEncryptionData *data;
 
@@ -3404,6 +3660,8 @@ unlock_encryption_data_new (DBusGMethodInvocation *context,
 
         data->context = context;
         data->device = g_object_ref (device);
+        data->hook_func = hook_func;
+        data->hook_user_data = hook_user_data;
         return data;
 }
 
@@ -3440,8 +3698,12 @@ unlock_encrypted_device_added_cb (DevkitDisksDaemon *daemon,
             device->priv->info.device_is_crypto_cleartext &&
             strcmp (device->priv->info.crypto_cleartext_slave, data->device->priv->object_path) == 0) {
 
-                /* yay! it is.. return value to the user */
-                dbus_g_method_return (data->context, object_path);
+                if (data->hook_func != NULL) {
+                        data->hook_func (data->context, device, data->hook_user_data);
+                } else {
+                        /* yay! it is.. return value to the user */
+                        dbus_g_method_return (data->context, object_path);
+                }
 
                 g_signal_handler_disconnect (daemon, data->device_added_signal_handler_id);
                 g_source_remove (data->device_added_timeout_id);
@@ -3457,6 +3719,10 @@ unlock_encrypted_device_not_seen_cb (gpointer user_data)
         throw_error (data->context,
                      DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
                      "Error unlocking device: timeout (10s) waiting for cleartext device to show up");
+
+        if (data->hook_func != NULL) {
+                data->hook_func (data->context, NULL, data->hook_user_data);
+        }
 
         g_signal_handler_disconnect (data->device->priv->daemon, data->device_added_signal_handler_id);
         unlock_encryption_data_unref (data);
@@ -3479,7 +3745,11 @@ unlock_encrypted_completed_cb (DBusGMethodInvocation *context,
 
                 cleartext_device = find_cleartext_device (device);
                 if (cleartext_device != NULL) {
-                        dbus_g_method_return (data->context, cleartext_device->priv->object_path);
+                        if (data->hook_func != NULL) {
+                                data->hook_func (data->context, cleartext_device, data->hook_user_data);
+                        } else {
+                                dbus_g_method_return (data->context, cleartext_device->priv->object_path);
+                        }
                 } else {
                         /* sit around wait for the cleartext device to appear */
                         data->device_added_signal_handler_id = g_signal_connect_after (
@@ -3508,15 +3778,19 @@ unlock_encrypted_completed_cb (DBusGMethodInvocation *context,
                                      "Error unlocking device: cryptsetup exited with exit code %d: %s",
                                      WEXITSTATUS (status), stderr);
                 }
+                if (data->hook_func != NULL) {
+                        data->hook_func (data->context, NULL, data->hook_user_data);
+                }
         }
 }
 
-
-gboolean
-devkit_disks_device_unlock_encrypted (DevkitDisksDevice     *device,
-                                      const char            *secret,
-                                      char                 **options,
-                                      DBusGMethodInvocation *context)
+static gboolean
+devkit_disks_device_unlock_encrypted_internal (DevkitDisksDevice        *device,
+                                               const char               *secret,
+                                               char                    **options,
+                                               UnlockEncryptionHookFunc  hook_func,
+                                               gpointer                  hook_user_data,
+                                               DBusGMethodInvocation    *context)
 {
         int n;
         char *argv[10];
@@ -3572,7 +3846,7 @@ devkit_disks_device_unlock_encrypted (DevkitDisksDevice     *device,
                       argv,
                       secret_as_stdin,
                       unlock_encrypted_completed_cb,
-                      unlock_encryption_data_new (context, device),
+                      unlock_encryption_data_new (context, device, hook_func, hook_user_data),
                       (GDestroyNotify) unlock_encryption_data_unref)) {
                     goto out;
         }
@@ -3587,6 +3861,15 @@ out:
         if (pk_caller != NULL)
                 polkit_caller_unref (pk_caller);
         return TRUE;
+}
+
+gboolean
+devkit_disks_device_unlock_encrypted (DevkitDisksDevice     *device,
+                                      const char            *secret,
+                                      char                 **options,
+                                      DBusGMethodInvocation *context)
+{
+        return devkit_disks_device_unlock_encrypted_internal (device, secret, options, NULL, NULL, context);
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/
