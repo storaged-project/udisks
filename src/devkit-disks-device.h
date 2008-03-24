@@ -97,6 +97,8 @@ const char        *devkit_disks_device_local_get_mount_path (DevkitDisksDevice *
 void               devkit_disks_device_local_set_mounted (DevkitDisksDevice *device, const char *mount_path);
 void               devkit_disks_device_local_set_unmounted (DevkitDisksDevice *device);
 
+gboolean           devkit_disks_device_local_is_busy (DevkitDisksDevice *device);
+
 /* exported methods */
 
 gboolean devkit_disks_device_cancel_job (DevkitDisksDevice     *device,

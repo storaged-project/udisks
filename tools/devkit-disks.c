@@ -450,6 +450,7 @@ typedef struct
         gboolean device_is_drive;
         gboolean device_is_crypto_cleartext;
         gboolean device_is_mounted;
+        gboolean device_is_busy;
         char    *device_mount_path;
         guint64  device_size;
         guint64  device_block_size;
@@ -520,6 +521,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->device_is_crypto_cleartext = g_value_get_boolean (value);
         else if (strcmp (key, "device-is-mounted") == 0)
                 props->device_is_mounted = g_value_get_boolean (value);
+        else if (strcmp (key, "device-is-busy") == 0)
+                props->device_is_busy = g_value_get_boolean (value);
         else if (strcmp (key, "device-mount-path") == 0)
                 props->device_mount_path = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "device-size") == 0)
@@ -729,6 +732,7 @@ do_show_info (const char *object_path)
         g_print ("  removable:     %d\n", props->device_is_removable);
         g_print ("  has media:     %d\n", props->device_is_media_available);
         g_print ("  is mounted:    %d\n", props->device_is_mounted);
+        g_print ("  is busy:       %d\n", props->device_is_busy);
         g_print ("  mount path:    %s\n", props->device_mount_path);
         g_print ("  size:          %lld\n", props->device_size);
         g_print ("  block size:    %lld\n", props->device_block_size);

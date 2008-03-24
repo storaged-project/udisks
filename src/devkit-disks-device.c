@@ -110,6 +110,7 @@ enum
         PROP_DEVICE_SIZE,
         PROP_DEVICE_BLOCK_SIZE,
         PROP_DEVICE_IS_MOUNTED,
+        PROP_DEVICE_IS_BUSY,
         PROP_DEVICE_MOUNT_PATH,
 
         PROP_JOB_IN_PROGRESS,
@@ -280,6 +281,10 @@ get_property (GObject         *object,
 		break;
 	case PROP_DEVICE_IS_MOUNTED:
 		g_value_set_boolean (value, device->priv->info.device_is_mounted);
+		break;
+	case PROP_DEVICE_IS_BUSY:
+                /* this property is special; it's value is computed on demand */
+		g_value_set_boolean (value, devkit_disks_device_local_is_busy (device));
 		break;
 	case PROP_DEVICE_MOUNT_PATH:
 		g_value_set_string (value, device->priv->info.device_mount_path);
@@ -494,6 +499,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DEVICE_IS_MOUNTED,
                 g_param_spec_boolean ("device-is-mounted", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_IS_BUSY,
+                g_param_spec_boolean ("device-is-busy", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_DEVICE_MOUNT_PATH,
@@ -839,6 +848,10 @@ free_info (DevkitDisksDevice *device)
         g_free (device->priv->info.drive_serial);
 
         g_free (device->priv->info.dm_name);
+        g_ptr_array_foreach (device->priv->info.slaves_objpath, (GFunc) g_free, NULL);
+        g_ptr_array_free (device->priv->info.slaves_objpath, TRUE);
+        g_ptr_array_foreach (device->priv->info.holders_objpath, (GFunc) g_free, NULL);
+        g_ptr_array_free (device->priv->info.holders_objpath, TRUE);
 }
 
 static void
@@ -850,6 +863,8 @@ init_info (DevkitDisksDevice *device)
         device->priv->info.partition_flags = g_ptr_array_new ();
         device->priv->info.partition_table_offsets = g_array_new (FALSE, TRUE, sizeof (guint64));
         device->priv->info.partition_table_sizes = g_array_new (FALSE, TRUE, sizeof (guint64));
+        device->priv->info.slaves_objpath = g_ptr_array_new ();
+        device->priv->info.holders_objpath = g_ptr_array_new ();
 }
 
 
@@ -1029,22 +1044,12 @@ update_info_properties_cb (DevKitInfo *info, const char *key, void *user_data)
 
         } else if (strcmp (key, "DM_TARGET_TYPES") == 0) {
                 if (strcmp (devkit_info_property_get_string (info, key), "crypt") == 0) {
-                        char *slaves_path;
-                        GDir *slaves_dir;
-                        const char *slave_name;
-
-                        /* we're a dm-crypt target, find our slave */
-                        slaves_path = g_build_filename (device->priv->native_path, "slaves", NULL);
-                        if((slaves_dir = g_dir_open (slaves_path, 0, NULL)) != NULL) {
-                                while ((slave_name = g_dir_read_name (slaves_dir)) != NULL) {
-                                        device->priv->info.device_is_crypto_cleartext = TRUE;
-                                        device->priv->info.crypto_cleartext_slave =
-                                                compute_object_path_from_basename (slave_name);
-                                }
-                                g_dir_close (slaves_dir);
+                        /* we're a dm-crypt target and can, by design, then only have one slave */
+                        if (device->priv->info.slaves_objpath->len == 1) {
+                                device->priv->info.device_is_crypto_cleartext = TRUE;
+                                device->priv->info.crypto_cleartext_slave =
+                                        g_strdup (g_ptr_array_index (device->priv->info.slaves_objpath, 0));
                         }
-                        g_free (slaves_path);
-
                 }
 
         } else if (strcmp (key, "MEDIA_AVAILABLE") == 0) {
@@ -1074,10 +1079,17 @@ update_info_symlinks_cb (DevKitInfo *info, const char *value, void *user_data)
 static gboolean
 update_info (DevkitDisksDevice *device)
 {
+        guint64 start, size;
+        char *s;
+        char *p;
+        int n;
         gboolean ret;
         int fd;
         int block_size;
         DevKitInfo *info;
+        char *path;
+        GDir *dir;
+        const char *name;
 
         ret = FALSE;
         info = NULL;
@@ -1132,10 +1144,6 @@ update_info (DevkitDisksDevice *device)
 
         /* figure out if we're a partition and, if so, who our slave is */
         if (sysfs_file_exists (device->priv->native_path, "start")) {
-                guint64 start, size;
-                char *s;
-                char *p;
-                int n;
 
                 /* we're partitioned by the kernel */
                 device->priv->info.device_is_partition = TRUE;
@@ -1166,6 +1174,33 @@ update_info (DevkitDisksDevice *device)
                 /* TODO: handle partitions created by kpartx / dm-linear */
         }
 
+        /* Maintain (non-exported) properties holders and slaves for the holders resp. slaves
+         * directories in sysfs. The entries in these arrays are object paths (that may not
+         * exist; we just compute the name).
+         */
+        path = g_build_filename (device->priv->native_path, "slaves", NULL);
+        if((dir = g_dir_open (path, 0, NULL)) != NULL) {
+                while ((name = g_dir_read_name (dir)) != NULL) {
+                        s = compute_object_path_from_basename (name);
+                        g_ptr_array_add (device->priv->info.slaves_objpath, s);
+                        g_warning ("slave='%s'", s);
+                }
+                g_dir_close (dir);
+        }
+        g_free (path);
+
+        path = g_build_filename (device->priv->native_path, "holders", NULL);
+        if((dir = g_dir_open (path, 0, NULL)) != NULL) {
+                while ((name = g_dir_read_name (dir)) != NULL) {
+                        s = compute_object_path_from_basename (name);
+                        g_ptr_array_add (device->priv->info.holders_objpath, s);
+                        g_warning ("holder='%s'", s);
+                }
+                g_dir_close (dir);
+        }
+        g_free (path);
+
+
         if (devkit_info_property_foreach (info, update_info_properties_cb, device)) {
                 goto out;
         }
@@ -1175,6 +1210,31 @@ update_info (DevkitDisksDevice *device)
 out:
         if (info != NULL)
                 devkit_info_unref (info);
+        return ret;
+}
+
+gboolean
+devkit_disks_device_local_is_busy (DevkitDisksDevice *device)
+{
+        gboolean ret;
+
+        ret = TRUE;
+
+        /* busy if a job is pending */
+        if (device->priv->job != NULL)
+                goto out;
+
+        /* or if we're mounted */
+        if (device->priv->info.device_is_mounted)
+                goto out;
+
+        /* or if another block device is using/holding us (e.g. if holders/ is non-empty in sysfs) */
+        if (device->priv->info.holders_objpath->len > 0)
+                goto out;
+
+        ret = FALSE;
+
+out:
         return ret;
 }
 

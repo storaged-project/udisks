@@ -218,7 +218,13 @@
          "/" to mean "not set" for object paths. -->
 
     <!-- The 'native-path' property is the OS native path for the
-         device; on Linux this is the sysfs path. -->
+         device; on Linux this is the sysfs path.
+
+         The 'device-is-busy' property is set if the device is
+         in use; this can hapen if it's mounted, if another
+         block device is claiming it or if a job initiated from
+         DeviceKit-disks is pending.
+      -->
     <property name="native-path" type="s" access="read"/>
     <property name="device-file" type="s" access="read"/>
     <property name="device-file-by-id" type="as" access="read"/>
@@ -230,6 +236,7 @@
     <property name="device-is-drive" type="b" access="read"/>
     <property name="device-is-mounted" type="b" access="read"/>
     <property name="device-is-crypto-cleartext" type="b" access="read"/>
+    <property name="device-is-busy" type="b" access="read"/>
     <property name="device-mount-path" type="s" access="read"/>
     <property name="device-size" type="t" access="read"/>
     <property name="device-block-size" type="t" access="read"/>
@@ -245,8 +252,8 @@
          e.g. 'Erase', 'CreateFilesystem' and so on.
 
          Note that the 'job-cur-task' percentage starts at 0.  The
-         percentage is a number between -1 and 100. If set to -1 it
-         means the progress of the current is unknown. The task id is
+         percentage is normally a number between 0 and 100. If set to -1
+         it means the progress of the current is unknown. The task id is
          a well-defined name defining the current subtask of the job;
          known tasks id's are
 

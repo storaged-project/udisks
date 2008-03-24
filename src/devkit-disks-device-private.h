@@ -94,8 +94,10 @@ struct DevkitDisksDevicePrivate
 
                 char *crypto_cleartext_slave;
 
-                /* not exported */
+                /* the following properties are not (yet) exported */
                 char *dm_name;
+                GPtrArray *slaves_objpath;
+                GPtrArray *holders_objpath;
         } info;
 };
 
