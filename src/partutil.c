@@ -1263,7 +1263,8 @@ part_add_change_partition (char *device_file,
 			   guint64 new_start, guint64 new_size,
 			   guint64 *out_start, guint64 *out_size,
 			   char *type, char *label, char **flags,
-			   int geometry_hps, int geometry_spt)
+			   int geometry_hps, int geometry_spt,
+                           gboolean poke_kernel)
 {
 	int n;
 	gboolean is_change;
@@ -1650,14 +1651,17 @@ try_change_again:
 	 */
 	part = NULL;
 
-	/* use commit_to_dev rather than just commit to avoid
-	 * libparted sending BLKRRPART to the kernel - we want to do
-	 * this ourselves...
-	 */
-	if (ped_disk_commit_to_dev (disk) == 0) {
-		DEBUG ("ped_disk_commit_to_dev() failed");
-		goto out_ped_constraint;
-	}
+        if (poke_kernel) {
+                if (ped_disk_commit (disk) == 0) {
+                        DEBUG ("ped_disk_commit() failed");
+                        goto out_ped_disk;
+                }
+        } else {
+                if (ped_disk_commit_to_dev (disk) == 0) {
+                        DEBUG ("ped_disk_commit_to_dev() failed");
+                        goto out_ped_constraint;
+                }
+        }
 	DEBUG ("committed to disk");
 
 	res = TRUE;
@@ -1690,14 +1694,16 @@ part_add_partition (char *device_file,
 		    guint64 start, guint64 size,
 		    guint64 *out_start, guint64 *out_size,
 		    char *type, char *label, char **flags,
-		    int geometry_hps, int geometry_spt)
+		    int geometry_hps, int geometry_spt,
+                    gboolean poke_kernel)
 {
 	return part_add_change_partition (device_file,
 					  start, size,
 					  0, 0,
 					  out_start, out_size,
 					  type, label, flags,
-					  geometry_hps, geometry_spt);
+					  geometry_hps, geometry_spt,
+                                          poke_kernel);
 }
 
 gboolean
@@ -1713,11 +1719,12 @@ part_change_partition (char *device_file,
 					  new_start, new_size,
 					  out_start, out_size,
 					  type, label, flags,
-					  geometry_hps, geometry_spt);
+					  geometry_hps, geometry_spt,
+                                          FALSE);
 }
 
 gboolean
-part_del_partition (char *device_file, guint64 offset)
+part_del_partition (char *device_file, guint64 offset, gboolean poke_kernel)
 {
 	gboolean ret;
 	PedDevice *device;
@@ -1797,15 +1804,17 @@ part_del_partition (char *device_file, guint64 offset)
 		goto out_ped_disk;
 	}
 
-	/* use commit_to_dev rather than just commit to avoid
-	 * libparted sending BLKRRPART to the kernel - we want to do
-	 * this ourselves...
-	 */
-
-	if (ped_disk_commit_to_dev (disk) == 0) {
-		DEBUG ("ped_disk_commit_to_dev() failed");
-		goto out_ped_disk;
-	}
+        if (poke_kernel) {
+                if (ped_disk_commit (disk) == 0) {
+                        DEBUG ("ped_disk_commit() failed");
+                        goto out_ped_disk;
+                }
+        } else {
+                if (ped_disk_commit_to_dev (disk) == 0) {
+                        DEBUG ("ped_disk_commit_to_dev() failed");
+                        goto out_ped_disk;
+                }
+        }
 	DEBUG ("committed to disk");
 
 	ret = TRUE;

@@ -2676,12 +2676,14 @@ devkit_disks_device_delete_partition (DevkitDisksDevice     *device,
                 goto out;
         }
 
+#if 0
         /* see rant in devkit_disks_device_create_partition() */
         if (devkit_disks_device_local_partitions_are_busy (enclosing_device)) {
                 throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
                              "A sibling partition is busy (TODO: addpart/delpart/partx to the rescue!)");
                 goto out;
         }
+#endif
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
@@ -3385,20 +3387,7 @@ devkit_disks_device_create_partition (DevkitDisksDevice     *device,
                 goto out;
         }
 
-        /* TODO: Fuck, the kernel is dumb and BLKRRPART won't work if any of the partitions
-         *       are busy. The solution, I think, involves is judicious use of addpart(8) /
-         *       delpart(8) / partx(8) to spoonfeed the kernel this information.
-         *
-         * Until this is fixed, for now bail out if any of the partitions on the disk are busy.
-         */
-        if (devkit_disks_device_local_partitions_are_busy (device)) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
-                             "A partition on the device is busy (TODO: addpart/delpart/partx to the rescue!)");
-                goto out;
-        }
-
-
-        /* TODO: check there are no partitions in the requested slice */
+        /* partutil.c / libparted will check there are no partitions in the requested slice */
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,

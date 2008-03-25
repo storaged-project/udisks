@@ -43,7 +43,6 @@
 int
 main (int argc, char **argv)
 {
-        int fd;
         int ret;
         const char *device;
         const char *partition_device;
@@ -94,7 +93,8 @@ main (int argc, char **argv)
 
         g_print ("progress: %d %d -1 partitioning\n", num_erase_passes, num_erase_passes + 2);
 
-        if (part_del_partition ((char *) device, offset)) {
+        /* libparted will update the kernel's partition table map */
+        if (part_del_partition ((char *) device, offset, TRUE)) {
 
                 /* zero the contents of what was the _partition_
                  *
@@ -107,21 +107,6 @@ main (int argc, char **argv)
                         ret = 0;
                 }
         }
-
-        /* either way, we've got this far.. signal the kernel to reread the partition table */
-        fd = open (device, O_RDONLY);
-        if (fd < 0) {
-                g_printerr ("cannot open %s (for BLKRRPART): %m\n", device);
-                ret = 1;
-                goto out;
-        }
-        if (ioctl (fd, BLKRRPART) != 0) {
-                close (fd);
-                g_printerr ("BLKRRPART ioctl failed for %s: %m\n", device);
-                ret = 1;
-                goto out;
-        }
-        close (fd);
 
 out:
         g_free (erase);

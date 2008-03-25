@@ -311,6 +311,8 @@ gboolean              part_create_partition_table (char *device, PartitionScheme
  * @label: the partition label as defined in part_table_entry_get_label()
  * @geometry_hps: heads-per-sector used for LBA<->CHS conversions
  * @geometry_spt: sectors-per-track used for LBA<->CHS conversions
+ * @poke_kernel: whether to update the kernels in-memory representation of
+ * the partition table
  *
  * Adds a new partition to a disk. 
  *
@@ -342,9 +344,9 @@ gboolean              part_create_partition_table (char *device, PartitionScheme
  * To create an MSDOS extended partition table in a MSDOS partition
  * table, simply pass 0x05, 0x0f or 0x85 as the partition type.
  *
- * In order for changes to take effect, the caller needs to poke the
- * OS kernel himself to make it reload the partition table. It is not
- * automatically done by this function.
+ * Unless @poke_kernel is set to #TRUE, in order for changes to take
+ * effect, the caller needs to poke the OS kernel himself to make it
+ * reload the partition table.
  *
  * NOTE: After calling this function you need to discard any partition table
  * obtained with part_table_load_from_disk() since the in-memory data structure
@@ -356,7 +358,8 @@ gboolean              part_add_partition (char *device,
 					  guint64 start, guint64 size, 
 					  guint64 *out_start, guint64 *out_size, 
 					  char *type, char *label, char **flags,
-					  int geometry_hps, int geometry_spt);
+					  int geometry_hps, int geometry_spt,
+                                          gboolean poke_kernel);
 
 /**
  * part_change_partition:
@@ -413,6 +416,8 @@ gboolean              part_change_partition (char *device_file,
  * part_del_partition:
  * @device: name of device file for entire disk, e.g. /dev/sda
  * @offset: offset of somewhere within the partition to delete, in bytes
+ * @poke_kernel: whether to update the kernels in-memory representation of
+ * the partition table
  *
  * Deletes a partition. Just pass the offset of the partition. If you
  * delete an extended partition all logical partitions will be deleted
@@ -424,7 +429,7 @@ gboolean              part_change_partition (char *device_file,
  *
  * Returns: TRUE if the operation was succesful, otherwise FALSE
  */
-gboolean              part_del_partition (char *device, guint64 offset);
+gboolean              part_del_partition (char *device, guint64 offset, gboolean poke_kernel);
 
 
 #endif /* PARTUTIL_H */
