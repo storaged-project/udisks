@@ -93,7 +93,22 @@ devkit_disks_device_create_filesystem_internal (DevkitDisksDevice       *device,
                                                 gpointer                 hook_user_data,
                                                 DBusGMethodInvocation *context);
 
-static void force_unmount (DevkitDisksDevice *device, gboolean remove_dir_on_unmount);
+typedef void (*ForceRemovalCompleteFunc)     (DevkitDisksDevice        *device,
+                                              gboolean                  success,
+                                              gpointer                  user_data);
+
+static void force_removal                    (DevkitDisksDevice        *device,
+                                              ForceRemovalCompleteFunc  callback,
+                                              gpointer                  user_data);
+
+static void force_unmount                    (DevkitDisksDevice        *device,
+                                              ForceRemovalCompleteFunc  callback,
+                                              gpointer                  user_data);
+
+static void force_crypto_teardown            (DevkitDisksDevice        *device,
+                                              DevkitDisksDevice        *cleartext_device,
+                                              ForceRemovalCompleteFunc  callback,
+                                              gpointer                  user_data);
 
 enum
 {
@@ -1281,19 +1296,8 @@ devkit_disks_device_removed (DevkitDisksDevice *device)
 {
         update_slaves (device);
 
-        /* if this device was mounted by us, then forcibly unmount it
-         *
-         * This is the normally the path where the enclosing device is
-         * removed. Compare with devkit_disks_device_changed() for the
-         * other path.
-         */
-        if (device->priv->info.device_is_mounted && device->priv->info.device_mount_path != NULL) {
-                gboolean remove_dir_on_unmount;
-                if (mounts_file_has_device (device, NULL, &remove_dir_on_unmount)) {
-                        g_warning ("Force unmounting device %s", device->priv->info.device_file);
-                        force_unmount (device, remove_dir_on_unmount);
-                }
-        }
+        /* if the device is busy, we possibly need to force remove it */
+        force_removal (device, NULL, NULL);
 }
 
 DevkitDisksDevice *
@@ -1367,44 +1371,29 @@ devkit_disks_device_changed (DevkitDisksDevice *device)
                 emit_changed (device);
 
         /* Check if media was removed. If so, we need to forcibly unmount the device
-         * or all the partitions of the device
+         * and, if partitioned, all the partitions of the device.
          *
          * This is the normally the path where the media is removed but the enclosing
          * device is still present. Compare with devkit_disks_device_removed() for
          * the other path.
          */
         if (!device->priv->info.device_is_media_available) {
-                gboolean remove_dir_on_unmount;
+                GList *l;
+                GList *devices;
 
-                if (device->priv->info.device_is_mounted && device->priv->info.device_mount_path != NULL) {
-                        if (mounts_file_has_device (device, NULL, &remove_dir_on_unmount)) {
-                                g_warning ("Force unmounting device %s", device->priv->info.device_file);
-                                force_unmount (device, remove_dir_on_unmount);
+                force_removal (device, NULL, NULL);
+
+                /* check all partitions */
+                devices = devkit_disks_daemon_local_get_all_devices (device->priv->daemon);
+                for (l = devices; l != NULL; l = l->next) {
+                        DevkitDisksDevice *d = DEVKIT_DISKS_DEVICE (l->data);
+
+                        if (d->priv->info.device_is_partition &&
+                            d->priv->info.partition_slave != NULL &&
+                            strcmp (d->priv->info.partition_slave, device->priv->object_path) == 0) {
+
+                                force_removal (d, NULL, NULL);
                         }
-                } else {
-                        GList *l;
-                        GList *devices;
-
-                        /* check all partitions */
-                        devices = devkit_disks_daemon_local_get_all_devices (device->priv->daemon);
-                        for (l = devices; l != NULL; l = l->next) {
-                                DevkitDisksDevice *d = DEVKIT_DISKS_DEVICE (l->data);
-
-                                if (d->priv->info.device_is_partition &&
-                                    d->priv->info.partition_slave != NULL &&
-                                    strcmp (d->priv->info.partition_slave, device->priv->object_path) == 0) {
-
-                                        if (d->priv->info.device_is_mounted &&
-                                            d->priv->info.device_mount_path != NULL) {
-                                                if (mounts_file_has_device (d, NULL, &remove_dir_on_unmount)) {
-                                                        g_warning ("Force unmounting device %s",
-                                                                   d->priv->info.device_file);
-                                                        force_unmount (d, remove_dir_on_unmount);
-                                                }
-                                        }
-
-                                }
-                        } /* for all devices */
                 }
         }
 }
@@ -4345,6 +4334,34 @@ out:
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
+typedef struct {
+        char                     *mount_path;
+        ForceRemovalCompleteFunc  fr_callback;
+        gpointer                  fr_user_data;
+} ForceUnmountData;
+
+static ForceUnmountData *
+force_unmount_data_new (char                     *mount_path,
+                        ForceRemovalCompleteFunc  fr_callback,
+                        gpointer                  fr_user_data)
+{
+        ForceUnmountData *data;
+
+        data = g_new0 (ForceUnmountData, 1);
+        data->mount_path = g_strdup (mount_path);
+        data->fr_callback = fr_callback;
+        data->fr_user_data = fr_user_data;
+
+        return data;
+}
+
+static void
+force_unmount_data_unref (ForceUnmountData *data)
+{
+        g_free (data->mount_path);
+        g_free (data);
+}
+
 static void
 force_unmount_completed_cb (DBusGMethodInvocation *context,
                             DevkitDisksDevice *device,
@@ -4355,28 +4372,35 @@ force_unmount_completed_cb (DBusGMethodInvocation *context,
                             const char *stdout,
                             gpointer user_data)
 {
-        const char *mount_path = user_data;
+        ForceUnmountData *data = user_data;
         char *touch_str;
 
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
 
                 g_warning ("Successfully force unmounted device %s", device->priv->info.device_file);
                 devkit_disks_device_local_set_unmounted (device, TRUE);
-                mounts_file_remove (device, mount_path);
+                mounts_file_remove (device, data->mount_path);
 
                 /* TODO: when we add polling, this can probably be removed. I have no idea why hal's
                  *       poller don't cause the kernel to revalidate the (missing) media
                  */
                 touch_str = g_strdup_printf ("touch %s", device->priv->info.device_file);
-                g_spawn_command_line_async (touch_str, NULL);
+                g_spawn_command_line_sync (touch_str, NULL, NULL, NULL, NULL);
                 g_free (touch_str);
+
+                if (data->fr_callback != NULL)
+                        data->fr_callback (device, TRUE, data->fr_user_data);
         } else {
                 g_warning ("force unmount failed: %s", stderr);
+                if (data->fr_callback != NULL)
+                        data->fr_callback (device, FALSE, data->fr_user_data);
         }
 }
 
 static void
-force_unmount (DevkitDisksDevice *device, gboolean remove_dir_on_unmount)
+force_unmount (DevkitDisksDevice        *device,
+               ForceRemovalCompleteFunc  callback,
+               gpointer                  user_data)
 {
         int n;
         char *argv[16];
@@ -4398,11 +4422,208 @@ force_unmount (DevkitDisksDevice *device, gboolean remove_dir_on_unmount)
                       argv,
                       NULL,
                       force_unmount_completed_cb,
-                      g_strdup (device->priv->info.device_mount_path),
-                      g_free)) {
+                      force_unmount_data_new (device->priv->info.device_mount_path, callback, user_data),
+                      (GDestroyNotify) force_unmount_data_unref)) {
                 g_warning ("Couldn't spawn unmount for force unmounting: %s", error->message);
                 g_error_free (error);
+                if (callback != NULL)
+                        callback (device, FALSE, user_data);
         }
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+typedef struct {
+        DevkitDisksDevice        *device;
+        char                     *dm_name;
+        ForceRemovalCompleteFunc  fr_callback;
+        gpointer                  fr_user_data;
+} ForceCryptoTeardownData;
+
+static void
+force_crypto_teardown_completed_cb (DBusGMethodInvocation *context,
+                                    DevkitDisksDevice *device,
+                                    PolKitCaller *pk_caller,
+                                    gboolean job_was_cancelled,
+                                    int status,
+                                    const char *stderr,
+                                    const char *stdout,
+                                    gpointer user_data)
+{
+        ForceCryptoTeardownData *data = user_data;
+        char *touch_str;
+
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+
+                g_warning ("Successfully teared down crypto device %s", device->priv->info.device_file);
+
+                /* TODO: when we add polling, this can probably be removed. I have no idea why hal's
+                 *       poller don't cause the kernel to revalidate the (missing) media
+                 */
+                touch_str = g_strdup_printf ("touch %s", device->priv->info.device_file);
+                g_spawn_command_line_sync (touch_str, NULL, NULL, NULL, NULL);
+                g_free (touch_str);
+
+                if (data->fr_callback != NULL)
+                        data->fr_callback (device, TRUE, data->fr_user_data);
+        } else {
+                g_warning ("force crypto teardown failed: %s", stderr);
+                if (data->fr_callback != NULL)
+                        data->fr_callback (device, FALSE, data->fr_user_data);
+        }
+}
+
+static ForceCryptoTeardownData *
+force_crypto_teardown_data_new (DevkitDisksDevice        *device,
+                                const char               *dm_name,
+                                ForceRemovalCompleteFunc  fr_callback,
+                                gpointer                  fr_user_data)
+{
+        ForceCryptoTeardownData *data;
+
+        data = g_new0 (ForceCryptoTeardownData, 1);
+        data->device = g_object_ref (device);
+        data->dm_name = g_strdup (dm_name);
+        data->fr_callback = fr_callback;
+        data->fr_user_data = fr_user_data;
+        return data;
+}
+
+static void
+force_crypto_teardown_data_unref (ForceCryptoTeardownData *data)
+{
+        if (data->device != NULL)
+                g_object_unref (data->device);
+        g_free (data->dm_name);
+        g_free (data);
+}
+
+static void
+force_crypto_teardown_cleartext_done (DevkitDisksDevice *device,
+                                      gboolean success,
+                                      gpointer user_data)
+{
+        int n;
+        char *argv[16];
+        GError *error;
+        ForceCryptoTeardownData *data = user_data;
+
+        if (!success) {
+                if (data->fr_callback != NULL)
+                        data->fr_callback (data->device, FALSE, data->fr_user_data);
+
+                force_crypto_teardown_data_unref (data);
+                goto out;
+        }
+
+        /* ok, clear text device is out of the way; now tear it down */
+
+        n = 0;
+        argv[n++] = "cryptsetup";
+        argv[n++] = "luksClose";
+        argv[n++] = data->dm_name;
+        argv[n++] = NULL;
+
+        g_warning ("doing cryptsetup luksClose %s", data->dm_name);
+
+        error = NULL;
+        if (!job_new (NULL,
+                      "ForceCryptoTeardown",
+                      FALSE,
+                      data->device,
+                      NULL,
+                      argv,
+                      NULL,
+                      force_crypto_teardown_completed_cb,
+                      data,
+                      (GDestroyNotify) force_crypto_teardown_data_unref)) {
+
+                g_warning ("Couldn't spawn cryptsetup for force teardown: %s", error->message);
+                g_error_free (error);
+                if (data->fr_callback != NULL)
+                        data->fr_callback (data->device, FALSE, data->fr_user_data);
+
+                force_crypto_teardown_data_unref (data);
+        }
+out:
+        ;
+}
+
+static void
+force_crypto_teardown (DevkitDisksDevice        *device,
+                       DevkitDisksDevice        *cleartext_device,
+                       ForceRemovalCompleteFunc  callback,
+                       gpointer                  user_data)
+{
+        /* first we gotta force remove the clear text device */
+        force_removal (cleartext_device,
+                       force_crypto_teardown_cleartext_done,
+                       force_crypto_teardown_data_new (device,
+                                                       cleartext_device->priv->info.dm_name,
+                                                       callback,
+                                                       user_data));
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+force_removal (DevkitDisksDevice        *device,
+               ForceRemovalCompleteFunc  callback,
+               gpointer                  user_data)
+{
+        g_warning ("in force removal for %s", device->priv->info.device_file);
+
+        /* Device is going bye bye. If this device is
+         *
+         *  - Mounted by us, then forcibly unmount it.
+         *
+         *  - If it's a crypto device, check if there's cleartext
+         *    companion. If so, tear it down if it was setup by us.
+         *
+         * This is the normally the path where the enclosing device is
+         * removed. Compare with devkit_disks_device_changed() for the
+         * other path.
+         */
+        if (device->priv->info.device_is_mounted && device->priv->info.device_mount_path != NULL) {
+                gboolean remove_dir_on_unmount;
+                if (mounts_file_has_device (device, NULL, &remove_dir_on_unmount)) {
+                        g_warning ("Force unmounting device %s", device->priv->info.device_file);
+                        force_unmount (device, callback, user_data);
+                        goto pending;
+                }
+        }
+
+        if (device->priv->info.id_usage != NULL && strcmp (device->priv->info.id_usage, "crypto") == 0) {
+                GList *devices;
+                GList *l;
+
+                /* look for cleartext device  */
+                devices = devkit_disks_daemon_local_get_all_devices (device->priv->daemon);
+                for (l = devices; l != NULL; l = l->next) {
+                        DevkitDisksDevice *d = DEVKIT_DISKS_DEVICE (l->data);
+                        if (d->priv->info.device_is_crypto_cleartext &&
+                            d->priv->info.crypto_cleartext_slave != NULL &&
+                            strcmp (d->priv->info.crypto_cleartext_slave, device->priv->object_path) == 0) {
+
+                                g_warning ("Force crypto teardown device %s (cleartext %s)",
+                                           device->priv->info.device_file,
+                                           d->priv->info.device_file);
+
+                                /* TODO: actually check whether it is set up by us */
+
+                                /* Gotcha */
+                                force_crypto_teardown (device, d, callback, user_data);
+                                goto pending;
+                        }
+                }
+        }
+
+        /* nothing to force remove */
+        if (callback != NULL)
+                callback (device, TRUE, user_data);
+
+pending:
+        ;
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/
