@@ -84,6 +84,11 @@ gboolean           devkit_disks_damon_local_check_auth             (DevkitDisksD
                                                                     PolKitCaller          *pk_caller,
                                                                     const char            *action_id,
                                                                     DBusGMethodInvocation *context);
+
+void               devkit_disks_daemon_local_update_mount_state  (DevkitDisksDaemon       *daemon,
+                                                                  GList                   *devices,
+                                                                  gboolean                 emit_changed);
+
 /* exported methods */
 
 gboolean devkit_disks_daemon_inhibit_shutdown (DevkitDisksDaemon     *daemon,

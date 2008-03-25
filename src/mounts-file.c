@@ -191,9 +191,6 @@ mounts_file_remove (DevkitDisksDevice *device, const char *mount_path)
         device_file_escaped = NULL;
         mount_path_escaped = NULL;
 
-        g_return_if_fail (!device->priv->info.device_is_mounted);
-        g_return_if_fail (device->priv->info.device_mount_path == NULL);
-
         device_file_escaped = g_uri_escape_string (device->priv->info.device_file, NULL, TRUE);
         mount_path_escaped = g_uri_escape_string (mount_path, NULL, TRUE);
 

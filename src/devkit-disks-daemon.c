@@ -167,8 +167,8 @@ devkit_disks_daemon_reset_killtimer (DevkitDisksDaemon *daemon)
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
-static void
-update_mount_state  (DevkitDisksDaemon *daemon, GList *devices)
+void
+devkit_disks_daemon_local_update_mount_state (DevkitDisksDaemon *daemon, GList *devices, gboolean emit_changed)
 {
         GList *l;
         GList *mounts;
@@ -206,7 +206,7 @@ update_mount_state  (DevkitDisksDaemon *daemon, GList *devices)
                                         /* same mount path; no changes */
                                 } else {
                                         /* device was just mounted... or the mount path changed */
-                                        devkit_disks_device_local_set_mounted (device, mount_path);
+                                        devkit_disks_device_local_set_mounted (device, mount_path, emit_changed);
                                 }
 
                                 /* we're mounted so remove from list of devices (see below) */
@@ -236,7 +236,7 @@ update_mount_state  (DevkitDisksDaemon *daemon, GList *devices)
 
                 device_mount_path = devkit_disks_device_local_get_mount_path (device);
                 if (device_mount_path != NULL) {
-                        devkit_disks_device_local_set_unmounted (device);
+                        devkit_disks_device_local_set_unmounted (device, emit_changed);
                 }
         }
 
@@ -564,7 +564,6 @@ static void
 device_add (DevkitDisksDaemon *daemon, const char *native_path, gboolean emit_event)
 {
         DevkitDisksDevice *device;
-        GList *l;
 
         device = g_hash_table_lookup (daemon->priv->map_native_path_to_device, native_path);
         if (device != NULL) {
@@ -575,11 +574,6 @@ device_add (DevkitDisksDaemon *daemon, const char *native_path, gboolean emit_ev
                 device = devkit_disks_device_new (daemon, native_path);
 
                 if (device != NULL) {
-                        /* update whether device is mounted */
-                        l = g_list_prepend (NULL, device);
-                        update_mount_state (daemon, l);
-                        g_list_free (l);
-
                         /* only take a weak ref; the device will stay on the bus until
                          * it's unreffed. So if we ref it, it'll never go away. Stupid
                          * dbus-glib, no cookie for you.
@@ -742,7 +736,7 @@ mounts_changed (GUnixMountMonitor *monitor, gpointer user_data)
         GList *devices;
 
         devices = g_hash_table_get_values (daemon->priv->map_native_path_to_device);
-        update_mount_state (daemon, devices);
+        devkit_disks_daemon_local_update_mount_state (daemon, devices, TRUE);
         g_list_free (devices);
 }
 

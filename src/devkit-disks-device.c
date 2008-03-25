@@ -93,6 +93,8 @@ devkit_disks_device_create_filesystem_internal (DevkitDisksDevice       *device,
                                                 gpointer                 hook_user_data,
                                                 DBusGMethodInvocation *context);
 
+static void force_unmount (DevkitDisksDevice *device, gboolean remove_dir_on_unmount);
+
 enum
 {
         PROP_0,
@@ -1121,6 +1123,7 @@ update_info (DevkitDisksDevice *device)
         char *path;
         GDir *dir;
         const char *name;
+        GList *l;
 
         ret = FALSE;
         info = NULL;
@@ -1235,6 +1238,11 @@ update_info (DevkitDisksDevice *device)
 
         update_slaves (device);
 
+        /* update whether device is mounted */
+        l = g_list_prepend (NULL, device);
+        devkit_disks_daemon_local_update_mount_state (device->priv->daemon, l, FALSE);
+        g_list_free (l);
+
         ret = TRUE;
 
 out:
@@ -1272,6 +1280,20 @@ void
 devkit_disks_device_removed (DevkitDisksDevice *device)
 {
         update_slaves (device);
+
+        /* if this device was mounted by us, then forcibly unmount it
+         *
+         * This is the normally the path where the enclosing device is
+         * removed. Compare with devkit_disks_device_changed() for the
+         * other path.
+         */
+        if (device->priv->info.device_is_mounted && device->priv->info.device_mount_path != NULL) {
+                gboolean remove_dir_on_unmount;
+                if (mounts_file_has_device (device, NULL, &remove_dir_on_unmount)) {
+                        g_warning ("Force unmounting device %s", device->priv->info.device_file);
+                        force_unmount (device, remove_dir_on_unmount);
+                }
+        }
 }
 
 DevkitDisksDevice *
@@ -1343,6 +1365,48 @@ devkit_disks_device_changed (DevkitDisksDevice *device)
         /* TODO: fix up update_info to return TRUE iff something has changed */
         if (update_info (device))
                 emit_changed (device);
+
+        /* Check if media was removed. If so, we need to forcibly unmount the device
+         * or all the partitions of the device
+         *
+         * This is the normally the path where the media is removed but the enclosing
+         * device is still present. Compare with devkit_disks_device_removed() for
+         * the other path.
+         */
+        if (!device->priv->info.device_is_media_available) {
+                gboolean remove_dir_on_unmount;
+
+                if (device->priv->info.device_is_mounted && device->priv->info.device_mount_path != NULL) {
+                        if (mounts_file_has_device (device, NULL, &remove_dir_on_unmount)) {
+                                g_warning ("Force unmounting device %s", device->priv->info.device_file);
+                                force_unmount (device, remove_dir_on_unmount);
+                        }
+                } else {
+                        GList *l;
+                        GList *devices;
+
+                        /* check all partitions */
+                        devices = devkit_disks_daemon_local_get_all_devices (device->priv->daemon);
+                        for (l = devices; l != NULL; l = l->next) {
+                                DevkitDisksDevice *d = DEVKIT_DISKS_DEVICE (l->data);
+
+                                if (d->priv->info.device_is_partition &&
+                                    d->priv->info.partition_slave != NULL &&
+                                    strcmp (d->priv->info.partition_slave, device->priv->object_path) == 0) {
+
+                                        if (d->priv->info.device_is_mounted &&
+                                            d->priv->info.device_mount_path != NULL) {
+                                                if (mounts_file_has_device (d, NULL, &remove_dir_on_unmount)) {
+                                                        g_warning ("Force unmounting device %s",
+                                                                   d->priv->info.device_file);
+                                                        force_unmount (d, remove_dir_on_unmount);
+                                                }
+                                        }
+
+                                }
+                        } /* for all devices */
+                }
+        }
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/
@@ -1444,16 +1508,20 @@ devkit_disks_device_local_get_mount_path (DevkitDisksDevice *device)
 }
 
 void
-devkit_disks_device_local_set_mounted (DevkitDisksDevice *device, const char *mount_path)
+devkit_disks_device_local_set_mounted (DevkitDisksDevice *device,
+                                       const char        *mount_path,
+                                       gboolean           emit_changed_signal)
 {
         g_free (device->priv->info.device_mount_path);
         device->priv->info.device_mount_path = g_strdup (mount_path);
         device->priv->info.device_is_mounted = TRUE;
-        emit_changed (device);
+        if (emit_changed_signal)
+                emit_changed (device);
 }
 
 void
-devkit_disks_device_local_set_unmounted (DevkitDisksDevice *device)
+devkit_disks_device_local_set_unmounted (DevkitDisksDevice *device,
+                                         gboolean           emit_changed_signal)
 {
         char *mount_path;
         gboolean remove_dir_on_unmount;
@@ -1479,7 +1547,8 @@ devkit_disks_device_local_set_unmounted (DevkitDisksDevice *device)
                 }
         }
 
-        emit_changed (device);
+        if (emit_changed_signal)
+                emit_changed (device);
 
         g_free (mount_path);
 }
@@ -2218,7 +2287,7 @@ mount_completed_cb (DBusGMethodInvocation *context,
 
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
                 if (!data->is_remount) {
-                        devkit_disks_device_local_set_mounted (device, data->mount_point);
+                        devkit_disks_device_local_set_mounted (device, data->mount_point, TRUE);
                         mounts_file_add (device, uid, data->remove_dir_on_unmount);
                 }
                 dbus_g_method_return (context, data->mount_point);
@@ -2487,7 +2556,7 @@ unmount_completed_cb (DBusGMethodInvocation *context,
         char *mount_path = user_data;
 
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
-                devkit_disks_device_local_set_unmounted (device);
+                devkit_disks_device_local_set_unmounted (device, TRUE);
                 mounts_file_remove (device, mount_path);
                 dbus_g_method_return (context);
         } else {
@@ -4272,6 +4341,68 @@ out:
         if (pk_caller != NULL)
                 polkit_caller_unref (pk_caller);
         return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+force_unmount_completed_cb (DBusGMethodInvocation *context,
+                            DevkitDisksDevice *device,
+                            PolKitCaller *pk_caller,
+                            gboolean job_was_cancelled,
+                            int status,
+                            const char *stderr,
+                            const char *stdout,
+                            gpointer user_data)
+{
+        const char *mount_path = user_data;
+        char *touch_str;
+
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+
+                g_warning ("Successfully force unmounted device %s", device->priv->info.device_file);
+                devkit_disks_device_local_set_unmounted (device, TRUE);
+                mounts_file_remove (device, mount_path);
+
+                /* TODO: when we add polling, this can probably be removed. I have no idea why hal's
+                 *       poller don't cause the kernel to revalidate the (missing) media
+                 */
+                touch_str = g_strdup_printf ("touch %s", device->priv->info.device_file);
+                g_spawn_command_line_async (touch_str, NULL);
+                g_free (touch_str);
+        } else {
+                g_warning ("force unmount failed: %s", stderr);
+        }
+}
+
+static void
+force_unmount (DevkitDisksDevice *device, gboolean remove_dir_on_unmount)
+{
+        int n;
+        char *argv[16];
+        GError *error;
+
+        n = 0;
+        argv[n++] = "umount";
+        /* on Linux, we only have lazy unmount for now */
+        argv[n++] = "-l";
+        argv[n++] = device->priv->info.device_mount_path;
+        argv[n++] = NULL;
+
+        error = NULL;
+        if (!job_new (NULL,
+                      "ForceUnmount",
+                      FALSE,
+                      device,
+                      NULL,
+                      argv,
+                      NULL,
+                      force_unmount_completed_cb,
+                      g_strdup (device->priv->info.device_mount_path),
+                      g_free)) {
+                g_warning ("Couldn't spawn unmount for force unmounting: %s", error->message);
+                g_error_free (error);
+        }
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/

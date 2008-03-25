@@ -90,16 +90,19 @@ GList *devkit_disks_enumerate_native_paths (void);
 
 /* local methods */
 
-const char        *devkit_disks_device_local_get_object_path (DevkitDisksDevice *device);
-const char        *devkit_disks_device_local_get_native_path (DevkitDisksDevice *device);
+const char        *devkit_disks_device_local_get_object_path     (DevkitDisksDevice *device);
+const char        *devkit_disks_device_local_get_native_path     (DevkitDisksDevice *device);
 
-const char        *devkit_disks_device_local_get_device_file (DevkitDisksDevice *device);
-const char        *devkit_disks_device_local_get_mount_path (DevkitDisksDevice *device);
+const char        *devkit_disks_device_local_get_device_file     (DevkitDisksDevice *device);
+const char        *devkit_disks_device_local_get_mount_path      (DevkitDisksDevice *device);
 
-void               devkit_disks_device_local_set_mounted (DevkitDisksDevice *device, const char *mount_path);
-void               devkit_disks_device_local_set_unmounted (DevkitDisksDevice *device);
+void               devkit_disks_device_local_set_mounted         (DevkitDisksDevice *device,
+                                                                  const char        *mount_path,
+                                                                  gboolean           emit_changed_signal);
+void               devkit_disks_device_local_set_unmounted       (DevkitDisksDevice *device,
+                                                                  gboolean           emit_changed_signal);
 
-gboolean           devkit_disks_device_local_is_busy (DevkitDisksDevice *device);
+gboolean           devkit_disks_device_local_is_busy             (DevkitDisksDevice *device);
 gboolean           devkit_disks_device_local_partitions_are_busy (DevkitDisksDevice *device);
 
 /* exported methods */
