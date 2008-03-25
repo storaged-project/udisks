@@ -70,6 +70,7 @@ typedef enum
         DEVKIT_DISKS_DEVICE_ERROR_NOT_CRYPTO,
         DEVKIT_DISKS_DEVICE_ERROR_CRYPTO_ALREADY_UNLOCKED,
         DEVKIT_DISKS_DEVICE_ERROR_CRYPTO_NOT_UNLOCKED,
+        DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
         DEVKIT_DISKS_DEVICE_NUM_ERRORS
 } DevkitDisksDeviceError;
 
@@ -98,6 +99,7 @@ void               devkit_disks_device_local_set_mounted (DevkitDisksDevice *dev
 void               devkit_disks_device_local_set_unmounted (DevkitDisksDevice *device);
 
 gboolean           devkit_disks_device_local_is_busy (DevkitDisksDevice *device);
+gboolean           devkit_disks_device_local_partitions_are_busy (DevkitDisksDevice *device);
 
 /* exported methods */
 

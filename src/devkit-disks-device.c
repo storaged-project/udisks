@@ -207,6 +207,7 @@ devkit_disks_device_error_get_type (void)
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_CRYPTO, "NotCrypto"),
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_CRYPTO_ALREADY_UNLOCKED, "CryptoAlreadyUnlocked"),
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_CRYPTO_NOT_UNLOCKED, "CryptoNotUnlocked"),
+                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY, "IsBusy"),
                         { 0, 0, 0 }
                 };
                 g_assert (DEVKIT_DISKS_DEVICE_NUM_ERRORS == G_N_ELEMENTS (values) - 1);
@@ -2284,6 +2285,12 @@ devkit_disks_device_mount (DevkitDisksDevice     *device,
                 }
         }
 
+        if (devkit_disks_device_local_is_busy (device)) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                             "Device is busy");
+                goto out;
+        }
+
         /* handle some constraints required by remount */
         if (is_remount) {
                 if (!device->priv->info.device_is_mounted ||
@@ -2548,10 +2555,9 @@ devkit_disks_device_erase (DevkitDisksDevice     *device,
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
 
-        if (device->priv->info.device_is_mounted) {
-                throw_error (context,
-                             DEVKIT_DISKS_DEVICE_ERROR_MOUNTED,
-                             "Device is mounted");
+        if (devkit_disks_device_local_is_busy (device)) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                             "Device is busy");
                 goto out;
         }
 
@@ -2642,10 +2648,9 @@ devkit_disks_device_delete_partition (DevkitDisksDevice     *device,
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
 
-        if (device->priv->info.device_is_mounted) {
-                throw_error (context,
-                             DEVKIT_DISKS_DEVICE_ERROR_MOUNTED,
-                             "Device is mounted");
+        if (devkit_disks_device_local_is_busy (device)) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                             "Device is busy");
                 goto out;
         }
 
@@ -2662,6 +2667,19 @@ devkit_disks_device_delete_partition (DevkitDisksDevice     *device,
                 throw_error (context,
                              DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
                              "Cannot find enclosing device");
+                goto out;
+        }
+
+        if (devkit_disks_device_local_is_busy (enclosing_device)) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                             "Enclosing device is busy");
+                goto out;
+        }
+
+        /* see rant in devkit_disks_device_create_partition() */
+        if (devkit_disks_device_local_partitions_are_busy (enclosing_device)) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                             "A sibling partition is busy (TODO: addpart/delpart/partx to the rescue!)");
                 goto out;
         }
 
@@ -2954,10 +2972,9 @@ devkit_disks_device_create_filesystem_internal (DevkitDisksDevice       *device,
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
 
-        if (device->priv->info.device_is_mounted) {
-                throw_error (context,
-                             DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTED,
-                             "Device is mounted");
+        if (devkit_disks_device_local_is_busy (device)) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                             "Device is busy");
                 goto out;
         }
 
@@ -3260,9 +3277,9 @@ create_partition_completed_cb (DBusGMethodInvocation *context,
                  *   job-create-partition-size:
                  *
                  * lines and parse the new start and end. We need this
-                 * to waiting on the created partition since the requested
-                 * start and size passed may not be honored due to alignment
-                 * reasons.
+                 * for waiting on the created partition (since the requested
+                 * start and size passed may not be honored due to disk/cylinder/sector
+                 * alignment reasons).
                  */
                 offset = 0;
                 size = 0;
@@ -3361,6 +3378,25 @@ devkit_disks_device_create_partition (DevkitDisksDevice     *device,
                              "Device is not partitioned");
                 goto out;
         }
+
+        if (devkit_disks_device_local_is_busy (device)) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                             "Device is busy");
+                goto out;
+        }
+
+        /* TODO: Fuck, the kernel is dumb and BLKRRPART won't work if any of the partitions
+         *       are busy. The solution, I think, involves is judicious use of addpart(8) /
+         *       delpart(8) / partx(8) to spoonfeed the kernel this information.
+         *
+         * Until this is fixed, for now bail out if any of the partitions on the disk are busy.
+         */
+        if (devkit_disks_device_local_partitions_are_busy (device)) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                             "A partition on the device is busy (TODO: addpart/delpart/partx to the rescue!)");
+                goto out;
+        }
+
 
         /* TODO: check there are no partitions in the requested slice */
 
@@ -3498,6 +3534,12 @@ devkit_disks_device_modify_partition (DevkitDisksDevice     *device,
                 goto out;
         }
 
+        if (devkit_disks_device_local_is_busy (enclosing_device)) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                             "Enclosing device is busy");
+                goto out;
+        }
+
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
                                                   /* TODO: revisit authorization */
@@ -3581,6 +3623,36 @@ create_partition_table_completed_cb (DBusGMethodInvocation *context,
         }
 }
 
+/* note: this only checks whether the actual partitions are busy;
+ * caller will need to check the main device itself too
+ */
+gboolean
+devkit_disks_device_local_partitions_are_busy (DevkitDisksDevice *device)
+{
+        gboolean ret;
+        GList *l;
+        GList *devices;
+
+        ret = FALSE;
+
+        devices = devkit_disks_daemon_local_get_all_devices (device->priv->daemon);
+        for (l = devices; l != NULL; l = l->next) {
+                DevkitDisksDevice *d = DEVKIT_DISKS_DEVICE (l->data);
+
+                if (d->priv->info.device_is_partition &&
+                    d->priv->info.partition_slave != NULL &&
+                    strcmp (d->priv->info.partition_slave, device->priv->object_path) == 0) {
+
+                        if (devkit_disks_device_local_is_busy (d)) {
+                                ret = TRUE;
+                                break;
+                        }
+                }
+        }
+
+        return ret;
+}
+
 gboolean
 devkit_disks_device_create_partition_table (DevkitDisksDevice     *device,
                                             const char            *scheme,
@@ -3591,29 +3663,21 @@ devkit_disks_device_create_partition_table (DevkitDisksDevice     *device,
         int m;
         char *argv[128];
         GError *error;
-        GList *l;
-        GList *devices;
         PolKitCaller *pk_caller;
-
-        devices = NULL;
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
 
-        /* check that enclosed devices aren't busy or mounted */
-        devices = devkit_disks_daemon_local_get_all_devices (device->priv->daemon);
-        for (l = devices; l != NULL; l = l->next) {
-                DevkitDisksDevice *d = DEVKIT_DISKS_DEVICE (l->data);
-                if (d->priv->info.device_is_partition &&
-                    d->priv->info.partition_slave != NULL &&
-                    strcmp (d->priv->info.partition_slave, device->priv->object_path) == 0) {
-                        if (d->priv->info.device_is_mounted) {
-                                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_MOUNTED,
-                                             "A partition on the device is mounted");
-                                goto out;
-                        }
-                        /* TODO: other checks (holders/slaves) */
-                }
+        if (devkit_disks_device_local_is_busy (device)) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                             "Device is busy");
+                goto out;
+        }
+
+        if (devkit_disks_device_local_partitions_are_busy (device)) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                             "A partition on the device is busy");
+                goto out;
         }
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
@@ -3661,7 +3725,6 @@ devkit_disks_device_create_partition_table (DevkitDisksDevice     *device,
         }
 
 out:
-        g_list_free (devices);
         if (pk_caller != NULL)
                 polkit_caller_unref (pk_caller);
         return TRUE;
@@ -3864,6 +3927,12 @@ devkit_disks_device_unlock_encrypted_internal (DevkitDisksDevice        *device,
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
+
+        if (devkit_disks_device_local_is_busy (device)) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                             "Device is busy");
+                goto out;
+        }
 
         if (device->priv->info.id_usage == NULL ||
             strcmp (device->priv->info.id_usage, "crypto") != 0) {
@@ -4070,6 +4139,10 @@ devkit_disks_device_change_secret_for_encrypted (DevkitDisksDevice     *device,
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
+
+        /* No need to check for busy; we can actually do this while the device is unlocked as
+         * only LUKS metadata is modified.
+         */
 
         if (device->priv->info.id_usage == NULL ||
             strcmp (device->priv->info.id_usage, "crypto") != 0) {
