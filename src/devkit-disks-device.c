@@ -1514,6 +1514,7 @@ typedef void (*JobCompletedFunc) (DBusGMethodInvocation *context,
                                   gboolean was_cancelled,
                                   int status,
                                   const char *stderr,
+                                  const char *stdout,
                                   gpointer user_data);
 
 struct Job {
@@ -1534,6 +1535,8 @@ struct Job {
         int stdout_fd;
         GIOChannel *out_channel;
         guint out_channel_source_id;
+        GString *stdout_string;
+        int stdout_string_cursor;
 
         char *stdin_str;
         char *stdin_cursor;
@@ -1569,6 +1572,7 @@ job_free (Job *job)
         if (job->stdin_str != NULL) {
                 memset (job->stdin_str, '\0', strlen (job->stdin_str));
         }
+        g_string_free (job->stdout_string, TRUE);
         g_free (job->stdin_str);
         g_free (job);
 }
@@ -1576,7 +1580,18 @@ job_free (Job *job)
 static void
 job_child_watch_cb (GPid pid, int status, gpointer user_data)
 {
+        char *buf;
+        gsize buf_size;
         Job *job = user_data;
+
+        if (g_io_channel_read_to_end (job->error_channel, &buf, &buf_size, NULL) == G_IO_STATUS_NORMAL) {
+                g_string_append_len (job->error_string, buf, buf_size);
+                g_free (buf);
+        }
+        if (g_io_channel_read_to_end (job->out_channel, &buf, &buf_size, NULL) == G_IO_STATUS_NORMAL) {
+                g_string_append_len (job->stdout_string, buf, buf_size);
+                g_free (buf);
+        }
 
         g_print ("helper(pid %5d): completed with exit code %d\n", job->pid, WEXITSTATUS (status));
 
@@ -1598,6 +1613,7 @@ job_child_watch_cb (GPid pid, int status, gpointer user_data)
                                  job->was_cancelled,
                                  status,
                                  job->error_string->str,
+                                 job->stdout_string->str,
                                  job->user_data);
 
         job->device->priv->job = NULL;
@@ -1621,13 +1637,12 @@ job_read_error (GIOChannel *channel,
                 GIOCondition condition,
                 gpointer user_data)
 {
-        char *str;
-        gsize str_len;
+        char buf[1024];
+        gsize bytes_read;
         Job *job = user_data;
 
-        g_io_channel_read_to_end (channel, &str, &str_len, NULL);
-        g_string_append (job->error_string, str);
-        g_free (str);
+        g_io_channel_read_chars (channel, buf, sizeof buf, &bytes_read, NULL);
+        g_string_append_len (job->error_string, buf, bytes_read);
         return TRUE;
 }
 
@@ -1656,35 +1671,51 @@ job_read_out (GIOChannel *channel,
               GIOCondition condition,
               gpointer user_data)
 {
-        char *str;
-        gsize str_len;
+        char *s;
+        char *line;
+        char buf[1024];
+        gsize bytes_read;
         Job *job = user_data;
 
-        /* TODO: this blocks */
-        g_io_channel_read_line (channel, &str, &str_len, NULL, NULL);
-        g_print ("helper(pid %5d): %s", job->pid, str);
+        g_io_channel_read_chars (channel, buf, sizeof buf, &bytes_read, NULL);
+        g_string_append_len (job->stdout_string, buf, bytes_read);
 
-        if (strlen (str) < 256) {
-                int cur_task;
-                int num_tasks;
-                double cur_task_percentage;;
-                char cur_task_id[256];
+        do {
+                gsize line_len;
 
-                if (sscanf (str, "progress: %d %d %lg %s",
-                            &cur_task,
-                            &num_tasks,
-                            &cur_task_percentage,
-                            (char *) &cur_task_id) == 4) {
-                        job->device->priv->job_num_tasks = num_tasks;
-                        job->device->priv->job_cur_task = cur_task;
-                        g_free (job->device->priv->job_cur_task_id);
-                        job->device->priv->job_cur_task_id = g_strdup (cur_task_id);
-                        job->device->priv->job_cur_task_percentage = cur_task_percentage;
-                        emit_job_changed (job->device);
+                s = strstr (job->stdout_string->str + job->stdout_string_cursor, "\n");
+                if (s == NULL)
+                        break;
+
+                line_len = s - (job->stdout_string->str + job->stdout_string_cursor);
+                line = g_strndup (job->stdout_string->str + job->stdout_string_cursor, line_len);
+                job->stdout_string_cursor += line_len + 1;
+
+                g_print ("helper(pid %5d): '%s'\n", job->pid, line);
+
+                if (strlen (line) < 256) {
+                        int cur_task;
+                        int num_tasks;
+                        double cur_task_percentage;;
+                        char cur_task_id[256];
+
+                        if (sscanf (line, "progress: %d %d %lg %s",
+                                    &cur_task,
+                                    &num_tasks,
+                                    &cur_task_percentage,
+                                    (char *) &cur_task_id) == 4) {
+                                job->device->priv->job_num_tasks = num_tasks;
+                                job->device->priv->job_cur_task = cur_task;
+                                g_free (job->device->priv->job_cur_task_id);
+                                job->device->priv->job_cur_task_id = g_strdup (cur_task_id);
+                                job->device->priv->job_cur_task_percentage = cur_task_percentage;
+                                emit_job_changed (job->device);
+                        }
                 }
-        }
 
-        g_free (str);
+                g_free (line);
+        } while (TRUE);
+
         return TRUE;
 }
 
@@ -1726,6 +1757,8 @@ job_new (DBusGMethodInvocation *context,
         job->stdin_fd = -1;
         job->stdin_str = g_strdup (stdin_str);
         job->stdin_cursor = job->stdin_str;
+        job->stdout_string = g_string_sized_new (1024);
+
         g_free (job->device->priv->job_id);
         job->device->priv->job_id = g_strdup (job_id);
 
@@ -1750,13 +1783,27 @@ job_new (DBusGMethodInvocation *context,
 
         job->error_string = g_string_new ("");
         job->error_channel = g_io_channel_unix_new (job->stderr_fd);
+        error = NULL;
+        if (g_io_channel_set_flags (job->error_channel, G_IO_FLAG_NONBLOCK, &error) != G_IO_STATUS_NORMAL) {
+                g_warning ("Cannon set stderr fd for child to be non blocking: %s", error->message);
+                g_error_free (error);
+        }
         job->error_channel_source_id = g_io_add_watch (job->error_channel, G_IO_IN, job_read_error, job);
 
         job->out_channel = g_io_channel_unix_new (job->stdout_fd);
+        error = NULL;
+        if (g_io_channel_set_flags (job->out_channel, G_IO_FLAG_NONBLOCK, &error) != G_IO_STATUS_NORMAL) {
+                g_warning ("Cannon set stdout fd for child to be non blocking: %s", error->message);
+                g_error_free (error);
+        }
         job->out_channel_source_id = g_io_add_watch (job->out_channel, G_IO_IN, job_read_out, job);
 
         if (job->stdin_fd >= 0) {
                 job->in_channel = g_io_channel_unix_new (job->stdin_fd);
+                if (g_io_channel_set_flags (job->in_channel, G_IO_FLAG_NONBLOCK, &error) != G_IO_STATUS_NORMAL) {
+                        g_warning ("Cannon set stdin fd for child to be non blocking: %s", error->message);
+                        g_error_free (error);
+                }
                 job->in_channel_source_id = g_io_add_watch (job->in_channel, G_IO_OUT, job_write_in, job);
         }
 
@@ -2159,6 +2206,7 @@ mount_completed_cb (DBusGMethodInvocation *context,
                     gboolean job_was_cancelled,
                     int status,
                     const char *stderr,
+                    const char *stdout,
                     gpointer user_data)
 {
         MountData *data = (MountData *) user_data;
@@ -2433,6 +2481,7 @@ unmount_completed_cb (DBusGMethodInvocation *context,
                       gboolean job_was_cancelled,
                       int status,
                       const char *stderr,
+                      const char *stdout,
                       gpointer user_data)
 {
         char *mount_path = user_data;
@@ -2555,6 +2604,7 @@ erase_completed_cb (DBusGMethodInvocation *context,
                     gboolean job_was_cancelled,
                     int status,
                     const char *stderr,
+                    const char *stdout,
                     gpointer user_data)
 {
         /* either way, poke the kernel so we can reread the data */
@@ -2639,6 +2689,7 @@ delete_partition_completed_cb (DBusGMethodInvocation *context,
                                gboolean job_was_cancelled,
                                int status,
                                const char *stderr,
+                               const char *stdout,
                                gpointer user_data)
 {
         DevkitDisksDevice *enclosing_device = DEVKIT_DISKS_DEVICE (user_data);
@@ -2792,6 +2843,7 @@ create_filesystem_completed_cb (DBusGMethodInvocation *context,
                                 gboolean job_was_cancelled,
                                 int status,
                                 const char *stderr,
+                                const char *stdout,
                                 gpointer user_data)
 {
         MkfsData *data = user_data;
@@ -2941,6 +2993,7 @@ create_filesystem_create_encrypted_device_completed_cb (DBusGMethodInvocation *c
                                                         gboolean job_was_cancelled,
                                                         int status,
                                                         const char *stderr,
+                                                        const char *stdout,
                                                         gpointer user_data)
 {
         MkfsEncryptedData *data = user_data;
@@ -3294,6 +3347,7 @@ create_partition_completed_cb (DBusGMethodInvocation *context,
                                gboolean job_was_cancelled,
                                int status,
                                const char *stderr,
+                               const char *stdout,
                                gpointer user_data)
 {
         CreatePartitionData *data = user_data;
@@ -3495,6 +3549,7 @@ modify_partition_completed_cb (DBusGMethodInvocation *context,
                                gboolean job_was_cancelled,
                                int status,
                                const char *stderr,
+                               const char *stdout,
                                gpointer user_data)
 {
         DevkitDisksDevice *enclosing_device = DEVKIT_DISKS_DEVICE (user_data);
@@ -3625,6 +3680,7 @@ create_partition_table_completed_cb (DBusGMethodInvocation *context,
                                      gboolean job_was_cancelled,
                                      int status,
                                      const char *stderr,
+                                     const char *stdout,
                                      gpointer user_data)
 {
         /* either way, poke the kernel so we can reread the data */
@@ -3883,6 +3939,7 @@ unlock_encrypted_completed_cb (DBusGMethodInvocation *context,
                                gboolean job_was_cancelled,
                                int status,
                                const char *stderr,
+                               const char *stdout,
                                gpointer user_data)
 {
         UnlockEncryptionData *data = user_data;
@@ -4034,6 +4091,7 @@ lock_encrypted_completed_cb (DBusGMethodInvocation *context,
                              gboolean job_was_cancelled,
                              int status,
                              const char *stderr,
+                             const char *stdout,
                              gpointer user_data)
 {
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
@@ -4129,6 +4187,7 @@ change_secret_for_encrypted_completed_cb (DBusGMethodInvocation *context,
                                           gboolean job_was_cancelled,
                                           int status,
                                           const char *stderr,
+                                          const char *stdout,
                                           gpointer user_data)
 {
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
