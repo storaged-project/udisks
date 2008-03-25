@@ -1296,7 +1296,12 @@ devkit_disks_device_removed (DevkitDisksDevice *device)
 {
         update_slaves (device);
 
-        /* if the device is busy, we possibly need to force remove it */
+        /* if the device is busy, we possibly need to force remove it
+         *
+         * This is the normally the path where the enclosing device is
+         * removed. Compare with devkit_disks_device_changed() for the
+         * other path.
+         */
         force_removal (device, NULL, NULL);
 }
 
@@ -4580,9 +4585,6 @@ force_removal (DevkitDisksDevice        *device,
          *  - If it's a crypto device, check if there's cleartext
          *    companion. If so, tear it down if it was setup by us.
          *
-         * This is the normally the path where the enclosing device is
-         * removed. Compare with devkit_disks_device_changed() for the
-         * other path.
          */
         if (device->priv->info.device_is_mounted && device->priv->info.device_mount_path != NULL) {
                 gboolean remove_dir_on_unmount;
