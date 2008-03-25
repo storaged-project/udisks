@@ -611,6 +611,7 @@ device_remove (DevkitDisksDaemon *daemon, const char *native_path)
         if (device == NULL) {
                 g_print ("ignoring remove event on %s\n", native_path);
         } else {
+                devkit_disks_device_removed (device);
                 g_signal_emit (daemon, signals[DEVICE_REMOVED_SIGNAL], 0,
                                devkit_disks_device_local_get_object_path (device));
                 g_object_unref (device);

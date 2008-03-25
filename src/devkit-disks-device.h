@@ -84,6 +84,7 @@ GType              devkit_disks_device_get_type              (void);
 
 DevkitDisksDevice *devkit_disks_device_new                   (DevkitDisksDaemon *daemon, const char *native_path);
 void               devkit_disks_device_changed               (DevkitDisksDevice *device);
+void               devkit_disks_device_removed               (DevkitDisksDevice *device);
 
 GList *devkit_disks_enumerate_native_paths (void);
 

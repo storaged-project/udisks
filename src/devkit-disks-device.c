@@ -1077,6 +1077,36 @@ update_info_symlinks_cb (DevKitInfo *info, const char *value, void *user_data)
         return FALSE;
 }
 
+static void
+update_slaves (DevkitDisksDevice *device)
+{
+        unsigned int n;
+
+        /* Problem: The kernel doesn't send out a 'change' event when holders/ change. This
+         *          means that we'll have stale data in holder_objpath. However, since having
+         *          a slave is something one has for his lifetime, we can manually update
+         *          the holders/ on the slaves when the holder is added/removed.
+         *
+         *          E.g. when a holder (e.g. dm-0) appears, we call update_holders() on every
+         *          device referenced in the slaves/ directory (e.g. sdb1). Similar, when a
+         *          holder (e.g. dm-0) disappears we'll do the same on the devices in
+         *          slaves_objpath (the sysfs entry is long gone already so can't look in
+         *          the slaves/ directory) e.g. for sdb1.
+         *
+         *          Of course the kernel should just generate 'change' events for e.g. sdb1.
+         */
+
+        for (n = 0; n < device->priv->info.slaves_objpath->len; n++) {
+                const char *slave_objpath = device->priv->info.slaves_objpath->pdata[n];
+                DevkitDisksDevice *slave;
+
+                slave = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, slave_objpath);
+                if (slave != NULL) {
+                        update_info (slave);
+                }
+        }
+}
+
 static gboolean
 update_info (DevkitDisksDevice *device)
 {
@@ -1184,7 +1214,6 @@ update_info (DevkitDisksDevice *device)
                 while ((name = g_dir_read_name (dir)) != NULL) {
                         s = compute_object_path_from_basename (name);
                         g_ptr_array_add (device->priv->info.slaves_objpath, s);
-                        g_warning ("slave='%s'", s);
                 }
                 g_dir_close (dir);
         }
@@ -1195,16 +1224,16 @@ update_info (DevkitDisksDevice *device)
                 while ((name = g_dir_read_name (dir)) != NULL) {
                         s = compute_object_path_from_basename (name);
                         g_ptr_array_add (device->priv->info.holders_objpath, s);
-                        g_warning ("holder='%s'", s);
                 }
                 g_dir_close (dir);
         }
         g_free (path);
 
-
         if (devkit_info_property_foreach (info, update_info_properties_cb, device)) {
                 goto out;
         }
+
+        update_slaves (device);
 
         ret = TRUE;
 
@@ -1237,6 +1266,12 @@ devkit_disks_device_local_is_busy (DevkitDisksDevice *device)
 
 out:
         return ret;
+}
+
+void
+devkit_disks_device_removed (DevkitDisksDevice *device)
+{
+        update_slaves (device);
 }
 
 DevkitDisksDevice *
