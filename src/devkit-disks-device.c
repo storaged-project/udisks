@@ -4607,15 +4607,18 @@ force_removal (DevkitDisksDevice        *device,
                             d->priv->info.crypto_cleartext_slave != NULL &&
                             strcmp (d->priv->info.crypto_cleartext_slave, device->priv->object_path) == 0) {
 
-                                g_warning ("Force crypto teardown device %s (cleartext %s)",
-                                           device->priv->info.device_file,
-                                           d->priv->info.device_file);
+                                /* Check whether it is set up by us */
+                                if (d->priv->info.dm_name != NULL &&
+                                    g_str_has_prefix (d->priv->info.dm_name, "devkit-disks-luks-uuid-")) {
 
-                                /* TODO: actually check whether it is set up by us */
+                                        g_warning ("Force crypto teardown device %s (cleartext %s)",
+                                                   device->priv->info.device_file,
+                                                   d->priv->info.device_file);
 
-                                /* Gotcha */
-                                force_crypto_teardown (device, d, callback, user_data);
-                                goto pending;
+                                        /* Gotcha */
+                                        force_crypto_teardown (device, d, callback, user_data);
+                                        goto pending;
+                                }
                         }
                 }
         }
