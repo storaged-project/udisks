@@ -166,6 +166,8 @@ enum
         PROP_DRIVE_MODEL,
         PROP_DRIVE_REVISION,
         PROP_DRIVE_SERIAL,
+        PROP_DRIVE_CONNECTION_INTERFACE,
+        PROP_DRIVE_CONNECTION_SPEED,
 };
 
 enum
@@ -412,6 +414,13 @@ get_property (GObject         *object,
 	case PROP_DRIVE_SERIAL:
 		g_value_set_string (value, device->priv->info.drive_serial);
 		break;
+	case PROP_DRIVE_CONNECTION_INTERFACE:
+		g_value_set_string (value, device->priv->info.drive_connection_interface);
+		break;
+	case PROP_DRIVE_CONNECTION_SPEED:
+		g_value_set_uint64 (value, device->priv->info.drive_connection_speed);
+		break;
+
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
                 break;
@@ -661,6 +670,14 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DRIVE_SERIAL,
                 g_param_spec_string ("drive-serial", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_CONNECTION_INTERFACE,
+                g_param_spec_string ("drive-connection-interface", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_CONNECTION_SPEED,
+                g_param_spec_uint64 ("drive-connection-speed", NULL, NULL, 0, G_MAXUINT64, 0, G_PARAM_READABLE));
 }
 
 static void
@@ -755,6 +772,25 @@ register_disks_device (DevkitDisksDevice *device)
 
 error:
         return FALSE;
+}
+
+static double
+sysfs_get_double (const char *dir, const char *attribute)
+{
+        double result;
+        char *contents;
+        char *filename;
+
+        result = 0.0;
+        filename = g_build_filename (dir, attribute, NULL);
+        if (g_file_get_contents (filename, &contents, NULL, NULL)) {
+                result = atof (contents);
+                g_free (contents);
+        }
+        g_free (filename);
+
+
+        return result;
 }
 
 static int
@@ -864,6 +900,7 @@ free_info (DevkitDisksDevice *device)
         g_free (device->priv->info.drive_model);
         g_free (device->priv->info.drive_revision);
         g_free (device->priv->info.drive_serial);
+        g_free (device->priv->info.drive_connection_interface);
 
         g_free (device->priv->info.dm_name);
         g_ptr_array_foreach (device->priv->info.slaves_objpath, (GFunc) g_free, NULL);
@@ -909,8 +946,6 @@ _dupv8 (const char *s)
         }
 }
 
-#if 0
-// Oh well, may come in handy later
 static char *
 sysfs_resolve_link (const char *sysfs_path, const char *name)
 {
@@ -948,7 +983,6 @@ sysfs_resolve_link (const char *sysfs_path, const char *name)
         else
                 return NULL;
 }
-#endif
 
 static devkit_bool_t
 update_info_properties_cb (DevKitInfo *info, const char *key, void *user_data)
@@ -1124,6 +1158,93 @@ update_slaves (DevkitDisksDevice *device)
         }
 }
 
+static void
+update_drive_properties (DevkitDisksDevice *device)
+{
+        char *s;
+        char *p;
+        char *subsystem;
+        char *connection_interface;
+        guint64 connection_speed;
+
+        connection_interface = NULL;
+        connection_speed = 0;
+
+        /* walk up the device tree to figure out the subsystem */
+        s = g_strdup (device->priv->native_path);
+        do {
+                p = sysfs_resolve_link (s, "subsystem");
+                if (p != NULL) {
+                        subsystem = g_path_get_basename (p);
+                        g_free (p);
+
+                        if (strcmp (subsystem, "scsi") == 0) {
+                                g_free (connection_interface);
+                                connection_interface = g_strdup ("scsi");
+                                connection_speed = 0;
+                                /* continue walking up the chain; we just use scsi as a fallback */
+
+                                /* TODO: need to improve this code; we probably need the kernel to export more
+                                 *       information before this can be done
+                                 */
+
+                                if (device->priv->info.drive_vendor != NULL &&
+                                    strcmp (device->priv->info.drive_vendor, "ATA") == 0) {
+                                        g_free (connection_interface);
+                                        connection_interface = g_strdup ("ata");
+                                        break;
+                                }
+
+                        } else if (strcmp (subsystem, "usb") == 0) {
+                                double usb_speed;
+
+                                /* both the interface and the device will be 'usb'. However only
+                                 * the device will have the 'speed' property.
+                                 */
+                                usb_speed = sysfs_get_double (s, "speed");
+                                if (usb_speed > 0) {
+                                        g_free (connection_interface);
+                                        connection_interface = g_strdup ("usb");
+                                        connection_speed = usb_speed * (1000 * 1000);
+                                        break;
+                                }
+                        } else if (strcmp (subsystem, "firewire") == 0) {
+
+                                /* TODO: krh has promised a speed file in sysfs; theoretically, the speed can
+                                 *       be anything from 100, 200, 400, 800 and 3200. Till then we just hardcode
+                                 *       a resonable default of 400 Mbit/s.
+                                 */
+
+                                g_free (connection_interface);
+                                connection_interface = g_strdup ("firewire");
+                                connection_speed = 400 * (1000 * 1000);
+                                break;
+                        }
+
+
+                        g_free (subsystem);
+                }
+
+                /* advance up the chain */
+                p = g_strrstr (s, "/");
+                if (p == NULL)
+                        break;
+                *p = '\0';
+
+                /* but stop at the root */
+                if (strcmp (s, "/sys/devices") == 0)
+                        break;
+
+        } while (TRUE);
+
+        if (connection_interface != NULL) {
+                device->priv->info.drive_connection_interface = connection_interface;
+                device->priv->info.drive_connection_speed = connection_speed;
+        }
+
+        g_free (s);
+}
+
 static gboolean
 update_info (DevkitDisksDevice *device)
 {
@@ -1257,6 +1378,9 @@ update_info (DevkitDisksDevice *device)
         l = g_list_prepend (NULL, device);
         devkit_disks_daemon_local_update_mount_state (device->priv->daemon, l, FALSE);
         g_list_free (l);
+
+        if (device->priv->info.device_is_drive)
+                update_drive_properties (device);
 
         ret = TRUE;
 

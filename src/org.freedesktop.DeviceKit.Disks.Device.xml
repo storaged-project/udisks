@@ -360,11 +360,37 @@
     <property name="partition-table-offsets" type="ai" access="read"/>
     <property name="partition-table-sizes" type="ai" access="read"/>
 
-    <!-- properties for the drive -->
+    <!-- Properties for the drive. The property drive-connection-interface
+         specifies the physical connection used to connect the drive (or
+         it's enclosure) to the host system.
+
+         (TODO: actually, on Linux, it's hard to get the kernel/driver
+         to tell us this; in fact it might not even be possible as the
+         device driver itself may not know. Need to investigate this;
+         what we want to achieve here is making it easy for end users to
+         know what kind of drive to buy when getting a replacement drive.
+         And painting a nice icon.)
+
+         Known values for drive-connection-interface include
+
+          ata                - connected via ATA (PATA)
+          ata_serial         - connected via Serial ATA (SATA)
+          ata_serial_esata   - connected via External Serial ATA (eSATA)
+          ata_parallel       - connected via Parallel ATA
+          scsi               - connected via SCSI
+          usb                - connected via USB
+          firewire           - connected via Firewire
+
+         The property drive-connection-speed specifies the nominal
+         maximum speed of the interface in bits/s; if unknown this
+         is set to 0.
+      -->
     <property name="drive-vendor" type="s" access="read"/>
     <property name="drive-model" type="s" access="read"/>
     <property name="drive-revision" type="s" access="read"/>
     <property name="drive-serial" type="s" access="read"/>
+    <property name="drive-connection-interface" type="s" access="read"/>
+    <property name="drive-connection-speed" type="t" access="read"/>
 
   </interface>
 

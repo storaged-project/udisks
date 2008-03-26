@@ -91,6 +91,8 @@ struct DevkitDisksDevicePrivate
                 char *drive_model;
                 char *drive_revision;
                 char *drive_serial;
+                char *drive_connection_interface;
+                guint drive_connection_speed;
 
                 char *crypto_cleartext_slave;
 
