@@ -168,6 +168,7 @@ enum
         PROP_DRIVE_SERIAL,
         PROP_DRIVE_CONNECTION_INTERFACE,
         PROP_DRIVE_CONNECTION_SPEED,
+        PROP_DRIVE_MEDIA,
 };
 
 enum
@@ -419,6 +420,9 @@ get_property (GObject         *object,
 		break;
 	case PROP_DRIVE_CONNECTION_SPEED:
 		g_value_set_uint64 (value, device->priv->info.drive_connection_speed);
+		break;
+	case PROP_DRIVE_MEDIA:
+		g_value_set_boxed (value, device->priv->info.drive_media);
 		break;
 
         default:
@@ -678,6 +682,12 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DRIVE_CONNECTION_SPEED,
                 g_param_spec_uint64 ("drive-connection-speed", NULL, NULL, 0, G_MAXUINT64, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_MEDIA,
+                g_param_spec_boxed ("drive-media", NULL, NULL,
+                                    dbus_g_type_get_collection ("GPtrArray", G_TYPE_STRING),
+                                    G_PARAM_READABLE));
 }
 
 static void
@@ -901,6 +911,8 @@ free_info (DevkitDisksDevice *device)
         g_free (device->priv->info.drive_revision);
         g_free (device->priv->info.drive_serial);
         g_free (device->priv->info.drive_connection_interface);
+        g_ptr_array_foreach (device->priv->info.drive_media, (GFunc) g_free, NULL);
+        g_ptr_array_free (device->priv->info.drive_media, TRUE);
 
         g_free (device->priv->info.dm_name);
         g_ptr_array_foreach (device->priv->info.slaves_objpath, (GFunc) g_free, NULL);
@@ -918,6 +930,7 @@ init_info (DevkitDisksDevice *device)
         device->priv->info.partition_flags = g_ptr_array_new ();
         device->priv->info.partition_table_offsets = g_array_new (FALSE, TRUE, sizeof (guint64));
         device->priv->info.partition_table_sizes = g_array_new (FALSE, TRUE, sizeof (guint64));
+        device->priv->info.drive_media = g_ptr_array_new ();
         device->priv->info.slaves_objpath = g_ptr_array_new ();
         device->priv->info.holders_objpath = g_ptr_array_new ();
 }
@@ -1103,6 +1116,10 @@ update_info_properties_cb (DevKitInfo *info, const char *key, void *user_data)
                                         g_strdup (g_ptr_array_index (device->priv->info.slaves_objpath, 0));
                         }
                 }
+
+        } else if (strcmp (key, "MEDIA_TYPE") == 0) {
+                devkit_info_property_strlist_foreach (info, key, update_info_add_ptr, device->priv->info.drive_media);
+
 
         } else if (strcmp (key, "MEDIA_AVAILABLE") == 0) {
                 if (device->priv->info.device_is_removable) {

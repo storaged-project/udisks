@@ -493,6 +493,7 @@ typedef struct
         char    *drive_serial;
         char    *drive_connection_interface;
         guint64  drive_connection_speed;
+        char   **drive_media;
 } DeviceProperties;
 
 static void
@@ -610,6 +611,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->drive_connection_interface = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "drive-connection-speed") == 0)
                 props->drive_connection_speed = g_value_get_uint64 (value);
+        else if (strcmp (key, "drive-media") == 0)
+                props->drive_media = g_strdupv (g_value_get_boxed (value));
 
         else
                 handled = FALSE;
@@ -687,6 +690,7 @@ device_properties_free (DeviceProperties *props)
         g_free (props->drive_revision);
         g_free (props->drive_serial);
         g_free (props->drive_connection_interface);
+        g_strfreev (props->drive_media);
         g_free (props);
 }
 
@@ -787,6 +791,10 @@ do_show_info (const char *object_path)
                 g_print ("    model:       %s\n", props->drive_model);
                 g_print ("    revision:    %s\n", props->drive_revision);
                 g_print ("    serial:      %s\n", props->drive_serial);
+                g_print ("    media:      ");
+                for (n = 0; props->drive_media[n] != NULL; n++)
+                        g_print (" %s", (char *) props->drive_media[n]);
+                g_print ("\n");
                 if (props->drive_connection_interface == NULL || strlen (props->drive_connection_interface) == 0)
                         g_print ("    interface:   (unknown)\n");
                 else

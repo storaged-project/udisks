@@ -384,6 +384,44 @@
          The property drive-connection-speed specifies the nominal
          maximum speed of the interface in bits/s; if unknown this
          is set to 0.
+
+         The drive-media property specifies what kind of media
+         can be used in the drive; this is sometimes set using quirk
+         files if the hardware isn't capable of precisely reporting it.
+         Known values include
+
+           flash
+           flash_cf
+           flash_ms
+           flash_sm
+           flash_sd
+           flash_sdhc
+           flash_mmc
+           floppy
+           floppy_zip
+           floppy_jaz
+           optical
+           optical_cd
+           optical_cd_r
+           optical_cd_rw
+           optical_dvd
+           optical_dvd_r
+           optical_dvd_rw
+           optical_dvd_ram
+           optical_dvd_plus_r
+           optical_dvd_plus_rw
+           optical_dvd_plus_r_dl
+           optical_dvd_plus_rw_dl
+           optical_bd
+           optical_bd_r
+           optical_bd_re
+           optical_hddvd
+           optical_hddvd_r
+           optical_hddvd_rw
+           optical_mo
+           optical_mrw
+           optical_mrw_w
+
       -->
     <property name="drive-vendor" type="s" access="read"/>
     <property name="drive-model" type="s" access="read"/>
@@ -391,6 +429,7 @@
     <property name="drive-serial" type="s" access="read"/>
     <property name="drive-connection-interface" type="s" access="read"/>
     <property name="drive-connection-speed" type="t" access="read"/>
+    <property name="drive-media" type="as" access="read"/>
 
   </interface>
 
