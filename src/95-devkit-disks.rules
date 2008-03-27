@@ -9,10 +9,15 @@ KERNEL=="hd*[0-9]", ATTR{removable}=="1", GOTO="probe_parttable_end"
 # Example rule for tagging a device with a specific media type. Where and
 # how to store this database needs some thought.
 #
-SUBSYSTEM=="block", ACTION=="add|change", SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:0", ENV{MEDIA_TYPE}="flash_cf"
-SUBSYSTEM=="block", ACTION=="add|change", SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:1", ENV{MEDIA_TYPE}="flash_ms"
-SUBSYSTEM=="block", ACTION=="add|change", SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:2", ENV{MEDIA_TYPE}="flash_sm"
-SUBSYSTEM=="block", ACTION=="add|change", SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:3", ENV{MEDIA_TYPE}="flash_sd"
+SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:0", ENV{MEDIA_TYPE}="flash_cf"
+SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:1", ENV{MEDIA_TYPE}="flash_ms"
+SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:2", ENV{MEDIA_TYPE}="flash_sm"
+SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:3", ENV{MEDIA_TYPE}="flash_sd"
+
+SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:0", ENV{MEDIA_TYPE}="flash_cf"
+SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:1", ENV{MEDIA_TYPE}="flash_sm"
+SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:2", ENV{MEDIA_TYPE}="flash_sd"
+SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:3", ENV{MEDIA_TYPE}="flash_ms"
 
 # The following needs to come from cdrom_id and needs to set
 # more than just "optical". See the drive-media property.
