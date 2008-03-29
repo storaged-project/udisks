@@ -399,10 +399,13 @@
          maximum speed of the interface in bits/s; if unknown this
          is set to 0.
 
-         The drive-media property specifies what kind of media
-         can be used in the drive; this is sometimes set using quirk
-         files if the hardware isn't capable of precisely reporting it.
-         Known values include
+         The drive-media-compatibility property specifies what kind of
+         media can be used in the drive (it's an array of strings); this is
+         sometimes set using quirk files if the hardware isn't capable of
+         precisely reporting it. The property drive-media specifies the
+         current type of media in the drive.
+
+         Known values for drive-media-compatibility and drive-media include
 
            flash
            flash_cf
@@ -443,7 +446,8 @@
     <property name="drive-serial" type="s" access="read"/>
     <property name="drive-connection-interface" type="s" access="read"/>
     <property name="drive-connection-speed" type="t" access="read"/>
-    <property name="drive-media" type="as" access="read"/>
+    <property name="drive-media-compatibility" type="as" access="read"/>
+    <property name="drive-media" type="s" access="read"/>
 
   </interface>
 

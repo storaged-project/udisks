@@ -9,20 +9,24 @@ KERNEL=="hd*[0-9]", ATTR{removable}=="1", GOTO="probe_parttable_end"
 # Example rule for tagging a device with a specific media type. Where and
 # how to store this database needs some thought.
 #
-SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:0", ENV{MEDIA_TYPE}="flash_cf"
-SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:1", ENV{MEDIA_TYPE}="flash_ms"
-SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:2", ENV{MEDIA_TYPE}="flash_sm"
-SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:3", ENV{MEDIA_TYPE}="flash_sd"
+SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:0", ENV{COMPAT_MEDIA_TYPE}="flash_cf"
+SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:1", ENV{COMPAT_MEDIA_TYPE}="flash_ms"
+SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:2", ENV{COMPAT_MEDIA_TYPE}="flash_sm"
+SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:3", ENV{COMPAT_MEDIA_TYPE}="flash_sd"
 
-SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:0", ENV{MEDIA_TYPE}="flash_cf"
-SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:1", ENV{MEDIA_TYPE}="flash_sm"
-SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:2", ENV{MEDIA_TYPE}="flash_sd"
-SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:3", ENV{MEDIA_TYPE}="flash_ms"
+SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:0", ENV{COMPAT_MEDIA_TYPE}="flash_cf"
+SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:1", ENV{COMPAT_MEDIA_TYPE}="flash_sm"
+SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:2", ENV{COMPAT_MEDIA_TYPE}="flash_sd"
+SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:3", ENV{COMPAT_MEDIA_TYPE}="flash_ms"
 
 # The following needs to come from cdrom_id and needs to set
 # more than just "optical". See the drive-media property.
 #
-ENV{ID_CDROM}=="1", ENV{MEDIA_TYPE}="optical"
+ENV{ID_CDROM}=="1", ENV{COMPAT_MEDIA_TYPE}="optical"
+
+# Right now we just default to the first type of media the drive supports
+ENV{COMPAT_MEDIA_TYPE}!="", ENV{MEDIA_TYPE}="$env{COMPAT_MEDIA_TYPE}"
+
 
 # scan for partition table only if we're not a partition
 #

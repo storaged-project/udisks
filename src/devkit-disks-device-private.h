@@ -94,7 +94,8 @@ struct DevkitDisksDevicePrivate
                 char *drive_serial;
                 char *drive_connection_interface;
                 guint drive_connection_speed;
-                GPtrArray *drive_media;
+                GPtrArray *drive_media_compatibility;
+                char *drive_media;
 
                 char *crypto_cleartext_slave;
 
