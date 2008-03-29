@@ -68,7 +68,8 @@ libexec_PROGRAMS += devkit-disks-helper-erase                   \
 		    devkit-disks-helper-delete-partition        \
 		    devkit-disks-helper-create-partition        \
 		    devkit-disks-helper-modify-partition        \
-		    devkit-disks-helper-create-partition-table
+		    devkit-disks-helper-create-partition-table	\
+		    devkit-disks-helper-change-filesystem-label
 
 libexec_SCRIPTS = devkit-disks-helper-change-luks-password
 
@@ -95,6 +96,10 @@ devkit_disks_helper_modify_partition_LDADD = $(GLIB_LIBS) $(top_builddir)/src/li
 devkit_disks_helper_create_partition_table_SOURCES = job-shared.h job-create-partition-table.c
 devkit_disks_helper_create_partition_table_CPPFLAGS = $(AM_CPPFLAGS)
 devkit_disks_helper_create_partition_table_LDADD = $(GLIB_LIBS) $(top_builddir)/src/libpartutil.la
+
+devkit_disks_helper_change_filesystem_label_SOURCES = job-shared.h job-change-filesystem-label.c
+devkit_disks_helper_change_filesystem_label_CPPFLAGS = $(AM_CPPFLAGS)
+devkit_disks_helper_change_filesystem_label_LDADD = $(GLIB_LIBS)
 
 # TODO: move to udev
 udevhelperdir = /lib/udev

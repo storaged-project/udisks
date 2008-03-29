@@ -447,6 +447,7 @@ typedef struct
         gboolean device_is_partition_table;
         gboolean device_is_removable;
         gboolean device_is_media_available;
+        gboolean device_is_read_only;
         gboolean device_is_drive;
         gboolean device_is_crypto_cleartext;
         gboolean device_is_mounted;
@@ -518,6 +519,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->device_is_removable = g_value_get_boolean (value);
         else if (strcmp (key, "device-is-media-available") == 0)
                 props->device_is_media_available = g_value_get_boolean (value);
+        else if (strcmp (key, "device-is-read-only") == 0)
+                props->device_is_read_only = g_value_get_boolean (value);
         else if (strcmp (key, "device-is-drive") == 0)
                 props->device_is_drive = g_value_get_boolean (value);
         else if (strcmp (key, "device-is-crypto-cleartext") == 0)
@@ -742,6 +745,7 @@ do_show_info (const char *object_path)
                 g_print ("    by-path:     %s\n", (char *) props->device_file_by_path[n]);
         g_print ("  removable:     %d\n", props->device_is_removable);
         g_print ("  has media:     %d\n", props->device_is_media_available);
+        g_print ("  is read only:  %d\n", props->device_is_read_only);
         g_print ("  is mounted:    %d\n", props->device_is_mounted);
         g_print ("  is busy:       %d\n", props->device_is_busy);
         g_print ("  mount path:    %s\n", props->device_mount_path);

@@ -122,6 +122,7 @@ enum
         PROP_DEVICE_IS_PARTITION_TABLE,
         PROP_DEVICE_IS_REMOVABLE,
         PROP_DEVICE_IS_MEDIA_AVAILABLE,
+        PROP_DEVICE_IS_READ_ONLY,
         PROP_DEVICE_IS_DRIVE,
         PROP_DEVICE_IS_CRYPTO_CLEARTEXT,
         PROP_DEVICE_SIZE,
@@ -287,6 +288,9 @@ get_property (GObject         *object,
 		break;
 	case PROP_DEVICE_IS_MEDIA_AVAILABLE:
 		g_value_set_boolean (value, device->priv->info.device_is_media_available);
+		break;
+	case PROP_DEVICE_IS_READ_ONLY:
+		g_value_set_boolean (value, device->priv->info.device_is_read_only);
 		break;
 	case PROP_DEVICE_IS_DRIVE:
 		g_value_set_boolean (value, device->priv->info.device_is_drive);
@@ -510,6 +514,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DEVICE_IS_MEDIA_AVAILABLE,
                 g_param_spec_boolean ("device-is-media-available", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_IS_READ_ONLY,
+                g_param_spec_boolean ("device-is-read-only", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_DEVICE_IS_DRIVE,
@@ -799,6 +807,22 @@ sysfs_get_double (const char *dir, const char *attribute)
         }
         g_free (filename);
 
+
+        return result;
+}
+
+static char *
+sysfs_get_string (const char *dir, const char *attribute)
+{
+        char *result;
+        char *filename;
+
+        result = NULL;
+        filename = g_build_filename (dir, attribute, NULL);
+        if (!g_file_get_contents (filename, &result, NULL, NULL)) {
+                result = g_strdup ("");
+        }
+        g_free (filename);
 
         return result;
 }
@@ -1111,6 +1135,11 @@ update_info_properties_cb (DevKitInfo *info, const char *key, void *user_data)
                 if (strcmp (devkit_info_property_get_string (info, key), "crypt") == 0) {
                         /* we're a dm-crypt target and can, by design, then only have one slave */
                         if (device->priv->info.slaves_objpath->len == 1) {
+                                /* avoid claiming we are a drive since we want to be related
+                                 * to the cryptotext device
+                                 */
+                                device->priv->info.device_is_drive = FALSE;
+
                                 device->priv->info.device_is_crypto_cleartext = TRUE;
                                 device->priv->info.crypto_cleartext_slave =
                                         g_strdup (g_ptr_array_index (device->priv->info.slaves_objpath, 0));
@@ -1180,6 +1209,8 @@ update_drive_properties (DevkitDisksDevice *device)
 {
         char *s;
         char *p;
+        char *model;
+        char *vendor;
         char *subsystem;
         char *connection_interface;
         guint64 connection_speed;
@@ -1199,10 +1230,31 @@ update_drive_properties (DevkitDisksDevice *device)
                                 g_free (connection_interface);
                                 connection_interface = g_strdup ("scsi");
                                 connection_speed = 0;
+
                                 /* continue walking up the chain; we just use scsi as a fallback */
 
+                                /* grab the names from SCSI since the names from udev currently
+                                 *  - replaces whitespace with _
+                                 *  - is missing for e.g. Firewire
+                                 */
+                                vendor = sysfs_get_string (s, "vendor");
+                                if (vendor != NULL) {
+                                        g_free (device->priv->info.drive_vendor);
+                                        g_strstrip (vendor);
+                                        device->priv->info.drive_vendor = _dupv8 (vendor);
+                                        g_free (vendor);
+                                }
+
+                                model = sysfs_get_string (s, "model");
+                                if (model != NULL) {
+                                        g_free (device->priv->info.drive_model);
+                                        g_strstrip (model);
+                                        device->priv->info.drive_model = _dupv8 (model);
+                                        g_free (model);
+                                }
+
                                 /* TODO: need to improve this code; we probably need the kernel to export more
-                                 *       information before this can be done
+                                 *       information before we can properly get the type and speed.
                                  */
 
                                 if (device->priv->info.drive_vendor != NULL &&
@@ -1285,10 +1337,18 @@ update_info (DevkitDisksDevice *device)
         free_info (device);
         init_info (device);
 
-        /* fill in drive information */
-        if (sysfs_file_exists (device->priv->native_path, "device")) {
+        /* drive identification */
+        if (sysfs_file_exists (device->priv->native_path, "range")) {
                 device->priv->info.device_is_drive = TRUE;
-                /* TODO: fill in drive props */
+
+                if (sysfs_file_exists (device->priv->native_path, "md")) {
+                        device->priv->info.drive_vendor = g_strdup ("Linux");
+                        device->priv->info.drive_model = g_strdup ("Software RAID");
+                        device->priv->info.drive_revision = g_strstrip (sysfs_get_string (device->priv->native_path,
+                                                                                          "md/metadata_version"));
+                        device->priv->info.drive_connection_interface = g_strdup ("virtual");
+                }
+
         } else {
                 device->priv->info.device_is_drive = FALSE;
         }
@@ -1318,8 +1378,28 @@ update_info (DevkitDisksDevice *device)
                         goto out;
                 }
                 close (fd);
+
+                /* So we have media, find out if it's read-only.
+                 *
+                 * (e.g. write-protect on SD cards, optical drives etc.)
+                 */
+                errno = 0;
+                fd = open (devkit_info_get_device_file (info), O_WRONLY);
+                if (fd < 0) {
+                        if (errno == EROFS) {
+                                device->priv->info.device_is_read_only = TRUE;
+                        } else {
+                                g_warning ("Cannot determine if %s is read only: %m",
+                                           devkit_info_get_device_file (info));
+                                goto out;
+                        }
+                } else {
+                        close (fd);
+                }
+
         }
         device->priv->info.device_block_size = block_size;
+
 
         device->priv->info.device_is_removable =
                 (sysfs_get_int (device->priv->native_path, "removable") != 0);
@@ -1809,7 +1889,7 @@ job_child_watch_cb (GPid pid, int status, gpointer user_data)
         job->device->priv->job_cur_task_id = NULL;
         job->device->priv->job_cur_task_percentage = -1.0;
 
-        emit_job_changed (job->device);
+        job->device->priv->job = NULL;
 
         job->job_completed_func (job->context,
                                  job->device,
@@ -1820,8 +1900,7 @@ job_child_watch_cb (GPid pid, int status, gpointer user_data)
                                  job->stdout_string->str,
                                  job->user_data);
 
-        job->device->priv->job = NULL;
-
+        emit_job_changed (job->device);
         job_free (job);
 }
 
@@ -3746,6 +3825,49 @@ out:
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
+typedef struct {
+        DBusGMethodInvocation *context;
+        DevkitDisksDevice *device;
+        DevkitDisksDevice *enclosing_device;
+
+        char *type;
+        char *label;
+        char **flags;
+} ModifyPartitionData;
+
+static ModifyPartitionData *
+modify_partition_data_new (DBusGMethodInvocation *context,
+                           DevkitDisksDevice *device,
+                           DevkitDisksDevice *enclosing_device,
+                           const char *type,
+                           const char *label,
+                           char **flags)
+{
+        ModifyPartitionData *data;
+
+        data = g_new0 (ModifyPartitionData, 1);
+
+        data->context = context;
+        data->device = g_object_ref (device);
+        data->enclosing_device = g_object_ref (enclosing_device);
+        data->type = g_strdup (type);
+        data->label = g_strdup (label);
+        data->flags = g_strdupv (flags);
+
+        return data;
+}
+
+static void
+modify_partition_data_unref (ModifyPartitionData *data)
+{
+        g_object_unref (data->device);
+        g_object_unref (data->enclosing_device);
+        g_free (data->type);
+        g_free (data->label);
+        g_free (data->flags);
+        g_free (data);
+}
+
 static void
 modify_partition_completed_cb (DBusGMethodInvocation *context,
                                DevkitDisksDevice *device,
@@ -3756,13 +3878,34 @@ modify_partition_completed_cb (DBusGMethodInvocation *context,
                                const char *stdout,
                                gpointer user_data)
 {
-        DevkitDisksDevice *enclosing_device = DEVKIT_DISKS_DEVICE (user_data);
+        ModifyPartitionData *data = user_data;
 
         /* either way, poke the kernel so we can reread the data */
-        devkit_device_emit_changed_to_kernel (enclosing_device);
+        devkit_device_emit_changed_to_kernel (data->enclosing_device);
+        devkit_device_emit_changed_to_kernel (data->device);
 
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+                int n;
+
+                /* update local copy, don't wait for the kernel */
+
+                g_free (device->priv->info.partition_type);
+                device->priv->info.partition_type = g_strdup (data->type);
+
+                g_free (device->priv->info.partition_label);
+                device->priv->info.partition_label = g_strdup (data->label);
+
+                g_ptr_array_foreach (device->priv->info.partition_flags, (GFunc) g_free, NULL);
+                g_ptr_array_free (device->priv->info.partition_flags, TRUE);
+                device->priv->info.partition_flags = g_ptr_array_new ();
+                for (n = 0; data->flags[n] != NULL; n++) {
+                        g_ptr_array_add (device->priv->info.partition_flags, g_strdup (data->flags[n]));
+                }
+
+                emit_changed (device);
+
                 dbus_g_method_return (context);
+
         } else {
                 if (job_was_cancelled) {
                         throw_error (context,
@@ -3861,8 +4004,8 @@ devkit_disks_device_modify_partition (DevkitDisksDevice     *device,
                       argv,
                       NULL,
                       modify_partition_completed_cb,
-                      g_object_ref (enclosing_device),
-                      g_object_unref)) {
+                      modify_partition_data_new (context, device, enclosing_device, type, label, flags),
+                      (GDestroyNotify) modify_partition_data_unref)) {
                 goto out;
         }
 
@@ -4473,6 +4616,113 @@ out:
                 memset (secrets_as_stdin, '\0', strlen (secrets_as_stdin));
         }
         g_free (secrets_as_stdin);
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+change_filesystem_label_completed_cb (DBusGMethodInvocation *context,
+                                      DevkitDisksDevice *device,
+                                      PolKitCaller *pk_caller,
+                                      gboolean job_was_cancelled,
+                                      int status,
+                                      const char *stderr,
+                                      const char *stdout,
+                                      gpointer user_data)
+{
+        char *new_label = user_data;
+
+        /* either way, poke the kernel so we can reread the data */
+        devkit_device_emit_changed_to_kernel (device);
+
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+
+                /* update local copy, don't wait for the kernel */
+                g_free (device->priv->info.id_label);
+                device->priv->info.id_label = g_strdup (new_label);
+
+                emit_changed (device);
+
+                dbus_g_method_return (context);
+
+        } else {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Error changing fslabel: helper exited with exit code %d: %s",
+                                     WEXITSTATUS (status), stderr);
+                }
+        }
+}
+
+gboolean
+devkit_disks_device_change_filesystem_label (DevkitDisksDevice     *device,
+                                             const char            *new_label,
+                                             DBusGMethodInvocation *context)
+{
+        int n;
+        char *argv[10];
+        GError *error;
+        PolKitCaller *pk_caller;
+
+        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
+                goto out;
+
+        /* TODO: some file systems can do this while mounted; we need something similar
+         *       to GduCreatableFilesystem cf. gdu-util.h
+         */
+
+        if (devkit_disks_device_local_is_busy (device)) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                             "Device is busy");
+                goto out;
+        }
+
+        if (device->priv->info.id_usage == NULL ||
+            strcmp (device->priv->info.id_usage, "filesystem") != 0) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTABLE,
+                             "Not a mountable file system");
+                goto out;
+        }
+
+
+        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                  pk_caller,
+                                                  /* TODO: revisit auth */
+                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  context)) {
+                goto out;
+        }
+
+        n = 0;
+        argv[n++] = "devkit-disks-helper-change-filesystem-label";
+        argv[n++] = device->priv->info.device_file;
+        argv[n++] = device->priv->info.id_type;
+        argv[n++] = (char *) new_label;
+        argv[n++] = NULL;
+
+        error = NULL;
+        if (!job_new (context,
+                      "ChangeFilesystemLabel",
+                      FALSE,
+                      device,
+                      pk_caller,
+                      argv,
+                      NULL,
+                      change_filesystem_label_completed_cb,
+                      g_strdup (new_label),
+                      g_free)) {
+                goto out;
+        }
+
+out:
         if (pk_caller != NULL)
                 polkit_caller_unref (pk_caller);
         return TRUE;

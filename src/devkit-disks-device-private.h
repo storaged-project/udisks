@@ -58,6 +58,7 @@ struct DevkitDisksDevicePrivate
                 gboolean device_is_partition_table;
                 gboolean device_is_removable;
                 gboolean device_is_media_available;
+                gboolean device_is_read_only;
                 gboolean device_is_drive;
                 gboolean device_is_crypto_cleartext;
                 guint64 device_size;

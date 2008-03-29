@@ -39,37 +39,6 @@
 
 #include "job-shared.h"
 
-static gboolean
-validate_and_escape_label (char **label, int max_len)
-{
-        int n;
-        gboolean ret;
-        GString *s;
-
-        ret = FALSE;
-
-        if ((int) strlen (*label) > max_len) {
-                g_printerr ("given file system label exceeds %d characters\n", max_len);
-                goto out;
-        }
-
-        /* escape '"' */
-        s = g_string_new (*label);
-        for (n = 0; n < (int) s->len; n++) {
-                if (s->str[n] == '"') {
-                        g_string_insert_c (s, n, '\\');
-                        n++;
-                }
-        }
-        g_free (*label);
-        *label = g_string_free (s, FALSE);
-
-        ret = TRUE;
-out:
-        return ret;
-}
-
-
 int
 main (int argc, char **argv)
 {

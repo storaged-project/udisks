@@ -168,6 +168,10 @@ gboolean devkit_disks_device_change_secret_for_encrypted (DevkitDisksDevice     
                                                           const char            *new_secret,
                                                           DBusGMethodInvocation *context);
 
+gboolean devkit_disks_device_change_filesystem_label (DevkitDisksDevice     *device,
+                                                      const char            *new_label,
+                                                      DBusGMethodInvocation *context);
+
 G_END_DECLS
 
 #endif /* __DEVKIT_DISKS_DEVICE_H__ */

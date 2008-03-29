@@ -114,20 +114,7 @@ main (int argc, char **argv)
                 }
         }
 
-        /* either way, we've got this far.. signal the kernel to reread the partition table */
-        fd = open (device, O_RDONLY);
-        if (fd < 0) {
-                g_printerr ("cannot open %s (for BLKRRPART): %m\n", device);
-                ret = 1;
-                goto out;
-        }
-        if (ioctl (fd, BLKRRPART) != 0) {
-                close (fd);
-                g_printerr ("BLKRRPART ioctl failed for %s: %m\n", device);
-                ret = 1;
-                goto out;
-        }
-        close (fd);
+        /* no need to reread partition table as sizes didn't change */
 
 out:
         g_strfreev (flags);

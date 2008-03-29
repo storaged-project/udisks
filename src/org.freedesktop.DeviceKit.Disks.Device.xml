@@ -55,7 +55,8 @@
 
     <!-- CreatePartitionTable:
          @scheme:   The type of partition table to create. Currently
-                    the types 'mbr', 'gpt' and 'apm' are supported.
+                    the types 'none', 'mbr', 'gpt' and 'apm' are
+                    supported.
 
          @options:  Supported options are:
                      - erase=: whether to erase the contents of the
@@ -186,6 +187,16 @@
       <arg name="options" direction="in" type="as"/>
     </method>
 
+    <!-- ChangeFilesystemLabel:
+         @new_label:   The new label to use
+
+         Changes the file system label.
+      -->
+    <method name="ChangeFilesystemLabel">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="new_label" direction="in" type="s"/>
+    </method>
+
     <!-- BEGIN LIST OF SIGNALS -->
 
     <!-- Something about the device changed. Changes in job state
@@ -233,6 +244,7 @@
     <property name="device-is-partition-table" type="b" access="read"/>
     <property name="device-is-removable" type="b" access="read"/>
     <property name="device-is-media-available" type="b" access="read"/>
+    <property name="device-is-read-only" type="b" access="read"/>
     <property name="device-is-drive" type="b" access="read"/>
     <property name="device-is-mounted" type="b" access="read"/>
     <property name="device-is-crypto-cleartext" type="b" access="read"/>
@@ -373,6 +385,8 @@
 
          Known values for drive-connection-interface include
 
+          virtual            - a virtual device such as a software
+                               RAID array or LVM device
           ata                - connected via ATA (PATA)
           ata_serial         - connected via Serial ATA (SATA)
           ata_serial_esata   - connected via External Serial ATA (eSATA)

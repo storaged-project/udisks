@@ -52,9 +52,12 @@ main (int argc, char **argv)
         int num_erase_passes;
         int n;
         PartitionScheme pscheme;
+        gboolean no_partition_table;
 
         ret = 1;
         erase = NULL;
+        no_partition_table = FALSE;
+        pscheme = PART_TYPE_MSDOS;
 
         if (argc < 3) {
                 g_printerr ("wrong usage\n");
@@ -79,6 +82,8 @@ main (int argc, char **argv)
                 pscheme = PART_TYPE_GPT;
         } else if (strcmp (scheme, "apm") == 0) {
                 pscheme = PART_TYPE_APPLE;
+        } else if (strcmp (scheme, "none") == 0) {
+                no_partition_table = TRUE;
         } else {
                 g_printerr ("partitioning scheme %s not supported\n", scheme);
                 goto out;
@@ -96,8 +101,12 @@ main (int argc, char **argv)
 
         g_print ("progress: %d %d -1 partitioning\n", num_erase_passes + 1, num_erase_passes + 2);
 
-        if (part_create_partition_table ((char *) device, pscheme))
+        if (no_partition_table) {
                 ret = 0;
+        } else {
+                if (part_create_partition_table ((char *) device, pscheme))
+                        ret = 0;
+        }
 
         /* either way, we've got this far.. signal the kernel to reread the partition table */
         fd = open (device, O_RDONLY);
