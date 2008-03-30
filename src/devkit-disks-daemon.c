@@ -545,6 +545,8 @@ device_went_away (gpointer user_data, GObject *where_the_object_was)
                                      where_the_object_was);
 }
 
+static void device_add    (DevkitDisksDaemon *daemon, const char *native_path, gboolean emit_event);
+static void device_remove (DevkitDisksDaemon *daemon, const char *native_path);
 
 static void
 device_changed (DevkitDisksDaemon *daemon, const char *native_path)
@@ -553,10 +555,15 @@ device_changed (DevkitDisksDaemon *daemon, const char *native_path)
 
         device = g_hash_table_lookup (daemon->priv->map_native_path_to_device, native_path);
         if (device != NULL) {
-                g_print ("changed %s\n", native_path);
-                devkit_disks_device_changed (device);
+                if (!devkit_disks_device_changed (device)) {
+                        g_print ("changed triggered remove on %s\n", native_path);
+                        device_remove (daemon, native_path);
+                } else {
+                        g_print ("changed %s\n", native_path);
+                }
         } else {
-                g_print ("ignoring change event on %s\n", native_path);
+                g_print ("treating change event as add on %s\n", native_path);
+                device_add (daemon, native_path, TRUE);
         }
 }
 

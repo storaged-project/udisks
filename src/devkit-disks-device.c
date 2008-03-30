@@ -822,6 +822,25 @@ sysfs_get_double (const char *dir, const char *attribute)
         return result;
 }
 
+static gboolean
+sysfs_file_contains (const char *dir, const char *attribute, const char *string)
+{
+        gboolean result;
+        char *filename;
+        char *s;
+
+        result = FALSE;
+
+        filename = g_build_filename (dir, attribute, NULL);
+        if (g_file_get_contents (filename, &s, NULL, NULL)) {
+                result = (strstr(s, string) != NULL);
+                g_free (s);
+        }
+        g_free (filename);
+
+        return result;
+}
+
 static char *
 sysfs_get_string (const char *dir, const char *attribute)
 {
@@ -1209,12 +1228,15 @@ update_slaves (DevkitDisksDevice *device)
          *          Of course the kernel should just generate 'change' events for e.g. sdb1.
          */
 
+        g_warning ("updating slaves of %s", device->priv->native_path);
+
         for (n = 0; n < device->priv->info.slaves_objpath->len; n++) {
                 const char *slave_objpath = device->priv->info.slaves_objpath->pdata[n];
                 DevkitDisksDevice *slave;
 
                 slave = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, slave_objpath);
                 if (slave != NULL) {
+                        g_warning ("  slave %s", slave->priv->native_path);
                         update_info (slave);
                 }
         }
@@ -1330,6 +1352,14 @@ update_drive_properties (DevkitDisksDevice *device)
         g_free (s);
 }
 
+/**
+ * update_info:
+ * @device: the device
+ *
+ * Update information about the device.
+ *
+ * Returns: #TRUE to keep (or add) the device; #FALSE to ignore (or remove) the device
+ **/
 static gboolean
 update_info (DevkitDisksDevice *device)
 {
@@ -1348,6 +1378,15 @@ update_info (DevkitDisksDevice *device)
 
         ret = FALSE;
         info = NULL;
+
+        /* md is special; we don't get "remove" events from when an array is stopped; so catch
+         * it very early before erasing our existing slave variable (need it to set them free)
+         */
+        if (sysfs_file_contains (device->priv->native_path, "md/array_state", "clear")) {
+                /* set the slaves free and remove ourselves */
+                update_slaves (device);
+                goto out;
+        }
 
         /* free all info and prep for new info */
         free_info (device);
@@ -1605,12 +1644,20 @@ emit_changed (DevkitDisksDevice *device)
         g_signal_emit (device, signals[CHANGED_SIGNAL], 0);
 }
 
-void
+gboolean
 devkit_disks_device_changed (DevkitDisksDevice *device)
 {
-        /* TODO: fix up update_info to return TRUE iff something has changed */
-        if (update_info (device))
-                emit_changed (device);
+        gboolean keep_device;
+
+        keep_device = update_info (device);
+
+        /* this 'change' event might prompt us to remove the device */
+        if (!keep_device)
+                goto out;
+
+        /* no, it's good .. keep it */
+
+        emit_changed (device);
 
         /* Check if media was removed. If so, we need to forcibly unmount the device
          * and, if partitioned, all the partitions of the device.
@@ -1638,6 +1685,8 @@ devkit_disks_device_changed (DevkitDisksDevice *device)
                         }
                 }
         }
+out:
+        return keep_device;
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/
