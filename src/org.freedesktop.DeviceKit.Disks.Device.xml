@@ -295,6 +295,7 @@
     <property name="device-is-mounted" type="b" access="read"/>
     <property name="device-is-crypto-cleartext" type="b" access="read"/>
     <property name="device-is-busy" type="b" access="read"/>
+    <property name="device-is-linux-md-component" type="b" access="read"/>
     <property name="device-mount-path" type="s" access="read"/>
     <property name="device-size" type="t" access="read"/>
     <property name="device-block-size" type="t" access="read"/>
@@ -494,6 +495,15 @@
     <property name="drive-connection-speed" type="t" access="read"/>
     <property name="drive-media-compatibility" type="as" access="read"/>
     <property name="drive-media" type="s" access="read"/>
+
+    <!-- The device is a component of a Linux MD (Software RAID) array;
+         see property device-is-linux-md-component
+      -->
+    <property name="linux-md-component-level" type="i" access="read"/>
+    <property name="linux-md-component-num-raid-devices" type="i" access="read"/>
+    <property name="linux-md-component-uuid" type="s" access="read"/>
+    <property name="linux-md-component-name" type="s" access="read"/>
+    <property name="linux-md-component-version" type="s" access="read"/>
 
   </interface>
 

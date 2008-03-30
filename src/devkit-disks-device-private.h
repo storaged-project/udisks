@@ -61,6 +61,7 @@ struct DevkitDisksDevicePrivate
                 gboolean device_is_read_only;
                 gboolean device_is_drive;
                 gboolean device_is_crypto_cleartext;
+                gboolean device_is_linux_md_component;
                 guint64 device_size;
                 guint64 device_block_size;
                 gboolean device_is_mounted;
@@ -98,6 +99,12 @@ struct DevkitDisksDevicePrivate
                 char *drive_media;
 
                 char *crypto_cleartext_slave;
+
+                int linux_md_component_level;
+                int linux_md_component_num_raid_devices;
+                char *linux_md_component_uuid;
+                char *linux_md_component_name;
+                char *linux_md_component_version;
 
                 /* the following properties are not (yet) exported */
                 char *dm_name;

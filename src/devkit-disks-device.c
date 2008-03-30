@@ -125,6 +125,7 @@ enum
         PROP_DEVICE_IS_READ_ONLY,
         PROP_DEVICE_IS_DRIVE,
         PROP_DEVICE_IS_CRYPTO_CLEARTEXT,
+        PROP_DEVICE_IS_LINUX_MD_COMPONENT,
         PROP_DEVICE_SIZE,
         PROP_DEVICE_BLOCK_SIZE,
         PROP_DEVICE_IS_MOUNTED,
@@ -171,6 +172,12 @@ enum
         PROP_DRIVE_CONNECTION_SPEED,
         PROP_DRIVE_MEDIA_COMPATIBILITY,
         PROP_DRIVE_MEDIA,
+
+        PROP_LINUX_MD_COMPONENT_LEVEL,
+        PROP_LINUX_MD_COMPONENT_NUM_RAID_DEVICES,
+        PROP_LINUX_MD_COMPONENT_UUID,
+        PROP_LINUX_MD_COMPONENT_NAME,
+        PROP_LINUX_MD_COMPONENT_VERSION,
 };
 
 enum
@@ -301,6 +308,9 @@ get_property (GObject         *object,
 		break;
 	case PROP_DEVICE_IS_CRYPTO_CLEARTEXT:
 		g_value_set_boolean (value, device->priv->info.device_is_crypto_cleartext);
+		break;
+	case PROP_DEVICE_IS_LINUX_MD_COMPONENT:
+		g_value_set_boolean (value, device->priv->info.device_is_linux_md_component);
 		break;
 	case PROP_DEVICE_SIZE:
 		g_value_set_uint64 (value, device->priv->info.device_size);
@@ -436,6 +446,22 @@ get_property (GObject         *object,
 		g_value_set_string (value, device->priv->info.drive_media);
 		break;
 
+	case PROP_LINUX_MD_COMPONENT_LEVEL:
+		g_value_set_int (value, device->priv->info.linux_md_component_level);
+		break;
+	case PROP_LINUX_MD_COMPONENT_NUM_RAID_DEVICES:
+		g_value_set_int (value, device->priv->info.linux_md_component_num_raid_devices);
+		break;
+	case PROP_LINUX_MD_COMPONENT_UUID:
+		g_value_set_string (value, device->priv->info.linux_md_component_uuid);
+		break;
+	case PROP_LINUX_MD_COMPONENT_NAME:
+		g_value_set_string (value, device->priv->info.linux_md_component_name);
+		break;
+	case PROP_LINUX_MD_COMPONENT_VERSION:
+		g_value_set_string (value, device->priv->info.linux_md_component_version);
+		break;
+
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
                 break;
@@ -533,6 +559,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DEVICE_IS_CRYPTO_CLEARTEXT,
                 g_param_spec_boolean ("device-is-crypto-cleartext", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_IS_LINUX_MD_COMPONENT,
+                g_param_spec_boolean ("device-is-linux-md-component", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_DEVICE_SIZE,
@@ -707,6 +737,28 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DRIVE_MEDIA,
                 g_param_spec_string ("drive-media", NULL, NULL, NULL, G_PARAM_READABLE));
+
+
+        g_object_class_install_property (
+                object_class,
+                PROP_LINUX_MD_COMPONENT_LEVEL,
+                g_param_spec_int ("linux-md-component-level", NULL, NULL, 0, G_MAXINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_LINUX_MD_COMPONENT_NUM_RAID_DEVICES,
+                g_param_spec_int ("linux-md-component-num-raid-devices", NULL, NULL, 0, G_MAXINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_LINUX_MD_COMPONENT_UUID,
+                g_param_spec_string ("linux-md-component-uuid", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_LINUX_MD_COMPONENT_NAME,
+                g_param_spec_string ("linux-md-component-name", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_LINUX_MD_COMPONENT_VERSION,
+                g_param_spec_string ("linux-md-component-version", NULL, NULL, NULL, G_PARAM_READABLE));
 }
 
 static void
@@ -1066,10 +1118,22 @@ update_info_properties_cb (DevKitInfo *info, const char *key, void *user_data)
                 device->priv->info.id_type    = _dupv8 (devkit_info_property_get_string (info, key));
         } else if (strcmp (key, "ID_FS_VERSION") == 0) {
                 device->priv->info.id_version = _dupv8 (devkit_info_property_get_string (info, key));
+                if (device->priv->info.device_is_linux_md_component) {
+                        device->priv->info.linux_md_component_version =
+                                _dupv8 (devkit_info_property_get_string (info, key));
+                }
         } else if (strcmp (key, "ID_FS_UUID") == 0) {
                 device->priv->info.id_uuid    = _dupv8 (devkit_info_property_get_string (info, key));
+                if (device->priv->info.device_is_linux_md_component) {
+                        device->priv->info.linux_md_component_uuid =
+                                _dupv8 (devkit_info_property_get_string (info, key));
+                }
         } else if (strcmp (key, "ID_FS_LABEL") == 0) {
                 device->priv->info.id_label   = _dupv8 (devkit_info_property_get_string (info, key));
+                if (device->priv->info.device_is_linux_md_component) {
+                        device->priv->info.linux_md_component_name =
+                                _dupv8 (devkit_info_property_get_string (info, key));
+                }
 
         } else if (strcmp (key, "ID_VENDOR") == 0) {
                 if (device->priv->info.device_is_drive && device->priv->info.drive_vendor == NULL)
@@ -1148,6 +1212,12 @@ update_info_properties_cb (DevKitInfo *info, const char *key, void *user_data)
                                 }
                         }
                 }
+
+        } else if (strcmp (key, "ID_FS_MD_RAID_DISKS") == 0) {
+                device->priv->info.linux_md_component_num_raid_devices = devkit_info_property_get_int (info, key);
+
+        } else if (strcmp (key, "ID_FS_MD_RAID_LEVEL") == 0) {
+                device->priv->info.linux_md_component_level = devkit_info_property_get_int (info, key);
 
         } else if (strcmp (key, "DM_NAME") == 0) {
                 const char *dm_name;
@@ -1375,6 +1445,7 @@ update_info (DevkitDisksDevice *device)
         GDir *dir;
         const char *name;
         GList *l;
+        const char *fstype;
 
         ret = FALSE;
         info = NULL;
@@ -1520,13 +1591,23 @@ update_info (DevkitDisksDevice *device)
         }
         g_free (path);
 
+        /* ------------------------------------- */
+        /* Now set all properties from udev data */
+        /* ------------------------------------- */
+
+        /* set this first since e.g. ID_FS_LABEL et. al. needs to be redirected/copied */
+        fstype = devkit_info_property_get_string (info, "ID_FS_TYPE");
+        if (fstype != NULL && strcmp (fstype, "linux_raid_member") == 0) {
+                device->priv->info.device_is_linux_md_component = TRUE;
+        }
+
         if (devkit_info_property_foreach (info, update_info_properties_cb, device)) {
                 goto out;
         }
 
         update_slaves (device);
 
-        /* update whether device is mounted */
+        /* Update whether device is mounted */
         l = g_list_prepend (NULL, device);
         devkit_disks_daemon_local_update_mount_state (device->priv->daemon, l, FALSE);
         g_list_free (l);
