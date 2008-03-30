@@ -95,6 +95,7 @@ main (int argc, char **argv)
         const char *test;
         gboolean captive;
         const char *result;
+        const char *taskname;
 
         ret = 1;
         command_line = NULL;
@@ -108,6 +109,15 @@ main (int argc, char **argv)
         device = argv[1];
         test = argv[2];
         captive = (strcmp (argv[3], "1") == 0);
+
+        if (strcmp (test, "short") == 0) {
+                taskname = "smartselftest_short";
+        } else if (strcmp (test, "long") == 0) {
+                taskname = "smartselftest_long";
+        } else {
+                g_printerr ("unknown test '%s'", test);
+                goto out;
+        }
 
         g_print ("device   = '%s'\n", device);
         g_print ("test     = '%s'\n", test);
@@ -143,16 +153,18 @@ main (int argc, char **argv)
 
 
         /* progress at 0% initially */
-        g_print ("progress: 0 1 0 smartselftest\n");
+        g_print ("progress: 0 1 0 %s\n", taskname);
 
         while (TRUE) {
-                int exec_status = -1;
+                int n;
+                char **lines;
                 int percentage_done;
+                int exec_status = -1;
 
                 sleep (5);
 
                 if (cancelled) {
-                        g_printerr ("Abort test and exiting since we caught SIGTERM\n");
+                        g_printerr ("Aborting test and exiting since we caught SIGTERM\n");
                         abort_test ();
                         goto out;
                 }
@@ -172,9 +184,6 @@ main (int argc, char **argv)
                 }
                 g_free (standard_error);
                 standard_error = NULL;
-
-                int n;
-                char **lines;
 
                 lines = g_strsplit (standard_output, "\n", 0);
                 for (n = 0; lines[n] != NULL; n++) {
@@ -211,7 +220,7 @@ main (int argc, char **argv)
 
                 if ((exec_status >> 4) == 15) {
                         percentage_done = 100 - (exec_status & 0x0f) * 10;
-                        g_print ("progress: 0 1 %d smartselftest\n", percentage_done);
+                        g_print ("progress: 0 1 %d %s\n", percentage_done, taskname);
                 } else {
                         switch ((exec_status)>>4){
                         case  0:
