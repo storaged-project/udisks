@@ -44,7 +44,6 @@ int
 main (int argc, char **argv)
 {
         int n;
-        int fd;
         int ret;
         const char *device;
         char **options;
@@ -57,11 +56,12 @@ main (int argc, char **argv)
         guint64 out_start;
         guint64 out_size;
         char *endp;
+        int max_number;
 
         ret = 1;
         flags = NULL;
 
-        if (argc < 7) {
+        if (argc < 8) {
                 g_printerr ("wrong usage\n");
                 goto out;
         }
@@ -76,10 +76,15 @@ main (int argc, char **argv)
                 g_printerr ("malformed size '%s'\n", argv[3]);
                 goto out;
         }
-        type = argv[4];
-        label = argv[5];
-        flags_as_string = argv[6];
-        options = argv + 7;
+        max_number = strtol (argv[4], &endp, 10);
+        if (*endp != '\0') {
+                g_printerr ("malformed max number '%s'\n", argv[4]);
+                goto out;
+        }
+        type = argv[5];
+        label = argv[6];
+        flags_as_string = argv[7];
+        options = argv + 8;
 
         flags = g_strsplit (flags_as_string, ",", 0);
 
@@ -93,6 +98,7 @@ main (int argc, char **argv)
 
         g_print ("progress: %d %d -1 partitioning\n", 0, 2);
 
+        /* ask libparted to poke the kernel */
         if (part_add_partition ((char *) device,
                                 offset,
                                 size,
@@ -103,7 +109,8 @@ main (int argc, char **argv)
                                 flags,
                                 -1,
                                 -1,
-                                FALSE)) {
+                                TRUE)) {
+
                 /* now clear out file system signatures in the newly created
                  * partition... Unless it's an extended partition!
                  */
@@ -127,23 +134,6 @@ main (int argc, char **argv)
                 g_printerr ("job-create-partition-size: %lld\n", out_size);
         }
 
-        /* TODO: replace blkrrpart with partx-ish ioctls */
-
-        /* either way, we've got this far.. signal the kernel to reread the partition table */
-        fd = open (device, O_RDONLY);
-        if (fd < 0) {
-                g_printerr ("cannot open %s (for BLKRRPART): %m\n", device);
-                ret = 1;
-                goto out;
-        }
-
-        if (ioctl (fd, BLKRRPART) != 0) {
-                close (fd);
-                g_printerr ("BLKRRPART ioctl failed for %s: %m\n", device);
-                ret = 1;
-                goto out;
-        }
-        close (fd);
 
 out:
         g_strfreev (flags);

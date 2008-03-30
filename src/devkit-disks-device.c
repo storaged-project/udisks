@@ -3024,11 +3024,13 @@ devkit_disks_device_delete_partition (DevkitDisksDevice     *device,
         GError *error;
         char *offset_as_string;
         char *size_as_string;
+        char *part_number_as_string;
         PolKitCaller *pk_caller;
         DevkitDisksDevice *enclosing_device;
 
         offset_as_string = NULL;
         size_as_string = NULL;
+        part_number_as_string = NULL;
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
@@ -3079,8 +3081,7 @@ devkit_disks_device_delete_partition (DevkitDisksDevice     *device,
 
         offset_as_string = g_strdup_printf ("%lld", device->priv->info.partition_offset);
         size_as_string = g_strdup_printf ("%lld", device->priv->info.partition_size);
-
-        /* TODO: options: quick, full, secure_gutmann_35pass etc. */
+        part_number_as_string = g_strdup_printf ("%d", device->priv->info.partition_number);
 
         n = 0;
         argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-delete-partition";
@@ -3088,6 +3089,7 @@ devkit_disks_device_delete_partition (DevkitDisksDevice     *device,
         argv[n++] = device->priv->info.device_file;
         argv[n++] = offset_as_string;
         argv[n++] = size_as_string;
+        argv[n++] = part_number_as_string;
         for (m = 0; options[m] != NULL; m++) {
                 if (n >= (int) sizeof (argv) - 1) {
                         throw_error (context,
@@ -3117,6 +3119,7 @@ devkit_disks_device_delete_partition (DevkitDisksDevice     *device,
 out:
         g_free (offset_as_string);
         g_free (size_as_string);
+        g_free (part_number_as_string);
         if (pk_caller != NULL)
                 polkit_caller_unref (pk_caller);
         return TRUE;
@@ -3753,10 +3756,12 @@ devkit_disks_device_create_partition (DevkitDisksDevice     *device,
         PolKitCaller *pk_caller;
         char *offset_as_string;
         char *size_as_string;
+        char *max_number_as_string;
         char *flags_as_string;
 
         offset_as_string = NULL;
         size_as_string = NULL;
+        max_number_as_string = NULL;
         flags_as_string = NULL;
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
@@ -3793,6 +3798,7 @@ devkit_disks_device_create_partition (DevkitDisksDevice     *device,
 
         offset_as_string = g_strdup_printf ("%lld", offset);
         size_as_string = g_strdup_printf ("%lld", size);
+        max_number_as_string = g_strdup_printf ("%d", device->priv->info.partition_table_max_number);
         /* TODO: check that neither of the flags include ',' */
         flags_as_string = g_strjoinv (",", flags);
 
@@ -3801,6 +3807,7 @@ devkit_disks_device_create_partition (DevkitDisksDevice     *device,
         argv[n++] = device->priv->info.device_file;;
         argv[n++] = offset_as_string;
         argv[n++] = size_as_string;
+        argv[n++] = max_number_as_string;
         argv[n++] = (char *) type;
         argv[n++] = (char *) label;
         argv[n++] = (char *) flags_as_string;
@@ -3833,6 +3840,7 @@ devkit_disks_device_create_partition (DevkitDisksDevice     *device,
 out:
         g_free (offset_as_string);
         g_free (size_as_string);
+        g_free (max_number_as_string);
         g_free (flags_as_string);
         if (pk_caller != NULL)
                 polkit_caller_unref (pk_caller);

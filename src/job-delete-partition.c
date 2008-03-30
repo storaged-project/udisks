@@ -43,7 +43,6 @@
 int
 main (int argc, char **argv)
 {
-        int fd;
         int ret;
         const char *device;
         const char *partition_device;
@@ -53,13 +52,14 @@ main (int argc, char **argv)
         int n;
         guint64 offset;
         guint64 size;
+        int part_number;
         char *endp;
 
         ret = 1;
         erase = NULL;
 
 
-        if (argc < 4) {
+        if (argc < 5) {
                 g_printerr ("wrong usage\n");
                 goto out;
         }
@@ -75,7 +75,13 @@ main (int argc, char **argv)
                 g_printerr ("malformed size '%s'\n", argv[4]);
                 goto out;
         }
-        options = argv + 5;
+        part_number = strtol (argv[5], &endp, 10);
+        if (*endp != '\0') {
+                g_printerr ("malformed partition number '%s'\n", argv[5]);
+                goto out;
+        }
+
+        options = argv + 6;
 
         for (n = 0; options[n] != NULL; n++) {
                 if (g_str_has_prefix (options[n], "erase=")) {
@@ -94,7 +100,8 @@ main (int argc, char **argv)
 
         g_print ("progress: %d %d -1 partitioning\n", num_erase_passes, num_erase_passes + 2);
 
-        if (part_del_partition ((char *) device, offset, FALSE)) {
+        /* ask libparted to poke the kernel */
+        if (part_del_partition ((char *) device, offset, TRUE)) {
 
                 /* zero the contents of what was the _partition_
                  *
@@ -107,24 +114,6 @@ main (int argc, char **argv)
                         ret = 0;
                 }
         }
-
-        /* TODO: replace blkrrpart with partx-ish ioctls */
-
-        /* either way, we've got this far.. signal the kernel to reread the partition table */
-        fd = open (device, O_RDONLY);
-        if (fd < 0) {
-                g_printerr ("cannot open %s (for BLKRRPART): %m\n", device);
-                ret = 1;
-                goto out;
-        }
-
-        if (ioctl (fd, BLKRRPART) != 0) {
-                close (fd);
-                g_printerr ("BLKRRPART ioctl failed for %s: %m\n", device);
-                ret = 1;
-                goto out;
-        }
-        close (fd);
 
 out:
         g_free (erase);
