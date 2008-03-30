@@ -230,6 +230,9 @@ devkit_disks_device_error_get_type (void)
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_CRYPTO_ALREADY_UNLOCKED, "CryptoAlreadyUnlocked"),
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_CRYPTO_NOT_UNLOCKED, "CryptoNotUnlocked"),
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY, "IsBusy"),
+                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_DRIVE, "NotDrive"),
+                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_SMART_CAPABLE, "NotSmartCapable"),
+
                         { 0, 0, 0 }
                 };
                 g_assert (DEVKIT_DISKS_DEVICE_NUM_ERRORS == G_N_ELEMENTS (values) - 1);
@@ -4743,6 +4746,297 @@ out:
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
+static void
+retrieve_smart_data_completed_cb (DBusGMethodInvocation *context,
+                                  DevkitDisksDevice *device,
+                                  PolKitCaller *pk_caller,
+                                  gboolean job_was_cancelled,
+                                  int status,
+                                  const char *stderr,
+                                  const char *stdout,
+                                  gpointer user_data)
+{
+        int rc;
+        gboolean passed;
+        int n;
+        char **lines;
+        gboolean in_attributes;
+        int power_on_hours;
+        int temperature;
+
+        if (job_was_cancelled || stdout == NULL) {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Error retrieving S.M.A.R.T. data: no output",
+                                     WEXITSTATUS (status), stderr);
+                }
+                goto out;
+        }
+
+        rc = WEXITSTATUS (status);
+
+        if ((rc & (0x02|0x04)) != 0) {
+                throw_error (context,
+                             DEVKIT_DISKS_DEVICE_ERROR_NOT_SMART_CAPABLE,
+                             "Device is not S.M.A.R.T. capable");
+                goto out;
+        }
+
+        passed = TRUE;
+        power_on_hours = 0;
+        temperature = 0;
+
+        if ((rc & 0x08) != 0)
+                passed = FALSE;
+
+        lines = g_strsplit (stdout, "\n", 0);
+
+        in_attributes = FALSE;
+        for (n = 0; lines[n] != NULL; n++) {
+                const char *line = (const char *) lines[n];
+                int id;
+                char name[256];
+                unsigned int flags;
+                int value;
+                int worst;
+                int threshold;
+                char type[256];
+                char updated[256];
+                char when_failed[256];
+                int raw_value;
+
+                /* We're looking at parsing this block of the output
+                 *
+                 * ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
+                 *   1 Raw_Read_Error_Rate     0x000f   200   200   051    Pre-fail  Always       -       1284
+                 *   3 Spin_Up_Time            0x0003   225   215   021    Pre-fail  Always       -       5725
+                 *   4 Start_Stop_Count        0x0032   100   100   000    Old_age   Always       -       204
+                 *   5 Reallocated_Sector_Ct   0x0033   199   199   140    Pre-fail  Always       -       2
+                 *   7 Seek_Error_Rate         0x000f   127   127   051    Pre-fail  Always       -       65877
+                 *   9 Power_On_Hours          0x0032   096   096   000    Old_age   Always       -       3429
+                 *  10 Spin_Retry_Count        0x0013   100   100   051    Pre-fail  Always       -       0
+                 *  11 Calibration_Retry_Count 0x0012   100   100   051    Old_age   Always       -       0
+                 *  12 Power_Cycle_Count       0x0032   100   100   000    Old_age   Always       -       153
+                 * 190 Temperature_Celsius     0x0022   058   032   045    Old_age   Always   In_the_past 42
+                 * 194 Temperature_Celsius     0x0022   253   253   000    Old_age   Always       -       43
+                 * 196 Reallocated_Event_Count 0x0032   198   198   000    Old_age   Always       -       2
+                 * 197 Current_Pending_Sector  0x0012   191   191   000    Old_age   Always       -       762
+                 * 198 Offline_Uncorrectable   0x0010   200   200   000    Old_age   Offline      -       21
+                 * 199 UDMA_CRC_Error_Count    0x003e   200   200   000    Old_age   Always       -       40
+                 * 200 Multi_Zone_Error_Rate   0x0009   170   170   051    Pre-fail  Offline      -       1542
+                 *
+                 */
+
+                if (g_str_has_prefix (line, "ID# ATTRIBUTE_NAME ")) {
+                        in_attributes = TRUE;
+                        continue;
+                }
+
+                if (!in_attributes)
+                        continue;
+
+                if (strlen (line) == 0) {
+                        break;
+                }
+
+                if (strlen (line) >= 256) {
+                        g_warning ("Ignoring line '%s' (too long)", line);
+                        continue;
+                }
+
+                if (sscanf (line, "%d %s 0x%x %d %d %d %s %s %s %d",
+                            &id, name, &flags, &value, &worst, &threshold,
+                            type, updated, when_failed, &raw_value) == 10) {
+#if 0
+                        g_printerr ("           id=%d\n", id);
+                        g_printerr ("         name='%s'\n", name);
+                        g_printerr ("        flags=0x%x\n", flags);
+                        g_printerr ("        value=%d\n", value);
+                        g_printerr ("        worst=%d\n", worst);
+                        g_printerr ("    threshold=%d\n", threshold);
+                        g_printerr ("         type='%s'\n", type);
+                        g_printerr ("      updated='%s'\n", updated);
+                        g_printerr ("  when_failed='%s'\n", when_failed);
+                        g_printerr ("    raw_value=%d\n", raw_value);
+#endif
+
+                        if (id == 9) {
+                                power_on_hours = raw_value;
+                        } else if (id == 194) {
+                                temperature = raw_value;
+                        }
+                }
+
+        }
+        g_strfreev (lines);
+
+        dbus_g_method_return (context, passed, power_on_hours, temperature);
+out:
+        ;
+}
+
+gboolean
+devkit_disks_device_retrieve_smart_data (DevkitDisksDevice     *device,
+                                         DBusGMethodInvocation *context)
+{
+        int n;
+        char *argv[10];
+        GError *error;
+        PolKitCaller *pk_caller;
+
+        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
+                goto out;
+
+        if (!device->priv->info.device_is_drive) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_DRIVE,
+                             "Device is not a drive");
+                goto out;
+        }
+
+#if 0
+        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                  pk_caller,
+                                                  /* TODO: revisit auth */
+                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  context)) {
+                goto out;
+        }
+#endif
+
+        n = 0;
+        argv[n++] = "smartctl";
+        argv[n++] = "--all";
+        argv[n++] = device->priv->info.device_file;
+        argv[n++] = NULL;
+
+        error = NULL;
+        if (!job_new (context,
+                      "RetrieveSmartData",
+                      FALSE,
+                      device,
+                      pk_caller,
+                      argv,
+                      NULL,
+                      retrieve_smart_data_completed_cb,
+                      NULL,
+                      NULL)) {
+                goto out;
+        }
+
+out:
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+run_smart_selftest_completed_cb (DBusGMethodInvocation *context,
+                                 DevkitDisksDevice *device,
+                                 PolKitCaller *pk_caller,
+                                 gboolean job_was_cancelled,
+                                 int status,
+                                 const char *stderr,
+                                 const char *stdout,
+                                 gpointer user_data)
+{
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+
+                dbus_g_method_return (context);
+
+        } else {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Error running self test: helper exited with exit code %d: %s",
+                                     WEXITSTATUS (status), stderr);
+                }
+        }
+}
+
+gboolean
+devkit_disks_device_run_smart_selftest (DevkitDisksDevice     *device,
+                                        const char            *test,
+                                        gboolean               captive,
+                                        DBusGMethodInvocation *context)
+{
+        int n;
+        char *argv[10];
+        GError *error;
+        PolKitCaller *pk_caller;
+
+        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
+                goto out;
+
+        if (!device->priv->info.device_is_drive) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_DRIVE,
+                             "Device is not a drive");
+                goto out;
+        }
+
+        if (captive) {
+                if (devkit_disks_device_local_is_busy (device)) {
+                        throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                                     "Device is busy");
+                        goto out;
+                }
+
+                if (devkit_disks_device_local_partitions_are_busy (device)) {
+                        throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                                     "A partition on the device is busy");
+                        goto out;
+                }
+        }
+
+#if 0
+        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                  pk_caller,
+                                                  /* TODO: revisit auth */
+                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  context)) {
+                goto out;
+        }
+#endif
+
+        n = 0;
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-smart-selftest";
+        argv[n++] = device->priv->info.device_file;
+        argv[n++] = (char *) test;
+        argv[n++] = captive ? "1" : "0";
+        argv[n++] = NULL;
+
+        error = NULL;
+        if (!job_new (context,
+                      "RunSmartSelftest",
+                      TRUE,
+                      device,
+                      pk_caller,
+                      argv,
+                      NULL,
+                      run_smart_selftest_completed_cb,
+                      NULL,
+                      NULL)) {
+                goto out;
+        }
+
+out:
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
 typedef struct {
         char                     *mount_path;
         ForceRemovalCompleteFunc  fr_callback;
@@ -5034,5 +5328,6 @@ force_removal (DevkitDisksDevice        *device,
 pending:
         ;
 }
+
 
 /*--------------------------------------------------------------------------------------------------------------*/

@@ -53,6 +53,52 @@
       <arg name="options" direction="in" type="as"/>
     </method>
 
+    <!-- RetrieveSmartData:
+
+         Retrieves S.M.A.R.T. data from the drive.
+
+         TODO: We probably should return all attributes or something
+               more detailed. And at the same time try to abstract
+               the difference between SCSI and ATA.
+
+         Returns: Whether the drive is healthy, the number of hours
+                  it's been powered and the temperature in Celcius.
+      -->
+    <method name="RetrieveSmartData">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+
+      <arg name="is_healthy" direction="out" type="b"/>
+      <arg name="power_on_hours" direction="out" type="i"/>
+      <arg name="temperature" direction="out" type="i"/>
+    </method>
+
+
+    <!-- RunSmartSelftest:
+
+         @test:     The name of the test to run; supported values
+                    are 'short' (usually less than ten minutes)
+                    and 'long' (usually tens of minutes) and
+                    'conveyance' (usually a few minutes). See the
+                    smartctl(1) man page for details.
+
+         @captive:  If set to #TRUE then the drive will block
+                    access to the drive for the duration of the
+                    test. The method will error out if the drive
+                    is busy, e.g. if partitions are mounted.
+
+         Runs a S.M.A.R.T. self test on the drive.
+
+         TODO: need to figure out whether we need a return code
+
+      -->
+    <method name="RunSmartSelftest">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+
+      <arg name="test" direction="in" type="s"/>
+      <arg name="captive" direction="in" type="b"/>
+    </method>
+
+
     <!-- CreatePartitionTable:
          @scheme:   The type of partition table to create. Currently
                     the types 'none', 'mbr', 'gpt' and 'apm' are

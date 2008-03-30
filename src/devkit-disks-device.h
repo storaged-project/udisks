@@ -71,6 +71,8 @@ typedef enum
         DEVKIT_DISKS_DEVICE_ERROR_CRYPTO_ALREADY_UNLOCKED,
         DEVKIT_DISKS_DEVICE_ERROR_CRYPTO_NOT_UNLOCKED,
         DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+        DEVKIT_DISKS_DEVICE_ERROR_NOT_DRIVE,
+        DEVKIT_DISKS_DEVICE_ERROR_NOT_SMART_CAPABLE,
         DEVKIT_DISKS_DEVICE_NUM_ERRORS
 } DevkitDisksDeviceError;
 
@@ -171,6 +173,14 @@ gboolean devkit_disks_device_change_secret_for_encrypted (DevkitDisksDevice     
 gboolean devkit_disks_device_change_filesystem_label (DevkitDisksDevice     *device,
                                                       const char            *new_label,
                                                       DBusGMethodInvocation *context);
+
+gboolean devkit_disks_device_retrieve_smart_data (DevkitDisksDevice     *device,
+                                                  DBusGMethodInvocation *context);
+
+gboolean devkit_disks_device_run_smart_selftest (DevkitDisksDevice     *device,
+                                                 const char            *test,
+                                                 gboolean               captive,
+                                                 DBusGMethodInvocation *context);
 
 G_END_DECLS
 
