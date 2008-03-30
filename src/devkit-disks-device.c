@@ -4788,7 +4788,7 @@ retrieve_smart_data_completed_cb (DBusGMethodInvocation *context,
 
         rc = WEXITSTATUS (status);
 
-        if ((rc & (0x02|0x04)) != 0) {
+        if ((rc & (0x01|0x02|0x04)) != 0) {
                 throw_error (context,
                              DEVKIT_DISKS_DEVICE_ERROR_NOT_SMART_CAPABLE,
                              "Device is not S.M.A.R.T. capable");
