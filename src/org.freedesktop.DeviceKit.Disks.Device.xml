@@ -279,8 +279,8 @@
 
          The 'device-is-busy' property is set if the device is
          in use; this can hapen if it's mounted, if another
-         block device is claiming it or if a job initiated from
-         DeviceKit-disks is pending.
+         block device is claiming it (e.g. a RAID drive) or if a
+         job initiated from DeviceKit-disks is pending.
       -->
     <property name="native-path" type="s" access="read"/>
     <property name="device-file" type="s" access="read"/>
@@ -296,6 +296,7 @@
     <property name="device-is-crypto-cleartext" type="b" access="read"/>
     <property name="device-is-busy" type="b" access="read"/>
     <property name="device-is-linux-md-component" type="b" access="read"/>
+    <property name="device-is-linux-md" type="b" access="read"/>
     <property name="device-mount-path" type="s" access="read"/>
     <property name="device-size" type="t" access="read"/>
     <property name="device-block-size" type="t" access="read"/>
@@ -504,6 +505,16 @@
     <property name="linux-md-component-uuid" type="s" access="read"/>
     <property name="linux-md-component-name" type="s" access="read"/>
     <property name="linux-md-component-version" type="s" access="read"/>
+
+    <!-- The device is a Linux MD (Software RAID) array. The components
+         of the array are in the linux-md-slaves property.
+      -->
+    <property name="linux-md-level" type="i" access="read"/>
+    <property name="linux-md-num-raid-devices" type="i" access="read"/>
+    <property name="linux-md-uuid" type="s" access="read"/>
+    <property name="linux-md-name" type="s" access="read"/>
+    <property name="linux-md-version" type="s" access="read"/>
+    <property name="linux-md-slaves" type="ao" access="read"/>
 
   </interface>
 

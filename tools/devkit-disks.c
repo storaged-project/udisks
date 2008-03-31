@@ -453,6 +453,7 @@ typedef struct
         gboolean device_is_mounted;
         gboolean device_is_busy;
         gboolean device_is_linux_md_component;
+        gboolean device_is_linux_md;
         char    *device_mount_path;
         guint64  device_size;
         guint64  device_block_size;
@@ -503,6 +504,13 @@ typedef struct
         char    *linux_md_component_uuid;
         char    *linux_md_component_name;
         char    *linux_md_component_version;
+
+        int      linux_md_level;
+        int      linux_md_num_raid_devices;
+        char    *linux_md_uuid;
+        char    *linux_md_name;
+        char    *linux_md_version;
+        char   **linux_md_slaves;
 } DeviceProperties;
 
 static void
@@ -535,6 +543,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->device_is_crypto_cleartext = g_value_get_boolean (value);
         else if (strcmp (key, "device-is-linux-md-component") == 0)
                 props->device_is_linux_md_component = g_value_get_boolean (value);
+        else if (strcmp (key, "device-is-linux-md") == 0)
+                props->device_is_linux_md = g_value_get_boolean (value);
         else if (strcmp (key, "device-is-mounted") == 0)
                 props->device_is_mounted = g_value_get_boolean (value);
         else if (strcmp (key, "device-is-busy") == 0)
@@ -640,6 +650,28 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
         else if (strcmp (key, "linux-md-component-version") == 0)
                 props->linux_md_component_version = g_strdup (g_value_get_string (value));
 
+        else if (strcmp (key, "linux-md-level") == 0)
+                props->linux_md_level = g_value_get_int (value);
+        else if (strcmp (key, "linux-md-num-raid-devices") == 0)
+                props->linux_md_num_raid_devices = g_value_get_int (value);
+        else if (strcmp (key, "linux-md-uuid") == 0)
+                props->linux_md_uuid = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "linux-md-name") == 0)
+                props->linux_md_name = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "linux-md-version") == 0)
+                props->linux_md_version = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "linux-md-slaves") == 0) {
+                int n;
+                GPtrArray *object_paths;
+
+                object_paths = g_value_get_boxed (value);
+
+                props->linux_md_slaves = g_new0 (char *, object_paths->len + 1);
+                for (n = 0; n < (int) object_paths->len; n++)
+                        props->linux_md_slaves[n] = g_strdup (object_paths->pdata[n]);
+                props->linux_md_slaves[n] = NULL;
+        }
+
         else
                 handled = FALSE;
 
@@ -721,6 +753,10 @@ device_properties_free (DeviceProperties *props)
         g_free (props->linux_md_component_uuid);
         g_free (props->linux_md_component_name);
         g_free (props->linux_md_component_version);
+        g_free (props->linux_md_uuid);
+        g_free (props->linux_md_name);
+        g_free (props->linux_md_version);
+        g_strfreev (props->linux_md_slaves);
         g_free (props);
 }
 
@@ -798,6 +834,17 @@ do_show_info (const char *object_path)
                 g_print ("    uuid:        %s\n", props->linux_md_component_uuid);
                 g_print ("    name:        %s\n", props->linux_md_component_name);
                 g_print ("    version:     %s\n", props->linux_md_component_version);
+        }
+        if (props->device_is_linux_md) {
+                g_print ("  linux md:\n");
+                g_print ("    RAID level:  %d\n", props->linux_md_level);
+                g_print ("    num comp:    %d\n", props->linux_md_num_raid_devices);
+                g_print ("    uuid:        %s\n", props->linux_md_uuid);
+                g_print ("    name:        %s\n", props->linux_md_name);
+                g_print ("    version:     %s\n", props->linux_md_version);
+                g_print ("      slaves:\n");
+                for (n = 0; props->linux_md_slaves[n] != NULL; n++)
+                        g_print ("        %s\n", props->linux_md_slaves[n]);
         }
         if (props->device_is_crypto_cleartext) {
                 g_print ("  cleartext crypto device:\n");

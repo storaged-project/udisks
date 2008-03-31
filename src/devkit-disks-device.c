@@ -126,6 +126,7 @@ enum
         PROP_DEVICE_IS_DRIVE,
         PROP_DEVICE_IS_CRYPTO_CLEARTEXT,
         PROP_DEVICE_IS_LINUX_MD_COMPONENT,
+        PROP_DEVICE_IS_LINUX_MD,
         PROP_DEVICE_SIZE,
         PROP_DEVICE_BLOCK_SIZE,
         PROP_DEVICE_IS_MOUNTED,
@@ -178,6 +179,13 @@ enum
         PROP_LINUX_MD_COMPONENT_UUID,
         PROP_LINUX_MD_COMPONENT_NAME,
         PROP_LINUX_MD_COMPONENT_VERSION,
+
+        PROP_LINUX_MD_LEVEL,
+        PROP_LINUX_MD_NUM_RAID_DEVICES,
+        PROP_LINUX_MD_UUID,
+        PROP_LINUX_MD_NAME,
+        PROP_LINUX_MD_VERSION,
+        PROP_LINUX_MD_SLAVES,
 };
 
 enum
@@ -311,6 +319,9 @@ get_property (GObject         *object,
 		break;
 	case PROP_DEVICE_IS_LINUX_MD_COMPONENT:
 		g_value_set_boolean (value, device->priv->info.device_is_linux_md_component);
+		break;
+	case PROP_DEVICE_IS_LINUX_MD:
+		g_value_set_boolean (value, device->priv->info.device_is_linux_md);
 		break;
 	case PROP_DEVICE_SIZE:
 		g_value_set_uint64 (value, device->priv->info.device_size);
@@ -462,6 +473,25 @@ get_property (GObject         *object,
 		g_value_set_string (value, device->priv->info.linux_md_component_version);
 		break;
 
+	case PROP_LINUX_MD_LEVEL:
+		g_value_set_int (value, device->priv->info.linux_md_level);
+		break;
+	case PROP_LINUX_MD_NUM_RAID_DEVICES:
+		g_value_set_int (value, device->priv->info.linux_md_num_raid_devices);
+		break;
+	case PROP_LINUX_MD_UUID:
+		g_value_set_string (value, device->priv->info.linux_md_uuid);
+		break;
+	case PROP_LINUX_MD_NAME:
+		g_value_set_string (value, device->priv->info.linux_md_name);
+		break;
+	case PROP_LINUX_MD_VERSION:
+		g_value_set_string (value, device->priv->info.linux_md_version);
+		break;
+	case PROP_LINUX_MD_SLAVES:
+                g_value_set_boxed (value, device->priv->info.linux_md_slaves);
+                break;
+
         default:
                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
                 break;
@@ -563,6 +593,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DEVICE_IS_LINUX_MD_COMPONENT,
                 g_param_spec_boolean ("device-is-linux-md-component", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_IS_LINUX_MD,
+                g_param_spec_boolean ("device-is-linux-md", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_DEVICE_SIZE,
@@ -759,6 +793,33 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_LINUX_MD_COMPONENT_VERSION,
                 g_param_spec_string ("linux-md-component-version", NULL, NULL, NULL, G_PARAM_READABLE));
+
+        g_object_class_install_property (
+                object_class,
+                PROP_LINUX_MD_LEVEL,
+                g_param_spec_int ("linux-md-level", NULL, NULL, 0, G_MAXINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_LINUX_MD_NUM_RAID_DEVICES,
+                g_param_spec_int ("linux-md-num-raid-devices", NULL, NULL, 0, G_MAXINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_LINUX_MD_UUID,
+                g_param_spec_string ("linux-md-uuid", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_LINUX_MD_NAME,
+                g_param_spec_string ("linux-md-name", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_LINUX_MD_VERSION,
+                g_param_spec_string ("linux-md-version", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_LINUX_MD_SLAVES,
+                g_param_spec_boxed ("linux-md-slaves", NULL, NULL,
+                                    dbus_g_type_get_collection ("GPtrArray", DBUS_TYPE_G_OBJECT_PATH),
+                                    G_PARAM_READABLE));
 }
 
 static void
@@ -1021,6 +1082,9 @@ free_info (DevkitDisksDevice *device)
         g_ptr_array_free (device->priv->info.drive_media_compatibility, TRUE);
         g_free (device->priv->info.drive_media);
 
+        g_ptr_array_foreach (device->priv->info.linux_md_slaves, (GFunc) g_free, NULL);
+        g_ptr_array_free (device->priv->info.linux_md_slaves, TRUE);
+
         g_free (device->priv->info.dm_name);
         g_ptr_array_foreach (device->priv->info.slaves_objpath, (GFunc) g_free, NULL);
         g_ptr_array_free (device->priv->info.slaves_objpath, TRUE);
@@ -1038,6 +1102,7 @@ init_info (DevkitDisksDevice *device)
         device->priv->info.partition_table_offsets = g_array_new (FALSE, TRUE, sizeof (guint64));
         device->priv->info.partition_table_sizes = g_array_new (FALSE, TRUE, sizeof (guint64));
         device->priv->info.drive_media_compatibility = g_ptr_array_new ();
+        device->priv->info.linux_md_slaves = g_ptr_array_new ();
         device->priv->info.slaves_objpath = g_ptr_array_new ();
         device->priv->info.holders_objpath = g_ptr_array_new ();
 }
@@ -1298,15 +1363,12 @@ update_slaves (DevkitDisksDevice *device)
          *          Of course the kernel should just generate 'change' events for e.g. sdb1.
          */
 
-        g_warning ("updating slaves of %s", device->priv->native_path);
-
         for (n = 0; n < device->priv->info.slaves_objpath->len; n++) {
                 const char *slave_objpath = device->priv->info.slaves_objpath->pdata[n];
                 DevkitDisksDevice *slave;
 
                 slave = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, slave_objpath);
                 if (slave != NULL) {
-                        g_warning ("  slave %s", slave->priv->native_path);
                         update_info (slave);
                 }
         }
@@ -1466,15 +1528,6 @@ update_info (DevkitDisksDevice *device)
         /* drive identification */
         if (sysfs_file_exists (device->priv->native_path, "range")) {
                 device->priv->info.device_is_drive = TRUE;
-
-                if (sysfs_file_exists (device->priv->native_path, "md")) {
-                        device->priv->info.drive_vendor = g_strdup ("Linux");
-                        device->priv->info.drive_model = g_strdup ("Software RAID");
-                        device->priv->info.drive_revision = g_strstrip (sysfs_get_string (device->priv->native_path,
-                                                                                          "md/metadata_version"));
-                        device->priv->info.drive_connection_interface = g_strdup ("virtual");
-                }
-
         } else {
                 device->priv->info.device_is_drive = FALSE;
         }
@@ -1606,6 +1659,75 @@ update_info (DevkitDisksDevice *device)
         }
 
         update_slaves (device);
+
+        /* Linux MD detection */
+        if (sysfs_file_exists (device->priv->native_path, "md")) {
+                int level;
+                char *raid_level;
+
+                device->priv->info.device_is_linux_md = TRUE;
+
+                raid_level = g_strstrip (sysfs_get_string (device->priv->native_path,
+                                                              "md/level"));
+                if (raid_level == NULL) {
+                        g_warning ("Didn't find md/level. Ignoring.");
+                        goto out;
+                }
+                if (strcmp (raid_level, "raid0") == 0) {
+                        level = 0;
+                } else if (strcmp (raid_level, "raid1") == 0) {
+                        level = 1;
+                } else if (strcmp (raid_level, "raid4") == 0) {
+                        level = 4;
+                } else if (strcmp (raid_level, "raid5") == 0) {
+                        level = 5;
+                } else {
+                        g_warning ("Cannot parse '%s'. Ignoring.", raid_level);
+                        g_free (raid_level);
+                        goto out;
+                }
+                g_free (raid_level);
+
+                device->priv->info.linux_md_level = level;
+                device->priv->info.linux_md_num_raid_devices =
+                        sysfs_get_int (device->priv->native_path, "md/raid_disks");
+                device->priv->info.linux_md_version = g_strstrip (sysfs_get_string (device->priv->native_path,
+                                                                                            "md/metadata_version"));
+                /* copy slaves; pick uuid and name from the first slave */
+                for (n = 0; n < (int) device->priv->info.slaves_objpath->len; n++) {
+                        if (n == 0) {
+                                DevkitDisksDevice *slave;
+
+                                slave = devkit_disks_daemon_local_find_by_object_path (
+                                        device->priv->daemon,
+                                        device->priv->info.slaves_objpath->pdata[n]);
+                                if (slave == NULL) {
+                                        g_warning ("Unreferenced slave for array");
+                                        goto out;
+                                }
+
+                                device->priv->info.linux_md_name =
+                                        g_strdup (slave->priv->info.linux_md_component_name);
+                                device->priv->info.linux_md_uuid =
+                                        g_strdup (slave->priv->info.linux_md_component_uuid);
+                        }
+
+                        g_ptr_array_add (device->priv->info.linux_md_slaves,
+                                         g_strdup (device->priv->info.slaves_objpath->pdata[n]));
+                }
+
+                device->priv->info.drive_vendor = g_strdup ("Linux");
+                if (device->priv->info.linux_md_name != NULL && strlen (device->priv->info.linux_md_name) > 0) {
+                        device->priv->info.drive_model = g_strdup_printf ("RAID-%d %s",
+                                                                          device->priv->info.linux_md_level,
+                                                                          device->priv->info.linux_md_name);
+                } else {
+                        device->priv->info.drive_model = g_strdup_printf ("RAID-%d Array",
+                                                                          device->priv->info.linux_md_level);
+                }
+                device->priv->info.drive_revision = g_strdup (device->priv->info.linux_md_version);
+                device->priv->info.drive_connection_interface = g_strdup ("virtual");
+        }
 
         /* Update whether device is mounted */
         l = g_list_prepend (NULL, device);
