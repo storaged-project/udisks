@@ -53,6 +53,17 @@
       <arg name="options" direction="in" type="as"/>
     </method>
 
+    <!-- StopLinuxMdArray:
+         @options:   Options for stopping the array. Currently
+                     this is unused, no options are supported.
+
+         Stops a Linux md RAID array.
+      -->
+    <method name="StopLinuxMdArray">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="options" direction="in" type="as"/>
+    </method>
+
     <!-- RetrieveSmartData:
 
          Retrieves S.M.A.R.T. data from the drive.

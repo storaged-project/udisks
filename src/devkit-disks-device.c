@@ -247,7 +247,8 @@ devkit_disks_device_error_get_type (void)
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY, "IsBusy"),
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_DRIVE, "NotDrive"),
                         ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_SMART_CAPABLE, "NotSmartCapable"),
-
+                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_LINUX_MD, "NotLinuxMd"),
+                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_LINUX_MD_COMPONENT, "NotLinuxMdComponent"),
                         { 0, 0, 0 }
                 };
                 g_assert (DEVKIT_DISKS_DEVICE_NUM_ERRORS == G_N_ELEMENTS (values) - 1);
@@ -2147,17 +2148,19 @@ job_child_watch_cb (GPid pid, int status, gpointer user_data)
 
         g_print ("helper(pid %5d): completed with exit code %d\n", job->pid, WEXITSTATUS (status));
 
-        job->device->priv->job_in_progress = FALSE;
-        g_free (job->device->priv->job_id);
-        job->device->priv->job_id = NULL;
-        job->device->priv->job_is_cancellable = FALSE;
-        job->device->priv->job_num_tasks = 0;
-        job->device->priv->job_cur_task = 0;
-        g_free (job->device->priv->job_cur_task_id);
-        job->device->priv->job_cur_task_id = NULL;
-        job->device->priv->job_cur_task_percentage = -1.0;
+        if (job->device != NULL) {
+                job->device->priv->job_in_progress = FALSE;
+                g_free (job->device->priv->job_id);
+                job->device->priv->job_id = NULL;
+                job->device->priv->job_is_cancellable = FALSE;
+                job->device->priv->job_num_tasks = 0;
+                job->device->priv->job_cur_task = 0;
+                g_free (job->device->priv->job_cur_task_id);
+                job->device->priv->job_cur_task_id = NULL;
+                job->device->priv->job_cur_task_percentage = -1.0;
 
-        job->device->priv->job = NULL;
+                job->device->priv->job = NULL;
+        }
 
         job->job_completed_func (job->context,
                                  job->device,
@@ -2168,7 +2171,9 @@ job_child_watch_cb (GPid pid, int status, gpointer user_data)
                                  job->stdout_string->str,
                                  job->user_data);
 
-        emit_job_changed (job->device);
+        if (job->device != NULL) {
+                emit_job_changed (job->device);
+        }
         job_free (job);
 }
 
@@ -2255,12 +2260,14 @@ job_read_out (GIOChannel *channel,
                                     &num_tasks,
                                     &cur_task_percentage,
                                     (char *) &cur_task_id) == 4) {
-                                job->device->priv->job_num_tasks = num_tasks;
-                                job->device->priv->job_cur_task = cur_task;
-                                g_free (job->device->priv->job_cur_task_id);
-                                job->device->priv->job_cur_task_id = g_strdup (cur_task_id);
-                                job->device->priv->job_cur_task_percentage = cur_task_percentage;
-                                emit_job_changed (job->device);
+                                if (job->device != NULL) {
+                                        job->device->priv->job_num_tasks = num_tasks;
+                                        job->device->priv->job_cur_task = cur_task;
+                                        g_free (job->device->priv->job_cur_task_id);
+                                        job->device->priv->job_cur_task_id = g_strdup (cur_task_id);
+                                        job->device->priv->job_cur_task_percentage = cur_task_percentage;
+                                        emit_job_changed (job->device);
+                                }
                         }
                 }
 
@@ -2289,16 +2296,18 @@ job_new (DBusGMethodInvocation *context,
         ret = FALSE;
         job = NULL;
 
-        if (device->priv->job != NULL) {
-                throw_error (context,
-                             DEVKIT_DISKS_DEVICE_ERROR_JOB_ALREADY_IN_PROGRESS,
-                             "There is already a job running");
-                goto out;
+        if (device != NULL) {
+                if (device->priv->job != NULL) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_ALREADY_IN_PROGRESS,
+                                     "There is already a job running");
+                        goto out;
+                }
         }
 
         job = g_new0 (Job, 1);
         job->context = context;
-        job->device = DEVKIT_DISKS_DEVICE (g_object_ref (device));
+        job->device = device != NULL ? DEVKIT_DISKS_DEVICE (g_object_ref (device)) : NULL;
         job->pk_caller = pk_caller != NULL ? polkit_caller_ref (pk_caller) : NULL;
         job->job_completed_func = job_completed_func;
         job->user_data = user_data;
@@ -2310,8 +2319,10 @@ job_new (DBusGMethodInvocation *context,
         job->stdin_cursor = job->stdin_str;
         job->stdout_string = g_string_sized_new (1024);
 
-        g_free (job->device->priv->job_id);
-        job->device->priv->job_id = g_strdup (job_id);
+        if (device != NULL) {
+                g_free (job->device->priv->job_id);
+                job->device->priv->job_id = g_strdup (job_id);
+        }
 
         error = NULL;
         if (!g_spawn_async_with_pipes (NULL,
@@ -2360,19 +2371,25 @@ job_new (DBusGMethodInvocation *context,
 
         ret = TRUE;
 
-        device->priv->job_in_progress = TRUE;
-        device->priv->job_is_cancellable = is_cancellable;
-        device->priv->job_num_tasks = 0;
-        device->priv->job_cur_task = 0;
-        g_free (device->priv->job_cur_task_id);
-        device->priv->job_cur_task_id = NULL;
-        device->priv->job_cur_task_percentage = -1.0;
+        if (device != NULL) {
+                device->priv->job_in_progress = TRUE;
+                device->priv->job_is_cancellable = is_cancellable;
+                device->priv->job_num_tasks = 0;
+                device->priv->job_cur_task = 0;
+                g_free (device->priv->job_cur_task_id);
+                device->priv->job_cur_task_id = NULL;
+                device->priv->job_cur_task_percentage = -1.0;
 
-        device->priv->job = job;
+                device->priv->job = job;
 
-        emit_job_changed (device);
+                emit_job_changed (device);
+        }
 
-        g_print ("helper(pid %5d): launched job %s on %s\n", job->pid, argv[0], device->priv->info.device_file);
+        if (device != NULL) {
+                g_print ("helper(pid %5d): launched job %s on %s\n", job->pid, argv[0], device->priv->info.device_file);
+        } else {
+                g_print ("helper(pid %5d): launched job %s on daemon\n", job->pid, argv[0]);
+        }
 
 out:
         if (!ret && job != NULL)
@@ -5292,6 +5309,406 @@ devkit_disks_device_run_smart_selftest (DevkitDisksDevice     *device,
 out:
         if (pk_caller != NULL)
                 polkit_caller_unref (pk_caller);
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+stop_linux_md_array_completed_cb (DBusGMethodInvocation *context,
+                                  DevkitDisksDevice *device,
+                                  PolKitCaller *pk_caller,
+                                  gboolean job_was_cancelled,
+                                  int status,
+                                  const char *stderr,
+                                  const char *stdout,
+                                  gpointer user_data)
+{
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+
+                /* the kernel side of md currently doesn't emit a 'changed' event so
+                 * generate one such that the md device can disappear from our
+                 * database
+                 */
+                devkit_device_emit_changed_to_kernel (device);
+
+                dbus_g_method_return (context);
+
+        } else {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Error stopping array: mdadm exited with exit code %d: %s",
+                                     WEXITSTATUS (status), stderr);
+                }
+        }
+}
+
+gboolean
+devkit_disks_device_stop_linux_md_array (DevkitDisksDevice     *device,
+                                         char                 **options,
+                                         DBusGMethodInvocation *context)
+{
+        int n;
+        char *argv[10];
+        GError *error;
+        PolKitCaller *pk_caller;
+
+        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
+                goto out;
+
+        if (!device->priv->info.device_is_linux_md) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_LINUX_MD,
+                             "Device is not a Linux md drive");
+                goto out;
+        }
+
+#if 0
+        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                  pk_caller,
+                                                  /* TODO: revisit auth */
+                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  context)) {
+                goto out;
+        }
+#endif
+
+        n = 0;
+        argv[n++] = "mdadm";
+        argv[n++] = "--stop";
+        argv[n++] = device->priv->info.device_file;
+        argv[n++] = NULL;
+
+        error = NULL;
+        if (!job_new (context,
+                      "StopLinuxMdArray",
+                      TRUE,
+                      device,
+                      pk_caller,
+                      argv,
+                      NULL,
+                      stop_linux_md_array_completed_cb,
+                      NULL,
+                      NULL)) {
+                goto out;
+        }
+
+out:
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+typedef struct {
+        int refcount;
+
+        guint device_added_signal_handler_id;
+        guint device_added_timeout_id;
+
+        DBusGMethodInvocation *context;
+
+        DevkitDisksDaemon *daemon;
+        char *uuid;
+
+} AssembleLinuxMdArrayData;
+
+static AssembleLinuxMdArrayData *
+assemble_linux_md_array_data_new (DBusGMethodInvocation *context,
+                                  DevkitDisksDaemon     *daemon,
+                                  const char            *uuid)
+{
+        AssembleLinuxMdArrayData *data;
+
+        data = g_new0 (AssembleLinuxMdArrayData, 1);
+        data->refcount = 1;
+
+        data->context = context;
+        data->daemon = g_object_ref (daemon);
+        data->uuid = g_strdup (uuid);
+        return data;
+}
+
+static AssembleLinuxMdArrayData *
+assemble_linux_md_array_data_ref (AssembleLinuxMdArrayData *data)
+{
+        data->refcount++;
+        return data;
+}
+
+static void
+assemble_linux_md_array_data_unref (AssembleLinuxMdArrayData *data)
+{
+        data->refcount--;
+        if (data->refcount == 0) {
+                g_object_unref (data->daemon);
+                g_free (data->uuid);
+                g_free (data);
+        }
+}
+
+static void
+assemble_linux_md_array_device_added_cb (DevkitDisksDaemon *daemon,
+                                         const char *object_path,
+                                         gpointer user_data)
+{
+        AssembleLinuxMdArrayData *data = user_data;
+        DevkitDisksDevice *device;
+
+        /* check the device is a cleartext partition for us */
+        device = devkit_disks_daemon_local_find_by_object_path (daemon, object_path);
+
+        if (device != NULL &&
+            device->priv->info.device_is_linux_md &&
+            device->priv->info.linux_md_uuid != NULL &&
+            strcmp (device->priv->info.linux_md_uuid, data->uuid) == 0) {
+
+                /* yay! it is.. return value to the user */
+                dbus_g_method_return (data->context, object_path);
+
+                g_signal_handler_disconnect (daemon, data->device_added_signal_handler_id);
+                g_source_remove (data->device_added_timeout_id);
+                assemble_linux_md_array_data_unref (data);
+        }
+}
+
+static gboolean
+assemble_linux_md_array_device_not_seen_cb (gpointer user_data)
+{
+        AssembleLinuxMdArrayData *data = user_data;
+
+        throw_error (data->context,
+                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                     "Error assembling array: timeout (10s) waiting for array to show up");
+
+        g_signal_handler_disconnect (data->daemon, data->device_added_signal_handler_id);
+        assemble_linux_md_array_data_unref (data);
+        return FALSE;
+}
+
+/* NOTE: This is job completion callback from a method on the daemon, not the device. */
+
+static void
+assemble_linux_md_array_completed_cb (DBusGMethodInvocation *context,
+                                      DevkitDisksDevice *device,
+                                      PolKitCaller *pk_caller,
+                                      gboolean job_was_cancelled,
+                                      int status,
+                                      const char *stderr,
+                                      const char *stdout,
+                                      gpointer user_data)
+{
+        AssembleLinuxMdArrayData *data = user_data;
+
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+                GList *l;
+                GList *devices;
+                char *objpath;
+
+                /* see if the component appeared already */
+
+                objpath = NULL;
+
+                devices = devkit_disks_daemon_local_get_all_devices (data->daemon);
+                for (l = devices; l != NULL; l = l->next) {
+                        DevkitDisksDevice *device = DEVKIT_DISKS_DEVICE (l->data);
+
+                        if (device->priv->info.device_is_linux_md &&
+                            device->priv->info.linux_md_uuid != NULL &&
+                            strcmp (device->priv->info.linux_md_uuid, data->uuid) == 0) {
+                                /* yup, return to caller */
+                                objpath = device->priv->object_path;
+                                break;
+                        }
+                }
+
+                if (objpath != NULL) {
+                        dbus_g_method_return (context, objpath);
+                } else {
+                        /* sit around and wait for the md array to appear */
+
+                        /* sit around wait for the cleartext device to appear */
+                        data->device_added_signal_handler_id = g_signal_connect_after (
+                                data->daemon,
+                                "device-added",
+                                (GCallback) assemble_linux_md_array_device_added_cb,
+                                assemble_linux_md_array_data_ref (data));
+
+                        /* set up timeout for error reporting if waiting failed
+                         *
+                         * (the signal handler and the timeout handler share the ref to data
+                         * as one will cancel the other)
+                         */
+                        data->device_added_timeout_id = g_timeout_add (10 * 1000,
+                                                                       assemble_linux_md_array_device_not_seen_cb,
+                                                                       data);
+                }
+
+
+        } else {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Error assembling array: mdadm exited with exit code %d: %s",
+                                     WEXITSTATUS (status), stderr);
+                }
+        }
+}
+
+/* NOTE: This is a method on the daemon, not the device. */
+
+gboolean
+devkit_disks_daemon_assemble_linux_md_array (DevkitDisksDaemon     *daemon,
+                                             GPtrArray             *components,
+                                             char                 **options,
+                                             DBusGMethodInvocation *context)
+{
+        int n;
+        int m;
+        char *argv[128];
+        GError *error;
+        PolKitCaller *pk_caller;
+        char *uuid;
+        char *md_device_file;
+
+        uuid = NULL;
+        md_device_file = NULL;
+
+        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (daemon, context)) == NULL)
+                goto out;
+
+        /* check that all given components exist, that they are indeed inux-md-components and
+         * that their uuid agrees
+         */
+        for (n = 0; n < (int) components->len; n++) {
+                DevkitDisksDevice *slave;
+                const char *component_objpath = components->pdata[n];
+
+                slave = devkit_disks_daemon_local_find_by_object_path (daemon, component_objpath);
+                if (slave == NULL) {
+                        throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_LINUX_MD_COMPONENT,
+                                     "Component %s doesn't exist", component_objpath);
+                        goto out;
+                }
+
+                if (!slave->priv->info.device_is_linux_md_component) {
+                        throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_LINUX_MD_COMPONENT,
+                                     "%s is not a linux-md component", component_objpath);
+                        goto out;
+                }
+
+                if (n == 0) {
+                        uuid = g_strdup (slave->priv->info.linux_md_component_uuid);
+                        if (uuid == NULL) {
+                                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_LINUX_MD_COMPONENT,
+                                             "no uuid for one of the components");
+                        }
+                } else {
+                        const char *this_uuid;
+                        this_uuid = slave->priv->info.linux_md_component_uuid;
+
+                        if (this_uuid == NULL || strcmp (uuid, this_uuid) != 0) {
+                                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_LINUX_MD_COMPONENT,
+                                             "uuid mismatch between given components");
+                                goto out;
+                        }
+                }
+
+                if (devkit_disks_device_local_is_busy (slave)) {
+                        throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                                     "component %d is busy", n);
+                        goto out;
+                }
+        }
+
+        /* find an unused md minor... Man, I wish mdadm could do this itself; this is slightly racy */
+        for (n = 0; TRUE; n++) {
+                char *native_path;
+                char *array_state;
+
+                /* TODO: move to /sys/class/block instead */
+                native_path = g_strdup_printf ("/sys/block/md%d", n);
+                array_state = sysfs_get_string (native_path, "md/array_state");
+                if (array_state != NULL) {
+                        g_strstrip (array_state);
+                        if (strcmp (array_state, "clear") == 0) {
+                                /* It's clear! Let's use it! */
+                                g_free (array_state);
+                                g_free (native_path);
+                                break;
+                        }
+                        g_free (array_state);
+                }
+                g_free (native_path);
+        }
+
+        md_device_file = g_strdup_printf ("/dev/md%d", n);
+
+#if 0
+        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                  pk_caller,
+                                                  /* TODO: revisit auth */
+                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  context)) {
+                goto out;
+        }
+#endif
+
+        n = 0;
+        argv[n++] = "mdadm";
+        argv[n++] = "--assemble";
+        argv[n++] = md_device_file;
+        for (m = 0; m < (int) components->len; m++) {
+                DevkitDisksDevice *slave;
+                const char *component_objpath = components->pdata[m];
+
+                slave = devkit_disks_daemon_local_find_by_object_path (daemon, component_objpath);
+                if (slave == NULL) {
+                        throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_LINUX_MD_COMPONENT,
+                                     "Component %s doesn't exist", component_objpath);
+                        goto out;
+                }
+
+                if (n >= (int) sizeof (argv) - 1) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Too many components");
+                        goto out;
+                }
+
+                argv[n++] = (char *) slave->priv->info.device_file;
+        }
+        argv[n++] = NULL;
+
+        error = NULL;
+        if (!job_new (context,
+                      "AssembleLinuxMdArray",
+                      TRUE,
+                      NULL,
+                      pk_caller,
+                      argv,
+                      NULL,
+                      assemble_linux_md_array_completed_cb,
+                      assemble_linux_md_array_data_new (context, daemon, uuid),
+                      (GDestroyNotify) assemble_linux_md_array_data_unref)) {
+                goto out;
+        }
+
+out:
+        g_free (uuid);
+        g_free (md_device_file);
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
+
         return TRUE;
 }
 

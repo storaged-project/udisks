@@ -31,6 +31,25 @@
       <arg name="device" direction="out" type="o"/>
     </method>
 
+    <!-- AssembleLinuxMdArray:
+
+         @components: An array of components of the array.
+
+         @options:    Options for assembling the array. Currently
+                      this is unused, no options are supported.
+
+         Assembles a Linux md RAID array.
+
+         Returns: The object path of the assembled array.
+      -->
+    <method name="AssembleLinuxMdArray">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="components" direction="in" type="ao"/>
+      <arg name="options" direction="in" type="as"/>
+
+      <arg name="device" direction="out" type="o"/>
+    </method>
+
     <!-- A device was added -->
     <signal name="DeviceAdded">
       <arg name="device" type="o"/>

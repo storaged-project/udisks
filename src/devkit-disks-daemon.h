@@ -105,6 +105,11 @@ gboolean devkit_disks_daemon_find_device_by_device_file (DevkitDisksDaemon     *
                                                          const char            *device_file,
                                                          DBusGMethodInvocation *context);
 
+gboolean devkit_disks_daemon_assemble_linux_md_array (DevkitDisksDaemon     *daemon,
+                                                      GPtrArray             *components,
+                                                      char                 **options,
+                                                      DBusGMethodInvocation *context);
+
 G_END_DECLS
 
 #endif /* __DEVKIT_DISKS_DAEMON_H__ */
