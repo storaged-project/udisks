@@ -50,6 +50,8 @@ struct DevkitDisksDevicePrivate
         char *job_cur_task_id;
         double job_cur_task_percentage;
 
+        guint linux_md_poll_timeout_id;
+
         struct {
                 char *device_file;
                 GPtrArray *device_file_by_id;
@@ -101,18 +103,23 @@ struct DevkitDisksDevicePrivate
 
                 char *crypto_cleartext_slave;
 
-                int linux_md_component_level;
+                char *linux_md_component_level;
                 int linux_md_component_num_raid_devices;
                 char *linux_md_component_uuid;
                 char *linux_md_component_name;
                 char *linux_md_component_version;
+                guint64 linux_md_component_update_time;
+                guint64 linux_md_component_events;
 
-                int linux_md_level;
+                char *linux_md_level;
                 int linux_md_num_raid_devices;
-                char *linux_md_uuid;
-                char *linux_md_name;
                 char *linux_md_version;
                 GPtrArray *linux_md_slaves;
+                GPtrArray *linux_md_slaves_state;
+                gboolean linux_md_is_degraded;
+                char *linux_md_sync_action;
+                double linux_md_sync_percentage;
+                guint64 linux_md_sync_speed;
 
                 /* the following properties are not (yet) exported */
                 char *dm_name;

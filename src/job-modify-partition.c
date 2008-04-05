@@ -43,7 +43,6 @@
 int
 main (int argc, char **argv)
 {
-        int fd;
         int ret;
         const char *device;
         char *label;

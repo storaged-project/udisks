@@ -63,14 +63,15 @@ libpartutil_la_SOURCES = partutil.h partutil.c
 libpartutil_la_CPPFLAGS = $(LIBPARTED_CFLAGS)
 libpartutil_la_LIBADD = $(LIBPARTED_LIBS)
 
-libexec_PROGRAMS += devkit-disks-helper-erase                   \
-		    devkit-disks-helper-mkfs                    \
-		    devkit-disks-helper-delete-partition        \
-		    devkit-disks-helper-create-partition        \
-		    devkit-disks-helper-modify-partition        \
-		    devkit-disks-helper-create-partition-table	\
-		    devkit-disks-helper-change-filesystem-label \
-		    devkit-disks-helper-smart-selftest
+libexec_PROGRAMS += devkit-disks-helper-erase                   	\
+		    devkit-disks-helper-mkfs                    	\
+		    devkit-disks-helper-delete-partition        	\
+		    devkit-disks-helper-create-partition        	\
+		    devkit-disks-helper-modify-partition        	\
+		    devkit-disks-helper-create-partition-table		\
+		    devkit-disks-helper-change-filesystem-label 	\
+		    devkit-disks-helper-smart-selftest			\
+		    devkit-disks-helper-linux-md-remove-component
 
 libexec_SCRIPTS = devkit-disks-helper-change-luks-password
 
@@ -105,6 +106,10 @@ devkit_disks_helper_change_filesystem_label_LDADD = $(GLIB_LIBS)
 devkit_disks_helper_smart_selftest_SOURCES = job-shared.h job-smart-selftest.c
 devkit_disks_helper_smart_selftest_CPPFLAGS = $(AM_CPPFLAGS)
 devkit_disks_helper_smart_selftest_LDADD = $(GLIB_LIBS)
+
+devkit_disks_helper_linux_md_remove_component_SOURCES = job-shared.h job-linux-md-remove-component.c
+devkit_disks_helper_linux_md_remove_component_CPPFLAGS = $(AM_CPPFLAGS)
+devkit_disks_helper_linux_md_remove_component_LDADD = $(GLIB_LIBS)
 
 # TODO: move to udev
 udevhelperdir = /lib/udev

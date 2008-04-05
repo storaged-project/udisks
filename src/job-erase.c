@@ -27,25 +27,46 @@
 int
 main (int argc, char **argv)
 {
+        int n;
         int ret;
-        int num_passes;
+        char *erase;
+        int num_erase_passes;
+        char **options;
         const char *device;
 
         ret = 1;
+        erase = NULL;
 
-        if (argc != 2) {
+        if (argc < 2) {
                 g_printerr ("wrong usage\n");
                 goto out;
         }
         device = argv[1];
 
-        /* TODO: parse options etc. */
-        num_passes = 1;
-        if (!task_zero_device (device, 0, 0, num_passes, 0, 2))
+        options = argv + 2;
+
+        for (n = 0; options[n] != NULL; n++) {
+                if (g_str_has_prefix (options[n], "erase=")) {
+                        erase = strdup (options[n] + sizeof ("erase=") - 1);
+                } else {
+                        g_printerr ("option %s not supported\n", options[n]);
+                        goto out;
+                }
+        }
+
+
+        num_erase_passes = task_zero_device_parse_option (erase);
+        if (num_erase_passes == -1) {
+                g_printerr ("invalid erase=%s option\n", erase);
+                goto out;
+        }
+
+        if (!task_zero_device (device, 0, 0, num_erase_passes, 0, num_erase_passes + 1))
                 goto out;
 
         ret = 0;
 
 out:
+        g_free (erase);
         return ret;
 }

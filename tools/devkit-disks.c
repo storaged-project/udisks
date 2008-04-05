@@ -499,18 +499,23 @@ typedef struct
         char   **drive_media_compatibility;
         char    *drive_media;
 
-        int      linux_md_component_level;
+        char    *linux_md_component_level;
         int      linux_md_component_num_raid_devices;
         char    *linux_md_component_uuid;
         char    *linux_md_component_name;
         char    *linux_md_component_version;
+        guint64  linux_md_component_update_time;
+        guint64  linux_md_component_events;
 
-        int      linux_md_level;
+        char    *linux_md_level;
         int      linux_md_num_raid_devices;
-        char    *linux_md_uuid;
-        char    *linux_md_name;
         char    *linux_md_version;
         char   **linux_md_slaves;
+        char   **linux_md_slaves_state;
+        gboolean linux_md_is_degraded;
+        char    *linux_md_sync_action;
+        double   linux_md_sync_percentage;
+        guint64  linux_md_sync_speed;
 } DeviceProperties;
 
 static void
@@ -640,7 +645,7 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->drive_media = g_strdup (g_value_get_string (value));
 
         else if (strcmp (key, "linux-md-component-level") == 0)
-                props->linux_md_component_level = g_value_get_int (value);
+                props->linux_md_component_level = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "linux-md-component-num-raid-devices") == 0)
                 props->linux_md_component_num_raid_devices = g_value_get_int (value);
         else if (strcmp (key, "linux-md-component-uuid") == 0)
@@ -649,15 +654,15 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->linux_md_component_name = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "linux-md-component-version") == 0)
                 props->linux_md_component_version = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "linux-md-component-update-time") == 0)
+                props->linux_md_component_update_time = g_value_get_uint64 (value);
+        else if (strcmp (key, "linux-md-component-events") == 0)
+                props->linux_md_component_events = g_value_get_uint64 (value);
 
         else if (strcmp (key, "linux-md-level") == 0)
-                props->linux_md_level = g_value_get_int (value);
+                props->linux_md_level = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "linux-md-num-raid-devices") == 0)
                 props->linux_md_num_raid_devices = g_value_get_int (value);
-        else if (strcmp (key, "linux-md-uuid") == 0)
-                props->linux_md_uuid = g_strdup (g_value_get_string (value));
-        else if (strcmp (key, "linux-md-name") == 0)
-                props->linux_md_name = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "linux-md-version") == 0)
                 props->linux_md_version = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "linux-md-slaves") == 0) {
@@ -671,6 +676,16 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                         props->linux_md_slaves[n] = g_strdup (object_paths->pdata[n]);
                 props->linux_md_slaves[n] = NULL;
         }
+        else if (strcmp (key, "linux-md-slaves-state") == 0)
+                props->linux_md_slaves_state = g_strdupv (g_value_get_boxed (value));
+        else if (strcmp (key, "linux-md-is-degraded") == 0)
+                props->linux_md_is_degraded = g_value_get_boolean (value);
+        else if (strcmp (key, "linux-md-sync-action") == 0)
+                props->linux_md_sync_action = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "linux-md-sync-percentage") == 0)
+                props->linux_md_sync_percentage = g_value_get_double (value);
+        else if (strcmp (key, "linux-md-sync-speed") == 0)
+                props->linux_md_sync_speed = g_value_get_uint64 (value);
 
         else
                 handled = FALSE;
@@ -750,13 +765,15 @@ device_properties_free (DeviceProperties *props)
         g_free (props->drive_connection_interface);
         g_strfreev (props->drive_media_compatibility);
         g_free (props->drive_media);
+        g_free (props->linux_md_component_level);
         g_free (props->linux_md_component_uuid);
         g_free (props->linux_md_component_name);
         g_free (props->linux_md_component_version);
-        g_free (props->linux_md_uuid);
-        g_free (props->linux_md_name);
+        g_free (props->linux_md_level);
         g_free (props->linux_md_version);
         g_strfreev (props->linux_md_slaves);
+        g_strfreev (props->linux_md_slaves_state);
+        g_free (props->linux_md_sync_action);
         g_free (props);
 }
 
@@ -828,23 +845,38 @@ do_show_info (const char *object_path)
         g_print ("  uuid:          %s\n", props->id_uuid);
         g_print ("  label:         %s\n", props->id_label);
         if (props->device_is_linux_md_component) {
+                struct tm *time_tm;
+                time_t time;
+                char time_buf[256];
+
+                time = (time_t) props->linux_md_component_update_time;
+                time_tm = localtime (&time);
+                strftime (time_buf, sizeof time_buf, "%c", time_tm);
+
                 g_print ("  linux md component:\n");
-                g_print ("    RAID level:  %d\n", props->linux_md_component_level);
+                g_print ("    RAID level:  %s\n", props->linux_md_component_level);
                 g_print ("    num comp:    %d\n", props->linux_md_component_num_raid_devices);
                 g_print ("    uuid:        %s\n", props->linux_md_component_uuid);
                 g_print ("    name:        %s\n", props->linux_md_component_name);
                 g_print ("    version:     %s\n", props->linux_md_component_version);
+                g_print ("    update time: %llu (%s)\n", props->linux_md_component_update_time, time_buf);
+                g_print ("    events:      %llu\n", props->linux_md_component_events);
         }
         if (props->device_is_linux_md) {
                 g_print ("  linux md:\n");
-                g_print ("    RAID level:  %d\n", props->linux_md_level);
+                g_print ("    RAID level:  %s\n", props->linux_md_level);
                 g_print ("    num comp:    %d\n", props->linux_md_num_raid_devices);
-                g_print ("    uuid:        %s\n", props->linux_md_uuid);
-                g_print ("    name:        %s\n", props->linux_md_name);
                 g_print ("    version:     %s\n", props->linux_md_version);
-                g_print ("      slaves:\n");
+                g_print ("    degraded:    %d\n", props->linux_md_is_degraded);
+                g_print ("    sync action: %s\n", props->linux_md_sync_action);
+                if (strcmp (props->linux_md_sync_action, "idle") != 0) {
+                        g_print ("      complete:  %3.01f%%\n", props->linux_md_sync_percentage);
+                        g_print ("      speed:     %lld bytes/sec\n", props->linux_md_sync_speed);
+                }
+                g_print ("    slaves:\n");
                 for (n = 0; props->linux_md_slaves[n] != NULL; n++)
-                        g_print ("        %s\n", props->linux_md_slaves[n]);
+                        g_print ("        %s (state: %s)\n",
+                                 props->linux_md_slaves[n], props->linux_md_slaves_state[n]);
         }
         if (props->device_is_crypto_cleartext) {
                 g_print ("  cleartext crypto device:\n");

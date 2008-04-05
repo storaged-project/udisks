@@ -51,6 +51,7 @@
 
 #include "devkit-disks-daemon.h"
 #include "devkit-disks-device.h"
+#include "devkit-disks-device-private.h"
 #include "mounts-file.h"
 
 #include "devkit-disks-daemon-glue.h"
@@ -78,6 +79,7 @@ struct DevkitDisksDaemonPrivate
 
 	int                udev_socket;
 	GIOChannel        *udev_channel;
+	GIOChannel        *mdstat_channel;
 
         GList             *inhibitors;
         guint              killtimer_id;
@@ -412,6 +414,9 @@ devkit_disks_daemon_finalize (GObject *object)
         if (daemon->priv->udev_socket != -1)
                 close (daemon->priv->udev_socket);
 
+        if (daemon->priv->mdstat_channel != NULL)
+                g_io_channel_unref (daemon->priv->mdstat_channel);
+
         if (daemon->priv->udev_channel != NULL)
                 g_io_channel_unref (daemon->priv->udev_channel);
 
@@ -549,13 +554,13 @@ static void device_add    (DevkitDisksDaemon *daemon, const char *native_path, g
 static void device_remove (DevkitDisksDaemon *daemon, const char *native_path);
 
 static void
-device_changed (DevkitDisksDaemon *daemon, const char *native_path)
+device_changed (DevkitDisksDaemon *daemon, const char *native_path, gboolean synthesized)
 {
         DevkitDisksDevice *device;
 
         device = g_hash_table_lookup (daemon->priv->map_native_path_to_device, native_path);
         if (device != NULL) {
-                if (!devkit_disks_device_changed (device)) {
+                if (!devkit_disks_device_changed (device, synthesized)) {
                         g_print ("changed triggered remove on %s\n", native_path);
                         device_remove (daemon, native_path);
                 } else {
@@ -567,6 +572,13 @@ device_changed (DevkitDisksDaemon *daemon, const char *native_path)
         }
 }
 
+void
+devkit_disks_daemon_local_synthesize_changed (DevkitDisksDaemon       *daemon,
+                                              const char              *native_path)
+{
+        device_changed (daemon, native_path, TRUE);
+}
+
 static void
 device_add (DevkitDisksDaemon *daemon, const char *native_path, gboolean emit_event)
 {
@@ -576,7 +588,7 @@ device_add (DevkitDisksDaemon *daemon, const char *native_path, gboolean emit_ev
         if (device != NULL) {
                 /* we already have the device; treat as change event */
                 g_print ("treating add event as change event on %s\n", native_path);
-                device_changed (daemon, native_path);
+                device_changed (daemon, native_path, FALSE);
         } else {
                 device = devkit_disks_device_new (daemon, native_path);
 
@@ -723,7 +735,7 @@ receive_udev_data (GIOChannel *source, GIOCondition condition, gpointer user_dat
                         } else if (strcmp (action, "remove") == 0) {
                                 device_remove (daemon, native_path);
                         } else if (strcmp (action, "change") == 0) {
-                                device_changed (daemon, native_path);
+                                device_changed (daemon, native_path, FALSE);
                         }
                         g_free (native_path);
                 }
@@ -746,6 +758,53 @@ mounts_changed (GUnixMountMonitor *monitor, gpointer user_data)
         devkit_disks_daemon_local_update_mount_state (daemon, devices, TRUE);
         g_list_free (devices);
 }
+
+static gboolean
+mdstat_changed_event (GIOChannel *channel, GIOCondition cond, gpointer user_data)
+{
+        DevkitDisksDaemon *daemon = DEVKIT_DISKS_DAEMON (user_data);
+        GHashTableIter iter;
+        char *str;
+        gsize len;
+        DevkitDisksDevice *device;
+        char *native_path;
+        GPtrArray *a;
+        int n;
+
+	if (cond & ~G_IO_PRI)
+                goto out;
+
+        if (g_io_channel_seek (channel, 0, G_SEEK_SET) != G_IO_ERROR_NONE) {
+                g_warning ("Cannot seek in /proc/mdstat");
+                goto out;
+        }
+
+        g_io_channel_read_to_end (channel, &str, &len, NULL);
+
+        /* synthesize this as a change event on _all_ md devices; need to be careful; the change
+         * event might remove the device and thus change the hash table (e.g. invalidate our iterator)
+         */
+        a = g_ptr_array_new ();
+        g_hash_table_iter_init (&iter, daemon->priv->map_native_path_to_device);
+        while (g_hash_table_iter_next (&iter, (gpointer *) &native_path, (gpointer *) &device)) {
+                if (device->priv->info.device_is_linux_md) {
+                        g_ptr_array_add (a, g_strdup (native_path));
+                }
+        }
+
+        for (n = 0; n < (int) a->len; n++) {
+                char *native_path = a->pdata[n];
+                g_warning ("using change on /proc/mdstat to trigger change event on %s", native_path);
+                device_changed (daemon, native_path, FALSE);
+                g_free (native_path);
+        }
+
+        g_ptr_array_free (a, TRUE);
+
+out:
+	return TRUE;
+}
+
 
 static gboolean
 register_disks_daemon (DevkitDisksDaemon *daemon)
@@ -828,8 +887,25 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
                 goto error;
         }
 
-	/* setup socket for listening from messages from udev */
+        /* listen to /proc/mdstat for md changes
+         *
+	 * Linux 2.6.19 and onwards throws a POLLPRI event for every change
+         *
+         * TODO: Some people might have md as a module so if it's not there
+         *       we need to set up a watch for it to appear when loaded and
+         *       then poll it. Sigh.
+	 */
+	daemon->priv->mdstat_channel = g_io_channel_new_file ("/proc/mdstat", "r", &error);
+	if (daemon->priv->mdstat_channel != NULL) {
+		g_io_add_watch (daemon->priv->mdstat_channel, G_IO_PRI, mdstat_changed_event, daemon);
+	} else {
+                g_warning ("No /proc/mdstat file: %s", error->message);
+                g_error_free (error);
+                error = NULL;
+	}
 
+
+	/* setup socket for listening from messages from udev */
 	memset (&saddr, 0x00, sizeof(saddr));
 	saddr.sun_family = AF_LOCAL;
 	/* use abstract namespace for socket path */

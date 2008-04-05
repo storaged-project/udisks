@@ -96,6 +96,44 @@ out:
         return ret;
 }
 
+static inline gboolean
+_scrub_signatures (int fd, guint64 offset, guint64 size)
+{
+        gboolean ret;
+        guint64 wipe_size;
+        char buf[ERASE_SIZE];
+
+        ret = FALSE;
+
+        /* wipe first and last 16kb. TODO: check 16kb is the right number */
+        wipe_size = 16 * 1024;
+        g_assert (sizeof (buf) >= wipe_size);
+
+        if (wipe_size > size) {
+                wipe_size = size;
+        }
+
+        if (lseek64 (fd, offset, SEEK_SET) == (off64_t) -1) {
+                g_printerr ("cannot seek to %lld: %m", offset);
+                goto out;
+        }
+
+        if (!do_write (fd, buf, wipe_size))
+                goto out;
+
+        if (lseek64 (fd, offset + size - wipe_size, SEEK_SET) == (off64_t) -1) {
+                g_printerr ("cannot seek to %lld: %m", offset + size - wipe_size);
+                goto out;
+        }
+
+        if (!do_write (fd, buf, wipe_size))
+                goto out;
+
+        ret = TRUE;
+
+out:
+        return ret;
+}
 
 /**
  * task_zero_device:
@@ -155,35 +193,19 @@ task_zero_device (const char *device, guint64 offset, guint64 size, int num_pass
 
 
         if (num_passes == 0) {
-                guint64 wipe_size;
-
                 g_print ("progress: %d %d 0 zeroing\n", cur_task, num_tasks);
 
-                /* wipe first and last 16kb. TODO: check 16kb is the right number */
-                wipe_size = 16 * 1024;
-                g_assert (sizeof (buf) >= wipe_size);
-
-                if (wipe_size > size) {
-                        wipe_size = size;
-                }
-
-                if (lseek64 (fd, offset, SEEK_SET) == (off64_t) -1) {
-                        g_printerr ("cannot seek to %lld: %m", offset);
-                        goto out;
-                }
-
-                if (!do_write (fd, buf, wipe_size))
-                        goto out;
-
-                if (lseek64 (fd, offset + size - wipe_size, SEEK_SET) == (off64_t) -1) {
-                        g_printerr ("cannot seek to %lld: %m", offset + size - wipe_size);
-                        goto out;
-                }
-
-                if (!do_write (fd, buf, wipe_size))
+                if (!_scrub_signatures (fd, offset, size))
                         goto out;
 
         } else if (num_passes == 1) {
+                /* first do a quick scrub of the signatures */
+                if (!_scrub_signatures (fd, offset, size))
+                        goto out;
+
+                /* now all signatures should be gone.. TODO: poke the kernel so the volume is
+                 * tagged as unrecognized
+                 */
 
                 if (lseek64 (fd, offset, SEEK_SET) == (off64_t) -1) {
                         g_printerr ("cannot seek to %lld: %m", offset);

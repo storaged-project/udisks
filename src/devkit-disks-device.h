@@ -75,6 +75,7 @@ typedef enum
         DEVKIT_DISKS_DEVICE_ERROR_NOT_SMART_CAPABLE,
         DEVKIT_DISKS_DEVICE_ERROR_NOT_LINUX_MD,
         DEVKIT_DISKS_DEVICE_ERROR_NOT_LINUX_MD_COMPONENT,
+        DEVKIT_DISKS_DEVICE_ERROR_NO_SUCH_DEVICE,
         DEVKIT_DISKS_DEVICE_NUM_ERRORS
 } DevkitDisksDeviceError;
 
@@ -87,7 +88,7 @@ GQuark             devkit_disks_device_error_quark           (void);
 GType              devkit_disks_device_get_type              (void);
 
 DevkitDisksDevice *devkit_disks_device_new                   (DevkitDisksDaemon *daemon, const char *native_path);
-gboolean           devkit_disks_device_changed               (DevkitDisksDevice *device);
+gboolean           devkit_disks_device_changed               (DevkitDisksDevice *device, gboolean synthesized);
 void               devkit_disks_device_removed               (DevkitDisksDevice *device);
 
 GList *devkit_disks_enumerate_native_paths (void);
@@ -187,6 +188,16 @@ gboolean devkit_disks_device_run_smart_selftest (DevkitDisksDevice     *device,
 gboolean devkit_disks_device_stop_linux_md_array (DevkitDisksDevice     *device,
                                                   char                 **options,
                                                   DBusGMethodInvocation *context);
+
+gboolean devkit_disks_device_add_component_to_linux_md_array (DevkitDisksDevice     *device,
+                                                              char                  *component,
+                                                              char                 **options,
+                                                              DBusGMethodInvocation *context);
+
+gboolean devkit_disks_device_remove_component_from_linux_md_array (DevkitDisksDevice     *device,
+                                                                   char                  *component,
+                                                                   char                 **options,
+                                                                   DBusGMethodInvocation *context);
 
 G_END_DECLS
 

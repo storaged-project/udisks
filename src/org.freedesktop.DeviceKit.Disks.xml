@@ -38,7 +38,9 @@
          @options:    Options for assembling the array. Currently
                       this is unused, no options are supported.
 
-         Assembles a Linux md RAID array.
+         Assembles a Linux md RAID array. The array will be assembled
+         and started in degraded mode if an insufficient number of
+         components are given.
 
          Returns: The object path of the assembled array.
       -->

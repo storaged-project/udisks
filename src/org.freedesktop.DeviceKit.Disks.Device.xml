@@ -53,7 +53,43 @@
       <arg name="options" direction="in" type="as"/>
     </method>
 
+    <!-- AddComponentToLinuxMdArray:
+
+         @component: The component to add to the array
+
+         @options:   Options for adding the component to the array.
+                     Currently this is unused, no options are supported.
+
+         Adds a component to a Linux md RAID array.
+      -->
+    <method name="AddComponentToLinuxMdArray">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="component" direction="in" type="o"/>
+      <arg name="options" direction="in" type="as"/>
+    </method>
+
+    <!-- RemoveComponentFromLinuxMdArray:
+
+         @component: The component to remove from the array
+
+         @options:   Supported options are:
+                     - erase=: whether to erase the contents of the
+                               component after removing it from the
+                               array. Valid values include "none",
+                               "full", "full7pass" and "full35pass".
+
+         Removes a component from a Linux md RAID array. The component
+         will be removed and then the signatures on the component will
+         be erased according to the erase= option.
+      -->
+    <method name="RemoveComponentFromLinuxMdArray">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="component" direction="in" type="o"/>
+      <arg name="options" direction="in" type="as"/>
+    </method>
+
     <!-- StopLinuxMdArray:
+
          @options:   Options for stopping the array. Currently
                      this is unused, no options are supported.
 
@@ -511,21 +547,47 @@
     <!-- The device is a component of a Linux MD (Software RAID) array;
          see property device-is-linux-md-component
       -->
-    <property name="linux-md-component-level" type="i" access="read"/>
+    <property name="linux-md-component-level" type="s" access="read"/>
     <property name="linux-md-component-num-raid-devices" type="i" access="read"/>
     <property name="linux-md-component-uuid" type="s" access="read"/>
     <property name="linux-md-component-name" type="s" access="read"/>
     <property name="linux-md-component-version" type="s" access="read"/>
+    <property name="linux-md-component-update-time" type="t" access="read"/>
+    <property name="linux-md-component-events" type="t" access="read"/>
 
     <!-- The device is a Linux MD (Software RAID) array. The components
-         of the array are in the linux-md-slaves property.
+         of the array are in the linux-md-slaves property. The state
+         of each slave is in linux-md-slaves-state. The state can be
+
+            in_sync            - component is an active part of
+                                 the array
+            sync_in_progress   - component is being synced with
+                                 the rest of the array
+            spare              - component is a hot spare
+
+         The property linux-md-sync-action represents if an operation
+         is currently pending on the array and, if so, what the operation
+         is
+            idle      - no operation pending
+            reshape   - a reshape of the array is in progress
+            resync    - redundancy is being calculated
+            repair    - a repair operation is in progress
+            recover   - a hot spare is being built to replace a
+                        failed/missing device
+
+         If not 'idle' then the percentage (a number between 0 and
+         and 100) as well as speed (the sync speed in bytes/second)
+         are updated from time to time.
       -->
-    <property name="linux-md-level" type="i" access="read"/>
+    <property name="linux-md-level" type="s" access="read"/>
     <property name="linux-md-num-raid-devices" type="i" access="read"/>
-    <property name="linux-md-uuid" type="s" access="read"/>
-    <property name="linux-md-name" type="s" access="read"/>
     <property name="linux-md-version" type="s" access="read"/>
     <property name="linux-md-slaves" type="ao" access="read"/>
+    <property name="linux-md-slaves-state" type="as" access="read"/>
+    <property name="linux-md-is-degraded" type="b" access="read"/>
+    <property name="linux-md-sync-action" type="s" access="read"/>
+    <property name="linux-md-sync-percentage" type="d" access="read"/>
+    <property name="linux-md-sync-speed" type="t" access="read"/>
 
   </interface>
 
