@@ -112,7 +112,7 @@ devkit_disks_helper_linux_md_remove_component_CPPFLAGS = $(AM_CPPFLAGS)
 devkit_disks_helper_linux_md_remove_component_LDADD = $(GLIB_LIBS)
 
 # TODO: move to udev
-udevhelperdir = /lib/udev
+udevhelperdir = $(slashlibdir)/udev
 udevhelper_PROGRAMS = part_id
 
 part_id_SOURCES = part-id.c
@@ -142,7 +142,9 @@ CLEANFILES = $(BUILT_SOURCES)
 
 EXTRA_DIST = org.freedesktop.DeviceKit.Disks.xml        \
 	     org.freedesktop.DeviceKit.Disks.Device.xml \
+	     devkit-disks-marshal.list			\
 	     95-devkit-disks.rules                      \
+	     devkit-disks-helper-change-luks-password	\
 	     $(service_in_files)                        \
 	     $(dbusconf_in_files)
 

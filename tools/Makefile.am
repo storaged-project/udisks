@@ -47,7 +47,6 @@ devkit_disks_LDADD = 					\
 	$(DBUS_GLIB_LIBS)				\
 	$(POLKIT_DBUS_LIBS)
 
-slashsbindir = /sbin
 slashsbin_PROGRAMS = umount.devkit
 umount_devkit_SOURCES = umount-devkit.c
 umount_devkit_LDADD = $(DBUS_GLIB_LIBS) $(POLKIT_DBUS_LIBS)
