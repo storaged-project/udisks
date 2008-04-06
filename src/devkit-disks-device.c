@@ -5263,6 +5263,7 @@ retrieve_smart_data_completed_cb (DBusGMethodInvocation *context,
         gboolean in_attributes;
         int power_on_hours;
         int temperature;
+        const char *last_self_test_result;
 
         if (job_was_cancelled || stdout == NULL) {
                 if (job_was_cancelled) {
@@ -5290,6 +5291,7 @@ retrieve_smart_data_completed_cb (DBusGMethodInvocation *context,
         passed = TRUE;
         power_on_hours = 0;
         temperature = 0;
+        last_self_test_result = "";
 
         if ((rc & 0x08) != 0)
                 passed = FALSE;
@@ -5309,6 +5311,7 @@ retrieve_smart_data_completed_cb (DBusGMethodInvocation *context,
                 char updated[256];
                 char when_failed[256];
                 int raw_value;
+                int self_test_execution_status;
 
                 /* We're looking at parsing this block of the output
                  *
@@ -5337,16 +5340,55 @@ retrieve_smart_data_completed_cb (DBusGMethodInvocation *context,
                         continue;
                 }
 
-                if (!in_attributes)
-                        continue;
-
-                if (strlen (line) == 0) {
-                        break;
-                }
-
                 if (strlen (line) >= 256) {
                         g_warning ("Ignoring line '%s' (too long)", line);
                         continue;
+                }
+
+                if (!in_attributes) {
+                        if (sscanf (line, "Self-test execution status: ( %d)",
+                                    &self_test_execution_status) == 1) {
+                                g_warning ("self_test_execution_status: %d", self_test_execution_status);
+
+                                switch (self_test_execution_status >> 4) {
+                                case 0:
+                                        last_self_test_result = "completed_ok";
+                                        break;
+                                case 1:
+                                        last_self_test_result = "not_completed_aborted";
+                                        break;
+                                case 2:
+                                        last_self_test_result = "not_completed_aborted_reset";
+                                        break;
+                                case 3:
+                                        last_self_test_result = "not_completed_unknown_reason";
+                                        break;
+                                case 4:
+                                        last_self_test_result = "completed_failed_unknown_reason";
+                                        break;
+                                case 5:
+                                        last_self_test_result = "completed_failed_electrical";
+                                        break;
+                                case 6:
+                                        last_self_test_result = "completed_failed_servo";
+                                        break;
+                                case 7:
+                                        last_self_test_result = "completed_failed_read";
+                                        break;
+                                case 8:
+                                        last_self_test_result = "completed_failed_damage";
+                                        break;
+                                default:
+                                        last_self_test_result = "unknown";
+                                        break;
+                                }
+
+                        }
+                        continue;
+                }
+
+                if (strlen (line) == 0) {
+                        break;
                 }
 
                 if (sscanf (line, "%d %s 0x%x %d %d %d %s %s %s %d",
@@ -5375,7 +5417,7 @@ retrieve_smart_data_completed_cb (DBusGMethodInvocation *context,
         }
         g_strfreev (lines);
 
-        dbus_g_method_return (context, passed, power_on_hours, temperature);
+        dbus_g_method_return (context, passed, power_on_hours, temperature, last_self_test_result);
 out:
         ;
 }

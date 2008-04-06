@@ -108,8 +108,23 @@
                more detailed. And at the same time try to abstract
                the difference between SCSI and ATA.
 
+         The result of last_self_test_result is a string; the following
+         values are known
+
+          - completed_ok
+          - not_completed_aborted
+          - not_completed_aborted_reset
+          - not_completed_unknown_reason
+          - completed_failed_unknown_reason
+          - completed_failed_electrical
+          - completed_failed_servo
+          - completed_failed_read
+          - completed_failed_damage
+          - unknown
+
          Returns: Whether the drive is healthy, the number of hours
-                  it's been powered and the temperature in Celcius.
+                  it's been powered, the temperature (in Celcius),
+                  and the result of the last test.
       -->
     <method name="RetrieveSmartData">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
@@ -117,6 +132,7 @@
       <arg name="is_healthy" direction="out" type="b"/>
       <arg name="power_on_hours" direction="out" type="i"/>
       <arg name="temperature" direction="out" type="i"/>
+      <arg name="last_self_test_result" direction="out" type="s"/>
     </method>
 
 
