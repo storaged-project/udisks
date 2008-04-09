@@ -42,6 +42,10 @@ ATTR{range}=="[0-9]*", IMPORT{program}="part_id $tempnode"
 #
 ATTR{start}=="[0-9]*", IMPORT{program}="part_id $tempnode"
 
+# clear all ID_FS_USAGE, TYPE if we're a partition table
+ATTR{range}=="[0-9]*", ENV{PART_P1_TYPE}!="", ENV{ID_FS_USAGE}="", ENV{ID_FS_TYPE}=""
+
+
 LABEL="probe_parttable_end"
 
 
