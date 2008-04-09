@@ -376,7 +376,7 @@ part_table_parse_bsd (int fd, guint64 offset, guint64 size, int block_size)
 #define MSDOS_PARTTABLE_OFFSET		0x1be
 #define MSDOS_SIG_OFF			0x1fe
 
-#if 1
+#if 0
 static void
 hexdump (const guint8 *mem, int size)
 {
@@ -442,7 +442,7 @@ part_table_parse_msdos_extended (int fd, guint64 offset, guint64 size, int block
 
 		DEBUG ("readfrom = %lld", readfrom);
 
-		if (lseek64 (fd, readfrom, SEEK_SET) != readfrom) {
+		if ((guint64) lseek64 (fd, readfrom, SEEK_SET) != readfrom) {
 			DEBUG ("lseek failed (%s)", strerror (errno));
 			goto out;
 		}

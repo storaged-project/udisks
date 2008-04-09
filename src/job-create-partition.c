@@ -119,7 +119,7 @@ main (int argc, char **argv)
                         ret = 0;
                 } else {
                         if (!zero_signatures (device, out_start, out_size, 1, 2)) {
-                                g_printerr ("Cannot wipe file system signatures @ offset=%lld and size=%lld\n",
+                                g_printerr ("Cannot wipe file system signatures @ offset=%" G_GINT64_FORMAT " and size=%" G_GINT64_FORMAT "\n",
                                             out_start, out_size);
                         } else {
                                 ret = 0;
@@ -130,8 +130,8 @@ main (int argc, char **argv)
                  * wait for the created partition, because the partition may not have
                  * been created exactly where it was requested....
                  */
-                g_printerr ("job-create-partition-offset: %lld\n", out_start);
-                g_printerr ("job-create-partition-size: %lld\n", out_size);
+                g_printerr ("job-create-partition-offset: %" G_GINT64_FORMAT "\n", out_start);
+                g_printerr ("job-create-partition-size: %" G_GINT64_FORMAT "\n", out_size);
         }
 
 

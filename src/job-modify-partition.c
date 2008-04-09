@@ -103,10 +103,10 @@ main (int argc, char **argv)
                 if (out_start != offset ||
                     out_size != size) {
                         g_printerr ("ugh, offset or size changed\n");
-                        g_printerr ("offset:     %lld\n", offset);
-                        g_printerr ("size:       %lld\n", size);
-                        g_printerr ("new_offset: %lld\n", out_start);
-                        g_printerr ("new_size:   %lld\n", out_size);
+                        g_printerr ("offset:     %" G_GINT64_FORMAT "\n", offset);
+                        g_printerr ("size:       %" G_GINT64_FORMAT "\n", size);
+                        g_printerr ("new_offset: %" G_GINT64_FORMAT "\n", out_start);
+                        g_printerr ("new_size:   %" G_GINT64_FORMAT "\n", out_size);
                 } else {
                         /* success */
                         ret = 0;

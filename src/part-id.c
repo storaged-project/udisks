@@ -39,8 +39,8 @@ print_entry (PartitionTable *p, int entry, int print_number)
         flags_combined = g_strjoinv (" ", flags);
 
         printf ("PART_P%d_TYPE=%s\n", print_number, type != NULL ? type : "");
-        printf ("PART_P%d_OFFSET=%lld\n", print_number, offset);
-        printf ("PART_P%d_SIZE=%lld\n", print_number, size);
+        printf ("PART_P%d_OFFSET=%" G_GINT64_FORMAT "\n", print_number, offset);
+        printf ("PART_P%d_SIZE=%" G_GINT64_FORMAT "\n", print_number, size);
         printf ("PART_P%d_LABEL=%s\n", print_number, label != NULL ? label : "");
         printf ("PART_P%d_UUID=%s\n", print_number, uuid != NULL ? uuid : "");
         printf ("PART_P%d_FLAGS=%s\n", print_number, flags_combined);

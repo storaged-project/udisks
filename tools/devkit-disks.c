@@ -829,8 +829,8 @@ do_show_info (const char *object_path)
         g_print ("  is mounted:    %d\n", props->device_is_mounted);
         g_print ("  is busy:       %d\n", props->device_is_busy);
         g_print ("  mount path:    %s\n", props->device_mount_path);
-        g_print ("  size:          %lld\n", props->device_size);
-        g_print ("  block size:    %lld\n", props->device_block_size);
+        g_print ("  size:          %" G_GUINT64_FORMAT "\n", props->device_size);
+        g_print ("  block size:    %" G_GUINT64_FORMAT "\n", props->device_block_size);
 
         print_job (props->job_in_progress,
                    props->job_id,
@@ -859,8 +859,8 @@ do_show_info (const char *object_path)
                 g_print ("    uuid:        %s\n", props->linux_md_component_uuid);
                 g_print ("    name:        %s\n", props->linux_md_component_name);
                 g_print ("    version:     %s\n", props->linux_md_component_version);
-                g_print ("    update time: %llu (%s)\n", props->linux_md_component_update_time, time_buf);
-                g_print ("    events:      %llu\n", props->linux_md_component_events);
+                g_print ("    update time: %" G_GUINT64_FORMAT " (%s)\n", props->linux_md_component_update_time, time_buf);
+                g_print ("    events:      %" G_GUINT64_FORMAT "\n", props->linux_md_component_events);
         }
         if (props->device_is_linux_md) {
                 g_print ("  linux md:\n");
@@ -871,7 +871,7 @@ do_show_info (const char *object_path)
                 g_print ("    sync action: %s\n", props->linux_md_sync_action);
                 if (strcmp (props->linux_md_sync_action, "idle") != 0) {
                         g_print ("      complete:  %3.01f%%\n", props->linux_md_sync_percentage);
-                        g_print ("      speed:     %lld bytes/sec\n", props->linux_md_sync_speed);
+                        g_print ("      speed:     %" G_GINT64_FORMAT " bytes/sec\n", props->linux_md_sync_speed);
                 }
                 g_print ("    slaves:\n");
                 for (n = 0; props->linux_md_slaves[n] != NULL; n++)
@@ -898,8 +898,8 @@ do_show_info (const char *object_path)
                 for (n = 0; props->partition_flags[n] != NULL; n++)
                         g_print (" %s", (char *) props->partition_flags[n]);
                 g_print ("\n");
-                g_print ("    offset:      %lld\n", props->partition_offset);
-                g_print ("    size:        %lld\n", props->partition_size);
+                g_print ("    offset:      %" G_GINT64_FORMAT "\n", props->partition_offset);
+                g_print ("    size:        %" G_GINT64_FORMAT "\n", props->partition_size);
                 g_print ("    label:       %s\n", props->partition_label);
                 g_print ("    uuid:        %s\n", props->partition_uuid);
         }
@@ -921,7 +921,7 @@ do_show_info (const char *object_path)
                 if (props->drive_connection_speed == 0)
                         g_print ("    if speed:    (unknown)\n");
                 else
-                        g_print ("    if speed:    %lld bits/s\n", props->drive_connection_speed);
+                        g_print ("    if speed:    %" G_GINT64_FORMAT " bits/s\n", props->drive_connection_speed);
         }
         device_properties_free (props);
 }
