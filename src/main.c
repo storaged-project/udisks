@@ -125,6 +125,12 @@ main (int argc, char **argv)
                 goto out;
         }
 
+        /* avoid gvfs (http://bugzilla.gnome.org/show_bug.cgi?id=526454) */
+        if (!g_setenv ("GIO_USE_VFS", "local", TRUE)) {
+                g_warning ("Couldn't set GIO_USE_GVFS");
+                goto out;
+        }
+
         g_type_init ();
 
         context = g_option_context_new ("DeviceKit Disks Daemon");
