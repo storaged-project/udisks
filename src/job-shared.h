@@ -114,7 +114,7 @@ _scrub_signatures (int fd, guint64 offset, guint64 size)
         }
 
         if (lseek64 (fd, offset, SEEK_SET) == (off64_t) -1) {
-                g_printerr ("cannot seek to %lld: %m", offset);
+                g_printerr ("cannot seek to %" G_GINT64_FORMAT ": %m", offset);
                 goto out;
         }
 
@@ -122,7 +122,7 @@ _scrub_signatures (int fd, guint64 offset, guint64 size)
                 goto out;
 
         if (lseek64 (fd, offset + size - wipe_size, SEEK_SET) == (off64_t) -1) {
-                g_printerr ("cannot seek to %lld: %m", offset + size - wipe_size);
+                g_printerr ("cannot seek to %" G_GINT64_FORMAT ": %m", offset + size - wipe_size);
                 goto out;
         }
 
@@ -208,7 +208,7 @@ task_zero_device (const char *device, guint64 offset, guint64 size, int num_pass
                  */
 
                 if (lseek64 (fd, offset, SEEK_SET) == (off64_t) -1) {
-                        g_printerr ("cannot seek to %lld: %m", offset);
+                        g_printerr ("cannot seek to %" G_GINT64_FORMAT ": %m", offset);
                         goto out;
                 }
 
@@ -280,7 +280,7 @@ zero_signatures (const char *device, guint64 offset, guint64 size, int cur_task,
         }
 
         if (lseek64 (fd, offset, SEEK_SET) == (off64_t) -1) {
-                g_printerr ("cannot seek to %lld: %m", offset + size - wipe_size);
+                g_printerr ("cannot seek to %" G_GINT64_FORMAT ": %m", offset + size - wipe_size);
                 goto out;
         }
 
@@ -288,7 +288,7 @@ zero_signatures (const char *device, guint64 offset, guint64 size, int cur_task,
                 goto out;
 
         if (lseek64 (fd, offset + size - wipe_size, SEEK_SET) == (off64_t) -1) {
-                g_printerr ("cannot seek to %lld: %m", size - wipe_size);
+                g_printerr ("cannot seek to %" G_GINT64_FORMAT ": %m", size - wipe_size);
                 goto out;
         }
 

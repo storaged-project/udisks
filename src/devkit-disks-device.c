@@ -1045,7 +1045,7 @@ sysfs_get_int (const char *dir, const char *attribute)
         return result;
 }
 
-static int
+static guint64
 sysfs_get_uint64 (const char *dir, const char *attribute)
 {
         guint64 result;
@@ -1889,7 +1889,7 @@ update_info (DevkitDisksDevice *device)
                                 guint64 remaining;
 
                                 s = g_strstrip (sysfs_get_string (device->priv->native_path, "md/sync_completed"));
-                                if (sscanf (s, "%llu / %llu", &done, &remaining) == 2) {
+                                if (sscanf (s, "%" G_GUINT64_FORMAT " / %" G_GUINT64_FORMAT "", &done, &remaining) == 2) {
                                         device->priv->info.linux_md_sync_percentage =
                                                 100.0 * ((double) done) / ((double) remaining);
                                 } else {
@@ -3571,8 +3571,8 @@ devkit_disks_device_delete_partition (DevkitDisksDevice     *device,
                                                   context))
                 goto out;
 
-        offset_as_string = g_strdup_printf ("%lld", device->priv->info.partition_offset);
-        size_as_string = g_strdup_printf ("%lld", device->priv->info.partition_size);
+        offset_as_string = g_strdup_printf ("%" G_GINT64_FORMAT "", device->priv->info.partition_offset);
+        size_as_string = g_strdup_printf ("%" G_GINT64_FORMAT "", device->priv->info.partition_size);
         part_number_as_string = g_strdup_printf ("%d", device->priv->info.partition_number);
 
         n = 0;
@@ -4288,8 +4288,8 @@ devkit_disks_device_create_partition (DevkitDisksDevice     *device,
                 goto out;
         }
 
-        offset_as_string = g_strdup_printf ("%lld", offset);
-        size_as_string = g_strdup_printf ("%lld", size);
+        offset_as_string = g_strdup_printf ("%" G_GINT64_FORMAT "", offset);
+        size_as_string = g_strdup_printf ("%" G_GINT64_FORMAT "", size);
         max_number_as_string = g_strdup_printf ("%d", device->priv->info.partition_table_max_number);
         /* TODO: check that neither of the flags include ',' */
         flags_as_string = g_strjoinv (",", flags);
@@ -4496,8 +4496,8 @@ devkit_disks_device_modify_partition (DevkitDisksDevice     *device,
                 goto out;
         }
 
-        offset_as_string = g_strdup_printf ("%lld", device->priv->info.partition_offset);
-        size_as_string = g_strdup_printf ("%lld", device->priv->info.partition_size);
+        offset_as_string = g_strdup_printf ("%" G_GINT64_FORMAT "", device->priv->info.partition_offset);
+        size_as_string = g_strdup_printf ("%" G_GINT64_FORMAT "", device->priv->info.partition_size);
         /* TODO: check that neither of the flags include ',' */
         flags_as_string = g_strjoinv (",", flags);
 
