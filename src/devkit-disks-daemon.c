@@ -48,6 +48,7 @@
 #include <gio/gunixmounts.h>
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
+#include <devkit-gobject.h>
 
 #include "devkit-disks-daemon.h"
 #include "devkit-disks-device.h"
@@ -56,6 +57,7 @@
 
 #include "devkit-disks-daemon-glue.h"
 #include "devkit-disks-marshal.h"
+
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
@@ -77,8 +79,8 @@ struct DevkitDisksDaemonPrivate
         PolKitContext     *pk_context;
         PolKitTracker     *pk_tracker;
 
-	int                udev_socket;
-	GIOChannel        *udev_channel;
+        DevkitClient      *devkit_client;
+
 	GIOChannel        *mdstat_channel;
 
         GList             *inhibitors;
@@ -367,7 +369,6 @@ static void
 devkit_disks_daemon_init (DevkitDisksDaemon *daemon)
 {
         daemon->priv = DEVKIT_DISKS_DAEMON_GET_PRIVATE (daemon);
-        daemon->priv->udev_socket = -1;
         daemon->priv->map_native_path_to_device = g_hash_table_new_full (g_str_hash,
                                                                          g_str_equal,
                                                                          g_free,
@@ -411,14 +412,8 @@ devkit_disks_daemon_finalize (GObject *object)
                 g_source_remove (daemon->priv->killtimer_id);
         }
 
-        if (daemon->priv->udev_socket != -1)
-                close (daemon->priv->udev_socket);
-
         if (daemon->priv->mdstat_channel != NULL)
                 g_io_channel_unref (daemon->priv->mdstat_channel);
-
-        if (daemon->priv->udev_channel != NULL)
-                g_io_channel_unref (daemon->priv->udev_channel);
 
         if (daemon->priv->map_native_path_to_device != NULL) {
                 g_hash_table_unref (daemon->priv->map_native_path_to_device);
@@ -429,6 +424,10 @@ devkit_disks_daemon_finalize (GObject *object)
 
         if (daemon->priv->mount_monitor != NULL) {
                 g_object_unref (daemon->priv->mount_monitor);
+        }
+
+        if (daemon->priv->devkit_client != NULL) {
+                g_object_unref (daemon->priv->devkit_client);
         }
 
         G_OBJECT_CLASS (devkit_disks_daemon_parent_class)->finalize (object);
@@ -550,6 +549,7 @@ device_went_away (gpointer user_data, GObject *where_the_object_was)
                                      where_the_object_was);
 }
 
+#if 0
 static void device_add    (DevkitDisksDaemon *daemon, const char *native_path, gboolean emit_event);
 static void device_remove (DevkitDisksDaemon *daemon, const char *native_path);
 
@@ -571,26 +571,35 @@ device_changed (DevkitDisksDaemon *daemon, const char *native_path, gboolean syn
                 device_add (daemon, native_path, TRUE);
         }
 }
+#endif
+
+static void
+device_changed (DevkitDisksDaemon *daemon, const char *native_path, gboolean synthesized)
+{
+        g_warning ("TODO");
+}
 
 void
 devkit_disks_daemon_local_synthesize_changed (DevkitDisksDaemon       *daemon,
                                               const char              *native_path)
 {
-        device_changed (daemon, native_path, TRUE);
+        //device_changed (daemon, native_path, TRUE);
 }
 
 static void
-device_add (DevkitDisksDaemon *daemon, const char *native_path, gboolean emit_event)
+device_add (DevkitDisksDaemon *daemon, DevkitDevice *d, gboolean emit_event)
 {
         DevkitDisksDevice *device;
+        const char *native_path;
 
+        native_path = devkit_device_get_native_path (d);
         device = g_hash_table_lookup (daemon->priv->map_native_path_to_device, native_path);
         if (device != NULL) {
                 /* we already have the device; treat as change event */
                 g_print ("treating add event as change event on %s\n", native_path);
-                device_changed (daemon, native_path, FALSE);
+                //device_changed (daemon, d, FALSE);
         } else {
-                device = devkit_disks_device_new (daemon, native_path);
+                device = devkit_disks_device_new (daemon, d);
 
                 if (device != NULL) {
                         /* only take a weak ref; the device will stay on the bus until
@@ -615,6 +624,7 @@ device_add (DevkitDisksDaemon *daemon, const char *native_path, gboolean emit_ev
         }
 }
 
+#if 0
 static void
 device_remove (DevkitDisksDaemon *daemon, const char *native_path)
 {
@@ -630,6 +640,7 @@ device_remove (DevkitDisksDaemon *daemon, const char *native_path)
                 g_object_unref (device);
         }
 }
+#endif
 
 DevkitDisksDevice *
 devkit_disks_daemon_local_find_by_native_path (DevkitDisksDaemon *daemon, const char *native_path)
@@ -648,104 +659,6 @@ GList *
 devkit_disks_daemon_local_get_all_devices (DevkitDisksDaemon *daemon)
 {
         return g_hash_table_get_values (daemon->priv->map_native_path_to_device);
-}
-
-static gboolean
-receive_udev_data (GIOChannel *source, GIOCondition condition, gpointer user_data)
-{
-        DevkitDisksDaemon *daemon = user_data;
-	int fd;
-	int retval;
-	struct msghdr smsg;
-	struct cmsghdr *cmsg;
-	struct iovec iov;
-	struct ucred *cred;
-	char cred_msg[CMSG_SPACE(sizeof(struct ucred))];
-	char buf[4096];
-	size_t bufpos = 0;
-	const char *action;
-	const char *devpath;
-	const char *subsystem;
-
-	memset(buf, 0x00, sizeof (buf));
-	iov.iov_base = &buf;
-	iov.iov_len = sizeof (buf);
-	memset (&smsg, 0x00, sizeof (struct msghdr));
-	smsg.msg_iov = &iov;
-	smsg.msg_iovlen = 1;
-	smsg.msg_control = cred_msg;
-	smsg.msg_controllen = sizeof (cred_msg);
-
-	fd = g_io_channel_unix_get_fd (source);
-
-	retval = recvmsg (fd, &smsg, 0);
-	if (retval <  0) {
-		if (errno != EINTR)
-			g_warning ("Unable to receive message: %m");
-		goto out;
-	}
-	cmsg = CMSG_FIRSTHDR (&smsg);
-	cred = (struct ucred *) CMSG_DATA (cmsg);
-
-	if (cmsg == NULL || cmsg->cmsg_type != SCM_CREDENTIALS) {
-		g_warning ("No sender credentials received, message ignored");
-		goto out;
-	}
-
-	if (cred->uid != 0) {
-		g_warning ("Sender uid=%d, message ignored", cred->uid);
-		goto out;
-	}
-
-	if (!strstr(buf, "@/")) {
-		g_warning ("invalid message format");
-		goto out;
-	}
-
-        action = NULL;
-        devpath = NULL;
-        subsystem = NULL;
-	while (bufpos < sizeof (buf)) {
-		size_t keylen;
-		char *key;
-
-		key = &buf[bufpos];
-		keylen = strlen(key);
-		if (keylen == 0)
-			break;
-		bufpos += keylen + 1;
-
-		if (strncmp (key, "ACTION=", 7) == 0) {
-			action = key + 7;
-		} else if (strncmp (key, "DEVPATH=", 8) == 0) {
-                        devpath = key + 8;
-		} else if (strncmp(key, "SUBSYSTEM=", 10) == 0) {
-                        subsystem = key + 10;
-                }
-                /* TODO: collect other values */
-	}
-
-	if (action != NULL && devpath != NULL && subsystem != NULL) {
-                if (strcmp (subsystem, "block") == 0) {
-                        char *native_path;
-
-                        native_path = g_build_filename ("/sys", devpath, NULL);
-                        if (strcmp (action, "add") == 0) {
-                                device_add (daemon, native_path, TRUE);
-                        } else if (strcmp (action, "remove") == 0) {
-                                device_remove (daemon, native_path);
-                        } else if (strcmp (action, "change") == 0) {
-                                device_changed (daemon, native_path, FALSE);
-                        }
-                        g_free (native_path);
-                }
-
-	} else {
-                g_warning ("malformed message");
-        }
-
-out:
-	return TRUE;
 }
 
 static void
@@ -809,9 +722,6 @@ out:
 static gboolean
 register_disks_daemon (DevkitDisksDaemon *daemon)
 {
-	struct sockaddr_un saddr;
-	socklen_t addrlen;
-	const int on = 1;
         DBusConnection *connection;
         DBusError dbus_error;
         GError *error = NULL;
@@ -904,28 +814,13 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
                 error = NULL;
 	}
 
-
-	/* setup socket for listening from messages from udev */
-	memset (&saddr, 0x00, sizeof(saddr));
-	saddr.sun_family = AF_LOCAL;
-	/* use abstract namespace for socket path */
-	strcpy (&saddr.sun_path[1], "/org/freedesktop/devicekit/disks/udev_event");
-	addrlen = offsetof (struct sockaddr_un, sun_path) + strlen(saddr.sun_path+1) + 1;
-	daemon->priv->udev_socket = socket (AF_LOCAL, SOCK_DGRAM, 0);
-	if (daemon->priv->udev_socket == -1) {
-		g_warning ("Couldn't open udev event socket: %m");
+        /* connect to the DeviceKit daemon */
+        daemon->priv->devkit_client = devkit_client_new (NULL); // TODO: subsystems
+        if (!devkit_client_connect (daemon->priv->devkit_client, &error)) {
+		g_warning ("Couldn't open connection to DeviceKit daemon: %s", error->message);
+                g_error_free (error);
                 goto error;
-	}
-
-	if (bind (daemon->priv->udev_socket, (struct sockaddr *) &saddr, addrlen) < 0) {
-		g_warning ("Error binding to udev event socket: %m");
-                goto error;
-	}
-	/* enable receiving of the sender credentials */
-	setsockopt (daemon->priv->udev_socket, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on));
-	daemon->priv->udev_channel = g_io_channel_unix_new (daemon->priv->udev_socket);
-	g_io_add_watch (daemon->priv->udev_channel, G_IO_IN, receive_udev_data, daemon);
-	g_io_channel_unref (daemon->priv->udev_channel);
+        }
 
         /* monitor mounts */
         daemon->priv->mount_monitor = g_unix_mount_monitor_new ();
@@ -945,27 +840,36 @@ error:
 DevkitDisksDaemon *
 devkit_disks_daemon_new (gboolean no_exit)
 {
-        gboolean res;
         DevkitDisksDaemon *daemon;
-        GList *native_paths;
+        GError *error = NULL;
+        GList *devices;
         GList *l;
+        const char *subsystems[] = {"block", NULL};
 
         daemon = DEVKIT_DISKS_DAEMON (g_object_new (DEVKIT_TYPE_DISKS_DAEMON, NULL));
         daemon->priv->no_exit = no_exit;
 
-        res = register_disks_daemon (DEVKIT_DISKS_DAEMON (daemon));
-        if (! res) {
+        if (!register_disks_daemon (DEVKIT_DISKS_DAEMON (daemon))) {
                 g_object_unref (daemon);
                 return NULL;
         }
 
-        native_paths = devkit_disks_enumerate_native_paths ();
-        for (l = native_paths; l != NULL; l = l->next) {
-                char *native_path = l->data;
-                device_add (daemon, native_path, FALSE);
-                g_free (native_path);
+
+        devices = devkit_client_enumerate_by_subsystem (daemon->priv->devkit_client,
+                                                         subsystems,
+                                                         &error);
+        if (error != NULL) {
+                g_warning ("Cannot enumerate devices: %s", error->message);
+                g_error_free (error);
+                g_object_unref (daemon);
+                return NULL;
         }
-        g_list_free (native_paths);
+        for (l = devices; l != NULL; l = l->next) {
+                DevkitDevice *device = l->data;
+                device_add (daemon, device, FALSE);
+        }
+        g_list_foreach (devices, (GFunc) g_object_unref, NULL);
+        g_list_free (devices);
 
         /* clean stale directories in /media as well as stale
          * entries in /var/lib/DeviceKit-disks/mtab

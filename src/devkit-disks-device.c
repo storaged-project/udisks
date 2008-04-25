@@ -46,7 +46,7 @@
 #include <gio/gunixmounts.h>
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
-#include <devkit/devkit.h>
+#include <devkit-gobject.h>
 #include <polkit-dbus/polkit-dbus.h>
 
 #include "devkit-disks-device.h"
@@ -63,7 +63,7 @@ static void     devkit_disks_device_finalize    (GObject     *object);
 
 static void     init_info                  (DevkitDisksDevice *device);
 static void     free_info                  (DevkitDisksDevice *device);
-static gboolean update_info                (DevkitDisksDevice *device);
+static gboolean update_info                (DevkitDisksDevice *device, DevkitDevice *d);
 
 /* Returns the cleartext device. If device==NULL, unlocking failed and an error has
  * been reported back to the caller
@@ -1174,14 +1174,6 @@ init_info (DevkitDisksDevice *device)
 }
 
 
-static devkit_bool_t
-update_info_add_ptr (DevKitInfo *info, const char *str, void *user_data)
-{
-        GPtrArray *ptr_array = user_data;
-        g_ptr_array_add (ptr_array, g_strdup (str));
-        return FALSE;
-}
-
 static char *
 _dupv8 (const char *s)
 {
@@ -1235,62 +1227,60 @@ sysfs_resolve_link (const char *sysfs_path, const char *name)
                 return NULL;
 }
 
-static devkit_bool_t
-update_info_properties_cb (DevKitInfo *info, const char *key, void *user_data)
+static gboolean
+update_info_properties_cb (DevkitDevice *d, const char *key, const char *value, void *user_data)
 {
+        int n;
         gboolean ignore_device;
         DevkitDisksDevice *device = user_data;
 
         ignore_device = FALSE;
 
         if (strcmp (key, "ID_FS_USAGE") == 0) {
-                device->priv->info.id_usage   = _dupv8 (devkit_info_property_get_string (info, key));
+                device->priv->info.id_usage   = g_strdup (value);
         } else if (strcmp (key, "ID_FS_TYPE") == 0) {
-                device->priv->info.id_type    = _dupv8 (devkit_info_property_get_string (info, key));
+                device->priv->info.id_type    = g_strdup (value);
         } else if (strcmp (key, "ID_FS_VERSION") == 0) {
-                device->priv->info.id_version = _dupv8 (devkit_info_property_get_string (info, key));
+                device->priv->info.id_version = g_strdup (value);
                 if (device->priv->info.device_is_linux_md_component) {
-                        device->priv->info.linux_md_component_version =
-                                _dupv8 (devkit_info_property_get_string (info, key));
+                        device->priv->info.linux_md_component_version = g_strdup (value);
                 }
         } else if (strcmp (key, "ID_FS_UUID") == 0) {
-                device->priv->info.id_uuid    = _dupv8 (devkit_info_property_get_string (info, key));
+                device->priv->info.id_uuid    = g_strdup (value);
                 if (device->priv->info.device_is_linux_md_component) {
-                        device->priv->info.linux_md_component_uuid =
-                                _dupv8 (devkit_info_property_get_string (info, key));
+                        device->priv->info.linux_md_component_uuid = g_strdup (value);
                 }
         } else if (strcmp (key, "ID_FS_LABEL") == 0) {
-                device->priv->info.id_label   = _dupv8 (devkit_info_property_get_string (info, key));
+                device->priv->info.id_label   = g_strdup (value);
                 if (device->priv->info.device_is_linux_md_component) {
-                        device->priv->info.linux_md_component_name =
-                                _dupv8 (devkit_info_property_get_string (info, key));
+                        device->priv->info.linux_md_component_name = g_strdup (value);
                 }
 
         } else if (strcmp (key, "ID_VENDOR") == 0) {
                 if (device->priv->info.device_is_drive && device->priv->info.drive_vendor == NULL)
-                        device->priv->info.drive_vendor = _dupv8 (devkit_info_property_get_string (info, key));
+                        device->priv->info.drive_vendor = g_strdup (value);
         } else if (strcmp (key, "ID_MODEL") == 0) {
                 if (device->priv->info.device_is_drive && device->priv->info.drive_model == NULL)
-                        device->priv->info.drive_model = _dupv8 (devkit_info_property_get_string (info, key));
+                        device->priv->info.drive_model = g_strdup (value);
         } else if (strcmp (key, "ID_REVISION") == 0) {
                 if (device->priv->info.device_is_drive && device->priv->info.drive_revision == NULL)
-                        device->priv->info.drive_revision = _dupv8 (devkit_info_property_get_string (info, key));
+                        device->priv->info.drive_revision = g_strdup (value);
         } else if (strcmp (key, "ID_SERIAL_SHORT") == 0) {
                 if (device->priv->info.device_is_drive && device->priv->info.drive_serial == NULL)
-                        device->priv->info.drive_serial = _dupv8 (devkit_info_property_get_string (info, key));
+                        device->priv->info.drive_serial = g_strdup (value);
 
         } else if (strcmp (key, "PART_SCHEME") == 0) {
 
                 if (device->priv->info.device_is_partition) {
                         device->priv->info.partition_scheme =
-                                _dupv8 (devkit_info_property_get_string (info, key));
+                                g_strdup (value);
                 } else {
                         device->priv->info.device_is_partition_table = TRUE;
                         device->priv->info.partition_table_scheme =
-                                _dupv8 (devkit_info_property_get_string (info, key));
+                                g_strdup (value);
                 }
         } else if (strcmp (key, "PART_COUNT") == 0) {
-                device->priv->info.partition_table_count = devkit_info_property_get_int (info, key);
+                device->priv->info.partition_table_count = devkit_device_get_property_as_int (d, key);
         } else if (g_str_has_prefix (key, "PART_P") && g_ascii_isdigit (key[6])) {
                 char *endp;
                 int part_number = strtol (key + 6, &endp, 10);
@@ -1306,7 +1296,7 @@ update_info_properties_cb (DevKitInfo *info, const char *key, void *user_data)
 
                                 array = NULL;
                                 index = 0;
-                                value = devkit_info_property_get_uint64 (info, key);
+                                value = devkit_device_get_property_as_uint64 (d, key);
                                 if (g_str_has_prefix (endp, "_OFFSET")) {
                                         array = device->priv->info.partition_table_offsets;
                                         index = part_number - 1;
@@ -1324,53 +1314,52 @@ update_info_properties_cb (DevKitInfo *info, const char *key, void *user_data)
 
                                 if (g_str_has_prefix (endp, "_LABEL")) {
                                         device->priv->info.partition_label =
-                                                _dupv8 (devkit_info_property_get_string (info, key));
+                                                g_strdup (value);
                                 } else if (g_str_has_prefix (endp, "_UUID")) {
                                         device->priv->info.partition_uuid =
-                                                _dupv8 (devkit_info_property_get_string (info, key));
+                                                g_strdup (value);
                                 } else if (g_str_has_prefix (endp, "_TYPE")) {
                                         device->priv->info.partition_type =
-                                                _dupv8 (devkit_info_property_get_string (info, key));
+                                                g_strdup (value);
                                 } else if (g_str_has_prefix (endp, "_OFFSET")) {
                                         device->priv->info.partition_offset =
-                                                devkit_info_property_get_uint64 (info, key);
+                                                devkit_device_get_property_as_uint64 (d, key);
                                 } else if (g_str_has_prefix (endp, "_SIZE")) {
                                         device->priv->info.partition_size =
-                                                devkit_info_property_get_uint64 (info, key);
+                                                devkit_device_get_property_as_uint64 (d, key);
                                 } else if (g_str_has_prefix (endp, "_FLAGS")) {
-                                        devkit_info_property_strlist_foreach (info, key, update_info_add_ptr,
-                                                                              device->priv->info.partition_flags);
+                                        char **tokens = devkit_device_dup_property_as_strv (d, key);
+                                        for (n = 0; tokens[n] != NULL; n++)
+                                                g_ptr_array_add (device->priv->info.partition_flags, tokens[n]);
+                                        g_free (tokens);
                                 }
                         }
                 }
 
         } else if (strcmp (key, "MD_DEVICES") == 0) {
-                device->priv->info.linux_md_component_num_raid_devices = devkit_info_property_get_int (info, key);
+                device->priv->info.linux_md_component_num_raid_devices = devkit_device_get_property_as_int (d, key);
 
         } else if (strcmp (key, "MD_LEVEL") == 0) {
-                device->priv->info.linux_md_component_level = g_strdup (devkit_info_property_get_string (info, key));
+                device->priv->info.linux_md_component_level = g_strdup (value);
 
         } else if (strcmp (key, "MD_UPDATE_TIME") == 0) {
-                device->priv->info.linux_md_component_update_time = devkit_info_property_get_uint64 (info, key);
+                device->priv->info.linux_md_component_update_time = devkit_device_get_property_as_uint64 (d, key);
 
         } else if (strcmp (key, "MD_EVENTS") == 0) {
-                device->priv->info.linux_md_component_events = devkit_info_property_get_uint64 (info, key);
+                device->priv->info.linux_md_component_events = devkit_device_get_property_as_uint64 (d, key);
 
         } else if (strcmp (key, "DM_NAME") == 0) {
-                const char *dm_name;
-                dm_name = devkit_info_property_get_string (info, key);
-
-                if (g_str_has_prefix (dm_name, "temporary-cryptsetup-")) {
+                if (g_str_has_prefix (value, "temporary-cryptsetup-")) {
                         /* ignore temporary devices created by /sbin/cryptsetup */
                         ignore_device = TRUE;
                         goto out;
                 } else {
                         /* TODO: export this at some point */
-                        device->priv->info.dm_name = g_strdup (dm_name);
+                        device->priv->info.dm_name = g_strdup (value);
                 }
 
         } else if (strcmp (key, "DM_TARGET_TYPES") == 0) {
-                if (strcmp (devkit_info_property_get_string (info, key), "crypt") == 0) {
+                if (strcmp (value, "crypt") == 0) {
                         /* we're a dm-crypt target and can, by design, then only have one slave */
                         if (device->priv->info.slaves_objpath->len == 1) {
                                 /* avoid claiming we are a drive since we want to be related
@@ -1385,35 +1374,22 @@ update_info_properties_cb (DevKitInfo *info, const char *key, void *user_data)
                 }
 
         } else if (strcmp (key, "COMPAT_MEDIA_TYPE") == 0) {
-                devkit_info_property_strlist_foreach (info, key, update_info_add_ptr,
-                                                      device->priv->info.drive_media_compatibility);
-
+                char **tokens = devkit_device_dup_property_as_strv (d, key);
+                for (n = 0; tokens[n] != NULL; n++)
+                        g_ptr_array_add (device->priv->info.drive_media_compatibility, tokens[n]);
+                g_free (tokens);
         } else if (strcmp (key, "MEDIA_TYPE") == 0) {
-                device->priv->info.drive_media = _dupv8 (devkit_info_property_get_string (info, key));
+                device->priv->info.drive_media = g_strdup (value);
 
 
         } else if (strcmp (key, "MEDIA_AVAILABLE") == 0) {
                 if (device->priv->info.device_is_removable) {
-                        device->priv->info.device_is_media_available = devkit_info_property_get_bool (info, key);
+                        device->priv->info.device_is_media_available = devkit_device_get_property_as_boolean (d, key);
                 }
         }
 
 out:
         return ignore_device;
-}
-
-static gboolean
-update_info_symlinks_cb (DevKitInfo *info, const char *value, void *user_data)
-{
-        DevkitDisksDevice *device = user_data;
-
-        if (g_str_has_prefix (value, "/dev/disk/by-id/") || g_str_has_prefix (value, "/dev/disk/by-uuid/")) {
-                g_ptr_array_add (device->priv->info.device_file_by_id, _dupv8 (value));
-        } else if (g_str_has_prefix (value, "/dev/disk/by-path/")) {
-                g_ptr_array_add (device->priv->info.device_file_by_path, _dupv8 (value));
-        }
-
-        return FALSE;
 }
 
 static void
@@ -1441,7 +1417,7 @@ update_slaves (DevkitDisksDevice *device)
 
                 slave = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, slave_objpath);
                 if (slave != NULL) {
-                        update_info (slave);
+                        update_info (slave, NULL);
                 }
         }
 }
@@ -1613,7 +1589,7 @@ strv_has_str (char **strv, char *str)
  * Returns: #TRUE to keep (or add) the device; #FALSE to ignore (or remove) the device
  **/
 static gboolean
-update_info (DevkitDisksDevice *device)
+update_info (DevkitDisksDevice *device, DevkitDevice *d)
 {
         guint64 start, size;
         char *s;
@@ -1622,7 +1598,6 @@ update_info (DevkitDisksDevice *device)
         gboolean ret;
         int fd;
         int block_size;
-        DevKitInfo *info;
         char *path;
         GDir *dir;
         const char *name;
@@ -1630,7 +1605,13 @@ update_info (DevkitDisksDevice *device)
         const char *fstype;
 
         ret = FALSE;
-        info = NULL;
+
+        if (d != NULL) {
+                g_object_ref (d);
+        } else {
+                /* TODO */
+                goto out;
+        }
 
         /* md is special; we don't get "remove" events from the kernel when an array is
          * stopped; so catch it very early before erasing our existing slave variable (we
@@ -1663,28 +1644,37 @@ update_info (DevkitDisksDevice *device)
                 device->priv->info.device_is_drive = FALSE;
         }
 
-        info = devkit_info_new (device->priv->native_path);
-        if (info == NULL) {
+        device->priv->info.device_file = g_strdup (devkit_device_get_device_file (d));
+        if (device->priv->info.device_file == NULL) {
+		g_warning ("No device file for %s", device->priv->native_path);
                 goto out;
         }
 
-        device->priv->info.device_file = _dupv8 (devkit_info_get_device_file (info));
-        devkit_info_device_file_symlinks_foreach (info, update_info_symlinks_cb, device);
+        const char * const * symlinks;
+        symlinks = devkit_device_get_device_file_symlinks (d);
+        for (n = 0; symlinks[n] != NULL; n++) {
+                if (g_str_has_prefix (symlinks[n], "/dev/disk/by-id/") ||
+                    g_str_has_prefix (symlinks[n], "/dev/disk/by-uuid/")) {
+                        g_ptr_array_add (device->priv->info.device_file_by_id, g_strdup (symlinks[n]));
+                } else if (g_str_has_prefix (symlinks[n], "/dev/disk/by-path/")) {
+                        g_ptr_array_add (device->priv->info.device_file_by_path, g_strdup (symlinks[n]));
+                }
+        }
 
         /* TODO: hmm.. it would be really nice if sysfs could export this. There's a
-         *       queue/hw_sector_size in sysfs but that's not available for e.g. RAID
+         *       queue/hw_sector_size in sysfs but that's not available for e.g. Linux md devices
          */
         errno = 0;
-        fd = open (devkit_info_get_device_file (info), O_RDONLY);
+        fd = open (device->priv->info.device_file, O_RDONLY);
         if (fd < 0 && errno != ENOMEDIUM) {
-		g_warning ("Cannot open %s read only", devkit_info_get_device_file (info));
+		g_warning ("Cannot open %s read only", device->priv->info.device_file);
                 goto out;
         }
         if (errno == ENOMEDIUM) {
                 block_size = 0;
         } else {
                 if (ioctl (fd, BLKSSZGET, &block_size) != 0) {
-                        g_warning ("Cannot determine block size for %s", devkit_info_get_device_file (info));
+                        g_warning ("Cannot determine block size for %s", device->priv->info.device_file);
                         goto out;
                 }
                 close (fd);
@@ -1694,13 +1684,12 @@ update_info (DevkitDisksDevice *device)
                  * (e.g. write-protect on SD cards, optical drives etc.)
                  */
                 errno = 0;
-                fd = open (devkit_info_get_device_file (info), O_WRONLY);
+                fd = open (device->priv->info.device_file, O_WRONLY);
                 if (fd < 0) {
                         if (errno == EROFS) {
                                 device->priv->info.device_is_read_only = TRUE;
                         } else {
-                                g_warning ("Cannot determine if %s is read only: %m",
-                                           devkit_info_get_device_file (info));
+                                g_warning ("Cannot determine if %s is read only: %m", device->priv->info.device_file);
                                 goto out;
                         }
                 } else {
@@ -1780,12 +1769,12 @@ update_info (DevkitDisksDevice *device)
         /* ------------------------------------- */
 
         /* set this first since e.g. ID_FS_LABEL et. al. needs to be redirected/copied */
-        fstype = devkit_info_property_get_string (info, "ID_FS_TYPE");
+        fstype = devkit_device_get_property (d, "ID_FS_TYPE");
         if (fstype != NULL && strcmp (fstype, "linux_raid_member") == 0) {
                 device->priv->info.device_is_linux_md_component = TRUE;
         }
 
-        if (devkit_info_property_foreach (info, update_info_properties_cb, device)) {
+        if (devkit_device_properties_foreach (d, update_info_properties_cb, device)) {
                 goto out;
         }
 
@@ -1928,8 +1917,8 @@ update_info (DevkitDisksDevice *device)
         ret = TRUE;
 
 out:
-        if (info != NULL)
-                devkit_info_unref (info);
+        if (d != NULL)
+                g_object_unref (d);
         return ret;
 }
 
@@ -1981,23 +1970,30 @@ devkit_disks_device_removed (DevkitDisksDevice *device)
 }
 
 DevkitDisksDevice *
-devkit_disks_device_new (DevkitDisksDaemon *daemon, const char *native_path)
+devkit_disks_device_new (DevkitDisksDaemon *daemon, DevkitDevice *d)
 {
         DevkitDisksDevice *device;
-        gboolean res;
+        const char *native_path;
+
+        device = NULL;
+        native_path = devkit_device_get_native_path (d);
+
+        /* ignore ram and loop devices */
+        if (g_str_has_prefix (native_path, "/sys/devices/virtual/block/ram") ||
+            g_str_has_prefix (native_path, "/sys/devices/virtual/block/loop"))
+                goto out;
 
         device = DEVKIT_DISKS_DEVICE (g_object_new (DEVKIT_TYPE_DISKS_DEVICE, NULL));
 
         device->priv->daemon = g_object_ref (daemon);
         device->priv->native_path = g_strdup (native_path);
-        if (!update_info (device)) {
+        if (!update_info (device, d)) {
                 g_object_unref (device);
                 device = NULL;
                 goto out;
         }
 
-        res = register_disks_device (DEVKIT_DISKS_DEVICE (device));
-        if (! res) {
+        if (! register_disks_device (DEVKIT_DISKS_DEVICE (device))) {
                 g_object_unref (device);
                 device = NULL;
                 goto out;
@@ -2055,7 +2051,7 @@ devkit_disks_device_changed (DevkitDisksDevice *device, gboolean synthesized)
 {
         gboolean keep_device;
 
-        keep_device = update_info (device);
+        keep_device = update_info (device, NULL);
 
         /* if we're a linux md device.. then a change event might mean some metadata on the
          * components changed. So trigger a change on each slave

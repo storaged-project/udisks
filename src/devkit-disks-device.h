@@ -23,6 +23,7 @@
 
 #include <glib-object.h>
 #include <polkit-dbus/polkit-dbus.h>
+#include <devkit-gobject.h>
 
 #include "devkit-disks-daemon.h"
 
@@ -87,7 +88,7 @@ GType devkit_disks_device_error_get_type (void);
 GQuark             devkit_disks_device_error_quark           (void);
 GType              devkit_disks_device_get_type              (void);
 
-DevkitDisksDevice *devkit_disks_device_new                   (DevkitDisksDaemon *daemon, const char *native_path);
+DevkitDisksDevice *devkit_disks_device_new                   (DevkitDisksDaemon *daemon, DevkitDevice *d);
 gboolean           devkit_disks_device_changed               (DevkitDisksDevice *device, gboolean synthesized);
 void               devkit_disks_device_removed               (DevkitDisksDevice *device);
 

@@ -47,8 +47,10 @@
 #define DBUS_API_SUBJECT_TO_CHANGE
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
+#include <devkit-gobject.h>
 
 #include "devkit-disks-daemon.h"
+
 
 #define NAME_TO_CLAIM "org.freedesktop.DeviceKit.Disks"
 
@@ -100,6 +102,44 @@ acquire_name_on_proxy (DBusGProxy *bus_proxy)
  out:
         return ret;
 }
+
+#if 0
+static gboolean
+print_prop (DevkitDevice *device, const char *key, const char *value, gpointer user_data)
+{
+        g_print ("  %s -> %s\n", key, value);
+        return FALSE;
+}
+
+static void
+print_device (DevkitDevice *device)
+{
+        int n;
+        const char * const *symlinks;
+
+        g_print (" subsys=%s\n"
+                 " native_path=%s\n"
+                 " device=%s\n",
+                 devkit_device_get_subsystem (device),
+                 devkit_device_get_native_path (device),
+                 devkit_device_get_device_file (device));
+
+        symlinks = devkit_device_get_device_file_symlinks (device);
+        for (n = 0; symlinks[n] != NULL; n++)
+                g_print ("  symlink %d: %s\n", n, symlinks[n]);
+        devkit_device_properties_foreach (device, print_prop, NULL);
+}
+
+static void
+device_event_signal_handler (DevkitClient *client,
+                             const char   *action,
+                             DevkitDevice *device,
+                             gpointer      user_data)
+{
+        g_print ("action=%s\n", action);
+        print_device (device);
+}
+#endif
 
 int
 main (int argc, char **argv)
@@ -169,6 +209,20 @@ main (int argc, char **argv)
         }
 
         loop = g_main_loop_new (NULL, FALSE);
+
+#if 0
+        DevkitClient *c;
+        const char *subsystems[] = {"block", "usb_endpoint", NULL};
+        c = devkit_client_new (NULL);//subsystems);
+        g_signal_connect (c, "device-event", G_CALLBACK (device_event_signal_handler), NULL);
+        devkit_client_connect (c, NULL);
+        GList *devs;
+        devs = devkit_client_enumerate_by_subsystem (c, subsystems, NULL);
+        g_list_foreach (devs, (GFunc) print_device, NULL);
+        g_list_foreach (devs, (GFunc) devkit_device_free, NULL);
+        g_list_free (devs);
+        g_object_unref (c);
+#endif
 
         g_main_loop_run (loop);
 
