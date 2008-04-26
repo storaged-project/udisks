@@ -1,83 +1,197 @@
 <!DOCTYPE node PUBLIC
 "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
 "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
-<node name="/">
+<node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
 
   <interface name="org.freedesktop.DeviceKit.Disks">
 
-    <!-- Keep the daemon from exiting on inactivity; this is useful for
-         automounters that wants the daemon around to keep polling devices -->
+    <!-- ************************************************************ -->
+
     <method name="InhibitShutdown">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="cookie" direction="out" type="s"/>
+      <arg name="cookie" direction="out" type="s">
+        <doc:doc><doc:summary>The cookie that is used to stop inhibiting the daemon.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Keep the daemon from exiting on inactivity; this is useful
+            for programs that wants to keep the the daemon around for
+            listening on signals.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
 
-    <!-- Allow the daemon from exiting when inactive -->
+    <!-- ************************************************************ -->
+
     <method name="UninhibitShutdown">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="cookie" direction="in" type="s"/>
+      <arg name="cookie" direction="in" type="s">
+        <doc:doc><doc:summary>The cookie.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Allow the daemon to exit when it's inactive. The cookie
+            parameter is the return value from <doc:ref type="method"
+            to="Disks.InhibitShutdown">InhibitShutdown()</doc:ref>.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
 
-    <!-- Enumerate all devices -->
+    <!-- ************************************************************ -->
+
     <method name="EnumerateDevices">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="devices" direction="out" type="ao"/>
+      <arg name="devices" direction="out" type="ao">
+        <doc:doc><doc:summary>An array of object paths for devices.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Enumerate all disks on the system.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
 
-    <!-- Find device by device file -->
+    <!-- ************************************************************ -->
+
     <method name="FindDeviceByDeviceFile">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="device_file" direction="in" type="s"/>
-      <arg name="device" direction="out" type="o"/>
+      <arg name="device_file" direction="in" type="s">
+        <doc:doc><doc:summary>UNIX special device file</doc:summary></doc:doc>
+      </arg>
+      <arg name="device" direction="out" type="o">
+        <doc:doc><doc:summary>Object path of device</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Finds a device by device path.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
 
-    <!-- AssembleLinuxMdArray:
+    <!-- ************************************************************ -->
 
-         @components: An array of components of the array.
-
-         @options:    Options for assembling the array. Currently
-                      this is unused, no options are supported.
-
-         Assembles a Linux md RAID array. The array will be assembled
-         and started in degraded mode if an insufficient number of
-         components are given.
-
-         Returns: The object path of the assembled array.
-      -->
     <method name="AssembleLinuxMdArray">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="components" direction="in" type="ao"/>
-      <arg name="options" direction="in" type="as"/>
+      <arg name="components" direction="in" type="ao">
+        <doc:doc><doc:summary>The object paths of the components of the array to start.</doc:summary></doc:doc>
+      </arg>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Options for assembling the array. Currently no options are supported.</doc:summary></doc:doc>
+      </arg>
 
-      <arg name="device" direction="out" type="o"/>
+      <arg name="device" direction="out" type="o">
+        <doc:doc><doc:summary>The object path of the assembled array device.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Assembles a Linux md RAID array. The array will be
+            assembled and started in degraded mode if an insufficient
+            number of components are given.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
 
-    <!-- A device was added -->
+    <!-- ************************************************************ -->
+
     <signal name="DeviceAdded">
-      <arg name="device" type="o"/>
+      <arg name="device" type="o">
+        <doc:doc><doc:summary>Object path of device that was added.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Emitted when a device is added.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </signal>
 
-    <!-- A device was removed -->
+    <!-- ************************************************************ -->
+
     <signal name="DeviceRemoved">
-      <arg name="device" type="o"/>
+      <arg name="device" type="o">
+        <doc:doc><doc:summary>Object path of device that was removed.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Emitted when a device is removed.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </signal>
 
-    <!-- A device was changed -->
+    <!-- ************************************************************ -->
+
     <signal name="DeviceChanged">
-      <arg name="device" type="o"/>
+      <arg name="device" type="o">
+        <doc:doc><doc:summary>Object path of device that was changed.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Emitted when a device changed.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </signal>
 
-    <!-- Job state on a device was changed -->
+    <!-- ************************************************************ -->
+
     <signal name="DeviceJobChanged">
-      <arg name="device" type="o"/>
-      <arg name="job-in-progress" type="b"/>
-      <arg name="job-is-cancellable" type="b"/>
-      <arg name="job-id" type="s"/>
-      <arg name="job-num-tasks" type="i"/>
-      <arg name="job-cur-task" type="i"/>
-      <arg name="job-cur-task-id" type="s"/>
-      <arg name="job-cur-task-percentage" type="d"/>
+      <arg name="device" type="o">
+        <doc:doc><doc:summary>The object path of the device.</doc:summary></doc:doc>
+      </arg>
+      <arg name="job-in-progress" type="b">
+        <doc:doc><doc:summary>Whether a job is currently in progress.</doc:summary></doc:doc>
+      </arg>
+      <arg name="job-is-cancellable" type="b">
+        <doc:doc><doc:summary>Whether the job is cancellable.</doc:summary></doc:doc>
+      </arg>
+      <arg name="job-id" type="s">
+        <doc:doc><doc:summary>The identifier of the job.</doc:summary></doc:doc>
+      </arg>
+      <arg name="job-num-tasks" type="i">
+        <doc:doc><doc:summary>Number of tasks in the job.</doc:summary></doc:doc>
+      </arg>
+      <arg name="job-cur-task" type="i">
+        <doc:doc><doc:summary>Current task number (zero-based offset).</doc:summary></doc:doc>
+      </arg>
+      <arg name="job-cur-task-id" type="s">
+        <doc:doc><doc:summary>Task identifier for current task.</doc:summary></doc:doc>
+      </arg>
+      <arg name="job-cur-task-percentage" type="d">
+        <doc:doc><doc:summary>Percentage completed of current task (between 0 and 100, negative if unknown).</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Emitted when a job on a device changes.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </signal>
+
+    <!-- ************************************************************ -->
 
   </interface>
 

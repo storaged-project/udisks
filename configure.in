@@ -32,6 +32,8 @@ AC_PATH_PROG([XSLTPROC], [xsltproc])
 fi
 AM_CONDITIONAL(MAN_PAGES_ENABLED, test x$enable_man_pages = xyes)
 
+GTK_DOC_CHECK([1.3])
+
 #### gcc warning flags
 
 if test "x$GCC" = "xyes"; then
@@ -152,7 +154,9 @@ Makefile
 src/Makefile
 tools/Makefile
 doc/Makefile
+doc/version.xml
 doc/man/Makefile
+doc/dbus/Makefile
 policy/Makefile
 po/Makefile.in
 ])
@@ -180,5 +184,6 @@ echo "
         xsltproc:                   ${XSLTPROC}
 
         Maintainer mode:            ${USE_MAINTAINER_MODE}
+        Building api docs:          ${enable_gtk_doc}
         Building man pages:         ${enable_man_pages}
 "

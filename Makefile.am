@@ -33,7 +33,7 @@ DISTCLEANFILES = \
 	intltool-update
 
 # xsltproc barfs on 'make distcheck'; disable for now
-DISTCHECK_CONFIGURE_FLAGS=--disable-man-pages
+DISTCHECK_CONFIGURE_FLAGS=--disable-man-pages --disable-gtk-doc
 
 clean-local :
 	rm -f *~

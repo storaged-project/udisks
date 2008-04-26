@@ -1,57 +1,147 @@
 <!DOCTYPE node PUBLIC
 "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
 "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
-<node name="/">
+<node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
 
   <interface name="org.freedesktop.DeviceKit.Disks.Device">
 
     <!-- BEGIN LIST OF METHODS -->
 
-    <!-- TODO: docs -->
+    <!-- ************************************************************ -->
+
     <method name="UnlockEncrypted">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="secret" direction="in" type="s"/>
-      <arg name="options" direction="in" type="as"/>
-      <arg name="cleartext_device" direction="out" type="o"/>
+      <arg name="secret" direction="in" type="s">
+        <doc:doc><doc:summary>Secret for unlocking the cleartext data.</doc:summary></doc:doc>
+      </arg>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
+      </arg>
+      <arg name="cleartext_device" direction="out" type="o">
+        <doc:doc><doc:summary>The cleartext device created.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Sets up a cleartext device using the given device as backing store.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
 
-    <!-- TODO: docs -->
+    <!-- ************************************************************ -->
+
     <method name="LockEncrypted">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="options" direction="in" type="as"/>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Tears down the cleartext device set up using
+            e.g. the <doc:ref type="method"
+            to="Device.UnlockEncrypted">UnlockEncrypted()</doc:ref>
+            method.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
 
-    <!-- TODO: docs -->
+    <!-- ************************************************************ -->
+
     <method name="ChangeSecretForEncrypted">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="current_secret" direction="in" type="s"/>
-      <arg name="new_secret" direction="in" type="s"/>
+      <arg name="current_secret" direction="in" type="s">
+        <doc:doc><doc:summary>The current secret.</doc:summary></doc:doc>
+      </arg>
+      <arg name="new_secret" direction="in" type="s">
+        <doc:doc><doc:summary>The new secret.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Change the secret used to unlock an encrypted device.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
 
-    <!-- TODO: docs -->
+    <!-- ************************************************************ -->
+
     <method name="Mount">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="filesystem_type" direction="in" type="s"/>
-      <arg name="options" direction="in" type="as"/>
-      <arg name="mount_path" direction="out" type="s"/>
+      <arg name="filesystem_type" direction="in" type="s">
+        <doc:doc><doc:summary>File system type to use.</doc:summary></doc:doc>
+      </arg>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Mount Options. Valid mount options include 'remount' and other mount options accepted by the native mount program.</doc:summary></doc:doc>
+      </arg>
+      <arg name="mount_path" direction="out" type="s">
+        <doc:doc><doc:summary>Where the device was mounted.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Mount the device.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
 
-    <!-- TODO: docs -->
-    <method name="CancelJob">
-      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-    </method>
+    <!-- ************************************************************ -->
 
-    <!-- TODO: docs -->
     <method name="Unmount">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="options" direction="in" type="as"/>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Unmount options. Valid options currently include only 'force'.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Unmount the device.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
 
-    <!-- TODO: docs -->
+    <!-- ************************************************************ -->
+
+    <method name="CancelJob">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Cancels a job in progress.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
     <method name="Erase">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="options" direction="in" type="as"/>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Supports erase=(none|full|full3pass|full7pass|full35pass)</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Erase the contents of the device.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
+
+    <!-- ************************************************************ -->
 
     <!-- AddComponentToLinuxMdArray:
 
@@ -60,13 +150,28 @@
          @options:   Options for adding the component to the array.
                      Currently this is unused, no options are supported.
 
-         Adds a component to a Linux md RAID array.
+         .
       -->
     <method name="AddComponentToLinuxMdArray">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="component" direction="in" type="o"/>
-      <arg name="options" direction="in" type="as"/>
+      <arg name="component" direction="in" type="o">
+        <doc:doc><doc:summary>Object path of the component to add</doc:summary></doc:doc>
+      </arg>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Adds a component to a Linux md RAID array. Existing data
+            on the given component will be erased.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
+
+    <!-- ************************************************************ -->
 
     <!-- RemoveComponentFromLinuxMdArray:
 
@@ -78,49 +183,55 @@
                                array. Valid values include "none",
                                "full", "full7pass" and "full35pass".
 
-         Removes a component from a Linux md RAID array. The component
-         will be removed and then the signatures on the component will
-         be erased according to the erase= option.
       -->
     <method name="RemoveComponentFromLinuxMdArray">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="component" direction="in" type="o"/>
-      <arg name="options" direction="in" type="as"/>
+      <arg name="component" direction="in" type="o">
+        <doc:doc><doc:summary>The component to remove from the array.</doc:summary></doc:doc>
+      </arg>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Supports erase=(none|full|full3pass|full7pass|full35pass)</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Removes a component from a Linux md RAID array. The component
+            will be removed and then the signatures on the component will be
+            erased according to the erase= option.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
+
+    <!-- ************************************************************ -->
 
     <!-- StopLinuxMdArray:
 
          @options:   Options for stopping the array. Currently
                      this is unused, no options are supported.
 
-         Stops a Linux md RAID array.
       -->
     <method name="StopLinuxMdArray">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="options" direction="in" type="as"/>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Stops a Linux md RAID array.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
+
+    <!-- ************************************************************ -->
 
     <!-- RetrieveSmartData:
 
-         Retrieves S.M.A.R.T. data from the drive.
-
-         TODO: We probably should return all attributes or something
-               more detailed. And at the same time try to abstract
-               the difference between SCSI and ATA.
-
-         The result of last_self_test_result is a string; the following
-         values are known
-
-          - completed_ok
-          - not_completed_aborted
-          - not_completed_aborted_reset
-          - not_completed_unknown_reason
-          - completed_failed_unknown_reason
-          - completed_failed_electrical
-          - completed_failed_servo
-          - completed_failed_read
-          - completed_failed_damage
-          - unknown
+         
 
          Returns: Whether the drive is healthy, the number of hours
                   it's been powered, the temperature (in Celcius),
@@ -129,12 +240,47 @@
     <method name="RetrieveSmartData">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
 
-      <arg name="is_healthy" direction="out" type="b"/>
-      <arg name="power_on_hours" direction="out" type="i"/>
-      <arg name="temperature" direction="out" type="i"/>
-      <arg name="last_self_test_result" direction="out" type="s"/>
+      <arg name="is_healthy" direction="out" type="b">
+        <doc:doc><doc:summary>Returns an assessment of whether the drive is healthy or not.</doc:summary></doc:doc>
+      </arg>
+      <arg name="power_on_hours" direction="out" type="i">
+        <doc:doc><doc:summary>Number of hours that the drive has been powered on.</doc:summary></doc:doc>
+      </arg>
+      <arg name="temperature" direction="out" type="i">
+        <doc:doc><doc:summary>Temperature of the drive, in Celcius.</doc:summary></doc:doc>
+      </arg>
+      <arg name="last_self_test_result" direction="out" type="s">
+        <doc:doc><doc:summary>Result of the last self test.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Retrieves S.M.A.R.T. data from the device. TODO: We
+            probably should return all attributes or something more
+            detailed. And at the same time try to abstract the
+            difference between SCSI and ATA.
+          </doc:para>
+          <doc:para>
+            The result of last_self_test_result is a string; the following
+            values are known:
+            completed_ok,
+            not_completed_aborted,
+            not_completed_aborted_reset,
+            not_completed_unknown_reason,
+            completed_failed_unknown_reason,
+            completed_failed_electrical,
+            completed_failed_servo,
+            completed_failed_read,
+            completed_failed_damage,
+            unknown,
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
 
+
+    <!-- ************************************************************ -->
 
     <!-- RunSmartSelftest:
 
@@ -149,18 +295,37 @@
                     test. The method will error out if the drive
                     is busy, e.g. if partitions are mounted.
 
-         Runs a S.M.A.R.T. self test on the drive.
-
-         TODO: need to figure out whether we need a return code
-
       -->
     <method name="RunSmartSelftest">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
 
-      <arg name="test" direction="in" type="s"/>
-      <arg name="captive" direction="in" type="b"/>
+      <arg name="test" direction="in" type="s">
+        <doc:doc><doc:summary>
+            The name of the test to run; supported values are 'short'
+            (usually less than ten minutes) and 'long' (usually tens
+            of minutes) and 'conveyance' (usually a few minutes). See
+            the smartctl(1) man page for details.
+        </doc:summary></doc:doc>
+      </arg>
+      <arg name="captive" direction="in" type="b">
+        <doc:doc><doc:summary>
+            If TRUE then the drive will block access to the drive for
+            the duration of the test. The method will error out if the
+            drive is busy, e.g. if partitions are mounted.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Runs a S.M.A.R.T. self test on the drive. TODO: need to figure out whether we need a return code.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
 
+
+    <!-- ************************************************************ -->
 
     <!-- CreatePartitionTable:
          @scheme:   The type of partition table to create. Currently
@@ -173,14 +338,31 @@
                                table. Valid values include "none",
                                "full", "full7pass" and "full35pass".
 
-         Creates a new partition table. Optionally deletes all data
-         on the device before doing so.
       -->
     <method name="CreatePartitionTable">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="scheme" direction="in" type="s"/>
-      <arg name="options" direction="in" type="as"/>
+      <arg name="scheme" direction="in" type="s">
+        <doc:doc><doc:summary>
+            The type of partition table to create. Currently
+            the types 'none', 'mbr', 'gpt' and 'apm' are
+            supported.
+        </doc:summary></doc:doc>
+      </arg>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Supports erase=(none|full|full3pass|full7pass|full35pass)</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Creates a new partition table. Optionally deletes all data
+            on the device before doing so.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
+
+    <!-- ************************************************************ -->
 
     <!-- DeletePartition:
 
@@ -190,41 +372,61 @@
                                Valid values include "none", "full",
                                "full7pass" and "full35pass".
 
-         Deletes an entry from the partition table; optionally
-         erasing the space before doing so.
       -->
     <method name="DeletePartition">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="options" direction="in" type="as"/>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Supports erase=(none|full|full3pass|full7pass|full35pass)</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Deletes an entry from the partition table; optionally
+            erasing the space before doing so.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
 
-    <!-- ModifyPartition:
-         @type:      The type of the partition to create. Depends
-                     on the partitioning scheme.
+    <!-- ************************************************************ -->
 
-         @label:     The label to use for the partition. Leave
-                     blank if the partition table scheme doesn't
-                     support labels.
-
-         @flags:     Flags to use for the partition. (TODO)
-
-         Modifies the meta data such as label and flags for a
-         partition.
-
-         TODO: Consider allowing changing offset and size. Or
-               maybe that should be a separate method.
-      -->
     <method name="ModifyPartition">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="type" direction="in" type="s"/>
-      <arg name="label" direction="in" type="s"/>
-      <arg name="flags" direction="in" type="as"/>
+      <arg name="type" direction="in" type="s">
+        <doc:doc><doc:summary>
+            The type of the partition to create. Depends
+            on the partitioning scheme.
+        </doc:summary></doc:doc>
+      </arg>
+      <arg name="label" direction="in" type="s">
+        <doc:doc><doc:summary>
+            The label to use for the partition. Leave
+            blank if the partition table scheme doesn't
+            support labels.
+        </doc:summary></doc:doc>
+      </arg>
+      <arg name="flags" direction="in" type="as">
+        <doc:doc><doc:summary>Flags to use for the partition (TODO).</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Modifies the meta data such as label and flags for a
+            partition. TODO: Consider allowing changing offset and
+            size. Or maybe that should be a separate method.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
 
-    <!-- CreatePartition:
-         @offset:    Where to create the partition.
+    <!-- ************************************************************ -->
 
-         @size:      Size of the partitition to create.
+    <!-- CreatePartition:
+         @offset:    
+
+         @size:      .
 
          @type:      The type of the partition to create. Depends
                      on the partitioning scheme.
@@ -233,7 +435,7 @@
                      blank if the partition table scheme doesn't
                      support labels.
 
-         @flags:     Flags to use for the partition. (TODO)
+         @flags:     
 
          @options:   Options for partition creation. Currently
                      this is unused, no options are supported.
@@ -245,25 +447,65 @@
          @fsoptions: Options to use for file system creation. See
                      the CreateFilesystem() method for details.
 
-         Create a new partition and, optionally, create a file system
-         on it. The partition won't necessarily be created at the
-         exact location requested.
-
          Returns: the object path of the newly added partition.
       -->
     <method name="CreatePartition">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="offset" direction="in" type="t"/>
-      <arg name="size" direction="in" type="t"/>
-      <arg name="type" direction="in" type="s"/>
-      <arg name="label" direction="in" type="s"/>
-      <arg name="flags" direction="in" type="as"/>
-      <arg name="options" direction="in" type="as"/>
-      <arg name="fstype" direction="in" type="s"/>
-      <arg name="fsoptions" direction="in" type="as"/>
+      <arg name="offset" direction="in" type="t">
+        <doc:doc><doc:summary>Where to create the partition.</doc:summary></doc:doc>
+      </arg>
+      <arg name="size" direction="in" type="t">
+        <doc:doc><doc:summary>Size of the partitition to create.</doc:summary></doc:doc>
+      </arg>
+      <arg name="type" direction="in" type="s">
+        <doc:doc><doc:summary>
+            The type of the partition to create. Depends
+            on the partitioning scheme.
+        </doc:summary></doc:doc>
+      </arg>
+      <arg name="label" direction="in" type="s">
+        <doc:doc><doc:summary>
+            The label to use for the partition. Leave
+            blank if the partition table scheme doesn't
+            support labels.
+        </doc:summary></doc:doc>
+      </arg>
+      <arg name="flags" direction="in" type="as">
+        <doc:doc><doc:summary>Flags to use for the partition (TODO).</doc:summary></doc:doc>
+      </arg>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
+      </arg>
+      <arg name="fstype" direction="in" type="s">
+        <doc:doc><doc:summary>
+            The file system to create in new partition. Leave
+            blank to skip creating a file system. See the
+            CreateFilesystem() method for details.
+        </doc:summary></doc:doc>
+      </arg>
+      <arg name="fsoptions" direction="in" type="as">
+        <doc:doc><doc:summary>
+            Options to use for file system creation. See the
+            CreateFilesystem() method for details.
+        </doc:summary></doc:doc>
+      </arg>
+      <arg name="created_device" direction="out" type="o">
+        <doc:doc><doc:summary>The object path of the newly added partition.</doc:summary></doc:doc>
+      </arg>
 
-      <arg name="created_device" direction="out" type="o"/>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Create a new partition and, optionally, create a file
+            system on it. The partition won't necessarily be created
+            at the exact location requested due to disk geometry
+            constraints.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
+
+    <!-- ************************************************************ -->
 
     <!-- CreateFilesystem:
          @fstype:   the of file system to create. Pass "empty" to
@@ -288,41 +530,114 @@
                                  that will be setup. The passphrase used is
                                  the value following the '=' character.
 
-         Create a file system on a device.
      -->
     <method name="CreateFilesystem">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="fstype" direction="in" type="s"/>
-      <arg name="options" direction="in" type="as"/>
+      <arg name="fstype" direction="in" type="s">
+        <doc:doc><doc:summary>
+            The type of file system to create. Pass "empty" to not
+            create a file system. Use @TODO@ to get a list of file
+            systems that can be created.
+        </doc:summary></doc:doc>
+      </arg>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>
+            Supports the following options. To set the label use
+            label=NAME. May not be supported for all file systems and
+            the allowed length varies (see @TODO@). To erase the
+            device before creating a file system, pass erase= with one
+            of the following values none, full, full3pass, full7pass,
+            full35pass. To create the file system on an encrypted
+            block device, pass encrypt= with the passphrase to use.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Create a file system on a device.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
+
+    <!-- ************************************************************ -->
 
     <!-- ChangeFilesystemLabel:
          @new_label:   The new label to use
 
-         Changes the file system label.
       -->
     <method name="ChangeFilesystemLabel">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="new_label" direction="in" type="s"/>
+      <arg name="new_label" direction="in" type="s">
+        <doc:doc><doc:summary>
+            New label for file system. See the options parameter of
+            CreateFilesystem() for discussion of valid labels.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Changes the file system label.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </method>
 
     <!-- BEGIN LIST OF SIGNALS -->
 
-    <!-- Something about the device changed. Changes in job state
-         wont trigger this signal; see the 'JobChanged' signal -->
-    <signal name="Changed"/>
+    <!-- ************************************************************ -->
+
+    <signal name="Changed">
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Something on the device changed. Changes in job state wont
+            trigger this signal; see the <doc:ref type="signal"
+            to="Device::JobChanged">JobChanged()</doc:ref> signal.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </signal>
+
+    <!-- ************************************************************ -->
 
     <!-- Job state changed; clients should listen to this signal
          to avoid polling the daemon for job state -->
     <signal name="JobChanged">
-      <arg name="job-in-progress" type="b"/>
-      <arg name="job-is-cancellable" type="b"/>
-      <arg name="job-id" type="s"/>
-      <arg name="job-num-tasks" type="i"/>
-      <arg name="job-cur-task" type="i"/>
-      <arg name="job-cur-task-id" type="s"/>
-      <arg name="job-cur-task-percentage" type="d"/>
+      <arg name="job-in-progress" type="b">
+        <doc:doc><doc:summary>Whether a job is currently in progress.</doc:summary></doc:doc>
+      </arg>
+      <arg name="job-is-cancellable" type="b">
+        <doc:doc><doc:summary>Whether the job is cancellable.</doc:summary></doc:doc>
+      </arg>
+      <arg name="job-id" type="s">
+        <doc:doc><doc:summary>The identifier of the job.</doc:summary></doc:doc>
+      </arg>
+      <arg name="job-num-tasks" type="i">
+        <doc:doc><doc:summary>Number of tasks in the job.</doc:summary></doc:doc>
+      </arg>
+      <arg name="job-cur-task" type="i">
+        <doc:doc><doc:summary>Current task number (zero-based offset).</doc:summary></doc:doc>
+      </arg>
+      <arg name="job-cur-task-id" type="s">
+        <doc:doc><doc:summary>Task identifier for current task.</doc:summary></doc:doc>
+      </arg>
+      <arg name="job-cur-task-percentage" type="d">
+        <doc:doc><doc:summary>Percentage completed of current task (between 0 and 100, negative if unknown).</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Emitted when a job on a device changes.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
     </signal>
+
+    <!-- ************************************************************ -->
 
     <!-- BEGIN LIST OF PROPERTIES
 
@@ -345,24 +660,100 @@
          block device is claiming it (e.g. a RAID drive) or if a
          job initiated from DeviceKit-disks is pending.
       -->
-    <property name="native-path" type="s" access="read"/>
-    <property name="device-file" type="s" access="read"/>
-    <property name="device-file-by-id" type="as" access="read"/>
-    <property name="device-file-by-path" type="as" access="read"/>
-    <property name="device-is-partition" type="b" access="read"/>
-    <property name="device-is-partition-table" type="b" access="read"/>
-    <property name="device-is-removable" type="b" access="read"/>
-    <property name="device-is-media-available" type="b" access="read"/>
-    <property name="device-is-read-only" type="b" access="read"/>
-    <property name="device-is-drive" type="b" access="read"/>
-    <property name="device-is-mounted" type="b" access="read"/>
-    <property name="device-is-crypto-cleartext" type="b" access="read"/>
-    <property name="device-is-busy" type="b" access="read"/>
-    <property name="device-is-linux-md-component" type="b" access="read"/>
-    <property name="device-is-linux-md" type="b" access="read"/>
-    <property name="device-mount-path" type="s" access="read"/>
-    <property name="device-size" type="t" access="read"/>
-    <property name="device-block-size" type="t" access="read"/>
+    <property name="native-path" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            OS specific native path of the device.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-file" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            UNIX special device file for device.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-file-by-id" type="as" access="read">
+      <doc:doc><doc:description><doc:para>
+            Symlinks to UNIX special device file that are stable and uniquely identifies the device.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-file-by-path" type="as" access="read">
+      <doc:doc><doc:description><doc:para>
+            Symlinks to UNIX special device file that uniquely identifies the port/partition the device is plugged into.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-is-partition" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if the device is a partition. See the properties starting with partition- for details.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-is-partition-table" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if the device contains a partition table. See partition- properties for details.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-is-removable" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if the device contains removable media.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-is-media-available" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if media is available in the device.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-is-read-only" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if the device read-only.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-is-drive" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if the device is a drive. See drive- properties for details.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-is-mounted" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if the device is mounted.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-mount-path" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            Where the device is mounted.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-is-crypto-cleartext" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if device is a cleartext device backed by a encrypted device. See crypto-cleartext- properties for details.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-is-busy" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if device is currently busy. Is set if the device is
+            in use; this can hapen, for example, if the device is
+            mounted, if another block device is claiming it (e.g. a
+            RAID drive) or if a job initiated from DeviceKit-disks is
+            pending.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-is-linux-md-component" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if the device is a Linux md RAID component. See linux-md-component- properties for details.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-is-linux-md" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if the device is a Linux md RAID array. See linux-md- properties for details.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-size" type="t" access="read">
+      <doc:doc><doc:description><doc:para>
+            The size of the device in bytes.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-block-size" type="t" access="read">
+      <doc:doc><doc:description><doc:para>
+            The block size of the device in bytes.
+      </doc:para></doc:description></doc:doc>
+    </property>
 
     <!-- The job properties specify if a job initiated via the
          DeviceKit-disks daemon is currently in progress.  A job may
@@ -384,13 +775,49 @@
           - sync:    flushing data to the device
           - mkfs:    creating file system
       -->
-    <property name="job-in-progress" type="b" access="read"/>
-    <property name="job-id" type="s" access="read"/>
-    <property name="job-is-cancellable" type="b" access="read"/>
-    <property name="job-num-tasks" type="i" access="read"/>
-    <property name="job-cur-task" type="i" access="read"/>
-    <property name="job-cur-task-id" type="s" access="read"/>
-    <property name="job-cur-task-percentage" type="d" access="read"/>
+    <property name="job-in-progress" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            The job properties specify if a job initiated via the
+            DeviceKit-disks daemon is currently in progress.  A job
+            may be split into several sequential tasks; in that case
+            'job-num-tasks' will be greater than zero. If it is 0 none
+            of the 'job-cur-*' properties will be set.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="job-id" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The 'job-id' property is used to identify the job and maps
+            1-1 with the names of the method calls on this interface,
+            e.g. 'Erase', 'CreateFilesystem' and so on.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="job-is-cancellable" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            Whether the job can be cancelled
+            using <doc:ref type="method"
+            to="Device.CancelJob">CancelJob()</doc:ref> method.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="job-num-tasks" type="i" access="read">
+      <doc:doc><doc:description><doc:para>
+            Number of tasks in the job..
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="job-cur-task" type="i" access="read">
+      <doc:doc><doc:description><doc:para>
+            Current task number (zero-based offset).
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="job-cur-task-id" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            Task identifier for current task. TODO: enumerate task id's.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="job-cur-task-percentage" type="d" access="read">
+      <doc:doc><doc:description><doc:para>
+            Percentage completed of current task (between 0 and 100, negative if unknown).
+      </doc:para></doc:description></doc:doc>
+    </property>
 
     <!-- the usage is a result of probing for signatures on the block
          device; known values are
@@ -418,11 +845,37 @@
 
          The 'id-uuid' and 'id-label' properties, if set, are dependent
          on the 'id-type' property -->
-    <property name="id-usage" type="s" access="read"/>
-    <property name="id-type" type="s" access="read"/>
-    <property name="id-version" type="s" access="read"/>
-    <property name="id-uuid" type="s" access="read"/>
-    <property name="id-label" type="s" access="read"/>
+    <property name="id-usage" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            A result of probing for signatures on the block device;
+            known values are filesystem, crypto, partitiontable, raid
+            and other. If blank, no known signature was detected.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="id-type" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            For id-usage=filesystem this property contains the file system name (e.g. ext3, vfat).
+            For id-usage=crypto known values are crypto_LUKS.
+            For id-usage=partitiontable known values are mbr (Master Boot Record),
+            apm (Apple Partition) and gpt (GUID Partition Table).
+            For id-usage=raid known values are @TODO@.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="id-version" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The version of the file system or identified data structure.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="id-uuid" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The UUID of the detected instance.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="id-label" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The user-visible label of the detected instance.
+      </doc:para></doc:description></doc:doc>
+    </property>
 
     <!-- The following properties are only set if the device is
          a clear text device for an encrypted block device (see
@@ -431,7 +884,14 @@
          The property 'crypto-cleartext-slave' is a reference to the
          encrypted block device.
       -->
-    <property name="crypto-cleartext-slave" type="o" access="read"/>
+    <property name="crypto-cleartext-slave" type="o" access="read">
+      <doc:doc><doc:description><doc:para>
+            The encrypted device backing a crypto cleartext device.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-crypto-cleartext">device-is-crypto-cleartext</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
 
     <!-- the following properties are only set if the device is
          a partition (see 'device-is-partition'). Known values
@@ -446,15 +906,79 @@
          the device in question is a partition of. The property
          'partition-number' is the number of the partition starting
          from 1 -->
-    <property name="partition-slave" type="o" access="read"/>
-    <property name="partition-scheme" type="s" access="read"/>
-    <property name="partition-type" type="s" access="read"/>
-    <property name="partition-label" type="s" access="read"/>
-    <property name="partition-uuid" type="s" access="read"/>
-    <property name="partition-flags" type="as" access="read"/>
-    <property name="partition-number" type="i" access="read"/>
-    <property name="partition-offset" type="t" access="read"/>
-    <property name="partition-size" type="t" access="read"/>
+    <property name="partition-slave" type="o" access="read">
+      <doc:doc><doc:description><doc:para>
+            The object path of the parition table the partition is part of.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="partition-scheme" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The scheme of the partition table this partition is part of.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="partition-type" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The type of the partition (value depends on the partitioning scheme).
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="partition-label" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The label of the partition (blank if the partitioning scheme doesn't support labels).
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="partition-uuid" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The UUID of the partition (blank if the partitioning scheme doesn't support UUID's).
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="partition-flags" type="as" access="read">
+      <doc:doc><doc:description><doc:para>
+            Partition flags.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="partition-number" type="i" access="read">
+      <doc:doc><doc:description><doc:para>
+            Number of the partition.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="partition-offset" type="t" access="read">
+      <doc:doc><doc:description><doc:para>
+            Offset in bytes where the partition is located on the enclosing partition table device (see
+            <doc:ref type="property" to="Device:device-is-partition">partition-slave</doc:ref>).
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="partition-size" type="t" access="read">
+      <doc:doc><doc:description><doc:para>
+            Size of the partition.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
 
     <!-- the type of partition table the deice contains; only set if
          'device-is-partition-table' is true. Known values are
@@ -477,11 +1001,54 @@
          properties are arrays indexed by 'partition-number' and
          are of size 'partition-table-max-number'. It may contain
          holes in which case the offset will be 0. -->
-    <property name="partition-table-scheme" type="s" access="read"/>
-    <property name="partition-table-count" type="i" access="read"/>
-    <property name="partition-table-max-number" type="i" access="read"/>
-    <property name="partition-table-offsets" type="ai" access="read"/>
-    <property name="partition-table-sizes" type="ai" access="read"/>
+    <property name="partition-table-scheme" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The scheme of the partition table. Known values are 'mbr'
+            (Master Boot Record), 'apm' (Apple Partition Map) and
+            'gpt' (GUID partition table).
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-partition-table">device-is-partition-table</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="partition-table-count" type="i" access="read">
+      <doc:doc><doc:description><doc:para>
+            Number of partitions in the partition table.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-partition-table">device-is-partition-table</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="partition-table-max-number" type="i" access="read">
+      <doc:doc><doc:description><doc:para>
+            The maximum value for
+            <doc:ref type="property" to="Device:partition-number">partition-number</doc:ref>
+            of the enclosed partitions (partitions may not be sequentially numbered).
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-partition-table">device-is-partition-table</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="partition-table-offsets" type="at" access="read">
+      <doc:doc><doc:description><doc:para>
+            An array of size
+            <doc:ref type="property" to="Device:partition-table-max-number">partition-table-max-number</doc:ref>
+            that contains the offsets (in bytes) of each partition.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-partition-table">device-is-partition-table</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="partition-table-sizes" type="at" access="read">
+      <doc:doc><doc:description><doc:para>
+            An array of size
+            <doc:ref type="property" to="Device:partition-table-max-number">partition-table-max-number</doc:ref>
+            that contains the size (in bytes) of each partition.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-partition-table">device-is-partition-table</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
 
     <!-- Properties for the drive. The property drive-connection-interface
          specifies the physical connection used to connect the drive (or
@@ -551,25 +1118,178 @@
            optical_mrw_w
 
       -->
-    <property name="drive-vendor" type="s" access="read"/>
-    <property name="drive-model" type="s" access="read"/>
-    <property name="drive-revision" type="s" access="read"/>
-    <property name="drive-serial" type="s" access="read"/>
-    <property name="drive-connection-interface" type="s" access="read"/>
-    <property name="drive-connection-speed" type="t" access="read"/>
-    <property name="drive-media-compatibility" type="as" access="read"/>
-    <property name="drive-media" type="s" access="read"/>
+    <property name="drive-vendor" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            Name of the vendor of the drive.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-model" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            Name of the model of the drive.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-revision" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            Revision of the drive.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-serial" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The serial number of the drive or blank if unknown.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-connection-interface" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The interface through which the drive is connected. Known values include
+            virtual (for e.g. Software RAID), ata, ata_serial, ata_serial_esata, ata_parallel,
+            scsi, usb, firewire.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-connection-speed" type="t" access="read">
+      <doc:doc><doc:description><doc:para> 
+            The nominal speed of the connection interface in bits per
+            second. If unknown this property is set to 0.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-media-compatibility" type="as" access="read">
+      <doc:doc><doc:description><doc:para>
+            An array of media types that can be used in the
+            drive. This property is sometimes set using quirk files if
+            the hardware isn't capable of precisely reporting it.
+            Known values include:
+            flash,
+            flash_cf,
+            flash_ms,
+            flash_sm,
+            flash_sd,
+            flash_sdhc,
+            flash_mmc,
+            floppy,
+            floppy_zip,
+            floppy_jaz,
+            optical,
+            optical_cd,
+            optical_cd_r,
+            optical_cd_rw,
+            optical_dvd,
+            optical_dvd_r,
+            optical_dvd_rw,
+            optical_dvd_ram,
+            optical_dvd_plus_r,
+            optical_dvd_plus_rw,
+            optical_dvd_plus_r_dl,
+            optical_dvd_plus_rw_dl,
+            optical_bd,
+            optical_bd_r,
+            optical_bd_re,
+            optical_hddvd,
+            optical_hddvd_r,
+            optical_hddvd_rw,
+            optical_mo,
+            optical_mrw,
+            optical_mrw_w.
+          </doc:para><doc:para>
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-media" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The type of media currently in the drive (blank if no media is available). Known
+            values include the ones listed for the
+            <doc:ref type="property" to="Device:drive-media-compatibility">drive-media-compatibility</doc:ref>
+            property.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
 
     <!-- The device is a component of a Linux MD (Software RAID) array;
          see property device-is-linux-md-component
       -->
-    <property name="linux-md-component-level" type="s" access="read"/>
-    <property name="linux-md-component-num-raid-devices" type="i" access="read"/>
-    <property name="linux-md-component-uuid" type="s" access="read"/>
-    <property name="linux-md-component-name" type="s" access="read"/>
-    <property name="linux-md-component-version" type="s" access="read"/>
-    <property name="linux-md-component-update-time" type="t" access="read"/>
-    <property name="linux-md-component-events" type="t" access="read"/>
+    <property name="linux-md-component-level" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The RAID level of the array the component is part of. Known values include
+            raid0,
+            raid1,
+            raid4,
+            raid5,
+            raid10,
+            linear.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-linux-md-component">device-is-linux-md-component</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="linux-md-component-num-raid-devices" type="i" access="read">
+      <doc:doc><doc:description><doc:para>
+            The number of component devices in the array the component is part of.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-linux-md-component">device-is-linux-md-component</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="linux-md-component-uuid" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The UUID of the array the component is part of.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-linux-md-component">device-is-linux-md-component</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="linux-md-component-name" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The name of the array the component is part of. Blank if the array
+            doesn't have a name (e.g. pre-1.0 meta data).
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-linux-md-component">device-is-linux-md-component</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="linux-md-component-version" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The version of superblock of the component.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-linux-md-component">device-is-linux-md-component</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="linux-md-component-update-time" type="t" access="read">
+      <doc:doc><doc:description><doc:para>
+            The update time in the superblock of the component.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-linux-md-component">device-is-linux-md-component</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="linux-md-component-events" type="t" access="read">
+      <doc:doc><doc:description><doc:para>
+            The events counter in the superblock of the component.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-linux-md-component">device-is-linux-md-component</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
 
     <!-- The device is a Linux MD (Software RAID) array. The components
          of the array are in the linux-md-slaves property. The state
@@ -595,15 +1315,95 @@
          and 100) as well as speed (the sync speed in bytes/second)
          are updated from time to time.
       -->
-    <property name="linux-md-level" type="s" access="read"/>
-    <property name="linux-md-num-raid-devices" type="i" access="read"/>
-    <property name="linux-md-version" type="s" access="read"/>
-    <property name="linux-md-slaves" type="ao" access="read"/>
-    <property name="linux-md-slaves-state" type="as" access="read"/>
-    <property name="linux-md-is-degraded" type="b" access="read"/>
-    <property name="linux-md-sync-action" type="s" access="read"/>
-    <property name="linux-md-sync-percentage" type="d" access="read"/>
-    <property name="linux-md-sync-speed" type="t" access="read"/>
+    <property name="linux-md-level" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The RAID level of the array. Known values include
+            raid0,
+            raid1,
+            raid4,
+            raid5,
+            raid10,
+            linear.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="linux-md-num-raid-devices" type="i" access="read">
+      <doc:doc><doc:description><doc:para>
+            Number of component devices in the array.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="linux-md-version" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            Metadata version used in the components.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="linux-md-slaves" type="ao" access="read">
+      <doc:doc><doc:description><doc:para>
+            An array of object paths for components currently part of the array.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="linux-md-slaves-state" type="as" access="read">
+      <doc:doc><doc:description><doc:para>
+            Records the state of each component in the array
+            <doc:ref type="property" to="Device:linux-md-slaves">linux-md-slaves</doc:ref>.
+            The value can be in_sync (component is an active part of the array),
+            sync_in_progress (component is currently being synced with the array),
+            and spare (component is a hot spare).
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="linux-md-is-degraded" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE only if the array is running in degraded mode.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="linux-md-sync-action" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The operation currently pending on the array. Known values
+            include idle (no operation is pending), reshape (a reshape is in progress),
+            resync (redudancy is being calculated), repair (a repair operation is in progress),
+            and recover (a hot spare is being built to replace a failed/missing device).
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="linux-md-sync-percentage" type="d" access="read">
+      <doc:doc><doc:description><doc:para>
+            The progress of the current sync operation.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            is TRUE and
+            <doc:ref type="property" to="Device:linux-md-sync">linux-md-sync-action</doc:ref>
+            is not "idle".
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="linux-md-sync-speed" type="t" access="read">
+      <doc:doc><doc:description><doc:para>
+            The speed of the sync operation in bytes per second.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            is TRUE and
+            <doc:ref type="property" to="Device:linux-md-sync">linux-md-sync-action</doc:ref>
+            is not "idle".
+      </doc:para></doc:description></doc:doc>
+    </property>
 
   </interface>
 
