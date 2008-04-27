@@ -88,11 +88,14 @@ GType devkit_disks_device_error_get_type (void);
 GQuark             devkit_disks_device_error_quark           (void);
 GType              devkit_disks_device_get_type              (void);
 
-DevkitDisksDevice *devkit_disks_device_new                   (DevkitDisksDaemon *daemon, DevkitDevice *d);
-gboolean           devkit_disks_device_changed               (DevkitDisksDevice *device, gboolean synthesized);
-void               devkit_disks_device_removed               (DevkitDisksDevice *device);
+DevkitDisksDevice *devkit_disks_device_new                   (DevkitDisksDaemon *daemon,
+                                                              DevkitDevice      *d);
 
-GList *devkit_disks_enumerate_native_paths (void);
+gboolean           devkit_disks_device_changed               (DevkitDisksDevice *device,
+                                                              DevkitDevice      *d,
+                                                              gboolean           synthesized);
+
+void               devkit_disks_device_removed               (DevkitDisksDevice *device);
 
 /* local methods */
 

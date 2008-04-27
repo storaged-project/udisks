@@ -549,41 +549,37 @@ device_went_away (gpointer user_data, GObject *where_the_object_was)
                                      where_the_object_was);
 }
 
-#if 0
-static void device_add    (DevkitDisksDaemon *daemon, const char *native_path, gboolean emit_event);
-static void device_remove (DevkitDisksDaemon *daemon, const char *native_path);
+static void device_add (DevkitDisksDaemon *daemon, DevkitDevice *d, gboolean emit_event);
+static void device_remove (DevkitDisksDaemon *daemon, DevkitDevice *d);
 
 static void
-device_changed (DevkitDisksDaemon *daemon, const char *native_path, gboolean synthesized)
+device_changed (DevkitDisksDaemon *daemon, DevkitDevice *d, gboolean synthesized)
 {
         DevkitDisksDevice *device;
+        const char *native_path;
 
+        native_path = devkit_device_get_native_path (d);
         device = g_hash_table_lookup (daemon->priv->map_native_path_to_device, native_path);
         if (device != NULL) {
-                if (!devkit_disks_device_changed (device, synthesized)) {
+                if (!devkit_disks_device_changed (device, d, synthesized)) {
                         g_print ("changed triggered remove on %s\n", native_path);
-                        device_remove (daemon, native_path);
+                        device_remove (daemon, d);
                 } else {
                         g_print ("changed %s\n", native_path);
                 }
         } else {
                 g_print ("treating change event as add on %s\n", native_path);
-                device_add (daemon, native_path, TRUE);
+                device_add (daemon, d, TRUE);
         }
-}
-#endif
-
-static void
-device_changed (DevkitDisksDaemon *daemon, const char *native_path, gboolean synthesized)
-{
-        g_warning ("TODO");
 }
 
 void
 devkit_disks_daemon_local_synthesize_changed (DevkitDisksDaemon       *daemon,
-                                              const char              *native_path)
+                                              DevkitDevice            *d)
 {
-        //device_changed (daemon, native_path, TRUE);
+        g_object_ref (d);
+        device_changed (daemon, d, TRUE);
+        g_object_unref (d);
 }
 
 static void
@@ -597,7 +593,7 @@ device_add (DevkitDisksDaemon *daemon, DevkitDevice *d, gboolean emit_event)
         if (device != NULL) {
                 /* we already have the device; treat as change event */
                 g_print ("treating add event as change event on %s\n", native_path);
-                //device_changed (daemon, d, FALSE);
+                device_changed (daemon, d, FALSE);
         } else {
                 device = devkit_disks_device_new (daemon, d);
 
@@ -624,12 +620,13 @@ device_add (DevkitDisksDaemon *daemon, DevkitDevice *d, gboolean emit_event)
         }
 }
 
-#if 0
 static void
-device_remove (DevkitDisksDaemon *daemon, const char *native_path)
+device_remove (DevkitDisksDaemon *daemon, DevkitDevice *d)
 {
         DevkitDisksDevice *device;
+        const char *native_path;
 
+        native_path = devkit_device_get_native_path (d);
         device = g_hash_table_lookup (daemon->priv->map_native_path_to_device, native_path);
         if (device == NULL) {
                 g_print ("ignoring remove event on %s\n", native_path);
@@ -640,7 +637,25 @@ device_remove (DevkitDisksDaemon *daemon, const char *native_path)
                 g_object_unref (device);
         }
 }
-#endif
+
+static void
+device_event_signal_handler (DevkitClient *client,
+                             const char   *action,
+                             DevkitDevice *device,
+                             gpointer      user_data)
+{
+        DevkitDisksDaemon *daemon = DEVKIT_DISKS_DAEMON (user_data);
+
+        if (strcmp (action, "add") == 0) {
+                device_add (daemon, device, TRUE);
+        } else if (strcmp (action, "remove") == 0) {
+                device_remove (daemon, device);
+        } else if (strcmp (action, "change") == 0) {
+                device_changed (daemon, device, FALSE);
+        } else {
+                g_warning ("unhandled action '%s' on %s", action, devkit_device_get_native_path (device));
+        }
+}
 
 DevkitDisksDevice *
 devkit_disks_daemon_local_find_by_native_path (DevkitDisksDaemon *daemon, const char *native_path)
@@ -701,15 +716,15 @@ mdstat_changed_event (GIOChannel *channel, GIOCondition cond, gpointer user_data
         g_hash_table_iter_init (&iter, daemon->priv->map_native_path_to_device);
         while (g_hash_table_iter_next (&iter, (gpointer *) &native_path, (gpointer *) &device)) {
                 if (device->priv->info.device_is_linux_md) {
-                        g_ptr_array_add (a, g_strdup (native_path));
+                        g_ptr_array_add (a, g_object_ref (device->priv->d));
                 }
         }
 
         for (n = 0; n < (int) a->len; n++) {
-                char *native_path = a->pdata[n];
+                DevkitDevice *d = a->pdata[n];
                 g_warning ("using change on /proc/mdstat to trigger change event on %s", native_path);
-                device_changed (daemon, native_path, FALSE);
-                g_free (native_path);
+                device_changed (daemon, d, FALSE);
+                g_object_unref (d);
         }
 
         g_ptr_array_free (a, TRUE);
@@ -725,6 +740,7 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
         DBusConnection *connection;
         DBusError dbus_error;
         GError *error = NULL;
+        const char *subsystems[] = {"block", NULL};
 
         daemon->priv->pk_context = polkit_context_new ();
         polkit_context_set_io_watch_functions (daemon->priv->pk_context, pk_io_add_watch, pk_io_remove_watch);
@@ -748,7 +764,7 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
         polkit_tracker_set_system_bus_connection (daemon->priv->pk_tracker, connection);
         polkit_tracker_init (daemon->priv->pk_tracker);
 
-        dbus_g_connection_register_g_object (daemon->priv->system_bus_connection, "/", 
+        dbus_g_connection_register_g_object (daemon->priv->system_bus_connection, "/",
                                              G_OBJECT (daemon));
 
         daemon->priv->system_bus_proxy = dbus_g_proxy_new_for_name (daemon->priv->system_bus_connection,
@@ -815,12 +831,14 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
 	}
 
         /* connect to the DeviceKit daemon */
-        daemon->priv->devkit_client = devkit_client_new (NULL); // TODO: subsystems
+        daemon->priv->devkit_client = devkit_client_new (subsystems);
         if (!devkit_client_connect (daemon->priv->devkit_client, &error)) {
 		g_warning ("Couldn't open connection to DeviceKit daemon: %s", error->message);
                 g_error_free (error);
                 goto error;
         }
+        g_signal_connect (daemon->priv->devkit_client, "device-event",
+                          G_CALLBACK (device_event_signal_handler), daemon);
 
         /* monitor mounts */
         daemon->priv->mount_monitor = g_unix_mount_monitor_new ();

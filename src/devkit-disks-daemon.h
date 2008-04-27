@@ -90,7 +90,7 @@ void               devkit_disks_daemon_local_update_mount_state  (DevkitDisksDae
                                                                   gboolean                 emit_changed);
 
 void               devkit_disks_daemon_local_synthesize_changed  (DevkitDisksDaemon       *daemon,
-                                                                  const char              *native_path);
+                                                                  DevkitDevice            *d);
 
 /* exported methods */
 

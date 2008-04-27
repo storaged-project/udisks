@@ -63,7 +63,7 @@ static void     devkit_disks_device_finalize    (GObject     *object);
 
 static void     init_info                  (DevkitDisksDevice *device);
 static void     free_info                  (DevkitDisksDevice *device);
-static gboolean update_info                (DevkitDisksDevice *device, DevkitDevice *d);
+static gboolean update_info                (DevkitDisksDevice *device);
 
 /* Returns the cleartext device. If device==NULL, unlocking failed and an error has
  * been reported back to the caller
@@ -893,6 +893,7 @@ devkit_disks_device_finalize (GObject *object)
         device = DEVKIT_DISKS_DEVICE (object);
         g_return_if_fail (device->priv != NULL);
 
+        g_object_unref (device->priv->d);
         g_object_unref (device->priv->daemon);
         g_free (device->priv->object_path);
 
@@ -1417,7 +1418,7 @@ update_slaves (DevkitDisksDevice *device)
 
                 slave = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, slave_objpath);
                 if (slave != NULL) {
-                        update_info (slave, NULL);
+                        update_info (slave);
                 }
         }
 }
@@ -1562,7 +1563,7 @@ poll_syncing_md_device (gpointer user_data)
         g_warning ("polling md device");
 
         device->priv->linux_md_poll_timeout_id = 0;
-        devkit_disks_daemon_local_synthesize_changed (device->priv->daemon, device->priv->native_path);
+        devkit_disks_daemon_local_synthesize_changed (device->priv->daemon, device->priv->d);
         return FALSE;
 }
 
@@ -1589,7 +1590,7 @@ strv_has_str (char **strv, char *str)
  * Returns: #TRUE to keep (or add) the device; #FALSE to ignore (or remove) the device
  **/
 static gboolean
-update_info (DevkitDisksDevice *device, DevkitDevice *d)
+update_info (DevkitDisksDevice *device)
 {
         guint64 start, size;
         char *s;
@@ -1605,13 +1606,6 @@ update_info (DevkitDisksDevice *device, DevkitDevice *d)
         const char *fstype;
 
         ret = FALSE;
-
-        if (d != NULL) {
-                g_object_ref (d);
-        } else {
-                /* TODO */
-                goto out;
-        }
 
         /* md is special; we don't get "remove" events from the kernel when an array is
          * stopped; so catch it very early before erasing our existing slave variable (we
@@ -1644,14 +1638,14 @@ update_info (DevkitDisksDevice *device, DevkitDevice *d)
                 device->priv->info.device_is_drive = FALSE;
         }
 
-        device->priv->info.device_file = g_strdup (devkit_device_get_device_file (d));
+        device->priv->info.device_file = g_strdup (devkit_device_get_device_file (device->priv->d));
         if (device->priv->info.device_file == NULL) {
 		g_warning ("No device file for %s", device->priv->native_path);
                 goto out;
         }
 
         const char * const * symlinks;
-        symlinks = devkit_device_get_device_file_symlinks (d);
+        symlinks = devkit_device_get_device_file_symlinks (device->priv->d);
         for (n = 0; symlinks[n] != NULL; n++) {
                 if (g_str_has_prefix (symlinks[n], "/dev/disk/by-id/") ||
                     g_str_has_prefix (symlinks[n], "/dev/disk/by-uuid/")) {
@@ -1769,12 +1763,12 @@ update_info (DevkitDisksDevice *device, DevkitDevice *d)
         /* ------------------------------------- */
 
         /* set this first since e.g. ID_FS_LABEL et. al. needs to be redirected/copied */
-        fstype = devkit_device_get_property (d, "ID_FS_TYPE");
+        fstype = devkit_device_get_property (device->priv->d, "ID_FS_TYPE");
         if (fstype != NULL && strcmp (fstype, "linux_raid_member") == 0) {
                 device->priv->info.device_is_linux_md_component = TRUE;
         }
 
-        if (devkit_device_properties_foreach (d, update_info_properties_cb, device)) {
+        if (devkit_device_properties_foreach (device->priv->d, update_info_properties_cb, device)) {
                 goto out;
         }
 
@@ -1917,8 +1911,6 @@ update_info (DevkitDisksDevice *device, DevkitDevice *d)
         ret = TRUE;
 
 out:
-        if (d != NULL)
-                g_object_unref (d);
         return ret;
 }
 
@@ -1984,10 +1976,10 @@ devkit_disks_device_new (DevkitDisksDaemon *daemon, DevkitDevice *d)
                 goto out;
 
         device = DEVKIT_DISKS_DEVICE (g_object_new (DEVKIT_TYPE_DISKS_DEVICE, NULL));
-
+        device->priv->d = g_object_ref (d);
         device->priv->daemon = g_object_ref (daemon);
         device->priv->native_path = g_strdup (native_path);
-        if (!update_info (device, d)) {
+        if (!update_info (device)) {
                 g_object_unref (device);
                 device = NULL;
                 goto out;
@@ -2047,11 +2039,14 @@ emit_changed (DevkitDisksDevice *device)
 }
 
 gboolean
-devkit_disks_device_changed (DevkitDisksDevice *device, gboolean synthesized)
+devkit_disks_device_changed (DevkitDisksDevice *device, DevkitDevice *d, gboolean synthesized)
 {
         gboolean keep_device;
 
-        keep_device = update_info (device, NULL);
+        g_object_unref (device->priv->d);
+        device->priv->d = g_object_ref (d);
+
+        keep_device = update_info (device);
 
         /* if we're a linux md device.. then a change event might mean some metadata on the
          * components changed. So trigger a change on each slave
@@ -2102,78 +2097,6 @@ devkit_disks_device_changed (DevkitDisksDevice *device, gboolean synthesized)
         }
 out:
         return keep_device;
-}
-
-/*--------------------------------------------------------------------------------------------------------------*/
-
-/**
- * devkit_disks_enumerate_native_paths:
- *
- * Enumerates all block devices on the system.
- *
- * Returns: A #GList of native paths for devices (on Linux the sysfs path)
- */
-GList *
-devkit_disks_enumerate_native_paths (void)
-{
-        GList *ret;
-        GDir *dir;
-        gboolean have_class_block;
-        const char *name;
-
-        ret = 0;
-
-        /* TODO: rip out support for running without /sys/class/block */
-
-        have_class_block = FALSE;
-        if (g_file_test ("/sys/class/block", G_FILE_TEST_EXISTS))
-                have_class_block = TRUE;
-
-        dir = g_dir_open (have_class_block ? "/sys/class/block" : "/sys/block", 0, NULL);
-        if (dir == NULL)
-                goto out;
-
-        while ((name = g_dir_read_name (dir)) != NULL) {
-                char *s;
-                char sysfs_path[PATH_MAX];
-
-                /* skip all ram%d block devices */
-                if (g_str_has_prefix (name, "ram"))
-                        continue;
-
-                s = g_build_filename (have_class_block ? "/sys/class/block" : "/sys/block", name, NULL);
-                if (realpath (s, sysfs_path) == NULL) {
-                        g_free (s);
-                        continue;
-                }
-                g_free (s);
-
-                ret = g_list_prepend (ret, g_strdup (sysfs_path));
-
-                if (!have_class_block) {
-                        GDir *part_dir;
-                        const char *part_name;
-
-                        if((part_dir = g_dir_open (sysfs_path, 0, NULL)) != NULL) {
-                                while ((part_name = g_dir_read_name (part_dir)) != NULL) {
-                                        if (g_str_has_prefix (part_name, name)) {
-                                                char *part_sysfs_path;
-                                                part_sysfs_path = g_build_filename (sysfs_path, part_name, NULL);
-                                                ret = g_list_prepend (ret, part_sysfs_path);
-                                        }
-                                }
-                                g_dir_close (part_dir);
-                        }
-                }
-        }
-        g_dir_close (dir);
-
-        /* TODO: probing order.. might be tricky.. right now we just
-         *       sort the list
-         */
-        ret = g_list_sort (ret, (GCompareFunc) strcmp);
-out:
-        return ret;
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/

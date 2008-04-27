@@ -36,6 +36,7 @@ struct DevkitDisksDevicePrivate
         DBusGConnection *system_bus_connection;
         DBusGProxy      *system_bus_proxy;
         DevkitDisksDaemon *daemon;
+        DevkitDevice *d;
 
         Job *job;
 
