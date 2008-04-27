@@ -1,114 +1,58 @@
 <!DOCTYPE node PUBLIC
 "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
-"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd" [
+  <!ENTITY ERROR_GENERAL "org.freedesktop.DeviceKit.Disks.Device.GeneralError">
+  <!ENTITY ERROR_NO_SUCH_DEVICE "org.freedesktop.DeviceKit.Disks.Device.NoSuchDevice">
+  <!ENTITY ERROR_NOT_SUPPORTED "org.freedesktop.DeviceKit.Disks.Device.NotSupported">
+  <!ENTITY ERROR_NOT_MOUNTABLE "org.freedesktop.DeviceKit.Disks.Device.NotMountable">
+  <!ENTITY ERROR_MOUNTED "org.freedesktop.DeviceKit.Disks.Device.Mounted">
+  <!ENTITY ERROR_NOT_MOUNTED "org.freedesktop.DeviceKit.Disks.Device.NotMounted">
+  <!ENTITY ERROR_NOT_MOUNTED_BY_DK "org.freedesktop.DeviceKit.Disks.Device.NotMountedByDeviceKit">
+  <!ENTITY ERROR_FSTAB_ENTRY "org.freedesktop.DeviceKit.Disks.Device.FstabEntry">
+  <!ENTITY ERROR_MOUNT_OPTION_NOT_ALLOWED "org.freedesktop.DeviceKit.Disks.Device.MountOptionNotAllowed">
+  <!ENTITY ERROR_FILESYSTEM_BUSY "org.freedesktop.DeviceKit.Disks.Device.FilesystemBusy">
+  <!ENTITY ERROR_CANNOT_REMOUNT "org.freedesktop.DeviceKit.Disks.Device.CannotRemount">
+  <!ENTITY ERROR_UNMOUNT_OPTION_NOT_ALLOWED "org.freedesktop.DeviceKit.Disks.Device.UnmountOptionNotAllowed">
+  <!ENTITY ERROR_NO_JOB_IN_PROGRESS "org.freedesktop.DeviceKit.Disks.Device.NoJobInProgress">
+  <!ENTITY ERROR_JOB_ALREADY_IN_PROGRESS "org.freedesktop.DeviceKit.Disks.Device.JobAlreadyInProgress">
+  <!ENTITY ERROR_JOB_CANNOT_BE_CANCELLED "org.freedesktop.DeviceKit.Disks.Device.JobCannotBeCancelled">
+  <!ENTITY ERROR_JOB_WAS_CANCELLED "org.freedesktop.DeviceKit.Disks.Device.JobWasCancelled">
+  <!ENTITY ERROR_NOT_PARTITION "org.freedesktop.DeviceKit.Disks.Device.NotPartition">
+  <!ENTITY ERROR_NOT_PARTITIONED "org.freedesktop.DeviceKit.Disks.Device.NotPartitioned">
+  <!ENTITY ERROR_NOT_CRYPTO "org.freedesktop.DeviceKit.Disks.Device.NotCrypto">
+  <!ENTITY ERROR_CRYPTO_ALREADY_UNLOCKED "org.freedesktop.DeviceKit.Disks.Device.CryptoAlreadyUnlocked">
+  <!ENTITY ERROR_CRYPTO_NOT_UNLOCKED "org.freedesktop.DeviceKit.Disks.Device.CryptoNotUnlocked">
+  <!ENTITY ERROR_IS_BUSY "org.freedesktop.DeviceKit.Disks.Device.IsBusy">
+  <!ENTITY ERROR_NOT_DRIVE "org.freedesktop.DeviceKit.Disks.Device.NotDrive">
+  <!ENTITY ERROR_NOT_SMART_CAPABLE "org.freedesktop.DeviceKit.Disks.Device.NotSmartCapable">
+  <!ENTITY ERROR_NOT_LINUX_MD "org.freedesktop.DeviceKit.Disks.Device.NotLinuxMd">
+  <!ENTITY ERROR_NOT_LINUX_MD_COMPONENT "org.freedesktop.DeviceKit.Disks.Device.NotLinuxMdComponent">
+]>
 <node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
-
   <interface name="org.freedesktop.DeviceKit.Disks.Device">
-
-    <!-- BEGIN LIST OF METHODS -->
-
-    <!-- ************************************************************ -->
-
-    <method name="UnlockEncrypted">
-      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="secret" direction="in" type="s">
-        <doc:doc><doc:summary>Secret for unlocking the cleartext data.</doc:summary></doc:doc>
-      </arg>
-      <arg name="options" direction="in" type="as">
-        <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
-      </arg>
-      <arg name="cleartext_device" direction="out" type="o">
-        <doc:doc><doc:summary>The cleartext device created.</doc:summary></doc:doc>
-      </arg>
-
       <doc:doc>
         <doc:description>
           <doc:para>
-            Sets up a cleartext device using the given device as backing store.
+            This interface provides access to information about and
+            operations on individual block devices.
           </doc:para>
-        </doc:description>
-      </doc:doc>
-    </method>
-
-    <!-- ************************************************************ -->
-
-    <method name="LockEncrypted">
-      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="options" direction="in" type="as">
-        <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
-      </arg>
-
-      <doc:doc>
-        <doc:description>
           <doc:para>
-            Tears down the cleartext device set up using
-            e.g. the <doc:ref type="method"
-            to="Device.UnlockEncrypted">UnlockEncrypted()</doc:ref>
-            method.
+            A general note about properties: the set of values
+            returned can be expected to grow in the future as both
+            hardware and operating system capabilities evolve.
+            Care has been taken to namespace values
+            so applications can properly fall back (see e.g.
+            <doc:ref type="property" to="Device:drive-media-compatibility">drive-media-compatibility</doc:ref>)
+            and export both general and specific properties (such as
+            <doc:ref type="property" to="Device:id-usage">id-usage</doc:ref>
+            vs.
+            <doc:ref type="property" to="Device:id-type">id-type</doc:ref>).
+            In general an empty string in a property means not
+            set. Since the empty string is not a valid object path we
+            use the "/" to mean "not set" for object paths.
           </doc:para>
         </doc:description>
       </doc:doc>
-    </method>
-
-    <!-- ************************************************************ -->
-
-    <method name="ChangeSecretForEncrypted">
-      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="current_secret" direction="in" type="s">
-        <doc:doc><doc:summary>The current secret.</doc:summary></doc:doc>
-      </arg>
-      <arg name="new_secret" direction="in" type="s">
-        <doc:doc><doc:summary>The new secret.</doc:summary></doc:doc>
-      </arg>
-
-      <doc:doc>
-        <doc:description>
-          <doc:para>
-            Change the secret used to unlock an encrypted device.
-          </doc:para>
-        </doc:description>
-      </doc:doc>
-    </method>
-
-    <!-- ************************************************************ -->
-
-    <method name="Mount">
-      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="filesystem_type" direction="in" type="s">
-        <doc:doc><doc:summary>File system type to use.</doc:summary></doc:doc>
-      </arg>
-      <arg name="options" direction="in" type="as">
-        <doc:doc><doc:summary>Mount Options. Valid mount options include 'remount' and other mount options accepted by the native mount program.</doc:summary></doc:doc>
-      </arg>
-      <arg name="mount_path" direction="out" type="s">
-        <doc:doc><doc:summary>Where the device was mounted.</doc:summary></doc:doc>
-      </arg>
-
-      <doc:doc>
-        <doc:description>
-          <doc:para>
-            Mount the device.
-          </doc:para>
-        </doc:description>
-      </doc:doc>
-    </method>
-
-    <!-- ************************************************************ -->
-
-    <method name="Unmount">
-      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="options" direction="in" type="as">
-        <doc:doc><doc:summary>Unmount options. Valid options currently include only 'force'.</doc:summary></doc:doc>
-      </arg>
-
-      <doc:doc>
-        <doc:description>
-          <doc:para>
-            Unmount the device.
-          </doc:para>
-        </doc:description>
-      </doc:doc>
-    </method>
 
     <!-- ************************************************************ -->
 
@@ -121,224 +65,16 @@
             Cancels a job in progress.
           </doc:para>
         </doc:description>
+        <doc:permission>Callers need the org.freedesktop.devicekit.disks.format authorization</doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NO_JOB_IN_PROGRESS;">if no job is pending</doc:error>
+          <doc:error name="&ERROR_JOB_CANNOT_BE_CANCELLED;">if job is not cancellable</doc:error>
+        </doc:errors>
       </doc:doc>
     </method>
 
     <!-- ************************************************************ -->
 
-    <method name="Erase">
-      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="options" direction="in" type="as">
-        <doc:doc><doc:summary>Supports erase=(none|full|full3pass|full7pass|full35pass)</doc:summary></doc:doc>
-      </arg>
-
-      <doc:doc>
-        <doc:description>
-          <doc:para>
-            Erase the contents of the device.
-          </doc:para>
-        </doc:description>
-      </doc:doc>
-    </method>
-
-    <!-- ************************************************************ -->
-
-    <!-- AddComponentToLinuxMdArray:
-
-         @component: The component to add to the array
-
-         @options:   Options for adding the component to the array.
-                     Currently this is unused, no options are supported.
-
-         .
-      -->
-    <method name="AddComponentToLinuxMdArray">
-      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="component" direction="in" type="o">
-        <doc:doc><doc:summary>Object path of the component to add</doc:summary></doc:doc>
-      </arg>
-      <arg name="options" direction="in" type="as">
-        <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
-      </arg>
-
-      <doc:doc>
-        <doc:description>
-          <doc:para>
-            Adds a component to a Linux md RAID array. Existing data
-            on the given component will be erased.
-          </doc:para>
-        </doc:description>
-      </doc:doc>
-    </method>
-
-    <!-- ************************************************************ -->
-
-    <!-- RemoveComponentFromLinuxMdArray:
-
-         @component: The component to remove from the array
-
-         @options:   Supported options are:
-                     - erase=: whether to erase the contents of the
-                               component after removing it from the
-                               array. Valid values include "none",
-                               "full", "full7pass" and "full35pass".
-
-      -->
-    <method name="RemoveComponentFromLinuxMdArray">
-      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="component" direction="in" type="o">
-        <doc:doc><doc:summary>The component to remove from the array.</doc:summary></doc:doc>
-      </arg>
-      <arg name="options" direction="in" type="as">
-        <doc:doc><doc:summary>Supports erase=(none|full|full3pass|full7pass|full35pass)</doc:summary></doc:doc>
-      </arg>
-
-      <doc:doc>
-        <doc:description>
-          <doc:para>
-            Removes a component from a Linux md RAID array. The component
-            will be removed and then the signatures on the component will be
-            erased according to the erase= option.
-          </doc:para>
-        </doc:description>
-      </doc:doc>
-    </method>
-
-    <!-- ************************************************************ -->
-
-    <!-- StopLinuxMdArray:
-
-         @options:   Options for stopping the array. Currently
-                     this is unused, no options are supported.
-
-      -->
-    <method name="StopLinuxMdArray">
-      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="options" direction="in" type="as">
-        <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
-      </arg>
-
-      <doc:doc>
-        <doc:description>
-          <doc:para>
-            Stops a Linux md RAID array.
-          </doc:para>
-        </doc:description>
-      </doc:doc>
-    </method>
-
-    <!-- ************************************************************ -->
-
-    <!-- RetrieveSmartData:
-
-         
-
-         Returns: Whether the drive is healthy, the number of hours
-                  it's been powered, the temperature (in Celcius),
-                  and the result of the last test.
-      -->
-    <method name="RetrieveSmartData">
-      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-
-      <arg name="is_healthy" direction="out" type="b">
-        <doc:doc><doc:summary>Returns an assessment of whether the drive is healthy or not.</doc:summary></doc:doc>
-      </arg>
-      <arg name="power_on_hours" direction="out" type="i">
-        <doc:doc><doc:summary>Number of hours that the drive has been powered on.</doc:summary></doc:doc>
-      </arg>
-      <arg name="temperature" direction="out" type="i">
-        <doc:doc><doc:summary>Temperature of the drive, in Celcius.</doc:summary></doc:doc>
-      </arg>
-      <arg name="last_self_test_result" direction="out" type="s">
-        <doc:doc><doc:summary>Result of the last self test.</doc:summary></doc:doc>
-      </arg>
-
-      <doc:doc>
-        <doc:description>
-          <doc:para>
-            Retrieves S.M.A.R.T. data from the device. TODO: We
-            probably should return all attributes or something more
-            detailed. And at the same time try to abstract the
-            difference between SCSI and ATA.
-          </doc:para>
-          <doc:para>
-            The result of last_self_test_result is a string; the following
-            values are known:
-            completed_ok,
-            not_completed_aborted,
-            not_completed_aborted_reset,
-            not_completed_unknown_reason,
-            completed_failed_unknown_reason,
-            completed_failed_electrical,
-            completed_failed_servo,
-            completed_failed_read,
-            completed_failed_damage,
-            unknown,
-          </doc:para>
-        </doc:description>
-      </doc:doc>
-    </method>
-
-
-    <!-- ************************************************************ -->
-
-    <!-- RunSmartSelftest:
-
-         @test:     The name of the test to run; supported values
-                    are 'short' (usually less than ten minutes)
-                    and 'long' (usually tens of minutes) and
-                    'conveyance' (usually a few minutes). See the
-                    smartctl(1) man page for details.
-
-         @captive:  If set to #TRUE then the drive will block
-                    access to the drive for the duration of the
-                    test. The method will error out if the drive
-                    is busy, e.g. if partitions are mounted.
-
-      -->
-    <method name="RunSmartSelftest">
-      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-
-      <arg name="test" direction="in" type="s">
-        <doc:doc><doc:summary>
-            The name of the test to run; supported values are 'short'
-            (usually less than ten minutes) and 'long' (usually tens
-            of minutes) and 'conveyance' (usually a few minutes). See
-            the smartctl(1) man page for details.
-        </doc:summary></doc:doc>
-      </arg>
-      <arg name="captive" direction="in" type="b">
-        <doc:doc><doc:summary>
-            If TRUE then the drive will block access to the drive for
-            the duration of the test. The method will error out if the
-            drive is busy, e.g. if partitions are mounted.
-        </doc:summary></doc:doc>
-      </arg>
-
-      <doc:doc>
-        <doc:description>
-          <doc:para>
-            Runs a S.M.A.R.T. self test on the drive. TODO: need to figure out whether we need a return code.
-          </doc:para>
-        </doc:description>
-      </doc:doc>
-    </method>
-
-
-    <!-- ************************************************************ -->
-
-    <!-- CreatePartitionTable:
-         @scheme:   The type of partition table to create. Currently
-                    the types 'none', 'mbr', 'gpt' and 'apm' are
-                    supported.
-
-         @options:  Supported options are:
-                     - erase=: whether to erase the contents of the
-                               device before creating a new partition
-                               table. Valid values include "none",
-                               "full", "full7pass" and "full35pass".
-
-      -->
     <method name="CreatePartitionTable">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="scheme" direction="in" type="s">
@@ -349,7 +85,7 @@
         </doc:summary></doc:doc>
       </arg>
       <arg name="options" direction="in" type="as">
-        <doc:doc><doc:summary>Supports erase=(none|full|full3pass|full7pass|full35pass)</doc:summary></doc:doc>
+        <doc:doc><doc:summary>Supports erase= with values 'none', 'full', 'full3pass', 'full7pass' or 'full35pass'.</doc:summary></doc:doc>
       </arg>
 
       <doc:doc>
@@ -359,24 +95,20 @@
             on the device before doing so.
           </doc:para>
         </doc:description>
+        <doc:errors>
+          <doc:error name="&ERROR_IS_BUSY;">if the device is busy</doc:error>
+          <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_JOB_WAS_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
       </doc:doc>
     </method>
 
     <!-- ************************************************************ -->
 
-    <!-- DeletePartition:
-
-         @options:  Supported options are:
-                     - erase=: whether to erase the contents of the
-                               partition before deleting the entry.
-                               Valid values include "none", "full",
-                               "full7pass" and "full35pass".
-
-      -->
     <method name="DeletePartition">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="options" direction="in" type="as">
-        <doc:doc><doc:summary>Supports erase=(none|full|full3pass|full7pass|full35pass)</doc:summary></doc:doc>
+        <doc:doc><doc:summary>Supports erase= with values 'none', 'full', 'full3pass', 'full7pass' or 'full35pass'.</doc:summary></doc:doc>
       </arg>
 
       <doc:doc>
@@ -386,6 +118,12 @@
             erasing the space before doing so.
           </doc:para>
         </doc:description>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_PARTITION;">if the device is not a partition</doc:error>
+          <doc:error name="&ERROR_IS_BUSY;">if the device is busy</doc:error>
+          <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_JOB_WAS_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
       </doc:doc>
     </method>
 
@@ -418,37 +156,17 @@
             size. Or maybe that should be a separate method.
           </doc:para>
         </doc:description>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_PARTITION;">if the device is not a partition</doc:error>
+          <doc:error name="&ERROR_IS_BUSY;">if the device is busy</doc:error>
+          <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_JOB_WAS_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
       </doc:doc>
     </method>
 
     <!-- ************************************************************ -->
 
-    <!-- CreatePartition:
-         @offset:    
-
-         @size:      .
-
-         @type:      The type of the partition to create. Depends
-                     on the partitioning scheme.
-
-         @label:     The label to use for the partition. Leave
-                     blank if the partition table scheme doesn't
-                     support labels.
-
-         @flags:     
-
-         @options:   Options for partition creation. Currently
-                     this is unused, no options are supported.
-
-         @fstype:    The file system to create in new partition. Leave
-                     blank to skip creating a file system. See the
-                     CreateFilesystem() method for details.
-
-         @fsoptions: Options to use for file system creation. See
-                     the CreateFilesystem() method for details.
-
-         Returns: the object path of the newly added partition.
-      -->
     <method name="CreatePartition">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="offset" direction="in" type="t">
@@ -502,35 +220,17 @@
             constraints.
           </doc:para>
         </doc:description>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_PARTITIONED;">if the device is not a partitition table</doc:error>
+          <doc:error name="&ERROR_IS_BUSY;">if the device is busy</doc:error>
+          <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_JOB_WAS_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
       </doc:doc>
     </method>
 
     <!-- ************************************************************ -->
 
-    <!-- CreateFilesystem:
-         @fstype:   the of file system to create. Pass "empty" to
-                    not create a file system. Use @TODO@ to get
-                    a list of file systems that can be created.
-
-         @options:  List of options. Known options that are file system
-                    independent are:
-
-                     - label=:   For setting the file system label. May not
-                                 be support for all file systems and the
-                                 allowed length varies. See @TODO@ for the
-                                 file systems supported by the system.
-
-                     - erase=:   whether to erase the device before
-                                 creating a file system. Valid values
-                                 include "none", "full", "full7pass" and
-                                 "full35pass".
-
-                     - encrypt=: If this option is used, the file system
-                                 will be created on an encrypted block device
-                                 that will be setup. The passphrase used is
-                                 the value following the '=' character.
-
-     -->
     <method name="CreateFilesystem">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="fstype" direction="in" type="s">
@@ -558,15 +258,16 @@
             Create a file system on a device.
           </doc:para>
         </doc:description>
+        <doc:errors>
+          <doc:error name="&ERROR_IS_BUSY;">if the device is busy</doc:error>
+          <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_JOB_WAS_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
       </doc:doc>
     </method>
 
     <!-- ************************************************************ -->
 
-    <!-- ChangeFilesystemLabel:
-         @new_label:   The new label to use
-
-      -->
     <method name="ChangeFilesystemLabel">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="new_label" direction="in" type="s">
@@ -582,10 +283,342 @@
             Changes the file system label.
           </doc:para>
         </doc:description>
+        <doc:errors>
+          <doc:error name="&ERROR_IS_BUSY;">if the device is busy and changing the label requires an unmounted file system</doc:error>
+          <doc:error name="&ERROR_NOT_MOUNTABLE;">if the device is not a mountable file system</doc:error>
+          <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_JOB_WAS_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
       </doc:doc>
     </method>
 
-    <!-- BEGIN LIST OF SIGNALS -->
+    <!-- ************************************************************ -->
+
+    <method name="Mount">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="filesystem_type" direction="in" type="s">
+        <doc:doc><doc:summary>File system type to use.</doc:summary></doc:doc>
+      </arg>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Mount Options. Valid mount options include 'remount' and other mount options accepted by the native mount program.</doc:summary></doc:doc>
+      </arg>
+      <arg name="mount_path" direction="out" type="s">
+        <doc:doc><doc:summary>Where the device was mounted.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Mount the device.
+          </doc:para>
+        </doc:description>
+        <doc:errors>
+          <doc:error name="&ERROR_IS_BUSY;">if the device is busy</doc:error>
+          <doc:error name="&ERROR_NOT_MOUNTABLE;">if the device is not a mountable file system</doc:error>
+          <doc:error name="&ERROR_FSTAB_ENTRY;">if the device is referenced in the /etc/fstab file</doc:error>
+          <doc:error name="&ERROR_MOUNT_OPTION_NOT_ALLOWED;">if an invalid or malformed mount option was given</doc:error>
+          <doc:error name="&ERROR_MOUNTED;">if the device is already mounted</doc:error>
+          <doc:error name="&ERROR_CANNOT_REMOUNT;">if the remount option was given and remounting the device failed</doc:error>
+          <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_JOB_WAS_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="Unmount">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Unmount options. Valid options currently include only 'force'.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Unmount the device.
+          </doc:para>
+        </doc:description>
+        <doc:errors>
+          <doc:error name="&ERROR_IS_BUSY;">if the device is busy</doc:error>
+          <doc:error name="&ERROR_UNMOUNT_OPTION_NOT_ALLOWED;">if an invalid or malformed unmount option was given</doc:error>
+          <doc:error name="&ERROR_NOT_MOUNTED;">if the device is not mounted</doc:error>
+          <doc:error name="&ERROR_NOT_MOUNTED_BY_DK;">if the device is not mounted by the DeviceKit-disks daemon</doc:error>
+          <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_JOB_WAS_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="UnlockEncrypted">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="secret" direction="in" type="s">
+        <doc:doc><doc:summary>Secret for unlocking the cleartext data.</doc:summary></doc:doc>
+      </arg>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
+      </arg>
+      <arg name="cleartext_device" direction="out" type="o">
+        <doc:doc><doc:summary>The cleartext device created.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Sets up a cleartext device using the given device as backing store.
+          </doc:para>
+        </doc:description>
+        <doc:errors>
+          <doc:error name="&ERROR_IS_BUSY;">if the device is busy</doc:error>
+          <doc:error name="&ERROR_NOT_CRYPTO;">if the device is not encrypted</doc:error>
+          <doc:error name="&ERROR_CRYPTO_ALREADY_UNLOCKED;">if the device is already unlocked</doc:error>
+          <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_JOB_WAS_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="LockEncrypted">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Tears down the cleartext device set up using
+            e.g. the <doc:ref type="method"
+            to="Device.UnlockEncrypted">UnlockEncrypted()</doc:ref>
+            method.
+          </doc:para>
+        </doc:description>
+        <doc:errors>
+          <doc:error name="&ERROR_IS_BUSY;">if the device is busy</doc:error>
+          <doc:error name="&ERROR_NOT_CRYPTO;">if the device is not encrypted</doc:error>
+          <doc:error name="&ERROR_CRYPTO_NOT_UNLOCKED;">if the device is not unlocked</doc:error>
+          <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_JOB_WAS_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="ChangeSecretForEncrypted">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="current_secret" direction="in" type="s">
+        <doc:doc><doc:summary>The current secret.</doc:summary></doc:doc>
+      </arg>
+      <arg name="new_secret" direction="in" type="s">
+        <doc:doc><doc:summary>The new secret.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Change the secret used to unlock an encrypted device.
+          </doc:para>
+        </doc:description>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_CRYPTO;">if the device is not encrypted</doc:error>
+          <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_JOB_WAS_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="Erase">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Supports erase= with values 'none', 'full', 'full3pass', 'full7pass' or 'full35pass'.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Erase the contents of the device.
+          </doc:para>
+        </doc:description>
+        <doc:errors>
+          <doc:error name="&ERROR_IS_BUSY;">if the device is busy</doc:error>
+          <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_JOB_WAS_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="AddComponentToLinuxMdArray">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="component" direction="in" type="o">
+        <doc:doc><doc:summary>Object path of the component to add</doc:summary></doc:doc>
+      </arg>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Adds a component to a Linux md RAID array. Existing data
+            on the given component will be erased.
+          </doc:para>
+        </doc:description>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_LINUX_MD;">device to add component to is not a Linux md RAID array</doc:error>
+          <doc:error name="&ERROR_NO_SUCH_DEVICE;">given component doesn't exist</doc:error>
+          <doc:error name="&ERROR_IS_BUSY;">component to add is busy</doc:error>
+          <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_JOB_WAS_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="RemoveComponentFromLinuxMdArray">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="component" direction="in" type="o">
+        <doc:doc><doc:summary>The component to remove from the array.</doc:summary></doc:doc>
+      </arg>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Supports erase= with values 'none', 'full', 'full3pass', 'full7pass' or 'full35pass'.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Removes a component from a Linux md RAID array. The component
+            will be removed and then the signatures on the component will be
+            erased according to the erase= option.
+          </doc:para>
+        </doc:description>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_LINUX_MD;">device to remove component from is not a Linux md RAID array</doc:error>
+          <doc:error name="&ERROR_NO_SUCH_DEVICE;">given component is not part of the array</doc:error>
+          <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_JOB_WAS_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="StopLinuxMdArray">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Stops a Linux md RAID array.
+          </doc:para>
+        </doc:description>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_LINUX_MD;">device is not a Linux md RAID array</doc:error>
+          <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_JOB_WAS_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="RetrieveSmartData">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+
+      <arg name="is_healthy" direction="out" type="b">
+        <doc:doc><doc:summary>Returns an assessment of whether the drive is healthy or not.</doc:summary></doc:doc>
+      </arg>
+      <arg name="power_on_hours" direction="out" type="i">
+        <doc:doc><doc:summary>Number of hours that the drive has been powered on.</doc:summary></doc:doc>
+      </arg>
+      <arg name="temperature" direction="out" type="i">
+        <doc:doc><doc:summary>Temperature of the drive, in Celcius.</doc:summary></doc:doc>
+      </arg>
+      <arg name="last_self_test_result" direction="out" type="s">
+        <doc:doc><doc:summary>Result of the last self test.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Retrieves S.M.A.R.T. data from the device. TODO: We
+            probably should return all attributes or something more
+            detailed. And at the same time try to abstract the
+            difference between SCSI and ATA.
+          </doc:para>
+          <doc:para>
+            The result of last_self_test_result is a string; the following
+            values are known:
+            completed_ok,
+            not_completed_aborted,
+            not_completed_aborted_reset,
+            not_completed_unknown_reason,
+            completed_failed_unknown_reason,
+            completed_failed_electrical,
+            completed_failed_servo,
+            completed_failed_read,
+            completed_failed_damage,
+            unknown,
+          </doc:para>
+        </doc:description>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_SMART_CAPABLE;">device is not S.M.A.R.T. capable</doc:error>
+          <doc:error name="&ERROR_NOT_DRIVE;">device is not a drive</doc:error>
+          <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_JOB_WAS_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+
+    <!-- ************************************************************ -->
+
+    <method name="RunSmartSelftest">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+
+      <arg name="test" direction="in" type="s">
+        <doc:doc><doc:summary>
+            The name of the test to run; supported values are 'short'
+            (usually less than ten minutes) and 'long' (usually tens
+            of minutes) and 'conveyance' (usually a few minutes). See
+            the smartctl(1) man page for details.
+        </doc:summary></doc:doc>
+      </arg>
+      <arg name="captive" direction="in" type="b">
+        <doc:doc><doc:summary>
+            If TRUE then the drive will block access to the drive for
+            the duration of the test. The method will error out if the
+            drive is busy, e.g. if partitions are mounted.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Runs a S.M.A.R.T. self test on the drive. TODO: need to figure out whether we need a return code.
+          </doc:para>
+        </doc:description>
+        <doc:errors>
+          <doc:error name="&ERROR_IS_BUSY;">if captive was selected and the device is busy</doc:error>
+          <doc:error name="&ERROR_NOT_SMART_CAPABLE;">device is not S.M.A.R.T. capable</doc:error>
+          <doc:error name="&ERROR_NOT_DRIVE;">device is not a drive</doc:error>
+          <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_JOB_WAS_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
 
     <!-- ************************************************************ -->
 
@@ -603,8 +636,6 @@
 
     <!-- ************************************************************ -->
 
-    <!-- Job state changed; clients should listen to this signal
-         to avoid polling the daemon for job state -->
     <signal name="JobChanged">
       <arg name="job-in-progress" type="b">
         <doc:doc><doc:summary>Whether a job is currently in progress.</doc:summary></doc:doc>
@@ -631,26 +662,15 @@
       <doc:doc>
         <doc:description>
           <doc:para>
-            Emitted when a job on a device changes.
+            Emitted when a job on a device changes. Clients should
+            listen to this signal to avoid polling the daemon for job
+            state.
           </doc:para>
         </doc:description>
       </doc:doc>
     </signal>
 
     <!-- ************************************************************ -->
-
-    <!-- BEGIN LIST OF PROPERTIES
-
-         A general note about properties: the set of values returned
-         can be expected to grow in the future as hardware evolves.
-         Care has been taken to both namespace some values (so
-         applications can make educated guesses) and export both
-         general and specific properties (such as id_usage
-         vs. id_type).
-
-         In general an empty string properties means "not set"; as the
-         empty string "" is not a valid object we use the object path
-         "/" to mean "not set" for object paths. -->
 
     <!-- The 'native-path' property is the OS native path for the
          device; on Linux this is the sysfs path.
@@ -780,14 +800,14 @@
             The job properties specify if a job initiated via the
             DeviceKit-disks daemon is currently in progress.  A job
             may be split into several sequential tasks; in that case
-            'job-num-tasks' will be greater than zero. If it is 0 none
-            of the 'job-cur-*' properties will be set.
+            <doc:ref type="property" to="Device:job-num-tasks">job-num-tasks</doc:ref>
+            will be greater than one.
       </doc:para></doc:description></doc:doc>
     </property>
     <property name="job-id" type="s" access="read">
       <doc:doc><doc:description><doc:para>
-            The 'job-id' property is used to identify the job and maps
-            1-1 with the names of the method calls on this interface,
+            This property is used to identify the job and maps 1-1
+            with the names of the method calls on this interface,
             e.g. 'Erase', 'CreateFilesystem' and so on.
       </doc:para></doc:description></doc:doc>
     </property>

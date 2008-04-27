@@ -37,32 +37,40 @@
     </synopsis>
   </refsynopsisdiv>
 
-  <refsect1 role="signal_proto">
-    <title role="signal_proto.title">Signals</title>
-    <synopsis>
-  <xsl:call-template name="signals-synopsis">
-    <xsl:with-param name="basename" select="$basename"/>
-  </xsl:call-template>
-    </synopsis>
-  </refsect1>
+  <xsl:choose>
+    <xsl:when test="count(///signal) > 0">
+      <refsect1 role="signal_proto">
+        <title role="signal_proto.title">Signals</title>
+        <synopsis>
+          <xsl:call-template name="signals-synopsis">
+            <xsl:with-param name="basename" select="$basename"/>
+          </xsl:call-template>
+        </synopsis>
+      </refsect1>
+    </xsl:when>
+  </xsl:choose>
 
   <refsect1 role="impl_interfaces">
     <title role="impl_interfaces.title">Implemented Interfaces</title>
     <para>
-    <xsl:value-of select="$interface"/> implements
+    Objects implementing <xsl:value-of select="$interface"/> also implements
     org.freedesktop.DBus.Introspectable,
     org.freedesktop.DBus.Properties
     </para>
   </refsect1>
 
-  <refsect1 role="properties">
-    <title role="properties.title">Properties</title>
-    <synopsis>
-  <xsl:call-template name="properties-synopsis">
-    <xsl:with-param name="basename" select="$basename"/>
-  </xsl:call-template>
-    </synopsis>
-  </refsect1>
+  <xsl:choose>
+    <xsl:when test="count(///property) > 0">
+      <refsect1 role="properties">
+        <title role="properties.title">Properties</title>
+        <synopsis>
+          <xsl:call-template name="properties-synopsis">
+            <xsl:with-param name="basename" select="$basename"/>
+          </xsl:call-template>
+        </synopsis>
+      </refsect1>
+    </xsl:when>
+  </xsl:choose>
 
   <refsect1 role="desc">
     <title role="desc.title">Description</title>
@@ -78,19 +86,27 @@
     </xsl:call-template>
   </refsect1>
 
-  <refsect1 role="signals">
-    <title role="signals.title">Signal Details</title>
-    <xsl:call-template name="signal-details">
-      <xsl:with-param name="basename" select="$basename"/>
-    </xsl:call-template>
-  </refsect1>
+  <xsl:choose>
+    <xsl:when test="count(///signal) > 0">
+      <refsect1 role="signals">
+        <title role="signals.title">Signal Details</title>
+        <xsl:call-template name="signal-details">
+          <xsl:with-param name="basename" select="$basename"/>
+        </xsl:call-template>
+      </refsect1>
+    </xsl:when>
+  </xsl:choose>
 
-  <refsect1 role="property_details">
-    <title role="property_details.title">Property Details</title>
-    <xsl:call-template name="property-details">
-      <xsl:with-param name="basename" select="$basename"/>
-    </xsl:call-template>
-  </refsect1>
+  <xsl:choose>
+    <xsl:when test="count(///property) > 0">
+      <refsect1 role="property_details">
+        <title role="property_details.title">Property Details</title>
+        <xsl:call-template name="property-details">
+          <xsl:with-param name="basename" select="$basename"/>
+        </xsl:call-template>
+      </refsect1>
+    </xsl:when>
+  </xsl:choose>
 
 </refentry>
 </xsl:template>
@@ -249,6 +265,12 @@ instead.</para></warning>
 </para>
 </xsl:template>
 
+<xsl:template match="doc:errors">
+<para role="errors">
+<xsl:apply-templates />
+</para>
+</xsl:template>
+
 <xsl:template match="doc:seealso">
 <para>
 See also:
@@ -299,7 +321,32 @@ See also:
 
   <xsl:apply-templates select="doc:doc/doc:since"/>
   <xsl:apply-templates select="doc:doc/doc:deprecated"/>
-  <xsl:apply-templates select="doc:doc/doc:permission"/>
+
+  <xsl:choose>
+    <xsl:when test="count(doc:doc/doc:errors) > 0">
+      <refsect3>
+        <title>Errors</title>
+        <variablelist role="errors">
+          <xsl:for-each select="doc:doc/doc:errors/doc:error">
+            <varlistentry>
+              <term><parameter><xsl:value-of select="@name"/></parameter>:</term>
+              <listitem><simpara><xsl:value-of select="."/></simpara></listitem>
+            </varlistentry>
+          </xsl:for-each>
+        </variablelist>
+      </refsect3>
+    </xsl:when>
+  </xsl:choose>
+
+  <xsl:choose>
+    <xsl:when test="count(doc:doc/doc:permission) > 0">
+      <refsect3>
+        <title>Permissions</title>
+        <xsl:apply-templates select="doc:doc/doc:permission"/>
+      </refsect3>
+    </xsl:when>
+  </xsl:choose>
+
   <xsl:apply-templates select="doc:doc/doc:seealso"/>
 </xsl:template>
 
