@@ -7,44 +7,6 @@
 
     <!-- ************************************************************ -->
 
-    <method name="InhibitShutdown">
-      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="cookie" direction="out" type="s">
-        <doc:doc><doc:summary>The cookie that is used to stop inhibiting the daemon.</doc:summary></doc:doc>
-      </arg>
-
-      <doc:doc>
-        <doc:description>
-          <doc:para>
-            Keep the daemon from exiting on inactivity; this is useful
-            for programs that wants to keep the the daemon around for
-            listening on signals.
-          </doc:para>
-        </doc:description>
-      </doc:doc>
-    </method>
-
-    <!-- ************************************************************ -->
-
-    <method name="UninhibitShutdown">
-      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="cookie" direction="in" type="s">
-        <doc:doc><doc:summary>The cookie.</doc:summary></doc:doc>
-      </arg>
-
-      <doc:doc>
-        <doc:description>
-          <doc:para>
-            Allow the daemon to exit when it's inactive. The cookie
-            parameter is the return value from <doc:ref type="method"
-            to="Disks.InhibitShutdown">InhibitShutdown()</doc:ref>.
-          </doc:para>
-        </doc:description>
-      </doc:doc>
-    </method>
-
-    <!-- ************************************************************ -->
-
     <method name="EnumerateDevices">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="devices" direction="out" type="ao">

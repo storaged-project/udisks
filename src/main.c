@@ -103,44 +103,6 @@ acquire_name_on_proxy (DBusGProxy *bus_proxy)
         return ret;
 }
 
-#if 0
-static gboolean
-print_prop (DevkitDevice *device, const char *key, const char *value, gpointer user_data)
-{
-        g_print ("  %s -> %s\n", key, value);
-        return FALSE;
-}
-
-static void
-print_device (DevkitDevice *device)
-{
-        int n;
-        const char * const *symlinks;
-
-        g_print (" subsys=%s\n"
-                 " native_path=%s\n"
-                 " device=%s\n",
-                 devkit_device_get_subsystem (device),
-                 devkit_device_get_native_path (device),
-                 devkit_device_get_device_file (device));
-
-        symlinks = devkit_device_get_device_file_symlinks (device);
-        for (n = 0; symlinks[n] != NULL; n++)
-                g_print ("  symlink %d: %s\n", n, symlinks[n]);
-        devkit_device_properties_foreach (device, print_prop, NULL);
-}
-
-static void
-device_event_signal_handler (DevkitClient *client,
-                             const char   *action,
-                             DevkitDevice *device,
-                             gpointer      user_data)
-{
-        g_print ("action=%s\n", action);
-        print_device (device);
-}
-#endif
-
 int
 main (int argc, char **argv)
 {
@@ -151,9 +113,7 @@ main (int argc, char **argv)
         DBusGProxy          *bus_proxy;
         DBusGConnection     *bus;
         int                  ret;
-        static gboolean      no_exit      = FALSE;
         static GOptionEntry  entries []   = {
-                { "no-exit", 0, 0, G_OPTION_ARG_NONE, &no_exit, "Don't exit after 30 seconds of inactivity", NULL },
                 { NULL }
         };
 
@@ -202,27 +162,13 @@ main (int argc, char **argv)
 
         g_debug ("Starting devkit-disks-daemon version %s", VERSION);
 
-        disks_daemon = devkit_disks_daemon_new (no_exit);
+        disks_daemon = devkit_disks_daemon_new ();
 
         if (disks_daemon == NULL) {
                 goto out;
         }
 
         loop = g_main_loop_new (NULL, FALSE);
-
-#if 0
-        DevkitClient *c;
-        const char *subsystems[] = {"block", "usb_endpoint", NULL};
-        c = devkit_client_new (NULL);//subsystems);
-        g_signal_connect (c, "device-event", G_CALLBACK (device_event_signal_handler), NULL);
-        devkit_client_connect (c, NULL);
-        GList *devs;
-        devs = devkit_client_enumerate_by_subsystem (c, subsystems, NULL);
-        g_list_foreach (devs, (GFunc) print_device, NULL);
-        g_list_foreach (devs, (GFunc) devkit_device_free, NULL);
-        g_list_free (devs);
-        g_object_unref (c);
-#endif
 
         g_main_loop_run (loop);
 

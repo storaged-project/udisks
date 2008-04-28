@@ -83,11 +83,6 @@ struct DevkitDisksDaemonPrivate
 
 	GIOChannel        *mdstat_channel;
 
-        GList             *inhibitors;
-        guint              killtimer_id;
-        int                num_local_inhibitors;
-        gboolean           no_exit;
-
         GHashTable        *map_native_path_to_device;
         GHashTable        *map_object_path_to_device;
 
@@ -101,73 +96,6 @@ static void     devkit_disks_daemon_finalize    (GObject     *object);
 G_DEFINE_TYPE (DevkitDisksDaemon, devkit_disks_daemon, G_TYPE_OBJECT)
 
 #define DEVKIT_DISKS_DAEMON_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), DEVKIT_TYPE_DISKS_DAEMON, DevkitDisksDaemonPrivate))
-
-typedef struct
-{
-        char *cookie;
-        char *system_bus_name;
-} Inhibitor;
-
-static void
-inhibitor_free (Inhibitor *inhibitor)
-{
-        g_free (inhibitor->cookie);
-        g_free (inhibitor->system_bus_name);
-        g_free (inhibitor);
-}
-
-static void
-inhibitor_list_changed (DevkitDisksDaemon *daemon)
-{
-        devkit_disks_daemon_reset_killtimer (daemon);
-}
-
-void
-devkit_disks_daemon_inhibit_killtimer (DevkitDisksDaemon *daemon)
-{
-        daemon->priv->num_local_inhibitors++;
-        devkit_disks_daemon_reset_killtimer (daemon);
-}
-
-void
-devkit_disks_daemon_uninhibit_killtimer (DevkitDisksDaemon *daemon)
-{
-        daemon->priv->num_local_inhibitors--;
-        devkit_disks_daemon_reset_killtimer (daemon);
-}
-
-static gboolean
-killtimer_do_exit (gpointer user_data)
-{
-        g_debug ("Exiting due to inactivity");
-        exit (0);
-        return FALSE;
-}
-
-void
-devkit_disks_daemon_reset_killtimer (DevkitDisksDaemon *daemon)
-{
-        /* remove existing timer */
-        if (daemon->priv->killtimer_id > 0) {
-                //g_debug ("Removed existing killtimer");
-                g_source_remove (daemon->priv->killtimer_id);
-                daemon->priv->killtimer_id = 0;
-        }
-
-        /* someone on the bus is inhibiting us */
-        if (g_list_length (daemon->priv->inhibitors) > 0)
-                return;
-
-        /* some local long running method is inhibiting us */
-        if (daemon->priv->num_local_inhibitors > 0)
-                return;
-
-        if (daemon->priv->no_exit)
-                return;
-
-        //g_debug ("Setting killtimer to 30 seconds");
-        daemon->priv->killtimer_id = g_timeout_add (30 * 1000, killtimer_do_exit, NULL);
-}
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
@@ -403,15 +331,6 @@ devkit_disks_daemon_finalize (GObject *object)
         if (daemon->priv->system_bus_connection != NULL)
                 dbus_g_connection_unref (daemon->priv->system_bus_connection);
 
-        if (daemon->priv->inhibitors != NULL) {
-                g_list_foreach (daemon->priv->inhibitors, (GFunc) inhibitor_free, NULL);
-                g_list_free (daemon->priv->inhibitors);
-        }
-
-        if (daemon->priv->killtimer_id > 0) {
-                g_source_remove (daemon->priv->killtimer_id);
-        }
-
         if (daemon->priv->mdstat_channel != NULL)
                 g_io_channel_unref (daemon->priv->mdstat_channel);
 
@@ -476,36 +395,8 @@ _filter (DBusConnection *connection, DBusMessage *message, void *user_data)
         interface = dbus_message_get_interface (message);
 
         if (dbus_message_is_signal (message, DBUS_INTERFACE_DBUS, "NameOwnerChanged")) {
-                GList *l;
-                const char *system_bus_name;
-                const char *old_service_name;
-                const char *new_service_name;
-
                 /* pass NameOwnerChanged signals from the bus to PolKitTracker */
                 polkit_tracker_dbus_func (daemon->priv->pk_tracker, message);
-
-                /* find the name */
-		if (dbus_message_get_args (message, NULL,
-                                           DBUS_TYPE_STRING, &system_bus_name,
-                                           DBUS_TYPE_STRING, &old_service_name,
-                                           DBUS_TYPE_STRING, &new_service_name,
-                                           DBUS_TYPE_INVALID)) {
-
-                        if (strlen (new_service_name) == 0) {
-                                /* he exited.. remove from inhibitor list */
-                                for (l = daemon->priv->inhibitors; l != NULL; l = l->next) {
-                                        Inhibitor *inhibitor = l->data;
-                                        if (strcmp (system_bus_name, inhibitor->system_bus_name) == 0) {
-                                                daemon->priv->inhibitors = g_list_remove (daemon->priv->inhibitors,
-                                                                                          inhibitor);
-                                                inhibitor_list_changed (daemon);
-                                                //g_debug ("removed inhibitor %s %s (disconnected from the bus)",
-                                                //inhibitor->cookie, inhibitor->system_bus_name);
-                                                break;
-                                        }
-                                }
-                        }
-                }
         }
 
         if (interface != NULL && g_str_has_prefix (interface, "org.freedesktop.ConsoleKit")) {
@@ -846,8 +737,6 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
         //g_unix_mount_monitor_set_rate_limit (daemon->priv->mount_monitor, 50);
         g_signal_connect (daemon->priv->mount_monitor, "mounts-changed", (GCallback) mounts_changed, daemon);
 
-        devkit_disks_daemon_reset_killtimer (daemon);
-
         return TRUE;
 
 error:
@@ -856,7 +745,7 @@ error:
 
 
 DevkitDisksDaemon *
-devkit_disks_daemon_new (gboolean no_exit)
+devkit_disks_daemon_new (void)
 {
         DevkitDisksDaemon *daemon;
         GError *error = NULL;
@@ -865,7 +754,6 @@ devkit_disks_daemon_new (gboolean no_exit)
         const char *subsystems[] = {"block", NULL};
 
         daemon = DEVKIT_DISKS_DAEMON (g_object_new (DEVKIT_TYPE_DISKS_DAEMON, NULL));
-        daemon->priv->no_exit = no_exit;
 
         if (!register_disks_daemon (DEVKIT_DISKS_DAEMON (daemon))) {
                 g_object_unref (daemon);
@@ -989,76 +877,6 @@ throw_error (DBusGMethodInvocation *context, int error_code, const char *format,
 
 /*--------------------------------------------------------------------------------------------------------------*/
 /* exported methods */
-
-gboolean
-devkit_disks_daemon_inhibit_shutdown (DevkitDisksDaemon     *daemon,
-                                      DBusGMethodInvocation *context)
-{
-        GList *l;
-        Inhibitor *inhibitor;
-        const char *system_bus_name;
-
-        system_bus_name = dbus_g_method_get_sender (context);
-
-        inhibitor = g_new0 (Inhibitor, 1);
-        inhibitor->system_bus_name = g_strdup (system_bus_name);
-regen_cookie:
-        inhibitor->cookie = g_strdup_printf ("%d", g_random_int_range (0, G_MAXINT));
-        for (l = daemon->priv->inhibitors; l != NULL; l = l->next) {
-                Inhibitor *i = l->data;
-                if (strcmp (i->cookie, inhibitor->cookie) == 0) {
-                        g_free (inhibitor->cookie);
-                        goto regen_cookie;
-                }
-        }
-
-        daemon->priv->inhibitors = g_list_prepend (daemon->priv->inhibitors, inhibitor);
-        inhibitor_list_changed (daemon);
-
-        //g_debug ("added inhibitor %s %s", inhibitor->cookie, inhibitor->system_bus_name);
-
-        dbus_g_method_return (context, inhibitor->cookie);
-        return TRUE;
-}
-
-/*--------------------------------------------------------------------------------------------------------------*/
-
-gboolean
-devkit_disks_daemon_uninhibit_shutdown (DevkitDisksDaemon     *daemon,
-                                        const char            *cookie,
-                                        DBusGMethodInvocation *context)
-{
-        GList *l;
-        GError *error;
-        const char *system_bus_name;
-
-        system_bus_name = dbus_g_method_get_sender (context);
-
-        for (l = daemon->priv->inhibitors; l != NULL; l = l->next) {
-                Inhibitor *inhibitor = l->data;
-                if (strcmp (cookie, inhibitor->cookie) == 0 &&
-                    strcmp (system_bus_name, inhibitor->system_bus_name) == 0) {
-
-                        daemon->priv->inhibitors = g_list_remove (daemon->priv->inhibitors, inhibitor);
-                        inhibitor_list_changed (daemon);
-
-                        //g_debug ("removed inhibitor %s %s", inhibitor->cookie, inhibitor->system_bus_name);
-                        dbus_g_method_return (context);
-                        goto out;
-                }
-        }
-
-        error = g_error_new (DEVKIT_DISKS_DAEMON_ERROR,
-                             DEVKIT_DISKS_DAEMON_ERROR_GENERAL,
-                             "No such inhibitor");
-        dbus_g_method_return_error (context, error);
-        g_error_free (error);
-
-out:
-        return TRUE;
-}
-
-/*--------------------------------------------------------------------------------------------------------------*/
 
 static void
 enumerate_cb (gpointer key, gpointer value, gpointer user_data)

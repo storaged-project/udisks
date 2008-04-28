@@ -51,7 +51,6 @@ static DBusGConnection     *bus = NULL;
 static DBusGProxy          *disks_proxy = NULL;
 static GMainLoop           *loop;
 
-static gboolean      opt_inhibit           = FALSE;
 static gboolean      opt_enumerate         = FALSE;
 static gboolean      opt_monitor           = FALSE;
 static gboolean      opt_monitor_detail    = FALSE;
@@ -716,18 +715,11 @@ device_properties_free (DeviceProperties *props)
 static gboolean
 do_monitor (void)
 {
-        char *cookie;
         GError *error;
 
         g_print ("Monitoring activity from the disks daemon. Press Ctrl+C to cancel.\n");
 
         error = NULL;
-        if (!org_freedesktop_DeviceKit_Disks_inhibit_shutdown (disks_proxy, &cookie, &error)) {
-                g_warning ("Couldn't inhibit shutdown on disks daemon: %s", error->message);
-                g_error_free (error);
-                goto out;
-        }
-        g_free (cookie);
 
         dbus_g_proxy_connect_signal (disks_proxy, "DeviceAdded",
                                      G_CALLBACK (device_added_signal_handler), NULL, NULL);
@@ -739,7 +731,6 @@ do_monitor (void)
                                      G_CALLBACK (device_job_changed_signal_handler), NULL, NULL);
         g_main_loop_run (loop);
 
-out:
         return FALSE;
 }
 
@@ -868,7 +859,6 @@ main (int argc, char **argv)
         GError              *error = NULL;
         unsigned int         n;
         static GOptionEntry  entries []     = {
-                { "inhibit", 0, 0, G_OPTION_ARG_NONE, &opt_inhibit, "Inhibit the disks daemon from exiting", NULL },
                 { "enumerate", 0, 0, G_OPTION_ARG_NONE, &opt_enumerate, "Enumerate objects paths for devices", NULL },
                 { "monitor", 0, 0, G_OPTION_ARG_NONE, &opt_monitor, "Monitor activity from the disk daemon", NULL },
                 { "monitor-detail", 0, 0, G_OPTION_ARG_NONE, &opt_monitor_detail, "Monitor with detail", NULL },
@@ -937,18 +927,7 @@ main (int argc, char **argv)
                                  G_TYPE_DOUBLE,
                                  G_TYPE_INVALID);
 
-        if (opt_inhibit) {
-                char *cookie;
-                if (!org_freedesktop_DeviceKit_Disks_inhibit_shutdown (disks_proxy, &cookie, &error)) {
-                        g_warning ("Couldn't inhibit disk daemon: %s", error->message);
-                        g_error_free (error);
-                        goto out;
-                }
-                g_free (cookie);
-                g_print ("Disks daemon is now inhibited from exiting. Press Ctrl+C to cancel.\n");
-                /* spin forever */
-                g_main_loop_run (loop);
-        } else if (opt_enumerate) {
+        if (opt_enumerate) {
                 GPtrArray *devices;
                 if (!org_freedesktop_DeviceKit_Disks_enumerate_devices (disks_proxy, &devices, &error)) {
                         g_warning ("Couldn't enumerate devices: %s", error->message);

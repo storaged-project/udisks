@@ -62,16 +62,12 @@ GType devkit_disks_daemon_error_get_type (void);
 
 GQuark             devkit_disks_daemon_error_quark         (void);
 GType              devkit_disks_daemon_get_type            (void);
-DevkitDisksDaemon *devkit_disks_daemon_new                 (gboolean no_exit);
+DevkitDisksDaemon *devkit_disks_daemon_new                 (void);
 
 /* local methods */
 
 struct DevkitDisksDevice;
 typedef struct DevkitDisksDevice DevkitDisksDevice;
-
-void               devkit_disks_daemon_inhibit_killtimer         (DevkitDisksDaemon       *daemon);
-void               devkit_disks_daemon_uninhibit_killtimer       (DevkitDisksDaemon       *daemon);
-void               devkit_disks_daemon_reset_killtimer           (DevkitDisksDaemon       *daemon);
 
 GList             *devkit_disks_daemon_local_get_all_devices     (DevkitDisksDaemon       *daemon);
 DevkitDisksDevice *devkit_disks_daemon_local_find_by_native_path (DevkitDisksDaemon       *daemon,
@@ -93,13 +89,6 @@ void               devkit_disks_daemon_local_synthesize_changed  (DevkitDisksDae
                                                                   DevkitDevice            *d);
 
 /* exported methods */
-
-gboolean devkit_disks_daemon_inhibit_shutdown (DevkitDisksDaemon     *daemon,
-                                               DBusGMethodInvocation *context);
-
-gboolean devkit_disks_daemon_uninhibit_shutdown (DevkitDisksDaemon     *daemon,
-                                                 const char            *cookie,
-                                                 DBusGMethodInvocation *context);
 
 gboolean devkit_disks_daemon_enumerate_devices (DevkitDisksDaemon     *daemon,
                                                 DBusGMethodInvocation *context);
