@@ -19,8 +19,8 @@
 <!ELEMENT example (#PCDATA|para|code|ref)*>
 <!ATTLIST language (c|glib|python|shell) #REQUIRED>
 <!ATTLIST title CDATA #IMPLIED>
-<!ELEMENT list (listheader?, item*)>
-<!ATTLIST list type (bullet|number|table) #REQUIRED>
+<!ELEMENT list (item*)>
+<!ATTLIST list type (bullet|number) #REQUIRED>
 <!ELEMENT item (term|definition)*>
 <!ELEMENT term (#PCDATA|ref)*>
 <!ELEMENT definition (#PCDATA|para)*>

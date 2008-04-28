@@ -192,14 +192,74 @@
 </programlisting>
 </xsl:template>
 
+<xsl:template match="doc:tt">
+  <literal>
+    <xsl:apply-templates />
+  </literal>
+</xsl:template>
+
+<xsl:template match="doc:i">
+  <emphasis>
+    <xsl:apply-templates />
+  </emphasis>
+</xsl:template>
+
+<xsl:template match="doc:b">
+  <emphasis role="bold">
+    <xsl:apply-templates />
+  </emphasis>
+</xsl:template>
+
+<xsl:template match="doc:ulink">
+  <ulink>
+    <xsl:attribute name="url"><xsl:value-of select="@url"/></xsl:attribute>
+    <xsl:value-of select="."/>
+  </ulink>
+</xsl:template>
+
 <xsl:template match="doc:summary">
-<!-- by default don't display -->
+  <xsl:apply-templates />
 </xsl:template>
 
 <xsl:template match="doc:example">
 <informalexample>
 <xsl:apply-templates />
 </informalexample>
+</xsl:template>
+
+<xsl:template name="listitems-do-term">
+  <xsl:param name="str"/>
+  <xsl:choose>
+    <xsl:when test="string-length($str) > 0">
+      <emphasis role="bold"><xsl:value-of select="$str"/>: </emphasis>
+    </xsl:when>
+  </xsl:choose>
+</xsl:template>
+
+<xsl:template name="do-listitems">
+  <xsl:for-each select="doc:item">
+    <listitem>
+      <xsl:call-template name="listitems-do-term"><xsl:with-param name="str" select="doc:term"/></xsl:call-template>
+      <xsl:apply-templates select="doc:definition"/>
+    </listitem>
+  </xsl:for-each>
+</xsl:template>
+
+<xsl:template match="doc:list">
+  <para>
+    <xsl:choose>
+      <xsl:when test="contains(@type,'number')">
+        <orderedlist>
+          <xsl:call-template name="do-listitems"/>
+        </orderedlist>
+      </xsl:when>
+      <xsl:otherwise>
+        <itemizedlist>
+          <xsl:call-template name="do-listitems"/>
+        </itemizedlist>
+      </xsl:otherwise>
+    </xsl:choose>
+  </para>
 </xsl:template>
 
 <xsl:template match="doc:para">
@@ -314,7 +374,7 @@ See also:
   <variablelist role="params">
     <xsl:for-each select="arg">
 <varlistentry><term><parameter><xsl:value-of select="@name"/></parameter>:</term>
-<listitem><simpara><xsl:value-of select="doc:doc/doc:summary"/></simpara></listitem>
+<listitem><simpara><xsl:apply-templates select="doc:doc/doc:summary"/></simpara></listitem>
 </varlistentry>
     </xsl:for-each>
   </variablelist>
@@ -330,7 +390,7 @@ See also:
           <xsl:for-each select="doc:doc/doc:errors/doc:error">
             <varlistentry>
               <term><parameter><xsl:value-of select="@name"/></parameter>:</term>
-              <listitem><simpara><xsl:value-of select="."/></simpara></listitem>
+              <listitem><simpara><xsl:apply-templates select="."/></simpara></listitem>
             </varlistentry>
           </xsl:for-each>
         </variablelist>
