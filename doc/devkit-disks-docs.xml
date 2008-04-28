@@ -59,7 +59,8 @@
     <title>D-Bus API Reference</title>
     <partintro>
       <para>
-	This part D-Bus interface used to access the DeviceKit daemon.
+	This part documents the D-Bus interface used to access the
+	DeviceKit-disks daemon.
       </para>
     </partintro>
     <xi:include href="dbus/org.freedesktop.DeviceKit.Disks.ref.xml"/>
@@ -70,10 +71,12 @@
     <title>Manual Pages</title>
     <partintro>
       <para>
-	This part presents the tools, file formats used and assorted documentation distributed with DeviceKit.
+	This part contains the manual pages distributed with DeviceKit-disks.
       </para>
     </partintro>
     <xi:include href="man/DeviceKit-disks.xml"/>
+    <xi:include href="man/devkit-disks-daemon.xml"/>
+    <xi:include href="man/devkit-disks.xml"/>
   </reference>
 
   <index>

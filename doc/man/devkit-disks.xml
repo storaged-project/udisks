@@ -1,0 +1,98 @@
+<refentry id="devkit-disks.1">
+  <refentryinfo>
+    <title>devkit-disks</title>
+    <date>April 2008</date>
+    <productname>devkit-disks</productname>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>devkit-disks</refentrytitle>
+    <manvolnum>1</manvolnum>
+    <refmiscinfo class="version"></refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>devkit-disks</refname>
+    <refpurpose>DeviceKit-disks command line tool</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>devkit-disks</command>
+      <arg><option>--monitor</option></arg>
+      <arg><option>--monitor-detail</option></arg>
+      <arg><option>--help</option></arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+
+  <refsect1><title>DESCRIPTION</title>
+    <para>
+      <emphasis><refentrytitle>devkit-disks</refentrytitle></emphasis> is a
+      simple command line client for the
+      <citerefentry><refentrytitle>DeviceKit-disks</refentrytitle><manvolnum>7</manvolnum></citerefentry>
+      daemon. TODO: not fully documented.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>OPTIONS</title>
+    <variablelist>
+      <varlistentry>
+        <term><option>--monitor</option></term>
+        <listitem>
+          <para>
+            Connect to the DeviceKit-disks daemon and print a line
+            every time a block device is added, removed or changed.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--monitor-detail</option></term>
+        <listitem>
+          <para>
+            Like <option>--monitor</option> but prints the full
+            details of the device whenever an event happens.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--help</option></term>
+        <listitem>
+          <para>
+            Show help options.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1><title>AUTHOR</title>
+    <para>
+      Written by David Zeuthen <email>david@fubar.dk</email> with
+      a lot of help from many others.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>BUGS</title>
+    <para>
+      Please send bug reports to either the distribution or the
+      hal mailing list,
+      see <ulink url="http://lists.freedesktop.org/mailman/listinfo/hal"/>
+      on how to subscribe.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para>
+      <citerefentry>
+        <refentrytitle>devkit-disks-daemon</refentrytitle><manvolnum>8</manvolnum>
+      </citerefentry>,
+      <citerefentry>
+        <refentrytitle>DeviceKit-disks</refentrytitle><manvolnum>7</manvolnum>
+      </citerefentry>,
+    </para>
+  </refsect1>
+</refentry>
