@@ -106,7 +106,7 @@
 
     <!-- ************************************************************ -->
 
-    <method name="CancelJob">
+    <method name="JobCancel">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
 
       <doc:doc>
@@ -125,7 +125,7 @@
 
     <!-- ************************************************************ -->
 
-    <method name="CreatePartitionTable">
+    <method name="PartitionTableCreate">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="scheme" direction="in" type="s">
         <doc:doc><doc:summary>
@@ -182,7 +182,7 @@
 
     <!-- ************************************************************ -->
 
-    <method name="DeletePartition">
+    <method name="PartitionDelete">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="options" direction="in" type="as">
         <doc:doc><doc:summary>Supports the <doc:tt>erase=</doc:tt> option for erasing the contents of the device.</doc:summary></doc:doc>
@@ -205,7 +205,7 @@
 
     <!-- ************************************************************ -->
 
-    <method name="CreatePartition">
+    <method name="PartitionCreate">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="offset" direction="in" type="t">
         <doc:doc><doc:summary>Where on the device to create the partition.</doc:summary></doc:doc>
@@ -292,14 +292,14 @@
         <doc:doc><doc:summary>
             The file system to create in new partition. Leave
             blank to skip creating a file system. See the
-            <doc:ref type="method" to="Device.CreateFilesystem">CreateFilesystem()</doc:ref> method
+            <doc:ref type="method" to="Device.FilesystemCreate">FilesystemCreate()</doc:ref> method
             for details.
         </doc:summary></doc:doc>
       </arg>
       <arg name="fsoptions" direction="in" type="as">
         <doc:doc><doc:summary>
             Options to use for file system creation. See the
-            <doc:ref type="method" to="Device.CreateFilesystem">CreateFilesystem()</doc:ref> method
+            <doc:ref type="method" to="Device.FilesystemCreate">FilesystemCreate()</doc:ref> method
             for details.
         </doc:summary></doc:doc>
       </arg>
@@ -327,26 +327,26 @@
 
     <!-- ************************************************************ -->
 
-    <method name="ModifyPartition">
+    <method name="PartitionModify">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="type" direction="in" type="s">
         <doc:doc><doc:summary>
             The type of the partition to create. See the <doc:tt>type</doc:tt> parameter of the
-            <doc:ref type="method" to="Device.CreatePartition">CreatePartition()</doc:ref> method
+            <doc:ref type="method" to="Device.PartitionCreate">PartitionCreate()</doc:ref> method
             for details on valid types.
         </doc:summary></doc:doc>
       </arg>
       <arg name="label" direction="in" type="s">
         <doc:doc><doc:summary>
             The label to use for the partition. See the <doc:tt>label</doc:tt> parameter of the
-            <doc:ref type="method" to="Device.CreatePartition">CreatePartition()</doc:ref> method
+            <doc:ref type="method" to="Device.PartitionCreate">PartitionCreate()</doc:ref> method
             for details on valid labels.
         </doc:summary></doc:doc>
       </arg>
       <arg name="flags" direction="in" type="as">
         <doc:doc><doc:summary>
             Flags to use for the partition. See the <doc:tt>flags</doc:tt> parameter of the
-            <doc:ref type="method" to="Device.CreatePartition">CreatePartition()</doc:ref> method
+            <doc:ref type="method" to="Device.PartitionCreate">PartitionCreate()</doc:ref> method
             for details on valid flags
         </doc:summary></doc:doc>
       </arg>
@@ -370,7 +370,7 @@
 
     <!-- ************************************************************ -->
 
-    <method name="CreateFilesystem">
+    <method name="FilesystemCreate">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="fstype" direction="in" type="s">
         <doc:doc><doc:summary>
@@ -412,7 +412,7 @@
 
     <!-- ************************************************************ -->
 
-    <method name="ChangeFilesystemLabel">
+    <method name="FilesystemSetLabel">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="new_label" direction="in" type="s">
         <doc:doc><doc:summary>
@@ -425,7 +425,7 @@
           <doc:para>
             Changes the file system label. See the <doc:tt>options</doc:tt> parameter of
             <doc:ref type="method"
-            to="Device.CreateFilesystem">CreateFilesystem()</doc:ref>
+            to="Device.FilesystemCreate">FilesystemCreate()</doc:ref>
             method for details of what valid labels are valid.
           </doc:para>
         </doc:description>
@@ -440,7 +440,7 @@
 
     <!-- ************************************************************ -->
 
-    <method name="Mount">
+    <method name="FilesystemMount">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="filesystem_type" direction="in" type="s">
         <doc:doc><doc:summary>File system type to use.</doc:summary></doc:doc>
@@ -473,7 +473,7 @@
 
     <!-- ************************************************************ -->
 
-    <method name="Unmount">
+    <method name="FilesystemUnmount">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="options" direction="in" type="as">
         <doc:doc><doc:summary>Unmount options. Valid options currently include only 'force'.</doc:summary></doc:doc>
@@ -498,10 +498,10 @@
 
     <!-- ************************************************************ -->
 
-    <method name="UnlockEncrypted">
+    <method name="EncryptedUnlock">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="secret" direction="in" type="s">
-        <doc:doc><doc:summary>Secret for unlocking the cleartext data.</doc:summary></doc:doc>
+      <arg name="passphrase" direction="in" type="s">
+        <doc:doc><doc:summary>Passphrase for unlocking the cleartext data.</doc:summary></doc:doc>
       </arg>
       <arg name="options" direction="in" type="as">
         <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
@@ -528,7 +528,7 @@
 
     <!-- ************************************************************ -->
 
-    <method name="LockEncrypted">
+    <method name="EncryptedLock">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="options" direction="in" type="as">
         <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
@@ -539,7 +539,7 @@
           <doc:para>
             Tears down the cleartext device set up using
             e.g. the <doc:ref type="method"
-            to="Device.UnlockEncrypted">UnlockEncrypted()</doc:ref>
+            to="Device.EncryptedUnlock">EncryptedUnlock()</doc:ref>
             method.
           </doc:para>
         </doc:description>
@@ -555,19 +555,19 @@
 
     <!-- ************************************************************ -->
 
-    <method name="ChangeSecretForEncrypted">
+    <method name="EncryptedChangePassphrase">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="current_secret" direction="in" type="s">
-        <doc:doc><doc:summary>The current secret.</doc:summary></doc:doc>
+      <arg name="current_passphrase" direction="in" type="s">
+        <doc:doc><doc:summary>The current passphrase.</doc:summary></doc:doc>
       </arg>
-      <arg name="new_secret" direction="in" type="s">
-        <doc:doc><doc:summary>The new secret.</doc:summary></doc:doc>
+      <arg name="new_passphrase" direction="in" type="s">
+        <doc:doc><doc:summary>The new passphrase.</doc:summary></doc:doc>
       </arg>
 
       <doc:doc>
         <doc:description>
           <doc:para>
-            Change the secret used to unlock an encrypted device.
+            Change the passphrase used to unlock an encrypted device.
           </doc:para>
         </doc:description>
         <doc:errors>
@@ -580,29 +580,7 @@
 
     <!-- ************************************************************ -->
 
-    <method name="Erase">
-      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="options" direction="in" type="as">
-        <doc:doc><doc:summary>Supports the <doc:tt>erase=</doc:tt> option for erasing the contents of the device.</doc:summary></doc:doc>
-      </arg>
-
-      <doc:doc>
-        <doc:description>
-          <doc:para>
-            Erase the contents of the device.
-          </doc:para>
-        </doc:description>
-        <doc:errors>
-          <doc:error name="&ERROR_IS_BUSY;">if the device is busy</doc:error>
-          <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
-          <doc:error name="&ERROR_JOB_WAS_CANCELLED;">if the job was cancelled</doc:error>
-        </doc:errors>
-      </doc:doc>
-    </method>
-
-    <!-- ************************************************************ -->
-
-    <method name="AddComponentToLinuxMdArray">
+    <method name="LinuxMdAddComponent">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="component" direction="in" type="o">
         <doc:doc><doc:summary>Object path of the component to add</doc:summary></doc:doc>
@@ -630,7 +608,7 @@
 
     <!-- ************************************************************ -->
 
-    <method name="RemoveComponentFromLinuxMdArray">
+    <method name="LinuxMdRemoveComponent">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="component" direction="in" type="o">
         <doc:doc><doc:summary>The component to remove from the array.</doc:summary></doc:doc>
@@ -658,7 +636,7 @@
 
     <!-- ************************************************************ -->
 
-    <method name="StopLinuxMdArray">
+    <method name="LinuxMdStop">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="options" direction="in" type="as">
         <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
@@ -680,7 +658,7 @@
 
     <!-- ************************************************************ -->
 
-    <method name="RetrieveSmartData">
+    <method name="SmartRetrieveData">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
 
       <arg name="is_healthy" direction="out" type="b">
@@ -731,7 +709,7 @@
 
     <!-- ************************************************************ -->
 
-    <method name="RunSmartSelftest">
+    <method name="SmartInitiateSelftest">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
 
       <arg name="test" direction="in" type="s">
@@ -932,7 +910,7 @@
 
          The 'job-id' property is used to identify the job and maps
          1-1 with the names of the method calls on this interface,
-         e.g. 'Erase', 'CreateFilesystem' and so on.
+         e.g. 'Erase', 'FilesystemCreate' and so on.
 
          Note that the 'job-cur-task' percentage starts at 0.  The
          percentage is normally a number between 0 and 100. If set to -1
@@ -957,14 +935,14 @@
       <doc:doc><doc:description><doc:para>
             This property is used to identify the job and maps 1-1
             with the names of the method calls on this interface,
-            e.g. 'Erase', 'CreateFilesystem' and so on.
+            e.g. 'Erase', 'FilesystemCreate' and so on.
       </doc:para></doc:description></doc:doc>
     </property>
     <property name="job-is-cancellable" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             Whether the job can be cancelled
             using <doc:ref type="method"
-            to="Device.CancelJob">CancelJob()</doc:ref> method.
+            to="Device.JobCancel">JobCancel()</doc:ref> method.
       </doc:para></doc:description></doc:doc>
     </property>
     <property name="job-num-tasks" type="i" access="read">
@@ -1169,7 +1147,7 @@
       <doc:doc><doc:description><doc:para>
             The scheme of the partition table this partition is part of.
             See the <doc:tt>scheme</doc:tt> parameter of the
-            <doc:ref type="method" to="Device.CreatePartitionTable">CreatePartitionTable()</doc:ref> method
+            <doc:ref type="method" to="Device.PartitionTableCreate">PartitionTableCreate()</doc:ref> method
             for details on known partitioning schemes.
             This property is only valid if
             <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
@@ -1180,7 +1158,7 @@
       <doc:doc><doc:description><doc:para>
             The type of the partition.
             See the <doc:tt>type</doc:tt> parameter of the
-            <doc:ref type="method" to="Device.CreatePartition">CreatePartition()</doc:ref> method
+            <doc:ref type="method" to="Device.PartitionCreate">PartitionCreate()</doc:ref> method
             for details on known partitioning types.
             This property is only valid if
             <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
@@ -1191,7 +1169,7 @@
       <doc:doc><doc:description><doc:para>
             The label of the partition.
             See the <doc:tt>label</doc:tt> parameter of the
-            <doc:ref type="method" to="Device.CreatePartition">CreatePartition()</doc:ref> method
+            <doc:ref type="method" to="Device.PartitionCreate">PartitionCreate()</doc:ref> method
             for details on partition labels.
             This property is only valid if
             <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
@@ -1202,7 +1180,7 @@
       <doc:doc><doc:description><doc:para>
             The UUID of the partition.
             See the <doc:tt>uuid</doc:tt> parameter of the
-            <doc:ref type="method" to="Device.CreatePartition">CreatePartition()</doc:ref> method
+            <doc:ref type="method" to="Device.PartitionCreate">PartitionCreate()</doc:ref> method
             for details on partition UUID's.
             This property is only valid if
             <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
@@ -1213,7 +1191,7 @@
       <doc:doc><doc:description><doc:para>
             Partition flags.
             See the <doc:tt>flags</doc:tt> parameter of the
-            <doc:ref type="method" to="Device.CreatePartition">CreatePartition()</doc:ref> method
+            <doc:ref type="method" to="Device.PartitionCreate">PartitionCreate()</doc:ref> method
             for details on partition flags.
             This property is only valid if
             <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
@@ -1273,7 +1251,7 @@
       <doc:doc><doc:description><doc:para>
             The scheme of the partition table.
             See the <doc:tt>scheme</doc:tt> parameter of the
-            <doc:ref type="method" to="Device.CreatePartitionTable">CreatePartitionTable()</doc:ref> method
+            <doc:ref type="method" to="Device.PartitionTableCreate">PartitionTableCreate()</doc:ref> method
             for details on known partitioning schemes.
             This property is only valid if
             <doc:ref type="property" to="Device:device-is-partition-table">device-is-partition-table</doc:ref>

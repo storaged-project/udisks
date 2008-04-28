@@ -116,32 +116,32 @@ gboolean           devkit_disks_device_local_partitions_are_busy (DevkitDisksDev
 
 /* exported methods */
 
-gboolean devkit_disks_device_cancel_job (DevkitDisksDevice     *device,
+gboolean devkit_disks_device_job_cancel (DevkitDisksDevice     *device,
                                          DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_mount (DevkitDisksDevice     *device,
-                                    const char            *filesystem_type,
-                                    char                 **options,
-                                    DBusGMethodInvocation *context);
+gboolean devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
+                                               const char            *filesystem_type,
+                                               char                 **options,
+                                               DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_unmount (DevkitDisksDevice     *device,
-                                      char                 **options,
-                                      DBusGMethodInvocation *context);
+gboolean devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
+                                                 char                 **options,
+                                                 DBusGMethodInvocation *context);
 
 gboolean devkit_disks_device_erase (DevkitDisksDevice     *device,
                                     char                 **options,
                                     DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_create_filesystem (DevkitDisksDevice     *device,
+gboolean devkit_disks_device_filesystem_create (DevkitDisksDevice     *device,
                                                 const char            *fstype,
                                                 char                 **options,
                                                 DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_delete_partition (DevkitDisksDevice     *device,
+gboolean devkit_disks_device_partition_delete (DevkitDisksDevice     *device,
                                                char                 **options,
                                                DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_create_partition (DevkitDisksDevice     *device,
+gboolean devkit_disks_device_partition_create (DevkitDisksDevice     *device,
                                                guint64                offset,
                                                guint64                size,
                                                const char            *type,
@@ -152,56 +152,56 @@ gboolean devkit_disks_device_create_partition (DevkitDisksDevice     *device,
                                                char                 **fsoptions,
                                                DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_modify_partition (DevkitDisksDevice     *device,
+gboolean devkit_disks_device_partition_modify (DevkitDisksDevice     *device,
                                                const char            *type,
                                                const char            *label,
                                                char                 **flags,
                                                DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_create_partition_table (DevkitDisksDevice     *device,
+gboolean devkit_disks_device_partition_table_create (DevkitDisksDevice     *device,
                                                      const char            *scheme,
                                                      char                 **options,
                                                      DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_unlock_encrypted (DevkitDisksDevice     *device,
+gboolean devkit_disks_device_encrypted_unlock (DevkitDisksDevice     *device,
                                                const char            *secret,
                                                char                 **options,
                                                DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_lock_encrypted (DevkitDisksDevice     *device,
+gboolean devkit_disks_device_encrypted_lock (DevkitDisksDevice     *device,
                                              char                 **options,
                                              DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_change_secret_for_encrypted (DevkitDisksDevice     *device,
+gboolean devkit_disks_device_encrypted_change_passphrase (DevkitDisksDevice     *device,
                                                           const char            *old_secret,
                                                           const char            *new_secret,
                                                           DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_change_filesystem_label (DevkitDisksDevice     *device,
-                                                      const char            *new_label,
+gboolean devkit_disks_device_filesystem_set_label (DevkitDisksDevice     *device,
+                                                   const char            *new_label,
+                                                   DBusGMethodInvocation *context);
+
+gboolean devkit_disks_device_smart_retrieve_data (DevkitDisksDevice     *device,
+                                                  DBusGMethodInvocation *context);
+
+gboolean devkit_disks_device_smart_initiate_selftest (DevkitDisksDevice     *device,
+                                                      const char            *test,
+                                                      gboolean               captive,
                                                       DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_retrieve_smart_data (DevkitDisksDevice     *device,
-                                                  DBusGMethodInvocation *context);
+gboolean devkit_disks_device_linux_md_stop (DevkitDisksDevice     *device,
+                                            char                 **options,
+                                            DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_run_smart_selftest (DevkitDisksDevice     *device,
-                                                 const char            *test,
-                                                 gboolean               captive,
-                                                 DBusGMethodInvocation *context);
+gboolean devkit_disks_device_linux_md_add_component (DevkitDisksDevice     *device,
+                                                     char                  *component,
+                                                     char                 **options,
+                                                     DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_stop_linux_md_array (DevkitDisksDevice     *device,
-                                                  char                 **options,
-                                                  DBusGMethodInvocation *context);
-
-gboolean devkit_disks_device_add_component_to_linux_md_array (DevkitDisksDevice     *device,
-                                                              char                  *component,
-                                                              char                 **options,
-                                                              DBusGMethodInvocation *context);
-
-gboolean devkit_disks_device_remove_component_from_linux_md_array (DevkitDisksDevice     *device,
-                                                                   char                  *component,
-                                                                   char                 **options,
-                                                                   DBusGMethodInvocation *context);
+gboolean devkit_disks_device_linux_md_remove_component (DevkitDisksDevice     *device,
+                                                        char                  *component,
+                                                        char                 **options,
+                                                        DBusGMethodInvocation *context);
 
 G_END_DECLS
 

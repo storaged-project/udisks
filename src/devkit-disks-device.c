@@ -72,24 +72,24 @@ typedef void (*UnlockEncryptionHookFunc) (DBusGMethodInvocation *context,
                                           DevkitDisksDevice *device,
                                           gpointer user_data);
 
-static gboolean devkit_disks_device_unlock_encrypted_internal (DevkitDisksDevice        *device,
+static gboolean devkit_disks_device_encrypted_unlock_internal (DevkitDisksDevice        *device,
                                                                const char               *secret,
                                                                char                    **options,
                                                                UnlockEncryptionHookFunc  hook_func,
                                                                gpointer                  hook_user_data,
                                                                DBusGMethodInvocation    *context);
 
-/* if create_filesystem_succeeded==FALSE, mkfs failed and an error has been reported back to the caller */
-typedef void (*CreateFilesystemHookFunc) (DBusGMethodInvocation *context,
+/* if filesystem_create_succeeded==FALSE, mkfs failed and an error has been reported back to the caller */
+typedef void (*FilesystemCreateHookFunc) (DBusGMethodInvocation *context,
                                           DevkitDisksDevice *device,
-                                          gboolean create_filesystem_succeeded,
+                                          gboolean filesystem_create_succeeded,
                                           gpointer user_data);
 
 static gboolean
-devkit_disks_device_create_filesystem_internal (DevkitDisksDevice       *device,
+devkit_disks_device_filesystem_create_internal (DevkitDisksDevice       *device,
                                                 const char              *fstype,
                                                 char                   **options,
-                                                CreateFilesystemHookFunc hook_func,
+                                                FilesystemCreateHookFunc hook_func,
                                                 gpointer                 hook_user_data,
                                                 DBusGMethodInvocation *context);
 
@@ -1624,6 +1624,7 @@ update_info (DevkitDisksDevice *device)
                          */
                         linux_md_emit_changed_on_components (device);
                 }
+		g_warning ("Linux MD array %s is not 'clear'; removing", device->priv->native_path);
                 goto out;
         }
 
@@ -1769,6 +1770,7 @@ update_info (DevkitDisksDevice *device)
         }
 
         if (devkit_device_properties_foreach (device->priv->d, update_info_properties_cb, device)) {
+		g_warning ("Iteration of properties was short circuited for %s", device->priv->native_path);
                 goto out;
         }
 
@@ -1782,7 +1784,7 @@ update_info (DevkitDisksDevice *device)
 
                 raid_level = g_strstrip (sysfs_get_string (device->priv->native_path, "md/level"));
                 if (raid_level == NULL) {
-                        g_warning ("Didn't find md/level. Ignoring.");
+                        g_warning ("Didn't find md/level for %s. Ignoring.", device->priv->native_path);
                         goto out;
                 }
                 device->priv->info.linux_md_level = raid_level;
@@ -2541,7 +2543,7 @@ typedef struct {
 } MountData;
 
 static MountData *
-mount_data_new (const char *mount_point, gboolean remove_dir_on_unmount, gboolean is_remount)
+filesystem_mount_data_new (const char *mount_point, gboolean remove_dir_on_unmount, gboolean is_remount)
 {
         MountData *data;
         data = g_new0 (MountData, 1);
@@ -2552,7 +2554,7 @@ mount_data_new (const char *mount_point, gboolean remove_dir_on_unmount, gboolea
 }
 
 static void
-mount_data_free (MountData *data)
+filesystem_mount_data_free (MountData *data)
 {
         g_free (data->mount_point);
         g_free (data);
@@ -2902,14 +2904,14 @@ prepend_default_mount_options (const FSMountOptions *fsmo, uid_t caller_uid, cha
 }
 
 static void
-mount_completed_cb (DBusGMethodInvocation *context,
-                    DevkitDisksDevice *device,
-                    PolKitCaller *pk_caller,
-                    gboolean job_was_cancelled,
-                    int status,
-                    const char *stderr,
-                    const char *stdout,
-                    gpointer user_data)
+filesystem_mount_completed_cb (DBusGMethodInvocation *context,
+                               DevkitDisksDevice *device,
+                               PolKitCaller *pk_caller,
+                               gboolean job_was_cancelled,
+                               int status,
+                               const char *stderr,
+                               const char *stdout,
+                               gpointer user_data)
 {
         MountData *data = (MountData *) user_data;
         uid_t uid;
@@ -2946,10 +2948,10 @@ mount_completed_cb (DBusGMethodInvocation *context,
 
 
 gboolean
-devkit_disks_device_mount (DevkitDisksDevice     *device,
-                           const char            *filesystem_type,
-                           char                 **given_options,
-                           DBusGMethodInvocation *context)
+devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
+                                      const char            *filesystem_type,
+                                      char                 **given_options,
+                                      DBusGMethodInvocation *context)
 {
         int n;
         GString *s;
@@ -3147,15 +3149,15 @@ try_another_mount_point:
 
         error = NULL;
         if (!job_new (context,
-                      "Mount",
+                      "FilesystemMount",
                       FALSE,
                       device,
                       pk_caller,
                       argv,
                       NULL,
-                      mount_completed_cb,
-                      mount_data_new (mount_point, remove_dir_on_unmount, is_remount),
-                      (GDestroyNotify) mount_data_free)) {
+                      filesystem_mount_completed_cb,
+                      filesystem_mount_data_new (mount_point, remove_dir_on_unmount, is_remount),
+                      (GDestroyNotify) filesystem_mount_data_free)) {
                 if (!is_remount) {
                         if (g_rmdir (mount_point) != 0) {
                                 g_warning ("Error removing dir in early mount error path: %m");
@@ -3177,14 +3179,14 @@ out:
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static void
-unmount_completed_cb (DBusGMethodInvocation *context,
-                      DevkitDisksDevice *device,
-                      PolKitCaller *pk_caller,
-                      gboolean job_was_cancelled,
-                      int status,
-                      const char *stderr,
-                      const char *stdout,
-                      gpointer user_data)
+filesystem_unmount_completed_cb (DBusGMethodInvocation *context,
+                                 DevkitDisksDevice *device,
+                                 PolKitCaller *pk_caller,
+                                 gboolean job_was_cancelled,
+                                 int status,
+                                 const char *stderr,
+                                 const char *stdout,
+                                 gpointer user_data)
 {
         char *mount_path = user_data;
 
@@ -3214,9 +3216,9 @@ unmount_completed_cb (DBusGMethodInvocation *context,
 }
 
 gboolean
-devkit_disks_device_unmount (DevkitDisksDevice     *device,
-                             char                 **options,
-                             DBusGMethodInvocation *context)
+devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
+                                        char                 **options,
+                                        DBusGMethodInvocation *context)
 {
         int n;
         char *argv[16];
@@ -3279,13 +3281,13 @@ devkit_disks_device_unmount (DevkitDisksDevice     *device,
 
         error = NULL;
         if (!job_new (context,
-                      "Unmount",
+                      "FilesystemUnmount",
                       FALSE,
                       device,
                       pk_caller,
                       argv,
                       NULL,
-                      unmount_completed_cb,
+                      filesystem_unmount_completed_cb,
                       g_strdup (device->priv->info.device_mount_path),
                       g_free)) {
                 goto out;
@@ -3393,7 +3395,7 @@ out:
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static void
-delete_partition_completed_cb (DBusGMethodInvocation *context,
+partition_delete_completed_cb (DBusGMethodInvocation *context,
                                DevkitDisksDevice *device,
                                PolKitCaller *pk_caller,
                                gboolean job_was_cancelled,
@@ -3425,7 +3427,7 @@ delete_partition_completed_cb (DBusGMethodInvocation *context,
 }
 
 gboolean
-devkit_disks_device_delete_partition (DevkitDisksDevice     *device,
+devkit_disks_device_partition_delete (DevkitDisksDevice     *device,
                                       char                 **options,
                                       DBusGMethodInvocation *context)
 {
@@ -3475,7 +3477,7 @@ devkit_disks_device_delete_partition (DevkitDisksDevice     *device,
         }
 
 #if 0
-        /* see rant in devkit_disks_device_create_partition() */
+        /* see rant in devkit_disks_device_partition_create() */
         if (devkit_disks_device_local_partitions_are_busy (enclosing_device)) {
                 throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
                              "A sibling partition is busy (TODO: addpart/delpart/partx to the rescue!)");
@@ -3515,13 +3517,13 @@ devkit_disks_device_delete_partition (DevkitDisksDevice     *device,
 
         error = NULL;
         if (!job_new (context,
-                      "DeletePartition",
+                      "PartitionDelete",
                       TRUE,
                       device,
                       pk_caller,
                       argv,
                       NULL,
-                      delete_partition_completed_cb,
+                      partition_delete_completed_cb,
                       g_object_ref (enclosing_device),
                       g_object_unref)) {
                 goto out;
@@ -3539,7 +3541,7 @@ out:
 /*--------------------------------------------------------------------------------------------------------------*/
 
 typedef struct {
-        CreateFilesystemHookFunc hook_func;
+        FilesystemCreateHookFunc hook_func;
         gpointer                 hook_user_data;
 } MkfsData;
 
@@ -3550,7 +3552,7 @@ mkfs_data_unref (MkfsData *data)
 }
 
 static void
-create_filesystem_completed_cb (DBusGMethodInvocation *context,
+filesystem_create_completed_cb (DBusGMethodInvocation *context,
                                 DevkitDisksDevice *device,
                                 PolKitCaller *pk_caller,
                                 gboolean job_was_cancelled,
@@ -3598,7 +3600,7 @@ typedef struct {
         char **options;
         char *fstype;
 
-        CreateFilesystemHookFunc mkfs_hook_func;
+        FilesystemCreateHookFunc mkfs_hook_func;
         gpointer                 mkfs_hook_user_data;
 
         guint device_changed_signal_handler_id;
@@ -3630,7 +3632,7 @@ mkfse_data_unref (MkfsEncryptedData *data)
 }
 
 static void
-create_filesystem_wait_for_cleartext_device_hook (DBusGMethodInvocation *context,
+filesystem_create_wait_for_cleartext_device_hook (DBusGMethodInvocation *context,
                                                   DevkitDisksDevice *device,
                                                   gpointer user_data)
 {
@@ -3644,7 +3646,7 @@ create_filesystem_wait_for_cleartext_device_hook (DBusGMethodInvocation *context
                  * the source. Only the device is different.
                  */
 
-                devkit_disks_device_create_filesystem_internal (device,
+                devkit_disks_device_filesystem_create_internal (device,
                                                                 data->fstype,
                                                                 data->options,
                                                                 data->mkfs_hook_func,
@@ -3655,7 +3657,7 @@ create_filesystem_wait_for_cleartext_device_hook (DBusGMethodInvocation *context
 }
 
 static void
-create_filesystem_wait_for_encrypted_device_changed_cb (DevkitDisksDaemon *daemon,
+filesystem_create_wait_for_encrypted_device_changed_cb (DevkitDisksDaemon *daemon,
                                                         const char *object_path,
                                                         gpointer user_data)
 {
@@ -3670,10 +3672,10 @@ create_filesystem_wait_for_encrypted_device_changed_cb (DevkitDisksDaemon *daemo
 
                 /* yay! we are now set up the corresponding cleartext device */
 
-                devkit_disks_device_unlock_encrypted_internal (data->device,
+                devkit_disks_device_encrypted_unlock_internal (data->device,
                                                                data->passphrase,
                                                                NULL,
-                                                               create_filesystem_wait_for_cleartext_device_hook,
+                                                               filesystem_create_wait_for_cleartext_device_hook,
                                                                data,
                                                                data->context);
 
@@ -3683,7 +3685,7 @@ create_filesystem_wait_for_encrypted_device_changed_cb (DevkitDisksDaemon *daemo
 }
 
 static gboolean
-create_filesystem_wait_for_encrypted_device_not_seen_cb (gpointer user_data)
+filesystem_create_wait_for_encrypted_device_not_seen_cb (gpointer user_data)
 {
         MkfsEncryptedData *data = user_data;
 
@@ -3700,7 +3702,7 @@ create_filesystem_wait_for_encrypted_device_not_seen_cb (gpointer user_data)
 
 
 static void
-create_filesystem_create_encrypted_device_completed_cb (DBusGMethodInvocation *context,
+filesystem_create_create_encrypted_device_completed_cb (DBusGMethodInvocation *context,
                                                         DevkitDisksDevice *device,
                                                         PolKitCaller *pk_caller,
                                                         gboolean job_was_cancelled,
@@ -3723,7 +3725,7 @@ create_filesystem_create_encrypted_device_completed_cb (DBusGMethodInvocation *c
                 data->device_changed_signal_handler_id = g_signal_connect_after (
                         device->priv->daemon,
                         "device-changed",
-                        (GCallback) create_filesystem_wait_for_encrypted_device_changed_cb,
+                        (GCallback) filesystem_create_wait_for_encrypted_device_changed_cb,
                         mkfse_data_ref (data));
 
                 /* set up timeout for error reporting if waiting failed
@@ -3733,7 +3735,7 @@ create_filesystem_create_encrypted_device_completed_cb (DBusGMethodInvocation *c
                  */
                 data->device_changed_timeout_id = g_timeout_add (
                         10 * 1000,
-                        create_filesystem_wait_for_encrypted_device_not_seen_cb,
+                        filesystem_create_wait_for_encrypted_device_not_seen_cb,
                         data);
 
 
@@ -3753,10 +3755,10 @@ create_filesystem_create_encrypted_device_completed_cb (DBusGMethodInvocation *c
 }
 
 static gboolean
-devkit_disks_device_create_filesystem_internal (DevkitDisksDevice       *device,
+devkit_disks_device_filesystem_create_internal (DevkitDisksDevice       *device,
                                                 const char              *fstype,
                                                 char                   **options,
-                                                CreateFilesystemHookFunc hook_func,
+                                                FilesystemCreateHookFunc hook_func,
                                                 gpointer                 hook_user_data,
                                                 DBusGMethodInvocation *context)
 {
@@ -3836,7 +3838,7 @@ devkit_disks_device_create_filesystem_internal (DevkitDisksDevice       *device,
                                       pk_caller,
                                       argv,
                                       passphrase_stdin,
-                                      create_filesystem_create_encrypted_device_completed_cb,
+                                      filesystem_create_create_encrypted_device_completed_cb,
                                       mkfse_data,
                                       (GDestroyNotify) mkfse_data_unref)) {
                                 goto out;
@@ -3864,13 +3866,13 @@ devkit_disks_device_create_filesystem_internal (DevkitDisksDevice       *device,
 
         error = NULL;
         if (!job_new (context,
-                      "CreateFilesystem",
+                      "FilesystemCreate",
                       TRUE,
                       device,
                       pk_caller,
                       argv,
                       options_for_stdin,
-                      create_filesystem_completed_cb,
+                      filesystem_create_completed_cb,
                       mkfs_data,
                       (GDestroyNotify) mkfs_data_unref)) {
                 goto out;
@@ -3888,18 +3890,18 @@ out:
 }
 
 gboolean
-devkit_disks_device_create_filesystem (DevkitDisksDevice     *device,
+devkit_disks_device_filesystem_create (DevkitDisksDevice     *device,
                                        const char            *fstype,
                                        char                 **options,
                                        DBusGMethodInvocation *context)
 {
-        return devkit_disks_device_create_filesystem_internal (device, fstype, options, NULL, NULL, context);
+        return devkit_disks_device_filesystem_create_internal (device, fstype, options, NULL, NULL, context);
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
 gboolean
-devkit_disks_device_cancel_job (DevkitDisksDevice     *device,
+devkit_disks_device_job_cancel (DevkitDisksDevice     *device,
                                 DBusGMethodInvocation *context)
 {
         if (!device->priv->job_in_progress) {
@@ -3949,7 +3951,7 @@ typedef struct {
 } CreatePartitionData;
 
 static CreatePartitionData *
-create_partition_data_new (DBusGMethodInvocation *context,
+partition_create_data_new (DBusGMethodInvocation *context,
                            DevkitDisksDevice *device,
                            guint64 offset,
                            guint64 size,
@@ -3972,14 +3974,14 @@ create_partition_data_new (DBusGMethodInvocation *context,
 }
 
 static CreatePartitionData *
-create_partition_data_ref (CreatePartitionData *data)
+partition_create_data_ref (CreatePartitionData *data)
 {
         data->refcount++;
         return data;
 }
 
 static void
-create_partition_data_unref (CreatePartitionData *data)
+partition_create_data_unref (CreatePartitionData *data)
 {
         data->refcount--;
         if (data->refcount == 0) {
@@ -3991,13 +3993,13 @@ create_partition_data_unref (CreatePartitionData *data)
 }
 
 static void
-create_partition_create_filesystem_hook (DBusGMethodInvocation *context,
+partition_create_filesystem_create_hook (DBusGMethodInvocation *context,
                                          DevkitDisksDevice *device,
-                                         gboolean create_filesystem_succeeded,
+                                         gboolean filesystem_create_succeeded,
                                          gpointer user_data)
 {
-        if (!create_filesystem_succeeded) {
-                /* dang.. CreateFilesystem already reported an error */
+        if (!filesystem_create_succeeded) {
+                /* dang.. FilesystemCreate already reported an error */
         } else {
                 /* it worked.. */
                 dbus_g_method_return (context, device->priv->object_path);
@@ -4005,7 +4007,7 @@ create_partition_create_filesystem_hook (DBusGMethodInvocation *context,
 }
 
 static void
-create_partition_device_added_cb (DevkitDisksDaemon *daemon,
+partition_create_device_added_cb (DevkitDisksDaemon *daemon,
                                   const char *object_path,
                                   gpointer user_data)
 {
@@ -4022,10 +4024,10 @@ create_partition_device_added_cb (DevkitDisksDaemon *daemon,
 
                 /* yay! it is.. now create the file system if requested */
                 if (strlen (data->fstype) > 0) {
-                        devkit_disks_device_create_filesystem_internal (device,
+                        devkit_disks_device_filesystem_create_internal (device,
                                                                         data->fstype,
                                                                         data->fsoptions,
-                                                                        create_partition_create_filesystem_hook,
+                                                                        partition_create_filesystem_create_hook,
                                                                         NULL,
                                                                         data->context);
                 } else {
@@ -4034,12 +4036,12 @@ create_partition_device_added_cb (DevkitDisksDaemon *daemon,
 
                 g_signal_handler_disconnect (daemon, data->device_added_signal_handler_id);
                 g_source_remove (data->device_added_timeout_id);
-                create_partition_data_unref (data);
+                partition_create_data_unref (data);
         }
 }
 
 static gboolean
-create_partition_device_not_seen_cb (gpointer user_data)
+partition_create_device_not_seen_cb (gpointer user_data)
 {
         CreatePartitionData *data = user_data;
 
@@ -4048,13 +4050,13 @@ create_partition_device_not_seen_cb (gpointer user_data)
                      "Error creating partition: timeout (10s) waiting for partition to show up");
 
         g_signal_handler_disconnect (data->device->priv->daemon, data->device_added_signal_handler_id);
-        create_partition_data_unref (data);
+        partition_create_data_unref (data);
 
         return FALSE;
 }
 
 static void
-create_partition_completed_cb (DBusGMethodInvocation *context,
+partition_create_completed_cb (DBusGMethodInvocation *context,
                                DevkitDisksDevice *device,
                                PolKitCaller *pk_caller,
                                gboolean job_was_cancelled,
@@ -4121,8 +4123,8 @@ create_partition_completed_cb (DBusGMethodInvocation *context,
                         data->device_added_signal_handler_id = g_signal_connect_after (
                                 device->priv->daemon,
                                 "device-added",
-                                (GCallback) create_partition_device_added_cb,
-                                create_partition_data_ref (data));
+                                (GCallback) partition_create_device_added_cb,
+                                partition_create_data_ref (data));
 
                         /* set up timeout for error reporting if waiting failed
                          *
@@ -4130,7 +4132,7 @@ create_partition_completed_cb (DBusGMethodInvocation *context,
                          * as one will cancel the other)
                          */
                         data->device_added_timeout_id = g_timeout_add (10 * 1000,
-                                                                       create_partition_device_not_seen_cb,
+                                                                       partition_create_device_not_seen_cb,
                                                                        data);
                 }
         } else {
@@ -4149,7 +4151,7 @@ create_partition_completed_cb (DBusGMethodInvocation *context,
 }
 
 gboolean
-devkit_disks_device_create_partition (DevkitDisksDevice     *device,
+devkit_disks_device_partition_create (DevkitDisksDevice     *device,
                                       guint64                offset,
                                       guint64                size,
                                       const char            *type,
@@ -4236,15 +4238,15 @@ devkit_disks_device_create_partition (DevkitDisksDevice     *device,
 
         error = NULL;
         if (!job_new (context,
-                      "CreatePartition",
+                      "PartitionCreate",
                       TRUE,
                       device,
                       pk_caller,
                       argv,
                       NULL,
-                      create_partition_completed_cb,
-                      create_partition_data_new (context, device, offset, size, fstype, fsoptions),
-                      (GDestroyNotify) create_partition_data_unref)) {
+                      partition_create_completed_cb,
+                      partition_create_data_new (context, device, offset, size, fstype, fsoptions),
+                      (GDestroyNotify) partition_create_data_unref)) {
                 goto out;
         }
 
@@ -4271,7 +4273,7 @@ typedef struct {
 } ModifyPartitionData;
 
 static ModifyPartitionData *
-modify_partition_data_new (DBusGMethodInvocation *context,
+partition_modify_data_new (DBusGMethodInvocation *context,
                            DevkitDisksDevice *device,
                            DevkitDisksDevice *enclosing_device,
                            const char *type,
@@ -4293,7 +4295,7 @@ modify_partition_data_new (DBusGMethodInvocation *context,
 }
 
 static void
-modify_partition_data_unref (ModifyPartitionData *data)
+partition_modify_data_unref (ModifyPartitionData *data)
 {
         g_object_unref (data->device);
         g_object_unref (data->enclosing_device);
@@ -4304,7 +4306,7 @@ modify_partition_data_unref (ModifyPartitionData *data)
 }
 
 static void
-modify_partition_completed_cb (DBusGMethodInvocation *context,
+partition_modify_completed_cb (DBusGMethodInvocation *context,
                                DevkitDisksDevice *device,
                                PolKitCaller *pk_caller,
                                gboolean job_was_cancelled,
@@ -4357,7 +4359,7 @@ modify_partition_completed_cb (DBusGMethodInvocation *context,
 }
 
 gboolean
-devkit_disks_device_modify_partition (DevkitDisksDevice     *device,
+devkit_disks_device_partition_modify (DevkitDisksDevice     *device,
                                       const char            *type,
                                       const char            *label,
                                       char                 **flags,
@@ -4432,15 +4434,15 @@ devkit_disks_device_modify_partition (DevkitDisksDevice     *device,
 
         error = NULL;
         if (!job_new (context,
-                      "ModifyPartition",
+                      "PartitionModify",
                       TRUE,
                       device,
                       pk_caller,
                       argv,
                       NULL,
-                      modify_partition_completed_cb,
-                      modify_partition_data_new (context, device, enclosing_device, type, label, flags),
-                      (GDestroyNotify) modify_partition_data_unref)) {
+                      partition_modify_completed_cb,
+                      partition_modify_data_new (context, device, enclosing_device, type, label, flags),
+                      (GDestroyNotify) partition_modify_data_unref)) {
                 goto out;
         }
 
@@ -4456,7 +4458,7 @@ out:
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static void
-create_partition_table_completed_cb (DBusGMethodInvocation *context,
+partition_table_create_completed_cb (DBusGMethodInvocation *context,
                                      DevkitDisksDevice *device,
                                      PolKitCaller *pk_caller,
                                      gboolean job_was_cancelled,
@@ -4516,7 +4518,7 @@ devkit_disks_device_local_partitions_are_busy (DevkitDisksDevice *device)
 }
 
 gboolean
-devkit_disks_device_create_partition_table (DevkitDisksDevice     *device,
+devkit_disks_device_partition_table_create (DevkitDisksDevice     *device,
                                             const char            *scheme,
                                             char                 **options,
                                             DBusGMethodInvocation *context)
@@ -4574,13 +4576,13 @@ devkit_disks_device_create_partition_table (DevkitDisksDevice     *device,
 
         error = NULL;
         if (!job_new (context,
-                      "CreatePartitionTable",
+                      "PartitionTableCreate",
                       TRUE,
                       device,
                       pk_caller,
                       argv,
                       NULL,
-                      create_partition_table_completed_cb,
+                      partition_table_create_completed_cb,
                       NULL,
                       NULL)) {
                 goto out;
@@ -4669,7 +4671,7 @@ unlock_encryption_data_unref (UnlockEncryptionData *data)
 
 
 static void
-unlock_encrypted_device_added_cb (DevkitDisksDaemon *daemon,
+encrypted_unlock_device_added_cb (DevkitDisksDaemon *daemon,
                                   const char *object_path,
                                   gpointer user_data)
 {
@@ -4697,7 +4699,7 @@ unlock_encrypted_device_added_cb (DevkitDisksDaemon *daemon,
 }
 
 static gboolean
-unlock_encrypted_device_not_seen_cb (gpointer user_data)
+encrypted_unlock_device_not_seen_cb (gpointer user_data)
 {
         UnlockEncryptionData *data = user_data;
 
@@ -4715,7 +4717,7 @@ unlock_encrypted_device_not_seen_cb (gpointer user_data)
 }
 
 static void
-unlock_encrypted_completed_cb (DBusGMethodInvocation *context,
+encrypted_unlock_completed_cb (DBusGMethodInvocation *context,
                                DevkitDisksDevice *device,
                                PolKitCaller *pk_caller,
                                gboolean job_was_cancelled,
@@ -4741,7 +4743,7 @@ unlock_encrypted_completed_cb (DBusGMethodInvocation *context,
                         data->device_added_signal_handler_id = g_signal_connect_after (
                                 device->priv->daemon,
                                 "device-added",
-                                (GCallback) unlock_encrypted_device_added_cb,
+                                (GCallback) encrypted_unlock_device_added_cb,
                                 unlock_encryption_data_ref (data));
 
                         /* set up timeout for error reporting if waiting failed
@@ -4750,7 +4752,7 @@ unlock_encrypted_completed_cb (DBusGMethodInvocation *context,
                          * as one will cancel the other)
                          */
                         data->device_added_timeout_id = g_timeout_add (10 * 1000,
-                                                                       unlock_encrypted_device_not_seen_cb,
+                                                                       encrypted_unlock_device_not_seen_cb,
                                                                        data);
                 }
         } else {
@@ -4771,7 +4773,7 @@ unlock_encrypted_completed_cb (DBusGMethodInvocation *context,
 }
 
 static gboolean
-devkit_disks_device_unlock_encrypted_internal (DevkitDisksDevice        *device,
+devkit_disks_device_encrypted_unlock_internal (DevkitDisksDevice        *device,
                                                const char               *secret,
                                                char                    **options,
                                                UnlockEncryptionHookFunc  hook_func,
@@ -4831,13 +4833,13 @@ devkit_disks_device_unlock_encrypted_internal (DevkitDisksDevice        *device,
 
         error = NULL;
         if (!job_new (context,
-                      "UnlockEncrypted",
+                      "EncryptedUnlock",
                       FALSE,
                       device,
                       pk_caller,
                       argv,
                       secret_as_stdin,
-                      unlock_encrypted_completed_cb,
+                      encrypted_unlock_completed_cb,
                       unlock_encryption_data_new (context, device, hook_func, hook_user_data),
                       (GDestroyNotify) unlock_encryption_data_unref)) {
                     goto out;
@@ -4856,18 +4858,18 @@ out:
 }
 
 gboolean
-devkit_disks_device_unlock_encrypted (DevkitDisksDevice     *device,
+devkit_disks_device_encrypted_unlock (DevkitDisksDevice     *device,
                                       const char            *secret,
                                       char                 **options,
                                       DBusGMethodInvocation *context)
 {
-        return devkit_disks_device_unlock_encrypted_internal (device, secret, options, NULL, NULL, context);
+        return devkit_disks_device_encrypted_unlock_internal (device, secret, options, NULL, NULL, context);
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static void
-lock_encrypted_completed_cb (DBusGMethodInvocation *context,
+encrypted_lock_completed_cb (DBusGMethodInvocation *context,
                              DevkitDisksDevice *device,
                              PolKitCaller *pk_caller,
                              gboolean job_was_cancelled,
@@ -4893,7 +4895,7 @@ lock_encrypted_completed_cb (DBusGMethodInvocation *context,
 }
 
 gboolean
-devkit_disks_device_lock_encrypted (DevkitDisksDevice     *device,
+devkit_disks_device_encrypted_lock (DevkitDisksDevice     *device,
                                     char                 **options,
                                     DBusGMethodInvocation *context)
 {
@@ -4942,13 +4944,13 @@ devkit_disks_device_lock_encrypted (DevkitDisksDevice     *device,
 
         error = NULL;
         if (!job_new (context,
-                      "LockEncrypted",
+                      "EncryptedLock",
                       FALSE,
                       device,
                       pk_caller,
                       argv,
                       NULL,
-                      lock_encrypted_completed_cb,
+                      encrypted_lock_completed_cb,
                       NULL,
                       NULL)) {
                     goto out;
@@ -4963,7 +4965,7 @@ out:
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static void
-change_secret_for_encrypted_completed_cb (DBusGMethodInvocation *context,
+encrypted_change_passphrase_completed_cb (DBusGMethodInvocation *context,
                                           DevkitDisksDevice *device,
                                           PolKitCaller *pk_caller,
                                           gboolean job_was_cancelled,
@@ -4989,7 +4991,7 @@ change_secret_for_encrypted_completed_cb (DBusGMethodInvocation *context,
 }
 
 gboolean
-devkit_disks_device_change_secret_for_encrypted (DevkitDisksDevice     *device,
+devkit_disks_device_encrypted_change_passphrase (DevkitDisksDevice     *device,
                                                  const char            *old_secret,
                                                  const char            *new_secret,
                                                  DBusGMethodInvocation *context)
@@ -5033,13 +5035,13 @@ devkit_disks_device_change_secret_for_encrypted (DevkitDisksDevice     *device,
 
         error = NULL;
         if (!job_new (context,
-                      "ChangeSecretForEncrypted",
+                      "EncryptedChangePassphrase",
                       FALSE,
                       device,
                       pk_caller,
                       argv,
                       secrets_as_stdin,
-                      change_secret_for_encrypted_completed_cb,
+                      encrypted_change_passphrase_completed_cb,
                       NULL,
                       NULL)) {
                 goto out;
@@ -5059,7 +5061,7 @@ out:
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static void
-change_filesystem_label_completed_cb (DBusGMethodInvocation *context,
+filesystem_set_label_completed_cb (DBusGMethodInvocation *context,
                                       DevkitDisksDevice *device,
                                       PolKitCaller *pk_caller,
                                       gboolean job_was_cancelled,
@@ -5098,7 +5100,7 @@ change_filesystem_label_completed_cb (DBusGMethodInvocation *context,
 }
 
 gboolean
-devkit_disks_device_change_filesystem_label (DevkitDisksDevice     *device,
+devkit_disks_device_filesystem_set_label (DevkitDisksDevice     *device,
                                              const char            *new_label,
                                              DBusGMethodInvocation *context)
 {
@@ -5145,13 +5147,13 @@ devkit_disks_device_change_filesystem_label (DevkitDisksDevice     *device,
 
         error = NULL;
         if (!job_new (context,
-                      "ChangeFilesystemLabel",
+                      "FilesystemSetLabel",
                       FALSE,
                       device,
                       pk_caller,
                       argv,
                       NULL,
-                      change_filesystem_label_completed_cb,
+                      filesystem_set_label_completed_cb,
                       g_strdup (new_label),
                       g_free)) {
                 goto out;
@@ -5166,7 +5168,7 @@ out:
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static void
-retrieve_smart_data_completed_cb (DBusGMethodInvocation *context,
+smart_retrieve_data_completed_cb (DBusGMethodInvocation *context,
                                   DevkitDisksDevice *device,
                                   PolKitCaller *pk_caller,
                                   gboolean job_was_cancelled,
@@ -5342,7 +5344,7 @@ out:
 }
 
 gboolean
-devkit_disks_device_retrieve_smart_data (DevkitDisksDevice     *device,
+devkit_disks_device_smart_retrieve_data (DevkitDisksDevice     *device,
                                          DBusGMethodInvocation *context)
 {
         int n;
@@ -5377,13 +5379,13 @@ devkit_disks_device_retrieve_smart_data (DevkitDisksDevice     *device,
 
         error = NULL;
         if (!job_new (context,
-                      "RetrieveSmartData",
+                      "SmartRetrieveData",
                       FALSE,
                       device,
                       pk_caller,
                       argv,
                       NULL,
-                      retrieve_smart_data_completed_cb,
+                      smart_retrieve_data_completed_cb,
                       NULL,
                       NULL)) {
                 goto out;
@@ -5398,7 +5400,7 @@ out:
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static void
-run_smart_selftest_completed_cb (DBusGMethodInvocation *context,
+smart_initiate_selftest_completed_cb (DBusGMethodInvocation *context,
                                  DevkitDisksDevice *device,
                                  PolKitCaller *pk_caller,
                                  gboolean job_was_cancelled,
@@ -5426,7 +5428,7 @@ run_smart_selftest_completed_cb (DBusGMethodInvocation *context,
 }
 
 gboolean
-devkit_disks_device_run_smart_selftest (DevkitDisksDevice     *device,
+devkit_disks_device_smart_initiate_selftest (DevkitDisksDevice     *device,
                                         const char            *test,
                                         gboolean               captive,
                                         DBusGMethodInvocation *context)
@@ -5478,13 +5480,13 @@ devkit_disks_device_run_smart_selftest (DevkitDisksDevice     *device,
 
         error = NULL;
         if (!job_new (context,
-                      "RunSmartSelftest",
+                      "SmartInitiateSelftest",
                       TRUE,
                       device,
                       pk_caller,
                       argv,
                       NULL,
-                      run_smart_selftest_completed_cb,
+                      smart_initiate_selftest_completed_cb,
                       NULL,
                       NULL)) {
                 goto out;
@@ -5499,7 +5501,7 @@ out:
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static void
-stop_linux_md_array_completed_cb (DBusGMethodInvocation *context,
+linux_md_stop_completed_cb (DBusGMethodInvocation *context,
                                   DevkitDisksDevice *device,
                                   PolKitCaller *pk_caller,
                                   gboolean job_was_cancelled,
@@ -5533,7 +5535,7 @@ stop_linux_md_array_completed_cb (DBusGMethodInvocation *context,
 }
 
 gboolean
-devkit_disks_device_stop_linux_md_array (DevkitDisksDevice     *device,
+devkit_disks_device_linux_md_stop (DevkitDisksDevice     *device,
                                          char                 **options,
                                          DBusGMethodInvocation *context)
 {
@@ -5569,13 +5571,13 @@ devkit_disks_device_stop_linux_md_array (DevkitDisksDevice     *device,
 
         error = NULL;
         if (!job_new (context,
-                      "StopLinuxMdArray",
+                      "LinuxMdStop",
                       TRUE,
                       device,
                       pk_caller,
                       argv,
                       NULL,
-                      stop_linux_md_array_completed_cb,
+                      linux_md_stop_completed_cb,
                       NULL,
                       NULL)) {
                 goto out;
@@ -5590,7 +5592,7 @@ out:
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static void
-add_component_to_linux_md_array_completed_cb (DBusGMethodInvocation *context,
+linux_md_add_component_completed_cb (DBusGMethodInvocation *context,
                                               DevkitDisksDevice *device,
                                               PolKitCaller *pk_caller,
                                               gboolean job_was_cancelled,
@@ -5628,7 +5630,7 @@ add_component_to_linux_md_array_completed_cb (DBusGMethodInvocation *context,
 }
 
 gboolean
-devkit_disks_device_add_component_to_linux_md_array (DevkitDisksDevice     *device,
+devkit_disks_device_linux_md_add_component (DevkitDisksDevice     *device,
                                                      char                  *component,
                                                      char                 **options,
                                                      DBusGMethodInvocation *context)
@@ -5688,13 +5690,13 @@ devkit_disks_device_add_component_to_linux_md_array (DevkitDisksDevice     *devi
 
         error = NULL;
         if (!job_new (context,
-                      "AddComponentToLinuxMdArray",
+                      "LinuxMdAddComponent",
                       TRUE,
                       device,
                       pk_caller,
                       argv,
                       NULL,
-                      add_component_to_linux_md_array_completed_cb,
+                      linux_md_add_component_completed_cb,
                       g_object_ref (slave),
                       g_object_unref)) {
                 goto out;
@@ -5757,7 +5759,7 @@ remove_component_data_unref (RemoveComponentData *data)
 
 
 static void
-remove_component_from_linux_md_array_device_changed_cb (DevkitDisksDaemon *daemon,
+linux_md_remove_component_device_changed_cb (DevkitDisksDaemon *daemon,
                                                         const char *object_path,
                                                         gpointer user_data)
 {
@@ -5779,7 +5781,7 @@ remove_component_from_linux_md_array_device_changed_cb (DevkitDisksDaemon *daemo
 }
 
 static gboolean
-remove_component_from_linux_md_array_device_not_seen_cb (gpointer user_data)
+linux_md_remove_component_device_not_seen_cb (gpointer user_data)
 {
         RemoveComponentData *data = user_data;
 
@@ -5795,7 +5797,7 @@ remove_component_from_linux_md_array_device_not_seen_cb (gpointer user_data)
 
 
 static void
-remove_component_from_linux_md_array_completed_cb (DBusGMethodInvocation *context,
+linux_md_remove_component_completed_cb (DBusGMethodInvocation *context,
                                                    DevkitDisksDevice *device,
                                                    PolKitCaller *pk_caller,
                                                    gboolean job_was_cancelled,
@@ -5821,7 +5823,7 @@ remove_component_from_linux_md_array_completed_cb (DBusGMethodInvocation *contex
                 data->device_changed_signal_handler_id = g_signal_connect_after (
                         device->priv->daemon,
                         "device-changed",
-                        (GCallback) remove_component_from_linux_md_array_device_changed_cb,
+                        (GCallback) linux_md_remove_component_device_changed_cb,
                         remove_component_data_ref (data));
 
                 /* set up timeout for error reporting if waiting failed
@@ -5831,7 +5833,7 @@ remove_component_from_linux_md_array_completed_cb (DBusGMethodInvocation *contex
                  */
                 data->device_changed_timeout_id = g_timeout_add (
                         10 * 1000,
-                        remove_component_from_linux_md_array_device_not_seen_cb,
+                        linux_md_remove_component_device_not_seen_cb,
                         data);
 
         } else {
@@ -5849,7 +5851,7 @@ remove_component_from_linux_md_array_completed_cb (DBusGMethodInvocation *contex
 }
 
 gboolean
-devkit_disks_device_remove_component_from_linux_md_array (DevkitDisksDevice     *device,
+devkit_disks_device_linux_md_remove_component (DevkitDisksDevice     *device,
                                                           char                  *component,
                                                           char                 **options,
                                                           DBusGMethodInvocation *context)
@@ -5915,13 +5917,13 @@ devkit_disks_device_remove_component_from_linux_md_array (DevkitDisksDevice     
 
         error = NULL;
         if (!job_new (context,
-                      "RemoveComponentFromLinuxMdArray",
+                      "LinuxMdRemoveComponent",
                       TRUE,
                       device,
                       pk_caller,
                       argv,
                       NULL,
-                      remove_component_from_linux_md_array_completed_cb,
+                      linux_md_remove_component_completed_cb,
                       remove_component_data_new (context, slave, options),
                       (GDestroyNotify) remove_component_data_unref)) {
                 goto out;
@@ -5946,16 +5948,16 @@ typedef struct {
         DevkitDisksDaemon *daemon;
         char *uuid;
 
-} AssembleLinuxMdArrayData;
+} LinuxMdStartData;
 
-static AssembleLinuxMdArrayData *
-assemble_linux_md_array_data_new (DBusGMethodInvocation *context,
-                                  DevkitDisksDaemon     *daemon,
-                                  const char            *uuid)
+static LinuxMdStartData *
+linux_md_start_data_new (DBusGMethodInvocation *context,
+                         DevkitDisksDaemon     *daemon,
+                         const char            *uuid)
 {
-        AssembleLinuxMdArrayData *data;
+        LinuxMdStartData *data;
 
-        data = g_new0 (AssembleLinuxMdArrayData, 1);
+        data = g_new0 (LinuxMdStartData, 1);
         data->refcount = 1;
 
         data->context = context;
@@ -5964,15 +5966,15 @@ assemble_linux_md_array_data_new (DBusGMethodInvocation *context,
         return data;
 }
 
-static AssembleLinuxMdArrayData *
-assemble_linux_md_array_data_ref (AssembleLinuxMdArrayData *data)
+static LinuxMdStartData *
+linux_md_start_data_ref (LinuxMdStartData *data)
 {
         data->refcount++;
         return data;
 }
 
 static void
-assemble_linux_md_array_data_unref (AssembleLinuxMdArrayData *data)
+linux_md_start_data_unref (LinuxMdStartData *data)
 {
         data->refcount--;
         if (data->refcount == 0) {
@@ -5983,11 +5985,11 @@ assemble_linux_md_array_data_unref (AssembleLinuxMdArrayData *data)
 }
 
 static void
-assemble_linux_md_array_device_added_cb (DevkitDisksDaemon *daemon,
-                                         const char *object_path,
-                                         gpointer user_data)
+linux_md_start_device_added_cb (DevkitDisksDaemon *daemon,
+                                const char *object_path,
+                                gpointer user_data)
 {
-        AssembleLinuxMdArrayData *data = user_data;
+        LinuxMdStartData *data = user_data;
         DevkitDisksDevice *device;
 
         /* check the device is the one we're looking for */
@@ -6003,37 +6005,37 @@ assemble_linux_md_array_device_added_cb (DevkitDisksDaemon *daemon,
 
                 g_signal_handler_disconnect (daemon, data->device_added_signal_handler_id);
                 g_source_remove (data->device_added_timeout_id);
-                assemble_linux_md_array_data_unref (data);
+                linux_md_start_data_unref (data);
         }
 }
 
 static gboolean
-assemble_linux_md_array_device_not_seen_cb (gpointer user_data)
+linux_md_start_device_not_seen_cb (gpointer user_data)
 {
-        AssembleLinuxMdArrayData *data = user_data;
+        LinuxMdStartData *data = user_data;
 
         throw_error (data->context,
                      DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
                      "Error assembling array: timeout (10s) waiting for array to show up");
 
         g_signal_handler_disconnect (data->daemon, data->device_added_signal_handler_id);
-        assemble_linux_md_array_data_unref (data);
+        linux_md_start_data_unref (data);
         return FALSE;
 }
 
 /* NOTE: This is job completion callback from a method on the daemon, not the device. */
 
 static void
-assemble_linux_md_array_completed_cb (DBusGMethodInvocation *context,
-                                      DevkitDisksDevice *device,
-                                      PolKitCaller *pk_caller,
-                                      gboolean job_was_cancelled,
-                                      int status,
-                                      const char *stderr,
-                                      const char *stdout,
-                                      gpointer user_data)
+linux_md_start_completed_cb (DBusGMethodInvocation *context,
+                             DevkitDisksDevice *device,
+                             PolKitCaller *pk_caller,
+                             gboolean job_was_cancelled,
+                             int status,
+                             const char *stderr,
+                             const char *stdout,
+                             gpointer user_data)
 {
-        AssembleLinuxMdArrayData *data = user_data;
+        LinuxMdStartData *data = user_data;
 
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
                 GList *l;
@@ -6067,8 +6069,8 @@ assemble_linux_md_array_completed_cb (DBusGMethodInvocation *context,
                         data->device_added_signal_handler_id = g_signal_connect_after (
                                 data->daemon,
                                 "device-added",
-                                (GCallback) assemble_linux_md_array_device_added_cb,
-                                assemble_linux_md_array_data_ref (data));
+                                (GCallback) linux_md_start_device_added_cb,
+                                linux_md_start_data_ref (data));
 
                         /* set up timeout for error reporting if waiting failed
                          *
@@ -6076,7 +6078,7 @@ assemble_linux_md_array_completed_cb (DBusGMethodInvocation *context,
                          * as one will cancel the other)
                          */
                         data->device_added_timeout_id = g_timeout_add (10 * 1000,
-                                                                       assemble_linux_md_array_device_not_seen_cb,
+                                                                       linux_md_start_device_not_seen_cb,
                                                                        data);
                 }
 
@@ -6098,10 +6100,10 @@ assemble_linux_md_array_completed_cb (DBusGMethodInvocation *context,
 /* NOTE: This is a method on the daemon, not the device. */
 
 gboolean
-devkit_disks_daemon_assemble_linux_md_array (DevkitDisksDaemon     *daemon,
-                                             GPtrArray             *components,
-                                             char                 **options,
-                                             DBusGMethodInvocation *context)
+devkit_disks_daemon_linux_md_start (DevkitDisksDaemon     *daemon,
+                                    GPtrArray             *components,
+                                    char                 **options,
+                                    DBusGMethodInvocation *context)
 {
         int n;
         int m;
@@ -6227,15 +6229,15 @@ devkit_disks_daemon_assemble_linux_md_array (DevkitDisksDaemon     *daemon,
 
         error = NULL;
         if (!job_new (context,
-                      "AssembleLinuxMdArray",
+                      "LinuxMdStart",
                       TRUE,
                       NULL,
                       pk_caller,
                       argv,
                       NULL,
-                      assemble_linux_md_array_completed_cb,
-                      assemble_linux_md_array_data_new (context, daemon, uuid),
-                      (GDestroyNotify) assemble_linux_md_array_data_unref)) {
+                      linux_md_start_completed_cb,
+                      linux_md_start_data_new (context, daemon, uuid),
+                      (GDestroyNotify) linux_md_start_data_unref)) {
                 goto out;
         }
 
