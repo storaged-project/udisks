@@ -87,6 +87,8 @@ struct DevkitDisksDaemonPrivate
         GHashTable        *map_object_path_to_device;
 
         GUnixMountMonitor *mount_monitor;
+
+        guint              smart_refresh_timer_id;
 };
 
 static void     devkit_disks_daemon_class_init  (DevkitDisksDaemonClass *klass);
@@ -347,6 +349,10 @@ devkit_disks_daemon_finalize (GObject *object)
 
         if (daemon->priv->devkit_client != NULL) {
                 g_object_unref (daemon->priv->devkit_client);
+        }
+
+        if (daemon->priv->smart_refresh_timer_id > 0) {
+                g_source_remove (daemon->priv->smart_refresh_timer_id);
         }
 
         G_OBJECT_CLASS (devkit_disks_daemon_parent_class)->finalize (object);
@@ -624,6 +630,30 @@ out:
 	return TRUE;
 }
 
+static gboolean
+refresh_smart_data (DevkitDisksDaemon *daemon)
+{
+        DevkitDisksDevice *device;
+        const char *native_path;
+        GHashTableIter iter;
+
+        g_hash_table_iter_init (&iter, daemon->priv->map_native_path_to_device);
+        while (g_hash_table_iter_next (&iter, (gpointer *) &native_path, (gpointer *) &device)) {
+                if (device->priv->drive_smart_is_capable) {
+                        char *options[] = {NULL};
+
+                        g_warning ("automatically refreshing SMART data for %s", native_path);
+                        devkit_disks_device_drive_smart_refresh_data (device, options, NULL);
+                }
+        }
+
+        /* update in another 30 minutes */
+        daemon->priv->smart_refresh_timer_id = g_timeout_add_seconds (30 * 60,
+                                                                      (GSourceFunc) refresh_smart_data,
+                                                                      daemon);
+        return FALSE;
+}
+
 
 static gboolean
 register_disks_daemon (DevkitDisksDaemon *daemon)
@@ -738,7 +768,6 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
         g_signal_connect (daemon->priv->mount_monitor, "mounts-changed", (GCallback) mounts_changed, daemon);
 
         return TRUE;
-
 error:
         return FALSE;
 }
@@ -783,6 +812,9 @@ devkit_disks_daemon_new (void)
         l = g_hash_table_get_values (daemon->priv->map_native_path_to_device);
         mounts_file_clean_stale (l);
         g_list_free (l);
+
+        /* initial refresh of SMART data */
+        refresh_smart_data (daemon);
 
         return daemon;
 }

@@ -2287,6 +2287,9 @@ throw_error (DBusGMethodInvocation *context, int error_code, const char *format,
         va_list args;
         char *message;
 
+        if (context == NULL)
+                return TRUE;
+
         va_start (args, format);
         message = g_strdup_vprintf (format, args);
         va_end (args);
@@ -5295,6 +5298,7 @@ drive_smart_refresh_data_unref (DriveRefreshSmartDataData *data)
         g_free (data);
 }
 
+/* may be called with context==NULL */
 static void
 drive_smart_refresh_data_completed_cb (DBusGMethodInvocation *context,
                                        DevkitDisksDevice *device,
@@ -5541,11 +5545,13 @@ drive_smart_refresh_data_completed_cb (DBusGMethodInvocation *context,
         /* emit change event since we've updated the smart data */
         emit_changed (device);
 
-        dbus_g_method_return (context, passed, power_on_hours, temperature, last_self_test_result);
+        if (context != NULL)
+                dbus_g_method_return (context, passed, power_on_hours, temperature, last_self_test_result);
 out:
         ;
 }
 
+/* may be called with context==NULL */
 gboolean
 devkit_disks_device_drive_smart_refresh_data (DevkitDisksDevice     *device,
                                               char                 **options,
@@ -5558,8 +5564,12 @@ devkit_disks_device_drive_smart_refresh_data (DevkitDisksDevice     *device,
         const char *simulpath;
         gboolean nowakeup;
 
-        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
-                goto out;
+        pk_caller = NULL;
+        if (context != NULL) {
+                if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon,
+                                                                                  context)) == NULL)
+                        goto out;
+        }
 
         if (!device->priv->info.device_is_drive) {
                 throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_DRIVE,
@@ -5588,12 +5598,14 @@ devkit_disks_device_drive_smart_refresh_data (DevkitDisksDevice     *device,
         nowakeup = FALSE;
         for (n = 0; options[n] != NULL; n++) {
                 if (g_str_has_prefix (options[n], "simulate=")) {
-                        uid_t uid;
-                        if (!polkit_caller_get_uid (pk_caller, &uid) || uid != 0) {
-                                throw_error (context,
-                                             DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
-                                             "Only uid 0 may use the simulate= option");
-                                goto out;
+                        if (context != NULL) {
+                                uid_t uid;
+                                if (!polkit_caller_get_uid (pk_caller, &uid) || uid != 0) {
+                                        throw_error (context,
+                                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                                     "Only uid 0 may use the simulate= option");
+                                        goto out;
+                                }
                         }
                         simulpath = (const char *) options[n] + 9;
                 } else if (strcmp (options[n], "nowakeup") == 0) {

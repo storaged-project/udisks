@@ -666,7 +666,7 @@
             avoid spinning up the disk if it's in a low-power mode.
             The option <doc:tt>simulate=/path/to/smartctl-output</doc:tt> can be
             passed to read the given file instead of invoking <doc:tt>smartctl(8)</doc:tt> tool.
-            The <doc:tt>simulate=</doc:tt> can only be used by the super user.
+            The <doc:tt>simulate=</doc:tt> option can only be used by the super user.
         </doc:summary></doc:doc>
       </arg>
       <doc:doc>
