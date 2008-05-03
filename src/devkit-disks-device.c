@@ -2312,6 +2312,8 @@ typedef void (*JobCompletedFunc) (DBusGMethodInvocation *context,
                                   gpointer user_data);
 
 struct Job {
+        char *job_id;
+
         DevkitDisksDevice *device;
         PolKitCaller *pk_caller;
         DBusGMethodInvocation *context;
@@ -2368,6 +2370,7 @@ job_free (Job *job)
         }
         g_string_free (job->stdout_string, TRUE);
         g_free (job->stdin_str);
+        g_free (job->job_id);
         g_free (job);
 }
 
@@ -2389,7 +2392,7 @@ job_child_watch_cb (GPid pid, int status, gpointer user_data)
 
         g_print ("helper(pid %5d): completed with exit code %d\n", job->pid, WEXITSTATUS (status));
 
-        if (job->device != NULL) {
+        if (job->device != NULL && job->job_id != NULL) {
                 job->device->priv->job_in_progress = FALSE;
                 g_free (job->device->priv->job_id);
                 job->device->priv->job_id = NULL;
@@ -2412,7 +2415,7 @@ job_child_watch_cb (GPid pid, int status, gpointer user_data)
                                  job->stdout_string->str,
                                  job->user_data);
 
-        if (job->device != NULL) {
+        if (job->device != NULL && job->job_id != NULL) {
                 emit_job_changed (job->device);
         }
         job_free (job);
@@ -2501,7 +2504,7 @@ job_read_out (GIOChannel *channel,
                                     &num_tasks,
                                     &cur_task_percentage,
                                     (char *) &cur_task_id) == 4) {
-                                if (job->device != NULL) {
+                                if (job->device != NULL && job->job_id != NULL) {
                                         job->device->priv->job_num_tasks = num_tasks;
                                         job->device->priv->job_cur_task = cur_task;
                                         g_free (job->device->priv->job_cur_task_id);
@@ -2559,8 +2562,9 @@ job_new (DBusGMethodInvocation *context,
         job->stdin_str = g_strdup (stdin_str);
         job->stdin_cursor = job->stdin_str;
         job->stdout_string = g_string_sized_new (1024);
+        job->job_id = g_strdup (job_id);
 
-        if (device != NULL) {
+        if (device != NULL && job_id != NULL) {
                 g_free (job->device->priv->job_id);
                 job->device->priv->job_id = g_strdup (job_id);
         }
@@ -2612,7 +2616,7 @@ job_new (DBusGMethodInvocation *context,
 
         ret = TRUE;
 
-        if (device != NULL) {
+        if (device != NULL && job_id != NULL) {
                 device->priv->job_in_progress = TRUE;
                 device->priv->job_is_cancellable = is_cancellable;
                 device->priv->job_num_tasks = 0;
@@ -5612,8 +5616,9 @@ devkit_disks_device_drive_smart_refresh_data (DevkitDisksDevice     *device,
         }
 
         error = NULL;
+
         if (!job_new (context,
-                      "DriveSmartRefreshData",
+                      NULL,     /* don't run this as a job */
                       FALSE,
                       device,
                       pk_caller,

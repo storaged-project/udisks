@@ -674,7 +674,7 @@
           <doc:para>
             Refreshes the
             <doc:ulink url="http://en.wikipedia.org/wiki/S.M.A.R.T">S.M.A.R.T.</doc:ulink>
-            data for the given drive.
+            data for the given drive. This operation is not run as a job.
           </doc:para>
         </doc:description>
         <doc:errors>
