@@ -174,6 +174,15 @@ enum
         PROP_DRIVE_MEDIA_COMPATIBILITY,
         PROP_DRIVE_MEDIA,
 
+        PROP_DRIVE_SMART_IS_CAPABLE,
+        PROP_DRIVE_SMART_IS_ENABLED,
+        PROP_DRIVE_SMART_TIME_COLLECTED,
+        PROP_DRIVE_SMART_IS_FAILING,
+        PROP_DRIVE_SMART_TEMPERATURE,
+        PROP_DRIVE_SMART_TIME_POWERED_ON,
+        PROP_DRIVE_SMART_LAST_SELF_TEST_RESULT,
+        PROP_DRIVE_SMART_ATTRIBUTES,
+
         PROP_LINUX_MD_COMPONENT_LEVEL,
         PROP_LINUX_MD_COMPONENT_NUM_RAID_DEVICES,
         PROP_LINUX_MD_COMPONENT_UUID,
@@ -465,6 +474,31 @@ get_property (GObject         *object,
 		g_value_set_string (value, device->priv->info.drive_media);
 		break;
 
+	case PROP_DRIVE_SMART_IS_CAPABLE:
+		g_value_set_boolean (value, device->priv->drive_smart_is_capable);
+		break;
+	case PROP_DRIVE_SMART_IS_ENABLED:
+		g_value_set_boolean (value, device->priv->drive_smart_is_enabled);
+		break;
+	case PROP_DRIVE_SMART_TIME_COLLECTED:
+		g_value_set_uint64 (value, device->priv->drive_smart_time_collected);
+		break;
+	case PROP_DRIVE_SMART_IS_FAILING:
+		g_value_set_boolean (value, device->priv->drive_smart_is_failing);
+		break;
+	case PROP_DRIVE_SMART_TEMPERATURE:
+		g_value_set_double (value, device->priv->drive_smart_temperature);
+		break;
+	case PROP_DRIVE_SMART_TIME_POWERED_ON:
+		g_value_set_uint64 (value, device->priv->drive_smart_time_powered_on);
+		break;
+	case PROP_DRIVE_SMART_LAST_SELF_TEST_RESULT:
+		g_value_set_string (value, device->priv->drive_smart_last_self_test_result);
+		break;
+	case PROP_DRIVE_SMART_ATTRIBUTES:
+		g_value_set_boxed (value, device->priv->drive_smart_attributes);
+		break;
+
 	case PROP_LINUX_MD_COMPONENT_LEVEL:
 		g_value_set_string (value, device->priv->info.linux_md_component_level);
 		break;
@@ -520,6 +554,16 @@ get_property (GObject         *object,
                 break;
         }
 }
+
+#define SMART_DATA_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray",   \
+                                                        G_TYPE_INT,      \
+                                                        G_TYPE_STRING,   \
+                                                        G_TYPE_INT,      \
+                                                        G_TYPE_INT,      \
+                                                        G_TYPE_INT,      \
+                                                        G_TYPE_INT,      \
+                                                        G_TYPE_STRING,   \
+                                                        G_TYPE_INVALID))
 
 static void
 devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
@@ -795,6 +839,40 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 PROP_DRIVE_MEDIA,
                 g_param_spec_string ("drive-media", NULL, NULL, NULL, G_PARAM_READABLE));
 
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_SMART_IS_CAPABLE,
+                g_param_spec_boolean ("drive-smart-is-capable", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_SMART_IS_ENABLED,
+                g_param_spec_boolean ("drive-smart-is-enabled", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_SMART_TIME_COLLECTED,
+                g_param_spec_uint64 ("drive-smart-time-collected", NULL, NULL, 0, G_MAXUINT64, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_SMART_IS_FAILING,
+                g_param_spec_boolean ("drive-smart-is-failing", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_SMART_TEMPERATURE,
+                g_param_spec_double ("drive-smart-temperature", NULL, NULL, -G_MAXDOUBLE, G_MAXDOUBLE, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_SMART_TIME_POWERED_ON,
+                g_param_spec_uint64 ("drive-smart-time-powered-on", NULL, NULL, 0, G_MAXUINT64, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_SMART_LAST_SELF_TEST_RESULT,
+                g_param_spec_string ("drive-smart-last-self-test-result", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_SMART_ATTRIBUTES,
+                g_param_spec_boxed ("drive-smart-attributes", NULL, NULL,
+                                    dbus_g_type_get_collection ("GPtrArray", SMART_DATA_STRUCT_TYPE),
+                                    G_PARAM_READABLE));
 
         g_object_class_install_property (
                 object_class,
@@ -880,6 +958,7 @@ devkit_disks_device_init (DevkitDisksDevice *device)
 {
         device->priv = DEVKIT_DISKS_DEVICE_GET_PRIVATE (device);
         init_info (device);
+        device->priv->drive_smart_attributes = g_ptr_array_new ();
 }
 
 static void
@@ -900,6 +979,10 @@ devkit_disks_device_finalize (GObject *object)
         g_free (device->priv->native_path);
 
         free_info (device);
+
+        g_free (device->priv->drive_smart_last_self_test_result);
+        g_ptr_array_foreach (device->priv->drive_smart_attributes, (GFunc) g_value_array_free, NULL);
+        g_ptr_array_free (device->priv->drive_smart_attributes, TRUE);
 
         if (device->priv->linux_md_poll_timeout_id > 0)
                 g_source_remove (device->priv->linux_md_poll_timeout_id);
@@ -1909,6 +1992,28 @@ update_info (DevkitDisksDevice *device)
 
         if (device->priv->info.device_is_drive)
                 update_drive_properties (device);
+
+        /* Update whether device is S.M.A.R.T. capable
+         *
+         * TODO: need to check that it's hard disk and not e.g. an optical drive
+         *
+         * TODO: need to honor a quirk for certain USB drives being smart capable, cf.
+         *
+         *         Thanks to contributor Matthieu Castet, smartctl has
+         *         a new option '-d usbcypress'. So you can address
+         *         USB devices with cypress chips. The chipset
+         *         contains an ATACB proprietary pass through for ATA
+         *         commands passed through SCSI commands. Get current
+         *         version from CVS.
+         *
+         *       from http://smartmontools.sourceforge.net/
+         */
+        if (device->priv->info.drive_connection_interface != NULL) {
+                if (g_str_has_prefix (device->priv->info.drive_connection_interface, "ata") ||
+                    g_str_has_prefix (device->priv->info.drive_connection_interface, "scsi")) {
+                        device->priv->drive_smart_is_capable = TRUE;
+                }
+        }
 
         ret = TRUE;
 
@@ -5167,16 +5272,36 @@ out:
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
-static void
-smart_retrieve_data_completed_cb (DBusGMethodInvocation *context,
-                                  DevkitDisksDevice *device,
-                                  PolKitCaller *pk_caller,
-                                  gboolean job_was_cancelled,
-                                  int status,
-                                  const char *stderr,
-                                  const char *stdout,
-                                  gpointer user_data)
+typedef struct {
+        gboolean simulation;
+} DriveRefreshSmartDataData;
+
+static DriveRefreshSmartDataData *
+drive_smart_refresh_data_data_new (gboolean simulation)
 {
+        DriveRefreshSmartDataData *data;
+        data = g_new0 (DriveRefreshSmartDataData, 1);
+        data->simulation = simulation;
+        return data;
+}
+
+static void
+drive_smart_refresh_data_unref (DriveRefreshSmartDataData *data)
+{
+        g_free (data);
+}
+
+static void
+drive_smart_refresh_data_completed_cb (DBusGMethodInvocation *context,
+                                       DevkitDisksDevice *device,
+                                       PolKitCaller *pk_caller,
+                                       gboolean job_was_cancelled,
+                                       int status,
+                                       const char *stderr,
+                                       const char *stdout,
+                                       gpointer user_data)
+{
+        DriveRefreshSmartDataData *data = user_data;
         int rc;
         gboolean passed;
         int n;
@@ -5185,6 +5310,8 @@ smart_retrieve_data_completed_cb (DBusGMethodInvocation *context,
         int power_on_hours;
         int temperature;
         const char *last_self_test_result;
+        GTimeVal now;
+        gboolean attributes_has_upd;
 
         if (job_was_cancelled || stdout == NULL) {
                 if (job_was_cancelled) {
@@ -5203,23 +5330,43 @@ smart_retrieve_data_completed_cb (DBusGMethodInvocation *context,
         rc = WEXITSTATUS (status);
 
         if ((rc & (0x01|0x02|0x04)) != 0) {
+                /* update our setting if we "thought" (cf. update_info()) that this device
+                 * was S.M.A.R.T. capable
+                 */
+                if (device->priv->drive_smart_is_capable) {
+                        device->priv->drive_smart_is_capable = FALSE;
+                        emit_changed (device);
+                }
                 throw_error (context,
                              DEVKIT_DISKS_DEVICE_ERROR_NOT_SMART_CAPABLE,
                              "Device is not S.M.A.R.T. capable");
                 goto out;
         }
 
+        /* TODO: is_enabled */
+        device->priv->drive_smart_is_enabled = TRUE;
+
+        g_get_current_time (&now);
+        device->priv->drive_smart_time_collected = now.tv_sec;
+
+        g_ptr_array_foreach (device->priv->drive_smart_attributes, (GFunc) g_value_array_free, NULL);
+        g_ptr_array_free (device->priv->drive_smart_attributes, TRUE);
+        device->priv->drive_smart_attributes = g_ptr_array_new ();
+
         passed = TRUE;
         power_on_hours = 0;
         temperature = 0;
         last_self_test_result = "";
 
-        if ((rc & 0x08) != 0)
+        if ((rc & 0x08) != 0) {
                 passed = FALSE;
+                device->priv->drive_smart_is_failing = TRUE;
+        }
 
         lines = g_strsplit (stdout, "\n", 0);
 
         in_attributes = FALSE;
+        attributes_has_upd = FALSE;
         for (n = 0; lines[n] != NULL; n++) {
                 const char *line = (const char *) lines[n];
                 int id;
@@ -5231,8 +5378,10 @@ smart_retrieve_data_completed_cb (DBusGMethodInvocation *context,
                 char type[256];
                 char updated[256];
                 char when_failed[256];
+                char raw_string_value[256];
                 int raw_value;
                 int self_test_execution_status;
+                gboolean parsed_attr;
 
                 /* We're looking at parsing this block of the output
                  *
@@ -5256,8 +5405,19 @@ smart_retrieve_data_completed_cb (DBusGMethodInvocation *context,
                  *
                  */
 
+                if (data->simulation) {
+                        if (strstr (line, "self-assessment test result") != NULL) {
+                                if (strstr (line, "PASSED") != NULL)
+                                        passed = TRUE;
+                                else
+                                        passed = FALSE;
+                        }
+                }
+
                 if (g_str_has_prefix (line, "ID# ATTRIBUTE_NAME ")) {
                         in_attributes = TRUE;
+                        if (strstr (line, "UPDATED") != NULL)
+                                attributes_has_upd = TRUE;
                         continue;
                 }
 
@@ -5303,6 +5463,8 @@ smart_retrieve_data_completed_cb (DBusGMethodInvocation *context,
                                         last_self_test_result = "unknown";
                                         break;
                                 }
+                                g_free (device->priv->drive_smart_last_self_test_result);
+                                device->priv->drive_smart_last_self_test_result = g_strdup (last_self_test_result);
 
                         }
                         continue;
@@ -5312,31 +5474,68 @@ smart_retrieve_data_completed_cb (DBusGMethodInvocation *context,
                         break;
                 }
 
-                if (sscanf (line, "%d %s 0x%x %d %d %d %s %s %s %d",
-                            &id, name, &flags, &value, &worst, &threshold,
-                            type, updated, when_failed, &raw_value) == 10) {
-#if 0
-                        g_printerr ("           id=%d\n", id);
-                        g_printerr ("         name='%s'\n", name);
-                        g_printerr ("        flags=0x%x\n", flags);
-                        g_printerr ("        value=%d\n", value);
-                        g_printerr ("        worst=%d\n", worst);
-                        g_printerr ("    threshold=%d\n", threshold);
-                        g_printerr ("         type='%s'\n", type);
-                        g_printerr ("      updated='%s'\n", updated);
-                        g_printerr ("  when_failed='%s'\n", when_failed);
-                        g_printerr ("    raw_value=%d\n", raw_value);
-#endif
+                parsed_attr = FALSE;
+                memset (raw_string_value, '\0', sizeof raw_string_value);
+                if (attributes_has_upd) {
+                        parsed_attr = sscanf (line, "%d %s 0x%x %d %d %d %s %s %s %255c",
+                                              &id, name, &flags, &value, &worst, &threshold,
+                                              type, updated, when_failed, raw_string_value) == 10;
+                } else {
+                        parsed_attr = sscanf (line, "%d %s 0x%x %d %d %d %s %s %255c",
+                                              &id, name, &flags, &value, &worst, &threshold,
+                                              type, when_failed, raw_string_value) == 9;
+                }
 
-                        if (id == 9) {
-                                power_on_hours = raw_value;
-                        } else if (id == 194) {
-                                temperature = raw_value;
+                if (parsed_attr) {
+                        /*
+                        g_printerr ("                id=%d\n", id);
+                        g_printerr ("              name='%s'\n", name);
+                        g_printerr ("             flags=0x%x\n", flags);
+                        g_printerr ("             value=%d\n", value);
+                        g_printerr ("             worst=%d\n", worst);
+                        g_printerr ("         threshold=%d\n", threshold);
+                        g_printerr ("              type='%s'\n", type);
+                        g_printerr ("           updated='%s'\n", updated);
+                        g_printerr ("       when_failed='%s'\n", when_failed);
+                        g_printerr ("  raw_string_value='%s'\n", raw_string_value);
+                        */
+
+                        if (sscanf (raw_string_value, "%d", &raw_value) == 1) {
+                                if (id == 9) {
+                                        power_on_hours = raw_value;
+                                        device->priv->drive_smart_time_powered_on = raw_value * 3600;
+                                } else if (id == 194) {
+                                        temperature = raw_value;
+                                        device->priv->drive_smart_temperature = raw_value;
+                                }
                         }
+
+                        if (id == 197) {
+                        }
+
+                        GValue elem = {0};
+                        g_value_init (&elem, SMART_DATA_STRUCT_TYPE);
+                        g_value_take_boxed (&elem, dbus_g_type_specialized_construct (SMART_DATA_STRUCT_TYPE));
+                        dbus_g_type_struct_set (&elem,
+                                                0, id,
+                                                1, name,
+                                                2, flags,
+                                                3, value,
+                                                4, worst,
+                                                5, threshold,
+                                                6, raw_string_value,
+                                                G_MAXUINT);
+                        g_ptr_array_add (device->priv->drive_smart_attributes, g_value_get_boxed (&elem));
+
                 }
 
         }
         g_strfreev (lines);
+
+        device->priv->drive_smart_is_failing = !passed;
+
+        /* emit change event since we've updated the smart data */
+        emit_changed (device);
 
         dbus_g_method_return (context, passed, power_on_hours, temperature, last_self_test_result);
 out:
@@ -5344,13 +5543,16 @@ out:
 }
 
 gboolean
-devkit_disks_device_smart_retrieve_data (DevkitDisksDevice     *device,
-                                         DBusGMethodInvocation *context)
+devkit_disks_device_drive_smart_refresh_data (DevkitDisksDevice     *device,
+                                              char                 **options,
+                                              DBusGMethodInvocation *context)
 {
         int n;
         char *argv[10];
         GError *error;
         PolKitCaller *pk_caller;
+        const char *simulpath;
+        gboolean nowakeup;
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
@@ -5358,6 +5560,13 @@ devkit_disks_device_smart_retrieve_data (DevkitDisksDevice     *device,
         if (!device->priv->info.device_is_drive) {
                 throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_DRIVE,
                              "Device is not a drive");
+                goto out;
+        }
+
+        if (!device->priv->drive_smart_is_capable) {
+                throw_error (context,
+                             DEVKIT_DISKS_DEVICE_ERROR_NOT_SMART_CAPABLE,
+                             "Device is not S.M.A.R.T. capable");
                 goto out;
         }
 
@@ -5371,23 +5580,48 @@ devkit_disks_device_smart_retrieve_data (DevkitDisksDevice     *device,
         }
 #endif
 
-        n = 0;
-        argv[n++] = "smartctl";
-        argv[n++] = "--all";
-        argv[n++] = device->priv->info.device_file;
-        argv[n++] = NULL;
+        simulpath = NULL;
+        nowakeup = FALSE;
+        for (n = 0; options[n] != NULL; n++) {
+                if (g_str_has_prefix (options[n], "simulate=")) {
+                        uid_t uid;
+                        if (!polkit_caller_get_uid (pk_caller, &uid) || uid != 0) {
+                                throw_error (context,
+                                             DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                             "Only uid 0 may use the simulate= option");
+                                goto out;
+                        }
+                        simulpath = (const char *) options[n] + 9;
+                } else if (strcmp (options[n], "nowakeup") == 0) {
+                        nowakeup = TRUE;
+                }
+        }
+
+        if (simulpath != NULL) {
+                n = 0;
+                argv[n++] = "cat";
+                argv[n++] = (char *) simulpath;
+                argv[n++] = NULL;
+        } else {
+                n = 0;
+                /* TODO: honor option 'nowakeup' */
+                argv[n++] = "smartctl";
+                argv[n++] = "--all";
+                argv[n++] = device->priv->info.device_file;
+                argv[n++] = NULL;
+        }
 
         error = NULL;
         if (!job_new (context,
-                      "SmartRetrieveData",
+                      "DriveSmartRefreshData",
                       FALSE,
                       device,
                       pk_caller,
                       argv,
                       NULL,
-                      smart_retrieve_data_completed_cb,
-                      NULL,
-                      NULL)) {
+                      drive_smart_refresh_data_completed_cb,
+                      drive_smart_refresh_data_data_new (simulpath != NULL),
+                      (GDestroyNotify) drive_smart_refresh_data_unref)) {
                 goto out;
         }
 
@@ -5400,14 +5634,14 @@ out:
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static void
-smart_initiate_selftest_completed_cb (DBusGMethodInvocation *context,
-                                 DevkitDisksDevice *device,
-                                 PolKitCaller *pk_caller,
-                                 gboolean job_was_cancelled,
-                                 int status,
-                                 const char *stderr,
-                                 const char *stdout,
-                                 gpointer user_data)
+drive_smart_initiate_selftest_completed_cb (DBusGMethodInvocation *context,
+                                            DevkitDisksDevice *device,
+                                            PolKitCaller *pk_caller,
+                                            gboolean job_was_cancelled,
+                                            int status,
+                                            const char *stderr,
+                                            const char *stdout,
+                                            gpointer user_data)
 {
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
 
@@ -5428,10 +5662,10 @@ smart_initiate_selftest_completed_cb (DBusGMethodInvocation *context,
 }
 
 gboolean
-devkit_disks_device_smart_initiate_selftest (DevkitDisksDevice     *device,
-                                        const char            *test,
-                                        gboolean               captive,
-                                        DBusGMethodInvocation *context)
+devkit_disks_device_drive_smart_initiate_selftest (DevkitDisksDevice     *device,
+                                                   const char            *test,
+                                                   gboolean               captive,
+                                                   DBusGMethodInvocation *context)
 {
         int n;
         char *argv[10];
@@ -5480,13 +5714,13 @@ devkit_disks_device_smart_initiate_selftest (DevkitDisksDevice     *device,
 
         error = NULL;
         if (!job_new (context,
-                      "SmartInitiateSelftest",
+                      "DriveSmartInitiateSelftest",
                       TRUE,
                       device,
                       pk_caller,
                       argv,
                       NULL,
-                      smart_initiate_selftest_completed_cb,
+                      drive_smart_initiate_selftest_completed_cb,
                       NULL,
                       NULL)) {
                 goto out;

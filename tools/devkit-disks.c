@@ -369,6 +369,16 @@ device_removed_signal_handler (DBusGProxy *proxy, const char *object_path, gpoin
  * TODO: keep in sync with code in tools/devkit-disks in DeviceKit-disks.
  */
 
+typedef struct {
+        int id;
+        char *desc;
+        int flags;
+        int value;
+        int worst;
+        int threshold;
+        char *raw;
+} DeviceSmartAttribute;
+
 typedef struct
 {
         char *native_path;
@@ -432,6 +442,16 @@ typedef struct
         char   **drive_media_compatibility;
         char    *drive_media;
 
+        gboolean               drive_smart_is_capable;
+        gboolean               drive_smart_is_enabled;
+        guint64                drive_smart_time_collected;
+        gboolean               drive_smart_is_failing;
+        double                 drive_smart_temperature;
+        guint64                drive_smart_time_powered_on;
+        char                  *drive_smart_last_self_test_result;
+        int                    num_drive_smart_attributes;
+        DeviceSmartAttribute  *drive_smart_attributes;
+
         char    *linux_md_component_level;
         int      linux_md_component_num_raid_devices;
         char    *linux_md_component_uuid;
@@ -450,6 +470,16 @@ typedef struct
         double   linux_md_sync_percentage;
         guint64  linux_md_sync_speed;
 } DeviceProperties;
+
+#define SMART_DATA_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray",   \
+                                                        G_TYPE_INT,      \
+                                                        G_TYPE_STRING,   \
+                                                        G_TYPE_INT,      \
+                                                        G_TYPE_INT,      \
+                                                        G_TYPE_INT,      \
+                                                        G_TYPE_INT,      \
+                                                        G_TYPE_STRING,   \
+                                                        G_TYPE_INVALID))
 
 static void
 collect_props (const char *key, const GValue *value, DeviceProperties *props)
@@ -577,6 +607,42 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
         else if (strcmp (key, "drive-media") == 0)
                 props->drive_media = g_strdup (g_value_get_string (value));
 
+        else if (strcmp (key, "drive-smart-is-capable") == 0)
+                props->drive_smart_is_capable = g_value_get_boolean (value);
+        else if (strcmp (key, "drive-smart-is-enabled") == 0)
+                props->drive_smart_is_enabled = g_value_get_boolean (value);
+        else if (strcmp (key, "drive-smart-time-collected") == 0)
+                props->drive_smart_time_collected = g_value_get_uint64 (value);
+        else if (strcmp (key, "drive-smart-is-failing") == 0)
+                props->drive_smart_is_failing = g_value_get_boolean (value);
+        else if (strcmp (key, "drive-smart-temperature") == 0)
+                props->drive_smart_temperature = g_value_get_double (value);
+        else if (strcmp (key, "drive-smart-time-powered-on") == 0)
+                props->drive_smart_time_powered_on = g_value_get_uint64 (value);
+        else if (strcmp (key, "drive-smart-last-self-test-result") == 0)
+                props->drive_smart_last_self_test_result = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "drive-smart-attributes") == 0) {
+                GPtrArray *p = g_value_get_boxed (value);
+                int n;
+                props->num_drive_smart_attributes = (int) p->len;
+                props->drive_smart_attributes = g_new0 (DeviceSmartAttribute, props->num_drive_smart_attributes);
+                for (n = 0; n < (int) p->len; n++) {
+                        DeviceSmartAttribute *a = props->drive_smart_attributes + n;
+                        GValue elem = {0};
+                        g_value_init (&elem, SMART_DATA_STRUCT_TYPE);
+                        g_value_set_static_boxed (&elem, p->pdata[n]);
+                        dbus_g_type_struct_get (&elem,
+                                                0, &(a->id),
+                                                1, &(a->desc),
+                                                2, &(a->flags),
+                                                3, &(a->value),
+                                                4, &(a->worst),
+                                                5, &(a->threshold),
+                                                6, &(a->raw),
+                                                G_MAXUINT);
+                }
+        }
+
         else if (strcmp (key, "linux-md-component-level") == 0)
                 props->linux_md_component_level = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "linux-md-component-num-raid-devices") == 0)
@@ -670,6 +736,8 @@ out:
 static void
 device_properties_free (DeviceProperties *props)
 {
+        int n;
+
         g_free (props->native_path);
         g_free (props->device_file);
         g_strfreev (props->device_file_by_id);
@@ -698,6 +766,12 @@ device_properties_free (DeviceProperties *props)
         g_free (props->drive_connection_interface);
         g_strfreev (props->drive_media_compatibility);
         g_free (props->drive_media);
+        g_free (props->drive_smart_last_self_test_result);
+        for (n = 0; n < props->num_drive_smart_attributes; n++) {
+                g_free (props->drive_smart_attributes[n].desc);
+                g_free (props->drive_smart_attributes[n].raw);
+        }
+        g_free (props->drive_smart_attributes);
         g_free (props->linux_md_component_level);
         g_free (props->linux_md_component_uuid);
         g_free (props->linux_md_component_name);
@@ -847,6 +921,47 @@ do_show_info (const char *object_path)
                         g_print ("    if speed:    (unknown)\n");
                 else
                         g_print ("    if speed:    %" G_GINT64_FORMAT " bits/s\n", props->drive_connection_speed);
+
+                g_print ("    media:       %s\n", props->drive_media);
+                if (!props->drive_smart_is_capable) {
+                        g_print ("    S.M.A.R.T.:  not capable\n");
+                } else if (props->drive_smart_time_collected == 0) {
+                        g_print ("    S.M.A.R.T.:  not collected\n");
+                } else {
+                        struct tm *time_tm;
+                        time_t time;
+                        char time_buf[256];
+
+                        time = (time_t) props->drive_smart_time_collected;
+                        time_tm = localtime (&time);
+                        strftime (time_buf, sizeof time_buf, "%c", time_tm);
+
+                        g_print ("    S.M.A.R.T.:     Information collected at %s\n", time_buf);
+                        if (!props->drive_smart_is_capable) {
+                                g_print ("      not capable\n");
+                        } else if (!props->drive_smart_is_enabled) {
+                                g_print ("      not enabled\n");
+                        } else {
+                                int m;
+
+                                g_print ("      assessment:   %s\n",
+                                         props->drive_smart_is_failing ? "FAILING" : "Passed");
+                                g_print ("      temperature:  %g° C / %g° F\n",
+                                         props->drive_smart_temperature,
+                                         9 * props->drive_smart_temperature / 5 + 32);
+                                g_print ("      powered on:   %" G_GUINT64_FORMAT " hours\n", props->drive_smart_time_powered_on / 3600);
+                                //g_print ("      196  Reallocated_Event_Count      0x0032 100   100           0 443023360\n",
+                                g_print ("      =========================================================================\n");
+                                g_print ("      Id   Description                   Flags Value Worst Threshold       Raw\n");
+                                g_print ("      =========================================================================\n");
+                                for (m = 0; m < props->num_drive_smart_attributes; m++) {
+                                        DeviceSmartAttribute *a = props->drive_smart_attributes + m;
+                                        g_print ("      %3d  %-28s 0x%04x %5d %5d %9d %s\n",
+                                                 a->id, a->desc, a->flags, a->value, a->worst, a->threshold, a->raw);
+                                }
+                        }
+                }
+
         }
         device_properties_free (props);
 }

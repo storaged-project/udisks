@@ -658,43 +658,23 @@
 
     <!-- ************************************************************ -->
 
-    <method name="SmartRetrieveData">
+    <method name="DriveSmartRefreshData">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-
-      <arg name="is_healthy" direction="out" type="b">
-        <doc:doc><doc:summary>Returns an assessment of whether the drive is healthy or not.</doc:summary></doc:doc>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>
+            The option <doc:tt>nowakeup</doc:tt> can be passed to
+            avoid spinning up the disk if it's in a low-power mode.
+            The option <doc:tt>simulate=/path/to/smartctl-output</doc:tt> can be
+            passed to read the given file instead of invoking <doc:tt>smartctl(8)</doc:tt> tool.
+            The <doc:tt>simulate=</doc:tt> can only be used by the super user.
+        </doc:summary></doc:doc>
       </arg>
-      <arg name="power_on_hours" direction="out" type="i">
-        <doc:doc><doc:summary>Number of hours that the drive has been powered on.</doc:summary></doc:doc>
-      </arg>
-      <arg name="temperature" direction="out" type="i">
-        <doc:doc><doc:summary>Temperature of the drive, in Celcius.</doc:summary></doc:doc>
-      </arg>
-      <arg name="last_self_test_result" direction="out" type="s">
-        <doc:doc><doc:summary>Result of the last self test.</doc:summary></doc:doc>
-      </arg>
-
       <doc:doc>
         <doc:description>
           <doc:para>
-            Retrieves S.M.A.R.T. data from the device. TODO: We
-            probably should return all attributes or something more
-            detailed. And at the same time try to abstract the
-            difference between SCSI and ATA.
-          </doc:para>
-          <doc:para>
-            The result of last_self_test_result is a string; the following
-            values are known:
-            completed_ok,
-            not_completed_aborted,
-            not_completed_aborted_reset,
-            not_completed_unknown_reason,
-            completed_failed_unknown_reason,
-            completed_failed_electrical,
-            completed_failed_servo,
-            completed_failed_read,
-            completed_failed_damage,
-            unknown,
+            Refreshes the
+            <doc:ulink url="http://en.wikipedia.org/wiki/S.M.A.R.T">S.M.A.R.T.</doc:ulink>
+            data for the given drive.
           </doc:para>
         </doc:description>
         <doc:errors>
@@ -709,7 +689,7 @@
 
     <!-- ************************************************************ -->
 
-    <method name="SmartInitiateSelftest">
+    <method name="DriveSmartInitiateSelftest">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
 
       <arg name="test" direction="in" type="s">
@@ -1603,6 +1583,144 @@
             This property is only valid if
             <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
             is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+
+    <property name="drive-smart-is-capable" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE only if drive is
+            <doc:ulink url="http://en.wikipedia.org/wiki/S.M.A.R.T">S.M.A.R.T.</doc:ulink>
+            capable.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-smart-is-enabled" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE only if S.M.A.R.T. is enabled for the drive.
+            This property is only valid if
+            <doc:ref type="property" to="Device:drive-smart-time-collected">drive-smart-time-collected</doc:ref>
+            is greater than zero.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-smart-time-collected" type="t" access="read">
+      <doc:doc><doc:description><doc:para>
+            The point in time (seconds since the Epoch Jan 1, 1970
+            0:00 UTC) when the S.M.A.R.T. data was collected. If data
+            was never collected, this property will assume the value
+            0.  This property is only valid if
+            <doc:ref type="property" to="Device:drive-smart-is-capable">drive-smart-is-capable</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-smart-is-failing" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE only if the drive is assessed to be failing.
+            This property is only valid if
+            <doc:ref type="property" to="Device:drive-smart-time-collected">drive-smart-time-collected</doc:ref>
+            is greater than zero.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-smart-temperature" type="d" access="read">
+      <doc:doc><doc:description><doc:para>
+            Temperature of the drive, in degrees celcius.
+            This property is only valid if
+            <doc:ref type="property" to="Device:drive-smart-time-collected">drive-smart-time-collected</doc:ref>
+            is greater than zero.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-smart-time-powered-on" type="t" access="read">
+      <doc:doc><doc:description><doc:para>
+            Number of seconds the drive has been powered on.
+            This property is only valid if
+            <doc:ref type="property" to="Device:drive-smart-time-collected">drive-smart-time-collected</doc:ref>
+            is greater than zero.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-smart-last-self-test-result" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The result of the last self-test to run. The following values are known:
+            <doc:list>
+              <doc:item>
+                <doc:term>completed_ok</doc:term>
+                <doc:definition>Completed without error or never run</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>not_completed_aborted</doc:term>
+                <doc:definition>Aborted</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>not_completed_aborted_reset</doc:term>
+                <doc:definition>Aborted by host</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>not_completed_unknown_reason</doc:term>
+                <doc:definition>Aborted for unknown reason</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>completed_failed_unknown_reason</doc:term>
+                <doc:definition>Completed, with failure:</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>completed_failed_electrical</doc:term>
+                <doc:definition>Completed, with failure: electrical subsystem</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>completed_failed_servo</doc:term>
+                <doc:definition>Completed, with failure: servo/seek subsystem</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>completed_failed_read</doc:term>
+                <doc:definition>Completed, with failure: read failure</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>completed_failed_damage</doc:term>
+                <doc:definition>Completed, with failure: handling damage</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>unknown</doc:term>
+                <doc:definition>Unknown test result</doc:definition>
+              </doc:item>
+            </doc:list>
+            This property is only valid if
+            <doc:ref type="property" to="Device:drive-smart-time-collected">drive-smart-time-collected</doc:ref>
+            is greater than zero.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-smart-attributes" type="a(isiiiis)" access="read">
+      <doc:doc><doc:description><doc:para>
+            An array of S.M.A.R.T. attributes. Each element contains the following members
+            <doc:list>
+              <doc:item>
+                <doc:term>attribute id</doc:term>
+                <doc:definition>the identifier of the attribute</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>attribute name</doc:term>
+                <doc:definition>a human readable name of the attribute or blank</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>flags</doc:term>
+                <doc:definition>Flags (TODO: link to spec)</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>value</doc:term>
+                <doc:definition>The normalized value of the attribute</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>worst</doc:term>
+                <doc:definition>The worst value seen</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>threshold</doc:term>
+                <doc:definition>The threshold of the attribute</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>raw</doc:term>
+                <doc:definition>The raw vendor specific value of the attribute</doc:definition>
+              </doc:item>
+            </doc:list>
+            This property is only valid if
+            <doc:ref type="property" to="Device:drive-smart-time-collected">drive-smart-time-collected</doc:ref>
+            is greater than zero.
       </doc:para></doc:description></doc:doc>
     </property>
 

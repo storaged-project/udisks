@@ -127,6 +127,16 @@ struct DevkitDisksDevicePrivate
                 GPtrArray *slaves_objpath;
                 GPtrArray *holders_objpath;
         } info;
+
+        /* We want S.M.A.R.T. to persist over change events */
+        gboolean drive_smart_is_capable;
+        gboolean drive_smart_is_enabled;
+        guint64 drive_smart_time_collected;
+        gboolean drive_smart_is_failing;
+        double drive_smart_temperature;
+        guint64 drive_smart_time_powered_on;
+        char *drive_smart_last_self_test_result;
+        GPtrArray *drive_smart_attributes;
 };
 
 
