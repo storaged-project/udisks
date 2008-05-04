@@ -25,6 +25,11 @@
 #include <polkit-dbus/polkit-dbus.h>
 #include <dbus/dbus-glib.h>
 
+struct DevkitDisksDevice;
+typedef struct DevkitDisksDevice DevkitDisksDevice;
+
+#include "devkit-disks-logger.h"
+
 G_BEGIN_DECLS
 
 #define DEVKIT_TYPE_DISKS_DAEMON         (devkit_disks_daemon_get_type ())
@@ -66,9 +71,6 @@ DevkitDisksDaemon *devkit_disks_daemon_new                 (void);
 
 /* local methods */
 
-struct DevkitDisksDevice;
-typedef struct DevkitDisksDevice DevkitDisksDevice;
-
 GList             *devkit_disks_daemon_local_get_all_devices     (DevkitDisksDaemon       *daemon);
 DevkitDisksDevice *devkit_disks_daemon_local_find_by_native_path (DevkitDisksDaemon       *daemon,
                                                                   const char              *native_path);
@@ -87,6 +89,8 @@ void               devkit_disks_daemon_local_update_mount_state  (DevkitDisksDae
 
 void               devkit_disks_daemon_local_synthesize_changed  (DevkitDisksDaemon       *daemon,
                                                                   DevkitDevice            *d);
+
+DevkitDisksLogger *devkit_disks_daemon_local_get_logger (DevkitDisksDaemon *daemon);
 
 /* exported methods */
 

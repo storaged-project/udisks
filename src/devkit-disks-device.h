@@ -185,6 +185,11 @@ gboolean devkit_disks_device_drive_smart_refresh_data (DevkitDisksDevice     *de
                                                        char                 **options,
                                                        DBusGMethodInvocation *context);
 
+gboolean devkit_disks_device_drive_smart_get_historical_data (DevkitDisksDevice     *device,
+                                                              guint64                from,
+                                                              guint64                to,
+                                                              DBusGMethodInvocation *context);
+
 gboolean devkit_disks_device_drive_smart_initiate_selftest (DevkitDisksDevice     *device,
                                                             const char            *test,
                                                             gboolean               captive,

@@ -31,6 +31,25 @@ G_BEGIN_DECLS
 struct Job;
 typedef struct Job Job;
 
+#define SMART_DATA_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray",   \
+                                                        G_TYPE_INT,      \
+                                                        G_TYPE_STRING,   \
+                                                        G_TYPE_INT,      \
+                                                        G_TYPE_INT,      \
+                                                        G_TYPE_INT,      \
+                                                        G_TYPE_INT,      \
+                                                        G_TYPE_STRING,   \
+                                                        G_TYPE_INVALID))
+
+#define HISTORICAL_SMART_DATA_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray",   \
+                                                                   G_TYPE_UINT64, \
+                                                                   G_TYPE_DOUBLE, \
+                                                                   G_TYPE_UINT64, \
+                                                                   G_TYPE_STRING, \
+                                                                   G_TYPE_BOOLEAN, \
+                                                                   dbus_g_type_get_collection ("GPtrArray", SMART_DATA_STRUCT_TYPE), \
+                                                                   G_TYPE_INVALID))
+
 struct DevkitDisksDevicePrivate
 {
         DBusGConnection *system_bus_connection;

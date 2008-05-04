@@ -686,6 +686,93 @@
       </doc:doc>
     </method>
 
+    <method name="DriveSmartGetHistoricalData">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="since" direction="in" type="t">
+        <doc:doc><doc:summary>
+            Don't fetch S.M.A.R.T. data collected earlier than this point
+            in time (seconds since the Epoch Jan 1, 1970 0:00 UTC).
+        </doc:summary></doc:doc>
+      </arg>
+      <arg name="until" direction="in" type="t">
+        <doc:doc><doc:summary>
+            Don't fetch S.M.A.R.T. data collected later than this point in
+            time (seconds since the Epoch Jan 1, 1970 0:00 UTC). If 0 is
+            passed the current time will be used.
+        </doc:summary></doc:doc>
+      </arg>
+      <arg name="data" direction="out" type="a(tdtsba(isiiiis))">
+        <doc:doc><doc:summary>
+            An array of historical S.M.A.R.T. data. Each element contains
+            the following members:
+            <doc:list>
+              <doc:item>
+                <doc:term>time</doc:term>
+                <doc:definition>
+                  When the data was collected (seconds since the Epoch Jan 1, 1970 0:00 UTC). Similar to the
+                  <doc:ref type="property" to="Device:drive-smart-time-collected">drive-smart-time-collected</doc:ref>
+                  property.
+                </doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>temperature</doc:term>
+                <doc:definition>
+                  Temperature of the drive. Similar to the
+                  <doc:ref type="property" to="Device:drive-smart-temperature">drive-smart-temperature</doc:ref>
+                  property.
+                </doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>time-powered-on</doc:term>
+                <doc:definition>
+                  Number of the seconds the drive has been powered on. Similar to the
+                  <doc:ref type="property" to="Device:drive-smart-time-powered-on">drive-smart-time-powered-on</doc:ref>
+                  property.
+                </doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>last-self-test-result</doc:term>
+                <doc:definition>
+                  The result of the last self-test. Similar to the
+                  <doc:ref type="property" to="Device:drive-smart-last-self-test-result">drive-smart-last-self-test-result</doc:ref>
+                  property.
+                </doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>is-failing</doc:term>
+                <doc:definition>
+                  If the drive is assessed to be failing. Similar to the
+                  <doc:ref type="property" to="Device:drive-smart-is-failing">drive-smart-is-failing</doc:ref>
+                  property.
+                </doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>attributes</doc:term>
+                <doc:definition>
+                  The attributes of the drive. Similar to the
+                  <doc:ref type="property" to="Device:drive-smart-attributes">drive-smart-attributes</doc:ref>
+                  property.
+                </doc:definition>
+              </doc:item>
+            </doc:list>
+        </doc:summary></doc:doc>
+      </arg>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Retrieves historical S.M.A.R.T. data from the drive in the
+            given time interval. Note that this is data collected and
+            stored by the host as S.M.A.R.T. capable drives doesn't
+            store or return historical data.
+          </doc:para>
+        </doc:description>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_SMART_CAPABLE;">device is not S.M.A.R.T. capable</doc:error>
+          <doc:error name="&ERROR_NOT_DRIVE;">device is not a drive</doc:error>
+          <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
 
     <!-- ************************************************************ -->
 
@@ -1637,7 +1724,7 @@
     </property>
     <property name="drive-smart-last-self-test-result" type="s" access="read">
       <doc:doc><doc:description><doc:para>
-            The result of the last self-test to run. The following values are known:
+            The result of the last self-test. The following values are known:
             <doc:list>
               <doc:item>
                 <doc:term>completed_ok</doc:term>

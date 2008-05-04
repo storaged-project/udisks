@@ -48,6 +48,7 @@
 #include <dbus/dbus-glib-lowlevel.h>
 #include <devkit-gobject.h>
 #include <polkit-dbus/polkit-dbus.h>
+#include <sqlite3.h>
 
 #include "devkit-disks-device.h"
 #include "devkit-disks-device-private.h"
@@ -554,16 +555,6 @@ get_property (GObject         *object,
                 break;
         }
 }
-
-#define SMART_DATA_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray",   \
-                                                        G_TYPE_INT,      \
-                                                        G_TYPE_STRING,   \
-                                                        G_TYPE_INT,      \
-                                                        G_TYPE_INT,      \
-                                                        G_TYPE_INT,      \
-                                                        G_TYPE_INT,      \
-                                                        G_TYPE_STRING,   \
-                                                        G_TYPE_INVALID))
 
 static void
 devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
@@ -2494,7 +2485,7 @@ job_read_out (GIOChannel *channel,
                 line = g_strndup (job->stdout_string->str + job->stdout_string_cursor, line_len);
                 job->stdout_string_cursor += line_len + 1;
 
-                g_print ("helper(pid %5d): '%s'\n", job->pid, line);
+                //g_print ("helper(pid %5d): '%s'\n", job->pid, line);
 
                 if (strlen (line) < 256) {
                         int cur_task;
@@ -5544,6 +5535,9 @@ drive_smart_refresh_data_completed_cb (DBusGMethodInvocation *context,
 
         /* emit change event since we've updated the smart data */
         emit_changed (device);
+
+        devkit_disks_logger_record_smart_values (devkit_disks_daemon_local_get_logger (device->priv->daemon),
+                                                 device);
 
         if (context != NULL)
                 dbus_g_method_return (context, passed, power_on_hours, temperature, last_self_test_result);

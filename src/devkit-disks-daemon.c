@@ -89,6 +89,8 @@ struct DevkitDisksDaemonPrivate
         GUnixMountMonitor *mount_monitor;
 
         guint              smart_refresh_timer_id;
+
+        DevkitDisksLogger *logger;
 };
 
 static void     devkit_disks_daemon_class_init  (DevkitDisksDaemonClass *klass);
@@ -353,6 +355,10 @@ devkit_disks_daemon_finalize (GObject *object)
 
         if (daemon->priv->smart_refresh_timer_id > 0) {
                 g_source_remove (daemon->priv->smart_refresh_timer_id);
+        }
+
+        if (daemon->priv->logger != NULL) {
+                g_object_unref (daemon->priv->logger);
         }
 
         G_OBJECT_CLASS (devkit_disks_daemon_parent_class)->finalize (object);
@@ -767,6 +773,8 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
         //g_unix_mount_monitor_set_rate_limit (daemon->priv->mount_monitor, 50);
         g_signal_connect (daemon->priv->mount_monitor, "mounts-changed", (GCallback) mounts_changed, daemon);
 
+        daemon->priv->logger = devkit_disks_logger_new ();
+
         return TRUE;
 error:
         return FALSE;
@@ -817,6 +825,12 @@ devkit_disks_daemon_new (void)
         refresh_smart_data (daemon);
 
         return daemon;
+}
+
+DevkitDisksLogger *
+devkit_disks_daemon_local_get_logger (DevkitDisksDaemon *daemon)
+{
+        return daemon->priv->logger;
 }
 
 PolKitCaller *

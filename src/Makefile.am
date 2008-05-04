@@ -40,6 +40,7 @@ dbusif_DATA = org.freedesktop.DeviceKit.Disks.xml org.freedesktop.DeviceKit.Disk
 
 devkit_disks_daemon_SOURCES = 						\
 	devkit-disks-daemon.h		devkit-disks-daemon.c		\
+	devkit-disks-logger.h		devkit-disks-logger.c		\
 	devkit-disks-device.h		devkit-disks-device.c		\
 	devkit-disks-device-private.h					\
 	mounts-file.h			mounts-file.c			\
@@ -49,11 +50,13 @@ devkit_disks_daemon_SOURCES = 						\
 devkit_disks_daemon_CPPFLAGS = 				\
 	-I$(top_srcdir)/src				\
 	-DG_LOG_DOMAIN=\"devkit-disks-daemon\"		\
+	$(SQLITE3_CFLAGS)				\
 	$(DISABLE_DEPRECATED)				\
 	$(AM_CPPFLAGS)
 
 devkit_disks_daemon_LDADD = 				\
 	$(GIO_LIBS)					\
+	$(SQLITE3_LIBS)					\
 	$(DBUS_GLIB_LIBS)				\
 	$(POLKIT_DBUS_LIBS)				\
 	$(DEVKIT_LIBS)

@@ -2,3 +2,7 @@
 - Need a way to stop polling for SMART data to avoid
   breaking boxes with thousands of disks
   - maybe default to polling if there's less than 20 drives
+    - Probably needs config file
+
+- Delete all SMART data older than N days
+  - Probably needs config file
