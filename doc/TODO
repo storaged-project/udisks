@@ -1,8 +1,115 @@
 
-- Need a way to stop polling for SMART data to avoid
-  breaking boxes with thousands of disks
-  - maybe default to polling if there's less than 20 drives
-    - Probably needs config file
+------------------------------------------------------------------------
+- Current dependencies
+------------------------------------------------------------------------
 
-- Delete all SMART data older than N days
-  - Probably needs config file
+ - udev-120 with some patches
+   - necessary changes already upstream and will be in udev-121
+   - http://people.freedesktop.org/~david/DK/F9/src/udev-120-5.20080421git.1dze.fc9.src.rpm
+
+ - mdadm-2.6.4 with some patches
+   - necessary changes already upstream and will be in mdadm-2.6.5
+   - http://people.freedesktop.org/~david/DK/F9/src/mdadm-2.6.4-4.1dze.fc9.src.rpm
+
+ - device-mapper with some patches
+   - necessary changes (or similar functionality) already upstream and will be in next device-mapper release
+   - see https://bugzilla.redhat.com/show_bug.cgi?id=438604
+   - http://people.freedesktop.org/~david/DK/F9/src/lvm2-2.02.33-11.1dze.fc9.src.rpm
+
+ - DeviceKit from git
+   - http://gitweb.freedesktop.org/?p=users/david/DeviceKit.git
+   - http://people.freedesktop.org/~david/DK/F9/src/DeviceKit-002-0.git20080506.fc9.src.rpm
+
+ - D-Bus GLib 0.74 with some patches
+   - necessary changes are already committed upstream
+   - See Fedora 9 / Rawhide package for the patches needed
+
+ - Linux >= 2.6.25
+
+ - PolicyKit >= 0.8
+
+ - D-Bus >= 1.1.20
+
+ - parted
+
+ - smartmontools
+
+ - sqlite3
+
+ - util-linux-ng
+
+------------------------------------------------------------------------
+- TODO List
+------------------------------------------------------------------------
+
+Before (next) release:
+
+ - SMART
+   - Need a way to stop polling for SMART data to avoid
+     breaking boxes with thousands of disks
+     - maybe default to polling if there's less than, say, 50 drives
+   - Delete all SMART data older than N days
+     - polling every 30 min is roughly 50kb / drive / day
+   - Probably needs config file for this
+
+ - Poll storage devices
+
+ - Use new cdrom_id attrs from udev
+
+ - Need to figure out what PolicyKit authorizations to use
+   - it's really a big mess right now
+
+ - Split out Linux specific bits into separate files
+
+ - General cleanup + documentation
+   - devkit-disk-device.c is way too long right now
+
+ - Finish up Linux MD Software RAID support
+   - Major thing missing right now is creating an array
+
+ - Finish D-Bus documentation framework
+   - and have Jon McCann review it (it's based on his work from
+     ConsoleKit)
+
+ - General project management tasks
+   - review licenses, NEWS, TODO, HACKING etc. file
+
+------------------------------------------------------------------------
+- Current features (TODO: this section is incomplete)
+------------------------------------------------------------------------
+
+ - Enumerate and manipulate block devices including;
+   - Filesystems / Signatures
+     - create, modify label, delete, mount, unmount
+   - Partitions and Partition Tables
+     - create, modify, delete
+   - Linux MD Software RAID (both arrays and components)
+     - add/remove components, start, stop
+   - LUKS devices
+     - create, change passphrase
+   - Change notifications
+
+ - Retrieve SMART data
+   - includes storing a history in a database
+
+------------------------------------------------------------------------
+- Future features (TODO: this section is incomplete)
+------------------------------------------------------------------------
+
+ - Share drives via iSCSI
+   - initiator (connect to drive)
+   - target (offer drive)
+
+ - Filesystem check
+   - non-interactive is easy
+   - how can we do interactive fsck? Connect to a socket on the
+     client and the client includes a terminal emulator? Yuck
+
+ - Partition/Filesystem resizing
+   - Maybe just enhance PartitionModify
+
+ - Support for recognizing LVM2 PV's and LV's
+
+ - Support for recognizing partitioned disks setup via e.g. kpartx
+
+ - Support for non-Linux
