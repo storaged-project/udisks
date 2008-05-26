@@ -1508,6 +1508,10 @@
                 <doc:term>firewire</doc:term>
                 <doc:definition>Connected via Firewire</doc:definition>
               </doc:item>
+              <doc:item>
+                <doc:term>sdio</doc:term>
+                <doc:definition>Connected via SDIO</doc:definition>
+              </doc:item>
             </doc:list>
             This property is only valid if
             <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>

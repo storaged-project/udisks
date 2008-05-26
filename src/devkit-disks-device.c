@@ -1505,8 +1505,11 @@ update_drive_properties (DevkitDisksDevice *device)
         char *model;
         char *vendor;
         char *subsystem;
+        char *serial;
+        char *revision;
         char *connection_interface;
         guint64 connection_speed;
+        char *type;
 
         connection_interface = NULL;
         connection_speed = 0;
@@ -1569,6 +1572,7 @@ update_drive_properties (DevkitDisksDevice *device)
                                         connection_interface = g_strdup ("usb");
                                         connection_speed = usb_speed * (1000 * 1000);
                                         break;
+
                                 }
                         } else if (strcmp (subsystem, "firewire") == 0) {
 
@@ -1581,8 +1585,72 @@ update_drive_properties (DevkitDisksDevice *device)
                                 connection_interface = g_strdup ("firewire");
                                 connection_speed = 400 * (1000 * 1000);
                                 break;
-                        }
 
+                        } else if (strcmp (subsystem, "mmc") == 0) {
+
+                                /* TODO: what about non-SD, e.g. MMC? Is that another bus? */
+                                g_free (connection_interface);
+                                connection_interface = g_strdup ("sdio");
+
+                                type = sysfs_get_string (s, "type");
+                                if (type != NULL) {
+                                        g_strstrip (type);
+
+                                        /* TODO: set drive_media_compatibility */
+                                        if (strcmp (type, "MMC") == 0) {
+                                                g_free (device->priv->info.drive_media);
+                                                device->priv->info.drive_media = g_strdup ("flash_mmc");
+                                        } else if (strcmp (type, "SD") == 0) {
+                                                g_free (device->priv->info.drive_media);
+                                                device->priv->info.drive_media = g_strdup ("flash_sd");
+                                        } else if (strcmp (type, "SDHC") == 0) {
+                                                g_free (device->priv->info.drive_media);
+                                                device->priv->info.drive_media = g_strdup ("flash_sdhc");
+                                        }
+                                        g_free (type);
+                                }
+
+                                /* TODO: Set vendor name. According to this MMC document
+                                 *
+                                 *       http://www.mmca.org/membership/IAA_Agreement_10_12_06.pdf
+                                 *
+                                 *       - manfid: the manufacturer id
+                                 *       - oemid: the customer of the manufacturer
+                                 *
+                                 *       Apparently these numbers are kept secret. It would be nice
+                                 *       to map these into names for setting the manufacturer of the drive,
+                                 *       e.g. Panasonic, Sandisk etc.
+                                 */
+
+                                model = sysfs_get_string (s, "name");
+                                if (model != NULL) {
+                                        g_free (device->priv->info.drive_model);
+                                        g_strstrip (model);
+                                        device->priv->info.drive_model = _dupv8 (model);
+                                        g_free (model);
+                                }
+
+                                serial = sysfs_get_string (s, "serial");
+                                if (serial != NULL) {
+                                        g_free (device->priv->info.drive_serial);
+                                        g_strstrip (serial);
+                                        /* this is formatted as a hexnumber; drop the leading 0x */
+                                        device->priv->info.drive_serial = _dupv8 (serial + 2);
+                                        g_free (serial);
+                                }
+
+                                /* TODO: use hwrev and fwrev files? */
+                                revision = sysfs_get_string (s, "date");
+                                if (revision != NULL) {
+                                        g_free (device->priv->info.drive_revision);
+                                        g_strstrip (revision);
+                                        device->priv->info.drive_revision = _dupv8 (revision);
+                                        g_free (revision);
+                                }
+
+                                /* TODO: interface speed; the kernel driver knows; would be nice
+                                 * if it could export it */
+                        }
 
                         g_free (subsystem);
                 }
@@ -3205,12 +3273,12 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
                  * TODO: use characteristics of the drive such as the name, connection etc.
                  *       to get better names (/media/disk is kinda lame).
                  */
-                if (device->priv->info.id_label != NULL) {
+                if (device->priv->info.id_label != NULL && strlen (device->priv->info.id_label) > 0 ) {
                         mount_point = g_build_filename ("/media", device->priv->info.id_label, NULL);
-                } else if (device->priv->info.id_uuid != NULL) {
+                } else if (device->priv->info.id_uuid != NULL && strlen (device->priv->info.id_uuid) > 0) {
                         mount_point = g_build_filename ("/media", device->priv->info.id_uuid, NULL);
                 } else {
-                        mount_point = g_strup ("/media/disk");
+                        mount_point = g_strdup ("/media/disk");
                 }
 
 try_another_mount_point:
