@@ -206,12 +206,14 @@ main (int argc, char **argv)
         g_print ("progress: %d %d -1 mkfs\n", num_erase_passes + 1, num_erase_passes + 2);
 
         if (command_line != NULL) {
+                error = NULL;
                 if (!g_spawn_command_line_sync (command_line,
                                                 NULL,
                                                 &standard_error,
                                                 &exit_status,
                                                 &error)) {
-                        g_printerr ("cannot spawn '%s'\n", command_line);
+                        g_printerr ("cannot spawn '%s': %s\n", command_line, error->message);
+                        g_error_free (error);
                         goto out;
                 }
                 if (WEXITSTATUS (exit_status) != 0) {
