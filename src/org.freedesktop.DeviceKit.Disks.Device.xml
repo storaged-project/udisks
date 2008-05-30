@@ -455,7 +455,10 @@
       <doc:doc>
         <doc:description>
           <doc:para>
-            Mount the device.
+            Mount the device. If the device is referenced in the
+            system-wide <doc:tt>/etc/fstab</doc:tt> file, the given
+            parameters are all ignored and the device will be
+            attempted to be mounted as the calling user.
           </doc:para>
         </doc:description>
         <doc:errors>
@@ -482,7 +485,10 @@
       <doc:doc>
         <doc:description>
           <doc:para>
-            Unmount the device.
+            Unmount the device. If the device is referenced in the
+            system-wide <doc:tt>/etc/fstab</doc:tt> file (both at
+            mount time and when this method is invoked), the device
+            will be attempted to be unmounted as the calling user.
           </doc:para>
         </doc:description>
         <doc:errors>
