@@ -2732,7 +2732,7 @@ filesystem_mount_data_free (MountData *data)
 }
 
 static gboolean
-is_device_in_fstab (DevkitDisksDevice *device)
+is_device_in_fstab (DevkitDisksDevice *device, char **out_mount_point)
 {
         GList *l;
         GList *mount_points;
@@ -2754,6 +2754,8 @@ is_device_in_fstab (DevkitDisksDevice *device)
 
                 if (strcmp (device->priv->info.device_file, canonical_device_file) == 0) {
                         ret = TRUE;
+                        if (out_mount_point != NULL)
+                                *out_mount_point = g_strdup (g_unix_mount_point_get_mount_path (mount_point));
                         break;
                 }
         }
@@ -3092,8 +3094,9 @@ filesystem_mount_completed_cb (DBusGMethodInvocation *context,
                 polkit_caller_get_uid (pk_caller, &uid);
 
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
-                if (!data->is_remount) {
+                if (!device->priv->info.device_is_mounted && data->mount_point != NULL)
                         devkit_disks_device_local_set_mounted (device, data->mount_point, TRUE);
+                if (!data->is_remount) {
                         mounts_file_add (device, uid, data->remove_dir_on_unmount);
                 }
                 dbus_g_method_return (context, data->mount_point);
@@ -3137,6 +3140,7 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
         const FSMountOptions *fsmo;
         char **options;
         gboolean is_remount;
+        char uid_buf[32];
 
         fstype = NULL;
         options = NULL;
@@ -3156,13 +3160,32 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
                 goto out;
         }
 
-        /* Check if the device is referenced in /etc/fstab; if it is we refuse
-         * to mount the device to avoid violating system policy.
+        if (devkit_disks_device_local_is_busy (device)) {
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                             "Device is busy");
+                goto out;
+        }
+
+        /* Check if the device is referenced in /etc/fstab; if so, attempt to
+         * mount the device as the user
          */
-        if (is_device_in_fstab (device)) {
+        if (is_device_in_fstab (device, &mount_point)) {
+                n = 0;
+                snprintf (uid_buf, sizeof uid_buf, "%d", caller_uid);
+                argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-fstab-mounter";
+                argv[n++] = "mount";
+                argv[n++] = device->priv->info.device_file;
+                argv[n++] = uid_buf;
+                argv[n++] = NULL;
+
+                /* to avoid removing the mount point on error */
+                is_remount = TRUE;
+                goto run_job;
+#if 0
                 throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_FSTAB_ENTRY,
                              "Refusing to mount devices referenced in /etc/fstab");
                 goto out;
+#endif
         }
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
@@ -3243,12 +3266,6 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
                 }
         }
 
-        if (devkit_disks_device_local_is_busy (device)) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
-                             "Device is busy");
-                goto out;
-        }
-
         /* handle some constraints required by remount */
         if (is_remount) {
                 if (!device->priv->info.device_is_mounted ||
@@ -3318,6 +3335,7 @@ try_another_mount_point:
                 argv[n++] = NULL;
         }
 
+run_job:
         error = NULL;
         if (!job_new (context,
                       "FilesystemMount",
@@ -3363,7 +3381,8 @@ filesystem_unmount_completed_cb (DBusGMethodInvocation *context,
 
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
                 devkit_disks_device_local_set_unmounted (device, TRUE);
-                mounts_file_remove (device, mount_path);
+                if (mount_path != NULL) /* can be NULL when unmounting /etc/fstab mounts */
+                        mounts_file_remove (device, mount_path);
                 dbus_g_method_return (context);
         } else {
                 if (job_was_cancelled) {
@@ -3398,6 +3417,10 @@ devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
         uid_t uid;
         uid_t uid_of_mount;
         gboolean force_unmount;
+        char *mount_path;
+        char uid_buf[32];
+
+        mount_path = NULL;
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
@@ -3414,7 +3437,36 @@ devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
                 goto out;
         }
 
+        force_unmount = FALSE;
+        for (n = 0; options[n] != NULL; n++) {
+                char *option = options[n];
+                if (strcmp ("force", option) == 0) {
+                        force_unmount = TRUE;
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_UNMOUNT_OPTION_NOT_ALLOWED,
+                                     "Unknown option %s", option);
+                }
+        }
+
         if (!mounts_file_has_device (device, &uid_of_mount, NULL)) {
+                /* Check if the device is referenced in /etc/fstab; if so, attempt to
+                 * unmount the device as the user
+                 */
+                if (is_device_in_fstab (device, &mount_path)) {
+                        n = 0;
+                        snprintf (uid_buf, sizeof uid_buf, "%d", uid);
+                        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-fstab-mounter";
+                        if (force_unmount)
+                                argv[n++] = "force_unmount";
+                        else
+                                argv[n++] = "unmount";
+                        argv[n++] = device->priv->info.device_file;
+                        argv[n++] = uid_buf;
+                        argv[n++] = NULL;
+                        goto run_job;
+                }
+
                 throw_error (context,
                              DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTED_BY_DK,
                              "Device is not mounted by DeviceKit-disks");
@@ -3429,18 +3481,6 @@ devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
                         goto out;
         }
 
-        force_unmount = FALSE;
-        for (n = 0; options[n] != NULL; n++) {
-                char *option = options[n];
-                if (strcmp ("force", option) == 0) {
-                        force_unmount = TRUE;
-                } else {
-                        throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_UNMOUNT_OPTION_NOT_ALLOWED,
-                                     "Unknown option %s", option);
-                }
-        }
-
         n = 0;
         argv[n++] = "umount";
         if (force_unmount) {
@@ -3450,6 +3490,9 @@ devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
         argv[n++] = device->priv->info.device_mount_path;
         argv[n++] = NULL;
 
+        mount_path = g_strdup (device->priv->info.device_mount_path);
+
+run_job:
         error = NULL;
         if (!job_new (context,
                       "FilesystemUnmount",
@@ -3459,7 +3502,7 @@ devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
                       argv,
                       NULL,
                       filesystem_unmount_completed_cb,
-                      g_strdup (device->priv->info.device_mount_path),
+                      g_strdup (mount_path),
                       g_free)) {
                 goto out;
         }
@@ -3467,6 +3510,7 @@ devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
 out:
         if (pk_caller != NULL)
                 polkit_caller_unref (pk_caller);
+        g_free (mount_path);
         return TRUE;
 }
 
