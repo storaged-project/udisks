@@ -91,7 +91,8 @@ main (int argc, char **argv)
                                         &standard_error,
                                         &exit_status,
                                         &error)) {
-                g_printerr ("cannot spawn '%s'\n", command_line);
+                g_printerr ("cannot spawn '%s': %s\n", command_line, error->message);
+                g_error_free (error);
                 goto out;
         }
         if (WEXITSTATUS (exit_status) != 0) {
@@ -119,7 +120,8 @@ main (int argc, char **argv)
                                         &standard_error,
                                         &exit_status,
                                         &error)) {
-                g_printerr ("cannot spawn '%s'\n", command_line);
+                g_printerr ("cannot spawn '%s': %s\n", command_line, error->message);
+                g_error_free (error);
                 goto out;
         }
         if (WEXITSTATUS (exit_status) != 0) {
