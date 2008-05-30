@@ -914,7 +914,7 @@ throw_error (DBusGMethodInvocation *context, int error_code, const char *format,
 
         error = g_error_new (DEVKIT_DISKS_DAEMON_ERROR,
                              error_code,
-                             message);
+                             "%s", message);
         dbus_g_method_return_error (context, error);
         g_error_free (error);
         g_free (message);

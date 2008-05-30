@@ -73,6 +73,16 @@ if test "x$GCC" = "xyes"; then
   *) CFLAGS="$CFLAGS -Wsign-compare" ;;
   esac
 
+  case " $CFLAGS " in
+  *[\ \	]-Wformat[\ \	]*) ;;
+  *) CFLAGS="$CFLAGS -Wformat" ;;
+  esac
+
+  case " $CFLAGS " in
+  *[\ \	]-Wformat-security[\ \	]*) ;;
+  *) CFLAGS="$CFLAGS -Wformat-security" ;;
+  esac
+
   if test "x$enable_ansi" = "xyes"; then
     case " $CFLAGS " in
     *[\ \	]-ansi[\ \	]*) ;;
