@@ -109,6 +109,7 @@ void               devkit_disks_device_local_set_mounted         (DevkitDisksDev
                                                                   const char        *mount_path,
                                                                   gboolean           emit_changed_signal);
 void               devkit_disks_device_local_set_unmounted       (DevkitDisksDevice *device,
+                                                                  const char        *given_mount_path,
                                                                   gboolean           emit_changed_signal);
 
 gboolean           devkit_disks_device_local_is_busy             (DevkitDisksDevice *device);

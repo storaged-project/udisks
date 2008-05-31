@@ -170,7 +170,7 @@ devkit_disks_daemon_local_update_mount_state (DevkitDisksDaemon *daemon, GList *
 
                 device_mount_path = devkit_disks_device_local_get_mount_path (device);
                 if (device_mount_path != NULL) {
-                        devkit_disks_device_local_set_unmounted (device, emit_changed);
+                        devkit_disks_device_local_set_unmounted (device, device_mount_path, emit_changed);
                 }
         }
 

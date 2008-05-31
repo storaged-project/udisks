@@ -2305,18 +2305,24 @@ devkit_disks_device_local_set_mounted (DevkitDisksDevice *device,
 
 void
 devkit_disks_device_local_set_unmounted (DevkitDisksDevice *device,
+                                         const char        *given_mount_path,
                                          gboolean           emit_changed_signal)
 {
         char *mount_path;
         gboolean remove_dir_on_unmount;
 
-        mount_path = g_strdup (device->priv->info.device_mount_path);
+        if (given_mount_path != NULL)
+                mount_path = g_strdup (given_mount_path);
+        else
+                mount_path = g_strdup (device->priv->info.device_mount_path);
 
         /* make sure we clean up directories created by ourselves in /media */
         if (!mounts_file_has_device (device, NULL, &remove_dir_on_unmount)) {
                 g_warning ("Cannot determine if directory should be removed on late unmount path");
                 remove_dir_on_unmount = FALSE;
         }
+
+        g_warning ("mount_path=%s remove_dir_on_unmount=%d", mount_path, remove_dir_on_unmount);
 
         g_free (device->priv->info.device_mount_path);
         device->priv->info.device_mount_path = NULL;
@@ -2333,7 +2339,6 @@ devkit_disks_device_local_set_unmounted (DevkitDisksDevice *device,
 
         if (emit_changed_signal)
                 emit_changed (device);
-
         g_free (mount_path);
 }
 
@@ -3401,7 +3406,7 @@ filesystem_unmount_completed_cb (DBusGMethodInvocation *context,
         char *mount_path = user_data;
 
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
-                devkit_disks_device_local_set_unmounted (device, TRUE);
+                devkit_disks_device_local_set_unmounted (device, mount_path, TRUE);
                 if (mount_path != NULL) /* can be NULL when unmounting /etc/fstab mounts */
                         mounts_file_remove (device, mount_path);
                 dbus_g_method_return (context);
@@ -6674,7 +6679,7 @@ force_unmount_completed_cb (DBusGMethodInvocation *context,
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
 
                 g_warning ("Successfully force unmounted device %s", device->priv->info.device_file);
-                devkit_disks_device_local_set_unmounted (device, TRUE);
+                devkit_disks_device_local_set_unmounted (device, NULL, TRUE);
                 mounts_file_remove (device, data->mount_path);
 
                 /* TODO: when we add polling, this can probably be removed. I have no idea why hal's

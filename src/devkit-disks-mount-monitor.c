@@ -221,8 +221,8 @@ _check_lvm (const char *device_path)
 {
         struct stat statbuf;
         if (stat (device_path, &statbuf) == 0) {
-                g_warning ("major=%d minor=%d", major (statbuf.st_rdev), minor (statbuf.st_rdev));
                 if (major (statbuf.st_rdev) == 253) {
+                        /* TODO: should check that /dev/dm-%d exists and has same major/minor */
                         return g_strdup_printf ("/dev/dm-%d", minor (statbuf.st_rdev));
                 }
         }

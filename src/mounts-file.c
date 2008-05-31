@@ -98,7 +98,7 @@ mounts_file_has_device (DevkitDisksDevice *device,
                                 if (mounted_by_uid != NULL)
                                         *mounted_by_uid = atoi (tokens[MOUNTS_FILE_MOUNTED_BY_UID]);
                                 if (remove_dir_on_unmount != NULL)
-                                        if (strcmp (tokens[MOUNTS_FILE_MOUNTED_BY_UID], "1") == 0)
+                                        if (strcmp (tokens[MOUNTS_FILE_REMOVE_DIR_ON_UNMOUNT], "1") == 0)
                                                 *remove_dir_on_unmount = TRUE;
 
                                 g_strfreev (lines);
