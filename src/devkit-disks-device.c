@@ -2322,8 +2322,6 @@ devkit_disks_device_local_set_unmounted (DevkitDisksDevice *device,
                 remove_dir_on_unmount = FALSE;
         }
 
-        g_warning ("mount_path=%s remove_dir_on_unmount=%d", mount_path, remove_dir_on_unmount);
-
         g_free (device->priv->info.device_mount_path);
         device->priv->info.device_mount_path = NULL;
         device->priv->info.device_is_mounted = FALSE;
