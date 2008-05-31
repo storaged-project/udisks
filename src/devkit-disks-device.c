@@ -2744,13 +2744,34 @@ is_device_in_fstab (DevkitDisksDevice *device, char **out_mount_point)
         for (l = mount_points; l != NULL; l = l->next) {
                 GUnixMountPoint *mount_point = l->data;
                 char canonical_device_file[PATH_MAX];
+                char *device_path;
+                char *s;
+
+                device_path = g_strdup (g_unix_mount_point_get_device_path (mount_point));
 
                 /* get the canonical path; e.g. resolve
                  *
-                 * /dev/disk/by-path/pci-0000:00:1d.7-usb-0:3:1.0-scsi-0:0:0:3-part5 into /dev/sde5
+                 * /dev/disk/by-path/pci-0000:00:1d.7-usb-0:3:1.0-scsi-0:0:0:3-part5
+                 * UUID=78af6939-adac-4ea5-a2a8-576e141da010
+                 * LABEL=foobar
+                 *
+                 * into something like /dev/sde5.
                  */
-                if (realpath (g_unix_mount_point_get_device_path (mount_point), canonical_device_file) == NULL)
+                if (g_str_has_prefix (device_path, "UUID=")) {
+                        s = device_path;
+                        device_path = g_strdup_printf ("/dev/disk/by-uuid/%s", device_path + 5);
+                        g_free (s);
+                } else if (g_str_has_prefix (device_path, "LABEL=")) {
+                        s = device_path;
+                        device_path = g_strdup_printf ("/dev/disk/by-label/%s", device_path + 6);
+                        g_free (s);
+                }
+
+                if (realpath (device_path, canonical_device_file) == NULL) {
+                        g_free (device_path);
                         continue;
+                }
+                g_free (device_path);
 
                 if (strcmp (device->priv->info.device_file, canonical_device_file) == 0) {
                         ret = TRUE;
