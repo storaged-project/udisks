@@ -62,6 +62,8 @@ struct DevkitDisksDevicePrivate
         char *object_path;
         char *native_path;
 
+        gboolean removed;
+
         gboolean job_in_progress;
         char *job_id;
         gboolean job_is_cancellable;

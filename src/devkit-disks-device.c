@@ -2108,6 +2108,8 @@ out:
 void
 devkit_disks_device_removed (DevkitDisksDevice *device)
 {
+        device->priv->removed = TRUE;
+
         update_slaves (device);
 
         /* If the device is busy, we possibly need to clean up if the
@@ -2586,6 +2588,52 @@ job_read_out (GIOChannel *channel,
         return TRUE;
 }
 
+static void
+job_local_start (DevkitDisksDevice *device,
+                 const char *job_id)
+{
+        if (device->priv->job != NULL || device->priv->job_in_progress) {
+                g_warning ("There is already a job running");
+                goto out;
+        }
+
+        g_free (device->priv->job_id);
+        device->priv->job_id = g_strdup (job_id);
+        device->priv->job_in_progress = TRUE;
+        device->priv->job_is_cancellable = FALSE;
+        device->priv->job_num_tasks = 0;
+        device->priv->job_cur_task = 0;
+        g_free (device->priv->job_cur_task_id);
+        device->priv->job_cur_task_id = NULL;
+        device->priv->job_cur_task_percentage = -1.0;
+
+        emit_job_changed (device);
+out:
+        ;
+}
+
+static void
+job_local_end (DevkitDisksDevice *device)
+{
+        if (!device->priv->job_in_progress || device->priv->job != NULL) {
+                g_warning ("There is no job running");
+                goto out;
+        }
+
+        device->priv->job_in_progress = FALSE;
+        g_free (device->priv->job_id);
+        device->priv->job_id = NULL;
+        device->priv->job_is_cancellable = FALSE;
+        device->priv->job_num_tasks = 0;
+        device->priv->job_cur_task = 0;
+        g_free (device->priv->job_cur_task_id);
+        device->priv->job_cur_task_id = NULL;
+        device->priv->job_cur_task_percentage = -1.0;
+        emit_job_changed (device);
+out:
+        ;
+}
+
 static gboolean
 job_new (DBusGMethodInvocation *context,
          const char            *job_id,
@@ -2606,7 +2654,7 @@ job_new (DBusGMethodInvocation *context,
         job = NULL;
 
         if (device != NULL) {
-                if (device->priv->job != NULL) {
+                if (device->priv->job != NULL || device->priv->job_in_progress) {
                         throw_error (context,
                                      DEVKIT_DISKS_DEVICE_ERROR_JOB_ALREADY_IN_PROGRESS,
                                      "There is already a job running");
@@ -5107,6 +5155,88 @@ devkit_disks_device_encrypted_unlock (DevkitDisksDevice     *device,
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
+typedef struct {
+        int refcount;
+        DBusGMethodInvocation *context;
+        DevkitDisksDevice *crypto_device;
+        DevkitDisksDevice *cleartext_device;
+        guint device_removed_signal_handler_id;
+        guint device_removed_timeout_id;
+} LockEncryptionData;
+
+static LockEncryptionData *
+lock_encryption_data_new (DBusGMethodInvocation *context,
+                          DevkitDisksDevice *crypto_device,
+                          DevkitDisksDevice *cleartext_device)
+{
+        LockEncryptionData *data;
+
+        data = g_new0 (LockEncryptionData, 1);
+        data->refcount = 1;
+
+        data->context = context;
+        data->crypto_device = g_object_ref (crypto_device);
+        data->cleartext_device = g_object_ref (cleartext_device);
+        return data;
+}
+
+static LockEncryptionData *
+lock_encryption_data_ref (LockEncryptionData *data)
+{
+        data->refcount++;
+        return data;
+}
+
+static void
+lock_encryption_data_unref (LockEncryptionData *data)
+{
+        data->refcount--;
+        if (data->refcount == 0) {
+                g_object_unref (data->crypto_device);
+                g_object_unref (data->cleartext_device);
+                g_free (data);
+        }
+}
+
+
+static void
+encrypted_lock_wait_for_cleartext_device_removed_cb (DevkitDisksDaemon *daemon,
+                                                     const char *object_path,
+                                                     gpointer user_data)
+{
+        DevkitDisksDevice *device;
+        LockEncryptionData *data = user_data;
+
+        device = devkit_disks_daemon_local_find_by_object_path (daemon, object_path);
+        if (device == data->cleartext_device) {
+
+                job_local_end (data->crypto_device);
+
+                dbus_g_method_return (data->context);
+
+                g_signal_handler_disconnect (daemon, data->device_removed_signal_handler_id);
+                g_source_remove (data->device_removed_timeout_id);
+                lock_encryption_data_unref (data);
+        }
+}
+
+
+static gboolean
+encrypted_lock_wait_for_cleartext_device_not_seen_cb (gpointer user_data)
+{
+        LockEncryptionData *data = user_data;
+
+        job_local_end (data->crypto_device);
+
+        throw_error (data->context,
+                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                     "Error locking encrypted device: timeout (10s) waiting for cleartext device to be removed");
+
+        g_signal_handler_disconnect (data->cleartext_device->priv->daemon, data->device_removed_signal_handler_id);
+        lock_encryption_data_unref (data);
+        return FALSE;
+}
+
 static void
 encrypted_lock_completed_cb (DBusGMethodInvocation *context,
                              DevkitDisksDevice *device,
@@ -5117,8 +5247,34 @@ encrypted_lock_completed_cb (DBusGMethodInvocation *context,
                              const char *stdout,
                              gpointer user_data)
 {
+        LockEncryptionData *data = user_data;
+
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
-                dbus_g_method_return (context);
+
+                /* if device is already removed, just return */
+                if (data->cleartext_device->priv->removed) {
+                        dbus_g_method_return (context);
+                } else {
+                        /* otherwise sit and wait for the device to disappear */
+
+                        data->device_removed_signal_handler_id = g_signal_connect_after (
+                                device->priv->daemon,
+                                "device-removed",
+                                (GCallback) encrypted_lock_wait_for_cleartext_device_removed_cb,
+                                lock_encryption_data_ref (data));
+
+                        /* set up timeout for error reporting if waiting failed
+                         *
+                         * (the signal handler and the timeout handler share the ref to data
+                         * as one will cancel the other)
+                         */
+                        data->device_removed_timeout_id = g_timeout_add (
+                                10 * 1000,
+                                encrypted_lock_wait_for_cleartext_device_not_seen_cb,
+                                data);
+
+                        job_local_start (device, "EncryptedLock");
+                }
         } else {
                 if (job_was_cancelled) {
                         throw_error (context,
@@ -5190,8 +5346,8 @@ devkit_disks_device_encrypted_lock (DevkitDisksDevice     *device,
                       argv,
                       NULL,
                       encrypted_lock_completed_cb,
-                      NULL,
-                      NULL)) {
+                      lock_encryption_data_new (context, device, cleartext_device),
+                      (GDestroyNotify) lock_encryption_data_unref)) {
                     goto out;
         }
 
