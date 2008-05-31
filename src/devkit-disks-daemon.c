@@ -45,7 +45,6 @@
 #include <glib.h>
 #include <glib/gi18n-lib.h>
 #include <glib-object.h>
-#include <gio/gunixmounts.h>
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
 #include <devkit-gobject.h>
@@ -54,6 +53,7 @@
 #include "devkit-disks-device.h"
 #include "devkit-disks-device-private.h"
 #include "mounts-file.h"
+#include "devkit-disks-mount-monitor.h"
 
 #include "devkit-disks-daemon-glue.h"
 #include "devkit-disks-marshal.h"
@@ -74,23 +74,23 @@ static guint signals[LAST_SIGNAL] = { 0 };
 
 struct DevkitDisksDaemonPrivate
 {
-        DBusGConnection   *system_bus_connection;
-        DBusGProxy        *system_bus_proxy;
-        PolKitContext     *pk_context;
-        PolKitTracker     *pk_tracker;
+        DBusGConnection         *system_bus_connection;
+        DBusGProxy              *system_bus_proxy;
+        PolKitContext           *pk_context;
+        PolKitTracker           *pk_tracker;
 
-        DevkitClient      *devkit_client;
+        DevkitClient            *devkit_client;
 
-	GIOChannel        *mdstat_channel;
+	GIOChannel              *mdstat_channel;
 
-        GHashTable        *map_native_path_to_device;
-        GHashTable        *map_object_path_to_device;
+        GHashTable              *map_native_path_to_device;
+        GHashTable              *map_object_path_to_device;
 
-        GUnixMountMonitor *mount_monitor;
+        DevkitDisksMountMonitor *mount_monitor;
 
-        guint              smart_refresh_timer_id;
+        guint                    smart_refresh_timer_id;
 
-        DevkitDisksLogger *logger;
+        DevkitDisksLogger       *logger;
 };
 
 static void     devkit_disks_daemon_class_init  (DevkitDisksDaemonClass *klass);
@@ -114,17 +114,15 @@ devkit_disks_daemon_local_update_mount_state (DevkitDisksDaemon *daemon, GList *
 
         devices_copy = g_list_copy (devices);
 
-        /* TODO: cache the mounts list to avoid rereading every time */
-        mounts = g_unix_mounts_get (NULL);
+        mounts = devkit_disks_mount_monitor_get_mounts (daemon->priv->mount_monitor);
 
         for (l = mounts; l != NULL; l = l->next) {
-                GUnixMountEntry *mount_entry = l->data;
+                DevkitDisksMount *mount_entry = l->data;
                 const char *device_file;
                 const char *mount_path;
 
-                /* TODO: maybe use realpath() on the device_path */
-                device_file = g_unix_mount_get_device_path (mount_entry);
-                mount_path = g_unix_mount_get_mount_path (mount_entry);
+                device_file = devkit_disks_mount_get_device_path (mount_entry);
+                mount_path = devkit_disks_mount_get_mount_path (mount_entry);
 
                 for (j = devices_copy; j != NULL; j = jj) {
                         DevkitDisksDevice *device = j->data;
@@ -159,7 +157,7 @@ devkit_disks_daemon_local_update_mount_state (DevkitDisksDaemon *daemon, GList *
                         }
                 }
         }
-        g_list_foreach (mounts, (GFunc) g_unix_mount_free, NULL);
+        g_list_foreach (mounts, (GFunc) devkit_disks_mount_unref, NULL);
         g_list_free (mounts);
 
         /* Since we've removed mounted devices from the devices_copy
@@ -580,7 +578,7 @@ devkit_disks_daemon_local_get_all_devices (DevkitDisksDaemon *daemon)
 }
 
 static void
-mounts_changed (GUnixMountMonitor *monitor, gpointer user_data)
+mounts_changed (DevkitDisksMountMonitor *monitor, gpointer user_data)
 {
         DevkitDisksDaemon *daemon = DEVKIT_DISKS_DAEMON (user_data);
         GList *devices;
@@ -767,10 +765,7 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
         g_signal_connect (daemon->priv->devkit_client, "device-event",
                           G_CALLBACK (device_event_signal_handler), daemon);
 
-        /* monitor mounts */
-        daemon->priv->mount_monitor = g_unix_mount_monitor_new ();
-        // See http://bugzilla.gnome.org/show_bug.cgi?id=521946
-        //g_unix_mount_monitor_set_rate_limit (daemon->priv->mount_monitor, 50);
+        daemon->priv->mount_monitor = devkit_disks_mount_monitor_new ();
         g_signal_connect (daemon->priv->mount_monitor, "mounts-changed", (GCallback) mounts_changed, daemon);
 
         daemon->priv->logger = devkit_disks_logger_new ();
