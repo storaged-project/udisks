@@ -310,7 +310,7 @@ print_job (gboolean    job_in_progress,
 {
         if (job_in_progress) {
                 if (job_num_tasks > 0) {
-                        g_print ("  job underway:  %s: %d/%d tasks (%s",
+                        g_print ("  job underway:    %s: %d/%d tasks (%s",
                                  job_id,
                                  job_cur_task + 1,
                                  job_num_tasks,
@@ -321,13 +321,13 @@ print_job (gboolean    job_in_progress,
                                 g_print (", cancellable");
                         g_print (")\n");
                 } else {
-                        g_print ("  job underway:  %s: unknown progress", job_id);
+                        g_print ("  job underway:    %s: unknown progress", job_id);
                         if (job_is_cancellable)
                                 g_print (", cancellable");
                         g_print ("\n");
                 }
         } else {
-                g_print ("  job underway:  no\n");
+                g_print ("  job underway:    no\n");
         }
 }
 
@@ -361,6 +361,25 @@ device_removed_signal_handler (DBusGProxy *proxy, const char *object_path, gpoin
   g_print ("removed:   %s\n", object_path);
 }
 
+#define SMART_DATA_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray",   \
+                                                        G_TYPE_INT,      \
+                                                        G_TYPE_STRING,   \
+                                                        G_TYPE_INT,      \
+                                                        G_TYPE_INT,      \
+                                                        G_TYPE_INT,      \
+                                                        G_TYPE_INT,      \
+                                                        G_TYPE_STRING,   \
+                                                        G_TYPE_INVALID))
+
+#define HISTORICAL_SMART_DATA_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray",   \
+                                                                   G_TYPE_UINT64, \
+                                                                   G_TYPE_DOUBLE, \
+                                                                   G_TYPE_UINT64, \
+                                                                   G_TYPE_STRING, \
+                                                                   G_TYPE_BOOLEAN, \
+                                                                   dbus_g_type_get_collection ("GPtrArray", SMART_DATA_STRUCT_TYPE), \
+                                                                   G_TYPE_INVALID))
+
 /* --- SUCKY CODE BEGIN --- */
 
 /* This totally sucks; dbus-bindings-tool and dbus-glib should be able
@@ -369,16 +388,6 @@ device_removed_signal_handler (DBusGProxy *proxy, const char *object_path, gpoin
  * TODO: keep in sync with code in tools/devkit-disks in DeviceKit-disks.
  */
 
-typedef struct {
-        int id;
-        char *desc;
-        int flags;
-        int value;
-        int worst;
-        int threshold;
-        char *raw;
-} DeviceSmartAttribute;
-
 typedef struct
 {
         char *native_path;
@@ -386,6 +395,7 @@ typedef struct
         char    *device_file;
         char   **device_file_by_id;
         char   **device_file_by_path;
+        gboolean device_is_system_internal;
         gboolean device_is_partition;
         gboolean device_is_partition_table;
         gboolean device_is_removable;
@@ -449,8 +459,7 @@ typedef struct
         double                 drive_smart_temperature;
         guint64                drive_smart_time_powered_on;
         char                  *drive_smart_last_self_test_result;
-        int                    num_drive_smart_attributes;
-        DeviceSmartAttribute  *drive_smart_attributes;
+        GValue                 drive_smart_attributes;
 
         char    *linux_md_component_level;
         int      linux_md_component_num_raid_devices;
@@ -471,16 +480,6 @@ typedef struct
         guint64  linux_md_sync_speed;
 } DeviceProperties;
 
-#define SMART_DATA_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray",   \
-                                                        G_TYPE_INT,      \
-                                                        G_TYPE_STRING,   \
-                                                        G_TYPE_INT,      \
-                                                        G_TYPE_INT,      \
-                                                        G_TYPE_INT,      \
-                                                        G_TYPE_INT,      \
-                                                        G_TYPE_STRING,   \
-                                                        G_TYPE_INVALID))
-
 static void
 collect_props (const char *key, const GValue *value, DeviceProperties *props)
 {
@@ -495,6 +494,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->device_file_by_id = g_strdupv (g_value_get_boxed (value));
         else if (strcmp (key, "device-file-by-path") == 0)
                 props->device_file_by_path = g_strdupv (g_value_get_boxed (value));
+        else if (strcmp (key, "device-is-system-internal") == 0)
+                props->device_is_system_internal = g_value_get_boolean (value);
         else if (strcmp (key, "device-is-partition") == 0)
                 props->device_is_partition = g_value_get_boolean (value);
         else if (strcmp (key, "device-is-partition-table") == 0)
@@ -622,25 +623,9 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
         else if (strcmp (key, "drive-smart-last-self-test-result") == 0)
                 props->drive_smart_last_self_test_result = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "drive-smart-attributes") == 0) {
-                GPtrArray *p = g_value_get_boxed (value);
-                int n;
-                props->num_drive_smart_attributes = (int) p->len;
-                props->drive_smart_attributes = g_new0 (DeviceSmartAttribute, props->num_drive_smart_attributes);
-                for (n = 0; n < (int) p->len; n++) {
-                        DeviceSmartAttribute *a = props->drive_smart_attributes + n;
-                        GValue elem = {0};
-                        g_value_init (&elem, SMART_DATA_STRUCT_TYPE);
-                        g_value_set_static_boxed (&elem, p->pdata[n]);
-                        dbus_g_type_struct_get (&elem,
-                                                0, &(a->id),
-                                                1, &(a->desc),
-                                                2, &(a->flags),
-                                                3, &(a->value),
-                                                4, &(a->worst),
-                                                5, &(a->threshold),
-                                                6, &(a->raw),
-                                                G_MAXUINT);
-                }
+                g_value_init (&(props->drive_smart_attributes),
+                              dbus_g_type_get_collection ("GPtrArray", SMART_DATA_STRUCT_TYPE));
+                g_value_copy (value, &(props->drive_smart_attributes));
         }
 
         else if (strcmp (key, "linux-md-component-level") == 0)
@@ -736,8 +721,6 @@ out:
 static void
 device_properties_free (DeviceProperties *props)
 {
-        int n;
-
         g_free (props->native_path);
         g_free (props->device_file);
         g_strfreev (props->device_file_by_id);
@@ -767,11 +750,7 @@ device_properties_free (DeviceProperties *props)
         g_strfreev (props->drive_media_compatibility);
         g_free (props->drive_media);
         g_free (props->drive_smart_last_self_test_result);
-        for (n = 0; n < props->num_drive_smart_attributes; n++) {
-                g_free (props->drive_smart_attributes[n].desc);
-                g_free (props->drive_smart_attributes[n].raw);
-        }
-        g_free (props->drive_smart_attributes);
+        g_value_unset (&(props->drive_smart_attributes));
         g_free (props->linux_md_component_level);
         g_free (props->linux_md_component_uuid);
         g_free (props->linux_md_component_name);
@@ -816,20 +795,21 @@ do_show_info (const char *object_path)
 
         props = device_properties_get (bus, object_path);
         g_print ("Showing information for %s\n", object_path);
-        g_print ("  native-path:   %s\n", props->native_path);
-        g_print ("  device-file:   %s\n", props->device_file);
+        g_print ("  native-path:     %s\n", props->native_path);
+        g_print ("  device-file:     %s\n", props->device_file);
         for (n = 0; props->device_file_by_id[n] != NULL; n++)
-                g_print ("    by-id:       %s\n", (char *) props->device_file_by_id[n]);
+                g_print ("    by-id:         %s\n", (char *) props->device_file_by_id[n]);
         for (n = 0; props->device_file_by_path[n] != NULL; n++)
-                g_print ("    by-path:     %s\n", (char *) props->device_file_by_path[n]);
-        g_print ("  removable:     %d\n", props->device_is_removable);
-        g_print ("  has media:     %d\n", props->device_is_media_available);
-        g_print ("  is read only:  %d\n", props->device_is_read_only);
-        g_print ("  is mounted:    %d\n", props->device_is_mounted);
-        g_print ("  is busy:       %d\n", props->device_is_busy);
-        g_print ("  mount path:    %s\n", props->device_mount_path);
-        g_print ("  size:          %" G_GUINT64_FORMAT "\n", props->device_size);
-        g_print ("  block size:    %" G_GUINT64_FORMAT "\n", props->device_block_size);
+                g_print ("    by-path:       %s\n", (char *) props->device_file_by_path[n]);
+        g_print ("  system internal: %d\n", props->device_is_system_internal);
+        g_print ("  removable:       %d\n", props->device_is_removable);
+        g_print ("  has media:       %d\n", props->device_is_media_available);
+        g_print ("  is read only:    %d\n", props->device_is_read_only);
+        g_print ("  is mounted:      %d\n", props->device_is_mounted);
+        g_print ("  is busy:         %d\n", props->device_is_busy);
+        g_print ("  mount path:      %s\n", props->device_mount_path);
+        g_print ("  size:            %" G_GUINT64_FORMAT "\n", props->device_size);
+        g_print ("  block size:      %" G_GUINT64_FORMAT "\n", props->device_block_size);
 
         print_job (props->job_in_progress,
                    props->job_id,
@@ -838,11 +818,11 @@ do_show_info (const char *object_path)
                    props->job_cur_task,
                    props->job_cur_task_id,
                    props->job_cur_task_percentage);
-        g_print ("  usage:         %s\n", props->id_usage);
-        g_print ("  type:          %s\n", props->id_type);
-        g_print ("  version:       %s\n", props->id_version);
-        g_print ("  uuid:          %s\n", props->id_uuid);
-        g_print ("  label:         %s\n", props->id_label);
+        g_print ("  usage:           %s\n", props->id_usage);
+        g_print ("  type:            %s\n", props->id_type);
+        g_print ("  version:         %s\n", props->id_version);
+        g_print ("  uuid:            %s\n", props->id_uuid);
+        g_print ("  label:           %s\n", props->id_label);
         if (props->device_is_linux_md_component) {
                 struct tm *time_tm;
                 time_t time;
@@ -853,76 +833,76 @@ do_show_info (const char *object_path)
                 strftime (time_buf, sizeof time_buf, "%c", time_tm);
 
                 g_print ("  linux md component:\n");
-                g_print ("    RAID level:  %s\n", props->linux_md_component_level);
-                g_print ("    num comp:    %d\n", props->linux_md_component_num_raid_devices);
-                g_print ("    uuid:        %s\n", props->linux_md_component_uuid);
-                g_print ("    name:        %s\n", props->linux_md_component_name);
-                g_print ("    version:     %s\n", props->linux_md_component_version);
+                g_print ("    RAID level:    %s\n", props->linux_md_component_level);
+                g_print ("    num comp:      %d\n", props->linux_md_component_num_raid_devices);
+                g_print ("    uuid:          %s\n", props->linux_md_component_uuid);
+                g_print ("    name:          %s\n", props->linux_md_component_name);
+                g_print ("    version:       %s\n", props->linux_md_component_version);
                 g_print ("    update time: %" G_GUINT64_FORMAT " (%s)\n", props->linux_md_component_update_time, time_buf);
-                g_print ("    events:      %" G_GUINT64_FORMAT "\n", props->linux_md_component_events);
+                g_print ("    events:        %" G_GUINT64_FORMAT "\n", props->linux_md_component_events);
         }
         if (props->device_is_linux_md) {
                 g_print ("  linux md:\n");
-                g_print ("    RAID level:  %s\n", props->linux_md_level);
-                g_print ("    num comp:    %d\n", props->linux_md_num_raid_devices);
-                g_print ("    version:     %s\n", props->linux_md_version);
-                g_print ("    degraded:    %d\n", props->linux_md_is_degraded);
-                g_print ("    sync action: %s\n", props->linux_md_sync_action);
+                g_print ("    RAID level:    %s\n", props->linux_md_level);
+                g_print ("    num comp:      %d\n", props->linux_md_num_raid_devices);
+                g_print ("    version:       %s\n", props->linux_md_version);
+                g_print ("    degraded:      %d\n", props->linux_md_is_degraded);
+                g_print ("    sync action:   %s\n", props->linux_md_sync_action);
                 if (strcmp (props->linux_md_sync_action, "idle") != 0) {
-                        g_print ("      complete:  %3.01f%%\n", props->linux_md_sync_percentage);
-                        g_print ("      speed:     %" G_GINT64_FORMAT " bytes/sec\n", props->linux_md_sync_speed);
+                        g_print ("      complete:    %3.01f%%\n", props->linux_md_sync_percentage);
+                        g_print ("      speed:       %" G_GINT64_FORMAT " bytes/sec\n", props->linux_md_sync_speed);
                 }
                 g_print ("    slaves:\n");
                 for (n = 0; props->linux_md_slaves[n] != NULL; n++)
-                        g_print ("        %s (state: %s)\n",
+                        g_print ("          %s (state: %s)\n",
                                  props->linux_md_slaves[n], props->linux_md_slaves_state[n]);
         }
         if (props->device_is_crypto_cleartext) {
                 g_print ("  cleartext crypto device:\n");
-                g_print ("    backed by:   %s\n", props->crypto_cleartext_slave);
+                g_print ("    backed by:     %s\n", props->crypto_cleartext_slave);
         }
         if (props->device_is_partition_table) {
                 g_print ("  partition table:\n");
-                g_print ("    scheme:      %s\n", props->partition_table_scheme);
-                g_print ("    count:       %d\n", props->partition_table_count);
-                g_print ("    max number:  %d\n", props->partition_table_max_number);
+                g_print ("    scheme:        %s\n", props->partition_table_scheme);
+                g_print ("    count:         %d\n", props->partition_table_count);
+                g_print ("    max number:    %d\n", props->partition_table_max_number);
         }
         if (props->device_is_partition) {
                 g_print ("  partition:\n");
-                g_print ("    part of:     %s\n", props->partition_slave);
-                g_print ("    scheme:      %s\n", props->partition_scheme);
-                g_print ("    number:      %d\n", props->partition_number);
-                g_print ("    type:        %s\n", props->partition_type);
-                g_print ("    flags:      ");
+                g_print ("    part of:       %s\n", props->partition_slave);
+                g_print ("    scheme:        %s\n", props->partition_scheme);
+                g_print ("    number:        %d\n", props->partition_number);
+                g_print ("    type:          %s\n", props->partition_type);
+                g_print ("    flags:        ");
                 for (n = 0; props->partition_flags[n] != NULL; n++)
                         g_print (" %s", (char *) props->partition_flags[n]);
                 g_print ("\n");
-                g_print ("    offset:      %" G_GINT64_FORMAT "\n", props->partition_offset);
-                g_print ("    size:        %" G_GINT64_FORMAT "\n", props->partition_size);
-                g_print ("    label:       %s\n", props->partition_label);
-                g_print ("    uuid:        %s\n", props->partition_uuid);
+                g_print ("    offset:        %" G_GINT64_FORMAT "\n", props->partition_offset);
+                g_print ("    size:          %" G_GINT64_FORMAT "\n", props->partition_size);
+                g_print ("    label:         %s\n", props->partition_label);
+                g_print ("    uuid:          %s\n", props->partition_uuid);
         }
         if (props->device_is_drive) {
                 g_print ("  drive:\n");
-                g_print ("    vendor:      %s\n", props->drive_vendor);
-                g_print ("    model:       %s\n", props->drive_model);
-                g_print ("    revision:    %s\n", props->drive_revision);
-                g_print ("    serial:      %s\n", props->drive_serial);
-                g_print ("    media:       %s\n", props->drive_media);
+                g_print ("    vendor:        %s\n", props->drive_vendor);
+                g_print ("    model:         %s\n", props->drive_model);
+                g_print ("    revision:      %s\n", props->drive_revision);
+                g_print ("    serial:        %s\n", props->drive_serial);
+                g_print ("    media:         %s\n", props->drive_media);
                 g_print ("      compat:   ");
                 for (n = 0; props->drive_media_compatibility[n] != NULL; n++)
                         g_print (" %s", (char *) props->drive_media_compatibility[n]);
                 g_print ("\n");
                 if (props->drive_connection_interface == NULL || strlen (props->drive_connection_interface) == 0)
-                        g_print ("    interface:   (unknown)\n");
+                        g_print ("    interface:     (unknown)\n");
                 else
-                        g_print ("    interface:   %s\n", props->drive_connection_interface);
+                        g_print ("    interface:     %s\n", props->drive_connection_interface);
                 if (props->drive_connection_speed == 0)
-                        g_print ("    if speed:    (unknown)\n");
+                        g_print ("    if speed:      (unknown)\n");
                 else
-                        g_print ("    if speed:    %" G_GINT64_FORMAT " bits/s\n", props->drive_connection_speed);
+                        g_print ("    if speed:      %" G_GINT64_FORMAT " bits/s\n", props->drive_connection_speed);
 
-                g_print ("    media:       %s\n", props->drive_media);
+                g_print ("    media:         %s\n", props->drive_media);
                 if (!props->drive_smart_is_capable) {
                         g_print ("    S.M.A.R.T.:  not capable\n");
                 } else if (props->drive_smart_time_collected == 0) {
@@ -936,21 +916,23 @@ do_show_info (const char *object_path)
                         time_tm = localtime (&time);
                         strftime (time_buf, sizeof time_buf, "%c", time_tm);
 
-                        g_print ("    S.M.A.R.T.:     Information collected at %s\n", time_buf);
+                        g_print ("    S.M.A.R.T.:       Information collected at %s\n", time_buf);
                         if (!props->drive_smart_is_capable) {
                                 g_print ("      not capable\n");
                         } else if (!props->drive_smart_is_enabled) {
                                 g_print ("      not enabled\n");
                         } else {
-                                int m;
 
-                                g_print ("      assessment:   %s\n",
+                                g_print ("      assessment:     %s\n",
                                          props->drive_smart_is_failing ? "FAILING" : "Passed");
-                                g_print ("      temperature:  %g° C / %g° F\n",
+                                g_print ("      temperature:    %g° C / %g° F\n",
                                          props->drive_smart_temperature,
                                          9 * props->drive_smart_temperature / 5 + 32);
-                                g_print ("      powered on:   %" G_GUINT64_FORMAT " hours\n", props->drive_smart_time_powered_on / 3600);
+                                g_print ("      powered on:     %" G_GUINT64_FORMAT " hours\n", props->drive_smart_time_powered_on / 3600);
                                 //g_print ("      196  Reallocated_Event_Count      0x0032 100   100           0 443023360\n",
+#if 0
+                                int m;
+// TODO: bring this back
                                 g_print ("      =========================================================================\n");
                                 g_print ("      Id   Description                   Flags Value Worst Threshold       Raw\n");
                                 g_print ("      =========================================================================\n");
@@ -959,6 +941,7 @@ do_show_info (const char *object_path)
                                         g_print ("      %3d  %-28s 0x%04x %5d %5d %9d %s\n",
                                                  a->id, a->desc, a->flags, a->value, a->worst, a->threshold, a->raw);
                                 }
+#endif
                         }
                 }
 

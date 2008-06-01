@@ -78,6 +78,7 @@ struct DevkitDisksDevicePrivate
                 char *device_file;
                 GPtrArray *device_file_by_id;
                 GPtrArray *device_file_by_path;
+                gboolean device_is_system_internal;
                 gboolean device_is_partition;
                 gboolean device_is_partition_table;
                 gboolean device_is_removable;

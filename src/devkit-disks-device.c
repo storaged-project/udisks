@@ -119,6 +119,7 @@ enum
         PROP_DEVICE_FILE,
         PROP_DEVICE_FILE_BY_ID,
         PROP_DEVICE_FILE_BY_PATH,
+        PROP_DEVICE_IS_SYSTEM_INTERNAL,
         PROP_DEVICE_IS_PARTITION,
         PROP_DEVICE_IS_PARTITION_TABLE,
         PROP_DEVICE_IS_REMOVABLE,
@@ -314,6 +315,9 @@ get_property (GObject         *object,
         case PROP_DEVICE_FILE_BY_PATH:
                 g_value_set_boxed (value, device->priv->info.device_file_by_path);
                 break;
+	case PROP_DEVICE_IS_SYSTEM_INTERNAL:
+		g_value_set_boolean (value, device->priv->info.device_is_system_internal);
+		break;
 	case PROP_DEVICE_IS_PARTITION:
 		g_value_set_boolean (value, device->priv->info.device_is_partition);
 		break;
@@ -619,6 +623,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 g_param_spec_boxed ("device-file-by-path", NULL, NULL,
                                     dbus_g_type_get_collection ("GPtrArray", G_TYPE_STRING),
                                     G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_IS_SYSTEM_INTERNAL,
+                g_param_spec_boolean ("device-is-system-internal", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_DEVICE_IS_PARTITION,
@@ -2071,6 +2079,22 @@ update_info (DevkitDisksDevice *device)
                 if (g_str_has_prefix (device->priv->info.drive_connection_interface, "ata") ||
                     g_str_has_prefix (device->priv->info.drive_connection_interface, "scsi")) {
                         device->priv->drive_smart_is_capable = TRUE;
+                }
+        }
+
+        /* Set whether device is considered system internal
+         *
+         * TODO: make this possible to override from DeviceKit/udev database.
+         */
+        device->priv->info.device_is_system_internal = TRUE;
+        if (device->priv->info.device_is_removable) {
+                device->priv->info.device_is_system_internal = FALSE;
+        } else if (device->priv->info.device_is_drive && device->priv->info.drive_connection_interface != NULL) {
+                if (strcmp (device->priv->info.drive_connection_interface, "ata_serial_esata") == 0 ||
+                    strcmp (device->priv->info.drive_connection_interface, "sdio") == 0 ||
+                    strcmp (device->priv->info.drive_connection_interface, "usb") == 0 ||
+                    strcmp (device->priv->info.drive_connection_interface, "firewire") == 0) {
+                        device->priv->info.device_is_system_internal = FALSE;
                 }
         }
 

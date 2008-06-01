@@ -903,6 +903,14 @@
             is plugged into. Example: <doc:tt>/dev/disk/by-path/pci-0000:00:1f.2-scsi-0:0:1:0</doc:tt>
       </doc:para></doc:description></doc:doc>
     </property>
+    <property name="device-is-system-internal" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if the device is considered system internal. Typically, system internal devices
+            include non-removable internal hard disks and other drives that are not easily added/removed
+            by a local console user. The heuristic typically used is that only devices on removable media
+            and devices connected via Firewire, USB, eSATA and SDIO are considered external.
+      </doc:para></doc:description></doc:doc>
+    </property>
     <property name="device-is-partition" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE if the device is a partition. See the properties starting with partition- for details.
