@@ -34,6 +34,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/wait.h>
+#include <sys/mount.h>
 
 #include <glib.h>
 
@@ -61,11 +62,16 @@ main (int argc, char **argv)
         GPtrArray *options_array;
         char *option;
         gsize option_len;
+        char *endp;
+        uid_t take_ownership_uid;
+        gid_t take_ownership_gid;
 
         ret = 1;
         command_line = NULL;
         standard_error = NULL;
         erase = NULL;
+        take_ownership_uid = 0;
+        take_ownership_gid = 0;
 
         if (argc != 4) {
                 g_printerr ("wrong usage\n");
@@ -132,6 +138,18 @@ main (int argc, char **argv)
                                 g_free (label);
                         } else if (g_str_has_prefix (options[n], "erase=")) {
                                 erase = strdup (options[n] + sizeof ("erase=") - 1);
+                        } else if (g_str_has_prefix (options[n], "take_ownership_uid=")) {
+                                take_ownership_uid = strtol (options[n] + sizeof ("take_ownership_uid=") - 1, &endp, 10);
+                                if (endp == NULL || *endp != '\0') {
+                                        g_printerr ("option %s is malformed\n", options[n]);
+                                        goto out;
+                                }
+                        } else if (g_str_has_prefix (options[n], "take_ownership_gid=")) {
+                                take_ownership_gid = strtol (options[n] + sizeof ("take_ownership_gid=") - 1, &endp, 10);
+                                if (endp == NULL || *endp != '\0') {
+                                        g_printerr ("option %s is malformed\n", options[n]);
+                                        goto out;
+                                }
                         } else {
                                 g_printerr ("option %s not supported\n", options[n]);
                                 goto out;
@@ -229,19 +247,56 @@ main (int argc, char **argv)
                 fd = open (device, O_RDONLY);
                 if (fd < 0) {
                         g_printerr ("cannot open %s (for BLKRRPART): %m\n", device);
-                        ret = 1;
                         goto out;
                 }
                 if (ioctl (fd, BLKRRPART) != 0) {
                         close (fd);
                         g_printerr ("BLKRRPART ioctl failed for %s: %m\n", device);
-                        ret = 1;
                         goto out;
                 }
                 close (fd);
         }
 
-        ret = 0;
+        /* take ownership of the device if requested */
+        if (take_ownership_uid != 0 || take_ownership_gid != 0) {
+                char dir[256] = "/tmp/devkit-disks-mkfs-XXXXXX";
+
+                if (mkdtemp (dir) == NULL) {
+                        g_printerr ("cannot create directory %s: %m\n", dir);
+                        goto out;
+                }
+
+                if (mount (device, dir, fstype, 0, NULL) != 0) {
+                        g_printerr ("cannot mount %s at %s: %m\n", device, dir);
+                        ret = 2;
+                        goto tos_err0;
+                }
+
+                if (chown (dir, take_ownership_uid, take_ownership_gid) != 0) {
+                        g_printerr ("cannot chown %s to uid=%d and gid=%d: %m\n",
+                                    dir,
+                                    take_ownership_uid,
+                                    take_ownership_gid);
+                        ret = 2;
+                }
+
+                if (umount (dir) != 0) {
+                        g_printerr ("cannot unmount %s: %m\n", dir);
+                        ret = 2;
+                        goto tos_err0;
+                }
+
+        tos_err0:
+                if (rmdir (dir) != 0) {
+                        g_printerr ("cannot remove directory %s: %m\n", dir);
+                        goto out;
+                }
+        }
+
+        if (ret == 2)
+                ret = 1;
+        else
+                ret = 0;
 
 out:
         g_free (standard_error);

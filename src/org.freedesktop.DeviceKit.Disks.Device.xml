@@ -388,7 +388,10 @@
             for all file systems and the allowed length of a label may vary (see @TODO@).
             To create the file system on an encrypted
             block device, pass the <doc:tt>encrypt=</doc:tt> option with the
-            value set to the passphrase to use.
+            value set to the passphrase to use. For file systems with the concept of owners (e.g.
+            <doc:tt>ext3</doc:tt>), the options <doc:tt>take_ownership_uid=</doc:tt> and
+            <doc:tt>take_ownership_gid=</doc:tt> are supported and can be used to set the
+            initial owner of the created file system.
         </doc:summary></doc:doc>
       </arg>
 
