@@ -54,26 +54,40 @@
 
 #define NAME_TO_CLAIM "org.freedesktop.DeviceKit.Disks"
 
+static GMainLoop *loop;
+
+static void
+name_lost (DBusGProxy *system_bus_proxy, const char *name_which_was_lost, gpointer user_data)
+{
+        g_warning ("got NameLost, exiting");
+        g_main_loop_quit (loop);
+}
+
 static gboolean
-acquire_name_on_proxy (DBusGProxy *bus_proxy)
+acquire_name_on_proxy (DBusGProxy *system_bus_proxy, gboolean replace)
 {
         GError     *error;
         guint       result;
         gboolean    res;
         gboolean    ret;
+        guint       flags;
 
         ret = FALSE;
 
-        if (bus_proxy == NULL) {
+        flags = DBUS_NAME_FLAG_ALLOW_REPLACEMENT;
+        if (replace)
+                flags |= DBUS_NAME_FLAG_REPLACE_EXISTING;
+
+        if (system_bus_proxy == NULL) {
                 goto out;
         }
 
         error = NULL;
-	res = dbus_g_proxy_call (bus_proxy,
+	res = dbus_g_proxy_call (system_bus_proxy,
                                  "RequestName",
                                  &error,
                                  G_TYPE_STRING, NAME_TO_CLAIM,
-                                 G_TYPE_UINT, 0,
+                                 G_TYPE_UINT, flags,
                                  G_TYPE_INVALID,
                                  G_TYPE_UINT, &result,
                                  G_TYPE_INVALID);
@@ -97,6 +111,9 @@ acquire_name_on_proxy (DBusGProxy *bus_proxy)
                 goto out;
         }
 
+        dbus_g_proxy_add_signal (system_bus_proxy, "NameLost", G_TYPE_STRING, G_TYPE_INVALID);
+        dbus_g_proxy_connect_signal (system_bus_proxy, "NameLost", G_CALLBACK (name_lost), NULL, NULL);
+
         ret = TRUE;
 
  out:
@@ -107,13 +124,14 @@ int
 main (int argc, char **argv)
 {
         GError              *error;
-        GMainLoop           *loop;
         DevkitDisksDaemon   *disks_daemon;
         GOptionContext      *context;
-        DBusGProxy          *bus_proxy;
+        DBusGProxy          *system_bus_proxy;
         DBusGConnection     *bus;
         int                  ret;
+        static gboolean      replace;
         static GOptionEntry  entries []   = {
+                { "replace", 0, 0, G_OPTION_ARG_NONE, &replace, "Replace existing daemon", NULL },
                 { NULL }
         };
 
@@ -146,16 +164,16 @@ main (int argc, char **argv)
                 goto out;
         }
 
-	bus_proxy = dbus_g_proxy_new_for_name (bus,
+	system_bus_proxy = dbus_g_proxy_new_for_name (bus,
                                                DBUS_SERVICE_DBUS,
                                                DBUS_PATH_DBUS,
                                                DBUS_INTERFACE_DBUS);
-        if (bus_proxy == NULL) {
-                g_warning ("Could not construct bus_proxy object; bailing out");
+        if (system_bus_proxy == NULL) {
+                g_warning ("Could not construct system_bus_proxy object; bailing out");
                 goto out;
         }
 
-        if (!acquire_name_on_proxy (bus_proxy) ) {
+        if (!acquire_name_on_proxy (system_bus_proxy, replace) ) {
                 g_warning ("Could not acquire name; bailing out");
                 goto out;
         }
