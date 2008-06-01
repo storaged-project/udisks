@@ -2864,12 +2864,8 @@ static const char *vfat_allow[] =          {"utf8",
                                             "dmask=",
                                             "fmask=",
                                             "codepage=",
+                                            "iocharset=",
                                             NULL};
-static const FSRestrictedMountOption vfat_restricted[] = {
-        {"uid=", "org.freedesktop.devicekit.disks.mount-option.vfat-uid"},
-        {"gid=", "org.freedesktop.devicekit.disks.mount-option.vfat-gid"},
-        {NULL, NULL},
-};
 static const char *vfat_allow_uid_self[] = {"uid=", NULL};
 static const char *vfat_allow_gid_self[] = {"gid=", NULL};
 
@@ -2890,14 +2886,8 @@ static const char *any_allow[] = {"exec",
                                   "dirsync",
                                   NULL};
 
-static const FSRestrictedMountOption any_restricted[] = {
-        {"suid", "org.freedesktop.devicekit.disks.mount-option.suid"},
-        {"dev", "org.freedesktop.devicekit.disks.mount-option.dev"},
-        {NULL, NULL},
-};
-
 static const FSMountOptions fs_mount_options[] = {
-        {"vfat", vfat_defaults, vfat_allow, vfat_allow_uid_self, vfat_allow_gid_self, vfat_restricted},
+        {"vfat", vfat_defaults, vfat_allow, vfat_allow_uid_self, vfat_allow_gid_self},
 };
 
 /* ------------------------------------------------ */
@@ -3064,49 +3054,6 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
                         }
                 }
         }
-
-        /* .. and finally check the mount options that requires authorization */
-        if (fsmo != NULL) {
-                for (n = 0; fsmo->restricted[n].mount_option != NULL; n++) {
-                        const char *r_mount_option = fsmo->restricted[n].mount_option;
-                        const char *r_authorization_needed = fsmo->restricted[n].authorization_needed;
-                        ep = strstr (r_mount_option, "=");
-                        if (ep != NULL && ep[1] == '\0') {
-                                ep_len = ep - r_mount_option + 1;
-                                if (strncmp (r_mount_option, option, ep_len) == 0) {
-                                        allowed = TRUE;
-                                        *auth_needed = r_authorization_needed;
-                                        goto out;
-                                }
-                        } else {
-                                if (strcmp (r_mount_option, option) == 0) {
-                                        allowed = TRUE;
-                                        *auth_needed = r_authorization_needed;
-                                        goto out;
-                                }
-                        }
-                }
-        }
-        for (n = 0; any_restricted[n].mount_option != NULL; n++) {
-                const char *r_mount_option = any_restricted[n].mount_option;
-                const char *r_authorization_needed = any_restricted[n].authorization_needed;
-                ep = strstr (r_mount_option, "=");
-                if (ep != NULL && ep[1] == '\0') {
-                        ep_len = ep - r_mount_option + 1;
-                        if (strncmp (r_mount_option, option, ep_len) == 0) {
-                                allowed = TRUE;
-                                *auth_needed = r_authorization_needed;
-                                goto out;
-                        }
-                } else {
-                        if (strcmp (r_mount_option, option) == 0) {
-                                allowed = TRUE;
-                                *auth_needed = r_authorization_needed;
-                                goto out;
-                        }
-                }
-        }
-
 
 out:
         return allowed;
