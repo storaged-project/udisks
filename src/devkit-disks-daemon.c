@@ -140,7 +140,20 @@ devkit_disks_daemon_local_update_mount_state (DevkitDisksDaemon *daemon, GList *
                                         /* same mount path; no changes */
                                 } else {
                                         /* device was just mounted... or the mount path changed */
-                                        devkit_disks_device_local_set_mounted (device, mount_path, emit_changed);
+
+                                        if (device->priv->job_in_progress &&
+                                            device->priv->job_id != NULL &&
+                                            strcmp (device->priv->job_id, "FilesystemMount") == 0) {
+                                                /* delay setting the mount point until FilesystemMount returns;
+                                                 * otherwise we won't get the uid right */
+                                        } else {
+                                                uid_t uid = 0;
+                                                mounts_file_has_device (device, &uid, NULL);
+                                                devkit_disks_device_local_set_mounted (device,
+                                                                                       mount_path,
+                                                                                       emit_changed,
+                                                                                       uid);
+                                        }
                                 }
 
                                 /* we're mounted so remove from list of devices (see below) */
@@ -275,12 +288,13 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
                               G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                               0,
                               NULL, NULL,
-                              devkit_disks_marshal_VOID__STRING_BOOLEAN_STRING_BOOLEAN_INT_INT_STRING_DOUBLE,
+                              devkit_disks_marshal_VOID__STRING_BOOLEAN_STRING_UINT_BOOLEAN_INT_INT_STRING_DOUBLE,
                               G_TYPE_NONE,
-                              8,
+                              9,
                               G_TYPE_STRING,
                               G_TYPE_BOOLEAN,
                               G_TYPE_STRING,
+                              G_TYPE_UINT,
                               G_TYPE_BOOLEAN,
                               G_TYPE_INT,
                               G_TYPE_INT,

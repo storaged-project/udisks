@@ -66,6 +66,7 @@ struct DevkitDisksDevicePrivate
 
         gboolean job_in_progress;
         char *job_id;
+        uid_t job_initiated_by_uid;
         gboolean job_is_cancellable;
         int job_num_tasks;
         int job_cur_task;
@@ -92,6 +93,7 @@ struct DevkitDisksDevicePrivate
                 guint64 device_block_size;
                 gboolean device_is_mounted;
                 char *device_mount_path;
+                uid_t device_mounted_by_uid;
 
                 char *id_usage;
                 char *id_type;
@@ -125,6 +127,7 @@ struct DevkitDisksDevicePrivate
                 char *drive_media;
 
                 char *crypto_cleartext_slave;
+                uid_t crypto_cleartext_unlocked_by_uid;
 
                 char *linux_md_component_level;
                 int linux_md_component_num_raid_devices;

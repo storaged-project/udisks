@@ -416,6 +416,26 @@ devkit_disks_device_drive_smart_get_historical_data (DevkitDisksDevice     *devi
         char *err_msg;
         DevkitDisksLogger *logger;
         HistoricalData *data;
+        PolKitCaller *pk_caller;
+
+        disk_id = NULL;
+        pk_caller = NULL;
+
+        if (context != NULL) {
+                if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon,
+                                                                                  context)) == NULL)
+                        goto out;
+        }
+
+        if (context != NULL) {
+                if (!devkit_disks_damon_local_check_auth (
+                            device->priv->daemon,
+                            pk_caller,
+                            "org.freedesktop.devicekit.disks.smart-retrieve-historical-data",
+                            context)) {
+                        goto out;
+                }
+        }
 
         logger = devkit_disks_daemon_local_get_logger (device->priv->daemon);
 
@@ -481,5 +501,7 @@ devkit_disks_device_drive_smart_get_historical_data (DevkitDisksDevice     *devi
 
 out:
         g_free (disk_id);
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
         return TRUE;
 }

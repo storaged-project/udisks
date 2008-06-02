@@ -115,7 +115,23 @@
             Cancels a job in progress.
           </doc:para>
         </doc:description>
-        <doc:permission>Callers need the org.freedesktop.devicekit.disks.format authorization</doc:permission>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.cancel-job-others</doc:term>
+              <doc:definition>To cancel a job on a
+                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                device initiated by another user</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.cancel-job-others-system-internal</doc:term>
+              <doc:definition>To cancel a job on a
+                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                device initiated by another user</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_NO_JOB_IN_PROGRESS;">if no job is pending</doc:error>
           <doc:error name="&ERROR_JOB_CANNOT_BE_CANCELLED;">if job is not cancellable</doc:error>
@@ -172,6 +188,23 @@
             </doc:list>
           </doc:para>
         </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
+              <doc:definition>If the operation is on a
+                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                device</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.change-system-internal</doc:term>
+              <doc:definition>If the operation is on a
+                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                device</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_IS_BUSY;">if the device is busy</doc:error>
           <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
@@ -194,6 +227,23 @@
             Deletes a partition, removing it from the enclosing partition table.
           </doc:para>
         </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
+              <doc:definition>If the operation is on a
+                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                device</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.change-system-internal</doc:term>
+              <doc:definition>If the operation is on a
+                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                device</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_NOT_PARTITION;">if the device is not a partition</doc:error>
           <doc:error name="&ERROR_IS_BUSY;">if the device is busy</doc:error>
@@ -316,6 +366,23 @@
             constraints.
           </doc:para>
         </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
+              <doc:definition>If the operation is on a
+                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                device</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.change-system-internal</doc:term>
+              <doc:definition>If the operation is on a
+                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                device</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_NOT_PARTITIONED;">if the device is not a partitition table</doc:error>
           <doc:error name="&ERROR_IS_BUSY;">if the device is busy</doc:error>
@@ -359,6 +426,23 @@
             size. Or maybe that should be a separate method.
           </doc:para>
         </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
+              <doc:definition>If the operation is on a
+                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                device</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.change-system-internal</doc:term>
+              <doc:definition>If the operation is on a
+                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                device</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_NOT_PARTITION;">if the device is not a partition</doc:error>
           <doc:error name="&ERROR_IS_BUSY;">if the device is busy</doc:error>
@@ -405,6 +489,23 @@
             cleartext device.
           </doc:para>
         </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
+              <doc:definition>If the operation is on a
+                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                device</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.change-system-internal</doc:term>
+              <doc:definition>If the operation is on a
+                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                device</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_IS_BUSY;">if the device is busy</doc:error>
           <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
@@ -432,6 +533,23 @@
             method for details of what valid labels are valid.
           </doc:para>
         </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
+              <doc:definition>If the operation is on a
+                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                device</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.change-system-internal</doc:term>
+              <doc:definition>If the operation is on a
+                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                device</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_IS_BUSY;">if the device is busy and changing the label requires an unmounted file system</doc:error>
           <doc:error name="&ERROR_NOT_MOUNTABLE;">if the device is not a mountable file system</doc:error>
@@ -464,6 +582,23 @@
             attempted to be mounted as the calling user.
           </doc:para>
         </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.mount</doc:term>
+              <doc:definition>If the operation is on a
+                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                device</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.mount-system-internal</doc:term>
+              <doc:definition>If the operation is on a
+                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                device</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_IS_BUSY;">if the device is busy</doc:error>
           <doc:error name="&ERROR_NOT_MOUNTABLE;">if the device is not a mountable file system</doc:error>
@@ -494,6 +629,23 @@
             will be attempted to be unmounted as the calling user.
           </doc:para>
         </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.unmount-others</doc:term>
+              <doc:definition>To unmount a
+                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                device mounted by another user</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.unmount-others-system-internal</doc:term>
+              <doc:definition>To unmount a
+                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                device mounted by another user</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_IS_BUSY;">if the device is busy</doc:error>
           <doc:error name="&ERROR_UNMOUNT_OPTION_NOT_ALLOWED;">if an invalid or malformed unmount option was given</doc:error>
@@ -525,6 +677,15 @@
             Sets up a cleartext device using the given device as backing store.
           </doc:para>
         </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.unlock-encrypted</doc:term>
+              <doc:definition>To unlock encrypted devices</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_IS_BUSY;">if the device is busy</doc:error>
           <doc:error name="&ERROR_NOT_CRYPTO;">if the device is not encrypted</doc:error>
@@ -552,6 +713,23 @@
             method.
           </doc:para>
         </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.lock-encrypted-others</doc:term>
+              <doc:definition>To lock an encrypted
+                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                device unlocked by another user</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.lock-encrypted-others-system-internal</doc:term>
+              <doc:definition>To lock an encrypted
+                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                device unlocked by another user</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_IS_BUSY;">if the device is busy</doc:error>
           <doc:error name="&ERROR_NOT_CRYPTO;">if the device is not encrypted</doc:error>
@@ -579,6 +757,23 @@
             Change the passphrase used to unlock an encrypted device.
           </doc:para>
         </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
+              <doc:definition>If the operation is on a
+                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                device</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.change-system-internal</doc:term>
+              <doc:definition>If the operation is on a
+                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                device</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_NOT_CRYPTO;">if the device is not encrypted</doc:error>
           <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
@@ -605,6 +800,15 @@
             on the given component will be erased.
           </doc:para>
         </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.linux-md</doc:term>
+              <doc:definition>Needed to configured Linux md Software RAID devices</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_NOT_LINUX_MD;">device to add component to is not a Linux md RAID array</doc:error>
           <doc:error name="&ERROR_NO_SUCH_DEVICE;">given component doesn't exist</doc:error>
@@ -634,6 +838,15 @@
             erased according to the erase= option.
           </doc:para>
         </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.linux-md</doc:term>
+              <doc:definition>Needed to configured Linux md Software RAID devices</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_NOT_LINUX_MD;">device to remove component from is not a Linux md RAID array</doc:error>
           <doc:error name="&ERROR_NO_SUCH_DEVICE;">given component is not part of the array</doc:error>
@@ -657,6 +870,15 @@
             Stops a Linux md RAID array.
           </doc:para>
         </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.linux-md</doc:term>
+              <doc:definition>Needed to configured Linux md Software RAID devices</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_NOT_LINUX_MD;">device is not a Linux md RAID array</doc:error>
           <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
@@ -686,6 +908,15 @@
             data for the given drive. This operation is not run as a job.
           </doc:para>
         </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.smart-refresh</doc:term>
+              <doc:definition>Needed to refresh S.M.A.R.T. data</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_NOT_SMART_CAPABLE;">device is not S.M.A.R.T. capable</doc:error>
           <doc:error name="&ERROR_NOT_DRIVE;">device is not a drive</doc:error>
@@ -775,6 +1006,15 @@
             store or return historical data.
           </doc:para>
         </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.smart-retrieve-historical-data</doc:term>
+              <doc:definition>To retrieve historical S.M.A.R.T. data</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_NOT_SMART_CAPABLE;">device is not S.M.A.R.T. capable</doc:error>
           <doc:error name="&ERROR_NOT_DRIVE;">device is not a drive</doc:error>
@@ -810,6 +1050,15 @@
             Runs a S.M.A.R.T. self test on the drive. TODO: need to figure out whether we need a return code.
           </doc:para>
         </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.smart-selftest</doc:term>
+              <doc:definition>Needed to run S.M.A.R.T. self tests</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_IS_BUSY;">if captive was selected and the device is busy</doc:error>
           <doc:error name="&ERROR_NOT_SMART_CAPABLE;">device is not S.M.A.R.T. capable</doc:error>
@@ -846,6 +1095,9 @@
       <arg name="job-id" type="s">
         <doc:doc><doc:summary>The identifier of the job.</doc:summary></doc:doc>
       </arg>
+      <arg name="job-initiated-by-uid" type="u">
+        <doc:doc><doc:summary>The UNIX user id of the user who initiated the job.</doc:summary></doc:doc>
+      </arg>
       <arg name="job-num-tasks" type="i">
         <doc:doc><doc:summary>Number of tasks in the job.</doc:summary></doc:doc>
       </arg>
@@ -872,14 +1124,6 @@
 
     <!-- ************************************************************ -->
 
-    <!-- The 'native-path' property is the OS native path for the
-         device; on Linux this is the sysfs path.
-
-         The 'device-is-busy' property is set if the device is
-         in use; this can hapen if it's mounted, if another
-         block device is claiming it (e.g. a RAID drive) or if a
-         job initiated from DeviceKit-disks is pending.
-      -->
     <property name="native-path" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             OS specific native path of the device. On Linux this is the sysfs path, for example <doc:tt>/sys/devices/pci0000:00/0000:00:1f.2/host2/target2:0:1/2:0:1:0/block/sda</doc:tt>.
@@ -949,6 +1193,18 @@
     <property name="device-mount-path" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             Where the device is mounted.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-mounted">device-is-mounted</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-mounted-by-uid" type="u" access="read">
+      <doc:doc><doc:description><doc:para>
+            The UNIX user id of the user who mounted the device. Set to 0 if
+            not mounted by DeviceKit-disks.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-mounted">device-is-mounted</doc:ref>
+            is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
     <property name="device-is-crypto-cleartext" type="b" access="read">
@@ -986,26 +1242,6 @@
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <!-- The job properties specify if a job initiated via the
-         DeviceKit-disks daemon is currently in progress.  A job may
-         be split into several sequential tasks; in that case
-         'job-num-tasks' will be greater than zero. If it is 0 none
-         of the 'job-cur-*' properties will be set.
-
-         The 'job-id' property is used to identify the job and maps
-         1-1 with the names of the method calls on this interface,
-         e.g. 'Erase', 'FilesystemCreate' and so on.
-
-         Note that the 'job-cur-task' percentage starts at 0.  The
-         percentage is normally a number between 0 and 100. If set to -1
-         it means the progress of the current is unknown. The task id is
-         a well-defined name defining the current subtask of the job;
-         known tasks id's are
-
-          - zeroing: zeroing data on the device
-          - sync:    flushing data to the device
-          - mkfs:    creating file system
-      -->
     <property name="job-in-progress" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             The job properties specify if a job initiated via the
@@ -1020,6 +1256,11 @@
             This property is used to identify the job and maps 1-1
             with the names of the method calls on this interface,
             e.g. 'Erase', 'FilesystemCreate' and so on.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="job-initiated-by-uid" type="u" access="read">
+      <doc:doc><doc:description><doc:para>
+            The UNIX user id of the user who initiated the job.
       </doc:para></doc:description></doc:doc>
     </property>
     <property name="job-is-cancellable" type="b" access="read">
@@ -1050,32 +1291,6 @@
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <!-- the usage is a result of probing for signatures on the block
-         device; known values are
-
-           filesystem      - the device contains a file system; known
-                             values for 'id-type' is the same as the
-                             name of the OS fs driver e.g. 'vfat',
-                             'ext3' and so on.
-
-           crypto          - the device contains encrypted data. Known
-                             values for 'id-type' are 'crypto_LUKS'.
-
-           partitiontable  - the device is partitioned into other devices.
-                             Known values for 'id-type' are
-                              mbr  - Master Boot Record
-                              embr - Extended Master Boot Record
-                              apm  - Apple Partitoning Map
-                              gpt  - GUID Partition Table
-
-           raid            - the device is member of a RAID set or another
-                             scheme that requires device assembly. Known
-                             values for 'id-type' are TODO.
-
-           other           - other signature found on the device
-
-         The 'id-uuid' and 'id-label' properties, if set, are dependent
-         on the 'id-type' property -->
     <property name="id-usage" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             A result of probing for signatures on the block device;
@@ -1190,13 +1405,6 @@
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <!-- The following properties are only set if the device is
-         a clear text device for an encrypted block device (see
-         the property 'device-is-crypto-cleartext').
-
-         The property 'crypto-cleartext-slave' is a reference to the
-         encrypted block device.
-      -->
     <property name="crypto-cleartext-slave" type="o" access="read">
       <doc:doc><doc:description><doc:para>
             The encrypted device backing a crypto cleartext device.
@@ -1205,20 +1413,16 @@
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
+    <property name="crypto-cleartext-unlocked-by-uid" type="u" access="read">
+      <doc:doc><doc:description><doc:para>
+            The UNIX user id of the user who unlocked the device. Set to 0 if
+            not unlocked by DeviceKit-disks.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-crypto-cleartext">device-is-crypto-cleartext</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
 
-    <!-- the following properties are only set if the device is
-         a partition (see 'device-is-partition'). Known values
-         for the partitioning scheme are
-
-           mbr  - Master Boot Record
-           embr - Extended Master Boot Record
-           apm  - Apple Partitoning Map
-           gpt  - GUID Partition Table
-
-         The 'partition-slave' property specifies what device
-         the device in question is a partition of. The property
-         'partition-number' is the number of the partition starting
-         from 1 -->
     <property name="partition-slave" type="o" access="read">
       <doc:doc><doc:description><doc:para>
             The object path of the partition table the partition is part of.
@@ -1310,27 +1514,6 @@
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <!-- the type of partition table the deice contains; only set if
-         'device-is-partition-table' is true. Known values are
-
-           mbr  - Master Boot Record
-           embr - Extended Master Boot Record
-           apm  - Apple Partitoning Map
-           gpt  - GUID Partition Table
-
-         The 'partition-table-count' property specifies the number
-         of partitions in the partition table. Note that the
-         partitions may not be sequentially numbered (e.g.
-         it's fine for 'partition-table-count' to report 2
-         and 'partition-number' for the associated paritions
-         report 1 resp. 4). The property 'partition-table-max-number'
-         will contain the maximum value for 'partition-number'
-         of any partitions.
-
-         The 'partition-table-offsets' and 'partition-table-sizes'
-         properties are arrays indexed by 'partition-number' and
-         are of size 'partition-table-max-number'. It may contain
-         holes in which case the offset will be 0. -->
     <property name="partition-table-scheme" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The scheme of the partition table.
@@ -1387,74 +1570,6 @@
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <!-- Properties for the drive. The property drive-connection-interface
-         specifies the physical connection used to connect the drive (or
-         it's enclosure) to the host system.
-
-         (TODO: actually, on Linux, it's hard to get the kernel/driver
-         to tell us this; in fact it might not even be possible as the
-         device driver itself may not know. Need to investigate this;
-         what we want to achieve here is making it easy for end users to
-         know what kind of drive to buy when getting a replacement drive.
-         And painting a nice icon.)
-
-         Known values for drive-connection-interface include
-
-          virtual            - a virtual device such as a software
-                               RAID array or LVM device
-          ata                - connected via ATA (PATA)
-          ata_serial         - connected via Serial ATA (SATA)
-          ata_serial_esata   - connected via External Serial ATA (eSATA)
-          ata_parallel       - connected via Parallel ATA
-          scsi               - connected via SCSI
-          usb                - connected via USB
-          firewire           - connected via Firewire
-
-         The property drive-connection-speed specifies the nominal
-         maximum speed of the interface in bits/s; if unknown this
-         is set to 0.
-
-         The drive-media-compatibility property specifies what kind of
-         media can be used in the drive (it's an array of strings); this is
-         sometimes set using quirk files if the hardware isn't capable of
-         precisely reporting it. The property drive-media specifies the
-         current type of media in the drive.
-
-         Known values for drive-media-compatibility and drive-media include
-
-           flash
-           flash_cf
-           flash_ms
-           flash_sm
-           flash_sd
-           flash_sdhc
-           flash_mmc
-           floppy
-           floppy_zip
-           floppy_jaz
-           optical
-           optical_cd
-           optical_cd_r
-           optical_cd_rw
-           optical_dvd
-           optical_dvd_r
-           optical_dvd_rw
-           optical_dvd_ram
-           optical_dvd_plus_r
-           optical_dvd_plus_rw
-           optical_dvd_plus_r_dl
-           optical_dvd_plus_rw_dl
-           optical_bd
-           optical_bd_r
-           optical_bd_re
-           optical_hddvd
-           optical_hddvd_r
-           optical_hddvd_rw
-           optical_mo
-           optical_mrw
-           optical_mrw_w
-
-      -->
     <property name="drive-vendor" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             Name of the vendor of the drive, for example <doc:tt>MATSHITA</doc:tt> or <doc:tt>BELKIN</doc:tt>.
@@ -1832,9 +1947,6 @@
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <!-- The device is a component of a Linux MD (Software RAID) array;
-         see property device-is-linux-md-component
-      -->
     <property name="linux-md-component-level" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The RAID level of the array the component is part of. Known values include
@@ -1919,30 +2031,6 @@
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <!-- The device is a Linux MD (Software RAID) array. The components
-         of the array are in the linux-md-slaves property. The state
-         of each slave is in linux-md-slaves-state. The state can be
-
-            in_sync            - component is an active part of
-                                 the array
-            sync_in_progress   - component is being synced with
-                                 the rest of the array
-            spare              - component is a hot spare
-
-         The property linux-md-sync-action represents if an operation
-         is currently pending on the array and, if so, what the operation
-         is
-            idle      - no operation pending
-            reshape   - a reshape of the array is in progress
-            resync    - redundancy is being calculated
-            repair    - a repair operation is in progress
-            recover   - a hot spare is being built to replace a
-                        failed/missing device
-
-         If not 'idle' then the percentage (a number between 0 and
-         and 100) as well as speed (the sync speed in bytes/second)
-         are updated from time to time.
-      -->
     <property name="linux-md-level" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The RAID level of the array. For known values see the

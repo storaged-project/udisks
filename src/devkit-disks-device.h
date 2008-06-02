@@ -107,7 +107,8 @@ const char        *devkit_disks_device_local_get_mount_path      (DevkitDisksDev
 
 void               devkit_disks_device_local_set_mounted         (DevkitDisksDevice *device,
                                                                   const char        *mount_path,
-                                                                  gboolean           emit_changed_signal);
+                                                                  gboolean           emit_changed_signal,
+                                                                  uid_t              mounted_by_uid);
 void               devkit_disks_device_local_set_unmounted       (DevkitDisksDevice *device,
                                                                   const char        *given_mount_path,
                                                                   gboolean           emit_changed_signal);

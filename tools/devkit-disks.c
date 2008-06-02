@@ -302,6 +302,7 @@ device_changed_signal_handler (DBusGProxy *proxy, const char *object_path, gpoin
 static void
 print_job (gboolean    job_in_progress,
            const char *job_id,
+           uid_t       job_initiated_by_uid,
            gboolean    job_is_cancellable,
            int         job_num_tasks,
            int         job_cur_task,
@@ -319,11 +320,13 @@ print_job (gboolean    job_in_progress,
                                 g_print (" @ %3.0lf%%", job_cur_task_percentage);
                         if (job_is_cancellable)
                                 g_print (", cancellable");
+                        g_print (", initiated by uid %d", job_initiated_by_uid);
                         g_print (")\n");
                 } else {
                         g_print ("  job underway:    %s: unknown progress", job_id);
                         if (job_is_cancellable)
                                 g_print (", cancellable");
+                        g_print (", initiated by uid %d", job_initiated_by_uid);
                         g_print ("\n");
                 }
         } else {
@@ -336,6 +339,7 @@ device_job_changed_signal_handler (DBusGProxy *proxy,
                                    const char *object_path,
                                    gboolean    job_in_progress,
                                    const char *job_id,
+                                   guint32     job_initiated_by_uid,
                                    gboolean    job_is_cancellable,
                                    int         job_num_tasks,
                                    int         job_cur_task,
@@ -347,6 +351,7 @@ device_job_changed_signal_handler (DBusGProxy *proxy,
   if (opt_monitor_detail) {
           print_job (job_in_progress,
                      job_id,
+                     job_initiated_by_uid,
                      job_is_cancellable,
                      job_num_tasks,
                      job_cur_task,
@@ -408,11 +413,13 @@ typedef struct
         gboolean device_is_linux_md_component;
         gboolean device_is_linux_md;
         char    *device_mount_path;
+        uid_t    device_mounted_by_uid;
         guint64  device_size;
         guint64  device_block_size;
 
         gboolean job_in_progress;
         char    *job_id;
+        uid_t    job_initiated_by_uid;
         gboolean job_is_cancellable;
         int      job_num_tasks;
         int      job_cur_task;
@@ -442,6 +449,7 @@ typedef struct
         GArray  *partition_table_sizes;
 
         char    *crypto_cleartext_slave;
+        uid_t    crypto_cleartext_unlocked_by_uid;
 
         char    *drive_vendor;
         char    *drive_model;
@@ -520,6 +528,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->device_is_busy = g_value_get_boolean (value);
         else if (strcmp (key, "device-mount-path") == 0)
                 props->device_mount_path = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "device-mounted-by-uid") == 0)
+                props->device_mounted_by_uid = g_value_get_uint (value);
         else if (strcmp (key, "device-size") == 0)
                 props->device_size = g_value_get_uint64 (value);
         else if (strcmp (key, "device-block-size") == 0)
@@ -529,6 +539,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->job_in_progress = g_value_get_boolean (value);
         else if (strcmp (key, "job-id") == 0)
                 props->job_id = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "job-initiated-by-uid") == 0)
+                props->job_initiated_by_uid = g_value_get_uint (value);
         else if (strcmp (key, "job-is-cancellable") == 0)
                 props->job_is_cancellable = g_value_get_boolean (value);
         else if (strcmp (key, "job-num-tasks") == 0)
@@ -590,6 +602,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
 
         else if (strcmp (key, "crypto-cleartext-slave") == 0)
                 props->crypto_cleartext_slave = g_strdup (g_value_get_boxed (value));
+        else if (strcmp (key, "crypto-cleartext-unlocked-by-uid") == 0)
+                props->crypto_cleartext_unlocked_by_uid = g_value_get_uint (value);
 
         else if (strcmp (key, "drive-vendor") == 0)
                 props->drive_vendor = g_strdup (g_value_get_string (value));
@@ -808,11 +822,13 @@ do_show_info (const char *object_path)
         g_print ("  is mounted:      %d\n", props->device_is_mounted);
         g_print ("  is busy:         %d\n", props->device_is_busy);
         g_print ("  mount path:      %s\n", props->device_mount_path);
+        g_print ("  mounted by uid:  %d\n", props->device_mounted_by_uid);
         g_print ("  size:            %" G_GUINT64_FORMAT "\n", props->device_size);
         g_print ("  block size:      %" G_GUINT64_FORMAT "\n", props->device_block_size);
 
         print_job (props->job_in_progress,
                    props->job_id,
+                   props->job_initiated_by_uid,
                    props->job_is_cancellable,
                    props->job_num_tasks,
                    props->job_cur_task,
@@ -860,6 +876,7 @@ do_show_info (const char *object_path)
         if (props->device_is_crypto_cleartext) {
                 g_print ("  cleartext crypto device:\n");
                 g_print ("    backed by:     %s\n", props->crypto_cleartext_slave);
+                g_print ("    unlocked by:   %d\n", props->crypto_cleartext_unlocked_by_uid);
         }
         if (props->device_is_partition_table) {
                 g_print ("  partition table:\n");
@@ -994,11 +1011,12 @@ main (int argc, char **argv)
         }
 
         dbus_g_object_register_marshaller (
-                devkit_disks_marshal_VOID__STRING_BOOLEAN_STRING_BOOLEAN_INT_INT_STRING_DOUBLE,
+                devkit_disks_marshal_VOID__STRING_BOOLEAN_STRING_UINT_BOOLEAN_INT_INT_STRING_DOUBLE,
                 G_TYPE_NONE,
                 G_TYPE_STRING,
                 G_TYPE_BOOLEAN,
                 G_TYPE_STRING,
+                G_TYPE_UINT,
                 G_TYPE_BOOLEAN,
                 G_TYPE_INT,
                 G_TYPE_INT,
@@ -1018,6 +1036,7 @@ main (int argc, char **argv)
                                  G_TYPE_STRING,
                                  G_TYPE_BOOLEAN,
                                  G_TYPE_STRING,
+                                 G_TYPE_UINT,
                                  G_TYPE_BOOLEAN,
                                  G_TYPE_INT,
                                  G_TYPE_INT,

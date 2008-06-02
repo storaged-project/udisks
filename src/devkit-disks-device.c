@@ -66,6 +66,8 @@ static void     init_info                  (DevkitDisksDevice *device);
 static void     free_info                  (DevkitDisksDevice *device);
 static gboolean update_info                (DevkitDisksDevice *device);
 
+static gboolean luks_get_uid_from_dm_name (const char *dm_name, uid_t *out_uid);
+
 /* Returns the cleartext device. If device==NULL, unlocking failed and an error has
  * been reported back to the caller
  */
@@ -134,9 +136,11 @@ enum
         PROP_DEVICE_IS_MOUNTED,
         PROP_DEVICE_IS_BUSY,
         PROP_DEVICE_MOUNT_PATH,
+        PROP_DEVICE_MOUNTED_BY_UID,
 
         PROP_JOB_IN_PROGRESS,
         PROP_JOB_ID,
+        PROP_JOB_INITIATED_BY_UID,
         PROP_JOB_IS_CANCELLABLE,
         PROP_JOB_NUM_TASKS,
         PROP_JOB_CUR_TASK,
@@ -166,6 +170,7 @@ enum
         PROP_PARTITION_TABLE_SIZES,
 
         PROP_CRYPTO_CLEARTEXT_SLAVE,
+        PROP_CRYPTO_CLEARTEXT_UNLOCKED_BY_UID,
 
         PROP_DRIVE_VENDOR,
         PROP_DRIVE_MODEL,
@@ -361,12 +366,18 @@ get_property (GObject         *object,
 	case PROP_DEVICE_MOUNT_PATH:
 		g_value_set_string (value, device->priv->info.device_mount_path);
 		break;
+	case PROP_DEVICE_MOUNTED_BY_UID:
+		g_value_set_uint (value, device->priv->info.device_mounted_by_uid);
+		break;
 
 	case PROP_JOB_IN_PROGRESS:
 		g_value_set_boolean (value, device->priv->job_in_progress);
 		break;
 	case PROP_JOB_ID:
 		g_value_set_string (value, device->priv->job_id);
+		break;
+	case PROP_JOB_INITIATED_BY_UID:
+		g_value_set_uint (value, device->priv->job_initiated_by_uid);
 		break;
 	case PROP_JOB_IS_CANCELLABLE:
 		g_value_set_boolean (value, device->priv->job_is_cancellable);
@@ -452,6 +463,9 @@ get_property (GObject         *object,
                         g_value_set_boxed (value, device->priv->info.crypto_cleartext_slave);
                 else
                         g_value_set_boxed (value, "/");
+		break;
+	case PROP_CRYPTO_CLEARTEXT_UNLOCKED_BY_UID:
+		g_value_set_uint (value, device->priv->info.crypto_cleartext_unlocked_by_uid);
 		break;
 
 	case PROP_DRIVE_VENDOR:
@@ -586,11 +600,12 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                               G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                               0,
                               NULL, NULL,
-                              devkit_disks_marshal_VOID__BOOLEAN_STRING_BOOLEAN_INT_INT_STRING_DOUBLE,
+                              devkit_disks_marshal_VOID__BOOLEAN_STRING_UINT_BOOLEAN_INT_INT_STRING_DOUBLE,
                               G_TYPE_NONE,
-                              7,
+                              8,
                               G_TYPE_BOOLEAN,
                               G_TYPE_STRING,
+                              G_TYPE_UINT,
                               G_TYPE_BOOLEAN,
                               G_TYPE_INT,
                               G_TYPE_INT,
@@ -683,6 +698,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DEVICE_MOUNT_PATH,
                 g_param_spec_string ("device-mount-path", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_MOUNTED_BY_UID,
+                g_param_spec_uint ("device-mounted-by-uid", NULL, NULL, 0, G_MAXUINT, 0, G_PARAM_READABLE));
 
         g_object_class_install_property (
                 object_class,
@@ -692,6 +711,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_JOB_ID,
                 g_param_spec_string ("job-id", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_JOB_INITIATED_BY_UID,
+                g_param_spec_uint ("job-initiated-by-uid", NULL, NULL, 0, G_MAXUINT, 0, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_JOB_IS_CANCELLABLE,
@@ -802,6 +825,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_CRYPTO_CLEARTEXT_SLAVE,
                 g_param_spec_boxed ("crypto-cleartext-slave", NULL, NULL, DBUS_TYPE_G_OBJECT_PATH, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_CRYPTO_CLEARTEXT_UNLOCKED_BY_UID,
+                g_param_spec_uint ("crypto-cleartext-unlocked-by-uid", NULL, NULL, 0, G_MAXUINT, 0, G_PARAM_READABLE));
 
         g_object_class_install_property (
                 object_class,
@@ -1437,6 +1464,12 @@ update_info_properties_cb (DevkitDevice *d, const char *key, const char *value, 
                         ignore_device = TRUE;
                         goto out;
                 } else {
+                        uid_t unlocked_by_uid;
+
+                        if (luks_get_uid_from_dm_name (value, &unlocked_by_uid)) {
+                                device->priv->info.crypto_cleartext_unlocked_by_uid = unlocked_by_uid;
+                        }
+
                         /* TODO: export this at some point */
                         device->priv->info.dm_name = g_strdup (value);
                 }
@@ -2084,10 +2117,28 @@ update_info (DevkitDisksDevice *device)
 
         /* Set whether device is considered system internal
          *
-         * TODO: make this possible to override from DeviceKit/udev database.
+         * TODO: make this possible to override from the DeviceKit/udev database.
          */
         device->priv->info.device_is_system_internal = TRUE;
-        if (device->priv->info.device_is_removable) {
+        if (device->priv->info.device_is_partition) {
+                DevkitDisksDevice *enclosing_device;
+                enclosing_device = devkit_disks_daemon_local_find_by_object_path (
+                        device->priv->daemon,
+                        device->priv->info.partition_slave);
+                if (enclosing_device != NULL) {
+                        device->priv->info.device_is_system_internal =
+                                enclosing_device->priv->info.device_is_system_internal;
+                }
+        } else if (device->priv->info.device_is_crypto_cleartext) {
+                DevkitDisksDevice *enclosing_device;
+                enclosing_device = devkit_disks_daemon_local_find_by_object_path (
+                        device->priv->daemon,
+                        device->priv->info.crypto_cleartext_slave);
+                if (enclosing_device != NULL) {
+                        device->priv->info.device_is_system_internal =
+                                enclosing_device->priv->info.device_is_system_internal;
+                }
+        } else if (device->priv->info.device_is_removable) {
                 device->priv->info.device_is_system_internal = FALSE;
         } else if (device->priv->info.device_is_drive && device->priv->info.drive_connection_interface != NULL) {
                 if (strcmp (device->priv->info.drive_connection_interface, "ata_serial_esata") == 0 ||
@@ -2203,6 +2254,7 @@ emit_job_changed (DevkitDisksDevice *device)
                                device->priv->object_path,
                                device->priv->job_in_progress,
                                device->priv->job_id,
+                               device->priv->job_initiated_by_uid,
                                device->priv->job_is_cancellable,
                                device->priv->job_num_tasks,
                                device->priv->job_cur_task,
@@ -2212,6 +2264,7 @@ emit_job_changed (DevkitDisksDevice *device)
         g_signal_emit (device, signals[JOB_CHANGED_SIGNAL], 0,
                        device->priv->job_in_progress,
                        device->priv->job_id,
+                       device->priv->job_initiated_by_uid,
                        device->priv->job_is_cancellable,
                        device->priv->job_num_tasks,
                        device->priv->job_cur_task,
@@ -2320,11 +2373,13 @@ devkit_disks_device_local_get_mount_path (DevkitDisksDevice *device)
 void
 devkit_disks_device_local_set_mounted (DevkitDisksDevice *device,
                                        const char        *mount_path,
-                                       gboolean           emit_changed_signal)
+                                       gboolean           emit_changed_signal,
+                                       uid_t              mounted_by_uid)
 {
         g_free (device->priv->info.device_mount_path);
         device->priv->info.device_mount_path = g_strdup (mount_path);
         device->priv->info.device_is_mounted = TRUE;
+        device->priv->info.device_mounted_by_uid = mounted_by_uid;
         if (emit_changed_signal)
                 emit_changed (device);
 }
@@ -2350,6 +2405,7 @@ devkit_disks_device_local_set_unmounted (DevkitDisksDevice *device,
 
         g_free (device->priv->info.device_mount_path);
         device->priv->info.device_mount_path = NULL;
+        device->priv->info.device_mounted_by_uid = 0;
         device->priv->info.device_is_mounted = FALSE;
 
         if (mount_path != NULL) {
@@ -2487,6 +2543,7 @@ job_child_watch_cb (GPid pid, int status, gpointer user_data)
                 job->device->priv->job_in_progress = FALSE;
                 g_free (job->device->priv->job_id);
                 job->device->priv->job_id = NULL;
+                job->device->priv->job_initiated_by_uid = 0;
                 job->device->priv->job_is_cancellable = FALSE;
                 job->device->priv->job_num_tasks = 0;
                 job->device->priv->job_cur_task = 0;
@@ -2623,6 +2680,7 @@ job_local_start (DevkitDisksDevice *device,
 
         g_free (device->priv->job_id);
         device->priv->job_id = g_strdup (job_id);
+        device->priv->job_initiated_by_uid = 0;
         device->priv->job_in_progress = TRUE;
         device->priv->job_is_cancellable = FALSE;
         device->priv->job_num_tasks = 0;
@@ -2647,6 +2705,7 @@ job_local_end (DevkitDisksDevice *device)
         device->priv->job_in_progress = FALSE;
         g_free (device->priv->job_id);
         device->priv->job_id = NULL;
+        device->priv->job_initiated_by_uid = 0;
         device->priv->job_is_cancellable = FALSE;
         device->priv->job_num_tasks = 0;
         device->priv->job_cur_task = 0;
@@ -2761,6 +2820,10 @@ job_new (DBusGMethodInvocation *context,
                 g_free (device->priv->job_cur_task_id);
                 device->priv->job_cur_task_id = NULL;
                 device->priv->job_cur_task_percentage = -1.0;
+                device->priv->job_initiated_by_uid = 0;
+                if (pk_caller != NULL) {
+                        polkit_caller_get_uid (pk_caller, &(device->priv->job_initiated_by_uid));
+                }
 
                 device->priv->job = job;
 
@@ -3137,8 +3200,9 @@ filesystem_mount_completed_cb (DBusGMethodInvocation *context,
                 polkit_caller_get_uid (pk_caller, &uid);
 
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
-                if (!device->priv->info.device_is_mounted && data->mount_point != NULL)
-                        devkit_disks_device_local_set_mounted (device, data->mount_point, TRUE);
+                if (!device->priv->info.device_is_mounted && data->mount_point != NULL) {
+                        devkit_disks_device_local_set_mounted (device, data->mount_point, TRUE, uid);
+                }
                 if (!data->is_remount) {
                         mounts_file_add (device, uid, data->remove_dir_on_unmount);
                 }
@@ -3233,6 +3297,8 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
+                                                  device->priv->info.device_is_system_internal ?
+                                                  "org.freedesktop.devicekit.disks.mount-system-internal" :
                                                   "org.freedesktop.devicekit.disks.mount",
                                                   context)) {
                 goto out;
@@ -3509,7 +3575,6 @@ devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
                         argv[n++] = NULL;
                         goto run_job;
                 }
-
                 throw_error (context,
                              DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTED_BY_DK,
                              "Device is not mounted by DeviceKit-disks");
@@ -3519,7 +3584,9 @@ devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
         if (uid_of_mount != uid) {
                 if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                           pk_caller,
-                                                          "org.freedesktop.devicekit.disks.unmount-others",
+                                                          device->priv->info.device_is_system_internal ?
+                                                     "org.freedesktop.devicekit.disks.unmount-others-system-internal" :
+                                                     "org.freedesktop.devicekit.disks.unmount-others",
                                                           context))
                         goto out;
         }
@@ -3610,8 +3677,9 @@ devkit_disks_device_erase (DevkitDisksDevice     *device,
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
-                                                  /* TODO: revisit authorization */
-                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  device->priv->info.device_is_system_internal ?
+                                                  "org.freedesktop.devicekit.disks.change-system-internal" :
+                                                  "org.freedesktop.devicekit.disks.change",
                                                   context))
                 goto out;
 
@@ -3745,8 +3813,9 @@ devkit_disks_device_partition_delete (DevkitDisksDevice     *device,
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
-                                                  /* TODO: revisit authorization */
-                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  device->priv->info.device_is_system_internal ?
+                                                  "org.freedesktop.devicekit.disks.change-system-internal" :
+                                                  "org.freedesktop.devicekit.disks.change",
                                                   context))
                 goto out;
 
@@ -4043,8 +4112,9 @@ devkit_disks_device_filesystem_create_internal (DevkitDisksDevice       *device,
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
-                                                  /* TODO: revisit authorization */
-                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  device->priv->info.device_is_system_internal ?
+                                                  "org.freedesktop.devicekit.disks.change-system-internal" :
+                                                  "org.freedesktop.devicekit.disks.change",
                                                   context))
                 goto out;
 
@@ -4162,6 +4232,14 @@ gboolean
 devkit_disks_device_job_cancel (DevkitDisksDevice     *device,
                                 DBusGMethodInvocation *context)
 {
+        PolKitCaller *pk_caller;
+        uid_t uid;
+
+        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
+                goto out;
+
+        polkit_caller_get_uid (pk_caller, &uid);
+
         if (!device->priv->job_in_progress) {
                 throw_error (context,
                              DEVKIT_DISKS_DEVICE_ERROR_NO_JOB_IN_PROGRESS,
@@ -4176,7 +4254,15 @@ devkit_disks_device_job_cancel (DevkitDisksDevice     *device,
                 goto out;
         }
 
-        /* TODO: check authorization */
+        if (device->priv->job_initiated_by_uid != uid) {
+                if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                          pk_caller,
+                                                          device->priv->info.device_is_system_internal ?
+                                                  "org.freedesktop.devicekit.disks.cancel-job-others-system-internal" :
+                                                  "org.freedesktop.devicekit.disks.cancel-job-others",
+                                                          context))
+                        goto out;
+        }
 
         job_cancel (device);
 
@@ -4184,6 +4270,8 @@ devkit_disks_device_job_cancel (DevkitDisksDevice     *device,
         dbus_g_method_return (context);
 
 out:
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
         return TRUE;
 }
 
@@ -4455,8 +4543,9 @@ devkit_disks_device_partition_create (DevkitDisksDevice     *device,
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
-                                                  /* TODO: revisit authorization */
-                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  device->priv->info.device_is_system_internal ?
+                                                  "org.freedesktop.devicekit.disks.change-system-internal" :
+                                                  "org.freedesktop.devicekit.disks.change",
                                                   context))
                 goto out;
 
@@ -4663,8 +4752,9 @@ devkit_disks_device_partition_modify (DevkitDisksDevice     *device,
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
-                                                  /* TODO: revisit authorization */
-                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  device->priv->info.device_is_system_internal ?
+                                                  "org.freedesktop.devicekit.disks.change-system-internal" :
+                                                  "org.freedesktop.devicekit.disks.change",
                                                   context))
                 goto out;
 
@@ -4804,8 +4894,9 @@ devkit_disks_device_partition_table_create (DevkitDisksDevice     *device,
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
-                                                  /* TODO: revisit authorization */
-                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  device->priv->info.device_is_system_internal ?
+                                                  "org.freedesktop.devicekit.disks.change-system-internal" :
+                                                  "org.freedesktop.devicekit.disks.change",
                                                   context))
                 goto out;
 
@@ -5044,12 +5135,17 @@ devkit_disks_device_encrypted_unlock_internal (DevkitDisksDevice        *device,
         GError *error;
         PolKitCaller *pk_caller;
         char *secret_as_stdin;
+        uid_t uid;
 
         luks_name = NULL;
         secret_as_stdin = NULL;
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
+
+        uid = 0;
+        if (pk_caller != NULL)
+                polkit_caller_get_uid (pk_caller, &uid);
 
         if (devkit_disks_device_local_is_busy (device)) {
                 throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
@@ -5072,14 +5168,15 @@ devkit_disks_device_encrypted_unlock_internal (DevkitDisksDevice        *device,
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
-                                                  /* TODO: revisit auth */
-                                                  "org.freedesktop.devicekit.disks.mount",
+                                                  "org.freedesktop.devicekit.disks.unlock-encrypted",
                                                   context)) {
                 goto out;
         }
 
-        /* TODO: use same naming scheme as hal */
-        luks_name = g_strdup_printf ("devkit-disks-luks-uuid-%s", device->priv->info.id_uuid);
+
+        luks_name = g_strdup_printf ("devkit-disks-luks-uuid-%s-uid%d",
+                                     device->priv->info.id_uuid,
+                                     uid);
         secret_as_stdin = g_strdup_printf ("%s\n", secret);
 
         n = 0;
@@ -5260,6 +5357,39 @@ encrypted_lock_completed_cb (DBusGMethodInvocation *context,
         }
 }
 
+static gboolean
+luks_get_uid_from_dm_name (const char *dm_name, uid_t *out_uid)
+{
+        int n;
+        gboolean ret;
+        uid_t uid;
+        char *endp;
+
+        ret = FALSE;
+
+        if (!g_str_has_prefix (dm_name, "devkit-disks-luks-uuid"))
+                goto out;
+
+        /* determine who unlocked the device */
+        for (n = strlen (dm_name) - 1; n >= 0; n--) {
+                if (dm_name[n] == '-')
+                        break;
+        }
+        if (strncmp (dm_name + n, "-uid", 4) != 0)
+                goto out;
+
+        uid = strtol (dm_name + n + 4, &endp, 10);
+        if (endp == NULL || *endp != '\0')
+                goto out;
+
+        if (out_uid != NULL)
+                *out_uid = uid;
+
+        ret = TRUE;
+out:
+        return ret;
+}
+
 gboolean
 devkit_disks_device_encrypted_lock (DevkitDisksDevice     *device,
                                     char                 **options,
@@ -5270,9 +5400,15 @@ devkit_disks_device_encrypted_lock (DevkitDisksDevice     *device,
         GError *error;
         PolKitCaller *pk_caller;
         DevkitDisksDevice *cleartext_device;
+        uid_t unlocked_by_uid;
+        uid_t uid;
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
+
+        uid = 0;
+        if (pk_caller != NULL)
+                polkit_caller_get_uid (pk_caller, &uid);
 
         if (device->priv->info.id_usage == NULL ||
             strcmp (device->priv->info.id_usage, "crypto") != 0) {
@@ -5294,12 +5430,24 @@ devkit_disks_device_encrypted_lock (DevkitDisksDevice     *device,
                 goto out;
         }
 
-        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
-                                                  pk_caller,
-                                                  /* TODO: revisit auth */
-                                                  "org.freedesktop.devicekit.disks.mount",
-                                                  context)) {
+        /* only offer to unlock devices set up by us */
+        if (!luks_get_uid_from_dm_name (cleartext_device->priv->info.dm_name, &unlocked_by_uid)) {
+                /* TODO: maybe allow locked devices not unlocked by us? */
+                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                             "Device is not unlocked by DeviceKit-disks");
                 goto out;
+        }
+
+        /* require authorization if unlocked by someone else */
+        if (unlocked_by_uid != uid) {
+                if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                          pk_caller,
+                                                          device->priv->info.device_is_system_internal ?
+                                              "org.freedesktop.devicekit.disks.lock-encrypted-others-system-internal" :
+                                              "org.freedesktop.devicekit.disks.lock-encrypted-others",
+                                                          context)) {
+                        goto out;
+                }
         }
 
         n = 0;
@@ -5386,8 +5534,9 @@ devkit_disks_device_encrypted_change_passphrase (DevkitDisksDevice     *device,
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
-                                                  /* TODO: revisit auth */
-                                                  "org.freedesktop.devicekit.disks.mount",
+                                                  device->priv->info.device_is_system_internal ?
+                                                  "org.freedesktop.devicekit.disks.change-system-internal" :
+                                                  "org.freedesktop.devicekit.disks.change",
                                                   context)) {
                 goto out;
         }
@@ -5498,8 +5647,9 @@ devkit_disks_device_filesystem_set_label (DevkitDisksDevice     *device,
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
-                                                  /* TODO: revisit auth */
-                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  device->priv->info.device_is_system_internal ?
+                                                  "org.freedesktop.devicekit.disks.change-system-internal" :
+                                                  "org.freedesktop.devicekit.disks.change",
                                                   context)) {
                 goto out;
         }
@@ -5841,15 +5991,14 @@ devkit_disks_device_drive_smart_refresh_data (DevkitDisksDevice     *device,
                 goto out;
         }
 
-#if 0
-        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
-                                                  pk_caller,
-                                                  /* TODO: revisit auth */
-                                                  "org.freedesktop.devicekit.disks.erase",
-                                                  context)) {
-                goto out;
+        if (context != NULL) {
+                if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                          pk_caller,
+                                                          "org.freedesktop.devicekit.disks.smart-refresh",
+                                                          context)) {
+                        goto out;
+                }
         }
-#endif
 
         simulpath = NULL;
         nowakeup = FALSE;
@@ -5969,15 +6118,12 @@ devkit_disks_device_drive_smart_initiate_selftest (DevkitDisksDevice     *device
                 }
         }
 
-#if 0
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
-                                                  /* TODO: revisit auth */
-                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  "org.freedesktop.devicekit.disks.smart-selftest",
                                                   context)) {
                 goto out;
         }
-#endif
 
         n = 0;
         argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-smart-selftest";
@@ -6061,15 +6207,12 @@ devkit_disks_device_linux_md_stop (DevkitDisksDevice     *device,
                 goto out;
         }
 
-#if 0
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
-                                                  /* TODO: revisit auth */
-                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  "org.freedesktop.devicekit.disks.linux-md",
                                                   context)) {
                 goto out;
         }
-#endif
 
         n = 0;
         argv[n++] = "mdadm";
@@ -6177,15 +6320,12 @@ devkit_disks_device_linux_md_add_component (DevkitDisksDevice     *device,
 
         /* TODO: check component size is OK */
 
-#if 0
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
-                                                  /* TODO: revisit auth */
-                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  "org.freedesktop.devicekit.disks.linux-md",
                                                   context)) {
                 goto out;
         }
-#endif
 
         n = 0;
         argv[n++] = "mdadm";
@@ -6397,15 +6537,12 @@ devkit_disks_device_linux_md_remove_component (DevkitDisksDevice     *device,
                 goto out;
         }
 
-#if 0
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
-                                                  /* TODO: revisit auth */
-                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  "org.freedesktop.devicekit.disks.linux-md",
                                                   context)) {
                 goto out;
         }
-#endif
 
         n = 0;
         argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-linux-md-remove-component";
@@ -6698,15 +6835,12 @@ devkit_disks_daemon_linux_md_start (DevkitDisksDaemon     *daemon,
 
         md_device_file = g_strdup_printf ("/dev/md%d", n);
 
-#if 0
-        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+        if (!devkit_disks_damon_local_check_auth (daemon,
                                                   pk_caller,
-                                                  /* TODO: revisit auth */
-                                                  "org.freedesktop.devicekit.disks.erase",
+                                                  "org.freedesktop.devicekit.disks.linux-md",
                                                   context)) {
                 goto out;
         }
-#endif
 
         n = 0;
         argv[n++] = "mdadm";

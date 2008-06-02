@@ -20,12 +20,22 @@ file are instantly applied.
   <icon_name>drive-removable-media</icon_name>
 
   <action id="org.freedesktop.devicekit.disks.mount">
-    <_description>Mount a disk</_description>
-    <_message>Authentication is required to mount disks</_message>
+    <_description>Mount a device</_description>
+    <_message>Authentication is required to mount the device</_message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
       <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.devicekit.disks.mount-system-internal">
+    <_description>Mount a system-internal device</_description>
+    <_message>Authentication is required to mount the device</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
     </defaults>
   </action>
 
@@ -35,13 +45,124 @@ file are instantly applied.
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.devicekit.disks.unmount-others-system-internal">
+    <_description>Unmount a system-internal device mounted by another user</_description>
+    <_message>Authentication is required to unmount a device mounted by others than yourself</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
       <allow_active>auth_admin_keep_always</allow_active>
     </defaults>
   </action>
 
-  <action id="org.freedesktop.devicekit.disks.erase">
-    <_description>Erase a disk</_description>
-    <_message>Authentication is required to erase a disk</_message>
+  <action id="org.freedesktop.devicekit.disks.change">
+    <_description>Change a device</_description>
+    <_message>Authentication is required to change the device</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.devicekit.disks.change-system-internal">
+    <_description>Change a system-internal device</_description>
+    <_message>Authentication is required to change the device</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.devicekit.disks.smart-refresh">
+    <_description>Refresh S.M.A.R.T. data</_description>
+    <_message>Authentication is required to refresh S.M.A.R.T. data</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.devicekit.disks.smart-selftest">
+    <_description>Run S.M.A.R.T. Self Tests</_description>
+    <_message>Authentication is required to run S.M.A.R.T. Self Tests</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep_always</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.devicekit.disks.smart-retrieve-historical-data">
+    <_description>Retrieve historical S.M.A.R.T. data</_description>
+    <_message>Authentication is required to retrieve historical S.M.A.R.T. data</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.devicekit.disks.unlock-encrypted">
+    <_description>Unlock an encrypted device</_description>
+    <_message>Authentication is required to unlock an encrypted device</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.devicekit.disks.lock-encrypted-others">
+    <_description>Lock an encrypted device unlocked by another user</_description>
+    <_message>Authentication is required to lock an encrypted device unlocked by others than yourself</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.devicekit.disks.lock-encrypted-others-system-internal">
+    <_description>Lock an encrypted system-internal device unlocked by another user</_description>
+    <_message>Authentication is required to lock an encrypted device unlocked by others than yourself</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  </action>
+
+
+  <action id="org.freedesktop.devicekit.disks.linux-md">
+    <_description>Configure Software RAID (Linux md driver)</_description>
+    <_message>Authentication is required to configure Software RAID devices</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep_always</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.devicekit.disks.cancel-job-others">
+    <_description>Cancel a job on a device initiated by another user</_description>
+    <_message>Authentication is required to cancel a job initiated by another user</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_self</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.devicekit.disks.cancel-job-others-system-internal">
+    <_description>Cancel a job on a device initiated by another user</_description>
+    <_message>Authentication is required to cancel a job initiated by another user</_message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>

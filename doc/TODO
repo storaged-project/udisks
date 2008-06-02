@@ -74,6 +74,10 @@ Before (next) release:
  - General project management tasks
    - review licenses, NEWS, TODO, HACKING etc. file
 
+ - Should we allow operations on an unlocked encrypted device
+   unlocked by someone else? Should probably require a separate
+   authorization
+
 ------------------------------------------------------------------------
 - Current features (TODO: this section is incomplete)
 ------------------------------------------------------------------------
