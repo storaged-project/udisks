@@ -39,6 +39,26 @@ file are instantly applied.
     </defaults>
   </action>
 
+  <action id="org.freedesktop.devicekit.disks.filesystem-check">
+    <_description>Check file system on a device</_description>
+    <_message>Authentication is required to check the file system on the device</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.devicekit.disks.filesystem-check-system-internal">
+    <_description>Check file system of a system-internal device</_description>
+    <_message>Authentication is required to check the file system on the device</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  </action>
+
   <action id="org.freedesktop.devicekit.disks.unmount-others">
     <_description>Unmount a disk mounted by another user</_description>
     <_message>Authentication is required to unmount disks mounted by others than yourself</_message>

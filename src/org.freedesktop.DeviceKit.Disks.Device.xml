@@ -659,6 +659,51 @@
 
     <!-- ************************************************************ -->
 
+    <method name="FilesystemCheck">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
+      </arg>
+      <arg name="is_clean" direction="out" type="b">
+        <doc:doc><doc:summary>
+            Returns TRUE if the file system is clean, FALSE if there are errors on the file system.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Perform a non-interactive file system check.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.filesystem-check</doc:term>
+              <doc:definition>To check a file system on a
+                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                device.</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.filesystem-check-system-internal</doc:term>
+              <doc:definition>To check a file system on a
+                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                device.</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_MOUNTED;">if the device is mounted and the file system doesn't support online file system checking. See TODO for how to determine if a file system supports online fsck</doc:error>
+          <doc:error name="&ERROR_NOT_SUPPORTED;">if there is no suitable fsck program for the file system</doc:error>
+          <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_JOB_WAS_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
     <method name="EncryptedUnlock">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="passphrase" direction="in" type="s">

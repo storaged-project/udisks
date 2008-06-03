@@ -130,6 +130,10 @@ gboolean devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
                                                  char                 **options,
                                                  DBusGMethodInvocation *context);
 
+gboolean devkit_disks_device_filesystem_check (DevkitDisksDevice     *device,
+                                               char                 **options,
+                                               DBusGMethodInvocation *context);
+
 gboolean devkit_disks_device_erase (DevkitDisksDevice     *device,
                                     char                 **options,
                                     DBusGMethodInvocation *context);

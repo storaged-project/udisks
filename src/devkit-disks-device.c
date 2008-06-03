@@ -3627,6 +3627,103 @@ out:
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static void
+filesystem_check_completed_cb (DBusGMethodInvocation *context,
+                               DevkitDisksDevice *device,
+                               PolKitCaller *pk_caller,
+                               gboolean job_was_cancelled,
+                               int status,
+                               const char *stderr,
+                               const char *stdout,
+                               gpointer user_data)
+{
+        if (WIFEXITED (status) && !job_was_cancelled) {
+                int rc;
+                gboolean fs_is_clean;
+
+                fs_is_clean = FALSE;
+
+                rc = WEXITSTATUS (status);
+                if ((rc == 0) ||
+                    (((rc & 1) != 0) && ((rc & 4) == 0))) {
+                        fs_is_clean = TRUE;
+                }
+
+                dbus_g_method_return (context, fs_is_clean);
+        } else {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     "Error fsck'ing: fsck exited with exit code %d: %s",
+                                     WEXITSTATUS (status),
+                                     stderr);
+                }
+        }
+}
+
+gboolean
+devkit_disks_device_filesystem_check (DevkitDisksDevice     *device,
+                                      char                 **options,
+                                      DBusGMethodInvocation *context)
+{
+        int n;
+        char *argv[16];
+        GError *error;
+        PolKitCaller *pk_caller;
+
+        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
+                goto out;
+
+        /* TODO: change when we have a file system that supports online fsck */
+        if (device->priv->info.device_is_mounted) {
+                throw_error (context,
+                             DEVKIT_DISKS_DEVICE_ERROR_MOUNTED,
+                             "Device is mounted");
+                goto out;
+        }
+
+        /* TODO: options! */
+
+        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                  pk_caller,
+                                                  device->priv->info.device_is_system_internal ?
+                                                  "org.freedesktop.devicekit.disks.filesystem-check-system-internal" :
+                                                  "org.freedesktop.devicekit.disks.filesystem-check",
+                                                  context))
+                goto out;
+
+        n = 0;
+        argv[n++] = "fsck";
+        argv[n++] = "-a";
+        argv[n++] = device->priv->info.device_file;
+        argv[n++] = NULL;
+
+        error = NULL;
+        if (!job_new (context,
+                      "FilesystemCheck",
+                      FALSE,
+                      device,
+                      pk_caller,
+                      argv,
+                      NULL,
+                      filesystem_check_completed_cb,
+                      NULL,
+                      NULL)) {
+                goto out;
+        }
+
+out:
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
 erase_completed_cb (DBusGMethodInvocation *context,
                     DevkitDisksDevice *device,
                     PolKitCaller *pk_caller,
