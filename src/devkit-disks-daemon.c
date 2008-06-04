@@ -63,6 +63,14 @@
 
 enum
 {
+        PROP_0,
+        PROP_DAEMON_VERSION,
+        PROP_SUPPORTS_ENCRYPTED_DEVICES,
+        PROP_KNOWN_FILESYSTEMS,
+};
+
+enum
+{
         DEVICE_ADDED_SIGNAL,
         DEVICE_REMOVED_SIGNAL,
         DEVICE_CHANGED_SIGNAL,
@@ -245,6 +253,182 @@ devkit_disks_daemon_constructor (GType                  type,
         return G_OBJECT (daemon);
 }
 
+/*--------------------------------------------------------------------------------------------------------------*/
+
+#define KNOWN_FILESYSTEMS_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray",   \
+                                                               G_TYPE_STRING, \
+                                                               G_TYPE_STRING, \
+                                                               G_TYPE_BOOLEAN, \
+                                                               G_TYPE_BOOLEAN, \
+                                                               G_TYPE_BOOLEAN, \
+                                                               G_TYPE_UINT, \
+                                                               G_TYPE_BOOLEAN, \
+                                                               G_TYPE_BOOLEAN, \
+                                                               G_TYPE_BOOLEAN, \
+                                                               G_TYPE_BOOLEAN, \
+                                                               G_TYPE_BOOLEAN, \
+                                                               G_TYPE_BOOLEAN, \
+                                                               G_TYPE_BOOLEAN, \
+                                                               G_TYPE_BOOLEAN, \
+                                                               G_TYPE_INVALID))
+
+typedef struct {
+        const char *id;
+        const char *name;
+        gboolean supports_unix_owners;
+        gboolean can_mount;
+        gboolean can_create;
+        guint max_label_len;
+        gboolean supports_label_rename;
+        gboolean supports_online_label_rename;
+        gboolean supports_fsck;
+        gboolean supports_online_fsck;
+        gboolean supports_resize_enlarge;
+        gboolean supports_online_resize_enlarge;
+        gboolean supports_resize_shrink;
+        gboolean supports_online_resize_shrink;
+} DevkitDisksFilesystem;
+
+static const DevkitDisksFilesystem known_file_systems[] = {
+        {
+                "vfat",         /* id */
+                "FAT",          /* name */
+                FALSE,          /* supports_unix_owners */
+                TRUE,           /* can_mount */
+                TRUE,           /* can_create */
+                11,             /* max_label_len */
+                TRUE,           /* supports_label_rename */
+                FALSE,          /* supports_online_label_rename*/
+                TRUE,           /* supports_fsck */
+                FALSE,          /* supports_online_fsck */
+                FALSE,          /* supports_resize_enlarge */
+                FALSE,          /* supports_online_resize_enlarge */
+                FALSE,          /* supports_resize_shrink */
+                FALSE,          /* supports_online_resize_shrink */
+        },
+        {
+                "ext3",         /* id */
+                "Linux Ext3",   /* name */
+                TRUE,           /* supports_unix_owners */
+                TRUE,           /* can_mount */
+                TRUE,           /* can_create */
+                16,             /* max_label_len */
+                TRUE,           /* supports_label_rename */
+                TRUE,           /* supports_online_label_rename*/
+                TRUE,           /* supports_fsck */
+                FALSE,          /* supports_online_fsck */
+                TRUE,           /* supports_resize_enlarge */
+                TRUE,           /* supports_online_resize_enlarge */
+                TRUE,           /* supports_resize_shrink */
+                TRUE,           /* supports_online_resize_shrink */
+        },
+        {
+                "ntfs",         /* id */
+                "NTFS",         /* name */
+                FALSE,          /* supports_unix_owners */
+                TRUE,           /* can_mount */
+                TRUE,           /* can_create */
+                128,            /* max_label_len */
+                TRUE,           /* supports_label_rename */
+                FALSE,          /* supports_online_label_rename*/
+                FALSE,          /* supports_fsck (TODO: hmm.. ntfsck doesn't support -a yet?) */
+                FALSE,          /* supports_online_fsck */
+                TRUE,           /* supports_resize_enlarge */
+                FALSE,          /* supports_online_resize_enlarge */
+                TRUE,           /* supports_resize_shrink */
+                FALSE,          /* supports_online_resize_shrink */
+        },
+        {
+                "swap",         /* id */
+                "Swap Space",   /* name */
+                FALSE,          /* supports_unix_owners */
+                FALSE,          /* can_mount */
+                TRUE,           /* can_create */
+                0,              /* max_label_len (TODO: not actually true for new style swap areas) */
+                FALSE,          /* supports_label_rename */
+                FALSE,          /* supports_online_label_rename*/
+                FALSE,          /* supports_fsck */
+                FALSE,          /* supports_online_fsck */
+                FALSE,          /* supports_resize_enlarge */
+                FALSE,          /* supports_online_resize_enlarge */
+                FALSE,          /* supports_resize_shrink */
+                FALSE,          /* supports_online_resize_shrink */
+        },
+};
+
+static const int num_known_file_systems = sizeof (known_file_systems) / sizeof (DevkitDisksFilesystem);
+
+static GPtrArray *
+get_known_filesystems (DevkitDisksDaemon *daemon)
+{
+        int n;
+        GPtrArray *ret;
+
+        ret = g_ptr_array_new ();
+        for (n = 0; n < num_known_file_systems; n++) {
+                GValue elem = {0};
+                const DevkitDisksFilesystem *fs = known_file_systems + n;
+
+                g_value_init (&elem, KNOWN_FILESYSTEMS_STRUCT_TYPE);
+                g_value_take_boxed (&elem, dbus_g_type_specialized_construct (KNOWN_FILESYSTEMS_STRUCT_TYPE));
+                dbus_g_type_struct_set (&elem,
+                                        0, fs->id,
+                                        1, fs->name,
+                                        2, fs->supports_unix_owners,
+                                        3, fs->can_mount,
+                                        4, fs->can_create,
+                                        5, fs->max_label_len,
+                                        6, fs->supports_label_rename,
+                                        7, fs->supports_online_label_rename,
+                                        8, fs->supports_fsck,
+                                        9, fs->supports_online_fsck,
+                                        10, fs->supports_resize_enlarge,
+                                        11, fs->supports_online_resize_enlarge,
+                                        12, fs->supports_resize_shrink,
+                                        13, fs->supports_online_resize_shrink,
+                                        G_MAXUINT);
+                g_ptr_array_add (ret, g_value_get_boxed (&elem));
+        }
+
+        return ret;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+get_property (GObject         *object,
+              guint            prop_id,
+              GValue          *value,
+              GParamSpec      *pspec)
+{
+        DevkitDisksDaemon *daemon = DEVKIT_DISKS_DAEMON (object);
+        GPtrArray *filesystems;
+
+        switch (prop_id) {
+        case PROP_DAEMON_VERSION:
+                g_value_set_string (value, VERSION);
+                break;
+
+        case PROP_SUPPORTS_ENCRYPTED_DEVICES:
+                /* TODO: probably Linux only */
+                g_value_set_boolean (value, TRUE);
+                break;
+
+        case PROP_KNOWN_FILESYSTEMS:
+                filesystems = get_known_filesystems (daemon);
+                g_value_set_boxed (value, filesystems);
+                g_ptr_array_foreach (filesystems, (GFunc) g_value_array_free, NULL);
+                g_ptr_array_free (filesystems, TRUE);
+                break;
+
+        default:
+                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+                break;
+        }
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
 static void
 devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
 {
@@ -252,6 +436,7 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
 
         object_class->constructor = devkit_disks_daemon_constructor;
         object_class->finalize = devkit_disks_daemon_finalize;
+        object_class->get_property = get_property;
 
         g_type_class_add_private (klass, sizeof (DevkitDisksDaemonPrivate));
 
@@ -307,6 +492,23 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
         dbus_g_error_domain_register (DEVKIT_DISKS_DAEMON_ERROR,
                                       NULL,
                                       DEVKIT_DISKS_DAEMON_TYPE_ERROR);
+
+        g_object_class_install_property (
+                object_class,
+                PROP_DAEMON_VERSION,
+                g_param_spec_string ("daemon-version", NULL, NULL, NULL, G_PARAM_READABLE));
+
+        g_object_class_install_property (
+                object_class,
+                PROP_SUPPORTS_ENCRYPTED_DEVICES,
+                g_param_spec_boolean ("supports-encrypted-devices", NULL, NULL, FALSE, G_PARAM_READABLE));
+
+        g_object_class_install_property (
+                object_class,
+                PROP_KNOWN_FILESYSTEMS,
+                g_param_spec_boxed ("known-filesystems", NULL, NULL,
+                                    dbus_g_type_get_collection ("GPtrArray", KNOWN_FILESYSTEMS_STRUCT_TYPE),
+                                    G_PARAM_READABLE));
 }
 
 static void

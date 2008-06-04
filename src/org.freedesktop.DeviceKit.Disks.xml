@@ -197,6 +197,123 @@
 
     <!-- ************************************************************ -->
 
+    <property name="daemon-version" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The version of the running daemon.
+      </doc:para></doc:description></doc:doc>
+    </property>
+
+    <property name="supports-encrypted-devices" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE only if the daemon can create encrypted block devices, see the
+            <doc:ref type="method" to="Device.EncryptedLock">EncryptedUnlock()</doc:ref> and
+            <doc:ref type="method" to="Device.EncryptedLock">EncryptedLock()</doc:ref>
+            methods for details.
+      </doc:para></doc:description></doc:doc>
+    </property>
+
+
+    <!-- TODO: maybe this should return a dictionary so we can grow it in the future? -->
+    <property name="known-filesystems" type="a(ssbbbubbbbbbbb)" access="read">
+      <doc:doc><doc:description><doc:para>
+            An array of file systems known to the daemon and what features are supported.
+            Each element in the array contains the following members:
+            <doc:list>
+              <doc:item>
+                <doc:term>id</doc:term>
+                <doc:definition>
+                  The name / identifier of the file system (such as <doc:tt>ext3</doc:tt> or <doc:tt>vfat</doc:tt>),
+                  similar to the contents of the
+                  <doc:ref type="property" to="Device:id-type">Device:id-type</doc:ref>
+                  property.
+                </doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>name</doc:term>
+                <doc:definition>
+                  A human readable name for the file system such as "Linux Ext3".
+                </doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>supports_unix_owners</doc:term>
+                <doc:definition>
+                  Whether the file system supports the UNIX owners model (e.g. ext3 does, but vfat doesn't).
+                </doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>can_mount</doc:term>
+                <doc:definition>
+                  Whether the file system can be mounted.
+                </doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>can_create</doc:term>
+                <doc:definition>
+                  Whether the file system can be created on a device.
+                </doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>max_label_len</doc:term>
+                <doc:definition>
+                  The maximum amount of bytes that the file system label can hold. Set to zero if the file
+                  system doesn't support labels.
+                </doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>supports_label_rename</doc:term>
+                <doc:definition>
+                  Whether the label of the file system can be changed.
+                </doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>supports_online_label_rename</doc:term>
+                <doc:definition>
+                  Whether the label can be changed while the file system is mounted.
+                </doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>supports_fsck</doc:term>
+                <doc:definition>
+                  Whether the file system can be checked.
+                </doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>supports_online_fsck</doc:term>
+                <doc:definition>
+                  Whether the file system can be checked while mounted.
+                </doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>supports_resize_enlarge</doc:term>
+                <doc:definition>
+                  Whether the file system can be enlarged.
+                </doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>supports_online_resize_enlarge</doc:term>
+                <doc:definition>
+                  Whether the file system can be enlarged while mounted.
+                </doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>supports_resize_shrink</doc:term>
+                <doc:definition>
+                  Whether the file system can be shrunk.
+                </doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>supports_online_resize_shrink</doc:term>
+                <doc:definition>
+                  Whether the file system can be shrunk while mounted.
+                </doc:definition>
+              </doc:item>
+            </doc:list>
+
+      </doc:para></doc:description></doc:doc>
+    </property>
+
+    <!-- ************************************************************ -->
+
   </interface>
 
 </node>
