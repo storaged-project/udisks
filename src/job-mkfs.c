@@ -72,6 +72,7 @@ main (int argc, char **argv)
         erase = NULL;
         take_ownership_uid = 0;
         take_ownership_gid = 0;
+        label = NULL;
 
         if (argc != 4) {
                 g_printerr ("wrong usage\n");
@@ -108,12 +109,15 @@ main (int argc, char **argv)
                 for (n = 0; options[n] != NULL; n++) {
                         if (g_str_has_prefix (options[n], "label=")) {
                                 label = strdup (options[n] + sizeof ("label=") - 1);
-                                if (!validate_and_escape_label (&label, 11)) {
+                                if (!validate_and_escape_label (&label, 254)) {
                                         g_string_free (s, TRUE);
                                         goto out;
                                 }
-                                g_string_append_printf (s, " -n \"%s\"", label);
-                                g_free (label);
+                                if (strlen (label) <= 11) {
+                                        g_string_append_printf (s, " -n \"%s\"", label);
+                                        g_free (label);
+                                        label = NULL;
+                                }
                         } else if (g_str_has_prefix (options[n], "erase=")) {
                                 erase = strdup (options[n] + sizeof ("erase=") - 1);
                         } else {
@@ -136,6 +140,7 @@ main (int argc, char **argv)
                                 }
                                 g_string_append_printf (s, " -L \"%s\"", label);
                                 g_free (label);
+                                label = NULL;
                         } else if (g_str_has_prefix (options[n], "erase=")) {
                                 erase = strdup (options[n] + sizeof ("erase=") - 1);
                         } else if (g_str_has_prefix (options[n], "take_ownership_uid=")) {
@@ -170,6 +175,7 @@ main (int argc, char **argv)
                                 }
                                 g_string_append_printf (s, " -L \"%s\"", label);
                                 g_free (label);
+                                label = NULL;
                         } else if (g_str_has_prefix (options[n], "erase=")) {
                                 erase = strdup (options[n] + sizeof ("erase=") - 1);
                         } else if (g_str_has_prefix (options[n], "take_ownership_uid=")) {
@@ -207,6 +213,7 @@ main (int argc, char **argv)
                                 }
                                 g_string_append_printf (s, " -L \"%s\"", label);
                                 g_free (label);
+                                label = NULL;
                         } else if (g_str_has_prefix (options[n], "erase=")) {
                                 erase = strdup (options[n] + sizeof ("erase=") - 1);
                         } else {
@@ -273,6 +280,35 @@ main (int argc, char **argv)
                         goto out;
                 }
         }
+
+        if (label != NULL) {
+                g_free (command_line);
+
+                if (strcmp (fstype, "vfat") == 0) {
+                        command_line = g_strdup_printf ("mlabel -i %s \"::%s\"", device, label);
+                } else {
+                        g_printerr ("label change for fstype '%s' requested but not implemented", fstype);
+                        goto out;
+                }
+
+                error = NULL;
+                if (!g_spawn_command_line_sync (command_line,
+                                                NULL,
+                                                &standard_error,
+                                                &exit_status,
+                                                &error)) {
+                        g_printerr ("cannot spawn '%s': %s\n", command_line, error->message);
+                        g_error_free (error);
+                        goto out;
+                }
+                if (WEXITSTATUS (exit_status) != 0) {
+                        g_printerr ("helper failed with:\n%s", standard_error);
+                        goto out;
+                }
+
+                g_free (label);
+        }
+
 
         /* If we've created an fs on a partitioned device, then signal the
          * kernel to reread the (now missing) partition table.
