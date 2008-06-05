@@ -86,7 +86,7 @@ struct DevkitDisksDevicePrivate
                 gboolean device_is_media_available;
                 gboolean device_is_read_only;
                 gboolean device_is_drive;
-                gboolean device_is_crypto_cleartext;
+                gboolean device_is_luks_cleartext;
                 gboolean device_is_linux_md_component;
                 gboolean device_is_linux_md;
                 guint64 device_size;
@@ -126,8 +126,8 @@ struct DevkitDisksDevicePrivate
                 GPtrArray *drive_media_compatibility;
                 char *drive_media;
 
-                char *crypto_cleartext_slave;
-                uid_t crypto_cleartext_unlocked_by_uid;
+                char *luks_cleartext_slave;
+                uid_t luks_cleartext_unlocked_by_uid;
 
                 char *linux_md_component_level;
                 int linux_md_component_num_raid_devices;

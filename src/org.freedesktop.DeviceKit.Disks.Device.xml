@@ -470,8 +470,8 @@
             Supports the <doc:tt>erase=</doc:tt> option for erasing the contents of the device. To set the
             label use <doc:tt>label=NAME</doc:tt>. Labels may not be supported
             for all file systems and the allowed length of a label may vary (see @TODO@).
-            To create the file system on an encrypted
-            block device, pass the <doc:tt>encrypt=</doc:tt> option with the
+            To create the file system on an LUKS encrypted
+            block device, pass the <doc:tt>luks_encrypt=</doc:tt> option with the
             value set to the passphrase to use. For file systems with the concept of owners (e.g.
             <doc:tt>ext3</doc:tt>), the options <doc:tt>take_ownership_uid=</doc:tt> and
             <doc:tt>take_ownership_gid=</doc:tt> are supported and can be used to set the
@@ -483,8 +483,8 @@
         <doc:description>
           <doc:para>
             Create a file system on a device. If
-            the <doc:tt>encrypt=</doc:tt> option is passed then an
-            encrypted block device will be created, then unlocked and
+            the <doc:tt>luks_encrypt=</doc:tt> option is passed then an
+            LUKS encrypted block device will be created, then unlocked and
             the file system will be created on the corresponding
             cleartext device.
           </doc:para>
@@ -704,7 +704,7 @@
 
     <!-- ************************************************************ -->
 
-    <method name="EncryptedUnlock">
+    <method name="LuksUnlock">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="passphrase" direction="in" type="s">
         <doc:doc><doc:summary>Passphrase for unlocking the cleartext data.</doc:summary></doc:doc>
@@ -726,14 +726,14 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.unlock-encrypted</doc:term>
-              <doc:definition>To unlock encrypted devices</doc:definition>
+              <doc:term>org.freedesktop.devicekit.disks.unlock-luks</doc:term>
+              <doc:definition>To unlock LUKS encrypted devices</doc:definition>
             </doc:item>
           </doc:list>
         </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_IS_BUSY;">if the device is busy</doc:error>
-          <doc:error name="&ERROR_NOT_CRYPTO;">if the device is not encrypted</doc:error>
+          <doc:error name="&ERROR_NOT_CRYPTO;">if the device is not LUKS encrypted</doc:error>
           <doc:error name="&ERROR_CRYPTO_ALREADY_UNLOCKED;">if the device is already unlocked</doc:error>
           <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
           <doc:error name="&ERROR_JOB_WAS_CANCELLED;">if the job was cancelled</doc:error>
@@ -743,7 +743,7 @@
 
     <!-- ************************************************************ -->
 
-    <method name="EncryptedLock">
+    <method name="LuksLock">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="options" direction="in" type="as">
         <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
@@ -754,7 +754,7 @@
           <doc:para>
             Tears down the cleartext device set up using
             e.g. the <doc:ref type="method"
-            to="Device.EncryptedUnlock">EncryptedUnlock()</doc:ref>
+            to="Device.LuksUnlock">LuksUnlock()</doc:ref>
             method.
           </doc:para>
         </doc:description>
@@ -763,13 +763,13 @@
           <doc:list>
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.lock-encrypted-others</doc:term>
-              <doc:definition>To lock an encrypted
+              <doc:definition>To lock an encrypted LUKS
                 <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
                 device unlocked by another user</doc:definition>
             </doc:item>
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.lock-encrypted-others-system-internal</doc:term>
-              <doc:definition>To lock an encrypted
+              <doc:definition>To lock an encrypted LUKS
                 <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
                 device unlocked by another user</doc:definition>
             </doc:item>
@@ -777,7 +777,7 @@
         </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_IS_BUSY;">if the device is busy</doc:error>
-          <doc:error name="&ERROR_NOT_CRYPTO;">if the device is not encrypted</doc:error>
+          <doc:error name="&ERROR_NOT_CRYPTO;">if the device is not LUKS encrypted</doc:error>
           <doc:error name="&ERROR_CRYPTO_NOT_UNLOCKED;">if the device is not unlocked</doc:error>
           <doc:error name="&ERROR_GENERAL;">if incoming parameters are invalid or an unknown error occured</doc:error>
           <doc:error name="&ERROR_JOB_WAS_CANCELLED;">if the job was cancelled</doc:error>
@@ -787,7 +787,7 @@
 
     <!-- ************************************************************ -->
 
-    <method name="EncryptedChangePassphrase">
+    <method name="LuksChangePassphrase">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="current_passphrase" direction="in" type="s">
         <doc:doc><doc:summary>The current passphrase.</doc:summary></doc:doc>
@@ -799,7 +799,7 @@
       <doc:doc>
         <doc:description>
           <doc:para>
-            Change the passphrase used to unlock an encrypted device.
+            Change the passphrase used to unlock a LUKS encrypted device.
           </doc:para>
         </doc:description>
         <doc:permission>
@@ -1252,9 +1252,9 @@
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-is-crypto-cleartext" type="b" access="read">
+    <property name="device-is-luks-cleartext" type="b" access="read">
       <doc:doc><doc:description><doc:para>
-            TRUE if device is a cleartext device backed by a encrypted device. See crypto-cleartext- properties for details.
+            TRUE if device is a cleartext device backed by a LUKS encrypted device. See luks-cleartext- properties for details.
       </doc:para></doc:description></doc:doc>
     </property>
     <property name="device-is-busy" type="b" access="read">
@@ -1450,20 +1450,20 @@
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <property name="crypto-cleartext-slave" type="o" access="read">
+    <property name="luks-cleartext-slave" type="o" access="read">
       <doc:doc><doc:description><doc:para>
-            The encrypted device backing a crypto cleartext device.
+            The encrypted LUKS device backing a crypto cleartext device.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-crypto-cleartext">device-is-crypto-cleartext</doc:ref>
+            <doc:ref type="property" to="Device:device-is-luks-cleartext">device-is-luks-cleartext</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="crypto-cleartext-unlocked-by-uid" type="u" access="read">
+    <property name="luks-cleartext-unlocked-by-uid" type="u" access="read">
       <doc:doc><doc:description><doc:para>
-            The UNIX user id of the user who unlocked the device. Set to 0 if
+            The UNIX user id of the user who unlocked the LUKS device. Set to 0 if
             not unlocked by DeviceKit-disks.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-crypto-cleartext">device-is-crypto-cleartext</doc:ref>
+            <doc:ref type="property" to="Device:device-is-luks-cleartext">device-is-luks-cleartext</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>

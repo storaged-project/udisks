@@ -203,11 +203,11 @@
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <property name="supports-encrypted-devices" type="b" access="read">
+    <property name="supports-luks-devices" type="b" access="read">
       <doc:doc><doc:description><doc:para>
-            TRUE only if the daemon can create encrypted block devices, see the
-            <doc:ref type="method" to="Device.EncryptedLock">EncryptedUnlock()</doc:ref> and
-            <doc:ref type="method" to="Device.EncryptedLock">EncryptedLock()</doc:ref>
+            TRUE only if the daemon can create encrypted LUKS block devices, see the
+            <doc:ref type="method" to="Device.LuksLock">LuksUnlock()</doc:ref> and
+            <doc:ref type="method" to="Device.LuksLock">LuksLock()</doc:ref>
             methods for details.
       </doc:para></doc:description></doc:doc>
     </property>

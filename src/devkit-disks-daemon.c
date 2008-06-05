@@ -65,7 +65,7 @@ enum
 {
         PROP_0,
         PROP_DAEMON_VERSION,
-        PROP_SUPPORTS_ENCRYPTED_DEVICES,
+        PROP_SUPPORTS_LUKS_DEVICES,
         PROP_KNOWN_FILESYSTEMS,
 };
 
@@ -425,7 +425,7 @@ get_property (GObject         *object,
                 g_value_set_string (value, VERSION);
                 break;
 
-        case PROP_SUPPORTS_ENCRYPTED_DEVICES:
+        case PROP_SUPPORTS_LUKS_DEVICES:
                 /* TODO: probably Linux only */
                 g_value_set_boolean (value, TRUE);
                 break;
@@ -516,8 +516,8 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
 
         g_object_class_install_property (
                 object_class,
-                PROP_SUPPORTS_ENCRYPTED_DEVICES,
-                g_param_spec_boolean ("supports-encrypted-devices", NULL, NULL, FALSE, G_PARAM_READABLE));
+                PROP_SUPPORTS_LUKS_DEVICES,
+                g_param_spec_boolean ("supports-luks-devices", NULL, NULL, FALSE, G_PARAM_READABLE));
 
         g_object_class_install_property (
                 object_class,

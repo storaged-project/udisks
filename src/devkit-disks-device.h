@@ -169,19 +169,19 @@ gboolean devkit_disks_device_partition_table_create (DevkitDisksDevice     *devi
                                                      char                 **options,
                                                      DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_encrypted_unlock (DevkitDisksDevice     *device,
-                                               const char            *secret,
-                                               char                 **options,
-                                               DBusGMethodInvocation *context);
+gboolean devkit_disks_device_luks_unlock (DevkitDisksDevice     *device,
+                                          const char            *secret,
+                                          char                 **options,
+                                          DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_encrypted_lock (DevkitDisksDevice     *device,
-                                             char                 **options,
-                                             DBusGMethodInvocation *context);
+gboolean devkit_disks_device_luks_lock (DevkitDisksDevice     *device,
+                                        char                 **options,
+                                        DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_encrypted_change_passphrase (DevkitDisksDevice     *device,
-                                                          const char            *old_secret,
-                                                          const char            *new_secret,
-                                                          DBusGMethodInvocation *context);
+gboolean devkit_disks_device_luks_change_passphrase (DevkitDisksDevice     *device,
+                                                     const char            *old_secret,
+                                                     const char            *new_secret,
+                                                     DBusGMethodInvocation *context);
 
 gboolean devkit_disks_device_filesystem_set_label (DevkitDisksDevice     *device,
                                                    const char            *new_label,

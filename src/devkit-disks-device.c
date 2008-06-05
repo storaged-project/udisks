@@ -75,7 +75,7 @@ typedef void (*UnlockEncryptionHookFunc) (DBusGMethodInvocation *context,
                                           DevkitDisksDevice *device,
                                           gpointer user_data);
 
-static gboolean devkit_disks_device_encrypted_unlock_internal (DevkitDisksDevice        *device,
+static gboolean devkit_disks_device_luks_unlock_internal (DevkitDisksDevice        *device,
                                                                const char               *secret,
                                                                char                    **options,
                                                                UnlockEncryptionHookFunc  hook_func,
@@ -108,7 +108,7 @@ static void force_unmount                    (DevkitDisksDevice        *device,
                                               ForceRemovalCompleteFunc  callback,
                                               gpointer                  user_data);
 
-static void force_crypto_teardown            (DevkitDisksDevice        *device,
+static void force_luks_teardown            (DevkitDisksDevice        *device,
                                               DevkitDisksDevice        *cleartext_device,
                                               ForceRemovalCompleteFunc  callback,
                                               gpointer                  user_data);
@@ -128,7 +128,7 @@ enum
         PROP_DEVICE_IS_MEDIA_AVAILABLE,
         PROP_DEVICE_IS_READ_ONLY,
         PROP_DEVICE_IS_DRIVE,
-        PROP_DEVICE_IS_CRYPTO_CLEARTEXT,
+        PROP_DEVICE_IS_LUKS_CLEARTEXT,
         PROP_DEVICE_IS_LINUX_MD_COMPONENT,
         PROP_DEVICE_IS_LINUX_MD,
         PROP_DEVICE_SIZE,
@@ -169,8 +169,8 @@ enum
         PROP_PARTITION_TABLE_OFFSETS,
         PROP_PARTITION_TABLE_SIZES,
 
-        PROP_CRYPTO_CLEARTEXT_SLAVE,
-        PROP_CRYPTO_CLEARTEXT_UNLOCKED_BY_UID,
+        PROP_LUKS_CLEARTEXT_SLAVE,
+        PROP_LUKS_CLEARTEXT_UNLOCKED_BY_UID,
 
         PROP_DRIVE_VENDOR,
         PROP_DRIVE_MODEL,
@@ -341,8 +341,8 @@ get_property (GObject         *object,
 	case PROP_DEVICE_IS_DRIVE:
 		g_value_set_boolean (value, device->priv->info.device_is_drive);
 		break;
-	case PROP_DEVICE_IS_CRYPTO_CLEARTEXT:
-		g_value_set_boolean (value, device->priv->info.device_is_crypto_cleartext);
+	case PROP_DEVICE_IS_LUKS_CLEARTEXT:
+		g_value_set_boolean (value, device->priv->info.device_is_luks_cleartext);
 		break;
 	case PROP_DEVICE_IS_LINUX_MD_COMPONENT:
 		g_value_set_boolean (value, device->priv->info.device_is_linux_md_component);
@@ -458,14 +458,14 @@ get_property (GObject         *object,
 		g_value_set_boxed (value, device->priv->info.partition_table_sizes);
 		break;
 
-	case PROP_CRYPTO_CLEARTEXT_SLAVE:
-                if (device->priv->info.crypto_cleartext_slave != NULL)
-                        g_value_set_boxed (value, device->priv->info.crypto_cleartext_slave);
+	case PROP_LUKS_CLEARTEXT_SLAVE:
+                if (device->priv->info.luks_cleartext_slave != NULL)
+                        g_value_set_boxed (value, device->priv->info.luks_cleartext_slave);
                 else
                         g_value_set_boxed (value, "/");
 		break;
-	case PROP_CRYPTO_CLEARTEXT_UNLOCKED_BY_UID:
-		g_value_set_uint (value, device->priv->info.crypto_cleartext_unlocked_by_uid);
+	case PROP_LUKS_CLEARTEXT_UNLOCKED_BY_UID:
+		g_value_set_uint (value, device->priv->info.luks_cleartext_unlocked_by_uid);
 		break;
 
 	case PROP_DRIVE_VENDOR:
@@ -668,8 +668,8 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 g_param_spec_boolean ("device-is-drive", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
-                PROP_DEVICE_IS_CRYPTO_CLEARTEXT,
-                g_param_spec_boolean ("device-is-crypto-cleartext", NULL, NULL, FALSE, G_PARAM_READABLE));
+                PROP_DEVICE_IS_LUKS_CLEARTEXT,
+                g_param_spec_boolean ("device-is-luks-cleartext", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_DEVICE_IS_LINUX_MD_COMPONENT,
@@ -823,12 +823,12 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
 
         g_object_class_install_property (
                 object_class,
-                PROP_CRYPTO_CLEARTEXT_SLAVE,
-                g_param_spec_boxed ("crypto-cleartext-slave", NULL, NULL, DBUS_TYPE_G_OBJECT_PATH, G_PARAM_READABLE));
+                PROP_LUKS_CLEARTEXT_SLAVE,
+                g_param_spec_boxed ("luks-cleartext-slave", NULL, NULL, DBUS_TYPE_G_OBJECT_PATH, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
-                PROP_CRYPTO_CLEARTEXT_UNLOCKED_BY_UID,
-                g_param_spec_uint ("crypto-cleartext-unlocked-by-uid", NULL, NULL, 0, G_MAXUINT, 0, G_PARAM_READABLE));
+                PROP_LUKS_CLEARTEXT_UNLOCKED_BY_UID,
+                g_param_spec_uint ("luks-cleartext-unlocked-by-uid", NULL, NULL, 0, G_MAXUINT, 0, G_PARAM_READABLE));
 
         g_object_class_install_property (
                 object_class,
@@ -1237,7 +1237,7 @@ free_info (DevkitDisksDevice *device)
 
         g_free (device->priv->info.partition_table_scheme);
 
-        g_free (device->priv->info.crypto_cleartext_slave);
+        g_free (device->priv->info.luks_cleartext_slave);
 
         g_free (device->priv->info.drive_vendor);
         g_free (device->priv->info.drive_model);
@@ -1467,7 +1467,7 @@ update_info_properties_cb (DevkitDevice *d, const char *key, const char *value, 
                         uid_t unlocked_by_uid;
 
                         if (luks_get_uid_from_dm_name (value, &unlocked_by_uid)) {
-                                device->priv->info.crypto_cleartext_unlocked_by_uid = unlocked_by_uid;
+                                device->priv->info.luks_cleartext_unlocked_by_uid = unlocked_by_uid;
                         }
 
                         /* TODO: export this at some point */
@@ -1483,8 +1483,8 @@ update_info_properties_cb (DevkitDevice *d, const char *key, const char *value, 
                                  */
                                 device->priv->info.device_is_drive = FALSE;
 
-                                device->priv->info.device_is_crypto_cleartext = TRUE;
-                                device->priv->info.crypto_cleartext_slave =
+                                device->priv->info.device_is_luks_cleartext = TRUE;
+                                device->priv->info.luks_cleartext_slave =
                                         g_strdup (g_ptr_array_index (device->priv->info.slaves_objpath, 0));
                         }
                 }
@@ -2129,11 +2129,11 @@ update_info (DevkitDisksDevice *device)
                         device->priv->info.device_is_system_internal =
                                 enclosing_device->priv->info.device_is_system_internal;
                 }
-        } else if (device->priv->info.device_is_crypto_cleartext) {
+        } else if (device->priv->info.device_is_luks_cleartext) {
                 DevkitDisksDevice *enclosing_device;
                 enclosing_device = devkit_disks_daemon_local_find_by_object_path (
                         device->priv->daemon,
-                        device->priv->info.crypto_cleartext_slave);
+                        device->priv->info.luks_cleartext_slave);
                 if (enclosing_device != NULL) {
                         device->priv->info.device_is_system_internal =
                                 enclosing_device->priv->info.device_is_system_internal;
@@ -2191,7 +2191,7 @@ devkit_disks_device_removed (DevkitDisksDevice *device)
          * device itself is busy. This includes
          *
          *  - force unmounting the device and/or all it's partitions
-         *  - tearing down a crypto mapping if it's a cleartext device
+         *  - tearing down a luks mapping if it's a cleartext device
          *    backed by a crypted device
          *  - removing the device from a RAID array in case of Linux MD.
          *
@@ -2311,7 +2311,7 @@ devkit_disks_device_changed (DevkitDisksDevice *device, DevkitDevice *d, gboolea
          * if the device itself is busy. This includes
          *
          *  - force unmounting the device
-         *  - tearing down a crypto mapping if it's a cleartext device
+         *  - tearing down a luks mapping if it's a cleartext device
          *    backed by a crypted device
          *  - removing the device from a RAID array in case of Linux MD.
          *
@@ -4029,17 +4029,17 @@ typedef struct {
 
         guint device_changed_signal_handler_id;
         guint device_changed_timeout_id;
-} MkfsEncryptedData;
+} MkfsLuksData;
 
-static MkfsEncryptedData *
-mkfse_data_ref (MkfsEncryptedData *data)
+static MkfsLuksData *
+mkfse_data_ref (MkfsLuksData *data)
 {
         data->refcount++;
         return data;
 }
 
 static void
-mkfse_data_unref (MkfsEncryptedData *data)
+mkfse_data_unref (MkfsLuksData *data)
 {
         data->refcount--;
         if (data->refcount == 0) {
@@ -4060,7 +4060,7 @@ filesystem_create_wait_for_cleartext_device_hook (DBusGMethodInvocation *context
                                                   DevkitDisksDevice *device,
                                                   gpointer user_data)
 {
-        MkfsEncryptedData *data = user_data;
+        MkfsLuksData *data = user_data;
 
         if (device == NULL) {
                 /* Dang, unlocking failed. The unlock method have already thrown an exception for us. */
@@ -4081,11 +4081,11 @@ filesystem_create_wait_for_cleartext_device_hook (DBusGMethodInvocation *context
 }
 
 static void
-filesystem_create_wait_for_encrypted_device_changed_cb (DevkitDisksDaemon *daemon,
+filesystem_create_wait_for_luks_device_changed_cb (DevkitDisksDaemon *daemon,
                                                         const char *object_path,
                                                         gpointer user_data)
 {
-        MkfsEncryptedData *data = user_data;
+        MkfsLuksData *data = user_data;
         DevkitDisksDevice *device;
 
         /* check if we're now a LUKS crypto device */
@@ -4096,7 +4096,7 @@ filesystem_create_wait_for_encrypted_device_changed_cb (DevkitDisksDaemon *daemo
 
                 /* yay! we are now set up the corresponding cleartext device */
 
-                devkit_disks_device_encrypted_unlock_internal (data->device,
+                devkit_disks_device_luks_unlock_internal (data->device,
                                                                data->passphrase,
                                                                NULL,
                                                                filesystem_create_wait_for_cleartext_device_hook,
@@ -4109,13 +4109,13 @@ filesystem_create_wait_for_encrypted_device_changed_cb (DevkitDisksDaemon *daemo
 }
 
 static gboolean
-filesystem_create_wait_for_encrypted_device_not_seen_cb (gpointer user_data)
+filesystem_create_wait_for_luks_device_not_seen_cb (gpointer user_data)
 {
-        MkfsEncryptedData *data = user_data;
+        MkfsLuksData *data = user_data;
 
         throw_error (data->context,
                      DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
-                     "Error creating encrypted file system: timeout (10s) waiting for encrypted device to show up");
+                     "Error creating luks encrypted file system: timeout (10s) waiting for luks device to show up");
 
         g_signal_handler_disconnect (data->device->priv->daemon, data->device_changed_signal_handler_id);
         mkfse_data_unref (data);
@@ -4126,7 +4126,7 @@ filesystem_create_wait_for_encrypted_device_not_seen_cb (gpointer user_data)
 
 
 static void
-filesystem_create_create_encrypted_device_completed_cb (DBusGMethodInvocation *context,
+filesystem_create_create_luks_device_completed_cb (DBusGMethodInvocation *context,
                                                         DevkitDisksDevice *device,
                                                         PolKitCaller *pk_caller,
                                                         gboolean job_was_cancelled,
@@ -4135,21 +4135,21 @@ filesystem_create_create_encrypted_device_completed_cb (DBusGMethodInvocation *c
                                                         const char *stdout,
                                                         gpointer user_data)
 {
-        MkfsEncryptedData *data = user_data;
+        MkfsLuksData *data = user_data;
 
         /* either way, poke the kernel so we can reread the data (new uuid etc.) */
         devkit_device_emit_changed_to_kernel (device);
 
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
 
-                /* OK! So we've got ourselves an encrypted device. Let's set it up so we can create a file
+                /* OK! So we've got ourselves an luks device. Let's set it up so we can create a file
                  * system. Sit and wait for the change event to appear so we can setup with the right UUID.
                  */
 
                 data->device_changed_signal_handler_id = g_signal_connect_after (
                         device->priv->daemon,
                         "device-changed",
-                        (GCallback) filesystem_create_wait_for_encrypted_device_changed_cb,
+                        (GCallback) filesystem_create_wait_for_luks_device_changed_cb,
                         mkfse_data_ref (data));
 
                 /* set up timeout for error reporting if waiting failed
@@ -4159,7 +4159,7 @@ filesystem_create_create_encrypted_device_completed_cb (DBusGMethodInvocation *c
                  */
                 data->device_changed_timeout_id = g_timeout_add (
                         10 * 1000,
-                        filesystem_create_wait_for_encrypted_device_not_seen_cb,
+                        filesystem_create_wait_for_luks_device_not_seen_cb,
                         data);
 
 
@@ -4222,21 +4222,21 @@ devkit_disks_device_filesystem_create_internal (DevkitDisksDevice       *device,
                 goto out;
         }
 
-        /* search for encrypt=<passphrase> and do a detour if that's specified */
+        /* search for luks_encrypt=<passphrase> and do a detour if that's specified */
         for (n = 0; options[n] != NULL; n++) {
-                if (g_str_has_prefix (options[n], "encrypt=")) {
-                        MkfsEncryptedData *mkfse_data;
+                if (g_str_has_prefix (options[n], "luks_encrypt=")) {
+                        MkfsLuksData *mkfse_data;
 
-                        /* So this is a request to create an encrypted device to put the
-                         * file system on; save all options for mkfs (except encrypt=) for
+                        /* So this is a request to create an luks device to put the
+                         * file system on; save all options for mkfs (except luks_encrypt=) for
                          * later invocation once we have a cleartext device.
                          */
 
-                        mkfse_data = g_new0 (MkfsEncryptedData, 1);
+                        mkfse_data = g_new0 (MkfsLuksData, 1);
                         mkfse_data->refcount = 1;
                         mkfse_data->context = context;
                         mkfse_data->device = g_object_ref (device);
-                        mkfse_data->passphrase = g_strdup (options[n] + sizeof ("encrypt=") - 1);
+                        mkfse_data->passphrase = g_strdup (options[n] + sizeof ("luks_encrypt=") - 1);
                         mkfse_data->mkfs_hook_func = hook_func;
                         mkfse_data->mkfs_hook_user_data = hook_user_data;
                         mkfse_data->fstype = g_strdup (fstype);
@@ -4257,13 +4257,13 @@ devkit_disks_device_filesystem_create_internal (DevkitDisksDevice       *device,
 
                         error = NULL;
                         if (!job_new (context,
-                                      "CreateEncryptedDevice",
+                                      "LuksFormat",
                                       TRUE,
                                       device,
                                       pk_caller,
                                       argv,
                                       passphrase_stdin,
-                                      filesystem_create_create_encrypted_device_completed_cb,
+                                      filesystem_create_create_luks_device_completed_cb,
                                       mkfse_data,
                                       (GDestroyNotify) mkfse_data_unref)) {
                                 goto out;
@@ -5055,9 +5055,9 @@ find_cleartext_device (DevkitDisksDevice *device)
         devices = devkit_disks_daemon_local_get_all_devices (device->priv->daemon);
         for (l = devices; l != NULL; l = l->next) {
                 DevkitDisksDevice *d = DEVKIT_DISKS_DEVICE (l->data);
-                if (d->priv->info.device_is_crypto_cleartext &&
-                    d->priv->info.crypto_cleartext_slave != NULL &&
-                    strcmp (d->priv->info.crypto_cleartext_slave, device->priv->object_path) == 0) {
+                if (d->priv->info.device_is_luks_cleartext &&
+                    d->priv->info.luks_cleartext_slave != NULL &&
+                    strcmp (d->priv->info.luks_cleartext_slave, device->priv->object_path) == 0) {
                         ret = d;
                         goto out;
                 }
@@ -5117,7 +5117,7 @@ unlock_encryption_data_unref (UnlockEncryptionData *data)
 
 
 static void
-encrypted_unlock_device_added_cb (DevkitDisksDaemon *daemon,
+luks_unlock_device_added_cb (DevkitDisksDaemon *daemon,
                                   const char *object_path,
                                   gpointer user_data)
 {
@@ -5128,8 +5128,8 @@ encrypted_unlock_device_added_cb (DevkitDisksDaemon *daemon,
         device = devkit_disks_daemon_local_find_by_object_path (daemon, object_path);
 
         if (device != NULL &&
-            device->priv->info.device_is_crypto_cleartext &&
-            strcmp (device->priv->info.crypto_cleartext_slave, data->device->priv->object_path) == 0) {
+            device->priv->info.device_is_luks_cleartext &&
+            strcmp (device->priv->info.luks_cleartext_slave, data->device->priv->object_path) == 0) {
 
                 if (data->hook_func != NULL) {
                         data->hook_func (data->context, device, data->hook_user_data);
@@ -5145,7 +5145,7 @@ encrypted_unlock_device_added_cb (DevkitDisksDaemon *daemon,
 }
 
 static gboolean
-encrypted_unlock_device_not_seen_cb (gpointer user_data)
+luks_unlock_device_not_seen_cb (gpointer user_data)
 {
         UnlockEncryptionData *data = user_data;
 
@@ -5163,7 +5163,7 @@ encrypted_unlock_device_not_seen_cb (gpointer user_data)
 }
 
 static void
-encrypted_unlock_completed_cb (DBusGMethodInvocation *context,
+luks_unlock_completed_cb (DBusGMethodInvocation *context,
                                DevkitDisksDevice *device,
                                PolKitCaller *pk_caller,
                                gboolean job_was_cancelled,
@@ -5189,7 +5189,7 @@ encrypted_unlock_completed_cb (DBusGMethodInvocation *context,
                         data->device_added_signal_handler_id = g_signal_connect_after (
                                 device->priv->daemon,
                                 "device-added",
-                                (GCallback) encrypted_unlock_device_added_cb,
+                                (GCallback) luks_unlock_device_added_cb,
                                 unlock_encryption_data_ref (data));
 
                         /* set up timeout for error reporting if waiting failed
@@ -5198,7 +5198,7 @@ encrypted_unlock_completed_cb (DBusGMethodInvocation *context,
                          * as one will cancel the other)
                          */
                         data->device_added_timeout_id = g_timeout_add (10 * 1000,
-                                                                       encrypted_unlock_device_not_seen_cb,
+                                                                       luks_unlock_device_not_seen_cb,
                                                                        data);
                 }
         } else {
@@ -5219,7 +5219,7 @@ encrypted_unlock_completed_cb (DBusGMethodInvocation *context,
 }
 
 static gboolean
-devkit_disks_device_encrypted_unlock_internal (DevkitDisksDevice        *device,
+devkit_disks_device_luks_unlock_internal (DevkitDisksDevice        *device,
                                                const char               *secret,
                                                char                    **options,
                                                UnlockEncryptionHookFunc  hook_func,
@@ -5285,13 +5285,13 @@ devkit_disks_device_encrypted_unlock_internal (DevkitDisksDevice        *device,
 
         error = NULL;
         if (!job_new (context,
-                      "EncryptedUnlock",
+                      "LuksUnlock",
                       FALSE,
                       device,
                       pk_caller,
                       argv,
                       secret_as_stdin,
-                      encrypted_unlock_completed_cb,
+                      luks_unlock_completed_cb,
                       unlock_encryption_data_new (context, device, hook_func, hook_user_data),
                       (GDestroyNotify) unlock_encryption_data_unref)) {
                     goto out;
@@ -5310,12 +5310,12 @@ out:
 }
 
 gboolean
-devkit_disks_device_encrypted_unlock (DevkitDisksDevice     *device,
+devkit_disks_device_luks_unlock (DevkitDisksDevice     *device,
                                       const char            *secret,
                                       char                 **options,
                                       DBusGMethodInvocation *context)
 {
-        return devkit_disks_device_encrypted_unlock_internal (device, secret, options, NULL, NULL, context);
+        return devkit_disks_device_luks_unlock_internal (device, secret, options, NULL, NULL, context);
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/
@@ -5323,7 +5323,7 @@ devkit_disks_device_encrypted_unlock (DevkitDisksDevice     *device,
 typedef struct {
         int refcount;
         DBusGMethodInvocation *context;
-        DevkitDisksDevice *crypto_device;
+        DevkitDisksDevice *luks_device;
         DevkitDisksDevice *cleartext_device;
         guint device_removed_signal_handler_id;
         guint device_removed_timeout_id;
@@ -5331,7 +5331,7 @@ typedef struct {
 
 static LockEncryptionData *
 lock_encryption_data_new (DBusGMethodInvocation *context,
-                          DevkitDisksDevice *crypto_device,
+                          DevkitDisksDevice *luks_device,
                           DevkitDisksDevice *cleartext_device)
 {
         LockEncryptionData *data;
@@ -5340,7 +5340,7 @@ lock_encryption_data_new (DBusGMethodInvocation *context,
         data->refcount = 1;
 
         data->context = context;
-        data->crypto_device = g_object_ref (crypto_device);
+        data->luks_device = g_object_ref (luks_device);
         data->cleartext_device = g_object_ref (cleartext_device);
         return data;
 }
@@ -5357,7 +5357,7 @@ lock_encryption_data_unref (LockEncryptionData *data)
 {
         data->refcount--;
         if (data->refcount == 0) {
-                g_object_unref (data->crypto_device);
+                g_object_unref (data->luks_device);
                 g_object_unref (data->cleartext_device);
                 g_free (data);
         }
@@ -5365,7 +5365,7 @@ lock_encryption_data_unref (LockEncryptionData *data)
 
 
 static void
-encrypted_lock_wait_for_cleartext_device_removed_cb (DevkitDisksDaemon *daemon,
+luks_lock_wait_for_cleartext_device_removed_cb (DevkitDisksDaemon *daemon,
                                                      const char *object_path,
                                                      gpointer user_data)
 {
@@ -5375,7 +5375,7 @@ encrypted_lock_wait_for_cleartext_device_removed_cb (DevkitDisksDaemon *daemon,
         device = devkit_disks_daemon_local_find_by_object_path (daemon, object_path);
         if (device == data->cleartext_device) {
 
-                job_local_end (data->crypto_device);
+                job_local_end (data->luks_device);
 
                 dbus_g_method_return (data->context);
 
@@ -5387,15 +5387,15 @@ encrypted_lock_wait_for_cleartext_device_removed_cb (DevkitDisksDaemon *daemon,
 
 
 static gboolean
-encrypted_lock_wait_for_cleartext_device_not_seen_cb (gpointer user_data)
+luks_lock_wait_for_cleartext_device_not_seen_cb (gpointer user_data)
 {
         LockEncryptionData *data = user_data;
 
-        job_local_end (data->crypto_device);
+        job_local_end (data->luks_device);
 
         throw_error (data->context,
                      DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
-                     "Error locking encrypted device: timeout (10s) waiting for cleartext device to be removed");
+                     "Error locking luks device: timeout (10s) waiting for cleartext device to be removed");
 
         g_signal_handler_disconnect (data->cleartext_device->priv->daemon, data->device_removed_signal_handler_id);
         lock_encryption_data_unref (data);
@@ -5403,7 +5403,7 @@ encrypted_lock_wait_for_cleartext_device_not_seen_cb (gpointer user_data)
 }
 
 static void
-encrypted_lock_completed_cb (DBusGMethodInvocation *context,
+luks_lock_completed_cb (DBusGMethodInvocation *context,
                              DevkitDisksDevice *device,
                              PolKitCaller *pk_caller,
                              gboolean job_was_cancelled,
@@ -5425,7 +5425,7 @@ encrypted_lock_completed_cb (DBusGMethodInvocation *context,
                         data->device_removed_signal_handler_id = g_signal_connect_after (
                                 device->priv->daemon,
                                 "device-removed",
-                                (GCallback) encrypted_lock_wait_for_cleartext_device_removed_cb,
+                                (GCallback) luks_lock_wait_for_cleartext_device_removed_cb,
                                 lock_encryption_data_ref (data));
 
                         /* set up timeout for error reporting if waiting failed
@@ -5435,10 +5435,10 @@ encrypted_lock_completed_cb (DBusGMethodInvocation *context,
                          */
                         data->device_removed_timeout_id = g_timeout_add (
                                 10 * 1000,
-                                encrypted_lock_wait_for_cleartext_device_not_seen_cb,
+                                luks_lock_wait_for_cleartext_device_not_seen_cb,
                                 data);
 
-                        job_local_start (device, "EncryptedLock");
+                        job_local_start (device, "LuksLock");
                 }
         } else {
                 if (job_was_cancelled) {
@@ -5488,7 +5488,7 @@ out:
 }
 
 gboolean
-devkit_disks_device_encrypted_lock (DevkitDisksDevice     *device,
+devkit_disks_device_luks_lock (DevkitDisksDevice     *device,
                                     char                 **options,
                                     DBusGMethodInvocation *context)
 {
@@ -5555,13 +5555,13 @@ devkit_disks_device_encrypted_lock (DevkitDisksDevice     *device,
 
         error = NULL;
         if (!job_new (context,
-                      "EncryptedLock",
+                      "LuksLock",
                       FALSE,
                       device,
                       pk_caller,
                       argv,
                       NULL,
-                      encrypted_lock_completed_cb,
+                      luks_lock_completed_cb,
                       lock_encryption_data_new (context, device, cleartext_device),
                       (GDestroyNotify) lock_encryption_data_unref)) {
                     goto out;
@@ -5576,7 +5576,7 @@ out:
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static void
-encrypted_change_passphrase_completed_cb (DBusGMethodInvocation *context,
+luks_change_passphrase_completed_cb (DBusGMethodInvocation *context,
                                           DevkitDisksDevice *device,
                                           PolKitCaller *pk_caller,
                                           gboolean job_was_cancelled,
@@ -5602,7 +5602,7 @@ encrypted_change_passphrase_completed_cb (DBusGMethodInvocation *context,
 }
 
 gboolean
-devkit_disks_device_encrypted_change_passphrase (DevkitDisksDevice     *device,
+devkit_disks_device_luks_change_passphrase (DevkitDisksDevice     *device,
                                                  const char            *old_secret,
                                                  const char            *new_secret,
                                                  DBusGMethodInvocation *context)
@@ -5647,13 +5647,13 @@ devkit_disks_device_encrypted_change_passphrase (DevkitDisksDevice     *device,
 
         error = NULL;
         if (!job_new (context,
-                      "EncryptedChangePassphrase",
+                      "LuksChangePassphrase",
                       FALSE,
                       device,
                       pk_caller,
                       argv,
                       secrets_as_stdin,
-                      encrypted_change_passphrase_completed_cb,
+                      luks_change_passphrase_completed_cb,
                       NULL,
                       NULL)) {
                 goto out;
@@ -7095,10 +7095,10 @@ typedef struct {
         char                     *dm_name;
         ForceRemovalCompleteFunc  fr_callback;
         gpointer                  fr_user_data;
-} ForceCryptoTeardownData;
+} ForceLuksTeardownData;
 
 static void
-force_crypto_teardown_completed_cb (DBusGMethodInvocation *context,
+force_luks_teardown_completed_cb (DBusGMethodInvocation *context,
                                     DevkitDisksDevice *device,
                                     PolKitCaller *pk_caller,
                                     gboolean job_was_cancelled,
@@ -7107,12 +7107,12 @@ force_crypto_teardown_completed_cb (DBusGMethodInvocation *context,
                                     const char *stdout,
                                     gpointer user_data)
 {
-        ForceCryptoTeardownData *data = user_data;
+        ForceLuksTeardownData *data = user_data;
         char *touch_str;
 
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
 
-                g_warning ("Successfully teared down crypto device %s", device->priv->info.device_file);
+                g_warning ("Successfully teared down luks device %s", device->priv->info.device_file);
 
                 /* TODO: when we add polling, this can probably be removed. I have no idea why hal's
                  *       poller don't cause the kernel to revalidate the (missing) media
@@ -7124,21 +7124,21 @@ force_crypto_teardown_completed_cb (DBusGMethodInvocation *context,
                 if (data->fr_callback != NULL)
                         data->fr_callback (device, TRUE, data->fr_user_data);
         } else {
-                g_warning ("force crypto teardown failed: %s", stderr);
+                g_warning ("force luks teardown failed: %s", stderr);
                 if (data->fr_callback != NULL)
                         data->fr_callback (device, FALSE, data->fr_user_data);
         }
 }
 
-static ForceCryptoTeardownData *
-force_crypto_teardown_data_new (DevkitDisksDevice        *device,
+static ForceLuksTeardownData *
+force_luks_teardown_data_new (DevkitDisksDevice        *device,
                                 const char               *dm_name,
                                 ForceRemovalCompleteFunc  fr_callback,
                                 gpointer                  fr_user_data)
 {
-        ForceCryptoTeardownData *data;
+        ForceLuksTeardownData *data;
 
-        data = g_new0 (ForceCryptoTeardownData, 1);
+        data = g_new0 (ForceLuksTeardownData, 1);
         data->device = g_object_ref (device);
         data->dm_name = g_strdup (dm_name);
         data->fr_callback = fr_callback;
@@ -7147,7 +7147,7 @@ force_crypto_teardown_data_new (DevkitDisksDevice        *device,
 }
 
 static void
-force_crypto_teardown_data_unref (ForceCryptoTeardownData *data)
+force_luks_teardown_data_unref (ForceLuksTeardownData *data)
 {
         if (data->device != NULL)
                 g_object_unref (data->device);
@@ -7156,20 +7156,20 @@ force_crypto_teardown_data_unref (ForceCryptoTeardownData *data)
 }
 
 static void
-force_crypto_teardown_cleartext_done (DevkitDisksDevice *device,
+force_luks_teardown_cleartext_done (DevkitDisksDevice *device,
                                       gboolean success,
                                       gpointer user_data)
 {
         int n;
         char *argv[16];
         GError *error;
-        ForceCryptoTeardownData *data = user_data;
+        ForceLuksTeardownData *data = user_data;
 
         if (!success) {
                 if (data->fr_callback != NULL)
                         data->fr_callback (data->device, FALSE, data->fr_user_data);
 
-                force_crypto_teardown_data_unref (data);
+                force_luks_teardown_data_unref (data);
                 goto out;
         }
 
@@ -7185,37 +7185,37 @@ force_crypto_teardown_cleartext_done (DevkitDisksDevice *device,
 
         error = NULL;
         if (!job_new (NULL,
-                      "ForceCryptoTeardown",
+                      "ForceLuksTeardown",
                       FALSE,
                       data->device,
                       NULL,
                       argv,
                       NULL,
-                      force_crypto_teardown_completed_cb,
+                      force_luks_teardown_completed_cb,
                       data,
-                      (GDestroyNotify) force_crypto_teardown_data_unref)) {
+                      (GDestroyNotify) force_luks_teardown_data_unref)) {
 
                 g_warning ("Couldn't spawn cryptsetup for force teardown: %s", error->message);
                 g_error_free (error);
                 if (data->fr_callback != NULL)
                         data->fr_callback (data->device, FALSE, data->fr_user_data);
 
-                force_crypto_teardown_data_unref (data);
+                force_luks_teardown_data_unref (data);
         }
 out:
         ;
 }
 
 static void
-force_crypto_teardown (DevkitDisksDevice        *device,
+force_luks_teardown (DevkitDisksDevice        *device,
                        DevkitDisksDevice        *cleartext_device,
                        ForceRemovalCompleteFunc  callback,
                        gpointer                  user_data)
 {
         /* first we gotta force remove the clear text device */
         force_removal (cleartext_device,
-                       force_crypto_teardown_cleartext_done,
-                       force_crypto_teardown_data_new (device,
+                       force_luks_teardown_cleartext_done,
+                       force_luks_teardown_data_new (device,
                                                        cleartext_device->priv->info.dm_name,
                                                        callback,
                                                        user_data));
@@ -7395,7 +7395,7 @@ force_removal (DevkitDisksDevice        *device,
          *
          *  - Mounted by us, then forcibly unmount it.
          *
-         *  - If it's a crypto device, check if there's cleartext
+         *  - If it's a luks device, check if there's cleartext
          *    companion. If so, tear it down if it was setup by us.
          *
          *  - A Linux MD component that is part of a running array,
@@ -7421,20 +7421,20 @@ force_removal (DevkitDisksDevice        *device,
                 devices = devkit_disks_daemon_local_get_all_devices (device->priv->daemon);
                 for (l = devices; l != NULL; l = l->next) {
                         DevkitDisksDevice *d = DEVKIT_DISKS_DEVICE (l->data);
-                        if (d->priv->info.device_is_crypto_cleartext &&
-                            d->priv->info.crypto_cleartext_slave != NULL &&
-                            strcmp (d->priv->info.crypto_cleartext_slave, device->priv->object_path) == 0) {
+                        if (d->priv->info.device_is_luks_cleartext &&
+                            d->priv->info.luks_cleartext_slave != NULL &&
+                            strcmp (d->priv->info.luks_cleartext_slave, device->priv->object_path) == 0) {
 
                                 /* Check whether it is set up by us */
                                 if (d->priv->info.dm_name != NULL &&
                                     g_str_has_prefix (d->priv->info.dm_name, "devkit-disks-luks-uuid-")) {
 
-                                        g_warning ("Force crypto teardown device %s (cleartext %s)",
+                                        g_warning ("Force luks teardown device %s (cleartext %s)",
                                                    device->priv->info.device_file,
                                                    d->priv->info.device_file);
 
                                         /* Gotcha */
-                                        force_crypto_teardown (device, d, callback, user_data);
+                                        force_luks_teardown (device, d, callback, user_data);
                                         goto pending;
                                 }
                         }
