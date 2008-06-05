@@ -77,9 +77,12 @@ main (int argc, char **argv)
                         command_line = g_strdup_printf ("xfs_admin -L \"%s\" %s", new_label, device);
 
         } else if (strcmp (fstype, "vfat") == 0) {
-                if (!validate_and_escape_label (&new_label, 11))
+                if (!validate_and_escape_label (&new_label, 254))
                         goto out;
-                command_line = g_strdup_printf ("dosfslabel %s \"%s\"", device, new_label);
+                if (strlen (new_label) == 0)
+                        command_line = g_strdup_printf ("mlabel -c -i %s ::", device);
+                else
+                        command_line = g_strdup_printf ("mlabel -i %s \"::%s\"", device, new_label);
 
         } else {
                 g_printerr ("fstype %s not supported\n", fstype);
