@@ -201,12 +201,12 @@ devkit_disks_daemon_local_update_mount_state (DevkitDisksDaemon *daemon, GList *
 /*--------------------------------------------------------------------------------------------------------------*/
 
 GQuark
-devkit_disks_daemon_error_quark (void)
+devkit_disks_error_quark (void)
 {
         static GQuark ret = 0;
 
         if (ret == 0) {
-                ret = g_quark_from_static_string ("devkit_disks_daemon_error");
+                ret = g_quark_from_static_string ("devkit_disks_error");
         }
 
         return ret;
@@ -216,7 +216,7 @@ devkit_disks_daemon_error_quark (void)
 #define ENUM_ENTRY(NAME, DESC) { NAME, "" #NAME "", DESC }
 
 GType
-devkit_disks_daemon_error_get_type (void)
+devkit_disks_error_get_type (void)
 {
         static GType etype = 0;
 
@@ -224,13 +224,31 @@ devkit_disks_daemon_error_get_type (void)
         {
                 static const GEnumValue values[] =
                         {
-                                ENUM_ENTRY (DEVKIT_DISKS_DAEMON_ERROR_GENERAL, "GeneralError"),
-                                ENUM_ENTRY (DEVKIT_DISKS_DAEMON_ERROR_NOT_SUPPORTED, "NotSupported"),
-                                ENUM_ENTRY (DEVKIT_DISKS_DAEMON_ERROR_NO_SUCH_DEVICE, "NoSuchDevice"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_FAILED, "Failed"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_BUSY, "Busy"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_CANCELLED, "Cancelled"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_INVALID_OPTION, "InvalidOption"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_ALREADY_MOUNTED, "AlreadyMounted"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_MOUNTED, "NotMounted"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_CANCELLABLE, "NotCancellable"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_PARTITION, "NotPartition"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_PARTITION_TABLE, "NotPartitionTable"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_LABELED, "NotLabeled"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_FILESYSTEM, "NotFilesystem"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_LUKS, "NotLuks"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_LOCKED, "NotLocked"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_UNLOCKED, "NotUnlocked"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_LINUX_MD, "NotLinuxMd"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_LINUX_MD_COMPONENT, "NotLinuxComponent"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_DRIVE, "NotDrive"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_SMART_CAPABLE, "NotSmartCapable"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_SUPPORTED, "NotSupported"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_FOUND, "NotFound"),
+
                                 { 0, 0, 0 }
                         };
-                g_assert (DEVKIT_DISKS_DAEMON_NUM_ERRORS == G_N_ELEMENTS (values) - 1);
-                etype = g_enum_register_static ("DevkitDisksDaemonError", values);
+                g_assert (DEVKIT_DISKS_NUM_ERRORS == G_N_ELEMENTS (values) - 1);
+                etype = g_enum_register_static ("DevkitDisksError", values);
         }
         return etype;
 }
@@ -505,9 +523,9 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
 
         dbus_g_object_type_install_info (DEVKIT_TYPE_DISKS_DAEMON, &dbus_glib_devkit_disks_daemon_object_info);
 
-        dbus_g_error_domain_register (DEVKIT_DISKS_DAEMON_ERROR,
-                                      NULL,
-                                      DEVKIT_DISKS_DAEMON_TYPE_ERROR);
+        dbus_g_error_domain_register (DEVKIT_DISKS_ERROR,
+                                      "org.freedesktop.DeviceKit.Disks.Error",
+                                      DEVKIT_DISKS_TYPE_ERROR);
 
         g_object_class_install_property (
                 object_class,
@@ -1075,8 +1093,8 @@ devkit_disks_damon_local_get_caller_for_context (DevkitDisksDaemon *daemon,
                                                               sender,
                                                               &dbus_error);
         if (pk_caller == NULL) {
-                error = g_error_new (DEVKIT_DISKS_DAEMON_ERROR,
-                                     DEVKIT_DISKS_DAEMON_ERROR_GENERAL,
+                error = g_error_new (DEVKIT_DISKS_ERROR,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Error getting information about caller: %s: %s",
                                      dbus_error.name, dbus_error.message);
                 dbus_error_free (&dbus_error);
@@ -1139,7 +1157,7 @@ throw_error (DBusGMethodInvocation *context, int error_code, const char *format,
         message = g_strdup_vprintf (format, args);
         va_end (args);
 
-        error = g_error_new (DEVKIT_DISKS_DAEMON_ERROR,
+        error = g_error_new (DEVKIT_DISKS_ERROR,
                              error_code,
                              "%s", message);
         dbus_g_method_return_error (context, error);
@@ -1203,7 +1221,7 @@ out:
                 dbus_g_method_return (context, object_path);
         } else {
                 throw_error (context,
-                             DEVKIT_DISKS_DAEMON_ERROR_NO_SUCH_DEVICE,
+                             DEVKIT_DISKS_ERROR_NOT_FOUND,
                              "No such device");
         }
         return TRUE;

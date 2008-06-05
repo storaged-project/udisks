@@ -54,18 +54,35 @@ typedef struct
 
 typedef enum
 {
-        DEVKIT_DISKS_DAEMON_ERROR_GENERAL,
-        DEVKIT_DISKS_DAEMON_ERROR_NOT_SUPPORTED,
-        DEVKIT_DISKS_DAEMON_ERROR_NO_SUCH_DEVICE,
-        DEVKIT_DISKS_DAEMON_NUM_ERRORS
-} DevkitDisksDaemonError;
+        DEVKIT_DISKS_ERROR_FAILED,
+        DEVKIT_DISKS_ERROR_BUSY,
+        DEVKIT_DISKS_ERROR_CANCELLED,
+        DEVKIT_DISKS_ERROR_INVALID_OPTION,
+        DEVKIT_DISKS_ERROR_ALREADY_MOUNTED,
+        DEVKIT_DISKS_ERROR_NOT_MOUNTED,
+        DEVKIT_DISKS_ERROR_NOT_CANCELLABLE,
+        DEVKIT_DISKS_ERROR_NOT_PARTITION,
+        DEVKIT_DISKS_ERROR_NOT_PARTITION_TABLE,
+        DEVKIT_DISKS_ERROR_NOT_LABELED,
+        DEVKIT_DISKS_ERROR_NOT_FILESYSTEM,
+        DEVKIT_DISKS_ERROR_NOT_LUKS,
+        DEVKIT_DISKS_ERROR_NOT_LOCKED,
+        DEVKIT_DISKS_ERROR_NOT_UNLOCKED,
+        DEVKIT_DISKS_ERROR_NOT_LINUX_MD,
+        DEVKIT_DISKS_ERROR_NOT_LINUX_MD_COMPONENT,
+        DEVKIT_DISKS_ERROR_NOT_DRIVE,
+        DEVKIT_DISKS_ERROR_NOT_SMART_CAPABLE,
+        DEVKIT_DISKS_ERROR_NOT_SUPPORTED,
+        DEVKIT_DISKS_ERROR_NOT_FOUND,
+        DEVKIT_DISKS_NUM_ERRORS
+} DevkitDisksError;
 
-#define DEVKIT_DISKS_DAEMON_ERROR devkit_disks_daemon_error_quark ()
+#define DEVKIT_DISKS_ERROR devkit_disks_error_quark ()
 
-GType devkit_disks_daemon_error_get_type (void);
-#define DEVKIT_DISKS_DAEMON_TYPE_ERROR (devkit_disks_daemon_error_get_type ())
+GType devkit_disks_error_get_type (void);
+#define DEVKIT_DISKS_TYPE_ERROR (devkit_disks_error_get_type ())
+GQuark             devkit_disks_error_quark         (void);
 
-GQuark             devkit_disks_daemon_error_quark         (void);
 GType              devkit_disks_daemon_get_type            (void);
 DevkitDisksDaemon *devkit_disks_daemon_new                 (void);
 

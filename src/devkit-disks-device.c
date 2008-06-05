@@ -224,63 +224,6 @@ G_DEFINE_TYPE (DevkitDisksDevice, devkit_disks_device, G_TYPE_OBJECT)
 
 #define DEVKIT_DISKS_DEVICE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), DEVKIT_TYPE_DISKS_DEVICE, DevkitDisksDevicePrivate))
 
-GQuark
-devkit_disks_device_error_quark (void)
-{
-        static GQuark ret = 0;
-
-        if (ret == 0) {
-                ret = g_quark_from_static_string ("devkit_disks_device_error");
-        }
-
-        return ret;
-}
-
-
-#define ENUM_ENTRY(NAME, DESC) { NAME, "" #NAME "", DESC }
-
-GType
-devkit_disks_device_error_get_type (void)
-{
-        static GType etype = 0;
-
-        if (etype == 0) {
-                static const GEnumValue values[] = {
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_GENERAL, "GeneralError"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NO_SUCH_DEVICE, "NoSuchDevice"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_SUPPORTED, "NotSupported"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTABLE, "NotMountable"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_MOUNTED, "Mounted"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTED, "NotMounted"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTED_BY_DK, "NotMountedByDeviceKit"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_FSTAB_ENTRY, "FstabEntry"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_MOUNT_OPTION_NOT_ALLOWED, "MountOptionNotAllowed"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_FILESYSTEM_BUSY, "FilesystemBusy"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_CANNOT_REMOUNT, "CannotRemount"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_UNMOUNT_OPTION_NOT_ALLOWED, "UnmountOptionNotAllowed"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NO_JOB_IN_PROGRESS, "NoJobInProgress"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_JOB_ALREADY_IN_PROGRESS, "JobAlreadyInProgress"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_JOB_CANNOT_BE_CANCELLED, "JobCannotBeCancelled"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED, "JobWasCancelled"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_PARTITION, "NotPartition"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_PARTITIONED, "NotPartitioned"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_CRYPTO, "NotCrypto"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_CRYPTO_ALREADY_UNLOCKED, "CryptoAlreadyUnlocked"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_CRYPTO_NOT_UNLOCKED, "CryptoNotUnlocked"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY, "IsBusy"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_DRIVE, "NotDrive"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_SMART_CAPABLE, "NotSmartCapable"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_LINUX_MD, "NotLinuxMd"),
-                        ENUM_ENTRY (DEVKIT_DISKS_DEVICE_ERROR_NOT_LINUX_MD_COMPONENT, "NotLinuxMdComponent"),
-                        { 0, 0, 0 }
-                };
-                g_assert (DEVKIT_DISKS_DEVICE_NUM_ERRORS == G_N_ELEMENTS (values) - 1);
-                etype = g_enum_register_static ("DevkitDisksDeviceError", values);
-        }
-        return etype;
-}
-
-
 static GObject *
 devkit_disks_device_constructor (GType                  type,
                                  guint                  n_construct_properties,
@@ -613,10 +556,6 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                               G_TYPE_DOUBLE);
 
         dbus_g_object_type_install_info (DEVKIT_TYPE_DISKS_DEVICE, &dbus_glib_devkit_disks_device_object_info);
-
-        dbus_g_error_domain_register (DEVKIT_DISKS_DEVICE_ERROR,
-                                      NULL,
-                                      DEVKIT_DISKS_DEVICE_TYPE_ERROR);
 
         g_object_class_install_property (
                 object_class,
@@ -2438,7 +2377,7 @@ throw_error (DBusGMethodInvocation *context, int error_code, const char *format,
         message = g_strdup_vprintf (format, args);
         va_end (args);
 
-        error = g_error_new (DEVKIT_DISKS_DEVICE_ERROR,
+        error = g_error_new (DEVKIT_DISKS_ERROR,
                              error_code,
                              "%s", message);
         dbus_g_method_return_error (context, error);
@@ -2739,7 +2678,7 @@ job_new (DBusGMethodInvocation *context,
         if (device != NULL) {
                 if (device->priv->job != NULL || device->priv->job_in_progress) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_ALREADY_IN_PROGRESS,
+                                     DEVKIT_DISKS_ERROR_BUSY,
                                      "There is already a job running");
                         goto out;
                 }
@@ -2777,7 +2716,7 @@ job_new (DBusGMethodInvocation *context,
                                        &(job->stdout_fd),
                                        &(job->stderr_fd),
                                        &error)) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_GENERAL, "Error starting job: %s", error->message);
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED, "Error starting job: %s", error->message);
                 g_error_free (error);
                 goto out;
         }
@@ -3216,11 +3155,11 @@ filesystem_mount_completed_cb (DBusGMethodInvocation *context,
 
                 if (job_was_cancelled) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
                 } else {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Error mounting: mount exited with exit code %d: %s",
                                      WEXITSTATUS (status), stderr);
                 }
@@ -3262,13 +3201,13 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
 
         if (device->priv->info.id_usage == NULL ||
             strcmp (device->priv->info.id_usage, "filesystem") != 0) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTABLE,
+                throw_error (context, DEVKIT_DISKS_ERROR_NOT_FILESYSTEM,
                              "Not a mountable file system");
                 goto out;
         }
 
         if (devkit_disks_device_local_is_busy (device)) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
                              "Device is busy");
                 goto out;
         }
@@ -3288,11 +3227,6 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
                 /* to avoid removing the mount point on error */
                 is_remount = TRUE;
                 goto run_job;
-#if 0
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_FSTAB_ENTRY,
-                             "Refusing to mount devices referenced in /etc/fstab");
-                goto out;
-#endif
         }
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
@@ -3310,7 +3244,7 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
                 if (device->priv->info.id_type != NULL && strlen (device->priv->info.id_type)) {
                         fstype = g_strdup (device->priv->info.id_type);
                 } else {
-                        throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTABLE, "No file system type");
+                        throw_error (context, DEVKIT_DISKS_ERROR_NOT_FILESYSTEM, "No file system type");
                         goto out;
                 }
         } else {
@@ -3333,7 +3267,7 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
                 /* avoid attacks like passing "shortname=lower,uid=0" as a single mount option */
                 if (strstr (option, ",") != NULL) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_MOUNT_OPTION_NOT_ALLOWED,
+                                     DEVKIT_DISKS_ERROR_INVALID_OPTION,
                                      "Malformed mount option: ", option);
                         g_string_free (s, TRUE);
                         goto out;
@@ -3342,7 +3276,7 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
                 /* first check if the mount option is allowed */
                 if (!is_mount_option_allowed (fsmo, option, caller_uid, &auth_needed)) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_MOUNT_OPTION_NOT_ALLOWED,
+                                     DEVKIT_DISKS_ERROR_INVALID_OPTION,
                                      "Mount option %s is not allowed", option);
                         g_string_free (s, TRUE);
                         goto out;
@@ -3369,25 +3303,27 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
 
         if (device->priv->info.device_is_mounted) {
                 if (!is_remount) {
-                        throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_MOUNTED,
+                        throw_error (context, DEVKIT_DISKS_ERROR_ALREADY_MOUNTED,
                                      "Device is already mounted");
                         goto out;
                 }
         }
+
+        /* TODO: check for auth if user tries to remount something mounted by another user */
 
         /* handle some constraints required by remount */
         if (is_remount) {
                 if (!device->priv->info.device_is_mounted ||
                     device->priv->info.device_mount_path == NULL) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_CANNOT_REMOUNT,
+                                     DEVKIT_DISKS_ERROR_NOT_MOUNTED,
                                      "Can't remount a device that is not mounted");
                         goto out;
                 }
 
                 if (strlen (filesystem_type) > 0) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_CANNOT_REMOUNT,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Can't remount a device with a different file system type");
                         goto out;
                 }
@@ -3420,7 +3356,7 @@ try_another_mount_point:
                 remove_dir_on_unmount = TRUE;
 
                 if (g_mkdir (mount_point, 0700) != 0) {
-                        throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_GENERAL, "Error creating moint point: %m");
+                        throw_error (context, DEVKIT_DISKS_ERROR_FAILED, "Error creating moint point: %m");
                         goto out;
                 }
 
@@ -3496,16 +3432,16 @@ filesystem_unmount_completed_cb (DBusGMethodInvocation *context,
         } else {
                 if (job_was_cancelled) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
                 } else {
                         if (strstr (stderr, "device is busy") != NULL) {
                                 throw_error (context,
-                                             DEVKIT_DISKS_DEVICE_ERROR_FILESYSTEM_BUSY,
+                                             DEVKIT_DISKS_ERROR_BUSY,
                                              "Cannot unmount because file system on device is busy");
                         } else {
                                 throw_error (context,
-                                             DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                             DEVKIT_DISKS_ERROR_FAILED,
                                              "Error unmounting: umount exited with exit code %d: %s",
                                              WEXITSTATUS (status),
                                              stderr);
@@ -3541,7 +3477,7 @@ devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
         if (!device->priv->info.device_is_mounted ||
             device->priv->info.device_mount_path == NULL) {
                 throw_error (context,
-                             DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTED,
+                             DEVKIT_DISKS_ERROR_NOT_MOUNTED,
                              "Device is not mounted");
                 goto out;
         }
@@ -3553,7 +3489,7 @@ devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
                         force_unmount = TRUE;
                 } else {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_UNMOUNT_OPTION_NOT_ALLOWED,
+                                     DEVKIT_DISKS_ERROR_INVALID_OPTION,
                                      "Unknown option %s", option);
                 }
         }
@@ -3575,8 +3511,9 @@ devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
                         argv[n++] = NULL;
                         goto run_job;
                 }
+                /* TODO: allow unmounting foreign mounts as root after checking for privilege */
                 throw_error (context,
-                             DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTED_BY_DK,
+                             DEVKIT_DISKS_ERROR_FAILED,
                              "Device is not mounted by DeviceKit-disks");
                 goto out;
         }
@@ -3652,11 +3589,11 @@ filesystem_check_completed_cb (DBusGMethodInvocation *context,
         } else {
                 if (job_was_cancelled) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
                 } else {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Error fsck'ing: fsck exited with exit code %d: %s",
                                      WEXITSTATUS (status),
                                      stderr);
@@ -3680,8 +3617,8 @@ devkit_disks_device_filesystem_check (DevkitDisksDevice     *device,
         /* TODO: change when we have a file system that supports online fsck */
         if (device->priv->info.device_is_mounted) {
                 throw_error (context,
-                             DEVKIT_DISKS_DEVICE_ERROR_MOUNTED,
-                             "Device is mounted");
+                             DEVKIT_DISKS_ERROR_BUSY,
+                             "Device is mounted and no online capability in fsck tool for file system");
                 goto out;
         }
 
@@ -3741,11 +3678,11 @@ erase_completed_cb (DBusGMethodInvocation *context,
         } else {
                 if (job_was_cancelled) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
                 } else {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Error erasing: helper exited with exit code %d: %s",
                                      WEXITSTATUS (status),
                                      stderr);
@@ -3767,7 +3704,7 @@ devkit_disks_device_erase (DevkitDisksDevice     *device,
                 goto out;
 
         if (devkit_disks_device_local_is_busy (device)) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
                              "Device is busy");
                 goto out;
         }
@@ -3786,7 +3723,7 @@ devkit_disks_device_erase (DevkitDisksDevice     *device,
         for (m = 0; options[m] != NULL; m++) {
                 if (n >= (int) sizeof (argv) - 1) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Too many options");
                         goto out;
                 }
@@ -3837,11 +3774,11 @@ partition_delete_completed_cb (DBusGMethodInvocation *context,
         } else {
                 if (job_was_cancelled) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
                 } else {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Error erasing: helper exited with exit code %d: %s",
                                      WEXITSTATUS (status),
                                      stderr);
@@ -3872,14 +3809,14 @@ devkit_disks_device_partition_delete (DevkitDisksDevice     *device,
                 goto out;
 
         if (devkit_disks_device_local_is_busy (device)) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
                              "Device is busy");
                 goto out;
         }
 
         if (!device->priv->info.device_is_partition) {
                 throw_error (context,
-                             DEVKIT_DISKS_DEVICE_ERROR_NOT_PARTITION,
+                             DEVKIT_DISKS_ERROR_NOT_PARTITION,
                              "Device is not a partition");
                 goto out;
         }
@@ -3888,13 +3825,14 @@ devkit_disks_device_partition_delete (DevkitDisksDevice     *device,
                                                                           device->priv->info.partition_slave);
         if (enclosing_device == NULL) {
                 throw_error (context,
-                             DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                             DEVKIT_DISKS_ERROR_FAILED,
                              "Cannot find enclosing device");
                 goto out;
         }
 
         if (devkit_disks_device_local_is_busy (enclosing_device)) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                throw_error (context,
+                             DEVKIT_DISKS_ERROR_BUSY,
                              "Enclosing device is busy");
                 goto out;
         }
@@ -3902,7 +3840,7 @@ devkit_disks_device_partition_delete (DevkitDisksDevice     *device,
 #if 0
         /* see rant in devkit_disks_device_partition_create() */
         if (devkit_disks_device_local_partitions_are_busy (enclosing_device)) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
                              "A sibling partition is busy (TODO: addpart/delpart/partx to the rescue!)");
                 goto out;
         }
@@ -3930,7 +3868,7 @@ devkit_disks_device_partition_delete (DevkitDisksDevice     *device,
         for (m = 0; options[m] != NULL; m++) {
                 if (n >= (int) sizeof (argv) - 1) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Too many options");
                         goto out;
                 }
@@ -3998,11 +3936,11 @@ filesystem_create_completed_cb (DBusGMethodInvocation *context,
         } else {
                 if (job_was_cancelled) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
                 } else {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Error creating file system: helper exited with exit code %d: %s",
                                      WEXITSTATUS (status),
                                      stderr);
@@ -4114,7 +4052,7 @@ filesystem_create_wait_for_luks_device_not_seen_cb (gpointer user_data)
         MkfsLuksData *data = user_data;
 
         throw_error (data->context,
-                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                     DEVKIT_DISKS_ERROR_FAILED,
                      "Error creating luks encrypted file system: timeout (10s) waiting for luks device to show up");
 
         g_signal_handler_disconnect (data->device->priv->daemon, data->device_changed_signal_handler_id);
@@ -4166,11 +4104,11 @@ filesystem_create_create_luks_device_completed_cb (DBusGMethodInvocation *contex
         } else {
                 if (job_was_cancelled) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
                 } else {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Error creating file system: cryptsetup exited with exit code %d: %s",
                                      WEXITSTATUS (status),
                                      stderr);
@@ -4202,7 +4140,7 @@ devkit_disks_device_filesystem_create_internal (DevkitDisksDevice       *device,
                 goto out;
 
         if (devkit_disks_device_local_is_busy (device)) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
                              "Device is busy");
                 goto out;
         }
@@ -4217,7 +4155,7 @@ devkit_disks_device_filesystem_create_internal (DevkitDisksDevice       *device,
 
         if (strlen (fstype) == 0) {
                 throw_error (context,
-                             DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                             DEVKIT_DISKS_ERROR_FAILED,
                              "fstype not specified");
                 goto out;
         }
@@ -4339,14 +4277,14 @@ devkit_disks_device_job_cancel (DevkitDisksDevice     *device,
 
         if (!device->priv->job_in_progress) {
                 throw_error (context,
-                             DEVKIT_DISKS_DEVICE_ERROR_NO_JOB_IN_PROGRESS,
+                             DEVKIT_DISKS_ERROR_FAILED,
                              "There is no job to cancel");
                 goto out;
         }
 
         if (!device->priv->job_is_cancellable) {
                 throw_error (context,
-                             DEVKIT_DISKS_DEVICE_ERROR_JOB_CANNOT_BE_CANCELLED,
+                             DEVKIT_DISKS_ERROR_NOT_CANCELLABLE,
                              "Job cannot be cancelled");
                 goto out;
         }
@@ -4489,7 +4427,7 @@ partition_create_device_not_seen_cb (gpointer user_data)
         CreatePartitionData *data = user_data;
 
         throw_error (data->context,
-                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                     DEVKIT_DISKS_ERROR_FAILED,
                      "Error creating partition: timeout (10s) waiting for partition to show up");
 
         g_signal_handler_disconnect (data->device->priv->daemon, data->device_added_signal_handler_id);
@@ -4555,7 +4493,7 @@ partition_create_completed_cb (DBusGMethodInvocation *context,
 
                 if (m != 2) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Error creating partition: internal error, expected to find new "
                                      "start and end but m=%d", m);
                 } else {
@@ -4581,11 +4519,11 @@ partition_create_completed_cb (DBusGMethodInvocation *context,
         } else {
                 if (job_was_cancelled) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
                 } else {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Error creating partition: helper exited with exit code %d: %s",
                                      WEXITSTATUS (status),
                                      stderr);
@@ -4625,13 +4563,13 @@ devkit_disks_device_partition_create (DevkitDisksDevice     *device,
 
         if (!device->priv->info.device_is_partition_table) {
                 throw_error (context,
-                             DEVKIT_DISKS_DEVICE_ERROR_NOT_PARTITIONED,
+                             DEVKIT_DISKS_ERROR_NOT_PARTITION_TABLE,
                              "Device is not partitioned");
                 goto out;
         }
 
         if (devkit_disks_device_local_is_busy (device)) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
                              "Device is busy");
                 goto out;
         }
@@ -4648,7 +4586,7 @@ devkit_disks_device_partition_create (DevkitDisksDevice     *device,
 
         if (strlen (type) == 0) {
                 throw_error (context,
-                             DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                             DEVKIT_DISKS_ERROR_FAILED,
                              "type not specified");
                 goto out;
         }
@@ -4671,7 +4609,7 @@ devkit_disks_device_partition_create (DevkitDisksDevice     *device,
         for (m = 0; options[m] != NULL; m++) {
                 if (n >= (int) sizeof (argv) - 1) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Too many options");
                         goto out;
                 }
@@ -4790,11 +4728,11 @@ partition_modify_completed_cb (DBusGMethodInvocation *context,
         } else {
                 if (job_was_cancelled) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
                 } else {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Error modifying partition: helper exited with exit code %d: %s",
                                      WEXITSTATUS (status),
                                      stderr);
@@ -4827,7 +4765,7 @@ devkit_disks_device_partition_modify (DevkitDisksDevice     *device,
 
         if (!device->priv->info.device_is_partition) {
                 throw_error (context,
-                             DEVKIT_DISKS_DEVICE_ERROR_NOT_PARTITION,
+                             DEVKIT_DISKS_ERROR_NOT_PARTITION,
                              "Device is not a partition");
                 goto out;
         }
@@ -4836,13 +4774,13 @@ devkit_disks_device_partition_modify (DevkitDisksDevice     *device,
                                                                           device->priv->info.partition_slave);
         if (enclosing_device == NULL) {
                 throw_error (context,
-                             DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                             DEVKIT_DISKS_ERROR_FAILED,
                              "Cannot find enclosing device");
                 goto out;
         }
 
         if (devkit_disks_device_local_is_busy (enclosing_device)) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
                              "Enclosing device is busy");
                 goto out;
         }
@@ -4857,7 +4795,7 @@ devkit_disks_device_partition_modify (DevkitDisksDevice     *device,
 
         if (strlen (type) == 0) {
                 throw_error (context,
-                             DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                             DEVKIT_DISKS_ERROR_FAILED,
                              "type not specified");
                 goto out;
         }
@@ -4920,11 +4858,11 @@ partition_table_create_completed_cb (DBusGMethodInvocation *context,
         } else {
                 if (job_was_cancelled) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
                 } else {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Error creating partition table: helper exited with exit code %d: %s",
                                      WEXITSTATUS (status),
                                      stderr);
@@ -4978,13 +4916,13 @@ devkit_disks_device_partition_table_create (DevkitDisksDevice     *device,
                 goto out;
 
         if (devkit_disks_device_local_is_busy (device)) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
                              "Device is busy");
                 goto out;
         }
 
         if (devkit_disks_device_local_partitions_are_busy (device)) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
                              "A partition on the device is busy");
                 goto out;
         }
@@ -4999,7 +4937,7 @@ devkit_disks_device_partition_table_create (DevkitDisksDevice     *device,
 
         if (strlen (scheme) == 0) {
                 throw_error (context,
-                             DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                             DEVKIT_DISKS_ERROR_FAILED,
                              "type not specified");
                 goto out;
         }
@@ -5011,7 +4949,7 @@ devkit_disks_device_partition_table_create (DevkitDisksDevice     *device,
         for (m = 0; options[m] != NULL; m++) {
                 if (n >= (int) sizeof (argv) - 1) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Too many options");
                         goto out;
                 }
@@ -5150,7 +5088,7 @@ luks_unlock_device_not_seen_cb (gpointer user_data)
         UnlockEncryptionData *data = user_data;
 
         throw_error (data->context,
-                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                     DEVKIT_DISKS_ERROR_FAILED,
                      "Error unlocking device: timeout (10s) waiting for cleartext device to show up");
 
         if (data->hook_func != NULL) {
@@ -5204,11 +5142,11 @@ luks_unlock_completed_cb (DBusGMethodInvocation *context,
         } else {
                 if (job_was_cancelled) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
                 } else {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Error unlocking device: cryptsetup exited with exit code %d: %s",
                                      WEXITSTATUS (status), stderr);
                 }
@@ -5245,20 +5183,20 @@ devkit_disks_device_luks_unlock_internal (DevkitDisksDevice        *device,
                 polkit_caller_get_uid (pk_caller, &uid);
 
         if (devkit_disks_device_local_is_busy (device)) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
                              "Device is busy");
                 goto out;
         }
 
         if (device->priv->info.id_usage == NULL ||
             strcmp (device->priv->info.id_usage, "crypto") != 0) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_CRYPTO,
-                             "Not a crypto device");
+                throw_error (context, DEVKIT_DISKS_ERROR_NOT_LUKS,
+                             "Not a LUKS device");
                 goto out;
         }
 
         if (find_cleartext_device (device) != NULL) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_CRYPTO_ALREADY_UNLOCKED,
+                throw_error (context, DEVKIT_DISKS_ERROR_NOT_LOCKED,
                              "Cleartext device is already unlocked");
                 goto out;
         }
@@ -5394,7 +5332,7 @@ luks_lock_wait_for_cleartext_device_not_seen_cb (gpointer user_data)
         job_local_end (data->luks_device);
 
         throw_error (data->context,
-                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                     DEVKIT_DISKS_ERROR_FAILED,
                      "Error locking luks device: timeout (10s) waiting for cleartext device to be removed");
 
         g_signal_handler_disconnect (data->cleartext_device->priv->daemon, data->device_removed_signal_handler_id);
@@ -5443,11 +5381,11 @@ luks_lock_completed_cb (DBusGMethodInvocation *context,
         } else {
                 if (job_was_cancelled) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
                 } else {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Error locking device: cryptsetup exited with exit code %d: %s",
                                      WEXITSTATUS (status), stderr);
                 }
@@ -5509,20 +5447,20 @@ devkit_disks_device_luks_lock (DevkitDisksDevice     *device,
 
         if (device->priv->info.id_usage == NULL ||
             strcmp (device->priv->info.id_usage, "crypto") != 0) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_CRYPTO,
-                             "Not a crypto device");
+                throw_error (context, DEVKIT_DISKS_ERROR_NOT_LUKS,
+                             "Not a LUKS crypto device");
                 goto out;
         }
 
         cleartext_device = find_cleartext_device (device);
         if (cleartext_device == NULL) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_CRYPTO_NOT_UNLOCKED,
+                throw_error (context, DEVKIT_DISKS_ERROR_NOT_UNLOCKED,
                              "Cleartext device is not unlocked");
                 goto out;
         }
 
         if (cleartext_device->priv->info.dm_name == NULL || strlen (cleartext_device->priv->info.dm_name) == 0) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                              "Cannot determine device-mapper name");
                 goto out;
         }
@@ -5530,7 +5468,7 @@ devkit_disks_device_luks_lock (DevkitDisksDevice     *device,
         /* only offer to unlock devices set up by us */
         if (!luks_get_uid_from_dm_name (cleartext_device->priv->info.dm_name, &unlocked_by_uid)) {
                 /* TODO: maybe allow locked devices not unlocked by us? */
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                              "Device is not unlocked by DeviceKit-disks");
                 goto out;
         }
@@ -5590,11 +5528,11 @@ luks_change_passphrase_completed_cb (DBusGMethodInvocation *context,
         } else {
                 if (job_was_cancelled) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
                 } else {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Error changing secret on device: helper exited with exit code %d: %s",
                                      WEXITSTATUS (status), stderr);
                 }
@@ -5624,8 +5562,8 @@ devkit_disks_device_luks_change_passphrase (DevkitDisksDevice     *device,
 
         if (device->priv->info.id_usage == NULL ||
             strcmp (device->priv->info.id_usage, "crypto") != 0) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_CRYPTO,
-                             "Not a crypto device");
+                throw_error (context, DEVKIT_DISKS_ERROR_NOT_LUKS,
+                             "Not a LUKS crypto device");
                 goto out;
         }
 
@@ -5700,11 +5638,11 @@ filesystem_set_label_completed_cb (DBusGMethodInvocation *context,
         } else {
                 if (job_was_cancelled) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
                 } else {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Error changing fslabel: helper exited with exit code %d: %s",
                                      WEXITSTATUS (status), stderr);
                 }
@@ -5729,18 +5667,19 @@ devkit_disks_device_filesystem_set_label (DevkitDisksDevice     *device,
          */
 
         if (devkit_disks_device_local_is_busy (device)) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
                              "Device is busy");
                 goto out;
         }
 
         if (device->priv->info.id_usage == NULL ||
             strcmp (device->priv->info.id_usage, "filesystem") != 0) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_MOUNTABLE,
+                throw_error (context, DEVKIT_DISKS_ERROR_NOT_LABELED,
                              "Not a mountable file system");
                 goto out;
         }
 
+        /* TODO: check if the fs support labels at all */
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
@@ -5825,11 +5764,11 @@ drive_smart_refresh_data_completed_cb (DBusGMethodInvocation *context,
         if (job_was_cancelled || stdout == NULL) {
                 if (job_was_cancelled) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
                 } else {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Error retrieving S.M.A.R.T. data: no output",
                                      WEXITSTATUS (status), stderr);
                 }
@@ -5847,7 +5786,7 @@ drive_smart_refresh_data_completed_cb (DBusGMethodInvocation *context,
                         emit_changed (device);
                 }
                 throw_error (context,
-                             DEVKIT_DISKS_DEVICE_ERROR_NOT_SMART_CAPABLE,
+                             DEVKIT_DISKS_ERROR_NOT_SMART_CAPABLE,
                              "Device is not S.M.A.R.T. capable");
                 goto out;
         }
@@ -6076,14 +6015,14 @@ devkit_disks_device_drive_smart_refresh_data (DevkitDisksDevice     *device,
         }
 
         if (!device->priv->info.device_is_drive) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_DRIVE,
+                throw_error (context, DEVKIT_DISKS_ERROR_NOT_DRIVE,
                              "Device is not a drive");
                 goto out;
         }
 
         if (!device->priv->drive_smart_is_capable) {
                 throw_error (context,
-                             DEVKIT_DISKS_DEVICE_ERROR_NOT_SMART_CAPABLE,
+                             DEVKIT_DISKS_ERROR_NOT_SMART_CAPABLE,
                              "Device is not S.M.A.R.T. capable");
                 goto out;
         }
@@ -6105,7 +6044,7 @@ devkit_disks_device_drive_smart_refresh_data (DevkitDisksDevice     *device,
                                 uid_t uid;
                                 if (!polkit_caller_get_uid (pk_caller, &uid) || uid != 0) {
                                         throw_error (context,
-                                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                                     DEVKIT_DISKS_ERROR_FAILED,
                                                      "Only uid 0 may use the simulate= option");
                                         goto out;
                                 }
@@ -6170,11 +6109,11 @@ drive_smart_initiate_selftest_completed_cb (DBusGMethodInvocation *context,
         } else {
                 if (job_was_cancelled) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
                 } else {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Error running self test: helper exited with exit code %d: %s",
                                      WEXITSTATUS (status), stderr);
                 }
@@ -6196,20 +6135,20 @@ devkit_disks_device_drive_smart_initiate_selftest (DevkitDisksDevice     *device
                 goto out;
 
         if (!device->priv->info.device_is_drive) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_DRIVE,
+                throw_error (context, DEVKIT_DISKS_ERROR_NOT_DRIVE,
                              "Device is not a drive");
                 goto out;
         }
 
         if (captive) {
                 if (devkit_disks_device_local_is_busy (device)) {
-                        throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                        throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
                                      "Device is busy");
                         goto out;
                 }
 
                 if (devkit_disks_device_local_partitions_are_busy (device)) {
-                        throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                        throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
                                      "A partition on the device is busy");
                         goto out;
                 }
@@ -6274,11 +6213,11 @@ linux_md_stop_completed_cb (DBusGMethodInvocation *context,
         } else {
                 if (job_was_cancelled) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
                 } else {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Error stopping array: mdadm exited with exit code %d: %s",
                                      WEXITSTATUS (status), stderr);
                 }
@@ -6299,7 +6238,7 @@ devkit_disks_device_linux_md_stop (DevkitDisksDevice     *device,
                 goto out;
 
         if (!device->priv->info.device_is_linux_md) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_LINUX_MD,
+                throw_error (context, DEVKIT_DISKS_ERROR_NOT_LINUX_MD,
                              "Device is not a Linux md drive");
                 goto out;
         }
@@ -6366,11 +6305,11 @@ linux_md_add_component_completed_cb (DBusGMethodInvocation *context,
         } else {
                 if (job_was_cancelled) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
                 } else {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Error stopping array: mdadm exited with exit code %d: %s",
                                      WEXITSTATUS (status), stderr);
                 }
@@ -6393,14 +6332,14 @@ devkit_disks_device_linux_md_add_component (DevkitDisksDevice     *device,
                 goto out;
 
         if (!device->priv->info.device_is_linux_md) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_LINUX_MD,
+                throw_error (context, DEVKIT_DISKS_ERROR_NOT_LINUX_MD,
                              "Device is not a Linux md drive");
                 goto out;
         }
 
         slave = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, component);
         if (slave == NULL) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NO_SUCH_DEVICE,
+                throw_error (context, DEVKIT_DISKS_ERROR_NOT_FOUND,
                              "Component doesn't exist");
                 goto out;
         }
@@ -6410,7 +6349,7 @@ devkit_disks_device_linux_md_add_component (DevkitDisksDevice     *device,
          */
 
         if (devkit_disks_device_local_is_busy (slave)) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
                              "Component to add is busy");
                 goto out;
         }
@@ -6531,7 +6470,7 @@ linux_md_remove_component_device_not_seen_cb (gpointer user_data)
         RemoveComponentData *data = user_data;
 
         throw_error (data->context,
-                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                     DEVKIT_DISKS_ERROR_FAILED,
                      "Error removing component: timeout (10s) waiting for slave to stop being busy");
 
         g_signal_handler_disconnect (data->slave->priv->daemon, data->device_changed_signal_handler_id);
@@ -6584,11 +6523,11 @@ linux_md_remove_component_completed_cb (DBusGMethodInvocation *context,
         } else {
                 if (job_was_cancelled) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
                 } else {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Error stopping array: helper exited with exit code %d: %s",
                                      WEXITSTATUS (status), stderr);
                 }
@@ -6611,14 +6550,14 @@ devkit_disks_device_linux_md_remove_component (DevkitDisksDevice     *device,
                 goto out;
 
         if (!device->priv->info.device_is_linux_md) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_LINUX_MD,
+                throw_error (context, DEVKIT_DISKS_ERROR_NOT_LINUX_MD,
                              "Device is not a Linux md drive");
                 goto out;
         }
 
         slave = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, component);
         if (slave == NULL) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NO_SUCH_DEVICE,
+                throw_error (context, DEVKIT_DISKS_ERROR_NOT_FOUND,
                              "Component doesn't exist");
                 goto out;
         }
@@ -6629,7 +6568,7 @@ devkit_disks_device_linux_md_remove_component (DevkitDisksDevice     *device,
                         break;
         }
         if (n == (int) device->priv->info.linux_md_slaves->len) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NO_SUCH_DEVICE,
+                throw_error (context, DEVKIT_DISKS_ERROR_NOT_FOUND,
                              "Component isn't part of the running array");
                 goto out;
         }
@@ -6648,7 +6587,7 @@ devkit_disks_device_linux_md_remove_component (DevkitDisksDevice     *device,
         for (m = 0; options[m] != NULL; m++) {
                 if (n >= (int) sizeof (argv) - 1) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Too many options");
                         goto out;
                 }
@@ -6757,7 +6696,7 @@ linux_md_start_device_not_seen_cb (gpointer user_data)
         LinuxMdStartData *data = user_data;
 
         throw_error (data->context,
-                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                     DEVKIT_DISKS_ERROR_FAILED,
                      "Error assembling array: timeout (10s) waiting for array to show up");
 
         g_signal_handler_disconnect (data->daemon, data->device_added_signal_handler_id);
@@ -6828,11 +6767,11 @@ linux_md_start_completed_cb (DBusGMethodInvocation *context,
         } else {
                 if (job_was_cancelled) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_JOB_WAS_CANCELLED,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
                 } else {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Error assembling array: mdadm exited with exit code %d: %s",
                                      WEXITSTATUS (status), stderr);
                 }
@@ -6870,13 +6809,13 @@ devkit_disks_daemon_linux_md_start (DevkitDisksDaemon     *daemon,
 
                 slave = devkit_disks_daemon_local_find_by_object_path (daemon, component_objpath);
                 if (slave == NULL) {
-                        throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_LINUX_MD_COMPONENT,
+                        throw_error (context, DEVKIT_DISKS_ERROR_NOT_LINUX_MD_COMPONENT,
                                      "Component %s doesn't exist", component_objpath);
                         goto out;
                 }
 
                 if (!slave->priv->info.device_is_linux_md_component) {
-                        throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_LINUX_MD_COMPONENT,
+                        throw_error (context, DEVKIT_DISKS_ERROR_NOT_LINUX_MD_COMPONENT,
                                      "%s is not a linux-md component", component_objpath);
                         goto out;
                 }
@@ -6884,7 +6823,7 @@ devkit_disks_daemon_linux_md_start (DevkitDisksDaemon     *daemon,
                 if (n == 0) {
                         uuid = g_strdup (slave->priv->info.linux_md_component_uuid);
                         if (uuid == NULL) {
-                                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_LINUX_MD_COMPONENT,
+                                throw_error (context, DEVKIT_DISKS_ERROR_NOT_LINUX_MD_COMPONENT,
                                              "no uuid for one of the components");
                         }
                 } else {
@@ -6892,14 +6831,14 @@ devkit_disks_daemon_linux_md_start (DevkitDisksDaemon     *daemon,
                         this_uuid = slave->priv->info.linux_md_component_uuid;
 
                         if (this_uuid == NULL || strcmp (uuid, this_uuid) != 0) {
-                                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_LINUX_MD_COMPONENT,
+                                throw_error (context, DEVKIT_DISKS_ERROR_NOT_LINUX_MD_COMPONENT,
                                              "uuid mismatch between given components");
                                 goto out;
                         }
                 }
 
                 if (devkit_disks_device_local_is_busy (slave)) {
-                        throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_IS_BUSY,
+                        throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
                                      "component %d is busy", n);
                         goto out;
                 }
@@ -6950,14 +6889,14 @@ devkit_disks_daemon_linux_md_start (DevkitDisksDaemon     *daemon,
 
                 slave = devkit_disks_daemon_local_find_by_object_path (daemon, component_objpath);
                 if (slave == NULL) {
-                        throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_NOT_LINUX_MD_COMPONENT,
+                        throw_error (context, DEVKIT_DISKS_ERROR_NOT_LINUX_MD_COMPONENT,
                                      "Component %s doesn't exist", component_objpath);
                         goto out;
                 }
 
                 if (n >= (int) sizeof (argv) - 1) {
                         throw_error (context,
-                                     DEVKIT_DISKS_DEVICE_ERROR_GENERAL,
+                                     DEVKIT_DISKS_ERROR_FAILED,
                                      "Too many components");
                         goto out;
                 }

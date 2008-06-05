@@ -273,7 +273,7 @@ throw_error (DBusGMethodInvocation *context, int error_code, const char *format,
         message = g_strdup_vprintf (format, args);
         va_end (args);
 
-        error = g_error_new (DEVKIT_DISKS_DEVICE_ERROR,
+        error = g_error_new (DEVKIT_DISKS_ERROR,
                              error_code,
                              "%s", message);
         dbus_g_method_return_error (context, error);
@@ -442,12 +442,12 @@ devkit_disks_device_drive_smart_get_historical_data (DevkitDisksDevice     *devi
         disk_id = drive_get_safe_uuid (device);
         if (disk_id == NULL) {
                 g_warning ("no drive uuid for %s", device->priv->native_path);
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_GENERAL, "No unique disk id for device");
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED, "No unique disk id for device");
                 goto out;
         }
 
         if (from > to) {
-                throw_error (context, DEVKIT_DISKS_DEVICE_ERROR_GENERAL, "Malformed time range (from > to)");
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED, "Malformed time range (from > to)");
                 goto out;
         }
 
