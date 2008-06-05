@@ -146,9 +146,9 @@ gboolean devkit_disks_device_luks_change_passphrase (DevkitDisksDevice     *devi
                                                      const char            *new_secret,
                                                      DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_filesystem_set_label (DevkitDisksDevice     *device,
-                                                   const char            *new_label,
-                                                   DBusGMethodInvocation *context);
+gboolean devkit_disks_device_set_label (DevkitDisksDevice     *device,
+                                        const char            *new_label,
+                                        DBusGMethodInvocation *context);
 
 gboolean devkit_disks_device_drive_smart_refresh_data (DevkitDisksDevice     *device,
                                                        char                 **options,

@@ -5611,7 +5611,7 @@ out:
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static void
-filesystem_set_label_completed_cb (DBusGMethodInvocation *context,
+set_label_completed_cb (DBusGMethodInvocation *context,
                                       DevkitDisksDevice *device,
                                       PolKitCaller *pk_caller,
                                       gboolean job_was_cancelled,
@@ -5650,7 +5650,7 @@ filesystem_set_label_completed_cb (DBusGMethodInvocation *context,
 }
 
 gboolean
-devkit_disks_device_filesystem_set_label (DevkitDisksDevice     *device,
+devkit_disks_device_set_label (DevkitDisksDevice     *device,
                                              const char            *new_label,
                                              DBusGMethodInvocation *context)
 {
@@ -5699,13 +5699,13 @@ devkit_disks_device_filesystem_set_label (DevkitDisksDevice     *device,
 
         error = NULL;
         if (!job_new (context,
-                      "FilesystemSetLabel",
+                      "SetLabel",
                       FALSE,
                       device,
                       pk_caller,
                       argv,
                       NULL,
-                      filesystem_set_label_completed_cb,
+                      set_label_completed_cb,
                       g_strdup (new_label),
                       g_free)) {
                 goto out;
