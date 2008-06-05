@@ -79,6 +79,7 @@ main (int argc, char **argv)
         } else if (strcmp (fstype, "vfat") == 0) {
                 if (!validate_and_escape_label (&new_label, 254))
                         goto out;
+                g_setenv ("MTOOLS_SKIP_CHECK", "1", TRUE);
                 if (strlen (new_label) == 0)
                         command_line = g_strdup_printf ("mlabel -c -i %s ::", device);
                 else
