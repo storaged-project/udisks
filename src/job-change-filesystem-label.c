@@ -68,6 +68,13 @@ main (int argc, char **argv)
                 if (!validate_and_escape_label (&new_label, 16))
                         goto out;
                 command_line = g_strdup_printf ("e2label %s \"%s\"", device, new_label);
+        } else if (strcmp (fstype, "xfs") == 0) {
+                if (!validate_and_escape_label (&new_label, 12))
+                        goto out;
+                if (strlen (new_label) == 0)
+                        command_line = g_strdup_printf ("xfs_admin -L -- %s", device);
+                else
+                        command_line = g_strdup_printf ("xfs_admin -L \"%s\" %s", new_label, device);
 
         } else if (strcmp (fstype, "vfat") == 0) {
                 if (!validate_and_escape_label (&new_label, 11))
