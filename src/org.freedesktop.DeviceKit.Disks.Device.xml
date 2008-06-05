@@ -454,57 +454,6 @@
 
     <!-- ************************************************************ -->
 
-    <method name="SetLabel">
-      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="new_label" direction="in" type="s">
-        <doc:doc><doc:summary>
-            New label for device
-        </doc:summary></doc:doc>
-      </arg>
-
-      <doc:doc>
-        <doc:description>
-          <doc:para>
-            Changes the label on the device; note that this depends on the
-            the type/contents of the device; see the properties
-            <doc:ref type="property" to="Device:id-usage">id-usage</doc:ref>.
-            <doc:ref type="property" to="Device:id-type">id-type</doc:ref> and
-            <doc:ref type="property" to="Device:id-version">id-version</doc:ref>
-            for details. Most file systems supports labels; other known
-            device types that supports labels include Linux swap space
-            version 2. @TODO@ lists the file systems that supports
-            labels.
-          </doc:para>
-        </doc:description>
-        <doc:permission>
-          The caller will need one of the following PolicyKit authorizations:
-          <doc:list>
-            <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
-              <doc:definition>If the operation is on a
-                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
-                device</doc:definition>
-            </doc:item>
-            <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.change-system-internal</doc:term>
-              <doc:definition>If the operation is on a
-                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
-                device</doc:definition>
-            </doc:item>
-          </doc:list>
-        </doc:permission>
-        <doc:errors>
-          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_BUSY;">if the device is busy and changing the label requires e.g. an unmounted file system</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
-          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
-          <doc:error name="&ERROR_NOT_LABELED;">if the device type doesn't support labels</doc:error>
-        </doc:errors>
-      </doc:doc>
-    </method>
-
-    <!-- ************************************************************ -->
-
     <method name="FilesystemCreate">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="fstype" direction="in" type="s">
@@ -562,6 +511,52 @@
           <doc:error name="&ERROR_BUSY;">if the device is busy</doc:error>
           <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="FilesystemSetLabel">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="new_label" direction="in" type="s">
+        <doc:doc><doc:summary>
+            New label for file system.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Changes the file system label. See the <doc:tt>options</doc:tt> parameter of
+            <doc:ref type="method"
+            to="Device.FilesystemCreate">FilesystemCreate()</doc:ref>
+            method for details of what valid labels are valid.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
+              <doc:definition>If the operation is on a
+                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                device</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.change-system-internal</doc:term>
+              <doc:definition>If the operation is on a
+                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                device</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="&ERROR_BUSY;">if the device is busy and changing the label requires an unmounted file system</doc:error>
+          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+          <doc:error name="&ERROR_NOT_LABELED;">if the contents of the device doesn't support labels</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
