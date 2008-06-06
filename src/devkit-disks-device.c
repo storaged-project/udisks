@@ -2057,6 +2057,8 @@ update_info (DevkitDisksDevice *device)
         /* Set whether device is considered system internal
          *
          * TODO: make this possible to override from the DeviceKit/udev database.
+         *
+         * TODO: a linux-md device should be system-internal IFF a single component is system-internal
          */
         device->priv->info.device_is_system_internal = TRUE;
         if (device->priv->info.device_is_partition) {
@@ -2864,17 +2866,11 @@ is_device_in_fstab (DevkitDisksDevice *device, char **out_mount_point)
 }
 
 typedef struct {
-        const char *mount_option;
-        const char *authorization_needed;
-} FSRestrictedMountOption;
-
-typedef struct {
         const char         *fstype;
         const char * const *defaults;
         const char * const *allow;
         const char * const *allow_uid_self;
         const char * const *allow_gid_self;
-        const FSRestrictedMountOption *restricted;
 } FSMountOptions;
 
 /* ---------------------- vfat -------------------- */
@@ -2998,8 +2994,7 @@ out:
 static gboolean
 is_mount_option_allowed (const FSMountOptions *fsmo,
                          const char *option,
-                         uid_t caller_uid,
-                         const char **auth_needed)
+                         uid_t caller_uid)
 {
         int n;
         char *endp;
@@ -3010,7 +3005,6 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
         gsize ep_len;
 
         allowed = FALSE;
-        *auth_needed = NULL;
 
         /* first run through the allowed mount options */
         if (fsmo != NULL) {
@@ -3232,8 +3226,8 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
                                                   device->priv->info.device_is_system_internal ?
-                                                  "org.freedesktop.devicekit.disks.mount-system-internal" :
-                                                  "org.freedesktop.devicekit.disks.mount",
+                                                  "org.freedesktop.devicekit.disks.filesystem-mount-system-internal" :
+                                                  "org.freedesktop.devicekit.disks.filesystem-mount",
                                                   context)) {
                 goto out;
         }
@@ -3262,7 +3256,6 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
         s = g_string_new ("uhelper=devkit,nodev,nosuid");
         for (n = 0; options[n] != NULL; n++) {
                 const char *option = options[n];
-                const char *auth_needed;
 
                 /* avoid attacks like passing "shortname=lower,uid=0" as a single mount option */
                 if (strstr (option, ",") != NULL) {
@@ -3274,23 +3267,12 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
                 }
 
                 /* first check if the mount option is allowed */
-                if (!is_mount_option_allowed (fsmo, option, caller_uid, &auth_needed)) {
+                if (!is_mount_option_allowed (fsmo, option, caller_uid)) {
                         throw_error (context,
                                      DEVKIT_DISKS_ERROR_INVALID_OPTION,
                                      "Mount option %s is not allowed", option);
                         g_string_free (s, TRUE);
                         goto out;
-                }
-
-                /* may still be allowed but also may require an authorization */
-                if (auth_needed != NULL) {
-                        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
-                                                                  pk_caller,
-                                                                  auth_needed,
-                                                                  context)) {
-                                g_string_free (s, TRUE);
-                                goto out;
-                        }
                 }
 
                 if (strcmp (option, "remount") == 0)
@@ -3522,8 +3504,8 @@ devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
                 if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                           pk_caller,
                                                           device->priv->info.device_is_system_internal ?
-                                                     "org.freedesktop.devicekit.disks.unmount-others-system-internal" :
-                                                     "org.freedesktop.devicekit.disks.unmount-others",
+                                                     "org.freedesktop.devicekit.disks.filesystem-unmount-others-system-internal" :
+                                                     "org.freedesktop.devicekit.disks.filesystem-unmount-others",
                                                           context))
                         goto out;
         }
@@ -5203,7 +5185,7 @@ devkit_disks_device_luks_unlock_internal (DevkitDisksDevice        *device,
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
-                                                  "org.freedesktop.devicekit.disks.unlock-encrypted",
+                                                  "org.freedesktop.devicekit.disks.luks-unlock",
                                                   context)) {
                 goto out;
         }
@@ -5478,8 +5460,8 @@ devkit_disks_device_luks_lock (DevkitDisksDevice     *device,
                 if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                           pk_caller,
                                                           device->priv->info.device_is_system_internal ?
-                                              "org.freedesktop.devicekit.disks.lock-encrypted-others-system-internal" :
-                                              "org.freedesktop.devicekit.disks.lock-encrypted-others",
+                                              "org.freedesktop.devicekit.disks.luks-lock-others-system-internal" :
+                                              "org.freedesktop.devicekit.disks.luks-lock-others",
                                                           context)) {
                         goto out;
                 }
@@ -6030,7 +6012,7 @@ devkit_disks_device_drive_smart_refresh_data (DevkitDisksDevice     *device,
         if (context != NULL) {
                 if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                           pk_caller,
-                                                          "org.freedesktop.devicekit.disks.smart-refresh",
+                                                          "org.freedesktop.devicekit.disks.drive-smart-refresh",
                                                           context)) {
                         goto out;
                 }
@@ -6156,7 +6138,7 @@ devkit_disks_device_drive_smart_initiate_selftest (DevkitDisksDevice     *device
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
-                                                  "org.freedesktop.devicekit.disks.smart-selftest",
+                                                  "org.freedesktop.devicekit.disks.drive-smart-selftest",
                                                   context)) {
                 goto out;
         }
@@ -6245,6 +6227,8 @@ devkit_disks_device_linux_md_stop (DevkitDisksDevice     *device,
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
+                                                  device->priv->info.device_is_system_internal ?
+                                                  "org.freedesktop.devicekit.disks.linux-md-system-internal" :
                                                   "org.freedesktop.devicekit.disks.linux-md",
                                                   context)) {
                 goto out;
@@ -6358,6 +6342,8 @@ devkit_disks_device_linux_md_add_component (DevkitDisksDevice     *device,
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
+                                                  device->priv->info.device_is_system_internal ?
+                                                  "org.freedesktop.devicekit.disks.linux-md-system-internal" :
                                                   "org.freedesktop.devicekit.disks.linux-md",
                                                   context)) {
                 goto out;
@@ -6575,6 +6561,8 @@ devkit_disks_device_linux_md_remove_component (DevkitDisksDevice     *device,
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
+                                                  device->priv->info.device_is_system_internal ?
+                                                  "org.freedesktop.devicekit.disks.linux-md-system-internal" :
                                                   "org.freedesktop.devicekit.disks.linux-md",
                                                   context)) {
                 goto out;
@@ -6873,6 +6861,8 @@ devkit_disks_daemon_linux_md_start (DevkitDisksDaemon     *daemon,
 
         if (!devkit_disks_damon_local_check_auth (daemon,
                                                   pk_caller,
+                                                  TRUE ? /* TODO: si IFF just a single component is si */
+                                                  "org.freedesktop.devicekit.disks.linux-md-system-internal" :
                                                   "org.freedesktop.devicekit.disks.linux-md",
                                                   context)) {
                 goto out;

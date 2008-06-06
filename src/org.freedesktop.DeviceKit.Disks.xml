@@ -92,7 +92,18 @@
           <doc:list>
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.linux-md</doc:term>
-              <doc:definition>Needed to configured Linux md Software RAID devices</doc:definition>
+              <doc:definition>
+                Needed to configured Linux md Software RAID devices where all components are
+                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>.
+              </doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.linux-md-system-internal</doc:term>
+              <doc:definition>
+                Needed to configured Linux md Software RAID devices with one or more
+                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                components.
+              </doc:definition>
             </doc:item>
           </doc:list>
         </doc:permission>

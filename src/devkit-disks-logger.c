@@ -431,7 +431,7 @@ devkit_disks_device_drive_smart_get_historical_data (DevkitDisksDevice     *devi
                 if (!devkit_disks_damon_local_check_auth (
                             device->priv->daemon,
                             pk_caller,
-                            "org.freedesktop.devicekit.disks.smart-retrieve-historical-data",
+                            "org.freedesktop.devicekit.disks.drive-smart-retrieve-historical-data",
                             context)) {
                         goto out;
                 }

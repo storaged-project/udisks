@@ -19,7 +19,7 @@ file are instantly applied.
   <vendor_url>http://hal.freedesktop.org/docs/DeviceKit/</vendor_url>
   <icon_name>drive-removable-media</icon_name>
 
-  <action id="org.freedesktop.devicekit.disks.mount">
+  <action id="org.freedesktop.devicekit.disks.filesystem-mount">
     <_description>Mount a device</_description>
     <_message>Authentication is required to mount the device</_message>
     <defaults>
@@ -29,7 +29,7 @@ file are instantly applied.
     </defaults>
   </action>
 
-  <action id="org.freedesktop.devicekit.disks.mount-system-internal">
+  <action id="org.freedesktop.devicekit.disks.filesystem-mount-system-internal">
     <_description>Mount a system-internal device</_description>
     <_message>Authentication is required to mount the device</_message>
     <defaults>
@@ -59,7 +59,7 @@ file are instantly applied.
     </defaults>
   </action>
 
-  <action id="org.freedesktop.devicekit.disks.unmount-others">
+  <action id="org.freedesktop.devicekit.disks.filesystem-unmount-others">
     <_description>Unmount a disk mounted by another user</_description>
     <_message>Authentication is required to unmount disks mounted by others than yourself</_message>
     <defaults>
@@ -69,7 +69,7 @@ file are instantly applied.
     </defaults>
   </action>
 
-  <action id="org.freedesktop.devicekit.disks.unmount-others-system-internal">
+  <action id="org.freedesktop.devicekit.disks.filesystem-unmount-others-system-internal">
     <_description>Unmount a system-internal device mounted by another user</_description>
     <_message>Authentication is required to unmount a device mounted by others than yourself</_message>
     <defaults>
@@ -99,7 +99,7 @@ file are instantly applied.
     </defaults>
   </action>
 
-  <action id="org.freedesktop.devicekit.disks.smart-refresh">
+  <action id="org.freedesktop.devicekit.disks.drive-smart-refresh">
     <_description>Refresh S.M.A.R.T. data</_description>
     <_message>Authentication is required to refresh S.M.A.R.T. data</_message>
     <defaults>
@@ -109,7 +109,7 @@ file are instantly applied.
     </defaults>
   </action>
 
-  <action id="org.freedesktop.devicekit.disks.smart-selftest">
+  <action id="org.freedesktop.devicekit.disks.drive-smart-selftest">
     <_description>Run S.M.A.R.T. Self Tests</_description>
     <_message>Authentication is required to run S.M.A.R.T. Self Tests</_message>
     <defaults>
@@ -119,7 +119,7 @@ file are instantly applied.
     </defaults>
   </action>
 
-  <action id="org.freedesktop.devicekit.disks.smart-retrieve-historical-data">
+  <action id="org.freedesktop.devicekit.disks.drive-smart-retrieve-historical-data">
     <_description>Retrieve historical S.M.A.R.T. data</_description>
     <_message>Authentication is required to retrieve historical S.M.A.R.T. data</_message>
     <defaults>
@@ -129,7 +129,7 @@ file are instantly applied.
     </defaults>
   </action>
 
-  <action id="org.freedesktop.devicekit.disks.unlock-encrypted">
+  <action id="org.freedesktop.devicekit.disks.luks-unlock">
     <_description>Unlock an encrypted device</_description>
     <_message>Authentication is required to unlock an encrypted device</_message>
     <defaults>
@@ -139,7 +139,7 @@ file are instantly applied.
     </defaults>
   </action>
 
-  <action id="org.freedesktop.devicekit.disks.lock-encrypted-others">
+  <action id="org.freedesktop.devicekit.disks.luks-lock-others">
     <_description>Lock an encrypted device unlocked by another user</_description>
     <_message>Authentication is required to lock an encrypted device unlocked by others than yourself</_message>
     <defaults>
@@ -149,7 +149,7 @@ file are instantly applied.
     </defaults>
   </action>
 
-  <action id="org.freedesktop.devicekit.disks.lock-encrypted-others-system-internal">
+  <action id="org.freedesktop.devicekit.disks.lock-lock-others-system-internal">
     <_description>Lock an encrypted system-internal device unlocked by another user</_description>
     <_message>Authentication is required to lock an encrypted device unlocked by others than yourself</_message>
     <defaults>
@@ -161,6 +161,16 @@ file are instantly applied.
 
 
   <action id="org.freedesktop.devicekit.disks.linux-md">
+    <_description>Configure Software RAID (Linux md driver)</_description>
+    <_message>Authentication is required to configure Software RAID devices</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep_always</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.devicekit.disks.linux-md-system-internal">
     <_description>Configure Software RAID (Linux md driver)</_description>
     <_message>Authentication is required to configure Software RAID devices</_message>
     <defaults>

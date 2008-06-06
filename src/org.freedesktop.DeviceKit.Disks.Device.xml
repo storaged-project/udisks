@@ -588,13 +588,13 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.mount</doc:term>
+              <doc:term>org.freedesktop.devicekit.disks.filesystem-mount</doc:term>
               <doc:definition>If the operation is on a
                 <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.mount-system-internal</doc:term>
+              <doc:term>org.freedesktop.devicekit.disks.filesystem-mount-system-internal</doc:term>
               <doc:definition>If the operation is on a
                 <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
                 device</doc:definition>
@@ -635,13 +635,13 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.unmount-others</doc:term>
+              <doc:term>org.freedesktop.devicekit.disks.filesystem-unmount-others</doc:term>
               <doc:definition>To unmount a
                 <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
                 device mounted by another user</doc:definition>
             </doc:item>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.unmount-others-system-internal</doc:term>
+              <doc:term>org.freedesktop.devicekit.disks.filesystem-unmount-others-system-internal</doc:term>
               <doc:definition>To unmount a
                 <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
                 device mounted by another user</doc:definition>
@@ -728,7 +728,7 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.unlock-luks</doc:term>
+              <doc:term>org.freedesktop.devicekit.disks.luks-unlock</doc:term>
               <doc:definition>To unlock LUKS encrypted devices</doc:definition>
             </doc:item>
           </doc:list>
@@ -765,13 +765,13 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.lock-encrypted-others</doc:term>
+              <doc:term>org.freedesktop.devicekit.disks.luks-lock-others</doc:term>
               <doc:definition>To lock an encrypted LUKS
                 <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
                 device unlocked by another user</doc:definition>
             </doc:item>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.lock-encrypted-others-system-internal</doc:term>
+              <doc:term>org.freedesktop.devicekit.disks.luks-lock-others-system-internal</doc:term>
               <doc:definition>To lock an encrypted LUKS
                 <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
                 device unlocked by another user</doc:definition>
@@ -856,7 +856,18 @@
           <doc:list>
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.linux-md</doc:term>
-              <doc:definition>Needed to configured Linux md Software RAID devices</doc:definition>
+              <doc:definition>
+                Needed to configured Linux md Software RAID devices where all components are
+                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>.
+              </doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.linux-md-system-internal</doc:term>
+              <doc:definition>
+                Needed to configured Linux md Software RAID devices with one or more
+                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                components.
+              </doc:definition>
             </doc:item>
           </doc:list>
         </doc:permission>
@@ -895,7 +906,18 @@
           <doc:list>
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.linux-md</doc:term>
-              <doc:definition>Needed to configured Linux md Software RAID devices</doc:definition>
+              <doc:definition>
+                Needed to configured Linux md Software RAID devices where all components are
+                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>.
+              </doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.linux-md-system-internal</doc:term>
+              <doc:definition>
+                Needed to configured Linux md Software RAID devices with one or more
+                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                components.
+              </doc:definition>
             </doc:item>
           </doc:list>
         </doc:permission>
@@ -929,7 +951,18 @@
           <doc:list>
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.linux-md</doc:term>
-              <doc:definition>Needed to configured Linux md Software RAID devices</doc:definition>
+              <doc:definition>
+                Needed to configured Linux md Software RAID devices where all components are
+                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>.
+              </doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.linux-md-system-internal</doc:term>
+              <doc:definition>
+                Needed to configured Linux md Software RAID devices with one or more
+                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                components.
+              </doc:definition>
             </doc:item>
           </doc:list>
         </doc:permission>
@@ -968,7 +1001,7 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.smart-refresh</doc:term>
+              <doc:term>org.freedesktop.devicekit.disks.drive-smart-refresh</doc:term>
               <doc:definition>Needed to refresh S.M.A.R.T. data</doc:definition>
             </doc:item>
           </doc:list>
@@ -1067,7 +1100,7 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.smart-retrieve-historical-data</doc:term>
+              <doc:term>org.freedesktop.devicekit.disks.drive-smart-retrieve-historical-data</doc:term>
               <doc:definition>To retrieve historical S.M.A.R.T. data</doc:definition>
             </doc:item>
           </doc:list>
@@ -1114,7 +1147,7 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.smart-selftest</doc:term>
+              <doc:term>org.freedesktop.devicekit.disks.drive-smart-selftest</doc:term>
               <doc:definition>Needed to run S.M.A.R.T. self tests</doc:definition>
             </doc:item>
           </doc:list>
