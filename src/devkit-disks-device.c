@@ -3493,11 +3493,12 @@ devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
                         argv[n++] = NULL;
                         goto run_job;
                 }
-                /* TODO: allow unmounting foreign mounts as root after checking for privilege */
-                throw_error (context,
-                             DEVKIT_DISKS_ERROR_FAILED,
-                             "Device is not mounted by DeviceKit-disks");
-                goto out;
+
+                /* not mounted by DeviceKit-disks.. but still allow unmounting it.. if mounted by HAL then
+                 * eventually /sbin/umount.hal will be run and that will call Unmount() on HAL which will
+                 * clean up the mount point...
+                 */
+                uid_of_mount = 0;
         }
 
         if (uid_of_mount != uid) {
@@ -5447,12 +5448,12 @@ devkit_disks_device_luks_lock (DevkitDisksDevice     *device,
                 goto out;
         }
 
-        /* only offer to unlock devices set up by us */
+        /* see if we (DeviceKit-disks) set up this clear text device */
         if (!luks_get_uid_from_dm_name (cleartext_device->priv->info.dm_name, &unlocked_by_uid)) {
-                /* TODO: maybe allow locked devices not unlocked by us? */
-                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
-                             "Device is not unlocked by DeviceKit-disks");
-                goto out;
+                /* nope.. so assume uid 0 set it up.. we still allow locking
+                 * the device... given enough privilege
+                 */
+                unlocked_by_uid = 0;
         }
 
         /* require authorization if unlocked by someone else */
