@@ -407,7 +407,7 @@ typedef struct
         gboolean device_is_media_available;
         gboolean device_is_read_only;
         gboolean device_is_drive;
-        gboolean device_is_crypto_cleartext;
+        gboolean device_is_luks_cleartext;
         gboolean device_is_mounted;
         gboolean device_is_busy;
         gboolean device_is_linux_md_component;
@@ -448,8 +448,8 @@ typedef struct
         GArray  *partition_table_offsets;
         GArray  *partition_table_sizes;
 
-        char    *crypto_cleartext_slave;
-        uid_t    crypto_cleartext_unlocked_by_uid;
+        char    *luks_cleartext_slave;
+        uid_t    luks_cleartext_unlocked_by_uid;
 
         char    *drive_vendor;
         char    *drive_model;
@@ -516,8 +516,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->device_is_read_only = g_value_get_boolean (value);
         else if (strcmp (key, "device-is-drive") == 0)
                 props->device_is_drive = g_value_get_boolean (value);
-        else if (strcmp (key, "device-is-crypto-cleartext") == 0)
-                props->device_is_crypto_cleartext = g_value_get_boolean (value);
+        else if (strcmp (key, "device-is-luks-cleartext") == 0)
+                props->device_is_luks_cleartext = g_value_get_boolean (value);
         else if (strcmp (key, "device-is-linux-md-component") == 0)
                 props->device_is_linux_md_component = g_value_get_boolean (value);
         else if (strcmp (key, "device-is-linux-md") == 0)
@@ -600,10 +600,10 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->partition_table_sizes = g_value_get_boxed (&dest_value);
         }
 
-        else if (strcmp (key, "crypto-cleartext-slave") == 0)
-                props->crypto_cleartext_slave = g_strdup (g_value_get_boxed (value));
-        else if (strcmp (key, "crypto-cleartext-unlocked-by-uid") == 0)
-                props->crypto_cleartext_unlocked_by_uid = g_value_get_uint (value);
+        else if (strcmp (key, "luks-cleartext-slave") == 0)
+                props->luks_cleartext_slave = g_strdup (g_value_get_boxed (value));
+        else if (strcmp (key, "luks-cleartext-unlocked-by-uid") == 0)
+                props->luks_cleartext_unlocked_by_uid = g_value_get_uint (value);
 
         else if (strcmp (key, "drive-vendor") == 0)
                 props->drive_vendor = g_strdup (g_value_get_string (value));
@@ -755,7 +755,7 @@ device_properties_free (DeviceProperties *props)
         g_free (props->partition_table_scheme);
         g_array_free (props->partition_table_offsets, TRUE);
         g_array_free (props->partition_table_sizes, TRUE);
-        g_free (props->crypto_cleartext_slave);
+        g_free (props->luks_cleartext_slave);
         g_free (props->drive_model);
         g_free (props->drive_vendor);
         g_free (props->drive_revision);
@@ -873,10 +873,10 @@ do_show_info (const char *object_path)
                         g_print ("          %s (state: %s)\n",
                                  props->linux_md_slaves[n], props->linux_md_slaves_state[n]);
         }
-        if (props->device_is_crypto_cleartext) {
-                g_print ("  cleartext crypto device:\n");
-                g_print ("    backed by:     %s\n", props->crypto_cleartext_slave);
-                g_print ("    unlocked by:   %d\n", props->crypto_cleartext_unlocked_by_uid);
+        if (props->device_is_luks_cleartext) {
+                g_print ("  cleartext luks device:\n");
+                g_print ("    backed by:     %s\n", props->luks_cleartext_slave);
+                g_print ("    unlocked by:   uid %d\n", props->luks_cleartext_unlocked_by_uid);
         }
         if (props->device_is_partition_table) {
                 g_print ("  partition table:\n");
@@ -906,7 +906,7 @@ do_show_info (const char *object_path)
                 g_print ("    revision:      %s\n", props->drive_revision);
                 g_print ("    serial:        %s\n", props->drive_serial);
                 g_print ("    media:         %s\n", props->drive_media);
-                g_print ("      compat:   ");
+                g_print ("      compat:     ");
                 for (n = 0; props->drive_media_compatibility[n] != NULL; n++)
                         g_print (" %s", (char *) props->drive_media_compatibility[n]);
                 g_print ("\n");
@@ -921,9 +921,9 @@ do_show_info (const char *object_path)
 
                 g_print ("    media:         %s\n", props->drive_media);
                 if (!props->drive_smart_is_capable) {
-                        g_print ("    S.M.A.R.T.:  not capable\n");
+                        g_print ("    S.M.A.R.T.:    not capable\n");
                 } else if (props->drive_smart_time_collected == 0) {
-                        g_print ("    S.M.A.R.T.:  not collected\n");
+                        g_print ("    S.M.A.R.T.:    not collected\n");
                 } else {
                         struct tm *time_tm;
                         time_t time;
