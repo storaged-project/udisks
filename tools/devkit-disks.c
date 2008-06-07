@@ -460,6 +460,8 @@ typedef struct
         guint64  drive_connection_speed;
         char   **drive_media_compatibility;
         char    *drive_media;
+        gboolean drive_is_media_ejectable;
+        gboolean drive_requires_eject;
 
         gboolean optical_disc_is_recordable;
         gboolean optical_disc_is_rewritable;
@@ -633,6 +635,10 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->drive_media_compatibility = g_strdupv (g_value_get_boxed (value));
         else if (strcmp (key, "drive-media") == 0)
                 props->drive_media = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "drive-is-media-ejectable") == 0)
+                props->drive_is_media_ejectable = g_value_get_boolean (value);
+        else if (strcmp (key, "drive-requires-eject") == 0)
+                props->drive_requires_eject = g_value_get_boolean (value);
 
         else if (strcmp (key, "optical-disc-is-recordable") == 0)
                 props->optical_disc_is_recordable = g_value_get_boolean (value);
@@ -945,6 +951,8 @@ do_show_info (const char *object_path)
                 g_print ("    model:         %s\n", props->drive_model);
                 g_print ("    revision:      %s\n", props->drive_revision);
                 g_print ("    serial:        %s\n", props->drive_serial);
+                g_print ("    ejectable:     %d\n", props->drive_is_media_ejectable);
+                g_print ("    require eject: %d\n", props->drive_requires_eject);
                 g_print ("    media:         %s\n", props->drive_media);
                 g_print ("      compat:     ");
                 for (n = 0; props->drive_media_compatibility[n] != NULL; n++)

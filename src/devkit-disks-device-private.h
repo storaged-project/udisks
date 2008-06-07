@@ -126,6 +126,8 @@ struct DevkitDisksDevicePrivate
                 guint drive_connection_speed;
                 GPtrArray *drive_media_compatibility;
                 char *drive_media;
+                gboolean drive_is_media_ejectable;
+                gboolean drive_requires_eject;
 
                 gboolean optical_disc_is_recordable;
                 gboolean optical_disc_is_rewritable;

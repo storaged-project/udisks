@@ -976,6 +976,48 @@
 
     <!-- ************************************************************ -->
 
+    <method name="DriveEject">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Eject options. Currently no options are recognized.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Ejects media from the device.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.drive-eject</doc:term>
+              <doc:definition>To eject media from a
+                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                device</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.drive-eject-system-internal</doc:term>
+              <doc:definition>To eject a media from a
+                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                device</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="&ERROR_BUSY;">if the device or a dependent device (e.g. partition or cleartext luks device) is busy (e.g. mounted)</doc:error>
+          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+          <doc:error name="&ERROR_NOT_DRIVE;">device is not a drive</doc:error>
+          <doc:error name="&ERROR_INVALID_OPTION;">if an invalid or malformed unmount option was given</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
     <method name="DriveSmartRefreshData">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="options" direction="in" type="as">
@@ -1902,6 +1944,30 @@
             values include the ones listed for the
             <doc:ref type="property" to="Device:drive-media-compatibility">drive-media-compatibility</doc:ref>
             property.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-is-media-ejectable" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE only if the media can be physically ejected by issuing a command
+            from the host to the drive (e.g. optical drives). For devices, like iPod's,
+            that require an eject ioctl to be sent in order to be safely removed, use the
+            <doc:ref type="property" to="Device:drive-requires-eject">drive-requires-eject</doc:ref>
+            property instead.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-requires-eject" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE only if the drive requires an eject ioctl to be safely removed; typically
+            this includes multimedia devices like the iPod. If media can be physically
+            ejected from the drive, use the
+            <doc:ref type="property" to="Device:drive-is-media-ejectable">drive-is-media-ejectable</doc:ref>
+            property instead.
             This property is only valid if
             <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
             is TRUE.

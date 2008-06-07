@@ -181,6 +181,8 @@ enum
         PROP_DRIVE_CONNECTION_SPEED,
         PROP_DRIVE_MEDIA_COMPATIBILITY,
         PROP_DRIVE_MEDIA,
+        PROP_DRIVE_IS_MEDIA_EJECTABLE,
+        PROP_DRIVE_REQUIRES_EJECT,
 
         PROP_OPTICAL_DISC_IS_RECORDABLE,
         PROP_OPTICAL_DISC_IS_REWRITABLE,
@@ -447,6 +449,12 @@ get_property (GObject         *object,
 		break;
 	case PROP_DRIVE_MEDIA:
 		g_value_set_string (value, device->priv->info.drive_media);
+		break;
+	case PROP_DRIVE_IS_MEDIA_EJECTABLE:
+		g_value_set_boolean (value, device->priv->info.drive_is_media_ejectable);
+		break;
+	case PROP_DRIVE_REQUIRES_EJECT:
+		g_value_set_boolean (value, device->priv->info.drive_requires_eject);
 		break;
 
 	case PROP_OPTICAL_DISC_IS_RECORDABLE:
@@ -845,6 +853,14 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DRIVE_MEDIA,
                 g_param_spec_string ("drive-media", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_IS_MEDIA_EJECTABLE,
+                g_param_spec_boolean ("drive-is-media-ejectable", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_REQUIRES_EJECT,
+                g_param_spec_boolean ("drive-requires-eject", NULL, NULL, FALSE, G_PARAM_READABLE));
 
         g_object_class_install_property (
                 object_class,
@@ -1559,6 +1575,11 @@ update_info_properties_cb (DevkitDevice *d, const char *key, const char *value, 
                 g_free (device->priv->info.drive_media);
                 device->priv->info.drive_media = g_strdup ("floppy_jaz");
 
+        } else if (strcmp (key, "ID_DRIVE_IS_MEDIA_EJECTABLE") == 0) {
+                device->priv->info.drive_is_media_ejectable = (strcmp (value, "1") == 0);
+        } else if (strcmp (key, "ID_DRIVE_REQUIRES_EJECT") == 0) {
+                device->priv->info.drive_requires_eject = (strcmp (value, "1") == 0);
+
         /* ---------------------------------------------------------------------------------------------------- */
 
         } else if (strcmp (key, "ID_CDROM_MEDIA_TRACK_COUNT") == 0) {
@@ -1583,6 +1604,7 @@ update_info_properties_cb (DevkitDevice *d, const char *key, const char *value, 
         /* ---------------------------------------------------------------------------------------------------- */
 
         } else if (strcmp (key, "ID_CDROM") == 0 && strcmp (value, "1") == 0) {
+                device->priv->info.drive_is_media_ejectable = TRUE;
                 g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_cd"));
         } else if (strcmp (key, "ID_CDROM_CD") == 0 && strcmp (value, "1") == 0) {
                 g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_cd"));
@@ -3783,6 +3805,7 @@ devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
                         throw_error (context,
                                      DEVKIT_DISKS_ERROR_INVALID_OPTION,
                                      "Unknown option %s", option);
+                        goto out;
                 }
         }
 
@@ -3851,6 +3874,117 @@ out:
         if (pk_caller != NULL)
                 polkit_caller_unref (pk_caller);
         g_free (mount_path);
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+drive_eject_completed_cb (DBusGMethodInvocation *context,
+                          DevkitDisksDevice *device,
+                          PolKitCaller *pk_caller,
+                          gboolean job_was_cancelled,
+                          int status,
+                          const char *stderr,
+                          const char *stdout,
+                          gpointer user_data)
+{
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+                /* TODO: probably wait for has_media to change to FALSE */
+                dbus_g_method_return (context);
+        } else {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_FAILED,
+                                     "Error ejecting: eject exited with exit code %d: %s",
+                                     WEXITSTATUS (status),
+                                     stderr);
+                }
+        }
+}
+
+gboolean
+devkit_disks_device_drive_eject (DevkitDisksDevice     *device,
+                                 char                 **options,
+                                 DBusGMethodInvocation *context)
+{
+        int n;
+        char *argv[16];
+        GError *error;
+        PolKitCaller *pk_caller;
+        char *mount_path;
+
+        mount_path = NULL;
+
+        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
+                goto out;
+
+        if (!device->priv->info.device_is_drive) {
+                throw_error (context, DEVKIT_DISKS_ERROR_NOT_DRIVE,
+                             "Device is not a drive");
+                goto out;
+        }
+
+        if (!device->priv->info.device_is_media_available) {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                             "No media in drive");
+                goto out;
+        }
+
+        if (devkit_disks_device_local_is_busy (device)) {
+                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
+                             "Device is busy");
+                goto out;
+        }
+
+        if (devkit_disks_device_local_partitions_are_busy (device)) {
+                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
+                             "A partition on the device is busy");
+                goto out;
+        }
+
+        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                  pk_caller,
+                                                  device->priv->info.device_is_system_internal ?
+                                                  "org.freedesktop.devicekit.disks.drive-eject-system-internal" :
+                                                  "org.freedesktop.devicekit.disks.drive-eject",
+                                                  context))
+                goto out;
+
+        for (n = 0; options[n] != NULL; n++) {
+                const char *option = options[n];
+                throw_error (context,
+                             DEVKIT_DISKS_ERROR_INVALID_OPTION,
+                             "Unknown option %s", option);
+                goto out;
+        }
+
+        n = 0;
+        argv[n++] = "eject";
+        argv[n++] = device->priv->info.device_file;
+        argv[n++] = NULL;
+
+        error = NULL;
+        if (!job_new (context,
+                      "DriveEject",
+                      FALSE,
+                      device,
+                      pk_caller,
+                      argv,
+                      NULL,
+                      drive_eject_completed_cb,
+                      NULL,
+                      NULL)) {
+                goto out;
+        }
+
+out:
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
         return TRUE;
 }
 
