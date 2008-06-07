@@ -10,7 +10,6 @@
   <!ENTITY ERROR_NOT_CANCELLABLE "org.freedesktop.DeviceKit.Disks.Error.NotCancellable">
   <!ENTITY ERROR_NOT_PARTITION "org.freedesktop.DeviceKit.Disks.Error.NotPartition">
   <!ENTITY ERROR_NOT_PARTITION_TABLE "org.freedesktop.DeviceKit.Disks.Error.NotPartitionTable">
-  <!ENTITY ERROR_NOT_LABELED "org.freedesktop.DeviceKit.Disks.Error.NotLabeled">
   <!ENTITY ERROR_NOT_FILESYSTEM "org.freedesktop.DeviceKit.Disks.Error.NotFilesystem">
   <!ENTITY ERROR_NOT_LUKS "org.freedesktop.DeviceKit.Disks.Error.NotLuks">
   <!ENTITY ERROR_NOT_LOCKED "org.freedesktop.DeviceKit.Disks.Error.NotLocked">
@@ -554,9 +553,8 @@
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
           <doc:error name="&ERROR_BUSY;">if the device is busy and changing the label requires an unmounted file system</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the file system doesn't support labels, the label is too long</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
-          <doc:error name="&ERROR_NOT_LABELED;">if the contents of the device doesn't support labels</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
