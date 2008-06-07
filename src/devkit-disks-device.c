@@ -128,6 +128,7 @@ enum
         PROP_DEVICE_IS_MEDIA_AVAILABLE,
         PROP_DEVICE_IS_READ_ONLY,
         PROP_DEVICE_IS_DRIVE,
+        PROP_DEVICE_IS_OPTICAL_DISC,
         PROP_DEVICE_IS_LUKS_CLEARTEXT,
         PROP_DEVICE_IS_LINUX_MD_COMPONENT,
         PROP_DEVICE_IS_LINUX_MD,
@@ -180,6 +181,15 @@ enum
         PROP_DRIVE_CONNECTION_SPEED,
         PROP_DRIVE_MEDIA_COMPATIBILITY,
         PROP_DRIVE_MEDIA,
+
+        PROP_OPTICAL_DISC_IS_RECORDABLE,
+        PROP_OPTICAL_DISC_IS_REWRITABLE,
+        PROP_OPTICAL_DISC_IS_BLANK,
+        PROP_OPTICAL_DISC_IS_APPENDABLE,
+        PROP_OPTICAL_DISC_IS_CLOSED,
+        PROP_OPTICAL_DISC_HAS_AUDIO,
+        PROP_OPTICAL_DISC_NUM_TRACKS,
+        PROP_OPTICAL_DISC_NUM_SESSIONS,
 
         PROP_DRIVE_SMART_IS_CAPABLE,
         PROP_DRIVE_SMART_IS_ENABLED,
@@ -283,6 +293,9 @@ get_property (GObject         *object,
 		break;
 	case PROP_DEVICE_IS_DRIVE:
 		g_value_set_boolean (value, device->priv->info.device_is_drive);
+		break;
+	case PROP_DEVICE_IS_OPTICAL_DISC:
+		g_value_set_boolean (value, device->priv->info.device_is_optical_disc);
 		break;
 	case PROP_DEVICE_IS_LUKS_CLEARTEXT:
 		g_value_set_boolean (value, device->priv->info.device_is_luks_cleartext);
@@ -434,6 +447,31 @@ get_property (GObject         *object,
 		break;
 	case PROP_DRIVE_MEDIA:
 		g_value_set_string (value, device->priv->info.drive_media);
+		break;
+
+	case PROP_OPTICAL_DISC_IS_RECORDABLE:
+		g_value_set_boolean (value, device->priv->info.optical_disc_is_recordable);
+		break;
+	case PROP_OPTICAL_DISC_IS_REWRITABLE:
+		g_value_set_boolean (value, device->priv->info.optical_disc_is_rewritable);
+		break;
+	case PROP_OPTICAL_DISC_IS_BLANK:
+		g_value_set_boolean (value, device->priv->info.optical_disc_is_blank);
+		break;
+	case PROP_OPTICAL_DISC_IS_APPENDABLE:
+		g_value_set_boolean (value, device->priv->info.optical_disc_is_appendable);
+		break;
+	case PROP_OPTICAL_DISC_IS_CLOSED:
+		g_value_set_boolean (value, device->priv->info.optical_disc_is_closed);
+		break;
+	case PROP_OPTICAL_DISC_HAS_AUDIO:
+		g_value_set_boolean (value, device->priv->info.optical_disc_has_audio);
+		break;
+	case PROP_OPTICAL_DISC_NUM_TRACKS:
+		g_value_set_uint (value, device->priv->info.optical_disc_num_tracks);
+		break;
+	case PROP_OPTICAL_DISC_NUM_SESSIONS:
+		g_value_set_uint (value, device->priv->info.optical_disc_num_sessions);
 		break;
 
 	case PROP_DRIVE_SMART_IS_CAPABLE:
@@ -605,6 +643,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DEVICE_IS_DRIVE,
                 g_param_spec_boolean ("device-is-drive", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_IS_OPTICAL_DISC,
+                g_param_spec_boolean ("device-is-optical-disc", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_DEVICE_IS_LUKS_CLEARTEXT,
@@ -803,6 +845,39 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DRIVE_MEDIA,
                 g_param_spec_string ("drive-media", NULL, NULL, NULL, G_PARAM_READABLE));
+
+        g_object_class_install_property (
+                object_class,
+                PROP_OPTICAL_DISC_IS_RECORDABLE,
+                g_param_spec_boolean ("optical-disc-is-recordable", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_OPTICAL_DISC_IS_REWRITABLE,
+                g_param_spec_boolean ("optical-disc-is-rewritable", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_OPTICAL_DISC_IS_BLANK,
+                g_param_spec_boolean ("optical-disc-is-blank", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_OPTICAL_DISC_IS_APPENDABLE,
+                g_param_spec_boolean ("optical-disc-is-appendable", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_OPTICAL_DISC_IS_CLOSED,
+                g_param_spec_boolean ("optical-disc-is-closed", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_OPTICAL_DISC_HAS_AUDIO,
+                g_param_spec_boolean ("optical-disc-has-audio", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_OPTICAL_DISC_NUM_TRACKS,
+                g_param_spec_uint ("optical-disc-num-tracks", NULL, NULL, 0, G_MAXUINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_OPTICAL_DISC_NUM_SESSIONS,
+                g_param_spec_uint ("optical-disc-num-sessions", NULL, NULL, 0, G_MAXUINT, 0, G_PARAM_READABLE));
 
         g_object_class_install_property (
                 object_class,
@@ -1428,13 +1503,237 @@ update_info_properties_cb (DevkitDevice *d, const char *key, const char *value, 
                         }
                 }
 
-        } else if (strcmp (key, "COMPAT_MEDIA_TYPE") == 0) {
-                char **tokens = devkit_device_dup_property_as_strv (d, key);
-                for (n = 0; tokens[n] != NULL; n++)
-                        g_ptr_array_add (device->priv->info.drive_media_compatibility, tokens[n]);
-                g_free (tokens);
-        } else if (strcmp (key, "MEDIA_TYPE") == 0) {
-                device->priv->info.drive_media = g_strdup (value);
+        /* ---------------------------------------------------------------------------------------------------- */
+
+        } else if (strcmp (key, "ID_DRIVE_FLASH") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("flash"));
+        } else if (strcmp (key, "ID_DRIVE_FLASH_CF") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("flash_cf"));
+        } else if (strcmp (key, "ID_DRIVE_FLASH_MS") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("flash_ms"));
+        } else if (strcmp (key, "ID_DRIVE_FLASH_SM") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("flash_sm"));
+        } else if (strcmp (key, "ID_DRIVE_FLASH_SD") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("flash_sd"));
+        } else if (strcmp (key, "ID_DRIVE_FLASH_SDHC") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("flash_sdhc"));
+        } else if (strcmp (key, "ID_DRIVE_FLASH_MMC") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("flash_mmc"));
+        } else if (strcmp (key, "ID_DRIVE_FLOPPY") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("floppy"));
+        } else if (strcmp (key, "ID_DRIVE_FLOPPY_ZIP") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("floppy_zip"));
+        } else if (strcmp (key, "ID_DRIVE_FLOPPY_JAZ") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("floppy_jaz"));
+
+        /* ---------------------------------------------------------------------------------------------------- */
+
+        } else if (strcmp (key, "ID_DRIVE_MEDIA_FLASH") == 0 && strcmp (value, "1") == 0) {
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("flash");
+        } else if (strcmp (key, "ID_DRIVE_MEDIA_FLASH_CF") == 0 && strcmp (value, "1") == 0) {
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("flash_cf");
+        } else if (strcmp (key, "ID_DRIVE_MEDIA_FLASH_MS") == 0 && strcmp (value, "1") == 0) {
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("flash_ms");
+        } else if (strcmp (key, "ID_DRIVE_MEDIA_FLASH_SM") == 0 && strcmp (value, "1") == 0) {
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("flash_sm");
+        } else if (strcmp (key, "ID_DRIVE_MEDIA_FLASH_SD") == 0 && strcmp (value, "1") == 0) {
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("flash_sd");
+        } else if (strcmp (key, "ID_DRIVE_MEDIA_FLASH_SDHC") == 0 && strcmp (value, "1") == 0) {
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("flash_sdhc");
+        } else if (strcmp (key, "ID_DRIVE_MEDIA_FLASH_MMC") == 0 && strcmp (value, "1") == 0) {
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("flash_mmc");
+        } else if (strcmp (key, "ID_DRIVE_MEDIA_FLOPPY") == 0 && strcmp (value, "1") == 0) {
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("floppy");
+        } else if (strcmp (key, "ID_DRIVE_MEDIA_FLOPPY_ZIP") == 0 && strcmp (value, "1") == 0) {
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("floppy_zip");
+        } else if (strcmp (key, "ID_DRIVE_MEDIA_FLOPPY_JAZ") == 0 && strcmp (value, "1") == 0) {
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("floppy_jaz");
+
+        /* ---------------------------------------------------------------------------------------------------- */
+
+        } else if (strcmp (key, "ID_CDROM_MEDIA_TRACK_COUNT") == 0) {
+                device->priv->info.optical_disc_num_tracks = devkit_device_get_property_as_int (d, key);
+                device->priv->info.device_is_optical_disc = TRUE;
+        } else if (strcmp (key, "ID_CDROM_MEDIA_SESSION_COUNT") == 0) {
+                device->priv->info.optical_disc_num_sessions = devkit_device_get_property_as_int (d, key);
+                device->priv->info.device_is_optical_disc = TRUE;
+        } else if (strcmp (key, "ID_CDROM_MEDIA_STATE") == 0) {
+                device->priv->info.device_is_optical_disc = TRUE;
+                if (strcmp (value, "blank") == 0) {
+                        device->priv->info.optical_disc_is_blank = TRUE;
+                } else if (strcmp (value, "appendable") == 0) {
+                        device->priv->info.optical_disc_is_appendable = TRUE;
+                } else if (strcmp (value, "complete") == 0) {
+                        device->priv->info.optical_disc_is_closed = TRUE;
+                }
+        } else if (strcmp (key, "ID_CDROM_MEDIA_HAS_AUDIO") == 0 && strcmp (value, "1") == 0) {
+                device->priv->info.device_is_optical_disc = TRUE;
+                device->priv->info.optical_disc_has_audio = TRUE;
+
+        /* ---------------------------------------------------------------------------------------------------- */
+
+        } else if (strcmp (key, "ID_CDROM") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_cd"));
+        } else if (strcmp (key, "ID_CDROM_CD") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_cd"));
+        } else if (strcmp (key, "ID_CDROM_CD_R") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_cd_r"));
+        } else if (strcmp (key, "ID_CDROM_CD_RW") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_cd_rw"));
+
+        } else if (strcmp (key, "ID_CDROM_DVD") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_dvd"));
+        } else if (strcmp (key, "ID_CDROM_DVD_R") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_dvd_r"));
+        } else if (strcmp (key, "ID_CDROM_DVD_RW") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_dvd_rw"));
+        } else if (strcmp (key, "ID_CDROM_DVD_RAM") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_dvd_ram"));
+        } else if (strcmp (key, "ID_CDROM_DVD_PLUS_R") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_dvd_plus_r"));
+        } else if (strcmp (key, "ID_CDROM_DVD_PLUS_RW") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_dvd_plus_rw"));
+        } else if (strcmp (key, "ID_CDROM_DVD_PLUS_R_DL") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_dvd_plus_r_dl"));
+        } else if (strcmp (key, "ID_CDROM_DVD_PlUS_RW_DL") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_dvd_plus_rw_dl"));
+
+        } else if (strcmp (key, "ID_CDROM_BD") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_bd"));
+        } else if (strcmp (key, "ID_CDROM_BD_R") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_bd_r"));
+        } else if (strcmp (key, "ID_CDROM_BD_RE") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_bd_re"));
+
+        } else if (strcmp (key, "ID_CDROM_HDDVD") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_hddvd"));
+        } else if (strcmp (key, "ID_CDROM_HDDVD_R") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_hddvd_r"));
+        } else if (strcmp (key, "ID_CDROM_HDDVD_RW") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_hddvd_rw"));
+
+        } else if (strcmp (key, "ID_CDROM_MO") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_mo"));
+
+        } else if (strcmp (key, "ID_CDROM_MRW") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_mrw"));
+        } else if (strcmp (key, "ID_CDROM_MRW_W") == 0 && strcmp (value, "1") == 0) {
+                g_ptr_array_add (device->priv->info.drive_media_compatibility, g_strdup ("optical_mrw_w"));
+
+        /* ---------------------------------------------------------------------------------------------------- */
+
+        } else if (strcmp (key, "ID_CDROM_MEDIA_CD") == 0 && strcmp (value, "1") == 0) {
+                device->priv->info.device_is_optical_disc = TRUE;
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("optical_cd");
+        } else if (strcmp (key, "ID_CDROM_MEDIA_CD_R") == 0 && strcmp (value, "1") == 0) {
+                device->priv->info.device_is_optical_disc = TRUE;
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("optical_cd_r");
+        } else if (strcmp (key, "ID_CDROM_MEDIA_CD_RW") == 0 && strcmp (value, "1") == 0) {
+                device->priv->info.device_is_optical_disc = TRUE;
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("optical_cd_rw");
+
+        } else if (strcmp (key, "ID_CDROM_MEDIA_DVD") == 0 && strcmp (value, "1") == 0) {
+                device->priv->info.device_is_optical_disc = TRUE;
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("optical_dvd");
+        } else if (strcmp (key, "ID_CDROM_MEDIA_DVD_R") == 0 && strcmp (value, "1") == 0) {
+                device->priv->info.device_is_optical_disc = TRUE;
+                device->priv->info.optical_disc_is_recordable = TRUE;
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("optical_dvd_r");
+        } else if (strcmp (key, "ID_CDROM_MEDIA_DVD_RW") == 0 && strcmp (value, "1") == 0) {
+                device->priv->info.device_is_optical_disc = TRUE;
+                device->priv->info.optical_disc_is_recordable = TRUE;
+                device->priv->info.optical_disc_is_rewritable = TRUE;
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("optical_dvd_rw");
+        } else if (strcmp (key, "ID_CDROM_MEDIA_DVD_RAM") == 0 && strcmp (value, "1") == 0) {
+                device->priv->info.device_is_optical_disc = TRUE;
+                device->priv->info.optical_disc_is_recordable = TRUE;
+                device->priv->info.optical_disc_is_rewritable = TRUE;
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("optical_dvd_ram");
+        } else if (strcmp (key, "ID_CDROM_MEDIA_DVD_PLUS_R") == 0 && strcmp (value, "1") == 0) {
+                device->priv->info.device_is_optical_disc = TRUE;
+                device->priv->info.optical_disc_is_recordable = TRUE;
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("optical_dvd_plus_r");
+        } else if (strcmp (key, "ID_CDROM_MEDIA_DVD_PLUS_RW") == 0 && strcmp (value, "1") == 0) {
+                device->priv->info.device_is_optical_disc = TRUE;
+                device->priv->info.optical_disc_is_recordable = TRUE;
+                device->priv->info.optical_disc_is_rewritable = TRUE;
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("optical_dvd_plus_rw");
+        } else if (strcmp (key, "ID_CDROM_MEDIA_DVD_PLUS_R_DL") == 0 && strcmp (value, "1") == 0) {
+                device->priv->info.device_is_optical_disc = TRUE;
+                device->priv->info.optical_disc_is_recordable = TRUE;
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("optical_dvd_plus_r_dl");
+        } else if (strcmp (key, "ID_CDROM_MEDIA_DVD_PlUS_RW_DL") == 0 && strcmp (value, "1") == 0) {
+                device->priv->info.device_is_optical_disc = TRUE;
+                device->priv->info.optical_disc_is_recordable = TRUE;
+                device->priv->info.optical_disc_is_rewritable = TRUE;
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("optical_dvd_plus_rw_dl");
+
+        } else if (strcmp (key, "ID_CDROM_MEDIA_BD") == 0 && strcmp (value, "1") == 0) {
+                device->priv->info.device_is_optical_disc = TRUE;
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("optical_bd");
+        } else if (strcmp (key, "ID_CDROM_MEDIA_BD_R") == 0 && strcmp (value, "1") == 0) {
+                device->priv->info.device_is_optical_disc = TRUE;
+                device->priv->info.optical_disc_is_recordable = TRUE;
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("optical_bd_r");
+        } else if (strcmp (key, "ID_CDROM_MEDIA_BD_RE") == 0 && strcmp (value, "1") == 0) {
+                device->priv->info.device_is_optical_disc = TRUE;
+                device->priv->info.optical_disc_is_recordable = TRUE;
+                device->priv->info.optical_disc_is_rewritable = TRUE;
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("optical_bd_re");
+
+        } else if (strcmp (key, "ID_CDROM_MEDIA_HDDVD") == 0 && strcmp (value, "1") == 0) {
+                device->priv->info.device_is_optical_disc = TRUE;
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("optical_hddvd");
+        } else if (strcmp (key, "ID_CDROM_MEDIA_HDDVD_R") == 0 && strcmp (value, "1") == 0) {
+                device->priv->info.device_is_optical_disc = TRUE;
+                device->priv->info.optical_disc_is_recordable = TRUE;
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("optical_hddvd_r");
+        } else if (strcmp (key, "ID_CDROM_MEDIA_HDDVD_RW") == 0 && strcmp (value, "1") == 0) {
+                device->priv->info.device_is_optical_disc = TRUE;
+                device->priv->info.optical_disc_is_recordable = TRUE;
+                device->priv->info.optical_disc_is_rewritable = TRUE;
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("optical_hddvd_rw");
+
+        } else if (strcmp (key, "ID_CDROM_MEDIA_MO") == 0 && strcmp (value, "1") == 0) {
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("optical_mo");
+
+        } else if (strcmp (key, "ID_CDROM_MEDIA_MRW") == 0 && strcmp (value, "1") == 0) {
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("optical_mrw");
+        } else if (strcmp (key, "ID_CDROM_MEDIA_MRW_W") == 0 && strcmp (value, "1") == 0) {
+                device->priv->info.device_is_optical_disc = TRUE;
+                device->priv->info.optical_disc_is_recordable = TRUE;
+                device->priv->info.optical_disc_is_rewritable = TRUE;
+                g_free (device->priv->info.drive_media);
+                device->priv->info.drive_media = g_strdup ("optical_mrw_w");
 
 
         } else if (strcmp (key, "MEDIA_AVAILABLE") == 0) {
@@ -1894,6 +2193,17 @@ update_info (DevkitDisksDevice *device)
         if (devkit_device_properties_foreach (device->priv->d, update_info_properties_cb, device)) {
 		g_warning ("Iteration of properties was short circuited for %s", device->priv->native_path);
                 goto out;
+        }
+
+        if (device->priv->info.drive_media_compatibility->len > 0) {
+                /* make sure compat media is sorted */
+                g_ptr_array_sort (device->priv->info.drive_media_compatibility, (GCompareFunc) strcmp);
+
+                /* if we don't know the media but do know the media compat, just select the first one */
+                if (device->priv->info.drive_media == NULL) {
+                        device->priv->info.drive_media =
+                                g_strdup (device->priv->info.drive_media_compatibility->pdata[0]);
+                }
         }
 
         update_slaves (device);

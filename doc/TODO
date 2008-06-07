@@ -54,8 +54,6 @@ Before (next) release:
 
  - Poll storage devices
 
- - Use new cdrom_id attrs from udev
-
  - Need to figure out what PolicyKit authorizations to use
    - it's really a big mess right now
 
@@ -77,6 +75,8 @@ Before (next) release:
  - Should we allow operations on an unlocked encrypted device
    unlocked by someone else? Should probably require a separate
    authorization
+
+ - Document what udev properties we rely on
 
 ------------------------------------------------------------------------
 - Current features (TODO: this section is incomplete)

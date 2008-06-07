@@ -86,6 +86,7 @@ struct DevkitDisksDevicePrivate
                 gboolean device_is_media_available;
                 gboolean device_is_read_only;
                 gboolean device_is_drive;
+                gboolean device_is_optical_disc;
                 gboolean device_is_luks_cleartext;
                 gboolean device_is_linux_md_component;
                 gboolean device_is_linux_md;
@@ -125,6 +126,15 @@ struct DevkitDisksDevicePrivate
                 guint drive_connection_speed;
                 GPtrArray *drive_media_compatibility;
                 char *drive_media;
+
+                gboolean optical_disc_is_recordable;
+                gboolean optical_disc_is_rewritable;
+                gboolean optical_disc_is_blank;
+                gboolean optical_disc_is_appendable;
+                gboolean optical_disc_is_closed;
+                gboolean optical_disc_has_audio;
+                guint optical_disc_num_tracks;
+                guint optical_disc_num_sessions;
 
                 char *luks_cleartext_slave;
                 uid_t luks_cleartext_unlocked_by_uid;

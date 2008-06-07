@@ -1276,7 +1276,14 @@
     </property>
     <property name="device-is-drive" type="b" access="read">
       <doc:doc><doc:description><doc:para>
-            TRUE if the device is a drive. See drive- properties for details.
+            TRUE if the device is a drive.
+            See the drive- properties for details.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-is-optical-disc" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if the device is an optical drive and an optical disc is inserted.
+            See the optical-disc- properties for details.
       </doc:para></doc:description></doc:doc>
     </property>
     <property name="device-is-mounted" type="b" access="read">
@@ -1899,6 +1906,71 @@
             property.
             This property is only valid if
             <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+
+    <property name="optical-disc-is-recordable" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE only if the disc is recordable.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-optical-disc">device-is-optical-disc</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="optical-disc-is-rewritable" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE only if the disc is rewritable.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-optical-disc">device-is-optical-disc</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="optical-disc-is-blank" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE only if the disc is appendable.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-optical-disc">device-is-optical-disc</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="optical-disc-is-appendable" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE only if the disc is appendable.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-optical-disc">device-is-optical-disc</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="optical-disc-is-closed" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE only if the disc is appendable.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-optical-disc">device-is-optical-disc</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="optical-disc-has-audio" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE only if the disc contains audio tracks.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-optical-disc">device-is-optical-disc</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="optical-disc-num-tracks" type="u" access="read">
+      <doc:doc><doc:description><doc:para>
+            Number of tracks on the disc.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-optical-disc">device-is-optical-disc</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="optical-disc-num-sessions" type="u" access="read">
+      <doc:doc><doc:description><doc:para>
+            Number of sessions on the disc.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-optical-disc">device-is-optical-disc</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
