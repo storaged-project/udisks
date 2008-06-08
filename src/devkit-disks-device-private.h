@@ -50,6 +50,12 @@ typedef struct Job Job;
                                                                    dbus_g_type_get_collection ("GPtrArray", SMART_DATA_STRUCT_TYPE), \
                                                                    G_TYPE_INVALID))
 
+#define LSOF_DATA_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray",   \
+                                                       G_TYPE_UINT,     \
+                                                       G_TYPE_UINT,     \
+                                                       G_TYPE_STRING,   \
+                                                       G_TYPE_INVALID))
+
 struct DevkitDisksDevicePrivate
 {
         DBusGConnection *system_bus_connection;

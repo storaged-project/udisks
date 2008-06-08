@@ -93,6 +93,9 @@ gboolean devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
                                                  char                 **options,
                                                  DBusGMethodInvocation *context);
 
+gboolean devkit_disks_device_filesystem_list_open_files (DevkitDisksDevice     *device,
+                                                         DBusGMethodInvocation *context);
+
 gboolean devkit_disks_device_drive_eject (DevkitDisksDevice     *device,
                                           char                 **options,
                                           DBusGMethodInvocation *context);

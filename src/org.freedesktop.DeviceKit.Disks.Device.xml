@@ -704,6 +704,51 @@
 
     <!-- ************************************************************ -->
 
+    <method name="FilesystemListOpenFiles">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="processes" direction="out" type="a(uus)">
+        <doc:doc><doc:summary>
+            An array of triples (<doc:tt>pid</doc:tt>, <doc:tt>uid</doc:tt>, command line for the process
+            image) for processes currently having open files on the given mounted file system.
+            Note that this operation is not run as a job.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            List open files on a mounted file system.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.filesystem-lsof</doc:term>
+              <doc:definition>To check a file system on a
+                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                device.</doc:definition>
+            </doc:item>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.filesystem-lsof-system-internal</doc:term>
+              <doc:definition>To check a file system on a
+                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                device.</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="&ERROR_BUSY;">if the device is mounted and the file system doesn't support online file system checking. See TODO for how to determine if a file system supports online fsck</doc:error>
+          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_NOT_FILESYSTEM;">if the device is not a mountable file system</doc:error>
+          <doc:error name="&ERROR_NOT_MOUNTED;">if the file system is not mounted</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
     <method name="LuksUnlock">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="passphrase" direction="in" type="s">

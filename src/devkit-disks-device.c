@@ -3879,6 +3879,164 @@ out:
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
+static uid_t
+get_uid_for_pid (pid_t pid)
+{
+        uid_t ret;
+        char proc_name[32];
+        struct stat statbuf;
+
+        ret = 0;
+
+        snprintf (proc_name, sizeof (proc_name), "/proc/%d/stat", pid);
+        if (stat (proc_name, &statbuf) == 0) {
+                ret = statbuf.st_uid;
+        }
+
+        return ret;
+}
+
+static char *
+get_command_line_for_pid (pid_t pid)
+{
+        char proc_name[32];
+        char *buf;
+        gsize len;
+        char *ret;
+        unsigned int n;
+
+        ret = NULL;
+
+        snprintf (proc_name, sizeof (proc_name), "/proc/%d/cmdline", pid);
+        if (g_file_get_contents (proc_name, &buf, &len, NULL)) {
+                for (n = 0; n < len; n++) {
+                        if (buf[n] == '\0')
+                                buf[n] = ' ';
+                }
+                g_strstrip (buf);
+                ret = buf;
+        }
+
+        return ret;
+}
+
+static void
+lsof_parse (const char *stdout, GPtrArray *processes)
+{
+        int n;
+        char **tokens;
+
+        tokens = g_strsplit (stdout, "\n", 0);
+        for (n = 0; tokens[n] != NULL; n++) {
+                pid_t pid;
+                uid_t uid;
+                char *command_line;
+                GValue elem = {0};
+
+                if (strlen (tokens[n]) == 0)
+                        continue;
+
+                pid = atoi (tokens[n]);
+                uid = get_uid_for_pid (pid);
+                command_line = get_command_line_for_pid (pid);
+
+                g_value_init (&elem, LSOF_DATA_STRUCT_TYPE);
+                g_value_take_boxed (&elem, dbus_g_type_specialized_construct (LSOF_DATA_STRUCT_TYPE));
+                dbus_g_type_struct_set (&elem,
+                                        0, pid,
+                                        1, uid,
+                                        2, command_line != NULL ? command_line : "",
+                                        G_MAXUINT);
+                g_ptr_array_add (processes, g_value_get_boxed (&elem));
+
+                g_free (command_line);
+        }
+        g_strfreev (tokens);
+}
+
+static void
+filesystem_list_open_files_completed_cb (DBusGMethodInvocation *context,
+                                         DevkitDisksDevice *device,
+                                         PolKitCaller *pk_caller,
+                                         gboolean job_was_cancelled,
+                                         int status,
+                                         const char *stderr,
+                                         const char *stdout,
+                                         gpointer user_data)
+{
+        if ((WEXITSTATUS (status) == 0 || WEXITSTATUS (status) == 1) && !job_was_cancelled) {
+                GPtrArray *processes;
+
+                processes = g_ptr_array_new ();
+                lsof_parse (stdout, processes);
+                dbus_g_method_return (context, processes);
+                g_ptr_array_foreach (processes, (GFunc) g_value_array_free, NULL);
+                g_ptr_array_free (processes, TRUE);
+        } else {
+                throw_error (context,
+                             DEVKIT_DISKS_ERROR_FAILED,
+                             "Error listing open files: lsof exited with exit code %d: %s",
+                             WEXITSTATUS (status),
+                             stderr);
+        }
+}
+
+gboolean
+devkit_disks_device_filesystem_list_open_files (DevkitDisksDevice     *device,
+                                                DBusGMethodInvocation *context)
+{
+        int n;
+        char *argv[16];
+        GError *error;
+        PolKitCaller *pk_caller;
+
+        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
+                goto out;
+
+        if (!device->priv->info.device_is_mounted ||
+            device->priv->info.device_mount_path == NULL) {
+                throw_error (context,
+                             DEVKIT_DISKS_ERROR_NOT_MOUNTED,
+                             "Device is not mounted");
+                goto out;
+        }
+
+        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                  pk_caller,
+                                                  device->priv->info.device_is_system_internal ?
+                                                  "org.freedesktop.devicekit.disks.filesystem-lsof-system-internal" :
+                                                  "org.freedesktop.devicekit.disks.filesystem-lsof",
+                                                  context))
+                        goto out;
+
+        n = 0;
+        argv[n++] = "lsof";
+        argv[n++] = "-t";
+        argv[n++] = device->priv->info.device_mount_path;
+        argv[n++] = NULL;
+
+        error = NULL;
+        if (!job_new (context,
+                      NULL,     /* don't run this as a job */
+                      FALSE,
+                      device,
+                      pk_caller,
+                      argv,
+                      NULL,
+                      filesystem_list_open_files_completed_cb,
+                      NULL,
+                      NULL)) {
+                goto out;
+        }
+
+out:
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
 static void
 drive_eject_completed_cb (DBusGMethodInvocation *context,
                           DevkitDisksDevice *device,
