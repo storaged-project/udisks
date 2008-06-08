@@ -79,6 +79,46 @@ file are instantly applied.
     </defaults>
   </action>
 
+  <action id="org.freedesktop.devicekit.disks.filesystem-lsof">
+    <_description>Unmount a disk mounted by another user</_description>
+    <_message>Authentication is required to unmount disks mounted by another user</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.devicekit.disks.filesystem-lsof-system-internal">
+    <_description>Unmount a system-internal device mounted by another user</_description>
+    <_message>Authentication is required to unmount a device mounted by another user</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.devicekit.disks.drive-eject">
+    <_description>Eject a device</_description>
+    <_message>Authentication is required to eject media from the device</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.devicekit.disks.drive-eject-system-internal">
+    <_description>Eject a system-internal device</_description>
+    <_message>Authentication is required to eject media from the device</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  </action>
+
   <action id="org.freedesktop.devicekit.disks.change">
     <_description>Change a device</_description>
     <_message>Authentication is required to change the device</_message>
