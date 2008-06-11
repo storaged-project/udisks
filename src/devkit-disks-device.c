@@ -6462,7 +6462,7 @@ drive_smart_refresh_data_completed_cb (DBusGMethodInvocation *context,
                 if (!in_attributes) {
                         if (sscanf (line, "Self-test execution status: ( %d)",
                                     &self_test_execution_status) == 1) {
-                                g_warning ("self_test_execution_status: %d", self_test_execution_status);
+                                //g_warning ("self_test_execution_status: %d", self_test_execution_status);
 
                                 switch (self_test_execution_status >> 4) {
                                 case 0:
@@ -6570,8 +6570,11 @@ drive_smart_refresh_data_completed_cb (DBusGMethodInvocation *context,
         /* emit change event since we've updated the smart data */
         emit_changed (device);
 
-        devkit_disks_logger_record_smart_values (devkit_disks_daemon_local_get_logger (device->priv->daemon),
-                                                 device);
+        /* add result to database */
+        if (!data->simulation) {
+                devkit_disks_logger_record_smart_values (devkit_disks_daemon_local_get_logger (device->priv->daemon),
+                                                         device);
+        }
 
         if (context != NULL)
                 dbus_g_method_return (context, passed, power_on_hours, temperature, last_self_test_result);
