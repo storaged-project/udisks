@@ -481,7 +481,7 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
                               0,
                               NULL, NULL,
                               g_cclosure_marshal_VOID__STRING,
-                              G_TYPE_NONE, 1, G_TYPE_STRING);
+                              G_TYPE_NONE, 1, DBUS_TYPE_G_OBJECT_PATH);
 
         signals[DEVICE_REMOVED_SIGNAL] =
                 g_signal_new ("device-removed",
@@ -490,7 +490,7 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
                               0,
                               NULL, NULL,
                               g_cclosure_marshal_VOID__STRING,
-                              G_TYPE_NONE, 1, G_TYPE_STRING);
+                              G_TYPE_NONE, 1, DBUS_TYPE_G_OBJECT_PATH);
 
         signals[DEVICE_CHANGED_SIGNAL] =
                 g_signal_new ("device-changed",
@@ -499,7 +499,7 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
                               0,
                               NULL, NULL,
                               g_cclosure_marshal_VOID__STRING,
-                              G_TYPE_NONE, 1, G_TYPE_STRING);
+                              G_TYPE_NONE, 1, DBUS_TYPE_G_OBJECT_PATH);
 
         signals[DEVICE_JOB_CHANGED_SIGNAL] =
                 g_signal_new ("device-job-changed",
@@ -510,7 +510,7 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
                               devkit_disks_marshal_VOID__STRING_BOOLEAN_STRING_UINT_BOOLEAN_INT_INT_STRING_DOUBLE,
                               G_TYPE_NONE,
                               9,
-                              G_TYPE_STRING,
+                              DBUS_TYPE_G_OBJECT_PATH,
                               G_TYPE_BOOLEAN,
                               G_TYPE_STRING,
                               G_TYPE_UINT,

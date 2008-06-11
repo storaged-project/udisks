@@ -1075,12 +1075,12 @@ main (int argc, char **argv)
                                                  "org.freedesktop.DeviceKit.Disks",
                                                  "/",
                                                  "org.freedesktop.DeviceKit.Disks");
-        dbus_g_proxy_add_signal (disks_proxy, "DeviceAdded", G_TYPE_STRING, G_TYPE_INVALID);
-        dbus_g_proxy_add_signal (disks_proxy, "DeviceRemoved", G_TYPE_STRING, G_TYPE_INVALID);
-        dbus_g_proxy_add_signal (disks_proxy, "DeviceChanged", G_TYPE_STRING, G_TYPE_INVALID);
+        dbus_g_proxy_add_signal (disks_proxy, "DeviceAdded", DBUS_TYPE_G_OBJECT_PATH, G_TYPE_INVALID);
+        dbus_g_proxy_add_signal (disks_proxy, "DeviceRemoved", DBUS_TYPE_G_OBJECT_PATH, G_TYPE_INVALID);
+        dbus_g_proxy_add_signal (disks_proxy, "DeviceChanged", DBUS_TYPE_G_OBJECT_PATH, G_TYPE_INVALID);
         dbus_g_proxy_add_signal (disks_proxy,
                                  "DeviceJobChanged",
-                                 G_TYPE_STRING,
+                                 DBUS_TYPE_G_OBJECT_PATH,
                                  G_TYPE_BOOLEAN,
                                  G_TYPE_STRING,
                                  G_TYPE_UINT,
