@@ -480,7 +480,7 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
                               G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                               0,
                               NULL, NULL,
-                              g_cclosure_marshal_VOID__STRING,
+                              g_cclosure_marshal_VOID__BOXED,
                               G_TYPE_NONE, 1, DBUS_TYPE_G_OBJECT_PATH);
 
         signals[DEVICE_REMOVED_SIGNAL] =
@@ -489,7 +489,7 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
                               G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                               0,
                               NULL, NULL,
-                              g_cclosure_marshal_VOID__STRING,
+                              g_cclosure_marshal_VOID__BOXED,
                               G_TYPE_NONE, 1, DBUS_TYPE_G_OBJECT_PATH);
 
         signals[DEVICE_CHANGED_SIGNAL] =
@@ -498,7 +498,7 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
                               G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                               0,
                               NULL, NULL,
-                              g_cclosure_marshal_VOID__STRING,
+                              g_cclosure_marshal_VOID__BOXED,
                               G_TYPE_NONE, 1, DBUS_TYPE_G_OBJECT_PATH);
 
         signals[DEVICE_JOB_CHANGED_SIGNAL] =
@@ -507,7 +507,7 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
                               G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                               0,
                               NULL, NULL,
-                              devkit_disks_marshal_VOID__STRING_BOOLEAN_STRING_UINT_BOOLEAN_INT_INT_STRING_DOUBLE,
+                              devkit_disks_marshal_VOID__BOXED_BOOLEAN_STRING_UINT_BOOLEAN_INT_INT_STRING_DOUBLE,
                               G_TYPE_NONE,
                               9,
                               DBUS_TYPE_G_OBJECT_PATH,
@@ -762,8 +762,9 @@ device_add (DevkitDisksDaemon *daemon, DevkitDevice *d, gboolean emit_event)
                                              device);
                         g_print ("added %s\n", native_path);
                         if (emit_event) {
-                                g_signal_emit (daemon, signals[DEVICE_ADDED_SIGNAL], 0,
-                                               devkit_disks_device_local_get_object_path (device));
+                                const char *object_path;
+                                object_path = devkit_disks_device_local_get_object_path (device);
+                                g_signal_emit (daemon, signals[DEVICE_ADDED_SIGNAL], 0, object_path);
                         }
                 } else {
                         g_print ("ignoring add event on %s\n", native_path);
