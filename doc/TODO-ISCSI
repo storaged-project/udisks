@@ -1,0 +1,202 @@
+
+These notes are split into three parts;
+
+ a) How to set up a iSCSI target
+
+ b) How to connect to a iSCSI target
+
+ c) Some thoughts on how to integrate iSCSI into DeviceKit-disks,
+    Palimpsest and the GNOME desktop
+
+Keep in mind that a) and b) are merely my research notes used for
+investigating iSCSI. All of this stuff is preliminary.
+
+------------------------------------------------------------------------
+iSCSI target bits (the machine exporting a device)
+------------------------------------------------------------------------
+
+This is using scsi-target-utils-0.0-4.20071227snap.fc9.x86_64
+
+ killall -9 tgtd
+ service tgtd restart
+ tgtadm --lld iscsi --op new --mode target --tid 1 -T iqn.2001-04.com.example:storage.disk2.amiens.sys1.xyz
+ tgtadm --lld iscsi --op new --mode logicalunit --tid 1 --lun 1 -b /dev/sdc
+ tgtadm --lld iscsi --op new --mode account --user davidz --password iscsi123
+ tgtadm --lld iscsi --op bind --mode account --tid 1 --user davidz
+ tgtadm --lld iscsi --op bind --mode target --tid 1 -I ALL
+ tgtadm --lld iscsi --op show --mode target
+
+This exports the device /dev/sdc as an iSCSI target; will have to use
+username 'davidz' and 'iscsi123' when initiating a connection. This
+iSCSI target implementation doesn't seem capable of pass-through, e.g.
+you can't share an optical drive and expect the initiator side to use
+it for burning/dvd viewing.
+
+There's also another iSCSI target implemetation in Livna, called
+iscsitarget. See http://sourceforge.net/projects/iscsitarget/. This
+one appeared to be able to export the cdrom drive (at least I could
+mount the UDF file system); yet the initiator side didn't see it as a
+cdrom drive. E.g. probably no pass-through support.
+
+TODO: Need to find a good iSCSI target implementation.
+
+------------------------------------------------------------------------
+iSCSI initiator bits (the machine connecting to a remote device)
+------------------------------------------------------------------------
+
+This is using iscsi-initiator-utils-6.2.0.868-0.6.1dze.fc10.x86_64
+(basically rawhide package + patch referenced in https://bugzilla.redhat.com/show_bug.cgi?id=453282 )
+
+First, iscsi-initiator-utils maintains it's own persistent database of
+iSCSI targets associated with the machine. Initially this appears odd
+and potentially burdensome to deal with in the typical desktop
+workload: temporarily attach to a cd-rom on another system from a
+laptop for disc burning / dvd viewing.
+
+Another way to look at this is that the persistent database in many
+ways is analogous to cabling infrastructure. So tweaking this database
+is in many ways similar to attaching/detaching a device via a
+cable. Also, since iSCSI deals very well with connection loss and
+intermittent connections (e.g. through reconnection attempts /
+conservative error handling via timeouts) it makes even more sense.
+
+The interface to the persistent database is straightforward to deal
+with
+
+ iscsiadm --mode node --targetname iqn.2001-04.com.example:storage.disk2.amiens.sys1.xyz --portal quad.local:3260,1 --op new
+ iscsiadm --mode node --targetname iqn.2001-04.com.example:storage.disk2.amiens.sys1.xyz --portal quad.local:3260,1 --op update -n node.session.auth.authmethod -v CHAP
+ iscsiadm --mode node --targetname iqn.2001-04.com.example:storage.disk2.amiens.sys1.xyz --portal quad.local:3260,1 --op update -n node.session.auth.username -v davidz
+ iscsiadm --mode node --targetname iqn.2001-04.com.example:storage.disk2.amiens.sys1.xyz --portal quad.local:3260,1 --op update -n node.session.auth.password -v iscsi123
+ iscsiadm --mode node --targetname iqn.2001-04.com.example:storage.disk2.amiens.sys1.xyz --portal quad.local:3260,1 --op update -n node.startup -v manual
+
+Here we've configured the machine to associate with the device we set
+up earlier. Note that the node.startup key controls whether the OS
+initscripts will attempt to connect to the device at boot up.
+
+We haven't yet actually _connected_ to the device; that's
+done this way
+
+ iscsiadm --mode node --targetname iqn.2001-04.com.example:storage.disk2.amiens.sys1.xyz --portal quad.local:3260,1 --login
+
+So this is very similar to the act of attaching a physical device
+via e.g. a SATA cable. One gets the uevents when the device appears.
+
+One can disconnect from the device as well
+
+ iscsiadm --mode node --targetname iqn.2001-04.com.example:storage.disk2.amiens.sys1.xyz --portal quad.local:3260,1 --logout
+
+which is similar to disconnecting e.g. a SATA cable.
+
+Finally, one can disassociate the device from the system.
+
+ iscsiadm --mode node --targetname iqn.2001-04.com.example:storage.disk2.amiens.sys1.xyz --portal quad.local:3260,1 --op delete
+
+------------------------------------------------------------------------
+Teaching DeviceKit-disks / Palimpsest / GNOME about iSCSI devices
+------------------------------------------------------------------------
+
+First the 'why': there's a couple of reasons why iSCSI is interesting
+to integrate with the desktop stack and disk management graphical
+tools:
+
+ - It's generally a good idea to have graphical UI for OS
+   configuration bits in addition to configuration files and command
+   line tools. It's also not sufficient to just have UI tools
+   available at install time; people need to be able to tweak things
+   at run time as well.
+
+ - Both high-end laptops (e.g. Macbook Air, Lenovo X61, etc.) and
+   cheap sub-notebooks (e.g. Eee) doesn't come with optical
+   drives. Yet, users still need to be able to access storage media on
+   CD/DVD/Blu-Ray for both entertainment (e.g. watching DVD's) and
+   work (e.g. burning files to optical discs). It would be useful
+   to just use the optical drive from a desktop machine for this.
+
+Now to the 'how' part. First of all any integration being done should
+not render existing uses of iSCSI non-working and it shouldn't, as far
+as possible, be a parallel configuration stack to what people are
+currently using. The latter point means that if people use e.g.
+iscsiadm(1) on the command line, the results of their changes should
+appear in the UI as well.
+
+------------------------------------------------------------------------
+Changes needed on the initiator side:
+------------------------------------------------------------------------
+
+DeviceKit-disks changes:
+
+ - add 'iscsi' as valid value for drive-connection-interface
+   - and add new properties in the drive-iscsi-* namespace, e.g.
+     - name
+     - portal
+     - portal-port
+     - portal-group
+     - possibly information about current connection state
+       - may need to patch/fix the kernel to emit 'change' uevents
+         when this changes
+         - with this we can show notifications when there are
+           connection problems
+
+ - provide a way to enumerate iSCSI devices already setup; on
+   the org.freedesktop.DeviceKit.Disks interface add
+   - IScsiEnumerateEntries() that returns
+      { s: name
+        s: portal
+        i: portal-port
+        i: portal-group
+        b: autostart
+        <possible more, including auth details> }
+   - IScsiAddEntry(), IScsiRemoveEntry(), IScsiConfigureEntry()
+     - to add, remove and configure iSCSI associations
+       - might need changes to iscsiadm(1) so we can pipe
+         the password instead of including it on the command line
+   - signal IScsiEntriesChanged()
+     - may need to watch the iscsiadm(1) config files to listen
+       to changes
+   - IScsiEntryStart(), IScsiEntryStop()
+     - to login resp. logout to an iSCSI device
+
+libgdu / palimpsest changes:
+
+ - Like we do with Linux MD, make iSCSI drives implement the
+   GduActivableDrive interface. That way the user can start/stop
+   iSCSI drives. E.g. associated but non-connected iSCSI drives
+   should show up in the UI.
+
+ - When an iSCSI drive is selected, provide a GduSection with
+   widgets to change auth details etc. Similar to e.g.
+   GduSectionLinuxMd.
+
+ - Provide a way to create new iSCSI associations; probably just
+   an entry in the "File" menu in Palimpsest. Probably needs some
+   method on DeviceKit-disks to probe a portal for targets.
+
+Nautilus / gvfs / desktop shell changes:
+
+ - With a gvfs volume monitor based on libgdu (I'm working on it!)
+   that supports un-activated GduActivatableDrive instances, all
+   iSCSI associations will show up in the file manager and one
+   can double click the entry to activate it. Once logged into
+   the iSCSI target, it just appears as a normal local device.
+   Meaning it's accessible to any application
+
+ - Ideally iSCSI targets that one can connect to would show up
+   in network:///. There's a couple of protocols available for
+   iSCSI discovery but none of them seems to support mDNS. Need
+   some research here.
+
+ - Desktop notifications when a iSCSI connection is broken; user
+   should be able to disconnect / disassociate from the iSCSI
+   device
+
+ - For end user UI, should integrate with the "Personal File Sharing"
+   capplet; Bastien wants to rename it to e.g. "Sharing" since it
+   will also do other things like swallow the screen sharing bits.
+
+------------------------------------------------------------------------
+Changes needed on the target side
+------------------------------------------------------------------------
+
+TODO: this is probably simple UI wise (e.g. have "Share this drive"
+checkbox etc.) but need to figure out what iSCSI target implementation
+to depend on.

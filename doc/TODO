@@ -103,6 +103,7 @@ Before (next) release:
  - Share drives via iSCSI
    - initiator (connect to drive)
    - target (offer drive)
+   - see notes in doc/TODO-ISCSI
 
  - Filesystem check
    - non-interactive is easy
