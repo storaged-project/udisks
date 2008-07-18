@@ -122,11 +122,15 @@ devkit_disks_helper_fstab_mounter_LDADD = $(GLIB_LIBS)
 
 # TODO: move to udev
 udevhelperdir = $(slashlibdir)/udev
-udevhelper_PROGRAMS = part_id
+udevhelper_PROGRAMS = part_id devkit-disks-dm-export
 
 part_id_SOURCES = part-id.c
 part_id_CPPFLAGS = $(AM_CPPFLAGS)
 part_id_LDADD = $(GLIB_LIBS) $(top_builddir)/src/libpartutil.la
+
+devkit_disks_dm_export_SOURCES = devkit-disks-dm-export.c
+devkit_disks_dm_export_CPPFLAGS = $(AM_CPPFLAGS) $(DEVMAPPER_CFLAGS)
+devkit_disks_dm_export_LDADD = $(DEVMAPPER_LIBS)
 # end move to udev
 
 

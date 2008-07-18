@@ -1488,7 +1488,7 @@ update_info_properties_cb (DevkitDevice *d, const char *key, const char *value, 
         } else if (strcmp (key, "MD_EVENTS") == 0) {
                 device->priv->info.linux_md_component_events = devkit_device_get_property_as_uint64 (d, key);
 
-        } else if (strcmp (key, "DM_NAME") == 0) {
+        } else if (strcmp (key, "DKD_DM_NAME") == 0) {
                 if (g_str_has_prefix (value, "temporary-cryptsetup-")) {
                         /* ignore temporary devices created by /sbin/cryptsetup */
                         ignore_device = TRUE;
@@ -1504,7 +1504,7 @@ update_info_properties_cb (DevkitDevice *d, const char *key, const char *value, 
                         device->priv->info.dm_name = g_strdup (value);
                 }
 
-        } else if (strcmp (key, "DM_TARGET_TYPES") == 0) {
+        } else if (strcmp (key, "DKD_DM_TARGET_TYPES") == 0) {
                 if (strcmp (value, "crypt") == 0) {
                         /* we're a dm-crypt target and can, by design, then only have one slave */
                         if (device->priv->info.slaves_objpath->len == 1) {
