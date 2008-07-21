@@ -7,7 +7,7 @@ dist_devkit_policy_DATA = 					\
 @INTLTOOL_POLICY_RULE@
 
 check:
-	polkit-policy-file-validate $(dist_devkit_policy_DATA)
+	polkit-policy-file-validate $(top_srcdir)/policy/$(dist_devkit_policy_DATA)
 
 clean-local :
 	rm -f *~ *.policy
