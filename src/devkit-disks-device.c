@@ -2103,7 +2103,7 @@ update_info (DevkitDisksDevice *device)
          *       queue/hw_sector_size in sysfs but that's not available for e.g. Linux md devices
          */
         errno = 0;
-        fd = open (device->priv->info.device_file, O_RDONLY);
+        fd = open (device->priv->info.device_file, O_RDONLY|O_NONBLOCK);
         if (fd < 0 && errno != ENOMEDIUM) {
 		g_warning ("Cannot open %s read only", device->priv->info.device_file);
                 goto out;
@@ -2122,7 +2122,7 @@ update_info (DevkitDisksDevice *device)
                  * (e.g. write-protect on SD cards, optical drives etc.)
                  */
                 errno = 0;
-                fd = open (device->priv->info.device_file, O_WRONLY);
+                fd = open (device->priv->info.device_file, O_WRONLY|O_NONBLOCK);
                 if (fd < 0) {
                         if (errno == EROFS) {
                                 device->priv->info.device_is_read_only = TRUE;

@@ -1,27 +1,18 @@
 
-ACTION!="add|change", GOTO="probe_parttable_end"
-SUBSYSTEM!="block", GOTO="probe_parttable_end"
+# we only care about block devices
+ACTION!="add|change", GOTO="devkit_disks_end"
+SUBSYSTEM!="block", GOTO="devkit_disks_end"
+
+##############################################################################################################
+
+# Probe for partition tables
 
 # ignore non-cdrom ide drivers; these causes loops
 KERNEL=="hd*[!0-9]", ATTR{removable}=="1", DRIVERS=="ide-cs|ide-floppy", GOTO="probe_parttable_end"
 KERNEL=="hd*[0-9]", ATTR{removable}=="1", GOTO="probe_parttable_end"
 
-# Example rule for tagging a device with a specific media type. Where and
-# how to store this database needs some thought.
-#
-SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:0", ENV{ID_DRIVE_FLASH_CF}="1"
-SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:1", ENV{ID_DRIVE_FLASH_MS}="1"
-SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:2", ENV{ID_DRIVE_FLASH_SM}="1"
-SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:3", ENV{ID_DRIVE_FLASH_SD}="1"
-
-SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:0", ENV{ID_DRIVE_FLASH_CF}="1"
-SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:1", ENV{ID_DRIVE_FLASH_SM}="1"
-SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:2", ENV{ID_DRIVE_FLASH_SD}="1"
-SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:3", ENV{ID_DRIVE_FLASH_MS}="1"
-
-# Apple iPod Video
-#
-SYSFS{idVendor}=="05ac", SYSFS{idProduct}=="1209", ENV{ID_DRIVE_REQUIRES_EJECT}="1"
+# don't scan for partition tables on empty discs
+KERNEL=="sr*", ENV{ID_CDROM_MEDIA_TRACK_COUNT}!="?*", GOTO="probe_parttable_end"
 
 # scan for partition table only if we're not a partition
 #
@@ -40,11 +31,11 @@ ATTR{start}=="[0-9]*", IMPORT{program}="part_id $tempnode"
 # clear all ID_FS_USAGE, TYPE if we're a partition table
 ATTR{range}=="[0-9]*", ENV{PART_P1_TYPE}!="", ENV{ID_FS_USAGE}="", ENV{ID_FS_TYPE}=""
 
-
 LABEL="probe_parttable_end"
 
-# device-mapper stuff; this really needs to go to upstream
-#
+##############################################################################################################
+
+# pick up device-mapper data; this really needs to go to upstream
 
 KERNEL!="dm-*", GOTO="device_mapper_end"
 ACTION!="add|change", GOTO="device_mapper_end"
@@ -66,15 +57,30 @@ ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_FS_LABEL_ENC}=="?*", SYMLINK+="disk
 
 LABEL="device_mapper_end"
 
+##############################################################################################################
 
-# Temp hack because of jgarzik bug.. credit goes to Kay
-# Sievers for this. Thanks.
+# Example rule for tagging a device with a specific media type. Where and
+# how to store this database needs some thought.
 #
-# See http://marc.info/?l=linux-scsi&m=120479575414508&w=2
+SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:0", ENV{ID_DRIVE_FLASH_CF}="1"
+SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:1", ENV{ID_DRIVE_FLASH_MS}="1"
+SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:2", ENV{ID_DRIVE_FLASH_SM}="1"
+SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:3", ENV{ID_DRIVE_FLASH_SD}="1"
+
+SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:0", ENV{ID_DRIVE_FLASH_CF}="1"
+SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:1", ENV{ID_DRIVE_FLASH_SM}="1"
+SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:2", ENV{ID_DRIVE_FLASH_SD}="1"
+SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:3", ENV{ID_DRIVE_FLASH_MS}="1"
+
+# Apple iPod Video
 #
-ACTION=="change", SUBSYSTEM=="scsi", ENV{DEVTYPE}=="scsi_device", PROGRAM="/bin/sh -c 'for i in /sys%p/block/*/uevent; do echo -n change > $$i; done'"
-ACTION=="add", SUBSYSTEM=="scsi", ENV{DEVTYPE}=="scsi_device", PROGRAM="/bin/chmod 0644 /sys%p/evt_media_change", ATTR{evt_media_change}="1"
+SYSFS{idVendor}=="05ac", SYSFS{idProduct}=="1209", ENV{ID_DRIVE_REQUIRES_EJECT}="1"
+
+
+##############################################################################################################
 
 # finally pass all events to the DeviceKit disks daemon
 #
 SUBSYSTEM=="block", RUN+="socket:/org/freedesktop/devicekit/disks/udev_event"
+
+LABEL="devkit_disks_end"
