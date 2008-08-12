@@ -3,11 +3,11 @@ SCM
 
  - anonymous checkouts
 
-   $ git clone git://git.freedesktop.org/git/DeviceKit-disks.git
+   $ git clone git://git.freedesktop.org/git/DeviceKit/DeviceKit-disks.git
 
  - checkouts if you got an ssh account on fd.o (username@ is optional)
 
-   $ git clone ssh://[username@]git.freedesktop.org/git/DeviceKit-disks.git
+   $ git clone ssh://[username@]git.freedesktop.org/git/DeviceKit/DeviceKit-disks.git
 
  - commit to local repository
 
