@@ -24,6 +24,7 @@
 #include <glib-object.h>
 #include <polkit-dbus/polkit-dbus.h>
 #include <dbus/dbus-glib.h>
+#include <devkit-gobject/devkit-gobject.h>
 
 struct DevkitDisksDevice;
 typedef struct DevkitDisksDevice DevkitDisksDevice;
