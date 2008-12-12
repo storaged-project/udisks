@@ -8,4 +8,8 @@
   <policy user="root">
     <allow own="org.freedesktop.DeviceKit.Disks"/>
   </policy>
+
+  <policy context="default">
+    <allow send_destination="org.freedesktop.DeviceKit.Disks"/>
+  </policy>
 </busconfig>
