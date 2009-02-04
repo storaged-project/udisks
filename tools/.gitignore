@@ -1,0 +1,11 @@
+.deps
+Makefile
+Makefile.in
+*.o
+devkit-disks
+devkit-disks-daemon-glue.h
+devkit-disks-device-glue.h
+devkit-disks-marshal.c
+devkit-disks-marshal.h
+umount.devkit
+
