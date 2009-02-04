@@ -6,7 +6,7 @@ test -z "$srcdir" && srcdir=.
 
 DIE=0
 
-(test -f $srcdir/configure.in) || {
+(test -f $srcdir/configure.ac) || {
     echo -n "**Error**: Directory $srcdir does not look like the"
     echo " top-level package directory"
     exit 1
@@ -20,7 +20,7 @@ DIE=0
   DIE=1
 }
 
-(grep "^AM_PROG_LIBTOOL" $srcdir/configure.in >/dev/null) && {
+(grep "^AM_PROG_LIBTOOL" $srcdir/configure.ac >/dev/null) && {
   (libtool --version) < /dev/null > /dev/null 2>&1 || {
     echo
     echo "**Error**: You must have libtool installed."
@@ -65,7 +65,7 @@ esac
 
       aclocalinclude="$ACLOCAL_FLAGS"
 
-      if grep "^AM_PROG_LIBTOOL" configure.in >/dev/null; then
+      if grep "^AM_PROG_LIBTOOL" configure.ac >/dev/null; then
 	if test -z "$NO_LIBTOOLIZE" ; then 
 	  echo "Running libtoolize..."
 	  libtoolize --force --copy
@@ -73,7 +73,7 @@ esac
       fi
       echo "Running aclocal $aclocalinclude ..."
       aclocal $aclocalinclude
-      if grep "^AM_CONFIG_HEADER" configure.in >/dev/null; then
+      if grep "^AM_CONFIG_HEADER" configure.ac >/dev/null; then
 	echo "Running autoheader..."
 	autoheader
       fi
