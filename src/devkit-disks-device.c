@@ -1489,6 +1489,7 @@ update_info_properties_cb (DevkitDevice *d, const char *key, const char *value, 
                 device->priv->info.linux_md_component_events = devkit_device_get_property_as_uint64 (d, key);
 
         } else if (strcmp (key, "DKD_DM_NAME") == 0) {
+
                 if (g_str_has_prefix (value, "temporary-cryptsetup-")) {
                         /* ignore temporary devices created by /sbin/cryptsetup */
                         ignore_device = TRUE;
@@ -1505,17 +1506,20 @@ update_info_properties_cb (DevkitDevice *d, const char *key, const char *value, 
                 }
 
         } else if (strcmp (key, "DKD_DM_TARGET_TYPES") == 0) {
-                if (strcmp (value, "crypt") == 0) {
-                        /* we're a dm-crypt target and can, by design, then only have one slave */
-                        if (device->priv->info.slaves_objpath->len == 1) {
-                                /* avoid claiming we are a drive since we want to be related
-                                 * to the cryptotext device
-                                 */
-                                device->priv->info.device_is_drive = FALSE;
 
-                                device->priv->info.device_is_luks_cleartext = TRUE;
-                                device->priv->info.luks_cleartext_slave =
-                                        g_strdup (g_ptr_array_index (device->priv->info.slaves_objpath, 0));
+                if (strcmp (value, "crypt") == 0) {
+                        /* ignore temporary devices created by /sbin/cryptsetup */
+                        if (device->priv->info.dm_name != NULL && !g_str_has_prefix (device->priv->info.dm_name, "temporary-cryptsetup-")) {
+                                /* we're a dm-crypt target and can, by design, then only have one slave */
+                                if (device->priv->info.slaves_objpath->len == 1) {
+                                        /* avoid claiming we are a drive since we want to be related
+                                         * to the cryptotext device
+                                         */
+                                        device->priv->info.device_is_drive = FALSE;
+                                        device->priv->info.device_is_luks_cleartext = TRUE;
+                                        device->priv->info.luks_cleartext_slave =
+                                                g_strdup (g_ptr_array_index (device->priv->info.slaves_objpath, 0));
+                                }
                         }
                 }
 
@@ -5593,7 +5597,7 @@ out:
 typedef struct {
         int refcount;
 
-        guint device_added_signal_handler_id;
+        gulong device_added_signal_handler_id;
         guint device_added_timeout_id;
 
         DBusGMethodInvocation *context;
@@ -5680,10 +5684,46 @@ luks_unlock_device_not_seen_cb (gpointer user_data)
                 data->hook_func (data->context, NULL, data->hook_user_data);
         }
 
-        g_signal_handler_disconnect (data->device->priv->daemon, data->device_added_signal_handler_id);
+        if (data->device_added_signal_handler_id > 0)
+                g_signal_handler_disconnect (data->device->priv->daemon, data->device_added_signal_handler_id);
+
         unlock_encryption_data_unref (data);
         return FALSE;
 }
+
+static gboolean
+luks_unlock_start_waiting_for_cleartext_device (gpointer user_data)
+{
+        UnlockEncryptionData *data = user_data;
+        DevkitDisksDevice *cleartext_device;
+
+        cleartext_device = find_cleartext_device (data->device);
+        if (cleartext_device != NULL) {
+                if (data->hook_func != NULL) {
+                        data->hook_func (data->context, cleartext_device, data->hook_user_data);
+                } else {
+                        dbus_g_method_return (data->context, cleartext_device->priv->object_path);
+                }
+
+                unlock_encryption_data_unref (data);
+        } else {
+                /* sit around wait for the cleartext device to appear */
+                data->device_added_signal_handler_id = g_signal_connect_after (data->device->priv->daemon,
+                                                                               "device-added",
+                                                                               (GCallback) luks_unlock_device_added_cb,
+                                                                               data);
+
+                /* set up timeout for error reporting if waiting failed */
+                data->device_added_timeout_id = g_timeout_add (10 * 1000,
+                                                               luks_unlock_device_not_seen_cb,
+                                                               data);
+
+                /* Note that the signal and timeout handlers share the ref to data - one will cancel the other */
+        }
+
+        return FALSE;
+}
+
 
 static void
 luks_unlock_completed_cb (DBusGMethodInvocation *context,
@@ -5696,34 +5736,36 @@ luks_unlock_completed_cb (DBusGMethodInvocation *context,
                                gpointer user_data)
 {
         UnlockEncryptionData *data = user_data;
-        DevkitDisksDevice *cleartext_device;
 
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
 
-                cleartext_device = find_cleartext_device (device);
-                if (cleartext_device != NULL) {
-                        if (data->hook_func != NULL) {
-                                data->hook_func (data->context, cleartext_device, data->hook_user_data);
-                        } else {
-                                dbus_g_method_return (data->context, cleartext_device->priv->object_path);
-                        }
-                } else {
-                        /* sit around wait for the cleartext device to appear */
-                        data->device_added_signal_handler_id = g_signal_connect_after (
-                                device->priv->daemon,
-                                "device-added",
-                                (GCallback) luks_unlock_device_added_cb,
-                                unlock_encryption_data_ref (data));
+                /* yay, so it turns out /sbin/cryptsetup returns way too early; what happens is this
+                 *
+                 * - invoke /sbin/cryptsetup
+                 *   - temporary dm node with name temporary-cryptsetup-* appears. We ignore these,
+                 *     see above
+                 *   - temporary dm node removed
+                 * - /sbin/cryptsetup returns with success (brings us here)
+                 *   - proper dm node appears
+                 *     - with the name we requested, e.g. devkit-disks-luks-uuid-%s-uid%d
+                 *   - proper dm node disappears
+                 *   - proper dm node reappears
+                 *
+                 * Obiviously /sbin/cryptsetup shouldn't return before the dm node we are
+                 * looking for is really there.
+                 *
+                 * TODO: file a bug against /sbin/cryptsetup, probably fix it too. This probably
+                 *       involves fixing device-mapper as well
+                 *
+                 * CURRENT WORKAROUND: Basically, we just sleep two seconds before waiting for the
+                 *                     cleartext device to appear. That way we can ignore the initial
+                 *                     nodes.
+                 */
 
-                        /* set up timeout for error reporting if waiting failed
-                         *
-                         * (the signal handler and the timeout handler share the ref to data
-                         * as one will cancel the other)
-                         */
-                        data->device_added_timeout_id = g_timeout_add (10 * 1000,
-                                                                       luks_unlock_device_not_seen_cb,
-                                                                       data);
-                }
+                g_timeout_add (2 * 1000,
+                               luks_unlock_start_waiting_for_cleartext_device,
+                               unlock_encryption_data_ref (data));
+
         } else {
                 if (job_was_cancelled) {
                         throw_error (context,
