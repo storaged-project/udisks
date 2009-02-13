@@ -727,46 +727,6 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 g_warning ("unhandled property '%s'", key);
 }
 
-static DeviceProperties *
-device_properties_get (DBusGConnection *bus,
-                       const char *object_path)
-{
-        DeviceProperties *props;
-        GError *error;
-        GHashTable *hash_table;
-        DBusGProxy *prop_proxy;
-        const char *ifname = "org.freedesktop.DeviceKit.Disks.Device";
-
-        props = g_new0 (DeviceProperties, 1);
-
-	prop_proxy = dbus_g_proxy_new_for_name (bus,
-                                                "org.freedesktop.DeviceKit.Disks",
-                                                object_path,
-                                                "org.freedesktop.DBus.Properties");
-        error = NULL;
-        if (!dbus_g_proxy_call (prop_proxy,
-                                "GetAll",
-                                &error,
-                                G_TYPE_STRING,
-                                ifname,
-                                G_TYPE_INVALID,
-                                dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_VALUE),
-                                &hash_table,
-                                G_TYPE_INVALID)) {
-                g_warning ("Couldn't call GetAll() to get properties for %s: %s", object_path, error->message);
-                g_error_free (error);
-                goto out;
-        }
-
-        g_hash_table_foreach (hash_table, (GHFunc) collect_props, props);
-
-        g_hash_table_unref (hash_table);
-
-out:
-        g_object_unref (prop_proxy);
-        return props;
-}
-
 static void
 device_properties_free (DeviceProperties *props)
 {
@@ -812,6 +772,49 @@ device_properties_free (DeviceProperties *props)
         g_free (props);
 }
 
+static DeviceProperties *
+device_properties_get (DBusGConnection *bus,
+                       const char *object_path)
+{
+        DeviceProperties *props;
+        GError *error;
+        GHashTable *hash_table;
+        DBusGProxy *prop_proxy;
+        const char *ifname = "org.freedesktop.DeviceKit.Disks.Device";
+
+        props = g_new0 (DeviceProperties, 1);
+
+	prop_proxy = dbus_g_proxy_new_for_name (bus,
+                                                "org.freedesktop.DeviceKit.Disks",
+                                                object_path,
+                                                "org.freedesktop.DBus.Properties");
+        error = NULL;
+        if (!dbus_g_proxy_call (prop_proxy,
+                                "GetAll",
+                                &error,
+                                G_TYPE_STRING,
+                                ifname,
+                                G_TYPE_INVALID,
+                                dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_VALUE),
+                                &hash_table,
+                                G_TYPE_INVALID)) {
+                g_warning ("Couldn't call GetAll() to get properties for %s: %s", object_path, error->message);
+                g_error_free (error);
+
+                device_properties_free (props);
+                props = NULL;
+                goto out;
+        }
+
+        g_hash_table_foreach (hash_table, (GHFunc) collect_props, props);
+
+        g_hash_table_unref (hash_table);
+
+out:
+        g_object_unref (prop_proxy);
+        return props;
+}
+
 /* --- SUCKY CODE END --- */
 
 static gboolean
@@ -843,6 +846,9 @@ do_show_info (const char *object_path)
         DeviceProperties *props;
 
         props = device_properties_get (bus, object_path);
+        if (props == NULL)
+                return;
+
         g_print ("Showing information for %s\n", object_path);
         g_print ("  native-path:     %s\n", props->native_path);
         g_print ("  device-file:     %s\n", props->device_file);
