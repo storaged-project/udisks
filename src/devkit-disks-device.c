@@ -1840,17 +1840,23 @@ update_drive_properties (DevkitDisksDevice *device)
                                  */
                                 vendor = sysfs_get_string (s, "vendor");
                                 if (vendor != NULL) {
-                                        g_free (device->priv->info.drive_vendor);
                                         g_strstrip (vendor);
-                                        device->priv->info.drive_vendor = _dupv8 (vendor);
+                                        /* Don't overwrite what we set earlier from ID_VENDOR */
+                                        if (device->priv->info.drive_vendor == NULL) {
+                                                g_free (device->priv->info.drive_vendor);
+                                                device->priv->info.drive_vendor = _dupv8 (vendor);
+                                        }
                                         g_free (vendor);
                                 }
 
                                 model = sysfs_get_string (s, "model");
                                 if (model != NULL) {
-                                        g_free (device->priv->info.drive_model);
                                         g_strstrip (model);
-                                        device->priv->info.drive_model = _dupv8 (model);
+                                        /* Don't overwrite what we set earlier from ID_MODEL */
+                                        if (device->priv->info.drive_model == NULL) {
+                                                g_free (device->priv->info.drive_model);
+                                                device->priv->info.drive_model = _dupv8 (model);
+                                        }
                                         g_free (model);
                                 }
 
