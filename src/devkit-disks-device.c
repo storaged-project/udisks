@@ -65,6 +65,7 @@ static void     devkit_disks_device_finalize    (GObject     *object);
 static void     init_info                  (DevkitDisksDevice *device);
 static void     free_info                  (DevkitDisksDevice *device);
 static gboolean update_info                (DevkitDisksDevice *device);
+static void     update_info_in_idle        (DevkitDisksDevice *device);
 
 static gboolean luks_get_uid_from_dm_name (const char *dm_name, uid_t *out_uid);
 
@@ -1850,7 +1851,7 @@ update_slaves (DevkitDisksDevice *device)
 
                 slave = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, slave_objpath);
                 if (slave != NULL) {
-                        update_info (slave);
+                        update_info_in_idle (slave);
                 }
         }
 }
@@ -1868,7 +1869,7 @@ update_holders (DevkitDisksDevice *device)
 
                 holder = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, holder_objpath);
                 if (holder != NULL) {
-                        update_info (holder);
+                        update_info_in_idle (holder);
                 }
         }
 }
@@ -2105,25 +2106,41 @@ strv_has_str (char **strv, char *str)
         return FALSE;
 }
 
-static guint clear_handler_id = 0;
+static guint do_update_in_idle_handler_id = 0;
+static GList *devices_to_update_in_idle = NULL;
 
 static gboolean
-clear_is_updated_flags (DevkitDisksDaemon *daemon)
+do_update_in_idle (DevkitDisksDaemon *daemon)
 {
         GList *devices, *l;
 
         devices = devkit_disks_daemon_local_get_all_devices (daemon);
-        for (l = devices; l != NULL; l = l->next) {
+        for (l = devices_to_update_in_idle; l != NULL; l = l->next) {
                 DevkitDisksDevice *device = DEVKIT_DISKS_DEVICE (l->data);
 
-                device->priv->is_updated = FALSE;
+                update_info (device);
         }
+        g_list_foreach (devices_to_update_in_idle, (GFunc) g_object_unref, NULL);
+        g_list_free (devices_to_update_in_idle);
+        devices_to_update_in_idle = NULL;
 
-        g_list_free (devices);
-
-        clear_handler_id = 0;
+        do_update_in_idle_handler_id = 0;
 
         return FALSE;
+}
+
+static void
+update_info_in_idle (DevkitDisksDevice *device)
+{
+        if (g_list_find (devices_to_update_in_idle, device) != NULL)
+                goto out;
+
+        devices_to_update_in_idle = g_list_prepend (devices_to_update_in_idle, g_object_ref (device));
+
+ out:
+        /* ensure we have set up and idle handler */
+        if (do_update_in_idle_handler_id == 0)
+                do_update_in_idle_handler_id = g_idle_add ((GSourceFunc) do_update_in_idle, device->priv->daemon);
 }
 
 /**
@@ -2151,19 +2168,6 @@ update_info (DevkitDisksDevice *device)
         const char *fstype;
 
         ret = FALSE;
-
-        if (device->priv->is_updated) {
-                g_debug ("Skipping update of %s because is_updated==TRUE", device->priv->native_path);
-                ret = TRUE;
-                goto out;
-        }
-
-        device->priv->is_updated = TRUE;
-
-        /* ensure we have set up and idle handler to clear all flags */
-        if (clear_handler_id == 0)
-                clear_handler_id = g_idle_add ((GSourceFunc) clear_is_updated_flags, device->priv->daemon);
-
 
         /* md is special; we don't get "remove" events from the kernel when an array is
          * stopped; so catch it very early before erasing our existing slave variable (we

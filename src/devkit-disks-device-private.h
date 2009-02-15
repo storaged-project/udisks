@@ -81,8 +81,6 @@ struct DevkitDisksDevicePrivate
 
         guint linux_md_poll_timeout_id;
 
-        gboolean is_updated;
-
         struct {
                 char *device_file;
                 GPtrArray *device_file_by_id;
