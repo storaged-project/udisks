@@ -59,6 +59,12 @@ LABEL="device_mapper_end"
 
 ##############################################################################################################
 
+# pick up data from MD components; this really ought to be done by mdadm itself
+#
+ENV{ID_FS_TYPE}=="linux_raid_member", IMPORT{program}="/sbin/mdadm --examine --export $tempnode"
+
+##############################################################################################################
+
 # Example rule for tagging a device with a specific media type. Where and
 # how to store this database needs some thought.
 #
