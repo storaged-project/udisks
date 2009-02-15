@@ -548,6 +548,12 @@ get_property (GObject         *object,
 	case PROP_LINUX_MD_NUM_RAID_DEVICES:
 		g_value_set_int (value, device->priv->info.linux_md_num_raid_devices);
 		break;
+	case PROP_LINUX_MD_UUID:
+		g_value_set_string (value, device->priv->info.linux_md_uuid);
+		break;
+	case PROP_LINUX_MD_NAME:
+		g_value_set_string (value, device->priv->info.linux_md_name);
+		break;
 	case PROP_LINUX_MD_VERSION:
 		g_value_set_string (value, device->priv->info.linux_md_version);
 		break;
@@ -1308,6 +1314,8 @@ free_info (DevkitDisksDevice *device)
         g_free (device->priv->info.linux_md_component_version);
 
         g_free (device->priv->info.linux_md_level);
+        g_free (device->priv->info.linux_md_uuid);
+        g_free (device->priv->info.linux_md_name);
         g_free (device->priv->info.linux_md_version);
         g_ptr_array_foreach (device->priv->info.linux_md_slaves, (GFunc) g_free, NULL);
         g_ptr_array_free (device->priv->info.linux_md_slaves, TRUE);
@@ -1510,16 +1518,28 @@ update_info_properties_cb (DevkitDevice *d, const char *key, const char *value, 
                 }
 
         } else if (strcmp (key, "MD_DEVICES") == 0) {
-                device->priv->info.linux_md_component_num_raid_devices = devkit_device_get_property_as_int (d, key);
+                if (device->priv->info.device_is_linux_md_component)
+                        device->priv->info.linux_md_component_num_raid_devices = devkit_device_get_property_as_int (d, key);
 
         } else if (strcmp (key, "MD_LEVEL") == 0) {
-                device->priv->info.linux_md_component_level = g_strdup (value);
+                if (device->priv->info.device_is_linux_md_component)
+                        device->priv->info.linux_md_component_level = g_strdup (value);
 
         } else if (strcmp (key, "MD_UPDATE_TIME") == 0) {
-                device->priv->info.linux_md_component_update_time = devkit_device_get_property_as_uint64 (d, key);
+                if (device->priv->info.device_is_linux_md_component)
+                        device->priv->info.linux_md_component_update_time = devkit_device_get_property_as_uint64 (d, key);
 
         } else if (strcmp (key, "MD_EVENTS") == 0) {
-                device->priv->info.linux_md_component_events = devkit_device_get_property_as_uint64 (d, key);
+                if (device->priv->info.device_is_linux_md_component)
+                        device->priv->info.linux_md_component_events = devkit_device_get_property_as_uint64 (d, key);
+
+        } else if (strcmp (key, "MD_UUID") == 0) {
+                if (device->priv->info.device_is_linux_md)
+                        device->priv->info.linux_md_uuid = g_strdup (value);
+
+        } else if (strcmp (key, "MD_NAME") == 0) {
+                if (device->priv->info.device_is_linux_md)
+                        device->priv->info.linux_md_name = g_strdup (value);
 
         } else if (strcmp (key, "DKD_DM_NAME") == 0) {
 
@@ -2307,6 +2327,11 @@ update_info (DevkitDisksDevice *device)
                 device->priv->info.device_is_linux_md_component = TRUE;
         }
 
+        /* need to know if we are a linux md device so we know how to redirect MD_* properties */
+        if (sysfs_file_exists (device->priv->native_path, "md")) {
+                device->priv->info.device_is_linux_md = TRUE;
+        }
+
         if (devkit_device_properties_foreach (device->priv->d, update_info_properties_cb, device)) {
 		g_warning ("Iteration of properties was short circuited for %s", device->priv->native_path);
                 goto out;
@@ -2327,10 +2352,8 @@ update_info (DevkitDisksDevice *device)
         update_holders (device);
 
         /* Linux MD detection */
-        if (sysfs_file_exists (device->priv->native_path, "md")) {
+        if (device->priv->info.device_is_linux_md) {
                 char *raid_level;
-
-                device->priv->info.device_is_linux_md = TRUE;
 
                 raid_level = g_strstrip (sysfs_get_string (device->priv->native_path, "md/level"));
                 if (raid_level == NULL) {

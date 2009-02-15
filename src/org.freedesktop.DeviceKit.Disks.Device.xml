@@ -2330,6 +2330,22 @@
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
+    <property name="linux-md-uuid" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The UUID of the array.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="linux-md-name" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The name of the array. Blank if the array
+            doesn't have a name (e.g. pre-1.0 meta data).
+            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
     <property name="linux-md-num-raid-devices" type="i" access="read">
       <doc:doc><doc:description><doc:para>
             Number of component devices in the array.

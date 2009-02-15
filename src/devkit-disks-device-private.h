@@ -162,6 +162,8 @@ struct DevkitDisksDevicePrivate
 
                 char *linux_md_level;
                 int linux_md_num_raid_devices;
+                char *linux_md_uuid;
+                char *linux_md_name;
                 char *linux_md_version;
                 GPtrArray *linux_md_slaves;
                 GPtrArray *linux_md_slaves_state;
