@@ -593,6 +593,7 @@ devkit_disks_daemon_finalize (GObject *object)
                 g_hash_table_unref (daemon->priv->map_object_path_to_device);
         }
 
+
         if (daemon->priv->mount_monitor != NULL) {
                 g_object_unref (daemon->priv->mount_monitor);
         }
@@ -1034,15 +1035,18 @@ devkit_disks_daemon_new (void)
         GError *error = NULL;
         GList *devices;
         GList *l;
+        DevkitDisksDevice *device;
+        GHashTableIter device_iter;
         const char *subsystems[] = {"block", NULL};
 
         daemon = DEVKIT_DISKS_DAEMON (g_object_new (DEVKIT_TYPE_DISKS_DAEMON, NULL));
 
+
+
         if (!register_disks_daemon (DEVKIT_DISKS_DAEMON (daemon))) {
                 g_object_unref (daemon);
-                return NULL;
+                goto error;
         }
-
 
         devices = devkit_client_enumerate_by_subsystem (daemon->priv->devkit_client,
                                                          subsystems,
@@ -1051,7 +1055,7 @@ devkit_disks_daemon_new (void)
                 g_warning ("Cannot enumerate devices: %s", error->message);
                 g_error_free (error);
                 g_object_unref (daemon);
-                return NULL;
+                goto error;
         }
         for (l = devices; l != NULL; l = l->next) {
                 DevkitDevice *device = l->data;
@@ -1059,6 +1063,14 @@ devkit_disks_daemon_new (void)
         }
         g_list_foreach (devices, (GFunc) g_object_unref, NULL);
         g_list_free (devices);
+
+        /* now refresh data for all devices just added to get slave/holder relationships
+         * properly initialized
+         */
+        g_hash_table_iter_init (&device_iter, daemon->priv->map_object_path_to_device);
+        while (g_hash_table_iter_next (&device_iter, NULL, (gpointer) &device)) {
+                devkit_disks_daemon_local_synthesize_changed (daemon, device->priv->d);
+        }
 
         /* clean stale directories in /media as well as stale
          * entries in /var/lib/DeviceKit-disks/mtab
@@ -1071,6 +1083,9 @@ devkit_disks_daemon_new (void)
         refresh_smart_data (daemon);
 
         return daemon;
+
+ error:
+        return NULL;
 }
 
 DevkitDisksLogger *

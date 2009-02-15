@@ -81,6 +81,8 @@ struct DevkitDisksDevicePrivate
 
         guint linux_md_poll_timeout_id;
 
+        gboolean is_updated;
+
         struct {
                 char *device_file;
                 GPtrArray *device_file_by_id;
@@ -93,6 +95,7 @@ struct DevkitDisksDevicePrivate
                 gboolean device_is_read_only;
                 gboolean device_is_drive;
                 gboolean device_is_optical_disc;
+                gboolean device_is_luks;
                 gboolean device_is_luks_cleartext;
                 gboolean device_is_linux_md_component;
                 gboolean device_is_linux_md;
@@ -143,6 +146,8 @@ struct DevkitDisksDevicePrivate
                 gboolean optical_disc_has_audio;
                 guint optical_disc_num_tracks;
                 guint optical_disc_num_sessions;
+
+                char *luks_holder;
 
                 char *luks_cleartext_slave;
                 uid_t luks_cleartext_unlocked_by_uid;

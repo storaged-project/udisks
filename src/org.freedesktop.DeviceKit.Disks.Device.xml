@@ -1393,6 +1393,11 @@
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
+    <property name="device-is-luks" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if device is an LUKS encrypted device. See luks- properties for details.
+      </doc:para></doc:description></doc:doc>
+    </property>
     <property name="device-is-luks-cleartext" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE if device is a cleartext device backed by a LUKS encrypted device. See luks-cleartext- properties for details.
@@ -1588,6 +1593,15 @@
             and
             <doc:ref type="property" to="Device:id-usage">id-type</doc:ref>
             properties.
+      </doc:para></doc:description></doc:doc>
+    </property>
+
+    <property name="luks-holder" type="o" access="read">
+      <doc:doc><doc:description><doc:para>
+            The cleartext device that is using the LUKS device.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-luks-cleartext">device-is-luks</doc:ref>
+            is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
 

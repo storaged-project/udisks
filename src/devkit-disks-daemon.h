@@ -90,12 +90,16 @@ DevkitDisksDaemon *devkit_disks_daemon_new                 (void);
 /* local methods */
 
 GList             *devkit_disks_daemon_local_get_all_devices     (DevkitDisksDaemon       *daemon);
+
 DevkitDisksDevice *devkit_disks_daemon_local_find_by_native_path (DevkitDisksDaemon       *daemon,
                                                                   const char              *native_path);
+
 DevkitDisksDevice *devkit_disks_daemon_local_find_by_object_path (DevkitDisksDaemon       *daemon,
                                                                   const char              *object_path);
+
 PolKitCaller      *devkit_disks_damon_local_get_caller_for_context (DevkitDisksDaemon     *daemon,
                                                                     DBusGMethodInvocation *context);
+
 gboolean           devkit_disks_damon_local_check_auth             (DevkitDisksDaemon     *daemon,
                                                                     PolKitCaller          *pk_caller,
                                                                     const char            *action_id,

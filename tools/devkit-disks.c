@@ -408,6 +408,7 @@ typedef struct
         gboolean device_is_read_only;
         gboolean device_is_drive;
         gboolean device_is_optical_disc;
+        gboolean device_is_luks;
         gboolean device_is_luks_cleartext;
         gboolean device_is_mounted;
         gboolean device_is_busy;
@@ -448,6 +449,8 @@ typedef struct
         int      partition_table_max_number;
         GArray  *partition_table_offsets;
         GArray  *partition_table_sizes;
+
+        char    *luks_holder;
 
         char    *luks_cleartext_slave;
         uid_t    luks_cleartext_unlocked_by_uid;
@@ -530,6 +533,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->device_is_drive = g_value_get_boolean (value);
         else if (strcmp (key, "device-is-optical-disc") == 0)
                 props->device_is_optical_disc = g_value_get_boolean (value);
+        else if (strcmp (key, "device-is-luks") == 0)
+                props->device_is_luks = g_value_get_boolean (value);
         else if (strcmp (key, "device-is-luks-cleartext") == 0)
                 props->device_is_luks_cleartext = g_value_get_boolean (value);
         else if (strcmp (key, "device-is-linux-md-component") == 0)
@@ -613,6 +618,9 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 g_value_copy (value, &dest_value);
                 props->partition_table_sizes = g_value_get_boxed (&dest_value);
         }
+
+        else if (strcmp (key, "luks-holder") == 0)
+                props->luks_holder = g_strdup (g_value_get_boxed (value));
 
         else if (strcmp (key, "luks-cleartext-slave") == 0)
                 props->luks_cleartext_slave = g_strdup (g_value_get_boxed (value));
@@ -750,6 +758,7 @@ device_properties_free (DeviceProperties *props)
         g_free (props->partition_table_scheme);
         g_array_free (props->partition_table_offsets, TRUE);
         g_array_free (props->partition_table_sizes, TRUE);
+        g_free (props->luks_holder);
         g_free (props->luks_cleartext_slave);
         g_free (props->drive_model);
         g_free (props->drive_vendor);
@@ -913,6 +922,10 @@ do_show_info (const char *object_path)
                 for (n = 0; props->linux_md_slaves[n] != NULL; n++)
                         g_print ("          %s (state: %s)\n",
                                  props->linux_md_slaves[n], props->linux_md_slaves_state[n]);
+        }
+        if (props->device_is_luks) {
+                g_print ("  luks device:\n");
+                g_print ("    holder:        %s\n", props->luks_holder);
         }
         if (props->device_is_luks_cleartext) {
                 g_print ("  cleartext luks device:\n");

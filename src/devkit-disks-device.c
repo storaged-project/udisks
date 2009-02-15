@@ -129,6 +129,7 @@ enum
         PROP_DEVICE_IS_READ_ONLY,
         PROP_DEVICE_IS_DRIVE,
         PROP_DEVICE_IS_OPTICAL_DISC,
+        PROP_DEVICE_IS_LUKS,
         PROP_DEVICE_IS_LUKS_CLEARTEXT,
         PROP_DEVICE_IS_LINUX_MD_COMPONENT,
         PROP_DEVICE_IS_LINUX_MD,
@@ -169,6 +170,8 @@ enum
         PROP_PARTITION_TABLE_MAX_NUMBER,
         PROP_PARTITION_TABLE_OFFSETS,
         PROP_PARTITION_TABLE_SIZES,
+
+        PROP_LUKS_HOLDER,
 
         PROP_LUKS_CLEARTEXT_SLAVE,
         PROP_LUKS_CLEARTEXT_UNLOCKED_BY_UID,
@@ -299,6 +302,9 @@ get_property (GObject         *object,
 	case PROP_DEVICE_IS_OPTICAL_DISC:
 		g_value_set_boolean (value, device->priv->info.device_is_optical_disc);
 		break;
+	case PROP_DEVICE_IS_LUKS:
+		g_value_set_boolean (value, device->priv->info.device_is_luks);
+		break;
 	case PROP_DEVICE_IS_LUKS_CLEARTEXT:
 		g_value_set_boolean (value, device->priv->info.device_is_luks_cleartext);
 		break;
@@ -414,6 +420,13 @@ get_property (GObject         *object,
 		break;
 	case PROP_PARTITION_TABLE_SIZES:
 		g_value_set_boxed (value, device->priv->info.partition_table_sizes);
+		break;
+
+	case PROP_LUKS_HOLDER:
+                if (device->priv->info.luks_holder != NULL)
+                        g_value_set_boxed (value, device->priv->info.luks_holder);
+                else
+                        g_value_set_boxed (value, "/");
 		break;
 
 	case PROP_LUKS_CLEARTEXT_SLAVE:
@@ -657,6 +670,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 g_param_spec_boolean ("device-is-optical-disc", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
+                PROP_DEVICE_IS_LUKS,
+                g_param_spec_boolean ("device-is-luks", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
                 PROP_DEVICE_IS_LUKS_CLEARTEXT,
                 g_param_spec_boolean ("device-is-luks-cleartext", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
@@ -809,6 +826,11 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 g_param_spec_boxed ("partition-table-sizes", NULL, NULL,
                                     dbus_g_type_get_collection ("GArray", G_TYPE_UINT64),
                                     G_PARAM_READABLE));
+
+        g_object_class_install_property (
+                object_class,
+                PROP_LUKS_HOLDER,
+                g_param_spec_boxed ("luks-holder", NULL, NULL, DBUS_TYPE_G_OBJECT_PATH, G_PARAM_READABLE));
 
         g_object_class_install_property (
                 object_class,
@@ -1267,6 +1289,8 @@ free_info (DevkitDisksDevice *device)
 
         g_free (device->priv->info.partition_table_scheme);
 
+        g_free (device->priv->info.luks_holder);
+
         g_free (device->priv->info.luks_cleartext_slave);
 
         g_free (device->priv->info.drive_vendor);
@@ -1380,6 +1404,15 @@ update_info_properties_cb (DevkitDevice *d, const char *key, const char *value, 
                 device->priv->info.id_usage   = g_strdup (value);
         } else if (strcmp (key, "ID_FS_TYPE") == 0) {
                 device->priv->info.id_type    = g_strdup (value);
+
+                if (g_strcmp0 (device->priv->info.id_type, "crypto_LUKS") == 0) {
+
+                        device->priv->info.device_is_luks = TRUE;
+
+                        if (device->priv->info.holders_objpath->len == 1)
+                                device->priv->info.luks_holder = g_strdup (device->priv->info.holders_objpath->pdata[0]);
+                }
+
         } else if (strcmp (key, "ID_FS_VERSION") == 0) {
                 device->priv->info.id_version = g_strdup (value);
                 if (device->priv->info.device_is_linux_md_component) {
@@ -1803,6 +1836,24 @@ update_slaves (DevkitDisksDevice *device)
 }
 
 static void
+update_holders (DevkitDisksDevice *device)
+{
+        unsigned int n;
+
+        /* This is similar to update_slaves() only the other way around. */
+
+        for (n = 0; n < device->priv->info.holders_objpath->len; n++) {
+                const char *holder_objpath = device->priv->info.holders_objpath->pdata[n];
+                DevkitDisksDevice *holder;
+
+                holder = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, holder_objpath);
+                if (holder != NULL) {
+                        update_info (holder);
+                }
+        }
+}
+
+static void
 update_drive_properties (DevkitDisksDevice *device)
 {
         char *s;
@@ -2034,6 +2085,27 @@ strv_has_str (char **strv, char *str)
         return FALSE;
 }
 
+static guint clear_handler_id = 0;
+
+static gboolean
+clear_is_updated_flags (DevkitDisksDaemon *daemon)
+{
+        GList *devices, *l;
+
+        devices = devkit_disks_daemon_local_get_all_devices (daemon);
+        for (l = devices; l != NULL; l = l->next) {
+                DevkitDisksDevice *device = DEVKIT_DISKS_DEVICE (l->data);
+
+                device->priv->is_updated = FALSE;
+        }
+
+        g_list_free (devices);
+
+        clear_handler_id = 0;
+
+        return FALSE;
+}
+
 /**
  * update_info:
  * @device: the device
@@ -2059,6 +2131,19 @@ update_info (DevkitDisksDevice *device)
         const char *fstype;
 
         ret = FALSE;
+
+        if (device->priv->is_updated) {
+                g_debug ("Skipping update of %s because is_updated==TRUE", device->priv->native_path);
+                ret = TRUE;
+                goto out;
+        }
+
+        device->priv->is_updated = TRUE;
+
+        /* ensure we have set up and idle handler to clear all flags */
+        if (clear_handler_id == 0)
+                clear_handler_id = g_idle_add ((GSourceFunc) clear_is_updated_flags, device->priv->daemon);
+
 
         /* md is special; we don't get "remove" events from the kernel when an array is
          * stopped; so catch it very early before erasing our existing slave variable (we
@@ -2239,6 +2324,7 @@ update_info (DevkitDisksDevice *device)
         }
 
         update_slaves (device);
+        update_holders (device);
 
         /* Linux MD detection */
         if (sysfs_file_exists (device->priv->native_path, "md")) {
@@ -2469,6 +2555,7 @@ devkit_disks_device_removed (DevkitDisksDevice *device)
         device->priv->removed = TRUE;
 
         update_slaves (device);
+        update_holders (device);
 
         /* If the device is busy, we possibly need to clean up if the
          * device itself is busy. This includes
@@ -5664,10 +5751,14 @@ luks_unlock_device_added_cb (DevkitDisksDaemon *daemon,
             device->priv->info.device_is_luks_cleartext &&
             strcmp (device->priv->info.luks_cleartext_slave, data->device->priv->object_path) == 0) {
 
+                /* update and emit a Changed() signal on the holder since the luks-holder
+                 * property indicates the cleartext device
+                 */
+                update_info (data->device);
+                emit_changed (data->device);
                 if (data->hook_func != NULL) {
                         data->hook_func (data->context, device, data->hook_user_data);
                 } else {
-                        /* yay! it is.. return value to the user */
                         dbus_g_method_return (data->context, object_path);
                 }
 
@@ -5705,6 +5796,11 @@ luks_unlock_start_waiting_for_cleartext_device (gpointer user_data)
 
         cleartext_device = find_cleartext_device (data->device);
         if (cleartext_device != NULL) {
+                /* update and emit a Changed() signal on the holder since the luks-holder
+                 * property indicates the cleartext device
+                 */
+                update_info (data->device);
+                emit_changed (data->device);
                 if (data->hook_func != NULL) {
                         data->hook_func (data->context, cleartext_device, data->hook_user_data);
                 } else {
@@ -5948,6 +6044,11 @@ luks_lock_wait_for_cleartext_device_removed_cb (DevkitDisksDaemon *daemon,
 
                 job_local_end (data->luks_device);
 
+                /* update and emit a Changed() signal on the holder since the luks-holder
+                 * property indicates the cleartext device
+                 */
+                update_info (data->luks_device);
+                emit_changed (data->luks_device);
                 dbus_g_method_return (data->context);
 
                 g_signal_handler_disconnect (daemon, data->device_removed_signal_handler_id);
@@ -5989,6 +6090,11 @@ luks_lock_completed_cb (DBusGMethodInvocation *context,
 
                 /* if device is already removed, just return */
                 if (data->cleartext_device->priv->removed) {
+                        /* update and emit a Changed() signal on the holder since the luks-holder
+                         * property indicates the cleartext device
+                         */
+                        update_info (data->luks_device);
+                        emit_changed (data->luks_device);
                         dbus_g_method_return (context);
                 } else {
                         /* otherwise sit and wait for the device to disappear */
