@@ -153,6 +153,7 @@ struct DevkitDisksDevicePrivate
                 char *linux_md_component_level;
                 int linux_md_component_num_raid_devices;
                 char *linux_md_component_uuid;
+                char *linux_md_component_home_host;
                 char *linux_md_component_name;
                 char *linux_md_component_version;
                 guint64 linux_md_component_update_time;
@@ -161,6 +162,7 @@ struct DevkitDisksDevicePrivate
                 char *linux_md_level;
                 int linux_md_num_raid_devices;
                 char *linux_md_uuid;
+                char *linux_md_home_host;
                 char *linux_md_name;
                 char *linux_md_version;
                 GPtrArray *linux_md_slaves;

@@ -209,6 +209,7 @@ enum
         PROP_LINUX_MD_COMPONENT_LEVEL,
         PROP_LINUX_MD_COMPONENT_NUM_RAID_DEVICES,
         PROP_LINUX_MD_COMPONENT_UUID,
+        PROP_LINUX_MD_COMPONENT_HOME_HOST,
         PROP_LINUX_MD_COMPONENT_NAME,
         PROP_LINUX_MD_COMPONENT_VERSION,
         PROP_LINUX_MD_COMPONENT_UPDATE_TIME,
@@ -217,6 +218,7 @@ enum
         PROP_LINUX_MD_LEVEL,
         PROP_LINUX_MD_NUM_RAID_DEVICES,
         PROP_LINUX_MD_UUID,
+        PROP_LINUX_MD_HOME_HOST,
         PROP_LINUX_MD_NAME,
         PROP_LINUX_MD_VERSION,
         PROP_LINUX_MD_SLAVES,
@@ -530,6 +532,9 @@ get_property (GObject         *object,
 	case PROP_LINUX_MD_COMPONENT_UUID:
 		g_value_set_string (value, device->priv->info.linux_md_component_uuid);
 		break;
+	case PROP_LINUX_MD_COMPONENT_HOME_HOST:
+		g_value_set_string (value, device->priv->info.linux_md_component_home_host);
+		break;
 	case PROP_LINUX_MD_COMPONENT_NAME:
 		g_value_set_string (value, device->priv->info.linux_md_component_name);
 		break;
@@ -551,6 +556,9 @@ get_property (GObject         *object,
 		break;
 	case PROP_LINUX_MD_UUID:
 		g_value_set_string (value, device->priv->info.linux_md_uuid);
+		break;
+	case PROP_LINUX_MD_HOME_HOST:
+		g_value_set_string (value, device->priv->info.linux_md_home_host);
 		break;
 	case PROP_LINUX_MD_NAME:
 		g_value_set_string (value, device->priv->info.linux_md_name);
@@ -973,6 +981,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 g_param_spec_string ("linux-md-component-uuid", NULL, NULL, NULL, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
+                PROP_LINUX_MD_COMPONENT_HOME_HOST,
+                g_param_spec_string ("linux-md-component-home-host", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
                 PROP_LINUX_MD_COMPONENT_NAME,
                 g_param_spec_string ("linux-md-component-name", NULL, NULL, NULL, G_PARAM_READABLE));
         g_object_class_install_property (
@@ -1000,6 +1012,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_LINUX_MD_UUID,
                 g_param_spec_string ("linux-md-uuid", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_LINUX_MD_HOME_HOST,
+                g_param_spec_string ("linux-md-home-host", NULL, NULL, NULL, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_LINUX_MD_NAME,
@@ -1311,11 +1327,13 @@ free_info (DevkitDisksDevice *device)
 
         g_free (device->priv->info.linux_md_component_level);
         g_free (device->priv->info.linux_md_component_uuid);
+        g_free (device->priv->info.linux_md_component_home_host);
         g_free (device->priv->info.linux_md_component_name);
         g_free (device->priv->info.linux_md_component_version);
 
         g_free (device->priv->info.linux_md_level);
         g_free (device->priv->info.linux_md_uuid);
+        g_free (device->priv->info.linux_md_home_host);
         g_free (device->priv->info.linux_md_name);
         g_free (device->priv->info.linux_md_version);
         g_ptr_array_foreach (device->priv->info.linux_md_slaves, (GFunc) g_free, NULL);
@@ -1434,9 +1452,6 @@ update_info_properties_cb (DevkitDevice *d, const char *key, const char *value, 
                 }
         } else if (strcmp (key, "ID_FS_LABEL") == 0) {
                 device->priv->info.id_label   = g_strdup (value);
-                if (device->priv->info.device_is_linux_md_component) {
-                        device->priv->info.linux_md_component_name = g_strdup (value);
-                }
 
         } else if (strcmp (key, "ID_VENDOR") == 0) {
                 if (device->priv->info.device_is_drive && device->priv->info.drive_vendor == NULL)
@@ -1540,8 +1555,28 @@ update_info_properties_cb (DevkitDevice *d, const char *key, const char *value, 
                 }
 
         } else if (strcmp (key, "MD_NAME") == 0) {
-                if (device->priv->info.device_is_linux_md)
-                        device->priv->info.linux_md_name = g_strdup (value);
+                gchar **tokens;
+                const gchar *home_host;
+                const gchar *name;
+
+                tokens = g_strsplit (value, ":", 2);
+
+                if (g_strv_length (tokens) == 2) {
+                        home_host = tokens[0];
+                        name = tokens[1];
+                } else {
+                        name = tokens[0];
+                }
+
+                if (device->priv->info.device_is_linux_md) {
+                        device->priv->info.linux_md_home_host = g_strdup (home_host);
+                        device->priv->info.linux_md_name = g_strdup (name);
+                } else if (device->priv->info.device_is_linux_md_component) {
+                        device->priv->info.linux_md_component_home_host = g_strdup (home_host);
+                        device->priv->info.linux_md_component_name = g_strdup (name);
+                }
+
+                g_strfreev (tokens);
 
         } else if (strcmp (key, "DKD_DM_NAME") == 0) {
 

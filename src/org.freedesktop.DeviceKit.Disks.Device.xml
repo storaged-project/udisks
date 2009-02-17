@@ -2295,6 +2295,15 @@
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
+    <property name="linux-md-component-home-host" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The home host of the array the component is part of, e.g. where it was created. Blank if the array
+            has pre-1.0 meta data.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-linux-md-component">device-is-linux-md-component</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
     <property name="linux-md-component-version" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The version of superblock of the component.
@@ -2334,6 +2343,14 @@
       <doc:doc><doc:description><doc:para>
             The UUID of the array.
             This property is only valid if
+            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="linux-md-home-host" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The home host of the array, e.g. where if was created. Blank if the array
+            has pre-1.0 meta data.
             <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>

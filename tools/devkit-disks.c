@@ -487,6 +487,7 @@ typedef struct
         char    *linux_md_component_level;
         int      linux_md_component_num_raid_devices;
         char    *linux_md_component_uuid;
+        char    *linux_md_component_home_host;
         char    *linux_md_component_name;
         char    *linux_md_component_version;
         guint64  linux_md_component_update_time;
@@ -495,6 +496,7 @@ typedef struct
         char    *linux_md_level;
         int      linux_md_num_raid_devices;
         char    *linux_md_uuid;
+        char    *linux_md_home_host;
         char    *linux_md_name;
         char    *linux_md_version;
         char   **linux_md_slaves;
@@ -693,6 +695,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->linux_md_component_num_raid_devices = g_value_get_int (value);
         else if (strcmp (key, "linux-md-component-uuid") == 0)
                 props->linux_md_component_uuid = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "linux-md-component-home-host") == 0)
+                props->linux_md_component_home_host = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "linux-md-component-name") == 0)
                 props->linux_md_component_name = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "linux-md-component-version") == 0)
@@ -708,6 +712,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->linux_md_num_raid_devices = g_value_get_int (value);
         else if (strcmp (key, "linux-md-uuid") == 0)
                 props->linux_md_uuid = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "linux-md-home-host") == 0)
+                props->linux_md_home_host = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "linux-md-name") == 0)
                 props->linux_md_name = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "linux-md-version") == 0)
@@ -777,10 +783,12 @@ device_properties_free (DeviceProperties *props)
         g_value_unset (&(props->drive_smart_attributes));
         g_free (props->linux_md_component_level);
         g_free (props->linux_md_component_uuid);
+        g_free (props->linux_md_component_home_host);
         g_free (props->linux_md_component_name);
         g_free (props->linux_md_component_version);
         g_free (props->linux_md_level);
         g_free (props->linux_md_uuid);
+        g_free (props->linux_md_home_host);
         g_free (props->linux_md_name);
         g_free (props->linux_md_version);
         g_strfreev (props->linux_md_slaves);
@@ -910,6 +918,7 @@ do_show_info (const char *object_path)
                 g_print ("    RAID level:    %s\n", props->linux_md_component_level);
                 g_print ("    num comp:      %d\n", props->linux_md_component_num_raid_devices);
                 g_print ("    uuid:          %s\n", props->linux_md_component_uuid);
+                g_print ("    home host:     %s\n", props->linux_md_component_home_host);
                 g_print ("    name:          %s\n", props->linux_md_component_name);
                 g_print ("    version:       %s\n", props->linux_md_component_version);
                 g_print ("    update time: %" G_GUINT64_FORMAT " (%s)\n", props->linux_md_component_update_time, time_buf);
@@ -919,6 +928,7 @@ do_show_info (const char *object_path)
                 g_print ("  linux md:\n");
                 g_print ("    RAID level:    %s\n", props->linux_md_level);
                 g_print ("    uuid:          %s\n", props->linux_md_uuid);
+                g_print ("    home host:     %s\n", props->linux_md_home_host);
                 g_print ("    name:          %s\n", props->linux_md_name);
                 g_print ("    num comp:      %d\n", props->linux_md_num_raid_devices);
                 g_print ("    version:       %s\n", props->linux_md_version);
