@@ -1375,19 +1375,19 @@ sysfs_resolve_link (const char *sysfs_path, const char *name)
 
         full_path = g_build_filename (sysfs_path, name, NULL);
 
-        //g_warning ("name='%s'", name);
-        //g_warning ("full_path='%s'", full_path);
+        //g_debug ("name='%s'", name);
+        //g_debug ("full_path='%s'", full_path);
         num = readlink (full_path, link_path, sizeof (link_path) - 1);
         if (num != -1) {
                 char *absolute_path;
 
                 link_path[num] = '\0';
 
-                //g_warning ("link_path='%s'", link_path);
+                //g_debug ("link_path='%s'", link_path);
                 absolute_path = g_build_filename (sysfs_path, link_path, NULL);
-                //g_warning ("absolute_path='%s'", absolute_path);
+                //g_debug ("absolute_path='%s'", absolute_path);
                 if (realpath (absolute_path, resolved_path) != NULL) {
-                        //g_warning ("resolved_path='%s'", resolved_path);
+                        //g_debug ("resolved_path='%s'", resolved_path);
                         found_it = TRUE;
                 }
                 g_free (absolute_path);
@@ -1535,8 +1535,9 @@ update_info_properties_cb (DevkitDevice *d, const char *key, const char *value, 
                         device->priv->info.linux_md_component_events = devkit_device_get_property_as_uint64 (d, key);
 
         } else if (strcmp (key, "MD_UUID") == 0) {
-                if (device->priv->info.device_is_linux_md)
+                if (device->priv->info.device_is_linux_md) {
                         device->priv->info.linux_md_uuid = g_strdup (value);
+                }
 
         } else if (strcmp (key, "MD_NAME") == 0) {
                 if (device->priv->info.device_is_linux_md)
@@ -2064,7 +2065,7 @@ linux_md_emit_changed_on_components (DevkitDisksDevice *device)
         unsigned int n;
 
         if (!device->priv->info.device_is_linux_md) {
-                g_warning ("not a linux-md device");
+                g_warning ("%s is not a linux-md device", device->priv->native_path);
                 goto out;
         }
 
@@ -2085,7 +2086,7 @@ poll_syncing_md_device (gpointer user_data)
 {
         DevkitDisksDevice *device = DEVKIT_DISKS_DEVICE (user_data);
 
-        g_warning ("polling md device");
+        g_debug ("polling md device %s", device->priv->native_path);
 
         device->priv->linux_md_poll_timeout_id = 0;
         devkit_disks_daemon_local_synthesize_changed (device->priv->daemon, device->priv->d);
@@ -2112,18 +2113,27 @@ static GList *devices_to_update_in_idle = NULL;
 static gboolean
 do_update_in_idle (DevkitDisksDaemon *daemon)
 {
-        GList *devices, *l;
+        GList *devices;
+        GList *l;
+
+        g_debug ("in do_update_in_idle()");
 
         devices = devkit_disks_daemon_local_get_all_devices (daemon);
+
         for (l = devices_to_update_in_idle; l != NULL; l = l->next) {
                 DevkitDisksDevice *device = DEVKIT_DISKS_DEVICE (l->data);
 
-                update_info (device);
+                /* only update if daemon haven't removed the device */
+                if (g_list_find (devices, device) != NULL) {
+                        update_info (device);
+                }
         }
         g_list_foreach (devices_to_update_in_idle, (GFunc) g_object_unref, NULL);
         g_list_free (devices_to_update_in_idle);
-        devices_to_update_in_idle = NULL;
 
+        g_list_free (devices);
+
+        devices_to_update_in_idle = NULL;
         do_update_in_idle_handler_id = 0;
 
         return FALSE;
@@ -2135,13 +2145,30 @@ update_info_in_idle (DevkitDisksDevice *device)
         if (g_list_find (devices_to_update_in_idle, device) != NULL)
                 goto out;
 
+        g_debug ("scheduling update in idle for %s", device->priv->native_path);
+
         devices_to_update_in_idle = g_list_prepend (devices_to_update_in_idle, g_object_ref (device));
 
- out:
         /* ensure we have set up and idle handler */
         if (do_update_in_idle_handler_id == 0)
                 do_update_in_idle_handler_id = g_idle_add ((GSourceFunc) do_update_in_idle, device->priv->daemon);
+ out:
+        ;
 }
+
+static gchar **
+dup_strv_from_ptrarray (GPtrArray *p)
+{
+        gchar **ret;
+        guint n;
+
+        ret = g_new0 (gchar *, p->len + 1);
+        for (n = 0; n < p->len; n++)
+                ret[n] = g_strdup (((gchar **) p->pdata) [n]);
+
+        return ret;
+}
+
 
 /**
  * update_info:
@@ -2166,29 +2193,18 @@ update_info (DevkitDisksDevice *device)
         const char *name;
         GList *l;
         const char *fstype;
+        gchar **old_slaves_objpath;
+        gchar **old_holders_objpath;
 
         ret = FALSE;
 
-        /* md is special; we don't get "remove" events from the kernel when an array is
-         * stopped; so catch it very early before erasing our existing slave variable (we
-         * need this to set them slaves free)
+        g_debug ("update_info() for %s", device->priv->native_path);
+
+        /* need the slaves/holders to synthesize 'change' events if a device goes away (since the kernel
+         * doesn't do generate these)
          */
-
-        /* TODO: may need to accept more states than 'clear' */
-        if (sysfs_file_contains (device->priv->native_path, "md/array_state", "clear")) {
-                /* set the slaves free and remove ourselves */
-                update_slaves (device);
-
-                /* see if this is a going away event */
-                if (device->priv->info.device_is_linux_md) {
-                        /* Since we're going away it means that the superblocks on the components have
-                         * been updated. We want to reread this new data.
-                         */
-                        linux_md_emit_changed_on_components (device);
-                }
-		g_warning ("Linux MD array %s is not 'clear'; removing", device->priv->native_path);
-                goto out;
-        }
+        old_slaves_objpath = dup_strv_from_ptrarray (device->priv->info.slaves_objpath);
+        old_holders_objpath = dup_strv_from_ptrarray (device->priv->info.holders_objpath);
 
         /* free all info and prep for new info */
         free_info (device);
@@ -2337,7 +2353,7 @@ update_info (DevkitDisksDevice *device)
         }
 
         if (devkit_device_properties_foreach (device->priv->d, update_info_properties_cb, device)) {
-		g_warning ("Iteration of properties was short circuited for %s", device->priv->native_path);
+		g_debug ("Iteration of properties was short circuited for %s", device->priv->native_path);
                 goto out;
         }
 
@@ -2359,9 +2375,25 @@ update_info (DevkitDisksDevice *device)
         if (device->priv->info.device_is_linux_md) {
                 char *raid_level;
 
+                /* TODO: may need to accept more states than 'clear' */
+                if (sysfs_file_contains (device->priv->native_path, "md/array_state", "clear")) {
+                        g_debug ("Linux MD array %s is not 'clear'; removing", device->priv->native_path);
+                        goto out;
+                }
+
+                if (device->priv->info.linux_md_uuid == NULL) {
+                        g_debug ("No UUID for Linux MD array %s; removing", device->priv->native_path);
+                        goto out;
+                }
+
+                if (device->priv->info.slaves_objpath->len == 0) {
+                        g_debug ("No slaves for Linux MD array %s; removing", device->priv->native_path);
+                        goto out;
+                }
+
                 raid_level = g_strstrip (sysfs_get_string (device->priv->native_path, "md/level"));
                 if (raid_level == NULL) {
-                        g_warning ("Didn't find md/level for %s. Ignoring.", device->priv->native_path);
+                        g_debug ("Can't find md/level for %s. Ignoring.", device->priv->native_path);
                         goto out;
                 }
                 device->priv->info.linux_md_level = raid_level;
@@ -2381,9 +2413,9 @@ update_info (DevkitDisksDevice *device)
                                 device->priv->info.slaves_objpath->pdata[n]);
 
                         if (slave == NULL) {
-                                g_warning ("Unreferenced slave %s for array %s. Ignoring.",
-                                           (const char *) device->priv->info.slaves_objpath->pdata[n],
-                                           device->priv->info.device_file);
+                                g_debug ("Unreferenced slave %s for array %s. Ignoring.",
+                                         (const char *) device->priv->info.slaves_objpath->pdata[n],
+                                         device->priv->info.device_file);
                                 goto out;
                         }
 
@@ -2416,8 +2448,8 @@ update_info (DevkitDisksDevice *device)
                         } else {
                                 g_ptr_array_add (device->priv->info.linux_md_slaves_state,
                                                  g_strdup ("unknown"));
-                                g_warning ("cannot parse '%s' with slot '%s'",
-                                           component_state, component_slot_str);
+                                g_debug ("cannot parse '%s' with slot '%s'",
+                                         component_state, component_slot_str);
                         }
 
                         g_strfreev (states);
@@ -2455,7 +2487,7 @@ update_info (DevkitDisksDevice *device)
                                         device->priv->info.linux_md_sync_percentage =
                                                 100.0 * ((double) done) / ((double) remaining);
                                 } else {
-                                        g_warning ("cannot parse md/sync_completed: '%s'", s);
+                                        g_debug ("cannot parse md/sync_completed: '%s'", s);
                                 }
                                 g_free (s);
 
@@ -2548,6 +2580,29 @@ update_info (DevkitDisksDevice *device)
         ret = TRUE;
 
 out:
+
+        if (!ret) {
+                guint n;
+                DevkitDisksDevice *d;
+
+                for (n = 0; old_slaves_objpath != NULL && old_slaves_objpath[n] != NULL; n++) {
+                        d = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon,
+                                                                           old_slaves_objpath[n]);
+                        if (d != NULL)
+                                devkit_device_emit_changed_to_kernel (d);
+                }
+
+                for (n = 0; old_holders_objpath != NULL && old_holders_objpath[n] != NULL; n++) {
+                        d = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon,
+                                                                           old_holders_objpath[n]);
+                        if (d != NULL)
+                                devkit_device_emit_changed_to_kernel (d);
+                }
+        }
+
+        g_strfreev (old_slaves_objpath);
+        g_strfreev (old_holders_objpath);
+
         return ret;
 }
 
@@ -7750,7 +7805,7 @@ force_unmount_completed_cb (DBusGMethodInvocation *context,
 
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
 
-                g_warning ("Successfully force unmounted device %s", device->priv->info.device_file);
+                g_debug ("Successfully force unmounted device %s", device->priv->info.device_file);
                 devkit_disks_device_local_set_unmounted (device, NULL, TRUE);
                 mounts_file_remove (device, data->mount_path);
 
@@ -7764,7 +7819,7 @@ force_unmount_completed_cb (DBusGMethodInvocation *context,
                 if (data->fr_callback != NULL)
                         data->fr_callback (device, TRUE, data->fr_user_data);
         } else {
-                g_warning ("force unmount failed: %s", stderr);
+                g_debug ("force unmount failed: %s", stderr);
                 if (data->fr_callback != NULL)
                         data->fr_callback (device, FALSE, data->fr_user_data);
         }
@@ -7828,7 +7883,7 @@ force_luks_teardown_completed_cb (DBusGMethodInvocation *context,
 
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
 
-                g_warning ("Successfully teared down luks device %s", device->priv->info.device_file);
+                g_debug ("Successfully teared down luks device %s", device->priv->info.device_file);
 
                 /* TODO: when we add polling, this can probably be removed. I have no idea why hal's
                  *       poller don't cause the kernel to revalidate the (missing) media
@@ -7897,7 +7952,7 @@ force_luks_teardown_cleartext_done (DevkitDisksDevice *device,
         argv[n++] = data->dm_name;
         argv[n++] = NULL;
 
-        g_warning ("doing cryptsetup luksClose %s", data->dm_name);
+        //g_debug ("doing cryptsetup luksClose %s", data->dm_name);
 
         error = NULL;
         if (!job_new (NULL,
@@ -7985,9 +8040,9 @@ force_linux_md_removal_completed_cb (DBusGMethodInvocation *context,
 
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
 
-                g_warning ("Successfully force removed linux md component %s from array %s",
-                           data->component_device->priv->info.device_file,
-                           device->priv->info.device_file);
+                g_debug ("Successfully force removed linux md component %s from array %s",
+                         data->component_device->priv->info.device_file,
+                         device->priv->info.device_file);
 
                 /* TODO: when we add polling, this can probably be removed. I have no idea why hal's
                  *       poller don't cause the kernel to revalidate the (missing) media
@@ -8054,7 +8109,7 @@ force_linux_md_removal (DevkitDisksDevice        *device,
         state_path = g_strdup_printf ("%s/md/dev-%s/state",
                                       linux_md_array_device->priv->native_path,
                                       s);
-        g_warning ("state_path=%s", state_path);
+        //g_debug ("state_path=%s", state_path);
         fd = open (state_path, O_WRONLY);
         if (fd < 0) {
                 g_warning ("cannot open %s for writing", state_path);
@@ -8077,7 +8132,7 @@ force_linux_md_removal (DevkitDisksDevice        *device,
         argv[n++] = "failed";
         argv[n++] = NULL;
 
-        g_warning ("doing mdadm --manage %s --remove failed", linux_md_array_device->priv->info.device_file);
+        //g_debug ("doing mdadm --manage %s --remove failed", linux_md_array_device->priv->info.device_file);
 
         error = NULL;
         if (!job_new (NULL,
@@ -8105,7 +8160,7 @@ force_removal (DevkitDisksDevice        *device,
                ForceRemovalCompleteFunc  callback,
                gpointer                  user_data)
 {
-        g_warning ("in force removal for %s", device->priv->info.device_file);
+        //g_debug ("in force removal for %s", device->priv->info.device_file);
 
         /* Device is going bye bye. If this device is
          *
@@ -8123,7 +8178,7 @@ force_removal (DevkitDisksDevice        *device,
                 gboolean remove_dir_on_unmount;
 
                 if (mounts_file_has_device (device, NULL, &remove_dir_on_unmount)) {
-                        g_warning ("Force unmounting device %s", device->priv->info.device_file);
+                        g_debug ("Force unmounting device %s", device->priv->info.device_file);
                         force_unmount (device, callback, user_data);
                         goto pending;
                 }
@@ -8145,9 +8200,9 @@ force_removal (DevkitDisksDevice        *device,
                                 if (d->priv->info.dm_name != NULL &&
                                     g_str_has_prefix (d->priv->info.dm_name, "devkit-disks-luks-uuid-")) {
 
-                                        g_warning ("Force luks teardown device %s (cleartext %s)",
-                                                   device->priv->info.device_file,
-                                                   d->priv->info.device_file);
+                                        g_debug ("Force luks teardown device %s (cleartext %s)",
+                                                 device->priv->info.device_file,
+                                                 d->priv->info.device_file);
 
                                         /* Gotcha */
                                         force_luks_teardown (device, d, callback, user_data);
@@ -8181,9 +8236,9 @@ force_removal (DevkitDisksDevice        *device,
                                         if (strcmp (d->priv->info.linux_md_slaves->pdata[n],
                                                     device->priv->object_path) == 0) {
 
-                                                g_warning ("Force linux md component teardown of %s from array %s",
-                                                           device->priv->info.device_file,
-                                                           d->priv->info.device_file);
+                                                g_debug ("Force linux md component teardown of %s from array %s",
+                                                         device->priv->info.device_file,
+                                                         d->priv->info.device_file);
 
                                                 /* You're going to remove-from-array-city, buddy! */
                                                 force_linux_md_removal (device, d, callback, user_data);

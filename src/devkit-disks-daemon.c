@@ -875,7 +875,7 @@ mdstat_changed_event (GIOChannel *channel, GIOCondition cond, gpointer user_data
 
         for (n = 0; n < (int) a->len; n++) {
                 DevkitDevice *d = a->pdata[n];
-                g_warning ("using change on /proc/mdstat to trigger change event on %s", native_path);
+                g_debug ("using change on /proc/mdstat to trigger change event on %s", native_path);
                 device_changed (daemon, d, FALSE);
                 g_object_unref (d);
         }
@@ -898,7 +898,7 @@ refresh_smart_data (DevkitDisksDaemon *daemon)
                 if (device->priv->drive_smart_is_capable) {
                         char *options[] = {NULL};
 
-                        g_warning ("automatically refreshing SMART data for %s", native_path);
+                        g_debug ("automatically refreshing SMART data for %s", native_path);
                         devkit_disks_device_drive_smart_refresh_data (device, options, NULL);
                 }
         }
