@@ -1507,9 +1507,29 @@ update_info_properties_cb (DevkitDevice *d, const char *key, const char *value, 
         } else if (strcmp (key, "ID_VENDOR") == 0) {
                 if (device->priv->info.device_is_drive && device->priv->info.drive_vendor == NULL)
                         device->priv->info.drive_vendor = g_strdup (value);
+
+        } else if (strcmp (key, "ID_VENDOR_ENC") == 0) {
+                /* prefer ID_VENDOR_ENC to ID_VENDOR */
+                if (device->priv->info.device_is_drive) {
+                        if (device->priv->info.drive_vendor != NULL)
+                                g_free (device->priv->info.drive_vendor);
+                        device->priv->info.drive_vendor = decode_udev_encoded_string (value);
+                        g_strstrip (device->priv->info.drive_vendor);
+                }
+
         } else if (strcmp (key, "ID_MODEL") == 0) {
                 if (device->priv->info.device_is_drive && device->priv->info.drive_model == NULL)
                         device->priv->info.drive_model = g_strdup (value);
+
+        } else if (strcmp (key, "ID_MODEL_ENC") == 0) {
+                /* prefer ID_MODEL_ENC to ID_MODEL */
+                if (device->priv->info.device_is_drive) {
+                        if (device->priv->info.drive_model != NULL)
+                                g_free (device->priv->info.drive_model);
+                        device->priv->info.drive_model = decode_udev_encoded_string (value);
+                        g_strstrip (device->priv->info.drive_model);
+                }
+
         } else if (strcmp (key, "ID_REVISION") == 0) {
                 if (device->priv->info.device_is_drive && device->priv->info.drive_revision == NULL)
                         device->priv->info.drive_revision = g_strdup (value);
