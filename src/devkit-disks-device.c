@@ -1418,6 +1418,50 @@ sysfs_resolve_link (const char *sysfs_path, const char *name)
                 return NULL;
 }
 
+/* unescapes things like \x20 to " " and ensures the returned string is valid UTF-8.
+ *
+ * see volume_id_encode_string() in extras/volume_id/lib/volume_id.c in the
+ * udev tree for the encoder
+ */
+static gchar *
+decode_udev_encoded_string (const gchar *str)
+{
+        GString *s;
+        gchar *ret;
+        const gchar *end_valid;
+        guint n;
+
+        s = g_string_new (NULL);
+        for (n = 0; str[n] != '\0'; n++) {
+                if (str[n] == '\\') {
+                        gint val;
+
+                        if (str[n + 1] != 'x' || str[n + 2] == '\0' || str[n + 3] == '\0') {
+                                g_warning ("malformed encoded string %s", str);
+                                break;
+                        }
+
+                        val = (g_ascii_xdigit_value (str[n + 2]) << 4) | g_ascii_xdigit_value (str[n + 3]);
+
+                        g_string_append_c (s, val);
+
+                        n += 3;
+                } else {
+                        g_string_append_c (s, str[n]);
+                }
+        }
+
+        if (!g_utf8_validate (s->str, -1, &end_valid)) {
+                g_warning ("The string '%s' is not valid UTF-8. Invalid characters begins at '%s'", s->str, end_valid);
+                ret = g_strndup (s->str, end_valid - s->str);
+                g_string_free (s, TRUE);
+        } else {
+                ret = g_string_free (s, FALSE);
+        }
+
+        return ret;
+}
+
 static gboolean
 update_info_properties_cb (DevkitDevice *d, const char *key, const char *value, void *user_data)
 {
@@ -1451,7 +1495,14 @@ update_info_properties_cb (DevkitDevice *d, const char *key, const char *value, 
                         device->priv->info.linux_md_component_uuid = g_strdup (value);
                 }
         } else if (strcmp (key, "ID_FS_LABEL") == 0) {
-                device->priv->info.id_label   = g_strdup (value);
+                if (device->priv->info.id_label == NULL)
+                        device->priv->info.id_label   = g_strdup (value);
+
+        } else if (strcmp (key, "ID_FS_LABEL_ENC") == 0) {
+                /* prefer ID_FS_LABEL_ENC to ID_FS_LABEL */
+                if (device->priv->info.id_label != NULL)
+                        g_free (device->priv->info.id_label);
+                device->priv->info.id_label = decode_udev_encoded_string (value);
 
         } else if (strcmp (key, "ID_VENDOR") == 0) {
                 if (device->priv->info.device_is_drive && device->priv->info.drive_vendor == NULL)
@@ -1565,6 +1616,7 @@ update_info_properties_cb (DevkitDevice *d, const char *key, const char *value, 
                         home_host = tokens[0];
                         name = tokens[1];
                 } else {
+                        home_host = NULL;
                         name = tokens[0];
                 }
 
