@@ -768,8 +768,10 @@ device_properties_free (DeviceProperties *props)
         g_free (props->partition_uuid);
         g_strfreev (props->partition_flags);
         g_free (props->partition_table_scheme);
-        g_array_free (props->partition_table_offsets, TRUE);
-        g_array_free (props->partition_table_sizes, TRUE);
+        if (props->partition_table_offsets != NULL)
+                g_array_free (props->partition_table_offsets, TRUE);
+        if (props->partition_table_sizes != NULL)
+                g_array_free (props->partition_table_sizes, TRUE);
         g_free (props->luks_holder);
         g_free (props->luks_cleartext_slave);
         g_free (props->drive_model);
