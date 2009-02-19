@@ -2363,19 +2363,7 @@ update_info (DevkitDisksDevice *device)
                  *
                  * (e.g. write-protect on SD cards, optical drives etc.)
                  */
-                errno = 0;
-                fd = open (device->priv->info.device_file, O_WRONLY|O_NONBLOCK);
-                if (fd < 0) {
-                        if (errno == EROFS) {
-                                device->priv->info.device_is_read_only = TRUE;
-                        } else {
-                                g_warning ("Cannot determine if %s is read only: %m", device->priv->info.device_file);
-                                goto out;
-                        }
-                } else {
-                        close (fd);
-                }
-
+                device->priv->info.device_is_read_only = (sysfs_get_int (device->priv->native_path, "ro") != 0);
         }
         device->priv->info.device_block_size = block_size;
 
