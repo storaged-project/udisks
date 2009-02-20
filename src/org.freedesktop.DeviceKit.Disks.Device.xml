@@ -2180,17 +2180,17 @@
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="optical-disc-has-audio" type="b" access="read">
+    <property name="optical-disc-num-tracks" type="u" access="read">
       <doc:doc><doc:description><doc:para>
-            TRUE only if the disc contains audio tracks.
+            Number of tracks on the disc.
             This property is only valid if
             <doc:ref type="property" to="Device:device-is-optical-disc">device-is-optical-disc</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="optical-disc-num-tracks" type="u" access="read">
+    <property name="optical-disc-num-audio-tracks" type="u" access="read">
       <doc:doc><doc:description><doc:para>
-            Number of tracks on the disc.
+            Number of audio tracks on the disc.
             This property is only valid if
             <doc:ref type="property" to="Device:device-is-optical-disc">device-is-optical-disc</doc:ref>
             is TRUE.

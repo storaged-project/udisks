@@ -476,8 +476,8 @@ typedef struct
         gboolean optical_disc_is_blank;
         gboolean optical_disc_is_appendable;
         gboolean optical_disc_is_closed;
-        gboolean optical_disc_has_audio;
         guint optical_disc_num_tracks;
+        guint optical_disc_num_audio_tracks;
         guint optical_disc_num_sessions;
 
         gboolean               drive_smart_is_capable;
@@ -673,10 +673,10 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->optical_disc_is_appendable = g_value_get_boolean (value);
         else if (strcmp (key, "optical-disc-is-closed") == 0)
                 props->optical_disc_is_closed = g_value_get_boolean (value);
-        else if (strcmp (key, "optical-disc-has-audio") == 0)
-                props->optical_disc_has_audio = g_value_get_boolean (value);
         else if (strcmp (key, "optical-disc-num-tracks") == 0)
                 props->optical_disc_num_tracks = g_value_get_uint (value);
+        else if (strcmp (key, "optical-disc-num-audio-tracks") == 0)
+                props->optical_disc_num_audio_tracks = g_value_get_uint (value);
         else if (strcmp (key, "optical-disc-num-sessions") == 0)
                 props->optical_disc_num_sessions = g_value_get_uint (value);
 
@@ -996,8 +996,8 @@ do_show_info (const char *object_path)
                 g_print ("    blank:                 %d\n", props->optical_disc_is_blank);
                 g_print ("    appendable:            %d\n", props->optical_disc_is_appendable);
                 g_print ("    closed:                %d\n", props->optical_disc_is_closed);
-                g_print ("    has audio:             %d\n", props->optical_disc_has_audio);
                 g_print ("    num tracks:            %d\n", props->optical_disc_num_tracks);
+                g_print ("    num audio tracks:      %d\n", props->optical_disc_num_audio_tracks);
                 g_print ("    num sessions:          %d\n", props->optical_disc_num_sessions);
         }
         if (props->device_is_drive) {

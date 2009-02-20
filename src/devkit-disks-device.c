@@ -201,8 +201,8 @@ enum
         PROP_OPTICAL_DISC_IS_BLANK,
         PROP_OPTICAL_DISC_IS_APPENDABLE,
         PROP_OPTICAL_DISC_IS_CLOSED,
-        PROP_OPTICAL_DISC_HAS_AUDIO,
         PROP_OPTICAL_DISC_NUM_TRACKS,
+        PROP_OPTICAL_DISC_NUM_AUDIO_TRACKS,
         PROP_OPTICAL_DISC_NUM_SESSIONS,
 
         PROP_DRIVE_SMART_IS_CAPABLE,
@@ -505,11 +505,11 @@ get_property (GObject         *object,
 	case PROP_OPTICAL_DISC_IS_CLOSED:
 		g_value_set_boolean (value, device->priv->info.optical_disc_is_closed);
 		break;
-	case PROP_OPTICAL_DISC_HAS_AUDIO:
-		g_value_set_boolean (value, device->priv->info.optical_disc_has_audio);
-		break;
 	case PROP_OPTICAL_DISC_NUM_TRACKS:
 		g_value_set_uint (value, device->priv->info.optical_disc_num_tracks);
+		break;
+	case PROP_OPTICAL_DISC_NUM_AUDIO_TRACKS:
+		g_value_set_uint (value, device->priv->info.optical_disc_num_audio_tracks);
 		break;
 	case PROP_OPTICAL_DISC_NUM_SESSIONS:
 		g_value_set_uint (value, device->priv->info.optical_disc_num_sessions);
@@ -950,12 +950,12 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 g_param_spec_boolean ("optical-disc-is-closed", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
-                PROP_OPTICAL_DISC_HAS_AUDIO,
-                g_param_spec_boolean ("optical-disc-has-audio", NULL, NULL, FALSE, G_PARAM_READABLE));
-        g_object_class_install_property (
-                object_class,
                 PROP_OPTICAL_DISC_NUM_TRACKS,
                 g_param_spec_uint ("optical-disc-num-tracks", NULL, NULL, 0, G_MAXUINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_OPTICAL_DISC_NUM_AUDIO_TRACKS,
+                g_param_spec_uint ("optical-disc-num-audio-tracks", NULL, NULL, 0, G_MAXUINT, 0, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_OPTICAL_DISC_NUM_SESSIONS,
@@ -1788,6 +1788,9 @@ update_info_properties_cb (DevkitDevice *d, const char *key, const char *value, 
         } else if (strcmp (key, "ID_CDROM_MEDIA_TRACK_COUNT") == 0) {
                 device->priv->info.optical_disc_num_tracks = devkit_device_get_property_as_int (d, key);
                 device->priv->info.device_is_optical_disc = TRUE;
+        } else if (strcmp (key, "ID_CDROM_MEDIA_TRACK_COUNT_AUDIO") == 0) {
+                device->priv->info.optical_disc_num_audio_tracks = devkit_device_get_property_as_int (d, key);
+                device->priv->info.device_is_optical_disc = TRUE;
         } else if (strcmp (key, "ID_CDROM_MEDIA_SESSION_COUNT") == 0) {
                 device->priv->info.optical_disc_num_sessions = devkit_device_get_property_as_int (d, key);
                 device->priv->info.device_is_optical_disc = TRUE;
@@ -1800,9 +1803,6 @@ update_info_properties_cb (DevkitDevice *d, const char *key, const char *value, 
                 } else if (strcmp (value, "complete") == 0) {
                         device->priv->info.optical_disc_is_closed = TRUE;
                 }
-        } else if (strcmp (key, "ID_CDROM_MEDIA_HAS_AUDIO") == 0 && strcmp (value, "1") == 0) {
-                device->priv->info.device_is_optical_disc = TRUE;
-                device->priv->info.optical_disc_has_audio = TRUE;
 
         /* ---------------------------------------------------------------------------------------------------- */
 

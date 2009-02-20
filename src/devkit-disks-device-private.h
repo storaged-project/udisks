@@ -144,8 +144,8 @@ struct DevkitDisksDevicePrivate
                 gboolean optical_disc_is_blank;
                 gboolean optical_disc_is_appendable;
                 gboolean optical_disc_is_closed;
-                gboolean optical_disc_has_audio;
                 guint optical_disc_num_tracks;
+                guint optical_disc_num_audio_tracks;
                 guint optical_disc_num_sessions;
 
                 char *luks_holder;
