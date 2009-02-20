@@ -43,6 +43,7 @@
 #include <dbus/dbus-glib-lowlevel.h>
 #include <devkit-gobject/devkit-gobject.h>
 
+#include "poller.h"
 #include "devkit-disks-daemon.h"
 
 
@@ -130,6 +131,7 @@ main (int argc, char **argv)
         };
 
         ret = 1;
+        error = NULL;
 
         /* run with a controlled path */
         if (!g_setenv ("PATH", PACKAGE_LIBEXEC_DIR ":/sbin:/bin:/usr/sbin:/usr/bin", TRUE)) {
@@ -145,12 +147,16 @@ main (int argc, char **argv)
 
         g_type_init ();
 
+        /* fork the polling process early */
+        if (!poller_setup (argc, argv)) {
+                goto out;
+        }
+
         context = g_option_context_new ("DeviceKit Disks Daemon");
         g_option_context_add_main_entries (context, entries, NULL);
         g_option_context_parse (context, &argc, &argv, NULL);
         g_option_context_free (context);
 
-        error = NULL;
         bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
         if (bus == NULL) {
                 g_warning ("Couldn't connect to system bus: %s", error->message);

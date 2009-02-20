@@ -79,6 +79,8 @@ void               devkit_disks_device_local_set_unmounted       (DevkitDisksDev
 gboolean           devkit_disks_device_local_is_busy             (DevkitDisksDevice *device);
 gboolean           devkit_disks_device_local_partitions_are_busy (DevkitDisksDevice *device);
 
+gboolean           devkit_disks_device_local_update_media_detection (DevkitDisksDevice *device);
+
 /* exported methods */
 
 gboolean devkit_disks_device_job_cancel (DevkitDisksDevice     *device,
@@ -184,6 +186,17 @@ gboolean devkit_disks_device_linux_md_remove_component (DevkitDisksDevice     *d
                                                         char                  *component,
                                                         char                 **options,
                                                         DBusGMethodInvocation *context);
+
+gboolean devkit_disks_device_drive_inhibit_polling (DevkitDisksDevice     *device,
+                                                    char                 **options,
+                                                    DBusGMethodInvocation *context);
+
+gboolean devkit_disks_device_drive_uninhibit_polling (DevkitDisksDevice     *device,
+                                                      char                  *cookie,
+                                                      DBusGMethodInvocation *context);
+
+gboolean devkit_disks_device_drive_poll_media (DevkitDisksDevice     *device,
+                                               DBusGMethodInvocation *context);
 
 G_END_DECLS
 

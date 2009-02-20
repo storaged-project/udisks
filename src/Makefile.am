@@ -45,6 +45,8 @@ devkit_disks_daemon_SOURCES = 						\
 	devkit-disks-device-private.h					\
 	mounts-file.h			mounts-file.c			\
 	devkit-disks-mount-monitor.h	devkit-disks-mount-monitor.c	\
+	devkit-disks-inhibitor.h	devkit-disks-inhibitor.c	\
+	poller.h			poller.c			\
 	main.c								\
 	$(BUILT_SOURCES)
 

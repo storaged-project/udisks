@@ -54,6 +54,8 @@
 #include "devkit-disks-device-private.h"
 #include "devkit-disks-marshal.h"
 #include "mounts-file.h"
+#include "devkit-disks-inhibitor.h"
+#include "poller.h"
 
 /*--------------------------------------------------------------------------------------------------------------*/
 #include "devkit-disks-device-glue.h"
@@ -61,6 +63,9 @@
 static void     devkit_disks_device_class_init  (DevkitDisksDeviceClass *klass);
 static void     devkit_disks_device_init        (DevkitDisksDevice      *seat);
 static void     devkit_disks_device_finalize    (GObject     *object);
+
+static void     polling_inhibitor_disconnected_cb (DevkitDisksInhibitor *inhibitor,
+                                                   DevkitDisksDevice   *device);
 
 static void     init_info                  (DevkitDisksDevice *device);
 static void     free_info                  (DevkitDisksDevice *device);
@@ -127,6 +132,9 @@ enum
         PROP_DEVICE_IS_PARTITION_TABLE,
         PROP_DEVICE_IS_REMOVABLE,
         PROP_DEVICE_IS_MEDIA_AVAILABLE,
+        PROP_DEVICE_IS_MEDIA_CHANGE_DETECTED,
+        PROP_DEVICE_IS_MEDIA_CHANGE_DETECTION_INHIBITABLE,
+        PROP_DEVICE_IS_MEDIA_CHANGE_DETECTION_INHIBITED,
         PROP_DEVICE_IS_READ_ONLY,
         PROP_DEVICE_IS_DRIVE,
         PROP_DEVICE_IS_OPTICAL_DISC,
@@ -295,6 +303,15 @@ get_property (GObject         *object,
 		break;
 	case PROP_DEVICE_IS_MEDIA_AVAILABLE:
 		g_value_set_boolean (value, device->priv->info.device_is_media_available);
+		break;
+	case PROP_DEVICE_IS_MEDIA_CHANGE_DETECTED:
+		g_value_set_boolean (value, device->priv->info.device_is_media_change_detected);
+		break;
+	case PROP_DEVICE_IS_MEDIA_CHANGE_DETECTION_INHIBITABLE:
+		g_value_set_boolean (value, device->priv->info.device_is_media_change_detection_inhibitable);
+		break;
+	case PROP_DEVICE_IS_MEDIA_CHANGE_DETECTION_INHIBITED:
+		g_value_set_boolean (value, device->priv->info.device_is_media_change_detection_inhibited);
 		break;
 	case PROP_DEVICE_IS_READ_ONLY:
 		g_value_set_boolean (value, device->priv->info.device_is_read_only);
@@ -671,6 +688,18 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DEVICE_IS_MEDIA_AVAILABLE,
                 g_param_spec_boolean ("device-is-media-available", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_IS_MEDIA_CHANGE_DETECTED,
+                g_param_spec_boolean ("device-is-media-change-detected", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_IS_MEDIA_CHANGE_DETECTION_INHIBITABLE,
+                g_param_spec_boolean ("device-is-media-change-detection-inhibitable", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_IS_MEDIA_CHANGE_DETECTION_INHIBITED,
+                g_param_spec_boolean ("device-is-media-change-detection-inhibited", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_DEVICE_IS_READ_ONLY,
@@ -1066,6 +1095,7 @@ static void
 devkit_disks_device_finalize (GObject *object)
 {
         DevkitDisksDevice *device;
+        GList *l;
 
         g_return_if_fail (object != NULL);
         g_return_if_fail (DEVKIT_IS_DISKS_DEVICE (object));
@@ -1084,6 +1114,13 @@ devkit_disks_device_finalize (GObject *object)
         g_free (device->priv->drive_smart_last_self_test_result);
         g_ptr_array_foreach (device->priv->drive_smart_attributes, (GFunc) g_value_array_free, NULL);
         g_ptr_array_free (device->priv->drive_smart_attributes, TRUE);
+
+        for (l = device->priv->polling_inhibitors; l != NULL; l = l->next) {
+                DevkitDisksInhibitor *inhibitor = DEVKIT_DISKS_INHIBITOR (l->data);
+                g_signal_handlers_disconnect_by_func (inhibitor, polling_inhibitor_disconnected_cb, device);
+                g_object_unref (inhibitor);
+        }
+        g_list_free (device->priv->polling_inhibitors);
 
         if (device->priv->linux_md_poll_timeout_id > 0)
                 g_source_remove (device->priv->linux_md_poll_timeout_id);
@@ -2672,6 +2709,9 @@ update_info (DevkitDisksDevice *device)
                 }
         }
 
+        /* figure out if we need to poll the device */
+        devkit_disks_device_local_update_media_detection (device);
+
         ret = TRUE;
 
 out:
@@ -2700,6 +2740,41 @@ out:
 
         return ret;
 }
+
+/* returns TRUE if something changed */
+gboolean
+devkit_disks_device_local_update_media_detection (DevkitDisksDevice *device)
+{
+        gboolean ret;
+        gboolean old_media_change_detected;
+        gboolean old_media_change_detection_inhibitable;
+        gboolean old_media_change_detection_inhibited;
+
+        old_media_change_detected              = device->priv->info.device_is_media_change_detected;
+        old_media_change_detection_inhibitable = device->priv->info.device_is_media_change_detected;
+        old_media_change_detection_inhibited   = device->priv->info.device_is_media_change_detected;
+
+        if (device->priv->info.device_is_removable) {
+                /* TODO: figure out if the device supports SATA AN */
+                device->priv->info.device_is_media_change_detection_inhibitable = TRUE;
+
+                if (device->priv->polling_inhibitors != NULL ||
+                    devkit_disks_daemon_local_has_polling_inhibitors (device->priv->daemon)) {
+                        device->priv->info.device_is_media_change_detected = FALSE;
+                        device->priv->info.device_is_media_change_detection_inhibited = TRUE;
+                } else {
+                        device->priv->info.device_is_media_change_detected = TRUE;
+                        device->priv->info.device_is_media_change_detection_inhibited = FALSE;
+                }
+        }
+
+        ret =   (old_media_change_detected              != device->priv->info.device_is_media_change_detected) ||
+                (old_media_change_detection_inhibitable != device->priv->info.device_is_media_change_detected) ||
+                (old_media_change_detection_inhibited   != device->priv->info.device_is_media_change_detected);
+
+        return ret;
+}
+
 
 gboolean
 devkit_disks_device_local_is_busy (DevkitDisksDevice *device)
@@ -8354,3 +8429,147 @@ pending:
 
 
 /*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+polling_inhibitor_disconnected_cb (DevkitDisksInhibitor *inhibitor,
+                                   DevkitDisksDevice   *device)
+{
+        device->priv->polling_inhibitors = g_list_remove (device->priv->polling_inhibitors, inhibitor);
+        g_signal_handlers_disconnect_by_func (inhibitor, polling_inhibitor_disconnected_cb, device);
+        g_object_unref (inhibitor);
+
+        update_info (device);
+        devkit_disks_daemon_local_update_poller (device->priv->daemon);
+}
+
+gboolean
+devkit_disks_device_drive_inhibit_polling (DevkitDisksDevice     *device,
+                                           char                 **options,
+                                           DBusGMethodInvocation *context)
+{
+        DevkitDisksInhibitor *inhibitor;
+        PolKitCaller *pk_caller;
+        guint n;
+
+        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
+                goto out;
+
+        if (!device->priv->info.device_is_drive) {
+                throw_error (context, DEVKIT_DISKS_ERROR_NOT_DRIVE,
+                             "Device is not a drive");
+                goto out;
+        }
+
+        if (!device->priv->info.device_is_media_change_detection_inhibitable) {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                             "Media detection cannot be inhibited");
+                goto out;
+        }
+
+        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                  pk_caller,
+                                                  "org.freedesktop.devicekit.disks.inhibit-polling",
+                                                  context))
+                goto out;
+
+        for (n = 0; options[n] != NULL; n++) {
+                const char *option = options[n];
+                throw_error (context,
+                             DEVKIT_DISKS_ERROR_INVALID_OPTION,
+                             "Unknown option %s", option);
+                goto out;
+        }
+
+        inhibitor = devkit_disks_inhibitor_new (context);
+
+        device->priv->polling_inhibitors = g_list_prepend (device->priv->polling_inhibitors, inhibitor);
+        g_signal_connect (inhibitor, "disconnected", G_CALLBACK (polling_inhibitor_disconnected_cb), device);
+
+        update_info (device);
+        devkit_disks_daemon_local_update_poller (device->priv->daemon);
+
+        dbus_g_method_return (context, devkit_disks_inhibitor_get_cookie (inhibitor));
+
+out:
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
+        return TRUE;
+}
+
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+gboolean
+devkit_disks_device_drive_uninhibit_polling (DevkitDisksDevice     *device,
+                                             char                  *cookie,
+                                             DBusGMethodInvocation *context)
+{
+        const gchar *sender;
+        DevkitDisksInhibitor *inhibitor;
+        GList *l;
+
+        sender = dbus_g_method_get_sender (context);
+
+        inhibitor = NULL;
+        for (l = device->priv->polling_inhibitors; l != NULL; l = l->next) {
+                DevkitDisksInhibitor *i = DEVKIT_DISKS_INHIBITOR (l->data);
+
+                if (g_strcmp0 (devkit_disks_inhibitor_get_unique_dbus_name (i), sender) == 0 &&
+                    g_strcmp0 (devkit_disks_inhibitor_get_cookie (i), cookie) == 0) {
+                        inhibitor = i;
+                        break;
+                }
+        }
+
+        if (inhibitor == NULL) {
+                throw_error (context,
+                             DEVKIT_DISKS_ERROR_FAILED,
+                             "No such inhibitor");
+                goto out;
+        }
+
+        device->priv->polling_inhibitors = g_list_remove (device->priv->polling_inhibitors, inhibitor);
+        g_object_unref (inhibitor);
+
+        update_info (device);
+        devkit_disks_daemon_local_update_poller (device->priv->daemon);
+
+        dbus_g_method_return (context);
+
+ out:
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+gboolean
+devkit_disks_device_drive_poll_media (DevkitDisksDevice     *device,
+                                      DBusGMethodInvocation *context)
+{
+        PolKitCaller *pk_caller;
+
+        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
+                goto out;
+
+        if (!device->priv->info.device_is_drive) {
+                throw_error (context, DEVKIT_DISKS_ERROR_NOT_DRIVE,
+                             "Device is not a drive");
+                goto out;
+        }
+
+        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                  pk_caller,
+                                                  "org.freedesktop.devicekit.disks.inhibit-polling",
+                                                  context))
+                goto out;
+
+        poller_poll_device (device->priv->info.device_file);
+
+        dbus_g_method_return (context);
+
+out:
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
+        return TRUE;
+}
+

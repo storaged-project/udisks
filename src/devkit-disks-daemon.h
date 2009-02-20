@@ -112,6 +112,10 @@ void               devkit_disks_daemon_local_update_mount_state  (DevkitDisksDae
 void               devkit_disks_daemon_local_synthesize_changed  (DevkitDisksDaemon       *daemon,
                                                                   DevkitDevice            *d);
 
+void               devkit_disks_daemon_local_update_poller       (DevkitDisksDaemon       *daemon);
+
+gboolean           devkit_disks_daemon_local_has_polling_inhibitors (DevkitDisksDaemon       *daemon);
+
 DevkitDisksLogger *devkit_disks_daemon_local_get_logger (DevkitDisksDaemon *daemon);
 
 /* exported methods */
@@ -127,6 +131,14 @@ gboolean devkit_disks_daemon_linux_md_start (DevkitDisksDaemon     *daemon,
                                              GPtrArray             *components,
                                              char                 **options,
                                              DBusGMethodInvocation *context);
+
+gboolean devkit_disks_daemon_drive_inhibit_all_polling (DevkitDisksDaemon     *daemon,
+                                                        char                 **options,
+                                                        DBusGMethodInvocation *context);
+
+gboolean devkit_disks_daemon_drive_uninhibit_all_polling (DevkitDisksDaemon     *daemon,
+                                                          char                  *cookie,
+                                                          DBusGMethodInvocation *context);
 
 G_END_DECLS
 

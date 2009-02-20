@@ -54,6 +54,8 @@
 #include "devkit-disks-device-private.h"
 #include "mounts-file.h"
 #include "devkit-disks-mount-monitor.h"
+#include "poller.h"
+#include "devkit-disks-inhibitor.h"
 
 #include "devkit-disks-daemon-glue.h"
 #include "devkit-disks-marshal.h"
@@ -99,11 +101,16 @@ struct DevkitDisksDaemonPrivate
         guint                    smart_refresh_timer_id;
 
         DevkitDisksLogger       *logger;
+
+        GList *polling_inhibitors;
 };
 
 static void     devkit_disks_daemon_class_init  (DevkitDisksDaemonClass *klass);
 static void     devkit_disks_daemon_init        (DevkitDisksDaemon      *seat);
 static void     devkit_disks_daemon_finalize    (GObject     *object);
+
+static void     daemon_polling_inhibitor_disconnected_cb (DevkitDisksInhibitor *inhibitor,
+                                                          DevkitDisksDaemon    *daemon);
 
 G_DEFINE_TYPE (DevkitDisksDaemon, devkit_disks_daemon, G_TYPE_OBJECT)
 
@@ -563,6 +570,7 @@ static void
 devkit_disks_daemon_finalize (GObject *object)
 {
         DevkitDisksDaemon *daemon;
+        GList *l;
 
         g_return_if_fail (object != NULL);
         g_return_if_fail (DEVKIT_IS_DISKS_DAEMON (object));
@@ -610,6 +618,13 @@ devkit_disks_daemon_finalize (GObject *object)
                 g_object_unref (daemon->priv->logger);
         }
 
+        for (l = daemon->priv->polling_inhibitors; l != NULL; l = l->next) {
+                DevkitDisksInhibitor *inhibitor = DEVKIT_DISKS_INHIBITOR (l->data);
+                g_signal_handlers_disconnect_by_func (inhibitor, daemon_polling_inhibitor_disconnected_cb, daemon);
+                g_object_unref (inhibitor);
+        }
+        g_list_free (daemon->priv->polling_inhibitors);
+
         G_OBJECT_CLASS (devkit_disks_daemon_parent_class)->finalize (object);
 }
 
@@ -647,6 +662,8 @@ pk_io_remove_watch (PolKitContext *pk_context, int watch_id)
         g_source_remove (watch_id);
 }
 
+void devkit_disks_inhibitor_name_owner_changed (DBusMessage *message);
+
 static DBusHandlerResult
 _filter (DBusConnection *connection, DBusMessage *message, void *user_data)
 {
@@ -658,6 +675,9 @@ _filter (DBusConnection *connection, DBusMessage *message, void *user_data)
         if (dbus_message_is_signal (message, DBUS_INTERFACE_DBUS, "NameOwnerChanged")) {
                 /* pass NameOwnerChanged signals from the bus to PolKitTracker */
                 polkit_tracker_dbus_func (daemon->priv->pk_tracker, message);
+
+                /* for now, pass NameOwnerChanged to DevkitDisksInhibitor */
+                devkit_disks_inhibitor_name_owner_changed (message);
         }
 
         if (interface != NULL && g_str_has_prefix (interface, "org.freedesktop.ConsoleKit")) {
@@ -718,6 +738,7 @@ device_changed (DevkitDisksDaemon *daemon, DevkitDevice *d, gboolean synthesized
                         device_remove (daemon, d);
                 } else {
                         g_print ("changed %s\n", native_path);
+                        devkit_disks_daemon_local_update_poller (daemon);
                 }
         } else {
                 g_print ("treating change event as add on %s\n", native_path);
@@ -767,6 +788,7 @@ device_add (DevkitDisksDaemon *daemon, DevkitDevice *d, gboolean emit_event)
                                 object_path = devkit_disks_device_local_get_object_path (device);
                                 g_signal_emit (daemon, signals[DEVICE_ADDED_SIGNAL], 0, object_path);
                         }
+                        devkit_disks_daemon_local_update_poller (daemon);
                 } else {
                         g_print ("ignoring add event on %s\n", native_path);
                 }
@@ -788,6 +810,7 @@ device_remove (DevkitDisksDaemon *daemon, DevkitDevice *d)
                 g_signal_emit (daemon, signals[DEVICE_REMOVED_SIGNAL], 0,
                                devkit_disks_device_local_get_object_path (device));
                 g_object_unref (device);
+                devkit_disks_daemon_local_update_poller (daemon);
         }
 }
 
@@ -1159,6 +1182,27 @@ devkit_disks_damon_local_check_auth (DevkitDisksDaemon     *daemon,
         return ret;
 }
 
+/*--------------------------------------------------------------------------------------------------------------*/
+
+void
+devkit_disks_daemon_local_update_poller (DevkitDisksDaemon *daemon)
+{
+        GHashTableIter hash_iter;
+        DevkitDisksDevice *device;
+        GList *devices_to_poll;
+
+        devices_to_poll = NULL;
+
+        g_hash_table_iter_init (&hash_iter, daemon->priv->map_object_path_to_device);
+        while (g_hash_table_iter_next (&hash_iter, NULL, (gpointer) &device)) {
+                if (device->priv->info.device_is_media_change_detected)
+                        devices_to_poll = g_list_prepend (devices_to_poll, device);
+        }
+
+        poller_set_devices (devices_to_poll);
+
+        g_list_free (devices_to_poll);
+}
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
@@ -1240,6 +1284,131 @@ out:
                              DEVKIT_DISKS_ERROR_NOT_FOUND,
                              "No such device");
         }
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+polling_update_devices (DevkitDisksDaemon *daemon)
+{
+        GHashTableIter hash_iter;
+        DevkitDisksDevice *device;
+
+        g_hash_table_iter_init (&hash_iter, daemon->priv->map_object_path_to_device);
+        while (g_hash_table_iter_next (&hash_iter, NULL, (gpointer) &device)) {
+
+                if (devkit_disks_device_local_update_media_detection (device)) {
+                        DevkitDevice *d;
+
+                        d = g_object_ref (device->priv->d);
+                        device_changed (daemon, d, TRUE);
+                        g_object_unref (d);
+                }
+        }
+
+        devkit_disks_daemon_local_update_poller (daemon);
+}
+
+static void
+daemon_polling_inhibitor_disconnected_cb (DevkitDisksInhibitor *inhibitor,
+                                          DevkitDisksDaemon    *daemon)
+{
+        daemon->priv->polling_inhibitors = g_list_remove (daemon->priv->polling_inhibitors, inhibitor);
+        g_signal_handlers_disconnect_by_func (inhibitor, daemon_polling_inhibitor_disconnected_cb, daemon);
+        g_object_unref (inhibitor);
+
+        polling_update_devices (daemon);
+}
+
+gboolean
+devkit_disks_daemon_local_has_polling_inhibitors (DevkitDisksDaemon *daemon)
+{
+        return daemon->priv->polling_inhibitors != NULL;
+}
+
+gboolean
+devkit_disks_daemon_drive_inhibit_all_polling (DevkitDisksDaemon     *daemon,
+                                               char                 **options,
+                                               DBusGMethodInvocation *context)
+{
+        DevkitDisksInhibitor *inhibitor;
+        PolKitCaller *pk_caller;
+        guint n;
+
+        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (daemon, context)) == NULL)
+                goto out;
+
+
+        if (!devkit_disks_damon_local_check_auth (daemon,
+                                                  pk_caller,
+                                                  "org.freedesktop.devicekit.disks.inhibit-polling",
+                                                  context))
+                goto out;
+
+        for (n = 0; options[n] != NULL; n++) {
+                const char *option = options[n];
+                throw_error (context,
+                             DEVKIT_DISKS_ERROR_INVALID_OPTION,
+                             "Unknown option %s", option);
+                goto out;
+        }
+
+        inhibitor = devkit_disks_inhibitor_new (context);
+
+        daemon->priv->polling_inhibitors = g_list_prepend (daemon->priv->polling_inhibitors, inhibitor);
+        g_signal_connect (inhibitor, "disconnected", G_CALLBACK (daemon_polling_inhibitor_disconnected_cb), daemon);
+
+        polling_update_devices (daemon);
+
+        dbus_g_method_return (context, devkit_disks_inhibitor_get_cookie (inhibitor));
+
+out:
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
+        return TRUE;
+}
+
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+gboolean
+devkit_disks_daemon_drive_uninhibit_all_polling (DevkitDisksDaemon     *daemon,
+                                                 char                  *cookie,
+                                                 DBusGMethodInvocation *context)
+{
+        const gchar *sender;
+        DevkitDisksInhibitor *inhibitor;
+        GList *l;
+
+        sender = dbus_g_method_get_sender (context);
+
+        inhibitor = NULL;
+        for (l = daemon->priv->polling_inhibitors; l != NULL; l = l->next) {
+                DevkitDisksInhibitor *i = DEVKIT_DISKS_INHIBITOR (l->data);
+
+                if (g_strcmp0 (devkit_disks_inhibitor_get_unique_dbus_name (i), sender) == 0 &&
+                    g_strcmp0 (devkit_disks_inhibitor_get_cookie (i), cookie) == 0) {
+                        inhibitor = i;
+                        break;
+                }
+        }
+
+        if (inhibitor == NULL) {
+                throw_error (context,
+                             DEVKIT_DISKS_ERROR_FAILED,
+                             "No such inhibitor");
+                goto out;
+        }
+
+        daemon->priv->polling_inhibitors = g_list_remove (daemon->priv->polling_inhibitors, inhibitor);
+        g_object_unref (inhibitor);
+
+        polling_update_devices (daemon);
+
+        dbus_g_method_return (context);
+
+ out:
         return TRUE;
 }
 

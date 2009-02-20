@@ -90,6 +90,9 @@ struct DevkitDisksDevicePrivate
                 gboolean device_is_partition_table;
                 gboolean device_is_removable;
                 gboolean device_is_media_available;
+                gboolean device_is_media_change_detected;
+                gboolean device_is_media_change_detection_inhibitable;
+                gboolean device_is_media_change_detection_inhibited;
                 gboolean device_is_read_only;
                 gboolean device_is_drive;
                 gboolean device_is_optical_disc;
@@ -177,6 +180,9 @@ struct DevkitDisksDevicePrivate
                 GPtrArray *slaves_objpath;
                 GPtrArray *holders_objpath;
         } info;
+
+        /* A list of current polling inhibitors (DevkitDisksInhibitor objects) */
+        GList *polling_inhibitors;
 
         /* We want S.M.A.R.T. to persist over change events */
         gboolean drive_smart_is_capable;

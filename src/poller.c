@@ -1,0 +1,235 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*-
+ *
+ * Copyright (C) 2007 David Zeuthen <david@fubar.dk>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <string.h>
+
+#include "poller.h"
+#include "devkit-disks-device.h"
+#include "devkit-disks-device-private.h"
+
+static gchar **poller_devices_to_poll = NULL;
+
+static guint poller_timeout_id = 0;
+
+void
+poller_poll_device (const gchar *device_file)
+{
+        gboolean is_cdrom;
+        int fd;
+
+        /* the device file is the canonical device file from udev */
+        is_cdrom = (g_str_has_prefix (device_file, "/dev/sr") || g_str_has_prefix (device_file, "/dev/scd"));
+
+        g_debug ("polling '%s'", device_file);
+
+        if (is_cdrom) {
+                /* optical drives need special care
+                 *
+                 *  - use O_NONBLOCK to avoid closing the door
+                 *  - use O_EXCL to avoid interferring with cd burning software / audio playback / etc
+                 */
+                fd = open (device_file, O_RDONLY | O_NONBLOCK | O_EXCL);
+                if (fd != -1) {
+                        close (fd);
+                }
+
+        } else {
+                fd = open (device_file, O_RDONLY);
+                if (fd != -1) {
+                        close (fd);
+                }
+        }
+}
+
+
+static gboolean
+poller_timeout_cb (gpointer user_data)
+{
+        guint n;
+
+        for (n = 0; poller_devices_to_poll != NULL && poller_devices_to_poll[n] != NULL; n++) {
+                const gchar *device_file = poller_devices_to_poll[n];
+
+                poller_poll_device (device_file);
+        }
+
+        /* don't remove the source */
+        return TRUE;
+}
+
+static gboolean
+poller_have_data (GIOChannel    *channel,
+                GIOCondition   condition,
+                gpointer       user_data)
+{
+        gchar *line;
+        gsize line_length;
+        GError *error;
+        gint status;
+
+        error = NULL;
+
+ again:
+        status = g_io_channel_read_line (channel,
+                                         &line,
+                                         &line_length,
+                                         NULL,
+                                         &error);
+        if (error != NULL) {
+                g_warning ("Error reading line from daemon: %s", error->message);
+                g_error_free (error);
+                goto out;
+        }
+        if (status == G_IO_STATUS_AGAIN) {
+                goto again;
+        }
+
+        //g_debug ("polling process read '%s'", line);
+
+        if (line[line_length - 1] == '\n')
+                line[line_length - 1] = '\0';
+
+        if (line[line_length - 2] == ' ')
+                line[line_length - 2] = '\0';
+
+        g_strfreev (poller_devices_to_poll);
+        poller_devices_to_poll = g_strsplit (line, " ", 0);
+
+        if (g_strv_length (poller_devices_to_poll) == 0) {
+                if (poller_timeout_id > 0) {
+                        g_source_remove (poller_timeout_id);
+                        poller_timeout_id = 0;
+                }
+
+                g_print ("poller: not polling any devices\n");
+        } else {
+                g_print ("poller: polling %s", line);
+
+                if (poller_timeout_id == 0) {
+                        poller_timeout_id = g_timeout_add_seconds (2, poller_timeout_cb, NULL);
+                }
+        }
+
+        g_free (line);
+
+ out:
+        /* keep the IOChannel around */
+        return TRUE;
+}
+
+static void
+poller_run (gint fd)
+{
+        GMainLoop *loop;
+        GIOChannel *io_channel;
+
+        loop = g_main_loop_new (NULL, FALSE);
+
+        io_channel = g_io_channel_unix_new (fd);
+        g_io_channel_set_flags (io_channel, G_IO_FLAG_NONBLOCK, NULL);
+        g_io_add_watch (io_channel, G_IO_IN, poller_have_data, NULL);
+
+        g_main_loop_run (loop);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gint poller_daemon_write_end_fd;
+
+gboolean
+poller_setup (int argc, char *argv[])
+{
+        gint pipefds[2];
+        gboolean ret;
+
+        ret = FALSE;
+
+        if (pipe (pipefds) != 0) {
+                g_warning ("Couldn't set up polling process, pipe() failed: %m");
+                goto out;
+        }
+
+        switch (fork ()) {
+        case 0:
+                /* child */
+                close (pipefds[1]); /* close write end */
+                poller_run (pipefds[0]);
+                break;
+
+        default:
+                /* parent */
+                close (pipefds[0]); /* close read end */
+                poller_daemon_write_end_fd = pipefds[1];
+                break;
+
+        case -1:
+                g_warning ("Couldn't set up polling process, fork() failed: %m");
+                goto out;
+                break;
+        }
+
+        ret = TRUE;
+
+ out:
+        return ret;
+}
+
+void
+poller_set_devices (GList *devices)
+{
+        GList *l;
+        gchar **device_array;
+        guint n;
+        gchar *devices_to_poll;
+        static gchar *devices_currently_polled = NULL;
+
+        device_array = g_new0 (gchar *, g_list_length (devices) + 2);
+
+        for (l = devices, n = 0; l != NULL; l = l->next) {
+                DevkitDisksDevice *device = DEVKIT_DISKS_DEVICE (l->data);
+
+                device_array[n++] = device->priv->info.device_file;
+        }
+
+        g_qsort_with_data (device_array, n, sizeof (gchar *), (GCompareDataFunc) g_strcmp0, NULL);
+
+        device_array[n] = "\n";
+
+        devices_to_poll = g_strjoinv (" ", device_array);
+        g_free (device_array);
+
+        if (g_strcmp0 (devices_to_poll, devices_currently_polled) != 0) {
+                g_free (devices_currently_polled);
+                devices_currently_polled = devices_to_poll;
+
+                write (poller_daemon_write_end_fd, devices_currently_polled, strlen (devices_currently_polled));
+                //g_debug ("Wanna poll: '%s'", devices_currently_polled);
+        } else {
+                g_free (devices_to_poll);
+        }
+}

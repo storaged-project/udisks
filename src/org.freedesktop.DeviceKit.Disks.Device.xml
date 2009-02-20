@@ -1021,6 +1021,98 @@
 
     <!-- ************************************************************ -->
 
+    <method name="DriveInhibitPolling">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Inhibit options. Currently no options are recognized.</doc:summary></doc:doc>
+      </arg>
+
+      <arg name="cookie" direction="out" type="s">
+        <doc:doc><doc:summary>
+            A cookie that can be used in the
+            <doc:ref type="method" to="Device.DriveUninhibitPolling">DriveUninhibitPolling()</doc:ref> method
+            to stop inhibiting polling of the device.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Inhibits the daemon from polling the device for media changes.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.inhibit-polling</doc:term>
+              <doc:definition>To inhibit polling</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_NOT_DRIVE;">device is not a drive</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="DriveUninhibitPolling">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+
+      <arg name="cookie" direction="in" type="s">
+        <doc:doc><doc:summary>
+            A cookie obtained from the
+            <doc:ref type="method" to="Device.DriveInhibitPolling">DriveInhibitPolling()</doc:ref> method.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Uninhibits daemon from polling the device for media changes.
+          </doc:para>
+        </doc:description>
+        <doc:errors>
+          <doc:error name="&ERROR_FAILED;">if the given cookie is malformed</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+
+    <!-- ************************************************************ -->
+
+    <method name="DrivePollMedia">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Polls the drive for media. This is typically only useful when the
+            <doc:ref type="property" to="Device:device-is-media-change-detected">device-is-media-change-detected</doc:ref> property
+            is FALSE.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.inhibit-polling</doc:term>
+              <doc:definition>To inhibit polling</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_FAILED;">if an unknown error occured</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
     <method name="DriveEject">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="options" direction="in" type="as">
@@ -1352,6 +1444,21 @@
     <property name="device-is-media-available" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE if media is available in the device.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-is-media-change-detected" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if media changes are detected.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-is-media-change-detection-inhibitable" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if it is possible to inhibit media detection on the device (to avoid keeping the device in a high power state).
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-is-media-change-detection-inhibited" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if media detection is inhibited (to avoid keeping the device in a high power state).
       </doc:para></doc:description></doc:doc>
     </property>
     <property name="device-is-read-only" type="b" access="read">

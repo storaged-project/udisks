@@ -240,4 +240,14 @@ file are instantly applied.
     </defaults>
   </action>
 
+  <action id="org.freedesktop.devicekit.disks.inhibit-polling">
+    <_description>Inhibit media detection</_description>
+    <_message>Authentication is required to inhibit media detection</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
 </policyconfig>

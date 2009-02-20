@@ -65,6 +65,68 @@
 
     <!-- ************************************************************ -->
 
+    <method name="DriveInhibitAllPolling">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Inhibit options. Currently no options are recognized.</doc:summary></doc:doc>
+      </arg>
+
+      <arg name="cookie" direction="out" type="s">
+        <doc:doc><doc:summary>
+            A cookie that can be used in the
+            <doc:ref type="method" to="Disks.DriveUninhibitAllPolling">DriveUninhibitAllPolling()</doc:ref> method
+            to stop inhibiting polling of all devices.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Inhibits the daemon from polling devices for media changes.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.inhibit-polling</doc:term>
+              <doc:definition>To inhibit polling</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="DriveUninhibitAllPolling">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+
+      <arg name="cookie" direction="in" type="s">
+        <doc:doc><doc:summary>
+            A cookie obtained from the
+            <doc:ref type="method" to="Disks.DriveInhibitAllPolling">DriveInhibitAllPolling()</doc:ref> method.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Uninhibits daemon from polling devices for media changes.
+          </doc:para>
+        </doc:description>
+        <doc:errors>
+          <doc:error name="&ERROR_FAILED;">if the given cookie is malformed</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
     <method name="LinuxMdStart">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="components" direction="in" type="ao">
