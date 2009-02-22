@@ -2493,8 +2493,9 @@ update_info (DevkitDisksDevice *device)
                 /* make sure compat media is sorted */
                 g_ptr_array_sort (device->priv->info.drive_media_compatibility, (GCompareFunc) strcmp);
 
-                /* if we don't know the media but do know the media compat, just select the first one */
-                if (device->priv->info.drive_media == NULL) {
+                /* if we have have media, but don't know the media but do know the media compat,
+                 * just select the first one */
+                if (device->priv->info.device_is_media_available && device->priv->info.drive_media == NULL) {
                         device->priv->info.drive_media =
                                 g_strdup (device->priv->info.drive_media_compatibility->pdata[0]);
                 }
