@@ -105,8 +105,8 @@ _scrub_signatures (int fd, guint64 offset, guint64 size)
 
         ret = FALSE;
 
-        /* wipe first and last 16kb. TODO: check 16kb is the right number */
-        wipe_size = 16 * 1024;
+        /* wipe first and last 128KB. Note that btrfs keeps signatures at 0x10000 == 64KB. */
+        wipe_size = 128 * 1024;
         g_assert (sizeof (buf) >= wipe_size);
 
         if (wipe_size > size) {
