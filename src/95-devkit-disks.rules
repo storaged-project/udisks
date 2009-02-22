@@ -82,6 +82,10 @@ SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:3", ENV{
 #
 SYSFS{idVendor}=="05ac", SYSFS{idProduct}=="1209", ENV{ID_DRIVE_REQUIRES_EJECT}="1"
 
+# USB floppy drives
+#
+SYSFS{bInterfaceClass}=="08", SYSFS{bInterfaceSubClass}=="04", ENV{ID_DRIVE_FLOPPY}="1"
+
 
 ##############################################################################################################
 
