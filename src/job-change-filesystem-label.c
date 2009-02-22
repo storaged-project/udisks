@@ -64,7 +64,7 @@ main (int argc, char **argv)
         fstype = argv[2];
         new_label = g_strdup (argv[3]);
 
-        if (strcmp (fstype, "ext3") == 0) {
+        if (strcmp (fstype, "ext3") == 0 || strcmp (fstype, "ext4") == 0) {
                 if (!validate_and_escape_label (&new_label, 16))
                         goto out;
                 command_line = g_strdup_printf ("e2label %s \"%s\"", device, new_label);
