@@ -6650,19 +6650,10 @@ devkit_disks_device_filesystem_set_label (DevkitDisksDevice     *device,
         char *argv[10];
         GError *error;
         PolKitCaller *pk_caller;
+        const DevkitDisksFilesystem *fs_details;
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
-
-        /* TODO: some file systems can do this while mounted; we need something similar
-         *       to GduCreatableFilesystem cf. gdu-util.h
-         */
-
-        if (devkit_disks_device_local_is_busy (device)) {
-                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
-                             "Device is busy");
-                goto out;
-        }
 
         if (device->priv->info.id_usage == NULL ||
             strcmp (device->priv->info.id_usage, "filesystem") != 0) {
@@ -6671,7 +6662,19 @@ devkit_disks_device_filesystem_set_label (DevkitDisksDevice     *device,
                 goto out;
         }
 
-        /* TODO: check if the fs support labels at all */
+        fs_details = devkit_disks_daemon_local_get_fs_details (device->priv->daemon,
+                                                               device->priv->info.id_type);
+        if (fs_details == NULL) {
+                throw_error (context, DEVKIT_DISKS_ERROR_BUSY, "Unknown filesystem");
+                goto out;
+        }
+
+        if (!fs_details->supports_online_label_rename) {
+                if (devkit_disks_device_local_is_busy (device)) {
+                        throw_error (context, DEVKIT_DISKS_ERROR_BUSY, "Device is busy");
+                        goto out;
+                }
+        }
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,

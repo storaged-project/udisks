@@ -118,6 +118,26 @@ gboolean           devkit_disks_daemon_local_has_polling_inhibitors (DevkitDisks
 
 DevkitDisksLogger *devkit_disks_daemon_local_get_logger (DevkitDisksDaemon *daemon);
 
+typedef struct {
+        const char *id;
+        const char *name;
+        gboolean supports_unix_owners;
+        gboolean can_mount;
+        gboolean can_create;
+        guint max_label_len;
+        gboolean supports_label_rename;
+        gboolean supports_online_label_rename;
+        gboolean supports_fsck;
+        gboolean supports_online_fsck;
+        gboolean supports_resize_enlarge;
+        gboolean supports_online_resize_enlarge;
+        gboolean supports_resize_shrink;
+        gboolean supports_online_resize_shrink;
+} DevkitDisksFilesystem;
+
+const DevkitDisksFilesystem *devkit_disks_daemon_local_get_fs_details (DevkitDisksDaemon  *daemon,
+                                                                       const gchar        *filesystem_id);
+
 /* exported methods */
 
 gboolean devkit_disks_daemon_enumerate_devices (DevkitDisksDaemon     *daemon,
