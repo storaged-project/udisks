@@ -1313,8 +1313,7 @@ devkit_device_emit_changed_to_kernel (DevkitDisksDevice *device)
         if (f == NULL) {
                 g_warning ("error opening %s for writing: %m", filename);
         } else {
-                /* TODO: change 'add' to 'change' when new udev rules are released */
-                if (fputs ("add", f) == EOF) {
+                if (fputs ("change", f) == EOF) {
                         g_warning ("error writing 'add' to %s: %m", filename);
                 }
                 fclose (f);
@@ -2534,7 +2533,11 @@ update_info (DevkitDisksDevice *device)
                         sysfs_get_int (device->priv->native_path, "md/raid_disks");
                 device->priv->info.linux_md_version = g_strstrip (sysfs_get_string (device->priv->native_path,
                                                                                             "md/metadata_version"));
-                /* Verify that all slaves are there */
+
+                /* Check if all slaves are there. Unfortunately since the array may be incrementally
+                 * assemble from udev rules we get a 'change' event for the array *just before* the
+                 * last component is added. So don't bail on unreferenced slaves.
+                 */
                 for (n = 0; n < (int) device->priv->info.slaves_objpath->len; n++) {
                         DevkitDisksDevice *slave;
                         char *component_state;
@@ -2546,10 +2549,10 @@ update_info (DevkitDisksDevice *device)
                                 device->priv->info.slaves_objpath->pdata[n]);
 
                         if (slave == NULL) {
-                                g_debug ("Unreferenced slave %s for array %s. Ignoring.",
+                                g_debug ("Unreferenced slave %s for array %s.",
                                          (const char *) device->priv->info.slaves_objpath->pdata[n],
                                          device->priv->info.device_file);
-                                goto out;
+                                continue;
                         }
 
                         g_ptr_array_add (device->priv->info.linux_md_slaves,
