@@ -22,6 +22,7 @@
 #  include "config.h"
 #endif
 
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -84,8 +85,8 @@ poller_timeout_cb (gpointer user_data)
 
 static gboolean
 poller_have_data (GIOChannel    *channel,
-                GIOCondition   condition,
-                gpointer       user_data)
+                  GIOCondition   condition,
+                  gpointer       user_data)
 {
         gchar *line;
         gsize line_length;
@@ -93,6 +94,11 @@ poller_have_data (GIOChannel    *channel,
         gint status;
 
         error = NULL;
+
+        /* Exit if parent dies */
+        if (condition == G_IO_HUP) {
+                exit (1);
+        }
 
  again:
         status = g_io_channel_read_line (channel,
@@ -152,7 +158,7 @@ poller_run (gint fd)
 
         io_channel = g_io_channel_unix_new (fd);
         g_io_channel_set_flags (io_channel, G_IO_FLAG_NONBLOCK, NULL);
-        g_io_add_watch (io_channel, G_IO_IN, poller_have_data, NULL);
+        g_io_add_watch (io_channel, G_IO_IN | G_IO_HUP, poller_have_data, NULL);
 
         g_main_loop_run (loop);
 }
