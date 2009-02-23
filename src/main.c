@@ -133,6 +133,13 @@ main (int argc, char **argv)
         ret = 1;
         error = NULL;
 
+        g_type_init ();
+
+        /* fork the polling process early */
+        if (!poller_setup (argc, argv)) {
+                goto out;
+        }
+
         /* run with a controlled path */
         if (!g_setenv ("PATH", PACKAGE_LIBEXEC_DIR ":/sbin:/bin:/usr/sbin:/usr/bin", TRUE)) {
                 g_warning ("Couldn't set PATH");
@@ -142,13 +149,6 @@ main (int argc, char **argv)
         /* avoid gvfs (http://bugzilla.gnome.org/show_bug.cgi?id=526454) */
         if (!g_setenv ("GIO_USE_VFS", "local", TRUE)) {
                 g_warning ("Couldn't set GIO_USE_GVFS");
-                goto out;
-        }
-
-        g_type_init ();
-
-        /* fork the polling process early */
-        if (!poller_setup (argc, argv)) {
                 goto out;
         }
 

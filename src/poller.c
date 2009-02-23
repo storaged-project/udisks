@@ -23,6 +23,8 @@
 #endif
 
 #include <stdlib.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -32,6 +34,67 @@
 #include "poller.h"
 #include "devkit-disks-device.h"
 #include "devkit-disks-device-private.h"
+
+#ifdef __linux__
+extern char **environ;
+static char **argv_buffer = NULL;
+static size_t argv_size = 0;
+#endif
+
+static void
+set_proc_title_init (int argc, char *argv[])
+{
+#ifdef __linux__
+        unsigned int i;
+        char **new_environ, *endptr;
+
+        /* This code is really really ugly. We make some memory layout
+         * assumptions and reuse the environment array as memory to store
+         * our process title in */
+
+        for (i = 0; environ[i] != NULL; i++)
+                ;
+
+        endptr = i ? environ[i-1] + strlen (environ[i-1]) : argv[argc-1] + strlen (argv[argc-1]);
+
+        argv_buffer = argv;
+        argv_size = endptr - argv_buffer[0];
+
+        /* Make a copy of environ */
+
+        new_environ = malloc (sizeof(char*) * (i + 1));
+        for (i = 0; environ[i] != NULL; i++)
+                new_environ[i] = strdup (environ[i]);
+        new_environ[i] = NULL;
+
+        environ = new_environ;
+#endif
+}
+
+/* this code borrowed from avahi-daemon's setproctitle.c (LGPL v2) */
+static void
+set_proc_title (const char *format, ...)
+{
+#ifdef __linux__
+        size_t len;
+        va_list ap;
+
+        if (argv_buffer == NULL)
+                goto out;
+
+        va_start (ap, format);
+        vsnprintf (argv_buffer[0], argv_size, format, ap);
+        va_end (ap);
+
+        len = strlen (argv_buffer[0]);
+
+        memset (argv_buffer[0] + len, 0, argv_size - len);
+        argv_buffer[1] = NULL;
+out:
+        ;
+#endif
+}
+
 
 static gchar **poller_devices_to_poll = NULL;
 
@@ -46,7 +109,7 @@ poller_poll_device (const gchar *device_file)
         /* the device file is the canonical device file from udev */
         is_cdrom = (g_str_has_prefix (device_file, "/dev/sr") || g_str_has_prefix (device_file, "/dev/scd"));
 
-        g_debug ("polling '%s'", device_file);
+        //g_debug ("polling '%s'", device_file);
 
         if (is_cdrom) {
                 /* optical drives need special care
@@ -132,9 +195,9 @@ poller_have_data (GIOChannel    *channel,
                         poller_timeout_id = 0;
                 }
 
-                g_print ("poller: not polling any devices\n");
+                set_proc_title ("devkit-disks-daemon: not polling any devices");
         } else {
-                g_print ("poller: polling %s", line);
+                set_proc_title ("devkit-disks-daemon: polling %s", line);
 
                 if (poller_timeout_id == 0) {
                         poller_timeout_id = g_timeout_add_seconds (2, poller_timeout_cb, NULL);
@@ -184,6 +247,7 @@ poller_setup (int argc, char *argv[])
         case 0:
                 /* child */
                 close (pipefds[1]); /* close write end */
+                set_proc_title_init (argc, argv);
                 poller_run (pipefds[0]);
                 break;
 
