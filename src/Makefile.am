@@ -39,6 +39,7 @@ dbusifdir = $(datadir)/dbus-1/interfaces
 dbusif_DATA = org.freedesktop.DeviceKit.Disks.xml org.freedesktop.DeviceKit.Disks.Device.xml
 
 devkit_disks_daemon_SOURCES = 						\
+	devkit-disks-types.h						\
 	devkit-disks-daemon.h		devkit-disks-daemon.c		\
 	devkit-disks-logger.h		devkit-disks-logger.c		\
 	devkit-disks-device.h		devkit-disks-device.c		\

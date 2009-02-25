@@ -21,15 +21,11 @@
 #ifndef __DEVKIT_DISKS_DAEMON_H__
 #define __DEVKIT_DISKS_DAEMON_H__
 
-#include <glib-object.h>
+#include <devkit-gobject/devkit-gobject.h>
 #include <polkit-dbus/polkit-dbus.h>
 #include <dbus/dbus-glib.h>
-#include <devkit-gobject/devkit-gobject.h>
 
-struct DevkitDisksDevice;
-typedef struct DevkitDisksDevice DevkitDisksDevice;
-
-#include "devkit-disks-logger.h"
+#include "devkit-disks-types.h"
 
 G_BEGIN_DECLS
 
@@ -40,18 +36,19 @@ G_BEGIN_DECLS
 #define DEVKIT_IS_DISKS_DAEMON_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), DEVKIT_TYPE_DISKS_DAEMON))
 #define DEVKIT_DISKS_DAEMON_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), DEVKIT_TYPE_DISKS_DAEMON, DevkitDisksDaemonClass))
 
+typedef struct DevkitDisksDaemonClass   DevkitDisksDaemonClass;
 typedef struct DevkitDisksDaemonPrivate DevkitDisksDaemonPrivate;
 
-typedef struct
+struct DevkitDisksDaemon
 {
         GObject        parent;
         DevkitDisksDaemonPrivate *priv;
-} DevkitDisksDaemon;
+};
 
-typedef struct
+struct DevkitDisksDaemonClass
 {
         GObjectClass   parent_class;
-} DevkitDisksDaemonClass;
+};
 
 typedef enum
 {

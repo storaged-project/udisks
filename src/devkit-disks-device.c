@@ -50,6 +50,8 @@
 #include <polkit-dbus/polkit-dbus.h>
 #include <sqlite3.h>
 
+#include "devkit-disks-daemon.h"
+#include "devkit-disks-logger.h"
 #include "devkit-disks-device.h"
 #include "devkit-disks-device-private.h"
 #include "devkit-disks-marshal.h"

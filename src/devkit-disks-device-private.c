@@ -22,6 +22,7 @@
 #endif
 
 #include <string.h>
+#include "devkit-disks-device.h"
 #include "devkit-disks-device-private.h"
 
 static gboolean

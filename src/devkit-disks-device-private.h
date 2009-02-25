@@ -21,10 +21,9 @@
 #ifndef __DEVKIT_DISKS_DEVICE_PRIVATE_H__
 #define __DEVKIT_DISKS_DEVICE_PRIVATE_H__
 
-#include <glib-object.h>
 #include <polkit-dbus/polkit-dbus.h>
 
-#include "devkit-disks-device.h"
+#include "devkit-disks-types.h"
 
 G_BEGIN_DECLS
 

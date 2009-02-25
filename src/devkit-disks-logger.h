@@ -21,7 +21,7 @@
 #ifndef __DEVKIT_DISKS_LOGGER_H__
 #define __DEVKIT_DISKS_LOGGER_H__
 
-#include <glib-object.h>
+#include "devkit-disks-types.h"
 
 G_BEGIN_DECLS
 
@@ -32,18 +32,19 @@ G_BEGIN_DECLS
 #define DEVKIT_IS_DISKS_LOGGER_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), DEVKIT_TYPE_DISKS_LOGGER))
 #define DEVKIT_DISKS_LOGGER_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), DEVKIT_TYPE_DISKS_LOGGER, DevkitDisksLoggerClass))
 
+typedef struct DevkitDisksLoggerClass   DevkitDisksLoggerClass;
 typedef struct DevkitDisksLoggerPrivate DevkitDisksLoggerPrivate;
 
-typedef struct
+struct DevkitDisksLogger
 {
         GObject                   parent;
         DevkitDisksLoggerPrivate *priv;
-} DevkitDisksLogger;
+};
 
-typedef struct
+struct DevkitDisksLoggerClass
 {
         GObjectClass   parent_class;
-} DevkitDisksLoggerClass;
+};
 
 GType              devkit_disks_logger_get_type              (void);
 DevkitDisksLogger *devkit_disks_logger_new                   (void);

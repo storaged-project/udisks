@@ -56,6 +56,7 @@
 #include "devkit-disks-mount-monitor.h"
 #include "poller.h"
 #include "devkit-disks-inhibitor.h"
+#include "devkit-disks-logger.h"
 
 #include "devkit-disks-daemon-glue.h"
 #include "devkit-disks-marshal.h"

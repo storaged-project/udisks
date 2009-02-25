@@ -21,9 +21,7 @@
 #ifndef __DEVKIT_DISKS_MOUNT_MONITOR_H__
 #define __DEVKIT_DISKS_MOUNT_MONITOR_H__
 
-#include <glib-object.h>
-#include <polkit-dbus/polkit-dbus.h>
-#include <dbus/dbus-glib.h>
+#include "devkit-disks-types.h"
 
 G_BEGIN_DECLS
 
@@ -34,19 +32,19 @@ G_BEGIN_DECLS
 #define DEVKIT_IS_DISKS_MOUNT_MONITOR_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), DEVKIT_TYPE_DISKS_MOUNT_MONITOR))
 #define DEVKIT_DISKS_MOUNT_MONITOR_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), DEVKIT_TYPE_DISKS_MOUNT_MONITOR, DevkitDisksMountMonitorClass))
 
-struct DevkitDisksMountMonitorPrivate;
+typedef struct DevkitDisksMountMonitorClass   DevkitDisksMountMonitorClass;
 typedef struct DevkitDisksMountMonitorPrivate DevkitDisksMountMonitorPrivate;
 
-typedef struct
+struct DevkitDisksMountMonitor
 {
         GObject                         parent;
         DevkitDisksMountMonitorPrivate *priv;
-} DevkitDisksMountMonitor;
+};
 
-typedef struct
+struct DevkitDisksMountMonitorClass
 {
         GObjectClass   parent_class;
-} DevkitDisksMountMonitorClass;
+};
 
 GType                    devkit_disks_mount_monitor_get_type   (void);
 DevkitDisksMountMonitor *devkit_disks_mount_monitor_new        (void);

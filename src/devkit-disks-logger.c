@@ -32,6 +32,7 @@
 #include <dbus/dbus-glib-lowlevel.h>
 #include <sqlite3.h>
 
+#include "devkit-disks-daemon.h"
 #include "devkit-disks-device.h"
 #include "devkit-disks-device-private.h"
 #include "devkit-disks-logger.h"

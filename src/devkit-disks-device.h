@@ -21,11 +21,11 @@
 #ifndef __DEVKIT_DISKS_DEVICE_H__
 #define __DEVKIT_DISKS_DEVICE_H__
 
-#include <glib-object.h>
+#include <dbus/dbus-glib.h>
 #include <polkit-dbus/polkit-dbus.h>
 #include <devkit-gobject/devkit-gobject.h>
 
-#include "devkit-disks-daemon.h"
+#include "devkit-disks-types.h"
 
 G_BEGIN_DECLS
 
@@ -36,18 +36,19 @@ G_BEGIN_DECLS
 #define DEVKIT_IS_DISKS_DEVICE_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), DEVKIT_TYPE_DISKS_DEVICE))
 #define DEVKIT_DISKS_DEVICE_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), DEVKIT_TYPE_DISKS_DEVICE, DevkitDisksDeviceClass))
 
+typedef struct DevkitDisksDeviceClass   DevkitDisksDeviceClass;
 typedef struct DevkitDisksDevicePrivate DevkitDisksDevicePrivate;
 
 struct DevkitDisksDevice
 {
-        GObject        parent;
+        GObject                   parent;
         DevkitDisksDevicePrivate *priv;
 };
 
-typedef struct
+struct DevkitDisksDeviceClass
 {
-        GObjectClass   parent_class;
-} DevkitDisksDeviceClass;
+        GObjectClass parent_class;
+};
 
 GType              devkit_disks_device_get_type              (void);
 

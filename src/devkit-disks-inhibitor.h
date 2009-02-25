@@ -21,8 +21,9 @@
 #ifndef __DEVKIT_DISKS_INHIBITOR_H__
 #define __DEVKIT_DISKS_INHIBITOR_H__
 
-#include <glib-object.h>
 #include <dbus/dbus-glib.h>
+
+#include "devkit-disks-types.h"
 
 G_BEGIN_DECLS
 
@@ -33,7 +34,6 @@ G_BEGIN_DECLS
 #define DEVKIT_IS_DISKS_INHIBITOR_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), DEVKIT_TYPE_DISKS_INHIBITOR))
 #define DEVKIT_DISKS_INHIBITOR_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), DEVKIT_TYPE_DISKS_INHIBITOR, DevkitDisksInhibitorClass))
 
-typedef struct DevkitDisksInhibitor        DevkitDisksInhibitor;
 typedef struct DevkitDisksInhibitorClass   DevkitDisksInhibitorClass;
 typedef struct DevkitDisksInhibitorPrivate DevkitDisksInhibitorPrivate;
 
