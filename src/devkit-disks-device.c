@@ -1570,14 +1570,14 @@ update_info_partition_table (DevkitDisksDevice *device)
 {
         guint n;
 
-        if (!device->priv->device_is_partition && devkit_device_has_property (device->priv->d, "PART_SCHEME")) {
+        if (!device->priv->device_is_partition && devkit_device_has_property (device->priv->d, "DKD_PART_SCHEME")) {
                 GArray *offsets;
                 GArray *sizes;
 
                 devkit_disks_device_set_device_is_partition_table (device, TRUE);
-                devkit_disks_device_set_partition_table_scheme (device, devkit_device_get_property (device->priv->d, "PART_SCHEME"));
-                devkit_disks_device_set_partition_table_count (device, devkit_device_get_property_as_int (device->priv->d, "PART_COUNT"));
-                devkit_disks_device_set_partition_table_max_number (device, devkit_device_get_property_as_int (device->priv->d, "PART_MAX_NUMBER"));
+                devkit_disks_device_set_partition_table_scheme (device, devkit_device_get_property (device->priv->d, "DKD_PART_SCHEME"));
+                devkit_disks_device_set_partition_table_count (device, devkit_device_get_property_as_int (device->priv->d, "DKD_PART_COUNT"));
+                devkit_disks_device_set_partition_table_max_number (device, devkit_device_get_property_as_int (device->priv->d, "DKD_PART_MAX_NUMBER"));
 
                 offsets = g_array_sized_new (FALSE, TRUE, sizeof (guint64), device->priv->partition_table_max_number);
                 sizes = g_array_sized_new (FALSE, TRUE, sizeof (guint64), device->priv->partition_table_max_number);
@@ -1589,14 +1589,14 @@ update_info_partition_table (DevkitDisksDevice *device)
                         guint64 offset;
                         guint64 size;
 
-                        part_key = g_strdup_printf ("PART_P%d_OFFSET", n + 1);
+                        part_key = g_strdup_printf ("DKD_PART_P%d_OFFSET", n + 1);
                         if (devkit_device_has_property (device->priv->d, part_key))
                                 offset = devkit_device_get_property_as_uint64 (device->priv->d, part_key);
                         else
                                 offset = 0;
                         g_free (part_key);
 
-                        part_key = g_strdup_printf ("PART_P%d_SIZE", n + 1);
+                        part_key = g_strdup_printf ("DKD_PART_P%d_SIZE", n + 1);
                         if (devkit_device_has_property (device->priv->d, part_key))
                                 size = devkit_device_get_property_as_uint64 (device->priv->d, part_key);
                         else
@@ -1641,35 +1641,35 @@ update_info_partition (DevkitDisksDevice *device)
                 const gchar *uuid;
                 gchar **flags;
 
-                devkit_disks_device_set_partition_scheme (device, devkit_device_get_property (device->priv->d, "PART_SCHEME"));
+                devkit_disks_device_set_partition_scheme (device, devkit_device_get_property (device->priv->d, "DKD_PART_SCHEME"));
 
-                part_key = g_strdup_printf ("PART_P%d_OFFSET", device->priv->partition_number);
+                part_key = g_strdup_printf ("DKD_PART_P%d_OFFSET", device->priv->partition_number);
                 if (devkit_device_has_property (device->priv->d, part_key))
                         offset = devkit_device_get_property_as_uint64 (device->priv->d, part_key);
                 else
                         offset = 0;
                 g_free (part_key);
 
-                part_key = g_strdup_printf ("PART_P%d_SIZE", device->priv->partition_number);
+                part_key = g_strdup_printf ("DKD_PART_P%d_SIZE", device->priv->partition_number);
                 if (devkit_device_has_property (device->priv->d, part_key))
                         size = devkit_device_get_property_as_uint64 (device->priv->d, part_key);
                 else
                         size = 0;
                 g_free (part_key);
 
-                part_key = g_strdup_printf ("PART_P%d_TYPE", device->priv->partition_number);
+                part_key = g_strdup_printf ("DKD_PART_P%d_TYPE", device->priv->partition_number);
                 type = devkit_device_get_property (device->priv->d, part_key);
                 g_free (part_key);
 
-                part_key = g_strdup_printf ("PART_P%d_LABEL", device->priv->partition_number);
+                part_key = g_strdup_printf ("DKD_PART_P%d_LABEL", device->priv->partition_number);
                 label = devkit_device_get_property (device->priv->d, part_key);
                 g_free (part_key);
 
-                part_key = g_strdup_printf ("PART_P%d_UUID", device->priv->partition_number);
+                part_key = g_strdup_printf ("DKD_PART_P%d_UUID", device->priv->partition_number);
                 uuid = devkit_device_get_property (device->priv->d, part_key);
                 g_free (part_key);
 
-                part_key = g_strdup_printf ("PART_P%d_FLAGS", device->priv->partition_number);
+                part_key = g_strdup_printf ("DKD_PART_P%d_FLAGS", device->priv->partition_number);
                 flags = devkit_device_dup_property_as_strv (device->priv->d, part_key);
                 g_free (part_key);
 
@@ -2605,9 +2605,9 @@ update_info (DevkitDisksDevice *device)
 
         /* device_is_media_available property */
         if (device->priv->device_is_removable) {
-                if (devkit_device_has_property (device->priv->d, "MEDIA_AVAILABLE")) {
+                if (devkit_device_has_property (device->priv->d, "DKD_MEDIA_AVAILABLE")) {
                         devkit_disks_device_set_device_is_media_available (device,
-                               devkit_device_get_property_as_boolean (device->priv->d, "MEDIA_AVAILABLE"));
+                               devkit_device_get_property_as_boolean (device->priv->d, "DKD_MEDIA_AVAILABLE"));
                 } else {
                         if (devkit_device_has_property (device->priv->d, "ID_CDROM_MEDIA_STATE")) {
                                 devkit_disks_device_set_device_is_media_available (device, TRUE);

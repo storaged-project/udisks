@@ -38,12 +38,12 @@ print_entry (PartitionTable *p, int entry, int print_number)
 
         flags_combined = g_strjoinv (" ", flags);
 
-        printf ("PART_P%d_TYPE=%s\n", print_number, type != NULL ? type : "");
-        printf ("PART_P%d_OFFSET=%" G_GINT64_FORMAT "\n", print_number, offset);
-        printf ("PART_P%d_SIZE=%" G_GINT64_FORMAT "\n", print_number, size);
-        printf ("PART_P%d_LABEL=%s\n", print_number, label != NULL ? label : "");
-        printf ("PART_P%d_UUID=%s\n", print_number, uuid != NULL ? uuid : "");
-        printf ("PART_P%d_FLAGS=%s\n", print_number, flags_combined);
+        printf ("DKD_PART_P%d_TYPE=%s\n", print_number, type != NULL ? type : "");
+        printf ("DKD_PART_P%d_OFFSET=%" G_GINT64_FORMAT "\n", print_number, offset);
+        printf ("DKD_PART_P%d_SIZE=%" G_GINT64_FORMAT "\n", print_number, size);
+        printf ("DKD_PART_P%d_LABEL=%s\n", print_number, label != NULL ? label : "");
+        printf ("DKD_PART_P%d_UUID=%s\n", print_number, uuid != NULL ? uuid : "");
+        printf ("DKD_PART_P%d_FLAGS=%s\n", print_number, flags_combined);
 
         g_free (type);
         g_free (label);
@@ -96,8 +96,8 @@ do_table (int fd)
                 }
         }
 
-        printf ("PART_SCHEME=%s\n", part_get_scheme_name (part_table_get_scheme (table)));
-        printf ("PART_COUNT=%d\n", num_used_entries + num_nested_entries);
+        printf ("DKD_PART_SCHEME=%s\n", part_get_scheme_name (part_table_get_scheme (table)));
+        printf ("DKD_PART_COUNT=%d\n", num_used_entries + num_nested_entries);
 
         max_number = 0;
         for (n = 0; n < num_entries; n++) {
@@ -114,7 +114,7 @@ do_table (int fd)
                          max_number = n + 5;
         }
 
-        printf ("PART_MAX_NUMBER=%d\n", max_number);
+        printf ("DKD_PART_MAX_NUMBER=%d\n", max_number);
 out:
         if (table != NULL)
                 part_table_free (table);
@@ -269,18 +269,18 @@ open_device (const char *given_device_file, gboolean *is_part)
 
 out:
         if (fd < 0) {
-                printf ("MEDIA_AVAILABLE=0\n");
+                printf ("DKD_MEDIA_AVAILABLE=0\n");
         } else {
-                printf ("MEDIA_AVAILABLE=1\n");
+                printf ("DKD_MEDIA_AVAILABLE=1\n");
         }
         return fd;
 
 not_part:
         fd = open (given_device_file, O_RDONLY);
         if (fd < 0) {
-                printf ("MEDIA_AVAILABLE=0\n");
+                printf ("DKD_MEDIA_AVAILABLE=0\n");
         } else {
-                printf ("MEDIA_AVAILABLE=1\n");
+                printf ("DKD_MEDIA_AVAILABLE=1\n");
         }
         return fd;
 }
