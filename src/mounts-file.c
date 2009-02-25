@@ -65,7 +65,7 @@ mounts_file_has_device (DevkitDisksDevice *device,
 
         contents = NULL;
         ret = FALSE;
-        device_file_escaped = g_uri_escape_string (device->priv->info.device_file, NULL, TRUE);
+        device_file_escaped = g_uri_escape_string (device->priv->device_file, NULL, TRUE);
 
         error = NULL;
         if (!g_file_get_contents (PACKAGE_LOCALSTATE_DIR "/lib/DeviceKit-disks/mtab",
@@ -126,8 +126,8 @@ mounts_file_add (DevkitDisksDevice *device, uid_t mounted_by_uid, gboolean remov
         char *device_file_escaped;
         char *mount_path_escaped;
 
-        g_return_if_fail (device->priv->info.device_is_mounted);
-        g_return_if_fail (device->priv->info.device_mount_path != NULL);
+        g_return_if_fail (device->priv->device_is_mounted);
+        g_return_if_fail (device->priv->device_mount_path != NULL);
 
         /* on error resp. contents and size will be set to resp. NULL and 0 */
         error = NULL;
@@ -144,8 +144,8 @@ mounts_file_add (DevkitDisksDevice *device, uid_t mounted_by_uid, gboolean remov
                 g_error_free (error);
         }
 
-        device_file_escaped = g_uri_escape_string (device->priv->info.device_file, NULL, TRUE);
-        mount_path_escaped = g_uri_escape_string (device->priv->info.device_mount_path, NULL, TRUE);
+        device_file_escaped = g_uri_escape_string (device->priv->device_file, NULL, TRUE);
+        mount_path_escaped = g_uri_escape_string (device->priv->device_mount_path, NULL, TRUE);
         added_line = g_strdup_printf ("%s %s %d %d\n",
                                       device_file_escaped,
                                       mount_path_escaped,
@@ -191,7 +191,7 @@ mounts_file_remove (DevkitDisksDevice *device, const char *mount_path)
         device_file_escaped = NULL;
         mount_path_escaped = NULL;
 
-        device_file_escaped = g_uri_escape_string (device->priv->info.device_file, NULL, TRUE);
+        device_file_escaped = g_uri_escape_string (device->priv->device_file, NULL, TRUE);
         mount_path_escaped = g_uri_escape_string (mount_path, NULL, TRUE);
 
         error = NULL;
@@ -292,12 +292,12 @@ mounts_file_clean_stale (GList *existing_devices)
                                 DevkitDisksDevice *device = l->data;
                                 char *mount_path_escaped;
 
-                                if (!device->priv->info.device_is_mounted ||
-                                    device->priv->info.device_mount_path == NULL)
+                                if (!device->priv->device_is_mounted ||
+                                    device->priv->device_mount_path == NULL)
                                         continue;
 
                                 mount_path_escaped =
-                                        g_uri_escape_string (device->priv->info.device_mount_path, NULL, TRUE);
+                                        g_uri_escape_string (device->priv->device_mount_path, NULL, TRUE);
 
                                 if (strcmp (line_mount_path, mount_path_escaped) == 0) {
                                         entry_is_valid = TRUE;

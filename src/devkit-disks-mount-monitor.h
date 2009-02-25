@@ -48,12 +48,6 @@ typedef struct
         GObjectClass   parent_class;
 } DevkitDisksMountMonitorClass;
 
-typedef gboolean (*DevkitDisksMountMonitorForeachFunc) (const char *device_path,
-                                                        const char *mount_path,
-                                                        const char *fstype,
-                                                        const char *options,
-                                                        gpointer user_data);
-
 GType                    devkit_disks_mount_monitor_get_type   (void);
 DevkitDisksMountMonitor *devkit_disks_mount_monitor_new        (void);
 GList                   *devkit_disks_mount_monitor_get_mounts (DevkitDisksMountMonitor *mount_monitor);

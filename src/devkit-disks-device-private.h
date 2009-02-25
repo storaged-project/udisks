@@ -81,108 +81,107 @@ struct DevkitDisksDevicePrivate
 
         guint linux_md_poll_timeout_id;
 
-        struct {
-                char *device_file;
-                GPtrArray *device_file_by_id;
-                GPtrArray *device_file_by_path;
-                gboolean device_is_system_internal;
-                gboolean device_is_partition;
-                gboolean device_is_partition_table;
-                gboolean device_is_removable;
-                gboolean device_is_media_available;
-                gboolean device_is_media_change_detected;
-                gboolean device_is_media_change_detection_inhibitable;
-                gboolean device_is_media_change_detection_inhibited;
-                gboolean device_is_read_only;
-                gboolean device_is_drive;
-                gboolean device_is_optical_disc;
-                gboolean device_is_luks;
-                gboolean device_is_luks_cleartext;
-                gboolean device_is_linux_md_component;
-                gboolean device_is_linux_md;
-                guint64 device_size;
-                guint64 device_block_size;
-                gboolean device_is_mounted;
-                char *device_mount_path;
-                uid_t device_mounted_by_uid;
-
-                char *id_usage;
-                char *id_type;
-                char *id_version;
-                char *id_uuid;
-                char *id_label;
-
-                char *partition_slave;
-                char *partition_scheme;
-                char *partition_type;
-                char *partition_label;
-                char *partition_uuid;
-                GPtrArray *partition_flags;
-                int partition_number;
-                guint64 partition_offset;
-                guint64 partition_size;
-
-                char *partition_table_scheme;
-                int partition_table_count;
-                int partition_table_max_number;
-                GArray *partition_table_offsets;
-                GArray *partition_table_sizes;
-
-                char *drive_vendor;
-                char *drive_model;
-                char *drive_revision;
-                char *drive_serial;
-                char *drive_connection_interface;
-                guint drive_connection_speed;
-                GPtrArray *drive_media_compatibility;
-                char *drive_media;
-                gboolean drive_is_media_ejectable;
-                gboolean drive_requires_eject;
-
-                gboolean optical_disc_is_recordable;
-                gboolean optical_disc_is_rewritable;
-                gboolean optical_disc_is_blank;
-                gboolean optical_disc_is_appendable;
-                gboolean optical_disc_is_closed;
-                guint optical_disc_num_tracks;
-                guint optical_disc_num_audio_tracks;
-                guint optical_disc_num_sessions;
-
-                char *luks_holder;
-
-                char *luks_cleartext_slave;
-                uid_t luks_cleartext_unlocked_by_uid;
-
-                char *linux_md_component_level;
-                int linux_md_component_num_raid_devices;
-                char *linux_md_component_uuid;
-                char *linux_md_component_home_host;
-                char *linux_md_component_name;
-                char *linux_md_component_version;
-                guint64 linux_md_component_update_time;
-                guint64 linux_md_component_events;
-
-                char *linux_md_level;
-                int linux_md_num_raid_devices;
-                char *linux_md_uuid;
-                char *linux_md_home_host;
-                char *linux_md_name;
-                char *linux_md_version;
-                GPtrArray *linux_md_slaves;
-                GPtrArray *linux_md_slaves_state;
-                gboolean linux_md_is_degraded;
-                char *linux_md_sync_action;
-                double linux_md_sync_percentage;
-                guint64 linux_md_sync_speed;
-
-                /* the following properties are not (yet) exported */
-                char *dm_name;
-                GPtrArray *slaves_objpath;
-                GPtrArray *holders_objpath;
-        } info;
-
         /* A list of current polling inhibitors (DevkitDisksInhibitor objects) */
         GList *polling_inhibitors;
+
+        /* if non-zero, the id of the idle for emitting a 'change' signal */
+        guint emit_changed_idle_id;
+
+        /**************/
+        /* properties */
+        /*************/
+
+        char *device_file;
+        GPtrArray *device_file_by_id;
+        GPtrArray *device_file_by_path;
+        gboolean device_is_system_internal;
+        gboolean device_is_partition;
+        gboolean device_is_partition_table;
+        gboolean device_is_removable;
+        gboolean device_is_media_available;
+        gboolean device_is_media_change_detected;
+        gboolean device_is_media_change_detection_inhibitable;
+        gboolean device_is_media_change_detection_inhibited;
+        gboolean device_is_read_only;
+        gboolean device_is_drive;
+        gboolean device_is_optical_disc;
+        gboolean device_is_luks;
+        gboolean device_is_luks_cleartext;
+        gboolean device_is_linux_md_component;
+        gboolean device_is_linux_md;
+        guint64 device_size;
+        guint64 device_block_size;
+        gboolean device_is_mounted;
+        char *device_mount_path;
+        uid_t device_mounted_by_uid;
+
+        char *id_usage;
+        char *id_type;
+        char *id_version;
+        char *id_uuid;
+        char *id_label;
+
+        char *partition_slave;
+        char *partition_scheme;
+        char *partition_type;
+        char *partition_label;
+        char *partition_uuid;
+        GPtrArray *partition_flags;
+        int partition_number;
+        guint64 partition_offset;
+        guint64 partition_size;
+
+        char *partition_table_scheme;
+        int partition_table_count;
+        int partition_table_max_number;
+        GArray *partition_table_offsets;
+        GArray *partition_table_sizes;
+
+        char *drive_vendor;
+        char *drive_model;
+        char *drive_revision;
+        char *drive_serial;
+        char *drive_connection_interface;
+        guint drive_connection_speed;
+        GPtrArray *drive_media_compatibility;
+        char *drive_media;
+        gboolean drive_is_media_ejectable;
+        gboolean drive_requires_eject;
+
+        gboolean optical_disc_is_blank;
+        gboolean optical_disc_is_appendable;
+        gboolean optical_disc_is_closed;
+        guint optical_disc_num_tracks;
+        guint optical_disc_num_audio_tracks;
+        guint optical_disc_num_sessions;
+
+        char *luks_holder;
+
+        char *luks_cleartext_slave;
+        uid_t luks_cleartext_unlocked_by_uid;
+
+        char *linux_md_component_level;
+        int linux_md_component_num_raid_devices;
+        char *linux_md_component_uuid;
+        char *linux_md_component_home_host;
+        char *linux_md_component_name;
+        char *linux_md_component_version;
+        char *linux_md_component_holder;
+        GPtrArray *linux_md_component_state;
+
+        char *linux_md_state;
+        char *linux_md_level;
+        int linux_md_num_raid_devices;
+        char *linux_md_uuid;
+        char *linux_md_home_host;
+        char *linux_md_name;
+        char *linux_md_version;
+        GPtrArray *linux_md_slaves;
+        GPtrArray *linux_md_slaves_state;
+        gboolean linux_md_is_degraded;
+        char *linux_md_sync_action;
+        double linux_md_sync_percentage;
+        guint64 linux_md_sync_speed;
 
         /* We want S.M.A.R.T. to persist over change events */
         gboolean drive_smart_is_capable;
@@ -193,8 +192,127 @@ struct DevkitDisksDevicePrivate
         guint64 drive_smart_time_powered_on;
         char *drive_smart_last_self_test_result;
         GPtrArray *drive_smart_attributes;
+
+        /* the following properties are not (yet) exported */
+        char *dm_name;
+        GPtrArray *slaves_objpath;
+        GPtrArray *holders_objpath;
 };
 
+/* property setters */
+
+void devkit_disks_device_set_job_in_progress (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_job_id (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_job_initiated_by_uid (DevkitDisksDevice *device, guint value);
+void devkit_disks_device_set_job_is_cancellable (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_job_num_tasks (DevkitDisksDevice *device, gint value);
+void devkit_disks_device_set_job_cur_task (DevkitDisksDevice *device, gint value);
+void devkit_disks_device_set_job_cur_task_id (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_job_cur_task_percentage (DevkitDisksDevice *device, gdouble value);
+
+void devkit_disks_device_set_device_file (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_device_file_by_id (DevkitDisksDevice *device, GStrv value);
+void devkit_disks_device_set_device_file_by_path (DevkitDisksDevice *device, GStrv value);
+void devkit_disks_device_set_device_is_system_internal (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_device_is_partition (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_device_is_partition_table (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_device_is_removable (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_device_is_media_available (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_device_is_media_change_detected (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_device_is_media_change_detection_inhibitable (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_device_is_media_change_detection_inhibited (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_device_is_read_only (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_device_is_drive (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_device_is_optical_disc (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_device_is_luks (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_device_is_luks_cleartext (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_device_is_linux_md_component (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_device_is_linux_md (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_device_size (DevkitDisksDevice *device, guint64 value);
+void devkit_disks_device_set_device_block_size (DevkitDisksDevice *device, guint64 value);
+void devkit_disks_device_set_device_is_mounted (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_device_mount_path (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_device_mounted_by_uid (DevkitDisksDevice *device, guint value);
+
+void devkit_disks_device_set_id_usage (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_id_type (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_id_version (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_id_uuid (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_id_label (DevkitDisksDevice *device, const gchar *value);
+
+void devkit_disks_device_set_partition_slave (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_partition_scheme (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_partition_type (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_partition_label (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_partition_uuid (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_partition_flags (DevkitDisksDevice *device, GStrv value);
+void devkit_disks_device_set_partition_number (DevkitDisksDevice *device, gint value);
+void devkit_disks_device_set_partition_offset (DevkitDisksDevice *device, guint64 value);
+void devkit_disks_device_set_partition_size (DevkitDisksDevice *device, guint64 value);
+
+void devkit_disks_device_set_partition_table_scheme (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_partition_table_count (DevkitDisksDevice *device, gint value);
+void devkit_disks_device_set_partition_table_max_number (DevkitDisksDevice *device, gint value);
+void devkit_disks_device_set_partition_table_offsets (DevkitDisksDevice *device, GArray * value);
+void devkit_disks_device_set_partition_table_sizes (DevkitDisksDevice *device, GArray * value);
+
+void devkit_disks_device_set_drive_vendor (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_drive_model (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_drive_revision (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_drive_serial (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_drive_connection_interface (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_drive_connection_speed (DevkitDisksDevice *device, guint value);
+void devkit_disks_device_set_drive_media_compatibility (DevkitDisksDevice *device, GStrv value);
+void devkit_disks_device_set_drive_media (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_drive_is_media_ejectable (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_drive_requires_eject (DevkitDisksDevice *device, gboolean value);
+
+void devkit_disks_device_set_optical_disc_is_blank (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_optical_disc_is_appendable (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_optical_disc_is_closed (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_optical_disc_num_tracks (DevkitDisksDevice *device, guint value);
+void devkit_disks_device_set_optical_disc_num_audio_tracks (DevkitDisksDevice *device, guint value);
+void devkit_disks_device_set_optical_disc_num_sessions (DevkitDisksDevice *device, guint value);
+
+void devkit_disks_device_set_luks_holder (DevkitDisksDevice *device, const gchar *value);
+
+void devkit_disks_device_set_luks_cleartext_slave (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_luks_cleartext_unlocked_by_uid (DevkitDisksDevice *device, guint value);
+
+void devkit_disks_device_set_linux_md_component_level (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_linux_md_component_num_raid_devices (DevkitDisksDevice *device, gint value);
+void devkit_disks_device_set_linux_md_component_uuid (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_linux_md_component_home_host (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_linux_md_component_name (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_linux_md_component_version (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_linux_md_component_holder (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_linux_md_component_state (DevkitDisksDevice *device, GStrv value);
+
+void devkit_disks_device_set_linux_md_state (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_linux_md_level (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_linux_md_num_raid_devices (DevkitDisksDevice *device, gint value);
+void devkit_disks_device_set_linux_md_uuid (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_linux_md_home_host (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_linux_md_name (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_linux_md_version (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_linux_md_slaves (DevkitDisksDevice *device, GStrv value);
+void devkit_disks_device_set_linux_md_is_degraded (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_linux_md_sync_action (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_linux_md_sync_percentage (DevkitDisksDevice *device, gdouble value);
+void devkit_disks_device_set_linux_md_sync_speed (DevkitDisksDevice *device, guint64 value);
+
+void devkit_disks_device_set_dm_name (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_slaves_objpath (DevkitDisksDevice *device, GStrv value);
+void devkit_disks_device_set_holders_objpath (DevkitDisksDevice *device, GStrv value);
+
+void devkit_disks_device_set_drive_smart_is_capable (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_drive_smart_is_enabled (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_drive_smart_time_collected (DevkitDisksDevice *device, guint64 value);
+void devkit_disks_device_set_drive_smart_is_failing (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_drive_smart_temperature (DevkitDisksDevice *device, gdouble value);
+void devkit_disks_device_set_drive_smart_time_powered_on (DevkitDisksDevice *device, guint64 value);
+void devkit_disks_device_set_drive_smart_last_self_test_result (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_drive_smart_attributes_steal (DevkitDisksDevice *device, GPtrArray *attributes);
 
 G_END_DECLS
 

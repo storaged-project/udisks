@@ -283,7 +283,7 @@ poller_set_devices (GList *devices)
         for (l = devices, n = 0; l != NULL; l = l->next) {
                 DevkitDisksDevice *device = DEVKIT_DISKS_DEVICE (l->data);
 
-                device_array[n++] = device->priv->info.device_file;
+                device_array[n++] = device->priv->device_file;
         }
 
         g_qsort_with_data (device_array, n, sizeof (gchar *), (GCompareDataFunc) g_strcmp0, NULL);

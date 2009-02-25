@@ -5,7 +5,8 @@ SUBSYSTEM!="block", GOTO="devkit_disks_end"
 
 ##############################################################################################################
 
-# Probe for partition tables
+# Probe for partition tables; this really should be part of udev
+#
 
 # ignore non-cdrom ide drivers; these causes loops
 KERNEL=="hd*[!0-9]", ATTR{removable}=="1", DRIVERS=="ide-cs|ide-floppy", GOTO="probe_parttable_end"
@@ -35,7 +36,9 @@ LABEL="probe_parttable_end"
 
 ##############################################################################################################
 
-# pick up device-mapper data; this really needs to go to upstream
+# pick up device-mapper data; this really should be done by rules installed
+# by the device-mapper package
+#
 
 KERNEL!="dm-*", GOTO="device_mapper_end"
 ACTION!="add|change", GOTO="device_mapper_end"
@@ -59,7 +62,8 @@ LABEL="device_mapper_end"
 
 ##############################################################################################################
 
-# pick up data from MD components; this really ought to be done by mdadm itself
+# pick up data from MD components; this really should be done by rules
+* installed by mdadm or the kernel package
 #
 ENV{ID_FS_TYPE}=="linux_raid_member", IMPORT{program}="/sbin/mdadm --examine --export $tempnode"
 
@@ -86,11 +90,6 @@ SYSFS{idVendor}=="05ac", SYSFS{idProduct}=="1209", ENV{ID_DRIVE_REQUIRES_EJECT}=
 #
 SYSFS{bInterfaceClass}=="08", SYSFS{bInterfaceSubClass}=="04", ENV{ID_DRIVE_FLOPPY}="1"
 
-
 ##############################################################################################################
-
-# finally pass all events to the DeviceKit disks daemon
-#
-SUBSYSTEM=="block", RUN+="socket:/org/freedesktop/devicekit/disks/udev_event"
 
 LABEL="devkit_disks_end"

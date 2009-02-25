@@ -140,20 +140,20 @@ drive_get_safe_uuid (DevkitDisksDevice *device)
 
         result = NULL;
 
-        if (device->priv->info.drive_vendor == NULL || strlen (device->priv->info.drive_vendor) == 0)
+        if (device->priv->drive_vendor == NULL || strlen (device->priv->drive_vendor) == 0)
                 goto out;
-        if (device->priv->info.drive_model == NULL || strlen (device->priv->info.drive_model) == 0)
+        if (device->priv->drive_model == NULL || strlen (device->priv->drive_model) == 0)
                 goto out;
-        if (device->priv->info.drive_revision == NULL || strlen (device->priv->info.drive_revision) == 0)
+        if (device->priv->drive_revision == NULL || strlen (device->priv->drive_revision) == 0)
                 goto out;
-        if (device->priv->info.drive_serial == NULL || strlen (device->priv->info.drive_serial) == 0)
+        if (device->priv->drive_serial == NULL || strlen (device->priv->drive_serial) == 0)
                 goto out;
 
         s = g_strdup_printf ("%s_%s_%s_%s",
-                             device->priv->info.drive_vendor,
-                             device->priv->info.drive_model,
-                             device->priv->info.drive_revision,
-                             device->priv->info.drive_serial);
+                             device->priv->drive_vendor,
+                             device->priv->drive_model,
+                             device->priv->drive_revision,
+                             device->priv->drive_serial);
         result = g_uri_escape_string (s, NULL, FALSE);
         g_free (s);
 

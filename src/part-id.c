@@ -56,6 +56,7 @@ static void
 do_table (int fd)
 {
         int n;
+        guint max_number;
         PartitionTable *table;
         PartitionTable *nested_table;
         int num_entries;
@@ -98,15 +99,22 @@ do_table (int fd)
         printf ("PART_SCHEME=%s\n", part_get_scheme_name (part_table_get_scheme (table)));
         printf ("PART_COUNT=%d\n", num_used_entries + num_nested_entries);
 
+        max_number = 0;
         for (n = 0; n < num_entries; n++) {
                 if (!part_table_entry_is_in_use (table, n))
                         continue;
                 print_entry (table, n, n + 1);
+                if (n + 1 >= max_number)
+                         max_number = n + 1;
         }
 
         for (n = 0; n < num_nested_entries; n++) {
                 print_entry (nested_table, n, n + 5);
+                if (n + 5 >= max_number)
+                         max_number = n + 5;
         }
+
+        printf ("PART_MAX_NUMBER=%d\n", max_number);
 out:
         if (table != NULL)
                 part_table_free (table);

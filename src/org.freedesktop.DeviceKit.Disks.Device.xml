@@ -2140,22 +2140,6 @@
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <property name="optical-disc-is-recordable" type="b" access="read">
-      <doc:doc><doc:description><doc:para>
-            TRUE only if the disc is recordable.
-            This property is only valid if
-            <doc:ref type="property" to="Device:device-is-optical-disc">device-is-optical-disc</doc:ref>
-            is TRUE.
-      </doc:para></doc:description></doc:doc>
-    </property>
-    <property name="optical-disc-is-rewritable" type="b" access="read">
-      <doc:doc><doc:description><doc:para>
-            TRUE only if the disc is rewritable.
-            This property is only valid if
-            <doc:ref type="property" to="Device:device-is-optical-disc">device-is-optical-disc</doc:ref>
-            is TRUE.
-      </doc:para></doc:description></doc:doc>
-    </property>
     <property name="optical-disc-is-blank" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE only if the disc is appendable.
@@ -2419,23 +2403,33 @@
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="linux-md-component-update-time" type="t" access="read">
+    <property name="linux-md-component-holder" type="o" access="read">
       <doc:doc><doc:description><doc:para>
-            The update time in the superblock of the component.
+            The holder of the component or "/" if the component isn't claimed by any array.
             This property is only valid if
             <doc:ref type="property" to="Device:device-is-linux-md-component">device-is-linux-md-component</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="linux-md-component-events" type="t" access="read">
+    <property name="linux-md-component-state" type="as" access="read">
       <doc:doc><doc:description><doc:para>
-            The events counter in the superblock of the component.
+            The state of the component (contents of <literal>md/dev-XXX/state</literal> file).
             This property is only valid if
             <doc:ref type="property" to="Device:device-is-linux-md-component">device-is-linux-md-component</doc:ref>
-            is TRUE.
+            is TRUE and
+            <doc:ref type="property" to="Device:device-is-linux-md-component-holder">device-is-linux-md-component-holder</doc:ref>
+            is non-empty.
       </doc:para></doc:description></doc:doc>
     </property>
 
+    <property name="linux-md-state" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The state of the array (contents of the <literal>md/array_state</literal> file).
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
     <property name="linux-md-level" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The RAID level of the array. For known values see the
@@ -2489,30 +2483,6 @@
     <property name="linux-md-slaves" type="ao" access="read">
       <doc:doc><doc:description><doc:para>
             An array of object paths for components currently part of the array.
-            This property is only valid if
-            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
-            is TRUE.
-      </doc:para></doc:description></doc:doc>
-    </property>
-    <property name="linux-md-slaves-state" type="as" access="read">
-      <doc:doc><doc:description><doc:para>
-            Records the state of each component in the array
-            <doc:ref type="property" to="Device:linux-md-slaves">linux-md-slaves</doc:ref>.
-            Valid values include
-            <doc:list>
-              <doc:item>
-                <doc:term>in_sync</doc:term>
-                <doc:definition>Component is an active part of the array</doc:definition>
-              </doc:item>
-              <doc:item>
-                <doc:term>sync_in_progress</doc:term>
-                <doc:definition>Component is currently being synced with the array</doc:definition>
-              </doc:item>
-              <doc:item>
-                <doc:term>spare</doc:term>
-                <doc:definition>Component is a hot spare</doc:definition>
-              </doc:item>
-            </doc:list>
             This property is only valid if
             <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
             is TRUE.

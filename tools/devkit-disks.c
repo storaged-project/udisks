@@ -471,8 +471,6 @@ typedef struct
         gboolean drive_is_media_ejectable;
         gboolean drive_requires_eject;
 
-        gboolean optical_disc_is_recordable;
-        gboolean optical_disc_is_rewritable;
         gboolean optical_disc_is_blank;
         gboolean optical_disc_is_appendable;
         gboolean optical_disc_is_closed;
@@ -495,9 +493,10 @@ typedef struct
         char    *linux_md_component_home_host;
         char    *linux_md_component_name;
         char    *linux_md_component_version;
-        guint64  linux_md_component_update_time;
-        guint64  linux_md_component_events;
+        char    *linux_md_component_holder;
+        char   **linux_md_component_state;
 
+        char    *linux_md_state;
         char    *linux_md_level;
         int      linux_md_num_raid_devices;
         char    *linux_md_uuid;
@@ -505,7 +504,6 @@ typedef struct
         char    *linux_md_name;
         char    *linux_md_version;
         char   **linux_md_slaves;
-        char   **linux_md_slaves_state;
         gboolean linux_md_is_degraded;
         char    *linux_md_sync_action;
         double   linux_md_sync_percentage;
@@ -663,10 +661,6 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
         else if (strcmp (key, "drive-requires-eject") == 0)
                 props->drive_requires_eject = g_value_get_boolean (value);
 
-        else if (strcmp (key, "optical-disc-is-recordable") == 0)
-                props->optical_disc_is_recordable = g_value_get_boolean (value);
-        else if (strcmp (key, "optical-disc-is-rewritable") == 0)
-                props->optical_disc_is_rewritable = g_value_get_boolean (value);
         else if (strcmp (key, "optical-disc-is-blank") == 0)
                 props->optical_disc_is_blank = g_value_get_boolean (value);
         else if (strcmp (key, "optical-disc-is-appendable") == 0)
@@ -710,11 +704,13 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->linux_md_component_name = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "linux-md-component-version") == 0)
                 props->linux_md_component_version = g_strdup (g_value_get_string (value));
-        else if (strcmp (key, "linux-md-component-update-time") == 0)
-                props->linux_md_component_update_time = g_value_get_uint64 (value);
-        else if (strcmp (key, "linux-md-component-events") == 0)
-                props->linux_md_component_events = g_value_get_uint64 (value);
+        else if (strcmp (key, "linux-md-component-holder") == 0)
+                props->linux_md_component_holder = g_strdup (g_value_get_boxed (value));
+        else if (strcmp (key, "linux-md-component-state") == 0)
+                props->linux_md_component_state = g_strdupv (g_value_get_boxed (value));
 
+        else if (strcmp (key, "linux-md-state") == 0)
+                props->linux_md_state = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "linux-md-level") == 0)
                 props->linux_md_level = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "linux-md-num-raid-devices") == 0)
@@ -738,8 +734,6 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                         props->linux_md_slaves[n] = g_strdup (object_paths->pdata[n]);
                 props->linux_md_slaves[n] = NULL;
         }
-        else if (strcmp (key, "linux-md-slaves-state") == 0)
-                props->linux_md_slaves_state = g_strdupv (g_value_get_boxed (value));
         else if (strcmp (key, "linux-md-is-degraded") == 0)
                 props->linux_md_is_degraded = g_value_get_boolean (value);
         else if (strcmp (key, "linux-md-sync-action") == 0)
@@ -797,13 +791,16 @@ device_properties_free (DeviceProperties *props)
         g_free (props->linux_md_component_home_host);
         g_free (props->linux_md_component_name);
         g_free (props->linux_md_component_version);
+        g_free (props->linux_md_component_holder);
+        g_strfreev (props->linux_md_component_state);
+
+        g_free (props->linux_md_state);
         g_free (props->linux_md_level);
         g_free (props->linux_md_uuid);
         g_free (props->linux_md_home_host);
         g_free (props->linux_md_name);
         g_free (props->linux_md_version);
         g_strfreev (props->linux_md_slaves);
-        g_strfreev (props->linux_md_slaves_state);
         g_free (props->linux_md_sync_action);
         g_free (props);
 }
@@ -922,14 +919,6 @@ do_show_info (const char *object_path)
         g_print ("  uuid:                    %s\n", props->id_uuid);
         g_print ("  label:                   %s\n", props->id_label);
         if (props->device_is_linux_md_component) {
-                struct tm *time_tm;
-                time_t time;
-                char time_buf[256];
-
-                time = (time_t) props->linux_md_component_update_time;
-                time_tm = localtime (&time);
-                strftime (time_buf, sizeof time_buf, "%c", time_tm);
-
                 g_print ("  linux md component:\n");
                 g_print ("    RAID level:            %s\n", props->linux_md_component_level);
                 g_print ("    num comp:              %d\n", props->linux_md_component_num_raid_devices);
@@ -937,11 +926,21 @@ do_show_info (const char *object_path)
                 g_print ("    home host:             %s\n", props->linux_md_component_home_host);
                 g_print ("    name:                  %s\n", props->linux_md_component_name);
                 g_print ("    version:               %s\n", props->linux_md_component_version);
-                g_print ("    update time:         %" G_GUINT64_FORMAT " (%s)\n", props->linux_md_component_update_time, time_buf);
-                g_print ("    events:                %" G_GUINT64_FORMAT "\n", props->linux_md_component_events);
+                g_print ("    holder:                %s\n",
+                         g_strcmp0 (props->linux_md_component_holder, "/") == 0 ? "(none)" : props->linux_md_component_holder);
+                g_print ("    state:                 ");
+                for (n = 0;
+                     props->linux_md_component_state != NULL && props->linux_md_component_state[n] != NULL;
+                     n++) {
+                        if (n > 0)
+                                g_print (", ");
+                        g_print ("%s", props->linux_md_component_state[n]);
+                }
+                g_print ("\n");
         }
         if (props->device_is_linux_md) {
                 g_print ("  linux md:\n");
+                g_print ("    state:                 %s\n", props->linux_md_state);
                 g_print ("    RAID level:            %s\n", props->linux_md_level);
                 g_print ("    uuid:                  %s\n", props->linux_md_uuid);
                 g_print ("    home host:             %s\n", props->linux_md_home_host);
@@ -956,8 +955,7 @@ do_show_info (const char *object_path)
                 }
                 g_print ("    slaves:\n");
                 for (n = 0; props->linux_md_slaves[n] != NULL; n++)
-                        g_print ("                  %s (state: %s)\n",
-                                 props->linux_md_slaves[n], props->linux_md_slaves_state[n]);
+                        g_print ("                  %s\n", props->linux_md_slaves[n]);
         }
         if (props->device_is_luks) {
                 g_print ("  luks device:\n");
@@ -991,8 +989,6 @@ do_show_info (const char *object_path)
         }
         if (props->device_is_optical_disc) {
                 g_print ("  optical disc:\n");
-                g_print ("    recordable:            %d\n", props->optical_disc_is_recordable);
-                g_print ("    rewritable:            %d\n", props->optical_disc_is_rewritable);
                 g_print ("    blank:                 %d\n", props->optical_disc_is_blank);
                 g_print ("    appendable:            %d\n", props->optical_disc_is_appendable);
                 g_print ("    closed:                %d\n", props->optical_disc_is_closed);

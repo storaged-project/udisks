@@ -720,7 +720,7 @@ static gboolean
 device_went_away_remove_cb (gpointer key, gpointer value, gpointer user_data)
 {
         if (value == user_data) {
-                g_print ("removed %s\n", (char *) key);
+                g_print ("**** REMOVED %s\n", (char *) key);
                 return TRUE;
         }
         return FALSE;
@@ -751,15 +751,16 @@ device_changed (DevkitDisksDaemon *daemon, DevkitDevice *d, gboolean synthesized
         native_path = devkit_device_get_native_path (d);
         device = g_hash_table_lookup (daemon->priv->map_native_path_to_device, native_path);
         if (device != NULL) {
+                g_print ("**** CHANGING %s\n", native_path);
                 if (!devkit_disks_device_changed (device, d, synthesized)) {
-                        g_print ("changed triggered remove on %s\n", native_path);
+                        g_print ("**** CHANGE TRIGGERED REMOVE %s\n", native_path);
                         device_remove (daemon, d);
                 } else {
-                        g_print ("changed %s\n", native_path);
+                        g_print ("**** CHANGED %s\n", native_path);
                         devkit_disks_daemon_local_update_poller (daemon);
                 }
         } else {
-                g_print ("treating change event as add on %s\n", native_path);
+                g_print ("**** TREATING CHANGE AS ADD %s\n", native_path);
                 device_add (daemon, d, TRUE);
         }
 }
@@ -783,9 +784,10 @@ device_add (DevkitDisksDaemon *daemon, DevkitDevice *d, gboolean emit_event)
         device = g_hash_table_lookup (daemon->priv->map_native_path_to_device, native_path);
         if (device != NULL) {
                 /* we already have the device; treat as change event */
-                g_print ("treating add event as change event on %s\n", native_path);
+                g_print ("**** TREATING ADD AS CHANGE %s\n", native_path);
                 device_changed (daemon, d, FALSE);
         } else {
+                g_print ("**** ADDING %s\n", native_path);
                 device = devkit_disks_device_new (daemon, d);
 
                 if (device != NULL) {
@@ -800,7 +802,7 @@ device_add (DevkitDisksDaemon *daemon, DevkitDevice *d, gboolean emit_event)
                         g_hash_table_insert (daemon->priv->map_object_path_to_device,
                                              g_strdup (devkit_disks_device_local_get_object_path (device)),
                                              device);
-                        g_print ("added %s\n", native_path);
+                        g_print ("**** ADDED %s\n", native_path);
                         if (emit_event) {
                                 const char *object_path;
                                 object_path = devkit_disks_device_local_get_object_path (device);
@@ -808,7 +810,7 @@ device_add (DevkitDisksDaemon *daemon, DevkitDevice *d, gboolean emit_event)
                         }
                         devkit_disks_daemon_local_update_poller (daemon);
                 } else {
-                        g_print ("ignoring add event on %s\n", native_path);
+                        g_print ("**** IGNORING ADD %s\n", native_path);
                 }
         }
 }
@@ -822,8 +824,9 @@ device_remove (DevkitDisksDaemon *daemon, DevkitDevice *d)
         native_path = devkit_device_get_native_path (d);
         device = g_hash_table_lookup (daemon->priv->map_native_path_to_device, native_path);
         if (device == NULL) {
-                g_print ("ignoring remove event on %s\n", native_path);
+                g_print ("**** IGNORING REMOVE %s\n", native_path);
         } else {
+                g_print ("**** REMOVING %s\n", native_path);
                 devkit_disks_device_removed (device);
                 g_signal_emit (daemon, signals[DEVICE_REMOVED_SIGNAL], 0,
                                devkit_disks_device_local_get_object_path (device));
@@ -909,7 +912,7 @@ mdstat_changed_event (GIOChannel *channel, GIOCondition cond, gpointer user_data
         a = g_ptr_array_new ();
         g_hash_table_iter_init (&iter, daemon->priv->map_native_path_to_device);
         while (g_hash_table_iter_next (&iter, (gpointer *) &native_path, (gpointer *) &device)) {
-                if (device->priv->info.device_is_linux_md) {
+                if (device->priv->device_is_linux_md) {
                         g_ptr_array_add (a, g_object_ref (device->priv->d));
                 }
         }
@@ -1213,7 +1216,7 @@ devkit_disks_daemon_local_update_poller (DevkitDisksDaemon *daemon)
 
         g_hash_table_iter_init (&hash_iter, daemon->priv->map_object_path_to_device);
         while (g_hash_table_iter_next (&hash_iter, NULL, (gpointer) &device)) {
-                if (device->priv->info.device_is_media_change_detected)
+                if (device->priv->device_is_media_change_detected)
                         devices_to_poll = g_list_prepend (devices_to_poll, device);
         }
 
