@@ -93,19 +93,19 @@ devkit_disks_helper_mkfs_LDADD = $(GLIB_LIBS)
 
 devkit_disks_helper_delete_partition_SOURCES = job-shared.h job-delete-partition.c
 devkit_disks_helper_delete_partition_CPPFLAGS = $(AM_CPPFLAGS)
-devkit_disks_helper_delete_partition_LDADD = $(GLIB_LIBS) $(top_builddir)/src/libpartutil.la
+devkit_disks_helper_delete_partition_LDADD = $(GLIB_LIBS) libpartutil.la
 
 devkit_disks_helper_create_partition_SOURCES = job-shared.h job-create-partition.c
 devkit_disks_helper_create_partition_CPPFLAGS = $(AM_CPPFLAGS)
-devkit_disks_helper_create_partition_LDADD = $(GLIB_LIBS) $(top_builddir)/src/libpartutil.la
+devkit_disks_helper_create_partition_LDADD = $(GLIB_LIBS) libpartutil.la
 
 devkit_disks_helper_modify_partition_SOURCES = job-shared.h job-modify-partition.c
 devkit_disks_helper_modify_partition_CPPFLAGS = $(AM_CPPFLAGS)
-devkit_disks_helper_modify_partition_LDADD = $(GLIB_LIBS) $(top_builddir)/src/libpartutil.la
+devkit_disks_helper_modify_partition_LDADD = $(GLIB_LIBS) libpartutil.la
 
 devkit_disks_helper_create_partition_table_SOURCES = job-shared.h job-create-partition-table.c
 devkit_disks_helper_create_partition_table_CPPFLAGS = $(AM_CPPFLAGS)
-devkit_disks_helper_create_partition_table_LDADD = $(GLIB_LIBS) $(top_builddir)/src/libpartutil.la
+devkit_disks_helper_create_partition_table_LDADD = $(GLIB_LIBS) libpartutil.la
 
 devkit_disks_helper_change_filesystem_label_SOURCES = job-shared.h job-change-filesystem-label.c
 devkit_disks_helper_change_filesystem_label_CPPFLAGS = $(AM_CPPFLAGS)
@@ -129,7 +129,7 @@ udevhelper_PROGRAMS = part_id devkit-disks-dm-export
 
 part_id_SOURCES = part-id.c
 part_id_CPPFLAGS = $(AM_CPPFLAGS)
-part_id_LDADD = $(GLIB_LIBS) $(top_builddir)/src/libpartutil.la
+part_id_LDADD = $(GLIB_LIBS) libpartutil.la
 
 devkit_disks_dm_export_SOURCES = devkit-disks-dm-export.c
 devkit_disks_dm_export_CPPFLAGS = $(AM_CPPFLAGS) $(DEVMAPPER_CFLAGS)
