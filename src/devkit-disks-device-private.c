@@ -438,6 +438,28 @@ devkit_disks_device_set_device_mount_path (DevkitDisksDevice *device, const gcha
 }
 
 void
+devkit_disks_device_set_device_presentation_name (DevkitDisksDevice *device, const gchar *value)
+{
+  if (G_UNLIKELY (g_strcmp0 (device->priv->device_presentation_name, value) != 0))
+    {
+      g_free (device->priv->device_presentation_name);
+      device->priv->device_presentation_name = g_strdup (value);
+      emit_changed (device, "device_presentation_name");
+    }
+}
+
+void
+devkit_disks_device_set_device_presentation_icon_name (DevkitDisksDevice *device, const gchar *value)
+{
+  if (G_UNLIKELY (g_strcmp0 (device->priv->device_presentation_icon_name, value) != 0))
+    {
+      g_free (device->priv->device_presentation_icon_name);
+      device->priv->device_presentation_icon_name = g_strdup (value);
+      emit_changed (device, "device_presentation_icon_name");
+    }
+}
+
+void
 devkit_disks_device_set_device_mounted_by_uid (DevkitDisksDevice *device, guint value)
 {
   if (G_UNLIKELY (device->priv->device_mounted_by_uid != value))

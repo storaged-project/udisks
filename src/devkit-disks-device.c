@@ -150,6 +150,8 @@ enum
         PROP_DEVICE_IS_BUSY,
         PROP_DEVICE_MOUNT_PATH,
         PROP_DEVICE_MOUNTED_BY_UID,
+        PROP_DEVICE_PRESENTATION_NAME,
+        PROP_DEVICE_PRESENTATION_ICON_NAME,
 
         PROP_JOB_IN_PROGRESS,
         PROP_JOB_ID,
@@ -352,6 +354,12 @@ get_property (GObject         *object,
 		break;
 	case PROP_DEVICE_MOUNTED_BY_UID:
 		g_value_set_uint (value, device->priv->device_mounted_by_uid);
+		break;
+	case PROP_DEVICE_PRESENTATION_NAME:
+		g_value_set_string (value, device->priv->device_presentation_name);
+		break;
+	case PROP_DEVICE_PRESENTATION_ICON_NAME:
+		g_value_set_string (value, device->priv->device_presentation_icon_name);
 		break;
 
 	case PROP_JOB_IN_PROGRESS:
@@ -749,6 +757,14 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DEVICE_MOUNTED_BY_UID,
                 g_param_spec_uint ("device-mounted-by-uid", NULL, NULL, 0, G_MAXUINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_PRESENTATION_NAME,
+                g_param_spec_string ("device-presentation-name", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_PRESENTATION_ICON_NAME,
+                g_param_spec_string ("device-presentation-icon-name", NULL, NULL, NULL, G_PARAM_READABLE));
 
         g_object_class_install_property (
                 object_class,
@@ -1132,6 +1148,9 @@ devkit_disks_device_finalize (GObject *object)
         g_ptr_array_foreach (device->priv->device_file_by_path, (GFunc) g_free, NULL);
         g_ptr_array_free (device->priv->device_file_by_id, TRUE);
         g_ptr_array_free (device->priv->device_file_by_path, TRUE);
+        g_free (device->priv->device_mount_path);
+        g_free (device->priv->device_presentation_name);
+        g_free (device->priv->device_presentation_icon_name);
 
         g_free (device->priv->id_usage);
         g_free (device->priv->id_type);
@@ -1537,6 +1556,21 @@ diff_sorted_lists (GList         *list1,
       *added = g_list_prepend (*added, list2->data);
       list2 = list2->next;
     }
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/* update id_* properties */
+static gboolean
+update_info_presentation (DevkitDisksDevice *device)
+{
+        devkit_disks_device_set_device_presentation_name (device,
+               devkit_device_get_property (device->priv->d, "DKD_PRESENTATION_NAME"));
+
+        devkit_disks_device_set_device_presentation_icon_name (device,
+               devkit_device_get_property (device->priv->d, "DKD_PRESENTATION_ICON_NAME"));
+
+        return TRUE;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -2734,6 +2768,10 @@ update_info (DevkitDisksDevice *device)
          *  - partition_slave
          *
          */
+
+        /* device_presentation_name and device_presentation_icon_name properties */
+        if (!update_info_presentation (device))
+                goto out;
 
         /* id_* properties */
         if (!update_info_id (device))

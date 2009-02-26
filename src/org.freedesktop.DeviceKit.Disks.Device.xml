@@ -1539,6 +1539,17 @@
             The block size of the device in bytes.
       </doc:para></doc:description></doc:doc>
     </property>
+    <property name="device-presentation-name" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The name to use when presenting the device to an end user.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="device-presentation-icon-name" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The icon to use when presenting the device to an end user. If set, must be a name
+            following the freedesktop.org icon theme specification.
+      </doc:para></doc:description></doc:doc>
+    </property>
 
     <property name="job-in-progress" type="b" access="read">
       <doc:doc><doc:description><doc:para>

@@ -421,6 +421,8 @@ typedef struct
         gboolean device_is_linux_md;
         char    *device_mount_path;
         uid_t    device_mounted_by_uid;
+        char    *device_presentation_name;
+        char    *device_presentation_icon_name;
         guint64  device_size;
         guint64  device_block_size;
 
@@ -562,6 +564,10 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->device_mount_path = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "device-mounted-by-uid") == 0)
                 props->device_mounted_by_uid = g_value_get_uint (value);
+        else if (strcmp (key, "device-presentation-name") == 0)
+                props->device_presentation_name = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "device-presentation-icon-name") == 0)
+                props->device_presentation_icon_name = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "device-size") == 0)
                 props->device_size = g_value_get_uint64 (value);
         else if (strcmp (key, "device-block-size") == 0)
@@ -758,6 +764,8 @@ device_properties_free (DeviceProperties *props)
         g_strfreev (props->device_file_by_id);
         g_strfreev (props->device_file_by_path);
         g_free (props->device_mount_path);
+        g_free (props->device_presentation_name);
+        g_free (props->device_presentation_icon_name);
         g_free (props->job_id);
         g_free (props->job_cur_task_id);
         g_free (props->id_usage);
@@ -902,6 +910,8 @@ do_show_info (const char *object_path)
         g_print ("  is busy:                 %d\n", props->device_is_busy);
         g_print ("  mount path:              %s\n", props->device_mount_path);
         g_print ("  mounted by uid:          %d\n", props->device_mounted_by_uid);
+        g_print ("  presentation name:       %s\n", props->device_presentation_name);
+        g_print ("  presentation icon:       %s\n", props->device_presentation_icon_name);
         g_print ("  size:                    %" G_GUINT64_FORMAT "\n", props->device_size);
         g_print ("  block size:              %" G_GUINT64_FORMAT "\n", props->device_block_size);
 
