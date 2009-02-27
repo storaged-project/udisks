@@ -4020,6 +4020,9 @@ filesystem_mount_completed_cb (DBusGMethodInvocation *context,
                 if (!data->is_remount) {
                         mounts_file_add (device, uid, data->remove_dir_on_unmount);
                 }
+
+                drain_pending_changes (device, FALSE);
+
                 dbus_g_method_return (context, data->mount_point);
         } else {
                 if (!data->is_remount) {
