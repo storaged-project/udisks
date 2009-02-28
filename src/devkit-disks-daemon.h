@@ -29,12 +29,12 @@
 
 G_BEGIN_DECLS
 
-#define DEVKIT_TYPE_DISKS_DAEMON         (devkit_disks_daemon_get_type ())
-#define DEVKIT_DISKS_DAEMON(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), DEVKIT_TYPE_DISKS_DAEMON, DevkitDisksDaemon))
-#define DEVKIT_DISKS_DAEMON_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), DEVKIT_TYPE_DISKS_DAEMON, DevkitDisksDaemonClass))
-#define DEVKIT_IS_DISKS_DAEMON(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), DEVKIT_TYPE_DISKS_DAEMON))
-#define DEVKIT_IS_DISKS_DAEMON_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), DEVKIT_TYPE_DISKS_DAEMON))
-#define DEVKIT_DISKS_DAEMON_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), DEVKIT_TYPE_DISKS_DAEMON, DevkitDisksDaemonClass))
+#define DEVKIT_DISKS_TYPE_DAEMON         (devkit_disks_daemon_get_type ())
+#define DEVKIT_DISKS_DAEMON(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), DEVKIT_DISKS_TYPE_DAEMON, DevkitDisksDaemon))
+#define DEVKIT_DISKS_DAEMON_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), DEVKIT_DISKS_TYPE_DAEMON, DevkitDisksDaemonClass))
+#define DEVKIT_DISKS_IS_DAEMON(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), DEVKIT_DISKS_TYPE_DAEMON))
+#define DEVKIT_DISKS_IS_DAEMON_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), DEVKIT_DISKS_TYPE_DAEMON))
+#define DEVKIT_DISKS_DAEMON_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), DEVKIT_DISKS_TYPE_DAEMON, DevkitDisksDaemonClass))
 
 typedef struct DevkitDisksDaemonClass   DevkitDisksDaemonClass;
 typedef struct DevkitDisksDaemonPrivate DevkitDisksDaemonPrivate;

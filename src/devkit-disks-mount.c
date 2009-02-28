@@ -48,7 +48,7 @@ struct DevkitDisksMountPrivate
 
 G_DEFINE_TYPE (DevkitDisksMount, devkit_disks_mount, G_TYPE_OBJECT)
 
-#define DEVKIT_DISKS_MOUNT_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), DEVKIT_TYPE_DISKS_MOUNT, DevkitDisksMountPrivate))
+#define DEVKIT_DISKS_MOUNT_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), DEVKIT_DISKS_TYPE_MOUNT, DevkitDisksMountPrivate))
 
 static void
 devkit_disks_mount_finalize (GObject *object)
@@ -84,7 +84,7 @@ _devkit_disks_mount_new (const gchar *device_file, const gchar *mount_path)
 {
         DevkitDisksMount *mount;
 
-        mount = DEVKIT_DISKS_MOUNT (g_object_new (DEVKIT_TYPE_DISKS_MOUNT, NULL));
+        mount = DEVKIT_DISKS_MOUNT (g_object_new (DEVKIT_DISKS_TYPE_MOUNT, NULL));
         mount->priv->device_file = g_strdup (device_file);
         mount->priv->mount_path = g_strdup (mount_path);
 
@@ -94,14 +94,14 @@ _devkit_disks_mount_new (const gchar *device_file, const gchar *mount_path)
 const gchar *
 devkit_disks_mount_get_mount_path (DevkitDisksMount *mount)
 {
-        g_return_val_if_fail (DEVKIT_IS_DISKS_MOUNT (mount), NULL);
+        g_return_val_if_fail (DEVKIT_DISKS_IS_MOUNT (mount), NULL);
         return mount->priv->mount_path;
 }
 
 const gchar *
 devkit_disks_mount_get_device_file (DevkitDisksMount *mount)
 {
-        g_return_val_if_fail (DEVKIT_IS_DISKS_MOUNT (mount), NULL);
+        g_return_val_if_fail (DEVKIT_DISKS_IS_MOUNT (mount), NULL);
         return mount->priv->device_file;
 }
 

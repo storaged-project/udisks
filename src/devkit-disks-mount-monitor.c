@@ -79,7 +79,7 @@ static void
 devkit_disks_mount_monitor_init (DevkitDisksMountMonitor *monitor)
 {
         monitor->priv = G_TYPE_INSTANCE_GET_PRIVATE (monitor,
-                                                     DEVKIT_TYPE_DISKS_MOUNT_MONITOR,
+                                                     DEVKIT_DISKS_TYPE_MOUNT_MONITOR,
                                                      DevkitDisksMountMonitorPrivate);
 
         monitor->priv->mounts = g_hash_table_new_full (g_str_hash,
@@ -114,7 +114,7 @@ devkit_disks_mount_monitor_class_init (DevkitDisksMountMonitorClass *klass)
                               g_cclosure_marshal_VOID__OBJECT,
                               G_TYPE_NONE,
                               1,
-                              DEVKIT_TYPE_DISKS_MOUNT);
+                              DEVKIT_DISKS_TYPE_MOUNT);
 
         /**
          * DevkitDisksMountMonitor::unmounted
@@ -133,7 +133,7 @@ devkit_disks_mount_monitor_class_init (DevkitDisksMountMonitorClass *klass)
                               g_cclosure_marshal_VOID__OBJECT,
                               G_TYPE_NONE,
                               1,
-                              DEVKIT_TYPE_DISKS_MOUNT);
+                              DEVKIT_DISKS_TYPE_MOUNT);
 }
 
 static void
@@ -244,7 +244,7 @@ devkit_disks_mount_monitor_new (void)
         DevkitDisksMountMonitor *mount_monitor;
         GError *error;
 
-        mount_monitor = DEVKIT_DISKS_MOUNT_MONITOR (g_object_new (DEVKIT_TYPE_DISKS_MOUNT_MONITOR, NULL));
+        mount_monitor = DEVKIT_DISKS_MOUNT_MONITOR (g_object_new (DEVKIT_DISKS_TYPE_MOUNT_MONITOR, NULL));
 
         error = NULL;
 	mount_monitor->priv->mounts_channel = g_io_channel_new_file ("/proc/mounts", "r", &error);

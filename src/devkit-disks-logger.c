@@ -46,7 +46,7 @@ static GObjectClass *parent_class = NULL;
 
 G_DEFINE_TYPE (DevkitDisksLogger, devkit_disks_logger, G_TYPE_OBJECT)
 
-#define DEVKIT_DISKS_LOGGER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), DEVKIT_TYPE_DISKS_DEVICE, DevkitDisksDevicePrivate))
+#define DEVKIT_DISKS_LOGGER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), DEVKIT_DISKS_TYPE_DEVICE, DevkitDisksDevicePrivate))
 
 
 static void
@@ -83,7 +83,7 @@ devkit_disks_logger_new (void)
         char *err_msg;
         DevkitDisksLogger * logger;
 
-        logger = DEVKIT_DISKS_LOGGER (g_object_new (DEVKIT_TYPE_DISKS_LOGGER, NULL));
+        logger = DEVKIT_DISKS_LOGGER (g_object_new (DEVKIT_DISKS_TYPE_LOGGER, NULL));
 
         ret = sqlite3_open_v2 (PACKAGE_LOCALSTATE_DIR "/lib/DeviceKit-disks/db.sqlite3",
                                &logger->priv->db,

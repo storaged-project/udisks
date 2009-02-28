@@ -25,12 +25,12 @@
 
 G_BEGIN_DECLS
 
-#define DEVKIT_TYPE_DISKS_LOGGER         (devkit_disks_logger_get_type ())
-#define DEVKIT_DISKS_LOGGER(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), DEVKIT_TYPE_DISKS_LOGGER, DevkitDisksLogger))
-#define DEVKIT_DISKS_LOGGER_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), DEVKIT_TYPE_DISKS_LOGGER, DevkitDisksLoggerClass))
-#define DEVKIT_IS_DISKS_LOGGER(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), DEVKIT_TYPE_DISKS_LOGGER))
-#define DEVKIT_IS_DISKS_LOGGER_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), DEVKIT_TYPE_DISKS_LOGGER))
-#define DEVKIT_DISKS_LOGGER_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), DEVKIT_TYPE_DISKS_LOGGER, DevkitDisksLoggerClass))
+#define DEVKIT_DISKS_TYPE_LOGGER         (devkit_disks_logger_get_type ())
+#define DEVKIT_DISKS_LOGGER(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), DEVKIT_DISKS_TYPE_LOGGER, DevkitDisksLogger))
+#define DEVKIT_DISKS_LOGGER_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), DEVKIT_DISKS_TYPE_LOGGER, DevkitDisksLoggerClass))
+#define DEVKIT_DISKS_IS_LOGGER(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), DEVKIT_DISKS_TYPE_LOGGER))
+#define DEVKIT_DISKS_IS_LOGGER_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), DEVKIT_DISKS_TYPE_LOGGER))
+#define DEVKIT_DISKS_LOGGER_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), DEVKIT_DISKS_TYPE_LOGGER, DevkitDisksLoggerClass))
 
 typedef struct DevkitDisksLoggerClass   DevkitDisksLoggerClass;
 typedef struct DevkitDisksLoggerPrivate DevkitDisksLoggerPrivate;

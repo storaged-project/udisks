@@ -252,7 +252,7 @@ static guint signals[LAST_SIGNAL] = { 0 };
 
 G_DEFINE_TYPE (DevkitDisksDevice, devkit_disks_device, G_TYPE_OBJECT)
 
-#define DEVKIT_DISKS_DEVICE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), DEVKIT_TYPE_DISKS_DEVICE, DevkitDisksDevicePrivate))
+#define DEVKIT_DISKS_DEVICE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), DEVKIT_DISKS_TYPE_DEVICE, DevkitDisksDevicePrivate))
 
 static GObject *
 devkit_disks_device_constructor (GType                  type,
@@ -262,7 +262,7 @@ devkit_disks_device_constructor (GType                  type,
         DevkitDisksDevice      *device;
         DevkitDisksDeviceClass *klass;
 
-        klass = DEVKIT_DISKS_DEVICE_CLASS (g_type_class_peek (DEVKIT_TYPE_DISKS_DEVICE));
+        klass = DEVKIT_DISKS_DEVICE_CLASS (g_type_class_peek (DEVKIT_DISKS_TYPE_DEVICE));
 
         device = DEVKIT_DISKS_DEVICE (
                 G_OBJECT_CLASS (devkit_disks_device_parent_class)->constructor (type,
@@ -653,7 +653,7 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                               G_TYPE_STRING,
                               G_TYPE_DOUBLE);
 
-        dbus_g_object_type_install_info (DEVKIT_TYPE_DISKS_DEVICE, &dbus_glib_devkit_disks_device_object_info);
+        dbus_g_object_type_install_info (DEVKIT_DISKS_TYPE_DEVICE, &dbus_glib_devkit_disks_device_object_info);
 
         g_object_class_install_property (
                 object_class,
@@ -1116,7 +1116,7 @@ devkit_disks_device_finalize (GObject *object)
         GList *l;
 
         g_return_if_fail (object != NULL);
-        g_return_if_fail (DEVKIT_IS_DISKS_DEVICE (object));
+        g_return_if_fail (DEVKIT_DISKS_IS_DEVICE (object));
 
         device = DEVKIT_DISKS_DEVICE (object);
         g_return_if_fail (device->priv != NULL);
@@ -3104,7 +3104,7 @@ devkit_disks_device_new (DevkitDisksDaemon *daemon, DevkitDevice *d)
             g_str_has_prefix (native_path, "/sys/devices/virtual/block/loop"))
                 goto out;
 
-        device = DEVKIT_DISKS_DEVICE (g_object_new (DEVKIT_TYPE_DISKS_DEVICE, NULL));
+        device = DEVKIT_DISKS_DEVICE (g_object_new (DEVKIT_DISKS_TYPE_DEVICE, NULL));
         device->priv->d = g_object_ref (d);
         device->priv->daemon = g_object_ref (daemon);
         device->priv->native_path = g_strdup (native_path);

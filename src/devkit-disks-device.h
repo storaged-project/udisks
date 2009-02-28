@@ -29,12 +29,12 @@
 
 G_BEGIN_DECLS
 
-#define DEVKIT_TYPE_DISKS_DEVICE         (devkit_disks_device_get_type ())
-#define DEVKIT_DISKS_DEVICE(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), DEVKIT_TYPE_DISKS_DEVICE, DevkitDisksDevice))
-#define DEVKIT_DISKS_DEVICE_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), DEVKIT_TYPE_DISKS_DEVICE, DevkitDisksDeviceClass))
-#define DEVKIT_IS_DISKS_DEVICE(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), DEVKIT_TYPE_DISKS_DEVICE))
-#define DEVKIT_IS_DISKS_DEVICE_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), DEVKIT_TYPE_DISKS_DEVICE))
-#define DEVKIT_DISKS_DEVICE_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), DEVKIT_TYPE_DISKS_DEVICE, DevkitDisksDeviceClass))
+#define DEVKIT_DISKS_TYPE_DEVICE         (devkit_disks_device_get_type ())
+#define DEVKIT_DISKS_DEVICE(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), DEVKIT_DISKS_TYPE_DEVICE, DevkitDisksDevice))
+#define DEVKIT_DISKS_DEVICE_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), DEVKIT_DISKS_TYPE_DEVICE, DevkitDisksDeviceClass))
+#define DEVKIT_DISKS_IS_DEVICE(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), DEVKIT_DISKS_TYPE_DEVICE))
+#define DEVKIT_DISKS_IS_DEVICE_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), DEVKIT_DISKS_TYPE_DEVICE))
+#define DEVKIT_DISKS_DEVICE_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), DEVKIT_DISKS_TYPE_DEVICE, DevkitDisksDeviceClass))
 
 typedef struct DevkitDisksDeviceClass   DevkitDisksDeviceClass;
 typedef struct DevkitDisksDevicePrivate DevkitDisksDevicePrivate;

@@ -25,12 +25,12 @@
 
 G_BEGIN_DECLS
 
-#define DEVKIT_TYPE_DISKS_MOUNT         (devkit_disks_mount_get_type ())
-#define DEVKIT_DISKS_MOUNT(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), DEVKIT_TYPE_DISKS_MOUNT, DevkitDisksMount))
-#define DEVKIT_DISKS_MOUNT_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), DEVKIT_TYPE_DISKS_MOUNT, DevkitDisksMountClass))
-#define DEVKIT_IS_DISKS_MOUNT(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), DEVKIT_TYPE_DISKS_MOUNT))
-#define DEVKIT_IS_DISKS_MOUNT_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), DEVKIT_TYPE_DISKS_MOUNT))
-#define DEVKIT_DISKS_MOUNT_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), DEVKIT_TYPE_DISKS_MOUNT, DevkitDisksMountClass))
+#define DEVKIT_DISKS_TYPE_MOUNT         (devkit_disks_mount_get_type ())
+#define DEVKIT_DISKS_MOUNT(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), DEVKIT_DISKS_TYPE_MOUNT, DevkitDisksMount))
+#define DEVKIT_DISKS_MOUNT_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), DEVKIT_DISKS_TYPE_MOUNT, DevkitDisksMountClass))
+#define DEVKIT_DISKS_IS_MOUNT(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), DEVKIT_DISKS_TYPE_MOUNT))
+#define DEVKIT_DISKS_IS_MOUNT_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), DEVKIT_DISKS_TYPE_MOUNT))
+#define DEVKIT_DISKS_MOUNT_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), DEVKIT_DISKS_TYPE_MOUNT, DevkitDisksMountClass))
 
 typedef struct DevkitDisksMountClass   DevkitDisksMountClass;
 typedef struct DevkitDisksMountPrivate DevkitDisksMountPrivate;

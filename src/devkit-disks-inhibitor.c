@@ -63,7 +63,7 @@ devkit_disks_inhibitor_finalize (GObject *object)
 static void
 devkit_disks_inhibitor_init (DevkitDisksInhibitor *inhibitor)
 {
-  inhibitor->priv = G_TYPE_INSTANCE_GET_PRIVATE (inhibitor, DEVKIT_TYPE_DISKS_INHIBITOR, DevkitDisksInhibitorPrivate);
+  inhibitor->priv = G_TYPE_INSTANCE_GET_PRIVATE (inhibitor, DEVKIT_DISKS_TYPE_INHIBITOR, DevkitDisksInhibitorPrivate);
 }
 
 static void
@@ -91,7 +91,7 @@ devkit_disks_inhibitor_new (DBusGMethodInvocation *context)
         DevkitDisksInhibitor *inhibitor;
         static gint inhibitor_count = 0;
 
-        inhibitor = DEVKIT_DISKS_INHIBITOR (g_object_new (DEVKIT_TYPE_DISKS_INHIBITOR, NULL));
+        inhibitor = DEVKIT_DISKS_INHIBITOR (g_object_new (DEVKIT_DISKS_TYPE_INHIBITOR, NULL));
 
         inhibitor->priv->unique_dbus_name = g_strdup (dbus_g_method_get_sender (context));
 

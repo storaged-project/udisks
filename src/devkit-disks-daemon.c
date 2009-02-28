@@ -117,7 +117,7 @@ static void     daemon_polling_inhibitor_disconnected_cb (DevkitDisksInhibitor *
 
 G_DEFINE_TYPE (DevkitDisksDaemon, devkit_disks_daemon, G_TYPE_OBJECT)
 
-#define DEVKIT_DISKS_DAEMON_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), DEVKIT_TYPE_DISKS_DAEMON, DevkitDisksDaemonPrivate))
+#define DEVKIT_DISKS_DAEMON_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), DEVKIT_DISKS_TYPE_DAEMON, DevkitDisksDaemonPrivate))
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
@@ -183,7 +183,7 @@ devkit_disks_daemon_constructor (GType                  type,
         DevkitDisksDaemon      *daemon;
         DevkitDisksDaemonClass *klass;
 
-        klass = DEVKIT_DISKS_DAEMON_CLASS (g_type_class_peek (DEVKIT_TYPE_DISKS_DAEMON));
+        klass = DEVKIT_DISKS_DAEMON_CLASS (g_type_class_peek (DEVKIT_DISKS_TYPE_DAEMON));
 
         daemon = DEVKIT_DISKS_DAEMON (
                 G_OBJECT_CLASS (devkit_disks_daemon_parent_class)->constructor (type,
@@ -460,7 +460,7 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
                               G_TYPE_DOUBLE);
 
 
-        dbus_g_object_type_install_info (DEVKIT_TYPE_DISKS_DAEMON, &dbus_glib_devkit_disks_daemon_object_info);
+        dbus_g_object_type_install_info (DEVKIT_DISKS_TYPE_DAEMON, &dbus_glib_devkit_disks_daemon_object_info);
 
         dbus_g_error_domain_register (DEVKIT_DISKS_ERROR,
                                       "org.freedesktop.DeviceKit.Disks.Error",
@@ -509,7 +509,7 @@ devkit_disks_daemon_finalize (GObject *object)
         GList *l;
 
         g_return_if_fail (object != NULL);
-        g_return_if_fail (DEVKIT_IS_DISKS_DAEMON (object));
+        g_return_if_fail (DEVKIT_DISKS_IS_DAEMON (object));
 
         daemon = DEVKIT_DISKS_DAEMON (object);
 
@@ -1038,7 +1038,7 @@ devkit_disks_daemon_new (void)
         GHashTableIter device_iter;
         const char *subsystems[] = {"block", NULL};
 
-        daemon = DEVKIT_DISKS_DAEMON (g_object_new (DEVKIT_TYPE_DISKS_DAEMON, NULL));
+        daemon = DEVKIT_DISKS_DAEMON (g_object_new (DEVKIT_DISKS_TYPE_DAEMON, NULL));
 
 
 
