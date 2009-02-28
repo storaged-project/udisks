@@ -50,7 +50,7 @@ struct DevkitDisksDeviceClass
         GObjectClass parent_class;
 };
 
-GType              devkit_disks_device_get_type              (void);
+GType              devkit_disks_device_get_type              (void) G_GNUC_CONST;
 
 DevkitDisksDevice *devkit_disks_device_new                   (DevkitDisksDaemon *daemon,
                                                               DevkitDevice      *d);

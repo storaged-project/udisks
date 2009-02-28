@@ -81,7 +81,7 @@ GType devkit_disks_error_get_type (void);
 #define DEVKIT_DISKS_TYPE_ERROR (devkit_disks_error_get_type ())
 GQuark             devkit_disks_error_quark         (void);
 
-GType              devkit_disks_daemon_get_type            (void);
+GType              devkit_disks_daemon_get_type            (void) G_GNUC_CONST;
 DevkitDisksDaemon *devkit_disks_daemon_new                 (void);
 
 /* local methods */

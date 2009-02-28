@@ -46,7 +46,7 @@ struct DevkitDisksMountMonitorClass
         GObjectClass   parent_class;
 };
 
-GType                    devkit_disks_mount_monitor_get_type                  (void);
+GType                    devkit_disks_mount_monitor_get_type                  (void) G_GNUC_CONST;
 DevkitDisksMountMonitor *devkit_disks_mount_monitor_new                       (void);
 DevkitDisksMount        *devkit_disks_mount_monitor_get_mount_for_device_file (DevkitDisksMountMonitor *monitor,
                                                                                const gchar             *device_file);
