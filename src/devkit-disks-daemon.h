@@ -94,6 +94,10 @@ DevkitDisksDevice *devkit_disks_daemon_local_find_by_native_path (DevkitDisksDae
 DevkitDisksDevice *devkit_disks_daemon_local_find_by_object_path (DevkitDisksDaemon       *daemon,
                                                                   const char              *object_path);
 
+DevkitDisksDevice *devkit_disks_daemon_local_find_by_device_file (DevkitDisksDaemon       *daemon,
+                                                                  const char              *device_file);
+
+
 PolKitCaller      *devkit_disks_damon_local_get_caller_for_context (DevkitDisksDaemon     *daemon,
                                                                     DBusGMethodInvocation *context);
 
@@ -101,10 +105,6 @@ gboolean           devkit_disks_damon_local_check_auth             (DevkitDisksD
                                                                     PolKitCaller          *pk_caller,
                                                                     const char            *action_id,
                                                                     DBusGMethodInvocation *context);
-
-void               devkit_disks_daemon_local_update_mount_state  (DevkitDisksDaemon       *daemon,
-                                                                  GList                   *devices,
-                                                                  gboolean                 emit_changed);
 
 void               devkit_disks_daemon_local_synthesize_changed  (DevkitDisksDaemon       *daemon,
                                                                   DevkitDevice            *d);
@@ -114,6 +114,8 @@ void               devkit_disks_daemon_local_update_poller       (DevkitDisksDae
 gboolean           devkit_disks_daemon_local_has_polling_inhibitors (DevkitDisksDaemon       *daemon);
 
 DevkitDisksLogger *devkit_disks_daemon_local_get_logger (DevkitDisksDaemon *daemon);
+
+DevkitDisksMountMonitor *devkit_disks_daemon_local_get_mount_monitor (DevkitDisksDaemon *daemon);
 
 typedef struct {
         const char *id;

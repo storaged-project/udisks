@@ -52,7 +52,8 @@
 #include "devkit-disks-daemon.h"
 #include "devkit-disks-device.h"
 #include "devkit-disks-device-private.h"
-#include "mounts-file.h"
+#include "devkit-disks-mount-file.h"
+#include "devkit-disks-mount.h"
 #include "devkit-disks-mount-monitor.h"
 #include "poller.h"
 #include "devkit-disks-inhibitor.h"
@@ -94,6 +95,7 @@ struct DevkitDisksDaemonPrivate
 
 	GIOChannel              *mdstat_channel;
 
+        GHashTable              *map_device_file_to_device;
         GHashTable              *map_native_path_to_device;
         GHashTable              *map_object_path_to_device;
 
@@ -116,95 +118,6 @@ static void     daemon_polling_inhibitor_disconnected_cb (DevkitDisksInhibitor *
 G_DEFINE_TYPE (DevkitDisksDaemon, devkit_disks_daemon, G_TYPE_OBJECT)
 
 #define DEVKIT_DISKS_DAEMON_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), DEVKIT_TYPE_DISKS_DAEMON, DevkitDisksDaemonPrivate))
-
-/*--------------------------------------------------------------------------------------------------------------*/
-
-void
-devkit_disks_daemon_local_update_mount_state (DevkitDisksDaemon *daemon, GList *devices, gboolean emit_changed)
-{
-        GList *l;
-        GList *mounts;
-        GList *devices_copy;
-        GList *j;
-        GList *jj;
-
-        devices_copy = g_list_copy (devices);
-
-        mounts = devkit_disks_mount_monitor_get_mounts (daemon->priv->mount_monitor);
-
-        for (l = mounts; l != NULL; l = l->next) {
-                DevkitDisksMount *mount_entry = l->data;
-                const char *device_file;
-                const char *mount_path;
-
-                device_file = devkit_disks_mount_get_device_path (mount_entry);
-                mount_path = devkit_disks_mount_get_mount_path (mount_entry);
-
-                for (j = devices_copy; j != NULL; j = jj) {
-                        DevkitDisksDevice *device = j->data;
-                        const char *device_device_file;
-                        const char *device_mount_path;
-
-                        jj = j->next;
-
-                        device_device_file = devkit_disks_device_local_get_device_file (device);
-                        device_mount_path = devkit_disks_device_local_get_mount_path (device);
-
-                        if (strcmp (device_device_file, device_file) == 0) {
-                                /* is mounted */
-                                if (device_mount_path != NULL && strcmp (device_mount_path, mount_path) == 0) {
-                                        /* same mount path; no changes */
-                                } else {
-                                        /* device was just mounted... or the mount path changed */
-
-                                        if (device->priv->job_in_progress &&
-                                            device->priv->job_id != NULL &&
-                                            strcmp (device->priv->job_id, "FilesystemMount") == 0) {
-                                                /* delay setting the mount point until FilesystemMount returns;
-                                                 * otherwise we won't get the uid right */
-                                        } else {
-                                                uid_t uid = 0;
-                                                mounts_file_has_device (device, &uid, NULL);
-                                                devkit_disks_device_local_set_mounted (device,
-                                                                                       mount_path,
-                                                                                       emit_changed,
-                                                                                       uid);
-                                        }
-                                }
-
-                                /* we're mounted so remove from list of devices (see below) */
-                                devices_copy = g_list_delete_link (devices_copy, j);
-
-                                /* no other devices can be mounted at this path so break
-                                 * out and process the next mount entry
-                                 */
-                                break;
-                        }
-
-
-                        if (device_mount_path == NULL) {
-                        }
-                }
-        }
-        g_list_foreach (mounts, (GFunc) devkit_disks_mount_unref, NULL);
-        g_list_free (mounts);
-
-        /* Since we've removed mounted devices from the devices_copy
-         * list the remaining devices in the list are not mounted.
-         * Update their state to say so.
-         */
-        for (j = devices_copy; j != NULL; j = j->next) {
-                DevkitDisksDevice *device = j->data;
-                const char *device_mount_path;
-
-                device_mount_path = devkit_disks_device_local_get_mount_path (device);
-                if (device_mount_path != NULL) {
-                        devkit_disks_device_local_set_unmounted (device, device_mount_path, emit_changed);
-                }
-        }
-
-        g_list_free (devices_copy);
-}
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
@@ -575,6 +488,10 @@ static void
 devkit_disks_daemon_init (DevkitDisksDaemon *daemon)
 {
         daemon->priv = DEVKIT_DISKS_DAEMON_GET_PRIVATE (daemon);
+        daemon->priv->map_device_file_to_device = g_hash_table_new_full (g_str_hash,
+                                                                         g_str_equal,
+                                                                         g_free,
+                                                                         NULL);
         daemon->priv->map_native_path_to_device = g_hash_table_new_full (g_str_hash,
                                                                          g_str_equal,
                                                                          g_free,
@@ -613,6 +530,9 @@ devkit_disks_daemon_finalize (GObject *object)
         if (daemon->priv->mdstat_channel != NULL)
                 g_io_channel_unref (daemon->priv->mdstat_channel);
 
+        if (daemon->priv->map_device_file_to_device != NULL) {
+                g_hash_table_unref (daemon->priv->map_device_file_to_device);
+        }
         if (daemon->priv->map_native_path_to_device != NULL) {
                 g_hash_table_unref (daemon->priv->map_native_path_to_device);
         }
@@ -732,8 +652,11 @@ device_went_away (gpointer user_data, GObject *where_the_object_was)
 {
         DevkitDisksDaemon *daemon = DEVKIT_DISKS_DAEMON (user_data);
 
-        g_hash_table_foreach_remove (daemon->priv->map_native_path_to_device,
+        g_hash_table_foreach_remove (daemon->priv->map_device_file_to_device,
                                      device_went_away_remove_cb,
+                                     where_the_object_was);
+        g_hash_table_foreach_remove (daemon->priv->map_native_path_to_device,
+                                     device_went_away_remove_quiet_cb,
                                      where_the_object_was);
         g_hash_table_foreach_remove (daemon->priv->map_object_path_to_device,
                                      device_went_away_remove_quiet_cb,
@@ -797,6 +720,9 @@ device_add (DevkitDisksDaemon *daemon, DevkitDevice *d, gboolean emit_event)
                          * dbus-glib, no cookie for you.
                          */
                         g_object_weak_ref (G_OBJECT (device), device_went_away, daemon);
+                        g_hash_table_insert (daemon->priv->map_device_file_to_device,
+                                             g_strdup (devkit_disks_device_local_get_device_file (device)),
+                                             device);
                         g_hash_table_insert (daemon->priv->map_native_path_to_device,
                                              g_strdup (native_path),
                                              device);
@@ -856,6 +782,12 @@ device_event_signal_handler (DevkitClient *client,
 }
 
 DevkitDisksDevice *
+devkit_disks_daemon_local_find_by_device_file (DevkitDisksDaemon *daemon, const char *device_file)
+{
+        return g_hash_table_lookup (daemon->priv->map_device_file_to_device, device_file);
+}
+
+DevkitDisksDevice *
 devkit_disks_daemon_local_find_by_native_path (DevkitDisksDaemon *daemon, const char *native_path)
 {
         return g_hash_table_lookup (daemon->priv->map_native_path_to_device, native_path);
@@ -875,14 +807,35 @@ devkit_disks_daemon_local_get_all_devices (DevkitDisksDaemon *daemon)
 }
 
 static void
-mounts_changed (DevkitDisksMountMonitor *monitor, gpointer user_data)
+mount_removed (DevkitDisksMountMonitor *monitor,
+               DevkitDisksMount        *mount,
+               gpointer                 user_data)
 {
         DevkitDisksDaemon *daemon = DEVKIT_DISKS_DAEMON (user_data);
-        GList *devices;
+        DevkitDisksDevice *device;
 
-        devices = g_hash_table_get_values (daemon->priv->map_native_path_to_device);
-        devkit_disks_daemon_local_update_mount_state (daemon, devices, TRUE);
-        g_list_free (devices);
+        device = g_hash_table_lookup (daemon->priv->map_device_file_to_device,
+                                      devkit_disks_mount_get_device_file (mount));
+        if (device != NULL) {
+                g_print ("**** UNMOUNTED %s\n", device->priv->native_path);
+                devkit_disks_daemon_local_synthesize_changed (daemon, device->priv->d);
+        }
+}
+
+static void
+mount_added (DevkitDisksMountMonitor *monitor,
+             DevkitDisksMount        *mount,
+             gpointer                 user_data)
+{
+        DevkitDisksDaemon *daemon = DEVKIT_DISKS_DAEMON (user_data);
+        DevkitDisksDevice *device;
+
+        device = g_hash_table_lookup (daemon->priv->map_device_file_to_device,
+                                      devkit_disks_mount_get_device_file (mount));
+        if (device != NULL) {
+                g_print ("**** MOUNTED %s\n", device->priv->native_path);
+                devkit_disks_daemon_local_synthesize_changed (daemon, device->priv->d);
+        }
 }
 
 static gboolean
@@ -1063,7 +1016,8 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
                           G_CALLBACK (device_event_signal_handler), daemon);
 
         daemon->priv->mount_monitor = devkit_disks_mount_monitor_new ();
-        g_signal_connect (daemon->priv->mount_monitor, "mounts-changed", (GCallback) mounts_changed, daemon);
+        g_signal_connect (daemon->priv->mount_monitor, "mounted", (GCallback) mount_added, daemon);
+        g_signal_connect (daemon->priv->mount_monitor, "unmounted", (GCallback) mount_removed, daemon);
 
         daemon->priv->logger = devkit_disks_logger_new ();
 
@@ -1121,7 +1075,7 @@ devkit_disks_daemon_new (void)
          * entries in /var/lib/DeviceKit-disks/mtab
          */
         l = g_hash_table_get_values (daemon->priv->map_native_path_to_device);
-        mounts_file_clean_stale (l);
+        devkit_disks_mount_file_clean_stale (l);
         g_list_free (l);
 
         /* initial refresh of SMART data */
@@ -1137,6 +1091,12 @@ DevkitDisksLogger *
 devkit_disks_daemon_local_get_logger (DevkitDisksDaemon *daemon)
 {
         return daemon->priv->logger;
+}
+
+DevkitDisksMountMonitor *
+devkit_disks_daemon_local_get_mount_monitor (DevkitDisksDaemon *daemon)
+{
+        return daemon->priv->mount_monitor;
 }
 
 PolKitCaller *
@@ -1288,6 +1248,8 @@ devkit_disks_daemon_find_device_by_device_file (DevkitDisksDaemon     *daemon,
         const char *object_path;
         GHashTableIter iter;
         DevkitDisksDevice *device;
+
+        /* TODO: use hash */
 
         object_path = NULL;
         g_hash_table_iter_init (&iter, daemon->priv->map_native_path_to_device);

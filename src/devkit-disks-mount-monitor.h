@@ -46,16 +46,11 @@ struct DevkitDisksMountMonitorClass
         GObjectClass   parent_class;
 };
 
-GType                    devkit_disks_mount_monitor_get_type   (void);
-DevkitDisksMountMonitor *devkit_disks_mount_monitor_new        (void);
-GList                   *devkit_disks_mount_monitor_get_mounts (DevkitDisksMountMonitor *mount_monitor);
-
-struct DevkitDisksMount;
-typedef struct DevkitDisksMount DevkitDisksMount;
-
-void        devkit_disks_mount_unref (DevkitDisksMount *mount);
-const char *devkit_disks_mount_get_mount_path  (DevkitDisksMount *mount);
-const char *devkit_disks_mount_get_device_path (DevkitDisksMount *mount);
+GType                    devkit_disks_mount_monitor_get_type                  (void);
+DevkitDisksMountMonitor *devkit_disks_mount_monitor_new                       (void);
+DevkitDisksMount        *devkit_disks_mount_monitor_get_mount_for_device_file (DevkitDisksMountMonitor *monitor,
+                                                                               const gchar             *device_file);
+void                     devkit_disks_mount_monitor_invalidate                (DevkitDisksMountMonitor *monitor);
 
 G_END_DECLS
 

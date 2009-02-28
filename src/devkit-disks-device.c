@@ -55,7 +55,9 @@
 #include "devkit-disks-device.h"
 #include "devkit-disks-device-private.h"
 #include "devkit-disks-marshal.h"
-#include "mounts-file.h"
+#include "devkit-disks-mount.h"
+#include "devkit-disks-mount-monitor.h"
+#include "devkit-disks-mount-file.h"
 #include "devkit-disks-inhibitor.h"
 #include "poller.h"
 
@@ -2004,7 +2006,7 @@ update_info_drive (DevkitDisksDevice *device)
                 g_strstrip (decoded_string);
                 devkit_disks_device_set_drive_vendor (device, decoded_string);
                 g_free (decoded_string);
-        } else {
+        } else if (devkit_device_has_property (device->priv->d, "ID_VENDOR")) {
                 devkit_disks_device_set_drive_vendor (device, devkit_device_get_property (device->priv->d, "ID_VENDOR"));
         }
 
@@ -2013,12 +2015,14 @@ update_info_drive (DevkitDisksDevice *device)
                 g_strstrip (decoded_string);
                 devkit_disks_device_set_drive_model (device, decoded_string);
                 g_free (decoded_string);
-        } else {
+        } else if (devkit_device_has_property (device->priv->d, "ID_MODEL")) {
                 devkit_disks_device_set_drive_model (device, devkit_device_get_property (device->priv->d, "ID_MODEL"));
         }
 
-        devkit_disks_device_set_drive_revision (device, devkit_device_get_property (device->priv->d, "ID_REVISION"));
-        devkit_disks_device_set_drive_serial (device, devkit_device_get_property (device->priv->d, "ID_SERIAL_SHORT"));
+        if (devkit_device_has_property (device->priv->d, "ID_REVISION"))
+                devkit_disks_device_set_drive_revision (device, devkit_device_get_property (device->priv->d, "ID_REVISION"));
+        if (devkit_device_has_property (device->priv->d, "ID_SERIAL_SHORT"))
+                devkit_disks_device_set_drive_serial (device, devkit_device_get_property (device->priv->d, "ID_SERIAL_SHORT"));
 
         /* pick up some things (vendor, model, connection_interface, connection_speed)
          * not (yet) exported by udev helpers
@@ -2556,6 +2560,67 @@ update_info_is_system_internal (DevkitDisksDevice *device)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* device_is_mounted, device_mount, device_mounted_by_uid */
+static gboolean
+update_info_mount_state (DevkitDisksDevice *device)
+{
+        DevkitDisksMountMonitor *monitor;
+        DevkitDisksMount *mount;
+        gboolean was_mounted;
+        gchar *old_mount_path;
+
+        old_mount_path = NULL;
+
+        /* defer setting the mount point until FilesystemMount returns and
+         * the mounts file is written
+         */
+        if (device->priv->job_in_progress && g_strcmp0 (device->priv->job_id, "FilesystemMount") == 0)
+                goto out;
+
+        monitor = devkit_disks_daemon_local_get_mount_monitor (device->priv->daemon);
+        mount = devkit_disks_mount_monitor_get_mount_for_device_file (monitor, device->priv->device_file);
+
+        was_mounted = device->priv->device_is_mounted;
+        old_mount_path = g_strdup (device->priv->device_mount_path);
+
+        if (mount != NULL) {
+                devkit_disks_device_set_device_is_mounted (device, TRUE);
+                devkit_disks_device_set_device_mount_path (device, devkit_disks_mount_get_mount_path (mount));
+                if (!was_mounted) {
+                        uid_t mounted_by_uid;
+
+                        if (!devkit_disks_mount_file_has_device (device->priv->device_file, &mounted_by_uid, NULL))
+                                mounted_by_uid = 0;
+                        devkit_disks_device_set_device_mounted_by_uid (device, mounted_by_uid);
+                }
+        } else {
+                gboolean remove_dir_on_unmount;
+
+                devkit_disks_device_set_device_is_mounted (device, FALSE);
+                devkit_disks_device_set_device_mount_path (device, NULL);
+                devkit_disks_device_set_device_mounted_by_uid (device, 0);
+
+                /* clean up stale mount directory */
+                remove_dir_on_unmount = FALSE;
+                if (was_mounted && devkit_disks_mount_file_has_device (device->priv->device_file, NULL, &remove_dir_on_unmount)) {
+                        devkit_disks_mount_file_remove (device->priv->device_file, old_mount_path);
+                        if (remove_dir_on_unmount) {
+                                if (g_rmdir (old_mount_path) != 0) {
+                                        g_warning ("Error removing dir '%s' on unmount: %m", old_mount_path);
+                                }
+                        }
+                }
+
+        }
+
+ out:
+        g_free (old_mount_path);
+
+        return TRUE;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 /**
  * update_info:
  * @device: the device
@@ -2817,14 +2882,9 @@ update_info (DevkitDisksDevice *device)
         if (!update_info_is_system_internal (device))
                 goto out;
 
-        /* ---------------------------------------------------------------------------------------------------- */
-
-        /* device_is_mounted, device_mount, device_mounted_by_uid (TODO: probably want to rethink this)  */
-        l = g_list_prepend (NULL, device);
-        devkit_disks_daemon_local_update_mount_state (device->priv->daemon, l, FALSE);
-        g_list_free (l);
-
-        /* ---------------------------------------------------------------------------------------------------- */
+        /* device_is_mounted, device_mount, device_mounted_by_uid */
+        if (!update_info_mount_state (device))
+                goto out;
 
         /* device_is_media_change_* properties */
         devkit_disks_device_local_update_media_detection (device);
@@ -3196,52 +3256,6 @@ const char *
 devkit_disks_device_local_get_mount_path (DevkitDisksDevice *device)
 {
         return device->priv->device_mount_path;
-}
-
-void
-devkit_disks_device_local_set_mounted (DevkitDisksDevice *device,
-                                       const char        *mount_path,
-                                       gboolean           emit_changed_signal,
-                                       uid_t              mounted_by_uid)
-{
-        devkit_disks_device_set_device_mount_path (device, mount_path);
-        devkit_disks_device_set_device_is_mounted (device, TRUE);
-        devkit_disks_device_set_device_mounted_by_uid (device, mounted_by_uid);
-}
-
-void
-devkit_disks_device_local_set_unmounted (DevkitDisksDevice *device,
-                                         const char        *given_mount_path,
-                                         gboolean           emit_changed_signal)
-{
-        char *mount_path;
-        gboolean remove_dir_on_unmount;
-
-        if (given_mount_path != NULL)
-                mount_path = g_strdup (given_mount_path);
-        else
-                mount_path = g_strdup (device->priv->device_mount_path);
-
-        /* make sure we clean up directories created by ourselves in /media */
-        if (!mounts_file_has_device (device, NULL, &remove_dir_on_unmount)) {
-                g_warning ("Cannot determine if directory should be removed on late unmount path");
-                remove_dir_on_unmount = FALSE;
-        }
-
-        devkit_disks_device_set_device_mount_path (device, NULL);
-        devkit_disks_device_set_device_mounted_by_uid (device, 0);
-        devkit_disks_device_set_device_is_mounted (device, FALSE);
-
-        if (mount_path != NULL) {
-                mounts_file_remove (device, mount_path);
-                if (remove_dir_on_unmount) {
-                        if (g_rmdir (mount_path) != 0) {
-                                g_warning ("Error removing dir '%s' in late unmount path: %m", mount_path);
-                        }
-                }
-        }
-
-        g_free (mount_path);
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/
@@ -4014,20 +4028,19 @@ filesystem_mount_completed_cb (DBusGMethodInvocation *context,
                 polkit_caller_get_uid (pk_caller, &uid);
 
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
-                if (!device->priv->device_is_mounted && data->mount_point != NULL) {
-                        devkit_disks_device_local_set_mounted (device, data->mount_point, TRUE, uid);
-                }
-                if (!data->is_remount) {
-                        mounts_file_add (device, uid, data->remove_dir_on_unmount);
-                }
 
+                update_info (device);
                 drain_pending_changes (device, FALSE);
 
                 dbus_g_method_return (context, data->mount_point);
         } else {
                 if (!data->is_remount) {
-                        if (g_rmdir (data->mount_point) != 0) {
-                                g_warning ("Error removing dir in late mount error path: %m");
+                        devkit_disks_mount_file_remove (device->priv->device_file, data->mount_point);
+
+                        if (data->remove_dir_on_unmount) {
+                                if (g_rmdir (data->mount_point) != 0) {
+                                        g_warning ("Error removing dir in late mount error path: %m");
+                                }
                         }
                 }
 
@@ -4101,9 +4114,6 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
                 argv[n++] = device->priv->device_file;
                 argv[n++] = uid_buf;
                 argv[n++] = NULL;
-
-                /* to avoid removing the mount point on error */
-                is_remount = TRUE;
                 goto run_job;
         }
 
@@ -4247,6 +4257,16 @@ try_another_mount_point:
         }
 
 run_job:
+        if (!is_remount) {
+                /* now that we have a mount point, immediately add it to the
+                 * /var/lib/DeviceKit-disks/mtab file
+                 */
+                devkit_disks_mount_file_add (device->priv->device_file,
+                                             mount_point,
+                                             caller_uid,
+                                             remove_dir_on_unmount);
+        }
+
         error = NULL;
         if (!job_new (context,
                       "FilesystemMount",
@@ -4259,8 +4279,11 @@ run_job:
                       filesystem_mount_data_new (mount_point, remove_dir_on_unmount, is_remount),
                       (GDestroyNotify) filesystem_mount_data_free)) {
                 if (!is_remount) {
-                        if (g_rmdir (mount_point) != 0) {
-                                g_warning ("Error removing dir in early mount error path: %m");
+                        devkit_disks_mount_file_remove (device->priv->device_file, mount_point);
+                        if (remove_dir_on_unmount) {
+                                if (g_rmdir (mount_point) != 0) {
+                                        g_warning ("Error removing dir in early mount error path: %m");
+                                }
                         }
                 }
                 goto out;
@@ -4288,12 +4311,9 @@ filesystem_unmount_completed_cb (DBusGMethodInvocation *context,
                                  const char *stdout,
                                  gpointer user_data)
 {
-        char *mount_path = user_data;
-
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
-                devkit_disks_device_local_set_unmounted (device, mount_path, TRUE);
-                if (mount_path != NULL) /* can be NULL when unmounting /etc/fstab mounts */
-                        mounts_file_remove (device, mount_path);
+                /* update_info_mount_state() will update the mounts file and clean up the directory if needed */
+                update_info (device);
                 dbus_g_method_return (context);
         } else {
                 if (job_was_cancelled) {
@@ -4361,7 +4381,7 @@ devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
                 }
         }
 
-        if (!mounts_file_has_device (device, &uid_of_mount, NULL)) {
+        if (!devkit_disks_mount_file_has_device (device->priv->device_file, &uid_of_mount, NULL)) {
                 /* Check if the device is referenced in /etc/fstab; if so, attempt to
                  * unmount the device as the user
                  */
@@ -8166,8 +8186,8 @@ force_unmount_completed_cb (DBusGMethodInvocation *context,
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
 
                 g_debug ("Successfully force unmounted device %s", device->priv->device_file);
-                devkit_disks_device_local_set_unmounted (device, NULL, TRUE);
-                mounts_file_remove (device, data->mount_path);
+                /* update_info_mount_state() will update the mounts file and clean up the directory if needed */
+                update_info (device);
 
                 /* TODO: when we add polling, this can probably be removed. I have no idea why hal's
                  *       poller don't cause the kernel to revalidate the (missing) media
@@ -8537,7 +8557,7 @@ force_removal (DevkitDisksDevice        *device,
         if (device->priv->device_is_mounted && device->priv->device_mount_path != NULL) {
                 gboolean remove_dir_on_unmount;
 
-                if (mounts_file_has_device (device, NULL, &remove_dir_on_unmount)) {
+                if (devkit_disks_mount_file_has_device (device->priv->device_file, NULL, &remove_dir_on_unmount)) {
                         g_debug ("Force unmounting device %s", device->priv->device_file);
                         force_unmount (device, callback, user_data);
                         goto pending;

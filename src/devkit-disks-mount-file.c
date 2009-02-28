@@ -40,21 +40,22 @@
 #include <glib/gstdio.h>
 #include <glib/gi18n-lib.h>
 
-#include "mounts-file.h"
+#include "devkit-disks-mount-file.h"
+#include "devkit-disks-device.h"
 #include "devkit-disks-device-private.h"
 
 enum {
-        MOUNTS_FILE_DEVICE_FILE,
-        MOUNTS_FILE_MOUNT_PATH,
-        MOUNTS_FILE_MOUNTED_BY_UID,
-        MOUNTS_FILE_REMOVE_DIR_ON_UNMOUNT,
-        MOUNTS_FILE_NUM_TOKENS,
+        DEVKIT_DISKS_MOUNT_FILE_DEVICE_FILE,
+        DEVKIT_DISKS_MOUNT_FILE_MOUNT_PATH,
+        DEVKIT_DISKS_MOUNT_FILE_MOUNTED_BY_UID,
+        DEVKIT_DISKS_MOUNT_FILE_REMOVE_DIR_ON_UNMOUNT,
+        DEVKIT_DISKS_MOUNT_FILE_NUM_TOKENS,
 };
 
 gboolean
-mounts_file_has_device (DevkitDisksDevice *device,
-                        uid_t *mounted_by_uid,
-                        gboolean *remove_dir_on_unmount)
+devkit_disks_mount_file_has_device (const gchar *device_file,
+                                    uid_t       *mounted_by_uid,
+                                    gboolean    *remove_dir_on_unmount)
 {
         gboolean ret;
         char *contents;
@@ -65,7 +66,7 @@ mounts_file_has_device (DevkitDisksDevice *device,
 
         contents = NULL;
         ret = FALSE;
-        device_file_escaped = g_uri_escape_string (device->priv->device_file, NULL, TRUE);
+        device_file_escaped = g_uri_escape_string (device_file, NULL, TRUE);
 
         error = NULL;
         if (!g_file_get_contents (PACKAGE_LOCALSTATE_DIR "/lib/DeviceKit-disks/mtab",
@@ -88,17 +89,17 @@ mounts_file_has_device (DevkitDisksDevice *device,
                 char **tokens;
 
                 tokens = g_strsplit (line, " ", 0);
-                if (g_strv_length (tokens) == MOUNTS_FILE_NUM_TOKENS) {
-                        const char *line_device_file = tokens[MOUNTS_FILE_DEVICE_FILE];
+                if (g_strv_length (tokens) == DEVKIT_DISKS_MOUNT_FILE_NUM_TOKENS) {
+                        const char *line_device_file = tokens[DEVKIT_DISKS_MOUNT_FILE_DEVICE_FILE];
 
                         if (strcmp (line_device_file, device_file_escaped) == 0) {
 
                                 ret = TRUE;
 
                                 if (mounted_by_uid != NULL)
-                                        *mounted_by_uid = atoi (tokens[MOUNTS_FILE_MOUNTED_BY_UID]);
+                                        *mounted_by_uid = atoi (tokens[DEVKIT_DISKS_MOUNT_FILE_MOUNTED_BY_UID]);
                                 if (remove_dir_on_unmount != NULL)
-                                        if (strcmp (tokens[MOUNTS_FILE_REMOVE_DIR_ON_UNMOUNT], "1") == 0)
+                                        if (strcmp (tokens[DEVKIT_DISKS_MOUNT_FILE_REMOVE_DIR_ON_UNMOUNT], "1") == 0)
                                                 *remove_dir_on_unmount = TRUE;
 
                                 g_strfreev (lines);
@@ -117,7 +118,10 @@ out:
 }
 
 void
-mounts_file_add (DevkitDisksDevice *device, uid_t mounted_by_uid, gboolean remove_dir_on_unmount)
+devkit_disks_mount_file_add (const gchar *device_file,
+                             const gchar *mount_path,
+                             uid_t        mounted_by_uid,
+                             gboolean     remove_dir_on_unmount)
 {
         char *contents;
         char *new_contents;
@@ -126,8 +130,8 @@ mounts_file_add (DevkitDisksDevice *device, uid_t mounted_by_uid, gboolean remov
         char *device_file_escaped;
         char *mount_path_escaped;
 
-        g_return_if_fail (device->priv->device_is_mounted);
-        g_return_if_fail (device->priv->device_mount_path != NULL);
+        g_return_if_fail (device_file != NULL);
+        g_return_if_fail (mount_path != NULL);
 
         /* on error resp. contents and size will be set to resp. NULL and 0 */
         error = NULL;
@@ -144,8 +148,8 @@ mounts_file_add (DevkitDisksDevice *device, uid_t mounted_by_uid, gboolean remov
                 g_error_free (error);
         }
 
-        device_file_escaped = g_uri_escape_string (device->priv->device_file, NULL, TRUE);
-        mount_path_escaped = g_uri_escape_string (device->priv->device_mount_path, NULL, TRUE);
+        device_file_escaped = g_uri_escape_string (device_file, NULL, TRUE);
+        mount_path_escaped = g_uri_escape_string (mount_path, NULL, TRUE);
         added_line = g_strdup_printf ("%s %s %d %d\n",
                                       device_file_escaped,
                                       mount_path_escaped,
@@ -175,7 +179,8 @@ mounts_file_add (DevkitDisksDevice *device, uid_t mounted_by_uid, gboolean remov
 }
 
 void
-mounts_file_remove (DevkitDisksDevice *device, const char *mount_path)
+devkit_disks_mount_file_remove (const gchar *device_file,
+                                const gchar *mount_path)
 {
         char *contents;
         char **lines;
@@ -191,7 +196,7 @@ mounts_file_remove (DevkitDisksDevice *device, const char *mount_path)
         device_file_escaped = NULL;
         mount_path_escaped = NULL;
 
-        device_file_escaped = g_uri_escape_string (device->priv->device_file, NULL, TRUE);
+        device_file_escaped = g_uri_escape_string (device_file, NULL, TRUE);
         mount_path_escaped = g_uri_escape_string (mount_path, NULL, TRUE);
 
         error = NULL;
@@ -213,9 +218,9 @@ mounts_file_remove (DevkitDisksDevice *device, const char *mount_path)
                 char **tokens;
 
                 tokens = g_strsplit (line, " ", 0);
-                if (g_strv_length (tokens) == MOUNTS_FILE_NUM_TOKENS) {
-                        const char *line_device_file = tokens[MOUNTS_FILE_DEVICE_FILE];
-                        const char *line_mount_path = tokens[MOUNTS_FILE_MOUNT_PATH];
+                if (g_strv_length (tokens) == DEVKIT_DISKS_MOUNT_FILE_NUM_TOKENS) {
+                        const char *line_device_file = tokens[DEVKIT_DISKS_MOUNT_FILE_DEVICE_FILE];
+                        const char *line_mount_path = tokens[DEVKIT_DISKS_MOUNT_FILE_MOUNT_PATH];
 
                         if (strcmp (line_device_file, device_file_escaped) == 0 &&
                             strcmp (line_mount_path, mount_path_escaped) == 0) {
@@ -247,7 +252,7 @@ out:
 }
 
 void
-mounts_file_clean_stale (GList *existing_devices)
+devkit_disks_mount_file_clean_stale (GList *existing_devices)
 {
         GList *l;
         char *contents;
@@ -282,8 +287,8 @@ mounts_file_clean_stale (GList *existing_devices)
                 char **tokens;
 
                 tokens = g_strsplit (line, " ", 0);
-                if (g_strv_length (tokens) == MOUNTS_FILE_NUM_TOKENS) {
-                        const char *line_mount_path = tokens[MOUNTS_FILE_MOUNT_PATH];
+                if (g_strv_length (tokens) == DEVKIT_DISKS_MOUNT_FILE_NUM_TOKENS) {
+                        const char *line_mount_path = tokens[DEVKIT_DISKS_MOUNT_FILE_MOUNT_PATH];
                         gboolean entry_is_valid;
 
                         entry_is_valid = FALSE;

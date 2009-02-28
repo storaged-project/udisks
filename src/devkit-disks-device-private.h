@@ -22,6 +22,8 @@
 #define __DEVKIT_DISKS_DEVICE_PRIVATE_H__
 
 #include <polkit-dbus/polkit-dbus.h>
+#include <dbus/dbus-glib.h>
+#include <devkit-gobject/devkit-gobject.h>
 
 #include "devkit-disks-types.h"
 

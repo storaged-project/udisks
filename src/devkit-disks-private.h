@@ -18,24 +18,15 @@
  *
  */
 
-#ifndef __MOUNT_FILE_H__
-#define __MOUNT_FILE_H__
+#ifndef __DEVKIT_DISKS_PRIVATE_H__
+#define __DEVKIT_DISKS_PRIVATE_H__
 
-#include "devkit-disks-device.h"
+#include "devkit-disks-types.h"
 
 G_BEGIN_DECLS
 
-gboolean mounts_file_has_device  (DevkitDisksDevice *device,
-                                  uid_t *mounted_by_uid,
-                                  gboolean *remove_dir_on_unmount);
-void     mounts_file_add         (DevkitDisksDevice *device,
-                                  uid_t mounted_by_uid,
-                                  gboolean remove_dir_on_unmount);
-void     mounts_file_remove      (DevkitDisksDevice *device,
-                                  const char *mount_path);
-void     mounts_file_clean_stale (GList *existing_devices);
+DevkitDisksMount *_devkit_disks_mount_new (const gchar *device_file, const gchar *mount_path);
 
 G_END_DECLS
 
-#endif /* __MOUNT_FILE_H__ */
-
+#endif /* __DEVKIT_DISKS_PRIVATE_H__ */

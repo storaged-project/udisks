@@ -40,11 +40,13 @@ dbusif_DATA = org.freedesktop.DeviceKit.Disks.xml org.freedesktop.DeviceKit.Disk
 
 devkit_disks_daemon_SOURCES = 						\
 	devkit-disks-types.h						\
+	devkit-disks-private.h						\
 	devkit-disks-daemon.h		devkit-disks-daemon.c		\
 	devkit-disks-logger.h		devkit-disks-logger.c		\
 	devkit-disks-device.h		devkit-disks-device.c		\
 	devkit-disks-device-private.h	devkit-disks-device-private.c	\
-	mounts-file.h			mounts-file.c			\
+	devkit-disks-mount-file.h	devkit-disks-mount-file.c	\
+	devkit-disks-mount.h		devkit-disks-mount.c		\
 	devkit-disks-mount-monitor.h	devkit-disks-mount-monitor.c	\
 	devkit-disks-inhibitor.h	devkit-disks-inhibitor.c	\
 	poller.h			poller.c			\

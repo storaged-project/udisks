@@ -36,12 +36,15 @@
 #include <glib-object.h>
 
 #include "devkit-disks-mount-monitor.h"
+#include "devkit-disks-mount.h"
+#include "devkit-disks-private.h"
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
 enum
 {
-        MOUNTS_CHANGED_SIGNAL,
+        MOUNTED_SIGNAL,
+        UNMOUNTED_SIGNAL,
         LAST_SIGNAL,
 };
 
@@ -49,60 +52,187 @@ static guint signals[LAST_SIGNAL] = { 0 };
 
 struct DevkitDisksMountMonitorPrivate
 {
-	GIOChannel              *mounts_channel;
+	GIOChannel *mounts_channel;
+        GHashTable *mounts;
+        gboolean    have_data;
 };
-
-static GObjectClass *parent_class = NULL;
 
 G_DEFINE_TYPE (DevkitDisksMountMonitor, devkit_disks_mount_monitor, G_TYPE_OBJECT)
 
-#define DEVKIT_DISKS_MOUNT_MONITOR_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), DEVKIT_TYPE_DISKS_MOUNT_MONITOR, DevkitDisksMountMonitorPrivate))
+static void devkit_disks_mount_monitor_ensure (DevkitDisksMountMonitor *monitor);
 
 static void
-devkit_disks_mount_monitor_finalize (DevkitDisksMountMonitor *mount_monitor)
+devkit_disks_mount_monitor_finalize (GObject *object)
 {
-        if (mount_monitor->priv->mounts_channel != NULL)
-                g_io_channel_unref (mount_monitor->priv->mounts_channel);
-        if (G_OBJECT_CLASS (parent_class)->finalize)
-                (* G_OBJECT_CLASS (parent_class)->finalize) (G_OBJECT (mount_monitor));
+        DevkitDisksMountMonitor *monitor = DEVKIT_DISKS_MOUNT_MONITOR (object);
+
+        if (monitor->priv->mounts_channel != NULL)
+                g_io_channel_unref (monitor->priv->mounts_channel);
+
+        g_hash_table_unref (monitor->priv->mounts);
+
+        if (G_OBJECT_CLASS (devkit_disks_mount_monitor_parent_class)->finalize != NULL)
+                (* G_OBJECT_CLASS (devkit_disks_mount_monitor_parent_class)->finalize) (object);
 }
 
 static void
-devkit_disks_mount_monitor_init (DevkitDisksMountMonitor *mount_monitor)
+devkit_disks_mount_monitor_init (DevkitDisksMountMonitor *monitor)
 {
-        mount_monitor->priv = DEVKIT_DISKS_MOUNT_MONITOR_GET_PRIVATE (mount_monitor);
+        monitor->priv = G_TYPE_INSTANCE_GET_PRIVATE (monitor,
+                                                     DEVKIT_TYPE_DISKS_MOUNT_MONITOR,
+                                                     DevkitDisksMountMonitorPrivate);
+
+        monitor->priv->mounts = g_hash_table_new_full (g_str_hash,
+                                                       g_str_equal,
+                                                       g_free,
+                                                       g_object_unref);
 }
 
 static void
 devkit_disks_mount_monitor_class_init (DevkitDisksMountMonitorClass *klass)
 {
-        GObjectClass *obj_class = (GObjectClass *) klass;
+        GObjectClass *gobject_class = (GObjectClass *) klass;
 
-        parent_class = g_type_class_peek_parent (klass);
-
-        obj_class->finalize = (GObjectFinalizeFunc) devkit_disks_mount_monitor_finalize;
+        gobject_class->finalize = devkit_disks_mount_monitor_finalize;
 
         g_type_class_add_private (klass, sizeof (DevkitDisksMountMonitorPrivate));
 
-        signals[MOUNTS_CHANGED_SIGNAL] =
-                g_signal_new ("mounts-changed",
+        /**
+         * DevkitDisksMountMonitor::mounted
+         * @monitor: A #DevkitDisksMountMonitor.
+         * @mount: The #DevkitDisksMount that was mounted.
+         *
+         * Emitted when a filesystem is mounted.
+         */
+        signals[MOUNTED_SIGNAL] =
+                g_signal_new ("mounted",
                               G_OBJECT_CLASS_TYPE (klass),
                               G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                               0,
-                              NULL, NULL,
-                              g_cclosure_marshal_VOID__VOID,
-                              G_TYPE_NONE, 0);
+                              NULL,
+                              NULL,
+                              g_cclosure_marshal_VOID__OBJECT,
+                              G_TYPE_NONE,
+                              1,
+                              DEVKIT_TYPE_DISKS_MOUNT);
+
+        /**
+         * DevkitDisksMountMonitor::unmounted
+         * @monitor: A #DevkitDisksMountMonitor.
+         * @mount: The #DevkitDisksMount that was unmounted.
+         *
+         * Emitted when a filesystem is unmounted.
+         */
+        signals[UNMOUNTED_SIGNAL] =
+                g_signal_new ("unmounted",
+                              G_OBJECT_CLASS_TYPE (klass),
+                              G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                              0,
+                              NULL,
+                              NULL,
+                              g_cclosure_marshal_VOID__OBJECT,
+                              G_TYPE_NONE,
+                              1,
+                              DEVKIT_TYPE_DISKS_MOUNT);
+}
+
+static void
+diff_sorted_lists (GList         *list1,
+                   GList         *list2,
+                   GCompareFunc   compare,
+                   GList        **added,
+                   GList        **removed)
+{
+  int order;
+
+  *added = *removed = NULL;
+
+  while (list1 != NULL &&
+         list2 != NULL)
+    {
+      order = (*compare) (list1->data, list2->data);
+      if (order < 0)
+        {
+          *removed = g_list_prepend (*removed, list1->data);
+          list1 = list1->next;
+        }
+      else if (order > 0)
+        {
+          *added = g_list_prepend (*added, list2->data);
+          list2 = list2->next;
+        }
+      else
+        { /* same item */
+          list1 = list1->next;
+          list2 = list2->next;
+        }
+    }
+
+  while (list1 != NULL)
+    {
+      *removed = g_list_prepend (*removed, list1->data);
+      list1 = list1->next;
+    }
+  while (list2 != NULL)
+    {
+      *added = g_list_prepend (*added, list2->data);
+      list2 = list2->next;
+    }
 }
 
 static gboolean
 mounts_changed_event (GIOChannel *channel, GIOCondition cond, gpointer user_data)
 {
-        DevkitDisksMountMonitor *mount_monitor = DEVKIT_DISKS_MOUNT_MONITOR (user_data);
+        DevkitDisksMountMonitor *monitor = DEVKIT_DISKS_MOUNT_MONITOR (user_data);
+        GList *old_mounts;
+        GList *cur_mounts;
+        GList *added;
+        GList *removed;
+        GList *l;
 
 	if (cond & ~G_IO_ERR)
                 goto out;
 
-        g_signal_emit (mount_monitor, signals[MOUNTS_CHANGED_SIGNAL], 0);
+        devkit_disks_mount_monitor_ensure (monitor);
+        old_mounts = g_hash_table_get_values (monitor->priv->mounts);
+        g_list_foreach (old_mounts, (GFunc) g_object_ref, NULL);
+
+        devkit_disks_mount_monitor_invalidate (monitor);
+        devkit_disks_mount_monitor_ensure (monitor);
+
+        cur_mounts = g_hash_table_get_values (monitor->priv->mounts);
+
+        old_mounts = g_list_sort (old_mounts, (GCompareFunc) devkit_disks_mount_compare);
+        cur_mounts = g_list_sort (cur_mounts, (GCompareFunc) devkit_disks_mount_compare);
+
+        diff_sorted_lists (old_mounts,
+                           cur_mounts,
+                           (GCompareFunc) devkit_disks_mount_compare,
+                           &added,
+                           &removed);
+
+        for (l = removed; l != NULL; l = l->next) {
+                DevkitDisksMount *mount = DEVKIT_DISKS_MOUNT (l->data);
+                g_signal_emit (monitor,
+                               signals[UNMOUNTED_SIGNAL],
+                               0,
+                               mount);
+        }
+
+        for (l = added; l != NULL; l = l->next) {
+                DevkitDisksMount *mount = DEVKIT_DISKS_MOUNT (l->data);
+                g_signal_emit (monitor,
+                               signals[MOUNTED_SIGNAL],
+                               0,
+                               mount);
+        }
+
+
+        g_list_foreach (old_mounts, (GFunc) g_object_unref, NULL);
+        g_list_free (old_mounts);
+        g_list_free (cur_mounts);
+        g_list_free (removed);
+        g_list_free (added);
 
 out:
 	return TRUE;
@@ -130,31 +260,6 @@ devkit_disks_mount_monitor_new (void)
 
 out:
         return mount_monitor;
-}
-
-struct DevkitDisksMount {
-        char *mount_path;
-        char *device_path;
-};
-
-void
-devkit_disks_mount_unref (DevkitDisksMount *mount)
-{
-        g_free (mount->mount_path);
-        g_free (mount->device_path);
-        g_free (mount);
-}
-
-const char *
-devkit_disks_mount_get_mount_path (DevkitDisksMount *mount)
-{
-        return mount->mount_path;
-}
-
-const char *
-devkit_disks_mount_get_device_path (DevkitDisksMount *mount)
-{
-        return mount->device_path;
 }
 
 static const char *
@@ -230,16 +335,21 @@ _check_lvm (const char *device_path)
         return NULL;
 }
 
-GList *
-devkit_disks_mount_monitor_get_mounts (DevkitDisksMountMonitor *mount_monitor)
+void
+devkit_disks_mount_monitor_invalidate (DevkitDisksMountMonitor *monitor)
 {
-        GList *ret;
+        monitor->priv->have_data = FALSE;
+        g_hash_table_remove_all (monitor->priv->mounts);
+}
+
+static void
+devkit_disks_mount_monitor_ensure (DevkitDisksMountMonitor *monitor)
+{
         struct mntent *m;
         FILE *f;
 
-        /* TODO: cache this list */
-
-        ret = NULL;
+        if (monitor->priv->have_data)
+                goto out;
 
         f = fopen ("/proc/mounts", "r");
         if (f == NULL) {
@@ -248,29 +358,51 @@ devkit_disks_mount_monitor_get_mounts (DevkitDisksMountMonitor *mount_monitor)
         }
         while ((m = getmntent (f)) != NULL) {
                 DevkitDisksMount *mount;
-                mount = g_new0 (DevkitDisksMount, 1);
-                if (strcmp (m->mnt_fsname, "/dev/root") == 0) {
-                        mount->device_path = g_strdup (_resolve_dev_root ());
+                const gchar *device_file;
+                gchar *s;
+                gchar real_path[PATH_MAX];
+
+                /* ignore if not an absolute patch */
+                if (m->mnt_fsname[0] != '/')
+                        continue;
+
+                /* canonicalize */
+                realpath (m->mnt_fsname, real_path);
+                if (strcmp (real_path, "/dev/root") == 0) {
+                        device_file = _resolve_dev_root ();
                 } else {
-                        mount->device_path = g_strdup (m->mnt_fsname);
+                        device_file = real_path;
                 }
 
-                if (g_str_has_prefix (mount->device_path, "/dev/mapper/")) {
-                        char *s;
+                s = NULL;
+                if (g_str_has_prefix (device_file, "/dev/mapper/")) {
                         s = _check_lvm (m->mnt_fsname);
                         if (s != NULL) {
-                                g_free (mount->device_path);
-                                mount->device_path = s;
+                                device_file = s;
                         }
                 }
 
-                mount->mount_path = g_strdup (m->mnt_dir);
-                ret = g_list_prepend (ret, mount);
+                mount = _devkit_disks_mount_new (device_file, m->mnt_dir);
+
+                g_free (s);
+
+                g_hash_table_insert (monitor->priv->mounts,
+                                     g_strdup (device_file),
+                                     mount);
         }
         fclose (f);
 
-        ret = g_list_reverse (ret);
+        monitor->priv->have_data = TRUE;
 
 out:
-        return ret;
+        ;
+}
+
+DevkitDisksMount *
+devkit_disks_mount_monitor_get_mount_for_device_file (DevkitDisksMountMonitor *monitor,
+                                                      const gchar             *device_file)
+{
+        devkit_disks_mount_monitor_ensure (monitor);
+
+        return g_hash_table_lookup (monitor->priv->mounts, device_file);
 }
