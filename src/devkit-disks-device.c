@@ -75,6 +75,9 @@ static gboolean update_info                (DevkitDisksDevice *device);
 
 static void     drain_pending_changes (DevkitDisksDevice *device, gboolean force_update);
 
+static gboolean devkit_disks_device_local_is_busy             (DevkitDisksDevice *device);
+static gboolean devkit_disks_device_local_partitions_are_busy (DevkitDisksDevice *device);
+
 
 static gboolean luks_get_uid_from_dm_name (const char *dm_name, uid_t *out_uid);
 
@@ -3027,7 +3030,7 @@ out:
         return ret;
 }
 
-gboolean
+static gboolean
 devkit_disks_device_local_is_busy (DevkitDisksDevice *device)
 {
         gboolean ret;
@@ -3049,6 +3052,36 @@ devkit_disks_device_local_is_busy (DevkitDisksDevice *device)
         ret = FALSE;
 
 out:
+        return ret;
+}
+
+/* note: this only checks whether the actual partitions are busy;
+ * caller will need to check the main device itself too
+ */
+static gboolean
+devkit_disks_device_local_partitions_are_busy (DevkitDisksDevice *device)
+{
+        gboolean ret;
+        GList *l;
+        GList *devices;
+
+        ret = FALSE;
+
+        devices = devkit_disks_daemon_local_get_all_devices (device->priv->daemon);
+        for (l = devices; l != NULL; l = l->next) {
+                DevkitDisksDevice *d = DEVKIT_DISKS_DEVICE (l->data);
+
+                if (d->priv->device_is_partition &&
+                    d->priv->partition_slave != NULL &&
+                    strcmp (d->priv->partition_slave, device->priv->object_path) == 0) {
+
+                        if (devkit_disks_device_local_is_busy (d)) {
+                                ret = TRUE;
+                                break;
+                        }
+                }
+        }
+
         return ret;
 }
 
@@ -6011,36 +6044,6 @@ partition_table_create_completed_cb (DBusGMethodInvocation *context,
                                      stderr);
                 }
         }
-}
-
-/* note: this only checks whether the actual partitions are busy;
- * caller will need to check the main device itself too
- */
-gboolean
-devkit_disks_device_local_partitions_are_busy (DevkitDisksDevice *device)
-{
-        gboolean ret;
-        GList *l;
-        GList *devices;
-
-        ret = FALSE;
-
-        devices = devkit_disks_daemon_local_get_all_devices (device->priv->daemon);
-        for (l = devices; l != NULL; l = l->next) {
-                DevkitDisksDevice *d = DEVKIT_DISKS_DEVICE (l->data);
-
-                if (d->priv->device_is_partition &&
-                    d->priv->partition_slave != NULL &&
-                    strcmp (d->priv->partition_slave, device->priv->object_path) == 0) {
-
-                        if (devkit_disks_device_local_is_busy (d)) {
-                                ret = TRUE;
-                                break;
-                        }
-                }
-        }
-
-        return ret;
 }
 
 gboolean
