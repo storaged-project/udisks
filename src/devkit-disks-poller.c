@@ -31,7 +31,7 @@
 #include <fcntl.h>
 #include <string.h>
 
-#include "poller.h"
+#include "devkit-disks-poller.h"
 #include "devkit-disks-device.h"
 #include "devkit-disks-device-private.h"
 
@@ -101,7 +101,7 @@ static gchar **poller_devices_to_poll = NULL;
 static guint poller_timeout_id = 0;
 
 void
-poller_poll_device (const gchar *device_file)
+devkit_disks_poller_poll_device (const gchar *device_file)
 {
         gboolean is_cdrom;
         int fd;
@@ -139,7 +139,7 @@ poller_timeout_cb (gpointer user_data)
         for (n = 0; poller_devices_to_poll != NULL && poller_devices_to_poll[n] != NULL; n++) {
                 const gchar *device_file = poller_devices_to_poll[n];
 
-                poller_poll_device (device_file);
+                devkit_disks_poller_poll_device (device_file);
         }
 
         /* don't remove the source */
@@ -231,7 +231,7 @@ poller_run (gint fd)
 static gint poller_daemon_write_end_fd;
 
 gboolean
-poller_setup (int argc, char *argv[])
+devkit_disks_poller_setup (int argc, char *argv[])
 {
         gint pipefds[2];
         gboolean ret;
@@ -270,7 +270,7 @@ poller_setup (int argc, char *argv[])
 }
 
 void
-poller_set_devices (GList *devices)
+devkit_disks_poller_set_devices (GList *devices)
 {
         GList *l;
         gchar **device_array;
@@ -293,6 +293,7 @@ poller_set_devices (GList *devices)
         devices_to_poll = g_strjoinv (" ", device_array);
         g_free (device_array);
 
+        /* only poke the polling process if the list of currently polled devices change */
         if (g_strcmp0 (devices_to_poll, devices_currently_polled) != 0) {
                 g_free (devices_currently_polled);
                 devices_currently_polled = devices_to_poll;

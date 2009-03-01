@@ -43,7 +43,7 @@
 #include <dbus/dbus-glib-lowlevel.h>
 #include <devkit-gobject/devkit-gobject.h>
 
-#include "poller.h"
+#include "devkit-disks-poller.h"
 #include "devkit-disks-daemon.h"
 
 
@@ -136,7 +136,7 @@ main (int argc, char **argv)
         g_type_init ();
 
         /* fork the polling process early */
-        if (!poller_setup (argc, argv)) {
+        if (!devkit_disks_poller_setup (argc, argv)) {
                 goto out;
         }
 

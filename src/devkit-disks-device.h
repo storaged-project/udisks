@@ -72,8 +72,6 @@ const char        *devkit_disks_device_local_get_mount_path      (DevkitDisksDev
 gboolean           devkit_disks_device_local_is_busy             (DevkitDisksDevice *device);
 gboolean           devkit_disks_device_local_partitions_are_busy (DevkitDisksDevice *device);
 
-gboolean           devkit_disks_device_local_update_media_detection (DevkitDisksDevice *device);
-
 /* exported methods */
 
 gboolean devkit_disks_device_job_cancel (DevkitDisksDevice     *device,

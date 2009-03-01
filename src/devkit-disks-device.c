@@ -59,7 +59,7 @@
 #include "devkit-disks-mount-monitor.h"
 #include "devkit-disks-mount-file.h"
 #include "devkit-disks-inhibitor.h"
-#include "poller.h"
+#include "devkit-disks-poller.h"
 
 /*--------------------------------------------------------------------------------------------------------------*/
 #include "devkit-disks-device-glue.h"
@@ -1492,7 +1492,7 @@ poll_syncing_md_device (gpointer user_data)
         g_print ("**** POLL SYNCING MD %s", device->priv->native_path);
 
         device->priv->linux_md_poll_timeout_id = 0;
-        devkit_disks_daemon_local_synthesize_changed (device->priv->daemon, device->priv->d);
+        devkit_disks_daemon_local_synthesize_changed (device->priv->daemon, device);
         return FALSE;
 }
 
@@ -2621,6 +2621,48 @@ update_info_mount_state (DevkitDisksDevice *device)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* device_is_media_change_detected, device_is_media_change_detection_* properties */
+static gboolean
+update_info_media_detection (DevkitDisksDevice *device)
+{
+        gboolean detected;
+        gboolean inhibitable;
+        gboolean inhibited;
+
+        /* TODO: figure out if the device supports SATA AN and do the right thing in that case */
+
+        detected = FALSE;
+        inhibitable = FALSE;
+        inhibited = FALSE;
+
+        if (device->priv->device_is_removable) {
+
+                /* can always inhibit media changes on removable media since we poll those
+                 * by default... of course, once we properly detect SATA AN we'd need to
+                 * flip this switch to FALSE for such drives
+                 */
+                inhibitable = TRUE;
+
+                if (device->priv->polling_inhibitors != NULL ||
+                    devkit_disks_daemon_local_has_polling_inhibitors (device->priv->daemon)) {
+
+                        detected = FALSE;
+                        inhibited = TRUE;
+                } else {
+                        detected = TRUE;
+                        inhibited = FALSE;
+                }
+        }
+
+        devkit_disks_device_set_device_is_media_change_detected (device, detected);
+        devkit_disks_device_set_device_is_media_change_detection_inhibitable (device, inhibitable);
+        devkit_disks_device_set_device_is_media_change_detection_inhibited (device, inhibited);
+
+        return TRUE;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 /**
  * update_info:
  * @device: the device
@@ -2886,8 +2928,9 @@ update_info (DevkitDisksDevice *device)
         if (!update_info_mount_state (device))
                 goto out;
 
-        /* device_is_media_change_* properties */
-        devkit_disks_device_local_update_media_detection (device);
+        /* device_is_media_change_detected, device_is_media_change_detection_* properties */
+        if (!update_info_media_detection (device))
+                goto out;
 
         ret = TRUE;
 
@@ -2899,7 +2942,9 @@ out:
          *
          * Note that this won't trigger an endless loop since we look at the diffs.
          *
-         * We have to do this because TODO.
+         * We have to do this because the kernel doesn't generate any 'change' event
+         * when slaves/ or holders/ change. This is unfortunate because we *need* such
+         * a change event to update properties devices (for example: luks_holder).
          */
 
         cur_slaves_objpath = dup_list_from_ptrarray (device->priv->slaves_objpath);
@@ -2981,45 +3026,6 @@ out:
 
         return ret;
 }
-
-/* returns TRUE if something changed */
-gboolean
-devkit_disks_device_local_update_media_detection (DevkitDisksDevice *device)
-{
-        gboolean ret;
-        gboolean old_media_change_detected;
-        gboolean old_media_change_detection_inhibitable;
-        gboolean old_media_change_detection_inhibited;
-
-        old_media_change_detected              = device->priv->device_is_media_change_detected;
-        old_media_change_detection_inhibitable = device->priv->device_is_media_change_detected;
-        old_media_change_detection_inhibited   = device->priv->device_is_media_change_detected;
-
-        if (device->priv->device_is_removable) {
-                /* TODO: figure out if the device supports SATA AN */
-                devkit_disks_device_set_device_is_media_change_detection_inhibitable (device, TRUE);
-
-                if (device->priv->polling_inhibitors != NULL ||
-                    devkit_disks_daemon_local_has_polling_inhibitors (device->priv->daemon)) {
-                        devkit_disks_device_set_device_is_media_change_detected (device, FALSE);
-                        devkit_disks_device_set_device_is_media_change_detection_inhibited (device, TRUE);
-                } else {
-                        devkit_disks_device_set_device_is_media_change_detected (device, TRUE);
-                        devkit_disks_device_set_device_is_media_change_detection_inhibited (device, FALSE);
-                }
-        } else {
-                devkit_disks_device_set_device_is_media_change_detection_inhibitable (device, FALSE);
-                devkit_disks_device_set_device_is_media_change_detected (device, FALSE);
-                devkit_disks_device_set_device_is_media_change_detection_inhibited (device, FALSE);
-        }
-
-        ret =   (old_media_change_detected              != device->priv->device_is_media_change_detected) ||
-                (old_media_change_detection_inhibitable != device->priv->device_is_media_change_detected) ||
-                (old_media_change_detection_inhibited   != device->priv->device_is_media_change_detected);
-
-        return ret;
-}
-
 
 gboolean
 devkit_disks_device_local_is_busy (DevkitDisksDevice *device)
@@ -8776,7 +8782,7 @@ devkit_disks_device_drive_poll_media (DevkitDisksDevice     *device,
                                                   context))
                 goto out;
 
-        poller_poll_device (device->priv->device_file);
+        devkit_disks_poller_poll_device (device->priv->device_file);
 
         dbus_g_method_return (context);
 

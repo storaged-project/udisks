@@ -18,14 +18,14 @@
  *
  */
 
-#ifndef __POLLER_H__
-#define __POLLER_H__
+#ifndef __DEVKIT_DISKS_POLLER_H__
+#define __DEVKIT_DISKS_POLLER_H__
 
 #include <devkit-disks-device.h>
 
-gboolean poller_setup (int argc, char *argv[]);
-void     poller_set_devices (GList *devices);
-void     poller_poll_device (const gchar *device_file);
+gboolean devkit_disks_poller_setup (int argc, char *argv[]);
+void     devkit_disks_poller_set_devices (GList *devices);
+void     devkit_disks_poller_poll_device (const gchar *device_file);
 
 
-#endif /* __POLLER_H */
+#endif /* __DEVKIT_DISKS_POLLER_H */

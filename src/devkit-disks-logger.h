@@ -46,7 +46,7 @@ struct DevkitDisksLoggerClass
         GObjectClass   parent_class;
 };
 
-GType              devkit_disks_logger_get_type              (void);
+GType              devkit_disks_logger_get_type              (void) G_GNUC_CONST;
 DevkitDisksLogger *devkit_disks_logger_new                   (void);
 void               devkit_disks_logger_record_smart_values   (DevkitDisksLogger *logger,
                                                               DevkitDisksDevice *device);

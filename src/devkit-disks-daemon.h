@@ -106,8 +106,10 @@ gboolean           devkit_disks_damon_local_check_auth             (DevkitDisksD
                                                                     const char            *action_id,
                                                                     DBusGMethodInvocation *context);
 
+void               devkit_disks_daemon_local_synthesize_changed_on_all_devices (DevkitDisksDaemon *daemon);
+
 void               devkit_disks_daemon_local_synthesize_changed  (DevkitDisksDaemon       *daemon,
-                                                                  DevkitDevice            *d);
+                                                                  DevkitDisksDevice       *device);
 
 void               devkit_disks_daemon_local_update_poller       (DevkitDisksDaemon       *daemon);
 

@@ -46,7 +46,7 @@ emit_changed_idle_cb (gpointer data)
 static void
 emit_changed (DevkitDisksDevice *device, const gchar *name)
 {
-  g_debug ("property %s changed for %s", name, device->priv->device_file);
+  //g_debug ("property %s changed for %s", name, device->priv->device_file);
 
   if (device->priv->object_path != NULL)
     {

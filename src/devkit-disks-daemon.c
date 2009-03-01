@@ -55,7 +55,7 @@
 #include "devkit-disks-mount-file.h"
 #include "devkit-disks-mount.h"
 #include "devkit-disks-mount-monitor.h"
-#include "poller.h"
+#include "devkit-disks-poller.h"
 #include "devkit-disks-inhibitor.h"
 #include "devkit-disks-logger.h"
 
@@ -690,12 +690,24 @@ device_changed (DevkitDisksDaemon *daemon, DevkitDevice *d, gboolean synthesized
 }
 
 void
-devkit_disks_daemon_local_synthesize_changed (DevkitDisksDaemon       *daemon,
-                                              DevkitDevice            *d)
+devkit_disks_daemon_local_synthesize_changed (DevkitDisksDaemon *daemon,
+                                              DevkitDisksDevice *device)
 {
-        g_object_ref (d);
-        device_changed (daemon, d, TRUE);
-        g_object_unref (d);
+        g_object_ref (device->priv->d);
+        device_changed (daemon, device->priv->d, TRUE);
+        g_object_unref (device->priv->d);
+}
+
+void
+devkit_disks_daemon_local_synthesize_changed_on_all_devices (DevkitDisksDaemon *daemon)
+{
+        GHashTableIter hash_iter;
+        DevkitDisksDevice *device;
+
+        g_hash_table_iter_init (&hash_iter, daemon->priv->map_object_path_to_device);
+        while (g_hash_table_iter_next (&hash_iter, NULL, (gpointer) &device)) {
+                devkit_disks_daemon_local_synthesize_changed (daemon, device);
+        }
 }
 
 static void
@@ -818,7 +830,7 @@ mount_removed (DevkitDisksMountMonitor *monitor,
                                       devkit_disks_mount_get_device_file (mount));
         if (device != NULL) {
                 g_print ("**** UNMOUNTED %s\n", device->priv->native_path);
-                devkit_disks_daemon_local_synthesize_changed (daemon, device->priv->d);
+                devkit_disks_daemon_local_synthesize_changed (daemon, device);
         }
 }
 
@@ -834,7 +846,7 @@ mount_added (DevkitDisksMountMonitor *monitor,
                                       devkit_disks_mount_get_device_file (mount));
         if (device != NULL) {
                 g_print ("**** MOUNTED %s\n", device->priv->native_path);
-                devkit_disks_daemon_local_synthesize_changed (daemon, device->priv->d);
+                devkit_disks_daemon_local_synthesize_changed (daemon, device);
         }
 }
 
@@ -1068,7 +1080,7 @@ devkit_disks_daemon_new (void)
          */
         g_hash_table_iter_init (&device_iter, daemon->priv->map_object_path_to_device);
         while (g_hash_table_iter_next (&device_iter, NULL, (gpointer) &device)) {
-                devkit_disks_daemon_local_synthesize_changed (daemon, device->priv->d);
+                devkit_disks_daemon_local_synthesize_changed (daemon, device);
         }
 
         /* clean stale directories in /media as well as stale
@@ -1181,7 +1193,7 @@ devkit_disks_daemon_local_update_poller (DevkitDisksDaemon *daemon)
                         devices_to_poll = g_list_prepend (devices_to_poll, device);
         }
 
-        poller_set_devices (devices_to_poll);
+        devkit_disks_poller_set_devices (devices_to_poll);
 
         g_list_free (devices_to_poll);
 }
@@ -1246,53 +1258,28 @@ devkit_disks_daemon_find_device_by_device_file (DevkitDisksDaemon     *daemon,
                                                 DBusGMethodInvocation *context)
 {
         const char *object_path;
-        GHashTableIter iter;
         DevkitDisksDevice *device;
+        gchar canonical_device_file[PATH_MAX];
 
-        /* TODO: use hash */
+        /* TODO: maybe use realpath() on the given device_file so the caller can pass in symlinks? */
+        realpath (device_file, canonical_device_file);
 
         object_path = NULL;
-        g_hash_table_iter_init (&iter, daemon->priv->map_native_path_to_device);
-        while (g_hash_table_iter_next (&iter, NULL, (gpointer *) &device)) {
-                if (strcmp (devkit_disks_device_local_get_device_file (device), device_file) == 0) {
-                        object_path = devkit_disks_device_local_get_object_path (device);
-                        goto out;
-                }
-        }
 
-out:
-        if (object_path != NULL) {
+        device = devkit_disks_daemon_local_find_by_device_file (daemon, canonical_device_file);
+        if (device != NULL) {
+                object_path = devkit_disks_device_local_get_object_path (device);
                 dbus_g_method_return (context, object_path);
         } else {
                 throw_error (context,
                              DEVKIT_DISKS_ERROR_NOT_FOUND,
                              "No such device");
         }
+
         return TRUE;
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/
-
-static void
-polling_update_devices (DevkitDisksDaemon *daemon)
-{
-        GHashTableIter hash_iter;
-        DevkitDisksDevice *device;
-
-        g_hash_table_iter_init (&hash_iter, daemon->priv->map_object_path_to_device);
-        while (g_hash_table_iter_next (&hash_iter, NULL, (gpointer) &device)) {
-
-                if (devkit_disks_device_local_update_media_detection (device)) {
-                        DevkitDevice *d;
-
-                        d = g_object_ref (device->priv->d);
-                        device_changed (daemon, d, TRUE);
-                        g_object_unref (d);
-                }
-        }
-
-        devkit_disks_daemon_local_update_poller (daemon);
-}
 
 static void
 daemon_polling_inhibitor_disconnected_cb (DevkitDisksInhibitor *inhibitor,
@@ -1302,7 +1289,8 @@ daemon_polling_inhibitor_disconnected_cb (DevkitDisksInhibitor *inhibitor,
         g_signal_handlers_disconnect_by_func (inhibitor, daemon_polling_inhibitor_disconnected_cb, daemon);
         g_object_unref (inhibitor);
 
-        polling_update_devices (daemon);
+        devkit_disks_daemon_local_synthesize_changed_on_all_devices (daemon);
+        devkit_disks_daemon_local_update_poller (daemon);
 }
 
 gboolean
@@ -1343,7 +1331,8 @@ devkit_disks_daemon_drive_inhibit_all_polling (DevkitDisksDaemon     *daemon,
         daemon->priv->polling_inhibitors = g_list_prepend (daemon->priv->polling_inhibitors, inhibitor);
         g_signal_connect (inhibitor, "disconnected", G_CALLBACK (daemon_polling_inhibitor_disconnected_cb), daemon);
 
-        polling_update_devices (daemon);
+        devkit_disks_daemon_local_synthesize_changed_on_all_devices (daemon);
+        devkit_disks_daemon_local_update_poller (daemon);
 
         dbus_g_method_return (context, devkit_disks_inhibitor_get_cookie (inhibitor));
 
@@ -1388,7 +1377,8 @@ devkit_disks_daemon_drive_uninhibit_all_polling (DevkitDisksDaemon     *daemon,
         daemon->priv->polling_inhibitors = g_list_remove (daemon->priv->polling_inhibitors, inhibitor);
         g_object_unref (inhibitor);
 
-        polling_update_devices (daemon);
+        devkit_disks_daemon_local_synthesize_changed_on_all_devices (daemon);
+        devkit_disks_daemon_local_update_poller (daemon);
 
         dbus_g_method_return (context);
 
