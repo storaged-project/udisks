@@ -7553,7 +7553,7 @@ linux_md_add_component_completed_cb (DBusGMethodInvocation *context,
                 } else {
                         throw_error (context,
                                      DEVKIT_DISKS_ERROR_FAILED,
-                                     "Error stopping array: mdadm exited with exit code %d: %s",
+                                     "Error adding component: mdadm exited with exit code %d: %s",
                                      WEXITSTATUS (status), stderr);
                 }
         }
@@ -7773,7 +7773,7 @@ linux_md_remove_component_completed_cb (DBusGMethodInvocation *context,
                 } else {
                         throw_error (context,
                                      DEVKIT_DISKS_ERROR_FAILED,
-                                     "Error stopping array: helper exited with exit code %d: %s",
+                                     "Error removing component: helper exited with exit code %d: %s",
                                      WEXITSTATUS (status), stderr);
                 }
         }
