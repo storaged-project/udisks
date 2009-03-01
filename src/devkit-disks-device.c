@@ -2218,6 +2218,8 @@ update_info_linux_md_component (DevkitDisksDevice *device)
                 const gchar *md_comp_home_host;
                 const gchar *md_comp_name;
                 const gchar *md_comp_version;
+                gchar *md_name;
+                gchar *s;
 
                 devkit_disks_device_set_device_is_linux_md_component (device, TRUE);
 
@@ -2258,8 +2260,18 @@ update_info_linux_md_component (DevkitDisksDevice *device)
                 md_comp_level = devkit_device_get_property (device->priv->d, "MD_LEVEL");
                 md_comp_num_raid_devices = devkit_device_get_property_as_int (device->priv->d, "MD_DEVICES");
                 md_comp_uuid = devkit_device_get_property (device->priv->d, "MD_UUID");
-                md_comp_home_host = ""; /* TODO */
-                md_comp_name = devkit_device_get_property (device->priv->d, "MD_NAME");
+                md_name = g_strdup (devkit_device_get_property (device->priv->d, "MD_NAME"));
+                s = NULL;
+                if (md_name != NULL)
+                        s = strstr (md_name, ":");
+                if (s != NULL) {
+                        *s = '\0';
+                        md_comp_home_host = md_name;
+                        md_comp_name = s + 1;
+                } else {
+                        md_comp_home_host = "";
+                        md_comp_name = md_name;
+                }
                 md_comp_version = device->priv->id_version;
 
                 devkit_disks_device_set_linux_md_component_level (device, md_comp_level);
@@ -2269,6 +2281,7 @@ update_info_linux_md_component (DevkitDisksDevice *device)
                 devkit_disks_device_set_linux_md_component_name (device, md_comp_name);
                 devkit_disks_device_set_linux_md_component_version (device, md_comp_version);
 
+                g_free (md_name);
         } else {
                 devkit_disks_device_set_device_is_linux_md_component (device, FALSE);
                 devkit_disks_device_set_linux_md_component_level (device, NULL);
@@ -2293,6 +2306,7 @@ update_info_linux_md (DevkitDisksDevice *device)
         gboolean ret;
         guint n;
         gchar *s;
+        gchar *p;
 
         ret = FALSE;
 
@@ -2301,6 +2315,8 @@ update_info_linux_md (DevkitDisksDevice *device)
                 char *array_state;
                 DevkitDisksDevice *slave;
                 GPtrArray *md_slaves;
+                const gchar *md_name;
+                const gchar *md_home_host;
 
                 devkit_disks_device_set_device_is_linux_md (device, TRUE);
 
@@ -2363,9 +2379,21 @@ update_info_linux_md (DevkitDisksDevice *device)
                         devkit_disks_device_set_linux_md_num_raid_devices (device, slave->priv->linux_md_component_num_raid_devices);
                 }
 
-                devkit_disks_device_set_linux_md_home_host (device, devkit_device_get_property (device->priv->d, ""));
-                devkit_disks_device_set_linux_md_name (device, devkit_device_get_property (device->priv->d, "MD_NAME"));
-                /* TODO: name and homehost too */
+                p = g_strdup (devkit_device_get_property (device->priv->d, "MD_NAME"));
+                s = NULL;
+                if (p != NULL)
+                        s = strstr (p, ":");
+                if (s != NULL) {
+                        *s = '\0';
+                        md_home_host = p;
+                        md_name = s + 1;
+                } else {
+                        md_home_host = "";
+                        md_name = p;
+                }
+                devkit_disks_device_set_linux_md_home_host (device, md_home_host);
+                devkit_disks_device_set_linux_md_name (device, md_name);
+                g_free (p);
 
                 s = g_strstrip (sysfs_get_string (device->priv->native_path, "md/metadata_version"));
                 devkit_disks_device_set_linux_md_version (device, s);
