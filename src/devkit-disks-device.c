@@ -1709,7 +1709,10 @@ update_info_partition (DevkitDisksDevice *device)
                 g_free (part_key);
 
                 part_key = g_strdup_printf ("DKD_PART_P%d_FLAGS", device->priv->partition_number);
-                flags = devkit_device_dup_property_as_strv (device->priv->d, part_key);
+                if (devkit_device_has_property (device->priv->d, part_key))
+                        flags = devkit_device_dup_property_as_strv (device->priv->d, part_key);
+                else
+                        flags = NULL;
                 g_free (part_key);
 
                 devkit_disks_device_set_partition_offset (device, offset);
@@ -2552,39 +2555,70 @@ update_info_drive_smart (DevkitDisksDevice *device)
 static gboolean
 update_info_is_system_internal (DevkitDisksDevice *device)
 {
+        gboolean is_system_internal;
+
         /* TODO: make it possible to override this property from a udev property.
-         *
-         * TODO: a linux-md device should be system-internal IFF a single component is system-internal
          */
 
-        if (device->priv->device_is_partition) {
+        is_system_internal = FALSE;
+
+        if (device->priv->device_is_linux_md) {
+                guint n;
+
+                /* A Linux MD device is system internal IFF a single component is system internal */
+                for (n = 0; n < device->priv->slaves_objpath->len; n++) {
+                        const gchar *slave_objpath;
+                        DevkitDisksDevice *slave;
+
+                        slave_objpath = device->priv->slaves_objpath->pdata[n];
+                        slave = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, slave_objpath);
+                        if (slave == NULL)
+                                continue;
+
+                        if (slave->priv->device_is_system_internal) {
+                                is_system_internal = TRUE;
+                                break;
+                        }
+                }
+        }
+
+        else  if (device->priv->device_is_partition) {
                 DevkitDisksDevice *enclosing_device;
+
                 enclosing_device = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, device->priv->partition_slave);
                 if (enclosing_device != NULL) {
-                        devkit_disks_device_set_device_is_system_internal (device, enclosing_device->priv->device_is_system_internal);
+                        is_system_internal = enclosing_device->priv->device_is_system_internal;
                 } else {
-                        devkit_disks_device_set_device_is_system_internal (device, TRUE);
+                        is_system_internal = TRUE;
                 }
+
         } else if (device->priv->device_is_luks_cleartext) {
                 DevkitDisksDevice *enclosing_device;
+
                 enclosing_device = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, device->priv->luks_cleartext_slave);
                 if (enclosing_device != NULL) {
-                        devkit_disks_device_set_device_is_system_internal (device, enclosing_device->priv->device_is_system_internal);
+                        is_system_internal = enclosing_device->priv->device_is_system_internal;
                 } else {
-                        devkit_disks_device_set_device_is_system_internal (device, TRUE);
+                        is_system_internal = TRUE;
                 }
+
         } else if (device->priv->device_is_removable) {
-                devkit_disks_device_set_device_is_system_internal (device, FALSE);
+
+                is_system_internal = FALSE;
+
         } else if (device->priv->device_is_drive && device->priv->drive_connection_interface != NULL) {
+
                 if (strcmp (device->priv->drive_connection_interface, "ata_serial_esata") == 0 ||
                     strcmp (device->priv->drive_connection_interface, "sdio") == 0 ||
                     strcmp (device->priv->drive_connection_interface, "usb") == 0 ||
                     strcmp (device->priv->drive_connection_interface, "firewire") == 0) {
-                        devkit_disks_device_set_device_is_system_internal (device, FALSE);
+                        is_system_internal = FALSE;
                 } else {
-                        devkit_disks_device_set_device_is_system_internal (device, TRUE);
+                        is_system_internal = TRUE;
                 }
         }
+
+        devkit_disks_device_set_device_is_system_internal (device, is_system_internal);
 
         return TRUE;
 }
