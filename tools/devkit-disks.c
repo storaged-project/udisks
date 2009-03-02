@@ -33,6 +33,7 @@
 #include <fcntl.h>
 #include <pwd.h>
 #include <grp.h>
+#include <locale.h>
 
 #include <glib.h>
 #include <glib/gi18n-lib.h>
@@ -981,7 +982,7 @@ do_show_info (const char *object_path)
 
                                 g_print ("      assessment:          %s\n",
                                          props->drive_smart_is_failing ? "FAILING" : "Passed");
-                                g_print ("      temperature:         %g° C / %g° F\n",
+                                g_print ("      temperature:         %g\302\260 C / %g\302\260 F\n",
                                          props->drive_smart_temperature,
                                          9 * props->drive_smart_temperature / 5 + 32);
                                 g_print ("      powered on:          %" G_GUINT64_FORMAT " hours\n", props->drive_smart_time_powered_on / 3600);
@@ -1136,6 +1137,8 @@ main (int argc, char **argv)
         };
 
         ret = 1;
+
+        setlocale (LC_ALL, "");
 
         g_type_init ();
 
