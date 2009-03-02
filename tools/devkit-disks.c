@@ -815,7 +815,8 @@ do_monitor (void)
 static void
 do_show_info (const char *object_path)
 {
-        unsigned int n;
+        guint n;
+        guint m;
         DeviceProperties *props;
 
         props = device_properties_get (bus, object_path);
@@ -985,18 +986,48 @@ do_show_info (const char *object_path)
                                          9 * props->drive_smart_temperature / 5 + 32);
                                 g_print ("      powered on:          %" G_GUINT64_FORMAT " hours\n", props->drive_smart_time_powered_on / 3600);
                                 //g_print ("      196  Reallocated_Event_Count      0x0032 100   100           0 443023360\n",
-#if 0
-                                int m;
-// TODO: bring this back
                                 g_print ("      =========================================================================\n");
                                 g_print ("      Id   Description                   Flags Value Worst Threshold       Raw\n");
                                 g_print ("      =========================================================================\n");
-                                for (m = 0; m < props->num_drive_smart_attributes; m++) {
-                                        DeviceSmartAttribute *a = props->drive_smart_attributes + m;
+                                GPtrArray *p;
+                                p = g_value_get_boxed (&(props->drive_smart_attributes));
+                                for (m = 0; m < p->len; m++) {
+                                        gint attr_id;
+                                        gchar *attr_desc;
+                                        gint attr_flags;
+                                        gint attr_value;
+                                        gint attr_worst;
+                                        gint attr_threshold;
+                                        gchar *attr_raw;
+                                        GValue elem = {0};
+
+                                        g_value_init (&elem, SMART_DATA_STRUCT_TYPE);
+                                        g_value_set_static_boxed (&elem, p->pdata[m]);
+
+                                        dbus_g_type_struct_get (&elem,
+                                                                0, &(attr_id),
+                                                                1, &(attr_desc),
+                                                                2, &(attr_flags),
+                                                                3, &(attr_value),
+                                                                4, &(attr_worst),
+                                                                5, &(attr_threshold),
+                                                                6, &(attr_raw),
+                                                                G_MAXUINT);
+
                                         g_print ("      %3d  %-28s 0x%04x %5d %5d %9d %s\n",
-                                                 a->id, a->desc, a->flags, a->value, a->worst, a->threshold, a->raw);
+                                                 attr_id,
+                                                 attr_desc,
+                                                 attr_flags,
+                                                 attr_value,
+                                                 attr_worst,
+                                                 attr_threshold,
+                                                 attr_raw);
+
+                                        g_free (attr_desc);
+                                        g_free (attr_raw);
+
+                                        g_value_unset (&elem);
                                 }
-#endif
                         }
                 }
 
