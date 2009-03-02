@@ -2,6 +2,7 @@
 "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
 "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd" [
   <!ENTITY ERROR_FAILED "org.freedesktop.DeviceKit.Disks.Error.Failed">
+  <!ENTITY ERROR_INHIBITED "org.freedesktop.DeviceKit.Disks.Error.Inhibited">
   <!ENTITY ERROR_BUSY "org.freedesktop.DeviceKit.Disks.Error.Busy">
   <!ENTITY ERROR_CANCELLED "org.freedesktop.DeviceKit.Disks.Error.Cancelled">
   <!ENTITY ERROR_INVALID_OPTION "org.freedesktop.DeviceKit.Disks.Error.InvalidOption">
@@ -180,6 +181,64 @@
 
     <!-- ************************************************************ -->
 
+    <method name="Inhibit">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="cookie" direction="out" type="s">
+        <doc:doc><doc:summary>
+            A cookie that can be used in the
+            <doc:ref type="method" to="Disks.Uninhibit">Uninhibit()</doc:ref> method.
+            to stop inhibiting the daemon.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Inhibits clients from invoking methods on the daemon
+            of the daemon that require authorization (all methods
+            will return the <doc:tt>&ERROR_INHIBITED;</doc:tt> error)
+            if the caller is not the super user.
+            This is typically used by OS installers and other
+            programs that expects full control of the system, specifically
+            to avoid automounting devices.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          Only the super user can invoke this method.
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller is not the super user</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="Uninhibit">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+
+      <arg name="cookie" direction="in" type="s">
+        <doc:doc><doc:summary>
+            A cookie obtained from the
+            <doc:ref type="method" to="Disks.Inhibit">Inhibit()</doc:ref> method.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Uninhibits other clients from using the daemon.
+          </doc:para>
+        </doc:description>
+        <doc:errors>
+          <doc:error name="&ERROR_FAILED;">if the given cookie is malformed</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+
+    <!-- ************************************************************ -->
+
     <signal name="DeviceAdded">
       <arg name="device" type="o">
         <doc:doc><doc:summary>Object path of device that was added.</doc:summary></doc:doc>
@@ -268,6 +327,12 @@
     <property name="daemon-version" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The version of the running daemon.
+      </doc:para></doc:description></doc:doc>
+    </property>
+
+    <property name="daemon-is-inhibited" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE only if the daemon is inhibited.
       </doc:para></doc:description></doc:doc>
     </property>
 

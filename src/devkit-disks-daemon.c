@@ -69,6 +69,7 @@ enum
 {
         PROP_0,
         PROP_DAEMON_VERSION,
+        PROP_DAEMON_IS_INHIBITED,
         PROP_SUPPORTS_LUKS_DEVICES,
         PROP_KNOWN_FILESYSTEMS,
 };
@@ -106,6 +107,8 @@ struct DevkitDisksDaemonPrivate
         DevkitDisksLogger       *logger;
 
         GList *polling_inhibitors;
+
+        GList *inhibitors;
 };
 
 static void     devkit_disks_daemon_class_init  (DevkitDisksDaemonClass *klass);
@@ -114,6 +117,9 @@ static void     devkit_disks_daemon_finalize    (GObject     *object);
 
 static void     daemon_polling_inhibitor_disconnected_cb (DevkitDisksInhibitor *inhibitor,
                                                           DevkitDisksDaemon    *daemon);
+
+static void     daemon_inhibitor_disconnected_cb (DevkitDisksInhibitor *inhibitor,
+                                                  DevkitDisksDaemon    *daemon);
 
 G_DEFINE_TYPE (DevkitDisksDaemon, devkit_disks_daemon, G_TYPE_OBJECT)
 
@@ -146,6 +152,7 @@ devkit_disks_error_get_type (void)
                 static const GEnumValue values[] =
                         {
                                 ENUM_ENTRY (DEVKIT_DISKS_ERROR_FAILED, "Failed"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_INHIBITED, "Inhibited"),
                                 ENUM_ENTRY (DEVKIT_DISKS_ERROR_BUSY, "Busy"),
                                 ENUM_ENTRY (DEVKIT_DISKS_ERROR_CANCELLED, "Cancelled"),
                                 ENUM_ENTRY (DEVKIT_DISKS_ERROR_INVALID_OPTION, "InvalidOption"),
@@ -382,6 +389,10 @@ get_property (GObject         *object,
                 g_value_set_string (value, VERSION);
                 break;
 
+        case PROP_DAEMON_IS_INHIBITED:
+                g_value_set_boolean (value, (daemon->priv->inhibitors != NULL));
+                break;
+
         case PROP_SUPPORTS_LUKS_DEVICES:
                 /* TODO: probably Linux only */
                 g_value_set_boolean (value, TRUE);
@@ -470,6 +481,11 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
                 object_class,
                 PROP_DAEMON_VERSION,
                 g_param_spec_string ("daemon-version", NULL, NULL, NULL, G_PARAM_READABLE));
+
+        g_object_class_install_property (
+                object_class,
+                PROP_DAEMON_IS_INHIBITED,
+                g_param_spec_boolean ("daemon-is-inhibited", NULL, NULL, FALSE, G_PARAM_READABLE));
 
         g_object_class_install_property (
                 object_class,
@@ -563,6 +579,13 @@ devkit_disks_daemon_finalize (GObject *object)
                 g_object_unref (inhibitor);
         }
         g_list_free (daemon->priv->polling_inhibitors);
+
+        for (l = daemon->priv->inhibitors; l != NULL; l = l->next) {
+                DevkitDisksInhibitor *inhibitor = DEVKIT_DISKS_INHIBITOR (l->data);
+                g_signal_handlers_disconnect_by_func (inhibitor, daemon_inhibitor_disconnected_cb, daemon);
+                g_object_unref (inhibitor);
+        }
+        g_list_free (daemon->priv->inhibitors);
 
         G_OBJECT_CLASS (devkit_disks_daemon_parent_class)->finalize (object);
 }
@@ -1139,6 +1162,30 @@ devkit_disks_damon_local_get_caller_for_context (DevkitDisksDaemon *daemon,
         return pk_caller;
 }
 
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static gboolean
+throw_error (DBusGMethodInvocation *context, int error_code, const char *format, ...)
+{
+        GError *error;
+        va_list args;
+        char *message;
+
+        va_start (args, format);
+        message = g_strdup_vprintf (format, args);
+        va_end (args);
+
+        error = g_error_new (DEVKIT_DISKS_ERROR,
+                             error_code,
+                             "%s", message);
+        dbus_g_method_return_error (context, error);
+        g_error_free (error);
+        g_free (message);
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
 gboolean
 devkit_disks_damon_local_check_auth (DevkitDisksDaemon     *daemon,
                                      PolKitCaller          *pk_caller,
@@ -1152,6 +1199,18 @@ devkit_disks_damon_local_check_auth (DevkitDisksDaemon     *daemon,
         PolKitResult pk_result;
 
         ret = FALSE;
+
+        if (daemon->priv->inhibitors != NULL) {
+                uid_t uid;
+
+                uid = (uid_t) -1;
+                if (!polkit_caller_get_uid (pk_caller, &uid) || uid != 0) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_INHIBITED,
+                                     "Daemon is being inhibited");
+                }
+                goto out;
+        }
 
         pk_action = polkit_action_new ();
         polkit_action_set_action_id (pk_action, action_id);
@@ -1173,6 +1232,8 @@ devkit_disks_damon_local_check_auth (DevkitDisksDaemon     *daemon,
                 dbus_error_free (&d_error);
         }
         polkit_action_unref (pk_action);
+
+ out:
         return ret;
 }
 
@@ -1196,28 +1257,6 @@ devkit_disks_daemon_local_update_poller (DevkitDisksDaemon *daemon)
         devkit_disks_poller_set_devices (devices_to_poll);
 
         g_list_free (devices_to_poll);
-}
-
-/*--------------------------------------------------------------------------------------------------------------*/
-
-static gboolean
-throw_error (DBusGMethodInvocation *context, int error_code, const char *format, ...)
-{
-        GError *error;
-        va_list args;
-        char *message;
-
-        va_start (args, format);
-        message = g_strdup_vprintf (format, args);
-        va_end (args);
-
-        error = g_error_new (DEVKIT_DISKS_ERROR,
-                             error_code,
-                             "%s", message);
-        dbus_g_method_return_error (context, error);
-        g_error_free (error);
-        g_free (message);
-        return TRUE;
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/
@@ -1379,6 +1418,97 @@ devkit_disks_daemon_drive_uninhibit_all_polling (DevkitDisksDaemon     *daemon,
 
         devkit_disks_daemon_local_synthesize_changed_on_all_devices (daemon);
         devkit_disks_daemon_local_update_poller (daemon);
+
+        dbus_g_method_return (context);
+
+ out:
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+daemon_inhibitor_disconnected_cb (DevkitDisksInhibitor *inhibitor,
+                                  DevkitDisksDaemon    *daemon)
+{
+        daemon->priv->inhibitors = g_list_remove (daemon->priv->inhibitors, inhibitor);
+        g_signal_handlers_disconnect_by_func (inhibitor, daemon_inhibitor_disconnected_cb, daemon);
+        g_object_unref (inhibitor);
+}
+
+gboolean
+devkit_disks_daemon_local_has_inhibitors (DevkitDisksDaemon *daemon)
+{
+        return daemon->priv->inhibitors != NULL;
+}
+
+gboolean
+devkit_disks_daemon_inhibit (DevkitDisksDaemon     *daemon,
+                             DBusGMethodInvocation *context)
+{
+        DevkitDisksInhibitor *inhibitor;
+        PolKitCaller *pk_caller;
+        uid_t uid;
+
+
+        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (daemon, context)) == NULL)
+                goto out;
+
+        uid = (uid_t) -1;
+        if (!polkit_caller_get_uid (pk_caller, &uid) || uid != 0) {
+                throw_error (context,
+                             DEVKIT_DISKS_ERROR_FAILED,
+                             "Only uid 0 is authorized to inhibit the daemon");
+                goto out;
+        }
+
+        inhibitor = devkit_disks_inhibitor_new (context);
+
+        daemon->priv->inhibitors = g_list_prepend (daemon->priv->inhibitors, inhibitor);
+        g_signal_connect (inhibitor, "disconnected", G_CALLBACK (daemon_inhibitor_disconnected_cb), daemon);
+
+        dbus_g_method_return (context, devkit_disks_inhibitor_get_cookie (inhibitor));
+
+out:
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
+        return TRUE;
+}
+
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+gboolean
+devkit_disks_daemon_uninhibit (DevkitDisksDaemon     *daemon,
+                               char                  *cookie,
+                               DBusGMethodInvocation *context)
+{
+        const gchar *sender;
+        DevkitDisksInhibitor *inhibitor;
+        GList *l;
+
+        sender = dbus_g_method_get_sender (context);
+
+        inhibitor = NULL;
+        for (l = daemon->priv->inhibitors; l != NULL; l = l->next) {
+                DevkitDisksInhibitor *i = DEVKIT_DISKS_INHIBITOR (l->data);
+
+                if (g_strcmp0 (devkit_disks_inhibitor_get_unique_dbus_name (i), sender) == 0 &&
+                    g_strcmp0 (devkit_disks_inhibitor_get_cookie (i), cookie) == 0) {
+                        inhibitor = i;
+                        break;
+                }
+        }
+
+        if (inhibitor == NULL) {
+                throw_error (context,
+                             DEVKIT_DISKS_ERROR_FAILED,
+                             "No such inhibitor");
+                goto out;
+        }
+
+        daemon->priv->inhibitors = g_list_remove (daemon->priv->inhibitors, inhibitor);
+        g_object_unref (inhibitor);
 
         dbus_g_method_return (context);
 

@@ -58,6 +58,7 @@ static gboolean      opt_monitor           = FALSE;
 static gboolean      opt_monitor_detail    = FALSE;
 static char         *opt_show_info         = NULL;
 static char         *opt_inhibit_polling   = NULL;
+static gboolean      opt_inhibit           = FALSE;
 static gboolean      opt_inhibit_all_polling = FALSE;
 static char         *opt_mount             = NULL;
 static char         *opt_mount_fstype      = NULL;
@@ -1107,7 +1108,6 @@ out:
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-
 static gint
 do_inhibit_all_polling (gint         argc,
                         gchar       *argv[])
@@ -1175,6 +1175,70 @@ out:
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gint
+do_inhibit (gint         argc,
+            gchar       *argv[])
+{
+        char *cookie;
+        DBusGProxy *proxy;
+        GError *error;
+        gint ret;
+
+        cookie = NULL;
+        ret = 127;
+
+	proxy = dbus_g_proxy_new_for_name (bus,
+                                           "org.freedesktop.DeviceKit.Disks",
+                                           "/",
+                                           "org.freedesktop.DeviceKit.Disks");
+
+        error = NULL;
+        if (!org_freedesktop_DeviceKit_Disks_inhibit (proxy,
+                                                      &cookie,
+                                                      &error)) {
+                g_print ("Inhibit all polling failed: %s\n", error->message);
+                g_error_free (error);
+                goto out;
+        }
+
+        if (argc == 0) {
+                g_print ("Inhibiting the daemon. Press Ctrl+C to exit.\n");
+                while (TRUE)
+                        sleep (100000000);
+        } else {
+                GError *error;
+                gint exit_status;
+
+                error = NULL;
+                if (!g_spawn_sync (NULL,  /* working dir */
+                                   argv,
+                                   NULL,  /* envp */
+                                   G_SPAWN_SEARCH_PATH,
+                                   NULL, /* child_setup */
+                                   NULL, /* user_data */
+                                   NULL, /* standard_output */
+                                   NULL, /* standard_error */
+                                   &exit_status, /* exit_status */
+                                   &error)) {
+                        g_printerr ("Error launching program: %s\n", error->message);
+                        g_error_free (error);
+                        ret = 126;
+                        goto out;
+                }
+
+                if (WIFEXITED (exit_status))
+                        ret = WEXITSTATUS (exit_status);
+                else
+                        ret = 125;
+        }
+
+out:
+        g_free (cookie);
+        return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 int
 main (int argc, char **argv)
 {
@@ -1189,6 +1253,7 @@ main (int argc, char **argv)
                 { "show-info", 0, 0, G_OPTION_ARG_STRING, &opt_show_info, "Show information about object path", NULL },
                 { "inhibit-polling", 0, 0, G_OPTION_ARG_STRING, &opt_inhibit_polling, "Inhibit polling", NULL },
                 { "inhibit-all-polling", 0, 0, G_OPTION_ARG_NONE, &opt_inhibit_all_polling, "Inhibit all polling", NULL },
+                { "inhibit", 0, 0, G_OPTION_ARG_NONE, &opt_inhibit, "Inhibit the daemon", NULL },
 
                 { "mount", 0, 0, G_OPTION_ARG_STRING, &opt_mount, "Mount the device given by the object path", NULL },
                 { "mount-fstype", 0, 0, G_OPTION_ARG_STRING, &opt_mount_fstype, "Specify file system type", NULL },
@@ -1277,6 +1342,9 @@ main (int argc, char **argv)
                 goto out;
         } else if (opt_inhibit_all_polling) {
                 ret = do_inhibit_all_polling (argc - 1, argv + 1);
+                goto out;
+        } else if (opt_inhibit) {
+                ret = do_inhibit (argc - 1, argv + 1);
                 goto out;
         } else if (opt_mount != NULL) {
                 do_mount (opt_mount, opt_mount_fstype, opt_mount_options);

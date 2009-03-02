@@ -53,6 +53,7 @@ struct DevkitDisksDaemonClass
 typedef enum
 {
         DEVKIT_DISKS_ERROR_FAILED,
+        DEVKIT_DISKS_ERROR_INHIBITED,
         DEVKIT_DISKS_ERROR_BUSY,
         DEVKIT_DISKS_ERROR_CANCELLED,
         DEVKIT_DISKS_ERROR_INVALID_OPTION,
@@ -115,6 +116,8 @@ void               devkit_disks_daemon_local_update_poller       (DevkitDisksDae
 
 gboolean           devkit_disks_daemon_local_has_polling_inhibitors (DevkitDisksDaemon       *daemon);
 
+gboolean           devkit_disks_daemon_local_has_inhibitors (DevkitDisksDaemon       *daemon);
+
 DevkitDisksLogger *devkit_disks_daemon_local_get_logger (DevkitDisksDaemon *daemon);
 
 DevkitDisksMountMonitor *devkit_disks_daemon_local_get_mount_monitor (DevkitDisksDaemon *daemon);
@@ -160,6 +163,13 @@ gboolean devkit_disks_daemon_drive_inhibit_all_polling (DevkitDisksDaemon     *d
 gboolean devkit_disks_daemon_drive_uninhibit_all_polling (DevkitDisksDaemon     *daemon,
                                                           char                  *cookie,
                                                           DBusGMethodInvocation *context);
+
+gboolean devkit_disks_daemon_inhibit (DevkitDisksDaemon     *daemon,
+                                      DBusGMethodInvocation *context);
+
+gboolean devkit_disks_daemon_uninhibit (DevkitDisksDaemon     *daemon,
+                                        char                  *cookie,
+                                        DBusGMethodInvocation *context);
 
 G_END_DECLS
 

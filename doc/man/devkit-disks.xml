@@ -137,6 +137,30 @@
       </varlistentry>
 
       <varlistentry>
+        <term>
+          <option>--inhibit</option>
+          <arg><option>-- program arg ...</option></arg>
+        </term>
+        <listitem>
+          <para>
+             Inhibits clients from invoking methods on the daemon of
+             the daemon that require authorization (all methods will
+             return the
+             <literal>org.freedesktop.DeviceKit.Disks.Error.Inhibited</literal> error) if
+             the caller is not the super user. This is typically used
+             by OS installers and other programs that expects full
+             control of the system, specifically to avoid automounting
+             devices. Only the super user can do this.
+          </para>
+          <para>
+            If no program is given,
+            polling is inhibited until Ctrl+C is pressed. Otherwise the program is spawned and the polling
+            is only inhibited until the program terminates.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>--help</option></term>
         <listitem>
           <para>

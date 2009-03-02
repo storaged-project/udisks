@@ -2,6 +2,7 @@
 "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
 "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd" [
   <!ENTITY ERROR_FAILED "org.freedesktop.DeviceKit.Disks.Error.Failed">
+  <!ENTITY ERROR_INHIBITED "org.freedesktop.DeviceKit.Disks.Error.Inhibited">
   <!ENTITY ERROR_BUSY "org.freedesktop.DeviceKit.Disks.Error.Busy">
   <!ENTITY ERROR_CANCELLED "org.freedesktop.DeviceKit.Disks.Error.Cancelled">
   <!ENTITY ERROR_INVALID_OPTION "org.freedesktop.DeviceKit.Disks.Error.InvalidOption">
