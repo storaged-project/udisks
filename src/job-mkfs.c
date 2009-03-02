@@ -351,6 +351,11 @@ main (int argc, char **argv)
                         ret = 2;
                 }
 
+                if (chmod (dir, 0700) != 0) {
+                        g_printerr ("cannot chmod %s to mode 0700: %m\n", dir);
+                        ret = 2;
+                }
+
                 if (umount (dir) != 0) {
                         g_printerr ("cannot unmount %s: %m\n", dir);
                         ret = 2;
