@@ -60,18 +60,8 @@ file are instantly applied.
   </action>
 
   <action id="org.freedesktop.devicekit.disks.filesystem-unmount-others">
-    <_description>Unmount a disk mounted by another user</_description>
-    <_message>Authentication is required to unmount disks mounted by another user</_message>
-    <defaults>
-      <allow_any>no</allow_any>
-      <allow_inactive>no</allow_inactive>
-      <allow_active>auth_admin</allow_active>
-    </defaults>
-  </action>
-
-  <action id="org.freedesktop.devicekit.disks.filesystem-unmount-others-system-internal">
-    <_description>Unmount a system-internal device mounted by another user</_description>
-    <_message>Authentication is required to unmount a device mounted by another user</_message>
+    <_description>Unmount a device mounted by another user</_description>
+    <_message>Authentication is required to unmount devices mounted by another user</_message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -80,8 +70,8 @@ file are instantly applied.
   </action>
 
   <action id="org.freedesktop.devicekit.disks.filesystem-lsof">
-    <_description>Unmount a disk mounted by another user</_description>
-    <_message>Authentication is required to unmount disks mounted by another user</_message>
+    <_description>List open files</_description>
+    <_message>Authentication is required to list open files on a mounted file system</_message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -90,8 +80,8 @@ file are instantly applied.
   </action>
 
   <action id="org.freedesktop.devicekit.disks.filesystem-lsof-system-internal">
-    <_description>Unmount a system-internal device mounted by another user</_description>
-    <_message>Authentication is required to unmount a device mounted by another user</_message>
+    <_description>List open files on a system-internal device</_description>
+    <_message>Authentication is required to list open files on a mounted file system</_message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -109,19 +99,9 @@ file are instantly applied.
     </defaults>
   </action>
 
-  <action id="org.freedesktop.devicekit.disks.drive-eject-system-internal">
-    <_description>Eject a system-internal device</_description>
-    <_message>Authentication is required to eject media from the device</_message>
-    <defaults>
-      <allow_any>no</allow_any>
-      <allow_inactive>no</allow_inactive>
-      <allow_active>auth_admin</allow_active>
-    </defaults>
-  </action>
-
   <action id="org.freedesktop.devicekit.disks.change">
-    <_description>Change a device</_description>
-    <_message>Authentication is required to change the device</_message>
+    <_description>Modify a device</_description>
+    <_message>Authentication is required to modify the device</_message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -130,8 +110,8 @@ file are instantly applied.
   </action>
 
   <action id="org.freedesktop.devicekit.disks.change-system-internal">
-    <_description>Change a system-internal device</_description>
-    <_message>Authentication is required to change the device</_message>
+    <_description>Modify a system-internal device</_description>
+    <_message>Authentication is required to modify the device</_message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -151,11 +131,11 @@ file are instantly applied.
 
   <action id="org.freedesktop.devicekit.disks.drive-smart-selftest">
     <_description>Run S.M.A.R.T. Self Tests</_description>
-    <_message>Authentication is required to run S.M.A.R.T. Self Tests</_message>
+    <_message>Authentication is required to run S.M.A.R.T. self tests</_message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
-      <allow_active>auth_admin_keep_always</allow_active>
+      <allow_active>auth_admin</allow_active>
     </defaults>
   </action>
 
@@ -189,20 +169,9 @@ file are instantly applied.
     </defaults>
   </action>
 
-  <action id="org.freedesktop.devicekit.disks.luks-lock-others-system-internal">
-    <_description>Lock an encrypted system-internal device unlocked by another user</_description>
-    <_message>Authentication is required to lock an encrypted device unlocked by another user</_message>
-    <defaults>
-      <allow_any>no</allow_any>
-      <allow_inactive>no</allow_inactive>
-      <allow_active>auth_admin</allow_active>
-    </defaults>
-  </action>
-
-
   <action id="org.freedesktop.devicekit.disks.linux-md">
-    <_description>Configure Software RAID (Linux md driver)</_description>
-    <_message>Authentication is required to configure Software RAID devices</_message>
+    <_description>Configure Linux Software RAID</_description>
+    <_message>Authentication is required to configure Linux Software RAID devices</_message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -211,27 +180,17 @@ file are instantly applied.
   </action>
 
   <action id="org.freedesktop.devicekit.disks.linux-md-system-internal">
-    <_description>Configure Software RAID (Linux md driver)</_description>
-    <_message>Authentication is required to configure Software RAID devices</_message>
+    <_description>Configure Linux Software RAID on a system-internal device</_description>
+    <_message>Authentication is required to configure Linux Software RAID devices</_message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
-      <allow_active>auth_admin_keep_always</allow_active>
+      <allow_active>auth_admin</allow_active>
     </defaults>
   </action>
 
   <action id="org.freedesktop.devicekit.disks.cancel-job-others">
-    <_description>Cancel a job on a device initiated by another user</_description>
-    <_message>Authentication is required to cancel a job initiated by another user</_message>
-    <defaults>
-      <allow_any>no</allow_any>
-      <allow_inactive>no</allow_inactive>
-      <allow_active>auth_self</allow_active>
-    </defaults>
-  </action>
-
-  <action id="org.freedesktop.devicekit.disks.cancel-job-others-system-internal">
-    <_description>Cancel a job on a device initiated by another user</_description>
+    <_description>Cancel a job initiated by another user</_description>
     <_message>Authentication is required to cancel a job initiated by another user</_message>
     <defaults>
       <allow_any>no</allow_any>

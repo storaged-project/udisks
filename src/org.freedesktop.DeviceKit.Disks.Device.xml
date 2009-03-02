@@ -114,15 +114,7 @@
           <doc:list>
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.cancel-job-others</doc:term>
-              <doc:definition>To cancel a job on a
-                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
-                device initiated by another user</doc:definition>
-            </doc:item>
-            <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.cancel-job-others-system-internal</doc:term>
-              <doc:definition>To cancel a job on a
-                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
-                device initiated by another user</doc:definition>
+              <doc:definition>To cancel a job initiated by another user</doc:definition>
             </doc:item>
           </doc:list>
         </doc:permission>
@@ -634,15 +626,7 @@
           <doc:list>
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.filesystem-unmount-others</doc:term>
-              <doc:definition>To unmount a
-                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
-                device mounted by another user</doc:definition>
-            </doc:item>
-            <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.filesystem-unmount-others-system-internal</doc:term>
-              <doc:definition>To unmount a
-                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
-                device mounted by another user</doc:definition>
+              <doc:definition>To unmount a device mounted by another user</doc:definition>
             </doc:item>
           </doc:list>
         </doc:permission>
@@ -809,15 +793,7 @@
           <doc:list>
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.luks-lock-others</doc:term>
-              <doc:definition>To lock an encrypted LUKS
-                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
-                device unlocked by another user</doc:definition>
-            </doc:item>
-            <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.luks-lock-others-system-internal</doc:term>
-              <doc:definition>To lock an encrypted LUKS
-                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
-                device unlocked by another user</doc:definition>
+              <doc:definition>To lock an encrypted LUKS device unlocked by another user</doc:definition>
             </doc:item>
           </doc:list>
         </doc:permission>
@@ -1130,15 +1106,7 @@
           <doc:list>
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.drive-eject</doc:term>
-              <doc:definition>To eject media from a
-                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
-                device</doc:definition>
-            </doc:item>
-            <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.drive-eject-system-internal</doc:term>
-              <doc:definition>To eject a media from a
-                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
-                device</doc:definition>
+              <doc:definition>To eject media from a device</doc:definition>
             </doc:item>
           </doc:list>
         </doc:permission>

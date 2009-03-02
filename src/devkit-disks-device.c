@@ -4510,9 +4510,7 @@ devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
         if (uid_of_mount != uid) {
                 if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                           pk_caller,
-                                                          device->priv->device_is_system_internal ?
-                                                     "org.freedesktop.devicekit.disks.filesystem-unmount-others-system-internal" :
-                                                     "org.freedesktop.devicekit.disks.filesystem-unmount-others",
+                                                          "org.freedesktop.devicekit.disks.filesystem-unmount-others",
                                                           context))
                         goto out;
         }
@@ -4780,9 +4778,7 @@ devkit_disks_device_drive_eject (DevkitDisksDevice     *device,
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
-                                                  device->priv->device_is_system_internal ?
-                                                  "org.freedesktop.devicekit.disks.drive-eject-system-internal" :
-                                                  "org.freedesktop.devicekit.disks.drive-eject",
+                                                  "org.freedesktop.devicekit.disks.drive-eject-system-internal",
                                                   context))
                 goto out;
 
@@ -5541,9 +5537,7 @@ devkit_disks_device_job_cancel (DevkitDisksDevice     *device,
         if (device->priv->job_initiated_by_uid != uid) {
                 if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                           pk_caller,
-                                                          device->priv->device_is_system_internal ?
-                                                  "org.freedesktop.devicekit.disks.cancel-job-others-system-internal" :
-                                                  "org.freedesktop.devicekit.disks.cancel-job-others",
+                                                          "org.freedesktop.devicekit.disks.cancel-job-others",
                                                           context))
                         goto out;
         }
@@ -6746,9 +6740,7 @@ devkit_disks_device_luks_lock (DevkitDisksDevice     *device,
         if (unlocked_by_uid != uid) {
                 if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                           pk_caller,
-                                                          device->priv->device_is_system_internal ?
-                                              "org.freedesktop.devicekit.disks.luks-lock-others-system-internal" :
-                                              "org.freedesktop.devicekit.disks.luks-lock-others",
+                                                          "org.freedesktop.devicekit.disks.luks-lock-others",
                                                           context)) {
                         goto out;
                 }
