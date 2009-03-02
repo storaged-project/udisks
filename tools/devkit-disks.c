@@ -30,6 +30,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <fcntl.h>
 #include <pwd.h>
 #include <grp.h>
@@ -1038,15 +1039,20 @@ do_show_info (const char *object_path)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static void
-do_inhibit_polling (const char *object_path)
+static gint
+do_inhibit_polling (const char *object_path,
+                    gint         argc,
+                    gchar       *argv[])
 {
         char *cookie;
         DBusGProxy *proxy;
         GError *error;
         char **options;
+        gint ret;
 
         options = NULL;
+        cookie = NULL;
+        ret = 127;
 
 	proxy = dbus_g_proxy_new_for_name (bus,
                                            "org.freedesktop.DeviceKit.Disks",
@@ -1063,27 +1069,58 @@ do_inhibit_polling (const char *object_path)
                 goto out;
         }
 
-        g_print ("Inhibiting polling on %s. Press Ctrl+C to exit.\n", object_path);
-        while (TRUE)
-                sleep (100000000);
+        if (argc == 0) {
+                g_print ("Inhibiting polling on %s. Press Ctrl+C to exit.\n", object_path);
+                while (TRUE)
+                        sleep (100000000);
+        } else {
+                GError *error;
+                gint exit_status;
 
-        g_free (cookie);
+                error = NULL;
+                if (!g_spawn_sync (NULL,  /* working dir */
+                                   argv,
+                                   NULL,  /* envp */
+                                   G_SPAWN_SEARCH_PATH,
+                                   NULL, /* child_setup */
+                                   NULL, /* user_data */
+                                   NULL, /* standard_output */
+                                   NULL, /* standard_error */
+                                   &exit_status, /* exit_status */
+                                   &error)) {
+                        g_printerr ("Error launching program: %s\n", error->message);
+                        g_error_free (error);
+                        ret = 126;
+                        goto out;
+                }
+
+                if (WIFEXITED (exit_status))
+                        ret = WEXITSTATUS (exit_status);
+                else
+                        ret = 125;
+        }
+
 out:
-        ;
+        g_free (cookie);
+        return ret;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
 
 
-static void
-do_inhibit_all_polling (void)
+static gint
+do_inhibit_all_polling (gint         argc,
+                        gchar       *argv[])
 {
         char *cookie;
         DBusGProxy *proxy;
         GError *error;
         char **options;
+        gint ret;
 
         options = NULL;
+        cookie = NULL;
+        ret = 127;
 
 	proxy = dbus_g_proxy_new_for_name (bus,
                                            "org.freedesktop.DeviceKit.Disks",
@@ -1100,13 +1137,40 @@ do_inhibit_all_polling (void)
                 goto out;
         }
 
-        g_print ("Inhibiting polling on all devices. Press Ctrl+C to exit.\n");
-        while (TRUE)
-                sleep (100000000);
+        if (argc == 0) {
+                g_print ("Inhibiting polling on all devices. Press Ctrl+C to exit.\n");
+                while (TRUE)
+                        sleep (100000000);
+        } else {
+                GError *error;
+                gint exit_status;
 
-        g_free (cookie);
+                error = NULL;
+                if (!g_spawn_sync (NULL,  /* working dir */
+                                   argv,
+                                   NULL,  /* envp */
+                                   G_SPAWN_SEARCH_PATH,
+                                   NULL, /* child_setup */
+                                   NULL, /* user_data */
+                                   NULL, /* standard_output */
+                                   NULL, /* standard_error */
+                                   &exit_status, /* exit_status */
+                                   &error)) {
+                        g_printerr ("Error launching program: %s\n", error->message);
+                        g_error_free (error);
+                        ret = 126;
+                        goto out;
+                }
+
+                if (WIFEXITED (exit_status))
+                        ret = WEXITSTATUS (exit_status);
+                else
+                        ret = 125;
+        }
+
 out:
-        ;
+        g_free (cookie);
+        return ret;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1145,7 +1209,6 @@ main (int argc, char **argv)
         context = g_option_context_new ("DeviceKit-disks tool");
         g_option_context_add_main_entries (context, entries, NULL);
         g_option_context_parse (context, &argc, &argv, NULL);
-        g_option_context_free (context);
 
         loop = g_main_loop_new (NULL, FALSE);
 
@@ -1209,13 +1272,24 @@ main (int argc, char **argv)
         } else if (opt_show_info != NULL) {
                 do_show_info (opt_show_info);
         } else if (opt_inhibit_polling != NULL) {
-                do_inhibit_polling (opt_inhibit_polling);
+                ret = do_inhibit_polling (opt_inhibit_polling, argc - 1, argv + 1);
+                goto out;
         } else if (opt_inhibit_all_polling) {
-                do_inhibit_all_polling ();
+                ret = do_inhibit_all_polling (argc - 1, argv + 1);
+                goto out;
         } else if (opt_mount != NULL) {
                 do_mount (opt_mount, opt_mount_fstype, opt_mount_options);
         } else if (opt_unmount != NULL) {
                 do_unmount (opt_unmount, opt_unmount_options);
+        } else {
+                gchar *usage;
+
+                usage = g_option_context_get_help (context, FALSE, NULL);
+                g_printerr ("%s", usage);
+                g_free (usage);
+
+                ret = 1;
+                goto out;
         }
 
         ret = 0;
@@ -1225,6 +1299,7 @@ out:
                 g_object_unref (disks_proxy);
         if (bus != NULL)
                 dbus_g_connection_unref (bus);
+        g_option_context_free (context);
 
         return ret;
 }

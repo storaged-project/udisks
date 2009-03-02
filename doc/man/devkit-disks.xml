@@ -19,9 +19,7 @@
   <refsynopsisdiv>
     <cmdsynopsis>
       <command>devkit-disks</command>
-      <arg><option>--monitor</option></arg>
-      <arg><option>--monitor-detail</option></arg>
-      <arg><option>--help</option></arg>
+      <arg><option>OPTIONS</option></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -31,7 +29,7 @@
       <emphasis><refentrytitle>devkit-disks</refentrytitle></emphasis> is a
       simple command line client for the
       <citerefentry><refentrytitle>DeviceKit-disks</refentrytitle><manvolnum>7</manvolnum></citerefentry>
-      daemon. TODO: not fully documented.
+      system bus service.
     </para>
   </refsect1>
 
@@ -39,14 +37,24 @@
     <title>OPTIONS</title>
     <variablelist>
       <varlistentry>
-        <term><option>--monitor</option></term>
+        <term><option>--enumerate</option></term>
         <listitem>
           <para>
-            Connect to the DeviceKit-disks daemon and print a line
-            every time a block device is added, removed or changed.
+            Lists all object paths of devices know to the daemon.
           </para>
         </listitem>
       </varlistentry>
+
+      <varlistentry>
+        <term><option>--monitor</option></term>
+        <listitem>
+          <para>
+            Connect to the daemon and print a line every time an event
+            happens.
+          </para>
+        </listitem>
+      </varlistentry>
+
       <varlistentry>
         <term><option>--monitor-detail</option></term>
         <listitem>
@@ -56,6 +64,78 @@
           </para>
         </listitem>
       </varlistentry>
+
+      <varlistentry>
+        <term>
+          <option>--show-info</option>
+          <arg choice="plain"><replaceable>object_path</replaceable></arg>
+        </term>
+        <listitem>
+          <para>
+            Shows information about <replaceable>object_path</replaceable>.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>
+          <option>--inhibit-polling</option>
+          <arg choice="plain"><replaceable>object_path</replaceable></arg>
+          <arg><option>-- program arg ...</option></arg>
+        </term>
+        <listitem>
+          <para>
+            Inhibits polling on <replaceable>object_path</replaceable>. If no program is given,
+            polling is inhibited until Ctrl+C is pressed. Otherwise the program is spawned and the polling
+            is only inhibited until the program terminates.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>
+          <option>--inhibit-all-polling</option>
+          <arg><option>-- program arg ...</option></arg>
+        </term>
+        <listitem>
+          <para>
+            Inhibits polling on all devices. If no program is given,
+            polling is inhibited until Ctrl+C is pressed. Otherwise the program is spawned and the polling
+            is only inhibited until the program terminates.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>
+          <option>--mount</option>
+          <arg choice="plain"><replaceable>object_path</replaceable></arg>
+          <arg><option>--mount-fstype</option><arg choice="plain"><replaceable>fstype</replaceable></arg></arg>
+          <arg><option>--mount-options</option><arg choice="plain"><replaceable>options</replaceable></arg></arg>
+        </term>
+        <listitem>
+          <para>
+            Mounts the device represented by <replaceable>object_path</replaceable> using
+            the file system <replaceable>fstype</replaceable> and a comma-separated list
+            of <replaceable>options</replaceable>.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>
+          <option>--unmount</option>
+          <arg choice="plain"><replaceable>object_path</replaceable></arg>
+          <arg><option>--unmount-options</option><arg choice="plain"><replaceable>options</replaceable></arg></arg>
+        </term>
+        <listitem>
+          <para>
+            Unmounts the device represented by <replaceable>object_path</replaceable> using
+            a comma-separated list of <replaceable>options</replaceable>.
+          </para>
+        </listitem>
+      </varlistentry>
+
       <varlistentry>
         <term><option>--help</option></term>
         <listitem>
