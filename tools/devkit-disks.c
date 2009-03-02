@@ -1207,6 +1207,7 @@ main (int argc, char **argv)
         g_type_init ();
 
         context = g_option_context_new ("DeviceKit-disks tool");
+        g_option_context_set_description (context, "See the devkit-disks man page for details.");
         g_option_context_add_main_entries (context, entries, NULL);
         g_option_context_parse (context, &argc, &argv, NULL);
 
