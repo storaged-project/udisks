@@ -3,30 +3,19 @@
 - Current dependencies
 ------------------------------------------------------------------------
 
- - udev-120 with some patches
-   - necessary changes already upstream and will be in udev-121
-   - http://people.freedesktop.org/~david/DK/F9/src/udev-120-5.20080421git.1dze.fc9.src.rpm
+ - udev-139 with some patches
 
- - mdadm-2.6.4 with some patches
-   - necessary changes already upstream and will be in mdadm-2.6.5
-   - http://people.freedesktop.org/~david/DK/F9/src/mdadm-2.6.4-4.1dze.fc9.src.rpm
+ - mdadm-2.6.5 with some patches
 
  - device-mapper with some patches
-   - necessary changes (or similar functionality) already upstream and will be in next device-mapper release
-   - see https://bugzilla.redhat.com/show_bug.cgi?id=438604
-   - http://people.freedesktop.org/~david/DK/F9/src/lvm2-2.02.33-11.1dze.fc9.src.rpm
 
- - DeviceKit from git
-   - http://gitweb.freedesktop.org/?p=users/david/DeviceKit.git
-   - http://people.freedesktop.org/~david/DK/F9/src/DeviceKit-002-0.git20080506.fc9.src.rpm
+ - DeviceKit 003
 
- - D-Bus GLib 0.74 with some patches
-   - necessary changes are already committed upstream
-   - See Fedora 9 / Rawhide package for the patches needed
+ - D-Bus GLib 0.75 with some patches
 
  - Linux >= 2.6.25
 
- - PolicyKit >= 0.8
+ - PolicyKit >= 0.9
 
  - D-Bus >= 1.1.20
 
@@ -42,20 +31,11 @@
 - TODO List
 ------------------------------------------------------------------------
 
-Before (next) release:
+ - Port to libatasmart
 
- - SMART
-   - Need a way to stop polling for SMART data to avoid
-     breaking boxes with thousands of disks
-     - maybe default to polling if there's less than, say, 50 drives
-   - Delete all SMART data older than N days
-     - polling every 30 min is roughly 50kb / drive / day
-   - Probably needs config file for this
+ - Port to PolicyKit 1.0
 
- - Poll storage devices
-
- - Need to figure out what PolicyKit authorizations to use
-   - it's really a big mess right now
+ - Port to EggDBus
 
  - Split out Linux specific bits into separate files
 
@@ -64,10 +44,6 @@ Before (next) release:
 
  - Finish up Linux MD Software RAID support
    - Major thing missing right now is creating an array
-
- - Finish D-Bus documentation framework
-   - and have Jon McCann review it (it's based on his work from
-     ConsoleKit)
 
  - General project management tasks
    - review licenses, NEWS, TODO, HACKING etc. file
@@ -79,25 +55,7 @@ Before (next) release:
  - Document what udev properties we rely on
 
 ------------------------------------------------------------------------
-- Current features (TODO: this section is incomplete)
-------------------------------------------------------------------------
-
- - Enumerate and manipulate block devices including;
-   - Filesystems / Signatures
-     - create, modify label, delete, mount, unmount
-   - Partitions and Partition Tables
-     - create, modify, delete
-   - Linux MD Software RAID (both arrays and components)
-     - add/remove components, start, stop
-   - LUKS devices
-     - create, change passphrase
-   - Change notifications
-
- - Retrieve SMART data
-   - includes storing a history in a database
-
-------------------------------------------------------------------------
-- Future features (TODO: this section is incomplete)
+- Future features
 ------------------------------------------------------------------------
 
  - Share drives via iSCSI
@@ -106,7 +64,6 @@ Before (next) release:
    - see notes in doc/TODO-ISCSI
 
  - Filesystem check
-   - non-interactive is easy
    - how can we do interactive fsck? Connect to a socket on the
      client and the client includes a terminal emulator? Yuck
 
