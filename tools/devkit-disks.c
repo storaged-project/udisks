@@ -62,9 +62,6 @@ static char         *opt_mount_fstype      = NULL;
 static char         *opt_mount_options     = NULL;
 static char         *opt_unmount           = NULL;
 static char         *opt_unmount_options   = NULL;
-static char         *opt_create_fs         = NULL;
-static char         *opt_create_fs_type    = NULL;
-static char         *opt_create_fs_options = NULL;
 
 static gboolean do_monitor (void);
 static void do_show_info (const char *object_path);
@@ -211,73 +208,6 @@ try_again:
         }
 out:
         g_strfreev (unmount_options);
-}
-
-static void
-do_create_fs (const char *object_path,
-              const char *fs_type,
-              const char *options)
-{
-        DBusGProxy *proxy;
-        GError *error;
-        char **split_options;
-
-        split_options = NULL;
-        if (options != NULL)
-                split_options = g_strsplit (options, ",", 0);
-
-	proxy = dbus_g_proxy_new_for_name (bus,
-                                           "org.freedesktop.DeviceKit.Disks",
-                                           object_path,
-                                           "org.freedesktop.DeviceKit.Disks.Device");
-
-try_again:
-        error = NULL;
-        /* Stupid glue don't let me tweak the timeout */
-        if (!dbus_g_proxy_call_with_timeout (proxy,
-                                             "FilesystemCreate",
-                                             INT_MAX,
-                                             &error,
-                                             G_TYPE_STRING,
-                                             fs_type,
-                                             G_TYPE_STRV,
-                                             split_options,
-                                             G_TYPE_INVALID,
-                                             G_TYPE_INVALID)) {
-                PolKitAction *pk_action;
-                PolKitResult pk_result;
-
-                if (polkit_dbus_gerror_parse (error, &pk_action, &pk_result)) {
-                        if (pk_result != POLKIT_RESULT_NO) {
-                                char *action_id;
-                                DBusError d_error;
-
-                                polkit_action_get_action_id (pk_action, &action_id);
-                                dbus_error_init (&d_error);
-                                if (polkit_auth_obtain (action_id,
-                                                        0,
-                                                        getpid (),
-                                                        &d_error)) {
-                                        polkit_action_unref (pk_action);
-                                        goto try_again;
-                                } else {
-                                        g_print ("Obtaining authorization failed: %s: %s\n",
-                                                 d_error.name, d_error.message);
-                                        dbus_error_free (&d_error);
-                                        goto out;
-                                }
-                        }
-                        polkit_action_unref (pk_action);
-                        g_error_free (error);
-                        goto out;
-                } else {
-                        g_print ("CreateFilesystem failed: %s\n", error->message);
-                        g_error_free (error);
-                        goto out;
-                }
-        }
-out:
-        g_strfreev (split_options);
 }
 
 static void
@@ -1171,9 +1101,6 @@ main (int argc, char **argv)
                 { "unmount", 0, 0, G_OPTION_ARG_STRING, &opt_unmount, "Unmount the device given by the object path", NULL },
                 { "unmount-options", 0, 0, G_OPTION_ARG_STRING, &opt_unmount_options, "Unmount options separated by comma", NULL },
 
-                { "create-fs", 0, 0, G_OPTION_ARG_STRING, &opt_create_fs, "Create a file system", NULL },
-                { "create-fs-type", 0, 0, G_OPTION_ARG_STRING, &opt_create_fs_type, "File system type to create", NULL },
-                { "create-fs-options", 0, 0, G_OPTION_ARG_STRING, &opt_create_fs_options, "File system create options", NULL },
                 { NULL }
         };
 
@@ -1255,8 +1182,6 @@ main (int argc, char **argv)
                 do_mount (opt_mount, opt_mount_fstype, opt_mount_options);
         } else if (opt_unmount != NULL) {
                 do_unmount (opt_unmount, opt_unmount_options);
-        } else if (opt_create_fs != NULL && opt_create_fs_type != NULL) {
-                do_create_fs (opt_create_fs, opt_create_fs_type, opt_create_fs_options);
         }
 
         ret = 0;
