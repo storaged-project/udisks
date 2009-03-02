@@ -4778,7 +4778,7 @@ devkit_disks_device_drive_eject (DevkitDisksDevice     *device,
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
-                                                  "org.freedesktop.devicekit.disks.drive-eject-system-internal",
+                                                  "org.freedesktop.devicekit.disks.drive-eject",
                                                   context))
                 goto out;
 
