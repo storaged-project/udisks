@@ -66,6 +66,7 @@ void               devkit_disks_device_removed               (DevkitDisksDevice 
 const char        *devkit_disks_device_local_get_object_path     (DevkitDisksDevice *device);
 const char        *devkit_disks_device_local_get_native_path     (DevkitDisksDevice *device);
 
+dev_t              devkit_disks_device_local_get_dev             (DevkitDisksDevice *device);
 const char        *devkit_disks_device_local_get_device_file     (DevkitDisksDevice *device);
 const char        *devkit_disks_device_local_get_mount_path      (DevkitDisksDevice *device);
 

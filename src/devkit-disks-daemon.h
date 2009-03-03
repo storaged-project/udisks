@@ -98,6 +98,9 @@ DevkitDisksDevice *devkit_disks_daemon_local_find_by_object_path (DevkitDisksDae
 DevkitDisksDevice *devkit_disks_daemon_local_find_by_device_file (DevkitDisksDaemon       *daemon,
                                                                   const char              *device_file);
 
+DevkitDisksDevice *devkit_disks_daemon_local_find_by_dev         (DevkitDisksDaemon       *daemon,
+                                                                  dev_t                    dev);
+
 
 PolKitCaller      *devkit_disks_damon_local_get_caller_for_context (DevkitDisksDaemon     *daemon,
                                                                     DBusGMethodInvocation *context);

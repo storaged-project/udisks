@@ -25,7 +25,8 @@
 
 G_BEGIN_DECLS
 
-DevkitDisksMount *_devkit_disks_mount_new (const gchar *device_file, const gchar *mount_path);
+DevkitDisksMount *_devkit_disks_mount_new (dev_t        dev,
+                                           const gchar *mount_path);
 
 G_END_DECLS
 

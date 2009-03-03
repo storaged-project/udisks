@@ -2643,7 +2643,7 @@ update_info_mount_state (DevkitDisksDevice *device)
                 goto out;
 
         monitor = devkit_disks_daemon_local_get_mount_monitor (device->priv->daemon);
-        mount = devkit_disks_mount_monitor_get_mount_for_device_file (monitor, device->priv->device_file);
+        mount = devkit_disks_mount_monitor_get_mount_for_dev (monitor, device->priv->dev);
 
         was_mounted = device->priv->device_is_mounted;
         old_mount_path = g_strdup (device->priv->device_mount_path);
@@ -2762,6 +2762,8 @@ update_info (DevkitDisksDevice *device)
         GPtrArray *symlinks_by_path;
         GPtrArray *slaves;
         GPtrArray *holders;
+        gint major;
+        gint minor;
 
         ret = FALSE;
 
@@ -2779,6 +2781,16 @@ update_info (DevkitDisksDevice *device)
         } else {
                 devkit_disks_device_set_device_is_drive (device, FALSE);
         }
+
+        if (!devkit_device_has_property (device->priv->d, "MAJOR") ||
+            !devkit_device_has_property (device->priv->d, "MINOR")) {
+		g_warning ("No major/minor for %s", device->priv->native_path);
+                goto out;
+        }
+
+        major = devkit_device_get_property_as_int (device->priv->d, "MAJOR");
+        minor = devkit_device_get_property_as_int (device->priv->d, "MINOR");
+        device->priv->dev = makedev (major, minor);
 
         devkit_disks_device_set_device_file (device, devkit_device_get_device_file (device->priv->d));
         if (device->priv->device_file == NULL) {
@@ -3345,6 +3357,12 @@ const char *
 devkit_disks_device_local_get_native_path (DevkitDisksDevice *device)
 {
         return device->priv->native_path;
+}
+
+dev_t
+devkit_disks_device_local_get_dev (DevkitDisksDevice *device)
+{
+        return device->priv->dev;
 }
 
 const char *

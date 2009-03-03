@@ -96,6 +96,7 @@ struct DevkitDisksDaemonPrivate
 
 	GIOChannel              *mdstat_channel;
 
+        GHashTable              *map_dev_t_to_device;
         GHashTable              *map_device_file_to_device;
         GHashTable              *map_native_path_to_device;
         GHashTable              *map_object_path_to_device;
@@ -504,6 +505,10 @@ static void
 devkit_disks_daemon_init (DevkitDisksDaemon *daemon)
 {
         daemon->priv = DEVKIT_DISKS_DAEMON_GET_PRIVATE (daemon);
+        daemon->priv->map_dev_t_to_device = g_hash_table_new_full (g_direct_hash,
+                                                                   g_direct_equal,
+                                                                   NULL,
+                                                                   NULL);
         daemon->priv->map_device_file_to_device = g_hash_table_new_full (g_str_hash,
                                                                          g_str_equal,
                                                                          g_free,
@@ -546,6 +551,9 @@ devkit_disks_daemon_finalize (GObject *object)
         if (daemon->priv->mdstat_channel != NULL)
                 g_io_channel_unref (daemon->priv->mdstat_channel);
 
+        if (daemon->priv->map_dev_t_to_device != NULL) {
+                g_hash_table_unref (daemon->priv->map_dev_t_to_device);
+        }
         if (daemon->priv->map_device_file_to_device != NULL) {
                 g_hash_table_unref (daemon->priv->map_device_file_to_device);
         }
@@ -678,6 +686,9 @@ device_went_away (gpointer user_data, GObject *where_the_object_was)
         g_hash_table_foreach_remove (daemon->priv->map_device_file_to_device,
                                      device_went_away_remove_cb,
                                      where_the_object_was);
+        g_hash_table_foreach_remove (daemon->priv->map_dev_t_to_device,
+                                     device_went_away_remove_quiet_cb,
+                                     where_the_object_was);
         g_hash_table_foreach_remove (daemon->priv->map_native_path_to_device,
                                      device_went_away_remove_quiet_cb,
                                      where_the_object_was);
@@ -755,6 +766,9 @@ device_add (DevkitDisksDaemon *daemon, DevkitDevice *d, gboolean emit_event)
                          * dbus-glib, no cookie for you.
                          */
                         g_object_weak_ref (G_OBJECT (device), device_went_away, daemon);
+                        g_hash_table_insert (daemon->priv->map_dev_t_to_device,
+                                             GINT_TO_POINTER (devkit_disks_device_local_get_dev (device)),
+                                             device);
                         g_hash_table_insert (daemon->priv->map_device_file_to_device,
                                              g_strdup (devkit_disks_device_local_get_device_file (device)),
                                              device);
@@ -817,6 +831,12 @@ device_event_signal_handler (DevkitClient *client,
 }
 
 DevkitDisksDevice *
+devkit_disks_daemon_local_find_by_dev (DevkitDisksDaemon *daemon, dev_t dev)
+{
+        return g_hash_table_lookup (daemon->priv->map_dev_t_to_device, GINT_TO_POINTER (dev));
+}
+
+DevkitDisksDevice *
 devkit_disks_daemon_local_find_by_device_file (DevkitDisksDaemon *daemon, const char *device_file)
 {
         return g_hash_table_lookup (daemon->priv->map_device_file_to_device, device_file);
@@ -849,8 +869,8 @@ mount_removed (DevkitDisksMountMonitor *monitor,
         DevkitDisksDaemon *daemon = DEVKIT_DISKS_DAEMON (user_data);
         DevkitDisksDevice *device;
 
-        device = g_hash_table_lookup (daemon->priv->map_device_file_to_device,
-                                      devkit_disks_mount_get_device_file (mount));
+        device = g_hash_table_lookup (daemon->priv->map_dev_t_to_device,
+                                      GINT_TO_POINTER (devkit_disks_mount_get_dev (mount)));
         if (device != NULL) {
                 g_print ("**** UNMOUNTED %s\n", device->priv->native_path);
                 devkit_disks_daemon_local_synthesize_changed (daemon, device);
@@ -865,8 +885,8 @@ mount_added (DevkitDisksMountMonitor *monitor,
         DevkitDisksDaemon *daemon = DEVKIT_DISKS_DAEMON (user_data);
         DevkitDisksDevice *device;
 
-        device = g_hash_table_lookup (daemon->priv->map_device_file_to_device,
-                                      devkit_disks_mount_get_device_file (mount));
+        device = g_hash_table_lookup (daemon->priv->map_dev_t_to_device,
+                                      GINT_TO_POINTER (devkit_disks_mount_get_dev (mount)));
         if (device != NULL) {
                 g_print ("**** MOUNTED %s\n", device->priv->native_path);
                 devkit_disks_daemon_local_synthesize_changed (daemon, device);

@@ -21,6 +21,8 @@
 #ifndef __DEVKIT_DISKS_MOUNT_H__
 #define __DEVKIT_DISKS_MOUNT_H__
 
+#include <sys/types.h>
+
 #include "devkit-disks-types.h"
 
 G_BEGIN_DECLS
@@ -48,7 +50,7 @@ struct DevkitDisksMountClass
 
 GType         devkit_disks_mount_get_type        (void) G_GNUC_CONST;
 const gchar  *devkit_disks_mount_get_mount_path  (DevkitDisksMount *mount);
-const gchar  *devkit_disks_mount_get_device_file (DevkitDisksMount *mount);
+dev_t         devkit_disks_mount_get_dev         (DevkitDisksMount *mount);
 
 gint          devkit_disks_mount_compare         (DevkitDisksMount *a,
                                                   DevkitDisksMount *b);

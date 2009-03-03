@@ -43,7 +43,7 @@
 struct DevkitDisksMountPrivate
 {
         gchar *mount_path;
-        gchar *device_file;
+        dev_t dev;
 };
 
 G_DEFINE_TYPE (DevkitDisksMount, devkit_disks_mount, G_TYPE_OBJECT)
@@ -56,7 +56,6 @@ devkit_disks_mount_finalize (GObject *object)
         DevkitDisksMount *mount = DEVKIT_DISKS_MOUNT (object);
 
         g_free (mount->priv->mount_path);
-        g_free (mount->priv->device_file);
 
         if (G_OBJECT_CLASS (devkit_disks_mount_parent_class)->finalize)
                 (* G_OBJECT_CLASS (devkit_disks_mount_parent_class)->finalize) (object);
@@ -80,12 +79,12 @@ devkit_disks_mount_class_init (DevkitDisksMountClass *klass)
 
 
 DevkitDisksMount *
-_devkit_disks_mount_new (const gchar *device_file, const gchar *mount_path)
+_devkit_disks_mount_new (dev_t dev, const gchar *mount_path)
 {
         DevkitDisksMount *mount;
 
         mount = DEVKIT_DISKS_MOUNT (g_object_new (DEVKIT_DISKS_TYPE_MOUNT, NULL));
-        mount->priv->device_file = g_strdup (device_file);
+        mount->priv->dev = dev;
         mount->priv->mount_path = g_strdup (mount_path);
 
         return mount;
@@ -98,11 +97,11 @@ devkit_disks_mount_get_mount_path (DevkitDisksMount *mount)
         return mount->priv->mount_path;
 }
 
-const gchar *
-devkit_disks_mount_get_device_file (DevkitDisksMount *mount)
+dev_t
+devkit_disks_mount_get_dev (DevkitDisksMount *mount)
 {
-        g_return_val_if_fail (DEVKIT_DISKS_IS_MOUNT (mount), NULL);
-        return mount->priv->device_file;
+        g_return_val_if_fail (DEVKIT_DISKS_IS_MOUNT (mount), 0);
+        return mount->priv->dev;
 }
 
 gint
@@ -115,7 +114,7 @@ devkit_disks_mount_compare (DevkitDisksMount *a,
         if (ret != 0)
                 goto out;
 
-        ret = g_strcmp0 (a->priv->device_file, b->priv->device_file);
+        ret = (a->priv->dev - b->priv->dev);
 
  out:
         return ret;
