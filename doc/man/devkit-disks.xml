@@ -37,6 +37,15 @@
     <title>OPTIONS</title>
     <variablelist>
       <varlistentry>
+        <term><option>--dump</option></term>
+        <listitem>
+          <para>
+            Dump all information about all devices. Please include this when filing bugs.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>--enumerate</option></term>
         <listitem>
           <para>

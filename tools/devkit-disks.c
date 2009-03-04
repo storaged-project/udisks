@@ -53,6 +53,7 @@ static DBusGConnection     *bus = NULL;
 static DBusGProxy          *disks_proxy = NULL;
 static GMainLoop           *loop;
 
+static gboolean      opt_dump              = FALSE;
 static gboolean      opt_enumerate         = FALSE;
 static gboolean      opt_monitor           = FALSE;
 static gboolean      opt_monitor_detail    = FALSE;
@@ -1239,6 +1240,12 @@ out:
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gint
+ptr_str_array_compare (const gchar **a, const gchar **b)
+{
+        return g_strcmp0 (*a, *b);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -1248,6 +1255,7 @@ main (int argc, char **argv)
         unsigned int         n;
         static GOptionEntry  entries []     = {
                 { "enumerate", 0, 0, G_OPTION_ARG_NONE, &opt_enumerate, "Enumerate objects paths for devices", NULL },
+                { "dump", 0, 0, G_OPTION_ARG_NONE, &opt_dump, "Dump all information about all devices", NULL },
                 { "monitor", 0, 0, G_OPTION_ARG_NONE, &opt_monitor, "Monitor activity from the disk daemon", NULL },
                 { "monitor-detail", 0, 0, G_OPTION_ARG_NONE, &opt_monitor_detail, "Monitor with detail", NULL },
                 { "show-info", 0, 0, G_OPTION_ARG_STRING, &opt_show_info, "Show information about object path", NULL },
@@ -1319,7 +1327,24 @@ main (int argc, char **argv)
                                  G_TYPE_DOUBLE,
                                  G_TYPE_INVALID);
 
-        if (opt_enumerate) {
+        if (opt_dump) {
+                GPtrArray *devices;
+                if (!org_freedesktop_DeviceKit_Disks_enumerate_devices (disks_proxy, &devices, &error)) {
+                        g_warning ("Couldn't enumerate devices: %s", error->message);
+                        g_error_free (error);
+                        goto out;
+                }
+                g_ptr_array_sort (devices, (GCompareFunc) ptr_str_array_compare);
+                g_print ("========================================================================\n");
+                for (n = 0; n < devices->len; n++) {
+                        char *object_path = devices->pdata[n];
+                        do_show_info (object_path);
+                        g_print ("\n"
+                                 "========================================================================\n");
+                }
+                g_ptr_array_foreach (devices, (GFunc) g_free, NULL);
+                g_ptr_array_free (devices, TRUE);
+        } else if (opt_enumerate) {
                 GPtrArray *devices;
                 if (!org_freedesktop_DeviceKit_Disks_enumerate_devices (disks_proxy, &devices, &error)) {
                         g_warning ("Couldn't enumerate devices: %s", error->message);
