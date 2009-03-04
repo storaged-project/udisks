@@ -1225,9 +1225,10 @@ devkit_disks_damon_local_check_auth (DevkitDisksDaemon     *daemon,
 
                 uid = (uid_t) -1;
                 if (!polkit_caller_get_uid (pk_caller, &uid) || uid != 0) {
-                        throw_error (context,
-                                     DEVKIT_DISKS_ERROR_INHIBITED,
-                                     "Daemon is being inhibited");
+                        if (context != NULL)
+                                throw_error (context,
+                                             DEVKIT_DISKS_ERROR_INHIBITED,
+                                             "Daemon is being inhibited");
                 }
                 goto out;
         }
@@ -1245,10 +1246,12 @@ devkit_disks_damon_local_check_auth (DevkitDisksDaemon     *daemon,
 
                 dbus_error_init (&d_error);
                 polkit_dbus_error_generate (pk_action, pk_result, &d_error);
-                error = NULL;
-                dbus_set_g_error (&error, &d_error);
-                dbus_g_method_return_error (context, error);
-                g_error_free (error);
+                if (context != NULL) {
+                        error = NULL;
+                        dbus_set_g_error (&error, &d_error);
+                        dbus_g_method_return_error (context, error);
+                        g_error_free (error);
+                }
                 dbus_error_free (&d_error);
         }
         polkit_action_unref (pk_action);

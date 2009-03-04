@@ -4506,8 +4506,21 @@ devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
                  * unmount the device as the user
                  */
                 if (is_device_in_fstab (device, &mount_path)) {
+
+                        /* If the user has the filesystem-unmount-others authorization, unmount
+                         * as root. This is such that /etc/fstab mounts without the "user" option
+                         * (or similar) can be unmounted.
+                         */
+                        if (devkit_disks_damon_local_check_auth (device->priv->daemon,
+                                                                 pk_caller,
+                                                                 "org.freedesktop.devicekit.disks.filesystem-unmount-others",
+                                                                 NULL)) {
+                                snprintf (uid_buf, sizeof uid_buf, "%d", 0);
+                        } else {
+                                snprintf (uid_buf, sizeof uid_buf, "%d", uid);
+                        }
+
                         n = 0;
-                        snprintf (uid_buf, sizeof uid_buf, "%d", uid);
                         argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-fstab-mounter";
                         if (force_unmount)
                                 argv[n++] = "force_unmount";
