@@ -150,21 +150,12 @@
           </doc:para>
         </doc:description>
         <doc:permission>
-          The caller will need one of the following PolicyKit authorizations:
+          The caller will need the following PolicyKit authorization:
           <doc:list>
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.linux-md</doc:term>
               <doc:definition>
-                Needed to configured Linux md Software RAID devices where all components are
-                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>.
-              </doc:definition>
-            </doc:item>
-            <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.linux-md-system-internal</doc:term>
-              <doc:definition>
-                Needed to configured Linux md Software RAID devices with one or more
-                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
-                components.
+                Needed to configured Linux md Software RAID devices.
               </doc:definition>
             </doc:item>
           </doc:list>

@@ -95,6 +95,7 @@ out:
 #endif
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
 
 static gchar **poller_devices_to_poll = NULL;
 
@@ -130,6 +131,7 @@ devkit_disks_poller_poll_device (const gchar *device_file)
         }
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
 poller_timeout_cb (gpointer user_data)
@@ -145,6 +147,8 @@ poller_timeout_cb (gpointer user_data)
         /* don't remove the source */
         return TRUE;
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
 poller_have_data (GIOChannel    *channel,
@@ -211,6 +215,8 @@ poller_have_data (GIOChannel    *channel,
         return TRUE;
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 poller_run (gint fd)
 {
@@ -269,6 +275,8 @@ devkit_disks_poller_setup (int argc, char *argv[])
         return ret;
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 void
 devkit_disks_poller_set_devices (GList *devices)
 {
@@ -299,8 +307,10 @@ devkit_disks_poller_set_devices (GList *devices)
                 devices_currently_polled = devices_to_poll;
 
                 write (poller_daemon_write_end_fd, devices_currently_polled, strlen (devices_currently_polled));
-                //g_debug ("Wanna poll: '%s'", devices_currently_polled);
+                //g_debug ("Want to poll: '%s'", devices_currently_polled);
         } else {
                 g_free (devices_to_poll);
         }
 }
+
+/* ---------------------------------------------------------------------------------------------------- */

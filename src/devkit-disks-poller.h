@@ -24,8 +24,12 @@
 #include <devkit-disks-device.h>
 
 gboolean devkit_disks_poller_setup (int argc, char *argv[]);
+
+/* media detection polling */
 void     devkit_disks_poller_set_devices (GList *devices);
 void     devkit_disks_poller_poll_device (const gchar *device_file);
 
+/* ATA smart polling */
+void     devkit_disks_poller_set_ata_smart_devices (GList *devices);
 
 #endif /* __DEVKIT_DISKS_POLLER_H */

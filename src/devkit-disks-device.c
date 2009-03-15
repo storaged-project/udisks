@@ -7561,8 +7561,6 @@ devkit_disks_device_linux_md_stop (DevkitDisksDevice     *device,
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
-                                                  device->priv->device_is_system_internal ?
-                                                  "org.freedesktop.devicekit.disks.linux-md-system-internal" :
                                                   "org.freedesktop.devicekit.disks.linux-md",
                                                   context)) {
                 goto out;
@@ -7676,8 +7674,6 @@ devkit_disks_device_linux_md_add_component (DevkitDisksDevice     *device,
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
-                                                  device->priv->device_is_system_internal ?
-                                                  "org.freedesktop.devicekit.disks.linux-md-system-internal" :
                                                   "org.freedesktop.devicekit.disks.linux-md",
                                                   context)) {
                 goto out;
@@ -7895,8 +7891,6 @@ devkit_disks_device_linux_md_remove_component (DevkitDisksDevice     *device,
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
-                                                  device->priv->device_is_system_internal ?
-                                                  "org.freedesktop.devicekit.disks.linux-md-system-internal" :
                                                   "org.freedesktop.devicekit.disks.linux-md",
                                                   context)) {
                 goto out;
@@ -8195,8 +8189,6 @@ devkit_disks_daemon_linux_md_start (DevkitDisksDaemon     *daemon,
 
         if (!devkit_disks_damon_local_check_auth (daemon,
                                                   pk_caller,
-                                                  TRUE ? /* TODO: si IFF just a single component is si */
-                                                  "org.freedesktop.devicekit.disks.linux-md-system-internal" :
                                                   "org.freedesktop.devicekit.disks.linux-md",
                                                   context)) {
                 goto out;

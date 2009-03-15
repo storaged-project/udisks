@@ -175,16 +175,6 @@ file are instantly applied.
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
-      <allow_active>yes</allow_active>
-    </defaults>
-  </action>
-
-  <action id="org.freedesktop.devicekit.disks.linux-md-system-internal">
-    <_description>Configure Linux Software RAID on a system-internal device</_description>
-    <_message>Authentication is required to configure Linux Software RAID devices</_message>
-    <defaults>
-      <allow_any>no</allow_any>
-      <allow_inactive>no</allow_inactive>
       <allow_active>auth_admin</allow_active>
     </defaults>
   </action>
