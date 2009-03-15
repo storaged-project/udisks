@@ -3212,9 +3212,9 @@ devkit_disks_device_removed (DevkitDisksDevice *device)
          * device itself is busy. This includes
          *
          *  - force unmounting the device and/or all it's partitions
+         *
          *  - tearing down a luks mapping if it's a cleartext device
          *    backed by a crypted device
-         *  - removing the device from a RAID array in case of Linux MD.
          *
          * but see force_removal() for details.
          *
@@ -3334,9 +3334,9 @@ devkit_disks_device_changed (DevkitDisksDevice *device, DevkitDevice *d, gboolea
          * if the device itself is busy. This includes
          *
          *  - force unmounting the device
+         *
          *  - tearing down a luks mapping if it's a cleartext device
          *    backed by a crypted device
-         *  - removing the device from a RAID array in case of Linux MD.
          *
          * but see force_removal() for details.
          *
@@ -8483,167 +8483,6 @@ force_luks_teardown (DevkitDisksDevice        *device,
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
-typedef struct {
-        DevkitDisksDevice        *component_device;
-        ForceRemovalCompleteFunc  fr_callback;
-        gpointer                  fr_user_data;
-} ForceLinuxMdRemovalData;
-
-static ForceLinuxMdRemovalData *
-force_linux_md_removal_data_new (DevkitDisksDevice        *component_device,
-                                 ForceRemovalCompleteFunc  fr_callback,
-                                 gpointer                  fr_user_data)
-{
-        ForceLinuxMdRemovalData *data;
-
-        data = g_new0 (ForceLinuxMdRemovalData, 1);
-        data->component_device = g_object_ref (component_device);
-        data->fr_callback = fr_callback;
-        data->fr_user_data = fr_user_data;
-
-        return data;
-}
-
-static void
-force_linux_md_removal_data_unref (ForceLinuxMdRemovalData *data)
-{
-        g_object_unref (data->component_device);
-        g_free (data);
-}
-
-static void
-force_linux_md_removal_completed_cb (DBusGMethodInvocation *context,
-                                     DevkitDisksDevice *device,
-                                     PolKitCaller *pk_caller,
-                                     gboolean job_was_cancelled,
-                                     int status,
-                                     const char *stderr,
-                                     const char *stdout,
-                                     gpointer user_data)
-{
-        ForceLinuxMdRemovalData *data = user_data;
-        char *touch_str;
-
-        /* the kernel won't send change events so we simply poke the kernel to do that */
-        devkit_disks_device_generate_kernel_change_event (device);
-
-        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
-
-                g_debug ("Successfully force removed linux md component %s from array %s",
-                         data->component_device->priv->device_file,
-                         device->priv->device_file);
-
-                /* TODO: when we add polling, this can probably be removed. I have no idea why hal's
-                 *       poller don't cause the kernel to revalidate the (missing) media
-                 */
-                touch_str = g_strdup_printf ("touch %s", data->component_device->priv->device_file);
-                g_spawn_command_line_sync (touch_str, NULL, NULL, NULL, NULL);
-                g_free (touch_str);
-
-                if (data->fr_callback != NULL)
-                        data->fr_callback (data->component_device, TRUE, data->fr_user_data);
-        } else {
-                g_warning ("force linux_md_removal failed: %s", stderr);
-                if (data->fr_callback != NULL)
-                        data->fr_callback (data->component_device, FALSE, data->fr_user_data);
-        }
-}
-
-static void
-force_linux_md_removal (DevkitDisksDevice        *device,
-                        DevkitDisksDevice        *linux_md_array_device,
-                        ForceRemovalCompleteFunc  callback,
-                        gpointer                  user_data)
-{
-        int n;
-        char *argv[16];
-        GError *error;
-        char *s;
-        char *state_path;
-        int fd;
-
-        /* We arrive here if we know that a backing device for an
-         * array is irrevocably gone. There are two options from
-         * here.
-         *
-         * - if it's raid1, raid4, raid5 or raid6 or raid10 we can
-         *   sustain one or more drive failures. So check if we can
-         *   go on.
-         *
-         * - if it's raid0 or linear or we can't sustain more drive
-         *   failures we simply stop the array.
-         *
-         * Why do anything at all? Why deal with it? Because we want
-         * to notify the user that a) his array is now running degraded;
-         * or b) his array is no longer functioning. Letting him wait
-         * until he tries accessing the data? Bad form.
-         *
-         * Unfortunately there's no way to stop a busy array.. but
-         * at least we can manually fail a device in order to degrade
-         * the array. The life-cycle management in drivers/md/md.c
-         * simply just needs to be fixed.
-         */
-
-        /* Even though the kernel has removed the component block device, it simply won't
-         * realize that fact until it tries to access it (which may take hours).. so
-         * manually mark the device as faulty. We can't use mdadm's --fail option
-         * because the device file is no more.
-         *
-         * TODO: I think this is a bug in the kernel; or maybe it's policy but that
-         *       makes zero sense as the block device is gone; e.g. even the symlinks
-         *       in holders/ of the array device points to a directory in sysfs that
-         *       is gone. Need to investigate.
-         */
-        s = g_path_get_basename (device->priv->native_path);
-        state_path = g_strdup_printf ("%s/md/dev-%s/state",
-                                      linux_md_array_device->priv->native_path,
-                                      s);
-        //g_debug ("state_path=%s", state_path);
-        fd = open (state_path, O_WRONLY);
-        if (fd < 0) {
-                g_warning ("cannot open %s for writing", state_path);
-        } else {
-                char *buf = "faulty";
-                if (write (fd, buf, 6) != 6) {
-                        g_warning ("cannot write 'faulty' to %s", state_path);
-                }
-                close (fd);
-        }
-        g_free (s);
-        g_free (state_path);
-
-        /* ok, now that we're marked the component as faulty use mdadm to remove all failed devices */
-        n = 0;
-        argv[n++] = "mdadm";
-        argv[n++] = "--manage";
-        argv[n++] = linux_md_array_device->priv->device_file;
-        argv[n++] = "--remove";
-        argv[n++] = "failed";
-        argv[n++] = NULL;
-
-        //g_debug ("doing mdadm --manage %s --remove failed", linux_md_array_device->priv->device_file);
-
-        error = NULL;
-        if (!job_new (NULL,
-                      "ForceLinuxMdRemoval",
-                      FALSE,
-                      linux_md_array_device,
-                      NULL,
-                      argv,
-                      NULL,
-                      force_linux_md_removal_completed_cb,
-                      force_linux_md_removal_data_new (device, callback, user_data),
-                      (GDestroyNotify) force_linux_md_removal_data_unref)) {
-
-                g_warning ("Couldn't spawn mdadm for force removal: %s", error->message);
-                g_error_free (error);
-                if (callback != NULL)
-                        callback (device, FALSE, user_data);
-        }
-}
-
-/*--------------------------------------------------------------------------------------------------------------*/
-
 static void
 force_removal (DevkitDisksDevice        *device,
                ForceRemovalCompleteFunc  callback,
@@ -8657,10 +8496,6 @@ force_removal (DevkitDisksDevice        *device,
          *
          *  - If it's a luks device, check if there's cleartext
          *    companion. If so, tear it down if it was setup by us.
-         *
-         *  - A Linux MD component that is part of a running array,
-         *    we need to fail it on the array and the remove it
-         *    from the array
          *
          */
         if (device->priv->device_is_mounted && device->priv->device_mount_path != NULL) {
@@ -8696,43 +8531,6 @@ force_removal (DevkitDisksDevice        *device,
                                         /* Gotcha */
                                         force_luks_teardown (device, d, callback, user_data);
                                         goto pending;
-                                }
-                        }
-                }
-        }
-
-        if (device->priv->device_is_linux_md_component) {
-                GList *devices;
-                GList *l;
-
-                /* look for the array */
-                devices = devkit_disks_daemon_local_get_all_devices (device->priv->daemon);
-                for (l = devices; l != NULL; l = l->next) {
-                        DevkitDisksDevice *d = DEVKIT_DISKS_DEVICE (l->data);
-
-                        if (d->priv->device_is_linux_md) {
-                                /* TODO: check properly */
-
-                                unsigned int n;
-
-                                /* At least it's the same uuid.. but it may not be part of the running
-                                 * array. Need to check linux_md_slaves to be sure.
-                                 */
-
-                                /* TODO: check if we (DeviceKit-disks) set up this array */
-
-                                for (n = 0; n < d->priv->linux_md_slaves->len; n++) {
-                                        if (strcmp (d->priv->linux_md_slaves->pdata[n],
-                                                    device->priv->object_path) == 0) {
-
-                                                g_debug ("Force linux md component teardown of %s from array %s",
-                                                         device->priv->device_file,
-                                                         d->priv->device_file);
-
-                                                /* You're going to remove-from-array-city, buddy! */
-                                                force_linux_md_removal (device, d, callback, user_data);
-                                                goto pending;
-                                        }
                                 }
                         }
                 }
