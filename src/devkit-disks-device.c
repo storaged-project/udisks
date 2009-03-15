@@ -2892,16 +2892,25 @@ update_info (DevkitDisksDevice *device)
         }
 
         /* Maintain (non-exported) properties holders and slaves for the holders resp. slaves
-         * directories in sysfs. The entries in these arrays are object paths (that may not
-         * exist; we just compute the name).
+         * directories in sysfs. The entries in these arrays are object paths - we ignore
+         * an entry unless it corresponds to an device in our local database.
          */
         path = g_build_filename (device->priv->native_path, "slaves", NULL);
         slaves = g_ptr_array_new ();
         if((dir = g_dir_open (path, 0, NULL)) != NULL) {
                 while ((name = g_dir_read_name (dir)) != NULL) {
+                        DevkitDisksDevice *device2;
+
                         s = compute_object_path_from_basename (name);
-                        g_ptr_array_add (slaves, s);
-                        g_debug ("%s has slave %s", device->priv->object_path, s);
+
+                        device2 = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, s);
+                        if (device2 != NULL) {
+                                //g_debug ("%s has slave %s", device->priv->object_path, s);
+                                g_ptr_array_add (slaves, s);
+                        } else {
+                                //g_debug ("%s has non-existant slave %s", device->priv->object_path, s);
+                                g_free (s);
+                        }
                 }
                 g_dir_close (dir);
         }
@@ -2916,9 +2925,17 @@ update_info (DevkitDisksDevice *device)
         holders = g_ptr_array_new ();
         if((dir = g_dir_open (path, 0, NULL)) != NULL) {
                 while ((name = g_dir_read_name (dir)) != NULL) {
+                        DevkitDisksDevice *device2;
+
                         s = compute_object_path_from_basename (name);
-                        g_ptr_array_add (holders, s);
-                        g_debug ("%s has holder %s", device->priv->object_path, s);
+                        device2 = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, s);
+                        if (device2 != NULL) {
+                                //g_debug ("%s has holder %s", device->priv->object_path, s);
+                                g_ptr_array_add (holders, s);
+                        } else {
+                                //g_debug ("%s has non-existant holder %s", device->priv->object_path, s);
+                                g_free (s);
+                        }
                 }
                 g_dir_close (dir);
         }
@@ -3044,7 +3061,7 @@ out:
                 if (device2 != NULL) {
                         update_info (device2);
                 } else {
-                        //g_debug ("%s added non-existant slave %s", device->priv->object_path, objpath2);
+                        g_warning ("### %s added non-existant slave %s", device->priv->object_path, objpath2);
                 }
         }
         for (l = removed_objpath; l != NULL; l = l->next) {
@@ -3056,7 +3073,7 @@ out:
                 if (device2 != NULL) {
                         update_info (device2);
                 } else {
-                        //g_debug ("%s removed non-existant slave %s", device->priv->object_path, objpath2);
+                        //g_debug ("### %s removed non-existant slave %s", device->priv->object_path, objpath2);
                 }
         }
         g_list_free (added_objpath);
@@ -3074,7 +3091,7 @@ out:
                 if (device2 != NULL) {
                         update_info (device2);
                 } else {
-                        //g_debug ("%s added non-existant holder %s", device->priv->object_path, objpath2);
+                        g_warning ("### %s added non-existant holder %s", device->priv->object_path, objpath2);
                 }
         }
         for (l = removed_objpath; l != NULL; l = l->next) {
@@ -3086,7 +3103,7 @@ out:
                 if (device2 != NULL) {
                         update_info (device2);
                 } else {
-                        //g_debug ("%s removed non-existant holder %s", device->priv->object_path, objpath2);
+                        //g_debug ("### %s removed non-existant holder %s", device->priv->object_path, objpath2);
                 }
         }
         g_list_free (added_objpath);
