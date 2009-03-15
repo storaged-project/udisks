@@ -3910,12 +3910,13 @@ typedef struct {
 } FSMountOptions;
 
 /* ---------------------- vfat -------------------- */
-/* TODO: add more filesystems */
 
 static const char *vfat_defaults[] =       {"uid=",
                                             "gid=",
                                             "shortname=lower",
                                             "dmask=0077",
+                                            "iocharset=utf8",
+                                            "codepage=437",
                                             NULL};
 static const char *vfat_allow[] =          {"utf8",
                                             "shortname=",
@@ -3927,6 +3928,50 @@ static const char *vfat_allow[] =          {"utf8",
                                             NULL};
 static const char *vfat_allow_uid_self[] = {"uid=", NULL};
 static const char *vfat_allow_gid_self[] = {"gid=", NULL};
+
+/* ---------------------- ntfs -------------------- */
+/* this is assuming that ntfs-3g is used */
+
+static const char *ntfs_defaults[] =       {"uid=",
+                                            "gid=",
+                                            "dmask=0077",
+                                            NULL};
+static const char *ntfs_allow[] =          {"umask=",
+                                            "dmask=",
+                                            "fmask=",
+                                            NULL};
+static const char *ntfs_allow_uid_self[] = {"uid=", NULL};
+static const char *ntfs_allow_gid_self[] = {"gid=", NULL};
+
+/* ---------------------- iso9660 -------------------- */
+
+static const char *iso9660_defaults[] =       {"uid=",
+                                               "gid=",
+                                               "iocharset=utf8",
+                                               "mode=0400",
+                                               "dmode=0400",
+                                               NULL};
+static const char *iso9660_allow[] =          {"norock",
+                                               "nojoliet",
+                                               "iocharset=",
+                                               "mode=",
+                                               "dmode=",
+                                               NULL};
+static const char *iso9660_allow_uid_self[] = {"uid=", NULL};
+static const char *iso9660_allow_gid_self[] = {"gid=", NULL};
+
+/* ---------------------- udf -------------------- */
+
+static const char *udf_defaults[] =       {"uid=",
+                                           "gid=",
+                                           "iocharset=utf8",
+                                           "umask=0077",
+                                           NULL};
+static const char *udf_allow[] =          {"iocharset=",
+                                           "umask=",
+                                           NULL};
+static const char *udf_allow_uid_self[] = {"uid=", NULL};
+static const char *udf_allow_gid_self[] = {"gid=", NULL};
 
 /* ------------------------------------------------ */
 /* TODO: support context= */
@@ -3947,6 +3992,9 @@ static const char *any_allow[] = {"exec",
 
 static const FSMountOptions fs_mount_options[] = {
         {"vfat", vfat_defaults, vfat_allow, vfat_allow_uid_self, vfat_allow_gid_self},
+        {"ntfs", ntfs_defaults, ntfs_allow, ntfs_allow_uid_self, ntfs_allow_gid_self},
+        {"iso9660", iso9660_defaults, iso9660_allow, iso9660_allow_uid_self, iso9660_allow_gid_self},
+        {"udf", udf_defaults, udf_allow, udf_allow_uid_self, udf_allow_gid_self},
 };
 
 /* ------------------------------------------------ */
@@ -4045,7 +4093,7 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
 
         /* first run through the allowed mount options */
         if (fsmo != NULL) {
-                for (n = 0; fsmo->allow[n] != NULL; n++) {
+                for (n = 0; fsmo->allow != NULL && fsmo->allow[n] != NULL; n++) {
                         ep = strstr (fsmo->allow[n], "=");
                         if (ep != NULL && ep[1] == '\0') {
                                 ep_len = ep - fsmo->allow[n] + 1;
@@ -4081,7 +4129,7 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
          * in his own uid
          */
         if (fsmo != NULL) {
-                for (n = 0; fsmo->allow_uid_self[n] != NULL; n++) {
+                for (n = 0; fsmo->allow_uid_self != NULL && fsmo->allow_uid_self[n] != NULL; n++) {
                         const char *r_mount_option = fsmo->allow_uid_self[n];
                         if (g_str_has_prefix (option, r_mount_option)) {
                                 uid = strtol (option + strlen (r_mount_option), &endp, 10);
@@ -4098,7 +4146,7 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
         /* .. ditto for gid
          */
         if (fsmo != NULL) {
-                for (n = 0; fsmo->allow_gid_self[n] != NULL; n++) {
+                for (n = 0; fsmo->allow_gid_self != NULL && fsmo->allow_gid_self[n] != NULL; n++) {
                         const char *r_mount_option = fsmo->allow_gid_self[n];
                         if (g_str_has_prefix (option, r_mount_option)) {
                                 gid = strtol (option + strlen (r_mount_option), &endp, 10);
@@ -4126,7 +4174,7 @@ prepend_default_mount_options (const FSMountOptions *fsmo, uid_t caller_uid, cha
 
         options = g_ptr_array_new ();
         if (fsmo != NULL) {
-                for (n = 0; fsmo->defaults[n] != NULL; n++) {
+                for (n = 0; fsmo->defaults != NULL && fsmo->defaults[n] != NULL; n++) {
                         const char *option = fsmo->defaults[n];
 
                         if (strcmp (option, "uid=") == 0) {
@@ -4318,6 +4366,8 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
                 g_string_append (s, option);
         }
         mount_options = g_string_free (s, FALSE);
+
+        g_print ("**** USING MOUNT OPTIONS '%s' FOR DEVICE %s\n", mount_options, device->priv->device_file);
 
         if (device->priv->device_is_mounted) {
                 if (!is_remount) {
