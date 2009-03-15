@@ -2314,8 +2314,10 @@ update_info_linux_md (DevkitDisksDevice *device)
         ret = FALSE;
 
         if (sysfs_file_exists (device->priv->native_path, "md")) {
-                char *raid_level;
-                char *array_state;
+                gchar *uuid;
+                gint num_raid_devices;
+                gchar *raid_level;
+                gchar *array_state;
                 DevkitDisksDevice *slave;
                 GPtrArray *md_slaves;
                 const gchar *md_name;
@@ -2330,20 +2332,18 @@ update_info_linux_md (DevkitDisksDevice *device)
                         goto out;
                 }
                 g_strstrip (array_state);
+
+                /* ignore clear arrays since these have no devices, no size, no level */
                 if (strcmp (array_state, "clear") == 0) {
                         g_debug ("Linux MD array %s is 'clear'; removing", device->priv->native_path);
                         g_free (array_state);
                         goto out;
                 }
+
                 devkit_disks_device_set_linux_md_state (device, array_state);
                 g_free (array_state);
 
-                if (device->priv->slaves_objpath->len == 0) {
-                        g_debug ("No slaves for Linux MD array %s; removing", device->priv->native_path);
-                        goto out;
-                }
-
-                /* array must have at least on slave to be considered */
+                /* find a slave from the array */
                 slave = NULL;
                 for (n = 0; n < device->priv->slaves_objpath->len; n++) {
                         const gchar *slave_objpath;
@@ -2354,34 +2354,36 @@ update_info_linux_md (DevkitDisksDevice *device)
                                 break;
                 }
 
-                if (slave == NULL) {
-                        g_debug ("No UUID for Linux MD array %s and no slaves; removing", device->priv->native_path);
-                        goto out;
-                }
-
-                devkit_disks_device_set_linux_md_uuid (device, devkit_device_get_property (device->priv->d, "MD_UUID"));
-
-                /* if the UUID isn't set by the udev rules (array may be inactive) get it from a slave */
-                if (device->priv->linux_md_uuid == NULL) {
-                        devkit_disks_device_set_linux_md_uuid (device, slave->priv->linux_md_component_uuid);
-                }
-
-                /* ditto for raid level */
+                uuid = devkit_device_dup_property_as_str (device->priv->d, "MD_UUID");
+                num_raid_devices = sysfs_get_int (device->priv->native_path, "md/raid_disks");
                 raid_level = g_strstrip (sysfs_get_string (device->priv->native_path, "md/level"));
-                if (raid_level == NULL || strlen (raid_level) == 0) {
-                        g_free (raid_level);
-                        raid_level = g_strdup (slave->priv->linux_md_component_level);
+
+                if (slave != NULL) {
+                        /* if the UUID isn't set by the udev rules (array may be inactive) get it from a slave */
+                        if (uuid == NULL || strlen (uuid) == 0) {
+                                g_free (uuid);
+                                uuid = g_strdup (slave->priv->linux_md_component_uuid);
+                        }
+
+                        /* ditto for raid level */
+                        if (raid_level == NULL || strlen (raid_level) == 0) {
+                                g_free (raid_level);
+                                raid_level = g_strdup (slave->priv->linux_md_component_level);
+                        }
+
+                        /* and num_raid_devices too */
+                        if (device->priv->linux_md_num_raid_devices == 0) {
+                                num_raid_devices = slave->priv->linux_md_component_num_raid_devices;
+                        }
                 }
+
+                devkit_disks_device_set_linux_md_uuid (device, uuid);
+                devkit_disks_device_set_linux_md_num_raid_devices (device, num_raid_devices);
                 devkit_disks_device_set_linux_md_level (device, raid_level);
                 g_free (raid_level);
+                g_free (uuid);
 
-                /* and num_raid_devices too */
-                devkit_disks_device_set_linux_md_num_raid_devices (device,
-                                              sysfs_get_int (device->priv->native_path, "md/raid_disks"));
-                if (device->priv->linux_md_num_raid_devices == 0) {
-                        devkit_disks_device_set_linux_md_num_raid_devices (device, slave->priv->linux_md_component_num_raid_devices);
-                }
-
+                /* infer the array name and homehost */
                 p = g_strdup (devkit_device_get_property (device->priv->d, "MD_NAME"));
                 s = NULL;
                 if (p != NULL)
@@ -2425,15 +2427,18 @@ update_info_linux_md (DevkitDisksDevice *device)
 
                 /* TODO: may race */
                 devkit_disks_device_set_drive_vendor (device, "Linux");
-                s = g_strdup_printf ("Software RAID %s", device->priv->linux_md_level);
+                if (device->priv->linux_md_level != NULL)
+                        s = g_strdup_printf ("Software RAID %s", device->priv->linux_md_level);
+                else
+                        s = g_strdup_printf ("Software RAID");
                 devkit_disks_device_set_drive_model (device, s);
                 g_free (s);
                 devkit_disks_device_set_drive_revision (device, device->priv->linux_md_version);
                 devkit_disks_device_set_drive_connection_interface (device, "virtual");
 
                 /* RAID-0 can never resync or run degraded */
-                if (strcmp (device->priv->linux_md_level, "raid0") == 0 ||
-                    strcmp (device->priv->linux_md_level, "linear") == 0) {
+                if (g_strcmp0 (device->priv->linux_md_level, "raid0") == 0 ||
+                    g_strcmp0 (device->priv->linux_md_level, "linear") == 0) {
                         devkit_disks_device_set_linux_md_sync_action (device, "idle");
                         devkit_disks_device_set_linux_md_is_degraded (device, FALSE);
                 } else {
@@ -2460,7 +2465,7 @@ update_info_linux_md (DevkitDisksDevice *device)
                         }
 
                         /* if not idle; update percentage and speed */
-                        if (strcmp (device->priv->linux_md_sync_action, "idle") != 0) {
+                        if (g_strcmp0 (device->priv->linux_md_sync_action, "idle") != 0) {
                                 char *s;
                                 guint64 done;
                                 guint64 remaining;
