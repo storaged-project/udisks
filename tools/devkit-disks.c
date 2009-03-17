@@ -1060,6 +1060,11 @@ do_inhibit_polling (const char *object_path,
         cookie = NULL;
         ret = 127;
 
+	if (argc > 0 && strcmp (argv[0], "--") == 0) {
+		argv++;
+		argc--;
+	}
+
 	proxy = dbus_g_proxy_new_for_name (bus,
                                            "org.freedesktop.DeviceKit.Disks",
                                            object_path,
@@ -1127,6 +1132,11 @@ do_inhibit_all_polling (gint         argc,
         cookie = NULL;
         ret = 127;
 
+	if (argc > 0 && strcmp (argv[0], "--") == 0) {
+		argv++;
+		argc--;
+	}
+
 	proxy = dbus_g_proxy_new_for_name (bus,
                                            "org.freedesktop.DeviceKit.Disks",
                                            "/",
@@ -1191,6 +1201,11 @@ do_inhibit (gint         argc,
 
         cookie = NULL;
         ret = 127;
+
+	if (argc > 0 && strcmp (argv[0], "--") == 0) {
+		argv++;
+		argc--;
+	}
 
 	proxy = dbus_g_proxy_new_for_name (bus,
                                            "org.freedesktop.DeviceKit.Disks",
