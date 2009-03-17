@@ -1393,14 +1393,24 @@
             TRUE if media changes are detected.
       </doc:para></doc:description></doc:doc>
     </property>
+    <property name="device-is-media-change-detection-polling" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if media changes are detected through the host
+            polling the device, e.g. waking up every two seconds to
+            revalidate the media. This typically keeps the device in a
+            high power state and uses cycles on the CPU. As an
+            example, SATA AN capable optical drives does not need
+            polling.
+      </doc:para></doc:description></doc:doc>
+    </property>
     <property name="device-is-media-change-detection-inhibitable" type="b" access="read">
       <doc:doc><doc:description><doc:para>
-            TRUE if it is possible to inhibit media detection on the device (to avoid keeping the device in a high power state).
+            TRUE if it is possible to inhibit media detection on the device (to avoid keeping the device in a high power state and waking up the host).
       </doc:para></doc:description></doc:doc>
     </property>
     <property name="device-is-media-change-detection-inhibited" type="b" access="read">
       <doc:doc><doc:description><doc:para>
-            TRUE if media detection is inhibited (to avoid keeping the device in a high power state).
+            TRUE if media detection is inhibited (to avoid keeping the device in a high power state and waking up the host).
       </doc:para></doc:description></doc:doc>
     </property>
     <property name="device-is-read-only" type="b" access="read">

@@ -103,6 +103,7 @@ struct DevkitDisksDevicePrivate
         gboolean device_is_removable;
         gboolean device_is_media_available;
         gboolean device_is_media_change_detected;
+        gboolean device_is_media_change_detection_polling;
         gboolean device_is_media_change_detection_inhibitable;
         gboolean device_is_media_change_detection_inhibited;
         gboolean device_is_read_only;
@@ -224,6 +225,7 @@ void devkit_disks_device_set_device_is_partition_table (DevkitDisksDevice *devic
 void devkit_disks_device_set_device_is_removable (DevkitDisksDevice *device, gboolean value);
 void devkit_disks_device_set_device_is_media_available (DevkitDisksDevice *device, gboolean value);
 void devkit_disks_device_set_device_is_media_change_detected (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_device_is_media_change_detection_polling (DevkitDisksDevice *device, gboolean value);
 void devkit_disks_device_set_device_is_media_change_detection_inhibitable (DevkitDisksDevice *device, gboolean value);
 void devkit_disks_device_set_device_is_media_change_detection_inhibited (DevkitDisksDevice *device, gboolean value);
 void devkit_disks_device_set_device_is_read_only (DevkitDisksDevice *device, gboolean value);

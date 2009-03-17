@@ -1273,7 +1273,8 @@ devkit_disks_daemon_local_update_poller (DevkitDisksDaemon *daemon)
 
         g_hash_table_iter_init (&hash_iter, daemon->priv->map_object_path_to_device);
         while (g_hash_table_iter_next (&hash_iter, NULL, (gpointer) &device)) {
-                if (device->priv->device_is_media_change_detected)
+                if (device->priv->device_is_media_change_detected &&
+                    device->priv->device_is_media_change_detection_polling)
                         devices_to_poll = g_list_prepend (devices_to_poll, device);
         }
 

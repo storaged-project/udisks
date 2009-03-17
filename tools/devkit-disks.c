@@ -342,6 +342,7 @@ typedef struct
         gboolean device_is_removable;
         gboolean device_is_media_available;
         gboolean device_is_media_change_detected;
+        gboolean device_is_media_change_detection_polling;
         gboolean device_is_media_change_detection_inhibitable;
         gboolean device_is_media_change_detection_inhibited;
         gboolean device_is_read_only;
@@ -472,6 +473,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->device_is_media_available = g_value_get_boolean (value);
         else if (strcmp (key, "device-is-media-change-detected") == 0)
                 props->device_is_media_change_detected = g_value_get_boolean (value);
+        else if (strcmp (key, "device-is-media-change-detection-polling") == 0)
+                props->device_is_media_change_detection_polling = g_value_get_boolean (value);
         else if (strcmp (key, "device-is-media-change-detection-inhibitable") == 0)
                 props->device_is_media_change_detection_inhibitable = g_value_get_boolean (value);
         else if (strcmp (key, "device-is-media-change-detection-inhibited") == 0)
@@ -838,6 +841,7 @@ do_show_info (const char *object_path)
         g_print ("  removable:               %d\n", props->device_is_removable);
         g_print ("  has media:               %d\n", props->device_is_media_available);
         g_print ("    detects change:        %d\n", props->device_is_media_change_detected);
+        g_print ("    detection by polling:  %d\n", props->device_is_media_change_detection_polling);
         g_print ("    detection inhibitable: %d\n", props->device_is_media_change_detection_inhibitable);
         g_print ("    detection inhibited:   %d\n", props->device_is_media_change_detection_inhibited);
         g_print ("  is read only:            %d\n", props->device_is_read_only);

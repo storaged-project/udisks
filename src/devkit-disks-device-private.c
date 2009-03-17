@@ -307,6 +307,16 @@ devkit_disks_device_set_device_is_media_change_detected (DevkitDisksDevice *devi
 }
 
 void
+devkit_disks_device_set_device_is_media_change_detection_polling (DevkitDisksDevice *device, gboolean value)
+{
+  if (G_UNLIKELY (device->priv->device_is_media_change_detection_polling != value))
+    {
+      device->priv->device_is_media_change_detection_polling = value;
+      emit_changed (device, "device_is_media_change_detection_polling");
+    }
+}
+
+void
 devkit_disks_device_set_device_is_media_change_detection_inhibitable (DevkitDisksDevice *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_media_change_detection_inhibitable != value))

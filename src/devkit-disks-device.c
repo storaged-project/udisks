@@ -140,6 +140,7 @@ enum
         PROP_DEVICE_IS_REMOVABLE,
         PROP_DEVICE_IS_MEDIA_AVAILABLE,
         PROP_DEVICE_IS_MEDIA_CHANGE_DETECTED,
+        PROP_DEVICE_IS_MEDIA_CHANGE_DETECTION_POLLING,
         PROP_DEVICE_IS_MEDIA_CHANGE_DETECTION_INHIBITABLE,
         PROP_DEVICE_IS_MEDIA_CHANGE_DETECTION_INHIBITED,
         PROP_DEVICE_IS_READ_ONLY,
@@ -313,6 +314,9 @@ get_property (GObject         *object,
 		break;
 	case PROP_DEVICE_IS_MEDIA_CHANGE_DETECTED:
 		g_value_set_boolean (value, device->priv->device_is_media_change_detected);
+		break;
+	case PROP_DEVICE_IS_MEDIA_CHANGE_DETECTION_POLLING:
+		g_value_set_boolean (value, device->priv->device_is_media_change_detection_polling);
 		break;
 	case PROP_DEVICE_IS_MEDIA_CHANGE_DETECTION_INHIBITABLE:
 		g_value_set_boolean (value, device->priv->device_is_media_change_detection_inhibitable);
@@ -702,6 +706,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DEVICE_IS_MEDIA_CHANGE_DETECTED,
                 g_param_spec_boolean ("device-is-media-change-detected", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_IS_MEDIA_CHANGE_DETECTION_POLLING,
+                g_param_spec_boolean ("device-is-media-change-detection-polling", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_DEVICE_IS_MEDIA_CHANGE_DETECTION_INHIBITABLE,
@@ -2696,35 +2704,47 @@ static gboolean
 update_info_media_detection (DevkitDisksDevice *device)
 {
         gboolean detected;
+        gboolean polling;
         gboolean inhibitable;
         gboolean inhibited;
 
-        /* TODO: figure out if the device supports SATA AN and do the right thing in that case */
-
         detected = FALSE;
+        polling = FALSE;
         inhibitable = FALSE;
         inhibited = FALSE;
 
         if (device->priv->device_is_removable) {
+                guint64 evt_media_change;
 
-                /* can always inhibit media changes on removable media since we poll those
-                 * by default... of course, once we properly detect SATA AN we'd need to
-                 * flip this switch to FALSE for such drives
-                 */
-                inhibitable = TRUE;
+                evt_media_change = sysfs_get_uint64 (device->priv->native_path, "../../evt_media_change");
+                if (evt_media_change & 1) {
+                        /* SATA AN capabable drive */
 
-                if (device->priv->polling_inhibitors != NULL ||
-                    devkit_disks_daemon_local_has_polling_inhibitors (device->priv->daemon)) {
-
-                        detected = FALSE;
-                        inhibited = TRUE;
-                } else {
+                        polling = FALSE;
                         detected = TRUE;
-                        inhibited = FALSE;
+
+                } else {
+                        /* device that needs polling */
+
+                        polling = TRUE;
+
+                        /* can always inhibit media changes on removable media we poll */
+                        inhibitable = TRUE;
+
+                        if (device->priv->polling_inhibitors != NULL ||
+                            devkit_disks_daemon_local_has_polling_inhibitors (device->priv->daemon)) {
+
+                                detected = FALSE;
+                                inhibited = TRUE;
+                        } else {
+                                detected = TRUE;
+                                inhibited = FALSE;
+                        }
                 }
         }
 
         devkit_disks_device_set_device_is_media_change_detected (device, detected);
+        devkit_disks_device_set_device_is_media_change_detection_polling (device, polling);
         devkit_disks_device_set_device_is_media_change_detection_inhibitable (device, inhibitable);
         devkit_disks_device_set_device_is_media_change_detection_inhibited (device, inhibited);
 
