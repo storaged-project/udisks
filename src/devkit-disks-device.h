@@ -148,19 +148,19 @@ gboolean devkit_disks_device_filesystem_set_label (DevkitDisksDevice     *device
                                                    const char            *new_label,
                                                    DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_drive_smart_refresh_data (DevkitDisksDevice     *device,
-                                                       char                 **options,
-                                                       DBusGMethodInvocation *context);
+gboolean devkit_disks_device_drive_ata_smart_refresh_data (DevkitDisksDevice     *device,
+                                                           char                 **options,
+                                                           DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_drive_smart_get_historical_data (DevkitDisksDevice     *device,
-                                                              guint64                from,
-                                                              guint64                to,
-                                                              DBusGMethodInvocation *context);
+gboolean devkit_disks_device_drive_ata_smart_get_historical_data (DevkitDisksDevice     *device,
+                                                                  guint64                from,
+                                                                  guint64                to,
+                                                                  DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_drive_smart_initiate_selftest (DevkitDisksDevice     *device,
-                                                            const char            *test,
-                                                            gboolean               captive,
-                                                            DBusGMethodInvocation *context);
+gboolean devkit_disks_device_drive_ata_smart_initiate_selftest (DevkitDisksDevice     *device,
+                                                                const char            *test,
+                                                                char                 **options,
+                                                                DBusGMethodInvocation *context);
 
 gboolean devkit_disks_device_linux_md_stop (DevkitDisksDevice     *device,
                                             char                 **options,

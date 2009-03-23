@@ -119,9 +119,9 @@ file are instantly applied.
     </defaults>
   </action>
 
-  <action id="org.freedesktop.devicekit.disks.drive-smart-refresh">
-    <_description>Refresh S.M.A.R.T. data</_description>
-    <_message>Authentication is required to refresh S.M.A.R.T. data</_message>
+  <action id="org.freedesktop.devicekit.disks.drive-ata-smart-refresh">
+    <_description>Refresh ATA SMART data</_description>
+    <_message>Authentication is required to refresh ATA SMART data</_message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -129,9 +129,9 @@ file are instantly applied.
     </defaults>
   </action>
 
-  <action id="org.freedesktop.devicekit.disks.drive-smart-selftest">
-    <_description>Run S.M.A.R.T. Self Tests</_description>
-    <_message>Authentication is required to run S.M.A.R.T. self tests</_message>
+  <action id="org.freedesktop.devicekit.disks.drive-ata-smart-selftest">
+    <_description>Run ATA SMART Self Tests</_description>
+    <_message>Authentication is required to run ATA SMART self tests</_message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
@@ -139,9 +139,9 @@ file are instantly applied.
     </defaults>
   </action>
 
-  <action id="org.freedesktop.devicekit.disks.drive-smart-retrieve-historical-data">
-    <_description>Retrieve historical S.M.A.R.T. data</_description>
-    <_message>Authentication is required to retrieve historical S.M.A.R.T. data</_message>
+  <action id="org.freedesktop.devicekit.disks.drive-ata-smart-retrieve-historical-data">
+    <_description>Retrieve historical ATA SMART data</_description>
+    <_message>Authentication is required to retrieve historical ATA SMART data</_message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>

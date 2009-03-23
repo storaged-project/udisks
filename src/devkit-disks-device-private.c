@@ -1131,88 +1131,206 @@ devkit_disks_device_set_holders_objpath (DevkitDisksDevice *device, GStrv value)
     }
 }
 
+
 void
-devkit_disks_device_set_drive_smart_is_capable (DevkitDisksDevice *device, gboolean value)
+devkit_disks_device_set_drive_ata_smart_is_available (DevkitDisksDevice *device, gboolean value)
 {
-  if (G_UNLIKELY (device->priv->drive_smart_is_capable != value))
+  if (G_UNLIKELY (device->priv->drive_ata_smart_is_available != value))
     {
-      device->priv->drive_smart_is_capable = value;
-      emit_changed (device, "drive_smart_is_capable");
+      device->priv->drive_ata_smart_is_available = value;
+      emit_changed (device, "drive_ata_smart_is_available");
     }
 }
 
 void
-devkit_disks_device_set_drive_smart_is_enabled (DevkitDisksDevice *device, gboolean value)
+devkit_disks_device_set_drive_ata_smart_is_failing (DevkitDisksDevice *device, gboolean value)
 {
-  if (G_UNLIKELY (device->priv->drive_smart_is_enabled != value))
+  if (G_UNLIKELY (device->priv->drive_ata_smart_is_failing != value))
     {
-      device->priv->drive_smart_is_enabled = value;
-      emit_changed (device, "drive_smart_is_enabled");
+      device->priv->drive_ata_smart_is_failing = value;
+      emit_changed (device, "drive_ata_smart_is_failing");
     }
 }
 
 void
-devkit_disks_device_set_drive_smart_time_collected (DevkitDisksDevice *device, guint64 value)
+devkit_disks_device_set_drive_ata_smart_is_failing_valid (DevkitDisksDevice *device, gboolean value)
 {
-  if (G_UNLIKELY (device->priv->drive_smart_time_collected != value))
+  if (G_UNLIKELY (device->priv->drive_ata_smart_is_failing_valid != value))
     {
-      device->priv->drive_smart_time_collected = value;
-      emit_changed (device, "drive_smart_time_collected");
+      device->priv->drive_ata_smart_is_failing_valid = value;
+      emit_changed (device, "drive_ata_smart_is_failing_valid");
     }
 }
 
 void
-devkit_disks_device_set_drive_smart_is_failing (DevkitDisksDevice *device, gboolean value)
+devkit_disks_device_set_drive_ata_smart_has_bad_sectors (DevkitDisksDevice *device, gboolean value)
 {
-  if (G_UNLIKELY (device->priv->drive_smart_is_failing != value))
+  if (G_UNLIKELY (device->priv->drive_ata_smart_has_bad_sectors != value))
     {
-      device->priv->drive_smart_is_failing = value;
-      emit_changed (device, "drive_smart_is_failing");
+      device->priv->drive_ata_smart_has_bad_sectors = value;
+      emit_changed (device, "drive_ata_smart_has_bad_sectors");
     }
 }
 
 void
-devkit_disks_device_set_drive_smart_temperature (DevkitDisksDevice *device, gdouble value)
+devkit_disks_device_set_drive_ata_smart_has_bad_attributes (DevkitDisksDevice *device, gboolean value)
 {
-  if (G_UNLIKELY (device->priv->drive_smart_temperature != value))
+  if (G_UNLIKELY (device->priv->drive_ata_smart_has_bad_attributes != value))
     {
-      device->priv->drive_smart_temperature = value;
-      emit_changed (device, "drive_smart_temperature");
+      device->priv->drive_ata_smart_has_bad_attributes = value;
+      emit_changed (device, "drive_ata_smart_has_bad_attributes");
     }
 }
 
 void
-devkit_disks_device_set_drive_smart_time_powered_on (DevkitDisksDevice *device, guint64 value)
+devkit_disks_device_set_drive_ata_smart_temperature_kelvin (DevkitDisksDevice *device, gdouble value)
 {
-  if (G_UNLIKELY (device->priv->drive_smart_time_powered_on != value))
+  if (G_UNLIKELY (device->priv->drive_ata_smart_temperature_kelvin != value))
     {
-      device->priv->drive_smart_time_powered_on = value;
-      emit_changed (device, "drive_smart_time_powered_on");
+      device->priv->drive_ata_smart_temperature_kelvin = value;
+      emit_changed (device, "drive_ata_smart_temperature_kelvin");
     }
 }
 
 void
-devkit_disks_device_set_drive_smart_last_self_test_result (DevkitDisksDevice *device, const gchar *value)
+devkit_disks_device_set_drive_ata_smart_power_on_seconds (DevkitDisksDevice *device, guint64 value)
 {
-  if (G_UNLIKELY (g_strcmp0 (device->priv->drive_smart_last_self_test_result, value) != 0))
+  if (G_UNLIKELY (device->priv->drive_ata_smart_power_on_seconds != value))
     {
-      g_free (device->priv->drive_smart_last_self_test_result);
-      device->priv->drive_smart_last_self_test_result = g_strdup (value);
-      emit_changed (device, "drive_smart_last_self_test_result");
+      device->priv->drive_ata_smart_power_on_seconds = value;
+      emit_changed (device, "drive_ata_smart_power_on_seconds");
     }
 }
 
-/* NOTE: steals attributes! */
 void
-devkit_disks_device_set_drive_smart_attributes_steal (DevkitDisksDevice *device, GPtrArray *attributes)
+devkit_disks_device_set_drive_ata_smart_time_collected (DevkitDisksDevice *device, guint64 value)
+{
+  if (G_UNLIKELY (device->priv->drive_ata_smart_time_collected != value))
+    {
+      device->priv->drive_ata_smart_time_collected = value;
+      emit_changed (device, "drive_ata_smart_time_collected");
+    }
+}
+
+void
+devkit_disks_device_set_drive_ata_smart_offline_data_collection_status (DevkitDisksDevice *device, guint value)
+{
+  if (G_UNLIKELY (device->priv->drive_ata_smart_offline_data_collection_status != value))
+    {
+      device->priv->drive_ata_smart_offline_data_collection_status = value;
+      emit_changed (device, "drive_ata_smart_offline_data_collection_status");
+    }
+}
+
+void
+devkit_disks_device_set_drive_ata_smart_offline_data_collection_seconds (DevkitDisksDevice *device, guint value)
+{
+  if (G_UNLIKELY (device->priv->drive_ata_smart_offline_data_collection_seconds != value))
+    {
+      device->priv->drive_ata_smart_offline_data_collection_seconds = value;
+      emit_changed (device, "drive_ata_smart_offline_data_collection_seconds");
+    }
+}
+
+void
+devkit_disks_device_set_drive_ata_smart_self_test_execution_status (DevkitDisksDevice *device, guint value)
+{
+  if (G_UNLIKELY (device->priv->drive_ata_smart_self_test_execution_status != value))
+    {
+      device->priv->drive_ata_smart_self_test_execution_status = value;
+      emit_changed (device, "drive_ata_smart_self_test_execution_status");
+    }
+}
+
+void
+devkit_disks_device_set_drive_ata_smart_self_test_execution_percent_remaining (DevkitDisksDevice *device, guint value)
+{
+  if (G_UNLIKELY (device->priv->drive_ata_smart_self_test_execution_percent_remaining != value))
+    {
+      device->priv->drive_ata_smart_self_test_execution_percent_remaining = value;
+      emit_changed (device, "drive_ata_smart_self_test_execution_percent_remaining");
+    }
+}
+
+void
+devkit_disks_device_set_drive_ata_smart_short_and_extended_self_test_available (DevkitDisksDevice *device, gboolean value)
+{
+  if (G_UNLIKELY (device->priv->drive_ata_smart_short_and_extended_self_test_available != value))
+    {
+      device->priv->drive_ata_smart_short_and_extended_self_test_available = value;
+      emit_changed (device, "drive_ata_smart_short_and_extended_self_test_available");
+    }
+}
+
+void
+devkit_disks_device_set_drive_ata_smart_conveyance_self_test_available (DevkitDisksDevice *device, gboolean value)
+{
+  if (G_UNLIKELY (device->priv->drive_ata_smart_conveyance_self_test_available != value))
+    {
+      device->priv->drive_ata_smart_conveyance_self_test_available = value;
+      emit_changed (device, "drive_ata_smart_conveyance_self_test_available");
+    }
+}
+
+void
+devkit_disks_device_set_drive_ata_smart_start_self_test_available (DevkitDisksDevice *device, gboolean value)
+{
+  if (G_UNLIKELY (device->priv->drive_ata_smart_start_self_test_available != value))
+    {
+      device->priv->drive_ata_smart_start_self_test_available = value;
+      emit_changed (device, "drive_ata_smart_start_self_test_available");
+    }
+}
+
+void
+devkit_disks_device_set_drive_ata_smart_abort_self_test_available (DevkitDisksDevice *device, gboolean value)
+{
+  if (G_UNLIKELY (device->priv->drive_ata_smart_abort_self_test_available != value))
+    {
+      device->priv->drive_ata_smart_abort_self_test_available = value;
+      emit_changed (device, "drive_ata_smart_abort_self_test_available");
+    }
+}
+
+void
+devkit_disks_device_set_drive_ata_smart_short_self_test_polling_minutes (DevkitDisksDevice *device, guint value)
+{
+  if (G_UNLIKELY (device->priv->drive_ata_smart_short_self_test_polling_minutes != value))
+    {
+      device->priv->drive_ata_smart_short_self_test_polling_minutes = value;
+      emit_changed (device, "drive_ata_smart_short_self_test_polling_minutes");
+    }
+}
+
+void
+devkit_disks_device_set_drive_ata_smart_extended_self_test_polling_minutes (DevkitDisksDevice *device, guint value)
+{
+  if (G_UNLIKELY (device->priv->drive_ata_smart_extended_self_test_polling_minutes != value))
+    {
+      device->priv->drive_ata_smart_extended_self_test_polling_minutes = value;
+      emit_changed (device, "drive_ata_smart_extended_self_test_polling_minutes");
+    }
+}
+
+void
+devkit_disks_device_set_drive_ata_smart_conveyance_self_test_polling_minutes (DevkitDisksDevice *device, guint value)
+{
+  if (G_UNLIKELY (device->priv->drive_ata_smart_conveyance_self_test_polling_minutes != value))
+    {
+      device->priv->drive_ata_smart_conveyance_self_test_polling_minutes = value;
+      emit_changed (device, "drive_ata_smart_conveyance_self_test_polling_minutes");
+    }
+}
+
+void
+devkit_disks_device_set_drive_ata_smart_attributes_steal (DevkitDisksDevice *device, GPtrArray *attributes)
 {
   /* TODO: compare? Not really needed, this happens very rarely */
 
-  g_ptr_array_foreach (device->priv->drive_smart_attributes, (GFunc) g_value_array_free, NULL);
-  g_ptr_array_free (device->priv->drive_smart_attributes, TRUE);
+  g_ptr_array_foreach (device->priv->drive_ata_smart_attributes, (GFunc) g_value_array_free, NULL);
+  g_ptr_array_free (device->priv->drive_ata_smart_attributes, TRUE);
 
-  device->priv->drive_smart_attributes = attributes;
+  device->priv->drive_ata_smart_attributes = attributes;
 
-  emit_changed (device, "drive_smart_attributes");
+  emit_changed (device, "drive_ata_smart_attributes");
 }
-

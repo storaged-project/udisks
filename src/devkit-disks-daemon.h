@@ -70,9 +70,10 @@ typedef enum
         DEVKIT_DISKS_ERROR_NOT_LINUX_MD,
         DEVKIT_DISKS_ERROR_NOT_LINUX_MD_COMPONENT,
         DEVKIT_DISKS_ERROR_NOT_DRIVE,
-        DEVKIT_DISKS_ERROR_NOT_SMART_CAPABLE,
         DEVKIT_DISKS_ERROR_NOT_SUPPORTED,
         DEVKIT_DISKS_ERROR_NOT_FOUND,
+        DEVKIT_DISKS_ERROR_ATA_SMART_NOT_AVAILABLE,
+        DEVKIT_DISKS_ERROR_ATA_SMART_WOULD_WAKEUP,
         DEVKIT_DISKS_NUM_ERRORS
 } DevkitDisksError;
 
@@ -120,8 +121,6 @@ void               devkit_disks_daemon_local_update_poller       (DevkitDisksDae
 gboolean           devkit_disks_daemon_local_has_polling_inhibitors (DevkitDisksDaemon       *daemon);
 
 gboolean           devkit_disks_daemon_local_has_inhibitors (DevkitDisksDaemon       *daemon);
-
-DevkitDisksLogger *devkit_disks_daemon_local_get_logger (DevkitDisksDaemon *daemon);
 
 DevkitDisksMountMonitor *devkit_disks_daemon_local_get_mount_monitor (DevkitDisksDaemon *daemon);
 

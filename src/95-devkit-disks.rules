@@ -63,9 +63,18 @@ LABEL="device_mapper_end"
 ##############################################################################################################
 
 # pick up data from MD components; this really should be done by rules
-* installed by mdadm or the kernel package
+# installed by mdadm or the kernel package
 #
 ENV{ID_FS_TYPE}=="linux_raid_member", IMPORT{program}="/sbin/mdadm --examine --export $tempnode"
+
+##############################################################################################################
+
+# Check if disk is capable of ATA smart; this should probably be done by
+# ata_id and usb_id
+#
+
+ID_BUS="usb", DEVTYPE="disk", IMPORT{program}="devkit-disks-probe-ata-smart $tempnode"
+ID_BUS="scsi", ID_VENDOR="ATA", DEVTYPE="disk", IMPORT{program}="devkit-disks-probe-ata-smart $tempnode"
 
 ##############################################################################################################
 

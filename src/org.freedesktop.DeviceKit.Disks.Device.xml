@@ -18,9 +18,10 @@
   <!ENTITY ERROR_NOT_LINUX_MD "org.freedesktop.DeviceKit.Disks.Error.NotLinuxMd">
   <!ENTITY ERROR_NOT_LINUX_MD_COMPONENT "org.freedesktop.DeviceKit.Disks.Error.NotLinuxMdComponent">
   <!ENTITY ERROR_NOT_DRIVE "org.freedesktop.DeviceKit.Disks.Error.NotDrive">
-  <!ENTITY ERROR_NOT_SMART_CAPABLE "org.freedesktop.DeviceKit.Disks.Error.NotSmartCapable">
   <!ENTITY ERROR_NOT_SUPPORTED "org.freedesktop.DeviceKit.Disks.Error.NotSupported">
   <!ENTITY ERROR_NOT_FOUND "org.freedesktop.DeviceKit.Disks.Error.NotFound">
+  <!ENTITY ERROR_ATA_SMART_NOT_AVAILABLE "org.freedesktop.DeviceKit.Disks.Error.AtaSmartNotAvailable">
+  <!ENTITY ERROR_ATA_SMART_WOULD_WAKEUP "org.freedesktop.DeviceKit.Disks.Error.AtaSmartWouldWakeup">
   <!ENTITY ERROR_NOT_AUTHORIZED "org.freedesktop.PolicyKit.Error.NotAuthorized">
 ]>
 <node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
@@ -1097,14 +1098,15 @@
 
     <!-- ************************************************************ -->
 
-    <method name="DriveSmartRefreshData">
+    <method name="DriveAtaSmartRefreshData">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="options" direction="in" type="as">
         <doc:doc><doc:summary>
             The option <doc:tt>nowakeup</doc:tt> can be passed to
             avoid spinning up the disk if it's in a low-power mode.
-            The option <doc:tt>simulate=/path/to/smartctl-output</doc:tt> can be
-            passed to read the given file instead of invoking <doc:tt>smartctl(8)</doc:tt> tool.
+            The option <doc:tt>simulate=</doc:tt> can be
+            passed to use the given string (which is in a format private to DeviceKit-disks) instead
+            of reading it from the disk.
             The <doc:tt>simulate=</doc:tt> option can only be used by the super user.
         </doc:summary></doc:doc>
       </arg>
@@ -1112,7 +1114,7 @@
         <doc:description>
           <doc:para>
             Refreshes the
-            <doc:ulink url="http://en.wikipedia.org/wiki/S.M.A.R.T">S.M.A.R.T.</doc:ulink>
+            <doc:ulink url="http://en.wikipedia.org/wiki/S.M.A.R.T">ATA SMART</doc:ulink>
             data for the given drive. Note that this operation is not run as a job.
           </doc:para>
         </doc:description>
@@ -1120,164 +1122,106 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.drive-smart-refresh</doc:term>
-              <doc:definition>Needed to refresh S.M.A.R.T. data</doc:definition>
+              <doc:term>org.freedesktop.devicekit.disks.drive-ata-smart-refresh</doc:term>
+              <doc:definition>Needed to refresh ATA SMART data</doc:definition>
             </doc:item>
           </doc:list>
         </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_BUSY;">component to add is busy</doc:error>
+          <doc:error name="&ERROR_ATA_SMART_NOT_AVAILABLE;">if ATA SMART isn't available on the disk</doc:error>
+          <doc:error name="&ERROR_ATA_SMART_WOULD_WAKEUP;">If the disk is asleep and the nowakeup option was passed</doc:error>
           <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
-          <doc:error name="&ERROR_NOT_SMART_CAPABLE;">device is not S.M.A.R.T. capable</doc:error>
-          <doc:error name="&ERROR_NOT_DRIVE;">device is not a drive</doc:error>
-        </doc:errors>
-      </doc:doc>
-    </method>
-
-    <method name="DriveSmartGetHistoricalData">
-      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="since" direction="in" type="t">
-        <doc:doc><doc:summary>
-            Don't fetch S.M.A.R.T. data collected earlier than this point
-            in time (seconds since the Epoch Jan 1, 1970 0:00 UTC).
-        </doc:summary></doc:doc>
-      </arg>
-      <arg name="until" direction="in" type="t">
-        <doc:doc><doc:summary>
-            Don't fetch S.M.A.R.T. data collected later than this point in
-            time (seconds since the Epoch Jan 1, 1970 0:00 UTC). If 0 is
-            passed the current time will be used.
-        </doc:summary></doc:doc>
-      </arg>
-      <arg name="data" direction="out" type="a(tdtsba(isiiiis))">
-        <doc:doc><doc:summary>
-            An array of historical S.M.A.R.T. data. Each element contains
-            the following members:
-            <doc:list>
-              <doc:item>
-                <doc:term>time</doc:term>
-                <doc:definition>
-                  When the data was collected (seconds since the Epoch Jan 1, 1970 0:00 UTC). Similar to the
-                  <doc:ref type="property" to="Device:drive-smart-time-collected">drive-smart-time-collected</doc:ref>
-                  property.
-                </doc:definition>
-              </doc:item>
-              <doc:item>
-                <doc:term>temperature</doc:term>
-                <doc:definition>
-                  Temperature of the drive. Similar to the
-                  <doc:ref type="property" to="Device:drive-smart-temperature">drive-smart-temperature</doc:ref>
-                  property.
-                </doc:definition>
-              </doc:item>
-              <doc:item>
-                <doc:term>time-powered-on</doc:term>
-                <doc:definition>
-                  Number of the seconds the drive has been powered on. Similar to the
-                  <doc:ref type="property" to="Device:drive-smart-time-powered-on">drive-smart-time-powered-on</doc:ref>
-                  property.
-                </doc:definition>
-              </doc:item>
-              <doc:item>
-                <doc:term>last-self-test-result</doc:term>
-                <doc:definition>
-                  The result of the last self-test. Similar to the
-                  <doc:ref type="property" to="Device:drive-smart-last-self-test-result">drive-smart-last-self-test-result</doc:ref>
-                  property.
-                </doc:definition>
-              </doc:item>
-              <doc:item>
-                <doc:term>is-failing</doc:term>
-                <doc:definition>
-                  If the drive is assessed to be failing. Similar to the
-                  <doc:ref type="property" to="Device:drive-smart-is-failing">drive-smart-is-failing</doc:ref>
-                  property.
-                </doc:definition>
-              </doc:item>
-              <doc:item>
-                <doc:term>attributes</doc:term>
-                <doc:definition>
-                  The attributes of the drive. Similar to the
-                  <doc:ref type="property" to="Device:drive-smart-attributes">drive-smart-attributes</doc:ref>
-                  property.
-                </doc:definition>
-              </doc:item>
-            </doc:list>
-        </doc:summary></doc:doc>
-      </arg>
-      <doc:doc>
-        <doc:description>
-          <doc:para>
-            Retrieves historical S.M.A.R.T. data from the drive in the
-            given time interval. Note that this is data collected and
-            stored by the host as S.M.A.R.T. capable drives doesn't
-            store or return historical data.
-          </doc:para>
-        </doc:description>
-        <doc:permission>
-          The caller will need one of the following PolicyKit authorizations:
-          <doc:list>
-            <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.drive-smart-retrieve-historical-data</doc:term>
-              <doc:definition>To retrieve historical S.M.A.R.T. data</doc:definition>
-            </doc:item>
-          </doc:list>
-        </doc:permission>
-        <doc:errors>
-          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_BUSY;">component to add is busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
-          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
-          <doc:error name="&ERROR_NOT_SMART_CAPABLE;">device is not S.M.A.R.T. capable</doc:error>
-          <doc:error name="&ERROR_NOT_DRIVE;">device is not a drive</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
 
     <!-- ************************************************************ -->
 
-    <method name="DriveSmartInitiateSelftest">
+    <method name="DriveAtaSmartGetHistoricalData">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-
-      <arg name="test" direction="in" type="s">
+      <arg name="since" direction="in" type="t">
         <doc:doc><doc:summary>
-            The name of the test to run; supported values are 'short'
-            (usually less than ten minutes) and 'long' (usually tens
-            of minutes) and 'conveyance' (usually a few minutes). See
-            the smartctl(1) man page for details.
+            Don't fetch data collected earlier than this point
+            in time (seconds since the Epoch Jan 1, 1970 0:00 UTC).
         </doc:summary></doc:doc>
       </arg>
-      <arg name="captive" direction="in" type="b">
+      <arg name="until" direction="in" type="t">
         <doc:doc><doc:summary>
-            If TRUE then the drive will block access to the drive for
-            the duration of the test. The method will error out if the
-            drive is busy, e.g. if partitions are mounted.
+            Don't fetch data collected later than this point in
+            time (seconds since the Epoch Jan 1, 1970 0:00 UTC). If 0 is
+            passed the current time will be used.
         </doc:summary></doc:doc>
       </arg>
-
+      <arg name="data" direction="out" type="a(tbbbbdta(usubbybybybbbutay))">
+        <doc:doc><doc:summary>
+            An array of historical data. Each element contains
+            the following members (TODO).
+        </doc:summary></doc:doc>
+      </arg>
       <doc:doc>
         <doc:description>
           <doc:para>
-            Runs a S.M.A.R.T. self test on the drive. TODO: need to figure out whether we need a return code.
+            Retrieves historical ATA SMART data from the drive in the
+            given time interval. Note that this is data collected and
+            stored by the host as ATA SMART capable devices cannot
+            store or return historical data by themselves.
           </doc:para>
         </doc:description>
         <doc:permission>
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.drive-smart-selftest</doc:term>
-              <doc:definition>Needed to run S.M.A.R.T. self tests</doc:definition>
+              <doc:term>org.freedesktop.devicekit.disks.drive-ata-smart-retrieve-historical-data</doc:term>
+              <doc:definition>To retrieve historical ATA SMART data</doc:definition>
             </doc:item>
           </doc:list>
         </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_BUSY;">component to add is busy</doc:error>
+          <doc:error name="&ERROR_ATA_SMART_NOT_AVAILABLE;">if ATA SMART isn't available on the disk</doc:error>
           <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
-          <doc:error name="&ERROR_NOT_SMART_CAPABLE;">device is not S.M.A.R.T. capable</doc:error>
-          <doc:error name="&ERROR_NOT_DRIVE;">device is not a drive</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="DriveAtaSmartInitiateSelftest">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+
+      <arg name="test" direction="in" type="s">
+        <doc:doc><doc:summary>
+            The name of the test to run; supported values are 'short'
+            (usually less than ten minutes), 'extended' (usually tens
+            of minutes) and 'conveyance' (usually a few minutes).
+        </doc:summary></doc:doc>
+      </arg>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Runs a ATA SMART self test on the drive.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.drive-ata-smart-selftest</doc:term>
+              <doc:definition>Needed to run ATA SMART self tests</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+          <doc:error name="&ERROR_ATA_SMART_NOT_AVAILABLE;">device is not ATA SMART capable</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -2152,143 +2096,176 @@
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <property name="drive-smart-is-capable" type="b" access="read">
+    <!-- **************************************************************************************************** -->
+
+    <property name="drive-ata-smart-is-available" type="b" access="read">
       <doc:doc><doc:description><doc:para>
-            TRUE only if drive is
-            <doc:ulink url="http://en.wikipedia.org/wiki/S.M.A.R.T">S.M.A.R.T.</doc:ulink>
-            capable.
+            TRUE only if drive is capable of reporting
+            <doc:ulink url="http://en.wikipedia.org/wiki/S.M.A.R.T">ATA SMART</doc:ulink>
+            data.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="drive-smart-is-enabled" type="b" access="read">
+    <property name="drive-ata-smart-is-failing" type="b" access="read">
       <doc:doc><doc:description><doc:para>
-            TRUE only if S.M.A.R.T. is enabled for the drive.
+            Set to TRUE if ATA SMART indicates that the disk is failing, TRUE otherwise.
             This property is only valid if
-            <doc:ref type="property" to="Device:drive-smart-time-collected">drive-smart-time-collected</doc:ref>
-            is greater than zero.
-      </doc:para></doc:description></doc:doc>
-    </property>
-    <property name="drive-smart-time-collected" type="t" access="read">
-      <doc:doc><doc:description><doc:para>
-            The point in time (seconds since the Epoch Jan 1, 1970
-            0:00 UTC) when the S.M.A.R.T. data was collected. If data
-            was never collected, this property will assume the value
-            0.  This property is only valid if
-            <doc:ref type="property" to="Device:drive-smart-is-capable">drive-smart-is-capable</doc:ref>
+            <doc:ref type="property" to="Device:drive-ata-smart-time-collected">drive-ata-smart-time-collected</doc:ref>
+            is greater than zero and the property
+            <doc:ref type="property" to="Device:drive-ata-smart-status-valid">drive-ata-smart-status-valid</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="drive-smart-is-failing" type="b" access="read">
+    <property name="drive-ata-smart-is-failing-valid" type="b" access="read">
       <doc:doc><doc:description><doc:para>
-            TRUE only if the drive is assessed to be failing.
+            Set to TRUE only if the property
+            <doc:ref type="property" to="Device:drive-ata-smart-status">drive-ata-smart-status</doc:ref>
+            is valid.
+            This property is only valid if
+            <doc:ref type="property" to="Device:drive-ata-smart-time-collected">drive-ata-smart-time-collected</doc:ref>
+            is greater than zero.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-ata-smart-has-bad-sectors" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            Set to TRUE if ATA SMART indicates that one or more sectors are bad, TRUE otherwise.
+            This property is only valid if
+            <doc:ref type="property" to="Device:drive-ata-smart-time-collected">drive-ata-smart-time-collected</doc:ref>
+            is greater than zero.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-ata-smart-has-bad-attributes" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            Set to TRUE if ATA SMART indicates that one or more attributes are exceeding their threshold, TRUE otherwise.
+            This property is only valid if
+            <doc:ref type="property" to="Device:drive-ata-smart-time-collected">drive-ata-smart-time-collected</doc:ref>
+            is greater than zero.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-ata-smart-temperature-kelvin" type="d" access="read">
+      <doc:doc><doc:description><doc:para>
+            Temperature of the drive in kelvin or 0 if unknown.
+            This property is only valid if
+            <doc:ref type="property" to="Device:drive-ata-smart-time-collected">drive-ata-smart-time-collected</doc:ref>
+            is greater than zero.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-ata-smart-power-on-seconds" type="t" access="read">
+      <doc:doc><doc:description><doc:para>
+            Seconds the drive has been powered on or 0 if unknown.
+            This property is only valid if
+            <doc:ref type="property" to="Device:drive-ata-smart-time-collected">drive-ata-smart-time-collected</doc:ref>
+            is greater than zero.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-ata-smart-time-collected" type="t" access="read">
+      <doc:doc><doc:description><doc:para>
+            The point in time (seconds since the Epoch Jan 1, 1970
+            0:00 UTC) when ATA SMART data was collected. If data
+            was never collected, this property will assume the value
+            0.  This property is only valid if
+            <doc:ref type="property" to="Device:drive-ata-smart-is-available">drive-ata-smart-is-available</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-ata-smart-offline-data-collection-status" type="u" access="read">
+      <doc:doc><doc:description><doc:para>
+            Offline data collection status (TODO: specify values).
+            This property is only valid if
+            <doc:ref type="property" to="Device:drive-ata-smart-time-collected">drive-ata-smart-time-collected</doc:ref>
+            is greater than zero.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-ata-smart-offline-data-collection-seconds" type="u" access="read">
+      <doc:doc><doc:description><doc:para>
+            Number of seconds needed to perform offline data collection status.
+            This property is only valid if
+            <doc:ref type="property" to="Device:drive-ata-smart-time-collected">drive-ata-smart-time-collected</doc:ref>
+            is greater than zero.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-ata-smart-self-test-execution-status" type="u" access="read">
+      <doc:doc><doc:description><doc:para>
+            Current status of self test (TODO: specify values).
+            This property is only valid if
+            <doc:ref type="property" to="Device:drive-ata-smart-time-collected">drive-ata-smart-time-collected</doc:ref>
+            is greater than zero.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-ata-smart-self-test-execution-percent-remaining" type="u" access="read">
+      <doc:doc><doc:description><doc:para>
+            The progress of an ongoing self test or 0 if no self test is in progress.
+            This property is only valid if
+            <doc:ref type="property" to="Device:drive-ata-smart-time-collected">drive-ata-smart-time-collected</doc:ref>
+            is greater than zero.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-ata-smart-short-and-extended-self-test-available" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            Whether the short and extended self-tests are available.
+            This property is only valid if
+            <doc:ref type="property" to="Device:drive-ata-smart-time-collected">drive-ata-smart-time-collected</doc:ref>
+            is greater than zero.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-ata-smart-conveyance-self-test-available" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            Whether the conveyance self-test is available.
+            This property is only valid if
+            <doc:ref type="property" to="Device:drive-ata-smart-time-collected">drive-ata-smart-time-collected</doc:ref>
+            is greater than zero.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-ata-smart-start-self-test-available" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            Whether the start self-test is available.
+            This property is only valid if
+            <doc:ref type="property" to="Device:drive-ata-smart-time-collected">drive-ata-smart-time-collected</doc:ref>
+            is greater than zero.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-ata-smart-abort-self-test-available" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            Whether the abort self-test is available.
+            This property is only valid if
+            <doc:ref type="property" to="Device:drive-ata-smart-time-collected">drive-ata-smart-time-collected</doc:ref>
+            is greater than zero.
+      </doc:para></doc:description></doc:doc>
+    </property>
+
+    <property name="drive-ata-smart-short-self-test-polling-minutes" type="u" access="read">
+      <doc:doc><doc:description><doc:para>
+            Recommended polling time in minutes for short self-test.
+            This property is only valid if
+            <doc:ref type="property" to="Device:drive-ata-smart-time-collected">drive-ata-smart-time-collected</doc:ref>
+            is greater than zero.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-ata-smart-extended-self-test-polling-minutes" type="u" access="read">
+      <doc:doc><doc:description><doc:para>
+            Recommended polling time in minutes for extended self-test.
+            This property is only valid if
+            <doc:ref type="property" to="Device:drive-ata-smart-time-collected">drive-ata-smart-time-collected</doc:ref>
+            is greater than zero.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-ata-smart-conveyance-self-test-polling-minutes" type="u" access="read">
+      <doc:doc><doc:description><doc:para>
+            Recommended polling time in minutes for conveyance self-test.
+            This property is only valid if
+            <doc:ref type="property" to="Device:drive-ata-smart-time-collected">drive-ata-smart-time-collected</doc:ref>
+            is greater than zero.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-ata-smart-attributes" type="a(usubbybybybbbutay)" access="read">
+      <doc:doc><doc:description><doc:para>
+            An array of ATA SMART attributes. Each element contains the following members (TODO).
             This property is only valid if
             <doc:ref type="property" to="Device:drive-smart-time-collected">drive-smart-time-collected</doc:ref>
             is greater than zero.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="drive-smart-temperature" type="d" access="read">
-      <doc:doc><doc:description><doc:para>
-            Temperature of the drive, in degrees celcius.
-            This property is only valid if
-            <doc:ref type="property" to="Device:drive-smart-time-collected">drive-smart-time-collected</doc:ref>
-            is greater than zero.
-      </doc:para></doc:description></doc:doc>
-    </property>
-    <property name="drive-smart-time-powered-on" type="t" access="read">
-      <doc:doc><doc:description><doc:para>
-            Number of seconds the drive has been powered on.
-            This property is only valid if
-            <doc:ref type="property" to="Device:drive-smart-time-collected">drive-smart-time-collected</doc:ref>
-            is greater than zero.
-      </doc:para></doc:description></doc:doc>
-    </property>
-    <property name="drive-smart-last-self-test-result" type="s" access="read">
-      <doc:doc><doc:description><doc:para>
-            The result of the last self-test. The following values are known:
-            <doc:list>
-              <doc:item>
-                <doc:term>completed_ok</doc:term>
-                <doc:definition>Completed without error or never run</doc:definition>
-              </doc:item>
-              <doc:item>
-                <doc:term>not_completed_aborted</doc:term>
-                <doc:definition>Aborted</doc:definition>
-              </doc:item>
-              <doc:item>
-                <doc:term>not_completed_aborted_reset</doc:term>
-                <doc:definition>Aborted by host</doc:definition>
-              </doc:item>
-              <doc:item>
-                <doc:term>not_completed_unknown_reason</doc:term>
-                <doc:definition>Aborted for unknown reason</doc:definition>
-              </doc:item>
-              <doc:item>
-                <doc:term>completed_failed_unknown_reason</doc:term>
-                <doc:definition>Completed, with failure:</doc:definition>
-              </doc:item>
-              <doc:item>
-                <doc:term>completed_failed_electrical</doc:term>
-                <doc:definition>Completed, with failure: electrical subsystem</doc:definition>
-              </doc:item>
-              <doc:item>
-                <doc:term>completed_failed_servo</doc:term>
-                <doc:definition>Completed, with failure: servo/seek subsystem</doc:definition>
-              </doc:item>
-              <doc:item>
-                <doc:term>completed_failed_read</doc:term>
-                <doc:definition>Completed, with failure: read failure</doc:definition>
-              </doc:item>
-              <doc:item>
-                <doc:term>completed_failed_damage</doc:term>
-                <doc:definition>Completed, with failure: handling damage</doc:definition>
-              </doc:item>
-              <doc:item>
-                <doc:term>unknown</doc:term>
-                <doc:definition>Unknown test result</doc:definition>
-              </doc:item>
-            </doc:list>
-            This property is only valid if
-            <doc:ref type="property" to="Device:drive-smart-time-collected">drive-smart-time-collected</doc:ref>
-            is greater than zero.
-      </doc:para></doc:description></doc:doc>
-    </property>
-    <property name="drive-smart-attributes" type="a(isiiiis)" access="read">
-      <doc:doc><doc:description><doc:para>
-            An array of S.M.A.R.T. attributes. Each element contains the following members
-            <doc:list>
-              <doc:item>
-                <doc:term>attribute id</doc:term>
-                <doc:definition>the identifier of the attribute</doc:definition>
-              </doc:item>
-              <doc:item>
-                <doc:term>attribute name</doc:term>
-                <doc:definition>a human readable name of the attribute or blank</doc:definition>
-              </doc:item>
-              <doc:item>
-                <doc:term>flags</doc:term>
-                <doc:definition>Flags (TODO: link to spec)</doc:definition>
-              </doc:item>
-              <doc:item>
-                <doc:term>value</doc:term>
-                <doc:definition>The normalized value of the attribute</doc:definition>
-              </doc:item>
-              <doc:item>
-                <doc:term>worst</doc:term>
-                <doc:definition>The worst value seen</doc:definition>
-              </doc:item>
-              <doc:item>
-                <doc:term>threshold</doc:term>
-                <doc:definition>The threshold of the attribute</doc:definition>
-              </doc:item>
-              <doc:item>
-                <doc:term>raw</doc:term>
-                <doc:definition>The raw vendor specific value of the attribute</doc:definition>
-              </doc:item>
-            </doc:list>
-            This property is only valid if
-            <doc:ref type="property" to="Device:drive-smart-time-collected">drive-smart-time-collected</doc:ref>
-            is greater than zero.
-      </doc:para></doc:description></doc:doc>
-    </property>
+
+    <!-- **************************************************************************************************** -->
 
     <property name="linux-md-component-level" type="s" access="read">
       <doc:doc><doc:description><doc:para>

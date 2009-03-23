@@ -1,5 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
+NULL =
+
 INCLUDES = \
 	-I$(top_builddir)/src -I$(top_srcdir)/src \
 	-DPACKAGE_LIBEXEC_DIR=\""$(libexecdir)"\" \
@@ -42,7 +44,6 @@ devkit_disks_daemon_SOURCES = 						\
 	devkit-disks-types.h						\
 	devkit-disks-private.h						\
 	devkit-disks-daemon.h		devkit-disks-daemon.c		\
-	devkit-disks-logger.h		devkit-disks-logger.c		\
 	devkit-disks-device.h		devkit-disks-device.c		\
 	devkit-disks-device-private.h	devkit-disks-device-private.c	\
 	devkit-disks-mount-file.h	devkit-disks-mount-file.c	\
@@ -79,9 +80,11 @@ libexec_PROGRAMS += devkit-disks-helper-erase                   	\
 		    devkit-disks-helper-modify-partition        	\
 		    devkit-disks-helper-create-partition-table		\
 		    devkit-disks-helper-change-filesystem-label 	\
-		    devkit-disks-helper-smart-selftest			\
 		    devkit-disks-helper-linux-md-remove-component	\
-		    devkit-disks-helper-fstab-mounter
+		    devkit-disks-helper-fstab-mounter			\
+		    devkit-disks-helper-ata-smart-collect		\
+		    devkit-disks-helper-ata-smart-selftest		\
+		    $(NULL)
 
 libexec_SCRIPTS = devkit-disks-helper-change-luks-password
 
@@ -113,9 +116,13 @@ devkit_disks_helper_change_filesystem_label_SOURCES = job-shared.h job-change-fi
 devkit_disks_helper_change_filesystem_label_CPPFLAGS = $(AM_CPPFLAGS)
 devkit_disks_helper_change_filesystem_label_LDADD = $(GLIB_LIBS)
 
-devkit_disks_helper_smart_selftest_SOURCES = job-shared.h job-smart-selftest.c
-devkit_disks_helper_smart_selftest_CPPFLAGS = $(AM_CPPFLAGS)
-devkit_disks_helper_smart_selftest_LDADD = $(GLIB_LIBS)
+devkit_disks_helper_ata_smart_selftest_SOURCES = job-shared.h job-ata-smart-selftest.c
+devkit_disks_helper_ata_smart_selftest_CPPFLAGS = $(AM_CPPFLAGS) $(LIBATASMART_CFLAGS) $(GLIB_CFLAGS)
+devkit_disks_helper_ata_smart_selftest_LDADD = $(LIBATASMART_LIBS) $(GLIB_LIBS)
+
+devkit_disks_helper_ata_smart_collect_SOURCES = job-ata-smart-collect.c
+devkit_disks_helper_ata_smart_collect_CPPFLAGS = $(AM_CPPFLAGS) $(LIBATASMART_CFLAGS) $(GLIB_CFLAGS)
+devkit_disks_helper_ata_smart_collect_LDADD = $(LIBATASMART_LIBS) $(GLIB_LIBS)
 
 devkit_disks_helper_linux_md_remove_component_SOURCES = job-shared.h job-linux-md-remove-component.c
 devkit_disks_helper_linux_md_remove_component_CPPFLAGS = $(AM_CPPFLAGS)
@@ -127,7 +134,7 @@ devkit_disks_helper_fstab_mounter_LDADD = $(GLIB_LIBS)
 
 # TODO: move to udev
 udevhelperdir = $(slashlibdir)/udev
-udevhelper_PROGRAMS = devkit-disks-part-id devkit-disks-dm-export
+udevhelper_PROGRAMS = devkit-disks-part-id devkit-disks-dm-export devkit-disks-probe-ata-smart
 
 devkit_disks_part_id_SOURCES = part-id.c
 devkit_disks_part_id_CPPFLAGS = $(AM_CPPFLAGS)
@@ -136,6 +143,10 @@ devkit_disks_part_id_LDADD = $(GLIB_LIBS) libpartutil.la
 devkit_disks_dm_export_SOURCES = devkit-disks-dm-export.c
 devkit_disks_dm_export_CPPFLAGS = $(AM_CPPFLAGS) $(DEVMAPPER_CFLAGS)
 devkit_disks_dm_export_LDADD = $(DEVMAPPER_LIBS)
+
+devkit_disks_probe_ata_smart_SOURCES = devkit-disks-probe-ata-smart.c
+devkit_disks_probe_ata_smart_CPPFLAGS = $(AM_CPPFLAGS) $(LIBATASMART_CFLAGS)
+devkit_disks_probe_ata_smart_LDADD = $(LIBATASMART_LIBS)
 # end move to udev
 
 
@@ -171,4 +182,5 @@ clean-local :
 
 install-data-local:
 	-$(mkdir_p) $(DESTDIR)$(localstatedir)/lib/DeviceKit-disks
-	-chmod 0755 $(DESTDIR)$(localstatedir)/lib/DeviceKit-disks
+	-chmod 0700 $(DESTDIR)$(localstatedir)/lib/DeviceKit-disks
+	-$(mkdir_p) $(DESTDIR)$(localstatedir)/lib/DeviceKit-disks/ata-smart

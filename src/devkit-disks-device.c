@@ -51,7 +51,6 @@
 #include <sqlite3.h>
 
 #include "devkit-disks-daemon.h"
-#include "devkit-disks-logger.h"
 #include "devkit-disks-device.h"
 #include "devkit-disks-device-private.h"
 #include "devkit-disks-marshal.h"
@@ -213,14 +212,26 @@ enum
         PROP_OPTICAL_DISC_NUM_AUDIO_TRACKS,
         PROP_OPTICAL_DISC_NUM_SESSIONS,
 
-        PROP_DRIVE_SMART_IS_CAPABLE,
-        PROP_DRIVE_SMART_IS_ENABLED,
-        PROP_DRIVE_SMART_TIME_COLLECTED,
-        PROP_DRIVE_SMART_IS_FAILING,
-        PROP_DRIVE_SMART_TEMPERATURE,
-        PROP_DRIVE_SMART_TIME_POWERED_ON,
-        PROP_DRIVE_SMART_LAST_SELF_TEST_RESULT,
-        PROP_DRIVE_SMART_ATTRIBUTES,
+        PROP_DRIVE_ATA_SMART_IS_AVAILABLE,
+        PROP_DRIVE_ATA_SMART_IS_FAILING,
+        PROP_DRIVE_ATA_SMART_IS_FAILING_VALID,
+        PROP_DRIVE_ATA_SMART_HAS_BAD_SECTORS,
+        PROP_DRIVE_ATA_SMART_HAS_BAD_ATTRIBUTES,
+        PROP_DRIVE_ATA_SMART_TEMPERATURE_KELVIN,
+        PROP_DRIVE_ATA_SMART_POWER_ON_SECONDS,
+        PROP_DRIVE_ATA_SMART_TIME_COLLECTED,
+        PROP_DRIVE_ATA_SMART_OFFLINE_DATA_COLLECTION_STATUS,
+        PROP_DRIVE_ATA_SMART_OFFLINE_DATA_COLLECTION_SECONDS,
+        PROP_DRIVE_ATA_SMART_SELF_TEST_EXECUTION_STATUS,
+        PROP_DRIVE_ATA_SMART_SELF_TEST_EXECUTION_PERCENT_REMAINING,
+        PROP_DRIVE_ATA_SMART_SHORT_AND_EXTENDED_SELF_TEST_AVAILABLE,
+        PROP_DRIVE_ATA_SMART_CONVEYANCE_SELF_TEST_AVAILABLE,
+        PROP_DRIVE_ATA_SMART_START_SELF_TEST_AVAILABLE,
+        PROP_DRIVE_ATA_SMART_ABORT_SELF_TEST_AVAILABLE,
+        PROP_DRIVE_ATA_SMART_SHORT_SELF_TEST_POLLING_MINUTES,
+        PROP_DRIVE_ATA_SMART_EXTENDED_SELF_TEST_POLLING_MINUTES,
+        PROP_DRIVE_ATA_SMART_CONVEYANCE_SELF_TEST_POLLING_MINUTES,
+        PROP_DRIVE_ATA_SMART_ATTRIBUTES,
 
         PROP_LINUX_MD_COMPONENT_LEVEL,
         PROP_LINUX_MD_COMPONENT_NUM_RAID_DEVICES,
@@ -526,29 +537,65 @@ get_property (GObject         *object,
 		g_value_set_uint (value, device->priv->optical_disc_num_sessions);
 		break;
 
-	case PROP_DRIVE_SMART_IS_CAPABLE:
-		g_value_set_boolean (value, device->priv->drive_smart_is_capable);
+	case PROP_DRIVE_ATA_SMART_IS_AVAILABLE:
+		g_value_set_boolean (value, device->priv->drive_ata_smart_is_available);
 		break;
-	case PROP_DRIVE_SMART_IS_ENABLED:
-		g_value_set_boolean (value, device->priv->drive_smart_is_enabled);
+	case PROP_DRIVE_ATA_SMART_IS_FAILING:
+		g_value_set_boolean (value, device->priv->drive_ata_smart_is_failing);
 		break;
-	case PROP_DRIVE_SMART_TIME_COLLECTED:
-		g_value_set_uint64 (value, device->priv->drive_smart_time_collected);
+	case PROP_DRIVE_ATA_SMART_IS_FAILING_VALID:
+		g_value_set_boolean (value, device->priv->drive_ata_smart_is_failing_valid);
 		break;
-	case PROP_DRIVE_SMART_IS_FAILING:
-		g_value_set_boolean (value, device->priv->drive_smart_is_failing);
+	case PROP_DRIVE_ATA_SMART_HAS_BAD_SECTORS:
+		g_value_set_boolean (value, device->priv->drive_ata_smart_has_bad_sectors);
 		break;
-	case PROP_DRIVE_SMART_TEMPERATURE:
-		g_value_set_double (value, device->priv->drive_smart_temperature);
+	case PROP_DRIVE_ATA_SMART_HAS_BAD_ATTRIBUTES:
+		g_value_set_boolean (value, device->priv->drive_ata_smart_has_bad_attributes);
 		break;
-	case PROP_DRIVE_SMART_TIME_POWERED_ON:
-		g_value_set_uint64 (value, device->priv->drive_smart_time_powered_on);
+	case PROP_DRIVE_ATA_SMART_TEMPERATURE_KELVIN:
+		g_value_set_double (value, device->priv->drive_ata_smart_temperature_kelvin);
 		break;
-	case PROP_DRIVE_SMART_LAST_SELF_TEST_RESULT:
-		g_value_set_string (value, device->priv->drive_smart_last_self_test_result);
+	case PROP_DRIVE_ATA_SMART_POWER_ON_SECONDS:
+		g_value_set_uint64 (value, device->priv->drive_ata_smart_power_on_seconds);
 		break;
-	case PROP_DRIVE_SMART_ATTRIBUTES:
-		g_value_set_boxed (value, device->priv->drive_smart_attributes);
+	case PROP_DRIVE_ATA_SMART_TIME_COLLECTED:
+		g_value_set_uint64 (value, device->priv->drive_ata_smart_time_collected);
+		break;
+	case PROP_DRIVE_ATA_SMART_OFFLINE_DATA_COLLECTION_STATUS:
+		g_value_set_uint (value, device->priv->drive_ata_smart_offline_data_collection_status);
+		break;
+	case PROP_DRIVE_ATA_SMART_OFFLINE_DATA_COLLECTION_SECONDS:
+		g_value_set_uint (value, device->priv->drive_ata_smart_offline_data_collection_seconds);
+		break;
+	case PROP_DRIVE_ATA_SMART_SELF_TEST_EXECUTION_STATUS:
+		g_value_set_uint (value, device->priv->drive_ata_smart_self_test_execution_status);
+		break;
+	case PROP_DRIVE_ATA_SMART_SELF_TEST_EXECUTION_PERCENT_REMAINING:
+		g_value_set_uint (value, device->priv->drive_ata_smart_self_test_execution_percent_remaining);
+		break;
+	case PROP_DRIVE_ATA_SMART_SHORT_AND_EXTENDED_SELF_TEST_AVAILABLE:
+		g_value_set_boolean (value, device->priv->drive_ata_smart_short_and_extended_self_test_available);
+		break;
+	case PROP_DRIVE_ATA_SMART_CONVEYANCE_SELF_TEST_AVAILABLE:
+		g_value_set_boolean (value, device->priv->drive_ata_smart_conveyance_self_test_available);
+		break;
+	case PROP_DRIVE_ATA_SMART_START_SELF_TEST_AVAILABLE:
+		g_value_set_boolean (value, device->priv->drive_ata_smart_start_self_test_available);
+		break;
+	case PROP_DRIVE_ATA_SMART_ABORT_SELF_TEST_AVAILABLE:
+		g_value_set_boolean (value, device->priv->drive_ata_smart_abort_self_test_available);
+		break;
+	case PROP_DRIVE_ATA_SMART_SHORT_SELF_TEST_POLLING_MINUTES:
+		g_value_set_uint (value, device->priv->drive_ata_smart_short_self_test_polling_minutes);
+		break;
+	case PROP_DRIVE_ATA_SMART_EXTENDED_SELF_TEST_POLLING_MINUTES:
+		g_value_set_uint (value, device->priv->drive_ata_smart_extended_self_test_polling_minutes);
+		break;
+	case PROP_DRIVE_ATA_SMART_CONVEYANCE_SELF_TEST_POLLING_MINUTES:
+		g_value_set_uint (value, device->priv->drive_ata_smart_conveyance_self_test_polling_minutes);
+		break;
+	case PROP_DRIVE_ATA_SMART_ATTRIBUTES:
+		g_value_set_boxed (value, device->priv->drive_ata_smart_attributes);
 		break;
 
 	case PROP_LINUX_MD_COMPONENT_LEVEL:
@@ -981,38 +1028,87 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
 
         g_object_class_install_property (
                 object_class,
-                PROP_DRIVE_SMART_IS_CAPABLE,
-                g_param_spec_boolean ("drive-smart-is-capable", NULL, NULL, FALSE, G_PARAM_READABLE));
+                PROP_DRIVE_ATA_SMART_IS_AVAILABLE,
+                g_param_spec_boolean ("drive-ata-smart-is-available", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
-                PROP_DRIVE_SMART_IS_ENABLED,
-                g_param_spec_boolean ("drive-smart-is-enabled", NULL, NULL, FALSE, G_PARAM_READABLE));
+                PROP_DRIVE_ATA_SMART_IS_FAILING,
+                g_param_spec_boolean ("drive-ata-smart-is-failing", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
-                PROP_DRIVE_SMART_TIME_COLLECTED,
-                g_param_spec_uint64 ("drive-smart-time-collected", NULL, NULL, 0, G_MAXUINT64, 0, G_PARAM_READABLE));
+                PROP_DRIVE_ATA_SMART_IS_FAILING_VALID,
+                g_param_spec_boolean ("drive-ata-smart-is-failing-valid", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
-                PROP_DRIVE_SMART_IS_FAILING,
-                g_param_spec_boolean ("drive-smart-is-failing", NULL, NULL, FALSE, G_PARAM_READABLE));
+                PROP_DRIVE_ATA_SMART_HAS_BAD_SECTORS,
+                g_param_spec_boolean ("drive-ata-smart-has-bad-sectors", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
-                PROP_DRIVE_SMART_TEMPERATURE,
-                g_param_spec_double ("drive-smart-temperature", NULL, NULL, -G_MAXDOUBLE, G_MAXDOUBLE, 0, G_PARAM_READABLE));
+                PROP_DRIVE_ATA_SMART_HAS_BAD_ATTRIBUTES,
+                g_param_spec_boolean ("drive-ata-smart-has-bad-attributes", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
-                PROP_DRIVE_SMART_TIME_POWERED_ON,
-                g_param_spec_uint64 ("drive-smart-time-powered-on", NULL, NULL, 0, G_MAXUINT64, 0, G_PARAM_READABLE));
+                PROP_DRIVE_ATA_SMART_TEMPERATURE_KELVIN,
+                g_param_spec_double ("drive-ata-smart-temperature-kelvin", NULL, NULL, 0, G_MAXDOUBLE, 0, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
-                PROP_DRIVE_SMART_LAST_SELF_TEST_RESULT,
-                g_param_spec_string ("drive-smart-last-self-test-result", NULL, NULL, NULL, G_PARAM_READABLE));
+                PROP_DRIVE_ATA_SMART_POWER_ON_SECONDS,
+                g_param_spec_uint64 ("drive-ata-smart-power-on-seconds", NULL, NULL, 0, G_MAXUINT64, 0, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
-                PROP_DRIVE_SMART_ATTRIBUTES,
-                g_param_spec_boxed ("drive-smart-attributes", NULL, NULL,
-                                    dbus_g_type_get_collection ("GPtrArray", SMART_DATA_STRUCT_TYPE),
+                PROP_DRIVE_ATA_SMART_TIME_COLLECTED,
+                g_param_spec_uint64 ("drive-ata-smart-time-collected", NULL, NULL, 0, G_MAXUINT64, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_ATA_SMART_OFFLINE_DATA_COLLECTION_STATUS,
+                g_param_spec_uint ("drive-ata-smart-offline-data-collection-status", NULL, NULL, 0, G_MAXUINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_ATA_SMART_OFFLINE_DATA_COLLECTION_SECONDS,
+                g_param_spec_uint ("drive-ata-smart-offline-data-collection-seconds", NULL, NULL, 0, G_MAXUINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_ATA_SMART_SELF_TEST_EXECUTION_STATUS,
+                g_param_spec_uint ("drive-ata-smart-self-test-execution-status", NULL, NULL, 0, G_MAXUINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_ATA_SMART_SELF_TEST_EXECUTION_PERCENT_REMAINING,
+                g_param_spec_uint ("drive-ata-smart-self-test-execution-percent-remaining", NULL, NULL, 0, G_MAXUINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_ATA_SMART_SHORT_AND_EXTENDED_SELF_TEST_AVAILABLE,
+                g_param_spec_boolean ("drive-ata-smart-short-and-extended-self-test-available", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_ATA_SMART_CONVEYANCE_SELF_TEST_AVAILABLE,
+                g_param_spec_boolean ("drive-ata-smart-conveyance-self-test-available", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_ATA_SMART_START_SELF_TEST_AVAILABLE,
+                g_param_spec_boolean ("drive-ata-smart-start-self-test-available", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_ATA_SMART_ABORT_SELF_TEST_AVAILABLE,
+                g_param_spec_boolean ("drive-ata-smart-abort-self-test-available", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_ATA_SMART_SHORT_SELF_TEST_POLLING_MINUTES,
+                g_param_spec_uint ("drive-ata-smart-short-self-test-polling-minutes", NULL, NULL, 0, G_MAXUINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_ATA_SMART_EXTENDED_SELF_TEST_POLLING_MINUTES,
+                g_param_spec_uint ("drive-ata-smart-extended-self-test-polling-minutes", NULL, NULL, 0, G_MAXUINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_ATA_SMART_CONVEYANCE_SELF_TEST_POLLING_MINUTES,
+                g_param_spec_uint ("drive-ata-smart-conveyance-self-test-polling-minutes", NULL, NULL, 0, G_MAXUINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_ATA_SMART_ATTRIBUTES,
+                g_param_spec_boxed ("drive-ata-smart-attributes", NULL, NULL,
+                                    dbus_g_type_get_collection ("GPtrArray", ATA_SMART_DATA_ATTRIBUTE_STRUCT_TYPE),
                                     G_PARAM_READABLE));
+
 
         g_object_class_install_property (
                 object_class,
@@ -1117,7 +1213,7 @@ devkit_disks_device_init (DevkitDisksDevice *device)
         device->priv->slaves_objpath = g_ptr_array_new ();
         device->priv->holders_objpath = g_ptr_array_new ();
 
-        device->priv->drive_smart_attributes = g_ptr_array_new ();
+        device->priv->drive_ata_smart_attributes = g_ptr_array_new ();
 }
 
 static void
@@ -1138,9 +1234,8 @@ devkit_disks_device_finalize (GObject *object)
 
         g_free (device->priv->native_path);
 
-        g_free (device->priv->drive_smart_last_self_test_result);
-        g_ptr_array_foreach (device->priv->drive_smart_attributes, (GFunc) g_value_array_free, NULL);
-        g_ptr_array_free (device->priv->drive_smart_attributes, TRUE);
+        g_ptr_array_foreach (device->priv->drive_ata_smart_attributes, (GFunc) g_value_array_free, NULL);
+        g_ptr_array_free (device->priv->drive_ata_smart_attributes, TRUE);
 
         for (l = device->priv->polling_inhibitors; l != NULL; l = l->next) {
                 DevkitDisksInhibitor *inhibitor = DEVKIT_DISKS_INHIBITOR (l->data);
@@ -2532,32 +2627,23 @@ update_info_linux_md (DevkitDisksDevice *device)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-/* update drive_smart_* properties */
+/* update drive_ata_smart_* properties */
 static gboolean
-update_info_drive_smart (DevkitDisksDevice *device)
+update_info_drive_ata_smart (DevkitDisksDevice *device)
 {
-        /* Set whether device is S.M.A.R.T. capable
-         *
-         * TODO: need to check that it's hard disk and not e.g. an optical drive
-         *
-         * TODO: need to honor a quirk for certain USB drives being smart capable, cf.
-         *
-         *         Thanks to contributor Matthieu Castet, smartctl has
-         *         a new option '-d usbcypress'. So you can address
-         *         USB devices with cypress chips. The chipset
-         *         contains an ATACB proprietary pass through for ATA
-         *         commands passed through SCSI commands. Get current
-         *         version from CVS.
-         *
-         *       from http://smartmontools.sourceforge.net/
-         */
+        gboolean ata_smart_is_available;
 
-        /* drive_smart_is_capable */
-        if (device->priv->drive_connection_interface != NULL && g_str_has_prefix (device->priv->drive_connection_interface, "ata")) {
-                devkit_disks_device_set_drive_smart_is_capable (device, TRUE);
-        } else {
-                devkit_disks_device_set_drive_smart_is_capable (device, FALSE);
-        }
+        ata_smart_is_available = FALSE;
+        if (device->priv->device_is_drive &&
+            devkit_device_has_property (device->priv->d, "DKD_ATA_SMART_IS_AVAILABLE"))
+                ata_smart_is_available = devkit_device_get_property_as_boolean (device->priv->d, "DKD_ATA_SMART_IS_AVAILABLE");
+
+        devkit_disks_device_set_drive_ata_smart_is_available (device, ata_smart_is_available);
+
+        /* NOTE: we don't collect ATA SMART data here, we only set whether the device is ATA SMART capable;
+         *       collecting data is done in separate routines, see the
+         *       devkit_disks_device_drive_ata_smart_refresh_data() function for details.
+         */
 
         return TRUE;
 }
@@ -3064,8 +3150,8 @@ update_info (DevkitDisksDevice *device)
         if (!update_info_linux_md (device))
                 goto out;
 
-        /* drive_smart_* properties */
-        if (!update_info_drive_smart (device))
+        /* drive_ata_smart_* properties */
+        if (!update_info_drive_ata_smart (device))
                 goto out;
 
         /* device_is_system_internal property */
@@ -3302,6 +3388,14 @@ devkit_disks_device_new (DevkitDisksDaemon *daemon, DevkitDevice *d)
                 g_object_unref (device);
                 device = NULL;
                 goto out;
+        }
+
+        /* if just added, update the smart data if applicable */
+        if (device->priv->drive_ata_smart_is_available) {
+                gchar *ata_smart_refresh_data_options[] = {NULL};
+                devkit_disks_device_drive_ata_smart_refresh_data (device,
+                                                                  ata_smart_refresh_data_options,
+                                                                  NULL);
         }
 
 out:
@@ -7135,357 +7229,470 @@ out:
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
+static gchar *
+get_ata_smart_filename (DevkitDisksDevice *device)
+{
+        gchar *filename;
+
+        /* TODO: hmm... unique enough? Thinking serial number collisions.. but ata_id, scsi_id, usb_id in
+         * udev should take care of that...
+         */
+        filename = g_strdup_printf (PACKAGE_LOCALSTATE_DIR "/lib/DeviceKit-disks/ata-smart/%s-%s-%s-%s",
+                                    device->priv->drive_vendor,
+                                    device->priv->drive_model,
+                                    device->priv->drive_revision,
+                                    device->priv->drive_serial);
+
+        return filename;
+}
+
+static gboolean
+ata_smart_parse_attribute (const gchar *tokens, GValue *elem)
+{
+        gboolean ret;
+        guint id;
+        guint flags;
+        gboolean online, prefailure;
+        guint current;
+        gboolean current_valid;
+        guint worst;
+        gboolean worst_valid;
+        guint threshold;
+        gboolean threshold_valid;
+        gboolean good, good_valid;
+        guint pretty_unit;
+        guint64 pretty_value;
+        guint raw0, raw1, raw2, raw3, raw4, raw5;
+        gchar name[256];
+        GArray *raw_data;
+
+        ret = FALSE;
+
+        if (sscanf (tokens,
+                    "%d "                             /* id */
+                    "%s "                             /* name */
+                    "%d "                             /* flags */
+                    "%d %d "                          /* online, prefailure */
+                    "%d %d "                          /* current_value, current_value_valid */
+                    "%d %d "                          /* worst_value, worst_value_valid */
+                    "%d %d "                          /* threshold, threshold_valid */
+                    "%d %d "                          /* good, good_valid */
+                    "%d %" G_GUINT64_FORMAT " "       /* pretty_unit, pretty_value */
+                    "%02x %02x %02x %02x %02x %02x",  /* raw[6] */
+                    &id,
+                    name,
+                    &flags,
+                    &online, &prefailure,
+                    &current, &current_valid,
+                    &worst, &worst_valid,
+                    &threshold, &threshold_valid,
+                    &good, &good_valid,
+                    &pretty_unit, &pretty_value,
+                    &raw0, &raw1, &raw2, &raw3, &raw4, &raw5) != 21) {
+                goto out;
+        }
+
+        raw_data = g_array_new (FALSE, TRUE, sizeof (guchar));
+        g_array_append_val (raw_data, raw0);
+        g_array_append_val (raw_data, raw1);
+        g_array_append_val (raw_data, raw2);
+        g_array_append_val (raw_data, raw3);
+        g_array_append_val (raw_data, raw4);
+        g_array_append_val (raw_data, raw5);
+
+        g_value_init (elem, ATA_SMART_DATA_ATTRIBUTE_STRUCT_TYPE);
+        g_value_take_boxed (elem, dbus_g_type_specialized_construct (ATA_SMART_DATA_ATTRIBUTE_STRUCT_TYPE));
+        dbus_g_type_struct_set (elem,
+                                0, id,
+                                1, name,
+                                2, flags,
+                                3, online,
+                                4, prefailure,
+                                5, current,
+                                6, current_valid,
+                                7, worst,
+                                8, worst_valid,
+                                9, threshold,
+                                10, threshold_valid,
+                                11, good,
+                                12, good_valid,
+                                13, pretty_unit,
+                                14, pretty_value,
+                                15, raw_data,
+                                G_MAXUINT);
+
+        g_array_free (raw_data, TRUE);
+
+        ret = TRUE;
+
+ out:
+        return ret;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
 typedef struct {
         gboolean simulation;
-} DriveRefreshSmartDataData;
+} DriveRefreshAtaSmartDataData;
 
-static DriveRefreshSmartDataData *
-drive_smart_refresh_data_data_new (gboolean simulation)
+static DriveRefreshAtaSmartDataData *
+drive_ata_smart_refresh_data_data_new (gboolean simulation)
 {
-        DriveRefreshSmartDataData *data;
-        data = g_new0 (DriveRefreshSmartDataData, 1);
+        DriveRefreshAtaSmartDataData *data;
+        data = g_new0 (DriveRefreshAtaSmartDataData, 1);
         data->simulation = simulation;
         return data;
 }
 
 static void
-drive_smart_refresh_data_unref (DriveRefreshSmartDataData *data)
+drive_ata_smart_refresh_data_unref (DriveRefreshAtaSmartDataData *data)
 {
         g_free (data);
 }
 
 /* may be called with context==NULL */
 static void
-drive_smart_refresh_data_completed_cb (DBusGMethodInvocation *context,
-                                       DevkitDisksDevice *device,
-                                       PolKitCaller *pk_caller,
-                                       gboolean job_was_cancelled,
-                                       int status,
-                                       const char *stderr,
-                                       const char *stdout,
-                                       gpointer user_data)
+drive_ata_smart_refresh_data_completed_cb (DBusGMethodInvocation *context,
+                                           DevkitDisksDevice *device,
+                                           PolKitCaller *pk_caller,
+                                           gboolean job_was_cancelled,
+                                           int status,
+                                           const char *stderr,
+                                           const char *stdout,
+                                           gpointer user_data)
 {
-        DriveRefreshSmartDataData *data = user_data;
-        int rc;
-        gboolean passed;
-        int n;
-        char **lines;
-        gboolean in_attributes;
-        int power_on_hours;
-        int temperature;
-        const char *last_self_test_result;
-        GTimeVal now;
-        gboolean attributes_has_upd;
+        DriveRefreshAtaSmartDataData *data;
+        gint rc;
+        gchar **tokens;
+        gboolean ata_smart_is_failing;
+        gboolean ata_smart_is_failing_valid;
+        gboolean ata_smart_has_bad_sectors;
+        gboolean ata_smart_has_bad_attributes;
+        gdouble ata_smart_temperature_kelvin;
+        guint64 ata_smart_power_on_seconds;
+        guint64 ata_smart_time_collected;
+        guint ata_smart_offline_data_collection_status;
+        guint ata_smart_offline_data_collection_seconds;
+        guint ata_smart_self_test_execution_status;
+        guint ata_smart_self_test_execution_percent_remaining;
+        gboolean ata_smart_short_and_extended_self_test_available;
+        gboolean ata_smart_conveyance_self_test_available;
+        gboolean ata_smart_start_self_test_available;
+        gboolean ata_smart_abort_self_test_available;
+        guint ata_smart_short_self_test_polling_minutes;
+        guint ata_smart_extended_self_test_polling_minutes;
+        guint ata_smart_conveyance_self_test_polling_minutes;
         GPtrArray *attributes;
+        guint n;
+
+        tokens = NULL;
+
+        data = user_data;
 
         if (job_was_cancelled || stdout == NULL) {
                 if (job_was_cancelled) {
-                        throw_error (context,
-                                     DEVKIT_DISKS_ERROR_CANCELLED,
-                                     "Job was cancelled");
+                        if (context != NULL)
+                                throw_error (context,
+                                             DEVKIT_DISKS_ERROR_CANCELLED,
+                                             "Job was cancelled");
                 } else {
-                        throw_error (context,
-                                     DEVKIT_DISKS_ERROR_FAILED,
-                                     "Error retrieving S.M.A.R.T. data: no output",
-                                     WEXITSTATUS (status), stderr);
+                        if (context != NULL)
+                                throw_error (context,
+                                             DEVKIT_DISKS_ERROR_FAILED,
+                                             "Error retrieving S.M.A.R.T. data: no output",
+                                             WEXITSTATUS (status), stderr);
                 }
                 goto out;
         }
 
         rc = WEXITSTATUS (status);
 
-        if ((rc & (0x01|0x02|0x04)) != 0) {
-                /* update our setting if we "thought" (cf. update_info()) that this device
-                 * was S.M.A.R.T. capable
-                 */
-                if (device->priv->drive_smart_is_capable) {
-                        devkit_disks_device_set_drive_smart_is_capable (device, FALSE);
-                        drain_pending_changes (device, FALSE);
+        if (rc != 0) {
+                if (rc == 2) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_ATA_SMART_WOULD_WAKEUP,
+                                     "Error retrieving S.M.A.R.T. data: %s",
+                                     stderr);
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_FAILED,
+                                     "Error retrieving S.M.A.R.T. data: helper failed with exit code %d: %s",
+                                     rc, stderr);
                 }
-                throw_error (context,
-                             DEVKIT_DISKS_ERROR_NOT_SMART_CAPABLE,
-                             "Device is not S.M.A.R.T. capable");
                 goto out;
         }
 
-        /* TODO: is_enabled */
-        devkit_disks_device_set_drive_smart_is_enabled (device, TRUE);
+        g_print ("**************************************************\n");
+        g_print ("TODO: %s parse '%s'\n", device->priv->device_file, stdout);
+        g_print ("**************************************************\n");
 
-        g_get_current_time (&now);
-        devkit_disks_device_set_drive_smart_time_collected (device, now.tv_sec);
+        tokens = g_strsplit (stdout, "|", 0);
 
+        if (g_strv_length (tokens) < 4) {
+                if (context != NULL)
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_FAILED,
+                                     "malformed data '%s'", stdout);
+                goto out;
+        }
+
+        if (sscanf (tokens[0],
+                    "%" G_GUINT64_FORMAT,
+                    &ata_smart_time_collected) != 1) {
+                if (context != NULL)
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_FAILED,
+                                     "error parsing section 0 '%s'", tokens[0]);
+                goto out;
+        }
+
+        if (g_strcmp0 (tokens[1], "atasmartv0") != 0) {
+                if (context != NULL)
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_FAILED,
+                                     "unknown format '%s'", tokens[1]);
+                goto out;
+        }
+
+        if (sscanf (tokens[2],
+                    "%d %d %d %d %lg %" G_GUINT64_FORMAT,
+                    &ata_smart_is_failing,
+                    &ata_smart_is_failing_valid,
+                    &ata_smart_has_bad_sectors,
+                    &ata_smart_has_bad_attributes,
+                    &ata_smart_temperature_kelvin,
+                    &ata_smart_power_on_seconds) != 6) {
+                if (context != NULL)
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_FAILED,
+                                     "error parsing section 2 '%s'", tokens[2]);
+                goto out;
+        }
+
+        if (sscanf (tokens[3],
+                    "%d %d %d %d %d %d %d %d %d %d %d",
+                    &ata_smart_offline_data_collection_status,
+                    &ata_smart_offline_data_collection_seconds,
+                    &ata_smart_self_test_execution_status,
+                    &ata_smart_self_test_execution_percent_remaining,
+                    &ata_smart_short_and_extended_self_test_available,
+                    &ata_smart_conveyance_self_test_available,
+                    &ata_smart_start_self_test_available,
+                    &ata_smart_abort_self_test_available,
+                    &ata_smart_short_self_test_polling_minutes,
+                    &ata_smart_extended_self_test_polling_minutes,
+                    &ata_smart_conveyance_self_test_polling_minutes) != 11) {
+                if (context != NULL)
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_FAILED,
+                                     "error parsing section 3 '%s'", tokens[3]);
+                goto out;
+        }
+
+        devkit_disks_device_set_drive_ata_smart_is_failing (device, ata_smart_is_failing);
+        devkit_disks_device_set_drive_ata_smart_is_failing_valid (device, ata_smart_is_failing_valid);
+        devkit_disks_device_set_drive_ata_smart_has_bad_sectors (device, ata_smart_has_bad_sectors);
+        devkit_disks_device_set_drive_ata_smart_has_bad_attributes (device, ata_smart_has_bad_attributes);
+        devkit_disks_device_set_drive_ata_smart_time_collected (device, ata_smart_time_collected);
+        devkit_disks_device_set_drive_ata_smart_temperature_kelvin (device, ata_smart_temperature_kelvin);
+        devkit_disks_device_set_drive_ata_smart_power_on_seconds (device, ata_smart_power_on_seconds);
+        devkit_disks_device_set_drive_ata_smart_offline_data_collection_status (device, ata_smart_offline_data_collection_status);
+        devkit_disks_device_set_drive_ata_smart_offline_data_collection_seconds (device, ata_smart_offline_data_collection_seconds);
+        devkit_disks_device_set_drive_ata_smart_self_test_execution_status (device, ata_smart_self_test_execution_status);
+        devkit_disks_device_set_drive_ata_smart_self_test_execution_percent_remaining (device, ata_smart_self_test_execution_percent_remaining);
+        devkit_disks_device_set_drive_ata_smart_short_and_extended_self_test_available (device, ata_smart_short_and_extended_self_test_available);
+        devkit_disks_device_set_drive_ata_smart_conveyance_self_test_available (device, ata_smart_conveyance_self_test_available);
+        devkit_disks_device_set_drive_ata_smart_start_self_test_available (device, ata_smart_start_self_test_available);
+        devkit_disks_device_set_drive_ata_smart_abort_self_test_available (device, ata_smart_abort_self_test_available);
+        devkit_disks_device_set_drive_ata_smart_short_self_test_polling_minutes (device, ata_smart_short_self_test_polling_minutes);
+        devkit_disks_device_set_drive_ata_smart_extended_self_test_polling_minutes (device, ata_smart_extended_self_test_polling_minutes);
+        devkit_disks_device_set_drive_ata_smart_conveyance_self_test_polling_minutes (device, ata_smart_conveyance_self_test_polling_minutes);
+
+        /* then all attributes */
         attributes = g_ptr_array_new ();
+        for (n = 4; tokens[n] != NULL; n++) {
+                GValue elem = {0};
 
-        passed = TRUE;
-        power_on_hours = 0;
-        temperature = 0;
-        last_self_test_result = "";
+                if (!ata_smart_parse_attribute (tokens[n], &elem)) {
+                        if (context != NULL)
+                                throw_error (context,
+                                             DEVKIT_DISKS_ERROR_FAILED,
+                                             "error parsing section %d '%s'", n, tokens[n]);
+                        g_ptr_array_foreach (attributes, (GFunc) g_value_array_free, NULL);
+                        g_ptr_array_free (attributes, TRUE);
+                        goto out;
+                }
 
-        if ((rc & 0x08) != 0) {
-                passed = FALSE;
-                devkit_disks_device_set_drive_smart_is_failing (device, TRUE);
+                g_ptr_array_add (attributes, g_value_get_boxed (&elem));
         }
 
-        lines = g_strsplit (stdout, "\n", 0);
-
-        in_attributes = FALSE;
-        attributes_has_upd = FALSE;
-        for (n = 0; lines[n] != NULL; n++) {
-                const char *line = (const char *) lines[n];
-                int id;
-                char name[256];
-                unsigned int flags;
-                int value;
-                int worst;
-                int threshold;
-                char type[256];
-                char updated[256];
-                char when_failed[256];
-                char raw_string_value[256];
-                int raw_value;
-                int self_test_execution_status;
-                gboolean parsed_attr;
-
-                /* We're looking at parsing this block of the output
-                 *
-                 * ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
-                 *   1 Raw_Read_Error_Rate     0x000f   200   200   051    Pre-fail  Always       -       1284
-                 *   3 Spin_Up_Time            0x0003   225   215   021    Pre-fail  Always       -       5725
-                 *   4 Start_Stop_Count        0x0032   100   100   000    Old_age   Always       -       204
-                 *   5 Reallocated_Sector_Ct   0x0033   199   199   140    Pre-fail  Always       -       2
-                 *   7 Seek_Error_Rate         0x000f   127   127   051    Pre-fail  Always       -       65877
-                 *   9 Power_On_Hours          0x0032   096   096   000    Old_age   Always       -       3429
-                 *  10 Spin_Retry_Count        0x0013   100   100   051    Pre-fail  Always       -       0
-                 *  11 Calibration_Retry_Count 0x0012   100   100   051    Old_age   Always       -       0
-                 *  12 Power_Cycle_Count       0x0032   100   100   000    Old_age   Always       -       153
-                 * 190 Temperature_Celsius     0x0022   058   032   045    Old_age   Always   In_the_past 42
-                 * 194 Temperature_Celsius     0x0022   253   253   000    Old_age   Always       -       43
-                 * 196 Reallocated_Event_Count 0x0032   198   198   000    Old_age   Always       -       2
-                 * 197 Current_Pending_Sector  0x0012   191   191   000    Old_age   Always       -       762
-                 * 198 Offline_Uncorrectable   0x0010   200   200   000    Old_age   Offline      -       21
-                 * 199 UDMA_CRC_Error_Count    0x003e   200   200   000    Old_age   Always       -       40
-                 * 200 Multi_Zone_Error_Rate   0x0009   170   170   051    Pre-fail  Offline      -       1542
-                 *
-                 */
-
-                if (data->simulation) {
-                        if (strstr (line, "self-assessment test result") != NULL) {
-                                if (strstr (line, "PASSED") != NULL)
-                                        passed = TRUE;
-                                else
-                                        passed = FALSE;
-                        }
-                }
-
-                if (g_str_has_prefix (line, "ID# ATTRIBUTE_NAME ")) {
-                        in_attributes = TRUE;
-                        if (strstr (line, "UPDATED") != NULL)
-                                attributes_has_upd = TRUE;
-                        continue;
-                }
-
-                if (strlen (line) >= 256) {
-                        g_warning ("Ignoring line '%s' (too long)", line);
-                        continue;
-                }
-
-                if (!in_attributes) {
-                        if (sscanf (line, "Self-test execution status: ( %d)",
-                                    &self_test_execution_status) == 1) {
-                                //g_warning ("self_test_execution_status: %d", self_test_execution_status);
-
-                                switch (self_test_execution_status >> 4) {
-                                case 0:
-                                        last_self_test_result = "completed_ok";
-                                        break;
-                                case 1:
-                                        last_self_test_result = "not_completed_aborted";
-                                        break;
-                                case 2:
-                                        last_self_test_result = "not_completed_aborted_reset";
-                                        break;
-                                case 3:
-                                        last_self_test_result = "not_completed_unknown_reason";
-                                        break;
-                                case 4:
-                                        last_self_test_result = "completed_failed_unknown_reason";
-                                        break;
-                                case 5:
-                                        last_self_test_result = "completed_failed_electrical";
-                                        break;
-                                case 6:
-                                        last_self_test_result = "completed_failed_servo";
-                                        break;
-                                case 7:
-                                        last_self_test_result = "completed_failed_read";
-                                        break;
-                                case 8:
-                                        last_self_test_result = "completed_failed_damage";
-                                        break;
-                                default:
-                                        last_self_test_result = "unknown";
-                                        break;
-                                }
-                                devkit_disks_device_set_drive_smart_last_self_test_result (device, last_self_test_result);
-
-                        }
-                        continue;
-                }
-
-                if (strlen (line) == 0) {
-                        break;
-                }
-
-                parsed_attr = FALSE;
-                memset (raw_string_value, '\0', sizeof raw_string_value);
-                if (attributes_has_upd) {
-                        parsed_attr = sscanf (line, "%d %s 0x%x %d %d %d %s %s %s %255c",
-                                              &id, name, &flags, &value, &worst, &threshold,
-                                              type, updated, when_failed, raw_string_value) == 10;
-                } else {
-                        parsed_attr = sscanf (line, "%d %s 0x%x %d %d %d %s %s %255c",
-                                              &id, name, &flags, &value, &worst, &threshold,
-                                              type, when_failed, raw_string_value) == 9;
-                }
-
-                if (parsed_attr) {
-                        /*
-                        g_printerr ("                id=%d\n", id);
-                        g_printerr ("              name='%s'\n", name);
-                        g_printerr ("             flags=0x%x\n", flags);
-                        g_printerr ("             value=%d\n", value);
-                        g_printerr ("             worst=%d\n", worst);
-                        g_printerr ("         threshold=%d\n", threshold);
-                        g_printerr ("              type='%s'\n", type);
-                        g_printerr ("           updated='%s'\n", updated);
-                        g_printerr ("       when_failed='%s'\n", when_failed);
-                        g_printerr ("  raw_string_value='%s'\n", raw_string_value);
-                        */
-
-                        if (sscanf (raw_string_value, "%d", &raw_value) == 1) {
-                                if (id == 9) {
-                                        power_on_hours = raw_value;
-                                        devkit_disks_device_set_drive_smart_time_powered_on (device, raw_value * 3600);
-                                } else if (id == 194) {
-                                        temperature = raw_value;
-                                        devkit_disks_device_set_drive_smart_temperature (device, raw_value);
-                                }
-                        }
-
-                        if (id == 197) {
-                        }
-
-                        GValue elem = {0};
-                        g_value_init (&elem, SMART_DATA_STRUCT_TYPE);
-                        g_value_take_boxed (&elem, dbus_g_type_specialized_construct (SMART_DATA_STRUCT_TYPE));
-                        dbus_g_type_struct_set (&elem,
-                                                0, id,
-                                                1, name,
-                                                2, flags,
-                                                3, value,
-                                                4, worst,
-                                                5, threshold,
-                                                6, raw_string_value,
-                                                G_MAXUINT);
-                        g_ptr_array_add (attributes, g_value_get_boxed (&elem));
-
-                }
-
-        }
-        g_strfreev (lines);
-
-        devkit_disks_device_set_drive_smart_is_failing (device, !passed);
-
-        /* this function steals the attributes */
-        devkit_disks_device_set_drive_smart_attributes_steal (device, attributes);
+        devkit_disks_device_set_drive_ata_smart_attributes_steal (device, attributes);
 
         /* emit change event since we've updated the smart data */
         drain_pending_changes (device, FALSE);
 
-        /* add result to database */
+        /* if not simulating, store the retrieved data and do some house-keeping as well
+         *
+         * TODO: it's probably somewhat inefficient to do house-keeping like this (better
+         *       to just append to the file and do housekeeping only on startup and every
+         *       24 hours or so)
+         *
+         * TODO: retrieving/storing the data should probably be async as well
+         */
         if (!data->simulation) {
-                devkit_disks_logger_record_smart_values (devkit_disks_daemon_local_get_logger (device->priv->daemon),
-                                                         device);
+                gchar *filename;
+                gchar *contents;
+                gsize length;
+                GError *error;
+                GString *s;
+                time_t now;
+
+                filename = get_ata_smart_filename (device);
+                if (filename == NULL) {
+                        if (context != NULL)
+                                throw_error (context,
+                                             DEVKIT_DISKS_ERROR_FAILED,
+                                             "Error computing smart data filename for device");
+                        goto out;
+                }
+
+                error = NULL;
+                if (!g_file_get_contents (filename,
+                                          &contents,
+                                          &length,
+                                          &error)) {
+                        if (error->domain == G_FILE_ERROR && error->code == G_FILE_ERROR_NOENT) {
+                                /* it's ok if the file doesn't exist */
+                                g_error_free (error);
+                        } else {
+                                if (context != NULL)
+                                        throw_error (context,
+                                                     DEVKIT_DISKS_ERROR_FAILED,
+                                                     "Error retrieving existing SMART data from %s: %s", filename, error->message);
+                                g_error_free (error);
+                                g_free (filename);
+                                goto out;
+                        }
+                }
+
+                now = time (NULL);
+
+                s = g_string_new (NULL);
+                if (contents != NULL) {
+                        gchar **lines;
+
+                        lines = g_strsplit (contents, "\n", 0);
+                        for (n = 0; lines[n] != NULL; n++) {
+                                time_t time_collected;
+
+                                time_collected = (time_t) atoll (lines[n]);
+
+                                /* keep data around for 7 days */
+                                if (now - time_collected > 7 * 24 * 60 * 60)
+                                        continue;
+
+                                g_string_append (s, lines[n]);
+                                g_string_append_c (s, '\n');
+                        }
+                        g_strfreev (lines);
+
+                        g_free (contents);
+                }
+
+                g_string_append (s, stdout);
+
+                error = NULL;
+                if (!g_file_set_contents (filename,
+                                          s->str,
+                                          s->len,
+                                          &error)) {
+                        if (context != NULL)
+                                throw_error (context,
+                                             DEVKIT_DISKS_ERROR_FAILED,
+                                             "Error retrieving saving SMART data to %s: %s", filename, error->message);
+                        g_error_free (error);
+                        g_free (filename);
+                        goto out;
+                }
+
+                g_free (filename);
         }
 
         if (context != NULL)
-                dbus_g_method_return (context, passed, power_on_hours, temperature, last_self_test_result);
+                dbus_g_method_return (context);
 out:
-        ;
+        g_strfreev (tokens);
 }
 
 /* may be called with context==NULL */
 gboolean
-devkit_disks_device_drive_smart_refresh_data (DevkitDisksDevice     *device,
-                                              char                 **options,
-                                              DBusGMethodInvocation *context)
+devkit_disks_device_drive_ata_smart_refresh_data (DevkitDisksDevice     *device,
+                                                  char                 **options,
+                                                  DBusGMethodInvocation *context)
 {
         int n;
         char *argv[10];
         GError *error;
         PolKitCaller *pk_caller;
-        const char *simulpath;
+        const char *simuldata;
         gboolean nowakeup;
+        uid_t caller_uid;
 
         pk_caller = NULL;
         if (context != NULL) {
-                if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon,
-                                                                                  context)) == NULL)
+                if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                         goto out;
         }
 
-        if (!device->priv->device_is_drive) {
-                throw_error (context, DEVKIT_DISKS_ERROR_NOT_DRIVE,
-                             "Device is not a drive");
-                goto out;
-        }
+        if (pk_caller != NULL)
+                polkit_caller_get_uid (pk_caller, &caller_uid);
+        else
+                caller_uid = 0;
 
-        if (!device->priv->drive_smart_is_capable) {
+        if (!device->priv->drive_ata_smart_is_available) {
                 throw_error (context,
-                             DEVKIT_DISKS_ERROR_NOT_SMART_CAPABLE,
-                             "Device is not S.M.A.R.T. capable");
+                             DEVKIT_DISKS_ERROR_ATA_SMART_NOT_AVAILABLE,
+                             "Device does not support ATA SMART");
                 goto out;
         }
 
-        if (context != NULL) {
+        if (context != NULL && caller_uid != 0) {
                 if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                           pk_caller,
-                                                          "org.freedesktop.devicekit.disks.drive-smart-refresh",
+                                                          "org.freedesktop.devicekit.disks.drive-ata-smart-refresh",
                                                           context)) {
                         goto out;
                 }
         }
 
-        simulpath = NULL;
+        simuldata = NULL;
         nowakeup = FALSE;
         for (n = 0; options[n] != NULL; n++) {
                 if (g_str_has_prefix (options[n], "simulate=")) {
                         if (context != NULL) {
-                                uid_t uid;
-                                if (!polkit_caller_get_uid (pk_caller, &uid) || uid != 0) {
+                                if (caller_uid != 0) {
                                         throw_error (context,
                                                      DEVKIT_DISKS_ERROR_FAILED,
                                                      "Only uid 0 may use the simulate= option");
                                         goto out;
                                 }
                         }
-                        simulpath = (const char *) options[n] + 9;
+                        simuldata = (const char *) options[n] + 9;
                 } else if (strcmp (options[n], "nowakeup") == 0) {
                         nowakeup = TRUE;
                 }
         }
 
-        if (simulpath != NULL) {
+        if (simuldata != NULL) {
                 n = 0;
-                argv[n++] = "cat";
-                argv[n++] = (char *) simulpath;
+                argv[n++] = "echo";
+                argv[n++] = (char *) simuldata;
                 argv[n++] = NULL;
         } else {
                 n = 0;
-                /* TODO: honor option 'nowakeup' */
-                argv[n++] = "smartctl";
-                argv[n++] = "--all";
+                argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-ata-smart-collect";
                 argv[n++] = device->priv->device_file;
+                argv[n++] = nowakeup ? "1" : "0";
                 argv[n++] = NULL;
         }
 
@@ -7498,9 +7705,9 @@ devkit_disks_device_drive_smart_refresh_data (DevkitDisksDevice     *device,
                       pk_caller,
                       argv,
                       NULL,
-                      drive_smart_refresh_data_completed_cb,
-                      drive_smart_refresh_data_data_new (simulpath != NULL),
-                      (GDestroyNotify) drive_smart_refresh_data_unref)) {
+                      drive_ata_smart_refresh_data_completed_cb,
+                      drive_ata_smart_refresh_data_data_new (simuldata != NULL),
+                      (GDestroyNotify) drive_ata_smart_refresh_data_unref)) {
                 goto out;
         }
 
@@ -7512,16 +7719,201 @@ out:
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
-static void
-drive_smart_initiate_selftest_completed_cb (DBusGMethodInvocation *context,
-                                            DevkitDisksDevice *device,
-                                            PolKitCaller *pk_caller,
-                                            gboolean job_was_cancelled,
-                                            int status,
-                                            const char *stderr,
-                                            const char *stdout,
-                                            gpointer user_data)
+gboolean
+devkit_disks_device_drive_ata_smart_get_historical_data (DevkitDisksDevice     *device,
+                                                         guint64                from,
+                                                         guint64                to,
+                                                         DBusGMethodInvocation *context)
 {
+        PolKitCaller *pk_caller;
+        GPtrArray *array;
+        gchar *filename;
+        gchar *contents;
+        GError *error;
+
+        pk_caller = NULL;
+        filename = NULL;
+
+        if (context != NULL) {
+                if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon,
+                                                                                  context)) == NULL)
+                        goto out;
+        }
+
+        if (!device->priv->drive_ata_smart_is_available) {
+                throw_error (context,
+                             DEVKIT_DISKS_ERROR_ATA_SMART_NOT_AVAILABLE,
+                             "Device does not support ATA SMART");
+                goto out;
+        }
+
+        if (context != NULL) {
+                if (!devkit_disks_damon_local_check_auth (
+                            device->priv->daemon,
+                            pk_caller,
+                            "org.freedesktop.devicekit.disks.drive-ata-smart-retrieve-historical-data",
+                            context)) {
+                        goto out;
+                }
+        }
+
+        if (from > to) {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED, "Malformed time range (from > to)");
+                goto out;
+        }
+
+        to = time (NULL);
+
+        filename = get_ata_smart_filename (device);
+        if (filename == NULL) {
+                throw_error (context,
+                             DEVKIT_DISKS_ERROR_FAILED,
+                             "Error computing smart data filename for device");
+                goto out;
+        }
+
+        error = NULL;
+        if (!g_file_get_contents (filename,
+                                  &contents,
+                                  NULL,
+                                  &error)) {
+                if (error->domain == G_FILE_ERROR && error->code == G_FILE_ERROR_NOENT) {
+                        /* it's ok if the file doesn't exist */
+                        g_error_free (error);
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_FAILED,
+                                     "Error retrieving existing SMART data from %s: %s", filename, error->message);
+                        g_error_free (error);
+                        g_free (filename);
+                        goto out;
+                }
+        }
+
+        array = g_ptr_array_new ();
+
+        if (contents != NULL) {
+                gchar **lines;
+                guint n;
+
+                lines = g_strsplit (contents, "\n", 0);
+                for (n = 0; lines[n] != NULL; n++) {
+                        gboolean ata_smart_is_failing;
+                        gboolean ata_smart_is_failing_valid;
+                        gboolean ata_smart_has_bad_sectors;
+                        gboolean ata_smart_has_bad_attributes;
+                        gdouble ata_smart_temperature_kelvin;
+                        guint64 ata_smart_power_on_seconds;
+                        guint64 ata_smart_time_collected;
+                        gchar **tokens;
+                        GPtrArray *attributes;
+                        guint m;
+                        GValue sample_elem = {0};
+
+                        if (strlen (lines[n]) == 0)
+                                continue;
+
+                        tokens = g_strsplit (lines[n], "|", 0);
+
+                        if (sscanf (tokens[0],
+                                    "%" G_GUINT64_FORMAT,
+                                    &ata_smart_time_collected) != 1) {
+                                g_warning ("error parsing section 0 '%s'", tokens[0]);
+                                g_strfreev (tokens);
+                                continue;
+                        }
+
+                        if (! ((ata_smart_time_collected >= from) && (ata_smart_time_collected <= to))) {
+                                g_strfreev (tokens);
+                                continue;
+                        }
+
+                        if (g_strcmp0 (tokens[1], "atasmartv0") != 0) {
+                                g_warning ("unknown format '%s'", tokens[1]);
+                                g_strfreev (tokens);
+                                continue;
+                        }
+
+                        if (sscanf (tokens[2],
+                                    "%d %d %d %d %lg %" G_GUINT64_FORMAT,
+                                    &ata_smart_is_failing,
+                                    &ata_smart_is_failing_valid,
+                                    &ata_smart_has_bad_sectors,
+                                    &ata_smart_has_bad_attributes,
+                                    &ata_smart_temperature_kelvin,
+                                    &ata_smart_power_on_seconds) != 6) {
+                                g_warning ("error parsing section 2 '%s'", tokens[2]);
+                                g_strfreev (tokens);
+                                continue;
+                        }
+
+                        attributes = g_ptr_array_new ();
+                        for (m = 4; tokens[m] != NULL; m++) {
+                                GValue elem = {0};
+
+                                /* ignore errors... */
+                                if (!ata_smart_parse_attribute (tokens[m], &elem)) {
+                                        g_warning ("error parsing '%s' in historical data", tokens[m]);
+                                        continue;
+                                }
+
+                                g_ptr_array_add (attributes, g_value_get_boxed (&elem));
+                        }
+
+                        g_value_init (&sample_elem, ATA_SMART_HISTORICAL_SMART_DATA_STRUCT_TYPE);
+                        g_value_take_boxed (&sample_elem, dbus_g_type_specialized_construct (ATA_SMART_HISTORICAL_SMART_DATA_STRUCT_TYPE));
+                        dbus_g_type_struct_set (&sample_elem,
+                                                0, ata_smart_time_collected,
+                                                1, ata_smart_is_failing,
+                                                2, ata_smart_is_failing_valid,
+                                                3, ata_smart_has_bad_sectors,
+                                                4, ata_smart_has_bad_attributes,
+                                                5, ata_smart_temperature_kelvin,
+                                                6, ata_smart_power_on_seconds,
+                                                7, attributes,
+                                                G_MAXUINT);
+                        g_ptr_array_add (array, g_value_get_boxed (&sample_elem));
+
+                        g_ptr_array_foreach (attributes, (GFunc) g_value_array_free, NULL);
+                        g_ptr_array_free (attributes, TRUE);
+
+                        g_strfreev (tokens);
+                }
+                g_strfreev (lines);
+
+                g_free (contents);
+        }
+
+
+        dbus_g_method_return (context, array);
+
+        g_ptr_array_foreach (array, (GFunc) g_value_array_free, NULL);
+        g_ptr_array_free (array, TRUE);
+
+out:
+        g_free (filename);
+        if (pk_caller != NULL)
+                polkit_caller_unref (pk_caller);
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+drive_ata_smart_initiate_selftest_completed_cb (DBusGMethodInvocation *context,
+                                                DevkitDisksDevice *device,
+                                                PolKitCaller *pk_caller,
+                                                gboolean job_was_cancelled,
+                                                int status,
+                                                const char *stderr,
+                                                const char *stdout,
+                                                gpointer user_data)
+{
+        char *options[] = {NULL};
+
+        /* no matter what happened, refresh the data */
+        devkit_disks_device_drive_ata_smart_refresh_data (device, options, NULL);
+
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
 
                 dbus_g_method_return (context);
@@ -7541,10 +7933,10 @@ drive_smart_initiate_selftest_completed_cb (DBusGMethodInvocation *context,
 }
 
 gboolean
-devkit_disks_device_drive_smart_initiate_selftest (DevkitDisksDevice     *device,
-                                                   const char            *test,
-                                                   gboolean               captive,
-                                                   DBusGMethodInvocation *context)
+devkit_disks_device_drive_ata_smart_initiate_selftest (DevkitDisksDevice     *device,
+                                                       const char            *test,
+                                                       gchar                **options,
+                                                       DBusGMethodInvocation *context)
 {
         int n;
         char *argv[10];
@@ -7554,49 +7946,35 @@ devkit_disks_device_drive_smart_initiate_selftest (DevkitDisksDevice     *device
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
 
-        if (!device->priv->device_is_drive) {
-                throw_error (context, DEVKIT_DISKS_ERROR_NOT_DRIVE,
-                             "Device is not a drive");
+        if (!device->priv->drive_ata_smart_is_available) {
+                throw_error (context,
+                             DEVKIT_DISKS_ERROR_ATA_SMART_NOT_AVAILABLE,
+                             "Device does not support ATA SMART");
                 goto out;
-        }
-
-        if (captive) {
-                if (devkit_disks_device_local_is_busy (device)) {
-                        throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
-                                     "Device is busy");
-                        goto out;
-                }
-
-                if (devkit_disks_device_local_partitions_are_busy (device)) {
-                        throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
-                                     "A partition on the device is busy");
-                        goto out;
-                }
         }
 
         if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
                                                   pk_caller,
-                                                  "org.freedesktop.devicekit.disks.drive-smart-selftest",
+                                                  "org.freedesktop.devicekit.disks.drive-ata-smart-selftest",
                                                   context)) {
                 goto out;
         }
 
         n = 0;
-        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-smart-selftest";
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-ata-smart-selftest";
         argv[n++] = device->priv->device_file;
         argv[n++] = (char *) test;
-        argv[n++] = captive ? "1" : "0";
         argv[n++] = NULL;
 
         error = NULL;
         if (!job_new (context,
-                      "DriveSmartInitiateSelftest",
+                      "DriveAtaSmartInitiateSelftest",
                       TRUE,
                       device,
                       pk_caller,
                       argv,
                       NULL,
-                      drive_smart_initiate_selftest_completed_cb,
+                      drive_ata_smart_initiate_selftest_completed_cb,
                       NULL,
                       NULL)) {
                 goto out;

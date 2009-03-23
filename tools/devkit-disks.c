@@ -302,24 +302,36 @@ device_removed_signal_handler (DBusGProxy *proxy, const char *object_path, gpoin
   g_print ("removed:   %s\n", object_path);
 }
 
-#define SMART_DATA_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray",   \
-                                                        G_TYPE_INT,      \
-                                                        G_TYPE_STRING,   \
-                                                        G_TYPE_INT,      \
-                                                        G_TYPE_INT,      \
-                                                        G_TYPE_INT,      \
-                                                        G_TYPE_INT,      \
-                                                        G_TYPE_STRING,   \
-                                                        G_TYPE_INVALID))
+#define ATA_SMART_DATA_ATTRIBUTE_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray", \
+                                                                      G_TYPE_UINT, \
+                                                                      G_TYPE_STRING, \
+                                                                      G_TYPE_UINT, \
+                                                                      G_TYPE_BOOLEAN, G_TYPE_BOOLEAN, \
+                                                                      G_TYPE_UCHAR, G_TYPE_BOOLEAN, \
+                                                                      G_TYPE_UCHAR, G_TYPE_BOOLEAN, \
+                                                                      G_TYPE_UCHAR, G_TYPE_BOOLEAN, \
+                                                                      G_TYPE_BOOLEAN, G_TYPE_BOOLEAN, \
+                                                                      G_TYPE_UINT, G_TYPE_UINT64, \
+                                                                      dbus_g_type_get_collection ("GArray", G_TYPE_UCHAR), \
+                                                                      G_TYPE_INVALID))
 
-#define HISTORICAL_SMART_DATA_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray",   \
-                                                                   G_TYPE_UINT64, \
-                                                                   G_TYPE_DOUBLE, \
-                                                                   G_TYPE_UINT64, \
-                                                                   G_TYPE_STRING, \
-                                                                   G_TYPE_BOOLEAN, \
-                                                                   dbus_g_type_get_collection ("GPtrArray", SMART_DATA_STRUCT_TYPE), \
-                                                                   G_TYPE_INVALID))
+#define ATA_SMART_HISTORICAL_SMART_DATA_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray",   \
+                                                                             G_TYPE_UINT64, \
+                                                                             G_TYPE_BOOLEAN, \
+                                                                             G_TYPE_BOOLEAN, \
+                                                                             G_TYPE_BOOLEAN, \
+                                                                             G_TYPE_BOOLEAN, \
+                                                                             G_TYPE_DOUBLE, \
+                                                                             G_TYPE_UINT64, \
+                                                                             dbus_g_type_get_collection ("GPtrArray", ATA_SMART_DATA_ATTRIBUTE_STRUCT_TYPE), \
+                                                                             G_TYPE_INVALID))
+
+#define LSOF_DATA_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray",   \
+                                                       G_TYPE_UINT,     \
+                                                       G_TYPE_UINT,     \
+                                                       G_TYPE_STRING,   \
+                                                       G_TYPE_INVALID))
+
 
 /* --- SUCKY CODE BEGIN --- */
 
@@ -415,14 +427,26 @@ typedef struct
         guint optical_disc_num_audio_tracks;
         guint optical_disc_num_sessions;
 
-        gboolean               drive_smart_is_capable;
-        gboolean               drive_smart_is_enabled;
-        guint64                drive_smart_time_collected;
-        gboolean               drive_smart_is_failing;
-        double                 drive_smart_temperature;
-        guint64                drive_smart_time_powered_on;
-        char                  *drive_smart_last_self_test_result;
-        GValue                 drive_smart_attributes;
+        gboolean drive_ata_smart_is_available;
+        gboolean drive_ata_smart_is_failing;
+        gboolean drive_ata_smart_is_failing_valid;
+        gboolean drive_ata_smart_has_bad_sectors;
+        gboolean drive_ata_smart_has_bad_attributes;
+        gdouble drive_ata_smart_temperature_kelvin;
+        guint64 drive_ata_smart_power_on_seconds;
+        guint64 drive_ata_smart_time_collected;
+        guint drive_ata_smart_offline_data_collection_status;
+        guint drive_ata_smart_offline_data_collection_seconds;
+        guint drive_ata_smart_self_test_execution_status;
+        guint drive_ata_smart_self_test_execution_percent_remaining;
+        gboolean drive_ata_smart_short_and_extended_self_test_available;
+        gboolean drive_ata_smart_conveyance_self_test_available;
+        gboolean drive_ata_smart_start_self_test_available;
+        gboolean drive_ata_smart_abort_self_test_available;
+        guint drive_ata_smart_short_self_test_polling_minutes;
+        guint drive_ata_smart_extended_self_test_polling_minutes;
+        guint drive_ata_smart_conveyance_self_test_polling_minutes;
+        GValue drive_ata_smart_attributes;
 
         char    *linux_md_component_level;
         int      linux_md_component_num_raid_devices;
@@ -617,22 +641,46 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
         else if (strcmp (key, "optical-disc-num-sessions") == 0)
                 props->optical_disc_num_sessions = g_value_get_uint (value);
 
-        else if (strcmp (key, "drive-smart-is-capable") == 0)
-                props->drive_smart_is_capable = g_value_get_boolean (value);
-        else if (strcmp (key, "drive-smart-is-enabled") == 0)
-                props->drive_smart_is_enabled = g_value_get_boolean (value);
-        else if (strcmp (key, "drive-smart-time-collected") == 0)
-                props->drive_smart_time_collected = g_value_get_uint64 (value);
-        else if (strcmp (key, "drive-smart-is-failing") == 0)
-                props->drive_smart_is_failing = g_value_get_boolean (value);
-        else if (strcmp (key, "drive-smart-temperature") == 0)
-                props->drive_smart_temperature = g_value_get_double (value);
-        else if (strcmp (key, "drive-smart-time-powered-on") == 0)
-                props->drive_smart_time_powered_on = g_value_get_uint64 (value);
-        else if (strcmp (key, "drive-smart-last-self-test-result") == 0)
-                props->drive_smart_last_self_test_result = g_strdup (g_value_get_string (value));
-        else if (strcmp (key, "drive-smart-attributes") == 0) {
-                g_value_copy (value, &(props->drive_smart_attributes));
+        else if (strcmp (key, "drive-ata-smart-is-available") == 0)
+                props->drive_ata_smart_is_available = g_value_get_boolean (value);
+        else if (strcmp (key, "drive-ata-smart-is-failing") == 0)
+                props->drive_ata_smart_is_failing = g_value_get_boolean (value);
+        else if (strcmp (key, "drive-ata-smart-is-failing-valid") == 0)
+                props->drive_ata_smart_is_failing_valid = g_value_get_boolean (value);
+        else if (strcmp (key, "drive-ata-smart-has-bad-sectors") == 0)
+                props->drive_ata_smart_has_bad_sectors = g_value_get_boolean (value);
+        else if (strcmp (key, "drive-ata-smart-has-bad-attributes") == 0)
+                props->drive_ata_smart_has_bad_attributes = g_value_get_boolean (value);
+        else if (strcmp (key, "drive-ata-smart-temperature-kelvin") == 0)
+                props->drive_ata_smart_temperature_kelvin = g_value_get_double (value);
+        else if (strcmp (key, "drive-ata-smart-power-on-seconds") == 0)
+                props->drive_ata_smart_power_on_seconds = g_value_get_uint64 (value);
+        else if (strcmp (key, "drive-ata-smart-time-collected") == 0)
+                props->drive_ata_smart_time_collected = g_value_get_uint64 (value);
+        else if (strcmp (key, "drive-ata-smart-offline-data-collection-status") == 0)
+                props->drive_ata_smart_offline_data_collection_status = g_value_get_uint (value);
+        else if (strcmp (key, "drive-ata-smart-offline-data-collection-seconds") == 0)
+                props->drive_ata_smart_offline_data_collection_seconds = g_value_get_uint (value);
+        else if (strcmp (key, "drive-ata-smart-self-test-execution-status") == 0)
+                props->drive_ata_smart_self_test_execution_status = g_value_get_uint (value);
+        else if (strcmp (key, "drive-ata-smart-self-test-execution-percent-remaining") == 0)
+                props->drive_ata_smart_self_test_execution_percent_remaining = g_value_get_uint (value);
+        else if (strcmp (key, "drive-ata-smart-short-and-extended-self-test-available") == 0)
+                props->drive_ata_smart_short_and_extended_self_test_available = g_value_get_boolean (value);
+        else if (strcmp (key, "drive-ata-smart-conveyance-self-test-available") == 0)
+                props->drive_ata_smart_conveyance_self_test_available = g_value_get_boolean (value);
+        else if (strcmp (key, "drive-ata-smart-start-self-test-available") == 0)
+                props->drive_ata_smart_start_self_test_available = g_value_get_boolean (value);
+        else if (strcmp (key, "drive-ata-smart-abort-self-test-available") == 0)
+                props->drive_ata_smart_abort_self_test_available = g_value_get_boolean (value);
+        else if (strcmp (key, "drive-ata-smart-short-self-test-polling-minutes") == 0)
+                props->drive_ata_smart_short_self_test_polling_minutes = g_value_get_uint (value);
+        else if (strcmp (key, "drive-ata-smart-extended-self-test-polling-minutes") == 0)
+                props->drive_ata_smart_extended_self_test_polling_minutes = g_value_get_uint (value);
+        else if (strcmp (key, "drive-ata-smart-conveyance-self-test-polling-minutes") == 0)
+                props->drive_ata_smart_conveyance_self_test_polling_minutes = g_value_get_uint (value);
+        else if (strcmp (key, "drive-ata-smart-attributes") == 0) {
+                g_value_copy (value, &(props->drive_ata_smart_attributes));
         }
 
         else if (strcmp (key, "linux-md-component-level") == 0)
@@ -729,8 +777,9 @@ device_properties_free (DeviceProperties *props)
         g_free (props->drive_connection_interface);
         g_strfreev (props->drive_media_compatibility);
         g_free (props->drive_media);
-        g_free (props->drive_smart_last_self_test_result);
-        g_value_unset (&(props->drive_smart_attributes));
+
+        g_value_unset (&(props->drive_ata_smart_attributes));
+
         g_free (props->linux_md_component_level);
         g_free (props->linux_md_component_uuid);
         g_free (props->linux_md_component_home_host);
@@ -761,8 +810,8 @@ device_properties_get (DBusGConnection *bus,
         const char *ifname = "org.freedesktop.DeviceKit.Disks.Device";
 
         props = g_new0 (DeviceProperties, 1);
-        g_value_init (&(props->drive_smart_attributes),
-                      dbus_g_type_get_collection ("GPtrArray", SMART_DATA_STRUCT_TYPE));
+        g_value_init (&(props->drive_ata_smart_attributes),
+                      dbus_g_type_get_collection ("GPtrArray", ATA_SMART_DATA_ATTRIBUTE_STRUCT_TYPE));
 
 	prop_proxy = dbus_g_proxy_new_for_name (bus,
                                                 "org.freedesktop.DeviceKit.Disks",
@@ -817,6 +866,127 @@ do_monitor (void)
         g_main_loop_run (loop);
 
         return FALSE;
+}
+
+static const gchar *
+print_available (gboolean available)
+{
+        if (available)
+                return "available";
+        else
+                return "not available";
+}
+
+static const gchar *
+get_ata_smart_offline_status (guint offline_status)
+{
+        const gchar *ret;
+
+        switch (offline_status) {
+        case 0: ret = "never collected"; break;
+        case 1: ret = "successful"; break;
+        case 2: ret = "in progress"; break;
+        case 3: ret = "suspended"; break;
+        case 4: ret = "aborted"; break;
+        case 5: ret = "fatal"; break;
+        default: ret = "unknown"; break;
+        }
+
+        return ret;
+}
+
+static const gchar *
+get_ata_smart_self_test_status (guint self_test_status)
+{
+        const gchar *ret;
+
+        switch (self_test_status) {
+        case 0: ret = "success or never"; break;
+        case 1: ret = "aborted"; break;
+        case 2: ret = "interrupted"; break;
+        case 3: ret = "fatal"; break;
+        case 4: ret = "error (unknown)"; break;
+        case 5: ret = "error (electrical)"; break;
+        case 6: ret = "error (servo)"; break;
+        case 7: ret = "error (read)"; break;
+        case 8: ret = "error (handling)"; break;
+        case 15: ret = "in progress"; break;
+        default: ret = "unknown"; break;
+        }
+
+        return ret;
+}
+
+static gchar *
+get_ata_smart_unit (guint unit, guint64 pretty_value)
+{
+        gchar *ret;
+
+        switch (unit) {
+        default:
+        case 0:
+        case 1:
+                ret = g_strdup_printf ("%" G_GUINT64_FORMAT, pretty_value);
+                break;
+
+        case 2:
+                if (pretty_value > 1000 * 60 * 60 * 24) {
+                        ret = g_strdup_printf ("%.3g days", pretty_value / 1000.0 / 60.0 / 60.0 / 24.0);
+                } else if (pretty_value > 1000 * 60 * 60) {
+                        ret = g_strdup_printf ("%.3g hours", pretty_value / 1000.0 / 60.0 / 60.0);
+                } else if (pretty_value > 1000 * 60) {
+                        ret = g_strdup_printf ("%.3g mins", pretty_value / 1000.0 / 60.0);
+                } else if (pretty_value > 1000) {
+                        ret = g_strdup_printf ("%.3g secs", pretty_value / 1000.0);
+                } else {
+                        ret = g_strdup_printf ("%d msec", (gint) pretty_value);
+                }
+                break;
+
+        case 3:
+                ret = g_strdup_printf ("%" G_GUINT64_FORMAT " sectors", pretty_value);
+                break;
+
+        case 4:
+                ret = g_strdup_printf ("%.3gC / %.3gF",
+                                       pretty_value / 1000.0 - 273.15,
+                                       (pretty_value / 1000.0 - 273.15) * 9.0 / 5.0 + 32.0);
+                break;
+        }
+
+        return ret;
+}
+
+static gboolean
+has_colors (void)
+{
+        static gboolean ret = FALSE;
+        static gboolean checked = FALSE;
+
+        if (checked)
+                return ret;
+
+        if (isatty (STDOUT_FILENO)) {
+                ret = TRUE;
+        }
+
+        checked = TRUE;
+
+        return ret;
+}
+
+static void
+begin_highlight (void)
+{
+        if (has_colors ())
+                g_print ("\x1B[1;31m");
+}
+
+static void
+end_highlight (void)
+{
+        if (has_colors ())
+                g_print ("\x1B[0m");
 }
 
 static void
@@ -967,77 +1137,190 @@ do_show_info (const char *object_path)
                 else
                         g_print ("    if speed:              %" G_GINT64_FORMAT " bits/s\n", props->drive_connection_speed);
 
-                if (!props->drive_smart_is_capable) {
-                        g_print ("    S.M.A.R.T.:            not capable\n");
-                } else if (props->drive_smart_time_collected == 0) {
-                        g_print ("    S.M.A.R.T.:            not collected\n");
+                /* ------------------------------------------------------------------------------------------------- */
+
+                if (!props->drive_ata_smart_is_available) {
+                        g_print ("    ATA SMART:             not available\n");
+                } else if (props->drive_ata_smart_time_collected == 0) {
+                        g_print ("    ATA SMART:             Data not collected\n");
                 } else {
                         struct tm *time_tm;
                         time_t time;
                         char time_buf[256];
+                        GPtrArray *p;
 
-                        time = (time_t) props->drive_smart_time_collected;
+                        time = (time_t) props->drive_ata_smart_time_collected;
                         time_tm = localtime (&time);
                         strftime (time_buf, sizeof time_buf, "%c", time_tm);
 
-                        g_print ("    S.M.A.R.T.:            Information collected at %s\n", time_buf);
-                        if (!props->drive_smart_is_capable) {
-                                g_print ("              not capable\n");
-                        } else if (!props->drive_smart_is_enabled) {
-                                g_print ("              not enabled\n");
-                        } else {
 
-                                g_print ("      assessment:          %s\n",
-                                         props->drive_smart_is_failing ? "FAILING" : "Passed");
-                                g_print ("      temperature:         %g\302\260 C / %g\302\260 F\n",
-                                         props->drive_smart_temperature,
-                                         9 * props->drive_smart_temperature / 5 + 32);
-                                g_print ("      powered on:          %" G_GUINT64_FORMAT " hours\n", props->drive_smart_time_powered_on / 3600);
-                                //g_print ("      196  Reallocated_Event_Count      0x0032 100   100           0 443023360\n",
-                                g_print ("      =========================================================================\n");
-                                g_print ("      Id   Description                   Flags Value Worst Threshold       Raw\n");
-                                g_print ("      =========================================================================\n");
-                                GPtrArray *p;
-                                p = g_value_get_boxed (&(props->drive_smart_attributes));
-                                for (m = 0; m < p->len; m++) {
-                                        gint attr_id;
-                                        gchar *attr_desc;
-                                        gint attr_flags;
-                                        gint attr_value;
-                                        gint attr_worst;
-                                        gint attr_threshold;
-                                        gchar *attr_raw;
-                                        GValue elem = {0};
-
-                                        g_value_init (&elem, SMART_DATA_STRUCT_TYPE);
-                                        g_value_set_static_boxed (&elem, p->pdata[m]);
-
-                                        dbus_g_type_struct_get (&elem,
-                                                                0, &(attr_id),
-                                                                1, &(attr_desc),
-                                                                2, &(attr_flags),
-                                                                3, &(attr_value),
-                                                                4, &(attr_worst),
-                                                                5, &(attr_threshold),
-                                                                6, &(attr_raw),
-                                                                G_MAXUINT);
-
-                                        g_print ("      %3d  %-28s 0x%04x %5d %5d %9d %s\n",
-                                                 attr_id,
-                                                 attr_desc,
-                                                 attr_flags,
-                                                 attr_value,
-                                                 attr_worst,
-                                                 attr_threshold,
-                                                 attr_raw);
-
-                                        g_free (attr_desc);
-                                        g_free (attr_raw);
-
-                                        g_value_unset (&elem);
+                        g_print ("    ATA SMART:             Updated at %s\n", time_buf);
+                        if (props->drive_ata_smart_is_failing_valid) {
+                                if (!props->drive_ata_smart_is_failing)
+                                        g_print ("      assessment:          PASSED\n");
+                                else {
+                                        g_print ("      assessment:          ");
+                                        begin_highlight ();
+                                        g_print ("FAILING");
+                                        end_highlight ();
+                                        g_print ("\n");
                                 }
+
+                        } else {
+                                g_print ("      assessment:          Unknown\n");
+                        }
+
+                        if (props->drive_ata_smart_has_bad_sectors) {
+                                begin_highlight ();
+                                g_print ("      bad sectors:         Yes\n");
+                                end_highlight ();
+                        } else {
+                                g_print ("      bad sectors:         None\n");
+                        }
+
+                        if (props->drive_ata_smart_has_bad_attributes) {
+                                begin_highlight ();
+                                g_print ("      attributes:          One ore more attrinbutes exceeds threshold\n");
+                                end_highlight ();
+                        } else {
+                                g_print ("      attributes:          Within threshold\n");
+                        }
+
+                        if (props->drive_ata_smart_temperature_kelvin < 0.1) {
+                                g_print ("      temperature:         Unknown\n");
+                        } else {
+                                gdouble celcius;
+                                gdouble fahrenheit;
+                                celcius = props->drive_ata_smart_temperature_kelvin - 273.15;
+                                fahrenheit = 9.0 * celcius / 5.0 + 32.0;
+                                g_print ("      temperature:         %.3g\302\260 C / %.3g\302\260 F\n", celcius, fahrenheit);
+                        }
+
+                        if (props->drive_ata_smart_power_on_seconds == 0) {
+                                g_print ("      power on hours:      Unknown\n");
+                                g_print ("      powered on:          Unknown\n");
+                        } else {
+                                gchar *power_on_text;
+                                guint val;
+
+                                val = props->drive_ata_smart_power_on_seconds;
+
+                                if (val > 60 * 60 * 24) {
+                                        power_on_text = g_strdup_printf (_("%.3g days"), val / 60.0 / 60.0 / 24.0);
+                                } else {
+                                        power_on_text = g_strdup_printf (_("%.3g hours"), val / 60.0 / 60.0);
+                                }
+
+                                g_print ("      powered on:          %s\n", power_on_text);
+                                g_free (power_on_text);
+                        }
+
+
+                        g_print ("      offline data:        %s (%d second(s) to complete)\n", get_ata_smart_offline_status (props->drive_ata_smart_offline_data_collection_status), props->drive_ata_smart_offline_data_collection_seconds);
+                        g_print ("      self-test status:    %s (%d%% remaining)\n", get_ata_smart_self_test_status (props->drive_ata_smart_self_test_execution_status), props->drive_ata_smart_self_test_execution_percent_remaining);
+                        g_print ("      ext./short test:     %s\n", print_available (props->drive_ata_smart_short_and_extended_self_test_available));
+                        g_print ("      conveyance test:     %s\n", print_available (props->drive_ata_smart_conveyance_self_test_available));
+                        g_print ("      start test:          %s\n", print_available (props->drive_ata_smart_start_self_test_available));
+                        g_print ("      abort test:          %s\n", print_available (props->drive_ata_smart_abort_self_test_available));
+                        g_print ("      short test:          %3d minute(s) recommended polling time\n", props->drive_ata_smart_short_self_test_polling_minutes);
+                        g_print ("      ext. test:           %3d minute(s) recommended polling time\n", props->drive_ata_smart_extended_self_test_polling_minutes);
+                        g_print ("      conveyance test:     %3d minute(s) recommended polling time\n", props->drive_ata_smart_conveyance_self_test_polling_minutes);
+                        g_print ("===============================================================================\n");
+                        g_print (" Attribute       Current/Worst/Threshold  Status   Value       Type     Updates\n");
+                        g_print ("===============================================================================\n");
+                        p = g_value_get_boxed (&(props->drive_ata_smart_attributes));
+                        for (m = 0; m < p->len; m++) {
+                                GValue elem = {0};
+                                guint id;
+                                gchar *name;
+                                guint flags;
+                                gboolean online, prefailure;
+                                guchar current;
+                                gboolean current_valid;
+                                guchar worst;
+                                gboolean worst_valid;
+                                guchar threshold;
+                                gboolean threshold_valid;
+                                gboolean good, good_valid;
+                                guint pretty_unit;
+                                guint64 pretty_value;
+                                gchar *pretty;
+                                const gchar *assessment;
+                                const gchar *type;
+                                const gchar *updates;
+                                gboolean do_highlight;
+                                GArray *raw_data;
+
+                                g_value_init (&elem, ATA_SMART_DATA_ATTRIBUTE_STRUCT_TYPE);
+                                g_value_set_static_boxed (&elem, p->pdata[m]);
+
+                                dbus_g_type_struct_get (&elem,
+                                                         0, &id,
+                                                         1, &name,
+                                                         2, &flags,
+                                                         3, &online,
+                                                         4, &prefailure,
+                                                         5, &current,
+                                                         6, &current_valid,
+                                                         7, &worst,
+                                                         8, &worst_valid,
+                                                         9, &threshold,
+                                                        10, &threshold_valid,
+                                                        11, &good,
+                                                        12, &good_valid,
+                                                        13, &pretty_unit,
+                                                        14, &pretty_value,
+                                                        15, &raw_data,
+                                                        G_MAXUINT);
+
+                                pretty = get_ata_smart_unit (pretty_unit, pretty_value);
+
+                                do_highlight = FALSE;
+                                if (!good_valid)
+                                        assessment = " n/a";
+                                else if (good)
+                                        assessment = "good";
+                                else {
+                                        assessment = "FAIL";
+                                        do_highlight = TRUE;
+                                }
+
+                                if (online)
+                                        updates = "Online ";
+                                else
+                                        updates = "Offline";
+
+                                if (prefailure)
+                                        type = "Prefail";
+                                else
+                                        type = "Old-age";
+
+                                if (do_highlight)
+                                        begin_highlight ();
+
+                                g_print (" %-27s %3d/%3d/%3d   %s    %-11s %s  %s\n",
+                                         name,
+                                         current,
+                                         worst,
+                                         threshold,
+                                         assessment,
+                                         pretty,
+                                         type,
+                                         updates);
+
+                                if (do_highlight)
+                                        end_highlight ();
+
+
+                                g_free (pretty);
+
+                                g_array_free (raw_data, TRUE);
+                                g_value_unset (&elem);
                         }
                 }
+
+                /* ------------------------------------------------------------------------------------------------- */
+
 
         }
         device_properties_free (props);
@@ -1292,9 +1575,9 @@ main (int argc, char **argv)
                 { NULL }
         };
 
-        ret = 1;
-
         setlocale (LC_ALL, "");
+
+        ret = 1;
 
         g_type_init ();
 

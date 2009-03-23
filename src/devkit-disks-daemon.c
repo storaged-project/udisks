@@ -57,7 +57,6 @@
 #include "devkit-disks-mount-monitor.h"
 #include "devkit-disks-poller.h"
 #include "devkit-disks-inhibitor.h"
-#include "devkit-disks-logger.h"
 
 #include "devkit-disks-daemon-glue.h"
 #include "devkit-disks-marshal.h"
@@ -103,9 +102,7 @@ struct DevkitDisksDaemonPrivate
 
         DevkitDisksMountMonitor *mount_monitor;
 
-        guint                    smart_refresh_timer_id;
-
-        DevkitDisksLogger       *logger;
+        guint                    ata_smart_refresh_timer_id;
 
         GList *polling_inhibitors;
 
@@ -170,9 +167,10 @@ devkit_disks_error_get_type (void)
                                 ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_LINUX_MD, "NotLinuxMd"),
                                 ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_LINUX_MD_COMPONENT, "NotLinuxComponent"),
                                 ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_DRIVE, "NotDrive"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_SMART_CAPABLE, "NotSmartCapable"),
                                 ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_SUPPORTED, "NotSupported"),
                                 ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_FOUND, "NotFound"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_ATA_SMART_NOT_AVAILABLE, "AtaSmartNotAvailable"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_ATA_SMART_WOULD_WAKEUP, "AtaSmartWouldWakeup"),
 
                                 { 0, 0, 0 }
                         };
@@ -573,12 +571,8 @@ devkit_disks_daemon_finalize (GObject *object)
                 g_object_unref (daemon->priv->devkit_client);
         }
 
-        if (daemon->priv->smart_refresh_timer_id > 0) {
-                g_source_remove (daemon->priv->smart_refresh_timer_id);
-        }
-
-        if (daemon->priv->logger != NULL) {
-                g_object_unref (daemon->priv->logger);
+        if (daemon->priv->ata_smart_refresh_timer_id > 0) {
+                g_source_remove (daemon->priv->ata_smart_refresh_timer_id);
         }
 
         for (l = daemon->priv->polling_inhibitors; l != NULL; l = l->next) {
@@ -940,7 +934,7 @@ out:
 }
 
 static gboolean
-refresh_smart_data (DevkitDisksDaemon *daemon)
+refresh_ata_smart_data (DevkitDisksDaemon *daemon)
 {
         DevkitDisksDevice *device;
         const char *native_path;
@@ -948,18 +942,20 @@ refresh_smart_data (DevkitDisksDaemon *daemon)
 
         g_hash_table_iter_init (&iter, daemon->priv->map_native_path_to_device);
         while (g_hash_table_iter_next (&iter, (gpointer *) &native_path, (gpointer *) &device)) {
-                if (device->priv->drive_smart_is_capable) {
-                        char *options[] = {NULL};
+                if (device->priv->drive_ata_smart_is_available) {
+                        char *options[] = {"nowakeup", NULL};
 
-                        g_debug ("automatically refreshing SMART data for %s", native_path);
-                        devkit_disks_device_drive_smart_refresh_data (device, options, NULL);
+                        g_debug ("refreshing ATA SMART data for %s", native_path);
+
+                        devkit_disks_device_drive_ata_smart_refresh_data (device, options, NULL);
                 }
         }
 
         /* update in another 30 minutes */
-        daemon->priv->smart_refresh_timer_id = g_timeout_add_seconds (30 * 60,
-                                                                      (GSourceFunc) refresh_smart_data,
-                                                                      daemon);
+        daemon->priv->ata_smart_refresh_timer_id = g_timeout_add_seconds (30 * 60,
+                                                                          (GSourceFunc) refresh_ata_smart_data,
+                                                                          daemon);
+
         return FALSE;
 }
 
@@ -1074,8 +1070,6 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
         g_signal_connect (daemon->priv->mount_monitor, "mounted", (GCallback) mount_added, daemon);
         g_signal_connect (daemon->priv->mount_monitor, "unmounted", (GCallback) mount_removed, daemon);
 
-        daemon->priv->logger = devkit_disks_logger_new ();
-
         return TRUE;
 error:
         return FALSE;
@@ -1133,19 +1127,15 @@ devkit_disks_daemon_new (void)
         devkit_disks_mount_file_clean_stale (l);
         g_list_free (l);
 
-        /* initial refresh of SMART data */
-        refresh_smart_data (daemon);
+        /* set up timer for ATA smart data refresh */
+        daemon->priv->ata_smart_refresh_timer_id = g_timeout_add_seconds (30 * 60,
+                                                                          (GSourceFunc) refresh_ata_smart_data,
+                                                                          daemon);
 
         return daemon;
 
  error:
         return NULL;
-}
-
-DevkitDisksLogger *
-devkit_disks_daemon_local_get_logger (DevkitDisksDaemon *daemon)
-{
-        return daemon->priv->logger;
 }
 
 DevkitDisksMountMonitor *
