@@ -165,7 +165,7 @@ devkit_disks_error_get_type (void)
                                 ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_LOCKED, "NotLocked"),
                                 ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_UNLOCKED, "NotUnlocked"),
                                 ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_LINUX_MD, "NotLinuxMd"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_LINUX_MD_COMPONENT, "NotLinuxComponent"),
+                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_LINUX_MD_COMPONENT, "NotLinuxMdComponent"),
                                 ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_DRIVE, "NotDrive"),
                                 ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_SUPPORTED, "NotSupported"),
                                 ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_FOUND, "NotFound"),
