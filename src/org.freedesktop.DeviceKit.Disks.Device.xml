@@ -1256,7 +1256,7 @@
         <doc:doc><doc:summary>The UNIX user id of the user who initiated the job.</doc:summary></doc:doc>
       </arg>
       <arg name="job-num-tasks" type="i">
-        <doc:doc><doc:summary>Number of tasks in the job.</doc:summary></doc:doc>
+        <doc:doc><doc:summary>Number of tasks in the job or zero if unknown.</doc:summary></doc:doc>
       </arg>
       <arg name="job-cur-task" type="i">
         <doc:doc><doc:summary>Current task number (zero-based offset).</doc:summary></doc:doc>
