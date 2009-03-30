@@ -134,6 +134,8 @@ main (int argc, char **argv)
         DBusGProxy *disks_proxy;
         int ret;
         char *object_path;
+        struct stat st;
+        char *path;
 
         ret = 1;
         bus = NULL;
@@ -160,8 +162,21 @@ main (int argc, char **argv)
                                                  "org.freedesktop.DeviceKit.Disks");
 
         error = NULL;
+
+	if (stat (argv[1], &st) < 0) {
+                fprintf (stderr, "%s: could not stat %s: %s\n", argv[0], argv[1], strerror (errno));
+                goto out;
+        }
+
+        if (S_ISBLK (st.st_mode)) {
+                path = g_strdup (argv[1]);
+        }
+        else {
+                path = g_strdup_printf ("/dev/block/%d:%d", major (st.st_dev), minor (st.st_dev));
+        }
+
         if (!org_freedesktop_DeviceKit_Disks_find_device_by_device_file (disks_proxy,
-                                                                         argv[1],
+                                                                         path,
                                                                          &object_path,
                                                                          &error)) {
                 fprintf (stderr, "%s: no device for %s: %s\n", argv[0], argv[1], error->message);
@@ -172,6 +187,7 @@ main (int argc, char **argv)
         g_free (object_path);
 
 out:
+        g_free (path);
         if (disks_proxy != NULL)
                 g_object_unref (disks_proxy);
         if (bus != NULL)
