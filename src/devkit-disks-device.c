@@ -76,6 +76,7 @@ static void     drain_pending_changes (DevkitDisksDevice *device, gboolean force
 
 static gboolean devkit_disks_device_local_is_busy             (DevkitDisksDevice *device);
 static gboolean devkit_disks_device_local_partitions_are_busy (DevkitDisksDevice *device);
+static gboolean devkit_disks_device_local_logical_partitions_are_busy (DevkitDisksDevice *device);
 
 
 static gboolean luks_get_uid_from_dm_name (const char *dm_name, uid_t *out_uid);
@@ -1430,7 +1431,7 @@ sysfs_get_int (const char *dir, const char *attribute)
         result = 0;
         filename = g_build_filename (dir, attribute, NULL);
         if (g_file_get_contents (filename, &contents, NULL, NULL)) {
-                result = atoi (contents);
+                result = strtol (contents, NULL, 0);
                 g_free (contents);
         }
         g_free (filename);
@@ -2552,7 +2553,7 @@ update_info_linux_md (DevkitDisksDevice *device)
                         if (degraded_file == NULL) {
                                 num_degraded_devices = 0;
                         } else {
-                                num_degraded_devices = atoi (degraded_file);
+                                num_degraded_devices = strtol (degraded_file, NULL, 0);
                         }
                         g_free (degraded_file);
 
@@ -3012,7 +3013,7 @@ update_info (DevkitDisksDevice *device)
                 s = device->priv->native_path;
                 for (n = strlen (s) - 1; n >= 0 && g_ascii_isdigit (s[n]); n--)
                         ;
-                devkit_disks_device_set_partition_number (device, atoi (s + n + 1));
+                devkit_disks_device_set_partition_number (device, strtol (s + n + 1, NULL, 0));
 
                 s = g_strdup (device->priv->native_path);
                 for (n = strlen (s) - 1; n >= 0 && s[n] != '/'; n--)
@@ -3280,6 +3281,21 @@ devkit_disks_device_local_is_busy (DevkitDisksDevice *device)
         if (device->priv->holders_objpath->len > 0)
                 goto out;
 
+        /* if we are an extended partition, we are also busy if one or more logical partitions are busy  */
+        if (g_strcmp0 (device->priv->partition_scheme, "mbr") == 0 && device->priv->partition_type != NULL) {
+                gint partition_type;
+                partition_type = strtol (device->priv->partition_type, NULL, 0);
+                if (partition_type == 0x05 ||
+                    partition_type == 0x0f ||
+                    partition_type == 0x85) {
+                        DevkitDisksDevice *drive_device;
+                        drive_device = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon,
+                                                                                      device->priv->partition_slave);
+                        if (devkit_disks_device_local_logical_partitions_are_busy (drive_device))
+                                goto out;
+                }
+        }
+
         ret = FALSE;
 
 out:
@@ -3304,7 +3320,36 @@ devkit_disks_device_local_partitions_are_busy (DevkitDisksDevice *device)
 
                 if (d->priv->device_is_partition &&
                     d->priv->partition_slave != NULL &&
-                    strcmp (d->priv->partition_slave, device->priv->object_path) == 0) {
+                    g_strcmp0 (d->priv->partition_slave, device->priv->object_path) == 0) {
+
+                        if (devkit_disks_device_local_is_busy (d)) {
+                                ret = TRUE;
+                                break;
+                        }
+                }
+        }
+
+        return ret;
+}
+
+static gboolean
+devkit_disks_device_local_logical_partitions_are_busy (DevkitDisksDevice *device)
+{
+        gboolean ret;
+        GList *l;
+        GList *devices;
+
+        ret = FALSE;
+
+        devices = devkit_disks_daemon_local_get_all_devices (device->priv->daemon);
+        for (l = devices; l != NULL; l = l->next) {
+                DevkitDisksDevice *d = DEVKIT_DISKS_DEVICE (l->data);
+
+                if (d->priv->device_is_partition &&
+                    d->priv->partition_slave != NULL &&
+                    g_strcmp0 (d->priv->partition_slave, device->priv->object_path) == 0 &&
+                    g_strcmp0 (d->priv->partition_scheme, "mbr") == 0 &&
+                    d->priv->partition_number >= 5) {
 
                         if (devkit_disks_device_local_is_busy (d)) {
                                 ret = TRUE;
@@ -4854,7 +4899,7 @@ lsof_parse (const char *stdout, GPtrArray *processes)
                 if (strlen (tokens[n]) == 0)
                         continue;
 
-                pid = atoi (tokens[n]);
+                pid = strtol (tokens[n], NULL, 0);
                 uid = get_uid_for_pid (pid);
                 command_line = get_command_line_for_pid (pid);
 
