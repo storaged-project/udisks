@@ -333,5 +333,39 @@ out:
         return ret;
 }
 
+static inline gboolean
+reread_partition_table (const gchar *device_file)
+{
+        gint fd;
+        gboolean ret;
+        guint num_retries;
+
+        ret = FALSE;
+        num_retries = 0;
+
+        fd = open (device_file, O_RDONLY);
+        if (fd < 0) {
+                g_printerr ("cannot open %s (for BLKRRPART): %m\n", device_file);
+                goto out;
+        }
+ try_again:
+        if (ioctl (fd, BLKRRPART) != 0) {
+                if (errno == EBUSY && num_retries < 20) {
+                        usleep (250 * 1000);
+                        num_retries++;
+                        goto try_again;
+                }
+                close (fd);
+                g_printerr ("BLKRRPART ioctl failed for %s: %m\n", device_file);
+                goto out;
+        }
+        close (fd);
+
+        ret = TRUE;
+
+ out:
+        return ret;
+}
+
 
 #endif /* __JOB_SHARED_H__ */
