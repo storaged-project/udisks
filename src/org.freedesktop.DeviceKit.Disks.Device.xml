@@ -1747,42 +1747,6 @@
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="partition-table-max-number" type="i" access="read">
-      <doc:doc><doc:description><doc:para>
-            The maximum value for
-            <doc:ref type="property" to="Device:partition-number">partition-number</doc:ref>
-            of the enclosed partitions (partitions may not be sequentially numbered).
-            This property is only valid if
-            <doc:ref type="property" to="Device:device-is-partition-table">device-is-partition-table</doc:ref>
-            is TRUE.
-      </doc:para></doc:description></doc:doc>
-    </property>
-    <property name="partition-table-offsets" type="at" access="read">
-      <doc:doc><doc:description><doc:para>
-            An array of size
-            <doc:ref type="property" to="Device:partition-table-max-number">partition-table-max-number</doc:ref>
-            that contains the offsets (in bytes) of each partition.
-            The property
-            <doc:ref type="property" to="Device:partition-number">partition-number</doc:ref>
-            on enclosed partitions can be used as an index in this array.
-            This property is only valid if
-            <doc:ref type="property" to="Device:device-is-partition-table">device-is-partition-table</doc:ref>
-            is TRUE.
-      </doc:para></doc:description></doc:doc>
-    </property>
-    <property name="partition-table-sizes" type="at" access="read">
-      <doc:doc><doc:description><doc:para>
-            An array of size
-            <doc:ref type="property" to="Device:partition-table-max-number">partition-table-max-number</doc:ref>
-            that contains the size (in bytes) of each partition.
-            The property
-            <doc:ref type="property" to="Device:partition-number">partition-number</doc:ref>
-            on enclosed partitions can be used as an index in this array.
-            This property is only valid if
-            <doc:ref type="property" to="Device:device-is-partition-table">device-is-partition-table</doc:ref>
-            is TRUE.
-      </doc:para></doc:description></doc:doc>
-    </property>
 
     <property name="drive-vendor" type="s" access="read">
       <doc:doc><doc:description><doc:para>

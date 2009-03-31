@@ -144,9 +144,6 @@ struct DevkitDisksDevicePrivate
 
         char *partition_table_scheme;
         int partition_table_count;
-        int partition_table_max_number;
-        GArray *partition_table_offsets;
-        GArray *partition_table_sizes;
 
         char *drive_vendor;
         char *drive_model;
@@ -277,9 +274,6 @@ void devkit_disks_device_set_partition_size (DevkitDisksDevice *device, guint64 
 
 void devkit_disks_device_set_partition_table_scheme (DevkitDisksDevice *device, const gchar *value);
 void devkit_disks_device_set_partition_table_count (DevkitDisksDevice *device, gint value);
-void devkit_disks_device_set_partition_table_max_number (DevkitDisksDevice *device, gint value);
-void devkit_disks_device_set_partition_table_offsets (DevkitDisksDevice *device, GArray * value);
-void devkit_disks_device_set_partition_table_sizes (DevkitDisksDevice *device, GArray * value);
 
 void devkit_disks_device_set_drive_vendor (DevkitDisksDevice *device, const gchar *value);
 void devkit_disks_device_set_drive_model (DevkitDisksDevice *device, const gchar *value);

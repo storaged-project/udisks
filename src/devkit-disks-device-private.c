@@ -103,34 +103,6 @@ ptr_str_array_from_strv (GStrv s)
   return ret;
 }
 
-
-static gboolean
-array_equals (GArray * a, GArray * b, guint elem_size)
-{
-  if (a == NULL && b == NULL)
-    return TRUE;
-  if (a == NULL || b == NULL)
-    return FALSE;
-  if (a->len != b->len)
-    return FALSE;
-  if (a->len == 0)
-    return TRUE;
-  if (memcmp (a->data, b->data, a->len * elem_size) == 0)
-    return TRUE;
-  return FALSE;
-}
-
-static GArray *
-array_dup (GArray * a, guint elem_size)
-{
-  GArray *ret;
-
-  ret = g_array_sized_new (FALSE, FALSE, elem_size, a->len);
-  g_array_append_vals (ret, a->data, a->len);
-
-  return ret;
-}
-
 void
 devkit_disks_device_set_job_in_progress (DevkitDisksDevice *device, gboolean value)
 {
@@ -648,38 +620,6 @@ devkit_disks_device_set_partition_table_count (DevkitDisksDevice *device, gint v
     {
       device->priv->partition_table_count = value;
       emit_changed (device, "partition_table_count");
-    }
-}
-
-void
-devkit_disks_device_set_partition_table_max_number (DevkitDisksDevice *device, gint value)
-{
-  if (G_UNLIKELY (device->priv->partition_table_max_number != value))
-    {
-      device->priv->partition_table_max_number = value;
-      emit_changed (device, "partition_table_max_number");
-    }
-}
-
-void
-devkit_disks_device_set_partition_table_offsets (DevkitDisksDevice *device, GArray * value)
-{
-  if (G_UNLIKELY (!array_equals (device->priv->partition_table_offsets, value, sizeof (guint64))))
-    {
-      g_array_free (device->priv->partition_table_offsets, TRUE);
-      device->priv->partition_table_offsets = array_dup (value, sizeof (guint64));
-      emit_changed (device, "partition_table_offsets");
-    }
-}
-
-void
-devkit_disks_device_set_partition_table_sizes (DevkitDisksDevice *device, GArray * value)
-{
-  if (G_UNLIKELY (!array_equals (device->priv->partition_table_sizes, value, sizeof (guint64))))
-    {
-      g_array_free (device->priv->partition_table_sizes, TRUE);
-      device->priv->partition_table_sizes = array_dup (value, sizeof (guint64));
-      emit_changed (device, "partition_table_sizes");
     }
 }
 

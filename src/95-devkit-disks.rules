@@ -17,20 +17,10 @@ KERNEL=="sr*", ENV{ID_CDROM_MEDIA_TRACK_COUNT}!="?*", GOTO="probe_parttable_end"
 
 # scan for partition table only if we're not a partition
 #
-ATTR{range}=="[0-9]*", IMPORT{program}="devkit-disks-part-id $tempnode"
-
-# for partitions, import parent information
-#
-#ATTR{start}=="[0-9]*", IMPORT{parent}="DKD_PART_*"
-
-# However.. right now we're not getting change events on media changes
-# *until* all the partitions are added.. so importing parent information
-# won't work; therefore, probe the partition table for each partition.
-#
-ATTR{start}=="[0-9]*", IMPORT{program}="devkit-disks-part-id $tempnode"
+IMPORT{program}="devkit-disks-part-id $tempnode"
 
 # clear all ID_FS_USAGE, TYPE if we're a partition table
-ATTR{range}=="[0-9]*", ENV{PART_P1_TYPE}!="", ENV{ID_FS_USAGE}="", ENV{ID_FS_TYPE}=""
+ENV{DKD_PART_ID_PARTITION_TABLE_SCHEME}!="", ENV{ID_FS_USAGE}="", ENV{ID_FS_TYPE}=""
 
 LABEL="probe_parttable_end"
 

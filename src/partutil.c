@@ -1,3 +1,5 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+
 /***************************************************************************
  *
  * part.c : library for reading and writing partition tables - uses
@@ -1278,9 +1280,6 @@ part_add_change_partition (char *device_file,
 	guint64 end_sector;
 	guint64 new_start_sector;
 	guint64 new_end_sector;
-	PartitionTable *p;
-	PartitionTable *container_p;
-	int container_entry;
 	PartitionScheme scheme;
 	guint8 mbr_flags = 0;
 	guint8 mbr_part_type = 0;
@@ -1301,51 +1300,63 @@ part_add_change_partition (char *device_file,
 		DEBUG ("In part_add_partition: device_file=%s, start=%lld, size=%lld, type=%s", device_file, start, size, type);
 	}
 
-	/* first, find the kind of (embedded) partition table the new partition is going to be part of */
-	p = part_table_load_from_disk_from_file (device_file);
-	if (p == NULL) {
-		DEBUG ("Cannot load partition table from %s", device_file);
-		goto out;
-	}
-
-	part_table_find (p, start + 512, &container_p, &container_entry);
-	scheme = part_table_get_scheme (container_p);
-
+        scheme = -1;
 	if (is_change) {
-		/* if changing, make sure there is a partition to change */
+                PartitionTable *p;
+                PartitionTable *container_p;
+                int container_entry;
+
+                /* if changing something, make sure the partition to change actually exists */
+
+                p = part_table_load_from_disk_from_file (device_file);
+                if (p == NULL) {
+                        DEBUG ("Cannot load partition table from %s", device_file);
+                        goto out;
+                }
+                part_table_find (p, start + 512, &container_p, &container_entry);
+                scheme = part_table_get_scheme (container_p);
+                DEBUG ("containing partition table scheme = %d", scheme);
+                part_table_free (p);
+
 		if (container_entry < 0) {
 			DEBUG ("Couldn't find partition to change");
 			goto out;
 		}
 	} else {
-		/* if adding, make sure there is no partition in the way... */
-		if (container_entry >= 0) {
-			char *part_type;
+                PartitionTable *p;
+                PartitionTable *container_p;
+                int container_entry;
 
-			/* this might be Apple_Free if we're on PART_TYPE_APPLE */
-			part_type = part_table_entry_get_type (p, container_entry);
-			if (! (p->scheme == PART_TYPE_APPLE && part_type != NULL && (strcmp (part_type, "Apple_Free") == 0))) {
-				part_table_free (p);
-				DEBUG ("There is a partition in the way on %s", device_file);
-				goto out;
-			}
-		}
-	}
-
-	DEBUG ("containing partition table scheme = %d", scheme);
-
-	part_table_free (p);
-	p = NULL;
-
-	if (!is_change) {
-		if (type == NULL) {
-			DEBUG ("No type specified");
-			goto out;
-		}
-	}
+                /* if adding, try to find the scheme of the partition table.. don't error out if we can't find it */
+                p = part_table_load_from_disk_from_file (device_file);
+                if (p != NULL) {
+                        part_table_find (p, start + 512, &container_p, &container_entry);
+                        scheme = part_table_get_scheme (container_p);
+                        DEBUG ("containing partition table scheme = %d", scheme);
+                        part_table_free (p);
+                }
+        }
 
 	/* now that we know the partitoning scheme, sanity check type and flags */
 	switch (scheme) {
+        case -1:
+                /* unknown partition table format; error out if any type, label or flags are given */
+                if ((flags != NULL && flags[0] != NULL)) {
+                        DEBUG ("unknown partition table format and flags is not empty");
+                        goto out;
+                }
+
+                if (type != NULL && strlen (type) > 0) {
+                        DEBUG ("unknown partition table format and type is not empty");
+                        goto out;
+                }
+
+                if (label != NULL && strlen (label) > 0) {
+                        DEBUG ("unknown partition table format and label is not empty");
+                        goto out;
+                }
+                break;
+
 	case PART_TYPE_MSDOS:
 	case PART_TYPE_MSDOS_EXTENDED:
 		mbr_flags = 0;
@@ -1730,7 +1741,7 @@ part_del_partition (char *device_file, guint64 offset, gboolean poke_kernel)
 	PedDevice *device;
 	PedDisk *disk;
 	PedPartition *part;
-	PartitionTable *p;
+        PartitionTable *p;
 	gboolean is_extended;
 	int n;
 
@@ -1749,21 +1760,19 @@ part_del_partition (char *device_file, guint64 offset, gboolean poke_kernel)
 	 */
 	is_extended = FALSE;
 	p = part_table_load_from_disk_from_file (device_file);
-	if (p == NULL) {
-		DEBUG ("Cannot load partition table from %s", device_file);
-		goto out;
-	}
-	for (n = 0; n < part_table_get_num_entries (p); n++) {
-		PartitionTable *nested;
-		nested = part_table_entry_get_nested (p, n);
-		if (nested != NULL) {
-			if (part_table_get_offset (nested) == offset) {
-				DEBUG ("partition to delete is an extended partition");
-				is_extended = TRUE;
-			}
-		}
-	}
-	part_table_free (p);
+	if (p != NULL) {
+                for (n = 0; n < part_table_get_num_entries (p); n++) {
+                        PartitionTable *nested;
+                        nested = part_table_entry_get_nested (p, n);
+                        if (nested != NULL) {
+                                if (part_table_get_offset (nested) == offset) {
+                                        DEBUG ("partition to delete is an extended partition");
+                                        is_extended = TRUE;
+                                }
+                        }
+                }
+                part_table_free (p);
+        }
 
 	device = ped_device_get (device_file);
 	if (device == NULL) {
@@ -1791,13 +1800,21 @@ part_del_partition (char *device_file, guint64 offset, gboolean poke_kernel)
 	}
 
 	DEBUG ("got partition - part->type=%d", part->type);
-	/* allow only to delete primary, logical and extended partitions */
-	if (! ((part->type == PED_PARTITION_NORMAL) ||
-	       (part->type == PED_PARTITION_LOGICAL) ||
-	       (part->type == PED_PARTITION_EXTENDED))) {
-		DEBUG ("no data partition at given offset %lld for device %s", offset, device_file);
-		goto out_ped_disk;
-	}
+
+        if (part->type & PED_PARTITION_METADATA) {
+                DEBUG ("refusing to delete a metadata partition");
+                goto out_ped_disk;
+        }
+
+        if (part->type & PED_PARTITION_PROTECTED) {
+                DEBUG ("refusing to delete a protected partition");
+                goto out_ped_disk;
+        }
+
+        if (part->type & PED_PARTITION_FREESPACE) {
+                DEBUG ("refusing to delete a protected partition");
+                goto out_ped_disk;
+        }
 
 	if (ped_disk_delete_partition (disk, part) == 0) {
 		DEBUG ("ped_disk_delete_partition() failed");

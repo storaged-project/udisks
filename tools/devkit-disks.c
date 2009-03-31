@@ -302,18 +302,18 @@ device_removed_signal_handler (DBusGProxy *proxy, const char *object_path, gpoin
   g_print ("removed:   %s\n", object_path);
 }
 
-#define ATA_SMART_DATA_ATTRIBUTE_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray", \
-                                                                      G_TYPE_UINT, \
-                                                                      G_TYPE_STRING, \
-                                                                      G_TYPE_UINT, \
-                                                                      G_TYPE_BOOLEAN, G_TYPE_BOOLEAN, \
-                                                                      G_TYPE_UCHAR, G_TYPE_BOOLEAN, \
-                                                                      G_TYPE_UCHAR, G_TYPE_BOOLEAN, \
-                                                                      G_TYPE_UCHAR, G_TYPE_BOOLEAN, \
-                                                                      G_TYPE_BOOLEAN, G_TYPE_BOOLEAN, \
-                                                                      G_TYPE_UINT, G_TYPE_UINT64, \
-                                                                      dbus_g_type_get_collection ("GArray", G_TYPE_UCHAR), \
-                                                                      G_TYPE_INVALID))
+#define ATA_SMART_ATTRIBUTE_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray", \
+                                                                 G_TYPE_UINT, \
+                                                                 G_TYPE_STRING, \
+                                                                 G_TYPE_UINT, \
+                                                                 G_TYPE_BOOLEAN, G_TYPE_BOOLEAN, \
+                                                                 G_TYPE_UCHAR, G_TYPE_BOOLEAN, \
+                                                                 G_TYPE_UCHAR, G_TYPE_BOOLEAN, \
+                                                                 G_TYPE_UCHAR, G_TYPE_BOOLEAN, \
+                                                                 G_TYPE_BOOLEAN, G_TYPE_BOOLEAN, \
+                                                                 G_TYPE_UINT, G_TYPE_UINT64, \
+                                                                 dbus_g_type_get_collection ("GArray", G_TYPE_UCHAR), \
+                                                                 G_TYPE_INVALID))
 
 #define ATA_SMART_HISTORICAL_SMART_DATA_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray",   \
                                                                              G_TYPE_UINT64, \
@@ -400,9 +400,6 @@ typedef struct
 
         char    *partition_table_scheme;
         int      partition_table_count;
-        int      partition_table_max_number;
-        GArray  *partition_table_offsets;
-        GArray  *partition_table_sizes;
 
         char    *luks_holder;
 
@@ -585,19 +582,6 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->partition_table_scheme = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "partition-table-count") == 0)
                 props->partition_table_count = g_value_get_int (value);
-        else if (strcmp (key, "partition-table-max-number") == 0)
-                props->partition_table_max_number = g_value_get_int (value);
-        else if (strcmp (key, "partition-table-offsets") == 0) {
-                GValue dest_value = {0,};
-                g_value_init (&dest_value, dbus_g_type_get_collection ("GArray", G_TYPE_UINT64));
-                g_value_copy (value, &dest_value);
-                props->partition_table_offsets = g_value_get_boxed (&dest_value);
-        } else if (strcmp (key, "partition-table-sizes") == 0) {
-                GValue dest_value = {0,};
-                g_value_init (&dest_value, dbus_g_type_get_collection ("GArray", G_TYPE_UINT64));
-                g_value_copy (value, &dest_value);
-                props->partition_table_sizes = g_value_get_boxed (&dest_value);
-        }
 
         else if (strcmp (key, "luks-holder") == 0)
                 props->luks_holder = g_strdup (g_value_get_boxed (value));
@@ -764,10 +748,6 @@ device_properties_free (DeviceProperties *props)
         g_free (props->partition_uuid);
         g_strfreev (props->partition_flags);
         g_free (props->partition_table_scheme);
-        if (props->partition_table_offsets != NULL)
-                g_array_free (props->partition_table_offsets, TRUE);
-        if (props->partition_table_sizes != NULL)
-                g_array_free (props->partition_table_sizes, TRUE);
         g_free (props->luks_holder);
         g_free (props->luks_cleartext_slave);
         g_free (props->drive_model);
@@ -811,7 +791,7 @@ device_properties_get (DBusGConnection *bus,
 
         props = g_new0 (DeviceProperties, 1);
         g_value_init (&(props->drive_ata_smart_attributes),
-                      dbus_g_type_get_collection ("GPtrArray", ATA_SMART_DATA_ATTRIBUTE_STRUCT_TYPE));
+                      dbus_g_type_get_collection ("GPtrArray", ATA_SMART_ATTRIBUTE_STRUCT_TYPE));
 
 	prop_proxy = dbus_g_proxy_new_for_name (bus,
                                                 "org.freedesktop.DeviceKit.Disks",
@@ -1089,7 +1069,6 @@ do_show_info (const char *object_path)
                 g_print ("  partition table:\n");
                 g_print ("    scheme:                %s\n", props->partition_table_scheme);
                 g_print ("    count:                 %d\n", props->partition_table_count);
-                g_print ("    max number:            %d\n", props->partition_table_max_number);
         }
         if (props->device_is_partition) {
                 g_print ("  partition:\n");
@@ -1251,7 +1230,7 @@ do_show_info (const char *object_path)
                                 gboolean do_highlight;
                                 GArray *raw_data;
 
-                                g_value_init (&elem, ATA_SMART_DATA_ATTRIBUTE_STRUCT_TYPE);
+                                g_value_init (&elem, ATA_SMART_ATTRIBUTE_STRUCT_TYPE);
                                 g_value_set_static_boxed (&elem, p->pdata[m]);
 
                                 dbus_g_type_struct_get (&elem,

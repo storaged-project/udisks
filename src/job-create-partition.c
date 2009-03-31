@@ -56,12 +56,11 @@ main (int argc, char **argv)
         guint64 out_start;
         guint64 out_size;
         char *endp;
-        int max_number;
 
         ret = 1;
         flags = NULL;
 
-        if (argc < 8) {
+        if (argc < 7) {
                 g_printerr ("wrong usage\n");
                 goto out;
         }
@@ -76,15 +75,10 @@ main (int argc, char **argv)
                 g_printerr ("malformed size '%s'\n", argv[3]);
                 goto out;
         }
-        max_number = strtol (argv[4], &endp, 10);
-        if (*endp != '\0') {
-                g_printerr ("malformed max number '%s'\n", argv[4]);
-                goto out;
-        }
-        type = argv[5];
-        label = argv[6];
-        flags_as_string = argv[7];
-        options = argv + 8;
+        type = argv[4];
+        label = argv[5];
+        flags_as_string = argv[6];
+        options = argv + 7;
 
         flags = g_strsplit (flags_as_string, ",", 0);
 

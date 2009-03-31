@@ -137,8 +137,8 @@ udevhelperdir = $(slashlibdir)/udev
 udevhelper_PROGRAMS = devkit-disks-part-id devkit-disks-dm-export devkit-disks-probe-ata-smart
 
 devkit_disks_part_id_SOURCES = part-id.c
-devkit_disks_part_id_CPPFLAGS = $(AM_CPPFLAGS)
-devkit_disks_part_id_LDADD = $(GLIB_LIBS) libpartutil.la
+devkit_disks_part_id_CPPFLAGS = $(AM_CPPFLAGS) $(LIBUDEV_CFLAGS)
+devkit_disks_part_id_LDADD = $(GLIB_LIBS) $(LIBUDEV_LIBS) libpartutil.la
 
 devkit_disks_dm_export_SOURCES = devkit-disks-dm-export.c
 devkit_disks_dm_export_CPPFLAGS = $(AM_CPPFLAGS) $(DEVMAPPER_CFLAGS)
