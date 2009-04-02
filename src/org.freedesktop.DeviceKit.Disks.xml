@@ -2,25 +2,12 @@
 "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
 "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd" [
   <!ENTITY ERROR_FAILED "org.freedesktop.DeviceKit.Disks.Error.Failed">
-  <!ENTITY ERROR_INHIBITED "org.freedesktop.DeviceKit.Disks.Error.Inhibited">
   <!ENTITY ERROR_BUSY "org.freedesktop.DeviceKit.Disks.Error.Busy">
   <!ENTITY ERROR_CANCELLED "org.freedesktop.DeviceKit.Disks.Error.Cancelled">
+  <!ENTITY ERROR_INHIBITED "org.freedesktop.DeviceKit.Disks.Error.Inhibited">
   <!ENTITY ERROR_INVALID_OPTION "org.freedesktop.DeviceKit.Disks.Error.InvalidOption">
-  <!ENTITY ERROR_ALREADY_MOUNTED "org.freedesktop.DeviceKit.Disks.Error.AlreadyMounted">
-  <!ENTITY ERROR_NOT_MOUNTED "org.freedesktop.DeviceKit.Disks.Error.NotMounted">
-  <!ENTITY ERROR_NOT_CANCELLABLE "org.freedesktop.DeviceKit.Disks.Error.NotCancellable">
-  <!ENTITY ERROR_NOT_PARTITION "org.freedesktop.DeviceKit.Disks.Error.NotPartition">
-  <!ENTITY ERROR_NOT_PARTITION_TABLE "org.freedesktop.DeviceKit.Disks.Error.NotPartitionTable">
-  <!ENTITY ERROR_NOT_FILESYSTEM "org.freedesktop.DeviceKit.Disks.Error.NotFilesystem">
-  <!ENTITY ERROR_NOT_LUKS "org.freedesktop.DeviceKit.Disks.Error.NotLuks">
-  <!ENTITY ERROR_NOT_LOCKED "org.freedesktop.DeviceKit.Disks.Error.NotLocked">
-  <!ENTITY ERROR_NOT_UNLOCKED "org.freedesktop.DeviceKit.Disks.Error.NotUnlocked">
-  <!ENTITY ERROR_NOT_LINUX_MD "org.freedesktop.DeviceKit.Disks.Error.NotLinuxMd">
-  <!ENTITY ERROR_NOT_LINUX_MD_COMPONENT "org.freedesktop.DeviceKit.Disks.Error.NotLinuxMdComponent">
-  <!ENTITY ERROR_NOT_DRIVE "org.freedesktop.DeviceKit.Disks.Error.NotDrive">
-  <!ENTITY ERROR_NOT_SMART_CAPABLE "org.freedesktop.DeviceKit.Disks.Error.NotSmartCapable">
   <!ENTITY ERROR_NOT_SUPPORTED "org.freedesktop.DeviceKit.Disks.Error.NotSupported">
-  <!ENTITY ERROR_NOT_FOUND "org.freedesktop.DeviceKit.Disks.Error.NotFound">
+  <!ENTITY ERROR_ATA_SMART_WOULD_WAKEUP "org.freedesktop.DeviceKit.Disks.Error.NotFound">
   <!ENTITY ERROR_NOT_AUTHORIZED "org.freedesktop.PolicyKit.Error.NotAuthorized">
 ]>
 <node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
@@ -97,7 +84,7 @@
         </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -163,9 +150,8 @@
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
           <doc:error name="&ERROR_BUSY;">if one of the given components are busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
-          <doc:error name="&ERROR_NOT_LINUX_MD_COMPONENT;">one of the given components doesn't exist or is not a Linux md component</doc:error>
         </doc:errors>
       </doc:doc>
     </method>

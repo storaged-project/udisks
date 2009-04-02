@@ -2,26 +2,12 @@
 "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
 "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd" [
   <!ENTITY ERROR_FAILED "org.freedesktop.DeviceKit.Disks.Error.Failed">
-  <!ENTITY ERROR_INHIBITED "org.freedesktop.DeviceKit.Disks.Error.Inhibited">
   <!ENTITY ERROR_BUSY "org.freedesktop.DeviceKit.Disks.Error.Busy">
   <!ENTITY ERROR_CANCELLED "org.freedesktop.DeviceKit.Disks.Error.Cancelled">
+  <!ENTITY ERROR_INHIBITED "org.freedesktop.DeviceKit.Disks.Error.Inhibited">
   <!ENTITY ERROR_INVALID_OPTION "org.freedesktop.DeviceKit.Disks.Error.InvalidOption">
-  <!ENTITY ERROR_ALREADY_MOUNTED "org.freedesktop.DeviceKit.Disks.Error.AlreadyMounted">
-  <!ENTITY ERROR_NOT_MOUNTED "org.freedesktop.DeviceKit.Disks.Error.NotMounted">
-  <!ENTITY ERROR_NOT_CANCELLABLE "org.freedesktop.DeviceKit.Disks.Error.NotCancellable">
-  <!ENTITY ERROR_NOT_PARTITION "org.freedesktop.DeviceKit.Disks.Error.NotPartition">
-  <!ENTITY ERROR_NOT_PARTITION_TABLE "org.freedesktop.DeviceKit.Disks.Error.NotPartitionTable">
-  <!ENTITY ERROR_NOT_FILESYSTEM "org.freedesktop.DeviceKit.Disks.Error.NotFilesystem">
-  <!ENTITY ERROR_NOT_LUKS "org.freedesktop.DeviceKit.Disks.Error.NotLuks">
-  <!ENTITY ERROR_NOT_LOCKED "org.freedesktop.DeviceKit.Disks.Error.NotLocked">
-  <!ENTITY ERROR_NOT_UNLOCKED "org.freedesktop.DeviceKit.Disks.Error.NotUnlocked">
-  <!ENTITY ERROR_NOT_LINUX_MD "org.freedesktop.DeviceKit.Disks.Error.NotLinuxMd">
-  <!ENTITY ERROR_NOT_LINUX_MD_COMPONENT "org.freedesktop.DeviceKit.Disks.Error.NotLinuxMdComponent">
-  <!ENTITY ERROR_NOT_DRIVE "org.freedesktop.DeviceKit.Disks.Error.NotDrive">
   <!ENTITY ERROR_NOT_SUPPORTED "org.freedesktop.DeviceKit.Disks.Error.NotSupported">
-  <!ENTITY ERROR_NOT_FOUND "org.freedesktop.DeviceKit.Disks.Error.NotFound">
-  <!ENTITY ERROR_ATA_SMART_NOT_AVAILABLE "org.freedesktop.DeviceKit.Disks.Error.AtaSmartNotAvailable">
-  <!ENTITY ERROR_ATA_SMART_WOULD_WAKEUP "org.freedesktop.DeviceKit.Disks.Error.AtaSmartWouldWakeup">
+  <!ENTITY ERROR_ATA_SMART_WOULD_WAKEUP "org.freedesktop.DeviceKit.Disks.Error.NotFound">
   <!ENTITY ERROR_NOT_AUTHORIZED "org.freedesktop.PolicyKit.Error.NotAuthorized">
 ]>
 <node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
@@ -122,8 +108,7 @@
         </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_FAILED;">if no job is pending</doc:error>
-          <doc:error name="&ERROR_NOT_CANCELLABLE;">if job is not cancellable</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -197,7 +182,7 @@
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
           <doc:error name="&ERROR_BUSY;">if the device or a partition on it are busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
         </doc:errors>
       </doc:doc>
@@ -237,9 +222,8 @@
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
           <doc:error name="&ERROR_BUSY;">if the device is busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
-          <doc:error name="&ERROR_NOT_PARTITION;">if the device is not a partition</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -377,9 +361,8 @@
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
           <doc:error name="&ERROR_BUSY;">if the device is busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
-          <doc:error name="&ERROR_NOT_PARTITION_TABLE;">if the device is not a partitition table</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -438,9 +421,8 @@
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
           <doc:error name="&ERROR_BUSY;">if the enclosing partition table device is busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
-          <doc:error name="&ERROR_NOT_PARTITION;">if the device is not a partition</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -502,7 +484,7 @@
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
           <doc:error name="&ERROR_BUSY;">if the device is busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
         </doc:errors>
       </doc:doc>
@@ -547,7 +529,7 @@
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
           <doc:error name="&ERROR_BUSY;">if the device is busy and changing the label requires an unmounted file system</doc:error>
-          <doc:error name="&ERROR_FAILED;">if the file system doesn't support labels, the label is too long</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
         </doc:errors>
       </doc:doc>
@@ -596,11 +578,9 @@
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
           <doc:error name="&ERROR_BUSY;">if the device is busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
-          <doc:error name="&ERROR_NOT_FILESYSTEM;">if the device is not a mountable file system</doc:error>
           <doc:error name="&ERROR_INVALID_OPTION;">if an invalid or malformed mount option was given</doc:error>
-          <doc:error name="&ERROR_ALREADY_MOUNTED;">if the device is already mounted</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -634,10 +614,9 @@
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
           <doc:error name="&ERROR_BUSY;">if the device is busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
           <doc:error name="&ERROR_INVALID_OPTION;">if an invalid or malformed unmount option was given</doc:error>
-          <doc:error name="&ERROR_NOT_MOUNTED;">if the device is not mounted</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -681,7 +660,7 @@
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
           <doc:error name="&ERROR_BUSY;">if the device is mounted and the file system doesn't support online file system checking. See TODO for how to determine if a file system supports online fsck</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
         </doc:errors>
       </doc:doc>
@@ -725,9 +704,7 @@
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
           <doc:error name="&ERROR_BUSY;">if the device is mounted and the file system doesn't support online file system checking. See TODO for how to determine if a file system supports online fsck</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
-          <doc:error name="&ERROR_NOT_FILESYSTEM;">if the device is not a mountable file system</doc:error>
-          <doc:error name="&ERROR_NOT_MOUNTED;">if the file system is not mounted</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -764,10 +741,8 @@
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
           <doc:error name="&ERROR_BUSY;">if the device is busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
-          <doc:error name="&ERROR_NOT_LUKS;">if the device is not LUKS encrypted</doc:error>
-          <doc:error name="&ERROR_NOT_LOCKED;">if the device is already unlocked</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -801,10 +776,8 @@
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
           <doc:error name="&ERROR_BUSY;">if the device is busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
-          <doc:error name="&ERROR_NOT_LUKS;">if the device is not LUKS encrypted</doc:error>
-          <doc:error name="&ERROR_NOT_UNLOCKED;">if the device is not unlocked</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -846,9 +819,8 @@
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
           <doc:error name="&ERROR_BUSY;">if the device is busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
-          <doc:error name="&ERROR_NOT_LUKS;">if the device is not LUKS encrypted</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -885,10 +857,8 @@
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
           <doc:error name="&ERROR_BUSY;">component to add is busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
-          <doc:error name="&ERROR_NOT_LINUX_MD;">device to add component to is not a Linux md RAID array</doc:error>
-          <doc:error name="&ERROR_NOT_FOUND;">given component doesn't exist</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -926,10 +896,8 @@
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
           <doc:error name="&ERROR_BUSY;">component to add is busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
-          <doc:error name="&ERROR_NOT_LINUX_MD;">device to remove component from is not a Linux md RAID array</doc:error>
-          <doc:error name="&ERROR_NOT_FOUND;">given component is not part of the array</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -962,9 +930,8 @@
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
           <doc:error name="&ERROR_BUSY;">component to add is busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
-          <doc:error name="&ERROR_NOT_LINUX_MD;">device is not a Linux md RAID array</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -1002,8 +969,7 @@
         </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
-          <doc:error name="&ERROR_NOT_DRIVE;">device is not a drive</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -1056,7 +1022,7 @@
           </doc:list>
         </doc:permission>
         <doc:errors>
-          <doc:error name="&ERROR_FAILED;">if an unknown error occured</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -1087,10 +1053,9 @@
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
           <doc:error name="&ERROR_BUSY;">if the device or a dependent device (e.g. partition or cleartext luks device) is busy (e.g. mounted)</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
-          <doc:error name="&ERROR_NOT_DRIVE;">device is not a drive</doc:error>
-          <doc:error name="&ERROR_INVALID_OPTION;">if an invalid or malformed unmount option was given</doc:error>
+          <doc:error name="&ERROR_INVALID_OPTION;">if an invalid or malformed option was given</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -1128,9 +1093,8 @@
         </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_ATA_SMART_NOT_AVAILABLE;">if ATA SMART isn't available on the disk</doc:error>
-          <doc:error name="&ERROR_ATA_SMART_WOULD_WAKEUP;">If the disk is asleep and the nowakeup option was passed</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_ATA_SMART_WOULD_WAKEUP;">If the disk is sleeping and the <doc:tt>nowakeup</doc:tt> option was passed</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -1178,8 +1142,7 @@
         </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_ATA_SMART_NOT_AVAILABLE;">if ATA SMART isn't available on the disk</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
         </doc:errors>
       </doc:doc>
@@ -1218,9 +1181,8 @@
         </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_FAILED;">if incoming parameters are invalid or an unknown error occured</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
-          <doc:error name="&ERROR_ATA_SMART_NOT_AVAILABLE;">device is not ATA SMART capable</doc:error>
         </doc:errors>
       </doc:doc>
     </method>

@@ -147,33 +147,16 @@ devkit_disks_error_get_type (void)
 
         if (etype == 0)
         {
-                static const GEnumValue values[] =
-                        {
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_FAILED, "Failed"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_INHIBITED, "Inhibited"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_BUSY, "Busy"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_CANCELLED, "Cancelled"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_INVALID_OPTION, "InvalidOption"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_ALREADY_MOUNTED, "AlreadyMounted"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_MOUNTED, "NotMounted"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_CANCELLABLE, "NotCancellable"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_PARTITION, "NotPartition"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_PARTITION_TABLE, "NotPartitionTable"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_LABELED, "NotLabeled"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_FILESYSTEM, "NotFilesystem"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_LUKS, "NotLuks"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_LOCKED, "NotLocked"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_UNLOCKED, "NotUnlocked"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_LINUX_MD, "NotLinuxMd"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_LINUX_MD_COMPONENT, "NotLinuxMdComponent"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_DRIVE, "NotDrive"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_SUPPORTED, "NotSupported"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_FOUND, "NotFound"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_ATA_SMART_NOT_AVAILABLE, "AtaSmartNotAvailable"),
-                                ENUM_ENTRY (DEVKIT_DISKS_ERROR_ATA_SMART_WOULD_WAKEUP, "AtaSmartWouldWakeup"),
-
-                                { 0, 0, 0 }
-                        };
+                static const GEnumValue values[] = {
+                        ENUM_ENTRY (DEVKIT_DISKS_ERROR_FAILED, "Failed"),
+                        ENUM_ENTRY (DEVKIT_DISKS_ERROR_INHIBITED, "Inhibited"),
+                        ENUM_ENTRY (DEVKIT_DISKS_ERROR_BUSY, "Busy"),
+                        ENUM_ENTRY (DEVKIT_DISKS_ERROR_CANCELLED, "Cancelled"),
+                        ENUM_ENTRY (DEVKIT_DISKS_ERROR_INVALID_OPTION, "InvalidOption"),
+                        ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_SUPPORTED, "NotSupported"),
+                        ENUM_ENTRY (DEVKIT_DISKS_ERROR_ATA_SMART_WOULD_WAKEUP, "AtaSmartWouldWakeup"),
+                        { 0, 0, 0 }
+                };
                 g_assert (DEVKIT_DISKS_NUM_ERRORS == G_N_ELEMENTS (values) - 1);
                 etype = g_enum_register_static ("DevkitDisksError", values);
         }
@@ -1325,7 +1308,7 @@ devkit_disks_daemon_find_device_by_device_file (DevkitDisksDaemon     *daemon,
                 dbus_g_method_return (context, object_path);
         } else {
                 throw_error (context,
-                             DEVKIT_DISKS_ERROR_NOT_FOUND,
+                             DEVKIT_DISKS_ERROR_FAILED,
                              "No such device");
         }
 

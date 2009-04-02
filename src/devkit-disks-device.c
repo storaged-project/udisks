@@ -4410,7 +4410,7 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
 
         if (device->priv->id_usage == NULL ||
             strcmp (device->priv->id_usage, "filesystem") != 0) {
-                throw_error (context, DEVKIT_DISKS_ERROR_NOT_FILESYSTEM,
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                              "Not a mountable file system");
                 goto out;
         }
@@ -4450,7 +4450,7 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
                 if (device->priv->id_type != NULL && strlen (device->priv->id_type)) {
                         fstype = g_strdup (device->priv->id_type);
                 } else {
-                        throw_error (context, DEVKIT_DISKS_ERROR_NOT_FILESYSTEM, "No file system type");
+                        throw_error (context, DEVKIT_DISKS_ERROR_FAILED, "No file system type");
                         goto out;
                 }
         } else {
@@ -4495,7 +4495,7 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
         g_print ("**** USING MOUNT OPTIONS '%s' FOR DEVICE %s\n", mount_options, device->priv->device_file);
 
         if (device->priv->device_is_mounted) {
-                throw_error (context, DEVKIT_DISKS_ERROR_ALREADY_MOUNTED,
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                              "Device is already mounted");
                 goto out;
         }
@@ -4643,7 +4643,7 @@ devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
         if (!device->priv->device_is_mounted ||
             device->priv->device_mount_paths->len == 0) {
                 throw_error (context,
-                             DEVKIT_DISKS_ERROR_NOT_MOUNTED,
+                             DEVKIT_DISKS_ERROR_FAILED,
                              "Device is not mounted");
                 goto out;
         }
@@ -4859,7 +4859,7 @@ devkit_disks_device_filesystem_list_open_files (DevkitDisksDevice     *device,
         if (!device->priv->device_is_mounted ||
             device->priv->device_mount_paths->len == 0) {
                 throw_error (context,
-                             DEVKIT_DISKS_ERROR_NOT_MOUNTED,
+                             DEVKIT_DISKS_ERROR_FAILED,
                              "Device is not mounted");
                 goto out;
         }
@@ -4945,7 +4945,7 @@ devkit_disks_device_drive_eject (DevkitDisksDevice     *device,
                 goto out;
 
         if (!device->priv->device_is_drive) {
-                throw_error (context, DEVKIT_DISKS_ERROR_NOT_DRIVE,
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                              "Device is not a drive");
                 goto out;
         }
@@ -5262,7 +5262,7 @@ devkit_disks_device_partition_delete (DevkitDisksDevice     *device,
 
         if (!device->priv->device_is_partition) {
                 throw_error (context,
-                             DEVKIT_DISKS_ERROR_NOT_PARTITION,
+                             DEVKIT_DISKS_ERROR_FAILED,
                              "Device is not a partition");
                 goto out;
         }
@@ -5721,7 +5721,7 @@ devkit_disks_device_job_cancel (DevkitDisksDevice     *device,
 
         if (!device->priv->job_is_cancellable) {
                 throw_error (context,
-                             DEVKIT_DISKS_ERROR_NOT_CANCELLABLE,
+                             DEVKIT_DISKS_ERROR_FAILED,
                              "Job cannot be cancelled");
                 goto out;
         }
@@ -5996,7 +5996,7 @@ devkit_disks_device_partition_create (DevkitDisksDevice     *device,
 
         if (!device->priv->device_is_partition_table) {
                 throw_error (context,
-                             DEVKIT_DISKS_ERROR_NOT_PARTITION_TABLE,
+                             DEVKIT_DISKS_ERROR_FAILED,
                              "Device is not partitioned");
                 goto out;
         }
@@ -6177,7 +6177,7 @@ devkit_disks_device_partition_modify (DevkitDisksDevice     *device,
 
         if (!device->priv->device_is_partition) {
                 throw_error (context,
-                             DEVKIT_DISKS_ERROR_NOT_PARTITION,
+                             DEVKIT_DISKS_ERROR_FAILED,
                              "Device is not a partition");
                 goto out;
         }
@@ -6621,13 +6621,13 @@ devkit_disks_device_luks_unlock_internal (DevkitDisksDevice        *device,
 
         if (device->priv->id_usage == NULL ||
             strcmp (device->priv->id_usage, "crypto") != 0) {
-                throw_error (context, DEVKIT_DISKS_ERROR_NOT_LUKS,
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                              "Not a LUKS device");
                 goto out;
         }
 
         if (find_cleartext_device (device) != NULL) {
-                throw_error (context, DEVKIT_DISKS_ERROR_NOT_LOCKED,
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                              "Cleartext device is already unlocked");
                 goto out;
         }
@@ -6890,14 +6890,14 @@ devkit_disks_device_luks_lock (DevkitDisksDevice     *device,
 
         if (device->priv->id_usage == NULL ||
             strcmp (device->priv->id_usage, "crypto") != 0) {
-                throw_error (context, DEVKIT_DISKS_ERROR_NOT_LUKS,
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                              "Not a LUKS crypto device");
                 goto out;
         }
 
         cleartext_device = find_cleartext_device (device);
         if (cleartext_device == NULL) {
-                throw_error (context, DEVKIT_DISKS_ERROR_NOT_UNLOCKED,
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                              "Cleartext device is not unlocked");
                 goto out;
         }
@@ -7003,7 +7003,7 @@ devkit_disks_device_luks_change_passphrase (DevkitDisksDevice     *device,
 
         if (device->priv->id_usage == NULL ||
             strcmp (device->priv->id_usage, "crypto") != 0) {
-                throw_error (context, DEVKIT_DISKS_ERROR_NOT_LUKS,
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                              "Not a LUKS crypto device");
                 goto out;
         }
@@ -7105,7 +7105,7 @@ devkit_disks_device_filesystem_set_label (DevkitDisksDevice     *device,
 
         if (device->priv->id_usage == NULL ||
             strcmp (device->priv->id_usage, "filesystem") != 0) {
-                throw_error (context, DEVKIT_DISKS_ERROR_NOT_LABELED,
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                              "Not a mountable file system");
                 goto out;
         }
@@ -7584,7 +7584,7 @@ devkit_disks_device_drive_ata_smart_refresh_data (DevkitDisksDevice     *device,
 
         if (!device->priv->drive_ata_smart_is_available) {
                 throw_error (context,
-                             DEVKIT_DISKS_ERROR_ATA_SMART_NOT_AVAILABLE,
+                             DEVKIT_DISKS_ERROR_FAILED,
                              "Device does not support ATA SMART");
                 goto out;
         }
@@ -7675,7 +7675,7 @@ devkit_disks_device_drive_ata_smart_get_historical_data (DevkitDisksDevice     *
 
         if (!device->priv->drive_ata_smart_is_available) {
                 throw_error (context,
-                             DEVKIT_DISKS_ERROR_ATA_SMART_NOT_AVAILABLE,
+                             DEVKIT_DISKS_ERROR_FAILED,
                              "Device does not support ATA SMART");
                 goto out;
         }
@@ -7881,7 +7881,7 @@ devkit_disks_device_drive_ata_smart_initiate_selftest (DevkitDisksDevice     *de
 
         if (!device->priv->drive_ata_smart_is_available) {
                 throw_error (context,
-                             DEVKIT_DISKS_ERROR_ATA_SMART_NOT_AVAILABLE,
+                             DEVKIT_DISKS_ERROR_FAILED,
                              "Device does not support ATA SMART");
                 goto out;
         }
@@ -7969,7 +7969,7 @@ devkit_disks_device_linux_md_stop (DevkitDisksDevice     *device,
                 goto out;
 
         if (!device->priv->device_is_linux_md) {
-                throw_error (context, DEVKIT_DISKS_ERROR_NOT_LINUX_MD,
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                              "Device is not a Linux md drive");
                 goto out;
         }
@@ -8063,14 +8063,14 @@ devkit_disks_device_linux_md_add_component (DevkitDisksDevice     *device,
                 goto out;
 
         if (!device->priv->device_is_linux_md) {
-                throw_error (context, DEVKIT_DISKS_ERROR_NOT_LINUX_MD,
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                              "Device is not a Linux md drive");
                 goto out;
         }
 
         slave = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, component);
         if (slave == NULL) {
-                throw_error (context, DEVKIT_DISKS_ERROR_NOT_FOUND,
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                              "Component doesn't exist");
                 goto out;
         }
@@ -8281,14 +8281,14 @@ devkit_disks_device_linux_md_remove_component (DevkitDisksDevice     *device,
                 goto out;
 
         if (!device->priv->device_is_linux_md) {
-                throw_error (context, DEVKIT_DISKS_ERROR_NOT_LINUX_MD,
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                              "Device is not a Linux md drive");
                 goto out;
         }
 
         slave = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, component);
         if (slave == NULL) {
-                throw_error (context, DEVKIT_DISKS_ERROR_NOT_FOUND,
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                              "Component doesn't exist");
                 goto out;
         }
@@ -8299,7 +8299,7 @@ devkit_disks_device_linux_md_remove_component (DevkitDisksDevice     *device,
                         break;
         }
         if (n == (int) device->priv->linux_md_slaves->len) {
-                throw_error (context, DEVKIT_DISKS_ERROR_NOT_FOUND,
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                              "Component isn't part of the running array");
                 goto out;
         }
@@ -8540,13 +8540,13 @@ devkit_disks_daemon_linux_md_start (DevkitDisksDaemon     *daemon,
 
                 slave = devkit_disks_daemon_local_find_by_object_path (daemon, component_objpath);
                 if (slave == NULL) {
-                        throw_error (context, DEVKIT_DISKS_ERROR_NOT_LINUX_MD_COMPONENT,
+                        throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                                      "Component %s doesn't exist", component_objpath);
                         goto out;
                 }
 
                 if (!slave->priv->device_is_linux_md_component) {
-                        throw_error (context, DEVKIT_DISKS_ERROR_NOT_LINUX_MD_COMPONENT,
+                        throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                                      "%s is not a linux-md component", component_objpath);
                         goto out;
                 }
@@ -8554,7 +8554,7 @@ devkit_disks_daemon_linux_md_start (DevkitDisksDaemon     *daemon,
                 if (n == 0) {
                         uuid = g_strdup (slave->priv->linux_md_component_uuid);
                         if (uuid == NULL) {
-                                throw_error (context, DEVKIT_DISKS_ERROR_NOT_LINUX_MD_COMPONENT,
+                                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                                              "no uuid for one of the components");
                         }
                 } else {
@@ -8562,7 +8562,7 @@ devkit_disks_daemon_linux_md_start (DevkitDisksDaemon     *daemon,
                         this_uuid = slave->priv->linux_md_component_uuid;
 
                         if (this_uuid == NULL || strcmp (uuid, this_uuid) != 0) {
-                                throw_error (context, DEVKIT_DISKS_ERROR_NOT_LINUX_MD_COMPONENT,
+                                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                                              "uuid mismatch between given components");
                                 goto out;
                         }
@@ -8620,7 +8620,7 @@ devkit_disks_daemon_linux_md_start (DevkitDisksDaemon     *daemon,
 
                 slave = devkit_disks_daemon_local_find_by_object_path (daemon, component_objpath);
                 if (slave == NULL) {
-                        throw_error (context, DEVKIT_DISKS_ERROR_NOT_LINUX_MD_COMPONENT,
+                        throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                                      "Component %s doesn't exist", component_objpath);
                         goto out;
                 }
@@ -8986,7 +8986,7 @@ devkit_disks_device_drive_inhibit_polling (DevkitDisksDevice     *device,
                 goto out;
 
         if (!device->priv->device_is_drive) {
-                throw_error (context, DEVKIT_DISKS_ERROR_NOT_DRIVE,
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                              "Device is not a drive");
                 goto out;
         }
@@ -9085,7 +9085,7 @@ devkit_disks_device_drive_poll_media (DevkitDisksDevice     *device,
                 goto out;
 
         if (!device->priv->device_is_drive) {
-                throw_error (context, DEVKIT_DISKS_ERROR_NOT_DRIVE,
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                              "Device is not a drive");
                 goto out;
         }
