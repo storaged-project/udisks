@@ -365,7 +365,6 @@ typedef struct
         gboolean device_is_luks;
         gboolean device_is_luks_cleartext;
         gboolean device_is_mounted;
-        gboolean device_is_busy;
         gboolean device_is_linux_md_component;
         gboolean device_is_linux_md;
         char   **device_mount_paths;
@@ -522,8 +521,6 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->device_is_linux_md = g_value_get_boolean (value);
         else if (strcmp (key, "device-is-mounted") == 0)
                 props->device_is_mounted = g_value_get_boolean (value);
-        else if (strcmp (key, "device-is-busy") == 0)
-                props->device_is_busy = g_value_get_boolean (value);
         else if (strcmp (key, "device-mount-paths") == 0)
                 props->device_mount_paths = g_strdupv (g_value_get_boxed (value));
         else if (strcmp (key, "device-mounted-by-uid") == 0)
@@ -1005,7 +1002,6 @@ do_show_info (const char *object_path)
         g_print ("    detection inhibited:   %d\n", props->device_is_media_change_detection_inhibited);
         g_print ("  is read only:            %d\n", props->device_is_read_only);
         g_print ("  is mounted:              %d\n", props->device_is_mounted);
-        g_print ("  is busy:                 %d\n", props->device_is_busy);
         g_print ("  mount paths:             ");
         for (n = 0; props->device_mount_paths != NULL && props->device_mount_paths[n] != NULL; n++) {
                 if (n != 0)

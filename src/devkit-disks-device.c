@@ -155,7 +155,6 @@ enum
         PROP_DEVICE_SIZE,
         PROP_DEVICE_BLOCK_SIZE,
         PROP_DEVICE_IS_MOUNTED,
-        PROP_DEVICE_IS_BUSY,
         PROP_DEVICE_MOUNT_PATHS,
         PROP_DEVICE_MOUNTED_BY_UID,
         PROP_DEVICE_PRESENTATION_NAME,
@@ -370,10 +369,6 @@ get_property (GObject         *object,
 		break;
 	case PROP_DEVICE_IS_MOUNTED:
 		g_value_set_boolean (value, device->priv->device_is_mounted);
-		break;
-	case PROP_DEVICE_IS_BUSY:
-                /* this property is special; it's value is computed on demand */
-		g_value_set_boolean (value, devkit_disks_device_local_is_busy (device));
 		break;
 	case PROP_DEVICE_MOUNT_PATHS:
 		g_value_set_boxed (value, device->priv->device_mount_paths);
@@ -810,10 +805,6 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DEVICE_IS_MOUNTED,
                 g_param_spec_boolean ("device-is-mounted", NULL, NULL, FALSE, G_PARAM_READABLE));
-        g_object_class_install_property (
-                object_class,
-                PROP_DEVICE_IS_BUSY,
-                g_param_spec_boolean ("device-is-busy", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_DEVICE_MOUNT_PATHS,

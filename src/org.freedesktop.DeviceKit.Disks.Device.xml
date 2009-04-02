@@ -1415,15 +1415,6 @@
             TRUE if device is a cleartext device backed by a LUKS encrypted device. See luks-cleartext- properties for details.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-is-busy" type="b" access="read">
-      <doc:doc><doc:description><doc:para>
-            TRUE if device is currently busy. Is set if the device is
-            in use; this can hapen, for example, if the device is
-            mounted, if another block device is claiming it (e.g. a
-            RAID drive) or if a job initiated from DeviceKit-disks is
-            pending.
-      </doc:para></doc:description></doc:doc>
-    </property>
     <property name="device-is-linux-md-component" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE if the device is a Linux md RAID component. See linux-md-component- properties for details.
