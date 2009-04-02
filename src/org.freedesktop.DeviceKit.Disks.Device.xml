@@ -34,39 +34,7 @@
           these options are literal strings (such
           as <doc:tt>noatime</doc:tt>) while some are encoded in the
           form of a key/value pair (such
-          as <doc:tt>label=</doc:tt>). While the documentation for
-          each method will specify exactly what set of options are
-          recognized, many methods accepts
-          the <doc:tt>erase=</doc:tt> option that can be used to
-          erase the contents of the device prior to starting the
-          operation. Instead of repeating what values can be used in
-          the the <doc:tt>erase=</doc:tt> option in every method
-          that supports it, we will enumerate them only once:
-          <doc:list>
-            <doc:item>
-              <doc:term>none</doc:term>
-              <doc:definition>Only areas of the device known to host file system signatures will be overwritten with zeros</doc:definition>
-            </doc:item>
-            <doc:item>
-              <doc:term>full</doc:term>
-              <doc:definition>Zeroes will be written out once on the device</doc:definition>
-            </doc:item>
-            <doc:item>
-              <doc:term>full3pass</doc:term>
-              <doc:definition>Writes random data on the device three times</doc:definition>
-            </doc:item>
-            <doc:item>
-              <doc:term>full7pass</doc:term>
-              <doc:definition>Writes random data on the device seven times</doc:definition>
-            </doc:item>
-            <doc:item>
-              <doc:term>full35pass</doc:term>
-              <doc:definition>Writes random data on the device 35 times</doc:definition>
-            </doc:item>
-          </doc:list>
-          The data written out is not entirely random, see
-          the <doc:ulink url="http://en.wikipedia.org/wiki/Gutmann_method">Gutmann
-            Method</doc:ulink> for more details.
+          as <doc:tt>label=</doc:tt>).
         </doc:para>
         <doc:para>
           A general note about properties: the set of values
@@ -123,7 +91,7 @@
         </doc:summary></doc:doc>
       </arg>
       <arg name="options" direction="in" type="as">
-        <doc:doc><doc:summary>Supports the <doc:tt>erase=</doc:tt> option for erasing the contents of the device.</doc:summary></doc:doc>
+        <doc:doc><doc:summary>No options are currently supported.</doc:summary></doc:doc>
       </arg>
 
       <doc:doc>
@@ -193,7 +161,7 @@
     <method name="PartitionDelete">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="options" direction="in" type="as">
-        <doc:doc><doc:summary>Supports the <doc:tt>erase=</doc:tt> option for erasing the contents of the device.</doc:summary></doc:doc>
+        <doc:doc><doc:summary>No options are currently supported.</doc:summary></doc:doc>
       </arg>
 
       <doc:doc>
@@ -442,12 +410,14 @@
       </arg>
       <arg name="options" direction="in" type="as">
         <doc:doc><doc:summary>
-            Supports the <doc:tt>erase=</doc:tt> option for erasing the contents of the device. To set the
-            label use <doc:tt>label=NAME</doc:tt>. Labels may not be supported
-            for all file systems and the allowed length of a label may vary (see @TODO@).
-            To create the file system on an LUKS encrypted
-            block device, pass the <doc:tt>luks_encrypt=</doc:tt> option with the
-            value set to the passphrase to use. For file systems with the concept of owners (e.g.
+            To set the label on the file system use
+            the <doc:tt>label=NAME</doc:tt> option. Labels may not be
+            supported for all file systems and the allowed length of a
+            label may vary (see @TODO@).  To create the file system on
+            an LUKS encrypted block device, pass
+            the <doc:tt>luks_encrypt=</doc:tt> option with the value
+            set to the passphrase to use. For file systems with the
+            concept of owners (e.g.
             <doc:tt>ext3</doc:tt>), the options <doc:tt>take_ownership_uid=</doc:tt> and
             <doc:tt>take_ownership_gid=</doc:tt> are supported and can be used to set the
             initial owner of the created file system.
@@ -871,7 +841,7 @@
         <doc:doc><doc:summary>The component to remove from the array.</doc:summary></doc:doc>
       </arg>
       <arg name="options" direction="in" type="as">
-        <doc:doc><doc:summary>Supports the <doc:tt>erase=</doc:tt> option for erasing the contents of the device.</doc:summary></doc:doc>
+        <doc:doc><doc:summary>No options are currently supported.</doc:summary></doc:doc>
       </arg>
 
       <doc:doc>
@@ -879,7 +849,7 @@
           <doc:para>
             Removes a component from a Linux md RAID array. The component
             will be removed and then the signatures on the component will be
-            erased according to the erase= option.
+            scrubbed.
           </doc:para>
         </doc:description>
         <doc:permission>
@@ -1216,17 +1186,8 @@
       <arg name="job-initiated-by-uid" type="u">
         <doc:doc><doc:summary>The UNIX user id of the user who initiated the job.</doc:summary></doc:doc>
       </arg>
-      <arg name="job-num-tasks" type="i">
-        <doc:doc><doc:summary>Number of tasks in the job or zero if unknown.</doc:summary></doc:doc>
-      </arg>
-      <arg name="job-cur-task" type="i">
-        <doc:doc><doc:summary>Current task number (zero-based offset).</doc:summary></doc:doc>
-      </arg>
-      <arg name="job-cur-task-id" type="s">
-        <doc:doc><doc:summary>Task identifier for current task.</doc:summary></doc:doc>
-      </arg>
-      <arg name="job-cur-task-percentage" type="d">
-        <doc:doc><doc:summary>Percentage completed of current task (between 0 and 100, negative if unknown).</doc:summary></doc:doc>
+      <arg name="job-percentage" type="d">
+        <doc:doc><doc:summary>Percentage completed of the job (between 0 and 100, negative if unknown).</doc:summary></doc:doc>
       </arg>
 
       <doc:doc>
@@ -1412,17 +1373,14 @@
     <property name="job-in-progress" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             The job properties specify if a job initiated via the
-            DeviceKit-disks daemon is currently in progress.  A job
-            may be split into several sequential tasks; in that case
-            <doc:ref type="property" to="Device:job-num-tasks">job-num-tasks</doc:ref>
-            will be greater than one.
+            DeviceKit-disks daemon is currently in progress.
       </doc:para></doc:description></doc:doc>
     </property>
     <property name="job-id" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             This property is used to identify the job and maps 1-1
             with the names of the method calls on this interface,
-            e.g. 'Erase', 'FilesystemCreate' and so on.
+            e.g. 'FilesystemCreate' and so on.
       </doc:para></doc:description></doc:doc>
     </property>
     <property name="job-initiated-by-uid" type="u" access="read">
@@ -1437,24 +1395,9 @@
             to="Device.JobCancel">JobCancel()</doc:ref> method.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="job-num-tasks" type="i" access="read">
+    <property name="job-percentage" type="d" access="read">
       <doc:doc><doc:description><doc:para>
-            Number of tasks in the job..
-      </doc:para></doc:description></doc:doc>
-    </property>
-    <property name="job-cur-task" type="i" access="read">
-      <doc:doc><doc:description><doc:para>
-            Current task number (zero-based offset).
-      </doc:para></doc:description></doc:doc>
-    </property>
-    <property name="job-cur-task-id" type="s" access="read">
-      <doc:doc><doc:description><doc:para>
-            Task identifier for current task. TODO: enumerate task id's.
-      </doc:para></doc:description></doc:doc>
-    </property>
-    <property name="job-cur-task-percentage" type="d" access="read">
-      <doc:doc><doc:description><doc:para>
-            Percentage completed of current task (between 0 and 100, negative if unknown).
+            Percentage completed of the job (between 0 and 100, negative if unknown).
       </doc:para></doc:description></doc:doc>
     </property>
 

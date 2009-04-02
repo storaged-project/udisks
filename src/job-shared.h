@@ -39,46 +39,8 @@
 
 /* TODO: maybe move to private static library if there's a lot of shared stuff */
 
-#define ERASE_SIZE (128*1024)
-
-/**
- * parse_passes_from_erase:
- * @str: string to pass, e.g. #NULL, "none", "full", "full3pass",
- * "full7pass", "full35pass".
- *
- * Parses an erase option string and returns the number of passes;
- * #NULL and "none" maps into 0, "full" maps into 1, "full3pass" maps
- * into 3, "full7pass" maps into 7, and "full35pass" maps into 35. If
- * the string cannot be parsed, -1 is returned.
- *
- * Returns: Number of passes or -1 on error.
- **/
-static inline int
-task_zero_device_parse_option (const char *str)
-{
-        int ret;
-
-        if (str == NULL) {
-                ret = 0;
-        } else if (strcmp (str, "none") == 0) {
-                ret = 0;
-        } else if (strcmp (str, "full") == 0) {
-                ret = 1;
-        } else if (strcmp (str, "full3pass") == 0) {
-                ret = 3;
-        } else if (strcmp (str, "full7pass") == 0) {
-                ret = 7;
-        } else if (strcmp (str, "full35pass") == 0) {
-                ret = 35;
-        } else {
-                ret = -1;
-        }
-
-        return ret;
-}
-
 static inline gboolean
-do_write (int fd, void *buf, int num)
+_do_write (int fd, void *buf, int num)
 {
         gboolean ret;
         ret = FALSE;
@@ -96,6 +58,8 @@ out:
         return ret;
 }
 
+#if 0
+#define ERASE_SIZE (128*1024)
 static inline gboolean
 _scrub_signatures (int fd, guint64 offset, guint64 size)
 {
@@ -118,7 +82,7 @@ _scrub_signatures (int fd, guint64 offset, guint64 size)
                 goto out;
         }
 
-        if (!do_write (fd, buf, wipe_size))
+        if (!_do_write (fd, buf, wipe_size))
                 goto out;
 
         if (lseek64 (fd, offset + size - wipe_size, SEEK_SET) == (off64_t) -1) {
@@ -126,7 +90,7 @@ _scrub_signatures (int fd, guint64 offset, guint64 size)
                 goto out;
         }
 
-        if (!do_write (fd, buf, wipe_size))
+        if (!_do_write (fd, buf, wipe_size))
                 goto out;
 
         ret = TRUE;
@@ -134,44 +98,24 @@ _scrub_signatures (int fd, guint64 offset, guint64 size)
 out:
         return ret;
 }
+#endif
 
 /**
  * task_zero_device:
  * @device: device to zero
  * @offset: the offset to start zeroing the device
  * @size: if zero is passed, the whole device is zeroed; otherwise size of slice to zero
- * @num_passes: number of passes, 0, 1, 3, 7 and 35 supported. See
- * the function task_zero_device_parse_option() for details.
- * @cur_task: current task
- * @num_tasks: number of tasks
  *
- * Zeroes (parts of) a device. If @num_passes is 0 then only the areas
- * where file system signatures are normally stored are zeroed,
- * otherwise the device is cleared @num_passes times using methods
- * compliant with US DoD 5220.
- *
- * This task will use @num_passes + 1 task slots.
- *
- * See these websites.
- *
- *   http://ask.metafilter.com/83005/How-long-does-a-7-Pass-US-DoD-5220-method-take
- *   http://en.wikipedia.org/wiki/Gutmann_method
- *   http://en.wikipedia.org/wiki/National_Industrial_Security_Program
- *
- * for more details on secure erase.
- *
- * Returns: #TRUE unless erasing failed or an incoming parameter was
- * invalid.
+ * Zeroes (parts of) a device and scrubs all areas containing
+ * signatures.
  **/
 static inline gboolean
-task_zero_device (const char *device, guint64 offset, guint64 size, int num_passes, int cur_task, int num_tasks)
+scrub_signatures (const char *device, guint64 offset, guint64 size)
 {
         int fd;
         gboolean ret;
-        guint64 cursor;
-        int percent;
-        int old_percent;
-        char buf[ERASE_SIZE];
+        char buf[128 * 1024];
+        guint64 wipe_size;
 
         fd = 0;
         ret = FALSE;
@@ -191,108 +135,28 @@ task_zero_device (const char *device, guint64 offset, guint64 size, int num_pass
 
         memset (buf, '\0', sizeof (buf));
 
-
-        if (num_passes == 0) {
-                g_print ("progress: %d %d 0 zeroing\n", cur_task, num_tasks);
-
-                if (!_scrub_signatures (fd, offset, size))
-                        goto out;
-
-        } else if (num_passes == 1) {
-                /* first do a quick scrub of the signatures */
-                if (!_scrub_signatures (fd, offset, size))
-                        goto out;
-
-                /* now all signatures should be gone.. TODO: poke the kernel so the volume is
-                 * tagged as unrecognized
-                 */
-
-                if (lseek64 (fd, offset, SEEK_SET) == (off64_t) -1) {
-                        g_printerr ("cannot seek to %" G_GINT64_FORMAT ": %m", offset);
-                        goto out;
-                }
-
-                cursor = 0;
-                old_percent = 0;
-                g_print ("progress: %d %d 0 zeroing\n", cur_task, num_tasks);
-                while (cursor < size) {
-                        guint64 num;
-
-                        num = sizeof (buf);
-                        if (size - cursor < num)
-                                num = size - cursor;
-                        if (!do_write (fd, buf, num))
-                                goto out;
-
-                        cursor += num;
-                        percent = 100 * cursor / size;
-
-                        if (percent > old_percent) {
-                                g_print ("progress: %d %d %d zeroing\n", cur_task, num_tasks, percent);
-                                old_percent = percent;
-                        }
-                }
-                g_print ("progress: %d %d -1 sync\n", cur_task + 1, num_tasks);
-                fsync (fd);
-        } else if (num_passes == 3) {
-                g_printerr ("only 0 and 1 erase passes is implemented for now\n");
-                goto out;
-        } else if (num_passes == 7) {
-                g_printerr ("only 0 and 1 erase passes is implemented for now\n");
-                goto out;
-        } else if (num_passes == 35) {
-                g_printerr ("only 0 and 1 erase passes is implemented for now\n");
-                goto out;
-        }
-
-        ret = TRUE;
-
-out:
-        if (fd >= 0)
-                close (fd);
-        return ret;
-}
-
-static inline gboolean
-zero_signatures (const char *device, guint64 offset, guint64 size, int cur_task, int num_tasks)
-{
-        int fd;
-        gboolean ret;
-        guint64 wipe_size;
-        char buf[ERASE_SIZE];
-
-        ret = FALSE;
-
-        fd = open (device, O_WRONLY);
-        if (fd < 0) {
-                g_printerr ("cannot open device: %m\n");
-                goto out;
-        }
-
-        g_print ("progress: %d %d 0 zeroing\n", cur_task, num_tasks);
-
-        /* wipe first and last 16kb. TODO: check 16kb is the right number */
-        wipe_size = 16 * 1024;
-        g_assert (sizeof (buf) >= wipe_size);
+        /* wipe first and last 128KB. Note that btrfs keeps signatures at 0x10000 == 64KB. */
+        wipe_size = 128 * 1024;
+        memset (buf, '\0', sizeof (buf));
 
         if (wipe_size > size) {
                 wipe_size = size;
         }
 
         if (lseek64 (fd, offset, SEEK_SET) == (off64_t) -1) {
+                g_printerr ("cannot seek to %" G_GINT64_FORMAT ": %m", offset);
+                goto out;
+        }
+
+        if (!_do_write (fd, buf, wipe_size))
+                goto out;
+
+        if (lseek64 (fd, offset + size - wipe_size, SEEK_SET) == (off64_t) -1) {
                 g_printerr ("cannot seek to %" G_GINT64_FORMAT ": %m", offset + size - wipe_size);
                 goto out;
         }
 
-        if (!do_write (fd, buf, wipe_size))
-                goto out;
-
-        if (lseek64 (fd, offset + size - wipe_size, SEEK_SET) == (off64_t) -1) {
-                g_printerr ("cannot seek to %" G_GINT64_FORMAT ": %m", size - wipe_size);
-                goto out;
-        }
-
-        if (!do_write (fd, buf, wipe_size))
+        if (!_do_write (fd, buf, wipe_size))
                 goto out;
 
         ret = TRUE;
@@ -302,6 +166,7 @@ out:
                 close (fd);
         return ret;
 }
+
 
 static inline gboolean
 validate_and_escape_label (char **label, int max_len)

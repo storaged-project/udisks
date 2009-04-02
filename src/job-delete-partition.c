@@ -47,8 +47,6 @@ main (int argc, char **argv)
         const char *device;
         const char *partition_device;
         char **options;
-        char *erase;
-        int num_erase_passes;
         int n;
         guint64 offset;
         guint64 size;
@@ -56,8 +54,6 @@ main (int argc, char **argv)
         char *endp;
 
         ret = 1;
-        erase = NULL;
-
 
         if (argc < 5) {
                 g_printerr ("wrong usage\n");
@@ -84,21 +80,9 @@ main (int argc, char **argv)
         options = argv + 6;
 
         for (n = 0; options[n] != NULL; n++) {
-                if (g_str_has_prefix (options[n], "erase=")) {
-                        erase = strdup (options[n] + sizeof ("erase=") - 1);
-                } else {
-                        g_printerr ("option %s not supported\n", options[n]);
-                        goto out;
-                }
-        }
-
-        num_erase_passes = task_zero_device_parse_option (erase);
-        if (num_erase_passes == -1) {
-                g_printerr ("invalid erase=%s option\n", erase);
+                g_printerr ("option %s not supported\n", options[n]);
                 goto out;
         }
-
-        g_print ("progress: %d %d -1 partitioning\n", num_erase_passes, num_erase_passes + 2);
 
         /* ask libparted to poke the kernel */
         if (part_del_partition ((char *) device, offset, TRUE)) {
@@ -108,14 +92,16 @@ main (int argc, char **argv)
                  *... but only after removing it from the partition table
                  *    (since it may contain meta data if it's an extended partition)
                  */
-                if (!task_zero_device (device, offset, size, num_erase_passes, 1, num_erase_passes + 2)) {
-                        g_printerr ("error zeroing the device\n");
+                /* scrub signatures */
+                if (!scrub_signatures (device, offset, size)) {
+                        g_printerr ("Cannot scrub filesystem signatures at "
+                                    "offset=%" G_GINT64_FORMAT " and size=%" G_GINT64_FORMAT "\n",
+                                    offset, size);
                 } else {
                         ret = 0;
                 }
         }
 
 out:
-        g_free (erase);
         return ret;
 }

@@ -94,10 +94,6 @@ gboolean devkit_disks_device_filesystem_check (DevkitDisksDevice     *device,
                                                char                 **options,
                                                DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_erase (DevkitDisksDevice     *device,
-                                    char                 **options,
-                                    DBusGMethodInvocation *context);
-
 gboolean devkit_disks_device_filesystem_create (DevkitDisksDevice     *device,
                                                 const char            *fstype,
                                                 char                 **options,

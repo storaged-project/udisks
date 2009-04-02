@@ -164,10 +164,7 @@ enum
         PROP_JOB_ID,
         PROP_JOB_INITIATED_BY_UID,
         PROP_JOB_IS_CANCELLABLE,
-        PROP_JOB_NUM_TASKS,
-        PROP_JOB_CUR_TASK,
-        PROP_JOB_CUR_TASK_ID,
-        PROP_JOB_CUR_TASK_PERCENTAGE,
+        PROP_JOB_PERCENTAGE,
 
         PROP_ID_USAGE,
         PROP_ID_TYPE,
@@ -395,17 +392,8 @@ get_property (GObject         *object,
 	case PROP_JOB_IS_CANCELLABLE:
 		g_value_set_boolean (value, device->priv->job_is_cancellable);
 		break;
-	case PROP_JOB_NUM_TASKS:
-		g_value_set_int (value, device->priv->job_num_tasks);
-		break;
-	case PROP_JOB_CUR_TASK:
-		g_value_set_int (value, device->priv->job_cur_task);
-		break;
-	case PROP_JOB_CUR_TASK_ID:
-		g_value_set_string (value, device->priv->job_cur_task_id);
-		break;
-	case PROP_JOB_CUR_TASK_PERCENTAGE:
-		g_value_set_double (value, device->priv->job_cur_task_percentage);
+	case PROP_JOB_PERCENTAGE:
+		g_value_set_double (value, device->priv->job_percentage);
 		break;
 
         case PROP_ID_USAGE:
@@ -687,16 +675,13 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                               G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                               0,
                               NULL, NULL,
-                              devkit_disks_marshal_VOID__BOOLEAN_STRING_UINT_BOOLEAN_INT_INT_STRING_DOUBLE,
+                              devkit_disks_marshal_VOID__BOOLEAN_STRING_UINT_BOOLEAN_DOUBLE,
                               G_TYPE_NONE,
-                              8,
+                              5,
                               G_TYPE_BOOLEAN,
                               G_TYPE_STRING,
                               G_TYPE_UINT,
                               G_TYPE_BOOLEAN,
-                              G_TYPE_INT,
-                              G_TYPE_INT,
-                              G_TYPE_STRING,
                               G_TYPE_DOUBLE);
 
         dbus_g_object_type_install_info (DEVKIT_DISKS_TYPE_DEVICE, &dbus_glib_devkit_disks_device_object_info);
@@ -842,20 +827,8 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 g_param_spec_boolean ("job-is-cancellable", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
-                PROP_JOB_NUM_TASKS,
-                g_param_spec_int ("job-num-tasks", NULL, NULL, 0, G_MAXINT, 0, G_PARAM_READABLE));
-        g_object_class_install_property (
-                object_class,
-                PROP_JOB_CUR_TASK,
-                g_param_spec_int ("job-cur-task", NULL, NULL, 0, G_MAXINT, 0, G_PARAM_READABLE));
-        g_object_class_install_property (
-                object_class,
-                PROP_JOB_CUR_TASK_ID,
-                g_param_spec_string ("job-cur-task-id", NULL, NULL, NULL, G_PARAM_READABLE));
-        g_object_class_install_property (
-                object_class,
-                PROP_JOB_CUR_TASK_PERCENTAGE,
-                g_param_spec_double ("job-cur-task-percentage", NULL, NULL, -1, 100, -1, G_PARAM_READABLE));
+                PROP_JOB_PERCENTAGE,
+                g_param_spec_double ("job-percentage", NULL, NULL, -1, 100, -1, G_PARAM_READABLE));
 
         g_object_class_install_property (
                 object_class,
@@ -3437,20 +3410,14 @@ emit_job_changed (DevkitDisksDevice *device)
                                device->priv->job_id,
                                device->priv->job_initiated_by_uid,
                                device->priv->job_is_cancellable,
-                               device->priv->job_num_tasks,
-                               device->priv->job_cur_task,
-                               device->priv->job_cur_task_id,
-                               device->priv->job_cur_task_percentage,
+                               device->priv->job_percentage,
                                NULL);
         g_signal_emit (device, signals[JOB_CHANGED_SIGNAL], 0,
                        device->priv->job_in_progress,
                        device->priv->job_id,
                        device->priv->job_initiated_by_uid,
                        device->priv->job_is_cancellable,
-                       device->priv->job_num_tasks,
-                       device->priv->job_cur_task,
-                       device->priv->job_cur_task_id,
-                       device->priv->job_cur_task_percentage);
+                       device->priv->job_percentage);
 }
 
 /* called by the daemon on the 'change' uevent */
@@ -3657,11 +3624,7 @@ job_child_watch_cb (GPid pid, int status, gpointer user_data)
                 job->device->priv->job_id = NULL;
                 job->device->priv->job_initiated_by_uid = 0;
                 job->device->priv->job_is_cancellable = FALSE;
-                job->device->priv->job_num_tasks = 0;
-                job->device->priv->job_cur_task = 0;
-                g_free (job->device->priv->job_cur_task_id);
-                job->device->priv->job_cur_task_id = NULL;
-                job->device->priv->job_cur_task_percentage = -1.0;
+                job->device->priv->job_percentage = -1.0;
 
                 job->device->priv->job = NULL;
         }
@@ -3754,22 +3717,11 @@ job_read_out (GIOChannel *channel,
                 //g_print ("helper(pid %5d): '%s'\n", job->pid, line);
 
                 if (strlen (line) < 256) {
-                        int cur_task;
-                        int num_tasks;
-                        double cur_task_percentage;;
-                        char cur_task_id[256];
+                        double cur_percentage;;
 
-                        if (sscanf (line, "progress: %d %d %lg %s",
-                                    &cur_task,
-                                    &num_tasks,
-                                    &cur_task_percentage,
-                                    (char *) &cur_task_id) == 4) {
+                        if (sscanf (line, "devkit-disks-helper-progress: %lg", &cur_percentage) == 1) {
                                 if (job->device != NULL && job->job_id != NULL) {
-                                        job->device->priv->job_num_tasks = num_tasks;
-                                        job->device->priv->job_cur_task = cur_task;
-                                        g_free (job->device->priv->job_cur_task_id);
-                                        job->device->priv->job_cur_task_id = g_strdup (cur_task_id);
-                                        job->device->priv->job_cur_task_percentage = cur_task_percentage;
+                                        job->device->priv->job_percentage = cur_percentage;
                                         emit_job_changed (job->device);
                                 }
                         }
@@ -3795,11 +3747,7 @@ job_local_start (DevkitDisksDevice *device,
         device->priv->job_initiated_by_uid = 0;
         device->priv->job_in_progress = TRUE;
         device->priv->job_is_cancellable = FALSE;
-        device->priv->job_num_tasks = 0;
-        device->priv->job_cur_task = 0;
-        g_free (device->priv->job_cur_task_id);
-        device->priv->job_cur_task_id = NULL;
-        device->priv->job_cur_task_percentage = -1.0;
+        device->priv->job_percentage = -1.0;
 
         emit_job_changed (device);
 out:
@@ -3819,11 +3767,7 @@ job_local_end (DevkitDisksDevice *device)
         device->priv->job_id = NULL;
         device->priv->job_initiated_by_uid = 0;
         device->priv->job_is_cancellable = FALSE;
-        device->priv->job_num_tasks = 0;
-        device->priv->job_cur_task = 0;
-        g_free (device->priv->job_cur_task_id);
-        device->priv->job_cur_task_id = NULL;
-        device->priv->job_cur_task_percentage = -1.0;
+        device->priv->job_percentage = -1.0;
         emit_job_changed (device);
 out:
         ;
@@ -3927,11 +3871,7 @@ job_new (DBusGMethodInvocation *context,
         if (device != NULL && job_id != NULL) {
                 device->priv->job_in_progress = TRUE;
                 device->priv->job_is_cancellable = is_cancellable;
-                device->priv->job_num_tasks = 0;
-                device->priv->job_cur_task = 0;
-                g_free (device->priv->job_cur_task_id);
-                device->priv->job_cur_task_id = NULL;
-                device->priv->job_cur_task_percentage = -1.0;
+                device->priv->job_percentage = -1.0;
                 device->priv->job_initiated_by_uid = 0;
                 if (pk_caller != NULL) {
                         polkit_caller_get_uid (pk_caller, &(device->priv->job_initiated_by_uid));
@@ -5093,100 +5033,6 @@ devkit_disks_device_filesystem_check (DevkitDisksDevice     *device,
                       argv,
                       NULL,
                       filesystem_check_completed_cb,
-                      NULL,
-                      NULL)) {
-                goto out;
-        }
-
-out:
-        if (pk_caller != NULL)
-                polkit_caller_unref (pk_caller);
-        return TRUE;
-}
-
-/*--------------------------------------------------------------------------------------------------------------*/
-
-static void
-erase_completed_cb (DBusGMethodInvocation *context,
-                    DevkitDisksDevice *device,
-                    PolKitCaller *pk_caller,
-                    gboolean job_was_cancelled,
-                    int status,
-                    const char *stderr,
-                    const char *stdout,
-                    gpointer user_data)
-{
-        /* poke the kernel so we can reread the data */
-        devkit_disks_device_generate_kernel_change_event (device);
-
-        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
-                dbus_g_method_return (context);
-        } else {
-                if (job_was_cancelled) {
-                        throw_error (context,
-                                     DEVKIT_DISKS_ERROR_CANCELLED,
-                                     "Job was cancelled");
-                } else {
-                        throw_error (context,
-                                     DEVKIT_DISKS_ERROR_FAILED,
-                                     "Error erasing: helper exited with exit code %d: %s",
-                                     WEXITSTATUS (status),
-                                     stderr);
-                }
-        }
-}
-
-gboolean
-devkit_disks_device_erase (DevkitDisksDevice     *device,
-                           char                 **options,
-                           DBusGMethodInvocation *context)
-{
-        int n, m;
-        char *argv[128];
-        GError *error;
-        PolKitCaller *pk_caller;
-
-        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
-                goto out;
-
-        if (devkit_disks_device_local_is_busy (device)) {
-                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
-                             "Device is busy");
-                goto out;
-        }
-
-        if (!devkit_disks_damon_local_check_auth (device->priv->daemon,
-                                                  pk_caller,
-                                                  device->priv->device_is_system_internal ?
-                                                  "org.freedesktop.devicekit.disks.change-system-internal" :
-                                                  "org.freedesktop.devicekit.disks.change",
-                                                  context))
-                goto out;
-
-        n = 0;
-        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-erase";
-        argv[n++] = device->priv->device_file;
-        for (m = 0; options[m] != NULL; m++) {
-                if (n >= (int) sizeof (argv) - 1) {
-                        throw_error (context,
-                                     DEVKIT_DISKS_ERROR_FAILED,
-                                     "Too many options");
-                        goto out;
-                }
-                /* the helper will validate each option */
-                argv[n++] = (char *) options[m];
-        }
-        argv[n++] = NULL;
-
-        error = NULL;
-        if (!job_new (context,
-                      "Erase",
-                      TRUE,
-                      device,
-                      pk_caller,
-                      argv,
-                      NULL,
-                      erase_completed_cb,
                       NULL,
                       NULL)) {
                 goto out;
@@ -8181,12 +8027,15 @@ linux_md_remove_component_device_changed_cb (DevkitDisksDaemon *daemon,
         RemoveComponentData *data = user_data;
         DevkitDisksDevice *device;
 
-        /* check if we're now a LUKS crypto device */
         device = devkit_disks_daemon_local_find_by_object_path (daemon, object_path);
         if (device == data->slave && !devkit_disks_device_local_is_busy (data->slave)) {
+                gchar *fs_create_options[] = {NULL};
 
                 /* yay! now scrub it! */
-                devkit_disks_device_erase (data->slave, data->options, data->context);
+                devkit_disks_device_filesystem_create (data->slave,
+                                                       "empty",
+                                                       fs_create_options,
+                                                       data->context);
 
                 /* TODO: leaking data? */
 

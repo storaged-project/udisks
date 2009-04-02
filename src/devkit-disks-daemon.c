@@ -439,17 +439,14 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
                               G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                               0,
                               NULL, NULL,
-                              devkit_disks_marshal_VOID__BOXED_BOOLEAN_STRING_UINT_BOOLEAN_INT_INT_STRING_DOUBLE,
+                              devkit_disks_marshal_VOID__BOXED_BOOLEAN_STRING_UINT_BOOLEAN_DOUBLE,
                               G_TYPE_NONE,
-                              9,
+                              6,
                               DBUS_TYPE_G_OBJECT_PATH,
                               G_TYPE_BOOLEAN,
                               G_TYPE_STRING,
                               G_TYPE_UINT,
                               G_TYPE_BOOLEAN,
-                              G_TYPE_INT,
-                              G_TYPE_INT,
-                              G_TYPE_STRING,
                               G_TYPE_DOUBLE);
 
 

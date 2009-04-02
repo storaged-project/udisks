@@ -47,14 +47,11 @@ main (int argc, char **argv)
         const char *device;
         const char *scheme;
         char **options;
-        char *erase;
-        int num_erase_passes;
         int n;
         PartitionScheme pscheme;
         gboolean no_partition_table;
 
         ret = 1;
-        erase = NULL;
         no_partition_table = FALSE;
         pscheme = PART_TYPE_MSDOS;
 
@@ -67,12 +64,8 @@ main (int argc, char **argv)
         options = argv + 3;
 
         for (n = 0; options[n] != NULL; n++) {
-                if (g_str_has_prefix (options[n], "erase=")) {
-                        erase = strdup (options[n] + sizeof ("erase=") - 1);
-                } else {
-                        g_printerr ("option %s not supported\n", options[n]);
-                        goto out;
-                }
+                g_printerr ("option %s not supported\n", options[n]);
+                goto out;
         }
 
         if (strcmp (scheme, "mbr") == 0) {
@@ -88,17 +81,9 @@ main (int argc, char **argv)
                 goto out;
         }
 
-        num_erase_passes = -1;
-
-        num_erase_passes = task_zero_device_parse_option (erase);
-        if (num_erase_passes == -1) {
-                g_printerr ("invalid erase=%s option\n", erase);
+        /* scrub signatures */
+        if (!scrub_signatures (device, 0, 0))
                 goto out;
-        }
-        if (!task_zero_device (device, 0, 0, num_erase_passes, 0, num_erase_passes + 2))
-                goto out;
-
-        g_print ("progress: %d %d -1 partitioning\n", num_erase_passes + 1, num_erase_passes + 2);
 
         if (no_partition_table) {
                 ret = 0;
@@ -114,6 +99,5 @@ main (int argc, char **argv)
         }
 
 out:
-        g_free (erase);
         return ret;
 }

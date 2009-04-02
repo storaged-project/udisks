@@ -80,10 +80,7 @@ struct DevkitDisksDevicePrivate
         char *job_id;
         uid_t job_initiated_by_uid;
         gboolean job_is_cancellable;
-        int job_num_tasks;
-        int job_cur_task;
-        char *job_cur_task_id;
-        double job_cur_task_percentage;
+        double job_percentage;
 
         guint linux_md_poll_timeout_id;
 
@@ -223,10 +220,7 @@ void devkit_disks_device_set_job_in_progress (DevkitDisksDevice *device, gboolea
 void devkit_disks_device_set_job_id (DevkitDisksDevice *device, const gchar *value);
 void devkit_disks_device_set_job_initiated_by_uid (DevkitDisksDevice *device, guint value);
 void devkit_disks_device_set_job_is_cancellable (DevkitDisksDevice *device, gboolean value);
-void devkit_disks_device_set_job_num_tasks (DevkitDisksDevice *device, gint value);
-void devkit_disks_device_set_job_cur_task (DevkitDisksDevice *device, gint value);
-void devkit_disks_device_set_job_cur_task_id (DevkitDisksDevice *device, const gchar *value);
-void devkit_disks_device_set_job_cur_task_percentage (DevkitDisksDevice *device, gdouble value);
+void devkit_disks_device_set_job_percentage (DevkitDisksDevice *device, gdouble value);
 
 void devkit_disks_device_set_device_file (DevkitDisksDevice *device, const gchar *value);
 void devkit_disks_device_set_device_file_by_id (DevkitDisksDevice *device, GStrv value);

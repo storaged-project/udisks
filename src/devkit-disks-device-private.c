@@ -145,43 +145,12 @@ devkit_disks_device_set_job_is_cancellable (DevkitDisksDevice *device, gboolean 
 }
 
 void
-devkit_disks_device_set_job_num_tasks (DevkitDisksDevice *device, gint value)
+devkit_disks_device_set_job_percentage (DevkitDisksDevice *device, gdouble value)
 {
-  if (G_UNLIKELY (device->priv->job_num_tasks != value))
+  if (G_UNLIKELY (device->priv->job_percentage != value))
     {
-      device->priv->job_num_tasks = value;
-      emit_changed (device, "job_num_tasks");
-    }
-}
-
-void
-devkit_disks_device_set_job_cur_task (DevkitDisksDevice *device, gint value)
-{
-  if (G_UNLIKELY (device->priv->job_cur_task != value))
-    {
-      device->priv->job_cur_task = value;
-      emit_changed (device, "job_cur_task");
-    }
-}
-
-void
-devkit_disks_device_set_job_cur_task_id (DevkitDisksDevice *device, const gchar *value)
-{
-  if (G_UNLIKELY (g_strcmp0 (device->priv->job_cur_task_id, value) != 0))
-    {
-      g_free (device->priv->job_cur_task_id);
-      device->priv->job_cur_task_id = g_strdup (value);
-      emit_changed (device, "job_cur_task_id");
-    }
-}
-
-void
-devkit_disks_device_set_job_cur_task_percentage (DevkitDisksDevice *device, gdouble value)
-{
-  if (G_UNLIKELY (device->priv->job_cur_task_percentage != value))
-    {
-      device->priv->job_cur_task_percentage = value;
-      emit_changed (device, "job_cur_task_percentage");
+      device->priv->job_percentage = value;
+      emit_changed (device, "job_percentage");
     }
 }
 

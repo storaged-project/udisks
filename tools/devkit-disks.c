@@ -240,31 +240,16 @@ print_job (gboolean    job_in_progress,
            const char *job_id,
            uid_t       job_initiated_by_uid,
            gboolean    job_is_cancellable,
-           int         job_num_tasks,
-           int         job_cur_task,
-           const char *job_cur_task_id,
-           double      job_cur_task_percentage)
+           double      job_percentage)
 {
         if (job_in_progress) {
-                if (job_num_tasks > 0) {
-                        g_print ("  job underway:            %s: %d/%d tasks (%s",
-                                 job_id,
-                                 job_cur_task + 1,
-                                 job_num_tasks,
-                                 job_cur_task_id);
-                        if (job_cur_task_percentage >= 0)
-                                g_print (" @ %3.0lf%%", job_cur_task_percentage);
-                        if (job_is_cancellable)
-                                g_print (", cancellable");
-                        g_print (", initiated by uid %d", job_initiated_by_uid);
-                        g_print (")\n");
-                } else {
-                        g_print ("  job underway:            %s: unknown progress", job_id);
-                        if (job_is_cancellable)
-                                g_print (", cancellable");
-                        g_print (", initiated by uid %d", job_initiated_by_uid);
-                        g_print ("\n");
-                }
+                g_print ("  job underway:            %s", job_id);
+                if (job_percentage >= 0)
+                        g_print (", %3.0lf%% complete", job_percentage);
+                if (job_is_cancellable)
+                        g_print (", cancellable");
+                g_print (", initiated by uid %d", job_initiated_by_uid);
+                g_print ("\n");
         } else {
                 g_print ("  job underway:            no\n");
         }
@@ -277,10 +262,7 @@ device_job_changed_signal_handler (DBusGProxy *proxy,
                                    const char *job_id,
                                    guint32     job_initiated_by_uid,
                                    gboolean    job_is_cancellable,
-                                   int         job_num_tasks,
-                                   int         job_cur_task,
-                                   const char *job_cur_task_id,
-                                   double      job_cur_task_percentage,
+                                   double      job_percentage,
                                    gpointer    user_data)
 {
   g_print ("job-changed: %s\n", object_path);
@@ -289,10 +271,7 @@ device_job_changed_signal_handler (DBusGProxy *proxy,
                      job_id,
                      job_initiated_by_uid,
                      job_is_cancellable,
-                     job_num_tasks,
-                     job_cur_task,
-                     job_cur_task_id,
-                     job_cur_task_percentage);
+                     job_percentage);
   }
 }
 
@@ -378,10 +357,7 @@ typedef struct
         char    *job_id;
         uid_t    job_initiated_by_uid;
         gboolean job_is_cancellable;
-        int      job_num_tasks;
-        int      job_cur_task;
-        char    *job_cur_task_id;
-        double   job_cur_task_percentage;
+        double   job_percentage;
 
         char    *id_usage;
         char    *id_type;
@@ -542,14 +518,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->job_initiated_by_uid = g_value_get_uint (value);
         else if (strcmp (key, "job-is-cancellable") == 0)
                 props->job_is_cancellable = g_value_get_boolean (value);
-        else if (strcmp (key, "job-num-tasks") == 0)
-                props->job_num_tasks = g_value_get_int (value);
-        else if (strcmp (key, "job-cur-task") == 0)
-                props->job_cur_task = g_value_get_int (value);
-        else if (strcmp (key, "job-cur-task-id") == 0)
-                props->job_cur_task_id = g_strdup (g_value_get_string (value));
-        else if (strcmp (key, "job-cur-task-percentage") == 0)
-                props->job_cur_task_percentage = g_value_get_double (value);
+        else if (strcmp (key, "job-percentage") == 0)
+                props->job_percentage = g_value_get_double (value);
 
         else if (strcmp (key, "id-usage") == 0)
                 props->id_usage = g_strdup (g_value_get_string (value));
@@ -739,7 +709,6 @@ device_properties_free (DeviceProperties *props)
         g_free (props->device_presentation_name);
         g_free (props->device_presentation_icon_name);
         g_free (props->job_id);
-        g_free (props->job_cur_task_id);
         g_free (props->id_usage);
         g_free (props->id_type);
         g_free (props->id_version);
@@ -1019,10 +988,7 @@ do_show_info (const char *object_path)
                    props->job_id,
                    props->job_initiated_by_uid,
                    props->job_is_cancellable,
-                   props->job_num_tasks,
-                   props->job_cur_task,
-                   props->job_cur_task_id,
-                   props->job_cur_task_percentage);
+                   props->job_percentage);
         g_print ("  usage:                   %s\n", props->id_usage);
         g_print ("  type:                    %s\n", props->id_type);
         g_print ("  version:                 %s\n", props->id_version);
@@ -1586,16 +1552,13 @@ main (int argc, char **argv)
         }
 
         dbus_g_object_register_marshaller (
-                devkit_disks_marshal_VOID__BOXED_BOOLEAN_STRING_UINT_BOOLEAN_INT_INT_STRING_DOUBLE,
+                devkit_disks_marshal_VOID__BOXED_BOOLEAN_STRING_UINT_BOOLEAN_DOUBLE,
                 G_TYPE_NONE,
                 DBUS_TYPE_G_OBJECT_PATH,
                 G_TYPE_BOOLEAN,
                 G_TYPE_STRING,
                 G_TYPE_UINT,
                 G_TYPE_BOOLEAN,
-                G_TYPE_INT,
-                G_TYPE_INT,
-                G_TYPE_STRING,
                 G_TYPE_DOUBLE,
                 G_TYPE_INVALID);
 
@@ -1613,9 +1576,6 @@ main (int argc, char **argv)
                                  G_TYPE_STRING,
                                  G_TYPE_UINT,
                                  G_TYPE_BOOLEAN,
-                                 G_TYPE_INT,
-                                 G_TYPE_INT,
-                                 G_TYPE_STRING,
                                  G_TYPE_DOUBLE,
                                  G_TYPE_INVALID);
 

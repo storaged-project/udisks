@@ -73,8 +73,7 @@ libpartutil_la_SOURCES = partutil.h partutil.c
 libpartutil_la_CPPFLAGS = $(LIBPARTED_CFLAGS)
 libpartutil_la_LIBADD = $(LIBPARTED_LIBS)
 
-libexec_PROGRAMS += devkit-disks-helper-erase                   	\
-		    devkit-disks-helper-mkfs                    	\
+libexec_PROGRAMS += devkit-disks-helper-mkfs                    	\
 		    devkit-disks-helper-delete-partition        	\
 		    devkit-disks-helper-create-partition        	\
 		    devkit-disks-helper-modify-partition        	\
@@ -87,10 +86,6 @@ libexec_PROGRAMS += devkit-disks-helper-erase                   	\
 		    $(NULL)
 
 libexec_SCRIPTS = devkit-disks-helper-change-luks-password
-
-devkit_disks_helper_erase_SOURCES = job-shared.h job-erase.c
-devkit_disks_helper_erase_CPPFLAGS = $(AM_CPPFLAGS)
-devkit_disks_helper_erase_LDADD = $(GLIB_LIBS)
 
 devkit_disks_helper_mkfs_SOURCES = job-shared.h job-mkfs.c
 devkit_disks_helper_mkfs_CPPFLAGS = $(AM_CPPFLAGS)

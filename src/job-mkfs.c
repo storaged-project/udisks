@@ -54,8 +54,6 @@ main (int argc, char **argv)
         char **options;
         GString *s;
         char *label;
-        char *erase;
-        int num_erase_passes;
         int n;
         gboolean is_kernel_partitioned;
         GIOChannel *stdin_channel;
@@ -69,7 +67,6 @@ main (int argc, char **argv)
         ret = 1;
         command_line = NULL;
         standard_error = NULL;
-        erase = NULL;
         take_ownership_uid = 0;
         take_ownership_gid = 0;
         label = NULL;
@@ -118,8 +115,6 @@ main (int argc, char **argv)
                                         g_free (label);
                                         label = NULL;
                                 }
-                        } else if (g_str_has_prefix (options[n], "erase=")) {
-                                erase = strdup (options[n] + sizeof ("erase=") - 1);
                         } else {
                                 g_printerr ("option %s not supported\n", options[n]);
                                 goto out;
@@ -142,8 +137,6 @@ main (int argc, char **argv)
                                 g_string_append_printf (s, " -L \"%s\"", label);
                                 g_free (label);
                                 label = NULL;
-                        } else if (g_str_has_prefix (options[n], "erase=")) {
-                                erase = strdup (options[n] + sizeof ("erase=") - 1);
                         } else if (g_str_has_prefix (options[n], "take_ownership_uid=")) {
                                 take_ownership_uid = strtol (options[n] + sizeof ("take_ownership_uid=") - 1, &endp, 10);
                                 if (endp == NULL || *endp != '\0') {
@@ -177,8 +170,6 @@ main (int argc, char **argv)
                                 g_string_append_printf (s, " -L \"%s\"", label);
                                 g_free (label);
                                 label = NULL;
-                        } else if (g_str_has_prefix (options[n], "erase=")) {
-                                erase = strdup (options[n] + sizeof ("erase=") - 1);
                         } else if (g_str_has_prefix (options[n], "take_ownership_uid=")) {
                                 take_ownership_uid = strtol (options[n] + sizeof ("take_ownership_uid=") - 1, &endp, 10);
                                 if (endp == NULL || *endp != '\0') {
@@ -215,8 +206,6 @@ main (int argc, char **argv)
                                 g_string_append_printf (s, " -L \"%s\"", label);
                                 g_free (label);
                                 label = NULL;
-                        } else if (g_str_has_prefix (options[n], "erase=")) {
-                                erase = strdup (options[n] + sizeof ("erase=") - 1);
                         } else {
                                 g_printerr ("option %s not supported\n", options[n]);
                                 goto out;
@@ -229,12 +218,8 @@ main (int argc, char **argv)
 
                 s = g_string_new ("mkswap");
                 for (n = 0; options[n] != NULL; n++) {
-                        if (g_str_has_prefix (options[n], "erase=")) {
-                                erase = strdup (options[n] + sizeof ("erase=") - 1);
-                        } else {
-                                g_printerr ("option %s not supported\n", options[n]);
-                                goto out;
-                        }
+                        g_printerr ("option %s not supported\n", options[n]);
+                        goto out;
                 }
                 g_string_append_printf (s, " %s", device);
                 command_line = g_string_free (s, FALSE);
@@ -242,28 +227,17 @@ main (int argc, char **argv)
         } else if (strcmp (fstype, "empty") == 0) {
                 command_line = NULL;
                 for (n = 0; options[n] != NULL; n++) {
-                        if (g_str_has_prefix (options[n], "erase=")) {
-                                erase = strdup (options[n] + sizeof ("erase=") - 1);
-                        } else {
-                                g_printerr ("option %s not supported\n", options[n]);
-                                goto out;
-                        }
+                        g_printerr ("option %s not supported\n", options[n]);
+                        goto out;
                 }
         } else {
                 g_printerr ("fstype %s not supported\n", fstype);
                 goto out;
         }
 
-        /* erase */
-        num_erase_passes = task_zero_device_parse_option (erase);
-        if (num_erase_passes == -1) {
-                g_printerr ("invalid erase=%s option\n", erase);
+        /* scrub signatures */
+        if (!scrub_signatures (device, 0, 0))
                 goto out;
-        }
-        if (!task_zero_device (device, 0, 0, num_erase_passes, 0, num_erase_passes + 2))
-                goto out;
-
-        g_print ("progress: %d %d -1 mkfs\n", num_erase_passes + 1, num_erase_passes + 2);
 
         if (command_line != NULL) {
                 error = NULL;
@@ -377,6 +351,5 @@ main (int argc, char **argv)
 out:
         g_free (standard_error);
         g_free (command_line);
-        g_free (erase);
         return ret;
 }

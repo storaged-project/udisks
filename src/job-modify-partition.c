@@ -87,8 +87,6 @@ main (int argc, char **argv)
         g_print ("label:           '%s'\n", label);
         g_print ("flags_as_string: '%s'\n", flags_as_string);
 
-        g_print ("progress: %d %d -1 partitioning\n", 0, 2);
-
         if (part_change_partition ((char *) device,
                                    offset,
                                    offset,

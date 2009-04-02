@@ -50,7 +50,6 @@ main (int argc, char *argv[])
         SkDisk *d;
         SkBool smart_is_available;
         SkSmartSelfTest test;
-        const gchar *taskname;
 
         d = NULL;
         ret = 1;
@@ -64,13 +63,10 @@ main (int argc, char *argv[])
 
         if (strcmp (argv[2], "short") == 0) {
                 test = SK_SMART_SELF_TEST_SHORT;
-                taskname = "ata_smart_selftest_short";
         } else if (strcmp (argv[2], "extended") == 0) {
                 test = SK_SMART_SELF_TEST_EXTENDED;
-                taskname = "ata_smart_selftest_extended";
         } else if (strcmp (argv[2], "conveyance") == 0) {
                 test = SK_SMART_SELF_TEST_CONVEYANCE;
-                taskname = "ata_smart_selftest_conveyance";
         } else {
                 g_printerr ("Unknown test '%s'\n", argv[2]);
                 goto out;
@@ -90,7 +86,7 @@ main (int argc, char *argv[])
         signal (SIGTERM, sigterm_handler);
 
         /* progress at 0% initially */
-        g_print ("progress: 0 1 0 %s\n", taskname);
+        g_print ("devkit-disks-helper-progress: 0\n");
 
         /* start the test */
         if (sk_disk_smart_self_test (d, test) != 0) {
@@ -117,7 +113,7 @@ main (int argc, char *argv[])
                         break;
 
                 /* update progress */
-                g_print ("progress: 0 1 %d %s\n", 100 - data->self_test_execution_percent_remaining, taskname);
+                g_print ("devkit-disks-helper-progress: %d\n", 100 - data->self_test_execution_percent_remaining);
         }
 
         /* abort test if cancelled */

@@ -90,8 +90,6 @@ main (int argc, char **argv)
         g_print ("label:           '%s'\n", label);
         g_print ("flags_as_string: '%s'\n", flags_as_string);
 
-        g_print ("progress: %d %d -1 partitioning\n", 0, 2);
-
         /* ask libparted to poke the kernel */
         if (part_add_partition ((char *) device,
                                 offset,
@@ -112,8 +110,9 @@ main (int argc, char **argv)
                 if (*endp == '\0' && (n == 0x05 || n == 0x0f || n == 0x85)) {
                         ret = 0;
                 } else {
-                        if (!zero_signatures (device, out_start, out_size, 1, 2)) {
-                                g_printerr ("Cannot wipe file system signatures @ offset=%" G_GINT64_FORMAT " and size=%" G_GINT64_FORMAT "\n",
+                        if (!scrub_signatures (device, out_start, out_size)) {
+                                g_printerr ("Cannot scrub filesystem signatures at "
+                                            "offset=%" G_GINT64_FORMAT " and size=%" G_GINT64_FORMAT "\n",
                                             out_start, out_size);
                         } else {
                                 ret = 0;
