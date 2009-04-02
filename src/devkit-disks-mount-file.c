@@ -298,11 +298,10 @@ devkit_disks_mount_file_clean_stale (GList *existing_devices)
                                 char *mount_path_escaped;
 
                                 if (!device->priv->device_is_mounted ||
-                                    device->priv->device_mount_path == NULL)
+                                    device->priv->device_mount_paths == NULL)
                                         continue;
 
-                                mount_path_escaped =
-                                        g_uri_escape_string (device->priv->device_mount_path, NULL, TRUE);
+                                mount_path_escaped = g_uri_escape_string (((gchar **) device->priv->device_mount_paths->pdata)[0], NULL, TRUE);
 
                                 if (strcmp (line_mount_path, mount_path_escaped) == 0) {
                                         entry_is_valid = TRUE;

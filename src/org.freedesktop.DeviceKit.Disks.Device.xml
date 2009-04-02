@@ -46,7 +46,7 @@
           Most methods on this interface take an array of strings
           for options that can affect what the method does. Some of
           these options are literal strings (such
-          as <doc:tt>remount</doc:tt>) while some are encoded in the
+          as <doc:tt>noatime</doc:tt>) while some are encoded in the
           form of a key/value pair (such
           as <doc:tt>label=</doc:tt>). While the documentation for
           each method will specify exactly what set of options are
@@ -561,7 +561,7 @@
         <doc:doc><doc:summary>File system type to use.</doc:summary></doc:doc>
       </arg>
       <arg name="options" direction="in" type="as">
-        <doc:doc><doc:summary>Mount Options. Valid mount options include 'remount' and other mount options accepted by the native mount program.</doc:summary></doc:doc>
+        <doc:doc><doc:summary>Mount Options. Valid mount options include mount options accepted by the native mount program.</doc:summary></doc:doc>
       </arg>
       <arg name="mount_path" direction="out" type="s">
         <doc:doc><doc:summary>Where the device was mounted.</doc:summary></doc:doc>
@@ -601,7 +601,6 @@
           <doc:error name="&ERROR_NOT_FILESYSTEM;">if the device is not a mountable file system</doc:error>
           <doc:error name="&ERROR_INVALID_OPTION;">if an invalid or malformed mount option was given</doc:error>
           <doc:error name="&ERROR_ALREADY_MOUNTED;">if the device is already mounted</doc:error>
-          <doc:error name="&ERROR_NOT_MOUNTED;">if the remount option was given and the device wasn't mounted</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -1379,9 +1378,9 @@
             TRUE if the device is mounted.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-mount-path" type="s" access="read">
+    <property name="device-mount-paths" type="as" access="read">
       <doc:doc><doc:description><doc:para>
-            Where the device is mounted.
+            A list of paths in the root namespace where the root of the device is mounted.
             This property is only valid if
             <doc:ref type="property" to="Device:device-is-mounted">device-is-mounted</doc:ref>
             is TRUE.

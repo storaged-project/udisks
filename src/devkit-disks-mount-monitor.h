@@ -38,17 +38,26 @@ typedef struct DevkitDisksMountMonitorPrivate DevkitDisksMountMonitorPrivate;
 struct DevkitDisksMountMonitor
 {
         GObject                         parent;
+
+        /*< private >*/
         DevkitDisksMountMonitorPrivate *priv;
 };
 
 struct DevkitDisksMountMonitorClass
 {
         GObjectClass   parent_class;
+
+        /*< public >*/
+        /* signals */
+        void (*mount_added)   (DevkitDisksMountMonitor *monitor,
+                               DevkitDisksMount        *mount);
+        void (*mount_removed) (DevkitDisksMountMonitor *monitor,
+                               DevkitDisksMount        *mount);
 };
 
 GType                    devkit_disks_mount_monitor_get_type                  (void) G_GNUC_CONST;
 DevkitDisksMountMonitor *devkit_disks_mount_monitor_new                       (void);
-DevkitDisksMount        *devkit_disks_mount_monitor_get_mount_for_dev         (DevkitDisksMountMonitor *monitor,
+GList                   *devkit_disks_mount_monitor_get_mounts_for_dev        (DevkitDisksMountMonitor *monitor,
                                                                                dev_t                    dev);
 void                     devkit_disks_mount_monitor_invalidate                (DevkitDisksMountMonitor *monitor);
 

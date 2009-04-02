@@ -110,7 +110,7 @@ devkit_disks_mount_compare (DevkitDisksMount *a,
 {
         gint ret;
 
-        ret = g_strcmp0 (a->priv->mount_path, b->priv->mount_path);
+        ret = g_strcmp0 (b->priv->mount_path, a->priv->mount_path);
         if (ret != 0)
                 goto out;
 

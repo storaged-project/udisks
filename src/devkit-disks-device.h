@@ -68,7 +68,6 @@ const char        *devkit_disks_device_local_get_native_path     (DevkitDisksDev
 
 dev_t              devkit_disks_device_local_get_dev             (DevkitDisksDevice *device);
 const char        *devkit_disks_device_local_get_device_file     (DevkitDisksDevice *device);
-const char        *devkit_disks_device_local_get_mount_path      (DevkitDisksDevice *device);
 
 /* exported methods */
 

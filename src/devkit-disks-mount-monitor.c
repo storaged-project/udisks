@@ -43,8 +43,8 @@
 
 enum
 {
-        MOUNTED_SIGNAL,
-        UNMOUNTED_SIGNAL,
+        MOUNT_ADDED_SIGNAL,
+        MOUNT_REMOVED_SIGNAL,
         LAST_SIGNAL,
 };
 
@@ -53,8 +53,8 @@ static guint signals[LAST_SIGNAL] = { 0 };
 struct DevkitDisksMountMonitorPrivate
 {
 	GIOChannel *mounts_channel;
-        GHashTable *mounts;
         gboolean    have_data;
+        GList      *mounts;
 };
 
 G_DEFINE_TYPE (DevkitDisksMountMonitor, devkit_disks_mount_monitor, G_TYPE_OBJECT)
@@ -69,7 +69,8 @@ devkit_disks_mount_monitor_finalize (GObject *object)
         if (monitor->priv->mounts_channel != NULL)
                 g_io_channel_unref (monitor->priv->mounts_channel);
 
-        g_hash_table_unref (monitor->priv->mounts);
+        g_list_foreach (monitor->priv->mounts, (GFunc) g_object_unref, NULL);
+        g_list_free (monitor->priv->mounts);
 
         if (G_OBJECT_CLASS (devkit_disks_mount_monitor_parent_class)->finalize != NULL)
                 (* G_OBJECT_CLASS (devkit_disks_mount_monitor_parent_class)->finalize) (object);
@@ -82,10 +83,7 @@ devkit_disks_mount_monitor_init (DevkitDisksMountMonitor *monitor)
                                                      DEVKIT_DISKS_TYPE_MOUNT_MONITOR,
                                                      DevkitDisksMountMonitorPrivate);
 
-        monitor->priv->mounts = g_hash_table_new_full (g_direct_hash,
-                                                       g_direct_equal,
-                                                       NULL,
-                                                       g_object_unref);
+        monitor->priv->mounts = NULL;
 }
 
 static void
@@ -98,17 +96,17 @@ devkit_disks_mount_monitor_class_init (DevkitDisksMountMonitorClass *klass)
         g_type_class_add_private (klass, sizeof (DevkitDisksMountMonitorPrivate));
 
         /**
-         * DevkitDisksMountMonitor::mounted
+         * DevkitDisksMountMonitor::mount-added
          * @monitor: A #DevkitDisksMountMonitor.
-         * @mount: The #DevkitDisksMount that was mounted.
+         * @mount: The #DevkitDisksMount that was added.
          *
-         * Emitted when a filesystem is mounted.
+         * Emitted when a mount is added.
          */
-        signals[MOUNTED_SIGNAL] =
-                g_signal_new ("mounted",
+        signals[MOUNT_ADDED_SIGNAL] =
+                g_signal_new ("mount-added",
                               G_OBJECT_CLASS_TYPE (klass),
                               G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
-                              0,
+                              G_STRUCT_OFFSET (DevkitDisksMountMonitorClass, mount_added),
                               NULL,
                               NULL,
                               g_cclosure_marshal_VOID__OBJECT,
@@ -117,17 +115,17 @@ devkit_disks_mount_monitor_class_init (DevkitDisksMountMonitorClass *klass)
                               DEVKIT_DISKS_TYPE_MOUNT);
 
         /**
-         * DevkitDisksMountMonitor::unmounted
+         * DevkitDisksMountMonitor::mount-removed
          * @monitor: A #DevkitDisksMountMonitor.
-         * @mount: The #DevkitDisksMount that was unmounted.
+         * @mount: The #DevkitDisksMount that was removed.
          *
-         * Emitted when a filesystem is unmounted.
+         * Emitted when a mount is removed.
          */
-        signals[UNMOUNTED_SIGNAL] =
-                g_signal_new ("unmounted",
+        signals[MOUNT_REMOVED_SIGNAL] =
+                g_signal_new ("mount-removed",
                               G_OBJECT_CLASS_TYPE (klass),
                               G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
-                              0,
+                              G_STRUCT_OFFSET (DevkitDisksMountMonitorClass, mount_removed),
                               NULL,
                               NULL,
                               g_cclosure_marshal_VOID__OBJECT,
@@ -193,14 +191,17 @@ mounts_changed_event (GIOChannel *channel, GIOCondition cond, gpointer user_data
 	if (cond & ~G_IO_ERR)
                 goto out;
 
+        g_debug ("/proc/self/mountinfo changed");
+
         devkit_disks_mount_monitor_ensure (monitor);
-        old_mounts = g_hash_table_get_values (monitor->priv->mounts);
+
+        old_mounts = g_list_copy (monitor->priv->mounts);
         g_list_foreach (old_mounts, (GFunc) g_object_ref, NULL);
 
         devkit_disks_mount_monitor_invalidate (monitor);
         devkit_disks_mount_monitor_ensure (monitor);
 
-        cur_mounts = g_hash_table_get_values (monitor->priv->mounts);
+        cur_mounts = g_list_copy (monitor->priv->mounts);
 
         old_mounts = g_list_sort (old_mounts, (GCompareFunc) devkit_disks_mount_compare);
         cur_mounts = g_list_sort (cur_mounts, (GCompareFunc) devkit_disks_mount_compare);
@@ -214,7 +215,7 @@ mounts_changed_event (GIOChannel *channel, GIOCondition cond, gpointer user_data
         for (l = removed; l != NULL; l = l->next) {
                 DevkitDisksMount *mount = DEVKIT_DISKS_MOUNT (l->data);
                 g_signal_emit (monitor,
-                               signals[UNMOUNTED_SIGNAL],
+                               signals[MOUNT_REMOVED_SIGNAL],
                                0,
                                mount);
         }
@@ -222,7 +223,7 @@ mounts_changed_event (GIOChannel *channel, GIOCondition cond, gpointer user_data
         for (l = added; l != NULL; l = l->next) {
                 DevkitDisksMount *mount = DEVKIT_DISKS_MOUNT (l->data);
                 g_signal_emit (monitor,
-                               signals[MOUNTED_SIGNAL],
+                               signals[MOUNT_ADDED_SIGNAL],
                                0,
                                mount);
         }
@@ -247,11 +248,11 @@ devkit_disks_mount_monitor_new (void)
         mount_monitor = DEVKIT_DISKS_MOUNT_MONITOR (g_object_new (DEVKIT_DISKS_TYPE_MOUNT_MONITOR, NULL));
 
         error = NULL;
-	mount_monitor->priv->mounts_channel = g_io_channel_new_file ("/proc/mounts", "r", &error);
+	mount_monitor->priv->mounts_channel = g_io_channel_new_file ("/proc/self/mountinfo", "r", &error);
 	if (mount_monitor->priv->mounts_channel != NULL) {
 		g_io_add_watch (mount_monitor->priv->mounts_channel, G_IO_ERR, mounts_changed_event, mount_monitor);
 	} else {
-                g_warning ("No /proc/mounts file: %s", error->message);
+                g_warning ("No /proc/self/mountinfo file: %s", error->message);
                 g_error_free (error);
                 g_object_unref (mount_monitor);
                 mount_monitor = NULL;
@@ -266,59 +267,131 @@ void
 devkit_disks_mount_monitor_invalidate (DevkitDisksMountMonitor *monitor)
 {
         monitor->priv->have_data = FALSE;
-        g_hash_table_remove_all (monitor->priv->mounts);
+
+        g_list_foreach (monitor->priv->mounts, (GFunc) g_object_unref, NULL);
+        g_list_free (monitor->priv->mounts);
+        monitor->priv->mounts = NULL;
+}
+
+static gboolean
+have_mount (DevkitDisksMountMonitor *monitor,
+            dev_t                    dev,
+            const gchar             *mount_point)
+{
+        GList *l;
+        gboolean ret;
+
+        ret = FALSE;
+
+        for (l = monitor->priv->mounts; l != NULL; l = l->next) {
+                DevkitDisksMount *mount = DEVKIT_DISKS_MOUNT (l->data);
+                if (devkit_disks_mount_get_dev (mount) == dev &&
+                    g_strcmp0 (devkit_disks_mount_get_mount_path (mount), mount_point) == 0) {
+                        ret = TRUE;
+                        break;
+                }
+        }
+
+        return ret;
 }
 
 static void
 devkit_disks_mount_monitor_ensure (DevkitDisksMountMonitor *monitor)
 {
-        struct mntent *m;
-        FILE *f;
+        gchar *contents;
+        gchar **lines;
+        GError *error;
+        guint n;
+
+        contents = NULL;
+        lines = NULL;
 
         if (monitor->priv->have_data)
                 goto out;
 
-        f = fopen ("/proc/mounts", "r");
-        if (f == NULL) {
-                g_warning ("error opening /proc/mounts: %m");
+        error = NULL;
+        if (!g_file_get_contents ("/proc/self/mountinfo", &contents, NULL, &error)) {
+                g_warning ("Error reading /proc/self/mountinfo: %s", error->message);
+                g_error_free (error);
                 goto out;
         }
-        while ((m = getmntent (f)) != NULL) {
-                DevkitDisksMount *mount;
-                struct stat statbuf;
 
-                /* ignore if not an absolute patch */
-                if (m->mnt_fsname[0] != '/')
+        /* See Documentation/filesystems/proc.txt for the format of /proc/self/mountinfo
+         *
+         * Note that things like space are encoded as \020.
+         */
+
+        lines = g_strsplit (contents, "\n", 0);
+        for (n = 0; lines[n] != NULL; n++) {
+                guint mount_id;
+                guint parent_id;
+                guint major, minor;
+                gchar encoded_root[PATH_MAX];
+                gchar encoded_mount_point[PATH_MAX];
+                gchar *mount_point;
+                dev_t dev;
+
+                if (strlen (lines[n]) == 0)
                         continue;
 
-                if (stat (m->mnt_fsname, &statbuf) != 0) {
-                        g_warning ("Cannot stat %s: %m", m->mnt_fsname);
-                } else if (statbuf.st_rdev != 0) {
-
-                        mount = _devkit_disks_mount_new (statbuf.st_rdev, m->mnt_dir);
-
-                        g_hash_table_insert (monitor->priv->mounts,
-                                             GINT_TO_POINTER (statbuf.st_rdev),
-                                             mount);
+                if (sscanf (lines[n], "%d %d %d:%d %s %s",
+                            &mount_id,
+                            &parent_id,
+                            &major,
+                            &minor,
+                            encoded_root,
+                            encoded_mount_point) != 6) {
+                        g_warning ("Error parsing line '%s'", lines[n]);
+                        continue;
                 }
+
+                /* ignore mounts where only a subtree of a filesystem is mounted */
+                if (g_strcmp0 (encoded_root, "/") != 0)
+                        continue;
+
+                mount_point = g_strcompress (encoded_mount_point);
+
+                dev = makedev (major, minor);
+
+                /* TODO: we can probably use a hash table or something if this turns out to be slow */
+                if (!have_mount (monitor, dev, mount_point)) {
+                        DevkitDisksMount *mount;
+                        mount = _devkit_disks_mount_new (dev, mount_point);
+                        monitor->priv->mounts = g_list_prepend (monitor->priv->mounts, mount);
+                        g_debug ("SUP ADDING %d:%d on %s", major, minor, mount_point);
+                }
+
+                g_free (mount_point);
         }
-        fclose (f);
 
         monitor->priv->have_data = TRUE;
 
 out:
-        ;
+        g_free (contents);
+        g_strfreev (lines);
 }
 
-DevkitDisksMount *
-devkit_disks_mount_monitor_get_mount_for_dev (DevkitDisksMountMonitor *monitor,
-                                              dev_t                    dev)
+GList *
+devkit_disks_mount_monitor_get_mounts_for_dev (DevkitDisksMountMonitor *monitor,
+                                               dev_t                    dev)
 {
-        DevkitDisksMount *ret;
+        GList *ret;
+        GList *l;
+
+        ret = NULL;
 
         devkit_disks_mount_monitor_ensure (monitor);
 
-        ret = g_hash_table_lookup (monitor->priv->mounts, GINT_TO_POINTER (dev));
+        for (l = monitor->priv->mounts; l != NULL; l = l->next) {
+                DevkitDisksMount *mount = DEVKIT_DISKS_MOUNT (l->data);
+
+                if (devkit_disks_mount_get_dev (mount) == dev) {
+                        ret = g_list_prepend (ret, g_object_ref (mount));
+                }
+        }
+
+        /* Sort the list to ensure that shortest mount paths appear first */
+        ret = g_list_sort (ret, (GCompareFunc) devkit_disks_mount_compare);
 
         return ret;
 }

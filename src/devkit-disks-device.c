@@ -154,7 +154,7 @@ enum
         PROP_DEVICE_BLOCK_SIZE,
         PROP_DEVICE_IS_MOUNTED,
         PROP_DEVICE_IS_BUSY,
-        PROP_DEVICE_MOUNT_PATH,
+        PROP_DEVICE_MOUNT_PATHS,
         PROP_DEVICE_MOUNTED_BY_UID,
         PROP_DEVICE_PRESENTATION_NAME,
         PROP_DEVICE_PRESENTATION_ICON_NAME,
@@ -367,8 +367,8 @@ get_property (GObject         *object,
                 /* this property is special; it's value is computed on demand */
 		g_value_set_boolean (value, devkit_disks_device_local_is_busy (device));
 		break;
-	case PROP_DEVICE_MOUNT_PATH:
-		g_value_set_string (value, device->priv->device_mount_path);
+	case PROP_DEVICE_MOUNT_PATHS:
+		g_value_set_boxed (value, device->priv->device_mount_paths);
 		break;
 	case PROP_DEVICE_MOUNTED_BY_UID:
 		g_value_set_uint (value, device->priv->device_mounted_by_uid);
@@ -800,8 +800,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 g_param_spec_boolean ("device-is-busy", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
-                PROP_DEVICE_MOUNT_PATH,
-                g_param_spec_string ("device-mount-path", NULL, NULL, NULL, G_PARAM_READABLE));
+                PROP_DEVICE_MOUNT_PATHS,
+                g_param_spec_boxed ("device-mount-paths", NULL, NULL,
+                                    dbus_g_type_get_collection ("GPtrArray", G_TYPE_STRING),
+                                    G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_DEVICE_MOUNTED_BY_UID,
@@ -1177,6 +1179,7 @@ devkit_disks_device_init (DevkitDisksDevice *device)
 
         device->priv->device_file_by_id = g_ptr_array_new ();
         device->priv->device_file_by_path = g_ptr_array_new ();
+        device->priv->device_mount_paths = g_ptr_array_new ();
         device->priv->partition_flags = g_ptr_array_new ();
         device->priv->drive_media_compatibility = g_ptr_array_new ();
         device->priv->linux_md_component_state = g_ptr_array_new ();
@@ -1227,7 +1230,7 @@ devkit_disks_device_finalize (GObject *object)
         g_ptr_array_foreach (device->priv->device_file_by_path, (GFunc) g_free, NULL);
         g_ptr_array_free (device->priv->device_file_by_id, TRUE);
         g_ptr_array_free (device->priv->device_file_by_path, TRUE);
-        g_free (device->priv->device_mount_path);
+        g_ptr_array_free (device->priv->device_mount_paths, TRUE);
         g_free (device->priv->device_presentation_name);
         g_free (device->priv->device_presentation_icon_name);
 
@@ -2659,10 +2662,10 @@ update_info_mount_state (DevkitDisksDevice *device)
 {
         DevkitDisksMountMonitor *monitor;
         DevkitDisksMount *mount;
+        GList *mounts;
         gboolean was_mounted;
-        gchar *old_mount_path;
 
-        old_mount_path = NULL;
+        mounts = NULL;
 
         /* defer setting the mount point until FilesystemMount returns and
          * the mounts file is written
@@ -2671,14 +2674,24 @@ update_info_mount_state (DevkitDisksDevice *device)
                 goto out;
 
         monitor = devkit_disks_daemon_local_get_mount_monitor (device->priv->daemon);
-        mount = devkit_disks_mount_monitor_get_mount_for_dev (monitor, device->priv->dev);
+
+        mounts = devkit_disks_mount_monitor_get_mounts_for_dev (monitor, device->priv->dev);
 
         was_mounted = device->priv->device_is_mounted;
-        old_mount_path = g_strdup (device->priv->device_mount_path);
 
-        if (mount != NULL) {
+        if (mounts != NULL) {
+                GList *l;
+                guint n;
+                gchar **mount_paths;
+
+                mount = g_object_ref (mounts->data);
+                mount_paths = g_new0 (gchar *, g_list_length (mounts) + 1);
+                for (l = mounts, n = 0; l != NULL; l = l->next, n++) {
+                        mount_paths[n] = g_strdup (devkit_disks_mount_get_mount_path (DEVKIT_DISKS_MOUNT (l->data)));
+                }
+
                 devkit_disks_device_set_device_is_mounted (device, TRUE);
-                devkit_disks_device_set_device_mount_path (device, devkit_disks_mount_get_mount_path (mount));
+                devkit_disks_device_set_device_mount_paths (device, mount_paths);
                 if (!was_mounted) {
                         uid_t mounted_by_uid;
 
@@ -2686,16 +2699,26 @@ update_info_mount_state (DevkitDisksDevice *device)
                                 mounted_by_uid = 0;
                         devkit_disks_device_set_device_mounted_by_uid (device, mounted_by_uid);
                 }
+
+                g_strfreev (mount_paths);
+
         } else {
                 gboolean remove_dir_on_unmount;
+                gchar *old_mount_path;
+
+                old_mount_path = NULL;
+                if (device->priv->device_mount_paths->len > 0)
+                        old_mount_path = g_strdup (((gchar **) device->priv->device_mount_paths->pdata)[0]);
 
                 devkit_disks_device_set_device_is_mounted (device, FALSE);
-                devkit_disks_device_set_device_mount_path (device, NULL);
+                devkit_disks_device_set_device_mount_paths (device, NULL);
                 devkit_disks_device_set_device_mounted_by_uid (device, 0);
 
                 /* clean up stale mount directory */
                 remove_dir_on_unmount = FALSE;
-                if (was_mounted && devkit_disks_mount_file_has_device (device->priv->device_file, NULL, &remove_dir_on_unmount)) {
+                if (was_mounted && devkit_disks_mount_file_has_device (device->priv->device_file,
+                                                                       NULL,
+                                                                       &remove_dir_on_unmount)) {
                         devkit_disks_mount_file_remove (device->priv->device_file, old_mount_path);
                         if (remove_dir_on_unmount) {
                                 if (g_rmdir (old_mount_path) != 0) {
@@ -2704,10 +2727,13 @@ update_info_mount_state (DevkitDisksDevice *device)
                         }
                 }
 
+                g_free (old_mount_path);
+
         }
 
  out:
-        g_free (old_mount_path);
+        g_list_foreach (mounts, (GFunc) g_object_unref, NULL);
+        g_list_free (mounts);
 
         return TRUE;
 }
@@ -3501,12 +3527,6 @@ devkit_disks_device_local_get_device_file (DevkitDisksDevice *device)
         return device->priv->device_file;
 }
 
-const char *
-devkit_disks_device_local_get_mount_path (DevkitDisksDevice *device)
-{
-        return device->priv->device_mount_path;
-}
-
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static gboolean
@@ -3933,17 +3953,15 @@ out:
 typedef struct {
         char *mount_point;
         gboolean remove_dir_on_unmount;
-        gboolean is_remount;
 } MountData;
 
 static MountData *
-filesystem_mount_data_new (const char *mount_point, gboolean remove_dir_on_unmount, gboolean is_remount)
+filesystem_mount_data_new (const char *mount_point, gboolean remove_dir_on_unmount)
 {
         MountData *data;
         data = g_new0 (MountData, 1);
         data->mount_point = g_strdup (mount_point);
         data->remove_dir_on_unmount = remove_dir_on_unmount;
-        data->is_remount = is_remount;
         return data;
 }
 
@@ -4091,7 +4109,6 @@ static const char *any_allow[] = {"exec",
                                   "atime",
                                   "noatime",
                                   "nodiratime",
-                                  "remount",
                                   "ro",
                                   "rw",
                                   "sync",
@@ -4332,13 +4349,11 @@ filesystem_mount_completed_cb (DBusGMethodInvocation *context,
 
                 dbus_g_method_return (context, data->mount_point);
         } else {
-                if (!data->is_remount) {
-                        devkit_disks_mount_file_remove (device->priv->device_file, data->mount_point);
+                devkit_disks_mount_file_remove (device->priv->device_file, data->mount_point);
 
-                        if (data->remove_dir_on_unmount) {
-                                if (g_rmdir (data->mount_point) != 0) {
-                                        g_warning ("Error removing dir in late mount error path: %m");
-                                }
+                if (data->remove_dir_on_unmount) {
+                        if (g_rmdir (data->mount_point) != 0) {
+                                g_warning ("Error removing dir in late mount error path: %m");
                         }
                 }
 
@@ -4374,14 +4389,12 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
         gboolean remove_dir_on_unmount;
         const FSMountOptions *fsmo;
         char **options;
-        gboolean is_remount;
         char uid_buf[32];
 
         fstype = NULL;
         options = NULL;
         mount_options = NULL;
         mount_point = NULL;
-        is_remount = FALSE;
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
@@ -4467,9 +4480,6 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
                         goto out;
                 }
 
-                if (strcmp (option, "remount") == 0)
-                        is_remount = TRUE;
-
                 g_string_append_c (s, ',');
                 g_string_append (s, option);
         }
@@ -4478,94 +4488,59 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
         g_print ("**** USING MOUNT OPTIONS '%s' FOR DEVICE %s\n", mount_options, device->priv->device_file);
 
         if (device->priv->device_is_mounted) {
-                if (!is_remount) {
-                        throw_error (context, DEVKIT_DISKS_ERROR_ALREADY_MOUNTED,
-                                     "Device is already mounted");
-                        goto out;
-                }
+                throw_error (context, DEVKIT_DISKS_ERROR_ALREADY_MOUNTED,
+                             "Device is already mounted");
+                goto out;
         }
 
-        /* TODO: check for auth if user tries to remount something mounted by another user */
-
-        /* handle some constraints required by remount */
-        if (is_remount) {
-                if (!device->priv->device_is_mounted ||
-                    device->priv->device_mount_path == NULL) {
-                        throw_error (context,
-                                     DEVKIT_DISKS_ERROR_NOT_MOUNTED,
-                                     "Can't remount a device that is not mounted");
-                        goto out;
-                }
-
-                if (strlen (filesystem_type) > 0) {
-                        throw_error (context,
-                                     DEVKIT_DISKS_ERROR_FAILED,
-                                     "Can't remount a device with a different file system type");
-                        goto out;
-                }
+        /* Determine the mount point to use.
+         *
+         * TODO: use characteristics of the drive such as the name, connection etc.
+         *       to get better names (/media/disk is kinda lame).
+         */
+        if (device->priv->id_label != NULL && strlen (device->priv->id_label) > 0 ) {
+                mount_point = g_build_filename ("/media", device->priv->id_label, NULL);
+        } else if (device->priv->id_uuid != NULL && strlen (device->priv->id_uuid) > 0) {
+                mount_point = g_build_filename ("/media", device->priv->id_uuid, NULL);
+        } else {
+                mount_point = g_strdup ("/media/disk");
         }
-
-        if (!is_remount) {
-                /* Determine the mount point to use.
-                 *
-                 * TODO: use characteristics of the drive such as the name, connection etc.
-                 *       to get better names (/media/disk is kinda lame).
-                 */
-                if (device->priv->id_label != NULL && strlen (device->priv->id_label) > 0 ) {
-                        mount_point = g_build_filename ("/media", device->priv->id_label, NULL);
-                } else if (device->priv->id_uuid != NULL && strlen (device->priv->id_uuid) > 0) {
-                        mount_point = g_build_filename ("/media", device->priv->id_uuid, NULL);
-                } else {
-                        mount_point = g_strdup ("/media/disk");
-                }
 
 try_another_mount_point:
-                /* ... then uniqify the mount point and mkdir it */
-                if (g_file_test (mount_point, G_FILE_TEST_EXISTS)) {
-                        char *s = mount_point;
-                        /* TODO: append numbers instead of _, __ and so on */
-                        mount_point = g_strdup_printf ("%s_", mount_point);
-                        g_free (s);
-                        goto try_another_mount_point;
-                }
-
-                remove_dir_on_unmount = TRUE;
-
-                if (g_mkdir (mount_point, 0700) != 0) {
-                        throw_error (context, DEVKIT_DISKS_ERROR_FAILED, "Error creating moint point: %m");
-                        goto out;
-                }
-
-                n = 0;
-                argv[n++] = "mount";
-                argv[n++] = "-t";
-                argv[n++] = fstype;
-                argv[n++] = "-o";
-                argv[n++] = mount_options;
-                argv[n++] = device->priv->device_file;
-                argv[n++] = mount_point;
-                argv[n++] = NULL;
-        } else {
-                /* we recycle the mount point on remount */
-                mount_point = g_strdup (device->priv->device_mount_path);
-                n = 0;
-                argv[n++] = "mount";
-                argv[n++] = "-o";
-                argv[n++] = mount_options;
-                argv[n++] = mount_point;
-                argv[n++] = NULL;
+        /* ... then uniqify the mount point and mkdir it */
+        if (g_file_test (mount_point, G_FILE_TEST_EXISTS)) {
+                char *s = mount_point;
+                /* TODO: append numbers instead of _, __ and so on */
+                mount_point = g_strdup_printf ("%s_", mount_point);
+                g_free (s);
+                goto try_another_mount_point;
         }
+
+        remove_dir_on_unmount = TRUE;
+
+        if (g_mkdir (mount_point, 0700) != 0) {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED, "Error creating moint point: %m");
+                goto out;
+        }
+
+        n = 0;
+        argv[n++] = "mount";
+        argv[n++] = "-t";
+        argv[n++] = fstype;
+        argv[n++] = "-o";
+        argv[n++] = mount_options;
+        argv[n++] = device->priv->device_file;
+        argv[n++] = mount_point;
+        argv[n++] = NULL;
 
 run_job:
-        if (!is_remount) {
-                /* now that we have a mount point, immediately add it to the
-                 * /var/lib/DeviceKit-disks/mtab file
-                 */
-                devkit_disks_mount_file_add (device->priv->device_file,
-                                             mount_point,
-                                             caller_uid,
-                                             remove_dir_on_unmount);
-        }
+        /* now that we have a mount point, immediately add it to the
+         * /var/lib/DeviceKit-disks/mtab file
+         */
+        devkit_disks_mount_file_add (device->priv->device_file,
+                                     mount_point,
+                                     caller_uid,
+                                     remove_dir_on_unmount);
 
         error = NULL;
         if (!job_new (context,
@@ -4576,14 +4551,12 @@ run_job:
                       argv,
                       NULL,
                       filesystem_mount_completed_cb,
-                      filesystem_mount_data_new (mount_point, remove_dir_on_unmount, is_remount),
+                      filesystem_mount_data_new (mount_point, remove_dir_on_unmount),
                       (GDestroyNotify) filesystem_mount_data_free)) {
-                if (!is_remount) {
-                        devkit_disks_mount_file_remove (device->priv->device_file, mount_point);
-                        if (remove_dir_on_unmount) {
-                                if (g_rmdir (mount_point) != 0) {
-                                        g_warning ("Error removing dir in early mount error path: %m");
-                                }
+                devkit_disks_mount_file_remove (device->priv->device_file, mount_point);
+                if (remove_dir_on_unmount) {
+                        if (g_rmdir (mount_point) != 0) {
+                                g_warning ("Error removing dir in early mount error path: %m");
                         }
                 }
                 goto out;
@@ -4661,7 +4634,7 @@ devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
                 polkit_caller_get_uid (pk_caller, &uid);
 
         if (!device->priv->device_is_mounted ||
-            device->priv->device_mount_path == NULL) {
+            device->priv->device_mount_paths->len == 0) {
                 throw_error (context,
                              DEVKIT_DISKS_ERROR_NOT_MOUNTED,
                              "Device is not mounted");
@@ -4727,16 +4700,16 @@ devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
                         goto out;
         }
 
+        mount_path = g_strdup (((gchar **) device->priv->device_mount_paths->pdata)[0]);
+
         n = 0;
         argv[n++] = "umount";
         if (force_unmount) {
                 /* on Linux we currently only have lazy unmount to emulate this */
                 argv[n++] = "-l";
         }
-        argv[n++] = device->priv->device_mount_path;
+        argv[n++] = mount_path;
         argv[n++] = NULL;
-
-        mount_path = g_strdup (device->priv->device_mount_path);
 
 run_job:
         error = NULL;
@@ -4877,7 +4850,7 @@ devkit_disks_device_filesystem_list_open_files (DevkitDisksDevice     *device,
                 goto out;
 
         if (!device->priv->device_is_mounted ||
-            device->priv->device_mount_path == NULL) {
+            device->priv->device_mount_paths->len == 0) {
                 throw_error (context,
                              DEVKIT_DISKS_ERROR_NOT_MOUNTED,
                              "Device is not mounted");
@@ -4895,7 +4868,7 @@ devkit_disks_device_filesystem_list_open_files (DevkitDisksDevice     *device,
         n = 0;
         argv[n++] = "lsof";
         argv[n++] = "-t";
-        argv[n++] = device->priv->device_mount_path;
+        argv[n++] = ((gchar **) device->priv->device_mount_paths->pdata)[0];
         argv[n++] = NULL;
 
         error = NULL;
@@ -8688,7 +8661,7 @@ typedef struct {
 } ForceUnmountData;
 
 static ForceUnmountData *
-force_unmount_data_new (char                     *mount_path,
+force_unmount_data_new (const gchar              *mount_path,
                         ForceRemovalCompleteFunc  fr_callback,
                         gpointer                  fr_user_data)
 {
@@ -8752,12 +8725,15 @@ force_unmount (DevkitDisksDevice        *device,
         int n;
         char *argv[16];
         GError *error;
+        const gchar *mount_path;
+
+        mount_path = ((gchar **) device->priv->device_mount_paths->pdata)[0];
 
         n = 0;
         argv[n++] = "umount";
         /* on Linux, we only have lazy unmount for now */
         argv[n++] = "-l";
-        argv[n++] = device->priv->device_mount_path;
+        argv[n++] = (gchar *) mount_path;
         argv[n++] = NULL;
 
         error = NULL;
@@ -8769,7 +8745,7 @@ force_unmount (DevkitDisksDevice        *device,
                       argv,
                       NULL,
                       force_unmount_completed_cb,
-                      force_unmount_data_new (device->priv->device_mount_path, callback, user_data),
+                      force_unmount_data_new (mount_path, callback, user_data),
                       (GDestroyNotify) force_unmount_data_unref)) {
                 g_warning ("Couldn't spawn unmount for force unmounting: %s", error->message);
                 g_error_free (error);
@@ -8928,7 +8904,7 @@ force_removal (DevkitDisksDevice        *device,
          *    companion. If so, tear it down if it was setup by us.
          *
          */
-        if (device->priv->device_is_mounted && device->priv->device_mount_path != NULL) {
+        if (device->priv->device_is_mounted && device->priv->device_mount_paths->len > 0) {
                 gboolean remove_dir_on_unmount;
 
                 if (devkit_disks_mount_file_has_device (device->priv->device_file, NULL, &remove_dir_on_unmount)) {

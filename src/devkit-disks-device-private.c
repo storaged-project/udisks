@@ -69,7 +69,7 @@ ptr_str_array_equals_strv (GPtrArray *a, GStrv b)
   if (a->len == 0 && b == NULL)
     return TRUE;
 
-  b_len = g_strv_length (b);
+  b_len = (b != NULL ? g_strv_length (b) : 0);
 
   if (a->len != b_len)
     return FALSE;
@@ -409,13 +409,13 @@ devkit_disks_device_set_device_is_mounted (DevkitDisksDevice *device, gboolean v
 }
 
 void
-devkit_disks_device_set_device_mount_path (DevkitDisksDevice *device, const gchar *value)
+devkit_disks_device_set_device_mount_paths (DevkitDisksDevice *device, GStrv value)
 {
-  if (G_UNLIKELY (g_strcmp0 (device->priv->device_mount_path, value) != 0))
+  if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->device_mount_paths, value)))
     {
-      g_free (device->priv->device_mount_path);
-      device->priv->device_mount_path = g_strdup (value);
-      emit_changed (device, "device_mount_path");
+      ptr_str_array_free (device->priv->device_mount_paths);
+      device->priv->device_mount_paths = ptr_str_array_from_strv (value);
+      emit_changed (device, "device_mount_paths");
     }
 }
 

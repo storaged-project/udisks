@@ -225,8 +225,8 @@ task_zero_device (const char *device, guint64 offset, guint64 size, int num_pass
                                 goto out;
 
                         cursor += num;
-
                         percent = 100 * cursor / size;
+
                         if (percent > old_percent) {
                                 g_print ("progress: %d %d %d zeroing\n", cur_task, num_tasks, percent);
                                 old_percent = percent;

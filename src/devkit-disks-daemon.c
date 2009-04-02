@@ -1067,8 +1067,8 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
                           G_CALLBACK (device_event_signal_handler), daemon);
 
         daemon->priv->mount_monitor = devkit_disks_mount_monitor_new ();
-        g_signal_connect (daemon->priv->mount_monitor, "mounted", (GCallback) mount_added, daemon);
-        g_signal_connect (daemon->priv->mount_monitor, "unmounted", (GCallback) mount_removed, daemon);
+        g_signal_connect (daemon->priv->mount_monitor, "mount-added", (GCallback) mount_added, daemon);
+        g_signal_connect (daemon->priv->mount_monitor, "mount-removed", (GCallback) mount_removed, daemon);
 
         return TRUE;
 error:

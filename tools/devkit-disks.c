@@ -366,7 +366,7 @@ typedef struct
         gboolean device_is_busy;
         gboolean device_is_linux_md_component;
         gboolean device_is_linux_md;
-        char    *device_mount_path;
+        char   **device_mount_paths;
         uid_t    device_mounted_by_uid;
         char    *device_presentation_name;
         char    *device_presentation_icon_name;
@@ -518,8 +518,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->device_is_mounted = g_value_get_boolean (value);
         else if (strcmp (key, "device-is-busy") == 0)
                 props->device_is_busy = g_value_get_boolean (value);
-        else if (strcmp (key, "device-mount-path") == 0)
-                props->device_mount_path = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "device-mount-paths") == 0)
+                props->device_mount_paths = g_strdupv (g_value_get_boxed (value));
         else if (strcmp (key, "device-mounted-by-uid") == 0)
                 props->device_mounted_by_uid = g_value_get_uint (value);
         else if (strcmp (key, "device-presentation-name") == 0)
@@ -732,7 +732,7 @@ device_properties_free (DeviceProperties *props)
         g_free (props->device_file);
         g_strfreev (props->device_file_by_id);
         g_strfreev (props->device_file_by_path);
-        g_free (props->device_mount_path);
+        g_strfreev (props->device_mount_paths);
         g_free (props->device_presentation_name);
         g_free (props->device_presentation_icon_name);
         g_free (props->job_id);
@@ -997,7 +997,13 @@ do_show_info (const char *object_path)
         g_print ("  is read only:            %d\n", props->device_is_read_only);
         g_print ("  is mounted:              %d\n", props->device_is_mounted);
         g_print ("  is busy:                 %d\n", props->device_is_busy);
-        g_print ("  mount path:              %s\n", props->device_mount_path);
+        g_print ("  mount paths:             ");
+        for (n = 0; props->device_mount_paths != NULL && props->device_mount_paths[n] != NULL; n++) {
+                if (n != 0)
+                        g_print (", ");
+                g_print ("%s", props->device_mount_paths[n]);
+        }
+        g_print ("\n");
         g_print ("  mounted by uid:          %d\n", props->device_mounted_by_uid);
         g_print ("  presentation name:       %s\n", props->device_presentation_name);
         g_print ("  presentation icon:       %s\n", props->device_presentation_icon_name);
@@ -1185,9 +1191,9 @@ do_show_info (const char *object_path)
                                 val = props->drive_ata_smart_power_on_seconds;
 
                                 if (val > 60 * 60 * 24) {
-                                        power_on_text = g_strdup_printf (_("%.3g days"), val / 60.0 / 60.0 / 24.0);
+                                        power_on_text = g_strdup_printf ("%.3g days", val / 60.0 / 60.0 / 24.0);
                                 } else {
-                                        power_on_text = g_strdup_printf (_("%.3g hours"), val / 60.0 / 60.0);
+                                        power_on_text = g_strdup_printf ("%.3g hours", val / 60.0 / 60.0);
                                 }
 
                                 g_print ("      powered on:          %s\n", power_on_text);
