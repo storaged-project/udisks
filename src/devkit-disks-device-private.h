@@ -93,13 +93,12 @@ struct DevkitDisksDevicePrivate
         /* if non-zero, the id of the idle for emitting a 'change' signal */
         guint emit_changed_idle_id;
 
-        dev_t dev; /* not exported */
-
         /**************/
         /* properties */
         /*************/
 
         char *device_file;
+        dev_t dev;
         GPtrArray *device_file_by_id;
         GPtrArray *device_file_by_path;
         gboolean device_is_system_internal;

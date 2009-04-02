@@ -131,6 +131,8 @@ enum
         PROP_0,
         PROP_NATIVE_PATH,
 
+        PROP_DEVICE_MAJOR,
+        PROP_DEVICE_MINOR,
         PROP_DEVICE_FILE,
         PROP_DEVICE_FILE_BY_ID,
         PROP_DEVICE_FILE_BY_PATH,
@@ -297,6 +299,12 @@ get_property (GObject         *object,
                 g_value_set_string (value, device->priv->native_path);
                 break;
 
+        case PROP_DEVICE_MAJOR:
+                g_value_set_int64 (value, major (device->priv->dev));
+                break;
+        case PROP_DEVICE_MINOR:
+                g_value_set_int64 (value, minor (device->priv->dev));
+                break;
         case PROP_DEVICE_FILE:
                 g_value_set_string (value, device->priv->device_file);
                 break;
@@ -702,6 +710,14 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_NATIVE_PATH,
                 g_param_spec_string ("native-path", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_MAJOR,
+                g_param_spec_int64 ("device-major", NULL, NULL, -G_MAXINT64, G_MAXINT64, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_MINOR,
+                g_param_spec_int64 ("device-minor", NULL, NULL, -G_MAXINT64, G_MAXINT64, 0, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_DEVICE_FILE,
