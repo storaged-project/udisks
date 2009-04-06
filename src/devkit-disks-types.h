@@ -30,6 +30,7 @@ typedef struct DevkitDisksDevice       DevkitDisksDevice;
 typedef struct DevkitDisksMount        DevkitDisksMount;
 typedef struct DevkitDisksMountMonitor DevkitDisksMountMonitor;
 typedef struct DevkitDisksInhibitor    DevkitDisksInhibitor;
+typedef struct DevkitDisksAtaSmartDb   DevkitDisksAtaSmartDb;
 
 G_END_DECLS
 

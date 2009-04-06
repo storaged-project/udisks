@@ -107,6 +107,20 @@ if test "x$GCC" = "xyes"; then
   changequote([,])dnl
 fi
 
+have_zlib="false"
+AC_CHECK_LIB([z], [compress2], [have_zlib="true"])
+if test x$have_zlib != "xtrue"; then
+  AC_MSG_ERROR([zlib is needed])
+fi
+ZLIB_CFLAGS=
+ZLIB_LIBS="-lz"
+AC_SUBST(ZLIB_CFLAGS)
+AC_SUBST(ZLIB_LIBS)
+
+PKG_CHECK_MODULES(SQLITE3, [sqlite3])
+AC_SUBST(SQLITE3_CFLAGS)
+AC_SUBST(SQLITE3_LIBS)
+
 PKG_CHECK_MODULES(DEVKIT, [devkit-gobject >= 002])
 AC_SUBST(DEVKIT_GOBJECT_CFLAGS)
 AC_SUBST(DEVKIT_GOBJECT_LIBS)
@@ -139,7 +153,7 @@ PKG_CHECK_MODULES(DEVMAPPER, [devmapper >= 1.02])
 AC_SUBST(DEVMAPPER_CFLAGS)
 AC_SUBST(DEVMAPPER_LIBS)
 
-PKG_CHECK_MODULES(LIBATASMART, [libatasmart >= 0.2])
+PKG_CHECK_MODULES(LIBATASMART, [libatasmart >= 0.5])
 AC_SUBST(LIBATASMART_CFLAGS)
 AC_SUBST(LIBATASMART_LIBS)
 

@@ -24,6 +24,20 @@
 
 #define _GNU_SOURCE 1
 
+/* ---------------------------------------------------------------------------------------------------- */
+/* We might want these things to be configurable; for now they are hardcoded */
+
+/* update ATA SMART every 30 minutes */
+#define ATA_SMART_REFRESH_INTERVAL_SECONDS (30*60)
+
+/* clean up old ATA SMART entries every 24 hours (and on startup) */
+#define ATA_SMART_CLEANUP_INTERVAL_SECONDS (24*60*60)
+
+/* delete entries older than five days */
+#define ATA_SMART_KEEP_ENTRIES_SECONDS (5*24*60*60)
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -57,6 +71,7 @@
 #include "devkit-disks-mount-monitor.h"
 #include "devkit-disks-poller.h"
 #include "devkit-disks-inhibitor.h"
+#include "devkit-disks-ata-smart-db.h"
 
 #include "devkit-disks-daemon-glue.h"
 #include "devkit-disks-marshal.h"
@@ -102,7 +117,10 @@ struct DevkitDisksDaemonPrivate
 
         DevkitDisksMountMonitor *mount_monitor;
 
+        DevkitDisksAtaSmartDb   *ata_smart_db;
+
         guint                    ata_smart_refresh_timer_id;
+        guint                    ata_smart_cleanup_timer_id;
 
         GList *polling_inhibitors;
 
@@ -300,6 +318,12 @@ static const DevkitDisksFilesystem known_file_systems[] = {
 };
 
 static const int num_known_file_systems = sizeof (known_file_systems) / sizeof (DevkitDisksFilesystem);
+
+DevkitDisksAtaSmartDb *
+devkit_disks_daemon_local_get_ata_smart_db (DevkitDisksDaemon *daemon)
+{
+        return daemon->priv->ata_smart_db;
+}
 
 const DevkitDisksFilesystem *
 devkit_disks_daemon_local_get_fs_details (DevkitDisksDaemon  *daemon,
@@ -547,8 +571,16 @@ devkit_disks_daemon_finalize (GObject *object)
                 g_object_unref (daemon->priv->mount_monitor);
         }
 
+        if (daemon->priv->ata_smart_db != NULL) {
+                g_object_unref (daemon->priv->ata_smart_db);
+        }
+
         if (daemon->priv->devkit_client != NULL) {
                 g_object_unref (daemon->priv->devkit_client);
+        }
+
+        if (daemon->priv->ata_smart_cleanup_timer_id > 0) {
+                g_source_remove (daemon->priv->ata_smart_cleanup_timer_id);
         }
 
         if (daemon->priv->ata_smart_refresh_timer_id > 0) {
@@ -914,6 +946,28 @@ out:
 }
 
 static gboolean
+cleanup_ata_smart_data (DevkitDisksDaemon *daemon)
+{
+        time_t now;
+        time_t cut_off_point;
+
+        now = time (NULL);
+        cut_off_point = now - ATA_SMART_KEEP_ENTRIES_SECONDS;
+
+        g_print ("**** Deleting all ATA SMART data older than %d seconds\n", ATA_SMART_KEEP_ENTRIES_SECONDS);
+
+        devkit_disks_ata_smart_db_delete_entries (daemon->priv->ata_smart_db,
+                                                  cut_off_point);
+
+        /* cleanup in another N seconds */
+        daemon->priv->ata_smart_cleanup_timer_id = g_timeout_add_seconds (ATA_SMART_CLEANUP_INTERVAL_SECONDS,
+                                                                          (GSourceFunc) cleanup_ata_smart_data,
+                                                                          daemon);
+
+        return FALSE;
+}
+
+static gboolean
 refresh_ata_smart_data (DevkitDisksDaemon *daemon)
 {
         DevkitDisksDevice *device;
@@ -925,14 +979,15 @@ refresh_ata_smart_data (DevkitDisksDaemon *daemon)
                 if (device->priv->drive_ata_smart_is_available) {
                         char *options[] = {"nowakeup", NULL};
 
-                        g_debug ("refreshing ATA SMART data for %s", native_path);
+                        g_print ("**** Refreshing ATA SMART data for %s\n", native_path);
 
                         devkit_disks_device_drive_ata_smart_refresh_data (device, options, NULL);
                 }
         }
 
-        /* update in another 30 minutes */
-        daemon->priv->ata_smart_refresh_timer_id = g_timeout_add_seconds (30 * 60,
+
+        /* update in another N seconds */
+        daemon->priv->ata_smart_refresh_timer_id = g_timeout_add_seconds (ATA_SMART_REFRESH_INTERVAL_SECONDS,
                                                                           (GSourceFunc) refresh_ata_smart_data,
                                                                           daemon);
 
@@ -1050,6 +1105,8 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
         g_signal_connect (daemon->priv->mount_monitor, "mount-added", (GCallback) mount_added, daemon);
         g_signal_connect (daemon->priv->mount_monitor, "mount-removed", (GCallback) mount_removed, daemon);
 
+        daemon->priv->ata_smart_db = devkit_disks_ata_smart_db_new ();
+
         return TRUE;
 error:
         return FALSE;
@@ -1107,8 +1164,13 @@ devkit_disks_daemon_new (void)
         devkit_disks_mount_file_clean_stale (l);
         g_list_free (l);
 
-        /* set up timer for ATA smart data refresh */
-        daemon->priv->ata_smart_refresh_timer_id = g_timeout_add_seconds (30 * 60,
+        /* clean up old ATA SMART data from the database */
+        cleanup_ata_smart_data (daemon);
+
+        /* set up timer for refreshing ATA SMART data - we don't want to refresh immediately because
+         * when adding a device we also do this...
+         */
+        daemon->priv->ata_smart_refresh_timer_id = g_timeout_add_seconds (ATA_SMART_REFRESH_INTERVAL_SECONDS,
                                                                           (GSourceFunc) refresh_ata_smart_data,
                                                                           daemon);
 

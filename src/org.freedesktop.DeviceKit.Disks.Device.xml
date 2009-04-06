@@ -1086,9 +1086,15 @@
             passed the current time will be used.
         </doc:summary></doc:doc>
       </arg>
+      <arg name="spacing" direction="in" type="t">
+        <doc:doc><doc:summary>
+            The minimum spacing (in seconds) between two data points or 0
+            to get all data points between @since and @until.
+        </doc:summary></doc:doc>
+      </arg>
       <arg name="data" direction="out" type="a(tbbbbdta(usubbybybybbbutay))">
         <doc:doc><doc:summary>
-            An array of historical data. Each element contains
+            An array of historical data sorted by collection date. Each element contains
             the following members (TODO).
         </doc:summary></doc:doc>
       </arg>

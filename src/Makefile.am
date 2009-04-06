@@ -50,6 +50,7 @@ devkit_disks_daemon_SOURCES = 						\
 	devkit-disks-mount.h		devkit-disks-mount.c		\
 	devkit-disks-mount-monitor.h	devkit-disks-mount-monitor.c	\
 	devkit-disks-inhibitor.h	devkit-disks-inhibitor.c	\
+	devkit-disks-ata-smart-db.h	devkit-disks-ata-smart-db.c	\
 	devkit-disks-poller.h		devkit-disks-poller.c		\
 	main.c								\
 	$(BUILT_SOURCES)
@@ -57,16 +58,25 @@ devkit_disks_daemon_SOURCES = 						\
 devkit_disks_daemon_CPPFLAGS = 				\
 	-I$(top_srcdir)/src				\
 	-DG_LOG_DOMAIN=\"devkit-disks-daemon\"		\
-	$(SQLITE3_CFLAGS)				\
 	$(DISABLE_DEPRECATED)				\
-	$(AM_CPPFLAGS)
+	$(AM_CPPFLAGS)					\
+	$(NULL)
+
+devkit_disks_daemon_CFLAGS = 				\
+	$(ZLIB_CFLAGS)					\
+	$(SQLITE3_CFLAGS)				\
+	$(LIBATASMART_CFLAGS)				\
+	$(NULL)
 
 devkit_disks_daemon_LDADD = 				\
 	$(GIO_LIBS)					\
-	$(SQLITE3_LIBS)					\
 	$(DBUS_GLIB_LIBS)				\
 	$(POLKIT_DBUS_LIBS)				\
-	$(DEVKIT_LIBS)
+	$(DEVKIT_LIBS)					\
+	$(ZLIB_LIBS)					\
+	$(SQLITE3_LIBS)					\
+	$(LIBATASMART_LIBS)				\
+	$(NULL)
 
 noinst_LTLIBRARIES = libpartutil.la
 libpartutil_la_SOURCES = partutil.h partutil.c
@@ -178,4 +188,3 @@ clean-local :
 install-data-local:
 	-$(mkdir_p) $(DESTDIR)$(localstatedir)/lib/DeviceKit-disks
 	-chmod 0700 $(DESTDIR)$(localstatedir)/lib/DeviceKit-disks
-	-$(mkdir_p) $(DESTDIR)$(localstatedir)/lib/DeviceKit-disks/ata-smart

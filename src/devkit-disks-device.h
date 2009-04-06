@@ -148,8 +148,9 @@ gboolean devkit_disks_device_drive_ata_smart_refresh_data (DevkitDisksDevice    
                                                            DBusGMethodInvocation *context);
 
 gboolean devkit_disks_device_drive_ata_smart_get_historical_data (DevkitDisksDevice     *device,
-                                                                  guint64                from,
-                                                                  guint64                to,
+                                                                  guint64                since,
+                                                                  guint64                until,
+                                                                  guint64                spacing,
                                                                   DBusGMethodInvocation *context);
 
 gboolean devkit_disks_device_drive_ata_smart_initiate_selftest (DevkitDisksDevice     *device,

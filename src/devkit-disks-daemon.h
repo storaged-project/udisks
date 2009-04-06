@@ -87,6 +87,8 @@ DevkitDisksDevice *devkit_disks_daemon_local_find_by_device_file (DevkitDisksDae
 DevkitDisksDevice *devkit_disks_daemon_local_find_by_dev         (DevkitDisksDaemon       *daemon,
                                                                   dev_t                    dev);
 
+DevkitDisksAtaSmartDb *devkit_disks_daemon_local_get_ata_smart_db (DevkitDisksDaemon       *daemon);
+
 
 PolKitCaller      *devkit_disks_damon_local_get_caller_for_context (DevkitDisksDaemon     *daemon,
                                                                     DBusGMethodInvocation *context);
