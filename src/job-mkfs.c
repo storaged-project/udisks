@@ -304,7 +304,7 @@ main (int argc, char **argv)
 
         /* take ownership of the device if requested */
         if (take_ownership_uid != 0 || take_ownership_gid != 0) {
-                char dir[256] = "/tmp/devkit-disks-mkfs-XXXXXX";
+                char dir[256] = PACKAGE_LOCALSTATE_DIR "/run/DeviceKit-disks/job-mkfs-XXXXXX";
 
                 if (mkdtemp (dir) == NULL) {
                         g_printerr ("cannot create directory %s: %m\n", dir);

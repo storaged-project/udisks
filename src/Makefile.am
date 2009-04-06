@@ -188,3 +188,5 @@ clean-local :
 install-data-local:
 	-$(mkdir_p) $(DESTDIR)$(localstatedir)/lib/DeviceKit-disks
 	-chmod 0700 $(DESTDIR)$(localstatedir)/lib/DeviceKit-disks
+	-$(mkdir_p) $(DESTDIR)$(localstatedir)/run/DeviceKit-disks
+	-chmod 0700 $(DESTDIR)$(localstatedir)/run/DeviceKit-disks
