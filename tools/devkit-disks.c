@@ -53,19 +53,20 @@ static DBusGConnection     *bus = NULL;
 static DBusGProxy          *disks_proxy = NULL;
 static GMainLoop           *loop;
 
-static gboolean      opt_dump              = FALSE;
-static gboolean      opt_enumerate         = FALSE;
-static gboolean      opt_monitor           = FALSE;
-static gboolean      opt_monitor_detail    = FALSE;
-static char         *opt_show_info         = NULL;
-static char         *opt_inhibit_polling   = NULL;
-static gboolean      opt_inhibit           = FALSE;
-static gboolean      opt_inhibit_all_polling = FALSE;
-static char         *opt_mount             = NULL;
-static char         *opt_mount_fstype      = NULL;
-static char         *opt_mount_options     = NULL;
-static char         *opt_unmount           = NULL;
-static char         *opt_unmount_options   = NULL;
+static gboolean      opt_dump                   = FALSE;
+static gboolean      opt_enumerate              = FALSE;
+static gboolean      opt_enumerate_device_files = FALSE;
+static gboolean      opt_monitor                = FALSE;
+static gboolean      opt_monitor_detail         = FALSE;
+static char         *opt_show_info              = NULL;
+static char         *opt_inhibit_polling        = NULL;
+static gboolean      opt_inhibit                = FALSE;
+static gboolean      opt_inhibit_all_polling    = FALSE;
+static char         *opt_mount                  = NULL;
+static char         *opt_mount_fstype           = NULL;
+static char         *opt_mount_options          = NULL;
+static char         *opt_unmount                = NULL;
+static char         *opt_unmount_options        = NULL;
 
 static gboolean do_monitor (void);
 static void do_show_info (const char *object_path);
@@ -1504,6 +1505,51 @@ ptr_str_array_compare (const gchar **a, const gchar **b)
         return g_strcmp0 (*a, *b);
 }
 
+static gchar *
+device_file_to_object_path (const gchar *device_file)
+{
+        gchar *object_path;
+        DBusGProxy *proxy;
+        GError *error;
+        struct stat statbuf;
+
+        object_path = NULL;
+        error = NULL;
+
+        if (stat (device_file, &statbuf) != 0) {
+                g_print ("Cannot stat device file %s: %m\n", device_file);
+                goto out;
+        }
+
+        if (!S_ISBLK (statbuf.st_mode)) {
+                g_print ("Device file %s is not a block device: %m\n", device_file);
+                goto out;
+        }
+
+	proxy = dbus_g_proxy_new_for_name (bus,
+                                           "org.freedesktop.DeviceKit.Disks",
+                                           "/org/freedesktop/DeviceKit/Disks",
+                                           "org.freedesktop.DeviceKit.Disks");
+
+        error = NULL;
+        if (!org_freedesktop_DeviceKit_Disks_find_device_by_major_minor (proxy,
+                                                                         major (statbuf.st_rdev),
+                                                                         minor (statbuf.st_rdev),
+                                                                         &object_path,
+                                                                         &error)) {
+                g_print ("Cannot find device with major:minor %d:%d: %s\n",
+                         major (statbuf.st_rdev),
+                         minor (statbuf.st_rdev),
+                         error->message);
+                g_error_free (error);
+                goto out;
+        }
+
+ out:
+        return object_path;
+}
+
+
 int
 main (int argc, char **argv)
 {
@@ -1511,12 +1557,14 @@ main (int argc, char **argv)
         GOptionContext      *context;
         GError              *error = NULL;
         unsigned int         n;
+        gchar               *device_file;
         static GOptionEntry  entries []     = {
                 { "enumerate", 0, 0, G_OPTION_ARG_NONE, &opt_enumerate, "Enumerate objects paths for devices", NULL },
+                { "enumerate-device-files", 0, 0, G_OPTION_ARG_NONE, &opt_enumerate_device_files, "Enumerate device files for devices", NULL },
                 { "dump", 0, 0, G_OPTION_ARG_NONE, &opt_dump, "Dump all information about all devices", NULL },
                 { "monitor", 0, 0, G_OPTION_ARG_NONE, &opt_monitor, "Monitor activity from the disk daemon", NULL },
                 { "monitor-detail", 0, 0, G_OPTION_ARG_NONE, &opt_monitor_detail, "Monitor with detail", NULL },
-                { "show-info", 0, 0, G_OPTION_ARG_STRING, &opt_show_info, "Show information about object path", NULL },
+                { "show-info", 0, 0, G_OPTION_ARG_STRING, &opt_show_info, "Show information about a device file", NULL },
                 { "inhibit-polling", 0, 0, G_OPTION_ARG_STRING, &opt_inhibit_polling, "Inhibit polling", NULL },
                 { "inhibit-all-polling", 0, 0, G_OPTION_ARG_NONE, &opt_inhibit_all_polling, "Inhibit all polling", NULL },
                 { "inhibit", 0, 0, G_OPTION_ARG_NONE, &opt_inhibit, "Inhibit the daemon", NULL },
@@ -1534,6 +1582,7 @@ main (int argc, char **argv)
         setlocale (LC_ALL, "");
 
         ret = 1;
+        device_file = NULL;
 
         g_type_init ();
 
@@ -1609,13 +1658,30 @@ main (int argc, char **argv)
                 }
                 g_ptr_array_foreach (devices, (GFunc) g_free, NULL);
                 g_ptr_array_free (devices, TRUE);
+        } else if (opt_enumerate_device_files) {
+                gchar **device_files;
+                if (!org_freedesktop_DeviceKit_Disks_enumerate_device_files (disks_proxy, &device_files, &error)) {
+                        g_warning ("Couldn't enumerate device files: %s", error->message);
+                        g_error_free (error);
+                        goto out;
+                }
+                for (n = 0; device_files != NULL && device_files[n] != NULL; n++) {
+                        g_print ("%s\n", device_files[n]);
+                }
+                g_strfreev (device_files);
         } else if (opt_monitor || opt_monitor_detail) {
                 if (!do_monitor ())
                         goto out;
         } else if (opt_show_info != NULL) {
-                do_show_info (opt_show_info);
+                device_file = device_file_to_object_path (opt_show_info);
+                if (device_file == NULL)
+                        goto out;
+                do_show_info (device_file);
         } else if (opt_inhibit_polling != NULL) {
-                ret = do_inhibit_polling (opt_inhibit_polling, argc - 1, argv + 1);
+                device_file = device_file_to_object_path (opt_inhibit_polling);
+                if (device_file == NULL)
+                        goto out;
+                ret = do_inhibit_polling (device_file, argc - 1, argv + 1);
                 goto out;
         } else if (opt_inhibit_all_polling) {
                 ret = do_inhibit_all_polling (argc - 1, argv + 1);
@@ -1624,9 +1690,15 @@ main (int argc, char **argv)
                 ret = do_inhibit (argc - 1, argv + 1);
                 goto out;
         } else if (opt_mount != NULL) {
-                do_mount (opt_mount, opt_mount_fstype, opt_mount_options);
+                device_file = device_file_to_object_path (opt_mount);
+                if (device_file == NULL)
+                        goto out;
+                do_mount (device_file, opt_mount_fstype, opt_mount_options);
         } else if (opt_unmount != NULL) {
-                do_unmount (opt_unmount, opt_unmount_options);
+                device_file = device_file_to_object_path (opt_unmount);
+                if (device_file == NULL)
+                        goto out;
+                do_unmount (device_file, opt_unmount_options);
         } else {
                 gchar *usage;
 
@@ -1641,6 +1713,7 @@ main (int argc, char **argv)
         ret = 0;
 
 out:
+        g_free (device_file);
         if (disks_proxy != NULL)
                 g_object_unref (disks_proxy);
         if (bus != NULL)

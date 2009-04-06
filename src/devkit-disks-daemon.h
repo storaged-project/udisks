@@ -136,6 +136,9 @@ const DevkitDisksFilesystem *devkit_disks_daemon_local_get_fs_details (DevkitDis
 gboolean devkit_disks_daemon_enumerate_devices (DevkitDisksDaemon     *daemon,
                                                 DBusGMethodInvocation *context);
 
+gboolean devkit_disks_daemon_enumerate_device_files (DevkitDisksDaemon     *daemon,
+                                                     DBusGMethodInvocation *context);
+
 gboolean devkit_disks_daemon_find_device_by_device_file (DevkitDisksDaemon     *daemon,
                                                          const char            *device_file,
                                                          DBusGMethodInvocation *context);

@@ -9,15 +9,15 @@ __devkit_disks() {
     local cur="${COMP_WORDS[COMP_CWORD]}"
 
     if [ "${COMP_WORDS[$(($COMP_CWORD - 1))]}" = "--show-info" ] ; then
-        COMPREPLY=($(compgen -W "$(devkit-disks --enumerate)" -- $cur))
+        COMPREPLY=($(compgen -W "$(devkit-disks --enumerate-device-files)" -- $cur))
     elif [ "${COMP_WORDS[$(($COMP_CWORD - 1))]}" = "--inhibit-polling" ] ; then
-        COMPREPLY=($(compgen -W "$(devkit-disks --enumerate)" -- $cur))
+        COMPREPLY=($(compgen -W "$(devkit-disks --enumerate-device-files)" -- $cur))
     elif [ "${COMP_WORDS[$(($COMP_CWORD - 1))]}" = "--mount" ] ; then
-        COMPREPLY=($(compgen -W "$(devkit-disks --enumerate)" -- $cur))
+        COMPREPLY=($(compgen -W "$(devkit-disks --enumerate-device-files)" -- $cur))
     elif [ "${COMP_WORDS[$(($COMP_CWORD - 1))]}" = "--unmount" ] ; then
-        COMPREPLY=($(compgen -W "$(devkit-disks --enumerate)" -- $cur))
+        COMPREPLY=($(compgen -W "$(devkit-disks --enumerate-device-files)" -- $cur))
     else
-        COMPREPLY=($(IFS=: compgen -S' ' -W "--dump:--inhibit-polling:--inhibit-all-polling:--enumerate:--monitor:--monitor-detail:--show-info:--help:--mount:--mount-fstype:--mount-options:--unmount:--unmount-options" -- $cur))
+        COMPREPLY=($(IFS=: compgen -S' ' -W "--dump:--inhibit-polling:--inhibit-all-polling:--enumerate:--enumerate-device-files:--monitor:--monitor-detail:--show-info:--help:--mount:--mount-fstype:--mount-options:--unmount:--unmount-options" -- $cur))
     fi
 }
 

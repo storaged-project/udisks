@@ -1347,6 +1347,43 @@ devkit_disks_daemon_enumerate_devices (DevkitDisksDaemon     *daemon,
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
+static void
+enumerate_device_files_cb (gpointer key, gpointer value, gpointer user_data)
+{
+        DevkitDisksDevice *device = DEVKIT_DISKS_DEVICE (value);
+        GPtrArray *device_files = user_data;
+        guint n;
+
+        g_ptr_array_add (device_files, g_strdup (devkit_disks_device_local_get_device_file (device)));
+
+        for (n = 0; n < device->priv->device_file_by_id->len; n++) {
+                g_ptr_array_add (device_files,
+                                 g_strdup (((gchar **) device->priv->device_file_by_id->pdata)[n]));
+        }
+
+        for (n = 0; n < device->priv->device_file_by_path->len; n++) {
+                g_ptr_array_add (device_files,
+                                 g_strdup (((gchar **) device->priv->device_file_by_path->pdata)[n]));
+        }
+}
+
+gboolean
+devkit_disks_daemon_enumerate_device_files (DevkitDisksDaemon     *daemon,
+                                            DBusGMethodInvocation *context)
+{
+        GPtrArray *device_files;
+
+        device_files = g_ptr_array_new ();
+        g_hash_table_foreach (daemon->priv->map_native_path_to_device, enumerate_device_files_cb, device_files);
+        g_ptr_array_add (device_files, NULL);
+        dbus_g_method_return (context, device_files->pdata);
+        g_ptr_array_foreach (device_files, (GFunc) g_free, NULL);
+        g_ptr_array_free (device_files, TRUE);
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
 gboolean
 devkit_disks_daemon_find_device_by_device_file (DevkitDisksDaemon     *daemon,
                                                 const char            *device_file,

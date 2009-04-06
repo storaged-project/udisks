@@ -25,7 +25,24 @@
       <doc:doc>
         <doc:description>
           <doc:para>
-            Enumerate all disks on the system.
+            Enumerate all disk devices on the system.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="EnumerateDeviceFiles">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="device_files" direction="out" type="as">
+        <doc:doc><doc:summary>An array device file names.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Enumerate all device files (including symlinks) for disk devices on the system.
           </doc:para>
         </doc:description>
       </doc:doc>
@@ -35,7 +52,7 @@
 
     <method name="FindDeviceByDeviceFile">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="device-file" direction="in" type="s">
+      <arg name="device_file" direction="in" type="s">
         <doc:doc><doc:summary>UNIX special device file</doc:summary></doc:doc>
       </arg>
       <arg name="device" direction="out" type="o">
@@ -55,10 +72,10 @@
 
     <method name="FindDeviceByMajorMinor">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="device-major" direction="in" type="x">
+      <arg name="device_major" direction="in" type="x">
         <doc:doc><doc:summary>Device major</doc:summary></doc:doc>
       </arg>
-      <arg name="device-minor" direction="in" type="x">
+      <arg name="device_minor" direction="in" type="x">
         <doc:doc><doc:summary>Device minor</doc:summary></doc:doc>
       </arg>
       <arg name="device" direction="out" type="o">
