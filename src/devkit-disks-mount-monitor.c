@@ -191,7 +191,7 @@ mounts_changed_event (GIOChannel *channel, GIOCondition cond, gpointer user_data
 	if (cond & ~G_IO_ERR)
                 goto out;
 
-        g_debug ("/proc/self/mountinfo changed");
+        g_print ("**** /proc/self/mountinfo changed\n");
 
         devkit_disks_mount_monitor_ensure (monitor);
 
@@ -358,7 +358,7 @@ devkit_disks_mount_monitor_ensure (DevkitDisksMountMonitor *monitor)
                         DevkitDisksMount *mount;
                         mount = _devkit_disks_mount_new (dev, mount_point);
                         monitor->priv->mounts = g_list_prepend (monitor->priv->mounts, mount);
-                        g_debug ("SUP ADDING %d:%d on %s", major, minor, mount_point);
+                        //g_debug ("SUP ADDING %d:%d on %s", major, minor, mount_point);
                 }
 
                 g_free (mount_point);
