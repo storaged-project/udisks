@@ -1137,7 +1137,7 @@ do_show_info (const char *object_path)
 
                         if (props->drive_ata_smart_has_bad_attributes) {
                                 begin_highlight ();
-                                g_print ("      attributes:          One ore more attrinbutes exceeds threshold\n");
+                                g_print ("      attributes:          One ore more attributes exceed threshold\n");
                                 end_highlight ();
                         } else {
                                 g_print ("      attributes:          Within threshold\n");
