@@ -1356,12 +1356,40 @@ devkit_disks_daemon_find_device_by_device_file (DevkitDisksDaemon     *daemon,
         DevkitDisksDevice *device;
         gchar canonical_device_file[PATH_MAX];
 
-        /* TODO: maybe use realpath() on the given device_file so the caller can pass in symlinks? */
         realpath (device_file, canonical_device_file);
 
         object_path = NULL;
 
         device = devkit_disks_daemon_local_find_by_device_file (daemon, canonical_device_file);
+        if (device != NULL) {
+                object_path = devkit_disks_device_local_get_object_path (device);
+                dbus_g_method_return (context, object_path);
+        } else {
+                throw_error (context,
+                             DEVKIT_DISKS_ERROR_FAILED,
+                             "No such device");
+        }
+
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+gboolean
+devkit_disks_daemon_find_device_by_major_minor (DevkitDisksDaemon     *daemon,
+                                                gint64                  major,
+                                                gint64                  minor,
+                                                DBusGMethodInvocation *context)
+{
+        const char *object_path;
+        DevkitDisksDevice *device;
+        dev_t dev;
+
+        dev = makedev (major, minor);
+
+        object_path = NULL;
+
+        device = devkit_disks_daemon_local_find_by_dev (daemon, dev);
         if (device != NULL) {
                 object_path = devkit_disks_device_local_get_object_path (device);
                 dbus_g_method_return (context, object_path);

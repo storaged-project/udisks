@@ -35,7 +35,7 @@
 
     <method name="FindDeviceByDeviceFile">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="device_file" direction="in" type="s">
+      <arg name="device-file" direction="in" type="s">
         <doc:doc><doc:summary>UNIX special device file</doc:summary></doc:doc>
       </arg>
       <arg name="device" direction="out" type="o">
@@ -46,6 +46,29 @@
         <doc:description>
           <doc:para>
             Finds a device by device path.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="FindDeviceByMajorMinor">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="device-major" direction="in" type="x">
+        <doc:doc><doc:summary>Device major</doc:summary></doc:doc>
+      </arg>
+      <arg name="device-minor" direction="in" type="x">
+        <doc:doc><doc:summary>Device minor</doc:summary></doc:doc>
+      </arg>
+      <arg name="device" direction="out" type="o">
+        <doc:doc><doc:summary>Object path of device</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Finds a device by major:minor.
           </doc:para>
         </doc:description>
       </doc:doc>

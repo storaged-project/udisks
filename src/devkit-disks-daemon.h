@@ -140,6 +140,11 @@ gboolean devkit_disks_daemon_find_device_by_device_file (DevkitDisksDaemon     *
                                                          const char            *device_file,
                                                          DBusGMethodInvocation *context);
 
+gboolean devkit_disks_daemon_find_device_by_major_minor (DevkitDisksDaemon     *daemon,
+                                                         gint64                  major,
+                                                         gint64                  minor,
+                                                         DBusGMethodInvocation *context);
+
 gboolean devkit_disks_daemon_linux_md_start (DevkitDisksDaemon     *daemon,
                                              GPtrArray             *components,
                                              char                 **options,
