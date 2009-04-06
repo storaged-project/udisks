@@ -158,7 +158,7 @@ main (int argc, char **argv)
 
 	disks_proxy = dbus_g_proxy_new_for_name (bus,
                                                  "org.freedesktop.DeviceKit.Disks",
-                                                 "/",
+                                                 "/org/freedesktop/DeviceKit/Disks",
                                                  "org.freedesktop.DeviceKit.Disks");
 
         error = NULL;
