@@ -8368,20 +8368,12 @@ force_unmount_completed_cb (DBusGMethodInvocation *context,
                             gpointer user_data)
 {
         ForceUnmountData *data = user_data;
-        char *touch_str;
 
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
 
                 g_debug ("Successfully force unmounted device %s", device->priv->device_file);
                 /* update_info_mount_state() will update the mounts file and clean up the directory if needed */
                 update_info (device);
-
-                /* TODO: when we add polling, this can probably be removed. I have no idea why hal's
-                 *       poller don't cause the kernel to revalidate the (missing) media
-                 */
-                touch_str = g_strdup_printf ("touch %s", device->priv->device_file);
-                g_spawn_command_line_sync (touch_str, NULL, NULL, NULL, NULL);
-                g_free (touch_str);
 
                 if (data->fr_callback != NULL)
                         data->fr_callback (device, TRUE, data->fr_user_data);
@@ -8449,18 +8441,10 @@ force_luks_teardown_completed_cb (DBusGMethodInvocation *context,
                                     gpointer user_data)
 {
         ForceLuksTeardownData *data = user_data;
-        char *touch_str;
 
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
 
                 g_debug ("Successfully teared down luks device %s", device->priv->device_file);
-
-                /* TODO: when we add polling, this can probably be removed. I have no idea why hal's
-                 *       poller don't cause the kernel to revalidate the (missing) media
-                 */
-                touch_str = g_strdup_printf ("touch %s", device->priv->device_file);
-                g_spawn_command_line_sync (touch_str, NULL, NULL, NULL, NULL);
-                g_free (touch_str);
 
                 if (data->fr_callback != NULL)
                         data->fr_callback (device, TRUE, data->fr_user_data);
