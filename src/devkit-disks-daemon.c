@@ -1025,7 +1025,7 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
         polkit_tracker_set_system_bus_connection (daemon->priv->pk_tracker, connection);
         polkit_tracker_init (daemon->priv->pk_tracker);
 
-        dbus_g_connection_register_g_object (daemon->priv->system_bus_connection, "/",
+        dbus_g_connection_register_g_object (daemon->priv->system_bus_connection, "/org/freedesktop/DeviceKit/Disks",
                                              G_OBJECT (daemon));
 
         daemon->priv->system_bus_proxy = dbus_g_proxy_new_for_name (daemon->priv->system_bus_connection,

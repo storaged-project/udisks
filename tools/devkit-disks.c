@@ -1378,7 +1378,7 @@ do_inhibit_all_polling (gint         argc,
 
 	proxy = dbus_g_proxy_new_for_name (bus,
                                            "org.freedesktop.DeviceKit.Disks",
-                                           "/",
+                                           "/org/freedesktop/DeviceKit/Disks",
                                            "org.freedesktop.DeviceKit.Disks");
 
         error = NULL;
@@ -1448,7 +1448,7 @@ do_inhibit (gint         argc,
 
 	proxy = dbus_g_proxy_new_for_name (bus,
                                            "org.freedesktop.DeviceKit.Disks",
-                                           "/",
+                                           "/org/freedesktop/DeviceKit/Disks",
                                            "org.freedesktop.DeviceKit.Disks");
 
         error = NULL;
@@ -1564,7 +1564,7 @@ main (int argc, char **argv)
 
 	disks_proxy = dbus_g_proxy_new_for_name (bus,
                                                  "org.freedesktop.DeviceKit.Disks",
-                                                 "/",
+                                                 "/org/freedesktop/DeviceKit/Disks",
                                                  "org.freedesktop.DeviceKit.Disks");
         dbus_g_proxy_add_signal (disks_proxy, "DeviceAdded", DBUS_TYPE_G_OBJECT_PATH, G_TYPE_INVALID);
         dbus_g_proxy_add_signal (disks_proxy, "DeviceRemoved", DBUS_TYPE_G_OBJECT_PATH, G_TYPE_INVALID);

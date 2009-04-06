@@ -1287,7 +1287,7 @@ compute_object_path_from_basename (const char *native_path_basename)
         for (n = 0; basename[n] != '\0'; n++)
                 if (basename[n] == '-')
                         basename[n] = '_';
-        object_path = g_build_filename ("/devices/", basename, NULL);
+        object_path = g_build_filename ("/org/freedesktop/DeviceKit/Disks/devices/", basename, NULL);
         g_free (basename);
 
         return object_path;
