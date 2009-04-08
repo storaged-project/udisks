@@ -4297,9 +4297,8 @@ filesystem_mount_completed_cb (DBusGMethodInvocation *context,
 
                 dbus_g_method_return (context, data->mount_point);
         } else {
-                devkit_disks_mount_file_remove (device->priv->device_file, data->mount_point);
-
                 if (data->remove_dir_on_unmount) {
+                        devkit_disks_mount_file_remove (device->priv->device_file, data->mount_point);
                         if (g_rmdir (data->mount_point) != 0) {
                                 g_warning ("Error removing dir in late mount error path: %m");
                         }
@@ -4343,6 +4342,7 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
         options = NULL;
         mount_options = NULL;
         mount_point = NULL;
+        remove_dir_on_unmount = FALSE;
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
@@ -4471,6 +4471,17 @@ try_another_mount_point:
                 goto out;
         }
 
+        /* now that we have a mount point, immediately add it to the
+         * /var/lib/DeviceKit-disks/mtab file.
+         *
+         * If mounting fails we'll clean it up in filesystem_mount_completed_cb. If it
+         * hangs we'll clean it up the next time we start up.
+         */
+        devkit_disks_mount_file_add (device->priv->device_file,
+                                     mount_point,
+                                     caller_uid,
+                                     remove_dir_on_unmount);
+
         n = 0;
         argv[n++] = "mount";
         argv[n++] = "-t";
@@ -4482,13 +4493,6 @@ try_another_mount_point:
         argv[n++] = NULL;
 
 run_job:
-        /* now that we have a mount point, immediately add it to the
-         * /var/lib/DeviceKit-disks/mtab file
-         */
-        devkit_disks_mount_file_add (device->priv->device_file,
-                                     mount_point,
-                                     caller_uid,
-                                     remove_dir_on_unmount);
 
         error = NULL;
         if (!job_new (context,
@@ -4501,8 +4505,8 @@ run_job:
                       filesystem_mount_completed_cb,
                       filesystem_mount_data_new (mount_point, remove_dir_on_unmount),
                       (GDestroyNotify) filesystem_mount_data_free)) {
-                devkit_disks_mount_file_remove (device->priv->device_file, mount_point);
                 if (remove_dir_on_unmount) {
+                        devkit_disks_mount_file_remove (device->priv->device_file, mount_point);
                         if (g_rmdir (mount_point) != 0) {
                                 g_warning ("Error removing dir in early mount error path: %m");
                         }
