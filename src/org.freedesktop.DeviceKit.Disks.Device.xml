@@ -1038,9 +1038,8 @@
         <doc:doc><doc:summary>
             The option <doc:tt>nowakeup</doc:tt> can be passed to
             avoid spinning up the disk if it's in a low-power mode.
-            The option <doc:tt>simulate=</doc:tt> can be
-            passed to use the given string (which is in a format private to DeviceKit-disks) instead
-            of reading it from the disk.
+            The option <doc:tt>simulate=</doc:tt> can be used to pass a path to
+            a blob with libatasmart data to use instead of reading it from the disk.
             The <doc:tt>simulate=</doc:tt> option can only be used by the super user.
         </doc:summary></doc:doc>
       </arg>

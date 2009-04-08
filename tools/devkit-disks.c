@@ -67,6 +67,10 @@ static char         *opt_mount_fstype           = NULL;
 static char         *opt_mount_options          = NULL;
 static char         *opt_unmount                = NULL;
 static char         *opt_unmount_options        = NULL;
+static char         *opt_ata_smart_refresh      = NULL;
+static gboolean      opt_ata_smart_wakeup       = FALSE;
+static char         *opt_ata_smart_simulate     = NULL;
+
 
 static gboolean do_monitor (void);
 static void do_show_info (const char *object_path);
@@ -91,6 +95,40 @@ polkit_dbus_gerror_parse (GError *error,
                                                     result);
 out:
         return ret;
+}
+
+static void
+do_ata_smart_refresh (const gchar *object_path,
+                      gboolean     wakeup,
+                      const gchar *simulate_path)
+{
+        DBusGProxy *proxy;
+        GError *error;
+        GPtrArray *options;
+
+        options = g_ptr_array_new ();
+        if (!wakeup)
+                g_ptr_array_add (options, g_strdup ("nowakeup"));
+        if (simulate_path != NULL)
+                g_ptr_array_add (options, g_strdup_printf ("simulate=%s", simulate_path));
+        g_ptr_array_add (options, NULL);
+
+	proxy = dbus_g_proxy_new_for_name (bus,
+                                           "org.freedesktop.DeviceKit.Disks",
+                                           object_path,
+                                           "org.freedesktop.DeviceKit.Disks.Device");
+        error = NULL;
+        if (!org_freedesktop_DeviceKit_Disks_Device_drive_ata_smart_refresh_data (proxy,
+                                                                                  (const char **) options->pdata,
+                                                                                  &error)) {
+                g_print ("Refreshing ATA SMART data failed: %s\n", error->message);
+                g_error_free (error);
+        } else {
+                do_show_info (object_path);
+        }
+
+        g_ptr_array_foreach (options, (GFunc) g_free, NULL);
+        g_ptr_array_free (options, TRUE);
 }
 
 static void
@@ -1575,7 +1613,9 @@ main (int argc, char **argv)
 
                 { "unmount", 0, 0, G_OPTION_ARG_STRING, &opt_unmount, "Unmount the device given by the object path", NULL },
                 { "unmount-options", 0, 0, G_OPTION_ARG_STRING, &opt_unmount_options, "Unmount options separated by comma", NULL },
-
+                { "ata-smart-refresh", 0, 0, G_OPTION_ARG_STRING, &opt_ata_smart_refresh, "Refresh ATA SMART data", NULL },
+                { "ata-smart-wakeup", 0, 0, G_OPTION_ARG_NONE, &opt_ata_smart_wakeup, "Wake up the disk if it is not awake", NULL },
+                { "ata-smart-simulate", 0, 0, G_OPTION_ARG_STRING, &opt_ata_smart_simulate, "Inject libatasmart BLOB for testing", NULL },
                 { NULL }
         };
 
@@ -1699,6 +1739,11 @@ main (int argc, char **argv)
                 if (device_file == NULL)
                         goto out;
                 do_unmount (device_file, opt_unmount_options);
+        } else if (opt_ata_smart_refresh != NULL) {
+                device_file = device_file_to_object_path (opt_ata_smart_refresh);
+                if (device_file == NULL)
+                        goto out;
+                do_ata_smart_refresh (device_file, opt_ata_smart_wakeup, opt_ata_smart_simulate);
         } else {
                 gchar *usage;
 

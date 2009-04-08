@@ -156,6 +156,39 @@
 
       <varlistentry>
         <term>
+          <option>--ata-smart-refresh</option>
+          <arg choice="plain"><replaceable>device_file</replaceable></arg>
+          <arg><option>--ata-smart-wakeup</option></arg>
+        </term>
+        <listitem>
+          <para>
+            Refreshes ATA SMART data for <replaceable>device_file</replaceable>. If the disk is
+            sleeping it will not be woken up unless <option>--ata-smart-wakeup</option> is passed.
+            will be used.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>
+          <option>--ata-smart-refresh</option>
+          <arg choice="plain"><replaceable>device_file</replaceable></arg>
+          <option>--ata-smart-simulate</option> <replaceable>blob</replaceable>
+        </term>
+        <listitem>
+          <para>
+            Read ATA SMART data from <replaceable>blob</replaceable> for <replaceable>device_file</replaceable>.
+            This can only be done by the super user and is typically used for testing that clients
+            relying on the ATA SMART data provided by DeviceKit-disks behave correctly.
+            The libatasmart git repository at
+            <ulink url="http://git.0pointer.de/?p=libatasmart.git;a=summary"/>
+            contains a collection of blobs from failing disks.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>
           <option>--inhibit</option>
           <arg><option>-- program arg ...</option></arg>
         </term>

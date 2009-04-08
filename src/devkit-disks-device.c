@@ -7093,7 +7093,7 @@ drive_ata_smart_refresh_data_completed_cb (DBusGMethodInvocation *context,
                                            const char *stdout,
                                            gpointer user_data)
 {
-        DriveRefreshAtaSmartDataData *data;
+        DriveRefreshAtaSmartDataData *data = user_data;
         gint rc;
         SkBool good;
         uint64_t num_bad_sectors;
@@ -7109,8 +7109,6 @@ drive_ata_smart_refresh_data_completed_cb (DBusGMethodInvocation *context,
         AtaSmartCollectAttrsData collect_attrs_data;
         DevkitDisksAtaSmartDb *db;
 
-        data = user_data;
-
         d = NULL;
         blob = NULL;
 
@@ -7124,7 +7122,7 @@ drive_ata_smart_refresh_data_completed_cb (DBusGMethodInvocation *context,
                         if (context != NULL)
                                 throw_error (context,
                                              DEVKIT_DISKS_ERROR_FAILED,
-                                             "Error retrieving S.M.A.R.T. data: no output",
+                                             "Error retrieving ATA SMART data: no output",
                                              WEXITSTATUS (status), stderr);
                 }
                 goto out;
@@ -7137,14 +7135,14 @@ drive_ata_smart_refresh_data_completed_cb (DBusGMethodInvocation *context,
                         if (context != NULL) {
                                 throw_error (context,
                                              DEVKIT_DISKS_ERROR_ATA_SMART_WOULD_WAKEUP,
-                                             "Error retrieving S.M.A.R.T. data: %s",
+                                             "Error retrieving ATA SMART data: %s",
                                              stderr);
                         }
                 } else {
                         if (context != NULL) {
                                 throw_error (context,
                                              DEVKIT_DISKS_ERROR_FAILED,
-                                             "Error retrieving S.M.A.R.T. data: helper failed with exit code %d: %s",
+                                             "Error retrieving ATA SMART data: helper failed with exit code %d: %s",
                                              rc, stderr);
                         }
                 }
@@ -7257,19 +7255,21 @@ drive_ata_smart_refresh_data_completed_cb (DBusGMethodInvocation *context,
         if (context != NULL)
                 dbus_g_method_return (context);
 
-        /* store the (time_collected, disk_id, blob) tupple in our database */
-        db = devkit_disks_daemon_local_get_ata_smart_db (device->priv->daemon);
-        devkit_disks_ata_smart_db_add_entry (db,
-                                             device,
-                                             time_collected,
-                                             is_failing,
-                                             is_failing_valid,
-                                             (num_bad_sectors > 0),
-                                             collect_attrs_data.has_bad_attributes,
-                                             temperature_mkelvin / 1000.0,
-                                             power_on_mseconds / 1000,
-                                             blob,
-                                             blob_size);
+        /* store the (time_collected, disk_id, blob) tupple in our database if not simulating */
+        if (!data->simulation) {
+                db = devkit_disks_daemon_local_get_ata_smart_db (device->priv->daemon);
+                devkit_disks_ata_smart_db_add_entry (db,
+                                                     device,
+                                                     time_collected,
+                                                     is_failing,
+                                                     is_failing_valid,
+                                                     (num_bad_sectors > 0),
+                                                     collect_attrs_data.has_bad_attributes,
+                                                     temperature_mkelvin / 1000.0,
+                                                     power_on_mseconds / 1000,
+                                                     blob,
+                                                     blob_size);
+        }
 
 out:
         g_free (blob);
@@ -7338,7 +7338,7 @@ devkit_disks_device_drive_ata_smart_refresh_data (DevkitDisksDevice     *device,
 
         if (simuldata != NULL) {
                 n = 0;
-                argv[n++] = "echo";
+                argv[n++] = "base64"; /* provided by coreutils */
                 argv[n++] = (char *) simuldata;
                 argv[n++] = NULL;
         } else {
