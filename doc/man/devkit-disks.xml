@@ -55,6 +55,15 @@
       </varlistentry>
 
       <varlistentry>
+        <term><option>--enumerate-device-files</option></term>
+        <listitem>
+          <para>
+            Lists all device files of devices know to the daemon.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>--monitor</option></term>
         <listitem>
           <para>
@@ -77,11 +86,11 @@
       <varlistentry>
         <term>
           <option>--show-info</option>
-          <arg choice="plain"><replaceable>object_path</replaceable></arg>
+          <arg choice="plain"><replaceable>device_file</replaceable></arg>
         </term>
         <listitem>
           <para>
-            Shows information about <replaceable>object_path</replaceable>.
+            Shows information about <replaceable>device_file</replaceable>.
           </para>
         </listitem>
       </varlistentry>
@@ -89,12 +98,12 @@
       <varlistentry>
         <term>
           <option>--inhibit-polling</option>
-          <arg choice="plain"><replaceable>object_path</replaceable></arg>
+          <arg choice="plain"><replaceable>device_file</replaceable></arg>
           <arg><option>-- program arg ...</option></arg>
         </term>
         <listitem>
           <para>
-            Inhibits polling on <replaceable>object_path</replaceable>. If no program is given,
+            Inhibits polling on <replaceable>device_file</replaceable>. If no program is given,
             polling is inhibited until Ctrl+C is pressed. Otherwise the program is spawned and the polling
             is only inhibited until the program terminates.
           </para>
@@ -118,13 +127,13 @@
       <varlistentry>
         <term>
           <option>--mount</option>
-          <arg choice="plain"><replaceable>object_path</replaceable></arg>
+          <arg choice="plain"><replaceable>device_file</replaceable></arg>
           <arg><option>--mount-fstype</option><arg choice="plain"><replaceable>fstype</replaceable></arg></arg>
           <arg><option>--mount-options</option><arg choice="plain"><replaceable>options</replaceable></arg></arg>
         </term>
         <listitem>
           <para>
-            Mounts the device represented by <replaceable>object_path</replaceable> using
+            Mounts the device represented by <replaceable>device_file</replaceable> using
             the file system <replaceable>fstype</replaceable> and a comma-separated list
             of <replaceable>options</replaceable>.
           </para>
@@ -134,12 +143,12 @@
       <varlistentry>
         <term>
           <option>--unmount</option>
-          <arg choice="plain"><replaceable>object_path</replaceable></arg>
+          <arg choice="plain"><replaceable>device_file</replaceable></arg>
           <arg><option>--unmount-options</option><arg choice="plain"><replaceable>options</replaceable></arg></arg>
         </term>
         <listitem>
           <para>
-            Unmounts the device represented by <replaceable>object_path</replaceable> using
+            Unmounts the device represented by <replaceable>device_file</replaceable> using
             a comma-separated list of <replaceable>options</replaceable>.
           </para>
         </listitem>
@@ -152,9 +161,8 @@
         </term>
         <listitem>
           <para>
-             Inhibits clients from invoking methods on the daemon of
-             the daemon that require authorization (all methods will
-             return the
+             Inhibits clients from invoking methods on the daemon that
+             require authorization (all methods will return the
              <literal>org.freedesktop.DeviceKit.Disks.Error.Inhibited</literal> error) if
              the caller is not the super user. This is typically used
              by OS installers and other programs that expects full
@@ -162,9 +170,9 @@
              devices. Only the super user can do this.
           </para>
           <para>
-            If no program is given,
-            polling is inhibited until Ctrl+C is pressed. Otherwise the program is spawned and the polling
-            is only inhibited until the program terminates.
+            If no program is given, the daemon is inhibited until
+            Ctrl+C is pressed. Otherwise the program is spawned and
+            the daemon is only inhibited until the program terminates.
           </para>
         </listitem>
       </varlistentry>
