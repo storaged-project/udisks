@@ -4022,7 +4022,7 @@ static const char *iso9660_defaults[] =       {"uid=",
                                                "gid=",
                                                "iocharset=utf8",
                                                "mode=0400",
-                                               "dmode=0400",
+                                               "dmode=0500",
                                                NULL};
 static const char *iso9660_allow[] =          {"norock",
                                                "nojoliet",
