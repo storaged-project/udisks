@@ -3208,6 +3208,12 @@ devkit_disks_device_local_is_busy (DevkitDisksDevice *device)
         if (device->priv->holders_objpath->len > 0)
                 goto out;
 
+        /* if we are a partition table, we are busy if one of our partitions are busy */
+        if (device->priv->device_is_partition_table) {
+                if (devkit_disks_device_local_partitions_are_busy (device))
+                        goto out;
+        }
+
         /* if we are an extended partition, we are also busy if one or more logical partitions are busy  */
         if (g_strcmp0 (device->priv->partition_scheme, "mbr") == 0 && device->priv->partition_type != NULL) {
                 gint partition_type;
