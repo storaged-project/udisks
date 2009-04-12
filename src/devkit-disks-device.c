@@ -75,7 +75,10 @@ static gboolean update_info                (DevkitDisksDevice *device);
 
 static void     drain_pending_changes (DevkitDisksDevice *device, gboolean force_update);
 
-static gboolean devkit_disks_device_local_is_busy             (DevkitDisksDevice *device);
+static gboolean devkit_disks_device_local_is_busy (DevkitDisksDevice *device,
+                                                   gboolean           check_partitions,
+                                                   GError           **error);
+
 static gboolean devkit_disks_device_local_partitions_are_busy (DevkitDisksDevice *device);
 static gboolean devkit_disks_device_local_logical_partitions_are_busy (DevkitDisksDevice *device);
 
@@ -3189,32 +3192,51 @@ out:
         return ret;
 }
 
+/**
+ * devkit_disks_device_local_is_busy:
+ * @device: A #DevkitDisksDevice.
+ * @check_partitions: Whether to check if partitions is busy if @device is a partition table
+ * @error: Either %NULL or a #GError to set to #DEVKIT_DISKS_ERROR_BUSY and an appropriate
+ * message, e.g. "Device is busy" or "A partition on the device is busy" if the device is busy.
+ *
+ * Checks if @device is busy.
+ *
+ * Returns: %TRUE if the device or, if @check_partitions is %TRUE, a partition on the device is busy.
+ */
 static gboolean
-devkit_disks_device_local_is_busy (DevkitDisksDevice *device)
+devkit_disks_device_local_is_busy (DevkitDisksDevice *device,
+                                   gboolean           check_partitions,
+                                   GError           **error)
 {
         gboolean ret;
 
         ret = TRUE;
 
         /* busy if a job is pending */
-        if (device->priv->job != NULL)
+        if (device->priv->job != NULL) {
+                g_set_error (error, DEVKIT_DISKS_ERROR, DEVKIT_DISKS_ERROR_BUSY,
+                             "A job is pending on %s", device->priv->device_file);
                 goto out;
-
-        /* or if we're mounted */
-        if (device->priv->device_is_mounted)
-                goto out;
-
-        /* or if another block device is using/holding us (e.g. if holders/ is non-empty in sysfs) */
-        if (device->priv->holders_objpath->len > 0)
-                goto out;
-
-        /* if we are a partition table, we are busy if one of our partitions are busy */
-        if (device->priv->device_is_partition_table) {
-                if (devkit_disks_device_local_partitions_are_busy (device))
-                        goto out;
         }
 
-        /* if we are an extended partition, we are also busy if one or more logical partitions are busy  */
+        /* or if we're mounted */
+        if (device->priv->device_is_mounted) {
+                g_set_error (error, DEVKIT_DISKS_ERROR, DEVKIT_DISKS_ERROR_BUSY,
+                             "%s is mounted", device->priv->device_file);
+                goto out;
+        }
+
+        /* or if another block device is using/holding us (e.g. if holders/ is non-empty in sysfs) */
+        if (device->priv->holders_objpath->len > 0) {
+                g_set_error (error, DEVKIT_DISKS_ERROR, DEVKIT_DISKS_ERROR_BUSY,
+                             "One or more block devices are holding %s", device->priv->device_file);
+                goto out;
+        }
+
+        /* If we are an extended partition, we are also busy if one or more logical partitions are busy
+         * even if @check_partitions is FALSE... This is because an extended partition only really is
+         * a place holder.
+         */
         if (g_strcmp0 (device->priv->partition_scheme, "mbr") == 0 && device->priv->partition_type != NULL) {
                 gint partition_type;
                 partition_type = strtol (device->priv->partition_type, NULL, 0);
@@ -3224,8 +3246,23 @@ devkit_disks_device_local_is_busy (DevkitDisksDevice *device)
                         DevkitDisksDevice *drive_device;
                         drive_device = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon,
                                                                                       device->priv->partition_slave);
-                        if (devkit_disks_device_local_logical_partitions_are_busy (drive_device))
+                        if (devkit_disks_device_local_logical_partitions_are_busy (drive_device)) {
+                                g_set_error (error, DEVKIT_DISKS_ERROR, DEVKIT_DISKS_ERROR_BUSY,
+                                             "%s is an MS-DOS extended partition and one or more "
+                                             "logical partitions are busy",
+                                             device->priv->device_file);
                                 goto out;
+                        }
+                }
+        }
+
+
+        /* if we are a partition table, we are busy if one of our partitions are busy */
+        if (check_partitions && device->priv->device_is_partition_table) {
+                if (devkit_disks_device_local_partitions_are_busy (device)) {
+                        g_set_error (error, DEVKIT_DISKS_ERROR, DEVKIT_DISKS_ERROR_BUSY,
+                                     "One or more partitions are busy on %s", device->priv->device_file);
+                        goto out;
                 }
         }
 
@@ -3255,7 +3292,7 @@ devkit_disks_device_local_partitions_are_busy (DevkitDisksDevice *device)
                     d->priv->partition_slave != NULL &&
                     g_strcmp0 (d->priv->partition_slave, device->priv->object_path) == 0) {
 
-                        if (devkit_disks_device_local_is_busy (d)) {
+                        if (devkit_disks_device_local_is_busy (d, FALSE, NULL)) {
                                 ret = TRUE;
                                 break;
                         }
@@ -3284,7 +3321,7 @@ devkit_disks_device_local_logical_partitions_are_busy (DevkitDisksDevice *device
                     g_strcmp0 (d->priv->partition_scheme, "mbr") == 0 &&
                     d->priv->partition_number >= 5) {
 
-                        if (devkit_disks_device_local_is_busy (d)) {
+                        if (devkit_disks_device_local_is_busy (d, FALSE, NULL)) {
                                 ret = TRUE;
                                 break;
                         }
@@ -4348,6 +4385,7 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
         mount_options = NULL;
         mount_point = NULL;
         remove_dir_on_unmount = FALSE;
+        error = NULL;
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
@@ -4361,9 +4399,9 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
                 goto out;
         }
 
-        if (devkit_disks_device_local_is_busy (device)) {
-                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
-                             "Device is busy");
+        if (devkit_disks_device_local_is_busy (device, FALSE, &error)) {
+                dbus_g_method_return_error (context, error);
+                g_error_free (error);
                 goto out;
         }
 
@@ -4889,6 +4927,7 @@ devkit_disks_device_drive_eject (DevkitDisksDevice     *device,
         PolKitCaller *pk_caller;
         char *mount_path;
 
+        error = NULL;
         mount_path = NULL;
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
@@ -4906,15 +4945,9 @@ devkit_disks_device_drive_eject (DevkitDisksDevice     *device,
                 goto out;
         }
 
-        if (devkit_disks_device_local_is_busy (device)) {
-                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
-                             "Device is busy");
-                goto out;
-        }
-
-        if (devkit_disks_device_local_partitions_are_busy (device)) {
-                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
-                             "A partition on the device is busy");
+        if (devkit_disks_device_local_is_busy (device, TRUE, &error)) {
+                dbus_g_method_return_error (context, error);
+                g_error_free (error);
                 goto out;
         }
 
@@ -4937,7 +4970,6 @@ devkit_disks_device_drive_eject (DevkitDisksDevice     *device,
         argv[n++] = device->priv->device_file;
         argv[n++] = NULL;
 
-        error = NULL;
         if (!job_new (context,
                       "DriveEject",
                       FALSE,
@@ -5106,13 +5138,14 @@ devkit_disks_device_partition_delete (DevkitDisksDevice     *device,
         offset_as_string = NULL;
         size_as_string = NULL;
         part_number_as_string = NULL;
+        error = NULL;
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
 
-        if (devkit_disks_device_local_is_busy (device)) {
-                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
-                             "Device is busy");
+        if (devkit_disks_device_local_is_busy (device, FALSE, &error)) {
+                dbus_g_method_return_error (context, error);
+                g_error_free (error);
                 goto out;
         }
 
@@ -5132,10 +5165,9 @@ devkit_disks_device_partition_delete (DevkitDisksDevice     *device,
                 goto out;
         }
 
-        if (devkit_disks_device_local_is_busy (enclosing_device)) {
-                throw_error (context,
-                             DEVKIT_DISKS_ERROR_BUSY,
-                             "Enclosing device is busy");
+        if (devkit_disks_device_local_is_busy (enclosing_device, FALSE, &error)) {
+                dbus_g_method_return_error (context, error);
+                g_error_free (error);
                 goto out;
         }
 
@@ -5170,7 +5202,6 @@ devkit_disks_device_partition_delete (DevkitDisksDevice     *device,
         }
         argv[n++] = NULL;
 
-        error = NULL;
         if (!job_new (context,
                       "PartitionDelete",
                       TRUE,
@@ -5428,13 +5459,14 @@ devkit_disks_device_filesystem_create_internal (DevkitDisksDevice       *device,
 
         options_for_stdin = NULL;
         passphrase_stdin = NULL;
+        error = NULL;
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
 
-        if (devkit_disks_device_local_is_busy (device)) {
-                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
-                             "Device is busy");
+        if (devkit_disks_device_local_is_busy (device, TRUE, &error)) {
+                dbus_g_method_return_error (context, error);
+                g_error_free (error);
                 goto out;
         }
 
@@ -5520,7 +5552,6 @@ devkit_disks_device_filesystem_create_internal (DevkitDisksDevice       *device,
         argv[n++] = device->priv->device_is_partition_table ? "1" : "0";
         argv[n++] = NULL;
 
-        error = NULL;
         if (!job_new (context,
                       "FilesystemCreate",
                       TRUE,
@@ -5846,6 +5877,7 @@ devkit_disks_device_partition_create (DevkitDisksDevice     *device,
         offset_as_string = NULL;
         size_as_string = NULL;
         flags_as_string = NULL;
+        error = NULL;
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
@@ -5857,9 +5889,9 @@ devkit_disks_device_partition_create (DevkitDisksDevice     *device,
                 goto out;
         }
 
-        if (devkit_disks_device_local_is_busy (device)) {
-                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
-                             "Device is busy");
+        if (devkit_disks_device_local_is_busy (device, FALSE, &error)) {
+                dbus_g_method_return_error (context, error);
+                g_error_free (error);
                 goto out;
         }
 
@@ -5898,7 +5930,6 @@ devkit_disks_device_partition_create (DevkitDisksDevice     *device,
         }
         argv[n++] = NULL;
 
-        error = NULL;
         if (!job_new (context,
                       "PartitionCreate",
                       TRUE,
@@ -6027,6 +6058,7 @@ devkit_disks_device_partition_modify (DevkitDisksDevice     *device,
         offset_as_string = NULL;
         size_as_string = NULL;
         flags_as_string = NULL;
+        error = NULL;
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
@@ -6047,9 +6079,9 @@ devkit_disks_device_partition_modify (DevkitDisksDevice     *device,
                 goto out;
         }
 
-        if (devkit_disks_device_local_is_busy (enclosing_device)) {
-                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
-                             "Enclosing device is busy");
+        if (devkit_disks_device_local_is_busy (enclosing_device, FALSE, &error)) {
+                dbus_g_method_return_error (context, error);
+                g_error_free (error);
                 goto out;
         }
 
@@ -6083,7 +6115,6 @@ devkit_disks_device_partition_modify (DevkitDisksDevice     *device,
         argv[n++] = (char *) flags_as_string;
         argv[n++] = NULL;
 
-        error = NULL;
         if (!job_new (context,
                       "PartitionModify",
                       TRUE,
@@ -6150,18 +6181,14 @@ devkit_disks_device_partition_table_create (DevkitDisksDevice     *device,
         GError *error;
         PolKitCaller *pk_caller;
 
+        error = NULL;
+
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
 
-        if (devkit_disks_device_local_is_busy (device)) {
-                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
-                             "Device is busy");
-                goto out;
-        }
-
-        if (devkit_disks_device_local_partitions_are_busy (device)) {
-                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
-                             "A partition on the device is busy");
+        if (devkit_disks_device_local_is_busy (device, TRUE, &error)) {
+                dbus_g_method_return_error (context, error);
+                g_error_free (error);
                 goto out;
         }
 
@@ -6196,7 +6223,6 @@ devkit_disks_device_partition_table_create (DevkitDisksDevice     *device,
         }
         argv[n++] = NULL;
 
-        error = NULL;
         if (!job_new (context,
                       "PartitionTableCreate",
                       TRUE,
@@ -6445,11 +6471,11 @@ luks_unlock_completed_cb (DBusGMethodInvocation *context,
 
 static gboolean
 devkit_disks_device_luks_unlock_internal (DevkitDisksDevice        *device,
-                                               const char               *secret,
-                                               char                    **options,
-                                               UnlockEncryptionHookFunc  hook_func,
-                                               gpointer                  hook_user_data,
-                                               DBusGMethodInvocation    *context)
+                                          const char               *secret,
+                                          char                    **options,
+                                          UnlockEncryptionHookFunc  hook_func,
+                                          gpointer                  hook_user_data,
+                                          DBusGMethodInvocation    *context)
 {
         int n;
         char *argv[10];
@@ -6461,6 +6487,7 @@ devkit_disks_device_luks_unlock_internal (DevkitDisksDevice        *device,
 
         luks_name = NULL;
         secret_as_stdin = NULL;
+        error = NULL;
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
@@ -6469,9 +6496,9 @@ devkit_disks_device_luks_unlock_internal (DevkitDisksDevice        *device,
         if (pk_caller != NULL)
                 polkit_caller_get_uid (pk_caller, &uid);
 
-        if (devkit_disks_device_local_is_busy (device)) {
-                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
-                             "Device is busy");
+        if (devkit_disks_device_local_is_busy (device, FALSE, &error)) {
+                dbus_g_method_return_error (context, error);
+                g_error_free (error);
                 goto out;
         }
 
@@ -6508,7 +6535,6 @@ devkit_disks_device_luks_unlock_internal (DevkitDisksDevice        *device,
         argv[n++] = luks_name;
         argv[n++] = NULL;
 
-        error = NULL;
         if (!job_new (context,
                       "LuksUnlock",
                       FALSE,
@@ -6956,6 +6982,8 @@ devkit_disks_device_filesystem_set_label (DevkitDisksDevice     *device,
         PolKitCaller *pk_caller;
         const DevkitDisksFilesystem *fs_details;
 
+        error = NULL;
+
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
 
@@ -6974,8 +7002,9 @@ devkit_disks_device_filesystem_set_label (DevkitDisksDevice     *device,
         }
 
         if (!fs_details->supports_online_label_rename) {
-                if (devkit_disks_device_local_is_busy (device)) {
-                        throw_error (context, DEVKIT_DISKS_ERROR_BUSY, "Device is busy");
+                if (devkit_disks_device_local_is_busy (device, FALSE, &error)) {
+                        dbus_g_method_return_error (context, error);
+                        g_error_free (error);
                         goto out;
                 }
         }
@@ -6996,7 +7025,6 @@ devkit_disks_device_filesystem_set_label (DevkitDisksDevice     *device,
         argv[n++] = (char *) new_label;
         argv[n++] = NULL;
 
-        error = NULL;
         if (!job_new (context,
                       "FilesystemSetLabel",
                       FALSE,
@@ -7723,15 +7751,17 @@ linux_md_add_component_completed_cb (DBusGMethodInvocation *context,
 
 gboolean
 devkit_disks_device_linux_md_add_component (DevkitDisksDevice     *device,
-                                                     char                  *component,
-                                                     char                 **options,
-                                                     DBusGMethodInvocation *context)
+                                            char                  *component,
+                                            char                 **options,
+                                            DBusGMethodInvocation *context)
 {
         int n;
         char *argv[10];
         GError *error;
         PolKitCaller *pk_caller;
         DevkitDisksDevice *slave;
+
+        error = NULL;
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (device->priv->daemon, context)) == NULL)
                 goto out;
@@ -7753,9 +7783,9 @@ devkit_disks_device_linux_md_add_component (DevkitDisksDevice     *device,
          * hot adding a new disk if an old one failed
          */
 
-        if (devkit_disks_device_local_is_busy (slave)) {
-                throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
-                             "Component to add is busy");
+        if (devkit_disks_device_local_is_busy (slave, TRUE, &error)) {
+                dbus_g_method_return_error (context, error);
+                g_error_free (error);
                 goto out;
         }
 
@@ -7777,7 +7807,6 @@ devkit_disks_device_linux_md_add_component (DevkitDisksDevice     *device,
         argv[n++] = "--force";
         argv[n++] = NULL;
 
-        error = NULL;
         if (!job_new (context,
                       "LinuxMdAddComponent",
                       TRUE,
@@ -7849,26 +7878,35 @@ remove_component_data_unref (RemoveComponentData *data)
 
 static void
 linux_md_remove_component_device_changed_cb (DevkitDisksDaemon *daemon,
-                                                        const char *object_path,
-                                                        gpointer user_data)
+                                             const char *object_path,
+                                             gpointer user_data)
 {
         RemoveComponentData *data = user_data;
         DevkitDisksDevice *device;
+        GError *error;
+
+        error = NULL;
 
         device = devkit_disks_daemon_local_find_by_object_path (daemon, object_path);
-        if (device == data->slave && !devkit_disks_device_local_is_busy (data->slave)) {
-                gchar *fs_create_options[] = {NULL};
+        if (device == data->slave) {
 
-                /* yay! now scrub it! */
-                devkit_disks_device_filesystem_create (data->slave,
-                                                       "empty",
-                                                       fs_create_options,
-                                                       data->context);
+                if (devkit_disks_device_local_is_busy (data->slave, FALSE, &error)) {
+                        dbus_g_method_return_error (data->context, error);
+                        g_error_free (error);
+                } else {
+                        gchar *fs_create_options[] = {NULL};
 
-                /* TODO: leaking data? */
+                        /* yay! now scrub it! */
+                        devkit_disks_device_filesystem_create (data->slave,
+                                                               "empty",
+                                                               fs_create_options,
+                                                               data->context);
 
-                g_signal_handler_disconnect (daemon, data->device_changed_signal_handler_id);
-                g_source_remove (data->device_changed_timeout_id);
+                        /* TODO: leaking data? */
+
+                        g_signal_handler_disconnect (daemon, data->device_changed_signal_handler_id);
+                        g_source_remove (data->device_changed_timeout_id);
+                }
         }
 }
 
@@ -8204,6 +8242,7 @@ devkit_disks_daemon_linux_md_start (DevkitDisksDaemon     *daemon,
 
         uuid = NULL;
         md_device_file = NULL;
+        error = NULL;
 
         if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (daemon, context)) == NULL)
                 goto out;
@@ -8245,9 +8284,9 @@ devkit_disks_daemon_linux_md_start (DevkitDisksDaemon     *daemon,
                         }
                 }
 
-                if (devkit_disks_device_local_is_busy (slave)) {
-                        throw_error (context, DEVKIT_DISKS_ERROR_BUSY,
-                                     "component %d is busy", n);
+                if (devkit_disks_device_local_is_busy (slave, FALSE, &error)) {
+                        dbus_g_method_return_error (context, error);
+                        g_error_free (error);
                         goto out;
                 }
         }
@@ -8313,7 +8352,6 @@ devkit_disks_daemon_linux_md_start (DevkitDisksDaemon     *daemon,
         }
         argv[n++] = NULL;
 
-        error = NULL;
         if (!job_new (context,
                       "LinuxMdStart",
                       TRUE,
