@@ -608,7 +608,6 @@ devkit_disks_device_set_drive_model (DevkitDisksDevice *device, const gchar *val
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->drive_model, value) != 0))
     {
-      g_debug ("dm '%s' '%s'", device->priv->drive_model, value);
       g_free (device->priv->drive_model);
       device->priv->drive_model = g_strdup (value);
       emit_changed (device, "drive_model");
