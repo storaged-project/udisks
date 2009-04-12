@@ -349,9 +349,51 @@ devkit_disks_mount_monitor_ensure (DevkitDisksMountMonitor *monitor)
                 if (g_strcmp0 (encoded_root, "/") != 0)
                         continue;
 
-                mount_point = g_strcompress (encoded_mount_point);
+                /* Temporary work-around for btrfs, see
+                 *
+                 *  https://bugzilla.redhat.com/show_bug.cgi?id=495152#c31
+                 *  http://article.gmane.org/gmane.comp.file-systems.btrfs/2851
+                 *
+                 * for details.
+                 */
+                if (major == 0) {
+                        const gchar *sep;
+                        sep = strstr (lines[n], " - ");
+                        if (sep != NULL) {
+                                gchar fstype[PATH_MAX];
+                                gchar mount_source[PATH_MAX];
+                                struct stat statbuf;
 
-                dev = makedev (major, minor);
+                                if (sscanf (sep + 3, "%s %s",
+                                            fstype,
+                                            mount_source) != 2) {
+                                        g_warning ("Error parsing things past - for '%s'", lines[n]);
+                                        continue;
+                                }
+
+                                if (g_strcmp0 (fstype, "btrfs") != 0)
+                                        continue;
+
+                                if (!g_str_has_prefix (mount_source, "/dev/"))
+                                        continue;
+
+                                if (stat (mount_source, &statbuf) != 0) {
+                                        g_warning ("Error statting %s: %m", mount_source);
+                                        continue;
+                                }
+
+                                if (!S_ISBLK (statbuf.st_mode)) {
+                                        g_warning ("%s is not a block device", mount_source);
+                                        continue;
+                                }
+
+                                dev = statbuf.st_rdev;
+                        }
+                } else {
+                        dev = makedev (major, minor);
+                }
+
+                mount_point = g_strcompress (encoded_mount_point);
 
                 /* TODO: we can probably use a hash table or something if this turns out to be slow */
                 if (!have_mount (monitor, dev, mount_point)) {
