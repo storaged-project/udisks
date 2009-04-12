@@ -63,8 +63,8 @@ ENV{ID_FS_TYPE}=="linux_raid_member", IMPORT{program}="/sbin/mdadm --examine --e
 # ata_id and usb_id
 #
 
-ENV{ID_BUS}="usb", ENV{DEVTYPE}="disk", IMPORT{program}="devkit-disks-probe-ata-smart $tempnode"
-ENV{ID_BUS}="scsi", ENV{DEVTYPE}="disk", ENV{ID_VENDOR}="ATA", IMPORT{program}="devkit-disks-probe-ata-smart $tempnode"
+KERNEL=="sd*[!0-9]", ENV{ID_BUS}=="usb", ENV{DEVTYPE}=="disk", IMPORT{program}="devkit-disks-probe-ata-smart $tempnode"
+KERNEL=="sd*[!0-9]", ENV{ID_BUS}=="scsi", ENV{DEVTYPE}=="disk", ENV{ID_VENDOR}=="ATA", IMPORT{program}="devkit-disks-probe-ata-smart $tempnode"
 
 ##############################################################################################################
 
