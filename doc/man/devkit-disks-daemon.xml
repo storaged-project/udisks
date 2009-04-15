@@ -34,6 +34,13 @@
       whenever an application calls into the <emphasis>org.freedesktop.DeviceKit.Disks</emphasis>
       service.
     </para>
+    <para>
+      See the
+      <citerefentry><refentrytitle>DeviceKit-disks</refentrytitle><manvolnum>7</manvolnum></citerefentry>
+      man page for information on how to customize
+      how <emphasis><refentrytitle>devkit-disks-daemon</refentrytitle></emphasis>
+      works.
+    </para>
   </refsect1>
 
   <refsect1>

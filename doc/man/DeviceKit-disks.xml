@@ -26,6 +26,160 @@
     </para>
   </refsect1>
 
+  <refsect1><title>DEVICE INFORMATION</title>
+    <para>
+      On Linux, DeviceKit-disks relies on recent versions of
+      <citerefentry><refentrytitle>udev</refentrytitle><manvolnum>7</manvolnum></citerefentry>
+      and the kernel. Influential device properties in the udev
+      database include:
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term><option>DKD_PRESENTATION_HIDE</option></term>
+        <listitem><para>If set to 1 this is a hint to presentation
+            level software that the device should not be shown to the
+            user.
+        </para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>DKD_PRESENTATION_NAME</option></term>
+        <listitem><para>The name to user for the device when
+        presenting it to the user.
+        </para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>DKD_PRESENTATION_ICON_NAME</option></term>
+        <listitem><para>The icon to use when presenting the device to
+        the user. If set, the name must follow the freedesktop.org
+        icon theme specification.
+        </para></listitem>
+      </varlistentry>
+    </variablelist>
+    <para>
+      The <option>ID_DRIVE_*</option> properties are used to describe what
+      kind of physical media can be used in a device. These are typically
+      set on the main block device (e.g. <literal>/dev/sdb</literal>) and
+      more than one these properties can be set if the device supports
+      multiple kinds of media.
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term><option>ID_DRIVE_FLASH</option></term>
+        <listitem><para>The device is compatible with flash.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_FLASH_CF</option></term>
+        <listitem><para>The device is compatible with Compact Flash.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_FLASH_MS</option></term>
+        <listitem><para>The device is compatible with Memory Stick.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_FLASH_SM</option></term>
+        <listitem><para>The device is compatible with SmartMedia.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_FLASH_SD</option></term>
+        <listitem><para>The device is compatible with SecureDigital.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_FLASH_SDHC</option></term>
+        <listitem><para>The device is compatible with High-Capicity SecureDigital.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_FLASH_MMC</option></term>
+        <listitem><para>The device is compatible with MultiMediaCard.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_FLOPPY</option></term>
+        <listitem><para>The device is compatible with floppy disk.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_FLOPPY_ZIP</option></term>
+        <listitem><para>The device is compatible with Zip.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_FLOPPY_JAZ</option></term>
+        <listitem><para>The device is compatible with Jaz.
+        </para></listitem>
+      </varlistentry>
+
+    </variablelist>
+    <para>
+      The <option>ID_DRIVE_MEDIA_*</option> properties describe the
+      current media in a device. As with
+      the <option>ID_DRIVE_*</option> properties, these properties are
+      typically set on the main block device
+      (e.g. <literal>/dev/sdb</literal>). Typically only one of these
+      properties are set.
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term><option>ID_DRIVE_MEDIA_FLASH</option></term>
+        <listitem><para>The physical media currently inserted into the device is flash.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_MEDIA_FLASH_CF</option></term>
+        <listitem><para>The physical media currently inserted into the device is Compact Flash.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_MEDIA_FLASH_MS</option></term>
+        <listitem><para>The physical media currently inserted into the device is Memory Stick.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_MEDIA_FLASH_SM</option></term>
+        <listitem><para>The physical media currently inserted into the device is SmartMedia.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_MEDIA_FLASH_SD</option></term>
+        <listitem><para>The physical media currently inserted into the device is SecureDigital.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_MEDIA_FLASH_SDHC</option></term>
+        <listitem><para>The physical media currently inserted into the device is High-Capicity SecureDigital.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_MEDIA_FLASH_MMC</option></term>
+        <listitem><para>The physical media currently inserted into the device is MultiMediaCard.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_MEDIA_FLOPPY</option></term>
+        <listitem><para>The physical media currently inserted into the device is floppy disk.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_MEDIA_FLOPPY_ZIP</option></term>
+        <listitem><para>The physical media currently inserted into the device is Zip.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_MEDIA_FLOPPY_JAZ</option></term>
+        <listitem><para>The physical media currently inserted into the device is Jaz.
+        </para></listitem>
+      </varlistentry>
+
+    </variablelist>
+  </refsect1>
+
   <refsect1><title>AUTHOR</title>
     <para>
       Written by David Zeuthen <email>david@fubar.dk</email> with
