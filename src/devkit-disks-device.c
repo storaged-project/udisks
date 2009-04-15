@@ -135,6 +135,7 @@ enum
         PROP_0,
         PROP_NATIVE_PATH,
 
+        PROP_DEVICE_DETECTION_TIME,
         PROP_DEVICE_MAJOR,
         PROP_DEVICE_MINOR,
         PROP_DEVICE_FILE,
@@ -300,6 +301,9 @@ get_property (GObject         *object,
                 g_value_set_string (value, device->priv->native_path);
                 break;
 
+        case PROP_DEVICE_DETECTION_TIME:
+                g_value_set_uint64 (value, device->priv->device_detection_time);
+                break;
         case PROP_DEVICE_MAJOR:
                 g_value_set_int64 (value, major (device->priv->dev));
                 break;
@@ -698,6 +702,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_NATIVE_PATH,
                 g_param_spec_string ("native-path", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_DETECTION_TIME,
+                g_param_spec_uint64 ("device-detection-time", NULL, NULL, 0, G_MAXUINT64, 0, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_DEVICE_MAJOR,
@@ -3404,6 +3412,13 @@ devkit_disks_device_new (DevkitDisksDaemon *daemon, DevkitDevice *d)
         device->priv->d = g_object_ref (d);
         device->priv->daemon = g_object_ref (daemon);
         device->priv->native_path = g_strdup (native_path);
+
+        /* TODO: we might want to get this from udev or the kernel... to get the time when the device
+         *       was initially detected... as opposed to this value which is when the device was detected
+         *       by our daemon... but this will do for now...
+         */
+        device->priv->device_detection_time = (guint64) time (NULL);
+
         if (!update_info (device)) {
                 g_object_unref (device);
                 device = NULL;

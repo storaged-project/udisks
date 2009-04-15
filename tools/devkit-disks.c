@@ -363,6 +363,7 @@ typedef struct
 {
         char *native_path;
 
+        guint64  device_detection_time;
         gint64   device_major;
         gint64   device_minor;
         char    *device_file;
@@ -493,6 +494,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
         if (strcmp (key, "native-path") == 0)
                 props->native_path = g_strdup (g_value_get_string (value));
 
+        else if (strcmp (key, "device-detection-time") == 0)
+                props->device_detection_time = g_value_get_uint64 (value);
         else if (strcmp (key, "device-major") == 0)
                 props->device_major = g_value_get_int64 (value);
         else if (strcmp (key, "device-minor") == 0)
@@ -989,10 +992,17 @@ do_show_info (const char *object_path)
         guint n;
         guint m;
         DeviceProperties *props;
+        struct tm *time_tm;
+        time_t time;
+        char time_buf[256];
 
         props = device_properties_get (bus, object_path);
         if (props == NULL)
                 return;
+
+        time = (time_t) props->device_detection_time;
+        time_tm = localtime (&time);
+        strftime (time_buf, sizeof time_buf, "%c", time_tm);
 
         g_print ("Showing information for %s\n", object_path);
         g_print ("  native-path:             %s\n", props->native_path);
@@ -1004,6 +1014,7 @@ do_show_info (const char *object_path)
                 g_print ("    by-id:                 %s\n", (char *) props->device_file_by_id[n]);
         for (n = 0; props->device_file_by_path[n] != NULL; n++)
                 g_print ("    by-path:               %s\n", (char *) props->device_file_by_path[n]);
+        g_print ("  detected at:             %s\n", time_buf);
         g_print ("  system internal:         %d\n", props->device_is_system_internal);
         g_print ("  removable:               %d\n", props->device_is_removable);
         g_print ("  has media:               %d\n", props->device_is_media_available);
@@ -1143,9 +1154,6 @@ do_show_info (const char *object_path)
                 } else if (props->drive_ata_smart_time_collected == 0) {
                         g_print ("    ATA SMART:             Data not collected\n");
                 } else {
-                        struct tm *time_tm;
-                        time_t time;
-                        char time_buf[256];
                         GPtrArray *p;
 
                         time = (time_t) props->drive_ata_smart_time_collected;

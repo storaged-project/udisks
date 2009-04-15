@@ -1213,6 +1213,12 @@
             OS specific native path of the device. On Linux this is the sysfs path, for example <doc:tt>/sys/devices/pci0000:00/0000:00:1f.2/host2/target2:0:1/2:0:1:0/block/sda</doc:tt>.
       </doc:para></doc:description></doc:doc>
     </property>
+    <property name="device-detection-time" type="t" access="read">
+      <doc:doc><doc:description><doc:para>
+            The point in time (seconds since the Epoch Jan 1, 1970 0:00 UTC) when the device
+            was detected by the daemon.
+      </doc:para></doc:description></doc:doc>
+    </property>
     <property name="device-major" type="x" access="read">
       <doc:doc><doc:description><doc:para>
             Major for the device or -1 if not set.

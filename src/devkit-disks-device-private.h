@@ -73,6 +73,7 @@ struct DevkitDisksDevicePrivate
 
         char *object_path;
         char *native_path;
+        guint64 device_detection_time;
 
         gboolean removed;
 
