@@ -161,6 +161,7 @@ enum
         PROP_DEVICE_IS_MOUNTED,
         PROP_DEVICE_MOUNT_PATHS,
         PROP_DEVICE_MOUNTED_BY_UID,
+        PROP_DEVICE_PRESENTATION_HIDE,
         PROP_DEVICE_PRESENTATION_NAME,
         PROP_DEVICE_PRESENTATION_ICON_NAME,
 
@@ -376,6 +377,9 @@ get_property (GObject         *object,
 		break;
 	case PROP_DEVICE_MOUNTED_BY_UID:
 		g_value_set_uint (value, device->priv->device_mounted_by_uid);
+		break;
+	case PROP_DEVICE_PRESENTATION_HIDE:
+		g_value_set_boolean (value, device->priv->device_presentation_hide);
 		break;
 	case PROP_DEVICE_PRESENTATION_NAME:
 		g_value_set_string (value, device->priv->device_presentation_name);
@@ -804,6 +808,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DEVICE_MOUNTED_BY_UID,
                 g_param_spec_uint ("device-mounted-by-uid", NULL, NULL, 0, G_MAXUINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_PRESENTATION_HIDE,
+                g_param_spec_boolean ("device-presentation-hide", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_DEVICE_PRESENTATION_NAME,
@@ -1627,6 +1635,9 @@ diff_sorted_lists (GList         *list1,
 static gboolean
 update_info_presentation (DevkitDisksDevice *device)
 {
+        devkit_disks_device_set_device_presentation_hide (device,
+               devkit_device_get_property_as_boolean (device->priv->d, "DKD_PRESENTATION_HIDE"));
+
         devkit_disks_device_set_device_presentation_name (device,
                devkit_device_get_property (device->priv->d, "DKD_PRESENTATION_NAME"));
 
@@ -3041,7 +3052,7 @@ update_info (DevkitDisksDevice *device)
          *
          */
 
-        /* device_presentation_name and device_presentation_icon_name properties */
+        /* device_presentation_hide, device_presentation_name and device_presentation_icon_name properties */
         if (!update_info_presentation (device))
                 goto out;
 

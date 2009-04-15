@@ -1363,6 +1363,11 @@
             The block size of the device in bytes.
       </doc:para></doc:description></doc:doc>
     </property>
+    <property name="device-presentation-hide" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            A hint if the device should be hidden from the user interface.
+      </doc:para></doc:description></doc:doc>
+    </property>
     <property name="device-presentation-name" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The name to use when presenting the device to an end user.
