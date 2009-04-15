@@ -1643,8 +1643,12 @@ diff_sorted_lists (GList         *list1,
 static gboolean
 update_info_presentation (DevkitDisksDevice *device)
 {
-        devkit_disks_device_set_device_presentation_hide (device,
-               devkit_device_get_property_as_boolean (device->priv->d, "DKD_PRESENTATION_HIDE"));
+        gboolean hide;
+
+        hide = FALSE;
+        if (devkit_device_has_property (device->priv->d, "DKD_PRESENTATION_HIDE"))
+                hide = devkit_device_get_property_as_boolean (device->priv->d, "DKD_PRESENTATION_HIDE");
+        devkit_disks_device_set_device_presentation_hide (device, hide);
 
         devkit_disks_device_set_device_presentation_name (device,
                devkit_device_get_property (device->priv->d, "DKD_PRESENTATION_NAME"));
