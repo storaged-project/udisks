@@ -19,9 +19,6 @@ KERNEL=="sr*", ENV{ID_CDROM_MEDIA_TRACK_COUNT}!="?*", GOTO="probe_parttable_end"
 #
 IMPORT{program}="devkit-disks-part-id $tempnode"
 
-# clear all ID_FS_USAGE, TYPE if we're a partition table
-ENV{DKD_PART_ID_PARTITION_TABLE_SCHEME}!="", ENV{ID_FS_USAGE}="", ENV{ID_FS_TYPE}=""
-
 LABEL="probe_parttable_end"
 
 ##############################################################################################################

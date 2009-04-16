@@ -1691,8 +1691,20 @@ update_info_partition_table (DevkitDisksDevice *device)
         if (!device->priv->device_is_partition &&
             devkit_device_has_property (device->priv->d, "DKD_PARTITION_TABLE")) {
 
-                devkit_disks_device_set_device_is_partition_table (device, TRUE);
-                devkit_disks_device_set_partition_table_scheme (device, devkit_device_get_property (device->priv->d, "DKD_PARTITION_TABLE_SCHEME"));
+                /* Some times we think that vfat on the main block device looks like a Master Boot Record
+                 * partition table (the on-disk formats are extremely similar). So if we already have
+                 * detected a file system on the main block device and don't have any partitions, then
+                 * avoid tagging the device as a partition table.
+                 *
+                 * See e.g. https://bugzilla.redhat.com/show_bug.cgi?id=495876.
+                 */
+                if (device->priv->partition_table_count == 0 &&
+                    g_strcmp0 (device->priv->id_usage, "filesystem") == 0) {
+                        devkit_disks_device_set_device_is_partition_table (device, FALSE);
+                } else {
+                        devkit_disks_device_set_device_is_partition_table (device, TRUE);
+                        devkit_disks_device_set_partition_table_scheme (device, devkit_device_get_property (device->priv->d, "DKD_PARTITION_TABLE_SCHEME"));
+                }
         } else {
                 devkit_disks_device_set_partition_table_scheme (device, NULL);
         }
