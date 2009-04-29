@@ -236,6 +236,22 @@ static const DevkitDisksFilesystem known_file_systems[] = {
                 FALSE,          /* supports_online_resize_shrink */
         },
         {
+                "ext2",         /* id */
+                "Linux Ext2",   /* name */
+                TRUE,           /* supports_unix_owners */
+                TRUE,           /* can_mount */
+                TRUE,           /* can_create */
+                16,             /* max_label_len */
+                TRUE,           /* supports_label_rename */
+                TRUE,           /* supports_online_label_rename*/
+                TRUE,           /* supports_fsck */
+                FALSE,          /* supports_online_fsck */
+                TRUE,           /* supports_resize_enlarge */
+                TRUE,           /* supports_online_resize_enlarge */
+                TRUE,           /* supports_resize_shrink */
+                TRUE,           /* supports_online_resize_shrink */
+        },
+        {
                 "ext3",         /* id */
                 "Linux Ext3",   /* name */
                 TRUE,           /* supports_unix_owners */

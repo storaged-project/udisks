@@ -123,7 +123,7 @@ main (int argc, char **argv)
                 g_string_append_printf (s, " %s", device);
                 command_line = g_string_free (s, FALSE);
 
-        } else if (strcmp (fstype, "ext3") == 0 || strcmp (fstype, "ext4") == 0) {
+        } else if (strcmp (fstype, "ext2") == 0 || strcmp (fstype, "ext3") == 0 || strcmp (fstype, "ext4") == 0) {
 
                 s = g_string_new ("mkfs.");
                 g_string_append (s, fstype);
