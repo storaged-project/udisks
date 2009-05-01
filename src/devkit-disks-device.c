@@ -136,6 +136,7 @@ enum
         PROP_NATIVE_PATH,
 
         PROP_DEVICE_DETECTION_TIME,
+        PROP_DEVICE_MEDIA_DETECTION_TIME,
         PROP_DEVICE_MAJOR,
         PROP_DEVICE_MINOR,
         PROP_DEVICE_FILE,
@@ -303,6 +304,9 @@ get_property (GObject         *object,
 
         case PROP_DEVICE_DETECTION_TIME:
                 g_value_set_uint64 (value, device->priv->device_detection_time);
+                break;
+        case PROP_DEVICE_MEDIA_DETECTION_TIME:
+                g_value_set_uint64 (value, device->priv->device_media_detection_time);
                 break;
         case PROP_DEVICE_MAJOR:
                 g_value_set_int64 (value, major (device->priv->dev));
@@ -706,6 +710,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DEVICE_DETECTION_TIME,
                 g_param_spec_uint64 ("device-detection-time", NULL, NULL, 0, G_MAXUINT64, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_MEDIA_DETECTION_TIME,
+                g_param_spec_uint64 ("device-media-detection-time", NULL, NULL, 0, G_MAXUINT64, 0, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_DEVICE_MAJOR,
@@ -2849,6 +2857,7 @@ update_info (DevkitDisksDevice *device)
         GPtrArray *holders;
         gint major;
         gint minor;
+        gboolean media_available;
 
         ret = FALSE;
 
@@ -2906,21 +2915,28 @@ update_info (DevkitDisksDevice *device)
 
         devkit_disks_device_set_device_is_removable (device, (sysfs_get_int (device->priv->native_path, "removable") != 0));
 
-        /* device_is_media_available property */
+        /* device_is_media_available and device_media_detection_time property */
         if (device->priv->device_is_removable) {
+                media_available = FALSE;
                 if (devkit_device_has_property (device->priv->d, "DKD_MEDIA_AVAILABLE")) {
-                        devkit_disks_device_set_device_is_media_available (device,
-                               devkit_device_get_property_as_boolean (device->priv->d, "DKD_MEDIA_AVAILABLE"));
+                        media_available = devkit_device_get_property_as_boolean (device->priv->d, "DKD_MEDIA_AVAILABLE");
                 } else {
                         if (devkit_device_has_property (device->priv->d, "ID_CDROM_MEDIA_STATE")) {
-                                devkit_disks_device_set_device_is_media_available (device, TRUE);
+                                media_available = TRUE;
                         } else {
-                                devkit_disks_device_set_device_is_media_available (device, FALSE);
+                                media_available = FALSE;
                         }
                 }
         } else {
-                devkit_disks_device_set_device_is_media_available (device, TRUE);
+                media_available = TRUE;
         }
+        devkit_disks_device_set_device_is_media_available (device, media_available);
+        if (media_available) {
+                if (device->priv->device_media_detection_time == 0)
+                        devkit_disks_device_set_device_media_detection_time (device, (guint64) time (NULL));
+        } else {
+                devkit_disks_device_set_device_media_detection_time (device, 0);
+         }
 
         /* device_size, device_block_size and device_is_read_only properties */
         if (device->priv->device_is_media_available) {

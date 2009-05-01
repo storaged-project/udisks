@@ -104,6 +104,26 @@ ptr_str_array_from_strv (GStrv s)
 }
 
 void
+devkit_disks_device_set_device_detection_time (DevkitDisksDevice *device, guint64 value)
+{
+  if (G_UNLIKELY (device->priv->device_detection_time != value))
+    {
+      device->priv->device_detection_time = value;
+      emit_changed (device, "device_detection_time");
+    }
+}
+
+void
+devkit_disks_device_set_device_media_detection_time (DevkitDisksDevice *device, guint64 value)
+{
+  if (G_UNLIKELY (device->priv->device_media_detection_time != value))
+    {
+      device->priv->device_media_detection_time = value;
+      emit_changed (device, "device_media_detection_time");
+    }
+}
+
+void
 devkit_disks_device_set_job_in_progress (DevkitDisksDevice *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->job_in_progress != value))

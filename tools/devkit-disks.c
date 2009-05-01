@@ -364,6 +364,7 @@ typedef struct
         char *native_path;
 
         guint64  device_detection_time;
+        guint64  device_media_detection_time;
         gint64   device_major;
         gint64   device_minor;
         char    *device_file;
@@ -496,6 +497,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
 
         else if (strcmp (key, "device-detection-time") == 0)
                 props->device_detection_time = g_value_get_uint64 (value);
+        else if (strcmp (key, "device-media-detection-time") == 0)
+                props->device_media_detection_time = g_value_get_uint64 (value);
         else if (strcmp (key, "device-major") == 0)
                 props->device_major = g_value_get_int64 (value);
         else if (strcmp (key, "device-minor") == 0)
@@ -1017,7 +1020,14 @@ do_show_info (const char *object_path)
         g_print ("  detected at:             %s\n", time_buf);
         g_print ("  system internal:         %d\n", props->device_is_system_internal);
         g_print ("  removable:               %d\n", props->device_is_removable);
-        g_print ("  has media:               %d\n", props->device_is_media_available);
+        g_print ("  has media:               %d", props->device_is_media_available);
+        if (props->device_media_detection_time != 0) {
+                time = (time_t) props->device_media_detection_time;
+                time_tm = localtime (&time);
+                strftime (time_buf, sizeof time_buf, "%c", time_tm);
+                g_print (" (detected at %s)", time_buf);
+        }
+        g_print ("\n");
         g_print ("    detects change:        %d\n", props->device_is_media_change_detected);
         g_print ("    detection by polling:  %d\n", props->device_is_media_change_detection_polling);
         g_print ("    detection inhibitable: %d\n", props->device_is_media_change_detection_inhibitable);

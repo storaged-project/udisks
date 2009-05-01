@@ -74,6 +74,7 @@ struct DevkitDisksDevicePrivate
         char *object_path;
         char *native_path;
         guint64 device_detection_time;
+        guint64 device_media_detection_time;
 
         gboolean removed;
 
@@ -224,6 +225,8 @@ void devkit_disks_device_set_job_initiated_by_uid (DevkitDisksDevice *device, gu
 void devkit_disks_device_set_job_is_cancellable (DevkitDisksDevice *device, gboolean value);
 void devkit_disks_device_set_job_percentage (DevkitDisksDevice *device, gdouble value);
 
+void devkit_disks_device_set_device_detection_time (DevkitDisksDevice *device, guint64 value);
+void devkit_disks_device_set_device_media_detection_time (DevkitDisksDevice *device, guint64 value);
 void devkit_disks_device_set_device_file (DevkitDisksDevice *device, const gchar *value);
 void devkit_disks_device_set_device_file_by_id (DevkitDisksDevice *device, GStrv value);
 void devkit_disks_device_set_device_file_by_path (DevkitDisksDevice *device, GStrv value);
