@@ -7167,7 +7167,7 @@ ata_smart_collect_attrs (SkDisk *d, const SkSmartAttributeParsedData *a, void *u
                                 15, raw_data,
                                 G_MAXUINT);
 
-        if (!a->good)
+        if (!a->good && a->good_valid && a->prefailure)
                 data->has_bad_attributes = TRUE;
 
         g_ptr_array_add (data->attributes, g_value_get_boxed (&elem));
