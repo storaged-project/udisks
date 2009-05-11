@@ -103,8 +103,8 @@ struct DevkitDisksDaemonPrivate
 {
         DBusGConnection         *system_bus_connection;
         DBusGProxy              *system_bus_proxy;
-        PolKitContext           *pk_context;
-        PolKitTracker           *pk_tracker;
+
+        PolkitAuthority         *authority;
 
         DevkitClient            *devkit_client;
 
@@ -167,6 +167,7 @@ devkit_disks_error_get_type (void)
         {
                 static const GEnumValue values[] = {
                         ENUM_ENTRY (DEVKIT_DISKS_ERROR_FAILED, "Failed"),
+                        ENUM_ENTRY (DEVKIT_DISKS_ERROR_PERMISSION_DENIED, "PermissionDenied"),
                         ENUM_ENTRY (DEVKIT_DISKS_ERROR_INHIBITED, "Inhibited"),
                         ENUM_ENTRY (DEVKIT_DISKS_ERROR_BUSY, "Busy"),
                         ENUM_ENTRY (DEVKIT_DISKS_ERROR_CANCELLED, "Cancelled"),
@@ -554,11 +555,8 @@ devkit_disks_daemon_finalize (GObject *object)
 
         g_return_if_fail (daemon->priv != NULL);
 
-        if (daemon->priv->pk_context != NULL)
-                polkit_context_unref (daemon->priv->pk_context);
-
-        if (daemon->priv->pk_tracker != NULL)
-                polkit_tracker_unref (daemon->priv->pk_tracker);
+        if (daemon->priv->authority != NULL)
+                g_object_unref (daemon->priv->authority);
 
         if (daemon->priv->system_bus_proxy != NULL)
                 g_object_unref (daemon->priv->system_bus_proxy);
@@ -620,61 +618,20 @@ devkit_disks_daemon_finalize (GObject *object)
         G_OBJECT_CLASS (devkit_disks_daemon_parent_class)->finalize (object);
 }
 
-static gboolean
-pk_io_watch_have_data (GIOChannel *channel, GIOCondition condition, gpointer user_data)
-{
-        int fd;
-        PolKitContext *pk_context = user_data;
-        fd = g_io_channel_unix_get_fd (channel);
-        polkit_context_io_func (pk_context, fd);
-        return TRUE;
-}
-
-static int
-pk_io_add_watch (PolKitContext *pk_context, int fd)
-{
-        guint id = 0;
-        GIOChannel *channel;
-        channel = g_io_channel_unix_new (fd);
-        if (channel == NULL)
-                goto out;
-        id = g_io_add_watch (channel, G_IO_IN, pk_io_watch_have_data, pk_context);
-        if (id == 0) {
-                g_io_channel_unref (channel);
-                goto out;
-        }
-        g_io_channel_unref (channel);
-out:
-        return id;
-}
-
-static void
-pk_io_remove_watch (PolKitContext *pk_context, int watch_id)
-{
-        g_source_remove (watch_id);
-}
 
 void devkit_disks_inhibitor_name_owner_changed (DBusMessage *message);
 
 static DBusHandlerResult
 _filter (DBusConnection *connection, DBusMessage *message, void *user_data)
 {
-        DevkitDisksDaemon *daemon = DEVKIT_DISKS_DAEMON (user_data);
+        //DevkitDisksDaemon *daemon = DEVKIT_DISKS_DAEMON (user_data);
         const char *interface;
 
         interface = dbus_message_get_interface (message);
 
         if (dbus_message_is_signal (message, DBUS_INTERFACE_DBUS, "NameOwnerChanged")) {
-                /* pass NameOwnerChanged signals from the bus to PolKitTracker */
-                polkit_tracker_dbus_func (daemon->priv->pk_tracker, message);
-
                 /* for now, pass NameOwnerChanged to DevkitDisksInhibitor */
                 devkit_disks_inhibitor_name_owner_changed (message);
-        }
-
-        if (interface != NULL && g_str_has_prefix (interface, "org.freedesktop.ConsoleKit")) {
-                /* pass ConsoleKit signals to PolKitTracker */
-                polkit_tracker_dbus_func (daemon->priv->pk_tracker, message);
         }
 
         /* other filters might want to process this message too */
@@ -1019,12 +976,7 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
         GError *error = NULL;
         const char *subsystems[] = {"block", NULL};
 
-        daemon->priv->pk_context = polkit_context_new ();
-        polkit_context_set_io_watch_functions (daemon->priv->pk_context, pk_io_add_watch, pk_io_remove_watch);
-        if (!polkit_context_init (daemon->priv->pk_context, NULL)) {
-                g_critical ("cannot initialize libpolkit");
-                goto error;
-        }
+        daemon->priv->authority = polkit_authority_get ();
 
         error = NULL;
         daemon->priv->system_bus_connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
@@ -1036,10 +988,6 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
                 goto error;
         }
         connection = dbus_g_connection_get_connection (daemon->priv->system_bus_connection);
-
-        daemon->priv->pk_tracker = polkit_tracker_new ();
-        polkit_tracker_set_system_bus_connection (daemon->priv->pk_tracker, connection);
-        polkit_tracker_init (daemon->priv->pk_tracker);
 
         dbus_g_connection_register_g_object (daemon->priv->system_bus_connection, "/org/freedesktop/DeviceKit/Disks",
                                              G_OBJECT (daemon));
@@ -1202,34 +1150,6 @@ devkit_disks_daemon_local_get_mount_monitor (DevkitDisksDaemon *daemon)
         return daemon->priv->mount_monitor;
 }
 
-PolKitCaller *
-devkit_disks_damon_local_get_caller_for_context (DevkitDisksDaemon *daemon,
-                                                 DBusGMethodInvocation *context)
-{
-        const char *sender;
-        GError *error;
-        DBusError dbus_error;
-        PolKitCaller *pk_caller;
-
-        sender = dbus_g_method_get_sender (context);
-        dbus_error_init (&dbus_error);
-        pk_caller = polkit_tracker_get_caller_from_dbus_name (daemon->priv->pk_tracker,
-                                                              sender,
-                                                              &dbus_error);
-        if (pk_caller == NULL) {
-                error = g_error_new (DEVKIT_DISKS_ERROR,
-                                     DEVKIT_DISKS_ERROR_FAILED,
-                                     "Error getting information about caller: %s: %s",
-                                     dbus_error.name, dbus_error.message);
-                dbus_error_free (&dbus_error);
-                dbus_g_method_return_error (context, error);
-                g_error_free (error);
-                return NULL;
-        }
-
-        return pk_caller;
-}
-
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static gboolean
@@ -1255,57 +1175,43 @@ throw_error (DBusGMethodInvocation *context, int error_code, const char *format,
 /*--------------------------------------------------------------------------------------------------------------*/
 
 gboolean
-devkit_disks_damon_local_check_auth (DevkitDisksDaemon     *daemon,
-                                     PolKitCaller          *pk_caller,
-                                     const char            *action_id,
-                                     DBusGMethodInvocation *context)
+devkit_disks_daemon_local_get_uid (DevkitDisksDaemon     *daemon,
+                                   uid_t                 *out_uid,
+                                   DBusGMethodInvocation *context)
 {
-        gboolean ret;
-        GError *error;
-        DBusError d_error;
-        PolKitAction *pk_action;
-        PolKitResult pk_result;
+        gchar *sender;
+        DBusError dbus_error;
+        DBusConnection *connection;
 
-        ret = FALSE;
-
-        if (daemon->priv->inhibitors != NULL) {
-                uid_t uid;
-
-                uid = (uid_t) -1;
-                if (!polkit_caller_get_uid (pk_caller, &uid) || uid != 0) {
-                        if (context != NULL)
-                                throw_error (context,
-                                             DEVKIT_DISKS_ERROR_INHIBITED,
-                                             "Daemon is being inhibited");
-                }
+        /* context can be NULL for things called by the daemon itself e.g. ATA SMART refresh */
+        if (context == NULL) {
+                *out_uid = 0;
                 goto out;
         }
 
-        pk_action = polkit_action_new ();
-        polkit_action_set_action_id (pk_action, action_id);
-        pk_result = polkit_context_is_caller_authorized (daemon->priv->pk_context,
-                                                         pk_action,
-                                                         pk_caller,
-                                                         TRUE,
-                                                         NULL);
-        if (pk_result == POLKIT_RESULT_YES) {
-                ret = TRUE;
-        } else {
+        /* TODO: right now this is synchronous and slow; when we switch to a better D-Bus
+         *       binding a'la EggDBus there will be a utility class (with caching) where we
+         *       can get this from
+         */
 
-                dbus_error_init (&d_error);
-                polkit_dbus_error_generate (pk_action, pk_result, &d_error);
-                if (context != NULL) {
-                        error = NULL;
-                        dbus_set_g_error (&error, &d_error);
-                        dbus_g_method_return_error (context, error);
-                        g_error_free (error);
-                }
-                dbus_error_free (&d_error);
+        sender = dbus_g_method_get_sender (context);
+        connection = dbus_g_connection_get_connection (daemon->priv->system_bus_connection);
+        dbus_error_init (&dbus_error);
+        *out_uid = dbus_bus_get_unix_user (connection,
+                                           sender,
+                                           &dbus_error);
+        if (dbus_error_is_set (&dbus_error)) {
+                *out_uid = 0;
+                g_warning ("Cannot get uid for sender %s: %s: %s",
+                           sender,
+                           dbus_error.name,
+                           dbus_error.message);
+                dbus_error_free (&dbus_error);
         }
-        polkit_action_unref (pk_action);
+        g_free (sender);
 
  out:
-        return ret;
+        return TRUE;
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/
@@ -1329,6 +1235,183 @@ devkit_disks_daemon_local_update_poller (DevkitDisksDaemon *daemon)
         devkit_disks_poller_set_devices (devices_to_poll);
 
         g_list_free (devices_to_poll);
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+typedef struct
+{
+        gchar *action_id;
+        DevkitDisksCheckAuthCallback check_auth_callback;
+        DBusGMethodInvocation *context;
+        DevkitDisksDaemon *daemon;
+        DevkitDisksDevice *device;
+
+        GCancellable *cancellable;
+        guint num_user_data;
+        gpointer *user_data_elements;
+        GDestroyNotify *user_data_notifiers;
+
+        DevkitDisksInhibitor *caller;
+} CheckAuthData;
+
+/* invoked when device is removed during authorization check */
+static void
+lca_device_went_away (gpointer user_data, GObject *where_the_object_was)
+{
+        CheckAuthData *data = user_data;
+
+        g_object_weak_unref (G_OBJECT (data->device), lca_device_went_away, data);
+        data->device = NULL;
+
+        /* this will trigger lca_check_authorization_callback() */
+        g_cancellable_cancel (data->cancellable);
+}
+
+/* invoked when caller disconnects during authorization check */
+static void
+lca_caller_disconnected_cb (DevkitDisksInhibitor *inhibitor,
+                            gpointer              user_data)
+{
+        CheckAuthData *data = user_data;
+
+        /* this will trigger lca_check_authorization_callback() */
+        g_cancellable_cancel (data->cancellable);
+}
+
+static void
+check_auth_data_free (CheckAuthData *data)
+{
+        guint n;
+
+        g_free (data->action_id);
+        g_object_unref (data->daemon);
+        if (data->device != NULL)
+                g_object_weak_unref (G_OBJECT (data->device), lca_device_went_away, data);
+        g_object_unref (data->cancellable);
+        for (n = 0; n < data->num_user_data; n++) {
+                if (data->user_data_notifiers[n] != NULL)
+                        data->user_data_notifiers[n] (data->user_data_elements[n]);
+        }
+        g_free (data->user_data_elements);
+        g_free (data->user_data_notifiers);
+        if (data->caller != NULL)
+                g_object_unref (data->caller);
+        g_free (data);
+}
+
+static void
+lca_check_authorization_callback (PolkitAuthority *authority,
+                                  GAsyncResult    *res,
+                                  gpointer         user_data)
+{
+        CheckAuthData *data = user_data;
+        PolkitAuthorizationResult result;
+        GError *error;
+        gboolean is_authorized;
+
+        is_authorized = FALSE;
+
+        error = NULL;
+        result = polkit_authority_check_authorization_finish (authority,
+                                                              res,
+                                                              &error);
+        if (error != NULL) {
+                throw_error (data->context,
+                             DEVKIT_DISKS_ERROR_PERMISSION_DENIED,
+                             "Not Authorized: %s", error->message);
+                g_error_free (error);
+        } else {
+                if (result == POLKIT_AUTHORIZATION_RESULT_NOT_AUTHORIZED) {
+                        throw_error (data->context,
+                                     DEVKIT_DISKS_ERROR_PERMISSION_DENIED,
+                                     "Not Authorized");
+                } else if (result == POLKIT_AUTHORIZATION_RESULT_CHALLENGE) {
+                        throw_error (data->context,
+                                     DEVKIT_DISKS_ERROR_PERMISSION_DENIED,
+                                     "Authentication is required");
+                } else {
+                        is_authorized = TRUE;
+                }
+        }
+
+        if (is_authorized) {
+                data->check_auth_callback (data->daemon,
+                                           data->device,
+                                           data->context,
+                                           data->action_id,
+                                           data->num_user_data,
+                                           data->user_data_elements);
+        }
+
+        check_auth_data_free (data);
+
+}
+
+/* num_user_data param is followed by @num_user_data (gpointer, GDestroyNotify) pairs.. */
+void
+devkit_disks_daemon_local_check_auth (DevkitDisksDaemon            *daemon,
+                                      DevkitDisksDevice            *device,
+                                      const gchar                  *action_id,
+                                      DevkitDisksCheckAuthCallback  check_auth_callback,
+                                      DBusGMethodInvocation        *context,
+                                      guint                         num_user_data,
+                                      ...)
+{
+        CheckAuthData *data;
+        va_list va_args;
+        guint n;
+
+        data = g_new0 (CheckAuthData, 1);
+        data->action_id = g_strdup (action_id);
+        data->check_auth_callback = check_auth_callback;
+        data->context = context;
+        data->daemon = g_object_ref (daemon);
+        data->device = device;
+        if (device != NULL)
+                g_object_weak_ref (G_OBJECT (device), lca_device_went_away, data);
+
+        data->cancellable = g_cancellable_new ();
+        data->num_user_data = num_user_data;
+        data->user_data_elements = g_new0 (gpointer, num_user_data);
+        data->user_data_notifiers = g_new0 (GDestroyNotify, num_user_data);
+
+        va_start (va_args, num_user_data);
+        for (n = 0; n < num_user_data; n++) {
+                data->user_data_elements[n] = va_arg (va_args, gpointer);
+                data->user_data_notifiers[n] = va_arg (va_args, GDestroyNotify);
+        }
+        va_end (va_args);
+
+        if (action_id != NULL) {
+                PolkitSubject *subject;
+
+                subject = polkit_system_bus_name_new (dbus_g_method_get_sender (context));
+
+                data->caller = devkit_disks_inhibitor_new (context);
+                g_signal_connect (data->caller,
+                                  "disconnected",
+                                  G_CALLBACK (lca_caller_disconnected_cb),
+                                  data);
+
+                polkit_authority_check_authorization (daemon->priv->authority,
+                                                      subject,
+                                                      action_id,
+                                                      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
+                                                      data->cancellable,
+                                                      (GAsyncReadyCallback) lca_check_authorization_callback,
+                                                      data);
+
+                g_object_unref (subject);
+        } else {
+                data->check_auth_callback (data->daemon,
+                                           data->device,
+                                           data->context,
+                                           data->action_id,
+                                           data->num_user_data,
+                                           data->user_data_elements);
+                check_auth_data_free (data);
+        }
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/
@@ -1475,24 +1558,17 @@ devkit_disks_daemon_local_has_polling_inhibitors (DevkitDisksDaemon *daemon)
         return daemon->priv->polling_inhibitors != NULL;
 }
 
-gboolean
-devkit_disks_daemon_drive_inhibit_all_polling (DevkitDisksDaemon     *daemon,
-                                               char                 **options,
-                                               DBusGMethodInvocation *context)
+static void
+devkit_disks_daemon_drive_inhibit_all_polling_authorized_cb (DevkitDisksDaemon     *daemon,
+                                                             DevkitDisksDevice     *device,
+                                                             DBusGMethodInvocation *context,
+                                                             const gchar           *action_id,
+                                                             guint                  num_user_data,
+                                                             gpointer              *user_data_elements)
 {
+        gchar **options = user_data_elements[0];
         DevkitDisksInhibitor *inhibitor;
-        PolKitCaller *pk_caller;
         guint n;
-
-        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (daemon, context)) == NULL)
-                goto out;
-
-
-        if (!devkit_disks_damon_local_check_auth (daemon,
-                                                  pk_caller,
-                                                  "org.freedesktop.devicekit.disks.inhibit-polling",
-                                                  context))
-                goto out;
 
         for (n = 0; options[n] != NULL; n++) {
                 const char *option = options[n];
@@ -1513,11 +1589,23 @@ devkit_disks_daemon_drive_inhibit_all_polling (DevkitDisksDaemon     *daemon,
         dbus_g_method_return (context, devkit_disks_inhibitor_get_cookie (inhibitor));
 
 out:
-        if (pk_caller != NULL)
-                polkit_caller_unref (pk_caller);
-        return TRUE;
+        ;
 }
 
+gboolean
+devkit_disks_daemon_drive_inhibit_all_polling (DevkitDisksDaemon     *daemon,
+                                               char                 **options,
+                                               DBusGMethodInvocation *context)
+{
+        devkit_disks_daemon_local_check_auth (daemon,
+                                              NULL,
+                                              "org.freedesktop.devicekit.disks.inhibit-polling",
+                                              devkit_disks_daemon_drive_inhibit_all_polling_authorized_cb,
+                                              context,
+                                              1,
+                                              g_strdupv (options), g_strfreev);
+        return TRUE;
+}
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
@@ -1584,15 +1672,12 @@ devkit_disks_daemon_inhibit (DevkitDisksDaemon     *daemon,
                              DBusGMethodInvocation *context)
 {
         DevkitDisksInhibitor *inhibitor;
-        PolKitCaller *pk_caller;
         uid_t uid;
 
-
-        if ((pk_caller = devkit_disks_damon_local_get_caller_for_context (daemon, context)) == NULL)
+        if (!devkit_disks_daemon_local_get_uid (daemon, &uid, context))
                 goto out;
 
-        uid = (uid_t) -1;
-        if (!polkit_caller_get_uid (pk_caller, &uid) || uid != 0) {
+        if (uid != 0) {
                 throw_error (context,
                              DEVKIT_DISKS_ERROR_FAILED,
                              "Only uid 0 is authorized to inhibit the daemon");
@@ -1607,8 +1692,6 @@ devkit_disks_daemon_inhibit (DevkitDisksDaemon     *daemon,
         dbus_g_method_return (context, devkit_disks_inhibitor_get_cookie (inhibitor));
 
 out:
-        if (pk_caller != NULL)
-                polkit_caller_unref (pk_caller);
         return TRUE;
 }
 

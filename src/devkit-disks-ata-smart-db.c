@@ -83,9 +83,9 @@ devkit_disks_ata_smart_db_init (DevkitDisksAtaSmartDb *db)
                                SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
                                NULL);
         if (ret != SQLITE_OK) {
-                g_warning ("error opening sqlite3 database at "
-                           PACKAGE_LOCALSTATE_DIR "/lib/DeviceKit-disks/ata-smart-db.sqlite3"
-                           ": %s", sqlite3_errmsg (db->priv->db));
+                g_debug ("error opening sqlite3 database at "
+                         PACKAGE_LOCALSTATE_DIR "/lib/DeviceKit-disks/ata-smart-db.sqlite3"
+                         ": %s", sqlite3_errmsg (db->priv->db));
                 sqlite3_close (db->priv->db);
                 g_object_unref (db);
                 goto out;
@@ -108,7 +108,7 @@ devkit_disks_ata_smart_db_init (DevkitDisksAtaSmartDb *db)
                             NULL,
                             &err_msg);
         if (ret != SQLITE_OK) {
-                g_warning ("SQL error creating tables: %s", err_msg);
+                g_debug ("SQL error creating tables: %s", err_msg);
                 sqlite3_free (err_msg);
         }
 

@@ -13,7 +13,7 @@ INCLUDES = \
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\" \
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT	\
 	$(DBUS_GLIB_CFLAGS) \
-	$(POLKIT_DBUS_CFLAGS) \
+	$(POLKIT_GOBJECT_1_CFLAGS) \
 	$(DEVKIT_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(GIO_CFLAGS)
@@ -71,7 +71,7 @@ devkit_disks_daemon_CFLAGS = 				\
 devkit_disks_daemon_LDADD = 				\
 	$(GIO_LIBS)					\
 	$(DBUS_GLIB_LIBS)				\
-	$(POLKIT_DBUS_LIBS)				\
+	$(POLKIT_GOBJECT_1_LIBS) 			\
 	$(DEVKIT_LIBS)					\
 	$(ZLIB_LIBS)					\
 	$(SQLITE3_LIBS)					\

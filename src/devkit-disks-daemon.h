@@ -22,7 +22,7 @@
 #define __DEVKIT_DISKS_DAEMON_H__
 
 #include <devkit-gobject/devkit-gobject.h>
-#include <polkit-dbus/polkit-dbus.h>
+#include <polkit/polkit.h>
 #include <dbus/dbus-glib.h>
 
 #include "devkit-disks-types.h"
@@ -53,6 +53,7 @@ struct DevkitDisksDaemonClass
 typedef enum
 {
         DEVKIT_DISKS_ERROR_FAILED,
+        DEVKIT_DISKS_ERROR_PERMISSION_DENIED,
         DEVKIT_DISKS_ERROR_BUSY,
         DEVKIT_DISKS_ERROR_CANCELLED,
         DEVKIT_DISKS_ERROR_INHIBITED,
@@ -90,12 +91,26 @@ DevkitDisksDevice *devkit_disks_daemon_local_find_by_dev         (DevkitDisksDae
 DevkitDisksAtaSmartDb *devkit_disks_daemon_local_get_ata_smart_db (DevkitDisksDaemon       *daemon);
 
 
-PolKitCaller      *devkit_disks_damon_local_get_caller_for_context (DevkitDisksDaemon     *daemon,
-                                                                    DBusGMethodInvocation *context);
+typedef void (*DevkitDisksCheckAuthCallback) (DevkitDisksDaemon     *daemon,
+                                              DevkitDisksDevice     *device,
+                                              DBusGMethodInvocation *context,
+                                              const gchar           *action_id,
+                                              guint                  num_user_data,
+                                              gpointer              *user_data_elements);
 
-gboolean           devkit_disks_damon_local_check_auth             (DevkitDisksDaemon     *daemon,
-                                                                    PolKitCaller          *pk_caller,
-                                                                    const char            *action_id,
+/* num_user_data param is followed by @num_user_data (gpointer, GDestroyNotify) pairs.. */
+void               devkit_disks_daemon_local_check_auth          (DevkitDisksDaemon            *daemon,
+                                                                  DevkitDisksDevice            *device,
+                                                                  const gchar                  *action_id,
+                                                                  DevkitDisksCheckAuthCallback  check_auth_callback,
+                                                                  DBusGMethodInvocation        *context,
+                                                                  guint                         num_user_data,
+                                                                  ...);
+
+
+/* TODO: probably use G_GNUC_WARN_UNUSED_RESULT here and fix up callers */
+gboolean           devkit_disks_daemon_local_get_uid               (DevkitDisksDaemon     *daemon,
+                                                                    uid_t                 *out_uid,
                                                                     DBusGMethodInvocation *context);
 
 void               devkit_disks_daemon_local_synthesize_changed_on_all_devices (DevkitDisksDaemon *daemon);

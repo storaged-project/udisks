@@ -143,7 +143,7 @@ devkit_disks_inhibitor_name_owner_changed (DBusMessage *message)
                         for (l = inhibitors; l != NULL; l = l->next) {
                                 DevkitDisksInhibitor *inhibitor = DEVKIT_DISKS_INHIBITOR (l->data);
 
-                                g_debug (" looking at %s", inhibitor->priv->unique_dbus_name);
+                                //g_debug (" looking at %s", inhibitor->priv->unique_dbus_name);
                                 if (g_strcmp0 (name, inhibitor->priv->unique_dbus_name) == 0) {
                                         g_signal_emit_by_name (inhibitor, "disconnected");
                                 }

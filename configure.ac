@@ -141,9 +141,15 @@ PKG_CHECK_MODULES(DBUS_GLIB, [dbus-glib-1 >= 0.74])
 AC_SUBST(DBUS_GLIB_CFLAGS)
 AC_SUBST(DBUS_GLIB_LIBS)
 
-PKG_CHECK_MODULES(POLKIT_DBUS, [polkit-dbus >= 0.7])
-AC_SUBST(POLKIT_DBUS_CFLAGS)
-AC_SUBST(POLKIT_DBUS_LIBS)
+msg_polkit_gobject_1=no
+PKG_CHECK_MODULES(POLKIT_GOBJECT_1,
+                  polkit-gobject-1 >= 0.92,
+                  [AM_CONDITIONAL(HAVE_POLKIT_GOBJECT_1, true)
+                   AC_DEFINE(HAVE_POLKIT_GOBJECT_1, [], [Set if polkit-gobject-1 is available])]
+                   msg_polkit_gobject_1=yes,
+                   [AM_CONDITIONAL(HAVE_POLKIT_GOBJECT_1, false)])
+AC_SUBST(POLKIT_GOBJECT_1_CFLAGS)
+AC_SUBST(POLKIT_GOBJECT_1_LIBS)
 
 PKG_CHECK_MODULES(LIBPARTED, [libparted >= 1.8.8])
 AC_SUBST(LIBPARTED_CFLAGS)
