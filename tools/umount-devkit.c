@@ -40,34 +40,11 @@
 
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
-#include <polkit-dbus/polkit-dbus.h>
 
 #include "devkit-disks-daemon-glue.h"
 #include "devkit-disks-device-glue.h"
 
 static DBusGConnection *bus;
-
-static gboolean
-polkit_dbus_gerror_parse (GError *error,
-                          PolKitAction **action,
-                          PolKitResult *result)
-{
-        gboolean ret;
-        const char *name;
-
-        ret = FALSE;
-        if (error->domain != DBUS_GERROR || error->code != DBUS_GERROR_REMOTE_EXCEPTION)
-                goto out;
-
-        name = dbus_g_error_get_name (error);
-
-        ret = polkit_dbus_error_parse_from_strings (name,
-                                                    error->message,
-                                                    action,
-                                                    result);
-out:
-        return ret;
-}
 
 static void
 do_unmount (const char *object_path,
@@ -91,37 +68,9 @@ try_again:
         if (!org_freedesktop_DeviceKit_Disks_Device_filesystem_unmount (proxy,
                                                                         (const char **) unmount_options,
                                                                         &error)) {
-                PolKitAction *pk_action;
-                PolKitResult pk_result;
-
-                if (polkit_dbus_gerror_parse (error, &pk_action, &pk_result)) {
-                        if (pk_result != POLKIT_RESULT_NO) {
-                                char *action_id;
-                                DBusError d_error;
-
-                                polkit_action_get_action_id (pk_action, &action_id);
-                                dbus_error_init (&d_error);
-                                if (polkit_auth_obtain (action_id,
-                                                        0,
-                                                        getpid (),
-                                                        &d_error)) {
-                                        polkit_action_unref (pk_action);
-                                        goto try_again;
-                                } else {
-                                        g_print ("Obtaining authorization failed: %s: %s\n",
-                                                 d_error.name, d_error.message);
-                                        dbus_error_free (&d_error);
-                                        goto out;
-                                }
-                        }
-                        polkit_action_unref (pk_action);
-                        g_error_free (error);
-                        goto out;
-                } else {
-                        g_print ("Unmount failed: %s\n", error->message);
-                        g_error_free (error);
-                        goto out;
-                }
+                g_print ("Unmount failed: %s\n", error->message);
+                g_error_free (error);
+                goto out;
         }
 out:
         g_strfreev (unmount_options);
