@@ -64,11 +64,10 @@ tracker reference if applicable) and so forth. Be concise but not too brief.
 
  - Always add a brief description of the commit to the _first_ line of
    the commit and terminate by two newlines (it will work without the
-   second newline, but that is not nice for the interfaces). 
+   second newline, but that is not nice for the interfaces).
 
  - First line (the brief description) must only be one sentence and
-   must not start with a capital letter. Don't use a trailing period
-   either.
+   must start with a capital letter. Don't use a trailing period.
 
  - The main description (the body) is normal prose and should use normal
    punctuation and capital letters where appropriate. Normally, for patches
