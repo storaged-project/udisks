@@ -1353,6 +1353,7 @@ void
 devkit_disks_daemon_local_check_auth (DevkitDisksDaemon            *daemon,
                                       DevkitDisksDevice            *device,
                                       const gchar                  *action_id,
+                                      const gchar                  *operation,
                                       DevkitDisksCheckAuthCallback  check_auth_callback,
                                       DBusGMethodInvocation        *context,
                                       guint                         num_user_data,
@@ -1385,6 +1386,77 @@ devkit_disks_daemon_local_check_auth (DevkitDisksDaemon            *daemon,
 
         if (action_id != NULL) {
                 PolkitSubject *subject;
+                GHashTable *details;
+                gchar partition_number_buf[32];
+
+                /* Set details - see devkit-disks-polkit-action-lookup.c for where
+                 * these key/value pairs are used
+                 */
+                details = g_hash_table_new (g_str_hash, g_str_equal);
+                if (operation != NULL) {
+                        g_hash_table_insert (details,
+                                             "operation",
+                                             (gpointer) operation);
+                }
+                if (device != NULL) {
+                        DevkitDisksDevice *drive;
+
+                        g_hash_table_insert (details,
+                                             "unix-device",
+                                             device->priv->device_file);
+                        if (device->priv->device_file_by_id->len > 0)
+                                g_hash_table_insert (details,
+                                                     "unix-device-by-id",
+                                                     device->priv->device_file_by_id->pdata[0]);
+                        if (device->priv->device_file_by_path->len > 0)
+                                g_hash_table_insert (details,
+                                                     "unix-device-by-path",
+                                                     device->priv->device_file_by_path->pdata[0]);
+
+                        if (device->priv->device_is_drive) {
+                                drive = device;
+                        } else if (device->priv->device_is_partition) {
+                                g_hash_table_insert (details, "is-partition", "1");
+                                g_snprintf (partition_number_buf,
+                                            sizeof partition_number_buf,
+                                            "%d",
+                                            device->priv->partition_number);
+                                g_hash_table_insert (details, "partition-number", partition_number_buf);
+                                drive = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon,
+                                                                                       device->priv->partition_slave);
+                        } else {
+                                drive = NULL;
+                        }
+
+                        if (drive != NULL) {
+                                g_hash_table_insert (details,
+                                                     "drive-unix-device",
+                                                     drive->priv->device_file);
+                                if (drive->priv->device_file_by_id->len > 0)
+                                        g_hash_table_insert (details,
+                                                             "drive-unix-device-by-id",
+                                                             drive->priv->device_file_by_id->pdata[0]);
+                                if (drive->priv->device_file_by_path->len > 0)
+                                        g_hash_table_insert (details,
+                                                             "drive-unix-device-by-path",
+                                                             drive->priv->device_file_by_path->pdata[0]);
+                                g_hash_table_insert (details,
+                                                     "drive-vendor",
+                                                     drive->priv->drive_vendor);
+                                g_hash_table_insert (details,
+                                                     "drive-model",
+                                                     drive->priv->drive_model);
+                                g_hash_table_insert (details,
+                                                     "drive-revision",
+                                                     drive->priv->drive_revision);
+                                g_hash_table_insert (details,
+                                                     "drive-serial",
+                                                     drive->priv->drive_serial);
+                                g_hash_table_insert (details,
+                                                     "drive-connection-interface",
+                                                     drive->priv->drive_connection_interface);
+                        }
+                }
 
                 subject = polkit_system_bus_name_new (dbus_g_method_get_sender (context));
 
@@ -1397,12 +1469,14 @@ devkit_disks_daemon_local_check_auth (DevkitDisksDaemon            *daemon,
                 polkit_authority_check_authorization (daemon->priv->authority,
                                                       subject,
                                                       action_id,
+                                                      details,
                                                       POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
                                                       data->cancellable,
                                                       (GAsyncReadyCallback) lca_check_authorization_callback,
                                                       data);
 
                 g_object_unref (subject);
+                g_hash_table_unref (details);
         } else {
                 data->check_auth_callback (data->daemon,
                                            data->device,
@@ -1600,6 +1674,7 @@ devkit_disks_daemon_drive_inhibit_all_polling (DevkitDisksDaemon     *daemon,
         devkit_disks_daemon_local_check_auth (daemon,
                                               NULL,
                                               "org.freedesktop.devicekit.disks.inhibit-polling",
+                                              "InhibitAllPolling",
                                               devkit_disks_daemon_drive_inhibit_all_polling_authorized_cb,
                                               context,
                                               1,

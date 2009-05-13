@@ -1,0 +1,216 @@
+# Danish translations for DeviceKit-disks.
+# Copyright (C) 2009 Red Hat, Inc.
+# This file is distributed under the same license as the DeviceKit-disks package.
+# David Zeuthen <davidz@redhat.com>, 2009.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: DeviceKit-disks\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2009-05-12 18:09-0400\n"
+"PO-Revision-Date: 2009-05-12 17:01-0400\n"
+"Last-Translator: David Zeuthen <davidz@redhat.com>\n"
+"Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:1
+msgid "Authentication is required to cancel a job initiated by another user"
+msgstr ""
+"Autorisering er påkrævet for at afbryde et job påbegyndt af en anden bruger"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:2
+msgid "Authentication is required to check the file system on the device"
+msgstr "Autorisering er påkrævet for at checke fil systemet på en enhed"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:3
+msgid "Authentication is required to configure Linux Software RAID devices"
+msgstr "Autorisering er påkrævet for at konfigurere RAID enheder"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:4
+msgid "Authentication is required to eject media from the device"
+msgstr "Autorisering er påkrævet for at skubbe medie ud af en enhed"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:5
+msgid "Authentication is required to inhibit media detection"
+msgstr "Autorisering er påkrævet for at undertrykke medie detektion"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:6
+msgid "Authentication is required to list open files on a mounted file system"
+msgstr "Autorisering er påkrævet for at liste åbne filer"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:7
+msgid ""
+"Authentication is required to lock an encrypted device unlocked by another "
+"user"
+msgstr ""
+"Autorisering er påkrævet for at låse en krypteret enhed åbnet af en anden "
+"bruger"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:8
+msgid "Authentication is required to modify the device"
+msgstr "Autorisering er påkrævet for at ændre en enhed"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:9
+msgid "Authentication is required to mount the device"
+msgstr "Autorisering er påkrævet for at montere et fil system"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:10
+msgid "Authentication is required to refresh ATA SMART data"
+msgstr "Autorisering er påkrævet for at læse ATA SMART data"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:11
+msgid "Authentication is required to retrieve historical ATA SMART data"
+msgstr "Autorisering er påkrævet for at hente historisk ATA SMART data"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:12
+msgid "Authentication is required to run ATA SMART self tests"
+msgstr "Autorisering er påkrævet for at køre ATA SMART selvcheck"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:13
+msgid "Authentication is required to unlock an encrypted device"
+msgstr "Autorisering er påkrævet for at åbne en krypteret enhed"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:14
+msgid "Authentication is required to unmount devices mounted by another user"
+msgstr ""
+"Autorisering er påkrævet for at afmontere enheder monteret af en anden bruger"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:15
+msgid "Cancel a job initiated by another user"
+msgstr "Afbryd job påbegyndt af en anden bruger"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:16
+msgid "Check file system of a system-internal device"
+msgstr "Check fil system for en intern enhed"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:17
+msgid "Check file system on a device"
+msgstr "Check fil system for en enhed"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:18
+msgid "Configure Linux Software RAID"
+msgstr "Konfigurér Software RAID"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:19
+msgid "Eject a device"
+msgstr "Skub media ud af en enhed"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:20
+msgid "Inhibit media detection"
+msgstr "Undertryk medie detektion"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:21
+msgid "List open files"
+msgstr "Vis åbne filer"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:22
+msgid "List open files on a system-internal device"
+msgstr "Vis åbne filer på en intern enhed"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:23
+msgid "Lock an encrypted device unlocked by another user"
+msgstr "Lås en krypteret enhed åbnet af en anden bruger"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:24
+msgid "Modify a device"
+msgstr "Modificér en enhed"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:25
+msgid "Modify a system-internal device"
+msgstr "Modificér en intern enhed"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:26
+msgid "Mount a device"
+msgstr "Montér en enhed"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:27
+msgid "Mount a system-internal device"
+msgstr "Montér en intern enhed"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:28
+msgid "Refresh ATA SMART data"
+msgstr "Læs ATA SMART data"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:29
+msgid "Retrieve historical ATA SMART data"
+msgstr "Hent historisk ATA SMART data"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:30
+msgid "Run ATA SMART Self Tests"
+msgstr "Kør ATA SMART selv checks"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:31
+msgid "Unlock an encrypted device"
+msgstr "Åbn en krypteret enhed"
+
+#: ../policy/org.freedesktop.devicekit.disks.policy.in.h:32
+msgid "Unmount a device mounted by another user"
+msgstr "Afmontér en enhed monteret af en anden bruger"
+
+#: ../src/devkit-disks-polkit-action-lookup.c:94
+msgid "Authentication is required to delete a partition"
+msgstr "Autorisering er påkrævet for at slette en partition"
+
+#: ../src/devkit-disks-polkit-action-lookup.c:98
+msgid "Authentication is required to create a filesystem"
+msgstr "Autorisering er påkrævet for at skabe et fil system"
+
+#: ../src/devkit-disks-polkit-action-lookup.c:102
+msgid "Authentication is required to create a partition"
+msgstr "Autorisering er påkrævet for at skabe en partition"
+
+#: ../src/devkit-disks-polkit-action-lookup.c:106
+msgid "Authentication is required to modify a partition"
+msgstr "Autorisering er påkrævet for at ændre en partition"
+
+#: ../src/devkit-disks-polkit-action-lookup.c:110
+msgid "Authentication is required to create a partition table"
+msgstr "Autorisering er påkrævet for at skabe en partition tabel"
+
+#: ../src/devkit-disks-polkit-action-lookup.c:114
+msgid "Authentication is required to set the file system label"
+msgstr "Autorisering er påkrævet for at sætte fil system mærkat"
+
+#: ../src/devkit-disks-polkit-action-lookup.c:118
+msgid "Authentication is required to stop a Software RAID device"
+msgstr "Autorisering er påkrævet for at stoppen en RAID enhed"
+
+#: ../src/devkit-disks-polkit-action-lookup.c:122
+msgid ""
+"Authentication is required to add a new component to a Software RAID device"
+msgstr ""
+"Autorisering er påkrævet for at tilføje en ny komponent til en RAID enhed"
+
+#: ../src/devkit-disks-polkit-action-lookup.c:126
+msgid ""
+"Authentication is required to remove a component from a Software RAID device"
+msgstr "Autorisering er påkrævet for at fjerne en komponent fra en RAID enhed"
+
+#: ../src/devkit-disks-polkit-action-lookup.c:130
+msgid "Authentication is required to start a Software RAID device"
+msgstr "Autorisering er påkrævet for starte en RAID enhed"
+
+#: ../src/devkit-disks-polkit-action-lookup.c:134
+msgid "Authentication is required to inhibit polling on a drive"
+msgstr ""
+"Autorisering er påkrævet for at undertrykke medie detektion for et drev"
+
+#: ../src/devkit-disks-polkit-action-lookup.c:138
+msgid "Authentication is required to poll for media"
+msgstr "Autorisering er påkrævet for at tjekke medie"
+
+#: ../src/devkit-disks-polkit-action-lookup.c:142
+msgid "Authentication is required to inhibit all drive polling"
+msgstr "Autorisering er påkrævet for at undertrykke al medie detektion"
+
+#: ../src/devkit-disks-polkit-action-lookup.c:212
+msgid "Device"
+msgstr "Enhed"
+
+#: ../src/devkit-disks-polkit-action-lookup.c:231
+msgid "Drive"
+msgstr "Drev"
