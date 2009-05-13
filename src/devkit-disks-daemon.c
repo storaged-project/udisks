@@ -1306,7 +1306,7 @@ lca_check_authorization_callback (PolkitAuthority *authority,
                                   gpointer         user_data)
 {
         CheckAuthData *data = user_data;
-        PolkitAuthorizationResult result;
+        PolkitAuthorizationResult *result;
         GError *error;
         gboolean is_authorized;
 
@@ -1322,17 +1322,18 @@ lca_check_authorization_callback (PolkitAuthority *authority,
                              "Not Authorized: %s", error->message);
                 g_error_free (error);
         } else {
-                if (result == POLKIT_AUTHORIZATION_RESULT_NOT_AUTHORIZED) {
-                        throw_error (data->context,
-                                     DEVKIT_DISKS_ERROR_PERMISSION_DENIED,
-                                     "Not Authorized");
-                } else if (result == POLKIT_AUTHORIZATION_RESULT_CHALLENGE) {
+                if (polkit_authorization_result_get_is_authorized (result)) {
+                        is_authorized = TRUE;
+                } else if (polkit_authorization_result_get_is_challenge (result)) {
                         throw_error (data->context,
                                      DEVKIT_DISKS_ERROR_PERMISSION_DENIED,
                                      "Authentication is required");
                 } else {
-                        is_authorized = TRUE;
+                        throw_error (data->context,
+                                     DEVKIT_DISKS_ERROR_PERMISSION_DENIED,
+                                     "Not Authorized");
                 }
+                g_object_unref (result);
         }
 
         if (is_authorized) {
@@ -1345,7 +1346,6 @@ lca_check_authorization_callback (PolkitAuthority *authority,
         }
 
         check_auth_data_free (data);
-
 }
 
 /* num_user_data param is followed by @num_user_data (gpointer, GDestroyNotify) pairs.. */
