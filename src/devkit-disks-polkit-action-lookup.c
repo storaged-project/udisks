@@ -151,7 +151,7 @@ static const Map map[] = {
 static gchar *
 devkit_disks_action_lookup_get_message   (PolkitBackendActionLookup *lookup,
                                           const gchar               *action_id,
-                                          GHashTable                *details,
+                                          PolkitDetails             *details,
                                           PolkitActionDescription   *action_description)
 {
         const gchar *operation;
@@ -163,7 +163,7 @@ devkit_disks_action_lookup_get_message   (PolkitBackendActionLookup *lookup,
         if (!g_str_has_prefix (action_id, "org.freedesktop.devicekit.disks."))
                 goto out;
 
-        operation = g_hash_table_lookup (details, "operation");
+        operation = polkit_details_lookup (details, "operation");
         if (operation == NULL)
                 goto out;
 
@@ -182,7 +182,7 @@ devkit_disks_action_lookup_get_message   (PolkitBackendActionLookup *lookup,
 static gchar *
 devkit_disks_action_lookup_get_icon_name (PolkitBackendActionLookup *lookup,
                                           const gchar               *action_id,
-                                          GHashTable                *details,
+                                          PolkitDetails             *details,
                                           PolkitActionDescription   *action_description)
 {
         gchar *ret;
@@ -198,34 +198,34 @@ devkit_disks_action_lookup_get_icon_name (PolkitBackendActionLookup *lookup,
         return ret;
 }
 
-static GHashTable *
+static PolkitDetails *
 devkit_disks_action_lookup_get_details   (PolkitBackendActionLookup *lookup,
                                           const gchar               *action_id,
-                                          GHashTable                *details,
+                                          PolkitDetails             *details,
                                           PolkitActionDescription   *action_description)
 {
         const gchar *s;
         const gchar *s2;
         const gchar *s3;
         GString *str;
-        GHashTable *ret;
+        PolkitDetails *ret;
 
         if (!g_str_has_prefix (action_id, "org.freedesktop.devicekit.disks."))
                 return NULL;
 
-        ret = g_hash_table_new_full (g_str_hash, g_str_equal, NULL, g_free);
+        ret = polkit_details_new ();
 
         /* see devkit_disks_daemon_local_check_auth() in devkit-disks-daemon.c
          * for where these keys are set
          */
 
-        s = g_hash_table_lookup (details, "unix-device");
+        s = polkit_details_lookup (details, "unix-device");
         if (s != NULL)
-                g_hash_table_insert (ret, _("Device"), g_strdup (s));
+                polkit_details_insert (ret, _("Device"), s);
 
-        s = g_hash_table_lookup (details, "drive-vendor");
-        s2 = g_hash_table_lookup (details, "drive-model");
-        s3 = g_hash_table_lookup (details, "drive-revision");
+        s = polkit_details_lookup (details, "drive-vendor");
+        s2 = polkit_details_lookup (details, "drive-model");
+        s3 = polkit_details_lookup (details, "drive-revision");
         str = g_string_new (NULL);
         if (s != NULL) {
                 g_string_append (str, s);
@@ -242,7 +242,7 @@ devkit_disks_action_lookup_get_details   (PolkitBackendActionLookup *lookup,
         }
 
         if (str->len > 0) {
-                g_hash_table_insert (ret, _("Drive"), g_strdup (str->str));
+                polkit_details_insert (ret, _("Drive"), str->str);
         }
         g_string_free (str, TRUE);
 
