@@ -190,6 +190,7 @@ AM_GLIB_GNU_GETTEXT
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE],["$GETTEXT_PACKAGE"],[gettext domain])
 
 AC_OUTPUT([
+DeviceKit-disks.pc
 Makefile
 src/Makefile
 tools/Makefile

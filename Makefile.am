@@ -19,8 +19,12 @@ $(srcdir)/ChangeLog:
 	  echo A git checkout and git-log is required to generate this file >> $@); \
 	fi
 
+pkgconfigdir = $(datadir)/pkgconfig
+pkgconfig_DATA = DeviceKit-disks.pc
+
 EXTRA_DIST = 			\
 	HACKING 		\
+	DeviceKit-disks.pc.in	\
 	mkinstalldirs 		\
 	ChangeLog 		\
 	intltool-extract.in 	\
