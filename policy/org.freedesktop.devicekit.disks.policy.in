@@ -80,8 +80,18 @@
   </action>
 
   <action id="org.freedesktop.devicekit.disks.drive-eject">
-    <_description>Eject a device</_description>
+    <_description>Eject media from a device</_description>
     <_message>Authentication is required to eject media from the device</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.devicekit.disks.drive-detach">
+    <_description>Detach a drive</_description>
+    <_message>Authentication is required to detach the drive</_message>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>

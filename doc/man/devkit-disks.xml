@@ -156,6 +156,23 @@
 
       <varlistentry>
         <term>
+          <option>--detach</option>
+          <arg choice="plain"><replaceable>device_file</replaceable></arg>
+          <arg><option>--detach-options</option><arg choice="plain"><replaceable>options</replaceable></arg></arg>
+        </term>
+        <listitem>
+          <para>
+            Detaches (e.g. powering down the physical port the device
+            is connected to) the device represented
+            by <replaceable>device_file</replaceable> using a
+            comma-separated list
+            of <replaceable>options</replaceable>.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>
           <option>--ata-smart-refresh</option>
           <arg choice="plain"><replaceable>device_file</replaceable></arg>
           <arg><option>--ata-smart-wakeup</option></arg>

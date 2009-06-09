@@ -93,6 +93,7 @@ libexec_PROGRAMS += devkit-disks-helper-mkfs                    	\
 		    devkit-disks-helper-fstab-mounter			\
 		    devkit-disks-helper-ata-smart-collect		\
 		    devkit-disks-helper-ata-smart-selftest		\
+		    devkit-disks-helper-drive-detach			\
 		    $(NULL)
 
 libexec_SCRIPTS = devkit-disks-helper-change-luks-password
@@ -136,6 +137,10 @@ devkit_disks_helper_linux_md_remove_component_LDADD = $(GLIB_LIBS)
 devkit_disks_helper_fstab_mounter_SOURCES = job-shared.h job-fstab-mounter.c
 devkit_disks_helper_fstab_mounter_CPPFLAGS = $(AM_CPPFLAGS)
 devkit_disks_helper_fstab_mounter_LDADD = $(GLIB_LIBS)
+
+devkit_disks_helper_drive_detach_SOURCES = job-shared.h job-drive-detach.c
+devkit_disks_helper_drive_detach_CPPFLAGS = $(AM_CPPFLAGS) $(LIBUDEV_CFLAGS) $(SGUTILS_CFLAGS)
+devkit_disks_helper_drive_detach_LDADD = $(LIBUDEV_LIBS) $(SGUTILS_LIBS) $(GLIB_LIBS)
 
 # TODO: move to udev
 udevhelperdir = $(slashlibdir)/udev

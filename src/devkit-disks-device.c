@@ -206,6 +206,7 @@ enum
         PROP_DRIVE_MEDIA,
         PROP_DRIVE_IS_MEDIA_EJECTABLE,
         PROP_DRIVE_REQUIRES_EJECT,
+        PROP_DRIVE_CAN_DETACH,
 
         PROP_OPTICAL_DISC_IS_BLANK,
         PROP_OPTICAL_DISC_IS_APPENDABLE,
@@ -511,6 +512,9 @@ get_property (GObject         *object,
 		break;
 	case PROP_DRIVE_REQUIRES_EJECT:
 		g_value_set_boolean (value, device->priv->drive_requires_eject);
+		break;
+	case PROP_DRIVE_CAN_DETACH:
+		g_value_set_boolean (value, device->priv->drive_can_detach);
 		break;
 
 	case PROP_OPTICAL_DISC_IS_BLANK:
@@ -982,6 +986,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DRIVE_REQUIRES_EJECT,
                 g_param_spec_boolean ("drive-requires-eject", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_CAN_DETACH,
+                g_param_spec_boolean ("drive-can-detach", NULL, NULL, FALSE, G_PARAM_READABLE));
 
         g_object_class_install_property (
                 object_class,
@@ -2036,6 +2044,7 @@ update_info_drive (DevkitDisksDevice *device)
         const gchar *media_in_drive;
         gboolean drive_is_ejectable;
         gboolean drive_requires_eject;
+        gboolean drive_can_detach;
         gchar *decoded_string;
         guint n;
 
@@ -2125,6 +2134,13 @@ update_info_drive (DevkitDisksDevice *device)
         devkit_disks_device_set_drive_media (device, media_in_drive);
 
         g_ptr_array_free (media_compat_array, TRUE);
+
+        /* right now, we only offer to detach USB devices */
+        drive_can_detach = FALSE;
+        if (g_strcmp0 (device->priv->drive_connection_interface, "usb") == 0) {
+                drive_can_detach = TRUE;
+        }
+        devkit_disks_device_set_drive_can_detach (device, drive_can_detach);
 
         return TRUE;
 }
@@ -5091,6 +5107,130 @@ devkit_disks_device_drive_eject (DevkitDisksDevice     *device,
                                               "org.freedesktop.devicekit.disks.drive-eject",
                                               "DriveEject",
                                               devkit_disks_device_drive_eject_authorized_cb,
+                                              context,
+                                              1,
+                                              g_strdupv (options), g_strfreev);
+
+ out:
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+drive_detach_completed_cb (DBusGMethodInvocation *context,
+                          DevkitDisksDevice *device,
+                          gboolean job_was_cancelled,
+                          int status,
+                          const char *stderr,
+                          const char *stdout,
+                          gpointer user_data)
+{
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+                /* TODO: probably wait for has_media to change to FALSE */
+                dbus_g_method_return (context);
+        } else {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_FAILED,
+                                     "Error detaching: helper exited with exit code %d: %s",
+                                     WEXITSTATUS (status),
+                                     stderr);
+                }
+        }
+}
+
+static void
+devkit_disks_device_drive_detach_authorized_cb (DevkitDisksDaemon     *daemon,
+                                               DevkitDisksDevice     *device,
+                                               DBusGMethodInvocation *context,
+                                               const gchar           *action_id,
+                                               guint                  num_user_data,
+                                               gpointer              *user_data_elements)
+{
+        gchar **options = user_data_elements[0];
+        int n;
+        char *argv[16];
+        GError *error;
+        char *mount_path;
+
+        error = NULL;
+        mount_path = NULL;
+
+        if (!device->priv->device_is_drive) {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                             "Device is not a drive");
+                goto out;
+        }
+
+        if (!device->priv->device_is_media_available) {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                             "No media in drive");
+                goto out;
+        }
+
+        if (devkit_disks_device_local_is_busy (device, TRUE, &error)) {
+                dbus_g_method_return_error (context, error);
+                g_error_free (error);
+                goto out;
+        }
+
+        for (n = 0; options[n] != NULL; n++) {
+                const char *option = options[n];
+                throw_error (context,
+                             DEVKIT_DISKS_ERROR_INVALID_OPTION,
+                             "Unknown option %s", option);
+                goto out;
+        }
+
+        n = 0;
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-drive-detach";
+        argv[n++] = device->priv->device_file;
+        argv[n++] = device->priv->native_path;
+        argv[n++] = NULL;
+
+        if (!job_new (context,
+                      "DriveDetach",
+                      FALSE,
+                      device,
+                      argv,
+                      NULL,
+                      drive_detach_completed_cb,
+                      NULL,
+                      NULL)) {
+                goto out;
+        }
+
+out:
+        ;
+}
+
+gboolean
+devkit_disks_device_drive_detach (DevkitDisksDevice     *device,
+                                 char                 **options,
+                                 DBusGMethodInvocation *context)
+{
+        if (!device->priv->device_is_drive) {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                             "Device is not a drive");
+                goto out;
+        }
+
+        if (!device->priv->device_is_media_available) {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                             "No media in drive");
+                goto out;
+        }
+
+        devkit_disks_daemon_local_check_auth (device->priv->daemon,
+                                              device,
+                                              "org.freedesktop.devicekit.disks.drive-detach",
+                                              "DriveDetach",
+                                              devkit_disks_device_drive_detach_authorized_cb,
                                               context,
                                               1,
                                               g_strdupv (options), g_strfreev);

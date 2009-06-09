@@ -183,6 +183,10 @@ gboolean devkit_disks_device_drive_uninhibit_polling (DevkitDisksDevice     *dev
 gboolean devkit_disks_device_drive_poll_media (DevkitDisksDevice     *device,
                                                DBusGMethodInvocation *context);
 
+gboolean devkit_disks_device_drive_detach (DevkitDisksDevice     *device,
+                                           char                 **options,
+                                           DBusGMethodInvocation *context);
+
 G_END_DECLS
 
 #endif /* __DEVKIT_DISKS_DEVICE_H__ */

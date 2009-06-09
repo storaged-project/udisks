@@ -1032,6 +1032,43 @@
 
     <!-- ************************************************************ -->
 
+    <method name="DriveDetach">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Detach options. Currently no options are recognized.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Detachs the device by e.g. powering down the physical port
+            it is connected to. Note that not all devices or ports are
+            capable of this. Check the
+            <doc:ref type="property" to="Device:drive-can-detach">drive-can-detach</doc:ref>
+            property before attempting to invoke this method.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.drive-detach</doc:term>
+              <doc:definition>To detach a device</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="&ERROR_BUSY;">if the device or a dependent device (e.g. partition or cleartext luks device) is busy (e.g. mounted)</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
+          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+          <doc:error name="&ERROR_INVALID_OPTION;">if an invalid or malformed option was given</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
     <method name="DriveAtaSmartRefreshData">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="options" direction="in" type="as">
@@ -1933,6 +1970,15 @@
             ejected from the drive, use the
             <doc:ref type="property" to="Device:drive-is-media-ejectable">drive-is-media-ejectable</doc:ref>
             property instead.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-can-detach" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE only if the drive is capable of being detached by
+            e.g. powering down the port it is connected to.
             This property is only valid if
             <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
             is TRUE.

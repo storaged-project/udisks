@@ -16,12 +16,14 @@ __devkit_disks() {
         COMPREPLY=($(compgen -W "$(devkit-disks --enumerate-device-files)" -- $cur))
     elif [ "${COMP_WORDS[$(($COMP_CWORD - 1))]}" = "--unmount" ] ; then
         COMPREPLY=($(compgen -W "$(devkit-disks --enumerate-device-files)" -- $cur))
+    elif [ "${COMP_WORDS[$(($COMP_CWORD - 1))]}" = "--detach" ] ; then
+        COMPREPLY=($(compgen -W "$(devkit-disks --enumerate-device-files)" -- $cur))
     elif [ "${COMP_WORDS[$(($COMP_CWORD - 1))]}" = "--ata-smart-refresh" ] ; then
         COMPREPLY=($(compgen -W "$(devkit-disks --enumerate-device-files)" -- $cur))
     elif [ "${COMP_WORDS[$(($COMP_CWORD - 1))]}" = "--ata-smart-simulate" ] ; then
         _filedir || return 0
     else
-        COMPREPLY=($(IFS=: compgen -W "--dump:--inhibit-polling:--inhibit-all-polling:--enumerate:--enumerate-device-files:--monitor:--monitor-detail:--show-info:--help:--mount:--mount-fstype:--mount-options:--unmount:--unmount-options:--ata-smart-refresh:--ata-smart-wakeup:--ata-smart-simulate" -- $cur))
+        COMPREPLY=($(IFS=: compgen -W "--dump:--inhibit-polling:--inhibit-all-polling:--enumerate:--enumerate-device-files:--monitor:--monitor-detail:--show-info:--help:--mount:--mount-fstype:--mount-options:--unmount:--unmount-options:--detach:--detach-options:--ata-smart-refresh:--ata-smart-wakeup:--ata-smart-simulate" -- $cur))
     fi
 }
 

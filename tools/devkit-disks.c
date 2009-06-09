@@ -65,6 +65,8 @@ static char         *opt_mount_fstype           = NULL;
 static char         *opt_mount_options          = NULL;
 static char         *opt_unmount                = NULL;
 static char         *opt_unmount_options        = NULL;
+static char         *opt_detach                 = NULL;
+static char         *opt_detach_options         = NULL;
 static char         *opt_ata_smart_refresh      = NULL;
 static gboolean      opt_ata_smart_wakeup       = FALSE;
 static char         *opt_ata_smart_simulate     = NULL;
@@ -164,6 +166,34 @@ do_unmount (const char *object_path,
                                                                         (const char **) unmount_options,
                                                                         &error)) {
                 g_print ("Unmount failed: %s\n", error->message);
+                g_error_free (error);
+        }
+
+        g_strfreev (unmount_options);
+}
+
+static void
+do_detach (const char *object_path,
+           const char *options)
+{
+        DBusGProxy *proxy;
+        GError *error;
+        char **unmount_options;
+
+        unmount_options = NULL;
+        if (options != NULL)
+                unmount_options = g_strsplit (options, ",", 0);
+
+	proxy = dbus_g_proxy_new_for_name (bus,
+                                           "org.freedesktop.DeviceKit.Disks",
+                                           object_path,
+                                           "org.freedesktop.DeviceKit.Disks.Device");
+
+        error = NULL;
+        if (!org_freedesktop_DeviceKit_Disks_Device_drive_detach (proxy,
+                                                                  (const char **) options,
+                                                                  &error)) {
+                g_print ("Detach failed: %s\n", error->message);
                 g_error_free (error);
         }
 
@@ -352,6 +382,7 @@ typedef struct
         char    *drive_media;
         gboolean drive_is_media_ejectable;
         gboolean drive_requires_eject;
+        gboolean drive_can_detach;
 
         gboolean optical_disc_is_blank;
         gboolean optical_disc_is_appendable;
@@ -549,6 +580,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->drive_is_media_ejectable = g_value_get_boolean (value);
         else if (strcmp (key, "drive-requires-eject") == 0)
                 props->drive_requires_eject = g_value_get_boolean (value);
+        else if (strcmp (key, "drive-can-detach") == 0)
+                props->drive_can_detach = g_value_get_boolean (value);
 
         else if (strcmp (key, "optical-disc-is-blank") == 0)
                 props->optical_disc_is_blank = g_value_get_boolean (value);
@@ -1058,6 +1091,7 @@ do_show_info (const char *object_path)
                 g_print ("    model:                 %s\n", props->drive_model);
                 g_print ("    revision:              %s\n", props->drive_revision);
                 g_print ("    serial:                %s\n", props->drive_serial);
+                g_print ("    detachable:            %d\n", props->drive_can_detach);
                 g_print ("    ejectable:             %d\n", props->drive_is_media_ejectable);
                 g_print ("    require eject:         %d\n", props->drive_requires_eject);
                 g_print ("    media:                 %s\n", props->drive_media);
@@ -1546,12 +1580,14 @@ main (int argc, char **argv)
                 { "inhibit-all-polling", 0, 0, G_OPTION_ARG_NONE, &opt_inhibit_all_polling, "Inhibit all polling", NULL },
                 { "inhibit", 0, 0, G_OPTION_ARG_NONE, &opt_inhibit, "Inhibit the daemon", NULL },
 
-                { "mount", 0, 0, G_OPTION_ARG_STRING, &opt_mount, "Mount the device given by the object path", NULL },
+                { "mount", 0, 0, G_OPTION_ARG_STRING, &opt_mount, "Mount the given device", NULL },
                 { "mount-fstype", 0, 0, G_OPTION_ARG_STRING, &opt_mount_fstype, "Specify file system type", NULL },
                 { "mount-options", 0, 0, G_OPTION_ARG_STRING, &opt_mount_options, "Mount options separated by comma", NULL },
 
-                { "unmount", 0, 0, G_OPTION_ARG_STRING, &opt_unmount, "Unmount the device given by the object path", NULL },
+                { "unmount", 0, 0, G_OPTION_ARG_STRING, &opt_unmount, "Unmount the given device", NULL },
                 { "unmount-options", 0, 0, G_OPTION_ARG_STRING, &opt_unmount_options, "Unmount options separated by comma", NULL },
+                { "detach", 0, 0, G_OPTION_ARG_STRING, &opt_detach, "Detach the given device", NULL },
+                { "detach-options", 0, 0, G_OPTION_ARG_STRING, &opt_detach_options, "Detach options separated by comma", NULL },
                 { "ata-smart-refresh", 0, 0, G_OPTION_ARG_STRING, &opt_ata_smart_refresh, "Refresh ATA SMART data", NULL },
                 { "ata-smart-wakeup", 0, 0, G_OPTION_ARG_NONE, &opt_ata_smart_wakeup, "Wake up the disk if it is not awake", NULL },
                 { "ata-smart-simulate", 0, 0, G_OPTION_ARG_STRING, &opt_ata_smart_simulate, "Inject libatasmart BLOB for testing", NULL },
@@ -1678,6 +1714,11 @@ main (int argc, char **argv)
                 if (device_file == NULL)
                         goto out;
                 do_unmount (device_file, opt_unmount_options);
+        } else if (opt_detach != NULL) {
+                device_file = device_file_to_object_path (opt_detach);
+                if (device_file == NULL)
+                        goto out;
+                do_detach (device_file, opt_detach_options);
         } else if (opt_ata_smart_refresh != NULL) {
                 device_file = device_file_to_object_path (opt_ata_smart_refresh);
                 if (device_file == NULL)

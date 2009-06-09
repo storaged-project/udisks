@@ -730,6 +730,16 @@ devkit_disks_device_set_drive_requires_eject (DevkitDisksDevice *device, gboolea
 }
 
 void
+devkit_disks_device_set_drive_can_detach (DevkitDisksDevice *device, gboolean value)
+{
+  if (G_UNLIKELY (device->priv->drive_can_detach != value))
+    {
+      device->priv->drive_can_detach = value;
+      emit_changed (device, "drive_can_detach");
+    }
+}
+
+void
 devkit_disks_device_set_optical_disc_is_blank (DevkitDisksDevice *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->optical_disc_is_blank != value))
