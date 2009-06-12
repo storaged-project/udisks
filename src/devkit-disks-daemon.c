@@ -1395,23 +1395,23 @@ devkit_disks_daemon_local_check_auth (DevkitDisksDaemon            *daemon,
                 details = polkit_details_new ();
                 if (operation != NULL) {
                         polkit_details_insert (details,
-                                             "operation",
-                                             (gpointer) operation);
+                                               "operation",
+                                               (gpointer) operation);
                 }
                 if (device != NULL) {
                         DevkitDisksDevice *drive;
 
                         polkit_details_insert (details,
-                                             "unix-device",
-                                             device->priv->device_file);
+                                               "unix-device",
+                                               device->priv->device_file);
                         if (device->priv->device_file_by_id->len > 0)
                                 polkit_details_insert (details,
-                                                     "unix-device-by-id",
-                                                     device->priv->device_file_by_id->pdata[0]);
+                                                       "unix-device-by-id",
+                                                       device->priv->device_file_by_id->pdata[0]);
                         if (device->priv->device_file_by_path->len > 0)
                                 polkit_details_insert (details,
-                                                     "unix-device-by-path",
-                                                     device->priv->device_file_by_path->pdata[0]);
+                                                       "unix-device-by-path",
+                                                       device->priv->device_file_by_path->pdata[0]);
 
                         if (device->priv->device_is_drive) {
                                 drive = device;
@@ -1430,31 +1430,36 @@ devkit_disks_daemon_local_check_auth (DevkitDisksDaemon            *daemon,
 
                         if (drive != NULL) {
                                 polkit_details_insert (details,
-                                                     "drive-unix-device",
-                                                     drive->priv->device_file);
+                                                       "drive-unix-device",
+                                                       drive->priv->device_file);
                                 if (drive->priv->device_file_by_id->len > 0)
                                         polkit_details_insert (details,
-                                                             "drive-unix-device-by-id",
-                                                             drive->priv->device_file_by_id->pdata[0]);
+                                                               "drive-unix-device-by-id",
+                                                               drive->priv->device_file_by_id->pdata[0]);
                                 if (drive->priv->device_file_by_path->len > 0)
                                         polkit_details_insert (details,
-                                                             "drive-unix-device-by-path",
-                                                             drive->priv->device_file_by_path->pdata[0]);
-                                polkit_details_insert (details,
-                                                     "drive-vendor",
-                                                     drive->priv->drive_vendor);
-                                polkit_details_insert (details,
-                                                     "drive-model",
-                                                     drive->priv->drive_model);
-                                polkit_details_insert (details,
-                                                     "drive-revision",
-                                                     drive->priv->drive_revision);
-                                polkit_details_insert (details,
-                                                     "drive-serial",
-                                                     drive->priv->drive_serial);
-                                polkit_details_insert (details,
-                                                     "drive-connection-interface",
-                                                     drive->priv->drive_connection_interface);
+                                                               "drive-unix-device-by-path",
+                                                               drive->priv->device_file_by_path->pdata[0]);
+                                if (drive->priv->drive_vendor != NULL)
+                                        polkit_details_insert (details,
+                                                               "drive-vendor",
+                                                               drive->priv->drive_vendor);
+                                if (drive->priv->drive_model != NULL)
+                                        polkit_details_insert (details,
+                                                               "drive-model",
+                                                               drive->priv->drive_model);
+                                if (drive->priv->drive_revision != NULL)
+                                        polkit_details_insert (details,
+                                                               "drive-revision",
+                                                               drive->priv->drive_revision);
+                                if (drive->priv->drive_serial != NULL)
+                                        polkit_details_insert (details,
+                                                               "drive-serial",
+                                                               drive->priv->drive_serial);
+                                if (drive->priv->drive_connection_interface != NULL)
+                                        polkit_details_insert (details,
+                                                               "drive-connection-interface",
+                                                               drive->priv->drive_connection_interface);
                         }
                 }
 
