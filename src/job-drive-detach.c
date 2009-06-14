@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*-
+/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * Copyright (C) 2009 David Zeuthen <david@fubar.dk>
  *
@@ -47,17 +47,21 @@ main (int argc, char *argv[])
   const gchar *sysfs_path;
   struct udev *udev;
   struct udev_device *udevice;
-  struct udev_device *udevice_usb;
+  struct udev_device *udevice_usb_interface;
+  struct udev_device *udevice_usb_device;
   gchar *unbind_path;
+  gchar *power_level_path;
   gchar *usb_interface_name;
   size_t usb_interface_name_len;
   FILE *f;
 
   udev = NULL;
   udevice = NULL;
-  udevice_usb = NULL;
+  udevice_usb_interface = NULL;
+  udevice_usb_device = NULL;
   usb_interface_name = NULL;
   unbind_path = NULL;
+  power_level_path = NULL;
 
   ret = 1;
   sg_fd = -1;
@@ -126,17 +130,18 @@ main (int argc, char *argv[])
       goto out;
     }
 
-  udevice_usb = udev_device_get_parent_with_subsystem_devtype (udevice, "usb", "usb_interface");
-  if (udevice_usb == NULL)
+  /* unbind the mass storage driver (e.g. usb-storage) */
+  udevice_usb_interface = udev_device_get_parent_with_subsystem_devtype (udevice, "usb", "usb_interface");
+  if (udevice_usb_interface == NULL)
     {
       g_printerr ("No usb parent interface for %s: %m\n", sysfs_path);
       goto out;
     }
 
-  usb_interface_name = g_path_get_basename (udev_device_get_devpath (udevice_usb));
+  usb_interface_name = g_path_get_basename (udev_device_get_devpath (udevice_usb_interface));
   usb_interface_name_len = strlen (usb_interface_name);
 
-  unbind_path = g_strdup_printf ("%s/driver/unbind", udev_device_get_syspath (udevice_usb));
+  unbind_path = g_strdup_printf ("%s/driver/unbind", udev_device_get_syspath (udevice_usb_interface));
   f = fopen (unbind_path, "w");
   if (f == NULL)
     {
@@ -151,11 +156,48 @@ main (int argc, char *argv[])
     }
   fclose (f);
 
+  /* If this is the only USB interface on the device, also suspend the
+   * USB device to e.g.  make the lights on the device power off.
+   *
+   * Failing to do so is not an error, the user may not have
+   * CONFIG_USB_SUSPEND enabled in their kernel.
+   */
   ret = 0;
+
+  udevice_usb_device = udev_device_get_parent_with_subsystem_devtype (udevice, "usb", "usb_device");
+  if (udevice_usb_device != NULL)
+    {
+      const char *bNumInterfaces;
+      char *endp;
+      int num_interfaces;
+      gchar *power_level_path;
+      gchar suspend_str[] = "suspend";
+
+      bNumInterfaces = udev_device_get_sysattr_value (udevice_usb_device, "bNumInterfaces");
+      num_interfaces = strtol (bNumInterfaces, &endp, 0);
+      if (endp != NULL && num_interfaces == 1)
+        {
+          power_level_path = g_strdup_printf ("%s/power/level", udev_device_get_syspath (udevice_usb_device));
+          f = fopen (power_level_path, "w");
+          if (f == NULL)
+            {
+              g_printerr ("Cannot open %s for writing: %m\n", unbind_path);
+            }
+          else
+            {
+              if (fwrite (suspend_str, sizeof (char), strlen (suspend_str), f) < strlen (suspend_str))
+                {
+                  g_printerr ("Error writing %s to %s: %m\n", power_level_path, suspend_str);
+                }
+              fclose (f);
+            }
+        }
+    }
 
  out:
   g_free (usb_interface_name);
   g_free (unbind_path);
+  g_free (power_level_path);
   if (sg_fd > 0)
     sg_cmds_close_device (sg_fd);
   if (udevice != NULL)
