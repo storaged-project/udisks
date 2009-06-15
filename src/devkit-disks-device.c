@@ -46,7 +46,7 @@
 #include <gio/gunixmounts.h>
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
-#include <devkit-gobject/devkit-gobject.h>
+#include <gudev/gudev.h>
 #include <atasmart.h>
 
 #include "devkit-disks-daemon.h"
@@ -1653,15 +1653,15 @@ update_info_presentation (DevkitDisksDevice *device)
         gboolean hide;
 
         hide = FALSE;
-        if (devkit_device_has_property (device->priv->d, "DKD_PRESENTATION_HIDE"))
-                hide = devkit_device_get_property_as_boolean (device->priv->d, "DKD_PRESENTATION_HIDE");
+        if (g_udev_device_has_property (device->priv->d, "DKD_PRESENTATION_HIDE"))
+                hide = g_udev_device_get_property_as_boolean (device->priv->d, "DKD_PRESENTATION_HIDE");
         devkit_disks_device_set_device_presentation_hide (device, hide);
 
         devkit_disks_device_set_device_presentation_name (device,
-               devkit_device_get_property (device->priv->d, "DKD_PRESENTATION_NAME"));
+               g_udev_device_get_property (device->priv->d, "DKD_PRESENTATION_NAME"));
 
         devkit_disks_device_set_device_presentation_icon_name (device,
-               devkit_device_get_property (device->priv->d, "DKD_PRESENTATION_ICON_NAME"));
+               g_udev_device_get_property (device->priv->d, "DKD_PRESENTATION_ICON_NAME"));
 
         return TRUE;
 }
@@ -1674,17 +1674,17 @@ update_info_id (DevkitDisksDevice *device)
 {
         gchar *decoded_string;
 
-        devkit_disks_device_set_id_usage (device, devkit_device_get_property (device->priv->d, "ID_FS_USAGE"));
-        devkit_disks_device_set_id_type (device, devkit_device_get_property (device->priv->d, "ID_FS_TYPE"));
-        devkit_disks_device_set_id_version (device, devkit_device_get_property (device->priv->d, "ID_FS_VERSION"));
-        if (devkit_device_has_property (device->priv->d, "ID_FS_LABEL_ENC")) {
-                decoded_string = decode_udev_encoded_string (devkit_device_get_property (device->priv->d, "ID_FS_LABEL_ENC"));
+        devkit_disks_device_set_id_usage (device, g_udev_device_get_property (device->priv->d, "ID_FS_USAGE"));
+        devkit_disks_device_set_id_type (device, g_udev_device_get_property (device->priv->d, "ID_FS_TYPE"));
+        devkit_disks_device_set_id_version (device, g_udev_device_get_property (device->priv->d, "ID_FS_VERSION"));
+        if (g_udev_device_has_property (device->priv->d, "ID_FS_LABEL_ENC")) {
+                decoded_string = decode_udev_encoded_string (g_udev_device_get_property (device->priv->d, "ID_FS_LABEL_ENC"));
                 devkit_disks_device_set_id_label (device, decoded_string);
                 g_free (decoded_string);
         } else {
-                devkit_disks_device_set_id_label (device, devkit_device_get_property (device->priv->d, "ID_FS_LABEL"));
+                devkit_disks_device_set_id_label (device, g_udev_device_get_property (device->priv->d, "ID_FS_LABEL"));
         }
-        devkit_disks_device_set_id_uuid (device, devkit_device_get_property (device->priv->d, "ID_FS_UUID"));
+        devkit_disks_device_set_id_uuid (device, g_udev_device_get_property (device->priv->d, "ID_FS_UUID"));
 
         return TRUE;
 }
@@ -1696,7 +1696,7 @@ static gboolean
 update_info_partition_table (DevkitDisksDevice *device)
 {
         if (!device->priv->device_is_partition &&
-            devkit_device_has_property (device->priv->d, "DKD_PARTITION_TABLE")) {
+            g_udev_device_has_property (device->priv->d, "DKD_PARTITION_TABLE")) {
 
                 /* Some times we think that vfat on the main block device looks like a Master Boot Record
                  * partition table (the on-disk formats are extremely similar). So if we already have
@@ -1710,7 +1710,7 @@ update_info_partition_table (DevkitDisksDevice *device)
                         devkit_disks_device_set_device_is_partition_table (device, FALSE);
                 } else {
                         devkit_disks_device_set_device_is_partition_table (device, TRUE);
-                        devkit_disks_device_set_partition_table_scheme (device, devkit_device_get_property (device->priv->d, "DKD_PARTITION_TABLE_SCHEME"));
+                        devkit_disks_device_set_partition_table_scheme (device, g_udev_device_get_property (device->priv->d, "DKD_PARTITION_TABLE_SCHEME"));
                 }
         } else {
                 devkit_disks_device_set_partition_table_scheme (device, NULL);
@@ -1731,29 +1731,27 @@ update_info_partition (DevkitDisksDevice *device)
         devkit_disks_device_set_partition_offset (device, offset);
 
         if (device->priv->device_is_partition &&
-            devkit_device_has_property (device->priv->d, "DKD_PARTITION")) {
+            g_udev_device_has_property (device->priv->d, "DKD_PARTITION")) {
                 guint64 size;
                 const gchar *scheme;
                 const gchar *type;
                 const gchar *label;
                 const gchar *uuid;
-                gchar **flags;
+                const gchar* const *flags;
 
-                scheme = devkit_device_get_property (device->priv->d, "DKD_PARTITION_SCHEME");
-                size = devkit_device_get_property_as_uint64 (device->priv->d, "DKD_PARTITION_SIZE");
-                type = devkit_device_get_property (device->priv->d, "DKD_PARTITION_TYPE");
-                label = devkit_device_get_property (device->priv->d, "DKD_PARTITION_LABEL");
-                uuid = devkit_device_get_property (device->priv->d, "DKD_PARTITION_UUID");
-                flags = devkit_device_dup_property_as_strv (device->priv->d, "DKD_PARTITION_FLAGS");
+                scheme = g_udev_device_get_property (device->priv->d, "DKD_PARTITION_SCHEME");
+                size = g_udev_device_get_property_as_uint64 (device->priv->d, "DKD_PARTITION_SIZE");
+                type = g_udev_device_get_property (device->priv->d, "DKD_PARTITION_TYPE");
+                label = g_udev_device_get_property (device->priv->d, "DKD_PARTITION_LABEL");
+                uuid = g_udev_device_get_property (device->priv->d, "DKD_PARTITION_UUID");
+                flags = g_udev_device_get_property_as_strv (device->priv->d, "DKD_PARTITION_FLAGS");
 
                 devkit_disks_device_set_partition_scheme (device, scheme);
                 devkit_disks_device_set_partition_size (device, size);
                 devkit_disks_device_set_partition_type (device, type);
                 devkit_disks_device_set_partition_label (device, label);
                 devkit_disks_device_set_partition_uuid (device, uuid);
-                devkit_disks_device_set_partition_flags (device, flags);
-
-                g_strfreev (flags);
+                devkit_disks_device_set_partition_flags (device, (gchar **) flags);
         } else {
                 /* if we don't have info from part_id, set the partition size to the same as the block device */
                 devkit_disks_device_set_partition_scheme (device, NULL);
@@ -2039,47 +2037,47 @@ update_info_drive (DevkitDisksDevice *device)
         gchar *decoded_string;
         guint n;
 
-        if (devkit_device_has_property (device->priv->d, "ID_VENDOR_ENC")) {
-                decoded_string = decode_udev_encoded_string (devkit_device_get_property (device->priv->d, "ID_VENDOR_ENC"));
+        if (g_udev_device_has_property (device->priv->d, "ID_VENDOR_ENC")) {
+                decoded_string = decode_udev_encoded_string (g_udev_device_get_property (device->priv->d, "ID_VENDOR_ENC"));
                 g_strstrip (decoded_string);
                 devkit_disks_device_set_drive_vendor (device, decoded_string);
                 g_free (decoded_string);
-        } else if (devkit_device_has_property (device->priv->d, "ID_VENDOR")) {
-                devkit_disks_device_set_drive_vendor (device, devkit_device_get_property (device->priv->d, "ID_VENDOR"));
+        } else if (g_udev_device_has_property (device->priv->d, "ID_VENDOR")) {
+                devkit_disks_device_set_drive_vendor (device, g_udev_device_get_property (device->priv->d, "ID_VENDOR"));
         }
 
-        if (devkit_device_has_property (device->priv->d, "ID_MODEL_ENC")) {
-                decoded_string = decode_udev_encoded_string (devkit_device_get_property (device->priv->d, "ID_MODEL_ENC"));
+        if (g_udev_device_has_property (device->priv->d, "ID_MODEL_ENC")) {
+                decoded_string = decode_udev_encoded_string (g_udev_device_get_property (device->priv->d, "ID_MODEL_ENC"));
                 g_strstrip (decoded_string);
                 devkit_disks_device_set_drive_model (device, decoded_string);
                 g_free (decoded_string);
-        } else if (devkit_device_has_property (device->priv->d, "ID_MODEL")) {
-                devkit_disks_device_set_drive_model (device, devkit_device_get_property (device->priv->d, "ID_MODEL"));
+        } else if (g_udev_device_has_property (device->priv->d, "ID_MODEL")) {
+                devkit_disks_device_set_drive_model (device, g_udev_device_get_property (device->priv->d, "ID_MODEL"));
         }
 
-        if (devkit_device_has_property (device->priv->d, "ID_REVISION"))
-                devkit_disks_device_set_drive_revision (device, devkit_device_get_property (device->priv->d, "ID_REVISION"));
-        if (devkit_device_has_property (device->priv->d, "ID_SERIAL_SHORT"))
-                devkit_disks_device_set_drive_serial (device, devkit_device_get_property (device->priv->d, "ID_SERIAL_SHORT"));
+        if (g_udev_device_has_property (device->priv->d, "ID_REVISION"))
+                devkit_disks_device_set_drive_revision (device, g_udev_device_get_property (device->priv->d, "ID_REVISION"));
+        if (g_udev_device_has_property (device->priv->d, "ID_SERIAL_SHORT"))
+                devkit_disks_device_set_drive_serial (device, g_udev_device_get_property (device->priv->d, "ID_SERIAL_SHORT"));
 
         /* pick up some things (vendor, model, connection_interface, connection_speed)
          * not (yet) exported by udev helpers
          */
         update_drive_properties_from_sysfs (device);
 
-        if (devkit_device_has_property (device->priv->d, "ID_DRIVE_EJECTABLE")) {
-                drive_is_ejectable = devkit_device_get_property_as_boolean (device->priv->d, "ID_DRIVE_EJECTABLE");
+        if (g_udev_device_has_property (device->priv->d, "ID_DRIVE_EJECTABLE")) {
+                drive_is_ejectable = g_udev_device_get_property_as_boolean (device->priv->d, "ID_DRIVE_EJECTABLE");
         } else {
                 drive_is_ejectable = FALSE;
-                drive_is_ejectable |= devkit_device_has_property (device->priv->d, "ID_CDROM");
-                drive_is_ejectable |= devkit_device_has_property (device->priv->d, "ID_DRIVE_FLOPPY_ZIP");
-                drive_is_ejectable |= devkit_device_has_property (device->priv->d, "ID_DRIVE_FLOPPY_JAZ");
+                drive_is_ejectable |= g_udev_device_has_property (device->priv->d, "ID_CDROM");
+                drive_is_ejectable |= g_udev_device_has_property (device->priv->d, "ID_DRIVE_FLOPPY_ZIP");
+                drive_is_ejectable |= g_udev_device_has_property (device->priv->d, "ID_DRIVE_FLOPPY_JAZ");
         }
         devkit_disks_device_set_drive_is_media_ejectable (device, drive_is_ejectable);
 
         media_compat_array = g_ptr_array_new ();
         for (n = 0; drive_media_mapping[n].udev_property != NULL; n++) {
-                if (!devkit_device_has_property (device->priv->d, drive_media_mapping[n].udev_property))
+                if (!g_udev_device_has_property (device->priv->d, drive_media_mapping[n].udev_property))
                         continue;
 
                 g_ptr_array_add (media_compat_array, (gpointer) drive_media_mapping[n].media_name);
@@ -2107,7 +2105,7 @@ update_info_drive (DevkitDisksDevice *device)
 
         if (device->priv->device_is_media_available) {
                 for (n = 0; media_mapping[n].udev_property != NULL; n++) {
-                        if (!devkit_device_has_property (device->priv->d, media_mapping[n].udev_property))
+                        if (!g_udev_device_has_property (device->priv->d, media_mapping[n].udev_property))
                                 continue;
 
                         media_in_drive = drive_media_mapping[n].media_name;
@@ -2128,8 +2126,8 @@ update_info_drive (DevkitDisksDevice *device)
         if (g_strcmp0 (device->priv->drive_connection_interface, "usb") == 0) {
                 drive_can_detach = TRUE;
         }
-        if (devkit_device_has_property (device->priv->d, "ID_DRIVE_DETACHABLE")) {
-                drive_can_detach = devkit_device_get_property_as_boolean (device->priv->d, "ID_DRIVE_DETACHABLE");
+        if (g_udev_device_has_property (device->priv->d, "ID_DRIVE_DETACHABLE")) {
+                drive_can_detach = g_udev_device_get_property_as_boolean (device->priv->d, "ID_DRIVE_DETACHABLE");
         }
         devkit_disks_device_set_drive_can_detach (device, drive_can_detach);
 
@@ -2148,23 +2146,23 @@ update_info_optical_disc (DevkitDisksDevice *device)
         gint cdrom_session_count;
 
         /* device_is_optical_disc and optical_disc_* */
-        if (devkit_device_has_property (device->priv->d, "ID_CDROM_MEDIA_STATE")) {
+        if (g_udev_device_has_property (device->priv->d, "ID_CDROM_MEDIA_STATE")) {
                 devkit_disks_device_set_device_is_optical_disc (device, TRUE);
 
                 cdrom_track_count = 0;
                 cdrom_track_count_audio = 0;
                 cdrom_session_count = 0;
 
-                if (devkit_device_has_property (device->priv->d, "ID_CDROM_MEDIA_TRACK_COUNT"))
-                        cdrom_track_count = devkit_device_get_property_as_int (device->priv->d, "ID_CDROM_MEDIA_TRACK_COUNT");
-                if (devkit_device_has_property (device->priv->d, "ID_CDROM_MEDIA_TRACK_COUNT_AUDIO"))
-                        cdrom_track_count_audio = devkit_device_get_property_as_int (device->priv->d, "ID_CDROM_MEDIA_TRACK_COUNT");
-                if (devkit_device_has_property (device->priv->d, "ID_CDROM_MEDIA_SESSION_COUNT"))
-                        cdrom_session_count = devkit_device_get_property_as_int (device->priv->d, "ID_CDROM_MEDIA_SESSION_COUNT");
+                if (g_udev_device_has_property (device->priv->d, "ID_CDROM_MEDIA_TRACK_COUNT"))
+                        cdrom_track_count = g_udev_device_get_property_as_int (device->priv->d, "ID_CDROM_MEDIA_TRACK_COUNT");
+                if (g_udev_device_has_property (device->priv->d, "ID_CDROM_MEDIA_TRACK_COUNT_AUDIO"))
+                        cdrom_track_count_audio = g_udev_device_get_property_as_int (device->priv->d, "ID_CDROM_MEDIA_TRACK_COUNT");
+                if (g_udev_device_has_property (device->priv->d, "ID_CDROM_MEDIA_SESSION_COUNT"))
+                        cdrom_session_count = g_udev_device_get_property_as_int (device->priv->d, "ID_CDROM_MEDIA_SESSION_COUNT");
                 devkit_disks_device_set_optical_disc_num_tracks (device, cdrom_track_count);
                 devkit_disks_device_set_optical_disc_num_audio_tracks (device, cdrom_track_count_audio);
                 devkit_disks_device_set_optical_disc_num_sessions (device, cdrom_session_count);
-                cdrom_disc_state = devkit_device_get_property (device->priv->d, "ID_CDROM_MEDIA_STATE");
+                cdrom_disc_state = g_udev_device_get_property (device->priv->d, "ID_CDROM_MEDIA_STATE");
                 devkit_disks_device_set_optical_disc_is_blank (device, g_strcmp0 (cdrom_disc_state, "blank") == 0);
                 devkit_disks_device_set_optical_disc_is_appendable (device, g_strcmp0 (cdrom_disc_state, "appendable") == 0);
                 devkit_disks_device_set_optical_disc_is_closed (device, g_strcmp0 (cdrom_disc_state, "complete") == 0);
@@ -2213,8 +2211,8 @@ update_info_luks_cleartext (DevkitDisksDevice *device)
 
         ret = FALSE;
 
-        dkd_dm_name = devkit_device_get_property (device->priv->d, "DKD_DM_NAME");
-        dkd_dm_target_types = devkit_device_get_property (device->priv->d, "DKD_DM_TARGET_TYPES");
+        dkd_dm_name = g_udev_device_get_property (device->priv->d, "DKD_DM_NAME");
+        dkd_dm_target_types = g_udev_device_get_property (device->priv->d, "DKD_DM_TARGET_TYPES");
         if (dkd_dm_name != NULL && g_strcmp0 (dkd_dm_target_types, "crypt") == 0 &&
             device->priv->slaves_objpath->len == 1) {
 
@@ -2299,10 +2297,10 @@ update_info_linux_md_component (DevkitDisksDevice *device)
                         devkit_disks_device_set_linux_md_component_state (device, NULL);
                 }
 
-                md_comp_level = devkit_device_get_property (device->priv->d, "MD_LEVEL");
-                md_comp_num_raid_devices = devkit_device_get_property_as_int (device->priv->d, "MD_DEVICES");
-                md_comp_uuid = devkit_device_get_property (device->priv->d, "MD_UUID");
-                md_name = g_strdup (devkit_device_get_property (device->priv->d, "MD_NAME"));
+                md_comp_level = g_udev_device_get_property (device->priv->d, "MD_LEVEL");
+                md_comp_num_raid_devices = g_udev_device_get_property_as_int (device->priv->d, "MD_DEVICES");
+                md_comp_uuid = g_udev_device_get_property (device->priv->d, "MD_UUID");
+                md_name = g_strdup (g_udev_device_get_property (device->priv->d, "MD_NAME"));
                 s = NULL;
                 if (md_name != NULL)
                         s = strstr (md_name, ":");
@@ -2393,7 +2391,7 @@ update_info_linux_md (DevkitDisksDevice *device)
                                 break;
                 }
 
-                uuid = devkit_device_dup_property_as_str (device->priv->d, "MD_UUID");
+                uuid = g_strdup (g_udev_device_get_property (device->priv->d, "MD_UUID"));
                 num_raid_devices = sysfs_get_int (device->priv->native_path, "md/raid_disks");
                 raid_level = g_strstrip (sysfs_get_string (device->priv->native_path, "md/level"));
 
@@ -2423,7 +2421,7 @@ update_info_linux_md (DevkitDisksDevice *device)
                 g_free (uuid);
 
                 /* infer the array name and homehost */
-                p = g_strdup (devkit_device_get_property (device->priv->d, "MD_NAME"));
+                p = g_strdup (g_udev_device_get_property (device->priv->d, "MD_NAME"));
                 s = NULL;
                 if (p != NULL)
                         s = strstr (p, ":");
@@ -2571,8 +2569,8 @@ update_info_drive_ata_smart (DevkitDisksDevice *device)
 
         ata_smart_is_available = FALSE;
         if (device->priv->device_is_drive &&
-            devkit_device_has_property (device->priv->d, "DKD_ATA_SMART_IS_AVAILABLE"))
-                ata_smart_is_available = devkit_device_get_property_as_boolean (device->priv->d, "DKD_ATA_SMART_IS_AVAILABLE");
+            g_udev_device_has_property (device->priv->d, "DKD_ATA_SMART_IS_AVAILABLE"))
+                ata_smart_is_available = g_udev_device_get_property_as_boolean (device->priv->d, "DKD_ATA_SMART_IS_AVAILABLE");
 
         devkit_disks_device_set_drive_ata_smart_is_available (device, ata_smart_is_available);
 
@@ -2882,24 +2880,24 @@ update_info (DevkitDisksDevice *device)
                 devkit_disks_device_set_device_is_drive (device, FALSE);
         }
 
-        if (!devkit_device_has_property (device->priv->d, "MAJOR") ||
-            !devkit_device_has_property (device->priv->d, "MINOR")) {
+        if (!g_udev_device_has_property (device->priv->d, "MAJOR") ||
+            !g_udev_device_has_property (device->priv->d, "MINOR")) {
 		g_warning ("No major/minor for %s", device->priv->native_path);
                 goto out;
         }
 
-        major = devkit_device_get_property_as_int (device->priv->d, "MAJOR");
-        minor = devkit_device_get_property_as_int (device->priv->d, "MINOR");
+        major = g_udev_device_get_property_as_int (device->priv->d, "MAJOR");
+        minor = g_udev_device_get_property_as_int (device->priv->d, "MINOR");
         device->priv->dev = makedev (major, minor);
 
-        devkit_disks_device_set_device_file (device, devkit_device_get_device_file (device->priv->d));
+        devkit_disks_device_set_device_file (device, g_udev_device_get_device_file (device->priv->d));
         if (device->priv->device_file == NULL) {
 		g_warning ("No device file for %s", device->priv->native_path);
                 goto out;
         }
 
         const char * const * symlinks;
-        symlinks = devkit_device_get_device_file_symlinks (device->priv->d);
+        symlinks = g_udev_device_get_device_file_symlinks (device->priv->d);
         symlinks_by_id = g_ptr_array_new ();
         symlinks_by_path = g_ptr_array_new ();
         for (n = 0; symlinks[n] != NULL; n++) {
@@ -2924,10 +2922,10 @@ update_info (DevkitDisksDevice *device)
         /* device_is_media_available and device_media_detection_time property */
         if (device->priv->device_is_removable) {
                 media_available = FALSE;
-                if (devkit_device_has_property (device->priv->d, "DKD_MEDIA_AVAILABLE")) {
-                        media_available = devkit_device_get_property_as_boolean (device->priv->d, "DKD_MEDIA_AVAILABLE");
+                if (g_udev_device_has_property (device->priv->d, "DKD_MEDIA_AVAILABLE")) {
+                        media_available = g_udev_device_get_property_as_boolean (device->priv->d, "DKD_MEDIA_AVAILABLE");
                 } else {
-                        if (devkit_device_has_property (device->priv->d, "ID_CDROM_MEDIA_STATE")) {
+                        if (g_udev_device_has_property (device->priv->d, "ID_CDROM_MEDIA_STATE")) {
                                 media_available = TRUE;
                         } else {
                                 media_available = FALSE;
@@ -3433,13 +3431,13 @@ devkit_disks_device_removed (DevkitDisksDevice *device)
 }
 
 DevkitDisksDevice *
-devkit_disks_device_new (DevkitDisksDaemon *daemon, DevkitDevice *d)
+devkit_disks_device_new (DevkitDisksDaemon *daemon, GUdevDevice *d)
 {
         DevkitDisksDevice *device;
         const char *native_path;
 
         device = NULL;
-        native_path = devkit_device_get_native_path (d);
+        native_path = g_udev_device_get_sysfs_path (d);
 
         /* ignore ram and loop devices */
         if (g_str_has_prefix (native_path, "/sys/devices/virtual/block/ram") ||
@@ -3530,7 +3528,7 @@ emit_job_changed (DevkitDisksDevice *device)
 
 /* called by the daemon on the 'change' uevent */
 gboolean
-devkit_disks_device_changed (DevkitDisksDevice *device, DevkitDevice *d, gboolean synthesized)
+devkit_disks_device_changed (DevkitDisksDevice *device, GUdevDevice *d, gboolean synthesized)
 {
         gboolean keep_device;
 

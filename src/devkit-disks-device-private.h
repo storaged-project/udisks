@@ -22,7 +22,7 @@
 #define __DEVKIT_DISKS_DEVICE_PRIVATE_H__
 
 #include <dbus/dbus-glib.h>
-#include <devkit-gobject/devkit-gobject.h>
+#include <gudev/gudev.h>
 
 #include "devkit-disks-types.h"
 
@@ -66,7 +66,7 @@ struct DevkitDisksDevicePrivate
         DBusGConnection *system_bus_connection;
         DBusGProxy      *system_bus_proxy;
         DevkitDisksDaemon *daemon;
-        DevkitDevice *d;
+        GUdevDevice *d;
 
         Job *job;
 

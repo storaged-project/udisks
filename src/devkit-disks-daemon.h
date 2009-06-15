@@ -21,7 +21,7 @@
 #ifndef __DEVKIT_DISKS_DAEMON_H__
 #define __DEVKIT_DISKS_DAEMON_H__
 
-#include <devkit-gobject/devkit-gobject.h>
+#include <gudev/gudev.h>
 #include <polkit/polkit.h>
 #include <dbus/dbus-glib.h>
 

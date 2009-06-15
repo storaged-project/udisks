@@ -22,7 +22,7 @@
 #define __DEVKIT_DISKS_DEVICE_H__
 
 #include <dbus/dbus-glib.h>
-#include <devkit-gobject/devkit-gobject.h>
+#include <gudev/gudev.h>
 #include <sys/types.h>
 
 #include "devkit-disks-types.h"
@@ -53,10 +53,10 @@ struct DevkitDisksDeviceClass
 GType              devkit_disks_device_get_type              (void) G_GNUC_CONST;
 
 DevkitDisksDevice *devkit_disks_device_new                   (DevkitDisksDaemon *daemon,
-                                                              DevkitDevice      *d);
+                                                              GUdevDevice       *d);
 
 gboolean           devkit_disks_device_changed               (DevkitDisksDevice *device,
-                                                              DevkitDevice      *d,
+                                                              GUdevDevice       *d,
                                                               gboolean           synthesized);
 
 void               devkit_disks_device_removed               (DevkitDisksDevice *device);

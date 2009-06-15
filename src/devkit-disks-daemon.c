@@ -61,7 +61,7 @@
 #include <glib-object.h>
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
-#include <devkit-gobject/devkit-gobject.h>
+#include <gudev/gudev.h>
 
 #include "devkit-disks-daemon.h"
 #include "devkit-disks-device.h"
@@ -106,7 +106,7 @@ struct DevkitDisksDaemonPrivate
 
         PolkitAuthority         *authority;
 
-        DevkitClient            *devkit_client;
+        GUdevClient             *gudev_client;
 
 	GIOChannel              *mdstat_channel;
 
@@ -589,8 +589,8 @@ devkit_disks_daemon_finalize (GObject *object)
                 g_object_unref (daemon->priv->ata_smart_db);
         }
 
-        if (daemon->priv->devkit_client != NULL) {
-                g_object_unref (daemon->priv->devkit_client);
+        if (daemon->priv->gudev_client != NULL) {
+                g_object_unref (daemon->priv->gudev_client);
         }
 
         if (daemon->priv->ata_smart_cleanup_timer_id > 0) {
@@ -676,16 +676,16 @@ device_went_away (gpointer user_data, GObject *where_the_object_was)
                                      where_the_object_was);
 }
 
-static void device_add (DevkitDisksDaemon *daemon, DevkitDevice *d, gboolean emit_event);
-static void device_remove (DevkitDisksDaemon *daemon, DevkitDevice *d);
+static void device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event);
+static void device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d);
 
 static void
-device_changed (DevkitDisksDaemon *daemon, DevkitDevice *d, gboolean synthesized)
+device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthesized)
 {
         DevkitDisksDevice *device;
         const char *native_path;
 
-        native_path = devkit_device_get_native_path (d);
+        native_path = g_udev_device_get_sysfs_path (d);
         device = g_hash_table_lookup (daemon->priv->map_native_path_to_device, native_path);
         if (device != NULL) {
                 g_print ("**** CHANGING %s\n", native_path);
@@ -724,12 +724,12 @@ devkit_disks_daemon_local_synthesize_changed_on_all_devices (DevkitDisksDaemon *
 }
 
 static void
-device_add (DevkitDisksDaemon *daemon, DevkitDevice *d, gboolean emit_event)
+device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event)
 {
         DevkitDisksDevice *device;
         const char *native_path;
 
-        native_path = devkit_device_get_native_path (d);
+        native_path = g_udev_device_get_sysfs_path (d);
         device = g_hash_table_lookup (daemon->priv->map_native_path_to_device, native_path);
         if (device != NULL) {
                 /* we already have the device; treat as change event */
@@ -771,12 +771,12 @@ device_add (DevkitDisksDaemon *daemon, DevkitDevice *d, gboolean emit_event)
 }
 
 static void
-device_remove (DevkitDisksDaemon *daemon, DevkitDevice *d)
+device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
 {
         DevkitDisksDevice *device;
         const char *native_path;
 
-        native_path = devkit_device_get_native_path (d);
+        native_path = g_udev_device_get_sysfs_path (d);
         device = g_hash_table_lookup (daemon->priv->map_native_path_to_device, native_path);
         if (device == NULL) {
                 g_print ("**** IGNORING REMOVE %s\n", native_path);
@@ -791,10 +791,10 @@ device_remove (DevkitDisksDaemon *daemon, DevkitDevice *d)
 }
 
 static void
-device_event_signal_handler (DevkitClient *client,
-                             const char   *action,
-                             DevkitDevice *device,
-                             gpointer      user_data)
+on_uevent (GUdevClient  *client,
+           const char   *action,
+           GUdevDevice *device,
+           gpointer      user_data)
 {
         DevkitDisksDaemon *daemon = DEVKIT_DISKS_DAEMON (user_data);
 
@@ -805,7 +805,7 @@ device_event_signal_handler (DevkitClient *client,
         } else if (strcmp (action, "change") == 0) {
                 device_changed (daemon, device, FALSE);
         } else {
-                g_warning ("unhandled action '%s' on %s", action, devkit_device_get_native_path (device));
+                g_warning ("unhandled action '%s' on %s", action, g_udev_device_get_sysfs_path (device));
         }
 }
 
@@ -906,7 +906,7 @@ mdstat_changed_event (GIOChannel *channel, GIOCondition cond, gpointer user_data
         }
 
         for (n = 0; n < (int) a->len; n++) {
-                DevkitDevice *d = a->pdata[n];
+                GUdevDevice *d = a->pdata[n];
                 g_debug ("using change on /proc/mdstat to trigger change event on %s", native_path);
                 device_changed (daemon, d, FALSE);
                 g_object_unref (d);
@@ -1056,14 +1056,11 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
 	}
 
         /* connect to the DeviceKit daemon */
-        daemon->priv->devkit_client = devkit_client_new (subsystems);
-        if (!devkit_client_connect (daemon->priv->devkit_client, &error)) {
-		g_warning ("Couldn't open connection to DeviceKit daemon: %s", error->message);
-                g_error_free (error);
-                goto error;
-        }
-        g_signal_connect (daemon->priv->devkit_client, "device-event",
-                          G_CALLBACK (device_event_signal_handler), daemon);
+        daemon->priv->gudev_client = g_udev_client_new (subsystems);
+        g_signal_connect (daemon->priv->gudev_client,
+                          "uevent",
+                          G_CALLBACK (on_uevent),
+                          daemon);
 
         daemon->priv->mount_monitor = devkit_disks_mount_monitor_new ();
         g_signal_connect (daemon->priv->mount_monitor, "mount-added", (GCallback) mount_added, daemon);
@@ -1081,33 +1078,21 @@ DevkitDisksDaemon *
 devkit_disks_daemon_new (void)
 {
         DevkitDisksDaemon *daemon;
-        GError *error = NULL;
         GList *devices;
         GList *l;
         DevkitDisksDevice *device;
         GHashTableIter device_iter;
-        const char *subsystems[] = {"block", NULL};
 
         daemon = DEVKIT_DISKS_DAEMON (g_object_new (DEVKIT_DISKS_TYPE_DAEMON, NULL));
-
-
 
         if (!register_disks_daemon (DEVKIT_DISKS_DAEMON (daemon))) {
                 g_object_unref (daemon);
                 goto error;
         }
 
-        devices = devkit_client_enumerate_by_subsystem (daemon->priv->devkit_client,
-                                                         subsystems,
-                                                         &error);
-        if (error != NULL) {
-                g_warning ("Cannot enumerate devices: %s", error->message);
-                g_error_free (error);
-                g_object_unref (daemon);
-                goto error;
-        }
+        devices = g_udev_client_query_by_subsystem (daemon->priv->gudev_client, "block");
         for (l = devices; l != NULL; l = l->next) {
-                DevkitDevice *device = l->data;
+                GUdevDevice *device = l->data;
                 device_add (daemon, device, FALSE);
         }
         g_list_foreach (devices, (GFunc) g_object_unref, NULL);
