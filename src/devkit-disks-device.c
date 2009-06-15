@@ -205,7 +205,6 @@ enum
         PROP_DRIVE_MEDIA_COMPATIBILITY,
         PROP_DRIVE_MEDIA,
         PROP_DRIVE_IS_MEDIA_EJECTABLE,
-        PROP_DRIVE_REQUIRES_EJECT,
         PROP_DRIVE_CAN_DETACH,
 
         PROP_OPTICAL_DISC_IS_BLANK,
@@ -509,9 +508,6 @@ get_property (GObject         *object,
 		break;
 	case PROP_DRIVE_IS_MEDIA_EJECTABLE:
 		g_value_set_boolean (value, device->priv->drive_is_media_ejectable);
-		break;
-	case PROP_DRIVE_REQUIRES_EJECT:
-		g_value_set_boolean (value, device->priv->drive_requires_eject);
 		break;
 	case PROP_DRIVE_CAN_DETACH:
 		g_value_set_boolean (value, device->priv->drive_can_detach);
@@ -982,10 +978,6 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DRIVE_IS_MEDIA_EJECTABLE,
                 g_param_spec_boolean ("drive-is-media-ejectable", NULL, NULL, FALSE, G_PARAM_READABLE));
-        g_object_class_install_property (
-                object_class,
-                PROP_DRIVE_REQUIRES_EJECT,
-                g_param_spec_boolean ("drive-requires-eject", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_DRIVE_CAN_DETACH,
@@ -2043,7 +2035,6 @@ update_info_drive (DevkitDisksDevice *device)
         GPtrArray *media_compat_array;
         const gchar *media_in_drive;
         gboolean drive_is_ejectable;
-        gboolean drive_requires_eject;
         gboolean drive_can_detach;
         gchar *decoded_string;
         guint n;
@@ -2076,18 +2067,15 @@ update_info_drive (DevkitDisksDevice *device)
          */
         update_drive_properties_from_sysfs (device);
 
-        if (devkit_device_has_property (device->priv->d, "ID_DRIVE_IS_MEDIA_EJECTABLE"))
-                drive_is_ejectable = devkit_device_get_property_as_boolean (device->priv->d, "ID_DRIVE_IS_MEDIA_EJECTABLE");
-        else
+        if (devkit_device_has_property (device->priv->d, "ID_DRIVE_EJECTABLE")) {
+                drive_is_ejectable = devkit_device_get_property_as_boolean (device->priv->d, "ID_DRIVE_EJECTABLE");
+        } else {
                 drive_is_ejectable = FALSE;
-
+                drive_is_ejectable |= devkit_device_has_property (device->priv->d, "ID_CDROM");
+                drive_is_ejectable |= devkit_device_has_property (device->priv->d, "ID_DRIVE_FLOPPY_ZIP");
+                drive_is_ejectable |= devkit_device_has_property (device->priv->d, "ID_DRIVE_FLOPPY_JAZ");
+        }
         devkit_disks_device_set_drive_is_media_ejectable (device, drive_is_ejectable);
-        if (devkit_device_has_property (device->priv->d, "ID_DRIVE_REQUIRES_EJECT"))
-                drive_requires_eject = devkit_device_get_property_as_boolean (device->priv->d, "ID_DRIVE_REQUIRES_EJECT");
-        else
-                drive_requires_eject = FALSE;
-        drive_requires_eject |= devkit_device_has_property (device->priv->d, "ID_CDROM");
-        devkit_disks_device_set_drive_requires_eject (device, drive_requires_eject);
 
         media_compat_array = g_ptr_array_new ();
         for (n = 0; drive_media_mapping[n].udev_property != NULL; n++) {
@@ -2139,6 +2127,9 @@ update_info_drive (DevkitDisksDevice *device)
         drive_can_detach = FALSE;
         if (g_strcmp0 (device->priv->drive_connection_interface, "usb") == 0) {
                 drive_can_detach = TRUE;
+        }
+        if (devkit_device_has_property (device->priv->d, "ID_DRIVE_DETACHABLE")) {
+                drive_can_detach = devkit_device_get_property_as_boolean (device->priv->d, "ID_DRIVE_DETACHABLE");
         }
         devkit_disks_device_set_drive_can_detach (device, drive_can_detach);
 
@@ -5167,9 +5158,9 @@ devkit_disks_device_drive_detach_authorized_cb (DevkitDisksDaemon     *daemon,
                 goto out;
         }
 
-        if (!device->priv->device_is_media_available) {
+        if (!device->priv->drive_can_detach) {
                 throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
-                             "No media in drive");
+                             "Device is not detachable");
                 goto out;
         }
 
@@ -5220,9 +5211,9 @@ devkit_disks_device_drive_detach (DevkitDisksDevice     *device,
                 goto out;
         }
 
-        if (!device->priv->device_is_media_available) {
+        if (!device->priv->drive_can_detach) {
                 throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
-                             "No media in drive");
+                             "Device is not detachable");
                 goto out;
         }
 

@@ -80,7 +80,7 @@ SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:3", ENV{
 
 # Apple iPod Video
 #
-SYSFS{idVendor}=="05ac", SYSFS{idProduct}=="1209", ENV{ID_DRIVE_REQUIRES_EJECT}="1", ENV{DKD_PRESENTATION_ICON_NAME}="multimedia-player-ipod-white"
+SYSFS{idVendor}=="05ac", SYSFS{idProduct}=="1209", ENV{DKD_PRESENTATION_ICON_NAME}="multimedia-player-ipod-white"
 
 # USB floppy drives
 #

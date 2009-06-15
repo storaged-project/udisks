@@ -381,7 +381,6 @@ typedef struct
         char   **drive_media_compatibility;
         char    *drive_media;
         gboolean drive_is_media_ejectable;
-        gboolean drive_requires_eject;
         gboolean drive_can_detach;
 
         gboolean optical_disc_is_blank;
@@ -578,8 +577,6 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->drive_media = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "drive-is-media-ejectable") == 0)
                 props->drive_is_media_ejectable = g_value_get_boolean (value);
-        else if (strcmp (key, "drive-requires-eject") == 0)
-                props->drive_requires_eject = g_value_get_boolean (value);
         else if (strcmp (key, "drive-can-detach") == 0)
                 props->drive_can_detach = g_value_get_boolean (value);
 
@@ -1093,7 +1090,6 @@ do_show_info (const char *object_path)
                 g_print ("    serial:                %s\n", props->drive_serial);
                 g_print ("    detachable:            %d\n", props->drive_can_detach);
                 g_print ("    ejectable:             %d\n", props->drive_is_media_ejectable);
-                g_print ("    require eject:         %d\n", props->drive_requires_eject);
                 g_print ("    media:                 %s\n", props->drive_media);
                 g_print ("      compat:             ");
                 for (n = 0; props->drive_media_compatibility[n] != NULL; n++)

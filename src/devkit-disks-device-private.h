@@ -152,7 +152,6 @@ struct DevkitDisksDevicePrivate
         GPtrArray *drive_media_compatibility;
         char *drive_media;
         gboolean drive_is_media_ejectable;
-        gboolean drive_requires_eject;
         gboolean drive_can_detach;
 
         gboolean optical_disc_is_blank;
@@ -283,7 +282,6 @@ void devkit_disks_device_set_drive_connection_speed (DevkitDisksDevice *device, 
 void devkit_disks_device_set_drive_media_compatibility (DevkitDisksDevice *device, GStrv value);
 void devkit_disks_device_set_drive_media (DevkitDisksDevice *device, const gchar *value);
 void devkit_disks_device_set_drive_is_media_ejectable (DevkitDisksDevice *device, gboolean value);
-void devkit_disks_device_set_drive_requires_eject (DevkitDisksDevice *device, gboolean value);
 void devkit_disks_device_set_drive_can_detach (DevkitDisksDevice *device, gboolean value);
 
 void devkit_disks_device_set_optical_disc_is_blank (DevkitDisksDevice *device, gboolean value);

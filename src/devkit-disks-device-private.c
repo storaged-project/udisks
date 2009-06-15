@@ -720,16 +720,6 @@ devkit_disks_device_set_drive_is_media_ejectable (DevkitDisksDevice *device, gbo
 }
 
 void
-devkit_disks_device_set_drive_requires_eject (DevkitDisksDevice *device, gboolean value)
-{
-  if (G_UNLIKELY (device->priv->drive_requires_eject != value))
-    {
-      device->priv->drive_requires_eject = value;
-      emit_changed (device, "drive_requires_eject");
-    }
-}
-
-void
 devkit_disks_device_set_drive_can_detach (DevkitDisksDevice *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->drive_can_detach != value))

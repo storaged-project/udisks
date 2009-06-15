@@ -66,6 +66,32 @@
     </para>
     <variablelist>
       <varlistentry>
+        <term><option>ID_DRIVE_EJECTABLE</option></term>
+        <listitem><para>Whether the media in the drive is physically ejectable. Only
+            set this to 1 (or 0) if the drive truly uses (or doesn't) ejectable media.
+            In particular, it is not necessary to set this for e.g. iPod or Kindle
+            devices where it is necessary to send a command via
+            <citerefentry>
+              <refentrytitle>eject</refentrytitle><manvolnum>1</manvolnum>
+            </citerefentry>
+            since the desktop user session will offer this option for
+            removable devices regardless of whether they are
+            ejectable.  If this property is not set, a heuristic will
+            be used to determine if the media is ejectable (drives
+            using optical, Zip or Jaz media are considered ejectable).
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_DETACHABLE</option></term>
+        <listitem><para> Whether the device is detachable. It is only meaningful
+            to set this to 0 (to avoid marking a device as detachable) since the
+            code for detaching the device is part of DeviceKit-disks itself.
+            If this property is not set, a heuristic will be used to determine if the
+            drive is detachable (currently only devices connected through USB are
+            detachable).
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
         <term><option>ID_DRIVE_FLASH</option></term>
         <listitem><para>The device is compatible with flash.
         </para></listitem>
