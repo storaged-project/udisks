@@ -7919,7 +7919,7 @@ devkit_disks_device_drive_ata_smart_get_historical_data_authorized_cb (DevkitDis
 {
         guint64                since   = *((guint64*) user_data_elements[0]);
         guint64                until   = *((guint64*) user_data_elements[1]);
-        guint64                spacing = *((guint64*) user_data_elements[1]);
+        guint64                spacing = *((guint64*) user_data_elements[2]);
         GPtrArray *array;
         DevkitDisksAtaSmartDb *db;
 
