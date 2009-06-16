@@ -1696,7 +1696,8 @@ static gboolean
 update_info_partition_table (DevkitDisksDevice *device)
 {
         if (!device->priv->device_is_partition &&
-            g_udev_device_has_property (device->priv->d, "DKD_PARTITION_TABLE")) {
+            g_udev_device_has_property (device->priv->d, "DKD_PARTITION_TABLE") &&
+            g_udev_device_get_property_as_boolean (device->priv->d, "DKD_PARTITION_TABLE")) {
 
                 /* Some times we think that vfat on the main block device looks like a Master Boot Record
                  * partition table (the on-disk formats are extremely similar). So if we already have
@@ -1925,6 +1926,15 @@ update_drive_properties_from_sysfs (DevkitDisksDevice *device)
 
                                 /* TODO: interface speed; the kernel driver knows; would be nice
                                  * if it could export it */
+
+                        } else if (strcmp (subsystem, "platform") == 0) {
+                                const gchar *sysfs_name;
+
+                                sysfs_name = g_strrstr (s, "/");
+                                if (g_str_has_prefix (sysfs_name + 1, "floppy.")) {
+                                        devkit_disks_device_set_drive_vendor (device, "Floppy Drive");
+                                        connection_interface = "platform";
+                                }
                         }
 
                         g_free (subsystem);
@@ -4459,9 +4469,17 @@ devkit_disks_device_filesystem_mount_authorized_cb (DevkitDisksDaemon     *daemo
 
         if (device->priv->id_usage == NULL ||
             strcmp (device->priv->id_usage, "filesystem") != 0) {
-                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
-                             "Not a mountable file system");
-                goto out;
+                if ((g_strcmp0 (filesystem_type, "auto") == 0 || g_strcmp0 (filesystem_type, "") == 0) &&
+                    device->priv->id_usage == NULL) {
+                        /* if we don't know the usage of the device and 'auto' or '' is passed for fstype
+                         * then just try that.. this is to make, for example, mounting /dev/fd0 work (we
+                         * don't probe such devices for filesystems in udev)
+                         */
+                } else {
+                        throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                                     "Not a mountable file system");
+                        goto out;
+                }
         }
 
         if (devkit_disks_device_local_is_busy (device, FALSE, &error)) {
@@ -4487,11 +4505,10 @@ devkit_disks_device_filesystem_mount_authorized_cb (DevkitDisksDaemon     *daemo
         /* set the fstype */
         fstype = NULL;
         if (strlen (filesystem_type) == 0) {
-                if (device->priv->id_type != NULL && strlen (device->priv->id_type)) {
+                if (device->priv->id_type != NULL && strlen (device->priv->id_type) > 0) {
                         fstype = g_strdup (device->priv->id_type);
                 } else {
-                        throw_error (context, DEVKIT_DISKS_ERROR_FAILED, "No file system type");
-                        goto out;
+                        fstype = g_strdup ("auto");
                 }
         } else {
                 fstype = g_strdup (filesystem_type);
@@ -4627,13 +4644,6 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
 {
         const gchar *action_id;
 
-        if (device->priv->id_usage == NULL ||
-            strcmp (device->priv->id_usage, "filesystem") != 0) {
-                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
-                             "Not a mountable file system");
-                goto out;
-        }
-
         if (is_device_in_fstab (device, NULL)) {
                 action_id = NULL;
         } else {
@@ -4653,8 +4663,7 @@ devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
                                               g_strdup (filesystem_type), g_free,
                                               g_strdupv (given_options), g_strfreev);
 
- out:
-        return TRUE;
+         return TRUE;
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/
@@ -9299,6 +9308,11 @@ devkit_disks_device_drive_poll_media_authorized_cb (DevkitDisksDaemon     *daemo
                                                     gpointer              *user_data_elements)
 {
         devkit_disks_poller_poll_device (device->priv->device_file);
+
+        /* Also generate a 'change' event since e.g. floppy.ko doesn't
+         * seem to generate one
+         */
+        devkit_disks_device_generate_kernel_change_event (device);
 
         dbus_g_method_return (context);
 }

@@ -8,16 +8,24 @@ SUBSYSTEM!="block", GOTO="devkit_disks_end"
 # Probe for partition tables; this really should be part of udev
 #
 
-# ignore non-cdrom ide drivers; these causes loops
-KERNEL=="hd*[!0-9]", ATTR{removable}=="1", DRIVERS=="ide-cs|ide-floppy", GOTO="probe_parttable_end"
-KERNEL=="hd*[0-9]", ATTR{removable}=="1", GOTO="probe_parttable_end"
+# skip rules for inappropriate block devices
+KERNEL=="mtd*|nbd*|gnbd*|btibm*", GOTO="probe_parttable_end"
+
+# never access non-cdrom removable ide devices, the drivers are causing event loops on open()
+KERNEL=="hd*[!0-9]", ATTR{removable}=="1", SUBSYSTEMS=="ide", ATTRS{media}=="disk|floppy", GOTO="probe_parttable_end"
+KERNEL=="hd*[0-9]", ATTRS{removable}=="1", GOTO="probe_parttable_end"
 
 # don't scan for partition tables on empty discs
 KERNEL=="sr*", ENV{ID_CDROM_MEDIA_TRACK_COUNT}!="?*", GOTO="probe_parttable_end"
 
-# scan for partition table only if we're not a partition
+# scan for partition tables both on whole-disk and partitions
 #
 IMPORT{program}="devkit-disks-part-id $tempnode"
+
+# work around for bug in devkit-disks-part-id that identifies FAT filesystems
+# on the whole-device as a MBR partition table
+#
+KERNEL=="fd*", ENV{DKD_PARTITION_TABLE}=="1", ENV{DKD_PARTITION_TABLE}="0"
 
 LABEL="probe_parttable_end"
 
@@ -82,9 +90,16 @@ SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:3", ENV{
 #
 SYSFS{idVendor}=="05ac", SYSFS{idProduct}=="1209", ENV{DKD_PRESENTATION_ICON_NAME}="multimedia-player-ipod-white"
 
+# PC floppy drives
+KERNEL=="fd*", ENV{ID_DRIVE_FLOPPY}="1"
+
 # USB floppy drives
 #
 SYSFS{bInterfaceClass}=="08", SYSFS{bInterfaceSubClass}=="04", ENV{ID_DRIVE_FLOPPY}="1"
+
+# ATA Zip drives
+#
+ENV{ID_VENDOR}=="*IOMEGA*", ENV{ID_MODEL}=="*ZIP*", ENV{ID_DRIVE_FLOPPY_ZIP}="1"
 
 ##############################################################################################################
 

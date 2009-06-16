@@ -1787,6 +1787,10 @@
                 <doc:term>sdio</doc:term>
                 <doc:definition>Connected via SDIO</doc:definition>
               </doc:item>
+              <doc:item>
+                <doc:term>platform</doc:term>
+                <doc:definition>Part of the platform, e.g. PC floppy drive</doc:definition>
+              </doc:item>
             </doc:list>
             This property is only valid if
             <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
