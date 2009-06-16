@@ -2787,6 +2787,7 @@ update_info_media_detection (DevkitDisksDevice *device)
 
         if (device->priv->device_is_removable) {
                 guint64 evt_media_change;
+                GUdevDevice *parent;
 
                 evt_media_change = sysfs_get_uint64 (device->priv->native_path, "../../evt_media_change");
                 if (evt_media_change & 1) {
@@ -2794,27 +2795,37 @@ update_info_media_detection (DevkitDisksDevice *device)
 
                         polling = FALSE;
                         detected = TRUE;
+                        goto determined;
+                }
 
-                } else {
-                        /* device that needs polling */
-
-                        polling = TRUE;
-
-                        /* can always inhibit media changes on removable media we poll */
-                        inhibitable = TRUE;
-
-                        if (device->priv->polling_inhibitors != NULL ||
-                            devkit_disks_daemon_local_has_polling_inhibitors (device->priv->daemon)) {
-
-                                detected = FALSE;
-                                inhibited = TRUE;
-                        } else {
-                                detected = TRUE;
-                                inhibited = FALSE;
+                parent = g_udev_device_get_parent_with_subsystem (device->priv->d,
+                                                                  "platform",
+                                                                  NULL);
+                if (parent != NULL) {
+                        /* never poll PC floppy drives, they are noisy (fdo #22149) */
+                        if (g_str_has_prefix (g_udev_device_get_name (parent), "floppy.")) {
+                                g_object_unref (parent);
+                                goto determined;
                         }
+                        g_object_unref (parent);
+                }
+
+                /* assume the device needs polling */
+                polling = TRUE;
+                inhibitable = TRUE;
+
+                if (device->priv->polling_inhibitors != NULL ||
+                    devkit_disks_daemon_local_has_polling_inhibitors (device->priv->daemon)) {
+
+                        detected = FALSE;
+                        inhibited = TRUE;
+                } else {
+                        detected = TRUE;
+                        inhibited = FALSE;
                 }
         }
 
+ determined:
         devkit_disks_device_set_device_is_media_change_detected (device, detected);
         devkit_disks_device_set_device_is_media_change_detection_polling (device, polling);
         devkit_disks_device_set_device_is_media_change_detection_inhibitable (device, inhibitable);
