@@ -16,7 +16,7 @@ KERNEL=="hd*[!0-9]", ATTR{removable}=="1", SUBSYSTEMS=="ide", ATTRS{media}=="dis
 KERNEL=="hd*[0-9]", ATTRS{removable}=="1", GOTO="probe_parttable_end"
 
 # don't scan for partition tables on empty discs
-KERNEL=="sr*", ENV{ID_CDROM_MEDIA_TRACK_COUNT}!="?*", GOTO="probe_parttable_end"
+KERNEL=="sr*", ENV{ID_CDROM_MEDIA}!="?*", GOTO="probe_parttable_end"
 
 # scan for partition tables both on whole-disk and partitions
 #
