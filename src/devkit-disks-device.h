@@ -162,6 +162,10 @@ gboolean devkit_disks_device_linux_md_stop (DevkitDisksDevice     *device,
                                             char                 **options,
                                             DBusGMethodInvocation *context);
 
+gboolean devkit_disks_device_linux_md_check (DevkitDisksDevice     *device,
+                                             char                 **options,
+                                             DBusGMethodInvocation *context);
+
 gboolean devkit_disks_device_linux_md_add_component (DevkitDisksDevice     *device,
                                                      char                  *component,
                                                      char                 **options,

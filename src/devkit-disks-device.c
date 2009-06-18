@@ -8197,6 +8197,140 @@ devkit_disks_device_linux_md_stop (DevkitDisksDevice     *device,
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static void
+linux_md_check_completed_cb (DBusGMethodInvocation *context,
+                             DevkitDisksDevice *device,
+                             gboolean job_was_cancelled,
+                             int status,
+                             const char *stderr,
+                             const char *stdout,
+                             gpointer user_data)
+{
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+                guint64 num_errors;
+
+                num_errors = sysfs_get_uint64 (device->priv->native_path, "md/mismatch_cnt");
+
+                dbus_g_method_return (context, num_errors);
+        } else {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_FAILED,
+                                     "Error checking array: helper exited with exit code %d: %s",
+                                     WEXITSTATUS (status), stderr);
+                }
+        }
+}
+
+static void
+devkit_disks_device_linux_md_check_authorized_cb (DevkitDisksDaemon     *daemon,
+                                                  DevkitDisksDevice     *device,
+                                                  DBusGMethodInvocation *context,
+                                                  const gchar           *action_id,
+                                                  guint                  num_user_data,
+                                                  gpointer              *user_data_elements)
+{
+        gchar **options = user_data_elements[0];
+        gchar *filename;
+        int n, m;
+        char *argv[128];
+        const gchar *job_name;
+
+        filename = NULL;
+
+        if (!device->priv->device_is_linux_md) {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                             "Device is not a Linux md drive");
+                goto out;
+        }
+
+        if (g_strcmp0 (device->priv->linux_md_sync_action, "idle") != 0) {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                             "Array is not idle");
+                goto out;
+        }
+
+        n = 0;
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-linux-md-check";
+        argv[n++] = device->priv->device_file;
+        argv[n++] = device->priv->native_path;
+        for (m = 0; options[m] != NULL; m++) {
+                if (n >= (int) sizeof (argv) - 1) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_FAILED,
+                                     "Too many options");
+                        goto out;
+                }
+                /* the helper will validate each option */
+                argv[n++] = (char *) options[m];
+        }
+        argv[n++] = NULL;
+
+        job_name = "LinuxMdCheck";
+        for (n = 0; options != NULL && options[n] != NULL; n++)
+                if (strcmp (options[n], "repair") == 0)
+                        job_name = "LinuxMdRepair";
+
+        if (!job_new (context,
+                      job_name,
+                      TRUE,
+                      device,
+                      argv,
+                      NULL,
+                      linux_md_check_completed_cb,
+                      NULL,
+                      NULL)) {
+                goto out;
+        }
+
+ out:
+        ;
+}
+
+gboolean
+devkit_disks_device_linux_md_check (DevkitDisksDevice     *device,
+                                    char                 **options,
+                                    DBusGMethodInvocation *context)
+{
+        guint n;
+        const gchar *job_name;
+
+        job_name = "LinuxMdCheck";
+        for (n = 0; options != NULL && options[n] != NULL; n++)
+                if (strcmp (options[n], "repair") == 0)
+                        job_name = "LinuxMdRepair";
+
+        if (!device->priv->device_is_linux_md) {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                             "Device is not a Linux md drive");
+                goto out;
+        }
+
+        if (g_strcmp0 (device->priv->linux_md_sync_action, "idle") != 0) {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                             "Array is not idle");
+                goto out;
+        }
+
+        devkit_disks_daemon_local_check_auth (device->priv->daemon,
+                                              device,
+                                              "org.freedesktop.devicekit.disks.linux-md",
+                                              job_name,
+                                              devkit_disks_device_linux_md_check_authorized_cb,
+                                              context,
+                                              1,
+                                              g_strdupv (options), g_strfreev);
+
+ out:
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
 linux_md_add_component_completed_cb (DBusGMethodInvocation *context,
                                               DevkitDisksDevice *device,
                                               gboolean job_was_cancelled,

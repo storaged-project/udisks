@@ -118,6 +118,14 @@ static const Map map[] = {
                 N_("Authentication is required to stop a Software RAID device")
         },
         {
+                "LinuxMdCheck",
+                N_("Authentication is required to check a Software RAID device")
+        },
+        {
+                "LinuxMdRepair",
+                N_("Authentication is required to repair a Software RAID device")
+        },
+        {
                 "LinuxMdAddComponent",
                 N_("Authentication is required to add a new component to a Software RAID device")
         },

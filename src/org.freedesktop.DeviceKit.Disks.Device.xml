@@ -899,7 +899,51 @@
         </doc:permission>
         <doc:errors>
           <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_BUSY;">component to add is busy</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
+          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="LinuxMdCheck">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>
+            Use the <doc:tt>repair</doc:tt> option to fix any problems encountered.
+        </doc:summary></doc:doc>
+      </arg>
+      <arg name="number_of_errors" direction="out" type="t">
+        <doc:doc>
+          <doc:summary>
+            Number of mismatched sectors/pages found (or fixed if the <doc:tt>repair</doc:tt> option is used).
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Checks a Linux md RAID array and returns the number of
+            sectors/page with errors found/fixed. This can only be done if the
+            property
+            <doc:ref type="property" to="Device:linux-md-sync-action">linux-md-sync-action</doc:ref>
+            is <quote>idle</quote>.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need the following PolicyKit authorization:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.linux-md</doc:term>
+              <doc:definition>
+                Needed to configured Linux md Software RAID devices.
+              </doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
           <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
         </doc:errors>
