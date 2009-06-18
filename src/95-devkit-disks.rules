@@ -31,43 +31,43 @@ LABEL="probe_parttable_end"
 
 ##############################################################################################################
 
-# pick up device-mapper data; this really should be done by rules installed
+# pick up device-mapper data; this REALLY should be done by rules installed
 # by the device-mapper package
 #
-
 KERNEL!="dm-*", GOTO="device_mapper_end"
 ACTION!="add|change", GOTO="device_mapper_end"
 
 IMPORT{program}="devkit-disks-dm-export %M %m"
 ENV{DKD_DM_NAME}!="?*", GOTO="device_mapper_end"
 
-SYMLINK+="disk/by-id/dm-name-$env{DKD_DM_NAME}"
-ENV{DKD_DM_UUID}=="?*", SYMLINK+="disk/by-id/dm-uuid-$env{DKD_DM_UUID}"
-
 ENV{DKD_DM_STATE}=="SUSPENDED", GOTO="device_mapper_end"
 ENV{DKD_DM_TARGET_TYPES}=="|*error*", GOTO="device_mapper_end"
 
-IMPORT{program}="vol_id --export $tempnode"
-OPTIONS="link_priority=-100"
-ENV{DKD_DM_TARGET_TYPES}=="*snapshot-origin*", OPTIONS="link_priority=-90"
-ENV{ID_FS_USAGE}=="filesystem|other|crypto", ENV{ID_FS_UUID_ENC}=="?*", SYMLINK+="disk/by-uuid/$env{ID_FS_UUID_ENC}"
-ENV{ID_FS_USAGE}=="filesystem|other", ENV{ID_FS_LABEL_ENC}=="?*", SYMLINK+="disk/by-label/$env{ID_FS_LABEL_ENC}"
+# avoid probing if it has already been done earlier
+#
+ENV{ID_FS_USAGE}!="", GOTO="device_mapper_end"
+IMPORT{program}="/sbin/blkid -o udev -p $tempnode"
 
 LABEL="device_mapper_end"
 
 ##############################################################################################################
 
-# pick up data from MD components; this really should be done by rules
-# installed by mdadm or the kernel package
+# pick up data from MD components; this REALLY should be done by rules installed
+# by mdadm or the kernel package
 #
-ENV{ID_FS_TYPE}=="linux_raid_member", IMPORT{program}="/sbin/mdadm --examine --export $tempnode"
+ENV{ID_FS_TYPE}!="linux_raid_member", GOTO="md_end"
+
+# avoid probing if it has already been done earlier
+#
+ENV{MD_LEVEL}!="", GOTO="md_end"
+IMPORT{program}="/sbin/mdadm --examine --export $tempnode"
+
+LABEL="md_end"
 
 ##############################################################################################################
 
-# Check if disk is capable of ATA smart; this should probably be done by
-# ata_id and usb_id
+# Check if a disk is ATA SMART capable
 #
-
 KERNEL=="sd*[!0-9]", ATTR{removable}=="0", ENV{ID_BUS}=="usb", ENV{DEVTYPE}=="disk", IMPORT{program}="devkit-disks-probe-ata-smart $tempnode"
 KERNEL=="sd*[!0-9]", ATTR{removable}=="0", ENV{ID_BUS}=="scsi", ENV{DEVTYPE}=="disk", ENV{ID_VENDOR}=="ATA", IMPORT{program}="devkit-disks-probe-ata-smart $tempnode"
 
@@ -90,7 +90,10 @@ SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:3", ENV{
 #
 SYSFS{idVendor}=="05ac", SYSFS{idProduct}=="1209", ENV{DKD_PRESENTATION_ICON_NAME}="multimedia-player-ipod-white"
 
+##############################################################################################################
+
 # PC floppy drives
+#
 KERNEL=="fd*", ENV{ID_DRIVE_FLOPPY}="1"
 
 # USB floppy drives
