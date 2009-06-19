@@ -8,4 +8,4 @@ clean-local :
 
 DISTCLEANFILES = $(dist_devkit_policy_DATA)
 
-EXTRA_DIST = $(dist_devkit_policy_DATA:.policy=.policy.in)
+EXTRA_DIST = $(dist_policy_DATA:.policy=.policy.in)

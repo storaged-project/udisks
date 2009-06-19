@@ -25,16 +25,7 @@ pkgconfig_DATA = DeviceKit-disks.pc
 EXTRA_DIST = 			\
 	HACKING 		\
 	DeviceKit-disks.pc.in	\
-	mkinstalldirs 		\
-	ChangeLog 		\
-	intltool-extract.in 	\
-	intltool-merge.in 	\
-	intltool-update.in
-
-DISTCLEANFILES = \
-	intltool-extract	\
-	intltool-merge		\
-	intltool-update
+	ChangeLog
 
 # xsltproc barfs on 'make distcheck'; disable for now
 DISTCHECK_CONFIGURE_FLAGS=--disable-man-pages --disable-gtk-doc
