@@ -1,8 +1,0 @@
-
-The files in this directory are from the smartmontools project, see
-
- http://smartmontools.sourceforge.net/help.html
-
-To feed data into the DeviceKit-disks daemon, use a command like this
-
- $ sudo dbus-send --print-reply --system --dest=org.freedesktop.DeviceKit.Disks /devices/sda org.freedesktop.DeviceKit.Disks.Device.DriveSmartRefreshData array:string:simulate=/home/davidz/Hacking/DeviceKit-disks/test/smart/WD800JD.txt
