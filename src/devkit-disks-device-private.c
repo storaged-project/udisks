@@ -32,11 +32,14 @@ emit_changed_idle_cb (gpointer data)
 
   //g_debug ("XXX emitting 'changed' in idle");
 
-  g_signal_emit_by_name (device->priv->daemon,
-                         "device-changed",
-                         device->priv->object_path);
-  g_signal_emit_by_name (device, "changed");
-
+  if (!device->priv->removed)
+    {
+      g_print ("**** EMITTING CHANGED for %s\n", device->priv->native_path);
+      g_signal_emit_by_name (device->priv->daemon,
+                             "device-changed",
+                             device->priv->object_path);
+      g_signal_emit_by_name (device, "changed");
+    }
   device->priv->emit_changed_idle_id = 0;
 
   /* remove the idle source */

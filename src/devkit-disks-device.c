@@ -1209,6 +1209,8 @@ devkit_disks_device_finalize (GObject *object)
         device = DEVKIT_DISKS_DEVICE (object);
         g_return_if_fail (device->priv != NULL);
 
+        g_debug ("finalizing %s", device->priv->native_path);
+
         g_object_unref (device->priv->d);
         g_object_unref (device->priv->daemon);
         g_free (device->priv->object_path);
@@ -1349,14 +1351,23 @@ register_disks_device (DevkitDisksDevice *device)
 
         device->priv->object_path = compute_object_path (device->priv->native_path);
 
+        if (dbus_g_connection_lookup_g_object (device->priv->system_bus_connection,
+                                               device->priv->object_path) != NULL) {
+                /* TODO: see devkit_disks_device_removed() for where we want to unregister the object but
+                 * we're missing the API. So do it manually here if we are forced to do so...
+                 */
+
+                g_print ("**** HACK: Wanting to register object at path `%s' but there is already an "
+                         "object there. Using a hack to move it out of the way.\n",
+                         device->priv->object_path);
+
+                dbus_connection_unregister_object_path (dbus_g_connection_get_connection (device->priv->system_bus_connection),
+                                                        device->priv->object_path);
+        }
+
         dbus_g_connection_register_g_object (device->priv->system_bus_connection,
                                              device->priv->object_path,
                                              G_OBJECT (device));
-
-        device->priv->system_bus_proxy = dbus_g_proxy_new_for_name (device->priv->system_bus_connection,
-                                                                    DBUS_SERVICE_DBUS,
-                                                                    DBUS_PATH_DBUS,
-                                                                    DBUS_INTERFACE_DBUS);
 
         return TRUE;
 
@@ -1479,7 +1490,8 @@ _dupv8 (const char *s)
         if (!g_utf8_validate (s,
                              -1,
                              &end_valid)) {
-                g_warning ("The string '%s' is not valid UTF-8. Invalid characters begins at '%s'", s, end_valid);
+                g_print ("**** NOTE: The string '%s' is not valid UTF-8. Invalid characters begins at '%s'\n",
+                         s, end_valid);
                 return g_strndup (s, end_valid - s);
         } else {
                 return g_strdup (s);
@@ -1543,7 +1555,7 @@ decode_udev_encoded_string (const gchar *str)
                         gint val;
 
                         if (str[n + 1] != 'x' || str[n + 2] == '\0' || str[n + 3] == '\0') {
-                                g_warning ("malformed encoded string %s", str);
+                                g_print ("**** NOTE: malformed encoded string '%s'\n", str);
                                 break;
                         }
 
@@ -1558,7 +1570,8 @@ decode_udev_encoded_string (const gchar *str)
         }
 
         if (!g_utf8_validate (s->str, -1, &end_valid)) {
-                g_warning ("The string '%s' is not valid UTF-8. Invalid characters begins at '%s'", s->str, end_valid);
+                g_print ("**** NOTE: The string '%s' is not valid UTF-8. Invalid characters begins at '%s'\n",
+                         s->str, end_valid);
                 ret = g_strndup (s->str, end_valid - s->str);
                 g_string_free (s, TRUE);
         } else {
@@ -2375,14 +2388,14 @@ update_info_linux_md (DevkitDisksDevice *device)
                 /* figure out if the array is active */
                 array_state = sysfs_get_string (device->priv->native_path, "md/array_state");
                 if (array_state == NULL) {
-                        g_debug ("Linux MD array %s has no array_state file'; removing", device->priv->native_path);
+                        g_print ("**** NOTE: Linux MD array %s has no array_state file'; removing\n", device->priv->native_path);
                         goto out;
                 }
                 g_strstrip (array_state);
 
                 /* ignore clear arrays since these have no devices, no size, no level */
                 if (strcmp (array_state, "clear") == 0) {
-                        g_debug ("Linux MD array %s is 'clear'; removing", device->priv->native_path);
+                        g_print ("**** NOTE: Linux MD array %s is 'clear'; removing\n", device->priv->native_path);
                         g_free (array_state);
                         goto out;
                 }
@@ -2522,7 +2535,9 @@ update_info_linux_md (DevkitDisksDevice *device)
                                         devkit_disks_device_set_linux_md_sync_percentage (device,
                                                                      100.0 * ((double) done) / ((double) remaining));
                                 } else {
-                                        g_debug ("cannot parse md/sync_completed: '%s'", s);
+                                        g_warning ("cannot parse md/sync_completed for %s: '%s'",
+                                                   device->priv->native_path,
+                                                   s);
                                 }
                                 g_free (s);
 
@@ -3208,7 +3223,7 @@ out:
                 if (device2 != NULL) {
                         update_info (device2);
                 } else {
-                        g_warning ("### %s added non-existant slave %s", device->priv->object_path, objpath2);
+                        g_print ("**** NOTE: %s added non-existant slave %s\n", device->priv->object_path, objpath2);
                 }
         }
         for (l = removed_objpath; l != NULL; l = l->next) {
@@ -3238,7 +3253,7 @@ out:
                 if (device2 != NULL) {
                         update_info (device2);
                 } else {
-                        g_warning ("### %s added non-existant holder %s", device->priv->object_path, objpath2);
+                        g_print ("**** NOTE: %s added non-existant holder %s\n", device->priv->object_path, objpath2);
                 }
         }
         for (l = removed_objpath; l != NULL; l = l->next) {
@@ -3414,6 +3429,12 @@ devkit_disks_device_removed (DevkitDisksDevice *device)
 
         device->priv->removed = TRUE;
 
+        /* TODO: this is in a yet to be released version of dbus-glib, use it when available
+
+        dbus_g_connection_unregister_g_object (device->priv->system_bus_connection,
+                                               G_OBJECT (device));
+        */
+
         /* device is now removed; update all slaves and holders */
         for (n = 0; n < device->priv->slaves_objpath->len; n++) {
                 const gchar *objpath2 = ((gchar **) device->priv->slaves_objpath->pdata)[n];
@@ -3516,8 +3537,9 @@ drain_pending_changes (DevkitDisksDevice *device, gboolean force_update)
                 emit_changed = TRUE;
         }
 
-        if (emit_changed || force_update) {
+        if ((!device->priv->removed) && (emit_changed || force_update)) {
                 if (device->priv->object_path != NULL) {
+                        g_print ("**** EMITTING CHANGED for %s\n", device->priv->native_path);
                         g_signal_emit_by_name (device, "changed");
                         g_signal_emit_by_name (device->priv->daemon, "device-changed", device->priv->object_path);
                 }
@@ -3529,22 +3551,24 @@ emit_job_changed (DevkitDisksDevice *device)
 {
         drain_pending_changes (device, FALSE);
 
-        g_print ("emitting job-changed on %s\n", device->priv->native_path);
-        g_signal_emit_by_name (device->priv->daemon,
-                               "device-job-changed",
-                               device->priv->object_path,
+        if (!device->priv->removed) {
+                g_print ("**** EMITTING JOB-CHANGED for %s\n", device->priv->native_path);
+                g_signal_emit_by_name (device->priv->daemon,
+                                       "device-job-changed",
+                                       device->priv->object_path,
+                                       device->priv->job_in_progress,
+                                       device->priv->job_id,
+                                       device->priv->job_initiated_by_uid,
+                                       device->priv->job_is_cancellable,
+                                       device->priv->job_percentage,
+                                       NULL);
+                g_signal_emit (device, signals[JOB_CHANGED_SIGNAL], 0,
                                device->priv->job_in_progress,
                                device->priv->job_id,
                                device->priv->job_initiated_by_uid,
                                device->priv->job_is_cancellable,
-                               device->priv->job_percentage,
-                               NULL);
-        g_signal_emit (device, signals[JOB_CHANGED_SIGNAL], 0,
-                       device->priv->job_in_progress,
-                       device->priv->job_id,
-                       device->priv->job_initiated_by_uid,
-                       device->priv->job_is_cancellable,
-                       device->priv->job_percentage);
+                               device->priv->job_percentage);
+        }
 }
 
 /* called by the daemon on the 'change' uevent */
@@ -9069,14 +9093,14 @@ force_unmount_completed_cb (DBusGMethodInvocation *context,
 
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
 
-                g_debug ("Successfully force unmounted device %s", device->priv->device_file);
+                g_print ("**** NOTE: Successfully force unmounted device %s\n", device->priv->device_file);
                 /* update_info_mount_state() will update the mounts file and clean up the directory if needed */
                 update_info (device);
 
                 if (data->fr_callback != NULL)
                         data->fr_callback (device, TRUE, data->fr_user_data);
         } else {
-                g_debug ("force unmount failed: %s", stderr);
+                g_print ("**** NOTE: force unmount failed: %s\n", stderr);
                 if (data->fr_callback != NULL)
                         data->fr_callback (device, FALSE, data->fr_user_data);
         }
@@ -9140,12 +9164,12 @@ force_luks_teardown_completed_cb (DBusGMethodInvocation *context,
 
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
 
-                g_debug ("Successfully teared down luks device %s", device->priv->device_file);
+                g_print ("**** NOTE: Successfully teared down luks device %s\n", device->priv->device_file);
 
                 if (data->fr_callback != NULL)
                         data->fr_callback (device, TRUE, data->fr_user_data);
         } else {
-                g_warning ("force luks teardown failed: %s", stderr);
+                g_print ("**** NOTE: force luks teardown failed: %s\n", stderr);
                 if (data->fr_callback != NULL)
                         data->fr_callback (device, FALSE, data->fr_user_data);
         }
@@ -9262,7 +9286,7 @@ force_removal (DevkitDisksDevice        *device,
                 gboolean remove_dir_on_unmount;
 
                 if (devkit_disks_mount_file_has_device (device->priv->device_file, NULL, &remove_dir_on_unmount)) {
-                        g_debug ("Force unmounting device %s", device->priv->device_file);
+                        g_print ("**** NOTE: Force unmounting device %s\n", device->priv->device_file);
                         force_unmount (device, callback, user_data);
                         goto pending;
                 }
@@ -9284,7 +9308,7 @@ force_removal (DevkitDisksDevice        *device,
                                 if (d->priv->dm_name != NULL &&
                                     g_str_has_prefix (d->priv->dm_name, "devkit-disks-luks-uuid-")) {
 
-                                        g_debug ("Force luks teardown device %s (cleartext %s)",
+                                        g_print ("**** NOTE: Force luks teardown device %s (cleartext %s)\n",
                                                  device->priv->device_file,
                                                  d->priv->device_file);
 

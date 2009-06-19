@@ -527,19 +527,19 @@ devkit_disks_daemon_init (DevkitDisksDaemon *daemon)
         daemon->priv->map_dev_t_to_device = g_hash_table_new_full (g_direct_hash,
                                                                    g_direct_equal,
                                                                    NULL,
-                                                                   NULL);
+                                                                   g_object_unref);
         daemon->priv->map_device_file_to_device = g_hash_table_new_full (g_str_hash,
                                                                          g_str_equal,
                                                                          g_free,
-                                                                         NULL);
+                                                                         g_object_unref);
         daemon->priv->map_native_path_to_device = g_hash_table_new_full (g_str_hash,
                                                                          g_str_equal,
                                                                          g_free,
-                                                                         NULL);
+                                                                         g_object_unref);
         daemon->priv->map_object_path_to_device = g_hash_table_new_full (g_str_hash,
                                                                          g_str_equal,
                                                                          g_free,
-                                                                         NULL);
+                                                                         g_object_unref);
 }
 
 static void
@@ -638,44 +638,6 @@ _filter (DBusConnection *connection, DBusMessage *message, void *user_data)
         return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 }
 
-static gboolean
-device_went_away_remove_quiet_cb (gpointer key, gpointer value, gpointer user_data)
-{
-        if (value == user_data) {
-                return TRUE;
-        }
-        return FALSE;
-}
-
-static gboolean
-device_went_away_remove_cb (gpointer key, gpointer value, gpointer user_data)
-{
-        if (value == user_data) {
-                g_print ("**** REMOVED %s\n", (char *) key);
-                return TRUE;
-        }
-        return FALSE;
-}
-
-static void
-device_went_away (gpointer user_data, GObject *where_the_object_was)
-{
-        DevkitDisksDaemon *daemon = DEVKIT_DISKS_DAEMON (user_data);
-
-        g_hash_table_foreach_remove (daemon->priv->map_device_file_to_device,
-                                     device_went_away_remove_cb,
-                                     where_the_object_was);
-        g_hash_table_foreach_remove (daemon->priv->map_dev_t_to_device,
-                                     device_went_away_remove_quiet_cb,
-                                     where_the_object_was);
-        g_hash_table_foreach_remove (daemon->priv->map_native_path_to_device,
-                                     device_went_away_remove_quiet_cb,
-                                     where_the_object_was);
-        g_hash_table_foreach_remove (daemon->priv->map_object_path_to_device,
-                                     device_went_away_remove_quiet_cb,
-                                     where_the_object_was);
-}
-
 static void device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event);
 static void device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d);
 
@@ -740,27 +702,23 @@ device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event)
                 device = devkit_disks_device_new (daemon, d);
 
                 if (device != NULL) {
-                        /* only take a weak ref; the device will stay on the bus until
-                         * it's unreffed. So if we ref it, it'll never go away. Stupid
-                         * dbus-glib, no cookie for you.
-                         */
-                        g_object_weak_ref (G_OBJECT (device), device_went_away, daemon);
                         g_hash_table_insert (daemon->priv->map_dev_t_to_device,
                                              GINT_TO_POINTER (devkit_disks_device_local_get_dev (device)),
-                                             device);
+                                             g_object_ref (device));
                         g_hash_table_insert (daemon->priv->map_device_file_to_device,
                                              g_strdup (devkit_disks_device_local_get_device_file (device)),
-                                             device);
+                                             g_object_ref (device));
                         g_hash_table_insert (daemon->priv->map_native_path_to_device,
                                              g_strdup (native_path),
-                                             device);
+                                             g_object_ref (device));
                         g_hash_table_insert (daemon->priv->map_object_path_to_device,
                                              g_strdup (devkit_disks_device_local_get_object_path (device)),
-                                             device);
+                                             g_object_ref (device));
                         g_print ("**** ADDED %s\n", native_path);
                         if (emit_event) {
                                 const char *object_path;
                                 object_path = devkit_disks_device_local_get_object_path (device);
+                                g_print ("**** EMITTING ADDED for %s\n", device->priv->native_path);
                                 g_signal_emit (daemon, signals[DEVICE_ADDED_SIGNAL], 0, object_path);
                         }
                         devkit_disks_daemon_local_update_poller (daemon);
@@ -782,10 +740,26 @@ device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
                 g_print ("**** IGNORING REMOVE %s\n", native_path);
         } else {
                 g_print ("**** REMOVING %s\n", native_path);
+
+                g_warn_if_fail (g_strcmp0 (native_path, device->priv->native_path) == 0);
+
+                g_warn_if_fail (g_hash_table_remove (daemon->priv->map_native_path_to_device,
+                                                     device->priv->native_path));
+                g_warn_if_fail (g_hash_table_remove (daemon->priv->map_device_file_to_device,
+                                                     device->priv->device_file));
+                g_warn_if_fail (g_hash_table_remove (daemon->priv->map_object_path_to_device,
+                                                     device->priv->object_path));
+                g_warn_if_fail (g_hash_table_remove (daemon->priv->map_dev_t_to_device,
+                                                     GINT_TO_POINTER (device->priv->dev)));
+
                 devkit_disks_device_removed (device);
+
+                g_print ("**** EMITTING REMOVED for %s\n", device->priv->native_path);
                 g_signal_emit (daemon, signals[DEVICE_REMOVED_SIGNAL], 0,
                                devkit_disks_device_local_get_object_path (device));
+
                 g_object_unref (device);
+
                 devkit_disks_daemon_local_update_poller (daemon);
         }
 }
@@ -805,7 +779,7 @@ on_uevent (GUdevClient  *client,
         } else if (strcmp (action, "change") == 0) {
                 device_changed (daemon, device, FALSE);
         } else {
-                g_warning ("unhandled action '%s' on %s", action, g_udev_device_get_sysfs_path (device));
+                g_print ("*** NOTE: unhandled action '%s' on %s\n", action, g_udev_device_get_sysfs_path (device));
         }
 }
 
@@ -993,16 +967,9 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
                                              G_OBJECT (daemon));
 
         daemon->priv->system_bus_proxy = dbus_g_proxy_new_for_name (daemon->priv->system_bus_connection,
-                                                                      DBUS_SERVICE_DBUS,
-                                                                      DBUS_PATH_DBUS,
-                                                                      DBUS_INTERFACE_DBUS);
-
-        /* TODO FIXME: I'm pretty sure dbus-glib blows in a way that
-         * we can't say we're interested in all signals from all
-         * members on all interfaces for a given service... So we do
-         * this..
-         */
-
+                                                                    DBUS_SERVICE_DBUS,
+                                                                    DBUS_PATH_DBUS,
+                                                                    DBUS_INTERFACE_DBUS);
         dbus_error_init (&dbus_error);
 
         /* need to listen to NameOwnerChanged */
@@ -1011,17 +978,6 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
 			    ",interface='"DBUS_INTERFACE_DBUS"'"
 			    ",sender='"DBUS_SERVICE_DBUS"'"
 			    ",member='NameOwnerChanged'",
-			    &dbus_error);
-
-        if (dbus_error_is_set (&dbus_error)) {
-                g_warning ("Cannot add match rule: %s: %s", dbus_error.name, dbus_error.message);
-                dbus_error_free (&dbus_error);
-                goto error;
-        }
-
-        /* need to listen to ConsoleKit signals */
-	dbus_bus_add_match (connection,
-			    "type='signal',sender='org.freedesktop.ConsoleKit'",
 			    &dbus_error);
 
         if (dbus_error_is_set (&dbus_error)) {
@@ -1055,7 +1011,7 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
                 error = NULL;
 	}
 
-        /* connect to the DeviceKit daemon */
+        /* connect to udev */
         daemon->priv->gudev_client = g_udev_client_new (subsystems);
         g_signal_connect (daemon->priv->gudev_client,
                           "uevent",

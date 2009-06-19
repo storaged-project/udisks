@@ -64,7 +64,6 @@ typedef struct Job Job;
 struct DevkitDisksDevicePrivate
 {
         DBusGConnection *system_bus_connection;
-        DBusGProxy      *system_bus_proxy;
         DevkitDisksDaemon *daemon;
         GUdevDevice *d;
 
