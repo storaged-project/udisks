@@ -191,6 +191,15 @@ gboolean devkit_disks_device_drive_detach (DevkitDisksDevice     *device,
                                            char                 **options,
                                            DBusGMethodInvocation *context);
 
+gboolean devkit_disks_device_drive_set_spindown_timeout (DevkitDisksDevice     *device,
+                                                         int                    timeout_seconds,
+                                                         char                 **options,
+                                                         DBusGMethodInvocation *context);
+
+gboolean devkit_disks_device_drive_unset_spindown_timeout (DevkitDisksDevice     *device,
+                                                           char                  *cookie,
+                                                           DBusGMethodInvocation *context);
+
 G_END_DECLS
 
 #endif /* __DEVKIT_DISKS_DEVICE_H__ */

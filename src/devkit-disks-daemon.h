@@ -121,6 +121,8 @@ void               devkit_disks_daemon_local_synthesize_changed  (DevkitDisksDae
 
 void               devkit_disks_daemon_local_update_poller       (DevkitDisksDaemon       *daemon);
 
+void               devkit_disks_daemon_local_update_spindown     (DevkitDisksDaemon       *daemon);
+
 gboolean           devkit_disks_daemon_local_has_polling_inhibitors (DevkitDisksDaemon       *daemon);
 
 gboolean           devkit_disks_daemon_local_has_inhibitors (DevkitDisksDaemon       *daemon);
@@ -183,6 +185,15 @@ gboolean devkit_disks_daemon_inhibit (DevkitDisksDaemon     *daemon,
 gboolean devkit_disks_daemon_uninhibit (DevkitDisksDaemon     *daemon,
                                         char                  *cookie,
                                         DBusGMethodInvocation *context);
+
+gboolean devkit_disks_daemon_drive_set_all_spindown_timeouts (DevkitDisksDaemon     *daemon,
+                                                              int                    timeout_seconds,
+                                                              char                 **options,
+                                                              DBusGMethodInvocation *context);
+
+gboolean devkit_disks_daemon_drive_unset_all_spindown_timeouts (DevkitDisksDaemon     *daemon,
+                                                                char                  *cookie,
+                                                                DBusGMethodInvocation *context);
 
 G_END_DECLS
 

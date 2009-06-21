@@ -60,6 +60,9 @@ static char         *opt_show_info              = NULL;
 static char         *opt_inhibit_polling        = NULL;
 static gboolean      opt_inhibit                = FALSE;
 static gboolean      opt_inhibit_all_polling    = FALSE;
+static char         *opt_drive_spindown         = NULL;
+static gboolean      opt_drive_spindown_all     = FALSE;
+static gint          opt_spindown_seconds       = 0;
 static char         *opt_mount                  = NULL;
 static char         *opt_mount_fstype           = NULL;
 static char         *opt_mount_options          = NULL;
@@ -382,6 +385,7 @@ typedef struct
         char    *drive_media;
         gboolean drive_is_media_ejectable;
         gboolean drive_can_detach;
+        gboolean drive_can_spindown;
 
         gboolean optical_disc_is_blank;
         gboolean optical_disc_is_appendable;
@@ -579,6 +583,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->drive_is_media_ejectable = g_value_get_boolean (value);
         else if (strcmp (key, "drive-can-detach") == 0)
                 props->drive_can_detach = g_value_get_boolean (value);
+        else if (strcmp (key, "drive-can-spindown") == 0)
+                props->drive_can_spindown = g_value_get_boolean (value);
 
         else if (strcmp (key, "optical-disc-is-blank") == 0)
                 props->optical_disc_is_blank = g_value_get_boolean (value);
@@ -1089,6 +1095,7 @@ do_show_info (const char *object_path)
                 g_print ("    revision:              %s\n", props->drive_revision);
                 g_print ("    serial:                %s\n", props->drive_serial);
                 g_print ("    detachable:            %d\n", props->drive_can_detach);
+                g_print ("    can spindown:          %d\n", props->drive_can_spindown);
                 g_print ("    ejectable:             %d\n", props->drive_is_media_ejectable);
                 g_print ("    media:                 %s\n", props->drive_media);
                 g_print ("      compat:             ");
@@ -1438,6 +1445,155 @@ out:
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gint
+do_set_spindown (const char *object_path,
+                 gint         argc,
+                 gchar       *argv[])
+{
+        char *cookie;
+        DBusGProxy *proxy;
+        GError *error;
+        char **options;
+        gint ret;
+
+        options = NULL;
+        cookie = NULL;
+        ret = 127;
+
+	if (argc > 0 && strcmp (argv[0], "--") == 0) {
+		argv++;
+		argc--;
+	}
+
+	proxy = dbus_g_proxy_new_for_name (bus,
+                                           "org.freedesktop.DeviceKit.Disks",
+                                           object_path,
+                                           "org.freedesktop.DeviceKit.Disks.Device");
+
+        error = NULL;
+        if (!org_freedesktop_DeviceKit_Disks_Device_drive_set_spindown_timeout (proxy,
+                                                                                opt_spindown_seconds,
+                                                                                (const char **) options,
+                                                                                &cookie,
+                                                                                &error)) {
+                g_print ("Setting spindown failed: %s\n", error->message);
+                g_error_free (error);
+                goto out;
+        }
+
+        if (argc == 0) {
+                g_print ("Set spindown on %s to %d seconds. Press Ctrl+C to exit.\n",
+                         object_path, opt_spindown_seconds);
+                while (TRUE)
+                        sleep (100000000);
+        } else {
+                GError *error;
+                gint exit_status;
+
+                error = NULL;
+                if (!g_spawn_sync (NULL,  /* working dir */
+                                   argv,
+                                   NULL,  /* envp */
+                                   G_SPAWN_SEARCH_PATH,
+                                   NULL, /* child_setup */
+                                   NULL, /* user_data */
+                                   NULL, /* standard_output */
+                                   NULL, /* standard_error */
+                                   &exit_status, /* exit_status */
+                                   &error)) {
+                        g_printerr ("Error launching program: %s\n", error->message);
+                        g_error_free (error);
+                        ret = 126;
+                        goto out;
+                }
+
+                if (WIFEXITED (exit_status))
+                        ret = WEXITSTATUS (exit_status);
+                else
+                        ret = 125;
+        }
+
+out:
+        g_free (cookie);
+        return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gint
+do_set_spindown_all (gint         argc,
+                     gchar       *argv[])
+{
+        char *cookie;
+        DBusGProxy *proxy;
+        GError *error;
+        char **options;
+        gint ret;
+
+        options = NULL;
+        cookie = NULL;
+        ret = 127;
+
+	if (argc > 0 && strcmp (argv[0], "--") == 0) {
+		argv++;
+		argc--;
+	}
+
+	proxy = dbus_g_proxy_new_for_name (bus,
+                                           "org.freedesktop.DeviceKit.Disks",
+                                           "/org/freedesktop/DeviceKit/Disks",
+                                           "org.freedesktop.DeviceKit.Disks");
+
+        error = NULL;
+        if (!org_freedesktop_DeviceKit_Disks_drive_set_all_spindown_timeouts (proxy,
+                                                                              opt_spindown_seconds,
+                                                                              (const char **) options,
+                                                                              &cookie,
+                                                                              &error)) {
+                g_print ("Setting spindown failed: %s\n", error->message);
+                g_error_free (error);
+                goto out;
+        }
+
+        if (argc == 0) {
+                g_print ("Set spindown for all drives to %d seconds. Press Ctrl+C to exit.\n",
+                         opt_spindown_seconds);
+                while (TRUE)
+                        sleep (100000000);
+        } else {
+                GError *error;
+                gint exit_status;
+
+                error = NULL;
+                if (!g_spawn_sync (NULL,  /* working dir */
+                                   argv,
+                                   NULL,  /* envp */
+                                   G_SPAWN_SEARCH_PATH,
+                                   NULL, /* child_setup */
+                                   NULL, /* user_data */
+                                   NULL, /* standard_output */
+                                   NULL, /* standard_error */
+                                   &exit_status, /* exit_status */
+                                   &error)) {
+                        g_printerr ("Error launching program: %s\n", error->message);
+                        g_error_free (error);
+                        ret = 126;
+                        goto out;
+                }
+
+                if (WIFEXITED (exit_status))
+                        ret = WEXITSTATUS (exit_status);
+                else
+                        ret = 125;
+        }
+
+out:
+        g_free (cookie);
+        return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gint
 do_inhibit (gint         argc,
             gchar       *argv[])
 {
@@ -1574,6 +1730,9 @@ main (int argc, char **argv)
                 { "show-info", 0, 0, G_OPTION_ARG_STRING, &opt_show_info, "Show information about a device file", NULL },
                 { "inhibit-polling", 0, 0, G_OPTION_ARG_STRING, &opt_inhibit_polling, "Inhibit polling", NULL },
                 { "inhibit-all-polling", 0, 0, G_OPTION_ARG_NONE, &opt_inhibit_all_polling, "Inhibit all polling", NULL },
+                { "set-spindown", 0, 0, G_OPTION_ARG_STRING, &opt_drive_spindown, "Set spindown timeout for drive", NULL },
+                { "set-spindown-all", 0, 0, G_OPTION_ARG_NONE, &opt_drive_spindown_all, "Set spindown timeout for all drives", NULL },
+                { "spindown-timeout", 0, 0, G_OPTION_ARG_INT, &opt_spindown_seconds, "Spindown timeout in seconds", NULL },
                 { "inhibit", 0, 0, G_OPTION_ARG_NONE, &opt_inhibit, "Inhibit the daemon", NULL },
 
                 { "mount", 0, 0, G_OPTION_ARG_STRING, &opt_mount, "Mount the given device", NULL },
@@ -1696,6 +1855,15 @@ main (int argc, char **argv)
                 goto out;
         } else if (opt_inhibit_all_polling) {
                 ret = do_inhibit_all_polling (argc - 1, argv + 1);
+                goto out;
+        } else if (opt_drive_spindown != NULL) {
+                device_file = device_file_to_object_path (opt_drive_spindown);
+                if (device_file == NULL)
+                        goto out;
+                ret = do_set_spindown (device_file, argc - 1, argv + 1);
+                goto out;
+        } else if (opt_drive_spindown_all) {
+                ret = do_set_spindown_all (argc - 1, argv + 1);
                 goto out;
         } else if (opt_inhibit) {
                 ret = do_inhibit (argc - 1, argv + 1);

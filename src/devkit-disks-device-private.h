@@ -87,8 +87,17 @@ struct DevkitDisksDevicePrivate
         /* A list of current polling inhibitors (DevkitDisksInhibitor objects) */
         GList *polling_inhibitors;
 
+        /* A list of current spindown configurators (DevkitDisksInhibitor objects) */
+        GList *spindown_inhibitors;
+
         /* if non-zero, the id of the idle for emitting a 'change' signal */
         guint emit_changed_idle_id;
+
+        /* used for spindown */
+        gint spindown_timeout;
+        gchar *spindown_last_stat;
+        time_t spindown_last_stat_time;
+        gboolean spindown_have_issued_standby;
 
         /**************/
         /* properties */
@@ -152,6 +161,7 @@ struct DevkitDisksDevicePrivate
         char *drive_media;
         gboolean drive_is_media_ejectable;
         gboolean drive_can_detach;
+        gboolean drive_can_spindown;
 
         gboolean optical_disc_is_blank;
         gboolean optical_disc_is_appendable;
@@ -282,6 +292,7 @@ void devkit_disks_device_set_drive_media_compatibility (DevkitDisksDevice *devic
 void devkit_disks_device_set_drive_media (DevkitDisksDevice *device, const gchar *value);
 void devkit_disks_device_set_drive_is_media_ejectable (DevkitDisksDevice *device, gboolean value);
 void devkit_disks_device_set_drive_can_detach (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_drive_can_spindown (DevkitDisksDevice *device, gboolean value);
 
 void devkit_disks_device_set_optical_disc_is_blank (DevkitDisksDevice *device, gboolean value);
 void devkit_disks_device_set_optical_disc_is_appendable (DevkitDisksDevice *device, gboolean value);

@@ -70,6 +70,9 @@ static void     devkit_disks_device_finalize    (GObject     *object);
 static void     polling_inhibitor_disconnected_cb (DevkitDisksInhibitor *inhibitor,
                                                    DevkitDisksDevice   *device);
 
+static void     spindown_inhibitor_disconnected_cb (DevkitDisksInhibitor *inhibitor,
+                                                    DevkitDisksDevice   *device);
+
 static gboolean update_info                (DevkitDisksDevice *device);
 
 static void     drain_pending_changes (DevkitDisksDevice *device, gboolean force_update);
@@ -206,6 +209,7 @@ enum
         PROP_DRIVE_MEDIA,
         PROP_DRIVE_IS_MEDIA_EJECTABLE,
         PROP_DRIVE_CAN_DETACH,
+        PROP_DRIVE_CAN_SPINDOWN,
 
         PROP_OPTICAL_DISC_IS_BLANK,
         PROP_OPTICAL_DISC_IS_APPENDABLE,
@@ -511,6 +515,9 @@ get_property (GObject         *object,
 		break;
 	case PROP_DRIVE_CAN_DETACH:
 		g_value_set_boolean (value, device->priv->drive_can_detach);
+		break;
+	case PROP_DRIVE_CAN_SPINDOWN:
+		g_value_set_boolean (value, device->priv->drive_can_spindown);
 		break;
 
 	case PROP_OPTICAL_DISC_IS_BLANK:
@@ -982,6 +989,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DRIVE_CAN_DETACH,
                 g_param_spec_boolean ("drive-can-detach", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_CAN_SPINDOWN,
+                g_param_spec_boolean ("drive-can-spindown", NULL, NULL, FALSE, G_PARAM_READABLE));
 
         g_object_class_install_property (
                 object_class,
@@ -1227,11 +1238,20 @@ devkit_disks_device_finalize (GObject *object)
         }
         g_list_free (device->priv->polling_inhibitors);
 
+        for (l = device->priv->spindown_inhibitors; l != NULL; l = l->next) {
+                DevkitDisksInhibitor *inhibitor = DEVKIT_DISKS_INHIBITOR (l->data);
+                g_signal_handlers_disconnect_by_func (inhibitor, spindown_inhibitor_disconnected_cb, device);
+                g_object_unref (inhibitor);
+        }
+        g_list_free (device->priv->spindown_inhibitors);
+
         if (device->priv->linux_md_poll_timeout_id > 0)
                 g_source_remove (device->priv->linux_md_poll_timeout_id);
 
         if (device->priv->emit_changed_idle_id > 0)
                 g_source_remove (device->priv->emit_changed_idle_id);
+
+        g_free (device->priv->spindown_last_stat);
 
         /* free properties */
         g_free (device->priv->device_file);
@@ -2153,6 +2173,34 @@ update_info_drive (DevkitDisksDevice *device)
                 drive_can_detach = g_udev_device_get_property_as_boolean (device->priv->d, "ID_DRIVE_DETACHABLE");
         }
         devkit_disks_device_set_drive_can_detach (device, drive_can_detach);
+
+        return TRUE;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/* update drive_can_spindown property */
+static gboolean
+update_info_drive_can_spindown (DevkitDisksDevice *device)
+{
+        gboolean drive_can_spindown;
+
+        /* Right now we only know how to spin down ATA devices (including those USB devices
+         * that can do ATA SMART)
+         *
+         * This would probably also work for SCSI devices (since the helper is doing SCSI
+         * STOP (which translated in libata to ATA's STANDBY IMMEDIATE) - but that needs
+         * testing...
+         */
+        drive_can_spindown = FALSE;
+        if (g_strcmp0 (device->priv->drive_connection_interface, "ata") == 0 ||
+            device->priv->drive_ata_smart_is_available) {
+                drive_can_spindown = TRUE;
+        }
+        if (g_udev_device_has_property (device->priv->d, "ID_DRIVE_CAN_SPINDOWN")) {
+                drive_can_spindown = g_udev_device_get_property_as_boolean (device->priv->d, "ID_DRIVE_CAN_SPINDOWN");
+        }
+        devkit_disks_device_set_drive_can_spindown (device, drive_can_spindown);
 
         return TRUE;
 }
@@ -3174,6 +3222,10 @@ update_info (DevkitDisksDevice *device)
 
         /* drive_ata_smart_* properties */
         if (!update_info_drive_ata_smart (device))
+                goto out;
+
+        /* drive_can_spindown property */
+        if (!update_info_drive_can_spindown (device))
                 goto out;
 
         /* device_is_system_internal property */
@@ -9495,3 +9547,160 @@ devkit_disks_device_drive_poll_media (DevkitDisksDevice     *device,
  out:
         return TRUE;
 }
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+spindown_inhibitor_disconnected_cb (DevkitDisksInhibitor *inhibitor,
+                                    DevkitDisksDevice   *device)
+{
+        device->priv->spindown_inhibitors = g_list_remove (device->priv->spindown_inhibitors, inhibitor);
+        g_signal_handlers_disconnect_by_func (inhibitor, spindown_inhibitor_disconnected_cb, device);
+        g_object_unref (inhibitor);
+
+        update_info (device);
+        drain_pending_changes (device, FALSE);
+        devkit_disks_daemon_local_update_spindown (device->priv->daemon);
+}
+
+static void
+devkit_disks_device_drive_set_spindown_timeout_authorized_cb (DevkitDisksDaemon     *daemon,
+                                                              DevkitDisksDevice     *device,
+                                                              DBusGMethodInvocation *context,
+                                                              const gchar           *action_id,
+                                                              guint                  num_user_data,
+                                                              gpointer              *user_data_elements)
+{
+        gint timeout_seconds = GPOINTER_TO_INT (user_data_elements[0]);
+        gchar **options = user_data_elements[1];
+        DevkitDisksInhibitor *inhibitor;
+        guint n;
+
+        if (!device->priv->device_is_drive) {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                             "Device is not a drive");
+                goto out;
+        }
+
+        if (!device->priv->drive_can_spindown) {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                             "Cannot spindown device");
+                goto out;
+        }
+
+        if (timeout_seconds < 1) {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                             "Timeout seconds must be at least 1");
+                goto out;
+        }
+
+        for (n = 0; options[n] != NULL; n++) {
+                const char *option = options[n];
+                throw_error (context,
+                             DEVKIT_DISKS_ERROR_INVALID_OPTION,
+                             "Unknown option %s", option);
+                goto out;
+        }
+
+        inhibitor = devkit_disks_inhibitor_new (context);
+
+        g_object_set_data (G_OBJECT (inhibitor), "spindown-timeout-seconds", GINT_TO_POINTER (timeout_seconds));
+
+        device->priv->spindown_inhibitors = g_list_prepend (device->priv->spindown_inhibitors, inhibitor);
+        g_signal_connect (inhibitor, "disconnected", G_CALLBACK (spindown_inhibitor_disconnected_cb), device);
+
+        update_info (device);
+        drain_pending_changes (device, FALSE);
+        devkit_disks_daemon_local_update_spindown (device->priv->daemon);
+
+        dbus_g_method_return (context, devkit_disks_inhibitor_get_cookie (inhibitor));
+
+out:
+        ;
+}
+
+gboolean
+devkit_disks_device_drive_set_spindown_timeout (DevkitDisksDevice     *device,
+                                                int                    timeout_seconds,
+                                                char                 **options,
+                                                DBusGMethodInvocation *context)
+{
+        if (!device->priv->device_is_drive) {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                             "Device is not a drive");
+                goto out;
+        }
+
+        if (!device->priv->drive_can_spindown) {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                             "Cannot spindown device");
+                goto out;
+        }
+
+        if (timeout_seconds < 1) {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                             "Timeout seconds must be at least 1");
+                goto out;
+        }
+
+        devkit_disks_daemon_local_check_auth (device->priv->daemon,
+                                              device,
+                                              "org.freedesktop.devicekit.disks.drive-set-spindown",
+                                              "DriveSetSpindownTimeout",
+                                              devkit_disks_device_drive_set_spindown_timeout_authorized_cb,
+                                              context,
+                                              2,
+                                              GINT_TO_POINTER (timeout_seconds), NULL,
+                                              g_strdupv (options), g_strfreev);
+
+
+ out:
+        return TRUE;
+}
+
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+gboolean
+devkit_disks_device_drive_unset_spindown_timeout (DevkitDisksDevice     *device,
+                                                  char                  *cookie,
+                                                  DBusGMethodInvocation *context)
+{
+        const gchar *sender;
+        DevkitDisksInhibitor *inhibitor;
+        GList *l;
+
+        sender = dbus_g_method_get_sender (context);
+
+        inhibitor = NULL;
+        for (l = device->priv->spindown_inhibitors; l != NULL; l = l->next) {
+                DevkitDisksInhibitor *i = DEVKIT_DISKS_INHIBITOR (l->data);
+
+                if (g_strcmp0 (devkit_disks_inhibitor_get_unique_dbus_name (i), sender) == 0 &&
+                    g_strcmp0 (devkit_disks_inhibitor_get_cookie (i), cookie) == 0) {
+                        inhibitor = i;
+                        break;
+                }
+        }
+
+        if (inhibitor == NULL) {
+                throw_error (context,
+                             DEVKIT_DISKS_ERROR_FAILED,
+                             "No such spindown configurator");
+                goto out;
+        }
+
+        device->priv->spindown_inhibitors = g_list_remove (device->priv->spindown_inhibitors, inhibitor);
+        g_object_unref (inhibitor);
+
+        update_info (device);
+        drain_pending_changes (device, FALSE);
+        devkit_disks_daemon_local_update_spindown (device->priv->daemon);
+
+        dbus_g_method_return (context);
+
+ out:
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/

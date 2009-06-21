@@ -155,6 +155,90 @@
 
     <!-- ************************************************************ -->
 
+    <method name="DriveSetAllSpindownTimeouts">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="timeout_seconds" direction="in" type="i">
+        <doc:doc><doc:summary>
+            Number of seconds before drives should be spun down.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>
+            Options related to setting spindown timeouts. Currently no options are recognized.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <arg name="cookie" direction="out" type="s">
+        <doc:doc><doc:summary>
+            A cookie that can be used in the
+            <doc:ref type="method" to="Drive.DriveUnsetAllSpindownTimeouts">DriveUnsetAllSpindownTimeouts()</doc:ref> method
+            to unset the spindown timeout for drives.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Configures spindown timeout for all drives capable of being spun down.
+            Caution should be exercised when using this method, see
+            the SPINNING DOWN DISKS section in the
+            devkit-disks<doc:tt>(1)</doc:tt> man page before using it.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.drive-set-spindown</doc:term>
+              <doc:definition>To set spindown timeouts</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
+          <doc:error name="&ERROR_INVALID_OPTION;">if an invalid or malformed option was given</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="DriveUnsetAllSpindownTimeouts">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+
+      <arg name="cookie" direction="in" type="s">
+        <doc:doc><doc:summary>
+            A cookie obtained from the
+            <doc:ref type="method" to="Device.DriveSetSpindownTimeout">DriveSetSpindownTimeout()</doc:ref> method.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Unsets spindown timeout for the drive.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.drive-set-spindown</doc:term>
+              <doc:definition>To set spindown timeouts</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
     <method name="LinuxMdStart">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="components" direction="in" type="ao">

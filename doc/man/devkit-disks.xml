@@ -228,6 +228,46 @@
       </varlistentry>
 
       <varlistentry>
+        <term>
+          <option>--set-spindown</option>
+          <arg choice="plain"><replaceable>device_file</replaceable></arg>
+          <option>--spindown-timeout</option>
+          <arg choice="plain"><replaceable>seconds</replaceable></arg>
+          <arg><option>-- program arg ...</option></arg>
+        </term>
+        <listitem>
+          <para>
+            Configures disk spindown timeout on <replaceable>device_file</replaceable> to
+            <replaceable>seconds</replaceable>.
+            See <xref linkend="devkit-disks-spindown"/> for important information before using this option.
+          </para>
+          <para>
+            If no program is given, the spindown time will be used until Ctrl+C is pressed. Otherwise the program is
+            spawned and the the spindown timeout will only be used until the program terminates.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>
+          <option>--set-spindown-all</option>
+          <option>--spindown-timeout</option>
+          <arg choice="plain"><replaceable>seconds</replaceable></arg>
+          <arg><option>-- program arg ...</option></arg>
+        </term>
+        <listitem>
+          <para>
+            Configures disk spindown timeout on all disks that can be spun down to <replaceable>seconds</replaceable>.
+            See <xref linkend="devkit-disks-spindown"/> for important information before using this option.
+          </para>
+          <para>
+            If no program is given, the spindown time will be used until Ctrl+C is pressed. Otherwise the program is
+            spawned and the the spindown timeout will only be used until the program terminates.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>--help</option></term>
         <listitem>
           <para>
@@ -236,6 +276,40 @@
         </listitem>
       </varlistentry>
     </variablelist>
+  </refsect1>
+
+  <refsect1 id="devkit-disks-spindown"><title>SPINNING DOWN DISKS</title>
+    <para>
+      Caution should be exercised when configuring disk spin down.
+    </para>
+    <para>
+      Note that every time a disk is spun down,
+      the <quote>start-stop-count</quote> ATA SMART attribute will
+      increase by 1 and most disks are only good for a limited number
+      (typically 50,000 but it varies by manufacturer and model). In
+      addition, the drive may take as long as 30 seconds to respond to
+      subsequent disk access – most drives are typically faster, see
+      the <quote>spin-up-time</quote> ATA SMART attribute.
+    </para>
+    <para>
+      For maximum compatibility (since disks from WD and others won't
+      spin down using the <quote>STANDBY</quote> ATA command),
+      <citerefentry>
+        <refentrytitle>devkit-disks-daemon</refentrytitle><manvolnum>8</manvolnum>
+      </citerefentry>
+      does all timeout handling on the host side. If a device appears
+      to be idle (this is determined by looking
+      at <filename>/sys/block/sdX/stat</filename> from time to time)
+      for the requested amount of time, the daemon will spin the disk
+      down using the <quote>STANDBY IMMEDIATE</quote> ATA COMMAND or
+      similar.
+    </para>
+    <para>
+      On the other hand, cautious use (e.g. using conservative
+      timeouts) of the ability to spin down disks, can be a good way
+      to trade power consumption (typically 8 vs 1 Watts for 3.5&#34;
+      drives) and heat emission for a slightly higher latency.
+    </para>
   </refsect1>
 
   <refsect1><title>AUTHOR</title>

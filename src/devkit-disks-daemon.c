@@ -36,6 +36,9 @@
 /* delete entries older than five days */
 #define ATA_SMART_KEEP_ENTRIES_SECONDS (5*24*60*60)
 
+/* the poll frequency for IO activity when clients wants to spin down drives */
+#define SPINDOWN_POLL_FREQ_SECONDS 5
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 #include <stdlib.h>
@@ -125,6 +128,9 @@ struct DevkitDisksDaemonPrivate
         GList *polling_inhibitors;
 
         GList *inhibitors;
+
+        guint spindown_timeout_id;
+        GList *spindown_inhibitors;
 };
 
 static void     devkit_disks_daemon_class_init  (DevkitDisksDaemonClass *klass);
@@ -601,6 +607,10 @@ devkit_disks_daemon_finalize (GObject *object)
                 g_source_remove (daemon->priv->ata_smart_refresh_timer_id);
         }
 
+        if (daemon->priv->spindown_timeout_id > 0) {
+                g_source_remove (daemon->priv->spindown_timeout_id);
+        }
+
         for (l = daemon->priv->polling_inhibitors; l != NULL; l = l->next) {
                 DevkitDisksInhibitor *inhibitor = DEVKIT_DISKS_INHIBITOR (l->data);
                 g_signal_handlers_disconnect_by_func (inhibitor, daemon_polling_inhibitor_disconnected_cb, daemon);
@@ -657,6 +667,7 @@ device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthesized)
                 } else {
                         g_print ("**** CHANGED %s\n", native_path);
                         devkit_disks_daemon_local_update_poller (daemon);
+                        devkit_disks_daemon_local_update_spindown (daemon);
                 }
         } else {
                 g_print ("**** TREATING CHANGE AS ADD %s\n", native_path);
@@ -722,6 +733,7 @@ device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event)
                                 g_signal_emit (daemon, signals[DEVICE_ADDED_SIGNAL], 0, object_path);
                         }
                         devkit_disks_daemon_local_update_poller (daemon);
+                        devkit_disks_daemon_local_update_spindown (daemon);
                 } else {
                         g_print ("**** IGNORING ADD %s\n", native_path);
                 }
@@ -761,6 +773,7 @@ device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
                 g_object_unref (device);
 
                 devkit_disks_daemon_local_update_poller (daemon);
+                devkit_disks_daemon_local_update_spindown (daemon);
         }
 }
 
@@ -1435,6 +1448,207 @@ devkit_disks_daemon_local_check_auth (DevkitDisksDaemon            *daemon,
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/
+
+#define SYSFS_BLOCK_STAT_MAX_SIZE 256
+
+static void
+issue_standby_child_watch_cb (GPid pid, int status, gpointer user_data)
+{
+        DevkitDisksDevice *device = DEVKIT_DISKS_DEVICE (user_data);
+
+        if (WIFEXITED (status) && WEXITSTATUS (status) == 0) {
+                //g_print ("**** NOTE: standby helper for %s completed successfully\n", device->priv->device_file);
+        } else {
+                g_warning ("standby helper for %s failed with exit code %d (if_exited=%d)\n",
+                           device->priv->device_file,
+                           WEXITSTATUS (status),
+                           WIFEXITED (status));
+        }
+
+        g_object_unref (device);
+}
+
+static void
+issue_standby_to_drive (DevkitDisksDevice *device)
+{
+        GError *error;
+        GPid pid;
+        gchar *argv[3] = {PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-drive-standby",
+                          NULL, /* device_file */
+                          NULL};
+
+        argv[1] = device->priv->device_file;
+
+        error = NULL;
+        if (!g_spawn_async_with_pipes (NULL,
+                                       argv,
+                                       NULL,
+                                       G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD,
+                                       NULL,
+                                       NULL,
+                                       &pid,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       &error)) {
+                g_warning ("Error launching %s: %s", argv[0], error->message);
+                g_error_free (error);
+                goto out;
+        }
+
+        g_child_watch_add (pid, issue_standby_child_watch_cb, g_object_ref (device));
+
+ out:
+        ;
+}
+
+static gboolean
+on_spindown_timeout (gpointer data)
+{
+        DevkitDisksDaemon *daemon = DEVKIT_DISKS_DAEMON (data);
+        GHashTableIter hash_iter;
+        DevkitDisksDevice *device;
+        gchar stat_file_path[PATH_MAX];
+        gchar buf[SYSFS_BLOCK_STAT_MAX_SIZE];
+        int fd;
+        time_t now;
+
+        now = time (NULL);
+
+        /* avoid allocating memory since this happens on a timer, e.g. all the FRAKKING time */
+
+        g_hash_table_iter_init (&hash_iter, daemon->priv->map_object_path_to_device);
+        while (g_hash_table_iter_next (&hash_iter, NULL, (gpointer) &device)) {
+
+                if (!device->priv->device_is_drive ||
+                    !device->priv->drive_can_spindown ||
+                    device->priv->spindown_timeout == 0)
+                        continue;
+
+                g_snprintf (stat_file_path,
+                            sizeof stat_file_path,
+                            "%s/stat",
+                            device->priv->native_path);
+                fd = open (stat_file_path, O_RDONLY);
+                if (fd == -1) {
+                        g_warning ("Error opening %s: %m", stat_file_path);
+                } else {
+                        ssize_t bytes_read;
+                        bytes_read = read (fd, buf, sizeof buf - 1);
+                        close (fd);
+                        if (bytes_read < 0) {
+                                g_warning ("Error reading from %s: %m", stat_file_path);
+                        } else {
+                                buf[bytes_read] = '\0';
+                                if (device->priv->spindown_last_stat == NULL) {
+                                        /* handle initial time this is set */
+                                        device->priv->spindown_last_stat = g_new0 (gchar, SYSFS_BLOCK_STAT_MAX_SIZE);
+                                        memcpy (device->priv->spindown_last_stat, buf, bytes_read + 1);
+                                        device->priv->spindown_last_stat_time = now;
+                                        device->priv->spindown_have_issued_standby = FALSE;
+                                } else {
+                                        if (g_strcmp0 (buf, device->priv->spindown_last_stat) == 0) {
+                                                gint64 idle_secs;
+
+                                                idle_secs = now - device->priv->spindown_last_stat_time;
+                                                /* same */
+                                                if (idle_secs > device->priv->spindown_timeout &&
+                                                    !device->priv->spindown_have_issued_standby) {
+                                                        device->priv->spindown_have_issued_standby = TRUE;
+                                                        g_print ("*** NOTE: issuing STANDBY IMMEDIATE for %s\n",
+                                                                 device->priv->device_file);
+
+                                                        /* and, now, DO IT! */
+                                                        issue_standby_to_drive (device);
+                                                }
+                                        } else {
+                                                /* differ */
+                                                memcpy (device->priv->spindown_last_stat, buf, bytes_read + 1);
+                                                device->priv->spindown_last_stat_time = now;
+                                                device->priv->spindown_have_issued_standby = FALSE;
+                                                //g_print ("*** NOTE: resetting spindown timeout on %s due "
+                                                //         "to IO activity\n",
+                                                //         device->priv->device_file);
+                                        }
+                                }
+                        }
+                }
+
+        }
+
+        /* keep timeout */
+        return TRUE;
+}
+
+void
+devkit_disks_daemon_local_update_spindown (DevkitDisksDaemon *daemon)
+{
+        GHashTableIter hash_iter;
+        DevkitDisksDevice *device;
+        GList *l;
+        gboolean watch_for_spindown;
+
+        watch_for_spindown = FALSE;
+        g_hash_table_iter_init (&hash_iter, daemon->priv->map_object_path_to_device);
+        while (g_hash_table_iter_next (&hash_iter, NULL, (gpointer) &device)) {
+                gint spindown_timeout;
+
+                if (!device->priv->device_is_drive || !device->priv->drive_can_spindown)
+                        continue;
+
+                spindown_timeout = G_MAXINT;
+                if (device->priv->spindown_inhibitors == NULL && daemon->priv->spindown_inhibitors == NULL) {
+                        /* no inhibitors */
+                        device->priv->spindown_timeout = 0;
+                        g_free (device->priv->spindown_last_stat);
+                        device->priv->spindown_last_stat = NULL;
+                        device->priv->spindown_last_stat_time = 0;
+                        device->priv->spindown_have_issued_standby = FALSE;
+                } else {
+                        /* first go through all inhibitors on the device */
+                        for (l = device->priv->spindown_inhibitors; l != NULL; l = l->next) {
+                                DevkitDisksInhibitor *inhibitor = DEVKIT_DISKS_INHIBITOR (l->data);
+                                gint spindown_timeout_inhibitor;
+
+                                spindown_timeout_inhibitor = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (inhibitor),
+                                                                                                 "spindown-timeout-seconds"));
+
+                                if (spindown_timeout_inhibitor < spindown_timeout)
+                                        spindown_timeout = spindown_timeout_inhibitor;
+                        }
+
+                        /* the all inhibitors on the daemon */
+                        for (l = daemon->priv->spindown_inhibitors; l != NULL; l = l->next) {
+                                DevkitDisksInhibitor *inhibitor = DEVKIT_DISKS_INHIBITOR (l->data);
+                                gint spindown_timeout_inhibitor;
+
+                                spindown_timeout_inhibitor = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (inhibitor),
+                                                                                                 "spindown-timeout-seconds"));
+
+                                if (spindown_timeout_inhibitor < spindown_timeout)
+                                        spindown_timeout = spindown_timeout_inhibitor;
+                        }
+
+                        device->priv->spindown_timeout = spindown_timeout;
+                        watch_for_spindown = TRUE;
+                }
+        }
+
+        if (watch_for_spindown) {
+                if (daemon->priv->spindown_timeout_id == 0) {
+                        daemon->priv->spindown_timeout_id = g_timeout_add_seconds (SPINDOWN_POLL_FREQ_SECONDS,
+                                                                                   on_spindown_timeout,
+                                                                                   daemon);
+                }
+        } else {
+                if (daemon->priv->spindown_timeout_id > 0) {
+                        g_source_remove (daemon->priv->spindown_timeout_id);
+                        daemon->priv->spindown_timeout_id = 0;
+                }
+        }
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
 /* exported methods */
 
 static void
@@ -1750,6 +1964,129 @@ devkit_disks_daemon_uninhibit (DevkitDisksDaemon     *daemon,
 
         daemon->priv->inhibitors = g_list_remove (daemon->priv->inhibitors, inhibitor);
         g_object_unref (inhibitor);
+
+        dbus_g_method_return (context);
+
+ out:
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+
+static void
+daemon_spindown_inhibitor_disconnected_cb (DevkitDisksInhibitor *inhibitor,
+                                           DevkitDisksDaemon     *daemon)
+{
+        daemon->priv->spindown_inhibitors = g_list_remove (daemon->priv->spindown_inhibitors, inhibitor);
+        g_signal_handlers_disconnect_by_func (inhibitor, daemon_spindown_inhibitor_disconnected_cb, daemon);
+        g_object_unref (inhibitor);
+
+        devkit_disks_daemon_local_update_spindown (daemon);
+}
+
+static void
+devkit_disks_daemon_drive_set_all_spindown_timeouts_authorized_cb (DevkitDisksDaemon     *daemon,
+                                                                   DevkitDisksDevice     *device,
+                                                                   DBusGMethodInvocation *context,
+                                                                   const gchar           *action_id,
+                                                                   guint                  num_user_data,
+                                                                   gpointer              *user_data_elements)
+{
+        gint timeout_seconds = GPOINTER_TO_INT (user_data_elements[0]);
+        gchar **options = user_data_elements[1];
+        DevkitDisksInhibitor *inhibitor;
+        guint n;
+
+        if (timeout_seconds < 1) {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                             "Timeout seconds must be at least 1");
+                goto out;
+        }
+
+        for (n = 0; options[n] != NULL; n++) {
+                const char *option = options[n];
+                throw_error (context,
+                             DEVKIT_DISKS_ERROR_INVALID_OPTION,
+                             "Unknown option %s", option);
+                goto out;
+        }
+
+        inhibitor = devkit_disks_inhibitor_new (context);
+
+        g_object_set_data (G_OBJECT (inhibitor), "spindown-timeout-seconds", GINT_TO_POINTER (timeout_seconds));
+
+        daemon->priv->spindown_inhibitors = g_list_prepend (daemon->priv->spindown_inhibitors, inhibitor);
+        g_signal_connect (inhibitor, "disconnected", G_CALLBACK (daemon_spindown_inhibitor_disconnected_cb), daemon);
+
+        devkit_disks_daemon_local_update_spindown (daemon);
+
+        dbus_g_method_return (context, devkit_disks_inhibitor_get_cookie (inhibitor));
+
+out:
+        ;
+}
+
+gboolean
+devkit_disks_daemon_drive_set_all_spindown_timeouts (DevkitDisksDaemon     *daemon,
+                                                     int                    timeout_seconds,
+                                                     char                 **options,
+                                                     DBusGMethodInvocation *context)
+{
+        if (timeout_seconds < 1) {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                             "Timeout seconds must be at least 1");
+                goto out;
+        }
+
+        devkit_disks_daemon_local_check_auth (daemon,
+                                              NULL,
+                                              "org.freedesktop.devicekit.disks.drive-set-spindown",
+                                              "DriveSetAllSpindownTimeouts",
+                                              devkit_disks_daemon_drive_set_all_spindown_timeouts_authorized_cb,
+                                              context,
+                                              2,
+                                              GINT_TO_POINTER (timeout_seconds), NULL,
+                                              g_strdupv (options), g_strfreev);
+
+
+ out:
+        return TRUE;
+}
+
+gboolean
+devkit_disks_daemon_drive_unset_all_spindown_timeouts (DevkitDisksDaemon     *daemon,
+                                                       char                  *cookie,
+                                                       DBusGMethodInvocation *context)
+{
+        const gchar *sender;
+        DevkitDisksInhibitor *inhibitor;
+        GList *l;
+
+        sender = dbus_g_method_get_sender (context);
+
+        inhibitor = NULL;
+        for (l = daemon->priv->spindown_inhibitors; l != NULL; l = l->next) {
+                DevkitDisksInhibitor *i = DEVKIT_DISKS_INHIBITOR (l->data);
+
+                if (g_strcmp0 (devkit_disks_inhibitor_get_unique_dbus_name (i), sender) == 0 &&
+                    g_strcmp0 (devkit_disks_inhibitor_get_cookie (i), cookie) == 0) {
+                        inhibitor = i;
+                        break;
+                }
+        }
+
+        if (inhibitor == NULL) {
+                throw_error (context,
+                             DEVKIT_DISKS_ERROR_FAILED,
+                             "No such spindown configurator");
+                goto out;
+        }
+
+        daemon->priv->spindown_inhibitors = g_list_remove (daemon->priv->spindown_inhibitors, inhibitor);
+        g_object_unref (inhibitor);
+
+        devkit_disks_daemon_local_update_spindown (daemon);
 
         dbus_g_method_return (context);
 

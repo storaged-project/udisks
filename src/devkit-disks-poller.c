@@ -41,6 +41,8 @@ static char **argv_buffer = NULL;
 static size_t argv_size = 0;
 #endif
 
+#define POLL_SHOW_DEBUG
+
 static void
 set_proc_title_init (int argc, char *argv[])
 {
@@ -110,7 +112,9 @@ devkit_disks_poller_poll_device (const gchar *device_file)
         /* the device file is the canonical device file from udev */
         is_cdrom = (g_str_has_prefix (device_file, "/dev/sr") || g_str_has_prefix (device_file, "/dev/scd"));
 
-        //g_debug ("polling '%s'", device_file);
+#ifdef POLL_SHOW_DEBUG
+        g_print ("**** POLLER (%d): polling %s\n", getpid (), device_file);
+#endif
 
         if (is_cdrom) {
                 /* optical drives need special care
@@ -167,7 +171,7 @@ poller_have_data (GIOChannel    *channel,
                 exit (1);
         }
 
- again:
+read_more:
         status = g_io_channel_read_line (channel,
                                          &line,
                                          &line_length,
@@ -178,20 +182,21 @@ poller_have_data (GIOChannel    *channel,
                 g_error_free (error);
                 goto out;
         }
-        if (status == G_IO_STATUS_AGAIN) {
-                goto again;
+        if (status == G_IO_STATUS_EOF || status == G_IO_STATUS_AGAIN) {
+                goto out;
         }
 
-        //g_debug ("polling process read '%s'", line);
+        g_strstrip (line);
 
-        if (line[line_length - 1] == '\n')
-                line[line_length - 1] = '\0';
-
-        if (line[line_length - 2] == ' ')
-                line[line_length - 2] = '\0';
-
-        g_strfreev (poller_devices_to_poll);
-        poller_devices_to_poll = g_strsplit (line, " ", 0);
+#ifdef POLL_SHOW_DEBUG
+        g_print ("**** POLLER (%d): polling process read '%s'\n", getpid (), line);
+#endif
+        if (g_str_has_prefix (line, "set-poll:")) {
+                g_strfreev (poller_devices_to_poll);
+                poller_devices_to_poll = g_strsplit (line + strlen ("set-poll:"), " ", 0);
+        } else {
+                g_printerr ("**** POLLER (%d): unknown command '%s'\n", getpid (), line);
+        }
 
         if (g_strv_length (poller_devices_to_poll) == 0) {
                 if (poller_timeout_id > 0) {
@@ -209,6 +214,7 @@ poller_have_data (GIOChannel    *channel,
         }
 
         g_free (line);
+        goto read_more;
 
  out:
         /* keep the IOChannel around */
@@ -283,6 +289,7 @@ devkit_disks_poller_set_devices (GList *devices)
         GList *l;
         gchar **device_array;
         guint n;
+        gchar *joined;
         gchar *devices_to_poll;
         static gchar *devices_currently_polled = NULL;
 
@@ -298,16 +305,22 @@ devkit_disks_poller_set_devices (GList *devices)
 
         device_array[n] = "\n";
 
-        devices_to_poll = g_strjoinv (" ", device_array);
+        joined = g_strjoinv (" ", device_array);
         g_free (device_array);
+        devices_to_poll = g_strconcat ("set-poll:",
+                                       joined,
+                                       NULL);
+        g_free (joined);
 
         /* only poke the polling process if the list of currently polled devices change */
         if (g_strcmp0 (devices_to_poll, devices_currently_polled) != 0) {
                 g_free (devices_currently_polled);
                 devices_currently_polled = devices_to_poll;
 
+#ifdef POLL_SHOW_DEBUG
+                g_print ("**** POLLER (%d): Sending poll command: '%s'\n", getpid (), devices_currently_polled);
+#endif
                 write (poller_daemon_write_end_fd, devices_currently_polled, strlen (devices_currently_polled));
-                //g_debug ("Want to poll: '%s'", devices_currently_polled);
         } else {
                 g_free (devices_to_poll);
         }

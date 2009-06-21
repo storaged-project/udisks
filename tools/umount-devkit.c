@@ -63,7 +63,6 @@ do_unmount (const char *object_path,
                                            object_path,
                                            "org.freedesktop.DeviceKit.Disks.Device");
 
-try_again:
         error = NULL;
         if (!org_freedesktop_DeviceKit_Disks_Device_filesystem_unmount (proxy,
                                                                         (const char **) unmount_options,

@@ -1113,6 +1113,93 @@
 
     <!-- ************************************************************ -->
 
+    <method name="DriveSetSpindownTimeout">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="timeout_seconds" direction="in" type="i">
+        <doc:doc><doc:summary>
+            Number of seconds before the drive should be spun down.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>
+            Options related to setting spindown timeout. Currently no options are recognized.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <arg name="cookie" direction="out" type="s">
+        <doc:doc><doc:summary>
+            A cookie that can be used in the
+            <doc:ref type="method" to="Device.DriveUnsetSpindownTimeout">DriveUnsetSpindownTimeout()</doc:ref> method
+            to unset the spindown timeout of the device.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Configures spindown timeout for the drive.
+            Check the
+            <doc:ref type="property" to="Device:drive-can-spindown">drive-can-spindown</doc:ref>
+            property before attempting to invoke this method.
+            Caution should be exercised when using this method, see
+            the SPINNING DOWN DISKS section in the
+            devkit-disks<doc:tt>(1)</doc:tt> man page before using it.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.drive-set-spindown</doc:term>
+              <doc:definition>To set spindown timeouts</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
+          <doc:error name="&ERROR_INVALID_OPTION;">if an invalid or malformed option was given</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="DriveUnsetSpindownTimeout">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+
+      <arg name="cookie" direction="in" type="s">
+        <doc:doc><doc:summary>
+            A cookie obtained from the
+            <doc:ref type="method" to="Device.DriveSetSpindownTimeout">DriveSetSpindownTimeout()</doc:ref> method.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Unsets spindown timeout for the drive.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.drive-set-spindown</doc:term>
+              <doc:definition>To set spindown timeouts</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
     <method name="DriveAtaSmartRefreshData">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="options" direction="in" type="as">
@@ -2012,6 +2099,15 @@
       <doc:doc><doc:description><doc:para>
             TRUE only if the drive is capable of being detached by
             e.g. powering down the port it is connected to.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="drive-can-spindown" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE only if the drive is capable of being put into
+            a standby mode (typically powering down the spindle motor).
             This property is only valid if
             <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
             is TRUE.

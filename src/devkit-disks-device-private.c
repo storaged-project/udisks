@@ -733,6 +733,16 @@ devkit_disks_device_set_drive_can_detach (DevkitDisksDevice *device, gboolean va
 }
 
 void
+devkit_disks_device_set_drive_can_spindown (DevkitDisksDevice *device, gboolean value)
+{
+  if (G_UNLIKELY (device->priv->drive_can_spindown != value))
+    {
+      device->priv->drive_can_spindown = value;
+      emit_changed (device, "drive_can_spindown");
+    }
+}
+
+void
 devkit_disks_device_set_optical_disc_is_blank (DevkitDisksDevice *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->optical_disc_is_blank != value))

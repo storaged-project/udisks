@@ -92,6 +92,16 @@
         </para></listitem>
       </varlistentry>
       <varlistentry>
+        <term><option>ID_DRIVE_CAN_SPINDOWN</option></term>
+        <listitem><para> Whether the device can spin down. It is only meaningful
+            to set this to 0 (to avoid marking a device as being capable of spinning down)
+            since the code for spinning down the device is part of DeviceKit-disks itself.
+            If this property is not set, a heuristic will be used to determine if the
+            drive can spin down (currently only ATA devices, including those USB
+            devices with a SAT layer) can be spun down).
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
         <term><option>ID_DRIVE_FLASH</option></term>
         <listitem><para>The device is compatible with flash.
         </para></listitem>
