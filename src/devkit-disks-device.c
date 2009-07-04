@@ -9084,7 +9084,7 @@ devkit_disks_daemon_linux_md_start (DevkitDisksDaemon     *daemon,
         gchar **components_as_strv;
         guint n;
 
-        components_as_strv = g_new0 (gchar *, components->len);
+        components_as_strv = g_new0 (gchar *, components->len + 1);
         for (n = 0; n < components->len; n++)
                 components_as_strv[n] = g_strdup (components->pdata[n]);
 
