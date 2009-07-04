@@ -188,12 +188,13 @@ devkit_disks_ata_smart_db_add_entry (DevkitDisksAtaSmartDb *db,
         }
 
         /* compress the data */
-        compressed_blob = g_new0 (guchar, blob_size * 3 / 2 + 32);
+        compressed_blob = g_new0 (guchar, blob_size * 2 + 32);
+        compressed_blob_size = blob_size * 2 + 32;
         ret = compress2 (compressed_blob, &compressed_blob_size,
                          blob, blob_size,
                          1);
         if (ret != Z_OK) {
-                g_warning ("Error compressing blob: %d", ret);
+                g_warning ("Error compressing blob (size=%d): %d", (gint) blob_size, ret);
                 goto out;
         }
 
