@@ -41,7 +41,7 @@ static char **argv_buffer = NULL;
 static size_t argv_size = 0;
 #endif
 
-#define POLL_SHOW_DEBUG
+/*#define POLL_SHOW_DEBUG*/
 
 static void
 set_proc_title_init (int argc, char *argv[])
@@ -206,7 +206,7 @@ read_more:
 
                 set_proc_title ("devkit-disks-daemon: not polling any devices");
         } else {
-                set_proc_title ("devkit-disks-daemon: polling %s", line);
+                set_proc_title ("devkit-disks-daemon: polling %s", line + strlen ("set-poll:"));
 
                 if (poller_timeout_id == 0) {
                         poller_timeout_id = g_timeout_add_seconds (2, poller_timeout_cb, NULL);
