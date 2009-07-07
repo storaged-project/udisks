@@ -58,6 +58,7 @@ static gboolean      opt_monitor                = FALSE;
 static gboolean      opt_monitor_detail         = FALSE;
 static char         *opt_show_info              = NULL;
 static char         *opt_inhibit_polling        = NULL;
+static char         *opt_poll_for_media         = NULL;
 static gboolean      opt_inhibit                = FALSE;
 static gboolean      opt_inhibit_all_polling    = FALSE;
 static char         *opt_drive_spindown         = NULL;
@@ -1300,6 +1301,36 @@ do_show_info (const char *object_path)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gint
+do_poll_for_media (const char *object_path)
+{
+        DBusGProxy *proxy;
+        GError *error;
+        gint ret;
+
+        ret = 1;
+
+	proxy = dbus_g_proxy_new_for_name (bus,
+                                           "org.freedesktop.DeviceKit.Disks",
+                                           object_path,
+                                           "org.freedesktop.DeviceKit.Disks.Device");
+
+        error = NULL;
+        if (!org_freedesktop_DeviceKit_Disks_Device_drive_poll_media (proxy,
+                                                                      &error)) {
+                g_print ("Poll for media failed: %s\n", error->message);
+                g_error_free (error);
+                goto out;
+        }
+
+        ret = 0;
+
+out:
+        return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gint
 do_inhibit_polling (const char *object_path,
                     gint         argc,
                     gchar       *argv[])
@@ -1730,6 +1761,7 @@ main (int argc, char **argv)
                 { "show-info", 0, 0, G_OPTION_ARG_STRING, &opt_show_info, "Show information about a device file", NULL },
                 { "inhibit-polling", 0, 0, G_OPTION_ARG_STRING, &opt_inhibit_polling, "Inhibit polling", NULL },
                 { "inhibit-all-polling", 0, 0, G_OPTION_ARG_NONE, &opt_inhibit_all_polling, "Inhibit all polling", NULL },
+                { "poll-for-media", 0, 0, G_OPTION_ARG_STRING, &opt_poll_for_media, "Poll for media", NULL },
                 { "set-spindown", 0, 0, G_OPTION_ARG_STRING, &opt_drive_spindown, "Set spindown timeout for drive", NULL },
                 { "set-spindown-all", 0, 0, G_OPTION_ARG_NONE, &opt_drive_spindown_all, "Set spindown timeout for all drives", NULL },
                 { "spindown-timeout", 0, 0, G_OPTION_ARG_INT, &opt_spindown_seconds, "Spindown timeout in seconds", NULL },
@@ -1852,6 +1884,12 @@ main (int argc, char **argv)
                 if (device_file == NULL)
                         goto out;
                 ret = do_inhibit_polling (device_file, argc - 1, argv + 1);
+                goto out;
+        } else if (opt_poll_for_media != NULL) {
+                device_file = device_file_to_object_path (opt_poll_for_media);
+                if (device_file == NULL)
+                        goto out;
+                ret = do_poll_for_media (device_file);
                 goto out;
         } else if (opt_inhibit_all_polling) {
                 ret = do_inhibit_all_polling (argc - 1, argv + 1);

@@ -112,6 +112,18 @@
 
       <varlistentry>
         <term>
+          <option>--poll-for-media</option>
+          <arg choice="plain"><replaceable>device_file</replaceable></arg>
+        </term>
+        <listitem>
+          <para>
+            Polls <replaceable>device_file</replaceable> to perform media detection.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>
           <option>--inhibit-all-polling</option>
           <arg><option>-- program arg ...</option></arg>
         </term>
