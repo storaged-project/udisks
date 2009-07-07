@@ -29,16 +29,13 @@ devkit-disks-marshal.h: devkit-disks-marshal.list
 devkit-disks-marshal.c: devkit-disks-marshal.list
 	echo "#include \"devkit-disks-marshal.h\"" > $@ && glib-genmarshal $< --prefix=devkit_disks_marshal --body >> $@
 
-devkit-disks-daemon-glue.h: org.freedesktop.DeviceKit.Disks.xml Makefile.am
-	dbus-binding-tool --prefix=devkit_disks_daemon --mode=glib-server --output=devkit-disks-daemon-glue.h org.freedesktop.DeviceKit.Disks.xml
+devkit-disks-daemon-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.xml Makefile.am
+	dbus-binding-tool --prefix=devkit_disks_daemon --mode=glib-server --output=devkit-disks-daemon-glue.h $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.xml
 
-devkit-disks-device-glue.h: org.freedesktop.DeviceKit.Disks.Device.xml Makefile.am
-	dbus-binding-tool --prefix=devkit_disks_device --mode=glib-server --output=devkit-disks-device-glue.h org.freedesktop.DeviceKit.Disks.Device.xml
+devkit-disks-device-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Device.xml Makefile.am
+	dbus-binding-tool --prefix=devkit_disks_device --mode=glib-server --output=devkit-disks-device-glue.h $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Device.xml
 
 libexec_PROGRAMS = devkit-disks-daemon
-
-dbusifdir = $(datadir)/dbus-1/interfaces
-dbusif_DATA = org.freedesktop.DeviceKit.Disks.xml org.freedesktop.DeviceKit.Disks.Device.xml
 
 devkit_disks_daemon_SOURCES = 						\
 	devkit-disks-types.h						\
@@ -174,24 +171,6 @@ devkit_disks_probe_ata_smart_CPPFLAGS = $(AM_CPPFLAGS) $(LIBATASMART_CFLAGS)
 devkit_disks_probe_ata_smart_LDADD = $(LIBATASMART_LIBS)
 # end move to udev
 
-
-servicedir       = $(datadir)/dbus-1/system-services
-service_in_files = org.freedesktop.DeviceKit.Disks.service.in
-service_DATA     = $(service_in_files:.service.in=.service)
-
-$(service_DATA): $(service_in_files) Makefile
-	@sed -e "s|\@libexecdir\@|$(libexecdir)|" $< > $@
-
-dbusconfdir = $(sysconfdir)/dbus-1/system.d
-dbusconf_in_files = org.freedesktop.DeviceKit.Disks.conf.in
-dbusconf_DATA = $(dbusconf_in_files:.conf.in=.conf)
-
-$(dbusconf_DATA): $(dbusconf_in_files) Makefile
-	cp $< $@
-
-udevrulesdir = $(slashlibdir)/udev/rules.d
-udevrules_DATA = 95-devkit-disks.rules
-
 # ----------------------------------------------------------------------------------------------------
 
 polkitmodulesdir = $(libdir)/polkit-1/extensions
@@ -221,16 +200,10 @@ libdevkit_disks_action_lookup_la_LIBADD =                 		\
 
 CLEANFILES = $(BUILT_SOURCES)
 
-EXTRA_DIST = org.freedesktop.DeviceKit.Disks.xml        \
-	     org.freedesktop.DeviceKit.Disks.Device.xml \
-	     devkit-disks-marshal.list			\
-	     95-devkit-disks.rules                      \
-	     devkit-disks-helper-change-luks-password	\
-	     $(service_in_files)                        \
-	     $(dbusconf_in_files)
-
-clean-local :
-	rm -f *~ $(service_DATA) $(dbusconf_DATA)
+EXTRA_DIST = 						\
+	devkit-disks-marshal.list			\
+	devkit-disks-helper-change-luks-password	\
+	$(NULL)
 
 install-data-local:
 	-$(mkdir_p) $(DESTDIR)$(localstatedir)/lib/DeviceKit-disks

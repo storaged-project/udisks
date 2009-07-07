@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = src doc tools policy po
+SUBDIRS = data src doc tools policy po
 
 # Creating ChangeLog from git log (taken from cairo/Makefile.am):
 ChangeLog: $(srcdir)/ChangeLog
@@ -19,12 +19,8 @@ $(srcdir)/ChangeLog:
 	  echo A git checkout and git-log is required to generate this file >> $@); \
 	fi
 
-pkgconfigdir = $(datadir)/pkgconfig
-pkgconfig_DATA = DeviceKit-disks.pc
-
 EXTRA_DIST = 			\
 	HACKING 		\
-	DeviceKit-disks.pc.in	\
 	ChangeLog
 
 # xsltproc barfs on 'make distcheck'; disable for now

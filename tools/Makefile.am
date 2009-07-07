@@ -25,11 +25,11 @@ devkit-disks-marshal.h: $(top_srcdir)/src/devkit-disks-marshal.list
 devkit-disks-marshal.c: $(top_srcdir)/src/devkit-disks-marshal.list
 	echo "#include \"devkit-disks-marshal.h\"" > $@ && glib-genmarshal $< --prefix=devkit_disks_marshal --body >> $@
 
-devkit-disks-daemon-glue.h: $(top_srcdir)/src/org.freedesktop.DeviceKit.Disks.xml Makefile.am
-	dbus-binding-tool --prefix=devkit_disks_daemon --mode=glib-client --output=devkit-disks-daemon-glue.h $(top_srcdir)/src/org.freedesktop.DeviceKit.Disks.xml
+devkit-disks-daemon-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.xml Makefile.am
+	dbus-binding-tool --prefix=devkit_disks_daemon --mode=glib-client --output=devkit-disks-daemon-glue.h $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.xml
 
-devkit-disks-device-glue.h: $(top_srcdir)/src/org.freedesktop.DeviceKit.Disks.Device.xml Makefile.am
-	dbus-binding-tool --prefix=devkit_disks_daemon --mode=glib-client --output=devkit-disks-device-glue.h $(top_srcdir)/src/org.freedesktop.DeviceKit.Disks.Device.xml
+devkit-disks-device-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Device.xml Makefile.am
+	dbus-binding-tool --prefix=devkit_disks_daemon --mode=glib-client --output=devkit-disks-device-glue.h $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Device.xml
 
 bin_PROGRAMS = devkit-disks
 
