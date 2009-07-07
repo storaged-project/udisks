@@ -107,7 +107,7 @@ void
 devkit_disks_poller_poll_device (const gchar *device_file)
 {
         gboolean is_cdrom;
-        int fd;
+        int fd, fd2;
 
         /* the device file is the canonical device file from udev */
         is_cdrom = (g_str_has_prefix (device_file, "/dev/sr") || g_str_has_prefix (device_file, "/dev/scd"));
@@ -129,8 +129,12 @@ devkit_disks_poller_poll_device (const gchar *device_file)
 
         } else {
                 fd = open (device_file, O_RDONLY);
+                fd2 = open (device_file, O_RDONLY | O_NONBLOCK);
                 if (fd != -1) {
                         close (fd);
+                }
+                if (fd2 != -1) {
+                        close (fd2);
                 }
         }
 }
