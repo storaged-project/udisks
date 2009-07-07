@@ -103,7 +103,7 @@ static gchar **poller_devices_to_poll = NULL;
 
 static guint poller_timeout_id = 0;
 
-void
+static void
 devkit_disks_poller_poll_device (const gchar *device_file)
 {
         gboolean is_cdrom;

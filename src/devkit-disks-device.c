@@ -9510,6 +9510,35 @@ devkit_disks_device_drive_uninhibit_polling (DevkitDisksDevice     *device,
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static void
+drive_poll_media_completed_cb (DBusGMethodInvocation *context,
+                               DevkitDisksDevice *device,
+                               gboolean job_was_cancelled,
+                               int status,
+                               const char *stderr,
+                               const char *stdout,
+                               gpointer user_data)
+{
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+
+                devkit_disks_device_generate_kernel_change_event (device);
+
+                dbus_g_method_return (context);
+        } else {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_FAILED,
+                                     "Error detaching: helper exited with exit code %d: %s",
+                                     WEXITSTATUS (status),
+                                     stderr);
+                }
+        }
+}
+
+static void
 devkit_disks_device_drive_poll_media_authorized_cb (DevkitDisksDaemon     *daemon,
                                                     DevkitDisksDevice     *device,
                                                     DBusGMethodInvocation *context,
@@ -9517,14 +9546,28 @@ devkit_disks_device_drive_poll_media_authorized_cb (DevkitDisksDaemon     *daemo
                                                     guint                  num_user_data,
                                                     gpointer              *user_data_elements)
 {
-        devkit_disks_poller_poll_device (device->priv->device_file);
+        int n;
+        char *argv[16];
 
-        /* Also generate a 'change' event since e.g. floppy.ko doesn't
-         * seem to generate one
-         */
-        devkit_disks_device_generate_kernel_change_event (device);
+        n = 0;
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-drive-poll";
+        argv[n++] = device->priv->device_file;
+        argv[n++] = NULL;
 
-        dbus_g_method_return (context);
+        if (!job_new (context,
+                      "DrivePollMedia",
+                      FALSE,
+                      device,
+                      argv,
+                      NULL,
+                      drive_poll_media_completed_cb,
+                      NULL,
+                      NULL)) {
+                goto out;
+        }
+
+ out:
+        ;
 }
 
 gboolean

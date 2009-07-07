@@ -94,6 +94,7 @@ libexec_PROGRAMS += devkit-disks-helper-mkfs                    	\
 		    devkit-disks-helper-ata-smart-collect		\
 		    devkit-disks-helper-ata-smart-selftest		\
 		    devkit-disks-helper-drive-detach			\
+		    devkit-disks-helper-drive-poll			\
 		    devkit-disks-helper-linux-md-check			\
 		    devkit-disks-helper-drive-standby			\
 		    $(NULL)
@@ -151,6 +152,10 @@ devkit_disks_helper_linux_md_check_LDADD = $(GLIB_LIBS)
 devkit_disks_helper_drive_standby_SOURCES = job-shared.h job-drive-standby.c
 devkit_disks_helper_drive_standby_CPPFLAGS = $(AM_CPPFLAGS) $(SGUTILS_CFLAGS)
 devkit_disks_helper_drive_standby_LDADD = $(SGUTILS_LIBS) $(GLIB_LIBS)
+
+devkit_disks_helper_drive_poll_SOURCES = job-shared.h job-drive-poll.c
+devkit_disks_helper_drive_poll_CPPFLAGS = $(AM_CPPFLAGS)
+devkit_disks_helper_drive_poll_LDADD =  $(GLIB_LIBS)
 
 # TODO: move to udev
 udevhelperdir = $(slashlibdir)/udev

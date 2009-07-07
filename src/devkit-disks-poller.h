@@ -27,6 +27,5 @@ gboolean devkit_disks_poller_setup (int argc, char *argv[]);
 
 /* media detection polling */
 void     devkit_disks_poller_set_devices (GList *devices);
-void     devkit_disks_poller_poll_device (const gchar *device_file);
 
 #endif /* __DEVKIT_DISKS_POLLER_H */
