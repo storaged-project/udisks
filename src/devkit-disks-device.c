@@ -2217,7 +2217,7 @@ update_info_optical_disc (DevkitDisksDevice *device)
         gint cdrom_session_count;
 
         /* device_is_optical_disc and optical_disc_* */
-        if (g_udev_device_has_property (device->priv->d, "ID_CDROM_MEDIA_STATE")) {
+        if (g_udev_device_has_property (device->priv->d, "ID_CDROM_MEDIA")) {
                 devkit_disks_device_set_device_is_optical_disc (device, TRUE);
 
                 cdrom_track_count = 0;
@@ -2227,7 +2227,7 @@ update_info_optical_disc (DevkitDisksDevice *device)
                 if (g_udev_device_has_property (device->priv->d, "ID_CDROM_MEDIA_TRACK_COUNT"))
                         cdrom_track_count = g_udev_device_get_property_as_int (device->priv->d, "ID_CDROM_MEDIA_TRACK_COUNT");
                 if (g_udev_device_has_property (device->priv->d, "ID_CDROM_MEDIA_TRACK_COUNT_AUDIO"))
-                        cdrom_track_count_audio = g_udev_device_get_property_as_int (device->priv->d, "ID_CDROM_MEDIA_TRACK_COUNT");
+                        cdrom_track_count_audio = g_udev_device_get_property_as_int (device->priv->d, "ID_CDROM_MEDIA_TRACK_COUNT_AUDIO");
                 if (g_udev_device_has_property (device->priv->d, "ID_CDROM_MEDIA_SESSION_COUNT"))
                         cdrom_session_count = g_udev_device_get_property_as_int (device->priv->d, "ID_CDROM_MEDIA_SESSION_COUNT");
                 devkit_disks_device_set_optical_disc_num_tracks (device, cdrom_track_count);
