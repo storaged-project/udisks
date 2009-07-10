@@ -113,4 +113,29 @@ ENV{ID_VENDOR}=="*IOMEGA*", ENV{ID_MODEL}=="*ZIP*", ENV{ID_DRIVE_FLOPPY_ZIP}="1"
 
 ##############################################################################################################
 
+# partitions which desktops should not display
+
+# Apple Bootstrap partitions
+ENV{DKD_PARTITION_SCHEME}=="apm", ENV{DKD_PARTITION_TYPE}=="Apple_Bootstrap", ENV{DKD_PRESENTATION_HIDE}="1"
+
+# special MBR partition types (EFI, hidden, etc.)
+# see http://www.win.tue.nl/~aeb/partitions/partition_types-1.html
+ENV{DKD_PARTITION_SCHEME}=="mbr", \
+  ENV{DKD_PARTITION_TYPE}=="0x00|0x11|0x14|0x16|0x17|0x1b|0x1c|0x1e|0x27|0x3d|0x84|0x8d|0x90|0x91|0x92|0x93|0x97|0x98|0x9a|0x9b|0xbb|0xc2|0xc3|0xdd|0xef", \
+  ENV{DKD_PRESENTATION_HIDE}="1"
+
+# special GUID-identified partition types
+# see http://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_type_GUIDs
+ENV{DKD_PARTITION_SCHEME}=="gpt", \
+  ENV{DKD_PARTITION_TYPE}=="C12A7328-F81F-11D2-BA4B-00A0C93EC93B|21686148-6449-6E6F-744E-656564454649", \
+  ENV{DKD_PRESENTATION_HIDE}="1"
+
+# recovery partitions (taken from old hal rules)
+ENV{ID_FS_TYPE}=="ntfs|vfat", \
+  ENV{ID_FS_LABEL}=="RECOVERY|HP_RECOVERY|Recovery Partition|DellUtility|DellRestore|IBM_SERVICE|SERVICEV001|SERVICEV002", \
+  ENV{DKD_PRESENTATION_HIDE}="1"
+
+
+##############################################################################################################
+
 LABEL="devkit_disks_end"
