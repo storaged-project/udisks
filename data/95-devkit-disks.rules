@@ -13,7 +13,7 @@ KERNEL=="mtd*|nbd*|gnbd*|btibm*", GOTO="probe_parttable_end"
 
 # never access non-cdrom removable ide devices, the drivers are causing event loops on open()
 KERNEL=="hd*[!0-9]", ATTR{removable}=="1", SUBSYSTEMS=="ide", ATTRS{media}=="disk|floppy", GOTO="probe_parttable_end"
-KERNEL=="hd*[0-9]", ATTRS{removable}=="1", GOTO="probe_parttable_end"
+KERNEL=="hd*[0-9]", ATTR{removable}=="1", GOTO="probe_parttable_end"
 
 # don't scan for partition tables on empty discs
 KERNEL=="sr*", ENV{ID_CDROM_MEDIA}!="?*", GOTO="probe_parttable_end"
@@ -68,7 +68,14 @@ LABEL="md_end"
 
 # Check if a disk is ATA SMART capable
 #
+
+# USB ATA enclosures with a SAT layer
 KERNEL=="sd*[!0-9]", ATTR{removable}=="0", ENV{ID_BUS}=="usb", ENV{DEVTYPE}=="disk", IMPORT{program}="devkit-disks-probe-ata-smart $tempnode"
+
+# ATA disks driven by libata
+KERNEL=="sd*[!0-9]", ATTR{removable}=="0", ENV{ID_BUS}=="ata", ENV{DEVTYPE}=="disk", IMPORT{program}="devkit-disks-probe-ata-smart $tempnode"
+
+# ATA disks connected via SAS (not driven by libata)
 KERNEL=="sd*[!0-9]", ATTR{removable}=="0", ENV{ID_BUS}=="scsi", ENV{DEVTYPE}=="disk", ENV{ID_VENDOR}=="ATA", IMPORT{program}="devkit-disks-probe-ata-smart $tempnode"
 
 ##############################################################################################################
@@ -76,19 +83,19 @@ KERNEL=="sd*[!0-9]", ATTR{removable}=="0", ENV{ID_BUS}=="scsi", ENV{DEVTYPE}=="d
 # Example rule for tagging a device with a specific media type. Where and
 # how to store this database needs some thought.
 #
-SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:0", ENV{ID_DRIVE_FLASH_CF}="1"
-SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:1", ENV{ID_DRIVE_FLASH_MS}="1"
-SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:2", ENV{ID_DRIVE_FLASH_SM}="1"
-SYSFS{idVendor}=="050d", SYSFS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:3", ENV{ID_DRIVE_FLASH_SD}="1"
+ATTRS{idVendor}=="050d", ATTRS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:0", ENV{ID_DRIVE_FLASH_CF}="1"
+ATTRS{idVendor}=="050d", ATTRS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:1", ENV{ID_DRIVE_FLASH_MS}="1"
+ATTRS{idVendor}=="050d", ATTRS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:2", ENV{ID_DRIVE_FLASH_SM}="1"
+ATTRS{idVendor}=="050d", ATTRS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:3", ENV{ID_DRIVE_FLASH_SD}="1"
 
-SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:0", ENV{ID_DRIVE_FLASH_CF}="1"
-SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:1", ENV{ID_DRIVE_FLASH_SM}="1"
-SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:2", ENV{ID_DRIVE_FLASH_SD}="1"
-SYSFS{idVendor}=="05e3", SYSFS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:3", ENV{ID_DRIVE_FLASH_MS}="1"
+ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:0", ENV{ID_DRIVE_FLASH_CF}="1"
+ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:1", ENV{ID_DRIVE_FLASH_SM}="1"
+ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:2", ENV{ID_DRIVE_FLASH_SD}="1"
+ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:3", ENV{ID_DRIVE_FLASH_MS}="1"
 
 # Apple iPod Video
 #
-SYSFS{idVendor}=="05ac", SYSFS{idProduct}=="1209", ENV{DKD_PRESENTATION_ICON_NAME}="multimedia-player-ipod-white"
+ATTRS{idVendor}=="05ac", ATTRS{idProduct}=="1209", ENV{DKD_PRESENTATION_ICON_NAME}="multimedia-player-ipod-white"
 
 ##############################################################################################################
 
@@ -98,7 +105,7 @@ KERNEL=="fd*", ENV{ID_DRIVE_FLOPPY}="1"
 
 # USB floppy drives
 #
-SYSFS{bInterfaceClass}=="08", SYSFS{bInterfaceSubClass}=="04", ENV{ID_DRIVE_FLOPPY}="1"
+ATTRS{bInterfaceClass}=="08", ATTRS{bInterfaceSubClass}=="04", ENV{ID_DRIVE_FLOPPY}="1"
 
 # ATA Zip drives
 #
