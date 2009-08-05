@@ -210,6 +210,7 @@ enum
         PROP_DRIVE_IS_MEDIA_EJECTABLE,
         PROP_DRIVE_CAN_DETACH,
         PROP_DRIVE_CAN_SPINDOWN,
+        PROP_DRIVE_IS_ROTATIONAL,
 
         PROP_OPTICAL_DISC_IS_BLANK,
         PROP_OPTICAL_DISC_IS_APPENDABLE,
@@ -518,6 +519,9 @@ get_property (GObject         *object,
 		break;
 	case PROP_DRIVE_CAN_SPINDOWN:
 		g_value_set_boolean (value, device->priv->drive_can_spindown);
+		break;
+	case PROP_DRIVE_IS_ROTATIONAL:
+		g_value_set_boolean (value, device->priv->drive_is_rotational);
 		break;
 
 	case PROP_OPTICAL_DISC_IS_BLANK:
@@ -993,6 +997,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DRIVE_CAN_SPINDOWN,
                 g_param_spec_boolean ("drive-can-spindown", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_IS_ROTATIONAL,
+                g_param_spec_boolean ("drive-is-rotational", NULL, NULL, FALSE, G_PARAM_READABLE));
 
         g_object_class_install_property (
                 object_class,
@@ -2173,6 +2181,11 @@ update_info_drive (DevkitDisksDevice *device)
                 drive_can_detach = g_udev_device_get_property_as_boolean (device->priv->d, "ID_DRIVE_DETACHABLE");
         }
         devkit_disks_device_set_drive_can_detach (device, drive_can_detach);
+
+        /* rotational is in sysfs */
+        devkit_disks_device_set_drive_is_rotational (device,
+                                                     g_udev_device_get_sysfs_attr_as_boolean (device->priv->d,
+                                                                                              "queue/rotational"));
 
         return TRUE;
 }

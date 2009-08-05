@@ -2113,6 +2113,14 @@
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
+    <property name="drive-is-rotational" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if the disk uses rotational media, such as a hard disk.
+            This property is only valid if
+            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
 
     <property name="optical-disc-is-blank" type="b" access="read">
       <doc:doc><doc:description><doc:para>

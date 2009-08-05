@@ -743,6 +743,16 @@ devkit_disks_device_set_drive_can_spindown (DevkitDisksDevice *device, gboolean 
 }
 
 void
+devkit_disks_device_set_drive_is_rotational (DevkitDisksDevice *device, gboolean value)
+{
+  if (G_UNLIKELY (device->priv->drive_is_rotational != value))
+    {
+      device->priv->drive_is_rotational = value;
+      emit_changed (device, "drive_is_rotational");
+    }
+}
+
+void
 devkit_disks_device_set_optical_disc_is_blank (DevkitDisksDevice *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->optical_disc_is_blank != value))

@@ -387,6 +387,7 @@ typedef struct
         gboolean drive_is_media_ejectable;
         gboolean drive_can_detach;
         gboolean drive_can_spindown;
+        gboolean drive_is_rotational;
 
         gboolean optical_disc_is_blank;
         gboolean optical_disc_is_appendable;
@@ -586,6 +587,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->drive_can_detach = g_value_get_boolean (value);
         else if (strcmp (key, "drive-can-spindown") == 0)
                 props->drive_can_spindown = g_value_get_boolean (value);
+        else if (strcmp (key, "drive-is-rotational") == 0)
+                props->drive_is_rotational = g_value_get_boolean (value);
 
         else if (strcmp (key, "optical-disc-is-blank") == 0)
                 props->optical_disc_is_blank = g_value_get_boolean (value);
@@ -1097,6 +1100,7 @@ do_show_info (const char *object_path)
                 g_print ("    serial:                %s\n", props->drive_serial);
                 g_print ("    detachable:            %d\n", props->drive_can_detach);
                 g_print ("    can spindown:          %d\n", props->drive_can_spindown);
+                g_print ("    rotational media:      %d\n", props->drive_is_rotational);
                 g_print ("    ejectable:             %d\n", props->drive_is_media_ejectable);
                 g_print ("    media:                 %s\n", props->drive_media);
                 g_print ("      compat:             ");

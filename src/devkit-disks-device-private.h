@@ -162,6 +162,7 @@ struct DevkitDisksDevicePrivate
         gboolean drive_is_media_ejectable;
         gboolean drive_can_detach;
         gboolean drive_can_spindown;
+        gboolean drive_is_rotational;
 
         gboolean optical_disc_is_blank;
         gboolean optical_disc_is_appendable;
@@ -293,6 +294,7 @@ void devkit_disks_device_set_drive_media (DevkitDisksDevice *device, const gchar
 void devkit_disks_device_set_drive_is_media_ejectable (DevkitDisksDevice *device, gboolean value);
 void devkit_disks_device_set_drive_can_detach (DevkitDisksDevice *device, gboolean value);
 void devkit_disks_device_set_drive_can_spindown (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_drive_is_rotational (DevkitDisksDevice *device, gboolean value);
 
 void devkit_disks_device_set_optical_disc_is_blank (DevkitDisksDevice *device, gboolean value);
 void devkit_disks_device_set_optical_disc_is_appendable (DevkitDisksDevice *device, gboolean value);
