@@ -171,6 +171,14 @@ gboolean devkit_disks_daemon_linux_md_start (DevkitDisksDaemon     *daemon,
                                              char                 **options,
                                              DBusGMethodInvocation *context);
 
+gboolean devkit_disks_daemon_linux_md_create (DevkitDisksDaemon     *daemon,
+                                              GPtrArray             *components,
+                                              char                  *level,
+                                              guint64                stripe_size,
+                                              char                  *name,
+                                              char                 **options,
+                                              DBusGMethodInvocation *context);
+
 gboolean devkit_disks_daemon_drive_inhibit_all_polling (DevkitDisksDaemon     *daemon,
                                                         char                 **options,
                                                         DBusGMethodInvocation *context);

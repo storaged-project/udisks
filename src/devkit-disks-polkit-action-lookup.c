@@ -138,6 +138,10 @@ static const Map map[] = {
                 N_("Authentication is required to start a Software RAID device")
         },
         {
+                "LinuxMdCreate",
+                N_("Authentication is required to create a Software RAID device")
+        },
+        {
                 "DriveInhibitPolling",
                 N_("Authentication is required to inhibit polling on a drive")
         },

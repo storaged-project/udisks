@@ -6576,6 +6576,90 @@ devkit_disks_device_partition_modify (DevkitDisksDevice     *device,
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
+typedef struct {
+        int refcount;
+
+        guint device_changed_signal_handler_id;
+        guint device_changed_timeout_id;
+
+        DBusGMethodInvocation *context;
+        DevkitDisksDevice *device;
+
+        char *scheme;
+
+} CreatePartitionTableData;
+
+static CreatePartitionTableData *
+partition_table_create_data_new (DBusGMethodInvocation *context,
+                                 DevkitDisksDevice *device,
+                                 const char *scheme)
+{
+        CreatePartitionTableData *data;
+
+        data = g_new0 (CreatePartitionTableData, 1);
+        data->refcount = 1;
+
+        data->context = context;
+        data->device = g_object_ref (device);
+        data->scheme = g_strdup (scheme);
+
+        return data;
+}
+
+static CreatePartitionTableData *
+partition_table_create_data_ref (CreatePartitionTableData *data)
+{
+        data->refcount++;
+        return data;
+}
+
+static void
+partition_table_create_data_unref (CreatePartitionTableData *data)
+{
+        data->refcount--;
+        if (data->refcount == 0) {
+                g_object_unref (data->device);
+                g_free (data->scheme);
+                g_free (data);
+        }
+}
+
+static void
+partition_table_create_device_changed_cb (DevkitDisksDaemon *daemon,
+                                          const char *object_path,
+                                          gpointer user_data)
+{
+        CreatePartitionTableData *data = user_data;
+        DevkitDisksDevice *device;
+
+        device = devkit_disks_daemon_local_find_by_object_path (daemon, object_path);
+        if (device == data->device) {
+
+                if (g_strcmp0 (device->priv->partition_table_scheme, data->scheme) == 0) {
+                        dbus_g_method_return (data->context);
+
+                        g_signal_handler_disconnect (daemon, data->device_changed_signal_handler_id);
+                        g_source_remove (data->device_changed_timeout_id);
+                        partition_table_create_data_unref (data);
+                }
+        }
+}
+
+static gboolean
+partition_table_create_device_not_changed_cb (gpointer user_data)
+{
+        CreatePartitionTableData *data = user_data;
+
+        throw_error (data->context,
+                     DEVKIT_DISKS_ERROR_FAILED,
+                     "Error creating partition table: timeout (10s) waiting for change");
+
+        g_signal_handler_disconnect (data->device->priv->daemon, data->device_changed_signal_handler_id);
+        partition_table_create_data_unref (data);
+
+        return FALSE;
+}
+
 static void
 partition_table_create_completed_cb (DBusGMethodInvocation *context,
                                      DevkitDisksDevice *device,
@@ -6585,11 +6669,33 @@ partition_table_create_completed_cb (DBusGMethodInvocation *context,
                                      const char *stdout,
                                      gpointer user_data)
 {
+        CreatePartitionTableData *data = user_data;
+
         /* poke the kernel so we can reread the data */
         devkit_disks_device_generate_kernel_change_event (device);
 
         if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
-                dbus_g_method_return (context);
+
+                if (g_strcmp0 (device->priv->partition_table_scheme, data->scheme) == 0) {
+                        dbus_g_method_return (context);
+                } else {
+                        /* sit around and wait for the new partition table to appear */
+                        data->device_changed_signal_handler_id = g_signal_connect_after (
+                                device->priv->daemon,
+                                "device-changed",
+                                (GCallback) partition_table_create_device_changed_cb,
+                                partition_table_create_data_ref (data));
+
+                        /* set up timeout for error reporting if waiting failed
+                         *
+                         * (the signal handler and the timeout handler share the ref to data
+                         * as one will cancel the other)
+                         */
+                        data->device_changed_timeout_id = g_timeout_add (10 * 1000,
+                                                                         partition_table_create_device_not_changed_cb,
+                                                                         data);
+                }
+
         } else {
                 if (job_was_cancelled) {
                         throw_error (context,
@@ -6635,6 +6741,13 @@ devkit_disks_device_partition_table_create_authorized_cb (DevkitDisksDaemon     
                 goto out;
         }
 
+        if (g_strcmp0 (device->priv->partition_table_scheme, scheme) == 0) {
+                throw_error (context,
+                             DEVKIT_DISKS_ERROR_FAILED,
+                             "device already has a partition table of given scheme");
+                goto out;
+        }
+
         n = 0;
         argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-create-partition-table";
         argv[n++] = device->priv->device_file;
@@ -6658,8 +6771,8 @@ devkit_disks_device_partition_table_create_authorized_cb (DevkitDisksDaemon     
                       argv,
                       NULL,
                       partition_table_create_completed_cb,
-                      NULL,
-                      NULL)) {
+                      partition_table_create_data_new (context, device, scheme),
+                      (GDestroyNotify) partition_table_create_data_unref)) {
                 goto out;
         }
 
@@ -9114,6 +9227,370 @@ devkit_disks_daemon_linux_md_start (DevkitDisksDaemon     *daemon,
         return TRUE;
 }
 
+/*--------------------------------------------------------------------------------------------------------------*/
+
+typedef struct {
+        int refcount;
+
+        guint device_added_signal_handler_id;
+        guint device_added_timeout_id;
+
+        DBusGMethodInvocation *context;
+
+        DevkitDisksDaemon *daemon;
+        char *first_component_objpath;
+
+} LinuxMdCreateData;
+
+static LinuxMdCreateData *
+linux_md_create_data_new (DBusGMethodInvocation *context,
+                          DevkitDisksDaemon     *daemon,
+                          const char            *first_component_objpath)
+{
+        LinuxMdCreateData *data;
+
+        data = g_new0 (LinuxMdCreateData, 1);
+        data->refcount = 1;
+
+        data->context = context;
+        data->daemon = g_object_ref (daemon);
+        data->first_component_objpath = g_strdup (first_component_objpath);
+        return data;
+}
+
+static LinuxMdCreateData *
+linux_md_create_data_ref (LinuxMdCreateData *data)
+{
+        data->refcount++;
+        return data;
+}
+
+static void
+linux_md_create_data_unref (LinuxMdCreateData *data)
+{
+        data->refcount--;
+        if (data->refcount == 0) {
+                g_object_unref (data->daemon);
+                g_free (data->first_component_objpath);
+                g_free (data);
+        }
+}
+
+static void
+linux_md_create_device_added_cb (DevkitDisksDaemon *daemon,
+                                const char *object_path,
+                                gpointer user_data)
+{
+        LinuxMdCreateData *data = user_data;
+        DevkitDisksDevice *device;
+
+        /* check the device is the one we're looking for */
+        device = devkit_disks_daemon_local_find_by_object_path (daemon, object_path);
+
+        if (device != NULL &&
+            device->priv->device_is_linux_md) {
+
+                /* TODO: actually check this properly by looking at slaves vs. components */
+
+                /* yay! it is.. return value to the user */
+                dbus_g_method_return (data->context, object_path);
+
+                g_signal_handler_disconnect (daemon, data->device_added_signal_handler_id);
+                g_source_remove (data->device_added_timeout_id);
+                linux_md_create_data_unref (data);
+        }
+}
+
+static gboolean
+linux_md_create_device_not_seen_cb (gpointer user_data)
+{
+        LinuxMdCreateData *data = user_data;
+
+        throw_error (data->context,
+                     DEVKIT_DISKS_ERROR_FAILED,
+                     "Error assembling array: timeout (10s) waiting for array to show up");
+
+        g_signal_handler_disconnect (data->daemon, data->device_added_signal_handler_id);
+        linux_md_create_data_unref (data);
+        return FALSE;
+}
+
+/* NOTE: This is job completion callback from a method on the daemon, not the device. */
+
+static void
+linux_md_create_completed_cb (DBusGMethodInvocation *context,
+                             DevkitDisksDevice *device,
+                             gboolean job_was_cancelled,
+                             int status,
+                             const char *stderr,
+                             const char *stdout,
+                             gpointer user_data)
+{
+        LinuxMdCreateData *data = user_data;
+
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+                GList *l;
+                GList *devices;
+                char *objpath;
+
+                /* see if the component appeared already */
+
+                objpath = NULL;
+
+                devices = devkit_disks_daemon_local_get_all_devices (data->daemon);
+                for (l = devices; l != NULL; l = l->next) {
+                        DevkitDisksDevice *device = DEVKIT_DISKS_DEVICE (l->data);
+
+                        if (device->priv->device_is_linux_md) {
+
+                                /* TODO: check properly */
+
+                                /* yup, return to caller */
+                                objpath = device->priv->object_path;
+                                break;
+                        }
+                }
+
+                if (objpath != NULL) {
+                        dbus_g_method_return (context, objpath);
+                } else {
+                        /* sit around and wait for the md array to appear */
+
+                        /* sit around wait for the cleartext device to appear */
+                        data->device_added_signal_handler_id = g_signal_connect_after (
+                                data->daemon,
+                                "device-added",
+                                (GCallback) linux_md_create_device_added_cb,
+                                linux_md_create_data_ref (data));
+
+                        /* set up timeout for error reporting if waiting failed
+                         *
+                         * (the signal handler and the timeout handler share the ref to data
+                         * as one will cancel the other)
+                         */
+                        data->device_added_timeout_id = g_timeout_add (10 * 1000,
+                                                                       linux_md_create_device_not_seen_cb,
+                                                                       data);
+                }
+
+
+        } else {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_FAILED,
+                                     "Error assembling array: mdadm exited with exit code %d: %s",
+                                     WEXITSTATUS (status), stderr);
+                }
+        }
+}
+
+/* NOTE: This is a method on the daemon, not the device. */
+static void
+devkit_disks_daemon_linux_md_create_authorized_cb (DevkitDisksDaemon     *daemon,
+                                                   DevkitDisksDevice     *device,
+                                                   DBusGMethodInvocation *context,
+                                                   const gchar           *action_id,
+                                                   guint                  num_user_data,
+                                                   gpointer              *user_data_elements)
+{
+        gchar **components_as_strv = user_data_elements[0];
+        gchar *level = user_data_elements[1];
+        guint64 stripe_size = *((guint64*) user_data_elements[2]);
+        gchar *name = user_data_elements[3];
+        /* TODO: use options */
+        //gchar **options            = user_data_elements[4];
+        int n;
+        int m;
+        char *argv[128];
+        GError *error;
+        gchar *md_device_file;
+        gchar *num_raid_devices_as_str;
+        gchar *stripe_size_as_str;
+        gboolean use_bitmap;
+        gboolean use_chunk;
+
+        md_device_file = NULL;
+        num_raid_devices_as_str = NULL;
+        stripe_size_as_str = NULL;
+        error = NULL;
+
+        /* sanity-check level */
+        use_bitmap = FALSE;
+        use_chunk = FALSE;
+        if (g_strcmp0 (level, "raid0") == 0) {
+                use_chunk = TRUE;
+        } else if (g_strcmp0 (level, "raid1") == 0) {
+                if (stripe_size > 0) {
+                        throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                                     "Stripe size doesn't make sense for RAID-1");
+                        goto out;
+                }
+        } else if (g_strcmp0 (level, "raid4") == 0 ||
+                   g_strcmp0 (level, "raid5") == 0 ||
+                   g_strcmp0 (level, "raid6") == 0 ||
+                   g_strcmp0 (level, "raid10") == 0) {
+                use_bitmap = TRUE;
+                use_chunk = TRUE;
+        } else {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                             "Invalid level `%s'",
+                             level);
+                goto out;
+        }
+
+        /* check that all given components exist and that they are not busy
+         */
+        for (n = 0; components_as_strv[n] != NULL; n++) {
+                DevkitDisksDevice *slave;
+                const char *component_objpath = components_as_strv[n];
+
+                slave = devkit_disks_daemon_local_find_by_object_path (daemon, component_objpath);
+                if (slave == NULL) {
+                        throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                                     "Component %s doesn't exist", component_objpath);
+                        goto out;
+                }
+
+                if (devkit_disks_device_local_is_busy (slave, FALSE, &error)) {
+                        dbus_g_method_return_error (context, error);
+                        g_error_free (error);
+                        goto out;
+                }
+        }
+
+        /* find an unused md minor... Man, I wish mdadm could do this itself; this is slightly racy */
+        for (n = 0; TRUE; n++) {
+                char *native_path;
+                char *array_state;
+
+                /* TODO: move to /sys/class/block instead */
+                native_path = g_strdup_printf ("/sys/block/md%d", n);
+                if (!sysfs_file_exists (native_path, "md/array_state")) {
+                        /* Apparently this slot is free since there is no such file. So let's peruse it. */
+                        g_free (native_path);
+                        break;
+                } else {
+                        array_state = sysfs_get_string (native_path, "md/array_state");
+                        g_strstrip (array_state);
+                        if (strcmp (array_state, "clear") == 0) {
+                                /* It's clear! Let's use it! */
+                                g_free (array_state);
+                                g_free (native_path);
+                                break;
+                        }
+                        g_free (array_state);
+                }
+                g_free (native_path);
+        }
+
+        md_device_file = g_strdup_printf ("/dev/md%d", n);
+
+        num_raid_devices_as_str = g_strdup_printf ("%d", g_strv_length (components_as_strv));
+
+        if (stripe_size > 0)
+                stripe_size_as_str = g_strdup_printf ("%d", ((gint) stripe_size) / 1024);
+
+        n = 0;
+        argv[n++] = "mdadm";
+        argv[n++] = "--create";
+        argv[n++] = md_device_file;
+        argv[n++] = "--level";
+        argv[n++] = level;
+        argv[n++] = "--raid-devices";
+        argv[n++] = num_raid_devices_as_str;
+        argv[n++] = "--metadata";
+        argv[n++] = "1.2";
+        argv[n++] = "--name";
+        argv[n++] = name;
+        argv[n++] = "--homehost";
+        argv[n++] = "";
+        if (use_bitmap) {
+                argv[n++] = "--bitmap";
+                argv[n++] = "internal";
+        }
+        if (use_chunk && stripe_size_as_str != NULL) {
+                argv[n++] = "--chunk";
+                argv[n++] = stripe_size_as_str;
+        }
+        for (m = 0; components_as_strv[m] != NULL; m++) {
+                DevkitDisksDevice *slave;
+                const char *component_objpath = components_as_strv[m];
+
+                slave = devkit_disks_daemon_local_find_by_object_path (daemon, component_objpath);
+                if (slave == NULL) {
+                        throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                                     "Component %s doesn't exist", component_objpath);
+                        goto out;
+                }
+
+                if (n >= (int) sizeof (argv) - 1) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_FAILED,
+                                     "Too many components");
+                        goto out;
+                }
+
+                argv[n++] = (char *) slave->priv->device_file;
+        }
+        argv[n++] = NULL;
+
+        for (m = 0; argv[m] != NULL; m++)
+                g_debug ("arg[%d] = `%s'", m, argv[m]);
+
+        if (!job_new (context,
+                      "LinuxMdCreate",
+                      TRUE,
+                      NULL,
+                      argv,
+                      NULL,
+                      linux_md_create_completed_cb,
+                      linux_md_create_data_new (context, daemon, components_as_strv[0]),
+                      (GDestroyNotify) linux_md_create_data_unref)) {
+                goto out;
+        }
+
+out:
+        g_free (md_device_file);
+        g_free (num_raid_devices_as_str);
+        g_free (stripe_size_as_str);
+}
+
+/* NOTE: This is a method on the daemon, not the device. */
+gboolean
+devkit_disks_daemon_linux_md_create (DevkitDisksDaemon     *daemon,
+                                     GPtrArray             *components,
+                                     char                  *level,
+                                     guint64                stripe_size,
+                                     char                  *name,
+                                     char                 **options,
+                                     DBusGMethodInvocation *context)
+{
+        gchar **components_as_strv;
+        guint n;
+
+        components_as_strv = g_new0 (gchar *, components->len + 1);
+        for (n = 0; n < components->len; n++)
+                components_as_strv[n] = g_strdup (components->pdata[n]);
+
+        devkit_disks_daemon_local_check_auth (daemon,
+                                              NULL,
+                                              "org.freedesktop.devicekit.disks.linux-md",
+                                              "LinuxMdCreate",
+                                              devkit_disks_daemon_linux_md_create_authorized_cb,
+                                              context,
+                                              4,
+                                              components_as_strv, g_strfreev,
+                                              g_strdup (level), g_free,
+                                              g_memdup (&stripe_size, sizeof (guint64)), g_free,
+                                              g_strdup (name), g_free,
+                                              g_strdupv (options), g_strfreev);
+
+        return TRUE;
+}
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
