@@ -292,7 +292,7 @@
 
   <refsect1 id="devkit-disks-spindown"><title>SPINNING DOWN DISKS</title>
     <para>
-      Caution should be exercised when configuring disk spin down.
+      Caution should be exercised when configuring disk spin down timeouts.
     </para>
     <para>
       Note that every time a disk is spun down,
@@ -302,19 +302,6 @@
       addition, the drive may take as long as 30 seconds to respond to
       subsequent disk access – most drives are typically faster, see
       the <quote>spin-up-time</quote> ATA SMART attribute.
-    </para>
-    <para>
-      For maximum compatibility (since disks from WD and others won't
-      spin down using the <quote>STANDBY</quote> ATA command),
-      <citerefentry>
-        <refentrytitle>devkit-disks-daemon</refentrytitle><manvolnum>8</manvolnum>
-      </citerefentry>
-      does all timeout handling on the host side. If a device appears
-      to be idle (this is determined by looking
-      at <filename>/sys/block/sdX/stat</filename> from time to time)
-      for the requested amount of time, the daemon will spin the disk
-      down using the <quote>STANDBY IMMEDIATE</quote> ATA COMMAND or
-      similar.
     </para>
     <para>
       On the other hand, cautious use (e.g. using conservative

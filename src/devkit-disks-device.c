@@ -1259,8 +1259,6 @@ devkit_disks_device_finalize (GObject *object)
         if (device->priv->emit_changed_idle_id > 0)
                 g_source_remove (device->priv->emit_changed_idle_id);
 
-        g_free (device->priv->spindown_last_stat);
-
         /* free properties */
         g_free (device->priv->device_file);
         g_ptr_array_foreach (device->priv->device_file_by_id, (GFunc) g_free, NULL);

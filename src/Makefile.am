@@ -93,7 +93,6 @@ libexec_PROGRAMS += devkit-disks-helper-mkfs                    	\
 		    devkit-disks-helper-drive-detach			\
 		    devkit-disks-helper-drive-poll			\
 		    devkit-disks-helper-linux-md-check			\
-		    devkit-disks-helper-drive-standby			\
 		    $(NULL)
 
 libexec_SCRIPTS = devkit-disks-helper-change-luks-password
@@ -145,10 +144,6 @@ devkit_disks_helper_drive_detach_LDADD = $(LIBUDEV_LIBS) $(SGUTILS_LIBS) $(GLIB_
 devkit_disks_helper_linux_md_check_SOURCES = job-shared.h job-linux-md-check.c
 devkit_disks_helper_linux_md_check_CPPFLAGS = $(AM_CPPFLAGS)
 devkit_disks_helper_linux_md_check_LDADD = $(GLIB_LIBS)
-
-devkit_disks_helper_drive_standby_SOURCES = job-shared.h job-drive-standby.c
-devkit_disks_helper_drive_standby_CPPFLAGS = $(AM_CPPFLAGS) $(SGUTILS_CFLAGS)
-devkit_disks_helper_drive_standby_LDADD = $(SGUTILS_LIBS) $(GLIB_LIBS)
 
 devkit_disks_helper_drive_poll_SOURCES = job-shared.h job-drive-poll.c
 devkit_disks_helper_drive_poll_CPPFLAGS = $(AM_CPPFLAGS)

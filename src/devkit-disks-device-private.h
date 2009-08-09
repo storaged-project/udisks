@@ -87,21 +87,36 @@ struct DevkitDisksDevicePrivate
         /* A list of current polling inhibitors (DevkitDisksInhibitor objects) */
         GList *polling_inhibitors;
 
-        /* A list of current spindown configurators (DevkitDisksInhibitor objects) */
-        GList *spindown_inhibitors;
-
         /* if non-zero, the id of the idle for emitting a 'change' signal */
         guint emit_changed_idle_id;
 
-        /* used for spindown */
+        /*****************/
+        /* Disk spindown */
+        /*****************/
+
+        /* A list of current spindown configurators (DevkitDisksInhibitor objects)
+         *
+         * Each object will have a data element, @spindown-timeout-seconds, that is
+         * the requested timeout for the inhibitor in question. It can be read via
+         *
+         *  GPOINTER_TO_INT (g_object_get_data (G_OBJECT (inhibitor), "spindown-timeout-seconds"));
+         */
+        GList *spindown_inhibitors;
+
+        /* The timeout the disk is currently configured with, in seconds. This is 0 if spindown
+         * is not enabled. Depending on the command-set used, a slightly different rounded value
+         * may have been sent to the disk - for example, the ATA command-set has a rather peculiar
+         * mapping, see the hdparm(1) man-page, option -S.
+         *
+         * This value is computed by considering all per-disk spindown inhibitors (set
+         * via the DriveSetSpindownTimeout() method on the device) and all global spindown
+         * inhibitors (set via the DriveSetAllSpindownTimeouts() method on the daemon).
+         */
         gint spindown_timeout;
-        gchar *spindown_last_stat;
-        time_t spindown_last_stat_time;
-        gboolean spindown_have_issued_standby;
 
         /**************/
-        /* properties */
-        /*************/
+        /* Properties */
+        /**************/
 
         char *device_file;
         dev_t dev;
