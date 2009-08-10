@@ -1326,37 +1326,47 @@ devkit_disks_device_finalize (GObject *object)
         G_OBJECT_CLASS (devkit_disks_device_parent_class)->finalize (object);
 }
 
-static char *
-compute_object_path_from_basename (const char *native_path_basename)
-{
-        char *basename;
-        char *object_path;
-        unsigned int n;
-
-        /* TODO: need to be more thorough with making proper object
-         * names that won't make D-Bus crash. This is just to cope
-         * with dm-0...
-         */
-        basename = g_path_get_basename (native_path_basename);
-        for (n = 0; basename[n] != '\0'; n++)
-                if (basename[n] == '-')
-                        basename[n] = '_';
-        object_path = g_build_filename ("/org/freedesktop/DeviceKit/Disks/devices/", basename, NULL);
-        g_free (basename);
-
-        return object_path;
-}
-
+/**
+ * compute_object_path:
+ * @native_path: Either an absolute sysfs path or the basename
+ *
+ * Maps @native_path to the D-Bus object path for the device.
+ *
+ * Returns: A valid D-Bus object path. Free with g_free().
+ */
 static char *
 compute_object_path (const char *native_path)
 {
-        char *basename;
-        char *object_path;
+        const gchar *basename;
+        GString *s;
+        guint n;
 
-        basename = g_path_get_basename (native_path);
-        object_path = compute_object_path_from_basename (basename);
-        g_free (basename);
-        return object_path;
+        basename = strrchr (native_path, '/');
+        if (basename != NULL) {
+                basename++;
+        } else {
+                basename = native_path;
+        }
+
+        s = g_string_new ("/org/freedesktop/DeviceKit/Disks/devices/");
+        for (n = 0; basename[n] != '\0'; n++) {
+                gint c = basename[n];
+
+                /* D-Bus spec sez:
+                 *
+                 * Each element must only contain the ASCII characters "[A-Z][a-z][0-9]_"
+                 */
+                if ((c >= 'A' && c <= 'Z') ||
+                    (c >= 'a' && c <= 'z') ||
+                    (c >= '0' && c <= '9')) {
+                        g_string_append_c (s, c);
+                } else {
+                        /* Escape bytes not in [A-Z][a-z][0-9] as _<hex-with-two-digits> */
+                        g_string_append_printf (s, "_%02x", c);
+                }
+        }
+
+        return g_string_free (s, FALSE);
 }
 
 static gboolean
@@ -2937,7 +2947,6 @@ update_info (DevkitDisksDevice *device)
 {
         guint64 start, size;
         char *s;
-        char *p;
         guint n;
         gboolean ret;
         char *path;
@@ -3078,9 +3087,7 @@ update_info (DevkitDisksDevice *device)
                 for (n = strlen (s) - 1; n >= 0 && s[n] != '/'; n--)
                         s[n] = '\0';
                 s[n] = '\0';
-                p = g_path_get_basename (s);
-                devkit_disks_device_set_partition_slave (device, compute_object_path_from_basename (p));
-                g_free (p);
+                devkit_disks_device_set_partition_slave (device, compute_object_path (s));
                 g_free (s);
         } else {
                 /* TODO: handle partitions created by kpartx / dm-linear */
@@ -3121,7 +3128,7 @@ update_info (DevkitDisksDevice *device)
                 while ((name = g_dir_read_name (dir)) != NULL) {
                         DevkitDisksDevice *device2;
 
-                        s = compute_object_path_from_basename (name);
+                        s = compute_object_path (name);
 
                         device2 = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, s);
                         if (device2 != NULL) {
@@ -3147,7 +3154,7 @@ update_info (DevkitDisksDevice *device)
                 while ((name = g_dir_read_name (dir)) != NULL) {
                         DevkitDisksDevice *device2;
 
-                        s = compute_object_path_from_basename (name);
+                        s = compute_object_path (name);
                         device2 = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, s);
                         if (device2 != NULL) {
                                 //g_debug ("%s has holder %s", device->priv->object_path, s);
