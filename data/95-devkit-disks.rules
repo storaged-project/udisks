@@ -9,7 +9,7 @@ SUBSYSTEM!="block", GOTO="devkit_disks_end"
 #
 
 # skip rules for inappropriate block devices
-KERNEL=="mtd*|nbd*|gnbd*|btibm*", GOTO="probe_parttable_end"
+KERNEL=="fd*|mtd*|nbd*|gnbd*|btibm*", GOTO="probe_parttable_end"
 
 # never access non-cdrom removable ide devices, the drivers are causing event loops on open()
 KERNEL=="hd*[!0-9]", ATTR{removable}=="1", SUBSYSTEMS=="ide", ATTRS{media}=="disk|floppy", GOTO="probe_parttable_end"
@@ -21,11 +21,6 @@ KERNEL=="sr*", ENV{ID_CDROM_MEDIA}!="?*", GOTO="probe_parttable_end"
 # scan for partition tables both on whole-disk and partitions
 #
 IMPORT{program}="devkit-disks-part-id $tempnode"
-
-# work around for bug in devkit-disks-part-id that identifies FAT filesystems
-# on the whole-device as a MBR partition table
-#
-KERNEL=="fd*", ENV{DKD_PARTITION_TABLE}=="1", ENV{DKD_PARTITION_TABLE}="0"
 
 LABEL="probe_parttable_end"
 
