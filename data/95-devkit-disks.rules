@@ -4,6 +4,7 @@
 # we only care about block devices
 ACTION!="add|change", GOTO="devkit_disks_end"
 SUBSYSTEM!="block", GOTO="devkit_disks_end"
+KERNEL=="loop*|ram*", GOTO="devkit_disks_end"
 
 ##############################################################################################################
 
