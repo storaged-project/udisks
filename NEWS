@@ -1,4 +1,44 @@
 -------------------
+DeviceKit-disks 006
+-------------------
+
+DeviceKit-disks is a daemon that provide interfaces to obtain
+information and perform operations on storage devices.
+
+NOTE NOTE NOTE: This is an unstable release of DeviceKit-disks, all
+                API is subject to change.
+
+David Zeuthen (22):
+      Post-release version bump to 006
+      Add a way to spin down drives
+      Fix segfault when starting a Linux MD array
+      Fix polling process title and turn off noisy debugging spew
+      Pass size of buffer to avoid Z_BUF_ERROR when compressing ATA SMART blob
+      Add --poll-for-media option to devkit-disks(1)
+      Work around media detection problems
+      Move implementation of DrivePollMedia into a separate process
+      Move data files into a separate directory
+      Misc fixes for optical disc detection
+      Fix up ATA SMART detection
+      Add Device:drive-is-rotational property
+      Add LinuxMdCreate method
+      Rely on the disk to spin itself down
+      Require latest libatasmart
+      Fix up object path mapping
+      Bug 23309 – Udev rules probe floppy drives when they shouldn't
+      Add a new :device-presentation-nopolicy property
+      Ignore loop and ram devices for now
+      Make FilesystemMount() accept an 'auth_no_user_interaction' option
+      Bug 23235 – Cannot mount disc with / (slash) in label
+      Update NEWS for release
+
+Martin Pitt (1):
+      Hide recovery, boot, and hidden partitions from desktops
+
+David Zeuthen,
+August 17, 2009
+
+-------------------
 DeviceKit-disks 005
 -------------------
 
