@@ -103,6 +103,7 @@ void               devkit_disks_daemon_local_check_auth          (DevkitDisksDae
                                                                   DevkitDisksDevice            *device,
                                                                   const gchar                  *action_id,
                                                                   const gchar                  *operation,
+                                                                  gboolean                      allow_user_interaction,
                                                                   DevkitDisksCheckAuthCallback  check_auth_callback,
                                                                   DBusGMethodInvocation        *context,
                                                                   guint                         num_user_data,

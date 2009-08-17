@@ -513,7 +513,9 @@
         <doc:doc><doc:summary>File system type to use.</doc:summary></doc:doc>
       </arg>
       <arg name="options" direction="in" type="as">
-        <doc:doc><doc:summary>Mount Options. Valid mount options include mount options accepted by the native mount program.</doc:summary></doc:doc>
+        <doc:doc><doc:summary>
+            Mount Options. Valid mount options include mount options accepted by the native mount program.
+            The option <quote>auth_no_user_interaction</quote> can be used to avoid user interaction (e.g. authentication dialogs) when checking whether the caller is authorized.</doc:summary></doc:doc>
       </arg>
       <arg name="mount_path" direction="out" type="s">
         <doc:doc><doc:summary>Where the device was mounted.</doc:summary></doc:doc>

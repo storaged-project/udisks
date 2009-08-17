@@ -1300,6 +1300,7 @@ devkit_disks_daemon_local_check_auth (DevkitDisksDaemon            *daemon,
                                       DevkitDisksDevice            *device,
                                       const gchar                  *action_id,
                                       const gchar                  *operation,
+                                      gboolean                      allow_user_interaction,
                                       DevkitDisksCheckAuthCallback  check_auth_callback,
                                       DBusGMethodInvocation        *context,
                                       guint                         num_user_data,
@@ -1333,6 +1334,7 @@ devkit_disks_daemon_local_check_auth (DevkitDisksDaemon            *daemon,
         if (action_id != NULL) {
                 PolkitSubject *subject;
                 PolkitDetails *details;
+                PolkitCheckAuthorizationFlags flags;
                 gchar partition_number_buf[32];
 
                 /* Set details - see devkit-disks-polkit-action-lookup.c for where
@@ -1417,11 +1419,14 @@ devkit_disks_daemon_local_check_auth (DevkitDisksDaemon            *daemon,
                                   G_CALLBACK (lca_caller_disconnected_cb),
                                   data);
 
+                flags = POLKIT_CHECK_AUTHORIZATION_FLAGS_NONE;
+                if (allow_user_interaction)
+                        flags |= POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION;
                 polkit_authority_check_authorization (daemon->priv->authority,
                                                       subject,
                                                       action_id,
                                                       details,
-                                                      POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION,
+                                                      flags,
                                                       data->cancellable,
                                                       (GAsyncReadyCallback) lca_check_authorization_callback,
                                                       data);
@@ -1758,6 +1763,7 @@ devkit_disks_daemon_drive_inhibit_all_polling (DevkitDisksDaemon     *daemon,
                                               NULL,
                                               "org.freedesktop.devicekit.disks.inhibit-polling",
                                               "InhibitAllPolling",
+                                              TRUE,
                                               devkit_disks_daemon_drive_inhibit_all_polling_authorized_cb,
                                               context,
                                               1,
@@ -1966,6 +1972,7 @@ devkit_disks_daemon_drive_set_all_spindown_timeouts (DevkitDisksDaemon     *daem
                                               NULL,
                                               "org.freedesktop.devicekit.disks.drive-set-spindown",
                                               "DriveSetAllSpindownTimeouts",
+                                              TRUE,
                                               devkit_disks_daemon_drive_set_all_spindown_timeouts_authorized_cb,
                                               context,
                                               2,
