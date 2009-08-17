@@ -166,6 +166,7 @@ enum
         PROP_DEVICE_MOUNT_PATHS,
         PROP_DEVICE_MOUNTED_BY_UID,
         PROP_DEVICE_PRESENTATION_HIDE,
+        PROP_DEVICE_PRESENTATION_NOPOLICY,
         PROP_DEVICE_PRESENTATION_NAME,
         PROP_DEVICE_PRESENTATION_ICON_NAME,
 
@@ -392,6 +393,9 @@ get_property (GObject         *object,
 		break;
 	case PROP_DEVICE_PRESENTATION_HIDE:
 		g_value_set_boolean (value, device->priv->device_presentation_hide);
+		break;
+	case PROP_DEVICE_PRESENTATION_NOPOLICY:
+		g_value_set_boolean (value, device->priv->device_presentation_nopolicy);
 		break;
 	case PROP_DEVICE_PRESENTATION_NAME:
 		g_value_set_string (value, device->priv->device_presentation_name);
@@ -838,6 +842,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DEVICE_PRESENTATION_HIDE,
                 g_param_spec_boolean ("device-presentation-hide", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DEVICE_PRESENTATION_NOPOLICY,
+                g_param_spec_boolean ("device-presentation-nopolicy", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_DEVICE_PRESENTATION_NAME,
@@ -1700,11 +1708,17 @@ static gboolean
 update_info_presentation (DevkitDisksDevice *device)
 {
         gboolean hide;
+        gboolean nopolicy;
 
         hide = FALSE;
         if (g_udev_device_has_property (device->priv->d, "DKD_PRESENTATION_HIDE"))
                 hide = g_udev_device_get_property_as_boolean (device->priv->d, "DKD_PRESENTATION_HIDE");
         devkit_disks_device_set_device_presentation_hide (device, hide);
+
+        nopolicy = FALSE;
+        if (g_udev_device_has_property (device->priv->d, "DKD_PRESENTATION_NOPOLICY"))
+                nopolicy = g_udev_device_get_property_as_boolean (device->priv->d, "DKD_PRESENTATION_NOPOLICY");
+        devkit_disks_device_set_device_presentation_nopolicy (device, nopolicy);
 
         devkit_disks_device_set_device_presentation_name (device,
                g_udev_device_get_property (device->priv->d, "DKD_PRESENTATION_NAME"));

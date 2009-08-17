@@ -144,6 +144,7 @@ struct DevkitDisksDevicePrivate
         GPtrArray *device_mount_paths;
         uid_t device_mounted_by_uid;
         gboolean device_presentation_hide;
+        gboolean device_presentation_nopolicy;
         char *device_presentation_name;
         char *device_presentation_icon_name;
 
@@ -276,6 +277,7 @@ void devkit_disks_device_set_device_is_mounted (DevkitDisksDevice *device, gbool
 void devkit_disks_device_set_device_mount_paths (DevkitDisksDevice *device, GStrv value);
 void devkit_disks_device_set_device_mounted_by_uid (DevkitDisksDevice *device, guint value);
 void devkit_disks_device_set_device_presentation_hide (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_device_presentation_nopolicy (DevkitDisksDevice *device, gboolean value);
 void devkit_disks_device_set_device_presentation_name (DevkitDisksDevice *device, const gchar *value);
 void devkit_disks_device_set_device_presentation_icon_name (DevkitDisksDevice *device, const gchar *value);
 

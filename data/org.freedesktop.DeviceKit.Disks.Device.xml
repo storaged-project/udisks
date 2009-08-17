@@ -1549,6 +1549,12 @@
             A hint if the device should be hidden from the user interface.
       </doc:para></doc:description></doc:doc>
     </property>
+    <property name="device-presentation-nopolicy" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            A hint if the device (or e.g. the multi-disk device that the device is
+            part of) shouldn't be automatically mounted / assembled.
+      </doc:para></doc:description></doc:doc>
+    </property>
     <property name="device-presentation-name" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The name to use when presenting the device to an end user.

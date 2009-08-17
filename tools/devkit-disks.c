@@ -341,6 +341,7 @@ typedef struct
         char   **device_mount_paths;
         uid_t    device_mounted_by_uid;
         gboolean device_presentation_hide;
+        gboolean device_presentation_nopolicy;
         char    *device_presentation_name;
         char    *device_presentation_icon_name;
         guint64  device_size;
@@ -502,6 +503,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->device_mounted_by_uid = g_value_get_uint (value);
         else if (strcmp (key, "device-presentation-hide") == 0)
                 props->device_presentation_hide = g_value_get_boolean (value);
+        else if (strcmp (key, "device-presentation-nopolicy") == 0)
+                props->device_presentation_nopolicy = g_value_get_boolean (value);
         else if (strcmp (key, "device-presentation-name") == 0)
                 props->device_presentation_name = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "device-presentation-icon-name") == 0)
@@ -1000,6 +1003,7 @@ do_show_info (const char *object_path)
         g_print ("\n");
         g_print ("  mounted by uid:          %d\n", props->device_mounted_by_uid);
         g_print ("  presentation hide:       %d\n", props->device_presentation_hide);
+        g_print ("  presentation nopolicy:   %d\n", props->device_presentation_nopolicy);
         g_print ("  presentation name:       %s\n", props->device_presentation_name);
         g_print ("  presentation icon:       %s\n", props->device_presentation_icon_name);
         g_print ("  size:                    %" G_GUINT64_FORMAT "\n", props->device_size);

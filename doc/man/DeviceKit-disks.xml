@@ -43,6 +43,14 @@
       </varlistentry>
 
       <varlistentry>
+        <term><option>DKD_PRESENTATION_NOPOLICY</option></term>
+        <listitem><para>If set to 1 this is a hint to presentation
+            level software that the device should not be automounted
+            or autoassembled (for e.g. components of a multi-disk device).
+        </para></listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>DKD_PRESENTATION_NAME</option></term>
         <listitem><para>The name to user for the device when
         presenting it to the user.

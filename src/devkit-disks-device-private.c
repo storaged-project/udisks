@@ -422,6 +422,16 @@ devkit_disks_device_set_device_presentation_hide (DevkitDisksDevice *device, gbo
 }
 
 void
+devkit_disks_device_set_device_presentation_nopolicy (DevkitDisksDevice *device, gboolean value)
+{
+  if (G_UNLIKELY (device->priv->device_presentation_nopolicy != value))
+    {
+      device->priv->device_presentation_nopolicy = value;
+      emit_changed (device, "device_presentation_nopolicy");
+    }
+}
+
+void
 devkit_disks_device_set_device_presentation_name (DevkitDisksDevice *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->device_presentation_name, value) != 0))
