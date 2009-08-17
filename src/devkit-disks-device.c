@@ -4853,6 +4853,8 @@ devkit_disks_device_filesystem_unmount_authorized_cb (DevkitDisksDaemon     *dae
         GError *error;
         gboolean force_unmount;
         char *mount_path;
+        uid_t uid;
+        gchar uid_buf[32];
 
         mount_path = NULL;
 
@@ -4877,10 +4879,10 @@ devkit_disks_device_filesystem_unmount_authorized_cb (DevkitDisksDaemon     *dae
                 }
         }
 
+        devkit_disks_daemon_local_get_uid (device->priv->daemon, &uid, context);
+        g_snprintf (uid_buf, sizeof uid_buf, "%d", uid);
+
         if (!devkit_disks_mount_file_has_device (device->priv->device_file, NULL, NULL)) {
-                /* Check if the device is referenced in /etc/fstab; if so, attempt to
-                 * unmount the device as uid 0 (since the user has acquired .unmount-others already)
-                 */
                 if (is_device_in_fstab (device, &mount_path)) {
 
                         n = 0;
@@ -4890,10 +4892,14 @@ devkit_disks_device_filesystem_unmount_authorized_cb (DevkitDisksDaemon     *dae
                         else
                                 argv[n++] = "unmount";
                         argv[n++] = device->priv->device_file;
-                        argv[n++] = "0";
+                        argv[n++] = uid_buf;
                         argv[n++] = NULL;
                         goto run_job;
                 }
+
+                /* otherwise the user will have the .unmount-others authorization per the logic in
+                 * devkit_disks_device_filesystem_unmount()
+                 */
         }
 
         mount_path = g_strdup (((gchar **) device->priv->device_mount_paths->pdata)[0]);
@@ -4930,9 +4936,8 @@ devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
                                         char                 **options,
                                         DBusGMethodInvocation *context)
 {
-        uid_t uid;
-        uid_t uid_of_mount;
         const gchar *action_id;
+        uid_t uid_of_mount;
 
         if (!device->priv->device_is_mounted ||
             device->priv->device_mount_paths->len == 0) {
@@ -4942,15 +4947,18 @@ devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
                 goto out;
         }
 
+        /* if device is in /etc/fstab, then we'll run unmount as the calling user */
+        action_id = NULL;
         if (!devkit_disks_mount_file_has_device (device->priv->device_file, &uid_of_mount, NULL)) {
-                uid_of_mount = 0;
-        }
-
-        devkit_disks_daemon_local_get_uid (device->priv->daemon, &uid, context);
-        if (uid_of_mount != uid) {
-                action_id = "org.freedesktop.devicekit.disks.filesystem-unmount-others";
+                if (!is_device_in_fstab (device, NULL)) {
+                        action_id = "org.freedesktop.devicekit.disks.filesystem-unmount-others";
+                }
         } else {
-                action_id = NULL;
+                uid_t uid;
+                devkit_disks_daemon_local_get_uid (device->priv->daemon, &uid, context);
+                if (uid_of_mount != uid) {
+                        action_id = "org.freedesktop.devicekit.disks.filesystem-unmount-others";
+                }
         }
 
         devkit_disks_daemon_local_check_auth (device->priv->daemon,
