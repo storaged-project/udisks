@@ -47,7 +47,6 @@ devkit_disks_daemon_SOURCES = 						\
 	devkit-disks-mount.h		devkit-disks-mount.c		\
 	devkit-disks-mount-monitor.h	devkit-disks-mount-monitor.c	\
 	devkit-disks-inhibitor.h	devkit-disks-inhibitor.c	\
-	devkit-disks-ata-smart-db.h	devkit-disks-ata-smart-db.c	\
 	devkit-disks-poller.h		devkit-disks-poller.c		\
 	main.c								\
 	$(BUILT_SOURCES)
@@ -60,8 +59,6 @@ devkit_disks_daemon_CPPFLAGS = 				\
 	$(NULL)
 
 devkit_disks_daemon_CFLAGS = 				\
-	$(ZLIB_CFLAGS)					\
-	$(SQLITE3_CFLAGS)				\
 	$(LIBATASMART_CFLAGS)				\
 	$(NULL)
 
@@ -70,8 +67,6 @@ devkit_disks_daemon_LDADD = 				\
 	$(DBUS_GLIB_LIBS)				\
 	$(POLKIT_GOBJECT_1_LIBS) 			\
 	$(GUDEV_LIBS)					\
-	$(ZLIB_LIBS)					\
-	$(SQLITE3_LIBS)					\
 	$(LIBATASMART_LIBS)				\
 	$(NULL)
 

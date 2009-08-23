@@ -109,16 +109,6 @@ if test "x$GCC" = "xyes"; then
   changequote([,])dnl
 fi
 
-have_zlib="false"
-AC_CHECK_LIB([z], [compress2], [have_zlib="true"])
-if test x$have_zlib != "xtrue"; then
-  AC_MSG_ERROR([zlib is needed])
-fi
-ZLIB_CFLAGS=
-ZLIB_LIBS="-lz"
-AC_SUBST(ZLIB_CFLAGS)
-AC_SUBST(ZLIB_LIBS)
-
 have_sgutils="false"
 AC_CHECK_LIB([sgutils2], [sg_ll_inquiry], have_sgutils="true")
 if test x$have_sgutils != "xtrue"; then
@@ -129,10 +119,6 @@ SGUTILS_LIBS="-lsgutils2"
 AC_SUBST(SGUTILS_CFLAGS)
 AC_SUBST(SGUTILS_LIBS)
 
-
-PKG_CHECK_MODULES(SQLITE3, [sqlite3])
-AC_SUBST(SQLITE3_CFLAGS)
-AC_SUBST(SQLITE3_LIBS)
 
 PKG_CHECK_MODULES(GUDEV, [gudev-1.0 >= 001])
 AC_SUBST(GUDEV_CFLAGS)

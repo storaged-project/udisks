@@ -1,5 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
+NULL =
+
 INCLUDES = \
 	-I$(top_builddir)/src -I$(top_srcdir)/src \
 	-DPACKAGE_LIBEXEC_DIR=\""$(libexecdir)"\" \
@@ -43,7 +45,12 @@ devkit_disks_CPPFLAGS = 				\
 	$(DISABLE_DEPRECATED)				\
 	$(AM_CPPFLAGS)
 
+devkit_disks_CFLAGS = 					\
+	$(LIBATASMART_CFLAGS)				\
+	$(NULL)
+
 devkit_disks_LDADD = 					\
+	$(LIBATASMART_LIBS)				\
 	$(DBUS_GLIB_LIBS)				\
 	$(POLKIT_DBUS_LIBS)
 

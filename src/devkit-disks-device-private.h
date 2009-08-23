@@ -23,6 +23,7 @@
 
 #include <dbus/dbus-glib.h>
 #include <gudev/gudev.h>
+#include <atasmart.h>
 
 #include "devkit-disks-types.h"
 
@@ -30,30 +31,6 @@ G_BEGIN_DECLS
 
 struct Job;
 typedef struct Job Job;
-
-#define ATA_SMART_DATA_ATTRIBUTE_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray", \
-                                                                      G_TYPE_UINT, \
-                                                                      G_TYPE_STRING, \
-                                                                      G_TYPE_UINT, \
-                                                                      G_TYPE_BOOLEAN, G_TYPE_BOOLEAN, \
-                                                                      G_TYPE_UCHAR, G_TYPE_BOOLEAN, \
-                                                                      G_TYPE_UCHAR, G_TYPE_BOOLEAN, \
-                                                                      G_TYPE_UCHAR, G_TYPE_BOOLEAN, \
-                                                                      G_TYPE_BOOLEAN, G_TYPE_BOOLEAN, \
-                                                                      G_TYPE_UINT, G_TYPE_UINT64, \
-                                                                      dbus_g_type_get_collection ("GArray", G_TYPE_UCHAR), \
-                                                                      G_TYPE_INVALID))
-
-#define ATA_SMART_HISTORICAL_SMART_DATA_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray",   \
-                                                                             G_TYPE_UINT64, \
-                                                                             G_TYPE_BOOLEAN, \
-                                                                             G_TYPE_BOOLEAN, \
-                                                                             G_TYPE_BOOLEAN, \
-                                                                             G_TYPE_BOOLEAN, \
-                                                                             G_TYPE_DOUBLE, \
-                                                                             G_TYPE_UINT64, \
-                                                                             dbus_g_type_get_collection ("GPtrArray", ATA_SMART_DATA_ATTRIBUTE_STRUCT_TYPE), \
-                                                                             G_TYPE_INVALID))
 
 #define LSOF_DATA_STRUCT_TYPE (dbus_g_type_get_struct ("GValueArray",   \
                                                        G_TYPE_UINT,     \
@@ -216,25 +193,10 @@ struct DevkitDisksDevicePrivate
         guint64 linux_md_sync_speed;
 
         gboolean drive_ata_smart_is_available;
-        gboolean drive_ata_smart_is_failing;
-        gboolean drive_ata_smart_is_failing_valid;
-        gboolean drive_ata_smart_has_bad_sectors;
-        gboolean drive_ata_smart_has_bad_attributes;
-        gdouble drive_ata_smart_temperature_kelvin;
-        guint64 drive_ata_smart_power_on_seconds;
         guint64 drive_ata_smart_time_collected;
-        guint drive_ata_smart_offline_data_collection_status;
-        guint drive_ata_smart_offline_data_collection_seconds;
-        guint drive_ata_smart_self_test_execution_status;
-        guint drive_ata_smart_self_test_execution_percent_remaining;
-        gboolean drive_ata_smart_short_and_extended_self_test_available;
-        gboolean drive_ata_smart_conveyance_self_test_available;
-        gboolean drive_ata_smart_start_self_test_available;
-        gboolean drive_ata_smart_abort_self_test_available;
-        guint drive_ata_smart_short_self_test_polling_minutes;
-        guint drive_ata_smart_extended_self_test_polling_minutes;
-        guint drive_ata_smart_conveyance_self_test_polling_minutes;
-        GPtrArray *drive_ata_smart_attributes;
+        SkSmartOverall drive_ata_smart_status;
+        void *drive_ata_smart_blob;
+        gsize drive_ata_smart_blob_size;
 
         /* the following properties are not (yet) exported */
         char *dm_name;
@@ -352,25 +314,9 @@ void devkit_disks_device_set_slaves_objpath (DevkitDisksDevice *device, GStrv va
 void devkit_disks_device_set_holders_objpath (DevkitDisksDevice *device, GStrv value);
 
 void devkit_disks_device_set_drive_ata_smart_is_available (DevkitDisksDevice *device, gboolean value);
-void devkit_disks_device_set_drive_ata_smart_is_failing (DevkitDisksDevice *device, gboolean value);
-void devkit_disks_device_set_drive_ata_smart_is_failing_valid (DevkitDisksDevice *device, gboolean value);
-void devkit_disks_device_set_drive_ata_smart_has_bad_sectors (DevkitDisksDevice *device, gboolean value);
-void devkit_disks_device_set_drive_ata_smart_has_bad_attributes (DevkitDisksDevice *device, gboolean value);
-void devkit_disks_device_set_drive_ata_smart_temperature_kelvin (DevkitDisksDevice *device, gdouble value);
-void devkit_disks_device_set_drive_ata_smart_power_on_seconds (DevkitDisksDevice *device, guint64 value);
 void devkit_disks_device_set_drive_ata_smart_time_collected (DevkitDisksDevice *device, guint64 value);
-void devkit_disks_device_set_drive_ata_smart_offline_data_collection_status (DevkitDisksDevice *device, guint value);
-void devkit_disks_device_set_drive_ata_smart_offline_data_collection_seconds (DevkitDisksDevice *device, guint value);
-void devkit_disks_device_set_drive_ata_smart_self_test_execution_status (DevkitDisksDevice *device, guint value);
-void devkit_disks_device_set_drive_ata_smart_self_test_execution_percent_remaining (DevkitDisksDevice *device, guint value);
-void devkit_disks_device_set_drive_ata_smart_short_and_extended_self_test_available (DevkitDisksDevice *device, gboolean value);
-void devkit_disks_device_set_drive_ata_smart_conveyance_self_test_available (DevkitDisksDevice *device, gboolean value);
-void devkit_disks_device_set_drive_ata_smart_start_self_test_available (DevkitDisksDevice *device, gboolean value);
-void devkit_disks_device_set_drive_ata_smart_abort_self_test_available (DevkitDisksDevice *device, gboolean value);
-void devkit_disks_device_set_drive_ata_smart_short_self_test_polling_minutes (DevkitDisksDevice *device, guint value);
-void devkit_disks_device_set_drive_ata_smart_extended_self_test_polling_minutes (DevkitDisksDevice *device, guint value);
-void devkit_disks_device_set_drive_ata_smart_conveyance_self_test_polling_minutes (DevkitDisksDevice *device, guint value);
-void devkit_disks_device_set_drive_ata_smart_attributes_steal (DevkitDisksDevice *device, GPtrArray *attributes);
+void devkit_disks_device_set_drive_ata_smart_status (DevkitDisksDevice *device, SkSmartOverall value);
+void devkit_disks_device_set_drive_ata_smart_blob_steal (DevkitDisksDevice *device, gchar *blob, gsize blob_size);
 
 
 G_END_DECLS
