@@ -4571,7 +4571,20 @@ devkit_disks_device_filesystem_mount_authorized_cb (DevkitDisksDaemon     *daemo
 
                 mount_point = g_string_free (s, FALSE);
         } else if (device->priv->id_uuid != NULL && strlen (device->priv->id_uuid) > 0) {
-                mount_point = g_build_filename ("/media", device->priv->id_uuid, NULL);
+
+                GString *s;
+
+                s = g_string_new ("/media/");
+                for (n = 0; device->priv->id_uuid[n] != '\0'; n++) {
+                        gint c = device->priv->id_uuid[n];
+                        if (c == '/')
+                                g_string_append_c (s, '_');
+                        else
+                                g_string_append_c (s, c);
+                }
+
+                mount_point = g_string_free (s, FALSE);
+
         } else {
                 mount_point = g_strdup ("/media/disk");
         }
