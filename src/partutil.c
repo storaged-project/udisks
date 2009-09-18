@@ -259,6 +259,8 @@ set_le_guid (guint8 *buf, const char *source)
 	gboolean ret;
 	int n;
 
+        ret = FALSE;
+
 	n = sscanf (source, "%x-%hx-%hx-%02hhx%02hhx-%02hhx%02hhx%02hhx%02hhx%02hhx%02hhx",
 		    &guid->data1,
 		    &guid->data2,
