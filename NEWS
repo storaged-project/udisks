@@ -1,4 +1,42 @@
 -------------------
+DeviceKit-disks 007
+-------------------
+
+DeviceKit-disks is a daemon that provide interfaces to obtain
+information and perform operations on storage devices.
+
+NOTE NOTE NOTE: This is an unstable release of DeviceKit-disks, all
+                API is subject to change.
+
+David Zeuthen (17):
+      Post-release version bump to 007
+      Bug 22914 – Require password to eject a CD or DVD mounted by the same user
+      Rework ATA SMART handling
+      Also be paranoid about the UUID containing '/' characters
+      Use WindowsStyleCaps for property names
+      Bug 23829 – Undefined value in partutil.c
+      Bug 23828 – Undefined value in umount-devkit.c
+      Bug 23827 – Undefined value
+      Bug 23826 – NULL dereference
+      Bug 23825 – Leak in update_info_mount_state
+      Bug 23824 – Unused variable
+      Bug 23823 – NULL dereference
+      Bug 23764 – Small leak in update_drive_properties_from_sysfs
+      Bug 23762 – Fix typo
+      Bug 23579 – Must allow DBus Properties interface for g-d-u to work
+      Bug 23926 – Error creating partition
+      Update NEWS for release
+
+Evan Dandrea (1):
+      Bug 23541 – PartitionTableCreate method times out
+
+Matthias Clasen (1):
+      Bug 23761 – Some leaks
+
+David Zeuthen,
+September 18, 2009
+
+-------------------
 DeviceKit-disks 006
 -------------------
 
