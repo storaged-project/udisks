@@ -6069,6 +6069,22 @@ partition_create_filesystem_create_hook (DBusGMethodInvocation *context,
 }
 
 static void
+partition_create_found_device (DevkitDisksDevice   *device,
+                               CreatePartitionData *data)
+{
+        if (strlen (data->fstype) > 0) {
+                devkit_disks_device_filesystem_create_internal (device,
+                                                                data->fstype,
+                                                                data->fsoptions,
+                                                                partition_create_filesystem_create_hook,
+                                                                NULL,
+                                                                data->context);
+        } else {
+                dbus_g_method_return (data->context, device->priv->object_path);
+        }
+}
+
+static void
 partition_create_device_added_cb (DevkitDisksDaemon *daemon,
                                   const char *object_path,
                                   gpointer user_data)
@@ -6085,16 +6101,7 @@ partition_create_device_added_cb (DevkitDisksDaemon *daemon,
             data->created_size == device->priv->partition_size) {
 
                 /* yay! it is.. now create the file system if requested */
-                if (strlen (data->fstype) > 0) {
-                        devkit_disks_device_filesystem_create_internal (device,
-                                                                        data->fstype,
-                                                                        data->fsoptions,
-                                                                        partition_create_filesystem_create_hook,
-                                                                        NULL,
-                                                                        data->context);
-                } else {
-                        dbus_g_method_return (data->context, device->priv->object_path);
-                }
+                partition_create_found_device (device, data);
 
                 g_signal_handler_disconnect (daemon, data->device_added_signal_handler_id);
                 g_source_remove (data->device_added_timeout_id);
@@ -6177,24 +6184,47 @@ partition_create_completed_cb (DBusGMethodInvocation *context,
                                      "Error creating partition: internal error, expected to find new "
                                      "start and end but m=%d", m);
                 } else {
+                        gboolean found_device;
+                        GList *devices;
+                        GList *l;
+
                         data->created_offset = offset;
                         data->created_size = size;
 
-                        /* sit around and wait for the new partition to appear */
-                        data->device_added_signal_handler_id = g_signal_connect_after (
-                                device->priv->daemon,
-                                "device-added",
-                                (GCallback) partition_create_device_added_cb,
-                                partition_create_data_ref (data));
+                        /* check if the device is already there */
+                        found_device = FALSE;
+                        devices = devkit_disks_daemon_local_get_all_devices (device->priv->daemon);
+                        for (l = devices; l != NULL; l = l->next) {
+                                DevkitDisksDevice *d = DEVKIT_DISKS_DEVICE (l->data);
 
-                        /* set up timeout for error reporting if waiting failed
-                         *
-                         * (the signal handler and the timeout handler share the ref to data
-                         * as one will cancel the other)
-                         */
-                        data->device_added_timeout_id = g_timeout_add (10 * 1000,
-                                                                       partition_create_device_not_seen_cb,
-                                                                       data);
+                                if (d->priv->device_is_partition &&
+                                    strcmp (d->priv->partition_slave, data->device->priv->object_path) == 0 &&
+                                    data->created_offset == d->priv->partition_offset &&
+                                    data->created_size == d->priv->partition_size) {
+                                        /* yay! it is.. now create the file system if requested */
+                                        partition_create_found_device (d, data);
+                                        found_device = TRUE;
+                                        break;
+                                }
+                        }
+
+                        if (!found_device) {
+                                /* otherwise sit around and wait for the new partition to appear */
+                                data->device_added_signal_handler_id = g_signal_connect_after (
+                                                                 device->priv->daemon,
+                                                                 "device-added",
+                                                                 (GCallback) partition_create_device_added_cb,
+                                                                 partition_create_data_ref (data));
+
+                                /* set up timeout for error reporting if waiting failed
+                                 *
+                                 * (the signal handler and the timeout handler share the ref to data
+                                 * as one will cancel the other)
+                                 */
+                                data->device_added_timeout_id = g_timeout_add (10 * 1000,
+                                                                               partition_create_device_not_seen_cb,
+                                                                               data);
+                        }
                 }
         } else {
                 if (job_was_cancelled) {

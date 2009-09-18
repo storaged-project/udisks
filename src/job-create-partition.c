@@ -127,7 +127,6 @@ main (int argc, char **argv)
                 g_printerr ("job-create-partition-size: %" G_GINT64_FORMAT "\n", out_size);
         }
 
-
 out:
         g_strfreev (flags);
         return ret;
