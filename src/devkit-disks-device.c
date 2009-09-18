@@ -8803,6 +8803,7 @@ devkit_disks_daemon_linux_md_start_authorized_cb (DevkitDisksDaemon     *daemon,
                         if (uuid == NULL) {
                                 throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
                                              "no uuid for one of the components");
+                                goto out;
                         }
                 } else {
                         const char *this_uuid;
