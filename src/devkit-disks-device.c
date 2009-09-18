@@ -1870,6 +1870,7 @@ update_drive_properties_from_sysfs (DevkitDisksDevice *device)
                                         if (device->priv->drive_revision == NULL) {
                                                 q = _dupv8 (revision);
                                                 devkit_disks_device_set_drive_revision (device, q);
+                                                g_free (q);
                                         }
                                         g_free (revision);
                                 }
