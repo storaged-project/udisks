@@ -3360,6 +3360,8 @@ devkit_disks_device_local_partitions_are_busy (DevkitDisksDevice *device)
                 }
         }
 
+        g_list_free (devices);
+
         return ret;
 }
 
@@ -3388,6 +3390,8 @@ devkit_disks_device_local_logical_partitions_are_busy (DevkitDisksDevice *device
                         }
                 }
         }
+
+        g_list_free (devices);
 
         return ret;
 }
@@ -3591,6 +3595,8 @@ devkit_disks_device_changed (DevkitDisksDevice *device, GUdevDevice *d, gboolean
                                 force_removal (d, NULL, NULL);
                         }
                 }
+
+                g_list_free (devices);
         }
 out:
         return keep_device;
@@ -6790,6 +6796,9 @@ find_cleartext_device (DevkitDisksDevice *device)
         }
 
 out:
+
+        g_list_free (devices);
+
         return ret;
 }
 
@@ -8719,6 +8728,8 @@ linux_md_start_completed_cb (DBusGMethodInvocation *context,
                         }
                 }
 
+                g_list_free (devices);
+
                 if (objpath != NULL) {
                         dbus_g_method_return (context, objpath);
                 } else {
@@ -9046,6 +9057,8 @@ linux_md_create_completed_cb (DBusGMethodInvocation *context,
                                 break;
                         }
                 }
+
+                g_list_free (devices);
 
                 if (objpath != NULL) {
                         dbus_g_method_return (context, objpath);
