@@ -6605,8 +6605,8 @@ partition_table_create_device_changed_cb (DevkitDisksDaemon *daemon,
 
         device = devkit_disks_daemon_local_find_by_object_path (daemon, object_path);
         if (device == data->device) {
-
-                if (g_strcmp0 (device->priv->partition_table_scheme, data->scheme) == 0) {
+                if (g_strcmp0 (device->priv->partition_table_scheme, data->scheme) == 0 ||
+                    (device->priv->partition_table_scheme == NULL && g_strcmp0 (data->scheme, "none") == 0)) {
                         dbus_g_method_return (data->context);
 
                         g_signal_handler_disconnect (daemon, data->device_changed_signal_handler_id);
