@@ -197,7 +197,6 @@ main (int argc, char *argv[])
                 gchar *uuid;
                 gchar **flags;
                 gchar *flags_combined;
-                guint64 offset;
                 guint64 size;
 
                 /* partition */
@@ -217,7 +216,6 @@ main (int argc, char *argv[])
                 label = part_table_entry_get_label (partition_table_for_entry, entry_num);
                 uuid = part_table_entry_get_uuid (partition_table_for_entry, entry_num);
                 flags = part_table_entry_get_flags (partition_table_for_entry, entry_num);
-                offset = part_table_entry_get_offset (partition_table_for_entry, entry_num);
                 size = part_table_entry_get_size (partition_table_for_entry, entry_num);
 
                 flags_combined = g_strjoinv (" ", flags);
