@@ -2687,7 +2687,6 @@ static gboolean
 update_info_mount_state (DevkitDisksDevice *device)
 {
         DevkitDisksMountMonitor *monitor;
-        DevkitDisksMount *mount;
         GList *mounts;
         gboolean was_mounted;
 
@@ -2710,7 +2709,6 @@ update_info_mount_state (DevkitDisksDevice *device)
                 guint n;
                 gchar **mount_paths;
 
-                mount = g_object_ref (mounts->data);
                 mount_paths = g_new0 (gchar *, g_list_length (mounts) + 1);
                 for (l = mounts, n = 0; l != NULL; l = l->next, n++) {
                         mount_paths[n] = g_strdup (devkit_disks_mount_get_mount_path (DEVKIT_DISKS_MOUNT (l->data)));
