@@ -9352,7 +9352,6 @@ force_unmount (DevkitDisksDevice        *device,
 {
         int n;
         char *argv[16];
-        GError *error;
         const gchar *mount_path;
 
         mount_path = ((gchar **) device->priv->device_mount_paths->pdata)[0];
@@ -9364,7 +9363,6 @@ force_unmount (DevkitDisksDevice        *device,
         argv[n++] = (gchar *) mount_path;
         argv[n++] = NULL;
 
-        error = NULL;
         if (!job_new (NULL,
                       "ForceUnmount",
                       FALSE,
@@ -9374,8 +9372,7 @@ force_unmount (DevkitDisksDevice        *device,
                       force_unmount_completed_cb,
                       force_unmount_data_new (mount_path, callback, user_data),
                       (GDestroyNotify) force_unmount_data_unref)) {
-                g_warning ("Couldn't spawn unmount for force unmounting: %s", error->message);
-                g_error_free (error);
+                g_warning ("Couldn't spawn unmount for force unmounting %s", mount_path);
                 if (callback != NULL)
                         callback (device, FALSE, user_data);
         }
@@ -9446,7 +9443,6 @@ force_luks_teardown_cleartext_done (DevkitDisksDevice *device,
 {
         int n;
         char *argv[16];
-        GError *error;
         ForceLuksTeardownData *data = user_data;
 
         if (!success) {
@@ -9467,7 +9463,6 @@ force_luks_teardown_cleartext_done (DevkitDisksDevice *device,
 
         //g_debug ("doing cryptsetup luksClose %s", data->dm_name);
 
-        error = NULL;
         if (!job_new (NULL,
                       "ForceLuksTeardown",
                       FALSE,
@@ -9478,8 +9473,7 @@ force_luks_teardown_cleartext_done (DevkitDisksDevice *device,
                       data,
                       (GDestroyNotify) force_luks_teardown_data_unref)) {
 
-                g_warning ("Couldn't spawn cryptsetup for force teardown: %s", error->message);
-                g_error_free (error);
+                g_warning ("Couldn't spawn cryptsetup for force teardown for device %s", data->dm_name);
                 if (data->fr_callback != NULL)
                         data->fr_callback (data->device, FALSE, data->fr_user_data);
 
