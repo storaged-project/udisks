@@ -87,6 +87,7 @@ main (int argc, char **argv)
 
         ret = 1;
         bus = NULL;
+        path = NULL;
         disks_proxy = NULL;
 
         g_type_init ();
