@@ -1779,7 +1779,7 @@ update_drive_properties_from_sysfs (DevkitDisksDevice *device)
                                         g_strstrip (model);
                                         /* Don't overwrite what we set earlier from ID_MODEL */
                                         if (device->priv->drive_model == NULL) {
-                                                q = _dupv8 (vendor);
+                                                q = _dupv8 (model);
                                                 devkit_disks_device_set_drive_model (device, q);
                                                 g_free (q);
                                         }
