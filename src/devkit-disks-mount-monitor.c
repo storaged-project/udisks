@@ -388,6 +388,8 @@ devkit_disks_mount_monitor_ensure (DevkitDisksMountMonitor *monitor)
                                 }
 
                                 dev = statbuf.st_rdev;
+                        } else {
+                                continue;
                         }
                 } else {
                         dev = makedev (major, minor);
