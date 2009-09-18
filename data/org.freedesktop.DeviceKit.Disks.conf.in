@@ -11,5 +11,14 @@
 
   <policy context="default">
     <allow send_destination="org.freedesktop.DeviceKit.Disks"/>
+
+    <allow send_destination="org.freedesktop.DeviceKit.Disks"
+           send_interface="org.freedesktop.DBus.Properties"/>
+    <allow send_destination="org.freedesktop.DeviceKit.Disks"
+           send_interface="org.freedesktop.DBus.Introspectable"/>
+    <allow send_destination="org.freedesktop.DeviceKit.Disks"
+           send_interface="org.freedesktop.DeviceKit.Disks"/>
+    <allow send_destination="org.freedesktop.DeviceKit.Disks"
+           send_interface="org.freedesktop.DeviceKit.Disks.Device"/>
   </policy>
 </busconfig>
