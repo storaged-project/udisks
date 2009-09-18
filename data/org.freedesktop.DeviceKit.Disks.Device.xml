@@ -42,11 +42,11 @@
           hardware and operating system capabilities evolve.  Care
           has been taken to namespace values so applications can
           properly fall back (see e.g.
-          <doc:ref type="property" to="Device:drive-media-compatibility">drive-media-compatibility</doc:ref>)
+          <doc:ref type="property" to="Device:DriveMediaCompatibility">DriveMediaCompatibility</doc:ref>)
           and export both general and specific properties (such as
-          <doc:ref type="property" to="Device:id-usage">id-usage</doc:ref>
+          <doc:ref type="property" to="Device:IdUsage">IdUsage</doc:ref>
           vs.
-          <doc:ref type="property" to="Device:id-type">id-type</doc:ref>).
+          <doc:ref type="property" to="Device:IdType">IdType</doc:ref>).
           In general an empty string in a property means not
           set. Since the empty string is not a valid object path we
           use the "/" to mean "not set" for object paths.
@@ -136,13 +136,13 @@
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
               <doc:definition>If the operation is on a
-                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                <doc:ref type="property" to="Device:DeviceIsSystemInternal">non-system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.change-system-internal</doc:term>
               <doc:definition>If the operation is on a
-                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                <doc:ref type="property" to="Device:DeviceIsSystemInternal">system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
           </doc:list>
@@ -176,13 +176,13 @@
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
               <doc:definition>If the operation is on a
-                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                <doc:ref type="property" to="Device:DeviceIsSystemInternal">non-system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.change-system-internal</doc:term>
               <doc:definition>If the operation is on a
-                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                <doc:ref type="property" to="Device:DeviceIsSystemInternal">system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
           </doc:list>
@@ -315,13 +315,13 @@
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
               <doc:definition>If the operation is on a
-                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                <doc:ref type="property" to="Device:DeviceIsSystemInternal">non-system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.change-system-internal</doc:term>
               <doc:definition>If the operation is on a
-                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                <doc:ref type="property" to="Device:DeviceIsSystemInternal">system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
           </doc:list>
@@ -375,7 +375,7 @@
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
               <doc:definition>If the operation is on a
-                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                <doc:ref type="property" to="Device:DeviceIsSystemInternal">non-system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
             <doc:item>
@@ -440,7 +440,7 @@
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
               <doc:definition>If the operation is on a
-                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                <doc:ref type="property" to="Device:DeviceIsSystemInternal">non-system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
             <doc:item>
@@ -485,13 +485,13 @@
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
               <doc:definition>If the operation is on a
-                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                <doc:ref type="property" to="Device:DeviceIsSystemInternal">non-system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.change-system-internal</doc:term>
               <doc:definition>If the operation is on a
-                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                <doc:ref type="property" to="Device:DeviceIsSystemInternal">system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
           </doc:list>
@@ -536,13 +536,13 @@
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.filesystem-mount</doc:term>
               <doc:definition>If the operation is on a
-                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                <doc:ref type="property" to="Device:DeviceIsSystemInternal">non-system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.filesystem-mount-system-internal</doc:term>
               <doc:definition>If the operation is on a
-                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                <doc:ref type="property" to="Device:DeviceIsSystemInternal">system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
           </doc:list>
@@ -618,13 +618,13 @@
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.filesystem-check</doc:term>
               <doc:definition>To check a file system on a
-                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                <doc:ref type="property" to="Device:DeviceIsSystemInternal">non-system-internal</doc:ref>
                 device.</doc:definition>
             </doc:item>
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.filesystem-check-system-internal</doc:term>
               <doc:definition>To check a file system on a
-                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                <doc:ref type="property" to="Device:DeviceIsSystemInternal">system-internal</doc:ref>
                 device.</doc:definition>
             </doc:item>
           </doc:list>
@@ -662,13 +662,13 @@
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.filesystem-lsof</doc:term>
               <doc:definition>To check a file system on a
-                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                <doc:ref type="property" to="Device:DeviceIsSystemInternal">non-system-internal</doc:ref>
                 device.</doc:definition>
             </doc:item>
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.filesystem-lsof-system-internal</doc:term>
               <doc:definition>To check a file system on a
-                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                <doc:ref type="property" to="Device:DeviceIsSystemInternal">system-internal</doc:ref>
                 device.</doc:definition>
             </doc:item>
           </doc:list>
@@ -777,13 +777,13 @@
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
               <doc:definition>If the operation is on a
-                <doc:ref type="property" to="Device:device-is-system-internal">non-system-internal</doc:ref>
+                <doc:ref type="property" to="Device:DeviceIsSystemInternal">non-system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
             <doc:item>
               <doc:term>org.freedesktop.devicekit.disks.change-system-internal</doc:term>
               <doc:definition>If the operation is on a
-                <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
+                <doc:ref type="property" to="Device:DeviceIsSystemInternal">system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
           </doc:list>
@@ -929,7 +929,7 @@
             Checks a Linux md RAID array and returns the number of
             sectors/page with errors found/fixed. This can only be done if the
             property
-            <doc:ref type="property" to="Device:linux-md-sync-action">linux-md-sync-action</doc:ref>
+            <doc:ref type="property" to="Device:LinuxMdSyncAction">LinuxMdSyncAction</doc:ref>
             is <quote>idle</quote>.
           </doc:para>
         </doc:description>
@@ -1024,7 +1024,7 @@
         <doc:description>
           <doc:para>
             Polls the drive for media. This is typically only useful when the
-            <doc:ref type="property" to="Device:device-is-media-change-detected">device-is-media-change-detected</doc:ref> property
+            <doc:ref type="property" to="Device:DeviceIsMediaChangeDetected">DeviceIsMediaChangeDetected</doc:ref> property
             is FALSE.
           </doc:para>
         </doc:description>
@@ -1090,7 +1090,7 @@
             Detachs the device by e.g. powering down the physical port
             it is connected to. Note that not all devices or ports are
             capable of this. Check the
-            <doc:ref type="property" to="Device:drive-can-detach">drive-can-detach</doc:ref>
+            <doc:ref type="property" to="Device:DriveCanDetach">DriveCanDetach</doc:ref>
             property before attempting to invoke this method.
           </doc:para>
         </doc:description>
@@ -1142,7 +1142,7 @@
           <doc:para>
             Configures spindown timeout for the drive.
             Check the
-            <doc:ref type="property" to="Device:drive-can-spindown">drive-can-spindown</doc:ref>
+            <doc:ref type="property" to="Device:DriveCanSpindown">DriveCanSpindown</doc:ref>
             property before attempting to invoke this method.
             Caution should be exercised when using this method, see
             the SPINNING DOWN DISKS section in the
@@ -1323,53 +1323,53 @@
 
     <!-- ************************************************************ -->
 
-    <property name="native-path" type="s" access="read">
+    <property name="NativePath" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             OS specific native path of the device. On Linux this is the sysfs path, for example <doc:tt>/sys/devices/pci0000:00/0000:00:1f.2/host2/target2:0:1/2:0:1:0/block/sda</doc:tt>.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-detection-time" type="t" access="read">
+    <property name="DeviceDetectionTime" type="t" access="read">
       <doc:doc><doc:description><doc:para>
             The point in time (seconds since the Epoch Jan 1, 1970 0:00 UTC) when the device
             was detected by the daemon.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-media-detection-time" type="t" access="read">
+    <property name="DeviceMediaDetectionTime" type="t" access="read">
       <doc:doc><doc:description><doc:para>
             The point in time (seconds since the Epoch Jan 1, 1970 0:00 UTC) when the
             media currently in the device was detected by the daemon or 0 if the
             device has no media.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-major" type="x" access="read">
+    <property name="DeviceMajor" type="x" access="read">
       <doc:doc><doc:description><doc:para>
             Major for the device or -1 if not set.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-minor" type="x" access="read">
+    <property name="DeviceMinor" type="x" access="read">
       <doc:doc><doc:description><doc:para>
             Major for the device or -1 if not set.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-file" type="s" access="read">
+    <property name="DeviceFile" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             UNIX special device file for device. Example: <doc:tt>/dev/sda</doc:tt>.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-file-by-id" type="as" access="read">
+    <property name="DeviceFileById" type="as" access="read">
       <doc:doc><doc:description><doc:para>
             Symlinks to UNIX special device file that are stable and uniquely identifies the device.
             Example: <doc:tt>/dev/disk/by-id/scsi-SATA_ST910021AS_3MH05AVA</doc:tt>,
             <doc:tt>/dev/disk/by-id/ata-ST910021AS_3MH05AVA</doc:tt>.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-file-by-path" type="as" access="read">
+    <property name="DeviceFileByPath" type="as" access="read">
       <doc:doc><doc:description><doc:para>
             Symlinks to UNIX special device file that uniquely identifies the port/partition the device
             is plugged into. Example: <doc:tt>/dev/disk/by-path/pci-0000:00:1f.2-scsi-0:0:1:0</doc:tt>
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-is-system-internal" type="b" access="read">
+    <property name="DeviceIsSystemInternal" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE if the device is considered system internal. Typically, system internal devices
             include non-removable internal hard disks and other drives that are not easily added/removed
@@ -1377,32 +1377,32 @@
             and devices connected via Firewire, USB, eSATA and SDIO are considered external.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-is-partition" type="b" access="read">
+    <property name="DeviceIsPartition" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE if the device is a partition. See the properties starting with partition- for details.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-is-partition-table" type="b" access="read">
+    <property name="DeviceIsPartitionTable" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE if the device contains a partition table. See partition- properties for details.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-is-removable" type="b" access="read">
+    <property name="DeviceIsRemovable" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE if the device contains removable media.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-is-media-available" type="b" access="read">
+    <property name="DeviceIsMediaAvailable" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE if media is available in the device.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-is-media-change-detected" type="b" access="read">
+    <property name="DeviceIsMediaChangeDetected" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE if media changes are detected.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-is-media-change-detection-polling" type="b" access="read">
+    <property name="DeviceIsMediaChangeDetectionPolling" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE if media changes are detected through the host
             polling the device, e.g. waking up every two seconds to
@@ -1412,140 +1412,140 @@
             polling.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-is-media-change-detection-inhibitable" type="b" access="read">
+    <property name="DeviceIsMediaChangeDetectionInhibitable" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE if it is possible to inhibit media detection on the device (to avoid keeping the device in a high power state and waking up the host).
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-is-media-change-detection-inhibited" type="b" access="read">
+    <property name="DeviceIsMediaChangeDetectionInhibited" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE if media detection is inhibited (to avoid keeping the device in a high power state and waking up the host).
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-is-read-only" type="b" access="read">
+    <property name="DeviceIsReadOnly" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE if the device read-only.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-is-drive" type="b" access="read">
+    <property name="DeviceIsDrive" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE if the device is a drive.
             See the drive- properties for details.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-is-optical-disc" type="b" access="read">
+    <property name="DeviceIsOpticalDisc" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE if the device is an optical drive and an optical disc is inserted.
             See the optical-disc- properties for details.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-is-mounted" type="b" access="read">
+    <property name="DeviceIsMounted" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE if the device is mounted.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-mount-paths" type="as" access="read">
+    <property name="DeviceMountPaths" type="as" access="read">
       <doc:doc><doc:description><doc:para>
             A list of paths in the root namespace where the root of the device is mounted.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-mounted">device-is-mounted</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsMounted">DeviceIsMounted</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-mounted-by-uid" type="u" access="read">
+    <property name="DeviceMountedByUid" type="u" access="read">
       <doc:doc><doc:description><doc:para>
             The UNIX user id of the user who mounted the device. Set to 0 if
             not mounted by DeviceKit-disks.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-mounted">device-is-mounted</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsMounted">DeviceIsMounted</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-is-luks" type="b" access="read">
+    <property name="DeviceIsLuks" type="b" access="read">
       <doc:doc><doc:description><doc:para>
-            TRUE if device is an LUKS encrypted device. See luks- properties for details.
+            TRUE if device is an LUKS encrypted device. See Lucks properties for details.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-is-luks-cleartext" type="b" access="read">
+    <property name="DeviceIsLuksCleartext" type="b" access="read">
       <doc:doc><doc:description><doc:para>
-            TRUE if device is a cleartext device backed by a LUKS encrypted device. See luks-cleartext- properties for details.
+            TRUE if device is a cleartext device backed by a LUKS encrypted device. See LucksCleartext properties for details.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-is-linux-md-component" type="b" access="read">
+    <property name="DeviceIsLinuxMdComponent" type="b" access="read">
       <doc:doc><doc:description><doc:para>
-            TRUE if the device is a Linux md RAID component. See linux-md-component- properties for details.
+            TRUE if the device is a Linux md RAID component. See LinuxMdComponent properties for details.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-is-linux-md" type="b" access="read">
+    <property name="DeviceIsLinuxMd" type="b" access="read">
       <doc:doc><doc:description><doc:para>
-            TRUE if the device is a Linux md RAID array. See linux-md- properties for details.
+            TRUE if the device is a Linux md RAID array. See LinuxMd properties for details.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-size" type="t" access="read">
+    <property name="DeviceSize" type="t" access="read">
       <doc:doc><doc:description><doc:para>
             The size of the device in bytes.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-block-size" type="t" access="read">
+    <property name="DeviceBlockSize" type="t" access="read">
       <doc:doc><doc:description><doc:para>
             The block size of the device in bytes.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-presentation-hide" type="b" access="read">
+    <property name="DevicePresentationHide" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             A hint if the device should be hidden from the user interface.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-presentation-nopolicy" type="b" access="read">
+    <property name="DevicePresentationNopolicy" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             A hint if the device (or e.g. the multi-disk device that the device is
             part of) shouldn't be automatically mounted / assembled.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-presentation-name" type="s" access="read">
+    <property name="DevicePresentationName" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The name to use when presenting the device to an end user.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="device-presentation-icon-name" type="s" access="read">
+    <property name="DevicePresentationIconName" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The icon to use when presenting the device to an end user. If set, must be a name
             following the freedesktop.org icon theme specification.
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <property name="job-in-progress" type="b" access="read">
+    <property name="JobInProgress" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             The job properties specify if a job initiated via the
             DeviceKit-disks daemon is currently in progress.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="job-id" type="s" access="read">
+    <property name="JobId" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             This property is used to identify the job and maps 1-1
             with the names of the method calls on this interface,
             e.g. 'FilesystemCreate' and so on.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="job-initiated-by-uid" type="u" access="read">
+    <property name="JobInitiatedByUid" type="u" access="read">
       <doc:doc><doc:description><doc:para>
             The UNIX user id of the user who initiated the job.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="job-is-cancellable" type="b" access="read">
+    <property name="JobIsCancellable" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             Whether the job can be cancelled
             using <doc:ref type="method"
             to="Device.JobCancel">JobCancel()</doc:ref> method.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="job-percentage" type="d" access="read">
+    <property name="JobPercentage" type="d" access="read">
       <doc:doc><doc:description><doc:para>
             Percentage completed of the job (between 0 and 100, negative if unknown).
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <property name="id-usage" type="s" access="read">
+    <property name="IdUsage" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             A result of probing for signatures on the block device;
             known values are:
@@ -1577,12 +1577,12 @@
             was detected.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="id-type" type="s" access="read">
+    <property name="IdType" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             This property contains more information about the result
             of probing the block device. It's value depends of the
             value the
-            <doc:ref type="property" to="Device:id-usage">id-usage</doc:ref>
+            <doc:ref type="property" to="Device:IdUsage">IdUsage</doc:ref>
             property:
             <doc:list>
               <doc:item>
@@ -1628,209 +1628,209 @@
             </doc:list>
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="id-version" type="s" access="read">
+    <property name="IdVersion" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The version of the
             detected file system (or other identified data structure) identified by the
-            <doc:ref type="property" to="Device:id-usage">id-usage</doc:ref>
+            <doc:ref type="property" to="Device:IdUsage">IdUsage</doc:ref>
             and
-            <doc:ref type="property" to="Device:id-usage">id-type</doc:ref>
+            <doc:ref type="property" to="Device:IdType">IdType</doc:ref>
             properties.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="id-uuid" type="s" access="read">
+    <property name="IdUuid" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The UUID (universally unique identifier) of the
             detected file system (or other identified data structure) identified by the
-            <doc:ref type="property" to="Device:id-usage">id-usage</doc:ref>
+            <doc:ref type="property" to="Device:IdUsage">IdUsage</doc:ref>
             and
-            <doc:ref type="property" to="Device:id-usage">id-type</doc:ref>
+            <doc:ref type="property" to="Device:IdUsage">IdType</doc:ref>
             properties.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="id-label" type="s" access="read">
+    <property name="IdLabel" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The user-visible label of the
             detected file system (or other identified data structure) identified by the
-            <doc:ref type="property" to="Device:id-usage">id-usage</doc:ref>
+            <doc:ref type="property" to="Device:IdUsage">IdUsage</doc:ref>
             and
-            <doc:ref type="property" to="Device:id-usage">id-type</doc:ref>
+            <doc:ref type="property" to="Device:IdUsage">IdType</doc:ref>
             properties.
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <property name="luks-holder" type="o" access="read">
+    <property name="LuksHolder" type="o" access="read">
       <doc:doc><doc:description><doc:para>
             The cleartext device that is using the LUKS device.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-luks-cleartext">device-is-luks</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLuksCleartext">DeviceIsLuks</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <property name="luks-cleartext-slave" type="o" access="read">
+    <property name="LuksCleartextSlave" type="o" access="read">
       <doc:doc><doc:description><doc:para>
             The encrypted LUKS device backing a crypto cleartext device.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-luks-cleartext">device-is-luks-cleartext</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLuksCleartext">DeviceIsLuksCleartext</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="luks-cleartext-unlocked-by-uid" type="u" access="read">
+    <property name="LuksCleartextUnlockedByUid" type="u" access="read">
       <doc:doc><doc:description><doc:para>
             The UNIX user id of the user who unlocked the LUKS device. Set to 0 if
             not unlocked by DeviceKit-disks.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-luks-cleartext">device-is-luks-cleartext</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLuksCleartext">DeviceIsLuksCleartext</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <property name="partition-slave" type="o" access="read">
+    <property name="PartitionSlave" type="o" access="read">
       <doc:doc><doc:description><doc:para>
             The object path of the partition table the partition is part of.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsPartition">DeviceIsPartition</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="partition-scheme" type="s" access="read">
+    <property name="PartitionScheme" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The scheme of the partition table this partition is part of.
             See the <doc:tt>scheme</doc:tt> parameter of the
             <doc:ref type="method" to="Device.PartitionTableCreate">PartitionTableCreate()</doc:ref> method
             for details on known partitioning schemes.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsPartition">DeviceIsPartition</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="partition-type" type="s" access="read">
+    <property name="PartitionType" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The type of the partition.
             See the <doc:tt>type</doc:tt> parameter of the
             <doc:ref type="method" to="Device.PartitionCreate">PartitionCreate()</doc:ref> method
             for details on known partitioning types.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsPartition">DeviceIsPartition</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="partition-label" type="s" access="read">
+    <property name="PartitionLabel" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The label of the partition.
             See the <doc:tt>label</doc:tt> parameter of the
             <doc:ref type="method" to="Device.PartitionCreate">PartitionCreate()</doc:ref> method
             for details on partition labels.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsPartition">DeviceIsPartition</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="partition-uuid" type="s" access="read">
+    <property name="PartitionUuid" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The UUID of the partition.
             See the <doc:tt>uuid</doc:tt> parameter of the
             <doc:ref type="method" to="Device.PartitionCreate">PartitionCreate()</doc:ref> method
             for details on partition UUID's.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsPartition">DeviceIsPartition</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="partition-flags" type="as" access="read">
+    <property name="PartitionFlags" type="as" access="read">
       <doc:doc><doc:description><doc:para>
             Partition flags.
             See the <doc:tt>flags</doc:tt> parameter of the
             <doc:ref type="method" to="Device.PartitionCreate">PartitionCreate()</doc:ref> method
             for details on partition flags.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsPartition">DeviceIsPartition</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="partition-number" type="i" access="read">
+    <property name="PartitionNumber" type="i" access="read">
       <doc:doc><doc:description><doc:para>
             Number of the partition. Typically partition numbers start at 1 and are identical
             to the numbers used by the kernel. Note that partitions may not be sequentially
             numbered.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsPartition">DeviceIsPartition</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="partition-offset" type="t" access="read">
+    <property name="PartitionOffset" type="t" access="read">
       <doc:doc><doc:description><doc:para>
             Offset in bytes where the partition is located on the enclosing partition table device (see
-            <doc:ref type="property" to="Device:device-is-partition">partition-slave</doc:ref>).
+            <doc:ref type="property" to="Device:DeviceIsPartition">PartitionSlave</doc:ref>).
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsPartition">DeviceIsPartition</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="partition-size" type="t" access="read">
+    <property name="PartitionSize" type="t" access="read">
       <doc:doc><doc:description><doc:para>
             Size of the partition in bytes.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-partition">device-is-partition</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsPartition">DeviceIsPartition</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <property name="partition-table-scheme" type="s" access="read">
+    <property name="PartitionTableScheme" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The scheme of the partition table.
             See the <doc:tt>scheme</doc:tt> parameter of the
             <doc:ref type="method" to="Device.PartitionTableCreate">PartitionTableCreate()</doc:ref> method
             for details on known partitioning schemes.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-partition-table">device-is-partition-table</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsPartitionTable">DeviceIsPartitionTable</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="partition-table-count" type="i" access="read">
+    <property name="PartitionTableCount" type="i" access="read">
       <doc:doc><doc:description><doc:para>
             Number of partitions in the partition table.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-partition-table">device-is-partition-table</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsPartitionTable">DeviceIsPartitionTable</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <property name="drive-vendor" type="s" access="read">
+    <property name="DriveVendor" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             Name of the vendor of the drive, for example <doc:tt>MATSHITA</doc:tt> or <doc:tt>BELKIN</doc:tt>.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsDrive">DeviceIsDrive</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="drive-model" type="s" access="read">
+    <property name="DriveModel" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             Name of the model of the drive, for example <doc:tt>ST910021AS</doc:tt> or <doc:tt>USB 2 HS-CF</doc:tt>.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsDrive">DeviceIsDrive</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="drive-revision" type="s" access="read">
+    <property name="DriveRevision" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             Revision of the drive, for example <doc:tt>3.07</doc:tt> or <doc:tt>1.95</doc:tt>.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsDrive">DeviceIsDrive</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="drive-serial" type="s" access="read">
+    <property name="DriveSerial" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The serial number of the drive or blank if unknown.
             Examples: <doc:tt>3MH05AVA</doc:tt>, <doc:tt>A0000001B900</doc:tt>.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsDrive">DeviceIsDrive</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="drive-connection-interface" type="s" access="read">
+    <property name="DriveConnectionInterface" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The interface through which the drive is connected. Known values include:
 
@@ -1877,20 +1877,20 @@
               </doc:item>
             </doc:list>
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsDrive">DeviceIsDrive</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="drive-connection-speed" type="t" access="read">
+    <property name="DriveConnectionSpeed" type="t" access="read">
       <doc:doc><doc:description><doc:para>
             The nominal speed of the connection interface in bits per
             second. If unknown this property is set to 0.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsDrive">DeviceIsDrive</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="drive-media-compatibility" type="as" access="read">
+    <property name="DriveMediaCompatibility" type="as" access="read">
       <doc:doc><doc:description><doc:para>
             An array of media types that can be used in the
             drive. This property is sometimes set using quirk files if
@@ -2024,123 +2024,123 @@
             </doc:list>
           </doc:para><doc:para>
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsDrive">DeviceIsDrive</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="drive-media" type="s" access="read">
+    <property name="DriveMedia" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The type of media currently in the drive (blank if no media is available). Known
             values include the ones listed for the
-            <doc:ref type="property" to="Device:drive-media-compatibility">drive-media-compatibility</doc:ref>
+            <doc:ref type="property" to="Device:DriveMediaCompatibility">DriveMediaCompatibility</doc:ref>
             property.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsDrive">DeviceIsDrive</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="drive-is-media-ejectable" type="b" access="read">
+    <property name="DriveIsMediaEjectable" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE only if the media can be physically ejected by issuing a command
             from the host to the drive (e.g. optical and Zip drives).
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsDrive">DeviceIsDrive</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="drive-can-detach" type="b" access="read">
+    <property name="DriveCanDetach" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE only if the drive is capable of being detached by
             e.g. powering down the port it is connected to.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsDrive">DeviceIsDrive</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="drive-can-spindown" type="b" access="read">
+    <property name="DriveCanSpindown" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE only if the drive is capable of being put into
             a standby mode (typically powering down the spindle motor).
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsDrive">DeviceIsDrive</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="drive-is-rotational" type="b" access="read">
+    <property name="DriveIsRotational" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE if the disk uses rotational media, such as a hard disk.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-drive">device-is-drive</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsDrive">DeviceIsDrive</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <property name="optical-disc-is-blank" type="b" access="read">
+    <property name="OpticalDiscIsBlank" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE only if the disc is appendable.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-optical-disc">device-is-optical-disc</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsOpticalDisc">DeviceIsOpticalDisc</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="optical-disc-is-appendable" type="b" access="read">
+    <property name="OpticalDiscIsAppendable" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE only if the disc is appendable.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-optical-disc">device-is-optical-disc</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsOpticalDisc">DeviceIsOpticalDisc</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="optical-disc-is-closed" type="b" access="read">
+    <property name="OpticalDiscIsClosed" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE only if the disc is appendable.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-optical-disc">device-is-optical-disc</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsOpticalDisc">DeviceIsOpticalDisc</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="optical-disc-num-tracks" type="u" access="read">
+    <property name="OpticalDiscNumTracks" type="u" access="read">
       <doc:doc><doc:description><doc:para>
             Number of tracks on the disc.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-optical-disc">device-is-optical-disc</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsOpticalDisc">DeviceIsOpticalDisc</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="optical-disc-num-audio-tracks" type="u" access="read">
+    <property name="OpticalDiscNumAudioTracks" type="u" access="read">
       <doc:doc><doc:description><doc:para>
             Number of audio tracks on the disc.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-optical-disc">device-is-optical-disc</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsOpticalDisc">DeviceIsOpticalDisc</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="optical-disc-num-sessions" type="u" access="read">
+    <property name="OpticalDiscNumSessions" type="u" access="read">
       <doc:doc><doc:description><doc:para>
             Number of sessions on the disc.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-optical-disc">device-is-optical-disc</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsOpticalDisc">DeviceIsOpticalDisc</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
 
     <!-- **************************************************************************************************** -->
 
-    <property name="drive-ata-smart-is-available" type="b" access="read">
+    <property name="DriveAtaSmartIsAvailable" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE if the disk is capable of reporting SMART data, FALSE otherwise.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="drive-ata-smart-time-collected" type="t" access="read">
+    <property name="DriveAtaSmartTimeCollected" type="t" access="read">
       <doc:doc><doc:description><doc:para>
             The point in time (seconds since the Epoch Jan 1, 1970
             0:00 UTC) when ATA SMART data was collected.
             This property is only valid if
-            <doc:ref type="property" to="Device:drive-ata-smart-time-collected">drive-ata-smart-time-collected</doc:ref>
+            <doc:ref type="property" to="Device:DriveAtaSmartTimeCollected">DriveAtaSmartTimeCollected</doc:ref>
             is greater than zero.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="drive-ata-smart-status" type="s" access="read">
+    <property name="DriveAtaSmartStatus" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The overall assessment for the disk. Is one of the following strings
             <quote>GOOD</quote>,
@@ -2151,23 +2151,23 @@
             <quote>BAD_STATUS</quote> (Smart Self Assessment negative)
             or empty if some error occured trying to determine the result.
             This property is only valid if
-            <doc:ref type="property" to="Device:drive-ata-smart-time-collected">drive-ata-smart-time-collected</doc:ref>
+            <doc:ref type="property" to="Device:DriveAtaSmartTimeCollected">DriveAtaSmartTimeCollected</doc:ref>
             is greater than zero.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="drive-ata-smart-blob" type="ay" access="read">
+    <property name="DriveAtaSmartBlob" type="ay" access="read">
       <doc:doc><doc:description><doc:para>
             A blob containing the ATA SMART data. This blob can be used with libatasmart to get
             more information.
             This property is only valid if
-            <doc:ref type="property" to="Device:drive-ata-smart-time-collected">drive-ata-smart-time-collected</doc:ref>
+            <doc:ref type="property" to="Device:DriveAtaSmartTimeCollected">DriveAtaSmartTimeCollected</doc:ref>
             is greater than zero.
       </doc:para></doc:description></doc:doc>
     </property>
 
     <!-- **************************************************************************************************** -->
 
-    <property name="linux-md-component-level" type="s" access="read">
+    <property name="LinuxMdComponentLevel" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The RAID level of the array the component is part of. Known values include
             <doc:list>
@@ -2197,146 +2197,146 @@
               </doc:item>
             </doc:list>
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-linux-md-component">device-is-linux-md-component</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLinuxMdComponent">DeviceIsLinuxMdComponent</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="linux-md-component-num-raid-devices" type="i" access="read">
+    <property name="LinuxMdComponentNumRaidDevices" type="i" access="read">
       <doc:doc><doc:description><doc:para>
             The number of component devices in the array the component is part of.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-linux-md-component">device-is-linux-md-component</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLinuxMdComponent">DeviceIsLinuxMdComponent</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="linux-md-component-uuid" type="s" access="read">
+    <property name="LinuxMdComponentUuid" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The UUID of the array the component is part of.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-linux-md-component">device-is-linux-md-component</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLinuxMdComponent">DeviceIsLinuxMdComponent</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="linux-md-component-name" type="s" access="read">
+    <property name="LinuxMdComponentName" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The name of the array the component is part of. Blank if the array
             doesn't have a name (e.g. pre-1.0 meta data).
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-linux-md-component">device-is-linux-md-component</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLinuxMdComponent">DeviceIsLinuxMdComponent</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="linux-md-component-home-host" type="s" access="read">
+    <property name="LinuxMdComponentHomeHost" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The home host of the array the component is part of, e.g. where it was created. Blank if the array
             has pre-1.0 meta data.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-linux-md-component">device-is-linux-md-component</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLinuxMdComponent">DeviceIsLinuxMdComponent</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="linux-md-component-version" type="s" access="read">
+    <property name="LinuxMdComponentVersion" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The version of superblock of the component.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-linux-md-component">device-is-linux-md-component</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLinuxMdComponent">DeviceIsLinuxMdComponent</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="linux-md-component-holder" type="o" access="read">
+    <property name="LinuxMdComponentHolder" type="o" access="read">
       <doc:doc><doc:description><doc:para>
             The holder of the component or "/" if the component isn't claimed by any array.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-linux-md-component">device-is-linux-md-component</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLinuxMdComponent">DeviceIsLinuxMdComponent</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="linux-md-component-state" type="as" access="read">
+    <property name="LinuxMdComponentState" type="as" access="read">
       <doc:doc><doc:description><doc:para>
             The state of the component (contents of <literal>md/dev-XXX/state</literal> file).
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-linux-md-component">device-is-linux-md-component</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLinuxMdComponent">DeviceIsLinuxMdComponent</doc:ref>
             is TRUE and
-            <doc:ref type="property" to="Device:device-is-linux-md-component-holder">device-is-linux-md-component-holder</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLinuxMdComponentHolder">DeviceIsLinuxMdComponentHolder</doc:ref>
             is non-empty.
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <property name="linux-md-state" type="s" access="read">
+    <property name="LinuxMdState" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The state of the array (contents of the <literal>md/array_state</literal> file).
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLinuxMd">DeviceIsLinuxMd</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="linux-md-level" type="s" access="read">
+    <property name="LinuxMdLevel" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The RAID level of the array. For known values see the
-            <doc:ref type="property" to="Device:linux-md-component-level">linux-md-component-level</doc:ref>
+            <doc:ref type="property" to="Device:LinuxMdComponentLevel">LinuxMdComponentLevel</doc:ref>
             property.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLinuxMd">DeviceIsLinuxMd</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="linux-md-uuid" type="s" access="read">
+    <property name="LinuxMdUuid" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The UUID of the array.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLinuxMd">DeviceIsLinuxMd</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="linux-md-home-host" type="s" access="read">
+    <property name="LinuxMdHomeHost" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The home host of the array, e.g. where if was created. Blank if the array
             has pre-1.0 meta data.
-            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLinuxMd">DeviceIsLinuxMd</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="linux-md-name" type="s" access="read">
+    <property name="LinuxMdName" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The name of the array. Blank if the array
             doesn't have a name (e.g. pre-1.0 meta data).
-            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLinuxMd">DeviceIsLinuxMd</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="linux-md-num-raid-devices" type="i" access="read">
+    <property name="LinuxMdNumRaidDevices" type="i" access="read">
       <doc:doc><doc:description><doc:para>
             Number of component devices in the array.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLinuxMd">DeviceIsLinuxMd</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="linux-md-version" type="s" access="read">
+    <property name="LinuxMdVersion" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             Metadata version used in the components.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLinuxMd">DeviceIsLinuxMd</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="linux-md-slaves" type="ao" access="read">
+    <property name="LinuxMdSlaves" type="ao" access="read">
       <doc:doc><doc:description><doc:para>
             An array of object paths for components currently part of the array.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLinuxMd">DeviceIsLinuxMd</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="linux-md-is-degraded" type="b" access="read">
+    <property name="LinuxMdIsDegraded" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE only if the array is running in degraded mode.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLinuxMd">DeviceIsLinuxMd</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="linux-md-sync-action" type="s" access="read">
+    <property name="LinuxMdSyncAction" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The operation currently pending on the array. Known values
             include
@@ -2363,27 +2363,27 @@
               </doc:item>
             </doc:list>
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLinuxMd">DeviceIsLinuxMd</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="linux-md-sync-percentage" type="d" access="read">
+    <property name="LinuxMdSyncPercentage" type="d" access="read">
       <doc:doc><doc:description><doc:para>
             The progress of the current sync operation.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLinuxMd">DeviceIsLinuxMd</doc:ref>
             is TRUE and the value of the property
-            <doc:ref type="property" to="Device:linux-md-sync-action">linux-md-sync-action</doc:ref>
+            <doc:ref type="property" to="Device:LinuxMdSyncAction">LinuxMdSyncAction</doc:ref>
             is not <doc:tt>idle</doc:tt>.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="linux-md-sync-speed" type="t" access="read">
+    <property name="LinuxMdSyncSpeed" type="t" access="read">
       <doc:doc><doc:description><doc:para>
             The speed of the sync operation in bytes per second.
             This property is only valid if
-            <doc:ref type="property" to="Device:device-is-linux-md">device-is-linux-md</doc:ref>
+            <doc:ref type="property" to="Device:DeviceIsLinuxMd">DeviceIsLinuxMd</doc:ref>
             is TRUE and the value of the property
-            <doc:ref type="property" to="Device:linux-md-sync-action">linux-md-sync-action</doc:ref>
+            <doc:ref type="property" to="Device:LinuxMdSyncAction">LinuxMdSyncAction</doc:ref>
             is not <doc:tt>idle</doc:tt>.
       </doc:para></doc:description></doc:doc>
     </property>

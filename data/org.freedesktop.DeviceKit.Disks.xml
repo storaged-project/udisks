@@ -476,19 +476,19 @@
 
     <!-- ************************************************************ -->
 
-    <property name="daemon-version" type="s" access="read">
+    <property name="DaemonVersion" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The version of the running daemon.
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <property name="daemon-is-inhibited" type="b" access="read">
+    <property name="DaemonIsInhibited" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE only if the daemon is inhibited.
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <property name="supports-luks-devices" type="b" access="read">
+    <property name="SupportsLuksDevices" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE only if the daemon can create encrypted LUKS block devices, see the
             <doc:ref type="method" to="Device.LuksLock">LuksUnlock()</doc:ref> and
@@ -499,7 +499,7 @@
 
 
     <!-- TODO: maybe this should return a dictionary so we can grow it in the future? -->
-    <property name="known-filesystems" type="a(ssbbbubbbbbbbb)" access="read">
+    <property name="KnownFilesystems" type="a(ssbbbubbbbbbbb)" access="read">
       <doc:doc><doc:description><doc:para>
             An array of file systems known to the daemon and what features are supported.
             Each element in the array contains the following members:
@@ -509,7 +509,7 @@
                 <doc:definition>
                   The name / identifier of the file system (such as <doc:tt>ext3</doc:tt> or <doc:tt>vfat</doc:tt>),
                   similar to the contents of the
-                  <doc:ref type="property" to="Device:id-type">Device:id-type</doc:ref>
+                  <doc:ref type="property" to="Device:IdType">Device:IdType</doc:ref>
                   property.
                 </doc:definition>
               </doc:item>
