@@ -1288,7 +1288,13 @@ devkit_disks_daemon_local_check_auth (DevkitDisksDaemon            *daemon,
         }
         va_end (va_args);
 
-        if (action_id != NULL) {
+        if (devkit_disks_daemon_local_is_inhibited (daemon)) {
+                throw_error (data->context,
+                             DEVKIT_DISKS_ERROR_INHIBITED,
+                             "Daemon is inhibited");
+                check_auth_data_free (data);
+
+        } else if (action_id != NULL) {
                 PolkitSubject *subject;
                 PolkitDetails *details;
                 PolkitCheckAuthorizationFlags flags;
@@ -1783,7 +1789,7 @@ daemon_inhibitor_disconnected_cb (DevkitDisksInhibitor *inhibitor,
 }
 
 gboolean
-devkit_disks_daemon_local_has_inhibitors (DevkitDisksDaemon *daemon)
+devkit_disks_daemon_local_is_inhibited (DevkitDisksDaemon *daemon)
 {
         return daemon->priv->inhibitors != NULL;
 }

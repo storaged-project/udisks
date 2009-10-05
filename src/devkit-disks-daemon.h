@@ -123,7 +123,7 @@ void               devkit_disks_daemon_local_update_spindown     (DevkitDisksDae
 
 gboolean           devkit_disks_daemon_local_has_polling_inhibitors (DevkitDisksDaemon       *daemon);
 
-gboolean           devkit_disks_daemon_local_has_inhibitors (DevkitDisksDaemon       *daemon);
+gboolean           devkit_disks_daemon_local_is_inhibited (DevkitDisksDaemon       *daemon);
 
 DevkitDisksMountMonitor *devkit_disks_daemon_local_get_mount_monitor (DevkitDisksDaemon *daemon);
 
