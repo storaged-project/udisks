@@ -38,6 +38,7 @@
 #include <grp.h>
 #include <linux/fs.h>
 #include <sys/ioctl.h>
+#include <linux/cdrom.h>
 
 #include <glib.h>
 #include <glib/gstdio.h>
@@ -4395,6 +4396,23 @@ prepend_default_mount_options (const FSMountOptions *fsmo, uid_t caller_uid, cha
 }
 
 static void
+unlock_cd_tray (DevkitDisksDevice *device)
+{
+        /* Unlock CD tray to keep the hardware eject button working */
+        if (g_udev_device_has_property (device->priv->d, "ID_CDROM")) {
+                g_print ("**** Unlocking CD-ROM door for %s\n", device->priv->device_file);
+                int fd = open(device->priv->device_file, O_RDONLY);
+                if (fd > 0) {
+                        if (ioctl (fd, CDROM_LOCKDOOR, 0) != 0)
+                                g_warning ("Could not unlock CD-ROM door: %s", strerror (errno));
+                        close (fd);
+                } else {
+                        g_warning ("Could not open CD-ROM device: %s", strerror (errno));
+                }
+        }
+}
+
+static void
 filesystem_mount_completed_cb (DBusGMethodInvocation *context,
                                DevkitDisksDevice *device,
                                gboolean job_was_cancelled,
@@ -4412,6 +4430,7 @@ filesystem_mount_completed_cb (DBusGMethodInvocation *context,
 
                 update_info (device);
                 drain_pending_changes (device, FALSE);
+                unlock_cd_tray (device);
 
                 dbus_g_method_return (context, data->mount_point);
         } else {
