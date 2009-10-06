@@ -1810,7 +1810,7 @@ update_drive_properties_from_sysfs (DevkitDisksDevice *device)
                                         break;
 
                                 }
-                        } else if (strcmp (subsystem, "firewire") == 0) {
+                        } else if (strcmp (subsystem, "firewire") == 0 || strcmp (subsystem, "ieee1394") == 0) {
 
                                 /* TODO: krh has promised a speed file in sysfs; theoretically, the speed can
                                  *       be anything from 100, 200, 400, 800 and 3200. Till then we just hardcode
