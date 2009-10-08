@@ -4109,7 +4109,7 @@ typedef struct {
 
 static const char *vfat_defaults[] =       {"uid=",
                                             "gid=",
-                                            "shortname=lower",
+                                            "shortname=mixed",
                                             "dmask=0077",
                                             "utf8=1",
                                             NULL};
