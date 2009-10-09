@@ -1093,6 +1093,15 @@
             <doc:ref type="property" to="Device:DriveCanDetach">DriveCanDetach</doc:ref>
             property before attempting to invoke this method.
           </doc:para>
+          <doc:para>
+            Note that the physical port a drive belongs to may be
+            located inside the physical casing - for example, some
+            netbooks provide a SD card drive connect through USB. As
+            such, users of this method should be careful – don't
+            automatically invoke this method if the user presses
+            e.g. an Eject button in the UI. Instead, provide e.g. a
+            "Safely Remove Drive" option.
+          </doc:para>
         </doc:description>
         <doc:permission>
           The caller will need one of the following PolicyKit authorizations:
