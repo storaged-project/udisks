@@ -143,7 +143,7 @@ ENV{ID_FS_TYPE}=="ntfs|vfat", \
 #
 
 ENV{DKD_PRESENTATION_NOPOLICY}="1"
-KERNEL=="sd*|hd*|sr*", ENV{DKD_PRESENTATION_NOPOLICY}="0"
+KERNEL=="sd*|hd*|sr*|mmcblk*|mspblk*", ENV{DKD_PRESENTATION_NOPOLICY}="0"
 
 ##############################################################################################################
 
