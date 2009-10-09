@@ -85,6 +85,8 @@ main (int argc, char **argv)
                 else
                         command_line = g_strdup_printf ("mlabel -i %s \"::%s\"", device, new_label);
 
+        } else if (strcmp (fstype, "ntfs") == 0) {
+                command_line = g_strdup_printf ("ntfslabel %s \"%s\"", device, new_label);
         } else {
                 g_printerr ("fstype %s not supported\n", fstype);
                 goto out;
