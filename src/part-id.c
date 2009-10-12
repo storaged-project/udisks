@@ -158,6 +158,12 @@ main (int argc, char *argv[])
                 }
                 partition_table_device_file = g_strdup (udev_device_get_devnode (device));
                 udev_device_unref (device);
+                if (partition_table_device_file == NULL) {
+			/* This Should Not Happen™, but was reported in a distribution upgrade 
+			   scenario, so handle it gracefully */
+                        g_printerr ("Error getting devnode from udev device path %s: %m\n", partition_table_devpath);
+                        goto out;
+                }
                 g_free (partition_table_devpath);
         } else {
                 /* not partition */
