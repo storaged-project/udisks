@@ -91,6 +91,10 @@ ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:1", ENV{
 ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:2", ENV{ID_DRIVE_FLASH_SD}="1"
 ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:3", ENV{ID_DRIVE_FLASH_MS}="1"
 
+# Generic music player
+#
+ENV{ID_MEDIA_PLAYER}=="?*", ENV{DKD_PRESENTATION_ICON_NAME}="multimedia-player"
+
 # Apple iPod Video
 #
 ATTRS{idVendor}=="05ac", ATTRS{idProduct}=="1209", ENV{DKD_PRESENTATION_ICON_NAME}="multimedia-player-ipod-white"
