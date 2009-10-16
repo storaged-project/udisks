@@ -1,8 +1,8 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59c)
-AC_INIT(DeviceKit-disks, 008, david@fubar.dk)
-AM_INIT_AUTOMAKE(DeviceKit-disks, 008)
+AC_INIT(DeviceKit-disks, 009, david@fubar.dk)
+AM_INIT_AUTOMAKE(DeviceKit-disks, 009)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 
