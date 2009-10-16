@@ -1,4 +1,35 @@
 -------------------
+DeviceKit-disks 008
+-------------------
+
+DeviceKit-disks is a daemon that provide interfaces to obtain
+information and perform operations on storage devices.
+
+NOTE NOTE NOTE: This is an unstable release of DeviceKit-disks, all
+                API is subject to change.
+
+David Zeuthen (6):
+      Post-release version bump to 008
+      Actually inhibit the daemon when Inhibit() is called
+      Bug 24054 – Devickit-disks doesn't support changing ntfs label
+      Bug 24343 – Unintended side-effect when calling DriveDetach()
+      Bug 24264 – Crash on removing NULL value from hash in device_remove()
+      Update NEWS for release
+
+Martin Pitt (5):
+      Bug 24052 – CDROM eject button is locked while CDROM is mounted
+      Bug 24129 – Please mount vfat disks with shortname=mixed
+      Bug 24351 – Firewire hard drive is considered system-internal
+      Bug 24468 – part-id crashes if drive device node does not exist
+      Bug 24499 – media players have USB drive icon
+
+Maxim Levitsky (1):
+      Bug 24053 – MMC cards aren't automounted.
+
+David Zeuthen,
+October 16, 2009
+
+-------------------
 DeviceKit-disks 007
 -------------------
 
