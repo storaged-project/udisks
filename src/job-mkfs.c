@@ -218,8 +218,19 @@ main (int argc, char **argv)
 
                 s = g_string_new ("mkswap");
                 for (n = 0; options[n] != NULL; n++) {
-                        g_printerr ("option %s not supported\n", options[n]);
-                        goto out;
+                        if (g_str_has_prefix (options[n], "label=")) {
+                                label = strdup (options[n] + sizeof ("label=") - 1);
+                                if (!validate_and_escape_label (&label, 15)) {
+                                        g_string_free (s, TRUE);
+                                        goto out;
+                                }
+                                g_string_append_printf (s, " -L \"%s\"", label);
+                                g_free (label);
+                                label = NULL;
+                        } else {
+                                g_printerr ("option %s not supported\n", options[n]);
+                                goto out;
+                        }
                 }
                 g_string_append_printf (s, " %s", device);
                 command_line = g_string_free (s, FALSE);

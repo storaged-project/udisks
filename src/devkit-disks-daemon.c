@@ -318,7 +318,7 @@ static const DevkitDisksFilesystem known_file_systems[] = {
                 FALSE,          /* supports_unix_owners */
                 FALSE,          /* can_mount */
                 TRUE,           /* can_create */
-                0,              /* max_label_len (TODO: not actually true for new style swap areas) */
+                15,             /* max_label_len */
                 FALSE,          /* supports_label_rename */
                 FALSE,          /* supports_online_label_rename*/
                 FALSE,          /* supports_fsck */
