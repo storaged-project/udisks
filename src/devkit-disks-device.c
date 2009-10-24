@@ -1624,6 +1624,20 @@ static gboolean
 update_info_id (DevkitDisksDevice *device)
 {
         gchar *decoded_string;
+        const gchar *partition_scheme;
+        gint partition_type;
+
+        partition_scheme = g_udev_device_get_property (device->priv->d, "DKD_PARTITION_SCHEME");
+        partition_type = g_udev_device_get_property_as_int (device->priv->d, "DKD_PARTITION_TYPE");
+        if (g_strcmp0 (partition_scheme, "mbr") == 0 &&
+            (partition_type == 0x05 || partition_type == 0x0f || partition_type == 0x85)) {
+                devkit_disks_device_set_id_usage (device, "");
+                devkit_disks_device_set_id_type (device, "");
+                devkit_disks_device_set_id_version (device, "");
+                devkit_disks_device_set_id_label (device, "");
+                devkit_disks_device_set_id_uuid (device, "");
+                goto out;
+        }
 
         devkit_disks_device_set_id_usage (device, g_udev_device_get_property (device->priv->d, "ID_FS_USAGE"));
         devkit_disks_device_set_id_type (device, g_udev_device_get_property (device->priv->d, "ID_FS_TYPE"));
@@ -1637,6 +1651,7 @@ update_info_id (DevkitDisksDevice *device)
         }
         devkit_disks_device_set_id_uuid (device, g_udev_device_get_property (device->priv->d, "ID_FS_UUID"));
 
+ out:
         return TRUE;
 }
 
