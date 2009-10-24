@@ -3783,9 +3783,15 @@ job_child_watch_cb (GPid pid, int status, gpointer user_data)
 
         job->status = status;
 
-        g_timeout_add (job->msec_sleep,
-                       job_completed_in_idle,
-                       job);
+        if (!job->was_cancelled && WIFEXITED (status) && WEXITSTATUS (status) == 0) {
+                /* sleep the time requested on success */
+                g_timeout_add (job->msec_sleep,
+                               job_completed_in_idle,
+                               job);
+        } else {
+                /* return immediately on error */
+                job_completed_in_idle (job);
+        }
 }
 
 static void
@@ -3925,7 +3931,7 @@ job_new (DBusGMethodInvocation *context,
          char                 **argv,
          const char            *stdin_str,
          JobCompletedFunc       job_completed_func,
-         guint                  msec_sleep,
+         guint                  msec_sleep, /* time to sleep if the command returned 0 (e.g. succeeded) */
          gpointer               user_data,
          GDestroyNotify         user_data_destroy_func)
 {
@@ -7111,6 +7117,8 @@ devkit_disks_device_luks_unlock_internal (DevkitDisksDevice        *device,
 
         n = 0;
         argv[n++] = "cryptsetup";
+        argv[n++] = "-T";
+        argv[n++] = "1";
         argv[n++] = "luksOpen";
         argv[n++] = device->priv->device_file;
         argv[n++] = luks_name;
@@ -7132,17 +7140,13 @@ devkit_disks_device_luks_unlock_internal (DevkitDisksDevice        *device,
          * looking for is really there or ready to use. But that's not how things
          * work.
          *
-         * TODO: file a bug against /sbin/cryptsetup, probably fix it too. This probably
-         *       involves fixing device-mapper as well
+         * This bug has been reported here:
          *
-         * CURRENT WORKAROUND: Basically, we just sleep 15 seconds before considering the
-         *                     job to be completed. That way we can ignore the initial
+         *  https://bugzilla.redhat.com/show_bug.cgi?id=530721
+         *
+         * CURRENT WORKAROUND: Basically, we just sleep 15 seconds before looking for
+         *                     the cleartext device. That way we can ignore the initial
          *                     nodes.
-         *
-         *                     davidz 10/23 2009: Bumped from 2 secs to 15 secs because
-         *                     cryptsetup-luks-1.1.0-0.1.fc12.x86_64 seems to require that..
-         *                     on this system it apparently takes 9-10 seconds for things
-         *                     to settle. Annoying.
          */
         if (!job_new (context,
                       "LuksUnlock",
