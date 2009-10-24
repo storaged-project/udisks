@@ -2831,6 +2831,62 @@ update_info_media_detection (DevkitDisksDevice *device)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+typedef struct {
+        guint idle_id;
+        DevkitDisksDevice *device;
+} UpdateInfoInIdleData;
+
+static void
+update_info_in_idle_device_unreffed (gpointer user_data,
+                                     GObject *where_the_object_was)
+{
+        UpdateInfoInIdleData *data = user_data;
+        g_source_remove (data->idle_id);
+}
+
+static void
+update_info_in_idle_data_free (UpdateInfoInIdleData *data)
+{
+        g_object_weak_unref (G_OBJECT (data->device),
+                             update_info_in_idle_device_unreffed,
+                             data);
+        g_free (data);
+}
+
+static gboolean
+update_info_in_idle_cb (gpointer user_data)
+{
+        UpdateInfoInIdleData *data = user_data;
+
+        update_info (data->device);
+
+        return FALSE; /* remove source */
+}
+
+/**
+ * update_info_in_idle:
+ * @device: A #DevkitDisksDevice.
+ *
+ * Like update_info() but does the update in idle. Takes a weak ref to
+ * @device and cancels the update if @device is unreffed.
+ */
+static void
+update_info_in_idle (DevkitDisksDevice *device)
+{
+        UpdateInfoInIdleData *data;
+
+        data = g_new0 (UpdateInfoInIdleData, 1);
+        data->device = device;
+        data->idle_id = g_idle_add_full (G_PRIORITY_HIGH_IDLE,
+                                         update_info_in_idle_cb,
+                                         data,
+                                         (GDestroyNotify) update_info_in_idle_data_free);
+
+        g_object_weak_ref (G_OBJECT (device),
+                           update_info_in_idle_device_unreffed,
+                           data);
+}
+
 /**
  * update_info:
  * @device: the device
@@ -3177,6 +3233,9 @@ out:
          * We have to do this because the kernel doesn't generate any 'change' event
          * when slaves/ or holders/ change. This is unfortunate because we *need* such
          * a change event to update properties devices (for example: luks_holder).
+         *
+         * We do the update in idle because the update may depend on the device
+         * currently being processed being added.
          */
 
         cur_slaves_objpath = dup_list_from_ptrarray (device->priv->slaves_objpath);
@@ -3197,7 +3256,7 @@ out:
                 //g_debug ("### %s added slave %s", device->priv->object_path, objpath2);
                 device2 = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, objpath2);
                 if (device2 != NULL) {
-                        update_info (device2);
+                        update_info_in_idle (device2);
                 } else {
                         g_print ("**** NOTE: %s added non-existant slave %s\n", device->priv->object_path, objpath2);
                 }
@@ -3209,7 +3268,7 @@ out:
                 //g_debug ("### %s removed slave %s", device->priv->object_path, objpath2);
                 device2 = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, objpath2);
                 if (device2 != NULL) {
-                        update_info (device2);
+                        update_info_in_idle (device2);
                 } else {
                         //g_debug ("### %s removed non-existant slave %s", device->priv->object_path, objpath2);
                 }
@@ -3227,7 +3286,7 @@ out:
                 //g_debug ("### %s added holder %s", device->priv->object_path, objpath2);
                 device2 = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, objpath2);
                 if (device2 != NULL) {
-                        update_info (device2);
+                        update_info_in_idle (device2);
                 } else {
                         g_print ("**** NOTE: %s added non-existant holder %s\n", device->priv->object_path, objpath2);
                 }
@@ -3239,7 +3298,7 @@ out:
                 //g_debug ("### %s removed holder %s", device->priv->object_path, objpath2);
                 device2 = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon, objpath2);
                 if (device2 != NULL) {
-                        update_info (device2);
+                        update_info_in_idle (device2);
                 } else {
                         //g_debug ("### %s removed non-existant holder %s", device->priv->object_path, objpath2);
                 }
