@@ -3753,7 +3753,7 @@ struct Job {
         gpointer user_data;
         GDestroyNotify user_data_destroy_func;
         gboolean was_cancelled;
-        guint msec_sleep;
+        gboolean udev_settle;
         int status;
 
         int stderr_fd;
@@ -3805,11 +3805,9 @@ job_free (Job *job)
         g_free (job);
 }
 
-static gboolean
-job_completed_in_idle (gpointer data)
+static void
+job_complete (Job *job)
 {
-        Job *job = data;
-
         if (job->device != NULL && job->job_id != NULL) {
                 job->device->priv->job_in_progress = FALSE;
                 g_free (job->device->priv->job_id);
@@ -3834,7 +3832,15 @@ job_completed_in_idle (gpointer data)
         }
 
         job_free (job);
-        return FALSE;
+}
+
+static void
+job_udevadm_settle_child_cb (GPid     pid,
+                             gint     status,
+                             gpointer user_data)
+{
+        Job *job = user_data;
+        job_complete (job);
 }
 
 static void
@@ -3857,14 +3863,33 @@ job_child_watch_cb (GPid pid, int status, gpointer user_data)
 
         job->status = status;
 
-        if (!job->was_cancelled && WIFEXITED (status) && WEXITSTATUS (status) == 0) {
-                /* sleep the time requested on success */
-                g_timeout_add (job->msec_sleep,
-                               job_completed_in_idle,
-                               job);
+        /* if requested, run 'udevadm settle' on success */
+        if (!job->was_cancelled && WIFEXITED (status) && WEXITSTATUS (status) == 0 && job->udev_settle) {
+                GError *error;
+                gchar *argv[] = {"udevadm", "settle", "--quiet", NULL};
+                GPid udevadm_pid;
+
+                error = NULL;
+                if (!g_spawn_async (NULL,
+                                    argv,
+                                    NULL,
+                                    G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD,
+                                    NULL,
+                                    NULL,
+                                    &udevadm_pid,
+                                    &error)) {
+                        g_warning ("Error running 'udevadm settle --quiet': %s", error->message);
+                        g_error_free (error);
+
+                        job_complete (job);
+                } else {
+                        g_child_watch_add (udevadm_pid,
+                                           job_udevadm_settle_child_cb,
+                                           job);
+                }
         } else {
                 /* return immediately on error */
-                job_completed_in_idle (job);
+                job_complete (job);
         }
 }
 
@@ -4005,7 +4030,7 @@ job_new (DBusGMethodInvocation *context,
          char                 **argv,
          const char            *stdin_str,
          JobCompletedFunc       job_completed_func,
-         guint                  msec_sleep, /* time to sleep if the command returned 0 (e.g. succeeded) */
+         gboolean               udev_settle, /* if TRUE, runs udevsettle before returning if the command succeeded */
          gpointer               user_data,
          GDestroyNotify         user_data_destroy_func)
 {
@@ -4038,7 +4063,7 @@ job_new (DBusGMethodInvocation *context,
         job->stdin_cursor = job->stdin_str;
         job->stdout_string = g_string_sized_new (1024);
         job->job_id = g_strdup (job_id);
-        job->msec_sleep = msec_sleep;
+        job->udev_settle = udev_settle;
 
         if (device != NULL && job_id != NULL) {
                 g_free (job->device->priv->job_id);
@@ -4764,7 +4789,7 @@ run_job:
                       argv,
                       NULL,
                       filesystem_mount_completed_cb,
-                      0,
+                      FALSE,
                       filesystem_mount_data_new (mount_point, remove_dir_on_unmount),
                       (GDestroyNotify) filesystem_mount_data_free)) {
                 if (remove_dir_on_unmount) {
@@ -4950,7 +4975,7 @@ run_job:
                       argv,
                       NULL,
                       filesystem_unmount_completed_cb,
-                      0,
+                      FALSE,
                       g_strdup (mount_path),
                       g_free)) {
                 goto out;
@@ -5141,7 +5166,7 @@ devkit_disks_device_filesystem_list_open_files_authorized_cb (DevkitDisksDaemon 
                       argv,
                       NULL,
                       filesystem_list_open_files_completed_cb,
-                      0,
+                      FALSE,
                       NULL,
                       NULL)) {
                 goto out;
@@ -5262,7 +5287,7 @@ devkit_disks_device_drive_eject_authorized_cb (DevkitDisksDaemon     *daemon,
                       argv,
                       NULL,
                       drive_eject_completed_cb,
-                      0,
+                      FALSE,
                       NULL,
                       NULL)) {
                 goto out;
@@ -5388,7 +5413,7 @@ devkit_disks_device_drive_detach_authorized_cb (DevkitDisksDaemon     *daemon,
                       argv,
                       NULL,
                       drive_detach_completed_cb,
-                      0,
+                      FALSE,
                       NULL,
                       NULL)) {
                 goto out;
@@ -5504,7 +5529,7 @@ devkit_disks_device_filesystem_check_authorized_cb (DevkitDisksDaemon     *daemo
                       argv,
                       NULL,
                       filesystem_check_completed_cb,
-                      0,
+                      FALSE,
                       NULL,
                       NULL)) {
                 goto out;
@@ -5647,7 +5672,7 @@ devkit_disks_device_partition_delete_authorized_cb (DevkitDisksDaemon     *daemo
                       argv,
                       NULL,
                       partition_delete_completed_cb,
-                      0,
+                      FALSE,
                       g_object_ref (enclosing_device),
                       g_object_unref)) {
                 goto out;
@@ -5966,7 +5991,7 @@ devkit_disks_device_filesystem_create_internal (DevkitDisksDevice       *device,
                                       argv,
                                       passphrase_stdin,
                                       filesystem_create_create_luks_device_completed_cb,
-                                      0,
+                                      FALSE,
                                       mkfse_data,
                                       (GDestroyNotify) mkfse_data_unref)) {
                                 goto out;
@@ -5999,7 +6024,7 @@ devkit_disks_device_filesystem_create_internal (DevkitDisksDevice       *device,
                       argv,
                       options_for_stdin,
                       filesystem_create_completed_cb,
-                      0,
+                      FALSE,
                       mkfs_data,
                       (GDestroyNotify) mkfs_data_unref)) {
                 goto out;
@@ -6448,7 +6473,7 @@ devkit_disks_device_partition_create_authorized_cb (DevkitDisksDaemon     *daemo
                       argv,
                       NULL,
                       partition_create_completed_cb,
-                      0,
+                      FALSE,
                       partition_create_data_new (context, device, offset, size, fstype, fsoptions),
                       (GDestroyNotify) partition_create_data_unref)) {
                 goto out;
@@ -6664,7 +6689,7 @@ devkit_disks_device_partition_modify_authorized_cb (DevkitDisksDaemon     *daemo
                       argv,
                       NULL,
                       partition_modify_completed_cb,
-                      0,
+                      FALSE,
                       partition_modify_data_new (context, device, enclosing_device, type, label, flags),
                       (GDestroyNotify) partition_modify_data_unref)) {
                 goto out;
@@ -6905,7 +6930,7 @@ devkit_disks_device_partition_table_create_authorized_cb (DevkitDisksDaemon     
                       argv,
                       NULL,
                       partition_table_create_completed_cb,
-                      0,
+                      FALSE,
                       partition_table_create_data_new (context, device, scheme),
                       (GDestroyNotify) partition_table_create_data_unref)) {
                 goto out;
@@ -7218,9 +7243,8 @@ devkit_disks_device_luks_unlock_internal (DevkitDisksDevice        *device,
          *
          *  https://bugzilla.redhat.com/show_bug.cgi?id=530721
          *
-         * CURRENT WORKAROUND: Basically, we just sleep 15 seconds before looking for
-         *                     the cleartext device. That way we can ignore the initial
-         *                     nodes.
+         * WORKAROUND: wait for the udev queue to settle before returning. Long
+         *             term fix is device-mapper/udev integration.
          */
         if (!job_new (context,
                       "LuksUnlock",
@@ -7229,7 +7253,7 @@ devkit_disks_device_luks_unlock_internal (DevkitDisksDevice        *device,
                       argv,
                       secret_as_stdin,
                       luks_unlock_completed_cb,
-                      15 * 1000, /* see note above */
+                      TRUE, /* see note above */
                       unlock_encryption_data_new (context, device, hook_func, hook_user_data),
                       (GDestroyNotify) unlock_encryption_data_unref)) {
                     goto out;
@@ -7515,7 +7539,7 @@ devkit_disks_device_luks_lock_authorized_cb (DevkitDisksDaemon     *daemon,
                       argv,
                       NULL,
                       luks_lock_completed_cb,
-                      0,
+                      FALSE,
                       lock_encryption_data_new (context, device, cleartext_device),
                       (GDestroyNotify) lock_encryption_data_unref)) {
                     goto out;
@@ -7652,7 +7676,7 @@ devkit_disks_device_luks_change_passphrase_authorized_cb (DevkitDisksDaemon     
                       argv,
                       secrets_as_stdin,
                       luks_change_passphrase_completed_cb,
-                      0,
+                      FALSE,
                       NULL,
                       NULL)) {
                 goto out;
@@ -7791,7 +7815,7 @@ devkit_disks_device_filesystem_set_label_authorized_cb (DevkitDisksDaemon     *d
                       argv,
                       NULL,
                       filesystem_set_label_completed_cb,
-                      0,
+                      FALSE,
                       g_strdup (new_label),
                       g_free)) {
                 goto out;
@@ -8015,7 +8039,7 @@ devkit_disks_device_drive_ata_smart_refresh_data_authorized_cb (DevkitDisksDaemo
                       argv,
                       NULL,
                       drive_ata_smart_refresh_data_completed_cb,
-                      0,
+                      FALSE,
                       NULL,
                       NULL)) {
                 goto out;
@@ -8136,7 +8160,7 @@ devkit_disks_device_drive_ata_smart_initiate_selftest_authorized_cb (DevkitDisks
                       argv,
                       NULL,
                       drive_ata_smart_initiate_selftest_completed_cb,
-                      0,
+                      FALSE,
                       NULL,
                       NULL)) {
                 goto out;
@@ -8237,7 +8261,7 @@ devkit_disks_device_linux_md_stop_authorized_cb (DevkitDisksDaemon     *daemon,
                       argv,
                       NULL,
                       linux_md_stop_completed_cb,
-                      0,
+                      FALSE,
                       NULL,
                       NULL)) {
                 goto out;
@@ -8359,7 +8383,7 @@ devkit_disks_device_linux_md_check_authorized_cb (DevkitDisksDaemon     *daemon,
                       argv,
                       NULL,
                       linux_md_check_completed_cb,
-                      0,
+                      FALSE,
                       NULL,
                       NULL)) {
                 goto out;
@@ -8500,7 +8524,7 @@ devkit_disks_device_linux_md_add_component_authorized_cb (DevkitDisksDaemon     
                       argv,
                       NULL,
                       linux_md_add_component_completed_cb,
-                      0,
+                      FALSE,
                       g_object_ref (slave),
                       g_object_unref)) {
                 goto out;
@@ -8747,7 +8771,7 @@ devkit_disks_device_linux_md_remove_component_authorized_cb (DevkitDisksDaemon  
                       argv,
                       NULL,
                       linux_md_remove_component_completed_cb,
-                      0,
+                      FALSE,
                       remove_component_data_new (context, slave, options),
                       (GDestroyNotify) remove_component_data_unref)) {
                 goto out;
@@ -9075,7 +9099,7 @@ devkit_disks_daemon_linux_md_start_authorized_cb (DevkitDisksDaemon     *daemon,
                       argv,
                       NULL,
                       linux_md_start_completed_cb,
-                      0,
+                      FALSE,
                       linux_md_start_data_new (context, daemon, uuid),
                       (GDestroyNotify) linux_md_start_data_unref)) {
                 goto out;
@@ -9427,8 +9451,8 @@ devkit_disks_daemon_linux_md_create_authorized_cb (DevkitDisksDaemon     *daemon
         }
         argv[n++] = NULL;
 
-        for (m = 0; argv[m] != NULL; m++)
-                g_debug ("arg[%d] = `%s'", m, argv[m]);
+        //for (m = 0; argv[m] != NULL; m++)
+        //        g_debug ("arg[%d] = `%s'", m, argv[m]);
 
         if (!job_new (context,
                       "LinuxMdCreate",
@@ -9437,7 +9461,7 @@ devkit_disks_daemon_linux_md_create_authorized_cb (DevkitDisksDaemon     *daemon
                       argv,
                       NULL,
                       linux_md_create_completed_cb,
-                      0,
+                      FALSE,
                       linux_md_create_data_new (context, daemon, components_as_strv[0]),
                       (GDestroyNotify) linux_md_create_data_unref)) {
                 goto out;
@@ -9564,7 +9588,7 @@ force_unmount (DevkitDisksDevice        *device,
                       argv,
                       NULL,
                       force_unmount_completed_cb,
-                      0,
+                      FALSE,
                       force_unmount_data_new (mount_path, callback, user_data),
                       (GDestroyNotify) force_unmount_data_unref)) {
                 g_warning ("Couldn't spawn unmount for force unmounting %s", mount_path);
@@ -9665,7 +9689,7 @@ force_luks_teardown_cleartext_done (DevkitDisksDevice *device,
                       argv,
                       NULL,
                       force_luks_teardown_completed_cb,
-                      0,
+                      FALSE,
                       data,
                       (GDestroyNotify) force_luks_teardown_data_unref)) {
 
@@ -9939,7 +9963,7 @@ devkit_disks_device_drive_poll_media_authorized_cb (DevkitDisksDaemon     *daemo
                       argv,
                       NULL,
                       drive_poll_media_completed_cb,
-                      0,
+                      FALSE,
                       NULL,
                       NULL)) {
                 goto out;
