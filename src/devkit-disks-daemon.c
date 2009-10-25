@@ -297,6 +297,22 @@ static const DevkitDisksFilesystem known_file_systems[] = {
                 FALSE,          /* supports_online_resize_shrink */
         },
         {
+                "minix",        /* id */
+                "Minix",        /* name */
+                TRUE,           /* supports_unix_owners */
+                TRUE,           /* can_mount */
+                TRUE,           /* can_create */
+                0,              /* max_label_len */
+                FALSE,          /* supports_label_rename */
+                FALSE,          /* supports_online_label_rename*/
+                TRUE,           /* supports_fsck */
+                FALSE,          /* supports_online_fsck */
+                FALSE,          /* supports_resize_enlarge */
+                FALSE,          /* supports_online_resize_enlarge */
+                FALSE,          /* supports_resize_shrink */
+                FALSE,          /* supports_online_resize_shrink */
+        },
+        {
                 "ntfs",         /* id */
                 "NTFS",         /* name */
                 FALSE,          /* supports_unix_owners */
