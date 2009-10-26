@@ -6878,8 +6878,8 @@ devkit_disks_device_partition_table_create_authorized_cb (DevkitDisksDaemon     
                                                           guint                  num_user_data,
                                                           gpointer              *user_data_elements)
 {
-        const char            *scheme  = user_data_elements[0];
-        char                 **options = user_data_elements[1];
+        const char *scheme  = user_data_elements[0];
+        char **options = user_data_elements[1];
         int n;
         int m;
         char *argv[128];
@@ -6897,13 +6897,6 @@ devkit_disks_device_partition_table_create_authorized_cb (DevkitDisksDaemon     
                 throw_error (context,
                              DEVKIT_DISKS_ERROR_FAILED,
                              "type not specified");
-                goto out;
-        }
-
-        if (g_strcmp0 (device->priv->partition_table_scheme, scheme) == 0) {
-                throw_error (context,
-                             DEVKIT_DISKS_ERROR_FAILED,
-                             "device already has a partition table of given scheme");
                 goto out;
         }
 
