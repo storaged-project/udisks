@@ -128,6 +128,7 @@ main (int argc, char **argv)
                 s = g_string_new ("mkfs.");
                 g_string_append (s, fstype);
                 for (n = 0; options[n] != NULL; n++) {
+                        g_string_append (s, " -F ");
                         if (g_str_has_prefix (options[n], "label=")) {
                                 label = strdup (options[n] + sizeof ("label=") - 1);
                                 if (!validate_and_escape_label (&label, 16)) {
