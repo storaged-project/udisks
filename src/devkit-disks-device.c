@@ -1283,18 +1283,12 @@ register_disks_device (DevkitDisksDevice *device)
 
         device->priv->object_path = compute_object_path (device->priv->native_path);
 
+        /* safety first */
         if (dbus_g_connection_lookup_g_object (device->priv->system_bus_connection,
                                                device->priv->object_path) != NULL) {
-                /* TODO: see devkit_disks_device_removed() for where we want to unregister the object but
-                 * we're missing the API. So do it manually here if we are forced to do so...
-                 */
-
-                g_print ("**** HACK: Wanting to register object at path `%s' but there is already an "
-                         "object there. Using a hack to move it out of the way.\n",
+                g_error ("**** HACK: Wanting to register object at path `%s' but there is already an "
+                         "object there. This is an internal error in the daemon. Aborting.\n",
                          device->priv->object_path);
-
-                dbus_connection_unregister_object_path (dbus_g_connection_get_connection (device->priv->system_bus_connection),
-                                                        device->priv->object_path);
         }
 
         dbus_g_connection_register_g_object (device->priv->system_bus_connection,
@@ -2873,7 +2867,10 @@ update_info_in_idle_cb (gpointer user_data)
 {
         UpdateInfoInIdleData *data = user_data;
 
-        update_info (data->device);
+        /* this indirectly calls update_info and also removes the device
+         * if it wants to be removed (e.g. if update_info() returns FALSE)
+         */
+        devkit_disks_daemon_local_synthesize_changed (data->device->priv->daemon, data->device);
 
         return FALSE; /* remove source */
 }
@@ -3483,11 +3480,10 @@ devkit_disks_device_removed (DevkitDisksDevice *device)
 
         device->priv->removed = TRUE;
 
-        /* TODO: this is in a yet to be released version of dbus-glib, use it when available
-
         dbus_g_connection_unregister_g_object (device->priv->system_bus_connection,
                                                G_OBJECT (device));
-        */
+        g_assert (dbus_g_connection_lookup_g_object (device->priv->system_bus_connection,
+                                                     device->priv->object_path) == NULL);
 
         /* device is now removed; update all slaves and holders */
         for (n = 0; n < device->priv->slaves_objpath->len; n++) {

@@ -636,6 +636,8 @@ device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthesized)
         native_path = g_udev_device_get_sysfs_path (d);
         device = g_hash_table_lookup (daemon->priv->map_native_path_to_device, native_path);
         if (device != NULL) {
+                gboolean keep_device;
+
                 g_print ("**** CHANGING %s\n", native_path);
 
                 /* The device file (udev rules) and/or sysfs path ('move' uevent) may actually change so
@@ -647,23 +649,28 @@ device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthesized)
                 g_warn_if_fail (g_hash_table_remove (daemon->priv->map_device_file_to_device,
                                                      device->priv->device_file));
 
-                if (!devkit_disks_device_changed (device, d, synthesized)) {
+                keep_device = devkit_disks_device_changed (device, d, synthesized);
+
+                g_assert (devkit_disks_device_local_get_device_file (device) != NULL);
+                g_assert (devkit_disks_device_local_get_native_path (device) != NULL);
+                g_assert (g_strcmp0 (native_path, devkit_disks_device_local_get_native_path (device)) == 0);
+
+                /* now add the things back to the global hashtables - it's important that we
+                 * do this *before* calling device_remove() - otherwise it will never remove
+                 * the device
+                 */
+                g_hash_table_insert (daemon->priv->map_device_file_to_device,
+                                     g_strdup (devkit_disks_device_local_get_device_file (device)),
+                                     g_object_ref (device));
+                g_hash_table_insert (daemon->priv->map_native_path_to_device,
+                                     g_strdup (devkit_disks_device_local_get_native_path (device)),
+                                     g_object_ref (device));
+
+                if (!keep_device) {
                         g_print ("**** CHANGE TRIGGERED REMOVE %s\n", native_path);
                         device_remove (daemon, d);
                 } else {
                         g_print ("**** CHANGED %s\n", native_path);
-
-                        g_assert (devkit_disks_device_local_get_device_file (device) != NULL);
-                        g_assert (devkit_disks_device_local_get_native_path (device) != NULL);
-                        g_assert (g_strcmp0 (native_path, devkit_disks_device_local_get_native_path (device)) == 0);
-
-                        /* now add the things back to the global hashtables */
-                        g_hash_table_insert (daemon->priv->map_device_file_to_device,
-                                             g_strdup (devkit_disks_device_local_get_device_file (device)),
-                                             g_object_ref (device));
-                        g_hash_table_insert (daemon->priv->map_native_path_to_device,
-                                             g_strdup (devkit_disks_device_local_get_native_path (device)),
-                                             g_object_ref (device));
 
                         devkit_disks_daemon_local_update_poller (daemon);
                         devkit_disks_daemon_local_update_spindown (daemon);
@@ -777,11 +784,11 @@ device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
                 g_warn_if_fail (g_hash_table_remove (daemon->priv->map_dev_t_to_device,
                                                      GINT_TO_POINTER (device->priv->dev)));
 
-                devkit_disks_device_removed (device);
-
                 g_print ("**** EMITTING REMOVED for %s\n", device->priv->native_path);
                 g_signal_emit (daemon, signals[DEVICE_REMOVED_SIGNAL], 0,
                                devkit_disks_device_local_get_object_path (device));
+
+                devkit_disks_device_removed (device);
 
                 g_object_unref (device);
 
