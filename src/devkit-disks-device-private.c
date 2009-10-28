@@ -866,6 +866,16 @@ devkit_disks_device_set_linux_md_component_level (DevkitDisksDevice *device, con
 }
 
 void
+devkit_disks_device_set_linux_md_component_position (DevkitDisksDevice *device, gint value)
+{
+  if (G_UNLIKELY (device->priv->linux_md_component_position != value))
+    {
+      device->priv->linux_md_component_position = value;
+      emit_changed (device, "linux_md_component_position");
+    }
+}
+
+void
 devkit_disks_device_set_linux_md_component_num_raid_devices (DevkitDisksDevice *device, gint value)
 {
   if (G_UNLIKELY (device->priv->linux_md_component_num_raid_devices != value))

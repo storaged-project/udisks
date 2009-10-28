@@ -170,6 +170,7 @@ struct DevkitDisksDevicePrivate
         uid_t luks_cleartext_unlocked_by_uid;
 
         char *linux_md_component_level;
+        int linux_md_component_position;
         int linux_md_component_num_raid_devices;
         char *linux_md_component_uuid;
         char *linux_md_component_home_host;
@@ -288,6 +289,7 @@ void devkit_disks_device_set_luks_cleartext_slave (DevkitDisksDevice *device, co
 void devkit_disks_device_set_luks_cleartext_unlocked_by_uid (DevkitDisksDevice *device, guint value);
 
 void devkit_disks_device_set_linux_md_component_level (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_linux_md_component_position (DevkitDisksDevice *device, gint value);
 void devkit_disks_device_set_linux_md_component_num_raid_devices (DevkitDisksDevice *device, gint value);
 void devkit_disks_device_set_linux_md_component_uuid (DevkitDisksDevice *device, const gchar *value);
 void devkit_disks_device_set_linux_md_component_home_host (DevkitDisksDevice *device, const gchar *value);

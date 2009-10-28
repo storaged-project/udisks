@@ -2210,6 +2210,14 @@
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
+    <property name="LinuxMdComponentPosition" type="i" access="read">
+      <doc:doc><doc:description><doc:para>
+            The zero-based position of the component or -1 if not part of a running array.
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsLinuxMdComponent">DeviceIsLinuxMdComponent</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
     <property name="LinuxMdComponentNumRaidDevices" type="i" access="read">
       <doc:doc><doc:description><doc:para>
             The number of component devices in the array the component is part of.

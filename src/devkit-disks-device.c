@@ -226,6 +226,7 @@ enum
         PROP_DRIVE_ATA_SMART_BLOB,
 
         PROP_LINUX_MD_COMPONENT_LEVEL,
+        PROP_LINUX_MD_COMPONENT_POSITION,
         PROP_LINUX_MD_COMPONENT_NUM_RAID_DEVICES,
         PROP_LINUX_MD_COMPONENT_UUID,
         PROP_LINUX_MD_COMPONENT_HOME_HOST,
@@ -563,6 +564,9 @@ get_property (GObject         *object,
 
 	case PROP_LINUX_MD_COMPONENT_LEVEL:
 		g_value_set_string (value, device->priv->linux_md_component_level);
+		break;
+	case PROP_LINUX_MD_COMPONENT_POSITION:
+		g_value_set_int (value, device->priv->linux_md_component_position);
 		break;
 	case PROP_LINUX_MD_COMPONENT_NUM_RAID_DEVICES:
 		g_value_set_int (value, device->priv->linux_md_component_num_raid_devices);
@@ -1012,6 +1016,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_LINUX_MD_COMPONENT_LEVEL,
                 g_param_spec_string ("linux-md-component-level", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_LINUX_MD_COMPONENT_POSITION,
+                g_param_spec_int ("linux-md-component-position", NULL, NULL, 0, G_MAXINT, 0, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_LINUX_MD_COMPONENT_NUM_RAID_DEVICES,
@@ -2264,6 +2272,9 @@ update_info_linux_md_component (DevkitDisksDevice *device)
                 const gchar *md_comp_version;
                 gchar *md_name;
                 gchar *s;
+                int md_comp_position;
+
+                md_comp_position = -1;
 
                 devkit_disks_device_set_device_is_linux_md_component (device, TRUE);
 
@@ -2280,6 +2291,9 @@ update_info_linux_md_component (DevkitDisksDevice *device)
                                 gchar *dev_name;
                                 gchar *md_dev_path;
                                 gchar *state_contents;
+                                gchar *slot_contents;
+                                gint slot_number;
+                                gchar *endp;
 
                                 dev_name = g_path_get_basename (device->priv->native_path);
                                 md_dev_path = g_strdup_printf ("%s/md/dev-%s", holder->priv->native_path, dev_name);
@@ -2287,6 +2301,14 @@ update_info_linux_md_component (DevkitDisksDevice *device)
                                 g_strstrip (state_contents);
                                 state_tokens = g_strsplit (state_contents, ",", 0);
 
+                                slot_contents = sysfs_get_string (md_dev_path, "slot");
+                                g_strstrip (slot_contents);
+                                slot_number = strtol (slot_contents, &endp, 0);
+                                if (endp != NULL && *endp == '\0') {
+                                        md_comp_position = slot_number;
+                                }
+
+                                g_free (slot_contents);
                                 g_free (state_contents);
                                 g_free (md_dev_path);
                                 g_free (dev_name);
@@ -2319,6 +2341,7 @@ update_info_linux_md_component (DevkitDisksDevice *device)
                 md_comp_version = device->priv->id_version;
 
                 devkit_disks_device_set_linux_md_component_level (device, md_comp_level);
+                devkit_disks_device_set_linux_md_component_position (device, md_comp_position);
                 devkit_disks_device_set_linux_md_component_num_raid_devices (device, md_comp_num_raid_devices);
                 devkit_disks_device_set_linux_md_component_uuid (device, md_comp_uuid);
                 devkit_disks_device_set_linux_md_component_home_host (device, md_comp_home_host);
@@ -2329,6 +2352,7 @@ update_info_linux_md_component (DevkitDisksDevice *device)
         } else {
                 devkit_disks_device_set_device_is_linux_md_component (device, FALSE);
                 devkit_disks_device_set_linux_md_component_level (device, NULL);
+                devkit_disks_device_set_linux_md_component_position (device, -1);
                 devkit_disks_device_set_linux_md_component_num_raid_devices (device, 0);
                 devkit_disks_device_set_linux_md_component_uuid (device, NULL);
                 devkit_disks_device_set_linux_md_component_home_host (device, NULL);

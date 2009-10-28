@@ -382,6 +382,7 @@ typedef struct
         gsize drive_ata_smart_blob_size;
 
         char    *linux_md_component_level;
+        int      linux_md_component_position;
         int      linux_md_component_num_raid_devices;
         char    *linux_md_component_uuid;
         char    *linux_md_component_home_host;
@@ -584,6 +585,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
 
         else if (strcmp (key, "LinuxMdComponentLevel") == 0)
                 props->linux_md_component_level = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "LinuxMdComponentPosition") == 0)
+                props->linux_md_component_position = g_value_get_int (value);
         else if (strcmp (key, "LinuxMdComponentNumRaidDevices") == 0)
                 props->linux_md_component_num_raid_devices = g_value_get_int (value);
         else if (strcmp (key, "LinuxMdComponentUuid") == 0)
@@ -1012,7 +1015,8 @@ do_show_info (const char *object_path)
         if (props->device_is_linux_md_component) {
                 g_print ("  linux md component:\n");
                 g_print ("    RAID level:                %s\n", props->linux_md_component_level);
-                g_print ("    num comp:                  %d\n", props->linux_md_component_num_raid_devices);
+                g_print ("    position:                  %d\n", props->linux_md_component_position);
+                g_print ("    num components:            %d\n", props->linux_md_component_num_raid_devices);
                 g_print ("    uuid:                      %s\n", props->linux_md_component_uuid);
                 g_print ("    home host:                 %s\n", props->linux_md_component_home_host);
                 g_print ("    name:                      %s\n", props->linux_md_component_name);
