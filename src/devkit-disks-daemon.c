@@ -1110,11 +1110,16 @@ throw_error (DBusGMethodInvocation *context, int error_code, const char *format,
         message = g_strdup_vprintf (format, args);
         va_end (args);
 
-        error = g_error_new (DEVKIT_DISKS_ERROR,
-                             error_code,
-                             "%s", message);
-        dbus_g_method_return_error (context, error);
-        g_error_free (error);
+        if (context != NULL) {
+                error = g_error_new (DEVKIT_DISKS_ERROR,
+                                     error_code,
+                                     "%s", message);
+                dbus_g_method_return_error (context, error);
+                g_error_free (error);
+        } else {
+                /* error from a daemon-internal method call */
+                g_warning ("%s", message);
+        }
         g_free (message);
         return TRUE;
 }
