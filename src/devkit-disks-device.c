@@ -4622,6 +4622,11 @@ filesystem_mount_completed_cb (DBusGMethodInvocation *context,
                         throw_error (context,
                                      DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
+                } else if (WEXITSTATUS (status) == 32) {
+                    throw_error (context,
+                            DEVKIT_DISKS_ERROR_FILESYSTEM_DRIVER_MISSING ,
+                            "Error mounting: %s",
+                            stderr);
                 } else {
                         throw_error (context,
                                      DEVKIT_DISKS_ERROR_FAILED,
@@ -5804,6 +5809,11 @@ filesystem_create_completed_cb (DBusGMethodInvocation *context,
                         throw_error (context,
                                      DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
+                } else if (WEXITSTATUS (status) == 3) {
+                    throw_error (context,
+                            DEVKIT_DISKS_ERROR_FILESYSTEM_TOOLS_MISSING ,
+                            "Error creating file system: Cannot run mkfs: %s",
+                            stderr);
                 } else {
                         throw_error (context,
                                      DEVKIT_DISKS_ERROR_FAILED,
@@ -7685,6 +7695,11 @@ luks_change_passphrase_completed_cb (DBusGMethodInvocation *context,
                         throw_error (context,
                                      DEVKIT_DISKS_ERROR_CANCELLED,
                                      "Job was cancelled");
+                } else if (WEXITSTATUS (status) == 3) {
+                    throw_error (context,
+                            DEVKIT_DISKS_ERROR_FILESYSTEM_TOOLS_MISSING ,
+                            "Error changing fs label: tool not available: %s",
+                            stderr);
                 } else {
                         throw_error (context,
                                      DEVKIT_DISKS_ERROR_FAILED,

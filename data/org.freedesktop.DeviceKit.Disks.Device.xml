@@ -9,6 +9,8 @@
   <!ENTITY ERROR_NOT_SUPPORTED "org.freedesktop.DeviceKit.Disks.Error.NotSupported">
   <!ENTITY ERROR_ATA_SMART_WOULD_WAKEUP "org.freedesktop.DeviceKit.Disks.Error.NotFound">
   <!ENTITY ERROR_NOT_AUTHORIZED "org.freedesktop.PolicyKit.Error.NotAuthorized">
+  <!ENTITY ERROR_FILESYSTEM_DRIVER_MISSING "org.freedesktop.DeviceKit.Disks.Error.FilesystemDriverMissing">
+  <!ENTITY ERROR_FILESYSTEM_TOOLS_MISSING "org.freedesktop.DeviceKit.Disks.Error.FilesystemToolsMissing">
 ]>
 <node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
   <interface name="org.freedesktop.DeviceKit.Disks.Device">
@@ -456,6 +458,7 @@
           <doc:error name="&ERROR_BUSY;">if the device is busy</doc:error>
           <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+	  <doc:error name="&ERROR_FILESYSTEM_TOOLS_MISSING;">if mkfs for this type is not available</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -501,6 +504,7 @@
           <doc:error name="&ERROR_BUSY;">if the device is busy and changing the label requires an unmounted file system</doc:error>
           <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+	  <doc:error name="&ERROR_FILESYSTEM_TOOLS_MISSING;">if the label changing tool for this file system type is not available</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -553,6 +557,7 @@
           <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
           <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
           <doc:error name="&ERROR_INVALID_OPTION;">if an invalid or malformed mount option was given</doc:error>
+	  <doc:error name="&ERROR_FILESYSTEM_DRIVER_MISSING;">if the kernel driver for this file system type is not available</doc:error>
         </doc:errors>
       </doc:doc>
     </method>

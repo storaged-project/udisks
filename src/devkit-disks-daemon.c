@@ -170,6 +170,8 @@ devkit_disks_error_get_type (void)
                         ENUM_ENTRY (DEVKIT_DISKS_ERROR_INVALID_OPTION, "InvalidOption"),
                         ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_SUPPORTED, "NotSupported"),
                         ENUM_ENTRY (DEVKIT_DISKS_ERROR_ATA_SMART_WOULD_WAKEUP, "AtaSmartWouldWakeup"),
+                        ENUM_ENTRY (DEVKIT_DISKS_ERROR_FILESYSTEM_DRIVER_MISSING, "FilesystemDriverMissing"),
+                        ENUM_ENTRY (DEVKIT_DISKS_ERROR_FILESYSTEM_TOOLS_MISSING, "FilesystemToolsMissing"),
                         { 0, 0, 0 }
                 };
                 g_assert (DEVKIT_DISKS_NUM_ERRORS == G_N_ELEMENTS (values) - 1);

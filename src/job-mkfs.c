@@ -284,6 +284,7 @@ main (int argc, char **argv)
                                                 &exit_status,
                                                 &error)) {
                         g_printerr ("cannot spawn '%s': %s\n", command_line, error->message);
+                        ret = 3; /* indicate FilesystemToolsMissing error */
                         g_error_free (error);
                         goto out;
                 }
@@ -311,6 +312,7 @@ main (int argc, char **argv)
                                                 &error)) {
                         g_printerr ("cannot spawn '%s': %s\n", command_line, error->message);
                         g_error_free (error);
+                        ret = 3; /* indicate FilesystemToolsMissing error */
                         goto out;
                 }
                 if (WEXITSTATUS (exit_status) != 0) {
