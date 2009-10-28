@@ -8817,12 +8817,6 @@ device_drive_ata_smart_refresh_data_authorized_cb (Daemon *daemon,
 
   daemon_local_get_uid (device->priv->daemon, &caller_uid, context);
 
-  if (!device->priv->drive_ata_smart_is_available)
-    {
-      throw_error (context, ERROR_FAILED, "Device does not support ATA SMART");
-      goto out;
-    }
-
   simuldata = NULL;
   nowakeup = FALSE;
   for (n = 0; options[n] != NULL; n++)
@@ -8838,11 +8832,18 @@ device_drive_ata_smart_refresh_data_authorized_cb (Daemon *daemon,
                 }
             }
           simuldata = (const char *) options[n] + 9;
+          device_set_drive_ata_smart_is_available (device, TRUE);
         }
       else if (strcmp (options[n], "nowakeup") == 0)
         {
           nowakeup = TRUE;
         }
+    }
+
+  if (!device->priv->drive_ata_smart_is_available)
+    {
+      throw_error (context, ERROR_FAILED, "Device does not support ATA SMART");
+      goto out;
     }
 
   if (simuldata != NULL)
@@ -8881,12 +8882,6 @@ device_drive_ata_smart_refresh_data (Device *device,
 {
   const gchar *action_id;
 
-  if (!device->priv->drive_ata_smart_is_available)
-    {
-      throw_error (context, ERROR_FAILED, "Device does not support ATA SMART");
-      goto out;
-    }
-
   action_id = NULL;
   if (context != NULL)
     {
@@ -8904,7 +8899,6 @@ device_drive_ata_smart_refresh_data (Device *device,
                            g_strdupv (options),
                            g_strfreev);
 
- out:
   return TRUE;
 }
 
