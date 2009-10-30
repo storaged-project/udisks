@@ -10,6 +10,8 @@ KERNEL=="loop*|ram*", GOTO="devkit_disks_end"
 # devices - never touch the device on add events
 KERNEL=="dm-*", ACTION!="change", GOTO="devkit_disks_end"
 
+ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}=="1", GOTO="devkit_disks_end"
+
 ##############################################################################################################
 
 # Probe for partition tables; this really should be part of udev
