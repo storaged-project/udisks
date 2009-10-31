@@ -83,6 +83,7 @@ static gboolean devkit_disks_device_local_is_busy (DevkitDisksDevice *device,
 
 static gboolean devkit_disks_device_local_partitions_are_busy (DevkitDisksDevice *device);
 static gboolean devkit_disks_device_local_logical_partitions_are_busy (DevkitDisksDevice *device);
+static gboolean devkit_disks_device_has_logical_partitions (DevkitDisksDevice *device);
 
 
 static gboolean luks_get_uid_from_dm_name (const char *dm_name, uid_t *out_uid);
@@ -3497,6 +3498,34 @@ devkit_disks_device_local_logical_partitions_are_busy (DevkitDisksDevice *device
         return ret;
 }
 
+static gboolean
+devkit_disks_device_has_logical_partitions (DevkitDisksDevice *device)
+{
+        gboolean ret;
+        GList *l;
+        GList *devices;
+
+        ret = FALSE;
+
+        devices = devkit_disks_daemon_local_get_all_devices (device->priv->daemon);
+        for (l = devices; l != NULL; l = l->next) {
+                DevkitDisksDevice *d = DEVKIT_DISKS_DEVICE (l->data);
+
+                if (d->priv->device_is_partition &&
+                    d->priv->partition_slave != NULL &&
+                    g_strcmp0 (d->priv->partition_slave, device->priv->object_path) == 0 &&
+                    g_strcmp0 (d->priv->partition_scheme, "mbr") == 0 &&
+                    d->priv->partition_number >= 5) {
+
+                        ret = TRUE;
+                }
+        }
+
+        g_list_free (devices);
+
+        return ret;
+}
+
 void
 devkit_disks_device_removed (DevkitDisksDevice *device)
 {
@@ -5628,6 +5657,8 @@ devkit_disks_device_partition_delete_authorized_cb (DevkitDisksDaemon     *daemo
         char *size_as_string;
         char *part_number_as_string;
         DevkitDisksDevice *enclosing_device;
+        const gchar *partition_scheme;
+        gint partition_type;
 
         offset_as_string = NULL;
         size_as_string = NULL;
@@ -5660,6 +5691,19 @@ devkit_disks_device_partition_delete_authorized_cb (DevkitDisksDaemon     *daemo
                 dbus_g_method_return_error (context, error);
                 g_error_free (error);
                 goto out;
+        }
+
+        /* don't allow deleting an extended partition if we have any logical partitions */
+        partition_scheme = g_udev_device_get_property (device->priv->d, "DKD_PARTITION_SCHEME");
+        partition_type = g_udev_device_get_property_as_int (device->priv->d, "DKD_PARTITION_TYPE");
+        if (g_strcmp0 (partition_scheme, "mbr") == 0 &&
+            (partition_type == 0x05 || partition_type == 0x0f || partition_type == 0x85)) {
+                if (devkit_disks_device_has_logical_partitions (enclosing_device)) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_FAILED,
+                                     "Cannot delete extended partition while logical partitions exist");
+                        goto out;
+                }
         }
 
         offset_as_string = g_strdup_printf ("%" G_GINT64_FORMAT "", device->priv->partition_offset);

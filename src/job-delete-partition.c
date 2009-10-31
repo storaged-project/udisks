@@ -34,6 +34,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/wait.h>
+#include <linux/blkpg.h>
 
 #include <glib.h>
 
@@ -84,8 +85,32 @@ main (int argc, char **argv)
                 goto out;
         }
 
-        /* ask libparted to poke the kernel */
-        if (part_del_partition ((char *) device, offset, TRUE)) {
+        /* don't ask libparted to poke the kernel - it won't work if other partitions are mounted/busy */
+        if (part_del_partition ((char *) device, offset, FALSE)) {
+                gint fd;
+                struct blkpg_ioctl_arg a;
+                struct blkpg_partition p;
+
+                /* now, ask the kernel to delete the partition */
+                fd = open (device, O_RDONLY);
+                if (fd < 0) {
+                        g_printerr ("Cannot open %s: %m\n", device);
+                        goto out;
+                }
+                memset (&a, '\0', sizeof (struct blkpg_ioctl_arg));
+                memset (&p, '\0', sizeof (struct blkpg_partition));
+                p.pno = part_number;
+                a.op = BLKPG_DEL_PARTITION;
+                a.datalen = sizeof(p);
+                a.data = &p;
+                if (ioctl (fd, BLKPG, &a) == -1) {
+                        g_printerr ("Error doing BLKPG ioctl with BLKPG_DEL_PARTITION for partition %d on %s: %m\n",
+                                    part_number,
+                                    device);
+                        close (fd);
+                        goto out;
+                }
+                close (fd);
 
                 /* zero the contents of what was the _partition_
                  *
