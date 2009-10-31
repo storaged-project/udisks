@@ -356,7 +356,7 @@ gboolean              part_create_partition_table (char *device, PartitionScheme
  */
 gboolean              part_add_partition (char *device, 
 					  guint64 start, guint64 size, 
-					  guint64 *out_start, guint64 *out_size, 
+					  guint64 *out_start, guint64 *out_size, guint *out_num,
 					  char *type, char *label, char **flags,
 					  int geometry_hps, int geometry_spt,
                                           gboolean poke_kernel);

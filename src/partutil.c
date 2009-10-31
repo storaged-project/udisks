@@ -1265,7 +1265,7 @@ static gboolean
 part_add_change_partition (char *device_file,
 			   guint64 start, guint64 size,
 			   guint64 new_start, guint64 new_size,
-			   guint64 *out_start, guint64 *out_size,
+			   guint64 *out_start, guint64 *out_size, guint *out_num,
 			   char *type, char *label, char **flags,
 			   int geometry_hps, int geometry_spt,
                            gboolean poke_kernel)
@@ -1638,8 +1638,12 @@ try_change_again:
 		}
 	}
 
-	*out_start = part->geom.start * 512;
-	*out_size = part->geom.length * 512;
+        if (out_start != NULL)
+                *out_start = part->geom.start * 512;
+        if (out_size != NULL)
+                *out_size = part->geom.length * 512;
+        if (out_num != NULL)
+                *out_num = part->num;
 
 	if (is_change) {
 		/* make sure the resulting size is never smaller than requested
@@ -1705,7 +1709,7 @@ out:
 gboolean
 part_add_partition (char *device_file,
 		    guint64 start, guint64 size,
-		    guint64 *out_start, guint64 *out_size,
+		    guint64 *out_start, guint64 *out_size, guint *out_num,
 		    char *type, char *label, char **flags,
 		    int geometry_hps, int geometry_spt,
                     gboolean poke_kernel)
@@ -1713,7 +1717,7 @@ part_add_partition (char *device_file,
 	return part_add_change_partition (device_file,
 					  start, size,
 					  0, 0,
-					  out_start, out_size,
+					  out_start, out_size, out_num,
 					  type, label, flags,
 					  geometry_hps, geometry_spt,
                                           poke_kernel);
@@ -1730,7 +1734,7 @@ part_change_partition (char *device_file,
 	return part_add_change_partition (device_file,
 					  start, 0,
 					  new_start, new_size,
-					  out_start, out_size,
+					  out_start, out_size, NULL,
 					  type, label, flags,
 					  geometry_hps, geometry_spt,
                                           FALSE);

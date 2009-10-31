@@ -101,7 +101,7 @@ main (int argc, char **argv)
                 memset (&p, '\0', sizeof (struct blkpg_partition));
                 p.pno = part_number;
                 a.op = BLKPG_DEL_PARTITION;
-                a.datalen = sizeof(p);
+                a.datalen = sizeof (p);
                 a.data = &p;
                 if (ioctl (fd, BLKPG, &a) == -1) {
                         g_printerr ("Error doing BLKPG ioctl with BLKPG_DEL_PARTITION for partition %d on %s: %m\n",
