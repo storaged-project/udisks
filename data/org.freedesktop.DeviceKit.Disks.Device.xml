@@ -1308,19 +1308,19 @@
     <!-- ************************************************************ -->
 
     <signal name="JobChanged">
-      <arg name="job-in-progress" type="b">
+      <arg name="job_in_progress" type="b">
         <doc:doc><doc:summary>Whether a job is currently in progress.</doc:summary></doc:doc>
       </arg>
-      <arg name="job-is-cancellable" type="b">
+      <arg name="job_is_cancellable" type="b">
         <doc:doc><doc:summary>Whether the job is cancellable.</doc:summary></doc:doc>
       </arg>
-      <arg name="job-id" type="s">
+      <arg name="job_id" type="s">
         <doc:doc><doc:summary>The identifier of the job.</doc:summary></doc:doc>
       </arg>
-      <arg name="job-initiated-by-uid" type="u">
+      <arg name="job_initiated_by_uid" type="u">
         <doc:doc><doc:summary>The UNIX user id of the user who initiated the job.</doc:summary></doc:doc>
       </arg>
-      <arg name="job-percentage" type="d">
+      <arg name="job_percentage" type="d">
         <doc:doc><doc:summary>Percentage completed of the job (between 0 and 100, negative if unknown).</doc:summary></doc:doc>
       </arg>
 

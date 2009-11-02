@@ -443,25 +443,25 @@
       <arg name="device" type="o">
         <doc:doc><doc:summary>The object path of the device.</doc:summary></doc:doc>
       </arg>
-      <arg name="job-in-progress" type="b">
+      <arg name="job_in_progress" type="b">
         <doc:doc><doc:summary>Whether a job is currently in progress.</doc:summary></doc:doc>
       </arg>
-      <arg name="job-is-cancellable" type="b">
+      <arg name="job_is_cancellable" type="b">
         <doc:doc><doc:summary>Whether the job is cancellable.</doc:summary></doc:doc>
       </arg>
-      <arg name="job-id" type="s">
+      <arg name="job_id" type="s">
         <doc:doc><doc:summary>The identifier of the job.</doc:summary></doc:doc>
       </arg>
-      <arg name="job-num-tasks" type="i">
+      <arg name="job_num_tasks" type="i">
         <doc:doc><doc:summary>Number of tasks in the job.</doc:summary></doc:doc>
       </arg>
-      <arg name="job-cur-task" type="i">
+      <arg name="job_cur_task" type="i">
         <doc:doc><doc:summary>Current task number (zero-based offset).</doc:summary></doc:doc>
       </arg>
-      <arg name="job-cur-task-id" type="s">
+      <arg name="job_cur_task_id" type="s">
         <doc:doc><doc:summary>Task identifier for current task.</doc:summary></doc:doc>
       </arg>
-      <arg name="job-cur-task-percentage" type="d">
+      <arg name="job_cur_task_percentage" type="d">
         <doc:doc><doc:summary>Percentage completed of current task (between 0 and 100, negative if unknown).</doc:summary></doc:doc>
       </arg>
 
