@@ -1,4 +1,42 @@
 -------------------
+DeviceKit-disks 009
+-------------------
+
+DeviceKit-disks is a daemon that provide interfaces to obtain
+information and perform operations on storage devices.
+
+NOTE NOTE NOTE: This is an unstable release of DeviceKit-disks, all
+                API is subject to change.
+
+David Zeuthen (15):
+      Post-release version bump to 009
+      Various device-mapper and cryptsetup fixes
+      Pass -T to cryptsetup to handle incorrect passphrases
+      When updating holders/slaves, defer the updates to an idle handler
+      Work around blkid incorrectly detecting FAT on extended partitions
+      Use 'udevadm settle' instead of 15-second timeout
+      Allow creating a partition table with same scheme as existing one
+      Pass -F to mkfs.ext[234] to allow creating a filesystem on the whole disk
+      Use unregister facility in dbus-glib 0.82 and misc life-cycle fixes
+      Add new LinuxMdComponentPosition property
+      Also ignore a device if DM_UDEV_DISABLE_OTHER_RULES_FLAG is set
+      Use BLKPG_DEL_PARTITION when deleting partitions instead of libparted
+      Use BLKPG_ADD_PARTITION when adding a partition
+      Don't use hyphens in param names
+      Update NEWS for release
+
+Martin Pitt (6):
+      Bug 24673 — Support creating swap fs with labels
+      Bug 24778 — throw_error() segfaults for daemon-internally called methods
+      Bug 24757 — Bashism in luks helper breaks password changing
+      Bug 24757 – Simplify helper-change-luks-password
+      Bug 24679 — Support creating minix file systems
+      Bug 24718 — Proper handling of missing mkfs.*/fsck.*
+
+David Zeuthen,
+November 2, 2009
+
+-------------------
 DeviceKit-disks 008
 -------------------
 
