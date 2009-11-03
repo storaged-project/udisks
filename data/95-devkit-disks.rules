@@ -6,6 +6,17 @@ ACTION!="add|change", GOTO="devkit_disks_end"
 SUBSYSTEM!="block", GOTO="devkit_disks_end"
 KERNEL=="loop*|ram*", GOTO="devkit_disks_end"
 
+# Mark devices that shouldn't be automounted / autoassembled etc.
+#
+# Deny all, then punch holes for what looks like physical drives
+# (TODO: this heuristic might need some work)
+#
+
+ENV{DKD_PRESENTATION_NOPOLICY}="1"
+KERNEL=="sd*|hd*|sr*|mmcblk*|mspblk*", ENV{DKD_PRESENTATION_NOPOLICY}="0"
+
+##############################################################################################################
+
 # we only care about change events on device-mapper
 # devices - never touch the device on add events
 KERNEL=="dm-*", ACTION!="change", GOTO="devkit_disks_end"
@@ -152,15 +163,5 @@ ENV{ID_FS_TYPE}=="ntfs|vfat", \
 
 ##############################################################################################################
 
-# Mark devices that shouldn't be automounted / autoassembled etc.
-#
-# Deny all, then punch holes for what looks like physical drives
-# (TODO: this heuristic might need some work)
-#
-
-ENV{DKD_PRESENTATION_NOPOLICY}="1"
-KERNEL=="sd*|hd*|sr*|mmcblk*|mspblk*", ENV{DKD_PRESENTATION_NOPOLICY}="0"
-
-##############################################################################################################
 
 LABEL="devkit_disks_end"
