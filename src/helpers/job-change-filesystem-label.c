@@ -82,6 +82,12 @@ main (int argc,
         command_line = g_strdup_printf ("xfs_admin -L \"%s\" %s", new_label, device);
 
     }
+  else if (strcmp (fstype, "reiserfs") == 0)
+    {
+      if (!validate_and_escape_label (&new_label, 16))
+        goto out;
+      command_line = g_strdup_printf ("reiserfstune -l \"%s\" %s", new_label, device);
+    }
   else if (strcmp (fstype, "vfat") == 0)
     {
       if (!validate_and_escape_label (&new_label, 254))
