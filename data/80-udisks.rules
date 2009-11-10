@@ -170,6 +170,11 @@ ENV{UDISKS_PARTITION_SCHEME}=="gpt", \
   ENV{UDISKS_PARTITION_TYPE}=="C12A7328-F81F-11D2-BA4B-00A0C93EC93B|21686148-6449-6E6F-744E-656564454649", \
   ENV{UDISKS_PRESENTATION_HIDE}="1"
 
+# APM recovery/tool partitions which are useless on Linux
+ENV{DKD_PARTITION_SCHEME}=="apm", \
+  ENV{ID_CDROM}=="?*", ENV{ID_FS_TYPE}=="udf", ENV{ID_FS_LABEL}=="WD_SmartWare", \
+  ENV{DKD_PRESENTATION_HIDE}="1"
+
 # recovery partitions (taken from old hal rules)
 ENV{ID_FS_TYPE}=="ntfs|vfat", \
   ENV{ID_FS_LABEL}=="RECOVERY|HP_RECOVERY|Recovery Partition|DellUtility|DellRestore|IBM_SERVICE|SERVICEV001|SERVICEV002", \
