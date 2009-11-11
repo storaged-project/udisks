@@ -8138,6 +8138,19 @@ drive_ata_smart_refresh_data_completed_cb (DBusGMethodInvocation *context,
 
         blob = (gchar *) g_base64_decode (stdout, &blob_size);
 
+        if (blob == NULL) {
+                if (context != NULL) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_FAILED,
+                                     "Error decoding ATA SMART data: invalid base64 format: %s",
+                                     stdout);
+                } else {
+                        g_warning ("Error decoding ATA SMART data: invalid base64 format: %s",
+                                   stdout);
+                }
+                goto out;
+        }
+
         if (sk_disk_open (NULL, &d) != 0) {
                 if (context != NULL) {
                         throw_error (context,
