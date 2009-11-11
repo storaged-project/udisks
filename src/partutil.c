@@ -1512,13 +1512,6 @@ part_add_change_partition (char *device_file,
 	if (scheme == PART_TYPE_GPT) {
 		struct {
 			efi_guid	type;
-			efi_guid	uuid;
-			char		name[37];
-			int		lvm;
-			int		raid;
-			int		boot;
-			int		hp_service;
-			int             hidden;
 			/* more stuff */
 		} *gpt_data = (void *) part->disk_specific;
 
@@ -1529,31 +1522,19 @@ part_add_change_partition (char *device_file,
 			}
 		}
 
-		if (flags != NULL) {
-			if (gpt_attributes & 1) {
-				gpt_data->hidden = 1;
-			} else {
-				gpt_data->hidden = 0;
-			}
-		}
+		ped_partition_set_flag (part, PED_PARTITION_HIDDEN, (gpt_attributes & 1) != 0);
 
 	} else if (scheme == PART_TYPE_MSDOS || scheme == PART_TYPE_MSDOS_EXTENDED) {
 		struct {
 			unsigned char	system;
-			int		boot;
 			/* more stuff */
 		} *dos_data = (void *) part->disk_specific;
 
 		if (type != NULL) {
 			dos_data->system = mbr_part_type;
 		}
-		if (flags != NULL) {
-			if (mbr_flags & 0x80) {
-				dos_data->boot = 1;
-			} else {
-				dos_data->boot = 0;
-			}
-		}
+
+		ped_partition_set_flag (part, PED_PARTITION_BOOT, (mbr_flags & 0x80) != 0);
 
 	} else if (scheme == PART_TYPE_APPLE) {
 		struct {
