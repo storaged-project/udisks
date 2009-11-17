@@ -38,7 +38,6 @@
 #include <glib/gi18n-lib.h>
 #include <glib-object.h>
 
-#define DBUS_API_SUBJECT_TO_CHANGE
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
 

@@ -27,7 +27,6 @@
 #include <scsi/sg_lib.h>
 #include <scsi/sg_cmds.h>
 
-#define LIBUDEV_I_KNOW_THE_API_IS_SUBJECT_TO_CHANGE
 #include <libudev.h>
 
 #include <glib.h>
