@@ -64,6 +64,85 @@ report_progress (gdouble percent,
     }
 }
 
+static gboolean
+guesstimate_optimal_buffer_size (guint num_samples)
+{
+  GTimeVal begin_time;
+  GTimeVal end_time;
+  gboolean ret;
+  gssize remaining;
+  gssize total_read;
+  gdouble duration_secs;
+  gssize num_read;
+
+  /* We don't want the benchmark to take forever. So measure the speed in the start and
+   * adjust buffer_size such that doing num_samples reads of buffer_size won't take
+   * more than 30 seconds.
+   *
+   * We do this by checking how long it takes to read buffer_size.
+   */
+
+  ret = FALSE;
+
+  if (lseek (fd, 0, SEEK_SET) == -1)
+    {
+      g_printerr ("Error seeking to start of disk for %s when guesstimating buffer size: %m\n",
+                  device_file);
+      goto out;
+    }
+
+  g_get_current_time (&begin_time);
+  remaining = buffer_size;
+  total_read = 0;
+  while (total_read < remaining)
+    {
+      num_read = read (fd, buf, remaining - total_read);
+
+      if (num_read == 0)
+        {
+          break;
+        }
+      else if (num_read < 0)
+        {
+          g_printerr ("Error reading %" G_GSSIZE_FORMAT " bytes at %" G_GOFFSET_FORMAT " from %s "
+                      "when guesstimating buffer size: %m\n",
+                      buffer_size,
+                      (remaining - total_read),
+                      device_file);
+          goto out;
+        }
+      else
+        {
+          total_read += num_read;
+        }
+    }
+  g_get_current_time (&end_time);
+
+  duration_secs = ((end_time.tv_sec * G_USEC_PER_SEC + end_time.tv_usec) -
+                   (begin_time.tv_sec * G_USEC_PER_SEC + begin_time.tv_usec)) / ((gdouble) G_USEC_PER_SEC);
+
+  /* duration_secs is (approx) the number of seconds needed to do one sample */
+  if (duration_secs * num_samples > 30.0)
+    {
+      guint64 new_buffer_size;
+
+      new_buffer_size = buffer_size * 30.0 / (duration_secs * num_samples);
+      new_buffer_size &= ~(page_size - 1);
+
+      if (new_buffer_size < 1 * 1024 * 1024)
+        {
+          g_printerr ("Device %s is too slow to benchmark", device_file);
+          goto out;
+        }
+
+      buffer_size = new_buffer_size;
+    }
+
+  ret = TRUE;
+
+ out:
+  return ret;
+}
 
 static gboolean
 measure_transfer_rate (guint num_samples,
@@ -92,7 +171,7 @@ measure_transfer_rate (guint num_samples,
       pos = n * size / num_samples;
 
       /* O_DIRECT also only wants to read from page offsets */
-      pos &= ~(page_size -1);
+      pos &= ~(page_size - 1);
 
       if (lseek (fd, pos, SEEK_SET) == -1)
         {
@@ -329,8 +408,6 @@ main (int argc, char *argv[])
   num_transfer_rate_samples = 200;
   num_access_time_samples = 1000;
 
-  buffer_size = 20 * 1024 * 1024;
-
   device_file = argv[1];
 
   do_write_benchmark = atoi (argv[2]);
@@ -359,10 +436,20 @@ main (int argc, char *argv[])
       goto out;
     }
 
+  /* upper bound for buffer size */
+  buffer_size = 100 * 1024 * 1024;
+
   buf_unaligned = g_new0 (guchar, buffer_size + page_size);
 
   /* O_DIRECT needs a page aligned buffer */
   buf = (guchar*) (((gintptr) (buf_unaligned + page_size)) & (~(page_size - 1)));
+
+  g_print ("devkit-disks-helper-progress: 0.0\n");
+
+  if (!guesstimate_optimal_buffer_size (num_transfer_rate_samples))
+    goto out;
+
+  /* TODO: report back chosen buffer_size? g_print ("buffer_size: %" G_GUINT64_FORMAT "\n", buffer_size); */
 
   cur_task = 0;
   if (do_write_benchmark)
