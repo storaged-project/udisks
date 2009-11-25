@@ -124,12 +124,7 @@ measure_transfer_rate (guint num_samples,
                           sample_size,
                           pos + (remaining - total_read),
                           device_file);
-              /* Don't abort the benchmark on error - just set the sample to 0 to indicate an error and
-               * move on to the next sample - this is useful when dealing with old broken disks - it's
-               * nice to be able to benchmark them even if we get read errors.
-               */
-              total_read = 0;
-              break;
+              goto out;
             }
           else
             {
@@ -214,13 +209,7 @@ measure_write_transfer_rate (guint num_samples,
                           sample_size,
                           pos + (remaining - total_written),
                           device_file);
-
-              /* Don't abort the benchmark on error - just set the sample to 0 to indicate an error and
-               * move on to the next sample - this is useful when dealing with old broken disks - it's
-               * nice to be able to benchmark them even if we get read errors.
-               */
-              total_written = 0;
-              break;
+              goto out;
             }
           else
             {
