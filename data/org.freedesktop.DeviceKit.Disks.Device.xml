@@ -1912,6 +1912,36 @@
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
+    <property name="DriveWwn" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The <doc:ulink url="http://en.wikipedia.org/wiki/World_Wide_Name">World Wide Name</doc:ulink>
+            in hex (without a leading "0x") or blank if the drive has no WWN.
+            Example: <doc:tt>50014ee0016eb572</doc:tt>.
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsDrive">DeviceIsDrive</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="DriveRotationRate" type="u" access="read">
+      <doc:doc><doc:description><doc:para>
+            The rotational rate of the disk (e.g. 4200, 5400, 5900, 7200, 10000, 15000) in rounds
+            per minute or 0 if unknown.
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsDrive">DeviceIsDrive</doc:ref>
+            is TRUE and
+            <doc:ref type="property" to="Device:DriveIsRotational">DriveIsRotational</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="DriveWriteCache" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            Whether the write cache is enabled, known values include "enabled" and "disabled" and
+            the blank string if unknown.
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsDrive">DeviceIsDrive</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
     <property name="DriveConnectionInterface" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The interface through which the drive is connected. Known values include:

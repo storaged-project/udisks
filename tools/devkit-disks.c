@@ -359,6 +359,7 @@ typedef struct
         char    *drive_model;
         char    *drive_revision;
         char    *drive_serial;
+        char    *drive_wwn;
         char    *drive_connection_interface;
         guint64  drive_connection_speed;
         char   **drive_media_compatibility;
@@ -367,6 +368,8 @@ typedef struct
         gboolean drive_can_detach;
         gboolean drive_can_spindown;
         gboolean drive_is_rotational;
+        guint    drive_rotation_rate;
+        char    *drive_write_cache;
 
         gboolean optical_disc_is_blank;
         gboolean optical_disc_is_appendable;
@@ -540,6 +543,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->drive_revision = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "DriveSerial") == 0)
                 props->drive_serial = g_strdup (g_value_get_string (value));
+        else if (strcmp (key, "DriveWwn") == 0)
+                props->drive_wwn = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "DriveConnectionInterface") == 0)
                 props->drive_connection_interface = g_strdup (g_value_get_string (value));
         else if (strcmp (key, "DriveConnectionSpeed") == 0)
@@ -556,6 +561,10 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->drive_can_spindown = g_value_get_boolean (value);
         else if (strcmp (key, "DriveIsRotational") == 0)
                 props->drive_is_rotational = g_value_get_boolean (value);
+        else if (strcmp (key, "DriveRotationRate") == 0)
+                props->drive_rotation_rate = g_value_get_uint (value);
+        else if (strcmp (key, "DriveWriteCache") == 0)
+                props->drive_write_cache = g_strdup (g_value_get_string (value));
 
         else if (strcmp (key, "OpticalDiscIsBlank") == 0)
                 props->optical_disc_is_blank = g_value_get_boolean (value);
@@ -671,6 +680,7 @@ device_properties_free (DeviceProperties *props)
         g_free (props->drive_vendor);
         g_free (props->drive_revision);
         g_free (props->drive_serial);
+        g_free (props->drive_wwn);
         g_free (props->drive_connection_interface);
         g_strfreev (props->drive_media_compatibility);
         g_free (props->drive_media);
@@ -1096,9 +1106,23 @@ do_show_info (const char *object_path)
                 g_print ("    model:                     %s\n", props->drive_model);
                 g_print ("    revision:                  %s\n", props->drive_revision);
                 g_print ("    serial:                    %s\n", props->drive_serial);
+                g_print ("    WWN:                       %s\n", props->drive_wwn);
                 g_print ("    detachable:                %d\n", props->drive_can_detach);
                 g_print ("    can spindown:              %d\n", props->drive_can_spindown);
-                g_print ("    rotational media:          %d\n", props->drive_is_rotational);
+                if (props->drive_is_rotational) {
+                        if (props->drive_rotation_rate > 0) {
+                                g_print ("    rotational media:          Yes, at %d RPM\n", props->drive_rotation_rate);
+                        } else {
+                                g_print ("    rotational media:          Yes, unknown rate\n");
+                        }
+                } else {
+                        g_print ("    rotational media:          No\n");
+                }
+                if (props->drive_write_cache == NULL || strlen (props->drive_write_cache) == 0) {
+                        g_print ("    write-cache:               unknown\n");
+                } else {
+                        g_print ("    write-cache:               %s\n", props->drive_write_cache);
+                }
                 g_print ("    ejectable:                 %d\n", props->drive_is_media_ejectable);
                 g_print ("    media:                     %s\n", props->drive_media);
                 g_print ("      compat:                 ");

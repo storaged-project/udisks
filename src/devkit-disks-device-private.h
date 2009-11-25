@@ -148,6 +148,7 @@ struct DevkitDisksDevicePrivate
         char *drive_model;
         char *drive_revision;
         char *drive_serial;
+        char *drive_wwn;
         char *drive_connection_interface;
         guint drive_connection_speed;
         GPtrArray *drive_media_compatibility;
@@ -156,6 +157,8 @@ struct DevkitDisksDevicePrivate
         gboolean drive_can_detach;
         gboolean drive_can_spindown;
         gboolean drive_is_rotational;
+        guint drive_rotation_rate;
+        char *drive_write_cache;
 
         gboolean optical_disc_is_blank;
         gboolean optical_disc_is_appendable;
@@ -267,6 +270,7 @@ void devkit_disks_device_set_drive_vendor (DevkitDisksDevice *device, const gcha
 void devkit_disks_device_set_drive_model (DevkitDisksDevice *device, const gchar *value);
 void devkit_disks_device_set_drive_revision (DevkitDisksDevice *device, const gchar *value);
 void devkit_disks_device_set_drive_serial (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_drive_wwn (DevkitDisksDevice *device, const gchar *value);
 void devkit_disks_device_set_drive_connection_interface (DevkitDisksDevice *device, const gchar *value);
 void devkit_disks_device_set_drive_connection_speed (DevkitDisksDevice *device, guint value);
 void devkit_disks_device_set_drive_media_compatibility (DevkitDisksDevice *device, GStrv value);
@@ -275,6 +279,8 @@ void devkit_disks_device_set_drive_is_media_ejectable (DevkitDisksDevice *device
 void devkit_disks_device_set_drive_can_detach (DevkitDisksDevice *device, gboolean value);
 void devkit_disks_device_set_drive_can_spindown (DevkitDisksDevice *device, gboolean value);
 void devkit_disks_device_set_drive_is_rotational (DevkitDisksDevice *device, gboolean value);
+void devkit_disks_device_set_drive_rotation_rate (DevkitDisksDevice *device, guint value);
+void devkit_disks_device_set_drive_write_cache (DevkitDisksDevice *device, const gchar *value);
 
 void devkit_disks_device_set_optical_disc_is_blank (DevkitDisksDevice *device, gboolean value);
 void devkit_disks_device_set_optical_disc_is_appendable (DevkitDisksDevice *device, gboolean value);

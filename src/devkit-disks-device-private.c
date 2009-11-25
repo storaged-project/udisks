@@ -680,6 +680,17 @@ devkit_disks_device_set_drive_serial (DevkitDisksDevice *device, const gchar *va
 }
 
 void
+devkit_disks_device_set_drive_wwn (DevkitDisksDevice *device, const gchar *value)
+{
+  if (G_UNLIKELY (g_strcmp0 (device->priv->drive_wwn, value) != 0))
+    {
+      g_free (device->priv->drive_wwn);
+      device->priv->drive_wwn = g_strdup (value);
+      emit_changed (device, "drive_wwn");
+    }
+}
+
+void
 devkit_disks_device_set_drive_connection_interface (DevkitDisksDevice *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->drive_connection_interface, value) != 0))
@@ -759,6 +770,27 @@ devkit_disks_device_set_drive_is_rotational (DevkitDisksDevice *device, gboolean
     {
       device->priv->drive_is_rotational = value;
       emit_changed (device, "drive_is_rotational");
+    }
+}
+
+void
+devkit_disks_device_set_drive_rotation_rate (DevkitDisksDevice *device, guint value)
+{
+  if (G_UNLIKELY (device->priv->drive_rotation_rate != value))
+    {
+      device->priv->drive_rotation_rate = value;
+      emit_changed (device, "drive_rotation_rate");
+    }
+}
+
+void
+devkit_disks_device_set_drive_write_cache (DevkitDisksDevice *device, const gchar *value)
+{
+  if (G_UNLIKELY (g_strcmp0 (device->priv->drive_write_cache, value) != 0))
+    {
+      g_free (device->priv->drive_write_cache);
+      device->priv->drive_write_cache = g_strdup (value);
+      emit_changed (device, "drive_write_cache");
     }
 }
 

@@ -205,6 +205,7 @@ enum
         PROP_DRIVE_MODEL,
         PROP_DRIVE_REVISION,
         PROP_DRIVE_SERIAL,
+        PROP_DRIVE_WWN,
         PROP_DRIVE_CONNECTION_INTERFACE,
         PROP_DRIVE_CONNECTION_SPEED,
         PROP_DRIVE_MEDIA_COMPATIBILITY,
@@ -213,6 +214,8 @@ enum
         PROP_DRIVE_CAN_DETACH,
         PROP_DRIVE_CAN_SPINDOWN,
         PROP_DRIVE_IS_ROTATIONAL,
+        PROP_DRIVE_ROTATION_RATE,
+        PROP_DRIVE_WRITE_CACHE,
 
         PROP_OPTICAL_DISC_IS_BLANK,
         PROP_OPTICAL_DISC_IS_APPENDABLE,
@@ -489,6 +492,9 @@ get_property (GObject         *object,
 	case PROP_DRIVE_SERIAL:
 		g_value_set_string (value, device->priv->drive_serial);
 		break;
+	case PROP_DRIVE_WWN:
+		g_value_set_string (value, device->priv->drive_wwn);
+		break;
 	case PROP_DRIVE_CONNECTION_INTERFACE:
 		g_value_set_string (value, device->priv->drive_connection_interface);
 		break;
@@ -512,6 +518,12 @@ get_property (GObject         *object,
 		break;
 	case PROP_DRIVE_IS_ROTATIONAL:
 		g_value_set_boolean (value, device->priv->drive_is_rotational);
+		break;
+	case PROP_DRIVE_WRITE_CACHE:
+		g_value_set_string (value, device->priv->drive_write_cache);
+		break;
+	case PROP_DRIVE_ROTATION_RATE:
+		g_value_set_uint (value, device->priv->drive_rotation_rate);
 		break;
 
 	case PROP_OPTICAL_DISC_IS_BLANK:
@@ -935,6 +947,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 g_param_spec_string ("drive-serial", NULL, NULL, NULL, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
+                PROP_DRIVE_WWN,
+                g_param_spec_string ("drive-wwn", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
                 PROP_DRIVE_CONNECTION_INTERFACE,
                 g_param_spec_string ("drive-connection-interface", NULL, NULL, NULL, G_PARAM_READABLE));
         g_object_class_install_property (
@@ -967,6 +983,14 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DRIVE_IS_ROTATIONAL,
                 g_param_spec_boolean ("drive-is-rotational", NULL, NULL, FALSE, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_ROTATION_RATE,
+                g_param_spec_uint ("drive-rotation-rate", NULL, NULL, 0, G_MAXUINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_WRITE_CACHE,
+                g_param_spec_string ("drive-write-cache", NULL, NULL, FALSE, G_PARAM_READABLE));
 
         g_object_class_install_property (
                 object_class,
@@ -1196,6 +1220,7 @@ devkit_disks_device_finalize (GObject *object)
         g_free (device->priv->drive_model);
         g_free (device->priv->drive_revision);
         g_free (device->priv->drive_serial);
+        g_free (device->priv->drive_wwn);
         g_free (device->priv->drive_connection_interface);
         g_ptr_array_foreach (device->priv->drive_media_compatibility, (GFunc) g_free, NULL);
         g_ptr_array_free (device->priv->drive_media_compatibility, TRUE);
@@ -2037,8 +2062,18 @@ update_info_drive (DevkitDisksDevice *device)
 
         if (g_udev_device_has_property (device->priv->d, "ID_REVISION"))
                 devkit_disks_device_set_drive_revision (device, g_udev_device_get_property (device->priv->d, "ID_REVISION"));
-        if (g_udev_device_has_property (device->priv->d, "ID_SERIAL_SHORT"))
+        if (g_udev_device_has_property (device->priv->d, "ID_SCSI_SERIAL")) {
+                /* scsi_id sometimes use the WWN as the serial - annoying - see
+                 * http://git.kernel.org/?p=linux/hotplug/udev.git;a=commit;h=4e9fdfccbdd16f0cfdb5c8fa8484a8ba0f2e69d3
+                 * for details
+                 */
+                devkit_disks_device_set_drive_serial (device, g_udev_device_get_property (device->priv->d, "ID_SCSI_SERIAL"));
+        } else if (g_udev_device_has_property (device->priv->d, "ID_SERIAL_SHORT")) {
                 devkit_disks_device_set_drive_serial (device, g_udev_device_get_property (device->priv->d, "ID_SERIAL_SHORT"));
+        }
+
+        if (g_udev_device_has_property (device->priv->d, "ID_WWN"))
+                devkit_disks_device_set_drive_wwn (device, g_udev_device_get_property (device->priv->d, "ID_WWN") + 2);
 
         /* pick up some things (vendor, model, connection_interface, connection_speed)
          * not (yet) exported by udev helpers
@@ -2115,6 +2150,19 @@ update_info_drive (DevkitDisksDevice *device)
         devkit_disks_device_set_drive_is_rotational (device,
                                                      g_udev_device_get_sysfs_attr_as_boolean (device->priv->d,
                                                                                               "queue/rotational"));
+
+        if (g_udev_device_has_property (device->priv->d, "ID_ATA_ROTATION_RATE_RPM")) {
+                devkit_disks_device_set_drive_rotation_rate (device,
+                                                             g_udev_device_get_property_as_int (device->priv->d, "ID_ATA_ROTATION_RATE_RPM"));
+        }
+
+        if (g_udev_device_get_property_as_boolean (device->priv->d, "ID_ATA_WRITE_CACHE")) {
+                if (g_udev_device_get_property_as_boolean (device->priv->d, "ID_ATA_WRITE_CACHE_ENABLED")) {
+                        devkit_disks_device_set_drive_write_cache (device, "enabled");
+                } else {
+                        devkit_disks_device_set_drive_write_cache (device, "disabled");
+                }
+        }
 
         return TRUE;
 }
@@ -2501,6 +2549,7 @@ update_info_linux_md (DevkitDisksDevice *device)
                 g_free (s);
                 devkit_disks_device_set_drive_revision (device, device->priv->linux_md_version);
                 devkit_disks_device_set_drive_connection_interface (device, "virtual");
+                devkit_disks_device_set_drive_serial (device, device->priv->linux_md_uuid);
 
                 /* RAID-0 can never resync or run degraded */
                 if (g_strcmp0 (device->priv->linux_md_level, "raid0") == 0 ||
