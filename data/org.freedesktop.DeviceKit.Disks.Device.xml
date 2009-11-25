@@ -1293,6 +1293,74 @@
 
     <!-- ************************************************************ -->
 
+    <method name="DriveBenchmark">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+
+      <arg name="do_write_benchmark" direction="in" type="b">
+        <doc:doc><doc:summary>
+            If TRUE, write performance will be benchmarked in addition
+            to read performance. Note that benchmarking write performance
+            will scribble zeros in various parts of the drive and can
+            only be used on a drive where the contents are completely
+            unrecognized (e.g. no partition table and device). Use
+            this option with caution.
+        </doc:summary></doc:doc>
+      </arg>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
+      </arg>
+
+      <arg name="read_transfer_rate_results" direction="out" type="a(td)">
+        <doc:doc><doc:summary>
+            An array of pairs where the first element is the offset
+            and the second element is the measured read transfer rate
+            (in bytes/sec) at the given offset.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <arg name="write_transfer_rate_results" direction="out" type="a(td)">
+        <doc:doc><doc:summary>
+            An array of pairs where the first element is the offset
+            and the second element is the measured read transfer rate
+            (in bytes/sec) at the given offset.
+            This is an empty array unless write benchmarking has been
+            requested.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <arg name="access_time_results" direction="out" type="a(td)">
+        <doc:doc><doc:summary>
+            An array of pairs where the first element is the offset
+            and the second element the amount of time (in seconds) it
+            took to seek to the position.
+        </doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Benchmarks the drive.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need one of the following PolicyKit authorizations:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
+              <doc:definition>Needed to run benchmarks</doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
+          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
     <signal name="Changed">
       <doc:doc>
         <doc:description>

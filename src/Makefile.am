@@ -88,6 +88,7 @@ libexec_PROGRAMS += devkit-disks-helper-mkfs                    	\
 		    devkit-disks-helper-drive-detach			\
 		    devkit-disks-helper-drive-poll			\
 		    devkit-disks-helper-linux-md-check			\
+		    devkit-disks-helper-drive-benchmark			\
 		    $(NULL)
 
 libexec_SCRIPTS = devkit-disks-helper-change-luks-password
@@ -143,6 +144,10 @@ devkit_disks_helper_linux_md_check_LDADD = $(GLIB_LIBS)
 devkit_disks_helper_drive_poll_SOURCES = job-shared.h job-drive-poll.c
 devkit_disks_helper_drive_poll_CPPFLAGS = $(AM_CPPFLAGS)
 devkit_disks_helper_drive_poll_LDADD =  $(GLIB_LIBS)
+
+devkit_disks_helper_drive_benchmark_SOURCES = job-drive-benchmark.c
+devkit_disks_helper_drive_benchmark_CPPFLAGS = $(AM_CPPFLAGS)
+devkit_disks_helper_drive_benchmark_LDADD =  $(GLIB_LIBS)
 
 # TODO: move to udev
 udevhelperdir = $(slashlibdir)/udev

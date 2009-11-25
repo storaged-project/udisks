@@ -10224,3 +10224,202 @@ devkit_disks_device_drive_unset_spindown_timeout (DevkitDisksDevice     *device,
 }
 
 /*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+drive_benchmark_completed_cb (DBusGMethodInvocation *context,
+                              DevkitDisksDevice *device,
+                              gboolean job_was_cancelled,
+                              int status,
+                              const gchar *stderr,
+                              const gchar *stdout,
+                              gpointer user_data)
+{
+        if (WEXITSTATUS (status) == 0 && !job_was_cancelled) {
+                GPtrArray *read_transfer_rate_array;
+                GPtrArray *write_transfer_rate_array;
+                GPtrArray *access_time_array;
+                gchar **lines;
+                guint n;
+                GType elem_gtype;
+
+                elem_gtype = dbus_g_type_get_struct ("GValueArray",
+                                                     G_TYPE_UINT64,
+                                                     G_TYPE_DOUBLE,
+                                                     G_TYPE_INVALID);
+
+                read_transfer_rate_array = g_ptr_array_new_with_free_func ((GDestroyNotify) g_value_array_free);
+                write_transfer_rate_array = g_ptr_array_new_with_free_func ((GDestroyNotify) g_value_array_free);
+                access_time_array = g_ptr_array_new_with_free_func ((GDestroyNotify) g_value_array_free);
+
+                lines = g_strsplit (stdout, "\n", 0);
+                for (n = 0; lines != NULL && lines[n] != NULL; n++) {
+                        const gchar *line = lines[n];
+                        guint64 offset;
+                        gdouble rate;
+                        gdouble access_time;
+                        GValue elem = {0};
+
+                        if (sscanf (line, "read_transfer_rate: offset %" G_GUINT64_FORMAT " rate %lf",
+                                    &offset,
+                                    &rate) == 2) {
+
+                                g_value_init (&elem, elem_gtype);
+                                g_value_take_boxed (&elem, dbus_g_type_specialized_construct (elem_gtype));
+                                dbus_g_type_struct_set (&elem,
+                                                        0, offset,
+                                                        1, rate,
+                                                        G_MAXUINT);
+                                g_ptr_array_add (read_transfer_rate_array, g_value_get_boxed (&elem));
+
+                        } else if (sscanf (line, "write_transfer_rate: offset %" G_GUINT64_FORMAT " rate %lf",
+                                    &offset,
+                                    &rate) == 2) {
+
+                                g_value_init (&elem, elem_gtype);
+                                g_value_take_boxed (&elem, dbus_g_type_specialized_construct (elem_gtype));
+                                dbus_g_type_struct_set (&elem,
+                                                        0, offset,
+                                                        1, rate,
+                                                        G_MAXUINT);
+                                g_ptr_array_add (write_transfer_rate_array, g_value_get_boxed (&elem));
+
+                        } else if (sscanf (line, "access_time: offset %" G_GUINT64_FORMAT " time %lf",
+                                    &offset,
+                                    &access_time) == 2) {
+
+                                g_value_init (&elem, elem_gtype);
+                                g_value_take_boxed (&elem, dbus_g_type_specialized_construct (elem_gtype));
+                                dbus_g_type_struct_set (&elem,
+                                                        0, offset,
+                                                        1, access_time,
+                                                        G_MAXUINT);
+                                g_ptr_array_add (access_time_array, g_value_get_boxed (&elem));
+
+                        } else {
+                                g_warning ("unhandled line %d: `%s'", n, line);
+                        }
+
+
+                }
+                g_strfreev (lines);
+
+                dbus_g_method_return (context,
+                                      read_transfer_rate_array,
+                                      write_transfer_rate_array,
+                                      access_time_array);
+
+                g_ptr_array_unref (read_transfer_rate_array);
+                g_ptr_array_unref (write_transfer_rate_array);
+                g_ptr_array_unref (access_time_array);
+        } else {
+                if (job_was_cancelled) {
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_CANCELLED,
+                                     "Job was cancelled");
+                } else {
+                        throw_error (context,
+                                     DEVKIT_DISKS_ERROR_FAILED,
+                                     "Error benchmarking: helper exited with exit code %d: %s",
+                                     WEXITSTATUS (status),
+                                     stderr);
+                }
+        }
+}
+
+static void
+devkit_disks_device_drive_benchmark_authorized_cb (DevkitDisksDaemon     *daemon,
+                                                   DevkitDisksDevice     *device,
+                                                   DBusGMethodInvocation *context,
+                                                   const gchar           *action_id,
+                                                   guint                  num_user_data,
+                                                   gpointer              *user_data_elements)
+{
+        gboolean do_write_benchmark = GPOINTER_TO_INT (user_data_elements[0]);
+        gchar **options = user_data_elements[1];
+        gchar *argv[16];
+        guint n;
+
+        if (!device->priv->device_is_drive) {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                             "Device is not a drive");
+                goto out;
+        }
+
+
+        if (do_write_benchmark) {
+                if (device->priv->device_is_partition_table) {
+                        throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                                     "A partition table was detected - write benchmarking requires "
+                                     "the disk to be completely empty");
+                        goto out;
+                }
+
+                if (device->priv->id_usage != NULL) {
+                        throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                                     "The disk seems to have usage `%s' - write benchmarking requires "
+                                     "the disk to be completely empty",
+                                     device->priv->id_usage);
+                        goto out;
+                }
+        }
+
+        for (n = 0; options[n] != NULL; n++) {
+                const char *option = options[n];
+                throw_error (context,
+                             DEVKIT_DISKS_ERROR_INVALID_OPTION,
+                             "Unknown option %s", option);
+                goto out;
+        }
+
+        n = 0;
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-drive-benchmark";
+        argv[n++] = device->priv->device_file;
+        argv[n++] = do_write_benchmark ? "1" : "0";
+        argv[n++] = NULL;
+
+        if (!job_new (context,
+                      "DriveBenchmark",
+                      TRUE,
+                      device,
+                      argv,
+                      NULL,
+                      drive_benchmark_completed_cb,
+                      FALSE,
+                      NULL,
+                      NULL)) {
+                goto out;
+        }
+
+out:
+        ;
+}
+
+gboolean devkit_disks_device_drive_benchmark (DevkitDisksDevice     *device,
+                                              gboolean               do_write_benchmark,
+                                              char                 **options,
+                                              DBusGMethodInvocation *context)
+{
+        if (!device->priv->device_is_drive) {
+                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                             "Device is not a drive");
+                goto out;
+        }
+
+        devkit_disks_daemon_local_check_auth (device->priv->daemon,
+                                              device,
+                                              "org.freedesktop.devicekit.disks.change",
+                                              "DriveBenchmark",
+                                              TRUE,
+                                              devkit_disks_device_drive_benchmark_authorized_cb,
+                                              context,
+                                              2,
+                                              GINT_TO_POINTER (do_write_benchmark), NULL,
+                                              g_strdupv (options), g_strfreev);
+
+
+ out:
+        return TRUE;
+}
+
+
+/*--------------------------------------------------------------------------------------------------------------*/

@@ -158,6 +158,11 @@ gboolean devkit_disks_device_drive_ata_smart_initiate_selftest (DevkitDisksDevic
                                                                 char                 **options,
                                                                 DBusGMethodInvocation *context);
 
+gboolean devkit_disks_device_drive_benchmark (DevkitDisksDevice     *device,
+                                              gboolean               do_write_benchmark,
+                                              char                 **options,
+                                              DBusGMethodInvocation *context);
+
 gboolean devkit_disks_device_linux_md_stop (DevkitDisksDevice     *device,
                                             char                 **options,
                                             DBusGMethodInvocation *context);
