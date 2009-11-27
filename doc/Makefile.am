@@ -54,6 +54,7 @@ content_files =  			    			\
 	man/DeviceKit-disks.xml		    			\
 	dbus/org.freedesktop.DeviceKit.Disks.ref.xml		\
 	dbus/org.freedesktop.DeviceKit.Disks.Device.ref.xml	\
+	dbus/org.freedesktop.DeviceKit.Disks.Controller.ref.xml	\
 	$(NULL)
 
 # Images to copy into HTML directory

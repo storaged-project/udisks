@@ -65,6 +65,7 @@
     </partintro>
     <xi:include href="dbus/org.freedesktop.DeviceKit.Disks.ref.xml"/>
     <xi:include href="dbus/org.freedesktop.DeviceKit.Disks.Device.ref.xml"/>
+    <xi:include href="dbus/org.freedesktop.DeviceKit.Disks.Controller.ref.xml"/>
   </reference>
 
   <reference id="tools-fileformats">
