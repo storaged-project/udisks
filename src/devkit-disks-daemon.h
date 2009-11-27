@@ -90,6 +90,9 @@ DevkitDisksDevice *devkit_disks_daemon_local_find_by_device_file (DevkitDisksDae
 DevkitDisksDevice *devkit_disks_daemon_local_find_by_dev         (DevkitDisksDaemon       *daemon,
                                                                   dev_t                    dev);
 
+DevkitDisksController *devkit_disks_daemon_local_find_controller (DevkitDisksDaemon       *daemon,
+                                                                  const gchar             *child_native_path);
+
 typedef void (*DevkitDisksCheckAuthCallback) (DevkitDisksDaemon     *daemon,
                                               DevkitDisksDevice     *device,
                                               DBusGMethodInvocation *context,
@@ -150,6 +153,9 @@ const DevkitDisksFilesystem *devkit_disks_daemon_local_get_fs_details (DevkitDis
                                                                        const gchar        *filesystem_id);
 
 /* exported methods */
+
+gboolean devkit_disks_daemon_enumerate_controllers (DevkitDisksDaemon     *daemon,
+                                                    DBusGMethodInvocation *context);
 
 gboolean devkit_disks_daemon_enumerate_devices (DevkitDisksDaemon     *daemon,
                                                 DBusGMethodInvocation *context);

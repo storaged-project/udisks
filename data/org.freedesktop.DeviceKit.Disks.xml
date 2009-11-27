@@ -16,6 +16,23 @@
 
     <!-- ************************************************************ -->
 
+    <method name="EnumerateControllers">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="devices" direction="out" type="ao">
+        <doc:doc><doc:summary>An array of object paths for controllers.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Enumerate all storage controllers on the system.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
     <method name="EnumerateDevices">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="devices" direction="out" type="ao">
@@ -469,6 +486,54 @@
         <doc:description>
           <doc:para>
             Emitted when a job on a device changes.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </signal>
+
+    <!-- ************************************************************ -->
+
+    <signal name="ControllerAdded">
+      <arg name="controller" type="o">
+        <doc:doc><doc:summary>Object path of controller that was added.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Emitted when a controller is added.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </signal>
+
+    <!-- ************************************************************ -->
+
+    <signal name="ControllerRemoved">
+      <arg name="controller" type="o">
+        <doc:doc><doc:summary>Object path of controller that was removed.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Emitted when a controller is removed.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </signal>
+
+    <!-- ************************************************************ -->
+
+    <signal name="ControllerChanged">
+      <arg name="controller" type="o">
+        <doc:doc><doc:summary>Object path of controller that was changed.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Emitted when a controller changed.
           </doc:para>
         </doc:description>
       </doc:doc>

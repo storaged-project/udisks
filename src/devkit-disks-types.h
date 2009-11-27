@@ -27,6 +27,7 @@ G_BEGIN_DECLS
 
 typedef struct DevkitDisksDaemon       DevkitDisksDaemon;
 typedef struct DevkitDisksDevice       DevkitDisksDevice;
+typedef struct DevkitDisksController   DevkitDisksController;
 typedef struct DevkitDisksMount        DevkitDisksMount;
 typedef struct DevkitDisksMountMonitor DevkitDisksMountMonitor;
 typedef struct DevkitDisksInhibitor    DevkitDisksInhibitor;

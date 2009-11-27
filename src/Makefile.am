@@ -21,6 +21,7 @@ INCLUDES = \
 BUILT_SOURCES =							\
 	devkit-disks-daemon-glue.h				\
 	devkit-disks-device-glue.h				\
+	devkit-disks-controller-glue.h				\
 	devkit-disks-marshal.h		devkit-disks-marshal.c
 
 devkit-disks-marshal.h: devkit-disks-marshal.list
@@ -35,20 +36,25 @@ devkit-disks-daemon-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.x
 devkit-disks-device-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Device.xml Makefile.am
 	dbus-binding-tool --prefix=devkit_disks_device --mode=glib-server --output=devkit-disks-device-glue.h $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Device.xml
 
+devkit-disks-controller-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Controller.xml Makefile.am
+	dbus-binding-tool --prefix=devkit_disks_controller --mode=glib-server --output=devkit-disks-controller-glue.h $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Controller.xml
+
 libexec_PROGRAMS = devkit-disks-daemon
 
-devkit_disks_daemon_SOURCES = 						\
-	devkit-disks-types.h						\
-	devkit-disks-private.h						\
-	devkit-disks-daemon.h		devkit-disks-daemon.c		\
-	devkit-disks-device.h		devkit-disks-device.c		\
-	devkit-disks-device-private.h	devkit-disks-device-private.c	\
-	devkit-disks-mount-file.h	devkit-disks-mount-file.c	\
-	devkit-disks-mount.h		devkit-disks-mount.c		\
-	devkit-disks-mount-monitor.h	devkit-disks-mount-monitor.c	\
-	devkit-disks-inhibitor.h	devkit-disks-inhibitor.c	\
-	devkit-disks-poller.h		devkit-disks-poller.c		\
-	main.c								\
+devkit_disks_daemon_SOURCES = 								\
+	devkit-disks-types.h								\
+	devkit-disks-private.h								\
+	devkit-disks-daemon.h			devkit-disks-daemon.c			\
+	devkit-disks-device.h			devkit-disks-device.c			\
+	devkit-disks-device-private.h		devkit-disks-device-private.c		\
+	devkit-disks-controller.h		devkit-disks-controller.c		\
+	devkit-disks-controller-private.h	devkit-disks-controller-private.c	\
+	devkit-disks-mount-file.h		devkit-disks-mount-file.c		\
+	devkit-disks-mount.h			devkit-disks-mount.c			\
+	devkit-disks-mount-monitor.h		devkit-disks-mount-monitor.c		\
+	devkit-disks-inhibitor.h		devkit-disks-inhibitor.c		\
+	devkit-disks-poller.h			devkit-disks-poller.c			\
+	main.c										\
 	$(BUILT_SOURCES)
 
 devkit_disks_daemon_CPPFLAGS = 				\
