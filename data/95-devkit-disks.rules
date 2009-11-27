@@ -3,7 +3,7 @@
 
 # import names for PCI storage controllers
 #
-SUBSYSTEMS=="pci", ENV{ID_MODEL_FROM_DATABASE}=="", ATTR{class}="0x01*", IMPORT{program}="pci-db %p"
+SUBSYSTEMS=="pci", ENV{ID_MODEL_FROM_DATABASE}=="", ATTR{class}=="0x01*", IMPORT{program}="pci-db %p"
 
 ##############################################################################################################
 
