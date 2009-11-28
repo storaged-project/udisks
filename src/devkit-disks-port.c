@@ -37,7 +37,7 @@
 #include "devkit-disks-port-private.h"
 #include "devkit-disks-marshal.h"
 
-#include "devkit-disks-controller.h"
+#include "devkit-disks-adapter.h"
 
 /*--------------------------------------------------------------------------------------------------------------*/
 #include "devkit-disks-port-glue.h"
@@ -55,7 +55,7 @@ enum
         PROP_0,
         PROP_NATIVE_PATH,
 
-        PROP_CONTROLLER,
+        PROP_ADAPTER,
         PROP_PARENT,
         PROP_NUMBER,
 };
@@ -85,9 +85,9 @@ get_property (GObject         *object,
                 g_value_set_string (value, port->priv->native_path);
                 break;
 
-        case PROP_CONTROLLER:
-                if (port->priv->controller != NULL)
-                        g_value_set_boxed (value, port->priv->controller);
+        case PROP_ADAPTER:
+                if (port->priv->adapter != NULL)
+                        g_value_set_boxed (value, port->priv->adapter);
                 else
                         g_value_set_boxed (value, "/");
                 break;
@@ -136,8 +136,8 @@ devkit_disks_port_class_init (DevkitDisksPortClass *klass)
                 g_param_spec_string ("native-path", NULL, NULL, NULL, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
-                PROP_CONTROLLER,
-                g_param_spec_boxed ("controller", NULL, NULL, DBUS_TYPE_G_OBJECT_PATH, G_PARAM_READABLE));
+                PROP_ADAPTER,
+                g_param_spec_boxed ("adapter", NULL, NULL, DBUS_TYPE_G_OBJECT_PATH, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_PARENT,
@@ -179,7 +179,7 @@ devkit_disks_port_finalize (GObject *object)
                 g_source_remove (port->priv->emit_changed_idle_id);
 
         /* free properties */
-        g_free (port->priv->controller);
+        g_free (port->priv->adapter);
         g_free (port->priv->parent);
 
         G_OBJECT_CLASS (devkit_disks_port_parent_class)->finalize (object);
@@ -434,7 +434,7 @@ int_compare_func (gconstpointer a,
 /* Update info for an ATA port */
 static gboolean
 update_info_ata (DevkitDisksPort       *port,
-                 DevkitDisksController *controller)
+                 DevkitDisksAdapter *adapter)
 {
         GDir *dir;
         GError *error;
@@ -488,12 +488,12 @@ update_info_ata (DevkitDisksPort       *port,
                 goto out;
         }
 
-        dir = g_dir_open (devkit_disks_controller_local_get_native_path (controller),
+        dir = g_dir_open (devkit_disks_adapter_local_get_native_path (adapter),
                           0,
                           &error);
         if (dir == NULL) {
                 g_warning ("Unable to open %s: %s",
-                           devkit_disks_controller_local_get_native_path (controller),
+                           devkit_disks_adapter_local_get_native_path (adapter),
                            error->message);
                 g_error_free (error);
                 goto out;
@@ -558,22 +558,22 @@ static gboolean
 update_info (DevkitDisksPort *port)
 {
         gboolean ret;
-        DevkitDisksController *controller;
+        DevkitDisksAdapter *adapter;
 
         ret = FALSE;
 
-        controller = devkit_disks_daemon_local_find_controller (port->priv->daemon,
-                                                                port->priv->native_path);
-        if (controller == NULL)
+        adapter = devkit_disks_daemon_local_find_adapter (port->priv->daemon,
+                                                          port->priv->native_path);
+        if (adapter == NULL)
                 goto out;
 
         /* TODO: handle expansion devices here (SAS expanders, SATA Port Multipliers) */
-        devkit_disks_port_set_controller (port, devkit_disks_controller_local_get_object_path (controller));
-        devkit_disks_port_set_parent (port, devkit_disks_controller_local_get_object_path (controller));
+        devkit_disks_port_set_adapter (port, devkit_disks_adapter_local_get_object_path (adapter));
+        devkit_disks_port_set_parent (port, devkit_disks_adapter_local_get_object_path (adapter));
 
         if (g_strcmp0 (g_udev_device_get_subsystem (port->priv->d), "scsi_host") == 0) {
                 /* TODO: ensure this is really an ATA port - bail if it's not */
-                if (!update_info_ata (port, controller))
+                if (!update_info_ata (port, adapter))
                         goto out;
         } else {
                 goto out;

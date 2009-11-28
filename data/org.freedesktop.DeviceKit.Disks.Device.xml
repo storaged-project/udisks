@@ -2186,9 +2186,9 @@
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="DriveController" type="o" access="read">
+    <property name="DriveAdapter" type="o" access="read">
       <doc:doc><doc:description><doc:para>
-            The object of the storage controller for the drive or "/" if no controller exists.
+            The object of the storage adapter for the drive or "/" if no adapter exists.
             This property is only valid if
             <doc:ref type="property" to="Device:DeviceIsDrive">DeviceIsDrive</doc:ref>
             is TRUE.

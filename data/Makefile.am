@@ -5,7 +5,7 @@ dbusifdir = $(datadir)/dbus-1/interfaces
 dbusif_DATA = \
 	org.freedesktop.DeviceKit.Disks.xml 		\
 	org.freedesktop.DeviceKit.Disks.Device.xml 	\
-	org.freedesktop.DeviceKit.Disks.Controller.xml	\
+	org.freedesktop.DeviceKit.Disks.Adapter.xml	\
 	org.freedesktop.DeviceKit.Disks.Port.xml	\
 	$(NULL)
 

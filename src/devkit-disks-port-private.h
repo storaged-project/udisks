@@ -48,14 +48,14 @@ struct DevkitDisksPortPrivate
         /* Properties */
         /**************/
 
-        gchar *controller;
+        gchar *adapter;
         gchar *parent;
         gint number;
 };
 
 /* property setters */
 
-void devkit_disks_port_set_controller (DevkitDisksPort *port, const gchar *value);
+void devkit_disks_port_set_adapter (DevkitDisksPort *port, const gchar *value);
 void devkit_disks_port_set_parent (DevkitDisksPort *port, const gchar *value);
 void devkit_disks_port_set_number (DevkitDisksPort *port, gint value);
 

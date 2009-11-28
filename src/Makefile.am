@@ -21,7 +21,7 @@ INCLUDES = \
 BUILT_SOURCES =							\
 	devkit-disks-daemon-glue.h				\
 	devkit-disks-device-glue.h				\
-	devkit-disks-controller-glue.h				\
+	devkit-disks-adapter-glue.h				\
 	devkit-disks-port-glue.h				\
 	devkit-disks-marshal.h		devkit-disks-marshal.c
 
@@ -37,8 +37,8 @@ devkit-disks-daemon-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.x
 devkit-disks-device-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Device.xml Makefile.am
 	dbus-binding-tool --prefix=devkit_disks_device --mode=glib-server --output=devkit-disks-device-glue.h $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Device.xml
 
-devkit-disks-controller-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Controller.xml Makefile.am
-	dbus-binding-tool --prefix=devkit_disks_controller --mode=glib-server --output=devkit-disks-controller-glue.h $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Controller.xml
+devkit-disks-adapter-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Adapter.xml Makefile.am
+	dbus-binding-tool --prefix=devkit_disks_adapter --mode=glib-server --output=devkit-disks-adapter-glue.h $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Adapter.xml
 
 devkit-disks-port-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Port.xml Makefile.am
 	dbus-binding-tool --prefix=devkit_disks_port --mode=glib-server --output=devkit-disks-port-glue.h $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Port.xml
@@ -51,8 +51,8 @@ devkit_disks_daemon_SOURCES = 								\
 	devkit-disks-daemon.h			devkit-disks-daemon.c			\
 	devkit-disks-device.h			devkit-disks-device.c			\
 	devkit-disks-device-private.h		devkit-disks-device-private.c		\
-	devkit-disks-controller.h		devkit-disks-controller.c		\
-	devkit-disks-controller-private.h	devkit-disks-controller-private.c	\
+	devkit-disks-adapter.h			devkit-disks-adapter.c			\
+	devkit-disks-adapter-private.h		devkit-disks-adapter-private.c		\
 	devkit-disks-port.h			devkit-disks-port.c			\
 	devkit-disks-port-private.h		devkit-disks-port-private.c		\
 	devkit-disks-mount-file.h		devkit-disks-mount-file.c		\

@@ -159,7 +159,7 @@ struct DevkitDisksDevicePrivate
         gboolean drive_is_rotational;
         guint drive_rotation_rate;
         char *drive_write_cache;
-        char *drive_controller;
+        char *drive_adapter;
         char *drive_port;
 
         gboolean optical_disc_is_blank;
@@ -283,7 +283,7 @@ void devkit_disks_device_set_drive_can_spindown (DevkitDisksDevice *device, gboo
 void devkit_disks_device_set_drive_is_rotational (DevkitDisksDevice *device, gboolean value);
 void devkit_disks_device_set_drive_rotation_rate (DevkitDisksDevice *device, guint value);
 void devkit_disks_device_set_drive_write_cache (DevkitDisksDevice *device, const gchar *value);
-void devkit_disks_device_set_drive_controller (DevkitDisksDevice *device, const gchar *value);
+void devkit_disks_device_set_drive_adapter (DevkitDisksDevice *device, const gchar *value);
 void devkit_disks_device_set_drive_port (DevkitDisksDevice *device, const gchar *value);
 
 void devkit_disks_device_set_optical_disc_is_blank (DevkitDisksDevice *device, gboolean value);

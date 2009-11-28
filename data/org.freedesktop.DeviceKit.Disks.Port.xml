@@ -44,9 +44,9 @@
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <property name="Controller" type="o" access="read">
+    <property name="Adapter" type="o" access="read">
       <doc:doc><doc:description><doc:para>
-            The object path of the controller the port is attached to.
+            The object path of the adapter the port is attached to.
       </doc:para></doc:description></doc:doc>
     </property>
 

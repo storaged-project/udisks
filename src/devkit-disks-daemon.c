@@ -63,8 +63,8 @@
 #include "devkit-disks-daemon.h"
 #include "devkit-disks-device.h"
 #include "devkit-disks-device-private.h"
-#include "devkit-disks-controller.h"
-#include "devkit-disks-controller-private.h"
+#include "devkit-disks-adapter.h"
+#include "devkit-disks-adapter-private.h"
 #include "devkit-disks-port.h"
 #include "devkit-disks-port-private.h"
 #include "devkit-disks-mount-file.h"
@@ -94,9 +94,9 @@ enum
         DEVICE_REMOVED_SIGNAL,
         DEVICE_CHANGED_SIGNAL,
         DEVICE_JOB_CHANGED_SIGNAL,
-        CONTROLLER_ADDED_SIGNAL,
-        CONTROLLER_REMOVED_SIGNAL,
-        CONTROLLER_CHANGED_SIGNAL,
+        ADAPTER_ADDED_SIGNAL,
+        ADAPTER_REMOVED_SIGNAL,
+        ADAPTER_CHANGED_SIGNAL,
         PORT_ADDED_SIGNAL,
         PORT_REMOVED_SIGNAL,
         PORT_CHANGED_SIGNAL,
@@ -121,8 +121,8 @@ struct DevkitDisksDaemonPrivate
         GHashTable              *map_native_path_to_device;
         GHashTable              *map_object_path_to_device;
 
-        GHashTable              *map_native_path_to_controller;
-        GHashTable              *map_object_path_to_controller;
+        GHashTable              *map_native_path_to_adapter;
+        GHashTable              *map_object_path_to_adapter;
 
         GHashTable              *map_native_path_to_port;
         GHashTable              *map_object_path_to_port;
@@ -514,8 +514,8 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
                               G_TYPE_BOOLEAN,
                               G_TYPE_DOUBLE);
 
-        signals[CONTROLLER_ADDED_SIGNAL] =
-                g_signal_new ("controller-added",
+        signals[ADAPTER_ADDED_SIGNAL] =
+                g_signal_new ("adapter-added",
                               G_OBJECT_CLASS_TYPE (klass),
                               G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                               0,
@@ -523,8 +523,8 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
                               g_cclosure_marshal_VOID__BOXED,
                               G_TYPE_NONE, 1, DBUS_TYPE_G_OBJECT_PATH);
 
-        signals[CONTROLLER_REMOVED_SIGNAL] =
-                g_signal_new ("controller-removed",
+        signals[ADAPTER_REMOVED_SIGNAL] =
+                g_signal_new ("adapter-removed",
                               G_OBJECT_CLASS_TYPE (klass),
                               G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                               0,
@@ -532,8 +532,8 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
                               g_cclosure_marshal_VOID__BOXED,
                               G_TYPE_NONE, 1, DBUS_TYPE_G_OBJECT_PATH);
 
-        signals[CONTROLLER_CHANGED_SIGNAL] =
-                g_signal_new ("controller-changed",
+        signals[ADAPTER_CHANGED_SIGNAL] =
+                g_signal_new ("adapter-changed",
                               G_OBJECT_CLASS_TYPE (klass),
                               G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                               0,
@@ -618,14 +618,14 @@ devkit_disks_daemon_init (DevkitDisksDaemon *daemon)
                                                                          g_str_equal,
                                                                          g_free,
                                                                          g_object_unref);
-        daemon->priv->map_native_path_to_controller = g_hash_table_new_full (g_str_hash,
-                                                                             g_str_equal,
-                                                                             g_free,
-                                                                             g_object_unref);
-        daemon->priv->map_object_path_to_controller = g_hash_table_new_full (g_str_hash,
-                                                                             g_str_equal,
-                                                                             g_free,
-                                                                             g_object_unref);
+        daemon->priv->map_native_path_to_adapter = g_hash_table_new_full (g_str_hash,
+                                                                          g_str_equal,
+                                                                          g_free,
+                                                                          g_object_unref);
+        daemon->priv->map_object_path_to_adapter = g_hash_table_new_full (g_str_hash,
+                                                                          g_str_equal,
+                                                                          g_free,
+                                                                          g_object_unref);
         daemon->priv->map_native_path_to_port = g_hash_table_new_full (g_str_hash,
                                                                        g_str_equal,
                                                                        g_free,
@@ -673,11 +673,11 @@ devkit_disks_daemon_finalize (GObject *object)
         if (daemon->priv->map_object_path_to_device != NULL) {
                 g_hash_table_unref (daemon->priv->map_object_path_to_device);
         }
-        if (daemon->priv->map_native_path_to_controller != NULL) {
-                g_hash_table_unref (daemon->priv->map_native_path_to_controller);
+        if (daemon->priv->map_native_path_to_adapter != NULL) {
+                g_hash_table_unref (daemon->priv->map_native_path_to_adapter);
         }
-        if (daemon->priv->map_object_path_to_controller != NULL) {
-                g_hash_table_unref (daemon->priv->map_object_path_to_controller);
+        if (daemon->priv->map_object_path_to_adapter != NULL) {
+                g_hash_table_unref (daemon->priv->map_object_path_to_adapter);
         }
         if (daemon->priv->map_native_path_to_port != NULL) {
                 g_hash_table_unref (daemon->priv->map_native_path_to_port);
@@ -750,13 +750,13 @@ static void device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d);
 static void
 pci_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthesized)
 {
-        DevkitDisksController *controller;
+        DevkitDisksAdapter *adapter;
         const char *native_path;
 
         native_path = g_udev_device_get_sysfs_path (d);
-        controller = g_hash_table_lookup (daemon->priv->map_native_path_to_controller, native_path);
-        if (controller != NULL) {
-                gboolean keep_controller;
+        adapter = g_hash_table_lookup (daemon->priv->map_native_path_to_adapter, native_path);
+        if (adapter != NULL) {
+                gboolean keep_adapter;
 
                 g_print ("**** pci CHANGING %s\n", native_path);
 
@@ -764,23 +764,23 @@ pci_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthesi
                  * it back after processing. The kernel name will never change so the object
                  * path will fortunately remain constant.
                  */
-                g_warn_if_fail (g_hash_table_remove (daemon->priv->map_native_path_to_controller,
-                                                     controller->priv->native_path));
+                g_warn_if_fail (g_hash_table_remove (daemon->priv->map_native_path_to_adapter,
+                                                     adapter->priv->native_path));
 
-                keep_controller = devkit_disks_controller_changed (controller, d, synthesized);
+                keep_adapter = devkit_disks_adapter_changed (adapter, d, synthesized);
 
-                g_assert (devkit_disks_controller_local_get_native_path (controller) != NULL);
-                g_assert (g_strcmp0 (native_path, devkit_disks_controller_local_get_native_path (controller)) == 0);
+                g_assert (devkit_disks_adapter_local_get_native_path (adapter) != NULL);
+                g_assert (g_strcmp0 (native_path, devkit_disks_adapter_local_get_native_path (adapter)) == 0);
 
                 /* now add the things back to the global hashtables - it's important that we
-                 * do this *before* calling controller_remove() - otherwise it will never remove
-                 * the controller
+                 * do this *before* calling adapter_remove() - otherwise it will never remove
+                 * the adapter
                  */
-                g_hash_table_insert (daemon->priv->map_native_path_to_controller,
-                                     g_strdup (devkit_disks_controller_local_get_native_path (controller)),
-                                     g_object_ref (controller));
+                g_hash_table_insert (daemon->priv->map_native_path_to_adapter,
+                                     g_strdup (devkit_disks_adapter_local_get_native_path (adapter)),
+                                     g_object_ref (adapter));
 
-                if (!keep_controller) {
+                if (!keep_adapter) {
                         g_print ("**** pci CHANGE TRIGGERED REMOVE %s\n", native_path);
                         device_remove (daemon, d);
                 } else {
@@ -937,37 +937,37 @@ devkit_disks_daemon_local_synthesize_changed_on_all_devices (DevkitDisksDaemon *
 static void
 pci_device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event)
 {
-        DevkitDisksController *controller;
+        DevkitDisksAdapter *adapter;
         const char *native_path;
 
         native_path = g_udev_device_get_sysfs_path (d);
-        controller = g_hash_table_lookup (daemon->priv->map_native_path_to_controller, native_path);
-        if (controller != NULL) {
-                /* we already have the controller; treat as change event */
+        adapter = g_hash_table_lookup (daemon->priv->map_native_path_to_adapter, native_path);
+        if (adapter != NULL) {
+                /* we already have the adapter; treat as change event */
                 g_print ("**** pci TREATING ADD AS CHANGE %s\n", native_path);
                 device_changed (daemon, d, FALSE);
         } else {
                 g_print ("**** pci ADDING %s\n", native_path);
-                controller = devkit_disks_controller_new (daemon, d);
+                adapter = devkit_disks_adapter_new (daemon, d);
 
-                if (controller != NULL) {
-                        /* assert that the controller is fully loaded with info */
-                        g_assert (devkit_disks_controller_local_get_native_path (controller) != NULL);
-                        g_assert (devkit_disks_controller_local_get_object_path (controller) != NULL);
-                        g_assert (g_strcmp0 (native_path, devkit_disks_controller_local_get_native_path (controller)) == 0);
+                if (adapter != NULL) {
+                        /* assert that the adapter is fully loaded with info */
+                        g_assert (devkit_disks_adapter_local_get_native_path (adapter) != NULL);
+                        g_assert (devkit_disks_adapter_local_get_object_path (adapter) != NULL);
+                        g_assert (g_strcmp0 (native_path, devkit_disks_adapter_local_get_native_path (adapter)) == 0);
 
-                        g_hash_table_insert (daemon->priv->map_native_path_to_controller,
-                                             g_strdup (devkit_disks_controller_local_get_native_path (controller)),
-                                             g_object_ref (controller));
-                        g_hash_table_insert (daemon->priv->map_object_path_to_controller,
-                                             g_strdup (devkit_disks_controller_local_get_object_path (controller)),
-                                             g_object_ref (controller));
+                        g_hash_table_insert (daemon->priv->map_native_path_to_adapter,
+                                             g_strdup (devkit_disks_adapter_local_get_native_path (adapter)),
+                                             g_object_ref (adapter));
+                        g_hash_table_insert (daemon->priv->map_object_path_to_adapter,
+                                             g_strdup (devkit_disks_adapter_local_get_object_path (adapter)),
+                                             g_object_ref (adapter));
                         g_print ("**** pci ADDED %s\n", native_path);
                         if (emit_event) {
                                 const char *object_path;
-                                object_path = devkit_disks_controller_local_get_object_path (controller);
-                                g_print ("**** pci EMITTING ADDED for %s\n", controller->priv->native_path);
-                                g_signal_emit (daemon, signals[CONTROLLER_ADDED_SIGNAL], 0, object_path);
+                                object_path = devkit_disks_adapter_local_get_object_path (adapter);
+                                g_print ("**** pci EMITTING ADDED for %s\n", adapter->priv->native_path);
+                                g_signal_emit (daemon, signals[ADAPTER_ADDED_SIGNAL], 0, object_path);
                         }
                 } else {
                         g_print ("**** pci IGNORING ADD %s\n", native_path);
@@ -1091,30 +1091,30 @@ device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event)
 static void
 pci_device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
 {
-        DevkitDisksController *controller;
+        DevkitDisksAdapter *adapter;
         const char *native_path;
 
         native_path = g_udev_device_get_sysfs_path (d);
-        controller = g_hash_table_lookup (daemon->priv->map_native_path_to_controller, native_path);
-        if (controller == NULL) {
+        adapter = g_hash_table_lookup (daemon->priv->map_native_path_to_adapter, native_path);
+        if (adapter == NULL) {
                 g_print ("**** pci IGNORING REMOVE %s\n", native_path);
         } else {
                 g_print ("**** pci REMOVING %s\n", native_path);
 
-                g_warn_if_fail (g_strcmp0 (native_path, controller->priv->native_path) == 0);
+                g_warn_if_fail (g_strcmp0 (native_path, adapter->priv->native_path) == 0);
 
-                g_hash_table_remove (daemon->priv->map_native_path_to_controller,
-                                     controller->priv->native_path);
-                g_warn_if_fail (g_hash_table_remove (daemon->priv->map_object_path_to_controller,
-                                                     controller->priv->object_path));
+                g_hash_table_remove (daemon->priv->map_native_path_to_adapter,
+                                     adapter->priv->native_path);
+                g_warn_if_fail (g_hash_table_remove (daemon->priv->map_object_path_to_adapter,
+                                                     adapter->priv->object_path));
 
-                g_print ("**** pci EMITTING REMOVED for %s\n", controller->priv->native_path);
-                g_signal_emit (daemon, signals[CONTROLLER_REMOVED_SIGNAL], 0,
-                               devkit_disks_controller_local_get_object_path (controller));
+                g_print ("**** pci EMITTING REMOVED for %s\n", adapter->priv->native_path);
+                g_signal_emit (daemon, signals[ADAPTER_REMOVED_SIGNAL], 0,
+                               devkit_disks_adapter_local_get_object_path (adapter));
 
-                devkit_disks_controller_removed (controller);
+                devkit_disks_adapter_removed (adapter);
 
-                g_object_unref (controller);
+                g_object_unref (adapter);
         }
 }
 
@@ -1378,7 +1378,7 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
         DBusError dbus_error;
         GError *error = NULL;
         const char *subsystems[] = {"block",      /* Disks and partitions */
-                                    "pci",        /* Storage controllers */
+                                    "pci",        /* Storage adapters */
                                     "scsi_host",  /* ATA ports are represented by scsi_host */
                                     NULL};
 
@@ -1476,7 +1476,7 @@ devkit_disks_daemon_new (void)
                 goto error;
         }
 
-        /* process storage controllers */
+        /* process storage adapters */
         devices = g_udev_client_query_by_subsystem (daemon->priv->gudev_client, "pci");
         for (l = devices; l != NULL; l = l->next) {
                 GUdevDevice *device = l->data;
@@ -2030,22 +2030,22 @@ devkit_disks_daemon_local_update_spindown (DevkitDisksDaemon *daemon)
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
-DevkitDisksController *
-devkit_disks_daemon_local_find_controller (DevkitDisksDaemon       *daemon,
+DevkitDisksAdapter *
+devkit_disks_daemon_local_find_adapter (DevkitDisksDaemon       *daemon,
                                            const gchar             *device_native_path)
 {
         GHashTableIter iter;
         const gchar *native_path;
-        DevkitDisksController *controller;
-        DevkitDisksController *ret;
+        DevkitDisksAdapter *adapter;
+        DevkitDisksAdapter *ret;
 
         ret = NULL;
 
-        g_hash_table_iter_init (&iter, daemon->priv->map_native_path_to_controller);
-        while (g_hash_table_iter_next (&iter, (gpointer) &native_path, (gpointer) &controller)) {
+        g_hash_table_iter_init (&iter, daemon->priv->map_native_path_to_adapter);
+        while (g_hash_table_iter_next (&iter, (gpointer) &native_path, (gpointer) &adapter)) {
                 if (g_str_has_prefix (device_native_path,
-                                      devkit_disks_controller_local_get_native_path (controller))) {
-                        ret = controller;
+                                      devkit_disks_adapter_local_get_native_path (adapter))) {
+                        ret = adapter;
                         break;
                 }
         }
@@ -2109,23 +2109,23 @@ devkit_disks_daemon_enumerate_devices (DevkitDisksDaemon     *daemon,
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static void
-enumerate_controller_cb (gpointer key, gpointer value, gpointer user_data)
+enumerate_adapter_cb (gpointer key, gpointer value, gpointer user_data)
 {
-        DevkitDisksController *controller = DEVKIT_DISKS_CONTROLLER (value);
+        DevkitDisksAdapter *adapter = DEVKIT_DISKS_ADAPTER (value);
         GPtrArray *object_paths = user_data;
-        g_ptr_array_add (object_paths, g_strdup (devkit_disks_controller_local_get_object_path (controller)));
+        g_ptr_array_add (object_paths, g_strdup (devkit_disks_adapter_local_get_object_path (adapter)));
 }
 
-/* dbus-send --system --print-reply --dest=org.freedesktop.DeviceKit.Disks /org/freedesktop/DeviceKit/Disks org.freedesktop.DeviceKit.Disks.EnumerateControllers
+/* dbus-send --system --print-reply --dest=org.freedesktop.DeviceKit.Disks /org/freedesktop/DeviceKit/Disks org.freedesktop.DeviceKit.Disks.EnumerateAdapters
  */
 gboolean
-devkit_disks_daemon_enumerate_controllers (DevkitDisksDaemon     *daemon,
+devkit_disks_daemon_enumerate_adapters (DevkitDisksDaemon     *daemon,
                                            DBusGMethodInvocation *context)
 {
         GPtrArray *object_paths;
 
         object_paths = g_ptr_array_new ();
-        g_hash_table_foreach (daemon->priv->map_native_path_to_controller, enumerate_controller_cb, object_paths);
+        g_hash_table_foreach (daemon->priv->map_native_path_to_adapter, enumerate_adapter_cb, object_paths);
         dbus_g_method_return (context, object_paths);
         g_ptr_array_foreach (object_paths, (GFunc) g_free, NULL);
         g_ptr_array_free (object_paths, TRUE);

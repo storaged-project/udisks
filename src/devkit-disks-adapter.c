@@ -33,20 +33,20 @@
 #include <atasmart.h>
 
 #include "devkit-disks-daemon.h"
-#include "devkit-disks-controller.h"
-#include "devkit-disks-controller-private.h"
+#include "devkit-disks-adapter.h"
+#include "devkit-disks-adapter-private.h"
 #include "devkit-disks-marshal.h"
 
 /*--------------------------------------------------------------------------------------------------------------*/
-#include "devkit-disks-controller-glue.h"
+#include "devkit-disks-adapter-glue.h"
 
-static void     devkit_disks_controller_class_init  (DevkitDisksControllerClass *klass);
-static void     devkit_disks_controller_init        (DevkitDisksController      *seat);
-static void     devkit_disks_controller_finalize    (GObject     *object);
+static void     devkit_disks_adapter_class_init  (DevkitDisksAdapterClass *klass);
+static void     devkit_disks_adapter_init        (DevkitDisksAdapter      *seat);
+static void     devkit_disks_adapter_finalize    (GObject     *object);
 
-static gboolean update_info                (DevkitDisksController *controller);
+static gboolean update_info                (DevkitDisksAdapter *adapter);
 
-static void     drain_pending_changes (DevkitDisksController *controller, gboolean force_update);
+static void     drain_pending_changes (DevkitDisksAdapter *adapter, gboolean force_update);
 
 enum
 {
@@ -68,9 +68,9 @@ enum
 
 static guint signals[LAST_SIGNAL] = { 0 };
 
-G_DEFINE_TYPE (DevkitDisksController, devkit_disks_controller, G_TYPE_OBJECT)
+G_DEFINE_TYPE (DevkitDisksAdapter, devkit_disks_adapter, G_TYPE_OBJECT)
 
-#define DEVKIT_DISKS_CONTROLLER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), DEVKIT_DISKS_TYPE_CONTROLLER, DevkitDisksControllerPrivate))
+#define DEVKIT_DISKS_ADAPTER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), DEVKIT_DISKS_TYPE_ADAPTER, DevkitDisksAdapterPrivate))
 
 static void
 get_property (GObject         *object,
@@ -78,31 +78,31 @@ get_property (GObject         *object,
               GValue          *value,
               GParamSpec      *pspec)
 {
-        DevkitDisksController *controller = DEVKIT_DISKS_CONTROLLER (object);
+        DevkitDisksAdapter *adapter = DEVKIT_DISKS_ADAPTER (object);
 
         switch (prop_id) {
         case PROP_NATIVE_PATH:
-                g_value_set_string (value, controller->priv->native_path);
+                g_value_set_string (value, adapter->priv->native_path);
                 break;
 
         case PROP_VENDOR:
-                g_value_set_string (value, controller->priv->vendor);
+                g_value_set_string (value, adapter->priv->vendor);
                 break;
 
         case PROP_MODEL:
-                g_value_set_string (value, controller->priv->model);
+                g_value_set_string (value, adapter->priv->model);
                 break;
 
         case PROP_DRIVER:
-                g_value_set_string (value, controller->priv->driver);
+                g_value_set_string (value, adapter->priv->driver);
                 break;
 
         case PROP_NUM_PORTS:
-                g_value_set_uint (value, controller->priv->num_ports);
+                g_value_set_uint (value, adapter->priv->num_ports);
                 break;
 
         case PROP_FABRIC:
-                g_value_set_string (value, controller->priv->fabric);
+                g_value_set_string (value, adapter->priv->fabric);
                 break;
 
         default:
@@ -112,14 +112,14 @@ get_property (GObject         *object,
 }
 
 static void
-devkit_disks_controller_class_init (DevkitDisksControllerClass *klass)
+devkit_disks_adapter_class_init (DevkitDisksAdapterClass *klass)
 {
         GObjectClass   *object_class = G_OBJECT_CLASS (klass);
 
-        object_class->finalize = devkit_disks_controller_finalize;
+        object_class->finalize = devkit_disks_adapter_finalize;
         object_class->get_property = get_property;
 
-        g_type_class_add_private (klass, sizeof (DevkitDisksControllerPrivate));
+        g_type_class_add_private (klass, sizeof (DevkitDisksAdapterPrivate));
 
         signals[CHANGED_SIGNAL] =
                 g_signal_new ("changed",
@@ -130,7 +130,7 @@ devkit_disks_controller_class_init (DevkitDisksControllerClass *klass)
                               g_cclosure_marshal_VOID__VOID,
                               G_TYPE_NONE, 0);
 
-        dbus_g_object_type_install_info (DEVKIT_DISKS_TYPE_CONTROLLER, &dbus_glib_devkit_disks_controller_object_info);
+        dbus_g_object_type_install_info (DEVKIT_DISKS_TYPE_ADAPTER, &dbus_glib_devkit_disks_adapter_object_info);
 
         g_object_class_install_property (
                 object_class,
@@ -159,46 +159,46 @@ devkit_disks_controller_class_init (DevkitDisksControllerClass *klass)
 }
 
 static void
-devkit_disks_controller_init (DevkitDisksController *controller)
+devkit_disks_adapter_init (DevkitDisksAdapter *adapter)
 {
-        controller->priv = DEVKIT_DISKS_CONTROLLER_GET_PRIVATE (controller);
+        adapter->priv = DEVKIT_DISKS_ADAPTER_GET_PRIVATE (adapter);
 }
 
 static void
-devkit_disks_controller_finalize (GObject *object)
+devkit_disks_adapter_finalize (GObject *object)
 {
-        DevkitDisksController *controller;
+        DevkitDisksAdapter *adapter;
 
         g_return_if_fail (object != NULL);
-        g_return_if_fail (DEVKIT_DISKS_IS_CONTROLLER (object));
+        g_return_if_fail (DEVKIT_DISKS_IS_ADAPTER (object));
 
-        controller = DEVKIT_DISKS_CONTROLLER (object);
-        g_return_if_fail (controller->priv != NULL);
+        adapter = DEVKIT_DISKS_ADAPTER (object);
+        g_return_if_fail (adapter->priv != NULL);
 
-        /* g_debug ("finalizing %s", controller->priv->native_path); */
+        /* g_debug ("finalizing %s", adapter->priv->native_path); */
 
-        g_object_unref (controller->priv->d);
-        g_object_unref (controller->priv->daemon);
-        g_free (controller->priv->object_path);
+        g_object_unref (adapter->priv->d);
+        g_object_unref (adapter->priv->daemon);
+        g_free (adapter->priv->object_path);
 
-        g_free (controller->priv->native_path);
+        g_free (adapter->priv->native_path);
 
-        if (controller->priv->emit_changed_idle_id > 0)
-                g_source_remove (controller->priv->emit_changed_idle_id);
+        if (adapter->priv->emit_changed_idle_id > 0)
+                g_source_remove (adapter->priv->emit_changed_idle_id);
 
         /* free properties */
-        g_free (controller->priv->vendor);
-        g_free (controller->priv->model);
-        g_free (controller->priv->driver);
+        g_free (adapter->priv->vendor);
+        g_free (adapter->priv->model);
+        g_free (adapter->priv->driver);
 
-        G_OBJECT_CLASS (devkit_disks_controller_parent_class)->finalize (object);
+        G_OBJECT_CLASS (devkit_disks_adapter_parent_class)->finalize (object);
 }
 
 /**
  * compute_object_path:
  * @native_path: Either an absolute sysfs path or the basename
  *
- * Maps @native_path to the D-Bus object path for the controller.
+ * Maps @native_path to the D-Bus object path for the adapter.
  *
  * Returns: A valid D-Bus object path. Free with g_free().
  */
@@ -216,7 +216,7 @@ compute_object_path (const char *native_path)
                 basename = native_path;
         }
 
-        s = g_string_new ("/org/freedesktop/DeviceKit/Disks/controllers/");
+        s = g_string_new ("/org/freedesktop/DeviceKit/Disks/adapters/");
         for (n = 0; basename[n] != '\0'; n++) {
                 gint c = basename[n];
 
@@ -240,34 +240,34 @@ compute_object_path (const char *native_path)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-register_disks_controller (DevkitDisksController *controller)
+register_disks_adapter (DevkitDisksAdapter *adapter)
 {
         DBusConnection *connection;
         GError *error = NULL;
 
-        controller->priv->system_bus_connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
-        if (controller->priv->system_bus_connection == NULL) {
+        adapter->priv->system_bus_connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+        if (adapter->priv->system_bus_connection == NULL) {
                 if (error != NULL) {
                         g_critical ("error getting system bus: %s", error->message);
                         g_error_free (error);
                 }
                 goto error;
         }
-        connection = dbus_g_connection_get_connection (controller->priv->system_bus_connection);
+        connection = dbus_g_connection_get_connection (adapter->priv->system_bus_connection);
 
-        controller->priv->object_path = compute_object_path (controller->priv->native_path);
+        adapter->priv->object_path = compute_object_path (adapter->priv->native_path);
 
         /* safety first */
-        if (dbus_g_connection_lookup_g_object (controller->priv->system_bus_connection,
-                                               controller->priv->object_path) != NULL) {
+        if (dbus_g_connection_lookup_g_object (adapter->priv->system_bus_connection,
+                                               adapter->priv->object_path) != NULL) {
                 g_error ("**** HACK: Wanting to register object at path `%s' but there is already an "
                          "object there. This is an internal error in the daemon. Aborting.\n",
-                         controller->priv->object_path);
+                         adapter->priv->object_path);
         }
 
-        dbus_g_connection_register_g_object (controller->priv->system_bus_connection,
-                                             controller->priv->object_path,
-                                             G_OBJECT (controller));
+        dbus_g_connection_register_g_object (adapter->priv->system_bus_connection,
+                                             adapter->priv->object_path,
+                                             G_OBJECT (adapter));
 
         return TRUE;
 
@@ -276,48 +276,48 @@ error:
 }
 
 void
-devkit_disks_controller_removed (DevkitDisksController *controller)
+devkit_disks_adapter_removed (DevkitDisksAdapter *adapter)
 {
-        controller->priv->removed = TRUE;
+        adapter->priv->removed = TRUE;
 
-        dbus_g_connection_unregister_g_object (controller->priv->system_bus_connection,
-                                               G_OBJECT (controller));
-        g_assert (dbus_g_connection_lookup_g_object (controller->priv->system_bus_connection,
-                                                     controller->priv->object_path) == NULL);
+        dbus_g_connection_unregister_g_object (adapter->priv->system_bus_connection,
+                                               G_OBJECT (adapter));
+        g_assert (dbus_g_connection_lookup_g_object (adapter->priv->system_bus_connection,
+                                                     adapter->priv->object_path) == NULL);
 }
 
-DevkitDisksController *
-devkit_disks_controller_new (DevkitDisksDaemon *daemon, GUdevDevice *d)
+DevkitDisksAdapter *
+devkit_disks_adapter_new (DevkitDisksDaemon *daemon, GUdevDevice *d)
 {
-        DevkitDisksController *controller;
+        DevkitDisksAdapter *adapter;
         const char *native_path;
 
-        controller = NULL;
+        adapter = NULL;
         native_path = g_udev_device_get_sysfs_path (d);
 
-        controller = DEVKIT_DISKS_CONTROLLER (g_object_new (DEVKIT_DISKS_TYPE_CONTROLLER, NULL));
-        controller->priv->d = g_object_ref (d);
-        controller->priv->daemon = g_object_ref (daemon);
-        controller->priv->native_path = g_strdup (native_path);
+        adapter = DEVKIT_DISKS_ADAPTER (g_object_new (DEVKIT_DISKS_TYPE_ADAPTER, NULL));
+        adapter->priv->d = g_object_ref (d);
+        adapter->priv->daemon = g_object_ref (daemon);
+        adapter->priv->native_path = g_strdup (native_path);
 
-        if (!update_info (controller)) {
-                g_object_unref (controller);
-                controller = NULL;
+        if (!update_info (adapter)) {
+                g_object_unref (adapter);
+                adapter = NULL;
                 goto out;
         }
 
-        if (!register_disks_controller (DEVKIT_DISKS_CONTROLLER (controller))) {
-                g_object_unref (controller);
-                controller = NULL;
+        if (!register_disks_adapter (DEVKIT_DISKS_ADAPTER (adapter))) {
+                g_object_unref (adapter);
+                adapter = NULL;
                 goto out;
         }
 
 out:
-        return controller;
+        return adapter;
 }
 
 static void
-drain_pending_changes (DevkitDisksController *controller, gboolean force_update)
+drain_pending_changes (DevkitDisksAdapter *adapter, gboolean force_update)
 {
         gboolean emit_changed;
 
@@ -326,73 +326,73 @@ drain_pending_changes (DevkitDisksController *controller, gboolean force_update)
         /* the update-in-idle is set up if, and only if, there are pending changes - so
          * we should emit a 'change' event only if it is set up
          */
-        if (controller->priv->emit_changed_idle_id != 0) {
-                g_source_remove (controller->priv->emit_changed_idle_id);
-                controller->priv->emit_changed_idle_id = 0;
+        if (adapter->priv->emit_changed_idle_id != 0) {
+                g_source_remove (adapter->priv->emit_changed_idle_id);
+                adapter->priv->emit_changed_idle_id = 0;
                 emit_changed = TRUE;
         }
 
-        if ((!controller->priv->removed) && (emit_changed || force_update)) {
-                if (controller->priv->object_path != NULL) {
-                        g_print ("**** EMITTING CHANGED for %s\n", controller->priv->native_path);
-                        g_signal_emit_by_name (controller, "changed");
-                        g_signal_emit_by_name (controller->priv->daemon, "controller-changed", controller->priv->object_path);
+        if ((!adapter->priv->removed) && (emit_changed || force_update)) {
+                if (adapter->priv->object_path != NULL) {
+                        g_print ("**** EMITTING CHANGED for %s\n", adapter->priv->native_path);
+                        g_signal_emit_by_name (adapter, "changed");
+                        g_signal_emit_by_name (adapter->priv->daemon, "adapter-changed", adapter->priv->object_path);
                 }
         }
 }
 
 /* called by the daemon on the 'change' uevent */
 gboolean
-devkit_disks_controller_changed (DevkitDisksController *controller, GUdevDevice *d, gboolean synthesized)
+devkit_disks_adapter_changed (DevkitDisksAdapter *adapter, GUdevDevice *d, gboolean synthesized)
 {
-        gboolean keep_controller;
+        gboolean keep_adapter;
 
-        g_object_unref (controller->priv->d);
-        controller->priv->d = g_object_ref (d);
+        g_object_unref (adapter->priv->d);
+        adapter->priv->d = g_object_ref (d);
 
-        keep_controller = update_info (controller);
+        keep_adapter = update_info (adapter);
 
-        /* this 'change' event might prompt us to remove the controller */
-        if (!keep_controller)
+        /* this 'change' event might prompt us to remove the adapter */
+        if (!keep_adapter)
                 goto out;
 
         /* no, it's good .. keep it.. and always force a 'change' signal if the event isn't synthesized */
-        drain_pending_changes (controller, !synthesized);
+        drain_pending_changes (adapter, !synthesized);
 
 out:
-        return keep_controller;
+        return keep_adapter;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
 
 const char *
-devkit_disks_controller_local_get_object_path (DevkitDisksController *controller)
+devkit_disks_adapter_local_get_object_path (DevkitDisksAdapter *adapter)
 {
-        return controller->priv->object_path;
+        return adapter->priv->object_path;
 }
 
 const char *
-devkit_disks_controller_local_get_native_path (DevkitDisksController *controller)
+devkit_disks_adapter_local_get_native_path (DevkitDisksAdapter *adapter)
 {
-        return controller->priv->native_path;
+        return adapter->priv->native_path;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
 
 /**
  * update_info:
- * @controller: the controller
+ * @adapter: the adapter
  *
- * Update information about the controller.
+ * Update information about the adapter.
  *
  * If one or more properties changed, the changes are scheduled to be emitted. Use
  * drain_pending_changes() to force emitting the pending changes (which is useful
  * before returning the result of an operation).
  *
- * Returns: #TRUE to keep (or add) the controller; #FALSE to ignore (or remove) the controller
+ * Returns: #TRUE to keep (or add) the adapter; #FALSE to ignore (or remove) the adapter
  **/
 static gboolean
-update_info (DevkitDisksController *controller)
+update_info (DevkitDisksAdapter *adapter)
 {
         gboolean ret;
         guint64 device_class;
@@ -404,26 +404,26 @@ update_info (DevkitDisksController *controller)
         vendor = NULL;
         model = NULL;
 
-        /* Only care about Mass Storage Controller devices */
-        device_class = g_udev_device_get_sysfs_attr_as_uint64 (controller->priv->d, "class");
+        /* Only care about Mass Storage Adapter devices */
+        device_class = g_udev_device_get_sysfs_attr_as_uint64 (adapter->priv->d, "class");
         if (((device_class & 0xff0000) >> 16) != 0x01)
                 goto out;
 
-        g_print ("**** UPDATING %s\n", controller->priv->native_path);
+        g_print ("**** UPDATING %s\n", adapter->priv->native_path);
 
-        vendor = g_strdup (g_udev_device_get_property (controller->priv->d, "ID_VENDOR_FROM_DATABASE"));
-        model = g_strdup (g_udev_device_get_property (controller->priv->d, "ID_MODEL_FROM_DATABASE"));
+        vendor = g_strdup (g_udev_device_get_property (adapter->priv->d, "ID_VENDOR_FROM_DATABASE"));
+        model = g_strdup (g_udev_device_get_property (adapter->priv->d, "ID_MODEL_FROM_DATABASE"));
 
-        /* TODO: probably want subsystem vendor and model - for the controllers in my Thinkpad X61 (not T61!)
+        /* TODO: probably want subsystem vendor and model - for the adapters in my Thinkpad X61 (not T61!)
          * it looks like this
          *
          *  00:1f.1: vendor:        Intel Corporation"
-         *           model:         82801HBM/HEM (ICH8M/ICH8M-E) IDE Controller
+         *           model:         82801HBM/HEM (ICH8M/ICH8M-E) IDE Adapter
          *           subsys_vendor: Lenovo
          *           subsys_model:  ThinkPad T61
          *
          *  00:1f.2: vendor:        Intel Corporation
-         *           model:         82801HBM/HEM (ICH8M/ICH8M-E) SATA AHCI Controller
+         *           model:         82801HBM/HEM (ICH8M/ICH8M-E) SATA AHCI Adapter
          *           subsys_vendor: Lenovo
          *           subsys_model:  ThinkPad T61
          *
@@ -431,7 +431,7 @@ update_info (DevkitDisksController *controller)
          */
 
         /* TODO: we want some kind of "type" or "interconnect" for the
-         * controller - e.g. SATA/PATA/SAS/FC/iSCSI - also want version
+         * adapter - e.g. SATA/PATA/SAS/FC/iSCSI - also want version
          * (e.g. SATA1, SATA2) and speed (e.g. 150MB/s, 300MB/s)
          */
 
@@ -440,7 +440,7 @@ update_info (DevkitDisksController *controller)
          * SASx4 (wide lane), FC... and the role (initiator or target)
          */
 
-        /* TODO: want to convey some kind of information about where the controller
+        /* TODO: want to convey some kind of information about where the adapter
          * is located (express-card, pc-card, pci-slot, onboard)...
          */
 
@@ -448,20 +448,20 @@ update_info (DevkitDisksController *controller)
 
         if (vendor == NULL) {
                 vendor = g_strdup_printf ("[vendor=0x%04x subsys=0x%04x]",
-                                          g_udev_device_get_sysfs_attr_as_int (controller->priv->d, "vendor"),
-                                          g_udev_device_get_sysfs_attr_as_int (controller->priv->d, "subsystem_vendor"));
+                                          g_udev_device_get_sysfs_attr_as_int (adapter->priv->d, "vendor"),
+                                          g_udev_device_get_sysfs_attr_as_int (adapter->priv->d, "subsystem_vendor"));
         }
         if (model == NULL) {
-                vendor = g_strdup_printf ("Storage Controller [model=0x%04x subsys=0x%04x]",
-                                          g_udev_device_get_sysfs_attr_as_int (controller->priv->d, "device"),
-                                          g_udev_device_get_sysfs_attr_as_int (controller->priv->d, "subsystem_device"));
+                vendor = g_strdup_printf ("Storage Adapter [model=0x%04x subsys=0x%04x]",
+                                          g_udev_device_get_sysfs_attr_as_int (adapter->priv->d, "device"),
+                                          g_udev_device_get_sysfs_attr_as_int (adapter->priv->d, "subsystem_device"));
         }
 
-        driver = g_udev_device_get_driver (controller->priv->d);
+        driver = g_udev_device_get_driver (adapter->priv->d);
 
-        devkit_disks_controller_set_vendor (controller, vendor);
-        devkit_disks_controller_set_model (controller, model);
-        devkit_disks_controller_set_driver (controller, driver);
+        devkit_disks_adapter_set_vendor (adapter, vendor);
+        devkit_disks_adapter_set_model (adapter, model);
+        devkit_disks_adapter_set_driver (adapter, driver);
 
         ret = TRUE;
 

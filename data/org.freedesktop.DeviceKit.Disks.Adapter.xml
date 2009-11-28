@@ -13,11 +13,11 @@
   <!ENTITY ERROR_FILESYSTEM_TOOLS_MISSING "org.freedesktop.DeviceKit.Disks.Error.FilesystemToolsMissing">
 ]>
 <node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
-  <interface name="org.freedesktop.DeviceKit.Disks.Controller">
+  <interface name="org.freedesktop.DeviceKit.Disks.Adapter">
     <doc:doc>
       <doc:description>
         <doc:para>
-          This interface provides information about storage controllers.
+          This interface provides information about storage adapters.
         </doc:para>
       </doc:description>
     </doc:doc>
@@ -28,7 +28,7 @@
       <doc:doc>
         <doc:description>
           <doc:para>
-            Something on the controller changed.
+            Something on the adapter changed.
           </doc:para>
         </doc:description>
       </doc:doc>
@@ -38,37 +38,37 @@
 
     <property name="NativePath" type="s" access="read">
       <doc:doc><doc:description><doc:para>
-            OS specific native path of the controller. On Linux this is the sysfs path, for example <doc:tt>/sys/devices/pci0000:00/0000:00:1f.2</doc:tt>.
+            OS specific native path of the adapter. On Linux this is the sysfs path, for example <doc:tt>/sys/devices/pci0000:00/0000:00:1f.2</doc:tt>.
       </doc:para></doc:description></doc:doc>
     </property>
 
     <property name="Vendor" type="s" access="read">
       <doc:doc><doc:description><doc:para>
-            The name of the vendor of the storage controller.
+            The name of the vendor of the storage adapter.
       </doc:para></doc:description></doc:doc>
     </property>
 
     <property name="Model" type="s" access="read">
       <doc:doc><doc:description><doc:para>
-            The name of the model of the storage controller.
+            The name of the model of the storage adapter.
       </doc:para></doc:description></doc:doc>
     </property>
 
     <property name="Driver" type="s" access="read">
       <doc:doc><doc:description><doc:para>
-            The name of the driver used for the storage controller.
+            The name of the driver used for the storage adapter.
       </doc:para></doc:description></doc:doc>
     </property>
 
     <property name="NumPorts" type="u" access="read">
       <doc:doc><doc:description><doc:para>
-            Number of physical ports on the storage controller or 0 if unknown.
+            Number of physical ports on the storage adapter or 0 if unknown.
       </doc:para></doc:description></doc:doc>
     </property>
 
     <property name="Fabric" type="s" access="read">
       <doc:doc><doc:description><doc:para>
-            The fabric used for the storage controller to communicate with other storage
+            The fabric used for the storage adapter to communicate with other storage
             targets and initiators or blank if unknown. Known values include
             <doc:list>
               <doc:item>

@@ -370,7 +370,7 @@ typedef struct
         gboolean drive_is_rotational;
         guint    drive_rotation_rate;
         char    *drive_write_cache;
-        char    *drive_controller;
+        char    *drive_adapter;
         char    *drive_port;
 
         gboolean optical_disc_is_blank;
@@ -567,8 +567,8 @@ collect_props (const char *key, const GValue *value, DeviceProperties *props)
                 props->drive_rotation_rate = g_value_get_uint (value);
         else if (strcmp (key, "DriveWriteCache") == 0)
                 props->drive_write_cache = g_strdup (g_value_get_string (value));
-        else if (strcmp (key, "DriveController") == 0)
-                props->drive_controller = g_strdup (g_value_get_boxed (value));
+        else if (strcmp (key, "DriveAdapter") == 0)
+                props->drive_adapter = g_strdup (g_value_get_boxed (value));
         else if (strcmp (key, "DrivePort") == 0)
                 props->drive_port = g_strdup (g_value_get_boxed (value));
 
@@ -691,7 +691,7 @@ device_properties_free (DeviceProperties *props)
         g_strfreev (props->drive_media_compatibility);
         g_free (props->drive_media);
         g_free (props->drive_write_cache);
-        g_free (props->drive_controller);
+        g_free (props->drive_adapter);
         g_free (props->drive_port);
 
         g_free (props->drive_ata_smart_status);
@@ -1133,7 +1133,7 @@ do_show_info (const char *object_path)
                         g_print ("    write-cache:               %s\n", props->drive_write_cache);
                 }
                 g_print ("    ejectable:                 %d\n", props->drive_is_media_ejectable);
-                g_print ("    controller:                %s\n", strlen (props->drive_controller) > 1 ? props->drive_controller : "Unknown");
+                g_print ("    adapter:                   %s\n", strlen (props->drive_adapter) > 1 ? props->drive_adapter : "Unknown");
                 g_print ("    port:                      %s\n", strlen (props->drive_port) > 1 ? props->drive_port : "Unknown");
                 g_print ("    media:                     %s\n", props->drive_media);
                 g_print ("      compat:                 ");

@@ -18,8 +18,8 @@
  *
  */
 
-#ifndef __DEVKIT_DISKS_CONTROLLER_PRIVATE_H__
-#define __DEVKIT_DISKS_CONTROLLER_PRIVATE_H__
+#ifndef __DEVKIT_DISKS_ADAPTER_PRIVATE_H__
+#define __DEVKIT_DISKS_ADAPTER_PRIVATE_H__
 
 #include <dbus/dbus-glib.h>
 #include <gudev/gudev.h>
@@ -29,7 +29,7 @@
 
 G_BEGIN_DECLS
 
-struct DevkitDisksControllerPrivate
+struct DevkitDisksAdapterPrivate
 {
         DBusGConnection *system_bus_connection;
         DevkitDisksDaemon *daemon;
@@ -55,12 +55,12 @@ struct DevkitDisksControllerPrivate
 
 /* property setters */
 
-void devkit_disks_controller_set_vendor (DevkitDisksController *controller, const gchar *value);
-void devkit_disks_controller_set_model (DevkitDisksController *controller, const gchar *value);
-void devkit_disks_controller_set_driver (DevkitDisksController *controller, const gchar *value);
-void devkit_disks_controller_set_num_ports (DevkitDisksController *controller, guint value);
-void devkit_disks_controller_set_fabric (DevkitDisksController *controller, const gchar *value);
+void devkit_disks_adapter_set_vendor (DevkitDisksAdapter *adapter, const gchar *value);
+void devkit_disks_adapter_set_model (DevkitDisksAdapter *adapter, const gchar *value);
+void devkit_disks_adapter_set_driver (DevkitDisksAdapter *adapter, const gchar *value);
+void devkit_disks_adapter_set_num_ports (DevkitDisksAdapter *adapter, guint value);
+void devkit_disks_adapter_set_fabric (DevkitDisksAdapter *adapter, const gchar *value);
 
 G_END_DECLS
 
-#endif /* __DEVKIT_DISKS_CONTROLLER_PRIVATE_H__ */
+#endif /* __DEVKIT_DISKS_ADAPTER_PRIVATE_H__ */

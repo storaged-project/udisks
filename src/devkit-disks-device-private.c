@@ -795,13 +795,13 @@ devkit_disks_device_set_drive_write_cache (DevkitDisksDevice *device, const gcha
 }
 
 void
-devkit_disks_device_set_drive_controller (DevkitDisksDevice *device, const gchar *value)
+devkit_disks_device_set_drive_adapter (DevkitDisksDevice *device, const gchar *value)
 {
-  if (G_UNLIKELY (g_strcmp0 (device->priv->drive_controller, value) != 0))
+  if (G_UNLIKELY (g_strcmp0 (device->priv->drive_adapter, value) != 0))
     {
-      g_free (device->priv->drive_controller);
-      device->priv->drive_controller = g_strdup (value);
-      emit_changed (device, "drive_controller");
+      g_free (device->priv->drive_adapter);
+      device->priv->drive_adapter = g_strdup (value);
+      emit_changed (device, "drive_adapter");
     }
 }
 

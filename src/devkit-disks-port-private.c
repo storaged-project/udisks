@@ -65,13 +65,13 @@ emit_changed (DevkitDisksPort *port, const gchar *name)
 }
 
 void
-devkit_disks_port_set_controller (DevkitDisksPort *port, const gchar *value)
+devkit_disks_port_set_adapter (DevkitDisksPort *port, const gchar *value)
 {
-  if (G_UNLIKELY (g_strcmp0 (port->priv->controller, value) != 0))
+  if (G_UNLIKELY (g_strcmp0 (port->priv->adapter, value) != 0))
     {
-      g_free (port->priv->controller);
-      port->priv->controller = g_strdup (value);
-      emit_changed (port, "controller");
+      g_free (port->priv->adapter);
+      port->priv->adapter = g_strdup (value);
+      emit_changed (port, "adapter");
     }
 }
 

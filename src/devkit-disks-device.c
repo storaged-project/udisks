@@ -59,7 +59,7 @@
 #include "devkit-disks-mount-file.h"
 #include "devkit-disks-inhibitor.h"
 #include "devkit-disks-poller.h"
-#include "devkit-disks-controller.h"
+#include "devkit-disks-adapter.h"
 #include "devkit-disks-port.h"
 
 /*--------------------------------------------------------------------------------------------------------------*/
@@ -218,7 +218,7 @@ enum
         PROP_DRIVE_IS_ROTATIONAL,
         PROP_DRIVE_ROTATION_RATE,
         PROP_DRIVE_WRITE_CACHE,
-        PROP_DRIVE_CONTROLLER,
+        PROP_DRIVE_ADAPTER,
         PROP_DRIVE_PORT,
 
         PROP_OPTICAL_DISC_IS_BLANK,
@@ -529,9 +529,9 @@ get_property (GObject         *object,
 	case PROP_DRIVE_ROTATION_RATE:
 		g_value_set_uint (value, device->priv->drive_rotation_rate);
 		break;
-	case PROP_DRIVE_CONTROLLER:
-                if (device->priv->drive_controller != NULL)
-                        g_value_set_boxed (value, device->priv->drive_controller);
+	case PROP_DRIVE_ADAPTER:
+                if (device->priv->drive_adapter != NULL)
+                        g_value_set_boxed (value, device->priv->drive_adapter);
                 else
                         g_value_set_boxed (value, "/");
 		break;
@@ -1009,8 +1009,8 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 g_param_spec_string ("drive-write-cache", NULL, NULL, FALSE, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
-                PROP_DRIVE_CONTROLLER,
-                g_param_spec_boxed ("drive-controller", NULL, NULL, DBUS_TYPE_G_OBJECT_PATH, G_PARAM_READABLE));
+                PROP_DRIVE_ADAPTER,
+                g_param_spec_boxed ("drive-adapter", NULL, NULL, DBUS_TYPE_G_OBJECT_PATH, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
                 PROP_DRIVE_PORT,
@@ -1250,7 +1250,7 @@ devkit_disks_device_finalize (GObject *object)
         g_ptr_array_free (device->priv->drive_media_compatibility, TRUE);
         g_free (device->priv->drive_media);
         g_free (device->priv->drive_write_cache);
-        g_free (device->priv->drive_controller);
+        g_free (device->priv->drive_adapter);
         g_free (device->priv->drive_port);
 
         g_free (device->priv->linux_md_component_level);
@@ -2941,22 +2941,22 @@ update_info_media_detection (DevkitDisksDevice *device)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-/* drive_controller property */
+/* drive_adapter property */
 static gboolean
-update_info_drive_controller (DevkitDisksDevice *device)
+update_info_drive_adapter (DevkitDisksDevice *device)
 {
-        DevkitDisksController *controller;
-        const gchar *controller_object_path;
+        DevkitDisksAdapter *adapter;
+        const gchar *adapter_object_path;
 
-        controller_object_path = NULL;
+        adapter_object_path = NULL;
 
-        controller = devkit_disks_daemon_local_find_controller (device->priv->daemon,
-                                                                device->priv->native_path);
-        if (controller != NULL) {
-                controller_object_path = devkit_disks_controller_local_get_object_path (controller);
+        adapter = devkit_disks_daemon_local_find_adapter (device->priv->daemon,
+                                                          device->priv->native_path);
+        if (adapter != NULL) {
+                adapter_object_path = devkit_disks_adapter_local_get_object_path (adapter);
         }
 
-        devkit_disks_device_set_drive_controller (device, controller_object_path);
+        devkit_disks_device_set_drive_adapter (device, adapter_object_path);
 
         return TRUE;
 }
@@ -3375,8 +3375,8 @@ update_info (DevkitDisksDevice *device)
         if (!update_info_media_detection (device))
                 goto out;
 
-        /* drive_controller proprety */
-        if (!update_info_drive_controller (device))
+        /* drive_adapter proprety */
+        if (!update_info_drive_adapter (device))
                 goto out;
 
         /* drive_port proprety */
