@@ -806,6 +806,17 @@ devkit_disks_device_set_drive_controller (DevkitDisksDevice *device, const gchar
 }
 
 void
+devkit_disks_device_set_drive_port (DevkitDisksDevice *device, const gchar *value)
+{
+  if (G_UNLIKELY (g_strcmp0 (device->priv->drive_port, value) != 0))
+    {
+      g_free (device->priv->drive_port);
+      device->priv->drive_port = g_strdup (value);
+      emit_changed (device, "drive_port");
+    }
+}
+
+void
 devkit_disks_device_set_optical_disc_is_blank (DevkitDisksDevice *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->optical_disc_is_blank != value))

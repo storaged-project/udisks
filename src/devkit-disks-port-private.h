@@ -18,8 +18,8 @@
  *
  */
 
-#ifndef __DEVKIT_DISKS_CONTROLLER_PRIVATE_H__
-#define __DEVKIT_DISKS_CONTROLLER_PRIVATE_H__
+#ifndef __DEVKIT_DISKS_PORT_PRIVATE_H__
+#define __DEVKIT_DISKS_PORT_PRIVATE_H__
 
 #include <dbus/dbus-glib.h>
 #include <gudev/gudev.h>
@@ -29,7 +29,7 @@
 
 G_BEGIN_DECLS
 
-struct DevkitDisksControllerPrivate
+struct DevkitDisksPortPrivate
 {
         DBusGConnection *system_bus_connection;
         DevkitDisksDaemon *daemon;
@@ -42,25 +42,23 @@ struct DevkitDisksControllerPrivate
         /* if non-zero, the id of the idle for emitting a 'change' signal */
         guint emit_changed_idle_id;
 
+        gchar *native_path_for_device_prefix;
+
         /**************/
         /* Properties */
         /**************/
 
-        gchar *vendor;
-        gchar *model;
-        gchar *driver;
-        guint num_ports;
-        gchar *fabric;
+        gchar *controller;
+        gchar *parent;
+        gint number;
 };
 
 /* property setters */
 
-void devkit_disks_controller_set_vendor (DevkitDisksController *controller, const gchar *value);
-void devkit_disks_controller_set_model (DevkitDisksController *controller, const gchar *value);
-void devkit_disks_controller_set_driver (DevkitDisksController *controller, const gchar *value);
-void devkit_disks_controller_set_num_ports (DevkitDisksController *controller, guint value);
-void devkit_disks_controller_set_fabric (DevkitDisksController *controller, const gchar *value);
+void devkit_disks_port_set_controller (DevkitDisksPort *port, const gchar *value);
+void devkit_disks_port_set_parent (DevkitDisksPort *port, const gchar *value);
+void devkit_disks_port_set_number (DevkitDisksPort *port, gint value);
 
 G_END_DECLS
 
-#endif /* __DEVKIT_DISKS_CONTROLLER_PRIVATE_H__ */
+#endif /* __DEVKIT_DISKS_PORT_PRIVATE_H__ */

@@ -2,7 +2,12 @@
 NULL =
 
 dbusifdir = $(datadir)/dbus-1/interfaces
-dbusif_DATA = org.freedesktop.DeviceKit.Disks.xml org.freedesktop.DeviceKit.Disks.Device.xml org.freedesktop.DeviceKit.Disks.Controller.xml
+dbusif_DATA = \
+	org.freedesktop.DeviceKit.Disks.xml 		\
+	org.freedesktop.DeviceKit.Disks.Device.xml 	\
+	org.freedesktop.DeviceKit.Disks.Controller.xml	\
+	org.freedesktop.DeviceKit.Disks.Port.xml	\
+	$(NULL)
 
 servicedir       = $(datadir)/dbus-1/system-services
 service_in_files = org.freedesktop.DeviceKit.Disks.service.in
@@ -25,10 +30,8 @@ pkgconfigdir = $(datadir)/pkgconfig
 pkgconfig_DATA = DeviceKit-disks.pc
 
 EXTRA_DIST = 						\
-	org.freedesktop.DeviceKit.Disks.xml		\
-	org.freedesktop.DeviceKit.Disks.Device.xml	\
-	org.freedesktop.DeviceKit.Disks.Controller.xml	\
 	95-devkit-disks.rules				\
+	$(dbusif_DATA)					\
 	$(service_in_files)				\
 	$(dbusconf_in_files)				\
 	DeviceKit-disks.pc.in				\

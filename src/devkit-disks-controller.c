@@ -56,6 +56,8 @@ enum
         PROP_VENDOR,
         PROP_MODEL,
         PROP_DRIVER,
+        PROP_NUM_PORTS,
+        PROP_FABRIC,
 };
 
 enum
@@ -93,6 +95,14 @@ get_property (GObject         *object,
 
         case PROP_DRIVER:
                 g_value_set_string (value, controller->priv->driver);
+                break;
+
+        case PROP_NUM_PORTS:
+                g_value_set_uint (value, controller->priv->num_ports);
+                break;
+
+        case PROP_FABRIC:
+                g_value_set_string (value, controller->priv->fabric);
                 break;
 
         default:
@@ -138,6 +148,14 @@ devkit_disks_controller_class_init (DevkitDisksControllerClass *klass)
                 object_class,
                 PROP_DRIVER,
                 g_param_spec_string ("driver", NULL, NULL, NULL, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_NUM_PORTS,
+                g_param_spec_uint ("num-ports", NULL, NULL, 0, G_MAXUINT, 0, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_FABRIC,
+                g_param_spec_string ("fabric", NULL, NULL, NULL, G_PARAM_READABLE));
 }
 
 static void

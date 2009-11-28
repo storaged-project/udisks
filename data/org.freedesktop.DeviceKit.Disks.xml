@@ -33,6 +33,23 @@
 
     <!-- ************************************************************ -->
 
+    <method name="EnumeratePorts">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="devices" direction="out" type="ao">
+        <doc:doc><doc:summary>An array of object paths for ports.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Enumerate all storage ports on the system.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
     <method name="EnumerateDevices">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="devices" direction="out" type="ao">
@@ -506,9 +523,6 @@
         </doc:description>
       </doc:doc>
     </signal>
-
-    <!-- ************************************************************ -->
-
     <signal name="ControllerRemoved">
       <arg name="controller" type="o">
         <doc:doc><doc:summary>Object path of controller that was removed.</doc:summary></doc:doc>
@@ -522,9 +536,6 @@
         </doc:description>
       </doc:doc>
     </signal>
-
-    <!-- ************************************************************ -->
-
     <signal name="ControllerChanged">
       <arg name="controller" type="o">
         <doc:doc><doc:summary>Object path of controller that was changed.</doc:summary></doc:doc>
@@ -534,6 +545,48 @@
         <doc:description>
           <doc:para>
             Emitted when a controller changed.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </signal>
+
+    <!-- ************************************************************ -->
+
+    <signal name="PortAdded">
+      <arg name="port" type="o">
+        <doc:doc><doc:summary>Object path of port that was added.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Emitted when a port is added.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </signal>
+    <signal name="PortRemoved">
+      <arg name="port" type="o">
+        <doc:doc><doc:summary>Object path of port that was removed.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Emitted when a port is removed.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </signal>
+    <signal name="PortChanged">
+      <arg name="port" type="o">
+        <doc:doc><doc:summary>Object path of port that was changed.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Emitted when a port changed.
           </doc:para>
         </doc:description>
       </doc:doc>

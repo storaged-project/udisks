@@ -22,6 +22,7 @@ BUILT_SOURCES =							\
 	devkit-disks-daemon-glue.h				\
 	devkit-disks-device-glue.h				\
 	devkit-disks-controller-glue.h				\
+	devkit-disks-port-glue.h				\
 	devkit-disks-marshal.h		devkit-disks-marshal.c
 
 devkit-disks-marshal.h: devkit-disks-marshal.list
@@ -39,6 +40,9 @@ devkit-disks-device-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.D
 devkit-disks-controller-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Controller.xml Makefile.am
 	dbus-binding-tool --prefix=devkit_disks_controller --mode=glib-server --output=devkit-disks-controller-glue.h $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Controller.xml
 
+devkit-disks-port-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Port.xml Makefile.am
+	dbus-binding-tool --prefix=devkit_disks_port --mode=glib-server --output=devkit-disks-port-glue.h $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Port.xml
+
 libexec_PROGRAMS = devkit-disks-daemon
 
 devkit_disks_daemon_SOURCES = 								\
@@ -49,6 +53,8 @@ devkit_disks_daemon_SOURCES = 								\
 	devkit-disks-device-private.h		devkit-disks-device-private.c		\
 	devkit-disks-controller.h		devkit-disks-controller.c		\
 	devkit-disks-controller-private.h	devkit-disks-controller-private.c	\
+	devkit-disks-port.h			devkit-disks-port.c			\
+	devkit-disks-port-private.h		devkit-disks-port-private.c		\
 	devkit-disks-mount-file.h		devkit-disks-mount-file.c		\
 	devkit-disks-mount.h			devkit-disks-mount.c			\
 	devkit-disks-mount-monitor.h		devkit-disks-mount-monitor.c		\

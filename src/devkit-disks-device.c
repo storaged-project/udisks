@@ -60,6 +60,7 @@
 #include "devkit-disks-inhibitor.h"
 #include "devkit-disks-poller.h"
 #include "devkit-disks-controller.h"
+#include "devkit-disks-port.h"
 
 /*--------------------------------------------------------------------------------------------------------------*/
 #include "devkit-disks-device-glue.h"
@@ -218,6 +219,7 @@ enum
         PROP_DRIVE_ROTATION_RATE,
         PROP_DRIVE_WRITE_CACHE,
         PROP_DRIVE_CONTROLLER,
+        PROP_DRIVE_PORT,
 
         PROP_OPTICAL_DISC_IS_BLANK,
         PROP_OPTICAL_DISC_IS_APPENDABLE,
@@ -530,6 +532,12 @@ get_property (GObject         *object,
 	case PROP_DRIVE_CONTROLLER:
                 if (device->priv->drive_controller != NULL)
                         g_value_set_boxed (value, device->priv->drive_controller);
+                else
+                        g_value_set_boxed (value, "/");
+		break;
+	case PROP_DRIVE_PORT:
+                if (device->priv->drive_port != NULL)
+                        g_value_set_boxed (value, device->priv->drive_port);
                 else
                         g_value_set_boxed (value, "/");
 		break;
@@ -1003,6 +1011,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 object_class,
                 PROP_DRIVE_CONTROLLER,
                 g_param_spec_boxed ("drive-controller", NULL, NULL, DBUS_TYPE_G_OBJECT_PATH, G_PARAM_READABLE));
+        g_object_class_install_property (
+                object_class,
+                PROP_DRIVE_PORT,
+                g_param_spec_boxed ("drive-port", NULL, NULL, DBUS_TYPE_G_OBJECT_PATH, G_PARAM_READABLE));
 
         g_object_class_install_property (
                 object_class,
@@ -1239,6 +1251,7 @@ devkit_disks_device_finalize (GObject *object)
         g_free (device->priv->drive_media);
         g_free (device->priv->drive_write_cache);
         g_free (device->priv->drive_controller);
+        g_free (device->priv->drive_port);
 
         g_free (device->priv->linux_md_component_level);
         g_free (device->priv->linux_md_component_uuid);
@@ -2928,9 +2941,9 @@ update_info_media_detection (DevkitDisksDevice *device)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-/* driver_controller property */
+/* drive_controller property */
 static gboolean
-update_info_driver_controller (DevkitDisksDevice *device)
+update_info_drive_controller (DevkitDisksDevice *device)
 {
         DevkitDisksController *controller;
         const gchar *controller_object_path;
@@ -2944,6 +2957,26 @@ update_info_driver_controller (DevkitDisksDevice *device)
         }
 
         devkit_disks_device_set_drive_controller (device, controller_object_path);
+
+        return TRUE;
+}
+
+/* drive_port property */
+static gboolean
+update_info_drive_port (DevkitDisksDevice *device)
+{
+        DevkitDisksPort *port;
+        const gchar *port_object_path;
+
+        port_object_path = NULL;
+
+        port = devkit_disks_daemon_local_find_port (device->priv->daemon,
+                                                    device->priv->native_path);
+        if (port != NULL) {
+                port_object_path = devkit_disks_port_local_get_object_path (port);
+        }
+
+        devkit_disks_device_set_drive_port (device, port_object_path);
 
         return TRUE;
 }
@@ -3342,8 +3375,12 @@ update_info (DevkitDisksDevice *device)
         if (!update_info_media_detection (device))
                 goto out;
 
-        /* device_controller proprety */
-        if (!update_info_driver_controller (device))
+        /* drive_controller proprety */
+        if (!update_info_drive_controller (device))
+                goto out;
+
+        /* drive_port proprety */
+        if (!update_info_drive_port (device))
                 goto out;
 
         ret = TRUE;

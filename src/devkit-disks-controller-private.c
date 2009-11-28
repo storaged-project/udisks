@@ -96,3 +96,24 @@ devkit_disks_controller_set_driver (DevkitDisksController *controller, const gch
       emit_changed (controller, "driver");
     }
 }
+
+void
+devkit_disks_controller_set_num_ports (DevkitDisksController *controller, guint value)
+{
+  if (G_UNLIKELY (controller->priv->num_ports != value))
+    {
+      controller->priv->num_ports = value;
+      emit_changed (controller, "num_ports");
+    }
+}
+
+void
+devkit_disks_controller_set_fabric (DevkitDisksController *controller, const gchar *value)
+{
+  if (G_UNLIKELY (g_strcmp0 (controller->priv->fabric, value) != 0))
+    {
+      g_free (controller->priv->fabric);
+      controller->priv->fabric = g_strdup (value);
+      emit_changed (controller, "fabric");
+    }
+}
