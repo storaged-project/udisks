@@ -219,7 +219,7 @@ enum
         PROP_DRIVE_ROTATION_RATE,
         PROP_DRIVE_WRITE_CACHE,
         PROP_DRIVE_ADAPTER,
-        PROP_DRIVE_PORT,
+        PROP_DRIVE_PORTS,
 
         PROP_OPTICAL_DISC_IS_BLANK,
         PROP_OPTICAL_DISC_IS_APPENDABLE,
@@ -535,11 +535,8 @@ get_property (GObject         *object,
                 else
                         g_value_set_boxed (value, "/");
 		break;
-	case PROP_DRIVE_PORT:
-                if (device->priv->drive_port != NULL)
-                        g_value_set_boxed (value, device->priv->drive_port);
-                else
-                        g_value_set_boxed (value, "/");
+	case PROP_DRIVE_PORTS:
+		g_value_set_boxed (value, device->priv->drive_ports);
 		break;
 
 	case PROP_OPTICAL_DISC_IS_BLANK:
@@ -1013,8 +1010,10 @@ devkit_disks_device_class_init (DevkitDisksDeviceClass *klass)
                 g_param_spec_boxed ("drive-adapter", NULL, NULL, DBUS_TYPE_G_OBJECT_PATH, G_PARAM_READABLE));
         g_object_class_install_property (
                 object_class,
-                PROP_DRIVE_PORT,
-                g_param_spec_boxed ("drive-port", NULL, NULL, DBUS_TYPE_G_OBJECT_PATH, G_PARAM_READABLE));
+                PROP_DRIVE_PORTS,
+                g_param_spec_boxed ("drive-ports", NULL, NULL,
+                                    dbus_g_type_get_collection ("GPtrArray", DBUS_TYPE_G_OBJECT_PATH),
+                                    G_PARAM_READABLE));
 
         g_object_class_install_property (
                 object_class,
@@ -1162,6 +1161,7 @@ devkit_disks_device_init (DevkitDisksDevice *device)
         device->priv->device_mount_paths = g_ptr_array_new ();
         device->priv->partition_flags = g_ptr_array_new ();
         device->priv->drive_media_compatibility = g_ptr_array_new ();
+        device->priv->drive_ports = g_ptr_array_new ();
         device->priv->linux_md_component_state = g_ptr_array_new ();
         device->priv->linux_md_slaves = g_ptr_array_new ();
         device->priv->slaves_objpath = g_ptr_array_new ();
@@ -1251,7 +1251,8 @@ devkit_disks_device_finalize (GObject *object)
         g_free (device->priv->drive_media);
         g_free (device->priv->drive_write_cache);
         g_free (device->priv->drive_adapter);
-        g_free (device->priv->drive_port);
+        g_ptr_array_foreach (device->priv->drive_ports, (GFunc) g_free, NULL);
+        g_ptr_array_free (device->priv->drive_ports, TRUE);
 
         g_free (device->priv->linux_md_component_level);
         g_free (device->priv->linux_md_component_uuid);
@@ -2961,22 +2962,21 @@ update_info_drive_adapter (DevkitDisksDevice *device)
         return TRUE;
 }
 
-/* drive_port property */
+/* drive_ports property */
 static gboolean
-update_info_drive_port (DevkitDisksDevice *device)
+update_info_drive_ports (DevkitDisksDevice *device)
 {
         DevkitDisksPort *port;
-        const gchar *port_object_path;
+        const gchar *val[2];
 
-        port_object_path = NULL;
-
+        val[0] = val[1] = NULL;
         port = devkit_disks_daemon_local_find_port (device->priv->daemon,
                                                     device->priv->native_path);
         if (port != NULL) {
-                port_object_path = devkit_disks_port_local_get_object_path (port);
+                val[0] = devkit_disks_port_local_get_object_path (port);
         }
 
-        devkit_disks_device_set_drive_port (device, port_object_path);
+        devkit_disks_device_set_drive_ports (device, (GStrv) val);
 
         return TRUE;
 }
@@ -3379,8 +3379,8 @@ update_info (DevkitDisksDevice *device)
         if (!update_info_drive_adapter (device))
                 goto out;
 
-        /* drive_port proprety */
-        if (!update_info_drive_port (device))
+        /* drive_ports proprety */
+        if (!update_info_drive_ports (device))
                 goto out;
 
         ret = TRUE;

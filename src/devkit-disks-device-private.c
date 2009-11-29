@@ -806,13 +806,13 @@ devkit_disks_device_set_drive_adapter (DevkitDisksDevice *device, const gchar *v
 }
 
 void
-devkit_disks_device_set_drive_port (DevkitDisksDevice *device, const gchar *value)
+devkit_disks_device_set_drive_ports (DevkitDisksDevice *device, GStrv value)
 {
-  if (G_UNLIKELY (g_strcmp0 (device->priv->drive_port, value) != 0))
+  if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->drive_ports, value)))
     {
-      g_free (device->priv->drive_port);
-      device->priv->drive_port = g_strdup (value);
-      emit_changed (device, "drive_port");
+      ptr_str_array_free (device->priv->drive_ports);
+      device->priv->drive_ports = ptr_str_array_from_strv (value);
+      emit_changed (device, "drive_ports");
     }
 }
 

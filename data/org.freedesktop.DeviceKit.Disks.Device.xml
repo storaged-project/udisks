@@ -2194,9 +2194,9 @@
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
-    <property name="DrivePort" type="o" access="read">
+    <property name="DrivePorts" type="ao" access="read">
       <doc:doc><doc:description><doc:para>
-            The object of the port for the drive or "/" if no port exists.
+            The object paths of the ports for the drive or empty if no ports exist.
             This property is only valid if
             <doc:ref type="property" to="Device:DeviceIsDrive">DeviceIsDrive</doc:ref>
             is TRUE.
