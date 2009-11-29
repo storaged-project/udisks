@@ -29,6 +29,11 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+        PORT_TYPE_ATA,
+        PORT_TYPE_SAS
+} PortType;
+
 struct DevkitDisksPortPrivate
 {
         DBusGConnection *system_bus_connection;
@@ -42,6 +47,8 @@ struct DevkitDisksPortPrivate
         /* if non-zero, the id of the idle for emitting a 'change' signal */
         guint emit_changed_idle_id;
 
+        /* used for internal bookkeeping */
+        PortType port_type;
         gchar *native_path_for_device_prefix;
 
         /**************/

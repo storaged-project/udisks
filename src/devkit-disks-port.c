@@ -373,7 +373,51 @@ gboolean
 devkit_disks_local_port_is_for_device (DevkitDisksPort *port,
                                        const gchar     *device_native_path)
 {
-        return g_str_has_prefix (device_native_path, port->priv->native_path_for_device_prefix);
+        gboolean ret;
+
+        ret = FALSE;
+
+        if (port->priv->port_type == PORT_TYPE_ATA) {
+
+                ret = g_str_has_prefix (device_native_path, port->priv->native_path_for_device_prefix);
+
+        } else if (port->priv->port_type == PORT_TYPE_SAS) {
+                GDir *dir;
+                gchar *s;
+                const gchar *name;
+                const gchar *phy_kernel_name;
+
+                phy_kernel_name = g_udev_device_get_name (port->priv->d);
+
+                /* Typically it looks like this
+                 *
+                 *  .../host6/port-6:0/end_device-6:0/target6:0:0/6:0:0:0/block/sda
+                 *
+                 * where
+                 *
+                 *  # ls /sys/devices/pci0000:00/0000:00:01.0/0000:07:00.0/host6/port-6:0/
+                 *  end_device-6:0  phy-6:0  power  sas_port  uevent
+                 *
+                 * unfortunately there are no helpful symlinks here so we need to
+                 * use device/../../..
+                 *
+                 * TODO: Ugh, this is probably pretty expensive syscall-wise...
+                 */
+                s = g_strdup_printf ("%s/device/../../..", device_native_path);
+                dir = g_dir_open (s, 0, NULL);
+                if (dir != NULL) {
+                        while ((name = g_dir_read_name (dir)) != NULL) {
+                                if (g_strcmp0 (name, phy_kernel_name) == 0) {
+                                        ret = TRUE;
+                                        break;
+                                }
+                        }
+                        g_dir_close (dir);
+                }
+                g_free (s);
+        }
+
+        return ret;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -433,7 +477,7 @@ int_compare_func (gconstpointer a,
 
 /* Update info for an ATA port */
 static gboolean
-update_info_ata (DevkitDisksPort       *port,
+update_info_ata (DevkitDisksPort    *port,
                  DevkitDisksAdapter *adapter)
 {
         GDir *dir;
@@ -531,6 +575,7 @@ update_info_ata (DevkitDisksPort       *port,
         }
 
         devkit_disks_port_set_number (port, port_number);
+        port->priv->port_type = PORT_TYPE_ATA;
         ret = TRUE;
 
  out:
@@ -541,6 +586,46 @@ update_info_ata (DevkitDisksPort       *port,
 
         return ret;
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/* Update info for a SAS PHY */
+static gboolean
+update_info_sas_phy (DevkitDisksPort    *port,
+                     DevkitDisksAdapter *adapter)
+{
+        gboolean ret;
+        gint port_number;
+        const gchar *kernel_name;
+        guint level;
+        guint n;
+
+        ret = FALSE;
+        port_number = -1;
+
+        /* Count how deep this PHY is - a level of 1 indicates it's a PHY for the
+         * HBA and not for an expander
+         */
+        level = 0;
+        kernel_name = g_udev_device_get_name (port->priv->d);
+        for (n = 0; kernel_name[n] != '\0'; n++) {
+                if (kernel_name[n] == ':')
+                        level++;
+        }
+
+        if (level > 1)
+                goto out;
+
+        port_number = g_udev_device_get_sysfs_attr_as_int (port->priv->d, "phy_identifier");
+
+        devkit_disks_port_set_number (port, port_number);
+        port->priv->port_type = PORT_TYPE_SAS;
+        ret = TRUE;
+ out:
+        return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 /**
  * update_info:
@@ -572,11 +657,11 @@ update_info (DevkitDisksPort *port)
         devkit_disks_port_set_parent (port, devkit_disks_adapter_local_get_object_path (adapter));
 
         if (g_strcmp0 (g_udev_device_get_subsystem (port->priv->d), "scsi_host") == 0) {
-                /* TODO: ensure this is really an ATA port - bail if it's not */
                 if (!update_info_ata (port, adapter))
                         goto out;
         } else {
-                goto out;
+                if (!update_info_sas_phy (port, adapter))
+                        goto out;
         }
 
         ret = TRUE;

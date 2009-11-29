@@ -842,6 +842,53 @@ scsi_host_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean sy
 /* ------------------------------ */
 
 static void
+sas_phy_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthesized)
+{
+        DevkitDisksPort *port;
+        const char *native_path;
+
+        native_path = g_udev_device_get_sysfs_path (d);
+        port = g_hash_table_lookup (daemon->priv->map_native_path_to_port, native_path);
+        if (port != NULL) {
+                gboolean keep_port;
+
+                g_print ("**** sas_phy CHANGING %s\n", native_path);
+
+                /* The sysfs path ('move' uevent) may actually change so remove it and add
+                 * it back after processing. The kernel name will never change so the object
+                 * path will fortunately remain constant.
+                 */
+                g_warn_if_fail (g_hash_table_remove (daemon->priv->map_native_path_to_port,
+                                                     port->priv->native_path));
+
+                keep_port = devkit_disks_port_changed (port, d, synthesized);
+
+                g_assert (devkit_disks_port_local_get_native_path (port) != NULL);
+                g_assert (g_strcmp0 (native_path, devkit_disks_port_local_get_native_path (port)) == 0);
+
+                /* now add the things back to the global hashtables - it's important that we
+                 * do this *before* calling port_remove() - otherwise it will never remove
+                 * the port
+                 */
+                g_hash_table_insert (daemon->priv->map_native_path_to_port,
+                                     g_strdup (devkit_disks_port_local_get_native_path (port)),
+                                     g_object_ref (port));
+
+                if (!keep_port) {
+                        g_print ("**** sas_phy CHANGE TRIGGERED REMOVE %s\n", native_path);
+                        device_remove (daemon, d);
+                } else {
+                        g_print ("**** sas_phy CHANGED %s\n", native_path);
+                }
+        } else {
+                g_print ("**** sas_phy TREATING CHANGE AS ADD %s\n", native_path);
+                device_add (daemon, d, TRUE);
+        }
+}
+
+/* ------------------------------ */
+
+static void
 block_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthesized)
 {
         DevkitDisksDevice *device;
@@ -907,6 +954,8 @@ device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthesized)
                 pci_device_changed (daemon, d, synthesized);
         else if (g_strcmp0 (subsystem, "scsi_host") == 0)
                 scsi_host_device_changed (daemon, d, synthesized);
+        else if (g_strcmp0 (subsystem, "sas_phy") == 0)
+                sas_phy_device_changed (daemon, d, synthesized);
         else
                 g_warning ("Unhandled changed event from subsystem `%s'", subsystem);
 }
@@ -1021,6 +1070,49 @@ scsi_host_device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_e
 /* ------------------------------ */
 
 static void
+sas_phy_device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event)
+{
+        DevkitDisksPort *port;
+        const char *native_path;
+
+        native_path = g_udev_device_get_sysfs_path (d);
+        port = g_hash_table_lookup (daemon->priv->map_native_path_to_port, native_path);
+        if (port != NULL) {
+                /* we already have the port; treat as change event */
+                g_print ("**** sas_phy TREATING ADD AS CHANGE %s\n", native_path);
+                device_changed (daemon, d, FALSE);
+        } else {
+                g_print ("**** sas_phy ADDING %s\n", native_path);
+                port = devkit_disks_port_new (daemon, d);
+
+                if (port != NULL) {
+                        /* assert that the port is fully loaded with info */
+                        g_assert (devkit_disks_port_local_get_native_path (port) != NULL);
+                        g_assert (devkit_disks_port_local_get_object_path (port) != NULL);
+                        g_assert (g_strcmp0 (native_path, devkit_disks_port_local_get_native_path (port)) == 0);
+
+                        g_hash_table_insert (daemon->priv->map_native_path_to_port,
+                                             g_strdup (devkit_disks_port_local_get_native_path (port)),
+                                             g_object_ref (port));
+                        g_hash_table_insert (daemon->priv->map_object_path_to_port,
+                                             g_strdup (devkit_disks_port_local_get_object_path (port)),
+                                             g_object_ref (port));
+                        g_print ("**** sas_phy ADDED %s\n", native_path);
+                        if (emit_event) {
+                                const char *object_path;
+                                object_path = devkit_disks_port_local_get_object_path (port);
+                                g_print ("**** sas_phy EMITTING ADDED for %s\n", port->priv->native_path);
+                                g_signal_emit (daemon, signals[PORT_ADDED_SIGNAL], 0, object_path);
+                        }
+                } else {
+                        g_print ("**** sas_phy IGNORING ADD %s\n", native_path);
+                }
+        }
+}
+
+/* ------------------------------ */
+
+static void
 block_device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event)
 {
         DevkitDisksDevice *device;
@@ -1082,6 +1174,8 @@ device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event)
                 pci_device_add (daemon, d, emit_event);
         else if (g_strcmp0 (subsystem, "scsi_host") == 0)
                 scsi_host_device_add (daemon, d, emit_event);
+        else if (g_strcmp0 (subsystem, "sas_phy") == 0)
+                sas_phy_device_add (daemon, d, emit_event);
         else
                 g_warning ("Unhandled add event from subsystem `%s'", subsystem);
 }
@@ -1153,6 +1247,38 @@ scsi_host_device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
 /* ------------------------------ */
 
 static void
+sas_phy_device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
+{
+        DevkitDisksPort *port;
+        const char *native_path;
+
+        native_path = g_udev_device_get_sysfs_path (d);
+        port = g_hash_table_lookup (daemon->priv->map_native_path_to_port, native_path);
+        if (port == NULL) {
+                g_print ("**** sas_phy IGNORING REMOVE %s\n", native_path);
+        } else {
+                g_print ("**** sas_phy REMOVING %s\n", native_path);
+
+                g_warn_if_fail (g_strcmp0 (native_path, port->priv->native_path) == 0);
+
+                g_hash_table_remove (daemon->priv->map_native_path_to_port,
+                                     port->priv->native_path);
+                g_warn_if_fail (g_hash_table_remove (daemon->priv->map_object_path_to_port,
+                                                     port->priv->object_path));
+
+                g_print ("**** sas_phy EMITTING REMOVED for %s\n", port->priv->native_path);
+                g_signal_emit (daemon, signals[PORT_REMOVED_SIGNAL], 0,
+                               devkit_disks_port_local_get_object_path (port));
+
+                devkit_disks_port_removed (port);
+
+                g_object_unref (port);
+        }
+}
+
+/* ------------------------------ */
+
+static void
 block_device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
 {
         DevkitDisksDevice *device;
@@ -1209,6 +1335,8 @@ device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
                 pci_device_remove (daemon, d);
         else if (g_strcmp0 (subsystem, "scsi_host") == 0)
                 scsi_host_device_remove (daemon, d);
+        else if (g_strcmp0 (subsystem, "sas_phy") == 0)
+                sas_phy_device_remove (daemon, d);
         else
                 g_warning ("Unhandled remove event from subsystem `%s'", subsystem);
 }
@@ -1380,6 +1508,7 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
         const char *subsystems[] = {"block",      /* Disks and partitions */
                                     "pci",        /* Storage adapters */
                                     "scsi_host",  /* ATA ports are represented by scsi_host */
+                                    "sas_phy",    /* SAS PHYs are represented by sas_phy */
                                     NULL};
 
         daemon->priv->authority = polkit_authority_get ();
@@ -1487,6 +1616,15 @@ devkit_disks_daemon_new (void)
 
         /* process ATA ports */
         devices = g_udev_client_query_by_subsystem (daemon->priv->gudev_client, "scsi_host");
+        for (l = devices; l != NULL; l = l->next) {
+                GUdevDevice *device = l->data;
+                device_add (daemon, device, FALSE);
+        }
+        g_list_foreach (devices, (GFunc) g_object_unref, NULL);
+        g_list_free (devices);
+
+        /* process SAS PHYs */
+        devices = g_udev_client_query_by_subsystem (daemon->priv->gudev_client, "sas_phy");
         for (l = devices; l != NULL; l = l->next) {
                 GUdevDevice *device = l->data;
                 device_add (daemon, device, FALSE);
@@ -2053,23 +2191,21 @@ devkit_disks_daemon_local_find_adapter (DevkitDisksDaemon       *daemon,
         return ret;
 }
 
-DevkitDisksPort *
-devkit_disks_daemon_local_find_port (DevkitDisksDaemon       *daemon,
+GList *
+devkit_disks_daemon_local_find_ports (DevkitDisksDaemon      *daemon,
                                      const gchar             *device_native_path)
 {
         GHashTableIter iter;
         const gchar *native_path;
         DevkitDisksPort *port;
-        DevkitDisksPort *ret;
+        GList *ret;
 
         ret = NULL;
 
         g_hash_table_iter_init (&iter, daemon->priv->map_native_path_to_port);
         while (g_hash_table_iter_next (&iter, (gpointer) &native_path, (gpointer) &port)) {
-
                 if (devkit_disks_local_port_is_for_device (port, device_native_path)) {
-                        ret = port;
-                        break;
+                        ret = g_list_append (ret, port);
                 }
         }
 

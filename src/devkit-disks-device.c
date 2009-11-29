@@ -2966,17 +2966,23 @@ update_info_drive_adapter (DevkitDisksDevice *device)
 static gboolean
 update_info_drive_ports (DevkitDisksDevice *device)
 {
-        DevkitDisksPort *port;
-        const gchar *val[2];
+        GList *ports;
+        GList *l;
+        GPtrArray *p;
 
-        val[0] = val[1] = NULL;
-        port = devkit_disks_daemon_local_find_port (device->priv->daemon,
-                                                    device->priv->native_path);
-        if (port != NULL) {
-                val[0] = devkit_disks_port_local_get_object_path (port);
+        ports = devkit_disks_daemon_local_find_ports (device->priv->daemon, device->priv->native_path);
+
+        p = g_ptr_array_new ();
+        for (l = ports; l != NULL; l = l->next) {
+                DevkitDisksPort *port = DEVKIT_DISKS_PORT (l->data);
+
+                g_ptr_array_add (p, (gpointer) devkit_disks_port_local_get_object_path (port));
         }
+        g_ptr_array_add (p, NULL);
+        devkit_disks_device_set_drive_ports (device, (GStrv) p->pdata);
+        g_ptr_array_unref (p);
 
-        devkit_disks_device_set_drive_ports (device, (GStrv) val);
+        g_list_free (ports);
 
         return TRUE;
 }
