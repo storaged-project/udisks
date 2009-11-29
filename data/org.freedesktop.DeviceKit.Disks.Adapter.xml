@@ -62,7 +62,28 @@
 
     <property name="NumPorts" type="u" access="read">
       <doc:doc><doc:description><doc:para>
-            Number of physical ports on the storage adapter or 0 if unknown.
+            Number of ports (aka PHYs) on the storage adapter or 0 if unknown. Note that
+            this may not correspond to the number _physical_ connectors as several PHYs may
+            be ganged together in a separate physical connector using e.g.
+            <doc:list>
+              <doc:item>
+                <doc:term>SFF-8484</doc:term>
+                <doc:definition>Internal connector, two or four SAS/SATA lanes</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>SFF-8470</doc:term>
+                <doc:definition>External/internal, Infiniband, four SAS/SATA lanes</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>SFF-8087 (</doc:term>
+                <doc:definition>Mini-SAS, internal, four SAS/SATA lanes</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>SFF-8088</doc:term>
+                <doc:definition>External Mini-SAS, four SAS/SATA lanes</doc:definition>
+              </doc:item>
+            </doc:list>
+            See each port object for more details.
       </doc:para></doc:description></doc:doc>
     </property>
 

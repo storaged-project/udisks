@@ -425,10 +425,10 @@ update_info_fabric_and_num_ports (DevkitDisksAdapter *adapter)
                         if (sscanf (name, "host%d", &number) != 1)
                                 continue;
                         num_scsi_host_objects++;
-                }
 
-                if (scsi_host_name == NULL) {
-                        scsi_host_name = g_strdup (name);
+                        if (scsi_host_name == NULL) {
+                                scsi_host_name = g_strdup (name);
+                        }
                 }
 
                 g_dir_close (dir);
@@ -467,22 +467,23 @@ update_info_fabric_and_num_ports (DevkitDisksAdapter *adapter)
                                              devkit_disks_adapter_local_get_native_path (adapter),
                                              scsi_host_name,
                                              scsi_host_name);
-                        if (g_file_test (s, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR) == 0) {
+                        g_debug ("foo = %s", s);
+                        if (g_file_test (s, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR)) {
                                 fabric = "scsi_sas";
 
                                 s = g_strdup_printf ("%s/%s",
                                                      devkit_disks_adapter_local_get_native_path (adapter),
                                                      scsi_host_name);
-                                /* Count number of port* objects in hostN/ */
+                                /* Count number of phy objects in hostN/ */
                                 dir = g_dir_open (s, 0, NULL);
                                 if (dir != NULL) {
                                         const gchar *name;
                                         while ((name = g_dir_read_name (dir)) != NULL) {
-                                                if (!g_str_has_prefix (name, "port-"))
+                                                if (!g_str_has_prefix (name, "phy-"))
                                                         continue;
-                                                /* Check that there's a sas_port directory underneath */
-                                                s2 = g_strdup_printf ("%s/%s/sas_port", s, name);
-                                                if (g_file_test (s, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR) == 0) {
+                                                /* Check that it's really a sas_phy */
+                                                s2 = g_strdup_printf ("%s/%s/sas_phy", s, name);
+                                                if (g_file_test (s, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR)) {
                                                         num_ports++;
                                                 }
                                                 g_free (s2);
