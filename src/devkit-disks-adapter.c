@@ -379,6 +379,135 @@ devkit_disks_adapter_local_get_native_path (DevkitDisksAdapter *adapter)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* figure out the fabric and number of ports - this is a bit dicey/sketchy and involves
+ * some heuristics - ideally drivers would export enough information here but that's
+ * not the way things work today...
+ */
+static gboolean
+update_info_fabric_and_num_ports (DevkitDisksAdapter *adapter)
+{
+        gboolean ret;
+        const gchar *fabric;
+        GDir *dir;
+        guint num_scsi_host_objects;
+        guint num_ports;
+        guint64 device_class;
+        const gchar *driver;
+        guint class;
+        guint subclass;
+        guint interface;
+        gchar *scsi_host_name;
+        gchar *s;
+        gchar *s2;
+
+        ret = FALSE;
+        fabric = NULL;
+        scsi_host_name = NULL;
+        num_ports = 0;
+
+        device_class = g_udev_device_get_sysfs_attr_as_uint64 (adapter->priv->d, "class");
+        driver = g_udev_device_get_driver (adapter->priv->d);
+
+        class = (device_class & 0xff0000);
+        subclass = (device_class & 0x00ff00);
+        interface = (device_class & 0x0000ff);
+
+        /* count number of scsi_host objects - this is to detect whether we are dealing with
+         * ATA - see comment in devkit-disks-port.c:update_info_ata() for details about
+         * the hack we use here and how to fix this
+         */
+        num_scsi_host_objects = 0;
+        dir = g_dir_open (devkit_disks_adapter_local_get_native_path (adapter), 0, NULL);
+        if (dir != NULL) {
+                const gchar *name;
+                while ((name = g_dir_read_name (dir)) != NULL) {
+                        gint number;
+                        if (sscanf (name, "host%d", &number) != 1)
+                                continue;
+                        num_scsi_host_objects++;
+                }
+
+                if (scsi_host_name == NULL) {
+                        scsi_host_name = g_strdup (name);
+                }
+
+                g_dir_close (dir);
+        }
+
+        if (num_scsi_host_objects > 1) {
+                /* we're dealing with ATA */
+                num_ports = num_scsi_host_objects;
+
+                /* use PCI class to zero in - maybe we also want to use driver names? */
+                fabric = "ata";
+                if (driver != NULL &&
+                    (g_str_has_prefix (driver, "pata_") ||
+                     g_strcmp0 (driver, "ata_piix") == 0)) {
+                        fabric = "ata_pata";
+                } else if (driver != NULL &&
+                           (g_str_has_prefix (driver, "sata_") ||
+                            g_strcmp0 (driver, "ahci") == 0)) {
+                        fabric = "ata_sata";
+                } else if (subclass == 0x01 || subclass == 0x05) {
+                        fabric = "ata_pata";
+                } else if (subclass == 0x06) {
+                        fabric = "ata_sata";
+                }
+        } else {
+                /* Not ATA */
+                if (subclass == 0x00) {
+                        fabric = "scsi";
+                } else if (subclass == 0x07) {
+                        fabric = "scsi_sas";
+                }
+
+                /* SAS */
+                if (scsi_host_name != NULL) {
+                        s = g_strdup_printf ("%s/%s/sas_host/%s",
+                                             devkit_disks_adapter_local_get_native_path (adapter),
+                                             scsi_host_name,
+                                             scsi_host_name);
+                        if (g_file_test (s, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR) == 0) {
+                                fabric = "scsi_sas";
+
+                                s = g_strdup_printf ("%s/%s",
+                                                     devkit_disks_adapter_local_get_native_path (adapter),
+                                                     scsi_host_name);
+                                /* Count number of port* objects in hostN/ */
+                                dir = g_dir_open (s, 0, NULL);
+                                if (dir != NULL) {
+                                        const gchar *name;
+                                        while ((name = g_dir_read_name (dir)) != NULL) {
+                                                if (!g_str_has_prefix (name, "port-"))
+                                                        continue;
+                                                /* Check that there's a sas_port directory underneath */
+                                                s2 = g_strdup_printf ("%s/%s/sas_port", s, name);
+                                                if (g_file_test (s, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR) == 0) {
+                                                        num_ports++;
+                                                }
+                                                g_free (s2);
+                                        }
+
+                                        if (scsi_host_name == NULL) {
+                                                scsi_host_name = g_strdup (name);
+                                        }
+                                        g_dir_close (dir);
+                                }
+                        }
+                        g_free (s);
+                }
+        }
+
+        ret = TRUE;
+
+        devkit_disks_adapter_set_fabric (adapter, fabric);
+        devkit_disks_adapter_set_num_ports (adapter, num_ports);
+
+        //out:
+        g_free (scsi_host_name);
+        return ret;
+}
+
 /**
  * update_info:
  * @adapter: the adapter
@@ -408,6 +537,8 @@ update_info (DevkitDisksAdapter *adapter)
         device_class = g_udev_device_get_sysfs_attr_as_uint64 (adapter->priv->d, "class");
         if (((device_class & 0xff0000) >> 16) != 0x01)
                 goto out;
+
+        driver = g_udev_device_get_driver (adapter->priv->d);
 
         g_print ("**** UPDATING %s\n", adapter->priv->native_path);
 
@@ -457,11 +588,12 @@ update_info (DevkitDisksAdapter *adapter)
                                           g_udev_device_get_sysfs_attr_as_int (adapter->priv->d, "subsystem_device"));
         }
 
-        driver = g_udev_device_get_driver (adapter->priv->d);
-
         devkit_disks_adapter_set_vendor (adapter, vendor);
         devkit_disks_adapter_set_model (adapter, model);
         devkit_disks_adapter_set_driver (adapter, driver);
+
+        if (!update_info_fabric_and_num_ports (adapter))
+                goto out;
 
         ret = TRUE;
 

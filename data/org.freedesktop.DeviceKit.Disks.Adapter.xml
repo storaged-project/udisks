@@ -69,19 +69,23 @@
     <property name="Fabric" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             The fabric used for the storage adapter to communicate with other storage
-            targets and initiators or blank if unknown. Known values include
+            targets and initiators or blank if unknown. See each port object for
+            more details. Known fabric values include
             <doc:list>
               <doc:item>
-                <doc:term>pata</doc:term><doc:definition>Parallel ATA</doc:definition>
+                <doc:term>ata</doc:term><doc:definition>ATA</doc:definition>
               </doc:item>
               <doc:item>
-                <doc:term>sata</doc:term><doc:definition>Serial ATA</doc:definition>
+                <doc:term>ata_pata</doc:term><doc:definition>Parallel ATA</doc:definition>
               </doc:item>
               <doc:item>
-                <doc:term>esata</doc:term><doc:definition>External Serial ATA</doc:definition>
+                <doc:term>ata_sata</doc:term><doc:definition>Serial ATA</doc:definition>
               </doc:item>
               <doc:item>
-                <doc:term>sas</doc:term><doc:definition>Serial Attached SCSI</doc:definition>
+                <doc:term>scsi</doc:term><doc:definition>SCSI</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>scsi_sas</doc:term><doc:definition>Serial Attached SCSI</doc:definition>
               </doc:item>
             </doc:list>
             TODO: include other fabrics (FC, Parallel SCSI, etc.).
