@@ -38,6 +38,7 @@
 #include "devkit-disks-marshal.h"
 
 #include "devkit-disks-adapter.h"
+#include "devkit-disks-expander.h"
 
 /*--------------------------------------------------------------------------------------------------------------*/
 #include "devkit-disks-port-glue.h"
@@ -370,8 +371,8 @@ devkit_disks_port_local_get_native_path (DevkitDisksPort *port)
 }
 
 gboolean
-devkit_disks_local_port_is_for_device (DevkitDisksPort *port,
-                                       const gchar     *device_native_path)
+devkit_disks_local_port_encloses_native_path (DevkitDisksPort *port,
+                                              const gchar     *native_path)
 {
         gboolean ret;
 
@@ -379,42 +380,87 @@ devkit_disks_local_port_is_for_device (DevkitDisksPort *port,
 
         if (port->priv->port_type == PORT_TYPE_ATA) {
 
-                ret = g_str_has_prefix (device_native_path, port->priv->native_path_for_device_prefix);
+                ret = g_str_has_prefix (native_path, port->priv->native_path_for_device_prefix);
 
         } else if (port->priv->port_type == PORT_TYPE_SAS) {
                 GDir *dir;
                 gchar *s;
                 const gchar *name;
                 const gchar *phy_kernel_name;
+                gchar **tokens;
+                gchar **tokens_copy;
+                guint num_tokens;
+                gint n;
 
                 phy_kernel_name = g_udev_device_get_name (port->priv->d);
 
-                /* Typically it looks like this
+                /* Typically it looks like this for a device
                  *
                  *  .../host6/port-6:0/end_device-6:0/target6:0:0/6:0:0:0/block/sda
                  *
-                 * where
+                 * with
                  *
                  *  # ls /sys/devices/pci0000:00/0000:00:01.0/0000:07:00.0/host6/port-6:0/
                  *  end_device-6:0  phy-6:0  power  sas_port  uevent
                  *
-                 * unfortunately there are no helpful symlinks here so we need to
-                 * use device/../../..
+                 * Or for an expander it may look like
                  *
-                 * TODO: Ugh, this is probably pretty expensive syscall-wise...
+                 * .../host7/port-7:0/expander-7:0/sas_expander/expander-7:0
+                 *
+                 * with
+                 *
+                 *  # ls /sys/devices/pci0000:00/0000:00:03.0/0000:06:00.0/host7/port-7:0/
+                 *  expander-7:0  phy-7:0  phy-7:1  phy-7:2  phy-7:3  power  sas_port  uevent
+                 *
+                 * Hmm, unfortunately there are no helpful symlinks we can use to
+                 * easily get the information. So we search backwards for the first
+                 * port-* directory. Then we look for a matching phy-name inside
+                 * that directory. We always stop at "/expander-" and "/host" elements.
+                 *
+                 * We always stop if we find an el
+                 *
+                 * (TODO: Ugh, this is probably pretty expensive syscall-, memory- and
+                 *  computation-wise. We really need symlinks in sysfs for this.)
                  */
-                s = g_strdup_printf ("%s/device/../../..", device_native_path);
-                dir = g_dir_open (s, 0, NULL);
-                if (dir != NULL) {
-                        while ((name = g_dir_read_name (dir)) != NULL) {
-                                if (g_strcmp0 (name, phy_kernel_name) == 0) {
-                                        ret = TRUE;
-                                        break;
-                                }
+                //g_debug ("Path is %s", native_path);
+
+                tokens = g_strsplit (native_path, "/", 0);
+                num_tokens = g_strv_length (tokens);
+                /* Copy the pointers so everything can be freed */
+                tokens_copy = g_memdup (tokens, sizeof (gchar*) * (num_tokens + 1));
+                s = NULL;
+                for (n = num_tokens - 2; n >= 0; n--) {
+                        //g_debug ("Token %s", tokens[n]);
+
+                        if (g_str_has_prefix (tokens[n], "port-")) {
+                                /* found it */
+                                tokens[n+1] = NULL;
+                                s = g_strjoinv ("/", tokens);
+                                break;
+                        } else if (g_str_has_prefix (tokens[n], "expander-")) {
+                                break;
+                        } else if (g_str_has_prefix (tokens[n], "host")) {
+                                break;
                         }
-                        g_dir_close (dir);
                 }
-                g_free (s);
+                g_strfreev (tokens_copy);
+                g_free (tokens);
+
+                //g_debug ("-> Port path %s", s);
+
+                if (s != NULL) {
+                        dir = g_dir_open (s, 0, NULL);
+                        if (dir != NULL) {
+                                while ((name = g_dir_read_name (dir)) != NULL) {
+                                        if (g_strcmp0 (name, phy_kernel_name) == 0) {
+                                                ret = TRUE;
+                                                break;
+                                        }
+                                }
+                                g_dir_close (dir);
+                        }
+                        g_free (s);
+                }
         }
 
         return ret;
@@ -594,35 +640,13 @@ static gboolean
 update_info_sas_phy (DevkitDisksPort    *port,
                      DevkitDisksAdapter *adapter)
 {
-        gboolean ret;
         gint port_number;
-        const gchar *kernel_name;
-        guint level;
-        guint n;
-
-        ret = FALSE;
-        port_number = -1;
-
-        /* Count how deep this PHY is - a level of 1 indicates it's a PHY for the
-         * HBA and not for an expander
-         */
-        level = 0;
-        kernel_name = g_udev_device_get_name (port->priv->d);
-        for (n = 0; kernel_name[n] != '\0'; n++) {
-                if (kernel_name[n] == ':')
-                        level++;
-        }
-
-        if (level > 1)
-                goto out;
 
         port_number = g_udev_device_get_sysfs_attr_as_int (port->priv->d, "phy_identifier");
-
         devkit_disks_port_set_number (port, port_number);
         port->priv->port_type = PORT_TYPE_SAS;
-        ret = TRUE;
- out:
-        return ret;
+
+        return TRUE;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -644,17 +668,32 @@ update_info (DevkitDisksPort *port)
 {
         gboolean ret;
         DevkitDisksAdapter *adapter;
+        DevkitDisksExpander *expander;
 
         ret = FALSE;
 
-        adapter = devkit_disks_daemon_local_find_adapter (port->priv->daemon,
-                                                          port->priv->native_path);
+        adapter = devkit_disks_daemon_local_find_enclosing_adapter (port->priv->daemon,
+                                                                    port->priv->native_path);
+
+        expander = devkit_disks_daemon_local_find_enclosing_expander (port->priv->daemon,
+                                                                      port->priv->native_path);
+
+#if 0
+        g_debug ("Adapter=%s and Expander=%s for %s",
+                 adapter != NULL ? devkit_disks_adapter_local_get_native_path (adapter) : "(none)",
+                 expander != NULL ? devkit_disks_expander_local_get_native_path (expander) : "(none)",
+                 g_udev_device_get_sysfs_path (port->priv->d));
+#endif
+
+        /* Need to have at least an adapter to continue */
         if (adapter == NULL)
                 goto out;
 
-        /* TODO: handle expansion devices here (SAS expanders, SATA Port Multipliers) */
         devkit_disks_port_set_adapter (port, devkit_disks_adapter_local_get_object_path (adapter));
-        devkit_disks_port_set_parent (port, devkit_disks_adapter_local_get_object_path (adapter));
+        if (expander != NULL)
+                devkit_disks_port_set_parent (port, devkit_disks_expander_local_get_object_path (expander));
+        else
+                devkit_disks_port_set_parent (port, devkit_disks_adapter_local_get_object_path (adapter));
 
         if (g_strcmp0 (g_udev_device_get_subsystem (port->priv->d), "scsi_host") == 0) {
                 if (!update_info_ata (port, adapter))

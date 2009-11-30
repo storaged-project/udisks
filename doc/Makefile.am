@@ -56,6 +56,7 @@ content_files =  			    			\
 	dbus/org.freedesktop.DeviceKit.Disks.Device.ref.xml	\
 	dbus/org.freedesktop.DeviceKit.Disks.Adapter.ref.xml	\
 	dbus/org.freedesktop.DeviceKit.Disks.Port.ref.xml	\
+	dbus/org.freedesktop.DeviceKit.Disks.Expander.ref.xml	\
 	$(NULL)
 
 # Images to copy into HTML directory

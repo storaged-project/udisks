@@ -2951,8 +2951,8 @@ update_info_drive_adapter (DevkitDisksDevice *device)
 
         adapter_object_path = NULL;
 
-        adapter = devkit_disks_daemon_local_find_adapter (device->priv->daemon,
-                                                          device->priv->native_path);
+        adapter = devkit_disks_daemon_local_find_enclosing_adapter (device->priv->daemon,
+                                                                    device->priv->native_path);
         if (adapter != NULL) {
                 adapter_object_path = devkit_disks_adapter_local_get_object_path (adapter);
         }
@@ -2970,7 +2970,7 @@ update_info_drive_ports (DevkitDisksDevice *device)
         GList *l;
         GPtrArray *p;
 
-        ports = devkit_disks_daemon_local_find_ports (device->priv->daemon, device->priv->native_path);
+        ports = devkit_disks_daemon_local_find_enclosing_ports (device->priv->daemon, device->priv->native_path);
 
         p = g_ptr_array_new ();
         for (l = ports; l != NULL; l = l->next) {

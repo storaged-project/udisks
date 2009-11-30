@@ -75,7 +75,7 @@
                 <doc:definition>External/internal, Infiniband, four SAS/SATA lanes</doc:definition>
               </doc:item>
               <doc:item>
-                <doc:term>SFF-8087 (</doc:term>
+                <doc:term>SFF-8087</doc:term>
                 <doc:definition>Mini-SAS, internal, four SAS/SATA lanes</doc:definition>
               </doc:item>
               <doc:item>

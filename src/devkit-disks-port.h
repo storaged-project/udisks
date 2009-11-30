@@ -63,10 +63,10 @@ void               devkit_disks_port_removed         (DevkitDisksPort *port);
 
 /* local methods */
 
-const char *devkit_disks_port_local_get_object_path (DevkitDisksPort *port);
-const char *devkit_disks_port_local_get_native_path (DevkitDisksPort *port);
-gboolean    devkit_disks_local_port_is_for_device   (DevkitDisksPort *port,
-                                                     const gchar     *device_native_path);
+const char *devkit_disks_port_local_get_object_path      (DevkitDisksPort *port);
+const char *devkit_disks_port_local_get_native_path      (DevkitDisksPort *port);
+gboolean    devkit_disks_local_port_encloses_native_path (DevkitDisksPort *port,
+                                                          const gchar     *native_path);
 
 G_END_DECLS
 

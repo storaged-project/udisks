@@ -483,7 +483,7 @@ update_info_fabric_and_num_ports (DevkitDisksAdapter *adapter)
                                                         continue;
                                                 /* Check that it's really a sas_phy */
                                                 s2 = g_strdup_printf ("%s/%s/sas_phy", s, name);
-                                                if (g_file_test (s, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR)) {
+                                                if (g_file_test (s2, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR)) {
                                                         num_ports++;
                                                 }
                                                 g_free (s2);

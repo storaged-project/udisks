@@ -29,6 +29,7 @@ typedef struct DevkitDisksDaemon       DevkitDisksDaemon;
 
 typedef struct DevkitDisksDevice       DevkitDisksDevice;
 typedef struct DevkitDisksAdapter      DevkitDisksAdapter;
+typedef struct DevkitDisksExpander     DevkitDisksExpander;
 typedef struct DevkitDisksPort         DevkitDisksPort;
 
 typedef struct DevkitDisksMount        DevkitDisksMount;

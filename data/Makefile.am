@@ -7,6 +7,7 @@ dbusif_DATA = \
 	org.freedesktop.DeviceKit.Disks.Device.xml 	\
 	org.freedesktop.DeviceKit.Disks.Adapter.xml	\
 	org.freedesktop.DeviceKit.Disks.Port.xml	\
+	org.freedesktop.DeviceKit.Disks.Expander.xml	\
 	$(NULL)
 
 servicedir       = $(datadir)/dbus-1/system-services

@@ -90,10 +90,14 @@ DevkitDisksDevice *devkit_disks_daemon_local_find_by_device_file (DevkitDisksDae
 DevkitDisksDevice *devkit_disks_daemon_local_find_by_dev         (DevkitDisksDaemon       *daemon,
                                                                   dev_t                    dev);
 
-DevkitDisksAdapter *devkit_disks_daemon_local_find_adapter       (DevkitDisksDaemon       *daemon,
-                                                                  const gchar             *device_native_path);
-GList              *devkit_disks_daemon_local_find_ports         (DevkitDisksDaemon       *daemon,
-                                                                  const gchar             *device_native_path);
+DevkitDisksAdapter *devkit_disks_daemon_local_find_enclosing_adapter       (DevkitDisksDaemon       *daemon,
+                                                                            const gchar             *native_path);
+
+DevkitDisksExpander *devkit_disks_daemon_local_find_enclosing_expander     (DevkitDisksDaemon       *daemon,
+                                                                            const gchar             *native_path);
+
+GList              *devkit_disks_daemon_local_find_enclosing_ports         (DevkitDisksDaemon       *daemon,
+                                                                            const gchar             *native_path);
 
 typedef void (*DevkitDisksCheckAuthCallback) (DevkitDisksDaemon     *daemon,
                                               DevkitDisksDevice     *device,
@@ -158,6 +162,9 @@ const DevkitDisksFilesystem *devkit_disks_daemon_local_get_fs_details (DevkitDis
 
 gboolean devkit_disks_daemon_enumerate_adapters (DevkitDisksDaemon     *daemon,
                                                  DBusGMethodInvocation *context);
+
+gboolean devkit_disks_daemon_enumerate_expanders (DevkitDisksDaemon     *daemon,
+                                                  DBusGMethodInvocation *context);
 
 gboolean devkit_disks_daemon_enumerate_ports (DevkitDisksDaemon     *daemon,
                                               DBusGMethodInvocation *context);

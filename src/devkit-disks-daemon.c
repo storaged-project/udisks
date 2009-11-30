@@ -65,6 +65,8 @@
 #include "devkit-disks-device-private.h"
 #include "devkit-disks-adapter.h"
 #include "devkit-disks-adapter-private.h"
+#include "devkit-disks-expander.h"
+#include "devkit-disks-expander-private.h"
 #include "devkit-disks-port.h"
 #include "devkit-disks-port-private.h"
 #include "devkit-disks-mount-file.h"
@@ -97,6 +99,9 @@ enum
         ADAPTER_ADDED_SIGNAL,
         ADAPTER_REMOVED_SIGNAL,
         ADAPTER_CHANGED_SIGNAL,
+        EXPANDER_ADDED_SIGNAL,
+        EXPANDER_REMOVED_SIGNAL,
+        EXPANDER_CHANGED_SIGNAL,
         PORT_ADDED_SIGNAL,
         PORT_REMOVED_SIGNAL,
         PORT_CHANGED_SIGNAL,
@@ -123,6 +128,9 @@ struct DevkitDisksDaemonPrivate
 
         GHashTable              *map_native_path_to_adapter;
         GHashTable              *map_object_path_to_adapter;
+
+        GHashTable              *map_native_path_to_expander;
+        GHashTable              *map_object_path_to_expander;
 
         GHashTable              *map_native_path_to_port;
         GHashTable              *map_object_path_to_port;
@@ -541,6 +549,33 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
                               g_cclosure_marshal_VOID__BOXED,
                               G_TYPE_NONE, 1, DBUS_TYPE_G_OBJECT_PATH);
 
+        signals[EXPANDER_ADDED_SIGNAL] =
+                g_signal_new ("expander-added",
+                              G_OBJECT_CLASS_TYPE (klass),
+                              G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                              0,
+                              NULL, NULL,
+                              g_cclosure_marshal_VOID__BOXED,
+                              G_TYPE_NONE, 1, DBUS_TYPE_G_OBJECT_PATH);
+
+        signals[EXPANDER_REMOVED_SIGNAL] =
+                g_signal_new ("expander-removed",
+                              G_OBJECT_CLASS_TYPE (klass),
+                              G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                              0,
+                              NULL, NULL,
+                              g_cclosure_marshal_VOID__BOXED,
+                              G_TYPE_NONE, 1, DBUS_TYPE_G_OBJECT_PATH);
+
+        signals[EXPANDER_CHANGED_SIGNAL] =
+                g_signal_new ("expander-changed",
+                              G_OBJECT_CLASS_TYPE (klass),
+                              G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                              0,
+                              NULL, NULL,
+                              g_cclosure_marshal_VOID__BOXED,
+                              G_TYPE_NONE, 1, DBUS_TYPE_G_OBJECT_PATH);
+
         signals[PORT_ADDED_SIGNAL] =
                 g_signal_new ("port-added",
                               G_OBJECT_CLASS_TYPE (klass),
@@ -602,6 +637,7 @@ static void
 devkit_disks_daemon_init (DevkitDisksDaemon *daemon)
 {
         daemon->priv = DEVKIT_DISKS_DAEMON_GET_PRIVATE (daemon);
+
         daemon->priv->map_dev_t_to_device = g_hash_table_new_full (g_direct_hash,
                                                                    g_direct_equal,
                                                                    NULL,
@@ -610,6 +646,7 @@ devkit_disks_daemon_init (DevkitDisksDaemon *daemon)
                                                                          g_str_equal,
                                                                          g_free,
                                                                          g_object_unref);
+
         daemon->priv->map_native_path_to_device = g_hash_table_new_full (g_str_hash,
                                                                          g_str_equal,
                                                                          g_free,
@@ -618,6 +655,7 @@ devkit_disks_daemon_init (DevkitDisksDaemon *daemon)
                                                                          g_str_equal,
                                                                          g_free,
                                                                          g_object_unref);
+
         daemon->priv->map_native_path_to_adapter = g_hash_table_new_full (g_str_hash,
                                                                           g_str_equal,
                                                                           g_free,
@@ -626,6 +664,16 @@ devkit_disks_daemon_init (DevkitDisksDaemon *daemon)
                                                                           g_str_equal,
                                                                           g_free,
                                                                           g_object_unref);
+
+        daemon->priv->map_native_path_to_expander = g_hash_table_new_full (g_str_hash,
+                                                                           g_str_equal,
+                                                                           g_free,
+                                                                           g_object_unref);
+        daemon->priv->map_object_path_to_expander = g_hash_table_new_full (g_str_hash,
+                                                                           g_str_equal,
+                                                                           g_free,
+                                                                           g_object_unref);
+
         daemon->priv->map_native_path_to_port = g_hash_table_new_full (g_str_hash,
                                                                        g_str_equal,
                                                                        g_free,
@@ -667,18 +715,28 @@ devkit_disks_daemon_finalize (GObject *object)
         if (daemon->priv->map_device_file_to_device != NULL) {
                 g_hash_table_unref (daemon->priv->map_device_file_to_device);
         }
+
         if (daemon->priv->map_native_path_to_device != NULL) {
                 g_hash_table_unref (daemon->priv->map_native_path_to_device);
         }
         if (daemon->priv->map_object_path_to_device != NULL) {
                 g_hash_table_unref (daemon->priv->map_object_path_to_device);
         }
+
         if (daemon->priv->map_native_path_to_adapter != NULL) {
                 g_hash_table_unref (daemon->priv->map_native_path_to_adapter);
         }
         if (daemon->priv->map_object_path_to_adapter != NULL) {
                 g_hash_table_unref (daemon->priv->map_object_path_to_adapter);
         }
+
+        if (daemon->priv->map_native_path_to_expander != NULL) {
+                g_hash_table_unref (daemon->priv->map_native_path_to_expander);
+        }
+        if (daemon->priv->map_object_path_to_expander != NULL) {
+                g_hash_table_unref (daemon->priv->map_object_path_to_expander);
+        }
+
         if (daemon->priv->map_native_path_to_port != NULL) {
                 g_hash_table_unref (daemon->priv->map_native_path_to_port);
         }
@@ -889,6 +947,53 @@ sas_phy_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synt
 /* ------------------------------ */
 
 static void
+sas_expander_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthesized)
+{
+        DevkitDisksExpander *expander;
+        const char *native_path;
+
+        native_path = g_udev_device_get_sysfs_path (d);
+        expander = g_hash_table_lookup (daemon->priv->map_native_path_to_expander, native_path);
+        if (expander != NULL) {
+                gboolean keep_expander;
+
+                g_print ("**** sas_expander CHANGING %s\n", native_path);
+
+                /* The sysfs path ('move' uevent) may actually change so remove it and add
+                 * it back after processing. The kernel name will never change so the object
+                 * path will fortunately remain constant.
+                 */
+                g_warn_if_fail (g_hash_table_remove (daemon->priv->map_native_path_to_expander,
+                                                     expander->priv->native_path));
+
+                keep_expander = devkit_disks_expander_changed (expander, d, synthesized);
+
+                g_assert (devkit_disks_expander_local_get_native_path (expander) != NULL);
+                g_assert (g_strcmp0 (native_path, devkit_disks_expander_local_get_native_path (expander)) == 0);
+
+                /* now add the things back to the global hashtables - it's important that we
+                 * do this *before* calling expander_remove() - otherwise it will never remove
+                 * the expander
+                 */
+                g_hash_table_insert (daemon->priv->map_native_path_to_expander,
+                                     g_strdup (devkit_disks_expander_local_get_native_path (expander)),
+                                     g_object_ref (expander));
+
+                if (!keep_expander) {
+                        g_print ("**** sas_expander CHANGE TRIGGERED REMOVE %s\n", native_path);
+                        device_remove (daemon, d);
+                } else {
+                        g_print ("**** sas_expander CHANGED %s\n", native_path);
+                }
+        } else {
+                g_print ("**** sas_expander TREATING CHANGE AS ADD %s\n", native_path);
+                device_add (daemon, d, TRUE);
+        }
+}
+
+/* ------------------------------ */
+
+static void
 block_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthesized)
 {
         DevkitDisksDevice *device;
@@ -956,6 +1061,8 @@ device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthesized)
                 scsi_host_device_changed (daemon, d, synthesized);
         else if (g_strcmp0 (subsystem, "sas_phy") == 0)
                 sas_phy_device_changed (daemon, d, synthesized);
+        else if (g_strcmp0 (subsystem, "sas_expander") == 0)
+                sas_expander_device_changed (daemon, d, synthesized);
         else
                 g_warning ("Unhandled changed event from subsystem `%s'", subsystem);
 }
@@ -1113,6 +1220,49 @@ sas_phy_device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_eve
 /* ------------------------------ */
 
 static void
+sas_expander_device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event)
+{
+        DevkitDisksExpander *expander;
+        const char *native_path;
+
+        native_path = g_udev_device_get_sysfs_path (d);
+        expander = g_hash_table_lookup (daemon->priv->map_native_path_to_expander, native_path);
+        if (expander != NULL) {
+                /* we already have the expander; treat as change event */
+                g_print ("**** sas_expander TREATING ADD AS CHANGE %s\n", native_path);
+                device_changed (daemon, d, FALSE);
+        } else {
+                g_print ("**** sas_expander ADDING %s\n", native_path);
+                expander = devkit_disks_expander_new (daemon, d);
+
+                if (expander != NULL) {
+                        /* assert that the expander is fully loaded with info */
+                        g_assert (devkit_disks_expander_local_get_native_path (expander) != NULL);
+                        g_assert (devkit_disks_expander_local_get_object_path (expander) != NULL);
+                        g_assert (g_strcmp0 (native_path, devkit_disks_expander_local_get_native_path (expander)) == 0);
+
+                        g_hash_table_insert (daemon->priv->map_native_path_to_expander,
+                                             g_strdup (devkit_disks_expander_local_get_native_path (expander)),
+                                             g_object_ref (expander));
+                        g_hash_table_insert (daemon->priv->map_object_path_to_expander,
+                                             g_strdup (devkit_disks_expander_local_get_object_path (expander)),
+                                             g_object_ref (expander));
+                        g_print ("**** sas_expander ADDED %s\n", native_path);
+                        if (emit_event) {
+                                const char *object_path;
+                                object_path = devkit_disks_expander_local_get_object_path (expander);
+                                g_print ("**** sas_expander EMITTING ADDED for %s\n", expander->priv->native_path);
+                                g_signal_emit (daemon, signals[EXPANDER_ADDED_SIGNAL], 0, object_path);
+                        }
+                } else {
+                        g_print ("**** sas_expander IGNORING ADD %s\n", native_path);
+                }
+        }
+}
+
+/* ------------------------------ */
+
+static void
 block_device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event)
 {
         DevkitDisksDevice *device;
@@ -1176,6 +1326,8 @@ device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event)
                 scsi_host_device_add (daemon, d, emit_event);
         else if (g_strcmp0 (subsystem, "sas_phy") == 0)
                 sas_phy_device_add (daemon, d, emit_event);
+        else if (g_strcmp0 (subsystem, "sas_expander") == 0)
+                sas_expander_device_add (daemon, d, emit_event);
         else
                 g_warning ("Unhandled add event from subsystem `%s'", subsystem);
 }
@@ -1279,6 +1431,38 @@ sas_phy_device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
 /* ------------------------------ */
 
 static void
+sas_expander_device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
+{
+        DevkitDisksExpander *expander;
+        const char *native_path;
+
+        native_path = g_udev_device_get_sysfs_path (d);
+        expander = g_hash_table_lookup (daemon->priv->map_native_path_to_expander, native_path);
+        if (expander == NULL) {
+                g_print ("**** sas_expander IGNORING REMOVE %s\n", native_path);
+        } else {
+                g_print ("**** sas_expander REMOVING %s\n", native_path);
+
+                g_warn_if_fail (g_strcmp0 (native_path, expander->priv->native_path) == 0);
+
+                g_hash_table_remove (daemon->priv->map_native_path_to_expander,
+                                     expander->priv->native_path);
+                g_warn_if_fail (g_hash_table_remove (daemon->priv->map_object_path_to_expander,
+                                                     expander->priv->object_path));
+
+                g_print ("**** sas_expander EMITTING REMOVED for %s\n", expander->priv->native_path);
+                g_signal_emit (daemon, signals[EXPANDER_REMOVED_SIGNAL], 0,
+                               devkit_disks_expander_local_get_object_path (expander));
+
+                devkit_disks_expander_removed (expander);
+
+                g_object_unref (expander);
+        }
+}
+
+/* ------------------------------ */
+
+static void
 block_device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
 {
         DevkitDisksDevice *device;
@@ -1337,6 +1521,8 @@ device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
                 scsi_host_device_remove (daemon, d);
         else if (g_strcmp0 (subsystem, "sas_phy") == 0)
                 sas_phy_device_remove (daemon, d);
+        else if (g_strcmp0 (subsystem, "sas_expander") == 0)
+                sas_expander_device_remove (daemon, d);
         else
                 g_warning ("Unhandled remove event from subsystem `%s'", subsystem);
 }
@@ -1505,10 +1691,11 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
         DBusConnection *connection;
         DBusError dbus_error;
         GError *error = NULL;
-        const char *subsystems[] = {"block",      /* Disks and partitions */
-                                    "pci",        /* Storage adapters */
-                                    "scsi_host",  /* ATA ports are represented by scsi_host */
-                                    "sas_phy",    /* SAS PHYs are represented by sas_phy */
+        const char *subsystems[] = {"block",        /* Disks and partitions */
+                                    "pci",          /* Storage adapters */
+                                    "scsi_host",    /* ATA ports are represented by scsi_host */
+                                    "sas_phy",      /* SAS PHYs are represented by sas_phy */
+                                    "sas_expander", /* SAS Expanders */
                                     NULL};
 
         daemon->priv->authority = polkit_authority_get ();
@@ -1623,8 +1810,30 @@ devkit_disks_daemon_new (void)
         g_list_foreach (devices, (GFunc) g_object_unref, NULL);
         g_list_free (devices);
 
+        /* process SAS Expanders */
+        devices = g_udev_client_query_by_subsystem (daemon->priv->gudev_client, "sas_expander");
+        for (l = devices; l != NULL; l = l->next) {
+                GUdevDevice *device = l->data;
+                device_add (daemon, device, FALSE);
+        }
+        g_list_foreach (devices, (GFunc) g_object_unref, NULL);
+        g_list_free (devices);
+
         /* process SAS PHYs */
         devices = g_udev_client_query_by_subsystem (daemon->priv->gudev_client, "sas_phy");
+        for (l = devices; l != NULL; l = l->next) {
+                GUdevDevice *device = l->data;
+                device_add (daemon, device, FALSE);
+        }
+        g_list_foreach (devices, (GFunc) g_object_unref, NULL);
+        g_list_free (devices);
+
+        /* reprocess SAS expanders to get the right Ports associated
+         *
+         * TODO: ideally there would be a way to properly traverse a whole subtree using gudev
+         * so we could visit everything in the proper order.
+         */
+        devices = g_udev_client_query_by_subsystem (daemon->priv->gudev_client, "sas_expander");
         for (l = devices; l != NULL; l = l->next) {
                 GUdevDevice *device = l->data;
                 device_add (daemon, device, FALSE);
@@ -2169,20 +2378,19 @@ devkit_disks_daemon_local_update_spindown (DevkitDisksDaemon *daemon)
 /*--------------------------------------------------------------------------------------------------------------*/
 
 DevkitDisksAdapter *
-devkit_disks_daemon_local_find_adapter (DevkitDisksDaemon       *daemon,
-                                           const gchar             *device_native_path)
+devkit_disks_daemon_local_find_enclosing_adapter (DevkitDisksDaemon       *daemon,
+                                                  const gchar             *native_path)
 {
         GHashTableIter iter;
-        const gchar *native_path;
+        const gchar *adapter_native_path;
         DevkitDisksAdapter *adapter;
         DevkitDisksAdapter *ret;
 
         ret = NULL;
 
         g_hash_table_iter_init (&iter, daemon->priv->map_native_path_to_adapter);
-        while (g_hash_table_iter_next (&iter, (gpointer) &native_path, (gpointer) &adapter)) {
-                if (g_str_has_prefix (device_native_path,
-                                      devkit_disks_adapter_local_get_native_path (adapter))) {
+        while (g_hash_table_iter_next (&iter, (gpointer) &adapter_native_path, (gpointer) &adapter)) {
+                if (g_str_has_prefix (native_path, adapter_native_path)) {
                         ret = adapter;
                         break;
                 }
@@ -2191,20 +2399,40 @@ devkit_disks_daemon_local_find_adapter (DevkitDisksDaemon       *daemon,
         return ret;
 }
 
-GList *
-devkit_disks_daemon_local_find_ports (DevkitDisksDaemon      *daemon,
-                                     const gchar             *device_native_path)
+DevkitDisksExpander *
+devkit_disks_daemon_local_find_enclosing_expander (DevkitDisksDaemon       *daemon,
+                                                   const gchar             *native_path)
 {
         GHashTableIter iter;
-        const gchar *native_path;
+        DevkitDisksExpander *expander;
+        DevkitDisksExpander *ret;
+
+        ret = NULL;
+
+        g_hash_table_iter_init (&iter, daemon->priv->map_native_path_to_expander);
+        while (g_hash_table_iter_next (&iter, NULL, (gpointer) &expander)) {
+                if (devkit_disks_local_expander_encloses_native_path (expander, native_path)) {
+                        ret = expander;
+                        break;
+                }
+        }
+
+        return ret;
+}
+
+GList *
+devkit_disks_daemon_local_find_enclosing_ports (DevkitDisksDaemon      *daemon,
+                                                const gchar            *native_path)
+{
+        GHashTableIter iter;
         DevkitDisksPort *port;
         GList *ret;
 
         ret = NULL;
 
         g_hash_table_iter_init (&iter, daemon->priv->map_native_path_to_port);
-        while (g_hash_table_iter_next (&iter, (gpointer) &native_path, (gpointer) &port)) {
-                if (devkit_disks_local_port_is_for_device (port, device_native_path)) {
+        while (g_hash_table_iter_next (&iter, NULL, (gpointer) &port)) {
+                if (devkit_disks_local_port_encloses_native_path (port, native_path)) {
                         ret = g_list_append (ret, port);
                 }
         }
@@ -2262,6 +2490,32 @@ devkit_disks_daemon_enumerate_adapters (DevkitDisksDaemon     *daemon,
 
         object_paths = g_ptr_array_new ();
         g_hash_table_foreach (daemon->priv->map_native_path_to_adapter, enumerate_adapter_cb, object_paths);
+        dbus_g_method_return (context, object_paths);
+        g_ptr_array_foreach (object_paths, (GFunc) g_free, NULL);
+        g_ptr_array_free (object_paths, TRUE);
+        return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+enumerate_expander_cb (gpointer key, gpointer value, gpointer user_data)
+{
+        DevkitDisksExpander *expander = DEVKIT_DISKS_EXPANDER (value);
+        GPtrArray *object_paths = user_data;
+        g_ptr_array_add (object_paths, g_strdup (devkit_disks_expander_local_get_object_path (expander)));
+}
+
+/* dbus-send --system --print-reply --dest=org.freedesktop.DeviceKit.Disks /org/freedesktop/DeviceKit/Disks org.freedesktop.DeviceKit.Disks.EnumerateExpanders
+ */
+gboolean
+devkit_disks_daemon_enumerate_expanders (DevkitDisksDaemon     *daemon,
+                                           DBusGMethodInvocation *context)
+{
+        GPtrArray *object_paths;
+
+        object_paths = g_ptr_array_new ();
+        g_hash_table_foreach (daemon->priv->map_native_path_to_expander, enumerate_expander_cb, object_paths);
         dbus_g_method_return (context, object_paths);
         g_ptr_array_foreach (object_paths, (GFunc) g_free, NULL);
         g_ptr_array_free (object_paths, TRUE);

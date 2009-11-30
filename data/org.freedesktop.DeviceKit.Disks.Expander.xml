@@ -13,13 +13,11 @@
   <!ENTITY ERROR_FILESYSTEM_TOOLS_MISSING "org.freedesktop.DeviceKit.Disks.Error.FilesystemToolsMissing">
 ]>
 <node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
-  <interface name="org.freedesktop.DeviceKit.Disks.Port">
+  <interface name="org.freedesktop.DeviceKit.Disks.Expander">
     <doc:doc>
       <doc:description>
         <doc:para>
-          This interface provides information about ports attached to
-          either an adapter or expander (e.g. SAS expanders or
-          SATA Port Multipliers).
+          This interface provides represents port expanders such as SAS Expanders or SATA Port Multipliers.
         </doc:para>
       </doc:description>
     </doc:doc>
@@ -30,7 +28,7 @@
       <doc:doc>
         <doc:description>
           <doc:para>
-            Something on the port changed.
+            Something on the expander changed.
           </doc:para>
         </doc:description>
       </doc:doc>
@@ -40,25 +38,47 @@
 
     <property name="NativePath" type="s" access="read">
       <doc:doc><doc:description><doc:para>
-            OS specific native path of the port. On Linux this is the sysfs path, for example <doc:tt>/sys/devices/pci0000:00/0000:00:1f.1/host3/scsi_host/host3</doc:tt> or TODO:SAS example.
+            OS specific native path of the expander. On Linux this is the sysfs path, for example <doc:tt>/sys/devices/pci0000:00/0000:00:03.0/0000:06:00.0/host7/port-7:0/expander-7:0/sas_expander/expander-7:0</doc:tt>.
+      </doc:para></doc:description></doc:doc>
+    </property>
+
+    <property name="Vendor" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The name of the vendor of the expander.
+      </doc:para></doc:description></doc:doc>
+    </property>
+
+    <property name="Model" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The name of the model of the expander.
+      </doc:para></doc:description></doc:doc>
+    </property>
+
+    <property name="Revision" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The name of the revision of the expander.
+      </doc:para></doc:description></doc:doc>
+    </property>
+
+    <property name="NumPorts" type="u" access="read">
+      <doc:doc><doc:description><doc:para>
+            Number of downstream ports (aka PHYs) on the expander or 0 if unknown. Note that
+            this may not correspond to the number _physical_ connectors as several PHYs may
+            be ganged together in a separate physical connectors. See the
+            <doc:ref type="property" to="Adapter:NumPorts">Adapter:NumPorts</doc:ref>
+            property for more discussion.
+      </doc:para></doc:description></doc:doc>
+    </property>
+
+    <property name="UpstreamPorts" type="ao" access="read">
+      <doc:doc><doc:description><doc:para>
+            The object paths of the upstream ports for the expander.
       </doc:para></doc:description></doc:doc>
     </property>
 
     <property name="Adapter" type="o" access="read">
       <doc:doc><doc:description><doc:para>
-            The object path of the adapter the port is attached to.
-      </doc:para></doc:description></doc:doc>
-    </property>
-
-    <property name="Parent" type="o" access="read">
-      <doc:doc><doc:description><doc:para>
-            The object path of the adapter or expansion device the port is attached to.
-      </doc:para></doc:description></doc:doc>
-    </property>
-
-    <property name="Number" type="i" access="read">
-      <doc:doc><doc:description><doc:para>
-            The number of the port (starting from zero) or -1 if unknown.
+            The object path of the adapter the expander is attached to.
       </doc:para></doc:description></doc:doc>
     </property>
 

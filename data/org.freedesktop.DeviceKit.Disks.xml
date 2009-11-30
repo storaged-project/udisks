@@ -33,6 +33,23 @@
 
     <!-- ************************************************************ -->
 
+    <method name="EnumerateExpanders">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="devices" direction="out" type="ao">
+        <doc:doc><doc:summary>An array of object paths for storage expanders.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Enumerate all storage expanders on the system.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
     <method name="EnumeratePorts">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="devices" direction="out" type="ao">
@@ -545,6 +562,48 @@
         <doc:description>
           <doc:para>
             Emitted when an adapter changed.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </signal>
+
+    <!-- ************************************************************ -->
+
+    <signal name="ExpanderAdded">
+      <arg name="expander" type="o">
+        <doc:doc><doc:summary>Object path of expander that was added.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Emitted when an expander is added.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </signal>
+    <signal name="ExpanderRemoved">
+      <arg name="expander" type="o">
+        <doc:doc><doc:summary>Object path of expander that was removed.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Emitted when an expander is removed.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </signal>
+    <signal name="ExpanderChanged">
+      <arg name="expander" type="o">
+        <doc:doc><doc:summary>Object path of expander that was changed.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Emitted when an expander changed.
           </doc:para>
         </doc:description>
       </doc:doc>

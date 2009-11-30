@@ -23,6 +23,7 @@ BUILT_SOURCES =							\
 	devkit-disks-device-glue.h				\
 	devkit-disks-adapter-glue.h				\
 	devkit-disks-port-glue.h				\
+	devkit-disks-expander-glue.h				\
 	devkit-disks-marshal.h		devkit-disks-marshal.c
 
 devkit-disks-marshal.h: devkit-disks-marshal.list
@@ -40,6 +41,9 @@ devkit-disks-device-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.D
 devkit-disks-adapter-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Adapter.xml Makefile.am
 	dbus-binding-tool --prefix=devkit_disks_adapter --mode=glib-server --output=devkit-disks-adapter-glue.h $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Adapter.xml
 
+devkit-disks-expander-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Expander.xml Makefile.am
+	dbus-binding-tool --prefix=devkit_disks_expander --mode=glib-server --output=devkit-disks-expander-glue.h $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Expander.xml
+
 devkit-disks-port-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Port.xml Makefile.am
 	dbus-binding-tool --prefix=devkit_disks_port --mode=glib-server --output=devkit-disks-port-glue.h $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Port.xml
 
@@ -53,6 +57,8 @@ devkit_disks_daemon_SOURCES = 								\
 	devkit-disks-device-private.h		devkit-disks-device-private.c		\
 	devkit-disks-adapter.h			devkit-disks-adapter.c			\
 	devkit-disks-adapter-private.h		devkit-disks-adapter-private.c		\
+	devkit-disks-expander.h			devkit-disks-expander.c			\
+	devkit-disks-expander-private.h		devkit-disks-expander-private.c		\
 	devkit-disks-port.h			devkit-disks-port.c			\
 	devkit-disks-port-private.h		devkit-disks-port-private.c		\
 	devkit-disks-mount-file.h		devkit-disks-mount-file.c		\
@@ -163,7 +169,7 @@ devkit_disks_helper_drive_benchmark_LDADD =  $(GLIB_LIBS)
 
 # TODO: move to udev
 udevhelperdir = $(slashlibdir)/udev
-udevhelper_PROGRAMS = devkit-disks-part-id devkit-disks-dm-export devkit-disks-probe-ata-smart
+udevhelper_PROGRAMS = devkit-disks-part-id devkit-disks-dm-export devkit-disks-probe-ata-smart devkit-disks-probe-sas-expander
 
 devkit_disks_part_id_SOURCES = part-id.c
 devkit_disks_part_id_CPPFLAGS = $(AM_CPPFLAGS) $(LIBUDEV_CFLAGS)
@@ -176,6 +182,10 @@ devkit_disks_dm_export_LDADD = $(DEVMAPPER_LIBS)
 devkit_disks_probe_ata_smart_SOURCES = devkit-disks-probe-ata-smart.c
 devkit_disks_probe_ata_smart_CPPFLAGS = $(AM_CPPFLAGS) $(LIBATASMART_CFLAGS)
 devkit_disks_probe_ata_smart_LDADD = $(LIBATASMART_LIBS)
+
+devkit_disks_probe_sas_expander_SOURCES = devkit-disks-probe-sas-expander.c
+devkit_disks_probe_sas_expander_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+devkit_disks_probe_sas_expander_LDADD = $(GLIB_LIBS)
 # end move to udev
 
 # ----------------------------------------------------------------------------------------------------
