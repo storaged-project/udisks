@@ -234,10 +234,9 @@
   <refsect1>
     <title>BUGS</title>
     <para>
-      Please send bug reports to either the distribution or the
-      devkit-devel mailing list,
-      see <ulink url="http://lists.freedesktop.org/mailman/listinfo/devkit-devel"/>.
-      to subscribe.
+      Please send bug reports to either the distribution bug tracker
+      or the upstream bug tracker at
+      <ulink url="http://bugs.freedesktop.org/enter_bug.cgi?product=udisks"/>.
     </para>
   </refsect1>
 

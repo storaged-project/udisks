@@ -60,7 +60,7 @@ BUGS and DEVELOPMENT
 
 Please report bugs via the freedesktop.org bugzilla at
 
- https://bugs.freedesktop.org/enter_bug.cgi?product=DeviceKit-disks
+ http://bugs.freedesktop.org/enter_bug.cgi?product=udisks
 
 For feature development use the devkit-devel mailing list (need to be
 subsribed to post)
