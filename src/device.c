@@ -5511,9 +5511,9 @@ device_filesystem_mount (Device *device,
   else
     {
       if (device->priv->device_is_system_internal)
-        action_id = "org.freedesktop.devicekit.disks.filesystem-mount-system-internal";
+        action_id = "org.freedesktop.udisks.filesystem-mount-system-internal";
       else
-        action_id = "org.freedesktop.devicekit.disks.filesystem-mount";
+        action_id = "org.freedesktop.udisks.filesystem-mount";
     }
 
   auth_no_user_interaction = FALSE;
@@ -5705,7 +5705,7 @@ device_filesystem_unmount (Device *device,
     {
       if (!is_device_in_fstab (device, NULL))
         {
-          action_id = "org.freedesktop.devicekit.disks.filesystem-unmount-others";
+          action_id = "org.freedesktop.udisks.filesystem-unmount-others";
         }
     }
   else
@@ -5714,7 +5714,7 @@ device_filesystem_unmount (Device *device,
       daemon_local_get_uid (device->priv->daemon, &uid, context);
       if (uid_of_mount != uid)
         {
-          action_id = "org.freedesktop.devicekit.disks.filesystem-unmount-others";
+          action_id = "org.freedesktop.udisks.filesystem-unmount-others";
         }
     }
 
@@ -5888,8 +5888,8 @@ device_filesystem_list_open_files (Device *device,
 
   daemon_local_check_auth (device->priv->daemon,
                            device,
-                           device->priv->device_is_system_internal ? "org.freedesktop.devicekit.disks.filesystem-lsof-system-internal"
-                           : "org.freedesktop.devicekit.disks.filesystem-lsof",
+                           device->priv->device_is_system_internal ? "org.freedesktop.udisks.filesystem-lsof-system-internal"
+                           : "org.freedesktop.udisks.filesystem-lsof",
                            "FilesystemListOpenFiles",
                            TRUE,
                            device_filesystem_list_open_files_authorized_cb,
@@ -6009,7 +6009,7 @@ device_drive_eject (Device *device,
 
   daemon_local_check_auth (device->priv->daemon,
                            device,
-                           "org.freedesktop.devicekit.disks.drive-eject",
+                           "org.freedesktop.udisks.drive-eject",
                            "DriveEject",
                            TRUE,
                            device_drive_eject_authorized_cb,
@@ -6132,7 +6132,7 @@ device_drive_detach (Device *device,
 
   daemon_local_check_auth (device->priv->daemon,
                            device,
-                           "org.freedesktop.devicekit.disks.drive-detach",
+                           "org.freedesktop.udisks.drive-detach",
                            "DriveDetach",
                            TRUE,
                            device_drive_detach_authorized_cb,
@@ -6233,8 +6233,8 @@ device_filesystem_check (Device *device,
   daemon_local_check_auth (device->priv->daemon,
                            device,
                            device->priv->device_is_system_internal ?
-                           "org.freedesktop.devicekit.disks.filesystem-check-system-internal" :
-                           "org.freedesktop.devicekit.disks.filesystem-check",
+                           "org.freedesktop.udisks.filesystem-check-system-internal" :
+                           "org.freedesktop.udisks.filesystem-check",
                            "FilesystemCheck",
                            TRUE,
                            device_filesystem_check_authorized_cb,
@@ -6397,8 +6397,8 @@ device_partition_delete (Device *device,
 {
   daemon_local_check_auth (device->priv->daemon,
                            device,
-                           device->priv->device_is_system_internal ? "org.freedesktop.devicekit.disks.change-system-internal"
-                           : "org.freedesktop.devicekit.disks.change",
+                           device->priv->device_is_system_internal ? "org.freedesktop.udisks.change-system-internal"
+                           : "org.freedesktop.udisks.change",
                            "PartitionDelete",
                            TRUE,
                            device_partition_delete_authorized_cb,
@@ -6790,8 +6790,8 @@ device_filesystem_create (Device *device,
 {
   daemon_local_check_auth (device->priv->daemon,
                            device,
-                           device->priv->device_is_system_internal ? "org.freedesktop.devicekit.disks.change-system-internal"
-                           : "org.freedesktop.devicekit.disks.change",
+                           device->priv->device_is_system_internal ? "org.freedesktop.udisks.change-system-internal"
+                           : "org.freedesktop.udisks.change",
                            "FilesystemCreate",
                            TRUE,
                            device_filesystem_create_authorized_cb,
@@ -6859,7 +6859,7 @@ device_job_cancel (Device *device,
   action_id = NULL;
   if (device->priv->job_initiated_by_uid != uid)
     {
-      action_id = "org.freedesktop.devicekit.disks.cancel-job-others";
+      action_id = "org.freedesktop.udisks.cancel-job-others";
     }
 
   daemon_local_check_auth (device->priv->daemon,
@@ -7250,8 +7250,8 @@ device_partition_create (Device *device,
 
   daemon_local_check_auth (device->priv->daemon,
                            device,
-                           device->priv->device_is_system_internal ? "org.freedesktop.devicekit.disks.change-system-internal"
-                           : "org.freedesktop.devicekit.disks.change",
+                           device->priv->device_is_system_internal ? "org.freedesktop.udisks.change-system-internal"
+                           : "org.freedesktop.udisks.change",
                            "PartitionCreate",
                            TRUE,
                            device_partition_create_authorized_cb,
@@ -7469,8 +7469,8 @@ device_partition_modify (Device *device,
 
   daemon_local_check_auth (device->priv->daemon,
                            device,
-                           device->priv->device_is_system_internal ? "org.freedesktop.devicekit.disks.change-system-internal"
-                           : "org.freedesktop.devicekit.disks.change",
+                           device->priv->device_is_system_internal ? "org.freedesktop.udisks.change-system-internal"
+                           : "org.freedesktop.udisks.change",
                            "PartitionModify",
                            TRUE,
                            device_partition_modify_authorized_cb,
@@ -7705,8 +7705,8 @@ device_partition_table_create (Device *device,
 {
   daemon_local_check_auth (device->priv->daemon,
                            device,
-                           device->priv->device_is_system_internal ? "org.freedesktop.devicekit.disks.change-system-internal"
-                           : "org.freedesktop.devicekit.disks.change",
+                           device->priv->device_is_system_internal ? "org.freedesktop.udisks.change-system-internal"
+                           : "org.freedesktop.udisks.change",
                            "PartitionTableCreate",
                            TRUE,
                            device_partition_table_create_authorized_cb,
@@ -8069,7 +8069,7 @@ device_luks_unlock (Device *device,
 
   daemon_local_check_auth (device->priv->daemon,
                            device,
-                           "org.freedesktop.devicekit.disks.luks-unlock",
+                           "org.freedesktop.udisks.luks-unlock",
                            "LuksUnlock",
                            TRUE,
                            device_luks_unlock_authorized_cb,
@@ -8377,7 +8377,7 @@ device_luks_lock (Device *device,
   action_id = NULL;
   if (unlocked_by_uid != uid)
     {
-      action_id = "org.freedesktop.devicekit.disks.luks-lock-others";
+      action_id = "org.freedesktop.udisks.luks-lock-others";
     }
 
   daemon_local_check_auth (device->priv->daemon,
@@ -8506,8 +8506,8 @@ device_luks_change_passphrase (Device *device,
 
   daemon_local_check_auth (device->priv->daemon,
                            device,
-                           device->priv->device_is_system_internal ? "org.freedesktop.devicekit.disks.change-system-internal"
-                           : "org.freedesktop.devicekit.disks.change",
+                           device->priv->device_is_system_internal ? "org.freedesktop.udisks.change-system-internal"
+                           : "org.freedesktop.udisks.change",
                            "LuksChangePassphrase",
                            TRUE,
                            device_luks_change_passphrase_authorized_cb,
@@ -8665,8 +8665,8 @@ device_filesystem_set_label (Device *device,
 
   daemon_local_check_auth (device->priv->daemon,
                            device,
-                           device->priv->device_is_system_internal ? "org.freedesktop.devicekit.disks.change-system-internal"
-                           : "org.freedesktop.devicekit.disks.change",
+                           device->priv->device_is_system_internal ? "org.freedesktop.udisks.change-system-internal"
+                           : "org.freedesktop.udisks.change",
                            "FilesystemSetLabel",
                            TRUE,
                            device_filesystem_set_label_authorized_cb,
@@ -8890,7 +8890,7 @@ device_drive_ata_smart_refresh_data (Device *device,
   action_id = NULL;
   if (context != NULL)
     {
-      action_id = "org.freedesktop.devicekit.disks.drive-ata-smart-refresh";
+      action_id = "org.freedesktop.udisks.drive-ata-smart-refresh";
     }
 
   daemon_local_check_auth (device->priv->daemon,
@@ -9021,7 +9021,7 @@ device_drive_ata_smart_initiate_selftest (Device *device,
 
   daemon_local_check_auth (device->priv->daemon,
                            device,
-                           "org.freedesktop.devicekit.disks.drive-ata-smart-selftest",
+                           "org.freedesktop.udisks.drive-ata-smart-selftest",
                            "DriveAtaSmartInitiateSelftest",
                            TRUE,
                            device_drive_ata_smart_initiate_selftest_authorized_cb,
@@ -9119,7 +9119,7 @@ device_linux_md_stop (Device *device,
 
   daemon_local_check_auth (device->priv->daemon,
                            device,
-                           "org.freedesktop.devicekit.disks.linux-md",
+                           "org.freedesktop.udisks.linux-md",
                            "LinuxMdStop",
                            TRUE,
                            device_linux_md_stop_authorized_cb,
@@ -9253,7 +9253,7 @@ device_linux_md_check (Device *device,
 
   daemon_local_check_auth (device->priv->daemon,
                            device,
-                           "org.freedesktop.devicekit.disks.linux-md",
+                           "org.freedesktop.udisks.linux-md",
                            job_name,
                            TRUE,
                            device_linux_md_check_authorized_cb,
@@ -9389,7 +9389,7 @@ device_linux_md_add_component (Device *device,
 
   daemon_local_check_auth (device->priv->daemon,
                            device,
-                           "org.freedesktop.devicekit.disks.linux-md",
+                           "org.freedesktop.udisks.linux-md",
                            "LinuxMdAddComponent",
                            TRUE,
                            device_linux_md_add_component_authorized_cb,
@@ -9642,7 +9642,7 @@ device_linux_md_remove_component (Device *device,
 
   daemon_local_check_auth (device->priv->daemon,
                            device,
-                           "org.freedesktop.devicekit.disks.linux-md",
+                           "org.freedesktop.udisks.linux-md",
                            "LinuxMdRemoveComponent",
                            TRUE,
                            device_linux_md_remove_component_authorized_cb,
@@ -9992,7 +9992,7 @@ daemon_linux_md_start (Daemon *daemon,
 
   daemon_local_check_auth (daemon,
                            NULL,
-                           "org.freedesktop.devicekit.disks.linux-md",
+                           "org.freedesktop.udisks.linux-md",
                            "LinuxMdStart",
                            TRUE,
                            daemon_linux_md_start_authorized_cb,
@@ -10379,7 +10379,7 @@ daemon_linux_md_create (Daemon *daemon,
 
   daemon_local_check_auth (daemon,
                            NULL,
-                           "org.freedesktop.devicekit.disks.linux-md",
+                           "org.freedesktop.udisks.linux-md",
                            "LinuxMdCreate",
                            TRUE,
                            daemon_linux_md_create_authorized_cb,
@@ -10753,7 +10753,7 @@ device_drive_inhibit_polling (Device *device,
 
   daemon_local_check_auth (device->priv->daemon,
                            device,
-                           "org.freedesktop.devicekit.disks.inhibit-polling",
+                           "org.freedesktop.udisks.inhibit-polling",
                            "DriveInhibitPolling",
                            TRUE,
                            device_drive_inhibit_polling_authorized_cb,
@@ -10883,7 +10883,7 @@ device_drive_poll_media (Device *device,
 
   daemon_local_check_auth (device->priv->daemon,
                            device,
-                           "org.freedesktop.devicekit.disks.inhibit-polling",
+                           "org.freedesktop.udisks.inhibit-polling",
                            "DrivePollMedia",
                            TRUE,
                            device_drive_poll_media_authorized_cb,
@@ -10989,7 +10989,7 @@ device_drive_set_spindown_timeout (Device *device,
 
   daemon_local_check_auth (device->priv->daemon,
                            device,
-                           "org.freedesktop.devicekit.disks.drive-set-spindown",
+                           "org.freedesktop.udisks.drive-set-spindown",
                            "DriveSetSpindownTimeout",
                            TRUE,
                            device_drive_set_spindown_timeout_authorized_cb,
@@ -11221,7 +11221,7 @@ device_drive_benchmark (Device *device,
 
   daemon_local_check_auth (device->priv->daemon,
                            device,
-                           "org.freedesktop.devicekit.disks.change",
+                           "org.freedesktop.udisks.change",
                            "DriveBenchmark",
                            TRUE,
                            device_drive_benchmark_authorized_cb,

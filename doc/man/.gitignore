@@ -1,6 +1,6 @@
 Makefile
 Makefile.in
-DeviceKit-disks.7
-devkit-disks-daemon.8
-devkit-disks.1
+udisks.7
+udisks-daemon.8
+udisks.1
 

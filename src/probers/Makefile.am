@@ -27,14 +27,14 @@ udisks_part_id_SOURCES = part-id.c
 udisks_part_id_CPPFLAGS = $(AM_CPPFLAGS) $(LIBUDEV_CFLAGS)
 udisks_part_id_LDADD = $(GLIB_LIBS) $(LIBUDEV_LIBS) $(top_builddir)/src/helpers/libpartutil.la
 
-udisks_dm_export_SOURCES = devkit-disks-dm-export.c
+udisks_dm_export_SOURCES = udisks-dm-export.c
 udisks_dm_export_CPPFLAGS = $(AM_CPPFLAGS) $(DEVMAPPER_CFLAGS)
 udisks_dm_export_LDADD = $(DEVMAPPER_LIBS)
 
-udisks_probe_ata_smart_SOURCES = devkit-disks-probe-ata-smart.c
+udisks_probe_ata_smart_SOURCES = udisks-probe-ata-smart.c
 udisks_probe_ata_smart_CPPFLAGS = $(AM_CPPFLAGS) $(LIBATASMART_CFLAGS)
 udisks_probe_ata_smart_LDADD = $(LIBATASMART_LIBS)
 
-udisks_probe_sas_expander_SOURCES = devkit-disks-probe-sas-expander.c
+udisks_probe_sas_expander_SOURCES = udisks-probe-sas-expander.c
 udisks_probe_sas_expander_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
 udisks_probe_sas_expander_LDADD = $(GLIB_LIBS)

@@ -1,4 +1,4 @@
 
-Name: DeviceKit-disks
-Description: DeviceKit-disks daemon
+Name: udisks
+Description: udisks storage daemon
 Version: @VERSION@

@@ -168,7 +168,7 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.inhibit-polling</doc:term>
+              <doc:term>org.freedesktop.udisks.inhibit-polling</doc:term>
               <doc:definition>To inhibit polling</doc:definition>
             </doc:item>
           </doc:list>
@@ -241,7 +241,7 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.drive-set-spindown</doc:term>
+              <doc:term>org.freedesktop.udisks.drive-set-spindown</doc:term>
               <doc:definition>To set spindown timeouts</doc:definition>
             </doc:item>
           </doc:list>
@@ -276,7 +276,7 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.drive-set-spindown</doc:term>
+              <doc:term>org.freedesktop.udisks.drive-set-spindown</doc:term>
               <doc:definition>To set spindown timeouts</doc:definition>
             </doc:item>
           </doc:list>
@@ -315,7 +315,7 @@
           The caller will need the following PolicyKit authorization:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.linux-md</doc:term>
+              <doc:term>org.freedesktop.udisks.linux-md</doc:term>
               <doc:definition>
                 Needed to configured Linux md Software RAID devices.
               </doc:definition>
@@ -366,7 +366,7 @@
           The caller will need the following PolicyKit authorization:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.linux-md</doc:term>
+              <doc:term>org.freedesktop.udisks.linux-md</doc:term>
               <doc:definition>
                 Needed to configured Linux md Software RAID devices.
               </doc:definition>

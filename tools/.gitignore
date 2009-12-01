@@ -2,10 +2,10 @@
 Makefile
 Makefile.in
 *.o
-devkit-disks
-devkit-disks-daemon-glue.h
-devkit-disks-device-glue.h
-devkit-disks-marshal.c
-devkit-disks-marshal.h
-umount.devkit
+udisks
+udisks-daemon-glue.h
+udisks-device-glue.h
+udisks-marshal.c
+udisks-marshal.h
+umount.udisks
 

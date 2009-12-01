@@ -6,6 +6,6 @@ dist_policy_DATA = org.freedesktop.udisks.policy
 clean-local :
 	rm -f *~ *.policy
 
-DISTCLEANFILES = $(dist_devkit_policy_DATA)
+DISTCLEANFILES = $(dist_policy_DATA)
 
 EXTRA_DIST = $(dist_policy_DATA:.policy=.policy.in)

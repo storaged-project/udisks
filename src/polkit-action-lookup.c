@@ -122,7 +122,7 @@ udisks_action_lookup_get_message (PolkitBackendActionLookup *lookup,
 
   ret = NULL;
 
-  if (!g_str_has_prefix (action_id, "org.freedesktop.devicekit.disks."))
+  if (!g_str_has_prefix (action_id, "org.freedesktop.udisks."))
     goto out;
 
   operation = polkit_details_lookup (details, "operation");
@@ -152,7 +152,7 @@ udisks_action_lookup_get_icon_name (PolkitBackendActionLookup *lookup,
 
   ret = NULL;
 
-  if (!g_str_has_prefix (action_id, "org.freedesktop.devicekit.disks."))
+  if (!g_str_has_prefix (action_id, "org.freedesktop.udisks."))
     goto out;
 
   /* explicitly left blank for now */
@@ -173,7 +173,7 @@ udisks_action_lookup_get_details (PolkitBackendActionLookup *lookup,
   GString *str;
   PolkitDetails *ret;
 
-  if (!g_str_has_prefix (action_id, "org.freedesktop.devicekit.disks."))
+  if (!g_str_has_prefix (action_id, "org.freedesktop.udisks."))
     return NULL;
 
   ret = polkit_details_new ();

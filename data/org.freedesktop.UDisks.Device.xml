@@ -71,7 +71,7 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.cancel-job-others</doc:term>
+              <doc:term>org.freedesktop.udisks.cancel-job-others</doc:term>
               <doc:definition>To cancel a job initiated by another user</doc:definition>
             </doc:item>
           </doc:list>
@@ -136,13 +136,13 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
+              <doc:term>org.freedesktop.udisks.change</doc:term>
               <doc:definition>If the operation is on a
                 <doc:ref type="property" to="Device:DeviceIsSystemInternal">non-system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.change-system-internal</doc:term>
+              <doc:term>org.freedesktop.udisks.change-system-internal</doc:term>
               <doc:definition>If the operation is on a
                 <doc:ref type="property" to="Device:DeviceIsSystemInternal">system-internal</doc:ref>
                 device</doc:definition>
@@ -176,13 +176,13 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
+              <doc:term>org.freedesktop.udisks.change</doc:term>
               <doc:definition>If the operation is on a
                 <doc:ref type="property" to="Device:DeviceIsSystemInternal">non-system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.change-system-internal</doc:term>
+              <doc:term>org.freedesktop.udisks.change-system-internal</doc:term>
               <doc:definition>If the operation is on a
                 <doc:ref type="property" to="Device:DeviceIsSystemInternal">system-internal</doc:ref>
                 device</doc:definition>
@@ -315,13 +315,13 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
+              <doc:term>org.freedesktop.udisks.change</doc:term>
               <doc:definition>If the operation is on a
                 <doc:ref type="property" to="Device:DeviceIsSystemInternal">non-system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.change-system-internal</doc:term>
+              <doc:term>org.freedesktop.udisks.change-system-internal</doc:term>
               <doc:definition>If the operation is on a
                 <doc:ref type="property" to="Device:DeviceIsSystemInternal">system-internal</doc:ref>
                 device</doc:definition>
@@ -375,13 +375,13 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
+              <doc:term>org.freedesktop.udisks.change</doc:term>
               <doc:definition>If the operation is on a
                 <doc:ref type="property" to="Device:DeviceIsSystemInternal">non-system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.change-system-internal</doc:term>
+              <doc:term>org.freedesktop.udisks.change-system-internal</doc:term>
               <doc:definition>If the operation is on a
                 <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
                 device</doc:definition>
@@ -440,13 +440,13 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
+              <doc:term>org.freedesktop.udisks.change</doc:term>
               <doc:definition>If the operation is on a
                 <doc:ref type="property" to="Device:DeviceIsSystemInternal">non-system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.change-system-internal</doc:term>
+              <doc:term>org.freedesktop.udisks.change-system-internal</doc:term>
               <doc:definition>If the operation is on a
                 <doc:ref type="property" to="Device:device-is-system-internal">system-internal</doc:ref>
                 device</doc:definition>
@@ -486,13 +486,13 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
+              <doc:term>org.freedesktop.udisks.change</doc:term>
               <doc:definition>If the operation is on a
                 <doc:ref type="property" to="Device:DeviceIsSystemInternal">non-system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.change-system-internal</doc:term>
+              <doc:term>org.freedesktop.udisks.change-system-internal</doc:term>
               <doc:definition>If the operation is on a
                 <doc:ref type="property" to="Device:DeviceIsSystemInternal">system-internal</doc:ref>
                 device</doc:definition>
@@ -538,13 +538,13 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.filesystem-mount</doc:term>
+              <doc:term>org.freedesktop.udisks.filesystem-mount</doc:term>
               <doc:definition>If the operation is on a
                 <doc:ref type="property" to="Device:DeviceIsSystemInternal">non-system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.filesystem-mount-system-internal</doc:term>
+              <doc:term>org.freedesktop.udisks.filesystem-mount-system-internal</doc:term>
               <doc:definition>If the operation is on a
                 <doc:ref type="property" to="Device:DeviceIsSystemInternal">system-internal</doc:ref>
                 device</doc:definition>
@@ -583,7 +583,7 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.filesystem-unmount-others</doc:term>
+              <doc:term>org.freedesktop.udisks.filesystem-unmount-others</doc:term>
               <doc:definition>To unmount a device mounted by another user</doc:definition>
             </doc:item>
           </doc:list>
@@ -621,13 +621,13 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.filesystem-check</doc:term>
+              <doc:term>org.freedesktop.udisks.filesystem-check</doc:term>
               <doc:definition>To check a file system on a
                 <doc:ref type="property" to="Device:DeviceIsSystemInternal">non-system-internal</doc:ref>
                 device.</doc:definition>
             </doc:item>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.filesystem-check-system-internal</doc:term>
+              <doc:term>org.freedesktop.udisks.filesystem-check-system-internal</doc:term>
               <doc:definition>To check a file system on a
                 <doc:ref type="property" to="Device:DeviceIsSystemInternal">system-internal</doc:ref>
                 device.</doc:definition>
@@ -665,13 +665,13 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.filesystem-lsof</doc:term>
+              <doc:term>org.freedesktop.udisks.filesystem-lsof</doc:term>
               <doc:definition>To check a file system on a
                 <doc:ref type="property" to="Device:DeviceIsSystemInternal">non-system-internal</doc:ref>
                 device.</doc:definition>
             </doc:item>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.filesystem-lsof-system-internal</doc:term>
+              <doc:term>org.freedesktop.udisks.filesystem-lsof-system-internal</doc:term>
               <doc:definition>To check a file system on a
                 <doc:ref type="property" to="Device:DeviceIsSystemInternal">system-internal</doc:ref>
                 device.</doc:definition>
@@ -710,7 +710,7 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.luks-unlock</doc:term>
+              <doc:term>org.freedesktop.udisks.luks-unlock</doc:term>
               <doc:definition>To unlock LUKS encrypted devices</doc:definition>
             </doc:item>
           </doc:list>
@@ -745,7 +745,7 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.luks-lock-others</doc:term>
+              <doc:term>org.freedesktop.udisks.luks-lock-others</doc:term>
               <doc:definition>To lock an encrypted LUKS device unlocked by another user</doc:definition>
             </doc:item>
           </doc:list>
@@ -780,13 +780,13 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
+              <doc:term>org.freedesktop.udisks.change</doc:term>
               <doc:definition>If the operation is on a
                 <doc:ref type="property" to="Device:DeviceIsSystemInternal">non-system-internal</doc:ref>
                 device</doc:definition>
             </doc:item>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.change-system-internal</doc:term>
+              <doc:term>org.freedesktop.udisks.change-system-internal</doc:term>
               <doc:definition>If the operation is on a
                 <doc:ref type="property" to="Device:DeviceIsSystemInternal">system-internal</doc:ref>
                 device</doc:definition>
@@ -824,7 +824,7 @@
           The caller will need the following PolicyKit authorization:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.linux-md</doc:term>
+              <doc:term>org.freedesktop.udisks.linux-md</doc:term>
               <doc:definition>
                 Needed to configured Linux md Software RAID devices.
               </doc:definition>
@@ -863,7 +863,7 @@
           The caller will need the following PolicyKit authorization:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.linux-md</doc:term>
+              <doc:term>org.freedesktop.udisks.linux-md</doc:term>
               <doc:definition>
                 Needed to configured Linux md Software RAID devices.
               </doc:definition>
@@ -897,7 +897,7 @@
           The caller will need the following PolicyKit authorization:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.linux-md</doc:term>
+              <doc:term>org.freedesktop.udisks.linux-md</doc:term>
               <doc:definition>
                 Needed to configured Linux md Software RAID devices.
               </doc:definition>
@@ -942,7 +942,7 @@
           The caller will need the following PolicyKit authorization:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.linux-md</doc:term>
+              <doc:term>org.freedesktop.udisks.linux-md</doc:term>
               <doc:definition>
                 Needed to configured Linux md Software RAID devices.
               </doc:definition>
@@ -983,7 +983,7 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.inhibit-polling</doc:term>
+              <doc:term>org.freedesktop.udisks.inhibit-polling</doc:term>
               <doc:definition>To inhibit polling</doc:definition>
             </doc:item>
           </doc:list>
@@ -1037,7 +1037,7 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.inhibit-polling</doc:term>
+              <doc:term>org.freedesktop.udisks.inhibit-polling</doc:term>
               <doc:definition>To inhibit polling</doc:definition>
             </doc:item>
           </doc:list>
@@ -1066,7 +1066,7 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.drive-eject</doc:term>
+              <doc:term>org.freedesktop.udisks.drive-eject</doc:term>
               <doc:definition>To eject media from a device</doc:definition>
             </doc:item>
           </doc:list>
@@ -1112,7 +1112,7 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.drive-detach</doc:term>
+              <doc:term>org.freedesktop.udisks.drive-detach</doc:term>
               <doc:definition>To detach a device</doc:definition>
             </doc:item>
           </doc:list>
@@ -1167,7 +1167,7 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.drive-set-spindown</doc:term>
+              <doc:term>org.freedesktop.udisks.drive-set-spindown</doc:term>
               <doc:definition>To set spindown timeouts</doc:definition>
             </doc:item>
           </doc:list>
@@ -1202,7 +1202,7 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.drive-set-spindown</doc:term>
+              <doc:term>org.freedesktop.udisks.drive-set-spindown</doc:term>
               <doc:definition>To set spindown timeouts</doc:definition>
             </doc:item>
           </doc:list>
@@ -1239,7 +1239,7 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.drive-ata-smart-refresh</doc:term>
+              <doc:term>org.freedesktop.udisks.drive-ata-smart-refresh</doc:term>
               <doc:definition>Needed to refresh ATA SMART data</doc:definition>
             </doc:item>
           </doc:list>
@@ -1278,7 +1278,7 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.drive-ata-smart-selftest</doc:term>
+              <doc:term>org.freedesktop.udisks.drive-ata-smart-selftest</doc:term>
               <doc:definition>Needed to run ATA SMART self tests</doc:definition>
             </doc:item>
           </doc:list>
@@ -1346,7 +1346,7 @@
           The caller will need one of the following PolicyKit authorizations:
           <doc:list>
             <doc:item>
-              <doc:term>org.freedesktop.devicekit.disks.change</doc:term>
+              <doc:term>org.freedesktop.udisks.change</doc:term>
               <doc:definition>Needed to run benchmarks</doc:definition>
             </doc:item>
           </doc:list>
