@@ -58,7 +58,7 @@ main (int argc, char *argv[])
                 goto out;
         }
 
-        printf ("DKD_ATA_SMART_IS_AVAILABLE=%d\n", smart_is_available);
+        printf ("UDISKS_ATA_SMART_IS_AVAILABLE=%d\n", smart_is_available);
 
         ret = 0;
 

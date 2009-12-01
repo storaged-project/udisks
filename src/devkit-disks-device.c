@@ -1655,20 +1655,20 @@ update_info_presentation (DevkitDisksDevice *device)
         gboolean nopolicy;
 
         hide = FALSE;
-        if (g_udev_device_has_property (device->priv->d, "DKD_PRESENTATION_HIDE"))
-                hide = g_udev_device_get_property_as_boolean (device->priv->d, "DKD_PRESENTATION_HIDE");
+        if (g_udev_device_has_property (device->priv->d, "UDISKS_PRESENTATION_HIDE"))
+                hide = g_udev_device_get_property_as_boolean (device->priv->d, "UDISKS_PRESENTATION_HIDE");
         devkit_disks_device_set_device_presentation_hide (device, hide);
 
         nopolicy = FALSE;
-        if (g_udev_device_has_property (device->priv->d, "DKD_PRESENTATION_NOPOLICY"))
-                nopolicy = g_udev_device_get_property_as_boolean (device->priv->d, "DKD_PRESENTATION_NOPOLICY");
+        if (g_udev_device_has_property (device->priv->d, "UDISKS_PRESENTATION_NOPOLICY"))
+                nopolicy = g_udev_device_get_property_as_boolean (device->priv->d, "UDISKS_PRESENTATION_NOPOLICY");
         devkit_disks_device_set_device_presentation_nopolicy (device, nopolicy);
 
         devkit_disks_device_set_device_presentation_name (device,
-               g_udev_device_get_property (device->priv->d, "DKD_PRESENTATION_NAME"));
+               g_udev_device_get_property (device->priv->d, "UDISKS_PRESENTATION_NAME"));
 
         devkit_disks_device_set_device_presentation_icon_name (device,
-               g_udev_device_get_property (device->priv->d, "DKD_PRESENTATION_ICON_NAME"));
+               g_udev_device_get_property (device->priv->d, "UDISKS_PRESENTATION_ICON_NAME"));
 
         return TRUE;
 }
@@ -1683,8 +1683,8 @@ update_info_id (DevkitDisksDevice *device)
         const gchar *partition_scheme;
         gint partition_type;
 
-        partition_scheme = g_udev_device_get_property (device->priv->d, "DKD_PARTITION_SCHEME");
-        partition_type = g_udev_device_get_property_as_int (device->priv->d, "DKD_PARTITION_TYPE");
+        partition_scheme = g_udev_device_get_property (device->priv->d, "UDISKS_PARTITION_SCHEME");
+        partition_type = g_udev_device_get_property_as_int (device->priv->d, "UDISKS_PARTITION_TYPE");
         if (g_strcmp0 (partition_scheme, "mbr") == 0 &&
             (partition_type == 0x05 || partition_type == 0x0f || partition_type == 0x85)) {
                 devkit_disks_device_set_id_usage (device, "");
@@ -1718,8 +1718,8 @@ static gboolean
 update_info_partition_table (DevkitDisksDevice *device)
 {
         if (!device->priv->device_is_partition &&
-            g_udev_device_has_property (device->priv->d, "DKD_PARTITION_TABLE") &&
-            g_udev_device_get_property_as_boolean (device->priv->d, "DKD_PARTITION_TABLE")) {
+            g_udev_device_has_property (device->priv->d, "UDISKS_PARTITION_TABLE") &&
+            g_udev_device_get_property_as_boolean (device->priv->d, "UDISKS_PARTITION_TABLE")) {
 
                 /* Some times we think that vfat on the main block device looks like a Master Boot Record
                  * partition table (the on-disk formats are extremely similar). So if we already have
@@ -1733,7 +1733,7 @@ update_info_partition_table (DevkitDisksDevice *device)
                         devkit_disks_device_set_device_is_partition_table (device, FALSE);
                 } else {
                         devkit_disks_device_set_device_is_partition_table (device, TRUE);
-                        devkit_disks_device_set_partition_table_scheme (device, g_udev_device_get_property (device->priv->d, "DKD_PARTITION_TABLE_SCHEME"));
+                        devkit_disks_device_set_partition_table_scheme (device, g_udev_device_get_property (device->priv->d, "UDISKS_PARTITION_TABLE_SCHEME"));
                 }
         } else {
                 devkit_disks_device_set_partition_table_scheme (device, NULL);
@@ -1754,7 +1754,7 @@ update_info_partition (DevkitDisksDevice *device)
         devkit_disks_device_set_partition_offset (device, offset);
 
         if (device->priv->device_is_partition &&
-            g_udev_device_has_property (device->priv->d, "DKD_PARTITION")) {
+            g_udev_device_has_property (device->priv->d, "UDISKS_PARTITION")) {
                 guint64 size;
                 const gchar *scheme;
                 const gchar *type;
@@ -1762,12 +1762,12 @@ update_info_partition (DevkitDisksDevice *device)
                 const gchar *uuid;
                 const gchar* const *flags;
 
-                scheme = g_udev_device_get_property (device->priv->d, "DKD_PARTITION_SCHEME");
-                size = g_udev_device_get_property_as_uint64 (device->priv->d, "DKD_PARTITION_SIZE");
-                type = g_udev_device_get_property (device->priv->d, "DKD_PARTITION_TYPE");
-                label = g_udev_device_get_property (device->priv->d, "DKD_PARTITION_LABEL");
-                uuid = g_udev_device_get_property (device->priv->d, "DKD_PARTITION_UUID");
-                flags = g_udev_device_get_property_as_strv (device->priv->d, "DKD_PARTITION_FLAGS");
+                scheme = g_udev_device_get_property (device->priv->d, "UDISKS_PARTITION_SCHEME");
+                size = g_udev_device_get_property_as_uint64 (device->priv->d, "UDISKS_PARTITION_SIZE");
+                type = g_udev_device_get_property (device->priv->d, "UDISKS_PARTITION_TYPE");
+                label = g_udev_device_get_property (device->priv->d, "UDISKS_PARTITION_LABEL");
+                uuid = g_udev_device_get_property (device->priv->d, "UDISKS_PARTITION_UUID");
+                flags = g_udev_device_get_property_as_strv (device->priv->d, "UDISKS_PARTITION_FLAGS");
 
                 devkit_disks_device_set_partition_scheme (device, scheme);
                 devkit_disks_device_set_partition_size (device, size);
@@ -2300,8 +2300,8 @@ update_info_luks_cleartext (DevkitDisksDevice *device)
 
         ret = FALSE;
 
-        dkd_dm_name = g_udev_device_get_property (device->priv->d, "DKD_DM_NAME");
-        dkd_dm_target_types = g_udev_device_get_property (device->priv->d, "DKD_DM_TARGET_TYPES");
+        dkd_dm_name = g_udev_device_get_property (device->priv->d, "UDISKS_DM_NAME");
+        dkd_dm_target_types = g_udev_device_get_property (device->priv->d, "UDISKS_DM_TARGET_TYPES");
         if (dkd_dm_name != NULL && g_strcmp0 (dkd_dm_target_types, "crypt") == 0 &&
             device->priv->slaves_objpath->len == 1) {
 
@@ -2677,8 +2677,8 @@ update_info_drive_ata_smart (DevkitDisksDevice *device)
 
         ata_smart_is_available = FALSE;
         if (device->priv->device_is_drive &&
-            g_udev_device_has_property (device->priv->d, "DKD_ATA_SMART_IS_AVAILABLE"))
-                ata_smart_is_available = g_udev_device_get_property_as_boolean (device->priv->d, "DKD_ATA_SMART_IS_AVAILABLE");
+            g_udev_device_has_property (device->priv->d, "UDISKS_ATA_SMART_IS_AVAILABLE"))
+                ata_smart_is_available = g_udev_device_get_property_as_boolean (device->priv->d, "UDISKS_ATA_SMART_IS_AVAILABLE");
 
         devkit_disks_device_set_drive_ata_smart_is_available (device, ata_smart_is_available);
 
@@ -3110,7 +3110,7 @@ update_info (DevkitDisksDevice *device)
 
         /* ignore dm devices that are not active */
         if (g_str_has_prefix (g_udev_device_get_name (device->priv->d), "dm-") &&
-            g_udev_device_get_property (device->priv->d, "DKD_DM_STATE") == NULL)
+            g_udev_device_get_property (device->priv->d, "UDISKS_DM_STATE") == NULL)
                 goto out;
 
         major = g_udev_device_get_property_as_int (device->priv->d, "MAJOR");
@@ -3149,8 +3149,8 @@ update_info (DevkitDisksDevice *device)
         /* device_is_media_available and device_media_detection_time property */
         if (device->priv->device_is_removable) {
                 media_available = FALSE;
-                if (g_udev_device_has_property (device->priv->d, "DKD_MEDIA_AVAILABLE")) {
-                        media_available = g_udev_device_get_property_as_boolean (device->priv->d, "DKD_MEDIA_AVAILABLE");
+                if (g_udev_device_has_property (device->priv->d, "UDISKS_MEDIA_AVAILABLE")) {
+                        media_available = g_udev_device_get_property_as_boolean (device->priv->d, "UDISKS_MEDIA_AVAILABLE");
                 } else {
                         if (g_udev_device_has_property (device->priv->d, "ID_CDROM_MEDIA_STATE")) {
                                 media_available = TRUE;
@@ -5831,8 +5831,8 @@ devkit_disks_device_partition_delete_authorized_cb (DevkitDisksDaemon     *daemo
         }
 
         /* don't allow deleting an extended partition if we have any logical partitions */
-        partition_scheme = g_udev_device_get_property (device->priv->d, "DKD_PARTITION_SCHEME");
-        partition_type = g_udev_device_get_property_as_int (device->priv->d, "DKD_PARTITION_TYPE");
+        partition_scheme = g_udev_device_get_property (device->priv->d, "UDISKS_PARTITION_SCHEME");
+        partition_type = g_udev_device_get_property_as_int (device->priv->d, "UDISKS_PARTITION_TYPE");
         if (g_strcmp0 (partition_scheme, "mbr") == 0 &&
             (partition_type == 0x05 || partition_type == 0x0f || partition_type == 0x85)) {
                 if (devkit_disks_device_has_logical_partitions (enclosing_device)) {

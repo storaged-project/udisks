@@ -59,44 +59,44 @@ export (int major, int minor)
 
         uuid = dm_task_get_uuid (dmt);
 
-        printf("DKD_DM_NAME=%s\n", name);
+        printf("UDISKS_DM_NAME=%s\n", name);
 
         if ((uuid = dm_task_get_uuid (dmt)) && *uuid)
-                printf("DKD_DM_UUID=%s\n", uuid);
+                printf("UDISKS_DM_UUID=%s\n", uuid);
 
         if (!info.exists) {
-                printf("DKD_DM_STATE=NOTPRESENT\n");
+                printf("UDISKS_DM_STATE=NOTPRESENT\n");
                 goto out;
         }
 
-        printf("DKD_DM_STATE=%s\n",
+        printf("UDISKS_DM_STATE=%s\n",
                info.suspended ? "SUSPENDED" :
                (info.read_only ? " READONLY" : "ACTIVE"));
 
         if (!info.live_table && !info.inactive_table)
-                printf("DKD_DM_TABLE_STATE=NONE\n");
+                printf("UDISKS_DM_TABLE_STATE=NONE\n");
         else
-                printf("DKD_DM_TABLE_STATE=%s%s%s\n",
+                printf("UDISKS_DM_TABLE_STATE=%s%s%s\n",
                        info.live_table ? "LIVE" : "",
                        info.live_table && info.inactive_table ? "/" : "",
                        info.inactive_table ? "INACTIVE" : "");
 
         if (info.open_count != -1)
-                printf("DKD_DM_OPENCOUNT=%d\n", info.open_count);
+                printf("UDISKS_DM_OPENCOUNT=%d\n", info.open_count);
 
-        printf("DKD_DM_LAST_EVENT_NR=%" PRIu32 "\n", info.event_nr);
+        printf("UDISKS_DM_LAST_EVENT_NR=%" PRIu32 "\n", info.event_nr);
 
-        printf("DKD_DM_MAJOR=%d\n", info.major);
-        printf("DKD_DM_MINOR=%d\n", info.minor);
+        printf("UDISKS_DM_MAJOR=%d\n", info.major);
+        printf("UDISKS_DM_MINOR=%d\n", info.minor);
 
         if (info.target_count != -1)
-                printf("DKD_DM_TARGET_COUNT=%d\n", info.target_count);
+                printf("UDISKS_DM_TARGET_COUNT=%d\n", info.target_count);
 
         /* export all table types */
         next = NULL;
         next = dm_get_next_target (dmt, next, &start, &length, &target_type, &params);
         if (target_type != NULL) {
-                printf("DKD_DM_TARGET_TYPES=%s", target_type);
+                printf("UDISKS_DM_TARGET_TYPES=%s", target_type);
                 while (next != NULL) {
                         next = dm_get_next_target (dmt, next, &start, &length, &target_type, &params);
                         if (target_type)

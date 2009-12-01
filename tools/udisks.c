@@ -1100,7 +1100,7 @@ do_show_info (const char *object_path)
                 g_print ("    scheme:                    %s\n", props->partition_scheme);
                 g_print ("    number:                    %d\n", props->partition_number);
                 g_print ("    type:                      %s\n", props->partition_type);
-                g_print ("    flags:                ");
+                g_print ("    flags:                    ");
                 for (n = 0; props->partition_flags[n] != NULL; n++)
                         g_print (" %s", (char *) props->partition_flags[n]);
                 g_print ("\n");

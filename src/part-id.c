@@ -177,9 +177,9 @@ main (int argc, char *argv[])
          */
         if (partition_number == 0) {
                 if (fd < 0) {
-                        g_print ("DKD_MEDIA_AVAILABLE=0\n");
+                        g_print ("UDISKS_MEDIA_AVAILABLE=0\n");
                 } else {
-                        g_print ("DKD_MEDIA_AVAILABLE=1\n");
+                        g_print ("UDISKS_MEDIA_AVAILABLE=1\n");
                 }
         }
 
@@ -226,16 +226,16 @@ main (int argc, char *argv[])
 
                 flags_combined = g_strjoinv (" ", flags);
 
-                g_print ("DKD_PARTITION=1\n");
-                g_print ("DKD_PARTITION_SCHEME=%s\n",
+                g_print ("UDISKS_PARTITION=1\n");
+                g_print ("UDISKS_PARTITION_SCHEME=%s\n",
                          //part_get_scheme_name (part_table_get_scheme (partition_table_for_entry)));
                          part_get_scheme_name (part_table_get_scheme (partition_table)));
-                g_print ("DKD_PARTITION_NUMBER=%d\n", partition_number);
-                g_print ("DKD_PARTITION_TYPE=%s\n", type != NULL ? type : "");
-                g_print ("DKD_PARTITION_SIZE=%" G_GINT64_FORMAT "\n", size);
-                g_print ("DKD_PARTITION_LABEL=%s\n", label != NULL ? label : "");
-                g_print ("DKD_PARTITION_UUID=%s\n", uuid != NULL ? uuid : "");
-                g_print ("DKD_PARTITION_FLAGS=%s\n", flags_combined);
+                g_print ("UDISKS_PARTITION_NUMBER=%d\n", partition_number);
+                g_print ("UDISKS_PARTITION_TYPE=%s\n", type != NULL ? type : "");
+                g_print ("UDISKS_PARTITION_SIZE=%" G_GINT64_FORMAT "\n", size);
+                g_print ("UDISKS_PARTITION_LABEL=%s\n", label != NULL ? label : "");
+                g_print ("UDISKS_PARTITION_UUID=%s\n", uuid != NULL ? uuid : "");
+                g_print ("UDISKS_PARTITION_FLAGS=%s\n", flags_combined);
 
                 g_free (type);
                 g_free (label);
@@ -243,8 +243,8 @@ main (int argc, char *argv[])
                 g_strfreev (flags);
                 g_free (flags_combined);
         } else {
-                g_print ("DKD_PARTITION_TABLE=1\n");
-                g_print ("DKD_PARTITION_TABLE_SCHEME=%s\n",
+                g_print ("UDISKS_PARTITION_TABLE=1\n");
+                g_print ("UDISKS_PARTITION_TABLE_SCHEME=%s\n",
                          part_get_scheme_name (part_table_get_scheme (partition_table)));
         }
 

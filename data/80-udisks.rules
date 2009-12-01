@@ -11,14 +11,14 @@ SUBSYSTEM=="pci", ACTION=="add|change", ENV{ID_MODEL_FROM_DATABASE}=="", ATTR{cl
 #  this is the case we can trigger a 'change' on the sas_expander device
 #  when the bsg device appears)
 #
-SUBSYSTEM=="sas_expander", ACTION=="add|change", IMPORT{program}="devkit-disks-probe-sas-expander /sys/%p"
+SUBSYSTEM=="sas_expander", ACTION=="add|change", IMPORT{program}="udisks-probe-sas-expander /sys/%p"
 
 ##############################################################################################################
 
 # from here on, we only care about block devices
-ACTION!="add|change", GOTO="devkit_disks_end"
-SUBSYSTEM!="block", GOTO="devkit_disks_end"
-KERNEL=="loop*|ram*", GOTO="devkit_disks_end"
+ACTION!="add|change", GOTO="udisks_end"
+SUBSYSTEM!="block", GOTO="udisks_end"
+KERNEL=="loop*|ram*", GOTO="udisks_end"
 
 # Mark devices that shouldn't be automounted / autoassembled etc.
 #
@@ -26,23 +26,23 @@ KERNEL=="loop*|ram*", GOTO="devkit_disks_end"
 # (TODO: this heuristic might need some work)
 #
 
-ENV{DKD_PRESENTATION_NOPOLICY}="1"
-KERNEL=="sd*|hd*|sr*|mmcblk*|mspblk*", ENV{DKD_PRESENTATION_NOPOLICY}="0"
+ENV{UDISKS_PRESENTATION_NOPOLICY}="1"
+KERNEL=="sd*|hd*|sr*|mmcblk*|mspblk*", ENV{UDISKS_PRESENTATION_NOPOLICY}="0"
 
 ##############################################################################################################
 
 # we only care about change events on device-mapper
 # devices - never touch the device on add events
-KERNEL=="dm-*", ACTION!="change", GOTO="devkit_disks_end"
+KERNEL=="dm-*", ACTION!="change", GOTO="udisks_end"
 
 # honor the flag that device-mapper sets if the device should be ignored
-ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}=="1", GOTO="devkit_disks_end"
+ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}=="1", GOTO="udisks_end"
 
 # ignore private devices - see https://bugzilla.redhat.com/show_bug.cgi?id=528909#c24
-KERNEL=="dm-*", IMPORT{program}="devkit-disks-dm-export %M %m"
-ENV{DKD_DM_UUID}=="CRYPT-TEMP-?*", GOTO="devkit_disks_end"
-ENV{DKD_DM_UUID}!="?*", ENV{DKD_DM_NAME}=="temporary-cryptsetup-?*", GOTO="devkit_disks_end"
-ENV{DKD_DM_NAME}=="?*-pvmove[0-9]*", GOTO="devkit_disks_end"
+KERNEL=="dm-*", IMPORT{program}="udisks-dm-export %M %m"
+ENV{UDISKS_DM_UUID}=="CRYPT-TEMP-?*", GOTO="udisks_end"
+ENV{UDISKS_DM_UUID}!="?*", ENV{UDISKS_DM_NAME}=="temporary-cryptsetup-?*", GOTO="udisks_end"
+ENV{UDISKS_DM_NAME}=="?*-pvmove[0-9]*", GOTO="udisks_end"
 
 ##############################################################################################################
 
@@ -61,7 +61,7 @@ KERNEL=="sr*", ENV{ID_CDROM_MEDIA}!="?*", GOTO="probe_parttable_end"
 
 # scan for partition tables both on whole-disk and partitions
 #
-IMPORT{program}="devkit-disks-part-id $tempnode"
+IMPORT{program}="udisks-part-id $tempnode"
 
 LABEL="probe_parttable_end"
 
@@ -73,10 +73,10 @@ LABEL="probe_parttable_end"
 KERNEL!="dm-*", GOTO="device_mapper_end"
 ACTION!="change", GOTO="device_mapper_end"
 
-ENV{DKD_DM_NAME}!="?*", GOTO="device_mapper_end"
+ENV{UDISKS_DM_NAME}!="?*", GOTO="device_mapper_end"
 
-ENV{DKD_DM_STATE}=="SUSPENDED", GOTO="device_mapper_end"
-ENV{DKD_DM_TARGET_TYPES}=="|*error*", GOTO="device_mapper_end"
+ENV{UDISKS_DM_STATE}=="SUSPENDED", GOTO="device_mapper_end"
+ENV{UDISKS_DM_TARGET_TYPES}=="|*error*", GOTO="device_mapper_end"
 
 # avoid probing if it has already been done earlier
 #
@@ -105,13 +105,13 @@ LABEL="md_end"
 #
 
 # USB ATA enclosures with a SAT layer
-KERNEL=="sd*[!0-9]", ATTR{removable}=="0", ENV{ID_BUS}=="usb", ENV{DEVTYPE}=="disk", IMPORT{program}="devkit-disks-probe-ata-smart $tempnode"
+KERNEL=="sd*[!0-9]", ATTR{removable}=="0", ENV{ID_BUS}=="usb", ENV{DEVTYPE}=="disk", IMPORT{program}="udisks-probe-ata-smart $tempnode"
 
 # ATA disks driven by libata
-KERNEL=="sd*[!0-9]", ATTR{removable}=="0", ENV{ID_BUS}=="ata", ENV{DEVTYPE}=="disk", IMPORT{program}="devkit-disks-probe-ata-smart $tempnode"
+KERNEL=="sd*[!0-9]", ATTR{removable}=="0", ENV{ID_BUS}=="ata", ENV{DEVTYPE}=="disk", IMPORT{program}="udisks-probe-ata-smart $tempnode"
 
 # ATA disks connected via SAS (not driven by libata)
-KERNEL=="sd*[!0-9]", ATTR{removable}=="0", ENV{ID_BUS}=="scsi", ENV{DEVTYPE}=="disk", ENV{ID_VENDOR}=="ATA", IMPORT{program}="devkit-disks-probe-ata-smart $tempnode"
+KERNEL=="sd*[!0-9]", ATTR{removable}=="0", ENV{ID_BUS}=="scsi", ENV{DEVTYPE}=="disk", ENV{ID_VENDOR}=="ATA", IMPORT{program}="udisks-probe-ata-smart $tempnode"
 
 ##############################################################################################################
 
@@ -130,11 +130,11 @@ ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:3", ENV{
 
 # Generic music player
 #
-ENV{ID_MEDIA_PLAYER}=="?*", ENV{DKD_PRESENTATION_ICON_NAME}="multimedia-player"
+ENV{ID_MEDIA_PLAYER}=="?*", ENV{UDISKS_PRESENTATION_ICON_NAME}="multimedia-player"
 
 # Apple iPod Video
 #
-ATTRS{idVendor}=="05ac", ATTRS{idProduct}=="1209", ENV{DKD_PRESENTATION_ICON_NAME}="multimedia-player-ipod-white"
+ATTRS{idVendor}=="05ac", ATTRS{idProduct}=="1209", ENV{UDISKS_PRESENTATION_ICON_NAME}="multimedia-player-ipod-white"
 
 ##############################################################################################################
 
@@ -156,26 +156,26 @@ ENV{ID_VENDOR}=="*IOMEGA*", ENV{ID_MODEL}=="*ZIP*", ENV{ID_DRIVE_FLOPPY_ZIP}="1"
 #
 
 # Apple Bootstrap partitions
-ENV{DKD_PARTITION_SCHEME}=="apm", ENV{DKD_PARTITION_TYPE}=="Apple_Bootstrap", ENV{DKD_PRESENTATION_HIDE}="1"
+ENV{UDISKS_PARTITION_SCHEME}=="apm", ENV{UDISKS_PARTITION_TYPE}=="Apple_Bootstrap", ENV{UDISKS_PRESENTATION_HIDE}="1"
 
 # special MBR partition types (EFI, hidden, etc.)
 # see http://www.win.tue.nl/~aeb/partitions/partition_types-1.html
-ENV{DKD_PARTITION_SCHEME}=="mbr", \
-  ENV{DKD_PARTITION_TYPE}=="0x00|0x11|0x14|0x16|0x17|0x1b|0x1c|0x1e|0x27|0x3d|0x84|0x8d|0x90|0x91|0x92|0x93|0x97|0x98|0x9a|0x9b|0xbb|0xc2|0xc3|0xdd|0xef", \
-  ENV{DKD_PRESENTATION_HIDE}="1"
+ENV{UDISKS_PARTITION_SCHEME}=="mbr", \
+  ENV{UDISKS_PARTITION_TYPE}=="0x00|0x11|0x14|0x16|0x17|0x1b|0x1c|0x1e|0x27|0x3d|0x84|0x8d|0x90|0x91|0x92|0x93|0x97|0x98|0x9a|0x9b|0xbb|0xc2|0xc3|0xdd|0xef", \
+  ENV{UDISKS_PRESENTATION_HIDE}="1"
 
 # special GUID-identified partition types
 # see http://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_type_GUIDs
-ENV{DKD_PARTITION_SCHEME}=="gpt", \
-  ENV{DKD_PARTITION_TYPE}=="C12A7328-F81F-11D2-BA4B-00A0C93EC93B|21686148-6449-6E6F-744E-656564454649", \
-  ENV{DKD_PRESENTATION_HIDE}="1"
+ENV{UDISKS_PARTITION_SCHEME}=="gpt", \
+  ENV{UDISKS_PARTITION_TYPE}=="C12A7328-F81F-11D2-BA4B-00A0C93EC93B|21686148-6449-6E6F-744E-656564454649", \
+  ENV{UDISKS_PRESENTATION_HIDE}="1"
 
 # recovery partitions (taken from old hal rules)
 ENV{ID_FS_TYPE}=="ntfs|vfat", \
   ENV{ID_FS_LABEL}=="RECOVERY|HP_RECOVERY|Recovery Partition|DellUtility|DellRestore|IBM_SERVICE|SERVICEV001|SERVICEV002", \
-  ENV{DKD_PRESENTATION_HIDE}="1"
+  ENV{UDISKS_PRESENTATION_HIDE}="1"
 
 ##############################################################################################################
 
 
-LABEL="devkit_disks_end"
+LABEL="udisks_end"
