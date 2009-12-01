@@ -42,8 +42,8 @@
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
-#include "devkit-disks-poller.h"
-#include "devkit-disks-daemon.h"
+#include "poller.h"
+#include "daemon.h"
 
 
 #define NAME_TO_CLAIM "org.freedesktop.UDisks"
@@ -118,7 +118,7 @@ int
 main (int argc, char **argv)
 {
         GError              *error;
-        DevkitDisksDaemon   *disks_daemon;
+        Daemon              *daemon;
         GOptionContext      *context;
         DBusGProxy          *system_bus_proxy;
         DBusGConnection     *bus;
@@ -135,7 +135,7 @@ main (int argc, char **argv)
         g_type_init ();
 
         /* fork the polling process early */
-        if (!devkit_disks_poller_setup (argc, argv)) {
+        if (!poller_setup (argc, argv)) {
                 goto out;
         }
 
@@ -177,11 +177,11 @@ main (int argc, char **argv)
                 goto out;
         }
 
-        g_debug ("Starting devkit-disks-daemon version %s", VERSION);
+        g_debug ("Starting daemon version %s", VERSION);
 
-        disks_daemon = devkit_disks_daemon_new ();
+        daemon = daemon_new ();
 
-        if (disks_daemon == NULL) {
+        if (daemon == NULL) {
                 goto out;
         }
 
@@ -189,7 +189,7 @@ main (int argc, char **argv)
 
         g_main_loop_run (loop);
 
-        g_object_unref (disks_daemon);
+        g_object_unref (daemon);
         g_main_loop_unref (loop);
         ret = 0;
 

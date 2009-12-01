@@ -26,27 +26,27 @@
 
 #include <glib/gi18n-lib.h>
 
-#define DEVKIT_DISKS_TYPE_ACTION_LOOKUP          (devkit_disks_action_lookup_get_type())
-#define DEVKIT_DISKS_ACTION_LOOKUP(o)            (G_TYPE_CHECK_INSTANCE_CAST ((o), DEVKIT_DISKS_TYPE_ACTION_LOOKUP, DevkitDisksActionLookup))
-#define DEVKIT_DISKS_ACTION_LOOKUP_CLASS(k)      (G_TYPE_CHECK_CLASS_CAST((k), DEVKIT_DISKS_TYPE_ACTION_LOOKUP, DevkitDisksActionLookupClass))
-#define DEVKIT_DISKS_ACTION_LOOKUP_GET_CLASS(o)  (G_TYPE_INSTANCE_GET_CLASS ((o), DEVKIT_DISKS_TYPE_ACTION_LOOKUP, DevkitDisksActionLookupClass))
-#define DEVKIT_DISKS_IS_ACTION_LOOKUP(o)         (G_TYPE_CHECK_INSTANCE_TYPE ((o), DEVKIT_DISKS_TYPE_ACTION_LOOKUP))
-#define DEVKIT_DISKS_IS_ACTION_LOOKUP_CLASS(k)   (G_TYPE_CHECK_CLASS_TYPE ((k), DEVKIT_DISKS_TYPE_ACTION_LOOKUP))
+#define UDISKS_TYPE_ACTION_LOOKUP          (udisks_action_lookup_get_type())
+#define UDISKS_ACTION_LOOKUP(o)            (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_ACTION_LOOKUP, UDisksActionLookup))
+#define UDISKS_ACTION_LOOKUP_CLASS(k)      (G_TYPE_CHECK_CLASS_CAST((k), UDISKS_TYPE_ACTION_LOOKUP, UDisksActionLookupClass))
+#define UDISKS_ACTION_LOOKUP_GET_CLASS(o)  (G_TYPE_INSTANCE_GET_CLASS ((o), UDISKS_TYPE_ACTION_LOOKUP, UDisksActionLookupClass))
+#define UDISKS_IS_ACTION_LOOKUP(o)         (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_ACTION_LOOKUP))
+#define UDISKS_IS_ACTION_LOOKUP_CLASS(k)   (G_TYPE_CHECK_CLASS_TYPE ((k), UDISKS_TYPE_ACTION_LOOKUP))
 
-typedef struct _DevkitDisksActionLookup DevkitDisksActionLookup;
-typedef struct _DevkitDisksActionLookupClass DevkitDisksActionLookupClass;
+typedef struct _UDisksActionLookup UDisksActionLookup;
+typedef struct _UDisksActionLookupClass UDisksActionLookupClass;
 
-struct _DevkitDisksActionLookup
+struct _UDisksActionLookup
 {
         GObject parent;
 };
 
-struct _DevkitDisksActionLookupClass
+struct _UDisksActionLookupClass
 {
         GObjectClass parent_class;
 };
 
-GType           devkit_disks_action_lookup_get_type     (void) G_GNUC_CONST;
+GType           udisks_action_lookup_get_type     (void) G_GNUC_CONST;
 
 static void polkit_backend_action_lookup_iface_init (PolkitBackendActionLookupIface *iface);
 
@@ -58,25 +58,25 @@ static void polkit_backend_action_lookup_iface_init (PolkitBackendActionLookupIf
         g_type_module_add_interface (type_module, g_define_type_id, TYPE_IFACE, &g_implement_interface_info); \
 }
 
-G_DEFINE_DYNAMIC_TYPE_EXTENDED (DevkitDisksActionLookup,
-                                devkit_disks_action_lookup,
+G_DEFINE_DYNAMIC_TYPE_EXTENDED (UDisksActionLookup,
+                                udisks_action_lookup,
                                 G_TYPE_OBJECT,
                                 0,
                                 _G_IMPLEMENT_INTERFACE_DYNAMIC (POLKIT_BACKEND_TYPE_ACTION_LOOKUP,
                                                                 polkit_backend_action_lookup_iface_init))
 
 static void
-devkit_disks_action_lookup_init (DevkitDisksActionLookup *lookup)
+udisks_action_lookup_init (UDisksActionLookup *lookup)
 {
 }
 
 static void
-devkit_disks_action_lookup_class_finalize (DevkitDisksActionLookupClass *klass)
+udisks_action_lookup_class_finalize (UDisksActionLookupClass *klass)
 {
 }
 
 static void
-devkit_disks_action_lookup_class_init (DevkitDisksActionLookupClass *klass)
+udisks_action_lookup_class_init (UDisksActionLookupClass *klass)
 {
 }
 
@@ -161,7 +161,7 @@ static const Map map[] = {
 
 
 static gchar *
-devkit_disks_action_lookup_get_message   (PolkitBackendActionLookup *lookup,
+udisks_action_lookup_get_message   (PolkitBackendActionLookup *lookup,
                                           const gchar               *action_id,
                                           PolkitDetails             *details,
                                           PolkitActionDescription   *action_description)
@@ -192,7 +192,7 @@ devkit_disks_action_lookup_get_message   (PolkitBackendActionLookup *lookup,
 }
 
 static gchar *
-devkit_disks_action_lookup_get_icon_name (PolkitBackendActionLookup *lookup,
+udisks_action_lookup_get_icon_name (PolkitBackendActionLookup *lookup,
                                           const gchar               *action_id,
                                           PolkitDetails             *details,
                                           PolkitActionDescription   *action_description)
@@ -211,7 +211,7 @@ devkit_disks_action_lookup_get_icon_name (PolkitBackendActionLookup *lookup,
 }
 
 static PolkitDetails *
-devkit_disks_action_lookup_get_details   (PolkitBackendActionLookup *lookup,
+udisks_action_lookup_get_details   (PolkitBackendActionLookup *lookup,
                                           const gchar               *action_id,
                                           PolkitDetails             *details,
                                           PolkitActionDescription   *action_description)
@@ -227,7 +227,7 @@ devkit_disks_action_lookup_get_details   (PolkitBackendActionLookup *lookup,
 
         ret = polkit_details_new ();
 
-        /* see devkit_disks_daemon_local_check_auth() in devkit-disks-daemon.c
+        /* see daemon_local_check_auth() in daemon.c
          * for where these keys are set
          */
 
@@ -264,9 +264,9 @@ devkit_disks_action_lookup_get_details   (PolkitBackendActionLookup *lookup,
 static void
 polkit_backend_action_lookup_iface_init (PolkitBackendActionLookupIface *iface)
 {
-        iface->get_message   = devkit_disks_action_lookup_get_message;
-        iface->get_icon_name = devkit_disks_action_lookup_get_icon_name;
-        iface->get_details   = devkit_disks_action_lookup_get_details;
+        iface->get_message   = udisks_action_lookup_get_message;
+        iface->get_icon_name = udisks_action_lookup_get_icon_name;
+        iface->get_details   = udisks_action_lookup_get_details;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -277,11 +277,11 @@ g_io_module_load (GIOModule *module)
         bindtextdomain (GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR);
         bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 
-        devkit_disks_action_lookup_register_type (G_TYPE_MODULE (module));
+        udisks_action_lookup_register_type (G_TYPE_MODULE (module));
 
         g_io_extension_point_implement (POLKIT_BACKEND_ACTION_LOOKUP_EXTENSION_POINT_NAME,
-                                        DEVKIT_DISKS_TYPE_ACTION_LOOKUP,
-                                        "DeviceKit-disks action lookup extension " PACKAGE_VERSION,
+                                        UDISKS_TYPE_ACTION_LOOKUP,
+                                        "udisks action lookup extension " PACKAGE_VERSION,
                                         0);
 }
 

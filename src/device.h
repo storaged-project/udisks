@@ -18,92 +18,92 @@
  *
  */
 
-#ifndef __DEVKIT_DISKS_DEVICE_H__
-#define __DEVKIT_DISKS_DEVICE_H__
+#ifndef __DEVICE_H__
+#define __DEVICE_H__
 
 #include <dbus/dbus-glib.h>
 #include <gudev/gudev.h>
 #include <sys/types.h>
 
-#include "devkit-disks-types.h"
+#include "types.h"
 
 G_BEGIN_DECLS
 
-#define DEVKIT_DISKS_TYPE_DEVICE         (devkit_disks_device_get_type ())
-#define DEVKIT_DISKS_DEVICE(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), DEVKIT_DISKS_TYPE_DEVICE, DevkitDisksDevice))
-#define DEVKIT_DISKS_DEVICE_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), DEVKIT_DISKS_TYPE_DEVICE, DevkitDisksDeviceClass))
-#define DEVKIT_DISKS_IS_DEVICE(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), DEVKIT_DISKS_TYPE_DEVICE))
-#define DEVKIT_DISKS_IS_DEVICE_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), DEVKIT_DISKS_TYPE_DEVICE))
-#define DEVKIT_DISKS_DEVICE_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), DEVKIT_DISKS_TYPE_DEVICE, DevkitDisksDeviceClass))
+#define TYPE_DEVICE         (device_get_type ())
+#define DEVICE(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), TYPE_DEVICE, Device))
+#define DEVICE_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), TYPE_DEVICE, DeviceClass))
+#define IS_DEVICE(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), TYPE_DEVICE))
+#define IS_DEVICE_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), TYPE_DEVICE))
+#define DEVICE_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), TYPE_DEVICE, DeviceClass))
 
-typedef struct DevkitDisksDeviceClass   DevkitDisksDeviceClass;
-typedef struct DevkitDisksDevicePrivate DevkitDisksDevicePrivate;
+typedef struct DeviceClass   DeviceClass;
+typedef struct DevicePrivate DevicePrivate;
 
-struct DevkitDisksDevice
+struct Device
 {
         GObject                   parent;
-        DevkitDisksDevicePrivate *priv;
+        DevicePrivate *priv;
 };
 
-struct DevkitDisksDeviceClass
+struct DeviceClass
 {
         GObjectClass parent_class;
 };
 
-GType              devkit_disks_device_get_type              (void) G_GNUC_CONST;
+GType              device_get_type              (void) G_GNUC_CONST;
 
-DevkitDisksDevice *devkit_disks_device_new                   (DevkitDisksDaemon *daemon,
+Device *device_new                   (Daemon *daemon,
                                                               GUdevDevice       *d);
 
-gboolean           devkit_disks_device_changed               (DevkitDisksDevice *device,
+gboolean           device_changed               (Device *device,
                                                               GUdevDevice       *d,
                                                               gboolean           synthesized);
 
-void               devkit_disks_device_removed               (DevkitDisksDevice *device);
+void               device_removed               (Device *device);
 
 /* local methods */
 
-const char        *devkit_disks_device_local_get_object_path     (DevkitDisksDevice *device);
-const char        *devkit_disks_device_local_get_native_path     (DevkitDisksDevice *device);
+const char        *device_local_get_object_path     (Device *device);
+const char        *device_local_get_native_path     (Device *device);
 
-dev_t              devkit_disks_device_local_get_dev             (DevkitDisksDevice *device);
-const char        *devkit_disks_device_local_get_device_file     (DevkitDisksDevice *device);
+dev_t              device_local_get_dev             (Device *device);
+const char        *device_local_get_device_file     (Device *device);
 
 /* exported methods */
 
-gboolean devkit_disks_device_job_cancel (DevkitDisksDevice     *device,
+gboolean device_job_cancel (Device     *device,
                                          DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_filesystem_mount (DevkitDisksDevice     *device,
+gboolean device_filesystem_mount (Device     *device,
                                                const char            *filesystem_type,
                                                char                 **options,
                                                DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_filesystem_unmount (DevkitDisksDevice     *device,
+gboolean device_filesystem_unmount (Device     *device,
                                                  char                 **options,
                                                  DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_filesystem_list_open_files (DevkitDisksDevice     *device,
+gboolean device_filesystem_list_open_files (Device     *device,
                                                          DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_drive_eject (DevkitDisksDevice     *device,
+gboolean device_drive_eject (Device     *device,
                                           char                 **options,
                                           DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_filesystem_check (DevkitDisksDevice     *device,
+gboolean device_filesystem_check (Device     *device,
                                                char                 **options,
                                                DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_filesystem_create (DevkitDisksDevice     *device,
+gboolean device_filesystem_create (Device     *device,
                                                 const char            *fstype,
                                                 char                 **options,
                                                 DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_partition_delete (DevkitDisksDevice     *device,
+gboolean device_partition_delete (Device     *device,
                                                char                 **options,
                                                DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_partition_create (DevkitDisksDevice     *device,
+gboolean device_partition_create (Device     *device,
                                                guint64                offset,
                                                guint64                size,
                                                const char            *type,
@@ -114,97 +114,97 @@ gboolean devkit_disks_device_partition_create (DevkitDisksDevice     *device,
                                                char                 **fsoptions,
                                                DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_partition_modify (DevkitDisksDevice     *device,
+gboolean device_partition_modify (Device     *device,
                                                const char            *type,
                                                const char            *label,
                                                char                 **flags,
                                                DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_partition_table_create (DevkitDisksDevice     *device,
+gboolean device_partition_table_create (Device     *device,
                                                      const char            *scheme,
                                                      char                 **options,
                                                      DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_luks_unlock (DevkitDisksDevice     *device,
+gboolean device_luks_unlock (Device     *device,
                                           const char            *secret,
                                           char                 **options,
                                           DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_luks_lock (DevkitDisksDevice     *device,
+gboolean device_luks_lock (Device     *device,
                                         char                 **options,
                                         DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_luks_change_passphrase (DevkitDisksDevice     *device,
+gboolean device_luks_change_passphrase (Device     *device,
                                                      const char            *old_secret,
                                                      const char            *new_secret,
                                                      DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_filesystem_set_label (DevkitDisksDevice     *device,
+gboolean device_filesystem_set_label (Device     *device,
                                                    const char            *new_label,
                                                    DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_drive_ata_smart_refresh_data (DevkitDisksDevice     *device,
+gboolean device_drive_ata_smart_refresh_data (Device     *device,
                                                            char                 **options,
                                                            DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_drive_ata_smart_get_historical_data (DevkitDisksDevice     *device,
+gboolean device_drive_ata_smart_get_historical_data (Device     *device,
                                                                   guint64                since,
                                                                   guint64                until,
                                                                   guint64                spacing,
                                                                   DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_drive_ata_smart_initiate_selftest (DevkitDisksDevice     *device,
+gboolean device_drive_ata_smart_initiate_selftest (Device     *device,
                                                                 const char            *test,
                                                                 char                 **options,
                                                                 DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_drive_benchmark (DevkitDisksDevice     *device,
+gboolean device_drive_benchmark (Device     *device,
                                               gboolean               do_write_benchmark,
                                               char                 **options,
                                               DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_linux_md_stop (DevkitDisksDevice     *device,
+gboolean device_linux_md_stop (Device     *device,
                                             char                 **options,
                                             DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_linux_md_check (DevkitDisksDevice     *device,
+gboolean device_linux_md_check (Device     *device,
                                              char                 **options,
                                              DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_linux_md_add_component (DevkitDisksDevice     *device,
+gboolean device_linux_md_add_component (Device     *device,
                                                      char                  *component,
                                                      char                 **options,
                                                      DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_linux_md_remove_component (DevkitDisksDevice     *device,
+gboolean device_linux_md_remove_component (Device     *device,
                                                         char                  *component,
                                                         char                 **options,
                                                         DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_drive_inhibit_polling (DevkitDisksDevice     *device,
+gboolean device_drive_inhibit_polling (Device     *device,
                                                     char                 **options,
                                                     DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_drive_uninhibit_polling (DevkitDisksDevice     *device,
+gboolean device_drive_uninhibit_polling (Device     *device,
                                                       char                  *cookie,
                                                       DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_drive_poll_media (DevkitDisksDevice     *device,
+gboolean device_drive_poll_media (Device     *device,
                                                DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_drive_detach (DevkitDisksDevice     *device,
+gboolean device_drive_detach (Device     *device,
                                            char                 **options,
                                            DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_drive_set_spindown_timeout (DevkitDisksDevice     *device,
+gboolean device_drive_set_spindown_timeout (Device     *device,
                                                          int                    timeout_seconds,
                                                          char                 **options,
                                                          DBusGMethodInvocation *context);
 
-gboolean devkit_disks_device_drive_unset_spindown_timeout (DevkitDisksDevice     *device,
+gboolean device_drive_unset_spindown_timeout (Device     *device,
                                                            char                  *cookie,
                                                            DBusGMethodInvocation *context);
 
 G_END_DECLS
 
-#endif /* __DEVKIT_DISKS_DEVICE_H__ */
+#endif /* __DEVICE_H__ */

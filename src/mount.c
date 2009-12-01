@@ -35,55 +35,55 @@
 #include <glib/gi18n-lib.h>
 #include <glib-object.h>
 
-#include "devkit-disks-mount.h"
-#include "devkit-disks-private.h"
+#include "mount.h"
+#include "private.h"
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
-struct DevkitDisksMountPrivate
+struct MountPrivate
 {
         gchar *mount_path;
         dev_t dev;
 };
 
-G_DEFINE_TYPE (DevkitDisksMount, devkit_disks_mount, G_TYPE_OBJECT)
+G_DEFINE_TYPE (Mount, mount, G_TYPE_OBJECT)
 
-#define DEVKIT_DISKS_MOUNT_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), DEVKIT_DISKS_TYPE_MOUNT, DevkitDisksMountPrivate))
+#define MOUNT_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), TYPE_MOUNT, MountPrivate))
 
 static void
-devkit_disks_mount_finalize (GObject *object)
+mount_finalize (GObject *object)
 {
-        DevkitDisksMount *mount = DEVKIT_DISKS_MOUNT (object);
+        Mount *mount = MOUNT (object);
 
         g_free (mount->priv->mount_path);
 
-        if (G_OBJECT_CLASS (devkit_disks_mount_parent_class)->finalize)
-                (* G_OBJECT_CLASS (devkit_disks_mount_parent_class)->finalize) (object);
+        if (G_OBJECT_CLASS (mount_parent_class)->finalize)
+                (* G_OBJECT_CLASS (mount_parent_class)->finalize) (object);
 }
 
 static void
-devkit_disks_mount_init (DevkitDisksMount *mount)
+mount_init (Mount *mount)
 {
-        mount->priv = DEVKIT_DISKS_MOUNT_GET_PRIVATE (mount);
+        mount->priv = MOUNT_GET_PRIVATE (mount);
 }
 
 static void
-devkit_disks_mount_class_init (DevkitDisksMountClass *klass)
+mount_class_init (MountClass *klass)
 {
         GObjectClass *obj_class = (GObjectClass *) klass;
 
-        obj_class->finalize = devkit_disks_mount_finalize;
+        obj_class->finalize = mount_finalize;
 
-        g_type_class_add_private (klass, sizeof (DevkitDisksMountPrivate));
+        g_type_class_add_private (klass, sizeof (MountPrivate));
 }
 
 
-DevkitDisksMount *
-_devkit_disks_mount_new (dev_t dev, const gchar *mount_path)
+Mount *
+_mount_new (dev_t dev, const gchar *mount_path)
 {
-        DevkitDisksMount *mount;
+        Mount *mount;
 
-        mount = DEVKIT_DISKS_MOUNT (g_object_new (DEVKIT_DISKS_TYPE_MOUNT, NULL));
+        mount = MOUNT (g_object_new (TYPE_MOUNT, NULL));
         mount->priv->dev = dev;
         mount->priv->mount_path = g_strdup (mount_path);
 
@@ -91,22 +91,22 @@ _devkit_disks_mount_new (dev_t dev, const gchar *mount_path)
 }
 
 const gchar *
-devkit_disks_mount_get_mount_path (DevkitDisksMount *mount)
+mount_get_mount_path (Mount *mount)
 {
-        g_return_val_if_fail (DEVKIT_DISKS_IS_MOUNT (mount), NULL);
+        g_return_val_if_fail (IS_MOUNT (mount), NULL);
         return mount->priv->mount_path;
 }
 
 dev_t
-devkit_disks_mount_get_dev (DevkitDisksMount *mount)
+mount_get_dev (Mount *mount)
 {
-        g_return_val_if_fail (DEVKIT_DISKS_IS_MOUNT (mount), 0);
+        g_return_val_if_fail (IS_MOUNT (mount), 0);
         return mount->priv->dev;
 }
 
 gint
-devkit_disks_mount_compare (DevkitDisksMount *a,
-                            DevkitDisksMount *b)
+mount_compare (Mount *a,
+                            Mount *b)
 {
         gint ret;
 

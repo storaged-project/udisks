@@ -18,26 +18,21 @@
  *
  */
 
-#ifndef __DEVKIT_DISKS_PORT_PRIVATE_H__
-#define __DEVKIT_DISKS_PORT_PRIVATE_H__
+#ifndef __ADAPTER_PRIVATE_H__
+#define __ADAPTER_PRIVATE_H__
 
 #include <dbus/dbus-glib.h>
 #include <gudev/gudev.h>
 #include <atasmart.h>
 
-#include "devkit-disks-types.h"
+#include "types.h"
 
 G_BEGIN_DECLS
 
-typedef enum {
-        PORT_TYPE_ATA,
-        PORT_TYPE_SAS
-} PortType;
-
-struct DevkitDisksPortPrivate
+struct AdapterPrivate
 {
         DBusGConnection *system_bus_connection;
-        DevkitDisksDaemon *daemon;
+        Daemon *daemon;
         GUdevDevice *d;
 
         gchar *object_path;
@@ -47,25 +42,25 @@ struct DevkitDisksPortPrivate
         /* if non-zero, the id of the idle for emitting a 'change' signal */
         guint emit_changed_idle_id;
 
-        /* used for internal bookkeeping */
-        PortType port_type;
-        gchar *native_path_for_device_prefix;
-
         /**************/
         /* Properties */
         /**************/
 
-        gchar *adapter;
-        gchar *parent;
-        gint number;
+        gchar *vendor;
+        gchar *model;
+        gchar *driver;
+        guint num_ports;
+        gchar *fabric;
 };
 
 /* property setters */
 
-void devkit_disks_port_set_adapter (DevkitDisksPort *port, const gchar *value);
-void devkit_disks_port_set_parent (DevkitDisksPort *port, const gchar *value);
-void devkit_disks_port_set_number (DevkitDisksPort *port, gint value);
+void adapter_set_vendor (Adapter *adapter, const gchar *value);
+void adapter_set_model (Adapter *adapter, const gchar *value);
+void adapter_set_driver (Adapter *adapter, const gchar *value);
+void adapter_set_num_ports (Adapter *adapter, guint value);
+void adapter_set_fabric (Adapter *adapter, const gchar *value);
 
 G_END_DECLS
 
-#endif /* __DEVKIT_DISKS_PORT_PRIVATE_H__ */
+#endif /* __ADAPTER_PRIVATE_H__ */

@@ -37,24 +37,24 @@
 #include <atasmart.h>
 #include <stdlib.h>
 
-#include "devkit-disks-daemon.h"
-#include "devkit-disks-expander.h"
-#include "devkit-disks-expander-private.h"
-#include "devkit-disks-marshal.h"
+#include "daemon.h"
+#include "expander.h"
+#include "expander-private.h"
+#include "marshal.h"
 
-#include "devkit-disks-port.h"
-#include "devkit-disks-adapter.h"
+#include "port.h"
+#include "adapter.h"
 
 /*--------------------------------------------------------------------------------------------------------------*/
-#include "devkit-disks-expander-glue.h"
+#include "expander-glue.h"
 
-static void     devkit_disks_expander_class_init  (DevkitDisksExpanderClass *klass);
-static void     devkit_disks_expander_init        (DevkitDisksExpander      *seat);
-static void     devkit_disks_expander_finalize    (GObject     *object);
+static void     expander_class_init  (ExpanderClass *klass);
+static void     expander_init        (Expander      *seat);
+static void     expander_finalize    (GObject     *object);
 
-static gboolean update_info                (DevkitDisksExpander *expander);
+static gboolean update_info                (Expander *expander);
 
-static void     drain_pending_changes (DevkitDisksExpander *expander, gboolean force_update);
+static void     drain_pending_changes (Expander *expander, gboolean force_update);
 
 enum
 {
@@ -77,9 +77,9 @@ enum
 
 static guint signals[LAST_SIGNAL] = { 0 };
 
-G_DEFINE_TYPE (DevkitDisksExpander, devkit_disks_expander, G_TYPE_OBJECT)
+G_DEFINE_TYPE (Expander, expander, G_TYPE_OBJECT)
 
-#define DEVKIT_DISKS_EXPANDER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), DEVKIT_DISKS_TYPE_EXPANDER, DevkitDisksExpanderPrivate))
+#define EXPANDER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), TYPE_EXPANDER, ExpanderPrivate))
 
 static void
 get_property (GObject         *object,
@@ -87,7 +87,7 @@ get_property (GObject         *object,
               GValue          *value,
               GParamSpec      *pspec)
 {
-        DevkitDisksExpander *expander = DEVKIT_DISKS_EXPANDER (object);
+        Expander *expander = EXPANDER (object);
 
         switch (prop_id) {
         case PROP_NATIVE_PATH:
@@ -128,14 +128,14 @@ get_property (GObject         *object,
 }
 
 static void
-devkit_disks_expander_class_init (DevkitDisksExpanderClass *klass)
+expander_class_init (ExpanderClass *klass)
 {
         GObjectClass   *object_class = G_OBJECT_CLASS (klass);
 
-        object_class->finalize = devkit_disks_expander_finalize;
+        object_class->finalize = expander_finalize;
         object_class->get_property = get_property;
 
-        g_type_class_add_private (klass, sizeof (DevkitDisksExpanderPrivate));
+        g_type_class_add_private (klass, sizeof (ExpanderPrivate));
 
         signals[CHANGED_SIGNAL] =
                 g_signal_new ("changed",
@@ -146,7 +146,7 @@ devkit_disks_expander_class_init (DevkitDisksExpanderClass *klass)
                               g_cclosure_marshal_VOID__VOID,
                               G_TYPE_NONE, 0);
 
-        dbus_g_object_type_install_info (DEVKIT_DISKS_TYPE_EXPANDER, &dbus_glib_devkit_disks_expander_object_info);
+        dbus_g_object_type_install_info (TYPE_EXPANDER, &dbus_glib_expander_object_info);
 
         g_object_class_install_property (
                 object_class,
@@ -181,22 +181,22 @@ devkit_disks_expander_class_init (DevkitDisksExpanderClass *klass)
 }
 
 static void
-devkit_disks_expander_init (DevkitDisksExpander *expander)
+expander_init (Expander *expander)
 {
-        expander->priv = DEVKIT_DISKS_EXPANDER_GET_PRIVATE (expander);
+        expander->priv = EXPANDER_GET_PRIVATE (expander);
 
         expander->priv->upstream_ports = g_ptr_array_new ();
 }
 
 static void
-devkit_disks_expander_finalize (GObject *object)
+expander_finalize (GObject *object)
 {
-        DevkitDisksExpander *expander;
+        Expander *expander;
 
         g_return_if_fail (object != NULL);
-        g_return_if_fail (DEVKIT_DISKS_IS_EXPANDER (object));
+        g_return_if_fail (IS_EXPANDER (object));
 
-        expander = DEVKIT_DISKS_EXPANDER (object);
+        expander = EXPANDER (object);
         g_return_if_fail (expander->priv != NULL);
 
         /* g_debug ("finalizing %s", expander->priv->native_path); */
@@ -218,7 +218,7 @@ devkit_disks_expander_finalize (GObject *object)
         g_ptr_array_free (expander->priv->upstream_ports, TRUE);
         g_free (expander->priv->adapter);
 
-        G_OBJECT_CLASS (devkit_disks_expander_parent_class)->finalize (object);
+        G_OBJECT_CLASS (expander_parent_class)->finalize (object);
 }
 
 /**
@@ -267,7 +267,7 @@ compute_object_path (const char *native_path)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-register_disks_expander (DevkitDisksExpander *expander)
+register_disks_expander (Expander *expander)
 {
         DBusConnection *connection;
         GError *error = NULL;
@@ -303,7 +303,7 @@ error:
 }
 
 void
-devkit_disks_expander_removed (DevkitDisksExpander *expander)
+expander_removed (Expander *expander)
 {
         expander->priv->removed = TRUE;
 
@@ -313,16 +313,16 @@ devkit_disks_expander_removed (DevkitDisksExpander *expander)
                                                      expander->priv->object_path) == NULL);
 }
 
-DevkitDisksExpander *
-devkit_disks_expander_new (DevkitDisksDaemon *daemon, GUdevDevice *d)
+Expander *
+expander_new (Daemon *daemon, GUdevDevice *d)
 {
-        DevkitDisksExpander *expander;
+        Expander *expander;
         const char *native_path;
 
         expander = NULL;
         native_path = g_udev_device_get_sysfs_path (d);
 
-        expander = DEVKIT_DISKS_EXPANDER (g_object_new (DEVKIT_DISKS_TYPE_EXPANDER, NULL));
+        expander = EXPANDER (g_object_new (TYPE_EXPANDER, NULL));
         expander->priv->d = g_object_ref (d);
         expander->priv->daemon = g_object_ref (daemon);
         expander->priv->native_path = g_strdup (native_path);
@@ -333,7 +333,7 @@ devkit_disks_expander_new (DevkitDisksDaemon *daemon, GUdevDevice *d)
                 goto out;
         }
 
-        if (!register_disks_expander (DEVKIT_DISKS_EXPANDER (expander))) {
+        if (!register_disks_expander (EXPANDER (expander))) {
                 g_object_unref (expander);
                 expander = NULL;
                 goto out;
@@ -344,7 +344,7 @@ out:
 }
 
 static void
-drain_pending_changes (DevkitDisksExpander *expander, gboolean force_update)
+drain_pending_changes (Expander *expander, gboolean force_update)
 {
         gboolean emit_changed;
 
@@ -370,7 +370,7 @@ drain_pending_changes (DevkitDisksExpander *expander, gboolean force_update)
 
 /* called by the daemon on the 'change' uevent */
 gboolean
-devkit_disks_expander_changed (DevkitDisksExpander *expander, GUdevDevice *d, gboolean synthesized)
+expander_changed (Expander *expander, GUdevDevice *d, gboolean synthesized)
 {
         gboolean keep_expander;
 
@@ -393,19 +393,19 @@ out:
 /* ---------------------------------------------------------------------------------------------------- */
 
 const char *
-devkit_disks_expander_local_get_object_path (DevkitDisksExpander *expander)
+expander_local_get_object_path (Expander *expander)
 {
         return expander->priv->object_path;
 }
 
 const char *
-devkit_disks_expander_local_get_native_path (DevkitDisksExpander *expander)
+expander_local_get_native_path (Expander *expander)
 {
         return expander->priv->native_path;
 }
 
 gboolean
-devkit_disks_local_expander_encloses_native_path (DevkitDisksExpander   *expander,
+local_expander_encloses_native_path (Expander   *expander,
                                                   const gchar           *native_path)
 {
         gboolean ret;
@@ -468,9 +468,9 @@ sysfs_resolve_link (const char *sysfs_path, const char *name)
  * Returns: #TRUE to keep (or add) the expander; #FALSE to ignore (or remove) the expander
  **/
 static gboolean
-update_info (DevkitDisksExpander *expander)
+update_info (Expander *expander)
 {
-        DevkitDisksAdapter *adapter;
+        Adapter *adapter;
         gboolean ret;
         GList *ports;
         GList *l;
@@ -499,22 +499,22 @@ update_info (DevkitDisksExpander *expander)
         }
 
         /* Set adapter */
-        adapter = devkit_disks_daemon_local_find_enclosing_adapter (expander->priv->daemon,
+        adapter = daemon_local_find_enclosing_adapter (expander->priv->daemon,
                                                                     expander->priv->native_path);
         if (adapter == NULL)
                 goto out;
-        devkit_disks_expander_set_adapter (expander, devkit_disks_adapter_local_get_object_path (adapter));
+        expander_set_adapter (expander, adapter_local_get_object_path (adapter));
 
         /* Figure out the upstream ports for the expander */
-        ports = devkit_disks_daemon_local_find_enclosing_ports (expander->priv->daemon,
+        ports = daemon_local_find_enclosing_ports (expander->priv->daemon,
                                                                 expander->priv->native_path_for_sysfs_prefix);
         p = g_ptr_array_new ();
         for (l = ports; l != NULL; l = l->next) {
-                DevkitDisksPort *port = DEVKIT_DISKS_PORT (l->data);
-                g_ptr_array_add (p, (gpointer) devkit_disks_port_local_get_object_path (port));
+                Port *port = PORT (l->data);
+                g_ptr_array_add (p, (gpointer) port_local_get_object_path (port));
         }
         g_ptr_array_add (p, NULL);
-        devkit_disks_expander_set_upstream_ports (expander, (GStrv) p->pdata);
+        expander_set_upstream_ports (expander, (GStrv) p->pdata);
         g_ptr_array_unref (p);
         g_list_free (ports);
 
@@ -534,14 +534,14 @@ update_info (DevkitDisksExpander *expander)
                 }
                 g_dir_close (dir);
         }
-        devkit_disks_expander_set_num_ports (expander, num_ports);
+        expander_set_num_ports (expander, num_ports);
 
         vendor = g_udev_device_get_property (expander->priv->d, "ID_VENDOR");
         model = g_udev_device_get_property (expander->priv->d, "ID_MODEL");
         revision = g_udev_device_get_property (expander->priv->d, "ID_REVISION");
-        devkit_disks_expander_set_vendor (expander, vendor);
-        devkit_disks_expander_set_model (expander, model);
-        devkit_disks_expander_set_revision (expander, revision);
+        expander_set_vendor (expander, vendor);
+        expander_set_model (expander, model);
+        expander_set_revision (expander, revision);
 
         ret = TRUE;
 

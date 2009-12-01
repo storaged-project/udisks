@@ -60,23 +60,23 @@
 #include <dbus/dbus-glib-lowlevel.h>
 #include <gudev/gudev.h>
 
-#include "devkit-disks-daemon.h"
-#include "devkit-disks-device.h"
-#include "devkit-disks-device-private.h"
-#include "devkit-disks-adapter.h"
-#include "devkit-disks-adapter-private.h"
-#include "devkit-disks-expander.h"
-#include "devkit-disks-expander-private.h"
-#include "devkit-disks-port.h"
-#include "devkit-disks-port-private.h"
-#include "devkit-disks-mount-file.h"
-#include "devkit-disks-mount.h"
-#include "devkit-disks-mount-monitor.h"
-#include "devkit-disks-poller.h"
-#include "devkit-disks-inhibitor.h"
+#include "daemon.h"
+#include "device.h"
+#include "device-private.h"
+#include "adapter.h"
+#include "adapter-private.h"
+#include "expander.h"
+#include "expander-private.h"
+#include "port.h"
+#include "port-private.h"
+#include "mount-file.h"
+#include "mount.h"
+#include "mount-monitor.h"
+#include "poller.h"
+#include "inhibitor.h"
 
-#include "devkit-disks-daemon-glue.h"
-#include "devkit-disks-marshal.h"
+#include "daemon-glue.h"
+#include "marshal.h"
 
 
 /*--------------------------------------------------------------------------------------------------------------*/
@@ -110,7 +110,7 @@ enum
 
 static guint signals[LAST_SIGNAL] = { 0 };
 
-struct DevkitDisksDaemonPrivate
+struct DaemonPrivate
 {
         DBusGConnection         *system_bus_connection;
         DBusGProxy              *system_bus_proxy;
@@ -135,7 +135,7 @@ struct DevkitDisksDaemonPrivate
         GHashTable              *map_native_path_to_port;
         GHashTable              *map_object_path_to_port;
 
-        DevkitDisksMountMonitor *mount_monitor;
+        MountMonitor *mount_monitor;
 
         guint                    ata_smart_refresh_timer_id;
         guint                    ata_smart_cleanup_timer_id;
@@ -147,24 +147,24 @@ struct DevkitDisksDaemonPrivate
         GList *spindown_inhibitors;
 };
 
-static void     devkit_disks_daemon_class_init  (DevkitDisksDaemonClass *klass);
-static void     devkit_disks_daemon_init        (DevkitDisksDaemon      *seat);
-static void     devkit_disks_daemon_finalize    (GObject     *object);
+static void     daemon_class_init  (DaemonClass *klass);
+static void     daemon_init        (Daemon      *seat);
+static void     daemon_finalize    (GObject     *object);
 
-static void     daemon_polling_inhibitor_disconnected_cb (DevkitDisksInhibitor *inhibitor,
-                                                          DevkitDisksDaemon    *daemon);
+static void     daemon_polling_inhibitor_disconnected_cb (Inhibitor *inhibitor,
+                                                          Daemon    *daemon);
 
-static void     daemon_inhibitor_disconnected_cb (DevkitDisksInhibitor *inhibitor,
-                                                  DevkitDisksDaemon    *daemon);
+static void     daemon_inhibitor_disconnected_cb (Inhibitor *inhibitor,
+                                                  Daemon    *daemon);
 
-G_DEFINE_TYPE (DevkitDisksDaemon, devkit_disks_daemon, G_TYPE_OBJECT)
+G_DEFINE_TYPE (Daemon, daemon, G_TYPE_OBJECT)
 
-#define DEVKIT_DISKS_DAEMON_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), DEVKIT_DISKS_TYPE_DAEMON, DevkitDisksDaemonPrivate))
+#define DAEMON_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), TYPE_DAEMON, DaemonPrivate))
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
 GQuark
-devkit_disks_error_quark (void)
+error_quark (void)
 {
         static GQuark ret = 0;
 
@@ -179,44 +179,44 @@ devkit_disks_error_quark (void)
 #define ENUM_ENTRY(NAME, DESC) { NAME, "" #NAME "", DESC }
 
 GType
-devkit_disks_error_get_type (void)
+error_get_type (void)
 {
         static GType etype = 0;
 
         if (etype == 0)
         {
                 static const GEnumValue values[] = {
-                        ENUM_ENTRY (DEVKIT_DISKS_ERROR_FAILED, "Failed"),
-                        ENUM_ENTRY (DEVKIT_DISKS_ERROR_PERMISSION_DENIED, "PermissionDenied"),
-                        ENUM_ENTRY (DEVKIT_DISKS_ERROR_INHIBITED, "Inhibited"),
-                        ENUM_ENTRY (DEVKIT_DISKS_ERROR_BUSY, "Busy"),
-                        ENUM_ENTRY (DEVKIT_DISKS_ERROR_CANCELLED, "Cancelled"),
-                        ENUM_ENTRY (DEVKIT_DISKS_ERROR_INVALID_OPTION, "InvalidOption"),
-                        ENUM_ENTRY (DEVKIT_DISKS_ERROR_NOT_SUPPORTED, "NotSupported"),
-                        ENUM_ENTRY (DEVKIT_DISKS_ERROR_ATA_SMART_WOULD_WAKEUP, "AtaSmartWouldWakeup"),
-                        ENUM_ENTRY (DEVKIT_DISKS_ERROR_FILESYSTEM_DRIVER_MISSING, "FilesystemDriverMissing"),
-                        ENUM_ENTRY (DEVKIT_DISKS_ERROR_FILESYSTEM_TOOLS_MISSING, "FilesystemToolsMissing"),
+                        ENUM_ENTRY (ERROR_FAILED, "Failed"),
+                        ENUM_ENTRY (ERROR_PERMISSION_DENIED, "PermissionDenied"),
+                        ENUM_ENTRY (ERROR_INHIBITED, "Inhibited"),
+                        ENUM_ENTRY (ERROR_BUSY, "Busy"),
+                        ENUM_ENTRY (ERROR_CANCELLED, "Cancelled"),
+                        ENUM_ENTRY (ERROR_INVALID_OPTION, "InvalidOption"),
+                        ENUM_ENTRY (ERROR_NOT_SUPPORTED, "NotSupported"),
+                        ENUM_ENTRY (ERROR_ATA_SMART_WOULD_WAKEUP, "AtaSmartWouldWakeup"),
+                        ENUM_ENTRY (ERROR_FILESYSTEM_DRIVER_MISSING, "FilesystemDriverMissing"),
+                        ENUM_ENTRY (ERROR_FILESYSTEM_TOOLS_MISSING, "FilesystemToolsMissing"),
                         { 0, 0, 0 }
                 };
-                g_assert (DEVKIT_DISKS_NUM_ERRORS == G_N_ELEMENTS (values) - 1);
-                etype = g_enum_register_static ("DevkitDisksError", values);
+                g_assert (NUM_ERRORS == G_N_ELEMENTS (values) - 1);
+                etype = g_enum_register_static ("Error", values);
         }
         return etype;
 }
 
 
 static GObject *
-devkit_disks_daemon_constructor (GType                  type,
+daemon_constructor (GType                  type,
                                  guint                  n_construct_properties,
                                  GObjectConstructParam *construct_properties)
 {
-        DevkitDisksDaemon      *daemon;
-        DevkitDisksDaemonClass *klass;
+        Daemon      *daemon;
+        DaemonClass *klass;
 
-        klass = DEVKIT_DISKS_DAEMON_CLASS (g_type_class_peek (DEVKIT_DISKS_TYPE_DAEMON));
+        klass = DAEMON_CLASS (g_type_class_peek (TYPE_DAEMON));
 
-        daemon = DEVKIT_DISKS_DAEMON (
-                G_OBJECT_CLASS (devkit_disks_daemon_parent_class)->constructor (type,
+        daemon = DAEMON (
+                G_OBJECT_CLASS (daemon_parent_class)->constructor (type,
                                                                                 n_construct_properties,
                                                                                 construct_properties));
         return G_OBJECT (daemon);
@@ -241,7 +241,7 @@ devkit_disks_daemon_constructor (GType                  type,
                                                                G_TYPE_BOOLEAN, \
                                                                G_TYPE_INVALID))
 
-static const DevkitDisksFilesystem known_file_systems[] = {
+static const Filesystem known_file_systems[] = {
         {
                 "vfat",         /* id */
                 "FAT",          /* name */
@@ -372,14 +372,14 @@ static const DevkitDisksFilesystem known_file_systems[] = {
         },
 };
 
-static const int num_known_file_systems = sizeof (known_file_systems) / sizeof (DevkitDisksFilesystem);
+static const int num_known_file_systems = sizeof (known_file_systems) / sizeof (Filesystem);
 
-const DevkitDisksFilesystem *
-devkit_disks_daemon_local_get_fs_details (DevkitDisksDaemon  *daemon,
+const Filesystem *
+daemon_local_get_fs_details (Daemon  *daemon,
                                           const gchar        *filesystem_id)
 {
         gint n;
-        const DevkitDisksFilesystem *ret;
+        const Filesystem *ret;
 
         ret = NULL;
 
@@ -394,7 +394,7 @@ devkit_disks_daemon_local_get_fs_details (DevkitDisksDaemon  *daemon,
 }
 
 static GPtrArray *
-get_known_filesystems (DevkitDisksDaemon *daemon)
+get_known_filesystems (Daemon *daemon)
 {
         int n;
         GPtrArray *ret;
@@ -402,7 +402,7 @@ get_known_filesystems (DevkitDisksDaemon *daemon)
         ret = g_ptr_array_new ();
         for (n = 0; n < num_known_file_systems; n++) {
                 GValue elem = {0};
-                const DevkitDisksFilesystem *fs = known_file_systems + n;
+                const Filesystem *fs = known_file_systems + n;
 
                 g_value_init (&elem, KNOWN_FILESYSTEMS_STRUCT_TYPE);
                 g_value_take_boxed (&elem, dbus_g_type_specialized_construct (KNOWN_FILESYSTEMS_STRUCT_TYPE));
@@ -436,7 +436,7 @@ get_property (GObject         *object,
               GValue          *value,
               GParamSpec      *pspec)
 {
-        DevkitDisksDaemon *daemon = DEVKIT_DISKS_DAEMON (object);
+        Daemon *daemon = DAEMON (object);
         GPtrArray *filesystems;
 
         switch (prop_id) {
@@ -469,15 +469,15 @@ get_property (GObject         *object,
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static void
-devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
+daemon_class_init (DaemonClass *klass)
 {
         GObjectClass   *object_class = G_OBJECT_CLASS (klass);
 
-        object_class->constructor = devkit_disks_daemon_constructor;
-        object_class->finalize = devkit_disks_daemon_finalize;
+        object_class->constructor = daemon_constructor;
+        object_class->finalize = daemon_finalize;
         object_class->get_property = get_property;
 
-        g_type_class_add_private (klass, sizeof (DevkitDisksDaemonPrivate));
+        g_type_class_add_private (klass, sizeof (DaemonPrivate));
 
         signals[DEVICE_ADDED_SIGNAL] =
                 g_signal_new ("device-added",
@@ -512,7 +512,7 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
                               G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
                               0,
                               NULL, NULL,
-                              devkit_disks_marshal_VOID__BOXED_BOOLEAN_STRING_UINT_BOOLEAN_DOUBLE,
+                              marshal_VOID__BOXED_BOOLEAN_STRING_UINT_BOOLEAN_DOUBLE,
                               G_TYPE_NONE,
                               6,
                               DBUS_TYPE_G_OBJECT_PATH,
@@ -604,11 +604,11 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
                               G_TYPE_NONE, 1, DBUS_TYPE_G_OBJECT_PATH);
 
 
-        dbus_g_object_type_install_info (DEVKIT_DISKS_TYPE_DAEMON, &dbus_glib_devkit_disks_daemon_object_info);
+        dbus_g_object_type_install_info (TYPE_DAEMON, &dbus_glib_daemon_object_info);
 
-        dbus_g_error_domain_register (DEVKIT_DISKS_ERROR,
+        dbus_g_error_domain_register (ERROR,
                                       "org.freedesktop.UDisks.Error",
-                                      DEVKIT_DISKS_TYPE_ERROR);
+                                      TYPE_ERROR);
 
         g_object_class_install_property (
                 object_class,
@@ -634,9 +634,9 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
 }
 
 static void
-devkit_disks_daemon_init (DevkitDisksDaemon *daemon)
+daemon_init (Daemon *daemon)
 {
-        daemon->priv = DEVKIT_DISKS_DAEMON_GET_PRIVATE (daemon);
+        daemon->priv = DAEMON_GET_PRIVATE (daemon);
 
         daemon->priv->map_dev_t_to_device = g_hash_table_new_full (g_direct_hash,
                                                                    g_direct_equal,
@@ -685,15 +685,15 @@ devkit_disks_daemon_init (DevkitDisksDaemon *daemon)
 }
 
 static void
-devkit_disks_daemon_finalize (GObject *object)
+daemon_finalize (GObject *object)
 {
-        DevkitDisksDaemon *daemon;
+        Daemon *daemon;
         GList *l;
 
         g_return_if_fail (object != NULL);
-        g_return_if_fail (DEVKIT_DISKS_IS_DAEMON (object));
+        g_return_if_fail (IS_DAEMON (object));
 
-        daemon = DEVKIT_DISKS_DAEMON (object);
+        daemon = DAEMON (object);
 
         g_return_if_fail (daemon->priv != NULL);
 
@@ -762,36 +762,36 @@ devkit_disks_daemon_finalize (GObject *object)
         }
 
         for (l = daemon->priv->polling_inhibitors; l != NULL; l = l->next) {
-                DevkitDisksInhibitor *inhibitor = DEVKIT_DISKS_INHIBITOR (l->data);
+                Inhibitor *inhibitor = INHIBITOR (l->data);
                 g_signal_handlers_disconnect_by_func (inhibitor, daemon_polling_inhibitor_disconnected_cb, daemon);
                 g_object_unref (inhibitor);
         }
         g_list_free (daemon->priv->polling_inhibitors);
 
         for (l = daemon->priv->inhibitors; l != NULL; l = l->next) {
-                DevkitDisksInhibitor *inhibitor = DEVKIT_DISKS_INHIBITOR (l->data);
+                Inhibitor *inhibitor = INHIBITOR (l->data);
                 g_signal_handlers_disconnect_by_func (inhibitor, daemon_inhibitor_disconnected_cb, daemon);
                 g_object_unref (inhibitor);
         }
         g_list_free (daemon->priv->inhibitors);
 
-        G_OBJECT_CLASS (devkit_disks_daemon_parent_class)->finalize (object);
+        G_OBJECT_CLASS (daemon_parent_class)->finalize (object);
 }
 
 
-void devkit_disks_inhibitor_name_owner_changed (DBusMessage *message);
+void inhibitor_name_owner_changed (DBusMessage *message);
 
 static DBusHandlerResult
 _filter (DBusConnection *connection, DBusMessage *message, void *user_data)
 {
-        //DevkitDisksDaemon *daemon = DEVKIT_DISKS_DAEMON (user_data);
+        //Daemon *daemon = DAEMON (user_data);
         const char *interface;
 
         interface = dbus_message_get_interface (message);
 
         if (dbus_message_is_signal (message, DBUS_INTERFACE_DBUS, "NameOwnerChanged")) {
-                /* for now, pass NameOwnerChanged to DevkitDisksInhibitor */
-                devkit_disks_inhibitor_name_owner_changed (message);
+                /* for now, pass NameOwnerChanged to Inhibitor */
+                inhibitor_name_owner_changed (message);
         }
 
         /* other filters might want to process this message too */
@@ -800,15 +800,15 @@ _filter (DBusConnection *connection, DBusMessage *message, void *user_data)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static void device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event);
-static void device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d);
+static void device_add (Daemon *daemon, GUdevDevice *d, gboolean emit_event);
+static void device_remove (Daemon *daemon, GUdevDevice *d);
 
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
-pci_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthesized)
+pci_device_changed (Daemon *daemon, GUdevDevice *d, gboolean synthesized)
 {
-        DevkitDisksAdapter *adapter;
+        Adapter *adapter;
         const char *native_path;
 
         native_path = g_udev_device_get_sysfs_path (d);
@@ -825,17 +825,17 @@ pci_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthesi
                 g_warn_if_fail (g_hash_table_remove (daemon->priv->map_native_path_to_adapter,
                                                      adapter->priv->native_path));
 
-                keep_adapter = devkit_disks_adapter_changed (adapter, d, synthesized);
+                keep_adapter = adapter_changed (adapter, d, synthesized);
 
-                g_assert (devkit_disks_adapter_local_get_native_path (adapter) != NULL);
-                g_assert (g_strcmp0 (native_path, devkit_disks_adapter_local_get_native_path (adapter)) == 0);
+                g_assert (adapter_local_get_native_path (adapter) != NULL);
+                g_assert (g_strcmp0 (native_path, adapter_local_get_native_path (adapter)) == 0);
 
                 /* now add the things back to the global hashtables - it's important that we
                  * do this *before* calling adapter_remove() - otherwise it will never remove
                  * the adapter
                  */
                 g_hash_table_insert (daemon->priv->map_native_path_to_adapter,
-                                     g_strdup (devkit_disks_adapter_local_get_native_path (adapter)),
+                                     g_strdup (adapter_local_get_native_path (adapter)),
                                      g_object_ref (adapter));
 
                 if (!keep_adapter) {
@@ -853,9 +853,9 @@ pci_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthesi
 /* ------------------------------ */
 
 static void
-scsi_host_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthesized)
+scsi_host_device_changed (Daemon *daemon, GUdevDevice *d, gboolean synthesized)
 {
-        DevkitDisksPort *port;
+        Port *port;
         const char *native_path;
 
         native_path = g_udev_device_get_sysfs_path (d);
@@ -872,17 +872,17 @@ scsi_host_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean sy
                 g_warn_if_fail (g_hash_table_remove (daemon->priv->map_native_path_to_port,
                                                      port->priv->native_path));
 
-                keep_port = devkit_disks_port_changed (port, d, synthesized);
+                keep_port = port_changed (port, d, synthesized);
 
-                g_assert (devkit_disks_port_local_get_native_path (port) != NULL);
-                g_assert (g_strcmp0 (native_path, devkit_disks_port_local_get_native_path (port)) == 0);
+                g_assert (port_local_get_native_path (port) != NULL);
+                g_assert (g_strcmp0 (native_path, port_local_get_native_path (port)) == 0);
 
                 /* now add the things back to the global hashtables - it's important that we
                  * do this *before* calling port_remove() - otherwise it will never remove
                  * the port
                  */
                 g_hash_table_insert (daemon->priv->map_native_path_to_port,
-                                     g_strdup (devkit_disks_port_local_get_native_path (port)),
+                                     g_strdup (port_local_get_native_path (port)),
                                      g_object_ref (port));
 
                 if (!keep_port) {
@@ -900,9 +900,9 @@ scsi_host_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean sy
 /* ------------------------------ */
 
 static void
-sas_phy_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthesized)
+sas_phy_device_changed (Daemon *daemon, GUdevDevice *d, gboolean synthesized)
 {
-        DevkitDisksPort *port;
+        Port *port;
         const char *native_path;
 
         native_path = g_udev_device_get_sysfs_path (d);
@@ -919,17 +919,17 @@ sas_phy_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synt
                 g_warn_if_fail (g_hash_table_remove (daemon->priv->map_native_path_to_port,
                                                      port->priv->native_path));
 
-                keep_port = devkit_disks_port_changed (port, d, synthesized);
+                keep_port = port_changed (port, d, synthesized);
 
-                g_assert (devkit_disks_port_local_get_native_path (port) != NULL);
-                g_assert (g_strcmp0 (native_path, devkit_disks_port_local_get_native_path (port)) == 0);
+                g_assert (port_local_get_native_path (port) != NULL);
+                g_assert (g_strcmp0 (native_path, port_local_get_native_path (port)) == 0);
 
                 /* now add the things back to the global hashtables - it's important that we
                  * do this *before* calling port_remove() - otherwise it will never remove
                  * the port
                  */
                 g_hash_table_insert (daemon->priv->map_native_path_to_port,
-                                     g_strdup (devkit_disks_port_local_get_native_path (port)),
+                                     g_strdup (port_local_get_native_path (port)),
                                      g_object_ref (port));
 
                 if (!keep_port) {
@@ -947,9 +947,9 @@ sas_phy_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synt
 /* ------------------------------ */
 
 static void
-sas_expander_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthesized)
+sas_expander_device_changed (Daemon *daemon, GUdevDevice *d, gboolean synthesized)
 {
-        DevkitDisksExpander *expander;
+        Expander *expander;
         const char *native_path;
 
         native_path = g_udev_device_get_sysfs_path (d);
@@ -966,17 +966,17 @@ sas_expander_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean
                 g_warn_if_fail (g_hash_table_remove (daemon->priv->map_native_path_to_expander,
                                                      expander->priv->native_path));
 
-                keep_expander = devkit_disks_expander_changed (expander, d, synthesized);
+                keep_expander = expander_changed (expander, d, synthesized);
 
-                g_assert (devkit_disks_expander_local_get_native_path (expander) != NULL);
-                g_assert (g_strcmp0 (native_path, devkit_disks_expander_local_get_native_path (expander)) == 0);
+                g_assert (expander_local_get_native_path (expander) != NULL);
+                g_assert (g_strcmp0 (native_path, expander_local_get_native_path (expander)) == 0);
 
                 /* now add the things back to the global hashtables - it's important that we
                  * do this *before* calling expander_remove() - otherwise it will never remove
                  * the expander
                  */
                 g_hash_table_insert (daemon->priv->map_native_path_to_expander,
-                                     g_strdup (devkit_disks_expander_local_get_native_path (expander)),
+                                     g_strdup (expander_local_get_native_path (expander)),
                                      g_object_ref (expander));
 
                 if (!keep_expander) {
@@ -994,9 +994,9 @@ sas_expander_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean
 /* ------------------------------ */
 
 static void
-block_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthesized)
+block_device_changed (Daemon *daemon, GUdevDevice *d, gboolean synthesized)
 {
-        DevkitDisksDevice *device;
+        Device *device;
         const char *native_path;
 
         native_path = g_udev_device_get_sysfs_path (d);
@@ -1015,21 +1015,21 @@ block_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthe
                 g_warn_if_fail (g_hash_table_remove (daemon->priv->map_device_file_to_device,
                                                      device->priv->device_file));
 
-                keep_device = devkit_disks_device_changed (device, d, synthesized);
+                keep_device = device_changed (device, d, synthesized);
 
-                g_assert (devkit_disks_device_local_get_device_file (device) != NULL);
-                g_assert (devkit_disks_device_local_get_native_path (device) != NULL);
-                g_assert (g_strcmp0 (native_path, devkit_disks_device_local_get_native_path (device)) == 0);
+                g_assert (device_local_get_device_file (device) != NULL);
+                g_assert (device_local_get_native_path (device) != NULL);
+                g_assert (g_strcmp0 (native_path, device_local_get_native_path (device)) == 0);
 
                 /* now add the things back to the global hashtables - it's important that we
                  * do this *before* calling device_remove() - otherwise it will never remove
                  * the device
                  */
                 g_hash_table_insert (daemon->priv->map_device_file_to_device,
-                                     g_strdup (devkit_disks_device_local_get_device_file (device)),
+                                     g_strdup (device_local_get_device_file (device)),
                                      g_object_ref (device));
                 g_hash_table_insert (daemon->priv->map_native_path_to_device,
-                                     g_strdup (devkit_disks_device_local_get_native_path (device)),
+                                     g_strdup (device_local_get_native_path (device)),
                                      g_object_ref (device));
 
                 if (!keep_device) {
@@ -1038,8 +1038,8 @@ block_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthe
                 } else {
                         g_print ("**** CHANGED %s\n", native_path);
 
-                        devkit_disks_daemon_local_update_poller (daemon);
-                        devkit_disks_daemon_local_update_spindown (daemon);
+                        daemon_local_update_poller (daemon);
+                        daemon_local_update_spindown (daemon);
                 }
         } else {
                 g_print ("**** TREATING CHANGE AS ADD %s\n", native_path);
@@ -1048,7 +1048,7 @@ block_device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthe
 }
 
 static void
-device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthesized)
+_device_changed (Daemon *daemon, GUdevDevice *d, gboolean synthesized)
 {
         const gchar *subsystem;
 
@@ -1068,32 +1068,32 @@ device_changed (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean synthesized)
 }
 
 void
-devkit_disks_daemon_local_synthesize_changed (DevkitDisksDaemon *daemon,
-                                              DevkitDisksDevice *device)
+daemon_local_synthesize_changed (Daemon *daemon,
+                                              Device *device)
 {
         g_object_ref (device->priv->d);
-        device_changed (daemon, device->priv->d, TRUE);
+        _device_changed (daemon, device->priv->d, TRUE);
         g_object_unref (device->priv->d);
 }
 
 void
-devkit_disks_daemon_local_synthesize_changed_on_all_devices (DevkitDisksDaemon *daemon)
+daemon_local_synthesize_changed_on_all_devices (Daemon *daemon)
 {
         GHashTableIter hash_iter;
-        DevkitDisksDevice *device;
+        Device *device;
 
         g_hash_table_iter_init (&hash_iter, daemon->priv->map_object_path_to_device);
         while (g_hash_table_iter_next (&hash_iter, NULL, (gpointer) &device)) {
-                devkit_disks_daemon_local_synthesize_changed (daemon, device);
+                daemon_local_synthesize_changed (daemon, device);
         }
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
-pci_device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event)
+pci_device_add (Daemon *daemon, GUdevDevice *d, gboolean emit_event)
 {
-        DevkitDisksAdapter *adapter;
+        Adapter *adapter;
         const char *native_path;
 
         native_path = g_udev_device_get_sysfs_path (d);
@@ -1101,27 +1101,27 @@ pci_device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event)
         if (adapter != NULL) {
                 /* we already have the adapter; treat as change event */
                 g_print ("**** pci TREATING ADD AS CHANGE %s\n", native_path);
-                device_changed (daemon, d, FALSE);
+                _device_changed (daemon, d, FALSE);
         } else {
                 g_print ("**** pci ADDING %s\n", native_path);
-                adapter = devkit_disks_adapter_new (daemon, d);
+                adapter = adapter_new (daemon, d);
 
                 if (adapter != NULL) {
                         /* assert that the adapter is fully loaded with info */
-                        g_assert (devkit_disks_adapter_local_get_native_path (adapter) != NULL);
-                        g_assert (devkit_disks_adapter_local_get_object_path (adapter) != NULL);
-                        g_assert (g_strcmp0 (native_path, devkit_disks_adapter_local_get_native_path (adapter)) == 0);
+                        g_assert (adapter_local_get_native_path (adapter) != NULL);
+                        g_assert (adapter_local_get_object_path (adapter) != NULL);
+                        g_assert (g_strcmp0 (native_path, adapter_local_get_native_path (adapter)) == 0);
 
                         g_hash_table_insert (daemon->priv->map_native_path_to_adapter,
-                                             g_strdup (devkit_disks_adapter_local_get_native_path (adapter)),
+                                             g_strdup (adapter_local_get_native_path (adapter)),
                                              g_object_ref (adapter));
                         g_hash_table_insert (daemon->priv->map_object_path_to_adapter,
-                                             g_strdup (devkit_disks_adapter_local_get_object_path (adapter)),
+                                             g_strdup (adapter_local_get_object_path (adapter)),
                                              g_object_ref (adapter));
                         g_print ("**** pci ADDED %s\n", native_path);
                         if (emit_event) {
                                 const char *object_path;
-                                object_path = devkit_disks_adapter_local_get_object_path (adapter);
+                                object_path = adapter_local_get_object_path (adapter);
                                 g_print ("**** pci EMITTING ADDED for %s\n", adapter->priv->native_path);
                                 g_signal_emit (daemon, signals[ADAPTER_ADDED_SIGNAL], 0, object_path);
                         }
@@ -1134,9 +1134,9 @@ pci_device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event)
 /* ------------------------------ */
 
 static void
-scsi_host_device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event)
+scsi_host_device_add (Daemon *daemon, GUdevDevice *d, gboolean emit_event)
 {
-        DevkitDisksPort *port;
+        Port *port;
         const char *native_path;
 
         native_path = g_udev_device_get_sysfs_path (d);
@@ -1144,27 +1144,27 @@ scsi_host_device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_e
         if (port != NULL) {
                 /* we already have the port; treat as change event */
                 g_print ("**** scsi_host TREATING ADD AS CHANGE %s\n", native_path);
-                device_changed (daemon, d, FALSE);
+                _device_changed (daemon, d, FALSE);
         } else {
                 g_print ("**** scsi_host ADDING %s\n", native_path);
-                port = devkit_disks_port_new (daemon, d);
+                port = port_new (daemon, d);
 
                 if (port != NULL) {
                         /* assert that the port is fully loaded with info */
-                        g_assert (devkit_disks_port_local_get_native_path (port) != NULL);
-                        g_assert (devkit_disks_port_local_get_object_path (port) != NULL);
-                        g_assert (g_strcmp0 (native_path, devkit_disks_port_local_get_native_path (port)) == 0);
+                        g_assert (port_local_get_native_path (port) != NULL);
+                        g_assert (port_local_get_object_path (port) != NULL);
+                        g_assert (g_strcmp0 (native_path, port_local_get_native_path (port)) == 0);
 
                         g_hash_table_insert (daemon->priv->map_native_path_to_port,
-                                             g_strdup (devkit_disks_port_local_get_native_path (port)),
+                                             g_strdup (port_local_get_native_path (port)),
                                              g_object_ref (port));
                         g_hash_table_insert (daemon->priv->map_object_path_to_port,
-                                             g_strdup (devkit_disks_port_local_get_object_path (port)),
+                                             g_strdup (port_local_get_object_path (port)),
                                              g_object_ref (port));
                         g_print ("**** scsi_host ADDED %s\n", native_path);
                         if (emit_event) {
                                 const char *object_path;
-                                object_path = devkit_disks_port_local_get_object_path (port);
+                                object_path = port_local_get_object_path (port);
                                 g_print ("**** scsi_host EMITTING ADDED for %s\n", port->priv->native_path);
                                 g_signal_emit (daemon, signals[PORT_ADDED_SIGNAL], 0, object_path);
                         }
@@ -1177,9 +1177,9 @@ scsi_host_device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_e
 /* ------------------------------ */
 
 static void
-sas_phy_device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event)
+sas_phy_device_add (Daemon *daemon, GUdevDevice *d, gboolean emit_event)
 {
-        DevkitDisksPort *port;
+        Port *port;
         const char *native_path;
 
         native_path = g_udev_device_get_sysfs_path (d);
@@ -1187,27 +1187,27 @@ sas_phy_device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_eve
         if (port != NULL) {
                 /* we already have the port; treat as change event */
                 g_print ("**** sas_phy TREATING ADD AS CHANGE %s\n", native_path);
-                device_changed (daemon, d, FALSE);
+                _device_changed (daemon, d, FALSE);
         } else {
                 g_print ("**** sas_phy ADDING %s\n", native_path);
-                port = devkit_disks_port_new (daemon, d);
+                port = port_new (daemon, d);
 
                 if (port != NULL) {
                         /* assert that the port is fully loaded with info */
-                        g_assert (devkit_disks_port_local_get_native_path (port) != NULL);
-                        g_assert (devkit_disks_port_local_get_object_path (port) != NULL);
-                        g_assert (g_strcmp0 (native_path, devkit_disks_port_local_get_native_path (port)) == 0);
+                        g_assert (port_local_get_native_path (port) != NULL);
+                        g_assert (port_local_get_object_path (port) != NULL);
+                        g_assert (g_strcmp0 (native_path, port_local_get_native_path (port)) == 0);
 
                         g_hash_table_insert (daemon->priv->map_native_path_to_port,
-                                             g_strdup (devkit_disks_port_local_get_native_path (port)),
+                                             g_strdup (port_local_get_native_path (port)),
                                              g_object_ref (port));
                         g_hash_table_insert (daemon->priv->map_object_path_to_port,
-                                             g_strdup (devkit_disks_port_local_get_object_path (port)),
+                                             g_strdup (port_local_get_object_path (port)),
                                              g_object_ref (port));
                         g_print ("**** sas_phy ADDED %s\n", native_path);
                         if (emit_event) {
                                 const char *object_path;
-                                object_path = devkit_disks_port_local_get_object_path (port);
+                                object_path = port_local_get_object_path (port);
                                 g_print ("**** sas_phy EMITTING ADDED for %s\n", port->priv->native_path);
                                 g_signal_emit (daemon, signals[PORT_ADDED_SIGNAL], 0, object_path);
                         }
@@ -1220,9 +1220,9 @@ sas_phy_device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_eve
 /* ------------------------------ */
 
 static void
-sas_expander_device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event)
+sas_expander_device_add (Daemon *daemon, GUdevDevice *d, gboolean emit_event)
 {
-        DevkitDisksExpander *expander;
+        Expander *expander;
         const char *native_path;
 
         native_path = g_udev_device_get_sysfs_path (d);
@@ -1230,27 +1230,27 @@ sas_expander_device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emi
         if (expander != NULL) {
                 /* we already have the expander; treat as change event */
                 g_print ("**** sas_expander TREATING ADD AS CHANGE %s\n", native_path);
-                device_changed (daemon, d, FALSE);
+                _device_changed (daemon, d, FALSE);
         } else {
                 g_print ("**** sas_expander ADDING %s\n", native_path);
-                expander = devkit_disks_expander_new (daemon, d);
+                expander = expander_new (daemon, d);
 
                 if (expander != NULL) {
                         /* assert that the expander is fully loaded with info */
-                        g_assert (devkit_disks_expander_local_get_native_path (expander) != NULL);
-                        g_assert (devkit_disks_expander_local_get_object_path (expander) != NULL);
-                        g_assert (g_strcmp0 (native_path, devkit_disks_expander_local_get_native_path (expander)) == 0);
+                        g_assert (expander_local_get_native_path (expander) != NULL);
+                        g_assert (expander_local_get_object_path (expander) != NULL);
+                        g_assert (g_strcmp0 (native_path, expander_local_get_native_path (expander)) == 0);
 
                         g_hash_table_insert (daemon->priv->map_native_path_to_expander,
-                                             g_strdup (devkit_disks_expander_local_get_native_path (expander)),
+                                             g_strdup (expander_local_get_native_path (expander)),
                                              g_object_ref (expander));
                         g_hash_table_insert (daemon->priv->map_object_path_to_expander,
-                                             g_strdup (devkit_disks_expander_local_get_object_path (expander)),
+                                             g_strdup (expander_local_get_object_path (expander)),
                                              g_object_ref (expander));
                         g_print ("**** sas_expander ADDED %s\n", native_path);
                         if (emit_event) {
                                 const char *object_path;
-                                object_path = devkit_disks_expander_local_get_object_path (expander);
+                                object_path = expander_local_get_object_path (expander);
                                 g_print ("**** sas_expander EMITTING ADDED for %s\n", expander->priv->native_path);
                                 g_signal_emit (daemon, signals[EXPANDER_ADDED_SIGNAL], 0, object_path);
                         }
@@ -1263,9 +1263,9 @@ sas_expander_device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emi
 /* ------------------------------ */
 
 static void
-block_device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event)
+block_device_add (Daemon *daemon, GUdevDevice *d, gboolean emit_event)
 {
-        DevkitDisksDevice *device;
+        Device *device;
         const char *native_path;
 
         native_path = g_udev_device_get_sysfs_path (d);
@@ -1273,39 +1273,39 @@ block_device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event
         if (device != NULL) {
                 /* we already have the device; treat as change event */
                 g_print ("**** TREATING ADD AS CHANGE %s\n", native_path);
-                device_changed (daemon, d, FALSE);
+                _device_changed (daemon, d, FALSE);
         } else {
                 g_print ("**** ADDING %s\n", native_path);
-                device = devkit_disks_device_new (daemon, d);
+                device = device_new (daemon, d);
 
                 if (device != NULL) {
                         /* assert that the device is fully loaded with info */
-                        g_assert (devkit_disks_device_local_get_device_file (device) != NULL);
-                        g_assert (devkit_disks_device_local_get_native_path (device) != NULL);
-                        g_assert (devkit_disks_device_local_get_object_path (device) != NULL);
-                        g_assert (g_strcmp0 (native_path, devkit_disks_device_local_get_native_path (device)) == 0);
+                        g_assert (device_local_get_device_file (device) != NULL);
+                        g_assert (device_local_get_native_path (device) != NULL);
+                        g_assert (device_local_get_object_path (device) != NULL);
+                        g_assert (g_strcmp0 (native_path, device_local_get_native_path (device)) == 0);
 
                         g_hash_table_insert (daemon->priv->map_dev_t_to_device,
-                                             GINT_TO_POINTER (devkit_disks_device_local_get_dev (device)),
+                                             GINT_TO_POINTER (device_local_get_dev (device)),
                                              g_object_ref (device));
                         g_hash_table_insert (daemon->priv->map_device_file_to_device,
-                                             g_strdup (devkit_disks_device_local_get_device_file (device)),
+                                             g_strdup (device_local_get_device_file (device)),
                                              g_object_ref (device));
                         g_hash_table_insert (daemon->priv->map_native_path_to_device,
-                                             g_strdup (devkit_disks_device_local_get_native_path (device)),
+                                             g_strdup (device_local_get_native_path (device)),
                                              g_object_ref (device));
                         g_hash_table_insert (daemon->priv->map_object_path_to_device,
-                                             g_strdup (devkit_disks_device_local_get_object_path (device)),
+                                             g_strdup (device_local_get_object_path (device)),
                                              g_object_ref (device));
                         g_print ("**** ADDED %s\n", native_path);
                         if (emit_event) {
                                 const char *object_path;
-                                object_path = devkit_disks_device_local_get_object_path (device);
+                                object_path = device_local_get_object_path (device);
                                 g_print ("**** EMITTING ADDED for %s\n", device->priv->native_path);
                                 g_signal_emit (daemon, signals[DEVICE_ADDED_SIGNAL], 0, object_path);
                         }
-                        devkit_disks_daemon_local_update_poller (daemon);
-                        devkit_disks_daemon_local_update_spindown (daemon);
+                        daemon_local_update_poller (daemon);
+                        daemon_local_update_spindown (daemon);
                 } else {
                         g_print ("**** IGNORING ADD %s\n", native_path);
                 }
@@ -1313,7 +1313,7 @@ block_device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event
 }
 
 static void
-device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event)
+device_add (Daemon *daemon, GUdevDevice *d, gboolean emit_event)
 {
         const gchar *subsystem;
 
@@ -1335,9 +1335,9 @@ device_add (DevkitDisksDaemon *daemon, GUdevDevice *d, gboolean emit_event)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
-pci_device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
+pci_device_remove (Daemon *daemon, GUdevDevice *d)
 {
-        DevkitDisksAdapter *adapter;
+        Adapter *adapter;
         const char *native_path;
 
         native_path = g_udev_device_get_sysfs_path (d);
@@ -1356,9 +1356,9 @@ pci_device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
 
                 g_print ("**** pci EMITTING REMOVED for %s\n", adapter->priv->native_path);
                 g_signal_emit (daemon, signals[ADAPTER_REMOVED_SIGNAL], 0,
-                               devkit_disks_adapter_local_get_object_path (adapter));
+                               adapter_local_get_object_path (adapter));
 
-                devkit_disks_adapter_removed (adapter);
+                adapter_removed (adapter);
 
                 g_object_unref (adapter);
         }
@@ -1367,9 +1367,9 @@ pci_device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
 /* ------------------------------ */
 
 static void
-scsi_host_device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
+scsi_host_device_remove (Daemon *daemon, GUdevDevice *d)
 {
-        DevkitDisksPort *port;
+        Port *port;
         const char *native_path;
 
         native_path = g_udev_device_get_sysfs_path (d);
@@ -1388,9 +1388,9 @@ scsi_host_device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
 
                 g_print ("**** scsi_host EMITTING REMOVED for %s\n", port->priv->native_path);
                 g_signal_emit (daemon, signals[PORT_REMOVED_SIGNAL], 0,
-                               devkit_disks_port_local_get_object_path (port));
+                               port_local_get_object_path (port));
 
-                devkit_disks_port_removed (port);
+                port_removed (port);
 
                 g_object_unref (port);
         }
@@ -1399,9 +1399,9 @@ scsi_host_device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
 /* ------------------------------ */
 
 static void
-sas_phy_device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
+sas_phy_device_remove (Daemon *daemon, GUdevDevice *d)
 {
-        DevkitDisksPort *port;
+        Port *port;
         const char *native_path;
 
         native_path = g_udev_device_get_sysfs_path (d);
@@ -1420,9 +1420,9 @@ sas_phy_device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
 
                 g_print ("**** sas_phy EMITTING REMOVED for %s\n", port->priv->native_path);
                 g_signal_emit (daemon, signals[PORT_REMOVED_SIGNAL], 0,
-                               devkit_disks_port_local_get_object_path (port));
+                               port_local_get_object_path (port));
 
-                devkit_disks_port_removed (port);
+                port_removed (port);
 
                 g_object_unref (port);
         }
@@ -1431,9 +1431,9 @@ sas_phy_device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
 /* ------------------------------ */
 
 static void
-sas_expander_device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
+sas_expander_device_remove (Daemon *daemon, GUdevDevice *d)
 {
-        DevkitDisksExpander *expander;
+        Expander *expander;
         const char *native_path;
 
         native_path = g_udev_device_get_sysfs_path (d);
@@ -1452,9 +1452,9 @@ sas_expander_device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
 
                 g_print ("**** sas_expander EMITTING REMOVED for %s\n", expander->priv->native_path);
                 g_signal_emit (daemon, signals[EXPANDER_REMOVED_SIGNAL], 0,
-                               devkit_disks_expander_local_get_object_path (expander));
+                               expander_local_get_object_path (expander));
 
-                devkit_disks_expander_removed (expander);
+                expander_removed (expander);
 
                 g_object_unref (expander);
         }
@@ -1463,9 +1463,9 @@ sas_expander_device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
 /* ------------------------------ */
 
 static void
-block_device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
+block_device_remove (Daemon *daemon, GUdevDevice *d)
 {
-        DevkitDisksDevice *device;
+        Device *device;
         const char *native_path;
 
         native_path = g_udev_device_get_sysfs_path (d);
@@ -1496,19 +1496,19 @@ block_device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
 
                 g_print ("**** EMITTING REMOVED for %s\n", device->priv->native_path);
                 g_signal_emit (daemon, signals[DEVICE_REMOVED_SIGNAL], 0,
-                               devkit_disks_device_local_get_object_path (device));
+                               device_local_get_object_path (device));
 
-                devkit_disks_device_removed (device);
+                device_removed (device);
 
                 g_object_unref (device);
 
-                devkit_disks_daemon_local_update_poller (daemon);
-                devkit_disks_daemon_local_update_spindown (daemon);
+                daemon_local_update_poller (daemon);
+                daemon_local_update_spindown (daemon);
         }
 }
 
 static void
-device_remove (DevkitDisksDaemon *daemon, GUdevDevice *d)
+device_remove (Daemon *daemon, GUdevDevice *d)
 {
         const gchar *subsystem;
 
@@ -1535,90 +1535,90 @@ on_uevent (GUdevClient  *client,
            GUdevDevice  *device,
            gpointer      user_data)
 {
-        DevkitDisksDaemon *daemon = DEVKIT_DISKS_DAEMON (user_data);
+        Daemon *daemon = DAEMON (user_data);
 
         if (strcmp (action, "add") == 0) {
                 device_add (daemon, device, TRUE);
         } else if (strcmp (action, "remove") == 0) {
                 device_remove (daemon, device);
         } else if (strcmp (action, "change") == 0) {
-                device_changed (daemon, device, FALSE);
+                _device_changed (daemon, device, FALSE);
         } else {
                 g_print ("*** NOTE: unhandled action '%s' on %s\n", action, g_udev_device_get_sysfs_path (device));
         }
 }
 
-DevkitDisksDevice *
-devkit_disks_daemon_local_find_by_dev (DevkitDisksDaemon *daemon, dev_t dev)
+Device *
+daemon_local_find_by_dev (Daemon *daemon, dev_t dev)
 {
         return g_hash_table_lookup (daemon->priv->map_dev_t_to_device, GINT_TO_POINTER (dev));
 }
 
-DevkitDisksDevice *
-devkit_disks_daemon_local_find_by_device_file (DevkitDisksDaemon *daemon, const char *device_file)
+Device *
+daemon_local_find_by_device_file (Daemon *daemon, const char *device_file)
 {
         return g_hash_table_lookup (daemon->priv->map_device_file_to_device, device_file);
 }
 
-DevkitDisksDevice *
-devkit_disks_daemon_local_find_by_native_path (DevkitDisksDaemon *daemon, const char *native_path)
+Device *
+daemon_local_find_by_native_path (Daemon *daemon, const char *native_path)
 {
         return g_hash_table_lookup (daemon->priv->map_native_path_to_device, native_path);
 }
 
-DevkitDisksDevice *
-devkit_disks_daemon_local_find_by_object_path (DevkitDisksDaemon *daemon,
+Device *
+daemon_local_find_by_object_path (Daemon *daemon,
                                                const char *object_path)
 {
         return g_hash_table_lookup (daemon->priv->map_object_path_to_device, object_path);
 }
 
 GList *
-devkit_disks_daemon_local_get_all_devices (DevkitDisksDaemon *daemon)
+daemon_local_get_all_devices (Daemon *daemon)
 {
         return g_hash_table_get_values (daemon->priv->map_native_path_to_device);
 }
 
 static void
-mount_removed (DevkitDisksMountMonitor *monitor,
-               DevkitDisksMount        *mount,
+mount_removed (MountMonitor *monitor,
+               Mount        *mount,
                gpointer                 user_data)
 {
-        DevkitDisksDaemon *daemon = DEVKIT_DISKS_DAEMON (user_data);
-        DevkitDisksDevice *device;
+        Daemon *daemon = DAEMON (user_data);
+        Device *device;
 
         device = g_hash_table_lookup (daemon->priv->map_dev_t_to_device,
-                                      GINT_TO_POINTER (devkit_disks_mount_get_dev (mount)));
+                                      GINT_TO_POINTER (mount_get_dev (mount)));
         if (device != NULL) {
                 g_print ("**** UNMOUNTED %s\n", device->priv->native_path);
-                devkit_disks_daemon_local_synthesize_changed (daemon, device);
+                daemon_local_synthesize_changed (daemon, device);
         }
 }
 
 static void
-mount_added (DevkitDisksMountMonitor *monitor,
-             DevkitDisksMount        *mount,
+mount_added (MountMonitor *monitor,
+             Mount        *mount,
              gpointer                 user_data)
 {
-        DevkitDisksDaemon *daemon = DEVKIT_DISKS_DAEMON (user_data);
-        DevkitDisksDevice *device;
+        Daemon *daemon = DAEMON (user_data);
+        Device *device;
 
         device = g_hash_table_lookup (daemon->priv->map_dev_t_to_device,
-                                      GINT_TO_POINTER (devkit_disks_mount_get_dev (mount)));
+                                      GINT_TO_POINTER (mount_get_dev (mount)));
         if (device != NULL) {
                 g_print ("**** MOUNTED %s\n", device->priv->native_path);
-                devkit_disks_daemon_local_synthesize_changed (daemon, device);
+                daemon_local_synthesize_changed (daemon, device);
         }
 }
 
 static gboolean
 mdstat_changed_event (GIOChannel *channel, GIOCondition cond, gpointer user_data)
 {
-        DevkitDisksDaemon *daemon = DEVKIT_DISKS_DAEMON (user_data);
+        Daemon *daemon = DAEMON (user_data);
         GHashTableIter iter;
         char *str;
         gsize len;
-        DevkitDisksDevice *device;
+        Device *device;
         char *native_path;
         GPtrArray *a;
         int n;
@@ -1647,7 +1647,7 @@ mdstat_changed_event (GIOChannel *channel, GIOCondition cond, gpointer user_data
         for (n = 0; n < (int) a->len; n++) {
                 GUdevDevice *d = a->pdata[n];
                 g_debug ("using change on /proc/mdstat to trigger change event on %s", native_path);
-                device_changed (daemon, d, FALSE);
+                _device_changed (daemon, d, FALSE);
                 g_object_unref (d);
         }
 
@@ -1658,9 +1658,9 @@ out:
 }
 
 static gboolean
-refresh_ata_smart_data (DevkitDisksDaemon *daemon)
+refresh_ata_smart_data (Daemon *daemon)
 {
-        DevkitDisksDevice *device;
+        Device *device;
         const char *native_path;
         GHashTableIter iter;
 
@@ -1671,7 +1671,7 @@ refresh_ata_smart_data (DevkitDisksDaemon *daemon)
 
                         g_print ("**** Refreshing ATA SMART data for %s\n", native_path);
 
-                        devkit_disks_device_drive_ata_smart_refresh_data (device, options, NULL);
+                        device_drive_ata_smart_refresh_data (device, options, NULL);
                 }
         }
 
@@ -1686,7 +1686,7 @@ refresh_ata_smart_data (DevkitDisksDaemon *daemon)
 
 
 static gboolean
-register_disks_daemon (DevkitDisksDaemon *daemon)
+register_disks_daemon (Daemon *daemon)
 {
         DBusConnection *connection;
         DBusError dbus_error;
@@ -1766,7 +1766,7 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
                           G_CALLBACK (on_uevent),
                           daemon);
 
-        daemon->priv->mount_monitor = devkit_disks_mount_monitor_new ();
+        daemon->priv->mount_monitor = mount_monitor_new ();
         g_signal_connect (daemon->priv->mount_monitor, "mount-added", (GCallback) mount_added, daemon);
         g_signal_connect (daemon->priv->mount_monitor, "mount-removed", (GCallback) mount_removed, daemon);
 
@@ -1776,18 +1776,18 @@ error:
 }
 
 
-DevkitDisksDaemon *
-devkit_disks_daemon_new (void)
+Daemon *
+daemon_new (void)
 {
-        DevkitDisksDaemon *daemon;
+        Daemon *daemon;
         GList *devices;
         GList *l;
-        DevkitDisksDevice *device;
+        Device *device;
         GHashTableIter device_iter;
 
-        daemon = DEVKIT_DISKS_DAEMON (g_object_new (DEVKIT_DISKS_TYPE_DAEMON, NULL));
+        daemon = DAEMON (g_object_new (TYPE_DAEMON, NULL));
 
-        if (!register_disks_daemon (DEVKIT_DISKS_DAEMON (daemon))) {
+        if (!register_disks_daemon (DAEMON (daemon))) {
                 g_object_unref (daemon);
                 goto error;
         }
@@ -1855,14 +1855,14 @@ devkit_disks_daemon_new (void)
          */
         g_hash_table_iter_init (&device_iter, daemon->priv->map_object_path_to_device);
         while (g_hash_table_iter_next (&device_iter, NULL, (gpointer) &device)) {
-                devkit_disks_daemon_local_synthesize_changed (daemon, device);
+                daemon_local_synthesize_changed (daemon, device);
         }
 
         /* clean stale directories in /media as well as stale
-         * entries in /var/lib/DeviceKit-disks/mtab
+         * entries in /var/lib/udisks/mtab
          */
         l = g_hash_table_get_values (daemon->priv->map_native_path_to_device);
-        devkit_disks_mount_file_clean_stale (l);
+        mount_file_clean_stale (l);
         g_list_free (l);
 
         /* set up timer for refreshing ATA SMART data - we don't want to refresh immediately because
@@ -1878,8 +1878,8 @@ devkit_disks_daemon_new (void)
         return NULL;
 }
 
-DevkitDisksMountMonitor *
-devkit_disks_daemon_local_get_mount_monitor (DevkitDisksDaemon *daemon)
+MountMonitor *
+daemon_local_get_mount_monitor (Daemon *daemon)
 {
         return daemon->priv->mount_monitor;
 }
@@ -1898,7 +1898,7 @@ throw_error (DBusGMethodInvocation *context, int error_code, const char *format,
         va_end (args);
 
         if (context != NULL) {
-                error = g_error_new (DEVKIT_DISKS_ERROR,
+                error = g_error_new (ERROR,
                                      error_code,
                                      "%s", message);
                 dbus_g_method_return_error (context, error);
@@ -1914,7 +1914,7 @@ throw_error (DBusGMethodInvocation *context, int error_code, const char *format,
 /*--------------------------------------------------------------------------------------------------------------*/
 
 gboolean
-devkit_disks_daemon_local_get_uid (DevkitDisksDaemon     *daemon,
+daemon_local_get_uid (Daemon     *daemon,
                                    uid_t                 *out_uid,
                                    DBusGMethodInvocation *context)
 {
@@ -1956,10 +1956,10 @@ devkit_disks_daemon_local_get_uid (DevkitDisksDaemon     *daemon,
 /*--------------------------------------------------------------------------------------------------------------*/
 
 void
-devkit_disks_daemon_local_update_poller (DevkitDisksDaemon *daemon)
+daemon_local_update_poller (Daemon *daemon)
 {
         GHashTableIter hash_iter;
-        DevkitDisksDevice *device;
+        Device *device;
         GList *devices_to_poll;
 
         devices_to_poll = NULL;
@@ -1971,7 +1971,7 @@ devkit_disks_daemon_local_update_poller (DevkitDisksDaemon *daemon)
                         devices_to_poll = g_list_prepend (devices_to_poll, device);
         }
 
-        devkit_disks_poller_set_devices (devices_to_poll);
+        poller_set_devices (devices_to_poll);
 
         g_list_free (devices_to_poll);
 }
@@ -1981,17 +1981,17 @@ devkit_disks_daemon_local_update_poller (DevkitDisksDaemon *daemon)
 typedef struct
 {
         gchar *action_id;
-        DevkitDisksCheckAuthCallback check_auth_callback;
+        CheckAuthCallback check_auth_callback;
         DBusGMethodInvocation *context;
-        DevkitDisksDaemon *daemon;
-        DevkitDisksDevice *device;
+        Daemon *daemon;
+        Device *device;
 
         GCancellable *cancellable;
         guint num_user_data;
         gpointer *user_data_elements;
         GDestroyNotify *user_data_notifiers;
 
-        DevkitDisksInhibitor *caller;
+        Inhibitor *caller;
 } CheckAuthData;
 
 /* invoked when device is removed during authorization check */
@@ -2009,7 +2009,7 @@ lca_device_went_away (gpointer user_data, GObject *where_the_object_was)
 
 /* invoked when caller disconnects during authorization check */
 static void
-lca_caller_disconnected_cb (DevkitDisksInhibitor *inhibitor,
+lca_caller_disconnected_cb (Inhibitor *inhibitor,
                             gpointer              user_data)
 {
         CheckAuthData *data = user_data;
@@ -2057,7 +2057,7 @@ lca_check_authorization_callback (PolkitAuthority *authority,
                                                               &error);
         if (error != NULL) {
                 throw_error (data->context,
-                             DEVKIT_DISKS_ERROR_PERMISSION_DENIED,
+                             ERROR_PERMISSION_DENIED,
                              "Not Authorized: %s", error->message);
                 g_error_free (error);
         } else {
@@ -2065,11 +2065,11 @@ lca_check_authorization_callback (PolkitAuthority *authority,
                         is_authorized = TRUE;
                 } else if (polkit_authorization_result_get_is_challenge (result)) {
                         throw_error (data->context,
-                                     DEVKIT_DISKS_ERROR_PERMISSION_DENIED,
+                                     ERROR_PERMISSION_DENIED,
                                      "Authentication is required");
                 } else {
                         throw_error (data->context,
-                                     DEVKIT_DISKS_ERROR_PERMISSION_DENIED,
+                                     ERROR_PERMISSION_DENIED,
                                      "Not Authorized");
                 }
                 g_object_unref (result);
@@ -2089,12 +2089,12 @@ lca_check_authorization_callback (PolkitAuthority *authority,
 
 /* num_user_data param is followed by @num_user_data (gpointer, GDestroyNotify) pairs.. */
 void
-devkit_disks_daemon_local_check_auth (DevkitDisksDaemon            *daemon,
-                                      DevkitDisksDevice            *device,
+daemon_local_check_auth (Daemon            *daemon,
+                                      Device            *device,
                                       const gchar                  *action_id,
                                       const gchar                  *operation,
                                       gboolean                      allow_user_interaction,
-                                      DevkitDisksCheckAuthCallback  check_auth_callback,
+                                      CheckAuthCallback  check_auth_callback,
                                       DBusGMethodInvocation        *context,
                                       guint                         num_user_data,
                                       ...)
@@ -2124,9 +2124,9 @@ devkit_disks_daemon_local_check_auth (DevkitDisksDaemon            *daemon,
         }
         va_end (va_args);
 
-        if (devkit_disks_daemon_local_is_inhibited (daemon)) {
+        if (daemon_local_is_inhibited (daemon)) {
                 throw_error (data->context,
-                             DEVKIT_DISKS_ERROR_INHIBITED,
+                             ERROR_INHIBITED,
                              "Daemon is inhibited");
                 check_auth_data_free (data);
 
@@ -2136,7 +2136,7 @@ devkit_disks_daemon_local_check_auth (DevkitDisksDaemon            *daemon,
                 PolkitCheckAuthorizationFlags flags;
                 gchar partition_number_buf[32];
 
-                /* Set details - see devkit-disks-polkit-action-lookup.c for where
+                /* Set details - see polkit-action-lookup.c for where
                  * these key/value pairs are used
                  */
                 details = polkit_details_new ();
@@ -2146,7 +2146,7 @@ devkit_disks_daemon_local_check_auth (DevkitDisksDaemon            *daemon,
                                                (gpointer) operation);
                 }
                 if (device != NULL) {
-                        DevkitDisksDevice *drive;
+                        Device *drive;
 
                         polkit_details_insert (details,
                                                "unix-device",
@@ -2169,7 +2169,7 @@ devkit_disks_daemon_local_check_auth (DevkitDisksDaemon            *daemon,
                                             "%d",
                                             device->priv->partition_number);
                                 polkit_details_insert (details, "partition-number", partition_number_buf);
-                                drive = devkit_disks_daemon_local_find_by_object_path (device->priv->daemon,
+                                drive = daemon_local_find_by_object_path (device->priv->daemon,
                                                                                        device->priv->partition_slave);
                         } else {
                                 drive = NULL;
@@ -2212,7 +2212,7 @@ devkit_disks_daemon_local_check_auth (DevkitDisksDaemon            *daemon,
 
                 subject = polkit_system_bus_name_new (dbus_g_method_get_sender (context));
 
-                data->caller = devkit_disks_inhibitor_new (context);
+                data->caller = inhibitor_new (context);
                 g_signal_connect (data->caller,
                                   "disconnected",
                                   G_CALLBACK (lca_caller_disconnected_cb),
@@ -2252,7 +2252,7 @@ disk_set_standby_timeout_child_watch_cb (GPid     pid,
                                          gint     status,
                                          gpointer user_data)
 {
-        DevkitDisksDevice *device = DEVKIT_DISKS_DEVICE (user_data);
+        Device *device = DEVICE (user_data);
 
         if (WIFEXITED (status) && WEXITSTATUS (status) == 0) {
                 g_print ("**** NOTE: standby helper for %s completed successfully\n", device->priv->device_file);
@@ -2267,7 +2267,7 @@ disk_set_standby_timeout_child_watch_cb (GPid     pid,
 }
 
 static void
-disk_set_standby_timeout (DevkitDisksDevice *device)
+disk_set_standby_timeout (Device *device)
 {
         GError *error;
         GPid pid;
@@ -2320,10 +2320,10 @@ disk_set_standby_timeout (DevkitDisksDevice *device)
 }
 
 void
-devkit_disks_daemon_local_update_spindown (DevkitDisksDaemon *daemon)
+daemon_local_update_spindown (Daemon *daemon)
 {
         GHashTableIter hash_iter;
-        DevkitDisksDevice *device;
+        Device *device;
         GList *l;
 
         g_hash_table_iter_init (&hash_iter, daemon->priv->map_object_path_to_device);
@@ -2342,7 +2342,7 @@ devkit_disks_daemon_local_update_spindown (DevkitDisksDaemon *daemon)
 
                         /* first go through all inhibitors on the device */
                         for (l = device->priv->spindown_inhibitors; l != NULL; l = l->next) {
-                                DevkitDisksInhibitor *inhibitor = DEVKIT_DISKS_INHIBITOR (l->data);
+                                Inhibitor *inhibitor = INHIBITOR (l->data);
                                 gint spindown_timeout_inhibitor;
 
                                 spindown_timeout_inhibitor = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (inhibitor),
@@ -2355,7 +2355,7 @@ devkit_disks_daemon_local_update_spindown (DevkitDisksDaemon *daemon)
 
                         /* then all inhibitors on the daemon */
                         for (l = daemon->priv->spindown_inhibitors; l != NULL; l = l->next) {
-                                DevkitDisksInhibitor *inhibitor = DEVKIT_DISKS_INHIBITOR (l->data);
+                                Inhibitor *inhibitor = INHIBITOR (l->data);
                                 gint spindown_timeout_inhibitor;
 
                                 spindown_timeout_inhibitor = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (inhibitor),
@@ -2377,14 +2377,14 @@ devkit_disks_daemon_local_update_spindown (DevkitDisksDaemon *daemon)
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
-DevkitDisksAdapter *
-devkit_disks_daemon_local_find_enclosing_adapter (DevkitDisksDaemon       *daemon,
+Adapter *
+daemon_local_find_enclosing_adapter (Daemon       *daemon,
                                                   const gchar             *native_path)
 {
         GHashTableIter iter;
         const gchar *adapter_native_path;
-        DevkitDisksAdapter *adapter;
-        DevkitDisksAdapter *ret;
+        Adapter *adapter;
+        Adapter *ret;
 
         ret = NULL;
 
@@ -2399,19 +2399,19 @@ devkit_disks_daemon_local_find_enclosing_adapter (DevkitDisksDaemon       *daemo
         return ret;
 }
 
-DevkitDisksExpander *
-devkit_disks_daemon_local_find_enclosing_expander (DevkitDisksDaemon       *daemon,
+Expander *
+daemon_local_find_enclosing_expander (Daemon       *daemon,
                                                    const gchar             *native_path)
 {
         GHashTableIter iter;
-        DevkitDisksExpander *expander;
-        DevkitDisksExpander *ret;
+        Expander *expander;
+        Expander *ret;
 
         ret = NULL;
 
         g_hash_table_iter_init (&iter, daemon->priv->map_native_path_to_expander);
         while (g_hash_table_iter_next (&iter, NULL, (gpointer) &expander)) {
-                if (devkit_disks_local_expander_encloses_native_path (expander, native_path)) {
+                if (local_expander_encloses_native_path (expander, native_path)) {
                         ret = expander;
                         break;
                 }
@@ -2421,18 +2421,18 @@ devkit_disks_daemon_local_find_enclosing_expander (DevkitDisksDaemon       *daem
 }
 
 GList *
-devkit_disks_daemon_local_find_enclosing_ports (DevkitDisksDaemon      *daemon,
+daemon_local_find_enclosing_ports (Daemon      *daemon,
                                                 const gchar            *native_path)
 {
         GHashTableIter iter;
-        DevkitDisksPort *port;
+        Port *port;
         GList *ret;
 
         ret = NULL;
 
         g_hash_table_iter_init (&iter, daemon->priv->map_native_path_to_port);
         while (g_hash_table_iter_next (&iter, NULL, (gpointer) &port)) {
-                if (devkit_disks_local_port_encloses_native_path (port, native_path)) {
+                if (local_port_encloses_native_path (port, native_path)) {
                         ret = g_list_append (ret, port);
                 }
         }
@@ -2446,13 +2446,13 @@ devkit_disks_daemon_local_find_enclosing_ports (DevkitDisksDaemon      *daemon,
 static void
 enumerate_cb (gpointer key, gpointer value, gpointer user_data)
 {
-        DevkitDisksDevice *device = DEVKIT_DISKS_DEVICE (value);
+        Device *device = DEVICE (value);
         GPtrArray *object_paths = user_data;
-        g_ptr_array_add (object_paths, g_strdup (devkit_disks_device_local_get_object_path (device)));
+        g_ptr_array_add (object_paths, g_strdup (device_local_get_object_path (device)));
 }
 
 gboolean
-devkit_disks_daemon_enumerate_devices (DevkitDisksDaemon     *daemon,
+daemon_enumerate_devices (Daemon     *daemon,
                                        DBusGMethodInvocation *context)
 {
         GPtrArray *object_paths;
@@ -2475,15 +2475,15 @@ devkit_disks_daemon_enumerate_devices (DevkitDisksDaemon     *daemon,
 static void
 enumerate_adapter_cb (gpointer key, gpointer value, gpointer user_data)
 {
-        DevkitDisksAdapter *adapter = DEVKIT_DISKS_ADAPTER (value);
+        Adapter *adapter = ADAPTER (value);
         GPtrArray *object_paths = user_data;
-        g_ptr_array_add (object_paths, g_strdup (devkit_disks_adapter_local_get_object_path (adapter)));
+        g_ptr_array_add (object_paths, g_strdup (adapter_local_get_object_path (adapter)));
 }
 
 /* dbus-send --system --print-reply --dest=org.freedesktop.UDisks /org/freedesktop/UDisks org.freedesktop.UDisks.EnumerateAdapters
  */
 gboolean
-devkit_disks_daemon_enumerate_adapters (DevkitDisksDaemon     *daemon,
+daemon_enumerate_adapters (Daemon     *daemon,
                                            DBusGMethodInvocation *context)
 {
         GPtrArray *object_paths;
@@ -2501,15 +2501,15 @@ devkit_disks_daemon_enumerate_adapters (DevkitDisksDaemon     *daemon,
 static void
 enumerate_expander_cb (gpointer key, gpointer value, gpointer user_data)
 {
-        DevkitDisksExpander *expander = DEVKIT_DISKS_EXPANDER (value);
+        Expander *expander = EXPANDER (value);
         GPtrArray *object_paths = user_data;
-        g_ptr_array_add (object_paths, g_strdup (devkit_disks_expander_local_get_object_path (expander)));
+        g_ptr_array_add (object_paths, g_strdup (expander_local_get_object_path (expander)));
 }
 
 /* dbus-send --system --print-reply --dest=org.freedesktop.UDisks /org/freedesktop/UDisks org.freedesktop.UDisks.EnumerateExpanders
  */
 gboolean
-devkit_disks_daemon_enumerate_expanders (DevkitDisksDaemon     *daemon,
+daemon_enumerate_expanders (Daemon     *daemon,
                                            DBusGMethodInvocation *context)
 {
         GPtrArray *object_paths;
@@ -2527,15 +2527,15 @@ devkit_disks_daemon_enumerate_expanders (DevkitDisksDaemon     *daemon,
 static void
 enumerate_port_cb (gpointer key, gpointer value, gpointer user_data)
 {
-        DevkitDisksPort *port = DEVKIT_DISKS_PORT (value);
+        Port *port = PORT (value);
         GPtrArray *object_paths = user_data;
-        g_ptr_array_add (object_paths, g_strdup (devkit_disks_port_local_get_object_path (port)));
+        g_ptr_array_add (object_paths, g_strdup (port_local_get_object_path (port)));
 }
 
 /* dbus-send --system --print-reply --dest=org.freedesktop.UDisks /org/freedesktop/UDisks org.freedesktop.UDisks.EnumeratePorts
  */
 gboolean
-devkit_disks_daemon_enumerate_ports (DevkitDisksDaemon     *daemon,
+daemon_enumerate_ports (Daemon     *daemon,
                                            DBusGMethodInvocation *context)
 {
         GPtrArray *object_paths;
@@ -2553,11 +2553,11 @@ devkit_disks_daemon_enumerate_ports (DevkitDisksDaemon     *daemon,
 static void
 enumerate_device_files_cb (gpointer key, gpointer value, gpointer user_data)
 {
-        DevkitDisksDevice *device = DEVKIT_DISKS_DEVICE (value);
+        Device *device = DEVICE (value);
         GPtrArray *device_files = user_data;
         guint n;
 
-        g_ptr_array_add (device_files, g_strdup (devkit_disks_device_local_get_device_file (device)));
+        g_ptr_array_add (device_files, g_strdup (device_local_get_device_file (device)));
 
         for (n = 0; n < device->priv->device_file_by_id->len; n++) {
                 g_ptr_array_add (device_files,
@@ -2571,7 +2571,7 @@ enumerate_device_files_cb (gpointer key, gpointer value, gpointer user_data)
 }
 
 gboolean
-devkit_disks_daemon_enumerate_device_files (DevkitDisksDaemon     *daemon,
+daemon_enumerate_device_files (Daemon     *daemon,
                                             DBusGMethodInvocation *context)
 {
         GPtrArray *device_files;
@@ -2588,25 +2588,25 @@ devkit_disks_daemon_enumerate_device_files (DevkitDisksDaemon     *daemon,
 /*--------------------------------------------------------------------------------------------------------------*/
 
 gboolean
-devkit_disks_daemon_find_device_by_device_file (DevkitDisksDaemon     *daemon,
+daemon_find_device_by_device_file (Daemon     *daemon,
                                                 const char            *device_file,
                                                 DBusGMethodInvocation *context)
 {
         const char *object_path;
-        DevkitDisksDevice *device;
+        Device *device;
         gchar canonical_device_file[PATH_MAX];
 
         realpath (device_file, canonical_device_file);
 
         object_path = NULL;
 
-        device = devkit_disks_daemon_local_find_by_device_file (daemon, canonical_device_file);
+        device = daemon_local_find_by_device_file (daemon, canonical_device_file);
         if (device != NULL) {
-                object_path = devkit_disks_device_local_get_object_path (device);
+                object_path = device_local_get_object_path (device);
                 dbus_g_method_return (context, object_path);
         } else {
                 throw_error (context,
-                             DEVKIT_DISKS_ERROR_FAILED,
+                             ERROR_FAILED,
                              "No such device");
         }
 
@@ -2616,26 +2616,26 @@ devkit_disks_daemon_find_device_by_device_file (DevkitDisksDaemon     *daemon,
 /*--------------------------------------------------------------------------------------------------------------*/
 
 gboolean
-devkit_disks_daemon_find_device_by_major_minor (DevkitDisksDaemon     *daemon,
+daemon_find_device_by_major_minor (Daemon     *daemon,
                                                 gint64                  major,
                                                 gint64                  minor,
                                                 DBusGMethodInvocation *context)
 {
         const char *object_path;
-        DevkitDisksDevice *device;
+        Device *device;
         dev_t dev;
 
         dev = makedev (major, minor);
 
         object_path = NULL;
 
-        device = devkit_disks_daemon_local_find_by_dev (daemon, dev);
+        device = daemon_local_find_by_dev (daemon, dev);
         if (device != NULL) {
-                object_path = devkit_disks_device_local_get_object_path (device);
+                object_path = device_local_get_object_path (device);
                 dbus_g_method_return (context, object_path);
         } else {
                 throw_error (context,
-                             DEVKIT_DISKS_ERROR_FAILED,
+                             ERROR_FAILED,
                              "No such device");
         }
 
@@ -2645,68 +2645,68 @@ devkit_disks_daemon_find_device_by_major_minor (DevkitDisksDaemon     *daemon,
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static void
-daemon_polling_inhibitor_disconnected_cb (DevkitDisksInhibitor *inhibitor,
-                                          DevkitDisksDaemon    *daemon)
+daemon_polling_inhibitor_disconnected_cb (Inhibitor *inhibitor,
+                                          Daemon    *daemon)
 {
         daemon->priv->polling_inhibitors = g_list_remove (daemon->priv->polling_inhibitors, inhibitor);
         g_signal_handlers_disconnect_by_func (inhibitor, daemon_polling_inhibitor_disconnected_cb, daemon);
         g_object_unref (inhibitor);
 
-        devkit_disks_daemon_local_synthesize_changed_on_all_devices (daemon);
-        devkit_disks_daemon_local_update_poller (daemon);
+        daemon_local_synthesize_changed_on_all_devices (daemon);
+        daemon_local_update_poller (daemon);
 }
 
 gboolean
-devkit_disks_daemon_local_has_polling_inhibitors (DevkitDisksDaemon *daemon)
+daemon_local_has_polling_inhibitors (Daemon *daemon)
 {
         return daemon->priv->polling_inhibitors != NULL;
 }
 
 static void
-devkit_disks_daemon_drive_inhibit_all_polling_authorized_cb (DevkitDisksDaemon     *daemon,
-                                                             DevkitDisksDevice     *device,
+daemon_drive_inhibit_all_polling_authorized_cb (Daemon     *daemon,
+                                                             Device     *device,
                                                              DBusGMethodInvocation *context,
                                                              const gchar           *action_id,
                                                              guint                  num_user_data,
                                                              gpointer              *user_data_elements)
 {
         gchar **options = user_data_elements[0];
-        DevkitDisksInhibitor *inhibitor;
+        Inhibitor *inhibitor;
         guint n;
 
         for (n = 0; options[n] != NULL; n++) {
                 const char *option = options[n];
                 throw_error (context,
-                             DEVKIT_DISKS_ERROR_INVALID_OPTION,
+                             ERROR_INVALID_OPTION,
                              "Unknown option %s", option);
                 goto out;
         }
 
-        inhibitor = devkit_disks_inhibitor_new (context);
+        inhibitor = inhibitor_new (context);
 
         daemon->priv->polling_inhibitors = g_list_prepend (daemon->priv->polling_inhibitors, inhibitor);
         g_signal_connect (inhibitor, "disconnected", G_CALLBACK (daemon_polling_inhibitor_disconnected_cb), daemon);
 
-        devkit_disks_daemon_local_synthesize_changed_on_all_devices (daemon);
-        devkit_disks_daemon_local_update_poller (daemon);
+        daemon_local_synthesize_changed_on_all_devices (daemon);
+        daemon_local_update_poller (daemon);
 
-        dbus_g_method_return (context, devkit_disks_inhibitor_get_cookie (inhibitor));
+        dbus_g_method_return (context, inhibitor_get_cookie (inhibitor));
 
 out:
         ;
 }
 
 gboolean
-devkit_disks_daemon_drive_inhibit_all_polling (DevkitDisksDaemon     *daemon,
+daemon_drive_inhibit_all_polling (Daemon     *daemon,
                                                char                 **options,
                                                DBusGMethodInvocation *context)
 {
-        devkit_disks_daemon_local_check_auth (daemon,
+        daemon_local_check_auth (daemon,
                                               NULL,
                                               "org.freedesktop.devicekit.disks.inhibit-polling",
                                               "InhibitAllPolling",
                                               TRUE,
-                                              devkit_disks_daemon_drive_inhibit_all_polling_authorized_cb,
+                                              daemon_drive_inhibit_all_polling_authorized_cb,
                                               context,
                                               1,
                                               g_strdupv (options), g_strfreev);
@@ -2716,22 +2716,22 @@ devkit_disks_daemon_drive_inhibit_all_polling (DevkitDisksDaemon     *daemon,
 /*--------------------------------------------------------------------------------------------------------------*/
 
 gboolean
-devkit_disks_daemon_drive_uninhibit_all_polling (DevkitDisksDaemon     *daemon,
+daemon_drive_uninhibit_all_polling (Daemon     *daemon,
                                                  char                  *cookie,
                                                  DBusGMethodInvocation *context)
 {
         const gchar *sender;
-        DevkitDisksInhibitor *inhibitor;
+        Inhibitor *inhibitor;
         GList *l;
 
         sender = dbus_g_method_get_sender (context);
 
         inhibitor = NULL;
         for (l = daemon->priv->polling_inhibitors; l != NULL; l = l->next) {
-                DevkitDisksInhibitor *i = DEVKIT_DISKS_INHIBITOR (l->data);
+                Inhibitor *i = INHIBITOR (l->data);
 
-                if (g_strcmp0 (devkit_disks_inhibitor_get_unique_dbus_name (i), sender) == 0 &&
-                    g_strcmp0 (devkit_disks_inhibitor_get_cookie (i), cookie) == 0) {
+                if (g_strcmp0 (inhibitor_get_unique_dbus_name (i), sender) == 0 &&
+                    g_strcmp0 (inhibitor_get_cookie (i), cookie) == 0) {
                         inhibitor = i;
                         break;
                 }
@@ -2739,7 +2739,7 @@ devkit_disks_daemon_drive_uninhibit_all_polling (DevkitDisksDaemon     *daemon,
 
         if (inhibitor == NULL) {
                 throw_error (context,
-                             DEVKIT_DISKS_ERROR_FAILED,
+                             ERROR_FAILED,
                              "No such inhibitor");
                 goto out;
         }
@@ -2747,8 +2747,8 @@ devkit_disks_daemon_drive_uninhibit_all_polling (DevkitDisksDaemon     *daemon,
         daemon->priv->polling_inhibitors = g_list_remove (daemon->priv->polling_inhibitors, inhibitor);
         g_object_unref (inhibitor);
 
-        devkit_disks_daemon_local_synthesize_changed_on_all_devices (daemon);
-        devkit_disks_daemon_local_update_poller (daemon);
+        daemon_local_synthesize_changed_on_all_devices (daemon);
+        daemon_local_update_poller (daemon);
 
         dbus_g_method_return (context);
 
@@ -2759,8 +2759,8 @@ devkit_disks_daemon_drive_uninhibit_all_polling (DevkitDisksDaemon     *daemon,
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static void
-daemon_inhibitor_disconnected_cb (DevkitDisksInhibitor *inhibitor,
-                                  DevkitDisksDaemon    *daemon)
+daemon_inhibitor_disconnected_cb (Inhibitor *inhibitor,
+                                  Daemon    *daemon)
 {
         daemon->priv->inhibitors = g_list_remove (daemon->priv->inhibitors, inhibitor);
         g_signal_handlers_disconnect_by_func (inhibitor, daemon_inhibitor_disconnected_cb, daemon);
@@ -2768,34 +2768,34 @@ daemon_inhibitor_disconnected_cb (DevkitDisksInhibitor *inhibitor,
 }
 
 gboolean
-devkit_disks_daemon_local_is_inhibited (DevkitDisksDaemon *daemon)
+daemon_local_is_inhibited (Daemon *daemon)
 {
         return daemon->priv->inhibitors != NULL;
 }
 
 gboolean
-devkit_disks_daemon_inhibit (DevkitDisksDaemon     *daemon,
+daemon_inhibit (Daemon     *daemon,
                              DBusGMethodInvocation *context)
 {
-        DevkitDisksInhibitor *inhibitor;
+        Inhibitor *inhibitor;
         uid_t uid;
 
-        if (!devkit_disks_daemon_local_get_uid (daemon, &uid, context))
+        if (!daemon_local_get_uid (daemon, &uid, context))
                 goto out;
 
         if (uid != 0) {
                 throw_error (context,
-                             DEVKIT_DISKS_ERROR_FAILED,
+                             ERROR_FAILED,
                              "Only uid 0 is authorized to inhibit the daemon");
                 goto out;
         }
 
-        inhibitor = devkit_disks_inhibitor_new (context);
+        inhibitor = inhibitor_new (context);
 
         daemon->priv->inhibitors = g_list_prepend (daemon->priv->inhibitors, inhibitor);
         g_signal_connect (inhibitor, "disconnected", G_CALLBACK (daemon_inhibitor_disconnected_cb), daemon);
 
-        dbus_g_method_return (context, devkit_disks_inhibitor_get_cookie (inhibitor));
+        dbus_g_method_return (context, inhibitor_get_cookie (inhibitor));
 
 out:
         return TRUE;
@@ -2805,22 +2805,22 @@ out:
 /*--------------------------------------------------------------------------------------------------------------*/
 
 gboolean
-devkit_disks_daemon_uninhibit (DevkitDisksDaemon     *daemon,
+daemon_uninhibit (Daemon     *daemon,
                                char                  *cookie,
                                DBusGMethodInvocation *context)
 {
         const gchar *sender;
-        DevkitDisksInhibitor *inhibitor;
+        Inhibitor *inhibitor;
         GList *l;
 
         sender = dbus_g_method_get_sender (context);
 
         inhibitor = NULL;
         for (l = daemon->priv->inhibitors; l != NULL; l = l->next) {
-                DevkitDisksInhibitor *i = DEVKIT_DISKS_INHIBITOR (l->data);
+                Inhibitor *i = INHIBITOR (l->data);
 
-                if (g_strcmp0 (devkit_disks_inhibitor_get_unique_dbus_name (i), sender) == 0 &&
-                    g_strcmp0 (devkit_disks_inhibitor_get_cookie (i), cookie) == 0) {
+                if (g_strcmp0 (inhibitor_get_unique_dbus_name (i), sender) == 0 &&
+                    g_strcmp0 (inhibitor_get_cookie (i), cookie) == 0) {
                         inhibitor = i;
                         break;
                 }
@@ -2828,7 +2828,7 @@ devkit_disks_daemon_uninhibit (DevkitDisksDaemon     *daemon,
 
         if (inhibitor == NULL) {
                 throw_error (context,
-                             DEVKIT_DISKS_ERROR_FAILED,
+                             ERROR_FAILED,
                              "No such inhibitor");
                 goto out;
         }
@@ -2846,19 +2846,19 @@ devkit_disks_daemon_uninhibit (DevkitDisksDaemon     *daemon,
 
 
 static void
-daemon_spindown_inhibitor_disconnected_cb (DevkitDisksInhibitor *inhibitor,
-                                           DevkitDisksDaemon     *daemon)
+daemon_spindown_inhibitor_disconnected_cb (Inhibitor *inhibitor,
+                                           Daemon     *daemon)
 {
         daemon->priv->spindown_inhibitors = g_list_remove (daemon->priv->spindown_inhibitors, inhibitor);
         g_signal_handlers_disconnect_by_func (inhibitor, daemon_spindown_inhibitor_disconnected_cb, daemon);
         g_object_unref (inhibitor);
 
-        devkit_disks_daemon_local_update_spindown (daemon);
+        daemon_local_update_spindown (daemon);
 }
 
 static void
-devkit_disks_daemon_drive_set_all_spindown_timeouts_authorized_cb (DevkitDisksDaemon     *daemon,
-                                                                   DevkitDisksDevice     *device,
+daemon_drive_set_all_spindown_timeouts_authorized_cb (Daemon     *daemon,
+                                                                   Device     *device,
                                                                    DBusGMethodInvocation *context,
                                                                    const gchar           *action_id,
                                                                    guint                  num_user_data,
@@ -2866,11 +2866,11 @@ devkit_disks_daemon_drive_set_all_spindown_timeouts_authorized_cb (DevkitDisksDa
 {
         gint timeout_seconds = GPOINTER_TO_INT (user_data_elements[0]);
         gchar **options = user_data_elements[1];
-        DevkitDisksInhibitor *inhibitor;
+        Inhibitor *inhibitor;
         guint n;
 
         if (timeout_seconds < 1) {
-                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                throw_error (context, ERROR_FAILED,
                              "Timeout seconds must be at least 1");
                 goto out;
         }
@@ -2878,44 +2878,44 @@ devkit_disks_daemon_drive_set_all_spindown_timeouts_authorized_cb (DevkitDisksDa
         for (n = 0; options[n] != NULL; n++) {
                 const char *option = options[n];
                 throw_error (context,
-                             DEVKIT_DISKS_ERROR_INVALID_OPTION,
+                             ERROR_INVALID_OPTION,
                              "Unknown option %s", option);
                 goto out;
         }
 
-        inhibitor = devkit_disks_inhibitor_new (context);
+        inhibitor = inhibitor_new (context);
 
         g_object_set_data (G_OBJECT (inhibitor), "spindown-timeout-seconds", GINT_TO_POINTER (timeout_seconds));
 
         daemon->priv->spindown_inhibitors = g_list_prepend (daemon->priv->spindown_inhibitors, inhibitor);
         g_signal_connect (inhibitor, "disconnected", G_CALLBACK (daemon_spindown_inhibitor_disconnected_cb), daemon);
 
-        devkit_disks_daemon_local_update_spindown (daemon);
+        daemon_local_update_spindown (daemon);
 
-        dbus_g_method_return (context, devkit_disks_inhibitor_get_cookie (inhibitor));
+        dbus_g_method_return (context, inhibitor_get_cookie (inhibitor));
 
 out:
         ;
 }
 
 gboolean
-devkit_disks_daemon_drive_set_all_spindown_timeouts (DevkitDisksDaemon     *daemon,
+daemon_drive_set_all_spindown_timeouts (Daemon     *daemon,
                                                      int                    timeout_seconds,
                                                      char                 **options,
                                                      DBusGMethodInvocation *context)
 {
         if (timeout_seconds < 1) {
-                throw_error (context, DEVKIT_DISKS_ERROR_FAILED,
+                throw_error (context, ERROR_FAILED,
                              "Timeout seconds must be at least 1");
                 goto out;
         }
 
-        devkit_disks_daemon_local_check_auth (daemon,
+        daemon_local_check_auth (daemon,
                                               NULL,
                                               "org.freedesktop.devicekit.disks.drive-set-spindown",
                                               "DriveSetAllSpindownTimeouts",
                                               TRUE,
-                                              devkit_disks_daemon_drive_set_all_spindown_timeouts_authorized_cb,
+                                              daemon_drive_set_all_spindown_timeouts_authorized_cb,
                                               context,
                                               2,
                                               GINT_TO_POINTER (timeout_seconds), NULL,
@@ -2927,22 +2927,22 @@ devkit_disks_daemon_drive_set_all_spindown_timeouts (DevkitDisksDaemon     *daem
 }
 
 gboolean
-devkit_disks_daemon_drive_unset_all_spindown_timeouts (DevkitDisksDaemon     *daemon,
+daemon_drive_unset_all_spindown_timeouts (Daemon     *daemon,
                                                        char                  *cookie,
                                                        DBusGMethodInvocation *context)
 {
         const gchar *sender;
-        DevkitDisksInhibitor *inhibitor;
+        Inhibitor *inhibitor;
         GList *l;
 
         sender = dbus_g_method_get_sender (context);
 
         inhibitor = NULL;
         for (l = daemon->priv->spindown_inhibitors; l != NULL; l = l->next) {
-                DevkitDisksInhibitor *i = DEVKIT_DISKS_INHIBITOR (l->data);
+                Inhibitor *i = INHIBITOR (l->data);
 
-                if (g_strcmp0 (devkit_disks_inhibitor_get_unique_dbus_name (i), sender) == 0 &&
-                    g_strcmp0 (devkit_disks_inhibitor_get_cookie (i), cookie) == 0) {
+                if (g_strcmp0 (inhibitor_get_unique_dbus_name (i), sender) == 0 &&
+                    g_strcmp0 (inhibitor_get_cookie (i), cookie) == 0) {
                         inhibitor = i;
                         break;
                 }
@@ -2950,7 +2950,7 @@ devkit_disks_daemon_drive_unset_all_spindown_timeouts (DevkitDisksDaemon     *da
 
         if (inhibitor == NULL) {
                 throw_error (context,
-                             DEVKIT_DISKS_ERROR_FAILED,
+                             ERROR_FAILED,
                              "No such spindown configurator");
                 goto out;
         }
@@ -2958,7 +2958,7 @@ devkit_disks_daemon_drive_unset_all_spindown_timeouts (DevkitDisksDaemon     *da
         daemon->priv->spindown_inhibitors = g_list_remove (daemon->priv->spindown_inhibitors, inhibitor);
         g_object_unref (inhibitor);
 
-        devkit_disks_daemon_local_update_spindown (daemon);
+        daemon_local_update_spindown (daemon);
 
         dbus_g_method_return (context);
 

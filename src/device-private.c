@@ -22,13 +22,13 @@
 #endif
 
 #include <string.h>
-#include "devkit-disks-device.h"
-#include "devkit-disks-device-private.h"
+#include "device.h"
+#include "device-private.h"
 
 static gboolean
 emit_changed_idle_cb (gpointer data)
 {
-  DevkitDisksDevice *device = DEVKIT_DISKS_DEVICE (data);
+  Device *device = DEVICE (data);
 
   //g_debug ("XXX emitting 'changed' in idle");
 
@@ -47,7 +47,7 @@ emit_changed_idle_cb (gpointer data)
 }
 
 static void
-emit_changed (DevkitDisksDevice *device, const gchar *name)
+emit_changed (Device *device, const gchar *name)
 {
   //g_debug ("property %s changed for %s", name, device->priv->device_file);
 
@@ -107,7 +107,7 @@ ptr_str_array_from_strv (GStrv s)
 }
 
 void
-devkit_disks_device_set_device_detection_time (DevkitDisksDevice *device, guint64 value)
+device_set_device_detection_time (Device *device, guint64 value)
 {
   if (G_UNLIKELY (device->priv->device_detection_time != value))
     {
@@ -117,7 +117,7 @@ devkit_disks_device_set_device_detection_time (DevkitDisksDevice *device, guint6
 }
 
 void
-devkit_disks_device_set_device_media_detection_time (DevkitDisksDevice *device, guint64 value)
+device_set_device_media_detection_time (Device *device, guint64 value)
 {
   if (G_UNLIKELY (device->priv->device_media_detection_time != value))
     {
@@ -127,7 +127,7 @@ devkit_disks_device_set_device_media_detection_time (DevkitDisksDevice *device, 
 }
 
 void
-devkit_disks_device_set_job_in_progress (DevkitDisksDevice *device, gboolean value)
+device_set_job_in_progress (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->job_in_progress != value))
     {
@@ -137,7 +137,7 @@ devkit_disks_device_set_job_in_progress (DevkitDisksDevice *device, gboolean val
 }
 
 void
-devkit_disks_device_set_job_id (DevkitDisksDevice *device, const gchar *value)
+device_set_job_id (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->job_id, value) != 0))
     {
@@ -148,7 +148,7 @@ devkit_disks_device_set_job_id (DevkitDisksDevice *device, const gchar *value)
 }
 
 void
-devkit_disks_device_set_job_initiated_by_uid (DevkitDisksDevice *device, guint value)
+device_set_job_initiated_by_uid (Device *device, guint value)
 {
   if (G_UNLIKELY (device->priv->job_initiated_by_uid != value))
     {
@@ -158,7 +158,7 @@ devkit_disks_device_set_job_initiated_by_uid (DevkitDisksDevice *device, guint v
 }
 
 void
-devkit_disks_device_set_job_is_cancellable (DevkitDisksDevice *device, gboolean value)
+device_set_job_is_cancellable (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->job_is_cancellable != value))
     {
@@ -168,7 +168,7 @@ devkit_disks_device_set_job_is_cancellable (DevkitDisksDevice *device, gboolean 
 }
 
 void
-devkit_disks_device_set_job_percentage (DevkitDisksDevice *device, gdouble value)
+device_set_job_percentage (Device *device, gdouble value)
 {
   if (G_UNLIKELY (device->priv->job_percentage != value))
     {
@@ -178,7 +178,7 @@ devkit_disks_device_set_job_percentage (DevkitDisksDevice *device, gdouble value
 }
 
 void
-devkit_disks_device_set_device_file (DevkitDisksDevice *device, const gchar *value)
+device_set_device_file (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->device_file, value) != 0))
     {
@@ -189,7 +189,7 @@ devkit_disks_device_set_device_file (DevkitDisksDevice *device, const gchar *val
 }
 
 void
-devkit_disks_device_set_device_file_by_id (DevkitDisksDevice *device, GStrv value)
+device_set_device_file_by_id (Device *device, GStrv value)
 {
   if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->device_file_by_id, value)))
     {
@@ -200,7 +200,7 @@ devkit_disks_device_set_device_file_by_id (DevkitDisksDevice *device, GStrv valu
 }
 
 void
-devkit_disks_device_set_device_file_by_path (DevkitDisksDevice *device, GStrv value)
+device_set_device_file_by_path (Device *device, GStrv value)
 {
   if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->device_file_by_path, value)))
     {
@@ -211,7 +211,7 @@ devkit_disks_device_set_device_file_by_path (DevkitDisksDevice *device, GStrv va
 }
 
 void
-devkit_disks_device_set_device_is_system_internal (DevkitDisksDevice *device, gboolean value)
+device_set_device_is_system_internal (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_system_internal != value))
     {
@@ -221,7 +221,7 @@ devkit_disks_device_set_device_is_system_internal (DevkitDisksDevice *device, gb
 }
 
 void
-devkit_disks_device_set_device_is_partition (DevkitDisksDevice *device, gboolean value)
+device_set_device_is_partition (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_partition != value))
     {
@@ -231,7 +231,7 @@ devkit_disks_device_set_device_is_partition (DevkitDisksDevice *device, gboolean
 }
 
 void
-devkit_disks_device_set_device_is_partition_table (DevkitDisksDevice *device, gboolean value)
+device_set_device_is_partition_table (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_partition_table != value))
     {
@@ -241,7 +241,7 @@ devkit_disks_device_set_device_is_partition_table (DevkitDisksDevice *device, gb
 }
 
 void
-devkit_disks_device_set_device_is_removable (DevkitDisksDevice *device, gboolean value)
+device_set_device_is_removable (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_removable != value))
     {
@@ -251,7 +251,7 @@ devkit_disks_device_set_device_is_removable (DevkitDisksDevice *device, gboolean
 }
 
 void
-devkit_disks_device_set_device_is_media_available (DevkitDisksDevice *device, gboolean value)
+device_set_device_is_media_available (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_media_available != value))
     {
@@ -261,7 +261,7 @@ devkit_disks_device_set_device_is_media_available (DevkitDisksDevice *device, gb
 }
 
 void
-devkit_disks_device_set_device_is_media_change_detected (DevkitDisksDevice *device, gboolean value)
+device_set_device_is_media_change_detected (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_media_change_detected != value))
     {
@@ -271,7 +271,7 @@ devkit_disks_device_set_device_is_media_change_detected (DevkitDisksDevice *devi
 }
 
 void
-devkit_disks_device_set_device_is_media_change_detection_polling (DevkitDisksDevice *device, gboolean value)
+device_set_device_is_media_change_detection_polling (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_media_change_detection_polling != value))
     {
@@ -281,7 +281,7 @@ devkit_disks_device_set_device_is_media_change_detection_polling (DevkitDisksDev
 }
 
 void
-devkit_disks_device_set_device_is_media_change_detection_inhibitable (DevkitDisksDevice *device, gboolean value)
+device_set_device_is_media_change_detection_inhibitable (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_media_change_detection_inhibitable != value))
     {
@@ -291,7 +291,7 @@ devkit_disks_device_set_device_is_media_change_detection_inhibitable (DevkitDisk
 }
 
 void
-devkit_disks_device_set_device_is_media_change_detection_inhibited (DevkitDisksDevice *device, gboolean value)
+device_set_device_is_media_change_detection_inhibited (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_media_change_detection_inhibited != value))
     {
@@ -301,7 +301,7 @@ devkit_disks_device_set_device_is_media_change_detection_inhibited (DevkitDisksD
 }
 
 void
-devkit_disks_device_set_device_is_read_only (DevkitDisksDevice *device, gboolean value)
+device_set_device_is_read_only (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_read_only != value))
     {
@@ -311,7 +311,7 @@ devkit_disks_device_set_device_is_read_only (DevkitDisksDevice *device, gboolean
 }
 
 void
-devkit_disks_device_set_device_is_drive (DevkitDisksDevice *device, gboolean value)
+device_set_device_is_drive (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_drive != value))
     {
@@ -321,7 +321,7 @@ devkit_disks_device_set_device_is_drive (DevkitDisksDevice *device, gboolean val
 }
 
 void
-devkit_disks_device_set_device_is_optical_disc (DevkitDisksDevice *device, gboolean value)
+device_set_device_is_optical_disc (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_optical_disc != value))
     {
@@ -331,7 +331,7 @@ devkit_disks_device_set_device_is_optical_disc (DevkitDisksDevice *device, gbool
 }
 
 void
-devkit_disks_device_set_device_is_luks (DevkitDisksDevice *device, gboolean value)
+device_set_device_is_luks (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_luks != value))
     {
@@ -341,7 +341,7 @@ devkit_disks_device_set_device_is_luks (DevkitDisksDevice *device, gboolean valu
 }
 
 void
-devkit_disks_device_set_device_is_luks_cleartext (DevkitDisksDevice *device, gboolean value)
+device_set_device_is_luks_cleartext (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_luks_cleartext != value))
     {
@@ -351,7 +351,7 @@ devkit_disks_device_set_device_is_luks_cleartext (DevkitDisksDevice *device, gbo
 }
 
 void
-devkit_disks_device_set_device_is_linux_md_component (DevkitDisksDevice *device, gboolean value)
+device_set_device_is_linux_md_component (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_linux_md_component != value))
     {
@@ -361,7 +361,7 @@ devkit_disks_device_set_device_is_linux_md_component (DevkitDisksDevice *device,
 }
 
 void
-devkit_disks_device_set_device_is_linux_md (DevkitDisksDevice *device, gboolean value)
+device_set_device_is_linux_md (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_linux_md != value))
     {
@@ -371,7 +371,7 @@ devkit_disks_device_set_device_is_linux_md (DevkitDisksDevice *device, gboolean 
 }
 
 void
-devkit_disks_device_set_device_size (DevkitDisksDevice *device, guint64 value)
+device_set_device_size (Device *device, guint64 value)
 {
   if (G_UNLIKELY (device->priv->device_size != value))
     {
@@ -381,7 +381,7 @@ devkit_disks_device_set_device_size (DevkitDisksDevice *device, guint64 value)
 }
 
 void
-devkit_disks_device_set_device_block_size (DevkitDisksDevice *device, guint64 value)
+device_set_device_block_size (Device *device, guint64 value)
 {
   if (G_UNLIKELY (device->priv->device_block_size != value))
     {
@@ -391,7 +391,7 @@ devkit_disks_device_set_device_block_size (DevkitDisksDevice *device, guint64 va
 }
 
 void
-devkit_disks_device_set_device_is_mounted (DevkitDisksDevice *device, gboolean value)
+device_set_device_is_mounted (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_mounted != value))
     {
@@ -401,7 +401,7 @@ devkit_disks_device_set_device_is_mounted (DevkitDisksDevice *device, gboolean v
 }
 
 void
-devkit_disks_device_set_device_mount_paths (DevkitDisksDevice *device, GStrv value)
+device_set_device_mount_paths (Device *device, GStrv value)
 {
   if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->device_mount_paths, value)))
     {
@@ -412,7 +412,7 @@ devkit_disks_device_set_device_mount_paths (DevkitDisksDevice *device, GStrv val
 }
 
 void
-devkit_disks_device_set_device_presentation_hide (DevkitDisksDevice *device, gboolean value)
+device_set_device_presentation_hide (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_presentation_hide != value))
     {
@@ -422,7 +422,7 @@ devkit_disks_device_set_device_presentation_hide (DevkitDisksDevice *device, gbo
 }
 
 void
-devkit_disks_device_set_device_presentation_nopolicy (DevkitDisksDevice *device, gboolean value)
+device_set_device_presentation_nopolicy (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_presentation_nopolicy != value))
     {
@@ -432,7 +432,7 @@ devkit_disks_device_set_device_presentation_nopolicy (DevkitDisksDevice *device,
 }
 
 void
-devkit_disks_device_set_device_presentation_name (DevkitDisksDevice *device, const gchar *value)
+device_set_device_presentation_name (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->device_presentation_name, value) != 0))
     {
@@ -443,7 +443,7 @@ devkit_disks_device_set_device_presentation_name (DevkitDisksDevice *device, con
 }
 
 void
-devkit_disks_device_set_device_presentation_icon_name (DevkitDisksDevice *device, const gchar *value)
+device_set_device_presentation_icon_name (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->device_presentation_icon_name, value) != 0))
     {
@@ -454,7 +454,7 @@ devkit_disks_device_set_device_presentation_icon_name (DevkitDisksDevice *device
 }
 
 void
-devkit_disks_device_set_device_mounted_by_uid (DevkitDisksDevice *device, guint value)
+device_set_device_mounted_by_uid (Device *device, guint value)
 {
   if (G_UNLIKELY (device->priv->device_mounted_by_uid != value))
     {
@@ -464,7 +464,7 @@ devkit_disks_device_set_device_mounted_by_uid (DevkitDisksDevice *device, guint 
 }
 
 void
-devkit_disks_device_set_id_usage (DevkitDisksDevice *device, const gchar *value)
+device_set_id_usage (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->id_usage, value) != 0))
     {
@@ -475,7 +475,7 @@ devkit_disks_device_set_id_usage (DevkitDisksDevice *device, const gchar *value)
 }
 
 void
-devkit_disks_device_set_id_type (DevkitDisksDevice *device, const gchar *value)
+device_set_id_type (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->id_type, value) != 0))
     {
@@ -486,7 +486,7 @@ devkit_disks_device_set_id_type (DevkitDisksDevice *device, const gchar *value)
 }
 
 void
-devkit_disks_device_set_id_version (DevkitDisksDevice *device, const gchar *value)
+device_set_id_version (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->id_version, value) != 0))
     {
@@ -497,7 +497,7 @@ devkit_disks_device_set_id_version (DevkitDisksDevice *device, const gchar *valu
 }
 
 void
-devkit_disks_device_set_id_uuid (DevkitDisksDevice *device, const gchar *value)
+device_set_id_uuid (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->id_uuid, value) != 0))
     {
@@ -508,7 +508,7 @@ devkit_disks_device_set_id_uuid (DevkitDisksDevice *device, const gchar *value)
 }
 
 void
-devkit_disks_device_set_id_label (DevkitDisksDevice *device, const gchar *value)
+device_set_id_label (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->id_label, value) != 0))
     {
@@ -519,7 +519,7 @@ devkit_disks_device_set_id_label (DevkitDisksDevice *device, const gchar *value)
 }
 
 void
-devkit_disks_device_set_partition_slave (DevkitDisksDevice *device, const gchar *value)
+device_set_partition_slave (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->partition_slave, value) != 0))
     {
@@ -530,7 +530,7 @@ devkit_disks_device_set_partition_slave (DevkitDisksDevice *device, const gchar 
 }
 
 void
-devkit_disks_device_set_partition_scheme (DevkitDisksDevice *device, const gchar *value)
+device_set_partition_scheme (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->partition_scheme, value) != 0))
     {
@@ -541,7 +541,7 @@ devkit_disks_device_set_partition_scheme (DevkitDisksDevice *device, const gchar
 }
 
 void
-devkit_disks_device_set_partition_type (DevkitDisksDevice *device, const gchar *value)
+device_set_partition_type (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->partition_type, value) != 0))
     {
@@ -552,7 +552,7 @@ devkit_disks_device_set_partition_type (DevkitDisksDevice *device, const gchar *
 }
 
 void
-devkit_disks_device_set_partition_label (DevkitDisksDevice *device, const gchar *value)
+device_set_partition_label (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->partition_label, value) != 0))
     {
@@ -563,7 +563,7 @@ devkit_disks_device_set_partition_label (DevkitDisksDevice *device, const gchar 
 }
 
 void
-devkit_disks_device_set_partition_uuid (DevkitDisksDevice *device, const gchar *value)
+device_set_partition_uuid (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->partition_uuid, value) != 0))
     {
@@ -574,7 +574,7 @@ devkit_disks_device_set_partition_uuid (DevkitDisksDevice *device, const gchar *
 }
 
 void
-devkit_disks_device_set_partition_flags (DevkitDisksDevice *device, GStrv value)
+device_set_partition_flags (Device *device, GStrv value)
 {
   if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->partition_flags, value)))
     {
@@ -585,7 +585,7 @@ devkit_disks_device_set_partition_flags (DevkitDisksDevice *device, GStrv value)
 }
 
 void
-devkit_disks_device_set_partition_number (DevkitDisksDevice *device, gint value)
+device_set_partition_number (Device *device, gint value)
 {
   if (G_UNLIKELY (device->priv->partition_number != value))
     {
@@ -595,7 +595,7 @@ devkit_disks_device_set_partition_number (DevkitDisksDevice *device, gint value)
 }
 
 void
-devkit_disks_device_set_partition_offset (DevkitDisksDevice *device, guint64 value)
+device_set_partition_offset (Device *device, guint64 value)
 {
   if (G_UNLIKELY (device->priv->partition_offset != value))
     {
@@ -605,7 +605,7 @@ devkit_disks_device_set_partition_offset (DevkitDisksDevice *device, guint64 val
 }
 
 void
-devkit_disks_device_set_partition_size (DevkitDisksDevice *device, guint64 value)
+device_set_partition_size (Device *device, guint64 value)
 {
   if (G_UNLIKELY (device->priv->partition_size != value))
     {
@@ -615,7 +615,7 @@ devkit_disks_device_set_partition_size (DevkitDisksDevice *device, guint64 value
 }
 
 void
-devkit_disks_device_set_partition_table_scheme (DevkitDisksDevice *device, const gchar *value)
+device_set_partition_table_scheme (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->partition_table_scheme, value) != 0))
     {
@@ -626,7 +626,7 @@ devkit_disks_device_set_partition_table_scheme (DevkitDisksDevice *device, const
 }
 
 void
-devkit_disks_device_set_partition_table_count (DevkitDisksDevice *device, gint value)
+device_set_partition_table_count (Device *device, gint value)
 {
   if (G_UNLIKELY (device->priv->partition_table_count != value))
     {
@@ -636,7 +636,7 @@ devkit_disks_device_set_partition_table_count (DevkitDisksDevice *device, gint v
 }
 
 void
-devkit_disks_device_set_drive_vendor (DevkitDisksDevice *device, const gchar *value)
+device_set_drive_vendor (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->drive_vendor, value) != 0))
     {
@@ -647,7 +647,7 @@ devkit_disks_device_set_drive_vendor (DevkitDisksDevice *device, const gchar *va
 }
 
 void
-devkit_disks_device_set_drive_model (DevkitDisksDevice *device, const gchar *value)
+device_set_drive_model (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->drive_model, value) != 0))
     {
@@ -658,7 +658,7 @@ devkit_disks_device_set_drive_model (DevkitDisksDevice *device, const gchar *val
 }
 
 void
-devkit_disks_device_set_drive_revision (DevkitDisksDevice *device, const gchar *value)
+device_set_drive_revision (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->drive_revision, value) != 0))
     {
@@ -669,7 +669,7 @@ devkit_disks_device_set_drive_revision (DevkitDisksDevice *device, const gchar *
 }
 
 void
-devkit_disks_device_set_drive_serial (DevkitDisksDevice *device, const gchar *value)
+device_set_drive_serial (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->drive_serial, value) != 0))
     {
@@ -680,7 +680,7 @@ devkit_disks_device_set_drive_serial (DevkitDisksDevice *device, const gchar *va
 }
 
 void
-devkit_disks_device_set_drive_wwn (DevkitDisksDevice *device, const gchar *value)
+device_set_drive_wwn (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->drive_wwn, value) != 0))
     {
@@ -691,7 +691,7 @@ devkit_disks_device_set_drive_wwn (DevkitDisksDevice *device, const gchar *value
 }
 
 void
-devkit_disks_device_set_drive_connection_interface (DevkitDisksDevice *device, const gchar *value)
+device_set_drive_connection_interface (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->drive_connection_interface, value) != 0))
     {
@@ -702,7 +702,7 @@ devkit_disks_device_set_drive_connection_interface (DevkitDisksDevice *device, c
 }
 
 void
-devkit_disks_device_set_drive_connection_speed (DevkitDisksDevice *device, guint value)
+device_set_drive_connection_speed (Device *device, guint value)
 {
   if (G_UNLIKELY (device->priv->drive_connection_speed != value))
     {
@@ -712,7 +712,7 @@ devkit_disks_device_set_drive_connection_speed (DevkitDisksDevice *device, guint
 }
 
 void
-devkit_disks_device_set_drive_media_compatibility (DevkitDisksDevice *device, GStrv value)
+device_set_drive_media_compatibility (Device *device, GStrv value)
 {
   if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->drive_media_compatibility, value)))
     {
@@ -723,7 +723,7 @@ devkit_disks_device_set_drive_media_compatibility (DevkitDisksDevice *device, GS
 }
 
 void
-devkit_disks_device_set_drive_media (DevkitDisksDevice *device, const gchar *value)
+device_set_drive_media (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->drive_media, value) != 0))
     {
@@ -734,7 +734,7 @@ devkit_disks_device_set_drive_media (DevkitDisksDevice *device, const gchar *val
 }
 
 void
-devkit_disks_device_set_drive_is_media_ejectable (DevkitDisksDevice *device, gboolean value)
+device_set_drive_is_media_ejectable (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->drive_is_media_ejectable != value))
     {
@@ -744,7 +744,7 @@ devkit_disks_device_set_drive_is_media_ejectable (DevkitDisksDevice *device, gbo
 }
 
 void
-devkit_disks_device_set_drive_can_detach (DevkitDisksDevice *device, gboolean value)
+device_set_drive_can_detach (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->drive_can_detach != value))
     {
@@ -754,7 +754,7 @@ devkit_disks_device_set_drive_can_detach (DevkitDisksDevice *device, gboolean va
 }
 
 void
-devkit_disks_device_set_drive_can_spindown (DevkitDisksDevice *device, gboolean value)
+device_set_drive_can_spindown (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->drive_can_spindown != value))
     {
@@ -764,7 +764,7 @@ devkit_disks_device_set_drive_can_spindown (DevkitDisksDevice *device, gboolean 
 }
 
 void
-devkit_disks_device_set_drive_is_rotational (DevkitDisksDevice *device, gboolean value)
+device_set_drive_is_rotational (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->drive_is_rotational != value))
     {
@@ -774,7 +774,7 @@ devkit_disks_device_set_drive_is_rotational (DevkitDisksDevice *device, gboolean
 }
 
 void
-devkit_disks_device_set_drive_rotation_rate (DevkitDisksDevice *device, guint value)
+device_set_drive_rotation_rate (Device *device, guint value)
 {
   if (G_UNLIKELY (device->priv->drive_rotation_rate != value))
     {
@@ -784,7 +784,7 @@ devkit_disks_device_set_drive_rotation_rate (DevkitDisksDevice *device, guint va
 }
 
 void
-devkit_disks_device_set_drive_write_cache (DevkitDisksDevice *device, const gchar *value)
+device_set_drive_write_cache (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->drive_write_cache, value) != 0))
     {
@@ -795,7 +795,7 @@ devkit_disks_device_set_drive_write_cache (DevkitDisksDevice *device, const gcha
 }
 
 void
-devkit_disks_device_set_drive_adapter (DevkitDisksDevice *device, const gchar *value)
+device_set_drive_adapter (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->drive_adapter, value) != 0))
     {
@@ -806,7 +806,7 @@ devkit_disks_device_set_drive_adapter (DevkitDisksDevice *device, const gchar *v
 }
 
 void
-devkit_disks_device_set_drive_ports (DevkitDisksDevice *device, GStrv value)
+device_set_drive_ports (Device *device, GStrv value)
 {
   if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->drive_ports, value)))
     {
@@ -817,7 +817,7 @@ devkit_disks_device_set_drive_ports (DevkitDisksDevice *device, GStrv value)
 }
 
 void
-devkit_disks_device_set_optical_disc_is_blank (DevkitDisksDevice *device, gboolean value)
+device_set_optical_disc_is_blank (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->optical_disc_is_blank != value))
     {
@@ -827,7 +827,7 @@ devkit_disks_device_set_optical_disc_is_blank (DevkitDisksDevice *device, gboole
 }
 
 void
-devkit_disks_device_set_optical_disc_is_appendable (DevkitDisksDevice *device, gboolean value)
+device_set_optical_disc_is_appendable (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->optical_disc_is_appendable != value))
     {
@@ -837,7 +837,7 @@ devkit_disks_device_set_optical_disc_is_appendable (DevkitDisksDevice *device, g
 }
 
 void
-devkit_disks_device_set_optical_disc_is_closed (DevkitDisksDevice *device, gboolean value)
+device_set_optical_disc_is_closed (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->optical_disc_is_closed != value))
     {
@@ -847,7 +847,7 @@ devkit_disks_device_set_optical_disc_is_closed (DevkitDisksDevice *device, gbool
 }
 
 void
-devkit_disks_device_set_optical_disc_num_tracks (DevkitDisksDevice *device, guint value)
+device_set_optical_disc_num_tracks (Device *device, guint value)
 {
   if (G_UNLIKELY (device->priv->optical_disc_num_tracks != value))
     {
@@ -857,7 +857,7 @@ devkit_disks_device_set_optical_disc_num_tracks (DevkitDisksDevice *device, guin
 }
 
 void
-devkit_disks_device_set_optical_disc_num_audio_tracks (DevkitDisksDevice *device, guint value)
+device_set_optical_disc_num_audio_tracks (Device *device, guint value)
 {
   if (G_UNLIKELY (device->priv->optical_disc_num_audio_tracks != value))
     {
@@ -867,7 +867,7 @@ devkit_disks_device_set_optical_disc_num_audio_tracks (DevkitDisksDevice *device
 }
 
 void
-devkit_disks_device_set_optical_disc_num_sessions (DevkitDisksDevice *device, guint value)
+device_set_optical_disc_num_sessions (Device *device, guint value)
 {
   if (G_UNLIKELY (device->priv->optical_disc_num_sessions != value))
     {
@@ -877,7 +877,7 @@ devkit_disks_device_set_optical_disc_num_sessions (DevkitDisksDevice *device, gu
 }
 
 void
-devkit_disks_device_set_luks_holder (DevkitDisksDevice *device, const gchar *value)
+device_set_luks_holder (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->luks_holder, value) != 0))
     {
@@ -888,7 +888,7 @@ devkit_disks_device_set_luks_holder (DevkitDisksDevice *device, const gchar *val
 }
 
 void
-devkit_disks_device_set_luks_cleartext_slave (DevkitDisksDevice *device, const gchar *value)
+device_set_luks_cleartext_slave (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->luks_cleartext_slave, value) != 0))
     {
@@ -899,7 +899,7 @@ devkit_disks_device_set_luks_cleartext_slave (DevkitDisksDevice *device, const g
 }
 
 void
-devkit_disks_device_set_luks_cleartext_unlocked_by_uid (DevkitDisksDevice *device, guint value)
+device_set_luks_cleartext_unlocked_by_uid (Device *device, guint value)
 {
   if (G_UNLIKELY (device->priv->luks_cleartext_unlocked_by_uid != value))
     {
@@ -909,7 +909,7 @@ devkit_disks_device_set_luks_cleartext_unlocked_by_uid (DevkitDisksDevice *devic
 }
 
 void
-devkit_disks_device_set_linux_md_component_level (DevkitDisksDevice *device, const gchar *value)
+device_set_linux_md_component_level (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_component_level, value) != 0))
     {
@@ -920,7 +920,7 @@ devkit_disks_device_set_linux_md_component_level (DevkitDisksDevice *device, con
 }
 
 void
-devkit_disks_device_set_linux_md_component_position (DevkitDisksDevice *device, gint value)
+device_set_linux_md_component_position (Device *device, gint value)
 {
   if (G_UNLIKELY (device->priv->linux_md_component_position != value))
     {
@@ -930,7 +930,7 @@ devkit_disks_device_set_linux_md_component_position (DevkitDisksDevice *device, 
 }
 
 void
-devkit_disks_device_set_linux_md_component_num_raid_devices (DevkitDisksDevice *device, gint value)
+device_set_linux_md_component_num_raid_devices (Device *device, gint value)
 {
   if (G_UNLIKELY (device->priv->linux_md_component_num_raid_devices != value))
     {
@@ -940,7 +940,7 @@ devkit_disks_device_set_linux_md_component_num_raid_devices (DevkitDisksDevice *
 }
 
 void
-devkit_disks_device_set_linux_md_component_uuid (DevkitDisksDevice *device, const gchar *value)
+device_set_linux_md_component_uuid (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_component_uuid, value) != 0))
     {
@@ -951,7 +951,7 @@ devkit_disks_device_set_linux_md_component_uuid (DevkitDisksDevice *device, cons
 }
 
 void
-devkit_disks_device_set_linux_md_component_home_host (DevkitDisksDevice *device, const gchar *value)
+device_set_linux_md_component_home_host (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_component_home_host, value) != 0))
     {
@@ -962,7 +962,7 @@ devkit_disks_device_set_linux_md_component_home_host (DevkitDisksDevice *device,
 }
 
 void
-devkit_disks_device_set_linux_md_component_name (DevkitDisksDevice *device, const gchar *value)
+device_set_linux_md_component_name (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_component_name, value) != 0))
     {
@@ -973,7 +973,7 @@ devkit_disks_device_set_linux_md_component_name (DevkitDisksDevice *device, cons
 }
 
 void
-devkit_disks_device_set_linux_md_component_version (DevkitDisksDevice *device, const gchar *value)
+device_set_linux_md_component_version (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_component_version, value) != 0))
     {
@@ -984,7 +984,7 @@ devkit_disks_device_set_linux_md_component_version (DevkitDisksDevice *device, c
 }
 
 void
-devkit_disks_device_set_linux_md_component_holder (DevkitDisksDevice *device, const gchar *value)
+device_set_linux_md_component_holder (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_component_holder, value) != 0))
     {
@@ -995,7 +995,7 @@ devkit_disks_device_set_linux_md_component_holder (DevkitDisksDevice *device, co
 }
 
 void
-devkit_disks_device_set_linux_md_component_state (DevkitDisksDevice *device, GStrv value)
+device_set_linux_md_component_state (Device *device, GStrv value)
 {
   if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->linux_md_component_state, value)))
     {
@@ -1006,7 +1006,7 @@ devkit_disks_device_set_linux_md_component_state (DevkitDisksDevice *device, GSt
 }
 
 void
-devkit_disks_device_set_linux_md_state (DevkitDisksDevice *device, const gchar *value)
+device_set_linux_md_state (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_state, value) != 0))
     {
@@ -1017,7 +1017,7 @@ devkit_disks_device_set_linux_md_state (DevkitDisksDevice *device, const gchar *
 }
 
 void
-devkit_disks_device_set_linux_md_level (DevkitDisksDevice *device, const gchar *value)
+device_set_linux_md_level (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_level, value) != 0))
     {
@@ -1028,7 +1028,7 @@ devkit_disks_device_set_linux_md_level (DevkitDisksDevice *device, const gchar *
 }
 
 void
-devkit_disks_device_set_linux_md_num_raid_devices (DevkitDisksDevice *device, gint value)
+device_set_linux_md_num_raid_devices (Device *device, gint value)
 {
   if (G_UNLIKELY (device->priv->linux_md_num_raid_devices != value))
     {
@@ -1038,7 +1038,7 @@ devkit_disks_device_set_linux_md_num_raid_devices (DevkitDisksDevice *device, gi
 }
 
 void
-devkit_disks_device_set_linux_md_uuid (DevkitDisksDevice *device, const gchar *value)
+device_set_linux_md_uuid (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_uuid, value) != 0))
     {
@@ -1049,7 +1049,7 @@ devkit_disks_device_set_linux_md_uuid (DevkitDisksDevice *device, const gchar *v
 }
 
 void
-devkit_disks_device_set_linux_md_home_host (DevkitDisksDevice *device, const gchar *value)
+device_set_linux_md_home_host (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_home_host, value) != 0))
     {
@@ -1060,7 +1060,7 @@ devkit_disks_device_set_linux_md_home_host (DevkitDisksDevice *device, const gch
 }
 
 void
-devkit_disks_device_set_linux_md_name (DevkitDisksDevice *device, const gchar *value)
+device_set_linux_md_name (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_name, value) != 0))
     {
@@ -1071,7 +1071,7 @@ devkit_disks_device_set_linux_md_name (DevkitDisksDevice *device, const gchar *v
 }
 
 void
-devkit_disks_device_set_linux_md_version (DevkitDisksDevice *device, const gchar *value)
+device_set_linux_md_version (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_version, value) != 0))
     {
@@ -1082,7 +1082,7 @@ devkit_disks_device_set_linux_md_version (DevkitDisksDevice *device, const gchar
 }
 
 void
-devkit_disks_device_set_linux_md_slaves (DevkitDisksDevice *device, GStrv value)
+device_set_linux_md_slaves (Device *device, GStrv value)
 {
   if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->linux_md_slaves, value)))
     {
@@ -1093,7 +1093,7 @@ devkit_disks_device_set_linux_md_slaves (DevkitDisksDevice *device, GStrv value)
 }
 
 void
-devkit_disks_device_set_linux_md_is_degraded (DevkitDisksDevice *device, gboolean value)
+device_set_linux_md_is_degraded (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->linux_md_is_degraded != value))
     {
@@ -1103,7 +1103,7 @@ devkit_disks_device_set_linux_md_is_degraded (DevkitDisksDevice *device, gboolea
 }
 
 void
-devkit_disks_device_set_linux_md_sync_action (DevkitDisksDevice *device, const gchar *value)
+device_set_linux_md_sync_action (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_sync_action, value) != 0))
     {
@@ -1114,7 +1114,7 @@ devkit_disks_device_set_linux_md_sync_action (DevkitDisksDevice *device, const g
 }
 
 void
-devkit_disks_device_set_linux_md_sync_percentage (DevkitDisksDevice *device, gdouble value)
+device_set_linux_md_sync_percentage (Device *device, gdouble value)
 {
   if (G_UNLIKELY (device->priv->linux_md_sync_percentage != value))
     {
@@ -1124,7 +1124,7 @@ devkit_disks_device_set_linux_md_sync_percentage (DevkitDisksDevice *device, gdo
 }
 
 void
-devkit_disks_device_set_linux_md_sync_speed (DevkitDisksDevice *device, guint64 value)
+device_set_linux_md_sync_speed (Device *device, guint64 value)
 {
   if (G_UNLIKELY (device->priv->linux_md_sync_speed != value))
     {
@@ -1134,7 +1134,7 @@ devkit_disks_device_set_linux_md_sync_speed (DevkitDisksDevice *device, guint64 
 }
 
 void
-devkit_disks_device_set_dm_name (DevkitDisksDevice *device, const gchar *value)
+device_set_dm_name (Device *device, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->dm_name, value) != 0))
     {
@@ -1145,7 +1145,7 @@ devkit_disks_device_set_dm_name (DevkitDisksDevice *device, const gchar *value)
 }
 
 void
-devkit_disks_device_set_slaves_objpath (DevkitDisksDevice *device, GStrv value)
+device_set_slaves_objpath (Device *device, GStrv value)
 {
   if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->slaves_objpath, value)))
     {
@@ -1156,7 +1156,7 @@ devkit_disks_device_set_slaves_objpath (DevkitDisksDevice *device, GStrv value)
 }
 
 void
-devkit_disks_device_set_holders_objpath (DevkitDisksDevice *device, GStrv value)
+device_set_holders_objpath (Device *device, GStrv value)
 {
   if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->holders_objpath, value)))
     {
@@ -1168,7 +1168,7 @@ devkit_disks_device_set_holders_objpath (DevkitDisksDevice *device, GStrv value)
 
 
 void
-devkit_disks_device_set_drive_ata_smart_is_available (DevkitDisksDevice *device, gboolean value)
+device_set_drive_ata_smart_is_available (Device *device, gboolean value)
 {
   if (G_UNLIKELY (device->priv->drive_ata_smart_is_available != value))
     {
@@ -1178,7 +1178,7 @@ devkit_disks_device_set_drive_ata_smart_is_available (DevkitDisksDevice *device,
 }
 
 void
-devkit_disks_device_set_drive_ata_smart_time_collected (DevkitDisksDevice *device, guint64 value)
+device_set_drive_ata_smart_time_collected (Device *device, guint64 value)
 {
   if (G_UNLIKELY (device->priv->drive_ata_smart_time_collected != value))
     {
@@ -1188,7 +1188,7 @@ devkit_disks_device_set_drive_ata_smart_time_collected (DevkitDisksDevice *devic
 }
 
 void
-devkit_disks_device_set_drive_ata_smart_status (DevkitDisksDevice *device, SkSmartOverall value)
+device_set_drive_ata_smart_status (Device *device, SkSmartOverall value)
 {
   if (G_UNLIKELY (device->priv->drive_ata_smart_status != value))
     {
@@ -1198,7 +1198,7 @@ devkit_disks_device_set_drive_ata_smart_status (DevkitDisksDevice *device, SkSma
 }
 
 void
-devkit_disks_device_set_drive_ata_smart_blob_steal (DevkitDisksDevice *device, gchar *blob, gsize blob_size)
+device_set_drive_ata_smart_blob_steal (Device *device, gchar *blob, gsize blob_size)
 {
   /* TODO: compare? Not really needed, this happens very rarely */
 

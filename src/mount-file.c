@@ -40,20 +40,20 @@
 #include <glib/gstdio.h>
 #include <glib/gi18n-lib.h>
 
-#include "devkit-disks-mount-file.h"
-#include "devkit-disks-device.h"
-#include "devkit-disks-device-private.h"
+#include "mount-file.h"
+#include "device.h"
+#include "device-private.h"
 
 enum {
-        DEVKIT_DISKS_MOUNT_FILE_DEVICE_FILE,
-        DEVKIT_DISKS_MOUNT_FILE_MOUNT_PATH,
-        DEVKIT_DISKS_MOUNT_FILE_MOUNTED_BY_UID,
-        DEVKIT_DISKS_MOUNT_FILE_REMOVE_DIR_ON_UNMOUNT,
-        DEVKIT_DISKS_MOUNT_FILE_NUM_TOKENS,
+        MOUNT_FILE_DEVICE_FILE,
+        MOUNT_FILE_MOUNT_PATH,
+        MOUNT_FILE_MOUNTED_BY_UID,
+        MOUNT_FILE_REMOVE_DIR_ON_UNMOUNT,
+        MOUNT_FILE_NUM_TOKENS,
 };
 
 gboolean
-devkit_disks_mount_file_has_device (const gchar *device_file,
+mount_file_has_device (const gchar *device_file,
                                     uid_t       *mounted_by_uid,
                                     gboolean    *remove_dir_on_unmount)
 {
@@ -69,14 +69,14 @@ devkit_disks_mount_file_has_device (const gchar *device_file,
         device_file_escaped = g_uri_escape_string (device_file, NULL, TRUE);
 
         error = NULL;
-        if (!g_file_get_contents (PACKAGE_LOCALSTATE_DIR "/lib/DeviceKit-disks/mtab",
+        if (!g_file_get_contents (PACKAGE_LOCALSTATE_DIR "/lib/udisks/mtab",
                                   &contents,
                                   NULL,
                                   &error)) {
                 /* not having the file is fine */
                 if (error->code != G_FILE_ERROR_NOENT) {
                         g_warning ("Error reading "
-                                   PACKAGE_LOCALSTATE_DIR "/lib/DeviceKit-disks/mtab: %s",
+                                   PACKAGE_LOCALSTATE_DIR "/lib/udisks/mtab: %s",
                                    error->message);
                 }
                 g_error_free (error);
@@ -89,17 +89,17 @@ devkit_disks_mount_file_has_device (const gchar *device_file,
                 char **tokens;
 
                 tokens = g_strsplit (line, " ", 0);
-                if (g_strv_length (tokens) == DEVKIT_DISKS_MOUNT_FILE_NUM_TOKENS) {
-                        const char *line_device_file = tokens[DEVKIT_DISKS_MOUNT_FILE_DEVICE_FILE];
+                if (g_strv_length (tokens) == MOUNT_FILE_NUM_TOKENS) {
+                        const char *line_device_file = tokens[MOUNT_FILE_DEVICE_FILE];
 
                         if (strcmp (line_device_file, device_file_escaped) == 0) {
 
                                 ret = TRUE;
 
                                 if (mounted_by_uid != NULL)
-                                        *mounted_by_uid = atoi (tokens[DEVKIT_DISKS_MOUNT_FILE_MOUNTED_BY_UID]);
+                                        *mounted_by_uid = atoi (tokens[MOUNT_FILE_MOUNTED_BY_UID]);
                                 if (remove_dir_on_unmount != NULL)
-                                        if (strcmp (tokens[DEVKIT_DISKS_MOUNT_FILE_REMOVE_DIR_ON_UNMOUNT], "1") == 0)
+                                        if (strcmp (tokens[MOUNT_FILE_REMOVE_DIR_ON_UNMOUNT], "1") == 0)
                                                 *remove_dir_on_unmount = TRUE;
 
                                 g_strfreev (lines);
@@ -118,7 +118,7 @@ out:
 }
 
 void
-devkit_disks_mount_file_add (const gchar *device_file,
+mount_file_add (const gchar *device_file,
                              const gchar *mount_path,
                              uid_t        mounted_by_uid,
                              gboolean     remove_dir_on_unmount)
@@ -135,14 +135,14 @@ devkit_disks_mount_file_add (const gchar *device_file,
 
         /* on error resp. contents and size will be set to resp. NULL and 0 */
         error = NULL;
-        if (!g_file_get_contents (PACKAGE_LOCALSTATE_DIR "/lib/DeviceKit-disks/mtab",
+        if (!g_file_get_contents (PACKAGE_LOCALSTATE_DIR "/lib/udisks/mtab",
                                   &contents,
                                   NULL,
                                   &error)) {
                 /* not having the file is fine */
                 if (error->code != G_FILE_ERROR_NOENT) {
                         g_warning ("Error reading "
-                                   PACKAGE_LOCALSTATE_DIR "/lib/DeviceKit-disks/mtab: %s",
+                                   PACKAGE_LOCALSTATE_DIR "/lib/udisks/mtab: %s",
                                    error->message);
                 }
                 g_error_free (error);
@@ -167,11 +167,11 @@ devkit_disks_mount_file_add (const gchar *device_file,
         }
 
         error = NULL;
-        if (!g_file_set_contents (PACKAGE_LOCALSTATE_DIR "/lib/DeviceKit-disks/mtab",
+        if (!g_file_set_contents (PACKAGE_LOCALSTATE_DIR "/lib/udisks/mtab",
                                   new_contents,
                                   strlen (new_contents),
                                   &error)) {
-                g_warning ("Error writing " PACKAGE_LOCALSTATE_DIR "/lib/DeviceKit-disks/mtab: %s", error->message);
+                g_warning ("Error writing " PACKAGE_LOCALSTATE_DIR "/lib/udisks/mtab: %s", error->message);
                 g_error_free (error);
         }
 
@@ -179,7 +179,7 @@ devkit_disks_mount_file_add (const gchar *device_file,
 }
 
 void
-devkit_disks_mount_file_remove (const gchar *device_file,
+mount_file_remove (const gchar *device_file,
                                 const gchar *mount_path)
 {
         char *contents;
@@ -200,12 +200,12 @@ devkit_disks_mount_file_remove (const gchar *device_file,
         mount_path_escaped = g_uri_escape_string (mount_path, NULL, TRUE);
 
         error = NULL;
-        if (!g_file_get_contents (PACKAGE_LOCALSTATE_DIR "/lib/DeviceKit-disks/mtab",
+        if (!g_file_get_contents (PACKAGE_LOCALSTATE_DIR "/lib/udisks/mtab",
                                   &contents,
                                   NULL,
                                   &error)) {
                 g_warning ("Error reading "
-                           PACKAGE_LOCALSTATE_DIR "/lib/DeviceKit-disks/mtab: %s",
+                           PACKAGE_LOCALSTATE_DIR "/lib/udisks/mtab: %s",
                            error->message);
                 g_error_free (error);
                 goto out;
@@ -218,9 +218,9 @@ devkit_disks_mount_file_remove (const gchar *device_file,
                 char **tokens;
 
                 tokens = g_strsplit (line, " ", 0);
-                if (g_strv_length (tokens) == DEVKIT_DISKS_MOUNT_FILE_NUM_TOKENS) {
-                        const char *line_device_file = tokens[DEVKIT_DISKS_MOUNT_FILE_DEVICE_FILE];
-                        const char *line_mount_path = tokens[DEVKIT_DISKS_MOUNT_FILE_MOUNT_PATH];
+                if (g_strv_length (tokens) == MOUNT_FILE_NUM_TOKENS) {
+                        const char *line_device_file = tokens[MOUNT_FILE_DEVICE_FILE];
+                        const char *line_mount_path = tokens[MOUNT_FILE_MOUNT_PATH];
 
                         if (strcmp (line_device_file, device_file_escaped) == 0 &&
                             strcmp (line_mount_path, mount_path_escaped) == 0) {
@@ -236,11 +236,11 @@ devkit_disks_mount_file_remove (const gchar *device_file,
         new_contents = g_string_free (str, FALSE);
 
         error = NULL;
-        if (!g_file_set_contents (PACKAGE_LOCALSTATE_DIR "/lib/DeviceKit-disks/mtab",
+        if (!g_file_set_contents (PACKAGE_LOCALSTATE_DIR "/lib/udisks/mtab",
                                   new_contents,
                                   strlen (new_contents),
                                   &error)) {
-                g_warning ("Error writing " PACKAGE_LOCALSTATE_DIR "/lib/DeviceKit-disks/mtab: %s", error->message);
+                g_warning ("Error writing " PACKAGE_LOCALSTATE_DIR "/lib/udisks/mtab: %s", error->message);
                 g_error_free (error);
         }
 
@@ -252,7 +252,7 @@ out:
 }
 
 void
-devkit_disks_mount_file_clean_stale (GList *existing_devices)
+mount_file_clean_stale (GList *existing_devices)
 {
         GList *l;
         char *contents;
@@ -266,14 +266,14 @@ devkit_disks_mount_file_clean_stale (GList *existing_devices)
         new_contents = NULL;
 
         error = NULL;
-        if (!g_file_get_contents (PACKAGE_LOCALSTATE_DIR "/lib/DeviceKit-disks/mtab",
+        if (!g_file_get_contents (PACKAGE_LOCALSTATE_DIR "/lib/udisks/mtab",
                                   &contents,
                                   NULL,
                                   &error)) {
                 /* not having the file is fine */
                 if (error->code != G_FILE_ERROR_NOENT) {
                         g_warning ("Error reading "
-                                   PACKAGE_LOCALSTATE_DIR "/lib/DeviceKit-disks/mtab: %s",
+                                   PACKAGE_LOCALSTATE_DIR "/lib/udisks/mtab: %s",
                                    error->message);
                 }
                 g_error_free (error);
@@ -287,14 +287,14 @@ devkit_disks_mount_file_clean_stale (GList *existing_devices)
                 char **tokens;
 
                 tokens = g_strsplit (line, " ", 0);
-                if (g_strv_length (tokens) == DEVKIT_DISKS_MOUNT_FILE_NUM_TOKENS) {
-                        const char *line_mount_path = tokens[DEVKIT_DISKS_MOUNT_FILE_MOUNT_PATH];
+                if (g_strv_length (tokens) == MOUNT_FILE_NUM_TOKENS) {
+                        const char *line_mount_path = tokens[MOUNT_FILE_MOUNT_PATH];
                         gboolean entry_is_valid;
 
                         entry_is_valid = FALSE;
 
                         for (l = existing_devices; l != NULL && !entry_is_valid; l = l->next) {
-                                DevkitDisksDevice *device = l->data;
+                                Device *device = l->data;
                                 char *mount_path_escaped;
 
                                 if (!device->priv->device_is_mounted ||
@@ -333,11 +333,11 @@ devkit_disks_mount_file_clean_stale (GList *existing_devices)
         new_contents = g_string_free (str, FALSE);
 
         error = NULL;
-        if (!g_file_set_contents (PACKAGE_LOCALSTATE_DIR "/lib/DeviceKit-disks/mtab",
+        if (!g_file_set_contents (PACKAGE_LOCALSTATE_DIR "/lib/udisks/mtab",
                                   new_contents,
                                   strlen (new_contents),
                                   &error)) {
-                g_warning ("Error writing " PACKAGE_LOCALSTATE_DIR "/lib/DeviceKit-disks/mtab: %s", error->message);
+                g_warning ("Error writing " PACKAGE_LOCALSTATE_DIR "/lib/udisks/mtab: %s", error->message);
                 g_error_free (error);
         }
 

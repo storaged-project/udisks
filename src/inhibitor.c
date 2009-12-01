@@ -25,9 +25,9 @@
 #include <string.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
-#include "devkit-disks-inhibitor.h"
+#include "inhibitor.h"
 
-struct DevkitDisksInhibitorPrivate
+struct InhibitorPrivate
 {
         gchar *unique_dbus_name;
         gchar *cookie;
@@ -41,39 +41,39 @@ enum
 
 static guint signals[LAST_SIGNAL] = { 0 };
 
-G_DEFINE_TYPE (DevkitDisksInhibitor, devkit_disks_inhibitor, G_TYPE_OBJECT)
+G_DEFINE_TYPE (Inhibitor, inhibitor, G_TYPE_OBJECT)
 
 static GList *inhibitors = NULL;
 
 static void
-devkit_disks_inhibitor_finalize (GObject *object)
+inhibitor_finalize (GObject *object)
 {
-        DevkitDisksInhibitor *inhibitor;
+        Inhibitor *inhibitor;
 
-        inhibitor = DEVKIT_DISKS_INHIBITOR (object);
+        inhibitor = INHIBITOR (object);
 
         inhibitors = g_list_remove (inhibitors, inhibitor);
 
         g_free (inhibitor->priv->unique_dbus_name);
         g_free (inhibitor->priv->cookie);
 
-        G_OBJECT_CLASS (devkit_disks_inhibitor_parent_class)->finalize (object);
+        G_OBJECT_CLASS (inhibitor_parent_class)->finalize (object);
 }
 
 static void
-devkit_disks_inhibitor_init (DevkitDisksInhibitor *inhibitor)
+inhibitor_init (Inhibitor *inhibitor)
 {
-  inhibitor->priv = G_TYPE_INSTANCE_GET_PRIVATE (inhibitor, DEVKIT_DISKS_TYPE_INHIBITOR, DevkitDisksInhibitorPrivate);
+  inhibitor->priv = G_TYPE_INSTANCE_GET_PRIVATE (inhibitor, TYPE_INHIBITOR, InhibitorPrivate);
 }
 
 static void
-devkit_disks_inhibitor_class_init (DevkitDisksInhibitorClass *klass)
+inhibitor_class_init (InhibitorClass *klass)
 {
         GObjectClass   *object_class = G_OBJECT_CLASS (klass);
 
-        object_class->finalize = devkit_disks_inhibitor_finalize;
+        object_class->finalize = inhibitor_finalize;
 
-        g_type_class_add_private (klass, sizeof (DevkitDisksInhibitorPrivate));
+        g_type_class_add_private (klass, sizeof (InhibitorPrivate));
 
         signals[DISCONNECTED_SIGNAL] =
                 g_signal_new ("disconnected",
@@ -85,13 +85,13 @@ devkit_disks_inhibitor_class_init (DevkitDisksInhibitorClass *klass)
                               G_TYPE_NONE, 0);
 }
 
-DevkitDisksInhibitor *
-devkit_disks_inhibitor_new (DBusGMethodInvocation *context)
+Inhibitor *
+inhibitor_new (DBusGMethodInvocation *context)
 {
-        DevkitDisksInhibitor *inhibitor;
+        Inhibitor *inhibitor;
         static gint inhibitor_count = 0;
 
-        inhibitor = DEVKIT_DISKS_INHIBITOR (g_object_new (DEVKIT_DISKS_TYPE_INHIBITOR, NULL));
+        inhibitor = INHIBITOR (g_object_new (TYPE_INHIBITOR, NULL));
 
         inhibitor->priv->unique_dbus_name = g_strdup (dbus_g_method_get_sender (context));
 
@@ -104,22 +104,22 @@ devkit_disks_inhibitor_new (DBusGMethodInvocation *context)
 }
 
 const gchar *
-devkit_disks_inhibitor_get_unique_dbus_name (DevkitDisksInhibitor *inhibitor)
+inhibitor_get_unique_dbus_name (Inhibitor *inhibitor)
 {
         return inhibitor->priv->unique_dbus_name;
 }
 
 const gchar *
-devkit_disks_inhibitor_get_cookie (DevkitDisksInhibitor *inhibitor)
+inhibitor_get_cookie (Inhibitor *inhibitor)
 {
         return inhibitor->priv->cookie;
 }
 
 
-void devkit_disks_inhibitor_name_owner_changed (DBusMessage *message);
+void inhibitor_name_owner_changed (DBusMessage *message);
 
 void
-devkit_disks_inhibitor_name_owner_changed (DBusMessage *message)
+inhibitor_name_owner_changed (DBusMessage *message)
 {
 
         if (dbus_message_is_signal (message, DBUS_INTERFACE_DBUS, "NameOwnerChanged")) {
@@ -141,7 +141,7 @@ devkit_disks_inhibitor_name_owner_changed (DBusMessage *message)
                         GList *l;
 
                         for (l = inhibitors; l != NULL; l = l->next) {
-                                DevkitDisksInhibitor *inhibitor = DEVKIT_DISKS_INHIBITOR (l->data);
+                                Inhibitor *inhibitor = INHIBITOR (l->data);
 
                                 //g_debug (" looking at %s", inhibitor->priv->unique_dbus_name);
                                 if (g_strcmp0 (name, inhibitor->priv->unique_dbus_name) == 0) {

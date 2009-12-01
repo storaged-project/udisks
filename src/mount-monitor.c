@@ -35,9 +35,9 @@
 #include <glib/gi18n-lib.h>
 #include <glib-object.h>
 
-#include "devkit-disks-mount-monitor.h"
-#include "devkit-disks-mount.h"
-#include "devkit-disks-private.h"
+#include "mount-monitor.h"
+#include "mount.h"
+#include "private.h"
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
@@ -50,21 +50,21 @@ enum
 
 static guint signals[LAST_SIGNAL] = { 0 };
 
-struct DevkitDisksMountMonitorPrivate
+struct MountMonitorPrivate
 {
 	GIOChannel *mounts_channel;
         gboolean    have_data;
         GList      *mounts;
 };
 
-G_DEFINE_TYPE (DevkitDisksMountMonitor, devkit_disks_mount_monitor, G_TYPE_OBJECT)
+G_DEFINE_TYPE (MountMonitor, mount_monitor, G_TYPE_OBJECT)
 
-static void devkit_disks_mount_monitor_ensure (DevkitDisksMountMonitor *monitor);
+static void mount_monitor_ensure (MountMonitor *monitor);
 
 static void
-devkit_disks_mount_monitor_finalize (GObject *object)
+mount_monitor_finalize (GObject *object)
 {
-        DevkitDisksMountMonitor *monitor = DEVKIT_DISKS_MOUNT_MONITOR (object);
+        MountMonitor *monitor = MOUNT_MONITOR (object);
 
         if (monitor->priv->mounts_channel != NULL)
                 g_io_channel_unref (monitor->priv->mounts_channel);
@@ -72,33 +72,33 @@ devkit_disks_mount_monitor_finalize (GObject *object)
         g_list_foreach (monitor->priv->mounts, (GFunc) g_object_unref, NULL);
         g_list_free (monitor->priv->mounts);
 
-        if (G_OBJECT_CLASS (devkit_disks_mount_monitor_parent_class)->finalize != NULL)
-                (* G_OBJECT_CLASS (devkit_disks_mount_monitor_parent_class)->finalize) (object);
+        if (G_OBJECT_CLASS (mount_monitor_parent_class)->finalize != NULL)
+                (* G_OBJECT_CLASS (mount_monitor_parent_class)->finalize) (object);
 }
 
 static void
-devkit_disks_mount_monitor_init (DevkitDisksMountMonitor *monitor)
+mount_monitor_init (MountMonitor *monitor)
 {
         monitor->priv = G_TYPE_INSTANCE_GET_PRIVATE (monitor,
-                                                     DEVKIT_DISKS_TYPE_MOUNT_MONITOR,
-                                                     DevkitDisksMountMonitorPrivate);
+                                                     TYPE_MOUNT_MONITOR,
+                                                     MountMonitorPrivate);
 
         monitor->priv->mounts = NULL;
 }
 
 static void
-devkit_disks_mount_monitor_class_init (DevkitDisksMountMonitorClass *klass)
+mount_monitor_class_init (MountMonitorClass *klass)
 {
         GObjectClass *gobject_class = (GObjectClass *) klass;
 
-        gobject_class->finalize = devkit_disks_mount_monitor_finalize;
+        gobject_class->finalize = mount_monitor_finalize;
 
-        g_type_class_add_private (klass, sizeof (DevkitDisksMountMonitorPrivate));
+        g_type_class_add_private (klass, sizeof (MountMonitorPrivate));
 
         /**
-         * DevkitDisksMountMonitor::mount-added
-         * @monitor: A #DevkitDisksMountMonitor.
-         * @mount: The #DevkitDisksMount that was added.
+         * MountMonitor::mount-added
+         * @monitor: A #MountMonitor.
+         * @mount: The #Mount that was added.
          *
          * Emitted when a mount is added.
          */
@@ -106,18 +106,18 @@ devkit_disks_mount_monitor_class_init (DevkitDisksMountMonitorClass *klass)
                 g_signal_new ("mount-added",
                               G_OBJECT_CLASS_TYPE (klass),
                               G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
-                              G_STRUCT_OFFSET (DevkitDisksMountMonitorClass, mount_added),
+                              G_STRUCT_OFFSET (MountMonitorClass, mount_added),
                               NULL,
                               NULL,
                               g_cclosure_marshal_VOID__OBJECT,
                               G_TYPE_NONE,
                               1,
-                              DEVKIT_DISKS_TYPE_MOUNT);
+                              TYPE_MOUNT);
 
         /**
-         * DevkitDisksMountMonitor::mount-removed
-         * @monitor: A #DevkitDisksMountMonitor.
-         * @mount: The #DevkitDisksMount that was removed.
+         * MountMonitor::mount-removed
+         * @monitor: A #MountMonitor.
+         * @mount: The #Mount that was removed.
          *
          * Emitted when a mount is removed.
          */
@@ -125,13 +125,13 @@ devkit_disks_mount_monitor_class_init (DevkitDisksMountMonitorClass *klass)
                 g_signal_new ("mount-removed",
                               G_OBJECT_CLASS_TYPE (klass),
                               G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
-                              G_STRUCT_OFFSET (DevkitDisksMountMonitorClass, mount_removed),
+                              G_STRUCT_OFFSET (MountMonitorClass, mount_removed),
                               NULL,
                               NULL,
                               g_cclosure_marshal_VOID__OBJECT,
                               G_TYPE_NONE,
                               1,
-                              DEVKIT_DISKS_TYPE_MOUNT);
+                              TYPE_MOUNT);
 }
 
 static void
@@ -181,7 +181,7 @@ diff_sorted_lists (GList         *list1,
 static gboolean
 mounts_changed_event (GIOChannel *channel, GIOCondition cond, gpointer user_data)
 {
-        DevkitDisksMountMonitor *monitor = DEVKIT_DISKS_MOUNT_MONITOR (user_data);
+        MountMonitor *monitor = MOUNT_MONITOR (user_data);
         GList *old_mounts;
         GList *cur_mounts;
         GList *added;
@@ -193,27 +193,27 @@ mounts_changed_event (GIOChannel *channel, GIOCondition cond, gpointer user_data
 
         g_print ("**** /proc/self/mountinfo changed\n");
 
-        devkit_disks_mount_monitor_ensure (monitor);
+        mount_monitor_ensure (monitor);
 
         old_mounts = g_list_copy (monitor->priv->mounts);
         g_list_foreach (old_mounts, (GFunc) g_object_ref, NULL);
 
-        devkit_disks_mount_monitor_invalidate (monitor);
-        devkit_disks_mount_monitor_ensure (monitor);
+        mount_monitor_invalidate (monitor);
+        mount_monitor_ensure (monitor);
 
         cur_mounts = g_list_copy (monitor->priv->mounts);
 
-        old_mounts = g_list_sort (old_mounts, (GCompareFunc) devkit_disks_mount_compare);
-        cur_mounts = g_list_sort (cur_mounts, (GCompareFunc) devkit_disks_mount_compare);
+        old_mounts = g_list_sort (old_mounts, (GCompareFunc) mount_compare);
+        cur_mounts = g_list_sort (cur_mounts, (GCompareFunc) mount_compare);
 
         diff_sorted_lists (old_mounts,
                            cur_mounts,
-                           (GCompareFunc) devkit_disks_mount_compare,
+                           (GCompareFunc) mount_compare,
                            &added,
                            &removed);
 
         for (l = removed; l != NULL; l = l->next) {
-                DevkitDisksMount *mount = DEVKIT_DISKS_MOUNT (l->data);
+                Mount *mount = MOUNT (l->data);
                 g_signal_emit (monitor,
                                signals[MOUNT_REMOVED_SIGNAL],
                                0,
@@ -221,7 +221,7 @@ mounts_changed_event (GIOChannel *channel, GIOCondition cond, gpointer user_data
         }
 
         for (l = added; l != NULL; l = l->next) {
-                DevkitDisksMount *mount = DEVKIT_DISKS_MOUNT (l->data);
+                Mount *mount = MOUNT (l->data);
                 g_signal_emit (monitor,
                                signals[MOUNT_ADDED_SIGNAL],
                                0,
@@ -239,13 +239,13 @@ out:
 	return TRUE;
 }
 
-DevkitDisksMountMonitor *
-devkit_disks_mount_monitor_new (void)
+MountMonitor *
+mount_monitor_new (void)
 {
-        DevkitDisksMountMonitor *mount_monitor;
+        MountMonitor *mount_monitor;
         GError *error;
 
-        mount_monitor = DEVKIT_DISKS_MOUNT_MONITOR (g_object_new (DEVKIT_DISKS_TYPE_MOUNT_MONITOR, NULL));
+        mount_monitor = MOUNT_MONITOR (g_object_new (TYPE_MOUNT_MONITOR, NULL));
 
         error = NULL;
 	mount_monitor->priv->mounts_channel = g_io_channel_new_file ("/proc/self/mountinfo", "r", &error);
@@ -264,7 +264,7 @@ out:
 }
 
 void
-devkit_disks_mount_monitor_invalidate (DevkitDisksMountMonitor *monitor)
+mount_monitor_invalidate (MountMonitor *monitor)
 {
         monitor->priv->have_data = FALSE;
 
@@ -274,7 +274,7 @@ devkit_disks_mount_monitor_invalidate (DevkitDisksMountMonitor *monitor)
 }
 
 static gboolean
-have_mount (DevkitDisksMountMonitor *monitor,
+have_mount (MountMonitor *monitor,
             dev_t                    dev,
             const gchar             *mount_point)
 {
@@ -284,9 +284,9 @@ have_mount (DevkitDisksMountMonitor *monitor,
         ret = FALSE;
 
         for (l = monitor->priv->mounts; l != NULL; l = l->next) {
-                DevkitDisksMount *mount = DEVKIT_DISKS_MOUNT (l->data);
-                if (devkit_disks_mount_get_dev (mount) == dev &&
-                    g_strcmp0 (devkit_disks_mount_get_mount_path (mount), mount_point) == 0) {
+                Mount *mount = MOUNT (l->data);
+                if (mount_get_dev (mount) == dev &&
+                    g_strcmp0 (mount_get_mount_path (mount), mount_point) == 0) {
                         ret = TRUE;
                         break;
                 }
@@ -296,7 +296,7 @@ have_mount (DevkitDisksMountMonitor *monitor,
 }
 
 static void
-devkit_disks_mount_monitor_ensure (DevkitDisksMountMonitor *monitor)
+mount_monitor_ensure (MountMonitor *monitor)
 {
         gchar *contents;
         gchar **lines;
@@ -399,8 +399,8 @@ devkit_disks_mount_monitor_ensure (DevkitDisksMountMonitor *monitor)
 
                 /* TODO: we can probably use a hash table or something if this turns out to be slow */
                 if (!have_mount (monitor, dev, mount_point)) {
-                        DevkitDisksMount *mount;
-                        mount = _devkit_disks_mount_new (dev, mount_point);
+                        Mount *mount;
+                        mount = _mount_new (dev, mount_point);
                         monitor->priv->mounts = g_list_prepend (monitor->priv->mounts, mount);
                         //g_debug ("SUP ADDING %d:%d on %s", major, minor, mount_point);
                 }
@@ -416,7 +416,7 @@ out:
 }
 
 GList *
-devkit_disks_mount_monitor_get_mounts_for_dev (DevkitDisksMountMonitor *monitor,
+mount_monitor_get_mounts_for_dev (MountMonitor *monitor,
                                                dev_t                    dev)
 {
         GList *ret;
@@ -424,18 +424,18 @@ devkit_disks_mount_monitor_get_mounts_for_dev (DevkitDisksMountMonitor *monitor,
 
         ret = NULL;
 
-        devkit_disks_mount_monitor_ensure (monitor);
+        mount_monitor_ensure (monitor);
 
         for (l = monitor->priv->mounts; l != NULL; l = l->next) {
-                DevkitDisksMount *mount = DEVKIT_DISKS_MOUNT (l->data);
+                Mount *mount = MOUNT (l->data);
 
-                if (devkit_disks_mount_get_dev (mount) == dev) {
+                if (mount_get_dev (mount) == dev) {
                         ret = g_list_prepend (ret, g_object_ref (mount));
                 }
         }
 
         /* Sort the list to ensure that shortest mount paths appear first */
-        ret = g_list_sort (ret, (GCompareFunc) devkit_disks_mount_compare);
+        ret = g_list_sort (ret, (GCompareFunc) mount_compare);
 
         return ret;
 }

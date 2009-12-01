@@ -22,13 +22,13 @@
 #endif
 
 #include <string.h>
-#include "devkit-disks-adapter.h"
-#include "devkit-disks-adapter-private.h"
+#include "adapter.h"
+#include "adapter-private.h"
 
 static gboolean
 emit_changed_idle_cb (gpointer data)
 {
-  DevkitDisksAdapter *adapter = DEVKIT_DISKS_ADAPTER (data);
+  Adapter *adapter = ADAPTER (data);
 
   //g_debug ("XXX emitting 'changed' in idle");
 
@@ -47,7 +47,7 @@ emit_changed_idle_cb (gpointer data)
 }
 
 static void
-emit_changed (DevkitDisksAdapter *adapter, const gchar *name)
+emit_changed (Adapter *adapter, const gchar *name)
 {
   //g_debug ("property %s changed for %s", name, adapter->priv->adapter_file);
 
@@ -65,7 +65,7 @@ emit_changed (DevkitDisksAdapter *adapter, const gchar *name)
 }
 
 void
-devkit_disks_adapter_set_vendor (DevkitDisksAdapter *adapter, const gchar *value)
+adapter_set_vendor (Adapter *adapter, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (adapter->priv->vendor, value) != 0))
     {
@@ -76,7 +76,7 @@ devkit_disks_adapter_set_vendor (DevkitDisksAdapter *adapter, const gchar *value
 }
 
 void
-devkit_disks_adapter_set_model (DevkitDisksAdapter *adapter, const gchar *value)
+adapter_set_model (Adapter *adapter, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (adapter->priv->model, value) != 0))
     {
@@ -87,7 +87,7 @@ devkit_disks_adapter_set_model (DevkitDisksAdapter *adapter, const gchar *value)
 }
 
 void
-devkit_disks_adapter_set_driver (DevkitDisksAdapter *adapter, const gchar *value)
+adapter_set_driver (Adapter *adapter, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (adapter->priv->driver, value) != 0))
     {
@@ -98,7 +98,7 @@ devkit_disks_adapter_set_driver (DevkitDisksAdapter *adapter, const gchar *value
 }
 
 void
-devkit_disks_adapter_set_num_ports (DevkitDisksAdapter *adapter, guint value)
+adapter_set_num_ports (Adapter *adapter, guint value)
 {
   if (G_UNLIKELY (adapter->priv->num_ports != value))
     {
@@ -108,7 +108,7 @@ devkit_disks_adapter_set_num_ports (DevkitDisksAdapter *adapter, guint value)
 }
 
 void
-devkit_disks_adapter_set_fabric (DevkitDisksAdapter *adapter, const gchar *value)
+adapter_set_fabric (Adapter *adapter, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (adapter->priv->fabric, value) != 0))
     {

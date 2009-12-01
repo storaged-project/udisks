@@ -18,16 +18,25 @@
  *
  */
 
-#ifndef __DEVKIT_DISKS_PRIVATE_H__
-#define __DEVKIT_DISKS_PRIVATE_H__
+#ifndef __TYPES_H__
+#define __TYPES_H__
 
-#include "devkit-disks-types.h"
+#include <glib-object.h>
 
 G_BEGIN_DECLS
 
-DevkitDisksMount *_devkit_disks_mount_new (dev_t        dev,
-                                           const gchar *mount_path);
+typedef struct Daemon       Daemon;
+
+typedef struct Device       Device;
+typedef struct Adapter      Adapter;
+typedef struct Expander     Expander;
+typedef struct Port         Port;
+
+typedef struct Mount        Mount;
+typedef struct MountMonitor MountMonitor;
+typedef struct Inhibitor    Inhibitor;
+typedef struct AtaSmartDb   AtaSmartDb;
 
 G_END_DECLS
 
-#endif /* __DEVKIT_DISKS_PRIVATE_H__ */
+#endif /* __TYPES_H__ */

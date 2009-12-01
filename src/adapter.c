@@ -32,21 +32,21 @@
 #include <gudev/gudev.h>
 #include <atasmart.h>
 
-#include "devkit-disks-daemon.h"
-#include "devkit-disks-adapter.h"
-#include "devkit-disks-adapter-private.h"
-#include "devkit-disks-marshal.h"
+#include "daemon.h"
+#include "adapter.h"
+#include "adapter-private.h"
+#include "marshal.h"
 
 /*--------------------------------------------------------------------------------------------------------------*/
-#include "devkit-disks-adapter-glue.h"
+#include "adapter-glue.h"
 
-static void     devkit_disks_adapter_class_init  (DevkitDisksAdapterClass *klass);
-static void     devkit_disks_adapter_init        (DevkitDisksAdapter      *seat);
-static void     devkit_disks_adapter_finalize    (GObject     *object);
+static void     adapter_class_init  (AdapterClass *klass);
+static void     adapter_init        (Adapter      *seat);
+static void     adapter_finalize    (GObject     *object);
 
-static gboolean update_info                (DevkitDisksAdapter *adapter);
+static gboolean update_info                (Adapter *adapter);
 
-static void     drain_pending_changes (DevkitDisksAdapter *adapter, gboolean force_update);
+static void     drain_pending_changes (Adapter *adapter, gboolean force_update);
 
 enum
 {
@@ -68,9 +68,9 @@ enum
 
 static guint signals[LAST_SIGNAL] = { 0 };
 
-G_DEFINE_TYPE (DevkitDisksAdapter, devkit_disks_adapter, G_TYPE_OBJECT)
+G_DEFINE_TYPE (Adapter, adapter, G_TYPE_OBJECT)
 
-#define DEVKIT_DISKS_ADAPTER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), DEVKIT_DISKS_TYPE_ADAPTER, DevkitDisksAdapterPrivate))
+#define ADAPTER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), TYPE_ADAPTER, AdapterPrivate))
 
 static void
 get_property (GObject         *object,
@@ -78,7 +78,7 @@ get_property (GObject         *object,
               GValue          *value,
               GParamSpec      *pspec)
 {
-        DevkitDisksAdapter *adapter = DEVKIT_DISKS_ADAPTER (object);
+        Adapter *adapter = ADAPTER (object);
 
         switch (prop_id) {
         case PROP_NATIVE_PATH:
@@ -112,14 +112,14 @@ get_property (GObject         *object,
 }
 
 static void
-devkit_disks_adapter_class_init (DevkitDisksAdapterClass *klass)
+adapter_class_init (AdapterClass *klass)
 {
         GObjectClass   *object_class = G_OBJECT_CLASS (klass);
 
-        object_class->finalize = devkit_disks_adapter_finalize;
+        object_class->finalize = adapter_finalize;
         object_class->get_property = get_property;
 
-        g_type_class_add_private (klass, sizeof (DevkitDisksAdapterPrivate));
+        g_type_class_add_private (klass, sizeof (AdapterPrivate));
 
         signals[CHANGED_SIGNAL] =
                 g_signal_new ("changed",
@@ -130,7 +130,7 @@ devkit_disks_adapter_class_init (DevkitDisksAdapterClass *klass)
                               g_cclosure_marshal_VOID__VOID,
                               G_TYPE_NONE, 0);
 
-        dbus_g_object_type_install_info (DEVKIT_DISKS_TYPE_ADAPTER, &dbus_glib_devkit_disks_adapter_object_info);
+        dbus_g_object_type_install_info (TYPE_ADAPTER, &dbus_glib_adapter_object_info);
 
         g_object_class_install_property (
                 object_class,
@@ -159,20 +159,20 @@ devkit_disks_adapter_class_init (DevkitDisksAdapterClass *klass)
 }
 
 static void
-devkit_disks_adapter_init (DevkitDisksAdapter *adapter)
+adapter_init (Adapter *adapter)
 {
-        adapter->priv = DEVKIT_DISKS_ADAPTER_GET_PRIVATE (adapter);
+        adapter->priv = ADAPTER_GET_PRIVATE (adapter);
 }
 
 static void
-devkit_disks_adapter_finalize (GObject *object)
+adapter_finalize (GObject *object)
 {
-        DevkitDisksAdapter *adapter;
+        Adapter *adapter;
 
         g_return_if_fail (object != NULL);
-        g_return_if_fail (DEVKIT_DISKS_IS_ADAPTER (object));
+        g_return_if_fail (IS_ADAPTER (object));
 
-        adapter = DEVKIT_DISKS_ADAPTER (object);
+        adapter = ADAPTER (object);
         g_return_if_fail (adapter->priv != NULL);
 
         /* g_debug ("finalizing %s", adapter->priv->native_path); */
@@ -191,7 +191,7 @@ devkit_disks_adapter_finalize (GObject *object)
         g_free (adapter->priv->model);
         g_free (adapter->priv->driver);
 
-        G_OBJECT_CLASS (devkit_disks_adapter_parent_class)->finalize (object);
+        G_OBJECT_CLASS (adapter_parent_class)->finalize (object);
 }
 
 /**
@@ -240,7 +240,7 @@ compute_object_path (const char *native_path)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-register_disks_adapter (DevkitDisksAdapter *adapter)
+register_disks_adapter (Adapter *adapter)
 {
         DBusConnection *connection;
         GError *error = NULL;
@@ -276,7 +276,7 @@ error:
 }
 
 void
-devkit_disks_adapter_removed (DevkitDisksAdapter *adapter)
+adapter_removed (Adapter *adapter)
 {
         adapter->priv->removed = TRUE;
 
@@ -286,16 +286,16 @@ devkit_disks_adapter_removed (DevkitDisksAdapter *adapter)
                                                      adapter->priv->object_path) == NULL);
 }
 
-DevkitDisksAdapter *
-devkit_disks_adapter_new (DevkitDisksDaemon *daemon, GUdevDevice *d)
+Adapter *
+adapter_new (Daemon *daemon, GUdevDevice *d)
 {
-        DevkitDisksAdapter *adapter;
+        Adapter *adapter;
         const char *native_path;
 
         adapter = NULL;
         native_path = g_udev_device_get_sysfs_path (d);
 
-        adapter = DEVKIT_DISKS_ADAPTER (g_object_new (DEVKIT_DISKS_TYPE_ADAPTER, NULL));
+        adapter = ADAPTER (g_object_new (TYPE_ADAPTER, NULL));
         adapter->priv->d = g_object_ref (d);
         adapter->priv->daemon = g_object_ref (daemon);
         adapter->priv->native_path = g_strdup (native_path);
@@ -306,7 +306,7 @@ devkit_disks_adapter_new (DevkitDisksDaemon *daemon, GUdevDevice *d)
                 goto out;
         }
 
-        if (!register_disks_adapter (DEVKIT_DISKS_ADAPTER (adapter))) {
+        if (!register_disks_adapter (ADAPTER (adapter))) {
                 g_object_unref (adapter);
                 adapter = NULL;
                 goto out;
@@ -317,7 +317,7 @@ out:
 }
 
 static void
-drain_pending_changes (DevkitDisksAdapter *adapter, gboolean force_update)
+drain_pending_changes (Adapter *adapter, gboolean force_update)
 {
         gboolean emit_changed;
 
@@ -343,7 +343,7 @@ drain_pending_changes (DevkitDisksAdapter *adapter, gboolean force_update)
 
 /* called by the daemon on the 'change' uevent */
 gboolean
-devkit_disks_adapter_changed (DevkitDisksAdapter *adapter, GUdevDevice *d, gboolean synthesized)
+adapter_changed (Adapter *adapter, GUdevDevice *d, gboolean synthesized)
 {
         gboolean keep_adapter;
 
@@ -366,13 +366,13 @@ out:
 /* ---------------------------------------------------------------------------------------------------- */
 
 const char *
-devkit_disks_adapter_local_get_object_path (DevkitDisksAdapter *adapter)
+adapter_local_get_object_path (Adapter *adapter)
 {
         return adapter->priv->object_path;
 }
 
 const char *
-devkit_disks_adapter_local_get_native_path (DevkitDisksAdapter *adapter)
+adapter_local_get_native_path (Adapter *adapter)
 {
         return adapter->priv->native_path;
 }
@@ -384,7 +384,7 @@ devkit_disks_adapter_local_get_native_path (DevkitDisksAdapter *adapter)
  * not the way things work today...
  */
 static gboolean
-update_info_fabric_and_num_ports (DevkitDisksAdapter *adapter)
+update_info_fabric_and_num_ports (Adapter *adapter)
 {
         gboolean ret;
         const gchar *fabric;
@@ -413,11 +413,11 @@ update_info_fabric_and_num_ports (DevkitDisksAdapter *adapter)
         interface = (device_class & 0x0000ff);
 
         /* count number of scsi_host objects - this is to detect whether we are dealing with
-         * ATA - see comment in devkit-disks-port.c:update_info_ata() for details about
+         * ATA - see comment in port.c:update_info_ata() for details about
          * the hack we use here and how to fix this
          */
         num_scsi_host_objects = 0;
-        dir = g_dir_open (devkit_disks_adapter_local_get_native_path (adapter), 0, NULL);
+        dir = g_dir_open (adapter_local_get_native_path (adapter), 0, NULL);
         if (dir != NULL) {
                 const gchar *name;
                 while ((name = g_dir_read_name (dir)) != NULL) {
@@ -464,7 +464,7 @@ update_info_fabric_and_num_ports (DevkitDisksAdapter *adapter)
                 /* SAS */
                 if (scsi_host_name != NULL) {
                         s = g_strdup_printf ("%s/%s/sas_host/%s",
-                                             devkit_disks_adapter_local_get_native_path (adapter),
+                                             adapter_local_get_native_path (adapter),
                                              scsi_host_name,
                                              scsi_host_name);
                         g_debug ("foo = %s", s);
@@ -472,7 +472,7 @@ update_info_fabric_and_num_ports (DevkitDisksAdapter *adapter)
                                 fabric = "scsi_sas";
 
                                 s = g_strdup_printf ("%s/%s",
-                                                     devkit_disks_adapter_local_get_native_path (adapter),
+                                                     adapter_local_get_native_path (adapter),
                                                      scsi_host_name);
                                 /* Count number of phy objects in hostN/ */
                                 dir = g_dir_open (s, 0, NULL);
@@ -501,8 +501,8 @@ update_info_fabric_and_num_ports (DevkitDisksAdapter *adapter)
 
         ret = TRUE;
 
-        devkit_disks_adapter_set_fabric (adapter, fabric);
-        devkit_disks_adapter_set_num_ports (adapter, num_ports);
+        adapter_set_fabric (adapter, fabric);
+        adapter_set_num_ports (adapter, num_ports);
 
         //out:
         g_free (scsi_host_name);
@@ -522,7 +522,7 @@ update_info_fabric_and_num_ports (DevkitDisksAdapter *adapter)
  * Returns: #TRUE to keep (or add) the adapter; #FALSE to ignore (or remove) the adapter
  **/
 static gboolean
-update_info (DevkitDisksAdapter *adapter)
+update_info (Adapter *adapter)
 {
         gboolean ret;
         guint64 device_class;
@@ -589,9 +589,9 @@ update_info (DevkitDisksAdapter *adapter)
                                           g_udev_device_get_sysfs_attr_as_int (adapter->priv->d, "subsystem_device"));
         }
 
-        devkit_disks_adapter_set_vendor (adapter, vendor);
-        devkit_disks_adapter_set_model (adapter, model);
-        devkit_disks_adapter_set_driver (adapter, driver);
+        adapter_set_vendor (adapter, vendor);
+        adapter_set_model (adapter, model);
+        adapter_set_driver (adapter, driver);
 
         if (!update_info_fabric_and_num_ports (adapter))
                 goto out;

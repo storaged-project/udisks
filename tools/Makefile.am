@@ -21,10 +21,10 @@ BUILT_SOURCES =							\
 	udisks-device-glue.h					\
 	udisks-marshal.h		udisks-marshal.c
 
-udisks-marshal.h: $(top_srcdir)/src/udisks-marshal.list
+udisks-marshal.h: $(top_srcdir)/src/marshal.list
 	glib-genmarshal $< --prefix=udisks_marshal --header > $@
 
-udisks-marshal.c: $(top_srcdir)/src/udisks-marshal.list
+udisks-marshal.c: $(top_srcdir)/src/marshal.list
 	echo "#include \"udisks-marshal.h\"" > $@ && glib-genmarshal $< --prefix=udisks_marshal --body >> $@
 
 udisks-daemon-glue.h: $(top_srcdir)/data/org.freedesktop.UDisks.xml Makefile.am

@@ -18,25 +18,14 @@
  *
  */
 
-#ifndef __DEVKIT_DISKS_TYPES_H__
-#define __DEVKIT_DISKS_TYPES_H__
+#ifndef __POLLER_H__
+#define __POLLER_H__
 
-#include <glib-object.h>
+#include <device.h>
 
-G_BEGIN_DECLS
+gboolean poller_setup (int argc, char *argv[]);
 
-typedef struct DevkitDisksDaemon       DevkitDisksDaemon;
+/* media detection polling */
+void     poller_set_devices (GList *devices);
 
-typedef struct DevkitDisksDevice       DevkitDisksDevice;
-typedef struct DevkitDisksAdapter      DevkitDisksAdapter;
-typedef struct DevkitDisksExpander     DevkitDisksExpander;
-typedef struct DevkitDisksPort         DevkitDisksPort;
-
-typedef struct DevkitDisksMount        DevkitDisksMount;
-typedef struct DevkitDisksMountMonitor DevkitDisksMountMonitor;
-typedef struct DevkitDisksInhibitor    DevkitDisksInhibitor;
-typedef struct DevkitDisksAtaSmartDb   DevkitDisksAtaSmartDb;
-
-G_END_DECLS
-
-#endif /* __DEVKIT_DISKS_TYPES_H__ */
+#endif /* __POLLER_H */

@@ -22,13 +22,13 @@
 #endif
 
 #include <string.h>
-#include "devkit-disks-port.h"
-#include "devkit-disks-port-private.h"
+#include "port.h"
+#include "port-private.h"
 
 static gboolean
 emit_changed_idle_cb (gpointer data)
 {
-  DevkitDisksPort *port = DEVKIT_DISKS_PORT (data);
+  Port *port = PORT (data);
 
   //g_debug ("XXX emitting 'changed' in idle");
 
@@ -47,7 +47,7 @@ emit_changed_idle_cb (gpointer data)
 }
 
 static void
-emit_changed (DevkitDisksPort *port, const gchar *name)
+emit_changed (Port *port, const gchar *name)
 {
   //g_debug ("property %s changed for %s", name, port->priv->port_file);
 
@@ -65,7 +65,7 @@ emit_changed (DevkitDisksPort *port, const gchar *name)
 }
 
 void
-devkit_disks_port_set_adapter (DevkitDisksPort *port, const gchar *value)
+port_set_adapter (Port *port, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (port->priv->adapter, value) != 0))
     {
@@ -76,7 +76,7 @@ devkit_disks_port_set_adapter (DevkitDisksPort *port, const gchar *value)
 }
 
 void
-devkit_disks_port_set_parent (DevkitDisksPort *port, const gchar *value)
+port_set_parent (Port *port, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (port->priv->parent, value) != 0))
     {
@@ -87,7 +87,7 @@ devkit_disks_port_set_parent (DevkitDisksPort *port, const gchar *value)
 }
 
 void
-devkit_disks_port_set_number (DevkitDisksPort *port, gint value)
+port_set_number (Port *port, gint value)
 {
   if (G_UNLIKELY (port->priv->number != value))
     {

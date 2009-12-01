@@ -22,13 +22,13 @@
 #endif
 
 #include <string.h>
-#include "devkit-disks-expander.h"
-#include "devkit-disks-expander-private.h"
+#include "expander.h"
+#include "expander-private.h"
 
 static gboolean
 emit_changed_idle_cb (gpointer data)
 {
-  DevkitDisksExpander *expander = DEVKIT_DISKS_EXPANDER (data);
+  Expander *expander = EXPANDER (data);
 
   //g_debug ("XXX emitting 'changed' in idle");
 
@@ -47,7 +47,7 @@ emit_changed_idle_cb (gpointer data)
 }
 
 static void
-emit_changed (DevkitDisksExpander *expander, const gchar *name)
+emit_changed (Expander *expander, const gchar *name)
 {
   //g_debug ("property %s changed for %s", name, expander->priv->expander_file);
 
@@ -113,7 +113,7 @@ ptr_str_array_from_strv (GStrv s)
 /* ---------------------------------------------------------------------------------------------------- */
 
 void
-devkit_disks_expander_set_vendor (DevkitDisksExpander *expander, const gchar *value)
+expander_set_vendor (Expander *expander, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (expander->priv->vendor, value) != 0))
     {
@@ -124,7 +124,7 @@ devkit_disks_expander_set_vendor (DevkitDisksExpander *expander, const gchar *va
 }
 
 void
-devkit_disks_expander_set_model (DevkitDisksExpander *expander, const gchar *value)
+expander_set_model (Expander *expander, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (expander->priv->model, value) != 0))
     {
@@ -135,7 +135,7 @@ devkit_disks_expander_set_model (DevkitDisksExpander *expander, const gchar *val
 }
 
 void
-devkit_disks_expander_set_revision (DevkitDisksExpander *expander, const gchar *value)
+expander_set_revision (Expander *expander, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (expander->priv->revision, value) != 0))
     {
@@ -146,7 +146,7 @@ devkit_disks_expander_set_revision (DevkitDisksExpander *expander, const gchar *
 }
 
 void
-devkit_disks_expander_set_num_ports (DevkitDisksExpander *expander, guint value)
+expander_set_num_ports (Expander *expander, guint value)
 {
   if (G_UNLIKELY (expander->priv->num_ports != value))
     {
@@ -156,7 +156,7 @@ devkit_disks_expander_set_num_ports (DevkitDisksExpander *expander, guint value)
 }
 
 void
-devkit_disks_expander_set_upstream_ports (DevkitDisksExpander *expander, GStrv value)
+expander_set_upstream_ports (Expander *expander, GStrv value)
 {
   if (G_UNLIKELY (!ptr_str_array_equals_strv (expander->priv->upstream_ports, value)))
     {
@@ -167,7 +167,7 @@ devkit_disks_expander_set_upstream_ports (DevkitDisksExpander *expander, GStrv v
 }
 
 void
-devkit_disks_expander_set_adapter (DevkitDisksExpander *expander, const gchar *value)
+expander_set_adapter (Expander *expander, const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (expander->priv->adapter, value) != 0))
     {

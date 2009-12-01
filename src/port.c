@@ -32,24 +32,24 @@
 #include <gudev/gudev.h>
 #include <stdlib.h>
 
-#include "devkit-disks-daemon.h"
-#include "devkit-disks-port.h"
-#include "devkit-disks-port-private.h"
-#include "devkit-disks-marshal.h"
+#include "daemon.h"
+#include "port.h"
+#include "port-private.h"
+#include "marshal.h"
 
-#include "devkit-disks-adapter.h"
-#include "devkit-disks-expander.h"
+#include "adapter.h"
+#include "expander.h"
 
 /*--------------------------------------------------------------------------------------------------------------*/
-#include "devkit-disks-port-glue.h"
+#include "port-glue.h"
 
-static void     devkit_disks_port_class_init  (DevkitDisksPortClass *klass);
-static void     devkit_disks_port_init        (DevkitDisksPort      *seat);
-static void     devkit_disks_port_finalize    (GObject     *object);
+static void     port_class_init  (PortClass *klass);
+static void     port_init        (Port      *seat);
+static void     port_finalize    (GObject     *object);
 
-static gboolean update_info                (DevkitDisksPort *port);
+static gboolean update_info                (Port *port);
 
-static void     drain_pending_changes (DevkitDisksPort *port, gboolean force_update);
+static void     drain_pending_changes (Port *port, gboolean force_update);
 
 enum
 {
@@ -69,9 +69,9 @@ enum
 
 static guint signals[LAST_SIGNAL] = { 0 };
 
-G_DEFINE_TYPE (DevkitDisksPort, devkit_disks_port, G_TYPE_OBJECT)
+G_DEFINE_TYPE (Port, port, G_TYPE_OBJECT)
 
-#define DEVKIT_DISKS_PORT_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), DEVKIT_DISKS_TYPE_PORT, DevkitDisksPortPrivate))
+#define PORT_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), TYPE_PORT, PortPrivate))
 
 static void
 get_property (GObject         *object,
@@ -79,7 +79,7 @@ get_property (GObject         *object,
               GValue          *value,
               GParamSpec      *pspec)
 {
-        DevkitDisksPort *port = DEVKIT_DISKS_PORT (object);
+        Port *port = PORT (object);
 
         switch (prop_id) {
         case PROP_NATIVE_PATH:
@@ -111,14 +111,14 @@ get_property (GObject         *object,
 }
 
 static void
-devkit_disks_port_class_init (DevkitDisksPortClass *klass)
+port_class_init (PortClass *klass)
 {
         GObjectClass   *object_class = G_OBJECT_CLASS (klass);
 
-        object_class->finalize = devkit_disks_port_finalize;
+        object_class->finalize = port_finalize;
         object_class->get_property = get_property;
 
-        g_type_class_add_private (klass, sizeof (DevkitDisksPortPrivate));
+        g_type_class_add_private (klass, sizeof (PortPrivate));
 
         signals[CHANGED_SIGNAL] =
                 g_signal_new ("changed",
@@ -129,7 +129,7 @@ devkit_disks_port_class_init (DevkitDisksPortClass *klass)
                               g_cclosure_marshal_VOID__VOID,
                               G_TYPE_NONE, 0);
 
-        dbus_g_object_type_install_info (DEVKIT_DISKS_TYPE_PORT, &dbus_glib_devkit_disks_port_object_info);
+        dbus_g_object_type_install_info (TYPE_PORT, &dbus_glib_port_object_info);
 
         g_object_class_install_property (
                 object_class,
@@ -150,21 +150,21 @@ devkit_disks_port_class_init (DevkitDisksPortClass *klass)
 }
 
 static void
-devkit_disks_port_init (DevkitDisksPort *port)
+port_init (Port *port)
 {
-        port->priv = DEVKIT_DISKS_PORT_GET_PRIVATE (port);
+        port->priv = PORT_GET_PRIVATE (port);
         port->priv->number = -1;
 }
 
 static void
-devkit_disks_port_finalize (GObject *object)
+port_finalize (GObject *object)
 {
-        DevkitDisksPort *port;
+        Port *port;
 
         g_return_if_fail (object != NULL);
-        g_return_if_fail (DEVKIT_DISKS_IS_PORT (object));
+        g_return_if_fail (IS_PORT (object));
 
-        port = DEVKIT_DISKS_PORT (object);
+        port = PORT (object);
         g_return_if_fail (port->priv != NULL);
 
         /* g_debug ("finalizing %s", port->priv->native_path); */
@@ -183,19 +183,19 @@ devkit_disks_port_finalize (GObject *object)
         g_free (port->priv->adapter);
         g_free (port->priv->parent);
 
-        G_OBJECT_CLASS (devkit_disks_port_parent_class)->finalize (object);
+        G_OBJECT_CLASS (port_parent_class)->finalize (object);
 }
 
 /**
  * compute_object_path:
- * @port: A #DevkitDisksPort.
+ * @port: A #Port.
  *
  * Computes the D-Bus object path for the port.
  *
  * Returns: A valid D-Bus object path. Free with g_free().
  */
 static char *
-compute_object_path (DevkitDisksPort *port)
+compute_object_path (Port *port)
 {
         const gchar *basename;
         GString *s;
@@ -233,7 +233,7 @@ compute_object_path (DevkitDisksPort *port)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-register_disks_port (DevkitDisksPort *port)
+register_disks_port (Port *port)
 {
         DBusConnection *connection;
         GError *error = NULL;
@@ -269,7 +269,7 @@ error:
 }
 
 void
-devkit_disks_port_removed (DevkitDisksPort *port)
+port_removed (Port *port)
 {
         port->priv->removed = TRUE;
 
@@ -279,16 +279,16 @@ devkit_disks_port_removed (DevkitDisksPort *port)
                                                      port->priv->object_path) == NULL);
 }
 
-DevkitDisksPort *
-devkit_disks_port_new (DevkitDisksDaemon *daemon, GUdevDevice *d)
+Port *
+port_new (Daemon *daemon, GUdevDevice *d)
 {
-        DevkitDisksPort *port;
+        Port *port;
         const char *native_path;
 
         port = NULL;
         native_path = g_udev_device_get_sysfs_path (d);
 
-        port = DEVKIT_DISKS_PORT (g_object_new (DEVKIT_DISKS_TYPE_PORT, NULL));
+        port = PORT (g_object_new (TYPE_PORT, NULL));
         port->priv->d = g_object_ref (d);
         port->priv->daemon = g_object_ref (daemon);
         port->priv->native_path = g_strdup (native_path);
@@ -299,7 +299,7 @@ devkit_disks_port_new (DevkitDisksDaemon *daemon, GUdevDevice *d)
                 goto out;
         }
 
-        if (!register_disks_port (DEVKIT_DISKS_PORT (port))) {
+        if (!register_disks_port (PORT (port))) {
                 g_object_unref (port);
                 port = NULL;
                 goto out;
@@ -310,7 +310,7 @@ out:
 }
 
 static void
-drain_pending_changes (DevkitDisksPort *port, gboolean force_update)
+drain_pending_changes (Port *port, gboolean force_update)
 {
         gboolean emit_changed;
 
@@ -336,7 +336,7 @@ drain_pending_changes (DevkitDisksPort *port, gboolean force_update)
 
 /* called by the daemon on the 'change' uevent */
 gboolean
-devkit_disks_port_changed (DevkitDisksPort *port, GUdevDevice *d, gboolean synthesized)
+port_changed (Port *port, GUdevDevice *d, gboolean synthesized)
 {
         gboolean keep_port;
 
@@ -359,19 +359,19 @@ out:
 /* ---------------------------------------------------------------------------------------------------- */
 
 const char *
-devkit_disks_port_local_get_object_path (DevkitDisksPort *port)
+port_local_get_object_path (Port *port)
 {
         return port->priv->object_path;
 }
 
 const char *
-devkit_disks_port_local_get_native_path (DevkitDisksPort *port)
+port_local_get_native_path (Port *port)
 {
         return port->priv->native_path;
 }
 
 gboolean
-devkit_disks_local_port_encloses_native_path (DevkitDisksPort *port,
+local_port_encloses_native_path (Port *port,
                                               const gchar     *native_path)
 {
         gboolean ret;
@@ -523,8 +523,8 @@ int_compare_func (gconstpointer a,
 
 /* Update info for an ATA port */
 static gboolean
-update_info_ata (DevkitDisksPort    *port,
-                 DevkitDisksAdapter *adapter)
+update_info_ata (Port    *port,
+                 Adapter *adapter)
 {
         GDir *dir;
         GError *error;
@@ -578,12 +578,12 @@ update_info_ata (DevkitDisksPort    *port,
                 goto out;
         }
 
-        dir = g_dir_open (devkit_disks_adapter_local_get_native_path (adapter),
+        dir = g_dir_open (adapter_local_get_native_path (adapter),
                           0,
                           &error);
         if (dir == NULL) {
                 g_warning ("Unable to open %s: %s",
-                           devkit_disks_adapter_local_get_native_path (adapter),
+                           adapter_local_get_native_path (adapter),
                            error->message);
                 g_error_free (error);
                 goto out;
@@ -620,7 +620,7 @@ update_info_ata (DevkitDisksPort    *port,
                 }
         }
 
-        devkit_disks_port_set_number (port, port_number);
+        port_set_number (port, port_number);
         port->priv->port_type = PORT_TYPE_ATA;
         ret = TRUE;
 
@@ -637,13 +637,13 @@ update_info_ata (DevkitDisksPort    *port,
 
 /* Update info for a SAS PHY */
 static gboolean
-update_info_sas_phy (DevkitDisksPort    *port,
-                     DevkitDisksAdapter *adapter)
+update_info_sas_phy (Port    *port,
+                     Adapter *adapter)
 {
         gint port_number;
 
         port_number = g_udev_device_get_sysfs_attr_as_int (port->priv->d, "phy_identifier");
-        devkit_disks_port_set_number (port, port_number);
+        port_set_number (port, port_number);
         port->priv->port_type = PORT_TYPE_SAS;
 
         return TRUE;
@@ -664,24 +664,24 @@ update_info_sas_phy (DevkitDisksPort    *port,
  * Returns: #TRUE to keep (or add) the port; #FALSE to ignore (or remove) the port
  **/
 static gboolean
-update_info (DevkitDisksPort *port)
+update_info (Port *port)
 {
         gboolean ret;
-        DevkitDisksAdapter *adapter;
-        DevkitDisksExpander *expander;
+        Adapter *adapter;
+        Expander *expander;
 
         ret = FALSE;
 
-        adapter = devkit_disks_daemon_local_find_enclosing_adapter (port->priv->daemon,
+        adapter = daemon_local_find_enclosing_adapter (port->priv->daemon,
                                                                     port->priv->native_path);
 
-        expander = devkit_disks_daemon_local_find_enclosing_expander (port->priv->daemon,
+        expander = daemon_local_find_enclosing_expander (port->priv->daemon,
                                                                       port->priv->native_path);
 
 #if 0
         g_debug ("Adapter=%s and Expander=%s for %s",
-                 adapter != NULL ? devkit_disks_adapter_local_get_native_path (adapter) : "(none)",
-                 expander != NULL ? devkit_disks_expander_local_get_native_path (expander) : "(none)",
+                 adapter != NULL ? adapter_local_get_native_path (adapter) : "(none)",
+                 expander != NULL ? expander_local_get_native_path (expander) : "(none)",
                  g_udev_device_get_sysfs_path (port->priv->d));
 #endif
 
@@ -689,11 +689,11 @@ update_info (DevkitDisksPort *port)
         if (adapter == NULL)
                 goto out;
 
-        devkit_disks_port_set_adapter (port, devkit_disks_adapter_local_get_object_path (adapter));
+        port_set_adapter (port, adapter_local_get_object_path (adapter));
         if (expander != NULL)
-                devkit_disks_port_set_parent (port, devkit_disks_expander_local_get_object_path (expander));
+                port_set_parent (port, expander_local_get_object_path (expander));
         else
-                devkit_disks_port_set_parent (port, devkit_disks_adapter_local_get_object_path (adapter));
+                port_set_parent (port, adapter_local_get_object_path (adapter));
 
         if (g_strcmp0 (g_udev_device_get_subsystem (port->priv->d), "scsi_host") == 0) {
                 if (!update_info_ata (port, adapter))

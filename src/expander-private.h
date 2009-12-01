@@ -18,21 +18,21 @@
  *
  */
 
-#ifndef __DEVKIT_DISKS_EXPANDER_PRIVATE_H__
-#define __DEVKIT_DISKS_EXPANDER_PRIVATE_H__
+#ifndef __EXPANDER_PRIVATE_H__
+#define __EXPANDER_PRIVATE_H__
 
 #include <dbus/dbus-glib.h>
 #include <gudev/gudev.h>
 #include <atasmart.h>
 
-#include "devkit-disks-types.h"
+#include "types.h"
 
 G_BEGIN_DECLS
 
-struct DevkitDisksExpanderPrivate
+struct ExpanderPrivate
 {
         DBusGConnection *system_bus_connection;
-        DevkitDisksDaemon *daemon;
+        Daemon *daemon;
         GUdevDevice *d;
 
         gchar *object_path;
@@ -58,13 +58,13 @@ struct DevkitDisksExpanderPrivate
 
 /* property setters */
 
-void devkit_disks_expander_set_vendor (DevkitDisksExpander *expander, const gchar *value);
-void devkit_disks_expander_set_model (DevkitDisksExpander *expander, const gchar *value);
-void devkit_disks_expander_set_revision (DevkitDisksExpander *expander, const gchar *value);
-void devkit_disks_expander_set_num_ports (DevkitDisksExpander *expander, guint value);
-void devkit_disks_expander_set_upstream_ports (DevkitDisksExpander *expander, GStrv value);
-void devkit_disks_expander_set_adapter (DevkitDisksExpander *expander, const gchar *value);
+void expander_set_vendor (Expander *expander, const gchar *value);
+void expander_set_model (Expander *expander, const gchar *value);
+void expander_set_revision (Expander *expander, const gchar *value);
+void expander_set_num_ports (Expander *expander, guint value);
+void expander_set_upstream_ports (Expander *expander, GStrv value);
+void expander_set_adapter (Expander *expander, const gchar *value);
 
 G_END_DECLS
 
-#endif /* __DEVKIT_DISKS_EXPANDER_PRIVATE_H__ */
+#endif /* __EXPANDER_PRIVATE_H__ */

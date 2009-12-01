@@ -18,14 +18,25 @@
  *
  */
 
-#ifndef __DEVKIT_DISKS_POLLER_H__
-#define __DEVKIT_DISKS_POLLER_H__
+#ifndef __MOUNT_FILE_H__
+#define __MOUNT_FILE_H__
 
-#include <devkit-disks-device.h>
+#include "types.h"
 
-gboolean devkit_disks_poller_setup (int argc, char *argv[]);
+G_BEGIN_DECLS
 
-/* media detection polling */
-void     devkit_disks_poller_set_devices (GList *devices);
+gboolean mount_file_has_device  (const gchar  *device_file,
+                                              uid_t        *mounted_by_uid,
+                                              gboolean     *remove_dir_on_unmount);
+void     mount_file_add         (const gchar  *device_file,
+                                              const gchar  *mount_path,
+                                              uid_t         mounted_by_uid,
+                                              gboolean      remove_dir_on_unmount);
+void     mount_file_remove      (const gchar  *device_file,
+                                              const char   *mount_path);
+void     mount_file_clean_stale (GList        *existing_devices);
 
-#endif /* __DEVKIT_DISKS_POLLER_H */
+G_END_DECLS
+
+#endif /* __MOUNT_FILE_H__ */
+
