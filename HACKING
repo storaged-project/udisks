@@ -1,61 +1,37 @@
-SCM
-===
+CODING STYLE
+============
 
- - anonymous checkouts
+ - Please follow the coding style already used (which is close to the
+   GNU style) - if adding new files please include the following mode
+   line for emacs and other editors:
 
-   $ git clone git://git.freedesktop.org/git/DeviceKit/DeviceKit-disks.git
+   -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*-
 
- - checkouts if you got an ssh account on fd.o (username@ is optional)
+ - Spaces, not tabs, are used.
 
-   $ git clone ssh://[username@]git.freedesktop.org/git/DeviceKit/DeviceKit-disks.git
-
- - commit to local repository
-
-   $ git commit -a
-
- - push local repository to master repository at fd.o (remember most patches
-   requires review at the mailing list)
-
-   $ git push
-
- - pull changes from master repository at fd.o
-
-   $ git pull
-
- - diff of working tree versus local repository
-
-   $ git diff
-
- - diff of local repository vs. master repository at fd.o
-
-   synchronize with upstream repo:
-   $ git pull
-
-   (possibly merge changes)
-
-   generate the diff:
-   $ git diff origin HEAD
-
- - influential environment variables (set these in e.g. .bash_profile)
-
-   export GIT_AUTHOR_NAME='Your Full Name'
-   export GIT_COMMITTER_NAME='Your Full Name'
-   export GIT_COMMITTER_EMAIL=youremail@domain.net
-   export GIT_AUTHOR_EMAIL=youremail@domain.net
-
- - see also
-
-    http://www.kernel.org/pub/software/scm/git/docs/
+ - All external interfaces (network protocols, file formats, etc.)
+   should be documented in man pages or other documentation.
 
 
-Committing code
-===
+SOURCE CONTROL
+==============
+
+Anonymous checkouts:
+
+  $ git clone git://git.freedesktop.org/git/DeviceKit/DeviceKit-disks.git
+
+Checkouts for ssh account holders
+
+  $ git clone ssh://[username@]git.freedesktop.org/git/DeviceKit/DeviceKit-disks.git
+
+COMMITTING CODE
+===============
 
  - Commit messages should be of the form (the five lines between the
    lines starting with ===)
 
 === begin example commit ===
-short explanation of the commit
+Short explanation of the commit
 
 Longer explanation explaining exactly what's changed, whether any
 external or private interfaces changed, what bugs were fixed (with bug
@@ -76,17 +52,8 @@ tracker reference if applicable) and so forth. Be concise but not too brief.
  - When committing code on behalf of others use the --author option, e.g.
    git commit -a --author "Joe Coder <joe@coder.org>"
 
-Coding Style
-===
-
- - Please follow the coding style already used.
-
- - Write docs for all functions and structs and so on. We use gtkdoc format.
-
- - All external interfaces (network protocols, file formats, etc.)
-   should have documented specifications sufficient to allow an
-   alternative implementation to be written. Our implementation should
-   be strict about specification compliance (should not for example
-   heuristically parse a file and accept not-well-formed
-   data). Avoiding heuristics is also important for security reasons;
-   if it looks funny, ignore it (or exit, or disconnect).
+ - If submitting (or commiting) patch in Bugzilla prefix the first
+   line with "Bug <Number> — <Bug Title>" (the dash is U+2014 EM DASH,
+   not '-') and include the bug URL in the commit message. Example:
+   "Bug 24885 — LVM LVs now have NOPOLICY=0" and
+   http://bugs.freedesktop.org/show_bug.cgi?id=24885.
