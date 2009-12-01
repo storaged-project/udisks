@@ -30,7 +30,7 @@
 #define LIBUDEV_I_KNOW_THE_API_IS_SUBJECT_TO_CHANGE
 #include <libudev.h>
 
-#include "partutil.h"
+#include "helpers/partutil.h"
 
 static void
 usage (int argc, char *argv[])
