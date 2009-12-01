@@ -1,3 +1,5 @@
+/* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*- */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

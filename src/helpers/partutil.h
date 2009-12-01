@@ -1,3 +1,5 @@
+/* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*- */
+
 /***************************************************************************
  *
  * part.h : library for reading and writing partition tables - uses

@@ -1,5 +1,5 @@
-/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
+/* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*-*/
+/*
  * Copyright (C) 2009 David Zeuthen <david@fubar.dk>
  *
  * This program is free software; you can redistribute it and/or modify
