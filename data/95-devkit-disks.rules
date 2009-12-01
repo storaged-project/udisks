@@ -3,7 +3,7 @@
 
 # import names for PCI storage controllers
 #
-SUBSYSTEM=="pci", ACTION="add|change", ENV{ID_MODEL_FROM_DATABASE}=="", ATTR{class}=="0x01*", IMPORT{program}="pci-db %p"
+SUBSYSTEM=="pci", ACTION=="add|change", ENV{ID_MODEL_FROM_DATABASE}=="", ATTR{class}=="0x01*", IMPORT{program}="pci-db %p"
 
 # probe SAS expanders
 #
@@ -11,7 +11,7 @@ SUBSYSTEM=="pci", ACTION="add|change", ENV{ID_MODEL_FROM_DATABASE}=="", ATTR{cla
 #  this is the case we can trigger a 'change' on the sas_expander device
 #  when the bsg device appears)
 #
-SUBSYSTEM=="sas_expander", ACTION="add|change", IMPORT{program}="devkit-disks-probe-sas-expander /sys/%p"
+SUBSYSTEM=="sas_expander", ACTION=="add|change", IMPORT{program}="devkit-disks-probe-sas-expander /sys/%p"
 
 ##############################################################################################################
 
