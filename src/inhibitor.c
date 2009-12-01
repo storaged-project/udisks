@@ -29,15 +29,15 @@
 
 struct InhibitorPrivate
 {
-        gchar *unique_dbus_name;
-        gchar *cookie;
+  gchar *unique_dbus_name;
+  gchar *cookie;
 };
 
 enum
-{
-        DISCONNECTED_SIGNAL,
-        LAST_SIGNAL
-};
+  {
+    DISCONNECTED_SIGNAL,
+    LAST_SIGNAL
+  };
 
 static guint signals[LAST_SIGNAL] = { 0 };
 
@@ -48,16 +48,16 @@ static GList *inhibitors = NULL;
 static void
 inhibitor_finalize (GObject *object)
 {
-        Inhibitor *inhibitor;
+  Inhibitor *inhibitor;
 
-        inhibitor = INHIBITOR (object);
+  inhibitor = INHIBITOR (object);
 
-        inhibitors = g_list_remove (inhibitors, inhibitor);
+  inhibitors = g_list_remove (inhibitors, inhibitor);
 
-        g_free (inhibitor->priv->unique_dbus_name);
-        g_free (inhibitor->priv->cookie);
+  g_free (inhibitor->priv->unique_dbus_name);
+  g_free (inhibitor->priv->cookie);
 
-        G_OBJECT_CLASS (inhibitor_parent_class)->finalize (object);
+  G_OBJECT_CLASS (inhibitor_parent_class)->finalize (object);
 }
 
 static void
@@ -69,89 +69,98 @@ inhibitor_init (Inhibitor *inhibitor)
 static void
 inhibitor_class_init (InhibitorClass *klass)
 {
-        GObjectClass   *object_class = G_OBJECT_CLASS (klass);
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-        object_class->finalize = inhibitor_finalize;
+  object_class->finalize = inhibitor_finalize;
 
-        g_type_class_add_private (klass, sizeof (InhibitorPrivate));
+  g_type_class_add_private (klass, sizeof(InhibitorPrivate));
 
-        signals[DISCONNECTED_SIGNAL] =
-                g_signal_new ("disconnected",
-                              G_OBJECT_CLASS_TYPE (klass),
-                              G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
-                              0,
-                              NULL, NULL,
-                              g_cclosure_marshal_VOID__VOID,
-                              G_TYPE_NONE, 0);
+  signals[DISCONNECTED_SIGNAL] = g_signal_new ("disconnected",
+                                               G_OBJECT_CLASS_TYPE (klass),
+                                               G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                                               0,
+                                               NULL,
+                                               NULL,
+                                               g_cclosure_marshal_VOID__VOID,
+                                               G_TYPE_NONE,
+                                               0);
 }
 
 Inhibitor *
 inhibitor_new (DBusGMethodInvocation *context)
 {
-        Inhibitor *inhibitor;
-        static gint inhibitor_count = 0;
+  Inhibitor *inhibitor;
+  static gint inhibitor_count = 0;
 
-        inhibitor = INHIBITOR (g_object_new (TYPE_INHIBITOR, NULL));
+  inhibitor = INHIBITOR (g_object_new (TYPE_INHIBITOR, NULL));
 
-        inhibitor->priv->unique_dbus_name = g_strdup (dbus_g_method_get_sender (context));
+  inhibitor->priv->unique_dbus_name = g_strdup (dbus_g_method_get_sender (context));
 
-        /* TODO: maybe use a real random number (if it turns out we need this to be cryptographically secure etc.) */
-        inhibitor->priv->cookie = g_strdup_printf ("udisks_inhibitor_%d", inhibitor_count++);
+  /* TODO: maybe use a real random number (if it turns out we need this to be cryptographically secure etc.) */
+  inhibitor->priv->cookie = g_strdup_printf ("udisks_inhibitor_%d", inhibitor_count++);
 
-        inhibitors = g_list_prepend (inhibitors, inhibitor);
+  inhibitors = g_list_prepend (inhibitors, inhibitor);
 
-        return inhibitor;
+  return inhibitor;
 }
 
 const gchar *
 inhibitor_get_unique_dbus_name (Inhibitor *inhibitor)
 {
-        return inhibitor->priv->unique_dbus_name;
+  return inhibitor->priv->unique_dbus_name;
 }
 
 const gchar *
 inhibitor_get_cookie (Inhibitor *inhibitor)
 {
-        return inhibitor->priv->cookie;
+  return inhibitor->priv->cookie;
 }
 
-
-void inhibitor_name_owner_changed (DBusMessage *message);
+void
+inhibitor_name_owner_changed (DBusMessage *message);
 
 void
 inhibitor_name_owner_changed (DBusMessage *message)
 {
 
-        if (dbus_message_is_signal (message, DBUS_INTERFACE_DBUS, "NameOwnerChanged")) {
-		char *name;
-		char *new_owner;
-		char *old_owner;
+  if (dbus_message_is_signal (message, DBUS_INTERFACE_DBUS, "NameOwnerChanged"))
+    {
+      char *name;
+      char *new_owner;
+      char *old_owner;
 
-		if (!dbus_message_get_args (message, NULL,
-					    DBUS_TYPE_STRING, &name,
-					    DBUS_TYPE_STRING, &old_owner,
-					    DBUS_TYPE_STRING, &new_owner,
-					    DBUS_TYPE_INVALID)) {
+      if (!dbus_message_get_args (message,
+                                  NULL,
+                                  DBUS_TYPE_STRING,
+                                  &name,
+                                  DBUS_TYPE_STRING,
+                                  &old_owner,
+                                  DBUS_TYPE_STRING,
+                                  &new_owner,
+                                  DBUS_TYPE_INVALID))
+        {
 
-                        g_warning ("The NameOwnerChanged signal has the wrong signature.");
-			goto out;
-		}
-
-                if (strlen (new_owner) == 0) {
-                        GList *l;
-
-                        for (l = inhibitors; l != NULL; l = l->next) {
-                                Inhibitor *inhibitor = INHIBITOR (l->data);
-
-                                //g_debug (" looking at %s", inhibitor->priv->unique_dbus_name);
-                                if (g_strcmp0 (name, inhibitor->priv->unique_dbus_name) == 0) {
-                                        g_signal_emit_by_name (inhibitor, "disconnected");
-                                }
-                        }
-                }
+          g_warning ("The NameOwnerChanged signal has the wrong signature.");
+          goto out;
         }
 
- out:
-        ;
-}
+      if (strlen (new_owner) == 0)
+        {
+          GList *l;
 
+          for (l = inhibitors; l != NULL; l = l->next)
+            {
+              Inhibitor *inhibitor = INHIBITOR (l->data);
+
+              //g_debug (" looking at %s", inhibitor->priv->unique_dbus_name);
+              if (g_strcmp0 (name, inhibitor->priv->unique_dbus_name) == 0)
+                {
+                  g_signal_emit_by_name (inhibitor, "disconnected");
+                }
+            }
+        }
+    }
+
+ out:
+  ;
+}

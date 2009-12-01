@@ -39,7 +39,8 @@ usage (void)
 }
 
 int
-main (int argc, char *argv[])
+main (int argc,
+      char *argv[])
 {
   int ret;
   int sg_fd;
@@ -82,29 +83,27 @@ main (int argc, char *argv[])
       goto out;
     }
 
-  if (sg_ll_sync_cache_10 (sg_fd,
-                           0,  /* sync_nv */
-                           0,  /* immed */
-                           0,  /* group */
-                           0,  /* lba */
-                           0,  /* count */
-                           1,  /* noisy */
-                           0   /* verbose */
+  if (sg_ll_sync_cache_10 (sg_fd, 0, /* sync_nv */
+                           0, /* immed */
+                           0, /* group */
+                           0, /* lba */
+                           0, /* count */
+                           1, /* noisy */
+                           0 /* verbose */
                            ) != 0)
     {
       g_printerr ("Error SYNCHRONIZE CACHE for %s: %m\n", device);
       /* this is not a catastrophe, carry on */
     }
 
-  if (sg_ll_start_stop_unit (sg_fd,
-                             0,  /* immed */
-                             0,  /* pc_mod__fl_num */
-                             0,  /* power_cond */
-                             0,  /* noflush__fl */
-                             0,  /* loej */
-                             0,  /* start */
-                             1,  /* noisy */
-                             0   /* verbose */
+  if (sg_ll_start_stop_unit (sg_fd, 0, /* immed */
+                             0, /* pc_mod__fl_num */
+                             0, /* power_cond */
+                             0, /* noflush__fl */
+                             0, /* loej */
+                             0, /* start */
+                             1, /* noisy */
+                             0 /* verbose */
                              ) != 0)
     {
       g_printerr ("Error STOP UNIT for %s: %m\n", device);
@@ -148,7 +147,7 @@ main (int argc, char *argv[])
       g_printerr ("Cannot open %s for writing: %m\n", unbind_path);
       goto out;
     }
-  if (fwrite (usb_interface_name, sizeof (char), usb_interface_name_len, f) < usb_interface_name_len)
+  if (fwrite (usb_interface_name, sizeof(char), usb_interface_name_len, f) < usb_interface_name_len)
     {
       g_printerr ("Error writing %s to %s: %m\n", unbind_path, usb_interface_name);
       fclose (f);
@@ -170,7 +169,7 @@ main (int argc, char *argv[])
       const char *bNumInterfaces;
       char *endp;
       int num_interfaces;
-      gchar *power_level_path;
+      gchar * power_level_path;
       gchar suspend_str[] = "suspend";
 
       bNumInterfaces = udev_device_get_sysattr_value (udevice_usb_device, "bNumInterfaces");
@@ -185,7 +184,7 @@ main (int argc, char *argv[])
             }
           else
             {
-              if (fwrite (suspend_str, sizeof (char), strlen (suspend_str), f) < strlen (suspend_str))
+              if (fwrite (suspend_str, sizeof(char), strlen (suspend_str), f) < strlen (suspend_str))
                 {
                   g_printerr ("Error writing %s to %s: %m\n", power_level_path, suspend_str);
                 }

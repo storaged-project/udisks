@@ -34,26 +34,25 @@ G_BEGIN_DECLS
 #define IS_MOUNT_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), TYPE_MOUNT))
 #define MOUNT_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), TYPE_MOUNT, MountClass))
 
-typedef struct MountClass   MountClass;
+typedef struct MountClass MountClass;
 typedef struct MountPrivate MountPrivate;
 
 struct Mount
 {
-        GObject                  parent;
-        MountPrivate *priv;
+  GObject parent;
+  MountPrivate *priv;
 };
 
 struct MountClass
 {
-        GObjectClass   parent_class;
+  GObjectClass parent_class;
 };
 
-GType         mount_get_type        (void) G_GNUC_CONST;
-const gchar  *mount_get_mount_path  (Mount *mount);
-dev_t         mount_get_dev         (Mount *mount);
+GType mount_get_type (void) G_GNUC_CONST;
+const gchar * mount_get_mount_path (Mount *mount);
+dev_t mount_get_dev (Mount *mount);
 
-gint          mount_compare         (Mount *a,
-                                                  Mount *b);
+gint mount_compare (Mount *a, Mount *b);
 
 G_END_DECLS
 

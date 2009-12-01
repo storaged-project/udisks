@@ -50,96 +50,96 @@ static void
 do_unmount (const char *object_path,
             const char *options)
 {
-        DBusGProxy *proxy;
-        GError *error;
-        char **unmount_options;
+  DBusGProxy *proxy;
+  GError *error;
+  char **unmount_options;
 
-        unmount_options = NULL;
-        if (options != NULL)
-                unmount_options = g_strsplit (options, ",", 0);
+  unmount_options = NULL;
+  if (options != NULL)
+    unmount_options = g_strsplit (options, ",", 0);
 
-	proxy = dbus_g_proxy_new_for_name (bus,
-                                           "org.freedesktop.UDisks",
-                                           object_path,
-                                           "org.freedesktop.UDisks.Device");
+  proxy = dbus_g_proxy_new_for_name (bus, "org.freedesktop.UDisks", object_path, "org.freedesktop.UDisks.Device");
 
-        error = NULL;
-        if (!org_freedesktop_UDisks_Device_filesystem_unmount (proxy,
-                                                               (const char **) unmount_options,
-                                                               &error)) {
-                g_print ("Unmount failed: %s\n", error->message);
-                g_error_free (error);
-                goto out;
-        }
-out:
-        g_strfreev (unmount_options);
+  error = NULL;
+  if (!org_freedesktop_UDisks_Device_filesystem_unmount (proxy, (const char **) unmount_options, &error))
+    {
+      g_print ("Unmount failed: %s\n", error->message);
+      g_error_free (error);
+      goto out;
+    }
+ out:
+  g_strfreev (unmount_options);
 }
 
 int
-main (int argc, char **argv)
+main (int argc,
+      char **argv)
 {
-        GError *error;
-        DBusGProxy *disks_proxy;
-        int ret;
-        char *object_path;
-        struct stat st;
-        char *path;
+  GError *error;
+  DBusGProxy *disks_proxy;
+  int ret;
+  char *object_path;
+  struct stat st;
+  char *path;
 
-        ret = 1;
-        bus = NULL;
-        path = NULL;
-        disks_proxy = NULL;
+  ret = 1;
+  bus = NULL;
+  path = NULL;
+  disks_proxy = NULL;
 
-        g_type_init ();
+  g_type_init ();
 
-        if (argc < 2 || strlen (argv[1]) == 0) {
-                fprintf (stderr, "%s: this program is only supposed to be invoked by umount(8).\n", argv[0]);
-                goto out;
-        }
+  if (argc < 2 || strlen (argv[1]) == 0)
+    {
+      fprintf (stderr, "%s: this program is only supposed to be invoked by umount(8).\n", argv[0]);
+      goto out;
+    }
 
-        error = NULL;
-        bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
-        if (bus == NULL) {
-                g_warning ("Couldn't connect to system bus: %s", error->message);
-                g_error_free (error);
-                goto out;
-        }
+  error = NULL;
+  bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+  if (bus == NULL)
+    {
+      g_warning ("Couldn't connect to system bus: %s", error->message);
+      g_error_free (error);
+      goto out;
+    }
 
-	disks_proxy = dbus_g_proxy_new_for_name (bus,
-                                                 "org.freedesktop.UDisks",
-                                                 "/org/freedesktop/UDisks",
-                                                 "org.freedesktop.UDisks");
+  disks_proxy = dbus_g_proxy_new_for_name (bus,
+                                           "org.freedesktop.UDisks",
+                                           "/org/freedesktop/UDisks",
+                                           "org.freedesktop.UDisks");
 
-        error = NULL;
+  error = NULL;
 
-	if (stat (argv[1], &st) < 0) {
-                fprintf (stderr, "%s: could not stat %s: %s\n", argv[0], argv[1], strerror (errno));
-                goto out;
-        }
+  if (stat (argv[1], &st) < 0)
+    {
+      fprintf (stderr, "%s: could not stat %s: %s\n", argv[0], argv[1], strerror (errno));
+      goto out;
+    }
 
-        if (S_ISBLK (st.st_mode)) {
-                path = g_strdup (argv[1]);
-        }
-        else {
-                path = g_strdup_printf ("/dev/block/%d:%d", major (st.st_dev), minor (st.st_dev));
-        }
+  if (S_ISBLK (st.st_mode))
+    {
+      path = g_strdup (argv[1]);
+    }
+  else
+    {
+      path = g_strdup_printf ("/dev/block/%d:%d", major (st.st_dev), minor (st.st_dev));
+    }
 
-        if (!org_freedesktop_UDisks_find_device_by_device_file (disks_proxy,
-                                                                path,
-                                                                &object_path,
-                                                                &error)) {
-                fprintf (stderr, "%s: no device for %s: %s\n", argv[0], argv[1], error->message);
-                g_error_free (error);
-                goto out;
-        }
-        do_unmount (object_path, NULL);
-        g_free (object_path);
+  if (!org_freedesktop_UDisks_find_device_by_device_file (disks_proxy, path, &object_path, &error))
+    {
+      fprintf (stderr, "%s: no device for %s: %s\n", argv[0], argv[1], error->message);
+      g_error_free (error);
+      goto out;
+    }
+  do_unmount (object_path, NULL);
+  g_free (object_path);
 
-out:
-        g_free (path);
-        if (disks_proxy != NULL)
-                g_object_unref (disks_proxy);
-        if (bus != NULL)
-                dbus_g_connection_unref (bus);
-        return ret;
+ out:
+  g_free (path);
+  if (disks_proxy != NULL)
+    g_object_unref (disks_proxy);
+  if (bus != NULL)
+    dbus_g_connection_unref (bus);
+  return ret;
 }

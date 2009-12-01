@@ -42,91 +42,103 @@
 #include "partutil.h"
 
 int
-main (int argc, char **argv)
+main (int argc,
+      char **argv)
 {
-        int ret;
-        const char *device;
-        const char *partition_device;
-        char **options;
-        int n;
-        guint64 offset;
-        guint64 size;
-        int part_number;
-        char *endp;
+  int ret;
+  const char *device;
+  const char *partition_device;
+  char **options;
+  int n;
+  guint64 offset;
+  guint64 size;
+  int part_number;
+  char *endp;
 
-        ret = 1;
+  ret = 1;
 
-        if (argc < 5) {
-                g_printerr ("wrong usage\n");
-                goto out;
+  if (argc < 5)
+    {
+      g_printerr ("wrong usage\n");
+      goto out;
+    }
+  device = argv[1];
+  partition_device = argv[2];
+  offset = strtoll (argv[3], &endp, 10);
+  if (*endp != '\0')
+    {
+      g_printerr ("malformed offset '%s'\n", argv[3]);
+      goto out;
+    }
+  size = strtoll (argv[4], &endp, 10);
+  if (*endp != '\0')
+    {
+      g_printerr ("malformed size '%s'\n", argv[4]);
+      goto out;
+    }
+  part_number = strtol (argv[5], &endp, 10);
+  if (*endp != '\0')
+    {
+      g_printerr ("malformed partition number '%s'\n", argv[5]);
+      goto out;
+    }
+
+  options = argv + 6;
+
+  for (n = 0; options[n] != NULL; n++)
+    {
+      g_printerr ("option %s not supported\n", options[n]);
+      goto out;
+    }
+
+  /* don't ask libparted to poke the kernel - it won't work if other partitions are mounted/busy */
+  if (part_del_partition ((char *) device, offset, FALSE))
+    {
+      gint fd;
+      struct blkpg_ioctl_arg a;
+      struct blkpg_partition p;
+
+      /* now, ask the kernel to delete the partition */
+      fd = open (device, O_RDONLY);
+      if (fd < 0)
+        {
+          g_printerr ("Cannot open %s: %m\n", device);
+          goto out;
         }
-        device = argv[1];
-        partition_device = argv[2];
-        offset = strtoll (argv[3], &endp, 10);
-        if (*endp != '\0') {
-                g_printerr ("malformed offset '%s'\n", argv[3]);
-                goto out;
+      memset (&a, '\0', sizeof(struct blkpg_ioctl_arg));
+      memset (&p, '\0', sizeof(struct blkpg_partition));
+      p.pno = part_number;
+      a.op = BLKPG_DEL_PARTITION;
+      a.datalen = sizeof(p);
+      a.data = &p;
+      if (ioctl (fd, BLKPG, &a) == -1)
+        {
+          g_printerr ("Error doing BLKPG ioctl with BLKPG_DEL_PARTITION for partition %d on %s: %m\n",
+                      part_number,
+                      device);
+          close (fd);
+          goto out;
         }
-        size = strtoll (argv[4], &endp, 10);
-        if (*endp != '\0') {
-                g_printerr ("malformed size '%s'\n", argv[4]);
-                goto out;
+      close (fd);
+
+      /* zero the contents of what was the _partition_
+       *
+       *... but only after removing it from the partition table
+       *    (since it may contain meta data if it's an extended partition)
+       */
+      /* scrub signatures */
+      if (!scrub_signatures (device, offset, size))
+        {
+          g_printerr        ("Cannot scrub filesystem signatures at "
+                             "offset=%" G_GINT64_FORMAT " and size=%" G_GINT64_FORMAT "\n",
+                             offset, size);
         }
-        part_number = strtol (argv[5], &endp, 10);
-        if (*endp != '\0') {
-                g_printerr ("malformed partition number '%s'\n", argv[5]);
-                goto out;
+      else
+        {
+          ret = 0;
         }
+    }
 
-        options = argv + 6;
-
-        for (n = 0; options[n] != NULL; n++) {
-                g_printerr ("option %s not supported\n", options[n]);
-                goto out;
-        }
-
-        /* don't ask libparted to poke the kernel - it won't work if other partitions are mounted/busy */
-        if (part_del_partition ((char *) device, offset, FALSE)) {
-                gint fd;
-                struct blkpg_ioctl_arg a;
-                struct blkpg_partition p;
-
-                /* now, ask the kernel to delete the partition */
-                fd = open (device, O_RDONLY);
-                if (fd < 0) {
-                        g_printerr ("Cannot open %s: %m\n", device);
-                        goto out;
-                }
-                memset (&a, '\0', sizeof (struct blkpg_ioctl_arg));
-                memset (&p, '\0', sizeof (struct blkpg_partition));
-                p.pno = part_number;
-                a.op = BLKPG_DEL_PARTITION;
-                a.datalen = sizeof (p);
-                a.data = &p;
-                if (ioctl (fd, BLKPG, &a) == -1) {
-                        g_printerr ("Error doing BLKPG ioctl with BLKPG_DEL_PARTITION for partition %d on %s: %m\n",
-                                    part_number,
-                                    device);
-                        close (fd);
-                        goto out;
-                }
-                close (fd);
-
-                /* zero the contents of what was the _partition_
-                 *
-                 *... but only after removing it from the partition table
-                 *    (since it may contain meta data if it's an extended partition)
-                 */
-                /* scrub signatures */
-                if (!scrub_signatures (device, offset, size)) {
-                        g_printerr ("Cannot scrub filesystem signatures at "
-                                    "offset=%" G_GINT64_FORMAT " and size=%" G_GINT64_FORMAT "\n",
-                                    offset, size);
-                } else {
-                        ret = 0;
-                }
-        }
-
-out:
-        return ret;
+ out:
+  return ret;
 }

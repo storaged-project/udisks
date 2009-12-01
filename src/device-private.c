@@ -36,9 +36,7 @@ emit_changed_idle_cb (gpointer data)
   if (!device->priv->removed)
     {
       g_print ("**** EMITTING CHANGED for %s\n", device->priv->native_path);
-      g_signal_emit_by_name (device->priv->daemon,
-                             "device-changed",
-                             device->priv->object_path);
+      g_signal_emit_by_name (device->priv->daemon, "device-changed", device->priv->object_path);
       g_signal_emit_by_name (device, "changed");
     }
   device->priv->emit_changed_idle_id = 0;
@@ -48,24 +46,27 @@ emit_changed_idle_cb (gpointer data)
 }
 
 static void
-emit_changed (Device *device, const gchar *name)
+emit_changed (Device *device,
+              const gchar *name)
 {
   //g_debug ("property %s changed for %s", name, device->priv->device_file);
 
   if (device->priv->object_path != NULL)
     {
       /* schedule a 'changed' signal in idle if one hasn't been scheduled already */
-      if (device->priv->emit_changed_idle_id == 0) {
-        device->priv->emit_changed_idle_id = g_idle_add_full (G_PRIORITY_DEFAULT,
-                                                              emit_changed_idle_cb,
-                                                              g_object_ref (device),
-                                                              (GDestroyNotify) g_object_unref);
-      }
+      if (device->priv->emit_changed_idle_id == 0)
+        {
+          device->priv->emit_changed_idle_id = g_idle_add_full (G_PRIORITY_DEFAULT,
+                                                                emit_changed_idle_cb,
+                                                                g_object_ref (device),
+                                                                (GDestroyNotify) g_object_unref);
+        }
     }
 }
 
 static gboolean
-ptr_str_array_equals_strv (GPtrArray *a, GStrv b)
+ptr_str_array_equals_strv (GPtrArray *a,
+                           GStrv b)
 {
   guint n;
   guint b_len;
@@ -81,7 +82,7 @@ ptr_str_array_equals_strv (GPtrArray *a, GStrv b)
   for (n = 0; n < a->len; n++)
     {
       if (g_strcmp0 ((gchar *) a->pdata[n], b[n]) != 0)
-	return FALSE;
+        return FALSE;
     }
 
   return TRUE;
@@ -108,7 +109,8 @@ ptr_str_array_from_strv (GStrv s)
 }
 
 void
-device_set_device_detection_time (Device *device, guint64 value)
+device_set_device_detection_time (Device *device,
+                                  guint64 value)
 {
   if (G_UNLIKELY (device->priv->device_detection_time != value))
     {
@@ -118,7 +120,8 @@ device_set_device_detection_time (Device *device, guint64 value)
 }
 
 void
-device_set_device_media_detection_time (Device *device, guint64 value)
+device_set_device_media_detection_time (Device *device,
+                                        guint64 value)
 {
   if (G_UNLIKELY (device->priv->device_media_detection_time != value))
     {
@@ -128,7 +131,8 @@ device_set_device_media_detection_time (Device *device, guint64 value)
 }
 
 void
-device_set_job_in_progress (Device *device, gboolean value)
+device_set_job_in_progress (Device *device,
+                            gboolean value)
 {
   if (G_UNLIKELY (device->priv->job_in_progress != value))
     {
@@ -138,7 +142,8 @@ device_set_job_in_progress (Device *device, gboolean value)
 }
 
 void
-device_set_job_id (Device *device, const gchar *value)
+device_set_job_id (Device *device,
+                   const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->job_id, value) != 0))
     {
@@ -149,7 +154,8 @@ device_set_job_id (Device *device, const gchar *value)
 }
 
 void
-device_set_job_initiated_by_uid (Device *device, guint value)
+device_set_job_initiated_by_uid (Device *device,
+                                 guint value)
 {
   if (G_UNLIKELY (device->priv->job_initiated_by_uid != value))
     {
@@ -159,7 +165,8 @@ device_set_job_initiated_by_uid (Device *device, guint value)
 }
 
 void
-device_set_job_is_cancellable (Device *device, gboolean value)
+device_set_job_is_cancellable (Device *device,
+                               gboolean value)
 {
   if (G_UNLIKELY (device->priv->job_is_cancellable != value))
     {
@@ -169,7 +176,8 @@ device_set_job_is_cancellable (Device *device, gboolean value)
 }
 
 void
-device_set_job_percentage (Device *device, gdouble value)
+device_set_job_percentage (Device *device,
+                           gdouble value)
 {
   if (G_UNLIKELY (device->priv->job_percentage != value))
     {
@@ -179,7 +187,8 @@ device_set_job_percentage (Device *device, gdouble value)
 }
 
 void
-device_set_device_file (Device *device, const gchar *value)
+device_set_device_file (Device *device,
+                        const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->device_file, value) != 0))
     {
@@ -190,7 +199,8 @@ device_set_device_file (Device *device, const gchar *value)
 }
 
 void
-device_set_device_file_by_id (Device *device, GStrv value)
+device_set_device_file_by_id (Device *device,
+                              GStrv value)
 {
   if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->device_file_by_id, value)))
     {
@@ -201,7 +211,8 @@ device_set_device_file_by_id (Device *device, GStrv value)
 }
 
 void
-device_set_device_file_by_path (Device *device, GStrv value)
+device_set_device_file_by_path (Device *device,
+                                GStrv value)
 {
   if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->device_file_by_path, value)))
     {
@@ -212,7 +223,8 @@ device_set_device_file_by_path (Device *device, GStrv value)
 }
 
 void
-device_set_device_is_system_internal (Device *device, gboolean value)
+device_set_device_is_system_internal (Device *device,
+                                      gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_system_internal != value))
     {
@@ -222,7 +234,8 @@ device_set_device_is_system_internal (Device *device, gboolean value)
 }
 
 void
-device_set_device_is_partition (Device *device, gboolean value)
+device_set_device_is_partition (Device *device,
+                                gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_partition != value))
     {
@@ -232,7 +245,8 @@ device_set_device_is_partition (Device *device, gboolean value)
 }
 
 void
-device_set_device_is_partition_table (Device *device, gboolean value)
+device_set_device_is_partition_table (Device *device,
+                                      gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_partition_table != value))
     {
@@ -242,7 +256,8 @@ device_set_device_is_partition_table (Device *device, gboolean value)
 }
 
 void
-device_set_device_is_removable (Device *device, gboolean value)
+device_set_device_is_removable (Device *device,
+                                gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_removable != value))
     {
@@ -252,7 +267,8 @@ device_set_device_is_removable (Device *device, gboolean value)
 }
 
 void
-device_set_device_is_media_available (Device *device, gboolean value)
+device_set_device_is_media_available (Device *device,
+                                      gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_media_available != value))
     {
@@ -262,7 +278,8 @@ device_set_device_is_media_available (Device *device, gboolean value)
 }
 
 void
-device_set_device_is_media_change_detected (Device *device, gboolean value)
+device_set_device_is_media_change_detected (Device *device,
+                                            gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_media_change_detected != value))
     {
@@ -272,7 +289,8 @@ device_set_device_is_media_change_detected (Device *device, gboolean value)
 }
 
 void
-device_set_device_is_media_change_detection_polling (Device *device, gboolean value)
+device_set_device_is_media_change_detection_polling (Device *device,
+                                                     gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_media_change_detection_polling != value))
     {
@@ -282,7 +300,8 @@ device_set_device_is_media_change_detection_polling (Device *device, gboolean va
 }
 
 void
-device_set_device_is_media_change_detection_inhibitable (Device *device, gboolean value)
+device_set_device_is_media_change_detection_inhibitable (Device *device,
+                                                         gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_media_change_detection_inhibitable != value))
     {
@@ -292,7 +311,8 @@ device_set_device_is_media_change_detection_inhibitable (Device *device, gboolea
 }
 
 void
-device_set_device_is_media_change_detection_inhibited (Device *device, gboolean value)
+device_set_device_is_media_change_detection_inhibited (Device *device,
+                                                       gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_media_change_detection_inhibited != value))
     {
@@ -302,7 +322,8 @@ device_set_device_is_media_change_detection_inhibited (Device *device, gboolean 
 }
 
 void
-device_set_device_is_read_only (Device *device, gboolean value)
+device_set_device_is_read_only (Device *device,
+                                gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_read_only != value))
     {
@@ -312,7 +333,8 @@ device_set_device_is_read_only (Device *device, gboolean value)
 }
 
 void
-device_set_device_is_drive (Device *device, gboolean value)
+device_set_device_is_drive (Device *device,
+                            gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_drive != value))
     {
@@ -322,7 +344,8 @@ device_set_device_is_drive (Device *device, gboolean value)
 }
 
 void
-device_set_device_is_optical_disc (Device *device, gboolean value)
+device_set_device_is_optical_disc (Device *device,
+                                   gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_optical_disc != value))
     {
@@ -332,7 +355,8 @@ device_set_device_is_optical_disc (Device *device, gboolean value)
 }
 
 void
-device_set_device_is_luks (Device *device, gboolean value)
+device_set_device_is_luks (Device *device,
+                           gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_luks != value))
     {
@@ -342,7 +366,8 @@ device_set_device_is_luks (Device *device, gboolean value)
 }
 
 void
-device_set_device_is_luks_cleartext (Device *device, gboolean value)
+device_set_device_is_luks_cleartext (Device *device,
+                                     gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_luks_cleartext != value))
     {
@@ -352,7 +377,8 @@ device_set_device_is_luks_cleartext (Device *device, gboolean value)
 }
 
 void
-device_set_device_is_linux_md_component (Device *device, gboolean value)
+device_set_device_is_linux_md_component (Device *device,
+                                         gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_linux_md_component != value))
     {
@@ -362,7 +388,8 @@ device_set_device_is_linux_md_component (Device *device, gboolean value)
 }
 
 void
-device_set_device_is_linux_md (Device *device, gboolean value)
+device_set_device_is_linux_md (Device *device,
+                               gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_linux_md != value))
     {
@@ -372,7 +399,8 @@ device_set_device_is_linux_md (Device *device, gboolean value)
 }
 
 void
-device_set_device_size (Device *device, guint64 value)
+device_set_device_size (Device *device,
+                        guint64 value)
 {
   if (G_UNLIKELY (device->priv->device_size != value))
     {
@@ -382,7 +410,8 @@ device_set_device_size (Device *device, guint64 value)
 }
 
 void
-device_set_device_block_size (Device *device, guint64 value)
+device_set_device_block_size (Device *device,
+                              guint64 value)
 {
   if (G_UNLIKELY (device->priv->device_block_size != value))
     {
@@ -392,7 +421,8 @@ device_set_device_block_size (Device *device, guint64 value)
 }
 
 void
-device_set_device_is_mounted (Device *device, gboolean value)
+device_set_device_is_mounted (Device *device,
+                              gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_is_mounted != value))
     {
@@ -402,7 +432,8 @@ device_set_device_is_mounted (Device *device, gboolean value)
 }
 
 void
-device_set_device_mount_paths (Device *device, GStrv value)
+device_set_device_mount_paths (Device *device,
+                               GStrv value)
 {
   if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->device_mount_paths, value)))
     {
@@ -413,7 +444,8 @@ device_set_device_mount_paths (Device *device, GStrv value)
 }
 
 void
-device_set_device_presentation_hide (Device *device, gboolean value)
+device_set_device_presentation_hide (Device *device,
+                                     gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_presentation_hide != value))
     {
@@ -423,7 +455,8 @@ device_set_device_presentation_hide (Device *device, gboolean value)
 }
 
 void
-device_set_device_presentation_nopolicy (Device *device, gboolean value)
+device_set_device_presentation_nopolicy (Device *device,
+                                         gboolean value)
 {
   if (G_UNLIKELY (device->priv->device_presentation_nopolicy != value))
     {
@@ -433,7 +466,8 @@ device_set_device_presentation_nopolicy (Device *device, gboolean value)
 }
 
 void
-device_set_device_presentation_name (Device *device, const gchar *value)
+device_set_device_presentation_name (Device *device,
+                                     const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->device_presentation_name, value) != 0))
     {
@@ -444,7 +478,8 @@ device_set_device_presentation_name (Device *device, const gchar *value)
 }
 
 void
-device_set_device_presentation_icon_name (Device *device, const gchar *value)
+device_set_device_presentation_icon_name (Device *device,
+                                          const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->device_presentation_icon_name, value) != 0))
     {
@@ -455,7 +490,8 @@ device_set_device_presentation_icon_name (Device *device, const gchar *value)
 }
 
 void
-device_set_device_mounted_by_uid (Device *device, guint value)
+device_set_device_mounted_by_uid (Device *device,
+                                  guint value)
 {
   if (G_UNLIKELY (device->priv->device_mounted_by_uid != value))
     {
@@ -465,7 +501,8 @@ device_set_device_mounted_by_uid (Device *device, guint value)
 }
 
 void
-device_set_id_usage (Device *device, const gchar *value)
+device_set_id_usage (Device *device,
+                     const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->id_usage, value) != 0))
     {
@@ -476,7 +513,8 @@ device_set_id_usage (Device *device, const gchar *value)
 }
 
 void
-device_set_id_type (Device *device, const gchar *value)
+device_set_id_type (Device *device,
+                    const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->id_type, value) != 0))
     {
@@ -487,7 +525,8 @@ device_set_id_type (Device *device, const gchar *value)
 }
 
 void
-device_set_id_version (Device *device, const gchar *value)
+device_set_id_version (Device *device,
+                       const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->id_version, value) != 0))
     {
@@ -498,7 +537,8 @@ device_set_id_version (Device *device, const gchar *value)
 }
 
 void
-device_set_id_uuid (Device *device, const gchar *value)
+device_set_id_uuid (Device *device,
+                    const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->id_uuid, value) != 0))
     {
@@ -509,7 +549,8 @@ device_set_id_uuid (Device *device, const gchar *value)
 }
 
 void
-device_set_id_label (Device *device, const gchar *value)
+device_set_id_label (Device *device,
+                     const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->id_label, value) != 0))
     {
@@ -520,7 +561,8 @@ device_set_id_label (Device *device, const gchar *value)
 }
 
 void
-device_set_partition_slave (Device *device, const gchar *value)
+device_set_partition_slave (Device *device,
+                            const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->partition_slave, value) != 0))
     {
@@ -531,7 +573,8 @@ device_set_partition_slave (Device *device, const gchar *value)
 }
 
 void
-device_set_partition_scheme (Device *device, const gchar *value)
+device_set_partition_scheme (Device *device,
+                             const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->partition_scheme, value) != 0))
     {
@@ -542,7 +585,8 @@ device_set_partition_scheme (Device *device, const gchar *value)
 }
 
 void
-device_set_partition_type (Device *device, const gchar *value)
+device_set_partition_type (Device *device,
+                           const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->partition_type, value) != 0))
     {
@@ -553,7 +597,8 @@ device_set_partition_type (Device *device, const gchar *value)
 }
 
 void
-device_set_partition_label (Device *device, const gchar *value)
+device_set_partition_label (Device *device,
+                            const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->partition_label, value) != 0))
     {
@@ -564,7 +609,8 @@ device_set_partition_label (Device *device, const gchar *value)
 }
 
 void
-device_set_partition_uuid (Device *device, const gchar *value)
+device_set_partition_uuid (Device *device,
+                           const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->partition_uuid, value) != 0))
     {
@@ -575,7 +621,8 @@ device_set_partition_uuid (Device *device, const gchar *value)
 }
 
 void
-device_set_partition_flags (Device *device, GStrv value)
+device_set_partition_flags (Device *device,
+                            GStrv value)
 {
   if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->partition_flags, value)))
     {
@@ -586,7 +633,8 @@ device_set_partition_flags (Device *device, GStrv value)
 }
 
 void
-device_set_partition_number (Device *device, gint value)
+device_set_partition_number (Device *device,
+                             gint value)
 {
   if (G_UNLIKELY (device->priv->partition_number != value))
     {
@@ -596,7 +644,8 @@ device_set_partition_number (Device *device, gint value)
 }
 
 void
-device_set_partition_offset (Device *device, guint64 value)
+device_set_partition_offset (Device *device,
+                             guint64 value)
 {
   if (G_UNLIKELY (device->priv->partition_offset != value))
     {
@@ -606,7 +655,8 @@ device_set_partition_offset (Device *device, guint64 value)
 }
 
 void
-device_set_partition_size (Device *device, guint64 value)
+device_set_partition_size (Device *device,
+                           guint64 value)
 {
   if (G_UNLIKELY (device->priv->partition_size != value))
     {
@@ -616,7 +666,8 @@ device_set_partition_size (Device *device, guint64 value)
 }
 
 void
-device_set_partition_table_scheme (Device *device, const gchar *value)
+device_set_partition_table_scheme (Device *device,
+                                   const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->partition_table_scheme, value) != 0))
     {
@@ -627,7 +678,8 @@ device_set_partition_table_scheme (Device *device, const gchar *value)
 }
 
 void
-device_set_partition_table_count (Device *device, gint value)
+device_set_partition_table_count (Device *device,
+                                  gint value)
 {
   if (G_UNLIKELY (device->priv->partition_table_count != value))
     {
@@ -637,7 +689,8 @@ device_set_partition_table_count (Device *device, gint value)
 }
 
 void
-device_set_drive_vendor (Device *device, const gchar *value)
+device_set_drive_vendor (Device *device,
+                         const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->drive_vendor, value) != 0))
     {
@@ -648,7 +701,8 @@ device_set_drive_vendor (Device *device, const gchar *value)
 }
 
 void
-device_set_drive_model (Device *device, const gchar *value)
+device_set_drive_model (Device *device,
+                        const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->drive_model, value) != 0))
     {
@@ -659,7 +713,8 @@ device_set_drive_model (Device *device, const gchar *value)
 }
 
 void
-device_set_drive_revision (Device *device, const gchar *value)
+device_set_drive_revision (Device *device,
+                           const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->drive_revision, value) != 0))
     {
@@ -670,7 +725,8 @@ device_set_drive_revision (Device *device, const gchar *value)
 }
 
 void
-device_set_drive_serial (Device *device, const gchar *value)
+device_set_drive_serial (Device *device,
+                         const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->drive_serial, value) != 0))
     {
@@ -681,7 +737,8 @@ device_set_drive_serial (Device *device, const gchar *value)
 }
 
 void
-device_set_drive_wwn (Device *device, const gchar *value)
+device_set_drive_wwn (Device *device,
+                      const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->drive_wwn, value) != 0))
     {
@@ -692,7 +749,8 @@ device_set_drive_wwn (Device *device, const gchar *value)
 }
 
 void
-device_set_drive_connection_interface (Device *device, const gchar *value)
+device_set_drive_connection_interface (Device *device,
+                                       const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->drive_connection_interface, value) != 0))
     {
@@ -703,7 +761,8 @@ device_set_drive_connection_interface (Device *device, const gchar *value)
 }
 
 void
-device_set_drive_connection_speed (Device *device, guint value)
+device_set_drive_connection_speed (Device *device,
+                                   guint value)
 {
   if (G_UNLIKELY (device->priv->drive_connection_speed != value))
     {
@@ -713,7 +772,8 @@ device_set_drive_connection_speed (Device *device, guint value)
 }
 
 void
-device_set_drive_media_compatibility (Device *device, GStrv value)
+device_set_drive_media_compatibility (Device *device,
+                                      GStrv value)
 {
   if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->drive_media_compatibility, value)))
     {
@@ -724,7 +784,8 @@ device_set_drive_media_compatibility (Device *device, GStrv value)
 }
 
 void
-device_set_drive_media (Device *device, const gchar *value)
+device_set_drive_media (Device *device,
+                        const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->drive_media, value) != 0))
     {
@@ -735,7 +796,8 @@ device_set_drive_media (Device *device, const gchar *value)
 }
 
 void
-device_set_drive_is_media_ejectable (Device *device, gboolean value)
+device_set_drive_is_media_ejectable (Device *device,
+                                     gboolean value)
 {
   if (G_UNLIKELY (device->priv->drive_is_media_ejectable != value))
     {
@@ -745,7 +807,8 @@ device_set_drive_is_media_ejectable (Device *device, gboolean value)
 }
 
 void
-device_set_drive_can_detach (Device *device, gboolean value)
+device_set_drive_can_detach (Device *device,
+                             gboolean value)
 {
   if (G_UNLIKELY (device->priv->drive_can_detach != value))
     {
@@ -755,7 +818,8 @@ device_set_drive_can_detach (Device *device, gboolean value)
 }
 
 void
-device_set_drive_can_spindown (Device *device, gboolean value)
+device_set_drive_can_spindown (Device *device,
+                               gboolean value)
 {
   if (G_UNLIKELY (device->priv->drive_can_spindown != value))
     {
@@ -765,7 +829,8 @@ device_set_drive_can_spindown (Device *device, gboolean value)
 }
 
 void
-device_set_drive_is_rotational (Device *device, gboolean value)
+device_set_drive_is_rotational (Device *device,
+                                gboolean value)
 {
   if (G_UNLIKELY (device->priv->drive_is_rotational != value))
     {
@@ -775,7 +840,8 @@ device_set_drive_is_rotational (Device *device, gboolean value)
 }
 
 void
-device_set_drive_rotation_rate (Device *device, guint value)
+device_set_drive_rotation_rate (Device *device,
+                                guint value)
 {
   if (G_UNLIKELY (device->priv->drive_rotation_rate != value))
     {
@@ -785,7 +851,8 @@ device_set_drive_rotation_rate (Device *device, guint value)
 }
 
 void
-device_set_drive_write_cache (Device *device, const gchar *value)
+device_set_drive_write_cache (Device *device,
+                              const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->drive_write_cache, value) != 0))
     {
@@ -796,7 +863,8 @@ device_set_drive_write_cache (Device *device, const gchar *value)
 }
 
 void
-device_set_drive_adapter (Device *device, const gchar *value)
+device_set_drive_adapter (Device *device,
+                          const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->drive_adapter, value) != 0))
     {
@@ -807,7 +875,8 @@ device_set_drive_adapter (Device *device, const gchar *value)
 }
 
 void
-device_set_drive_ports (Device *device, GStrv value)
+device_set_drive_ports (Device *device,
+                        GStrv value)
 {
   if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->drive_ports, value)))
     {
@@ -818,7 +887,8 @@ device_set_drive_ports (Device *device, GStrv value)
 }
 
 void
-device_set_optical_disc_is_blank (Device *device, gboolean value)
+device_set_optical_disc_is_blank (Device *device,
+                                  gboolean value)
 {
   if (G_UNLIKELY (device->priv->optical_disc_is_blank != value))
     {
@@ -828,7 +898,8 @@ device_set_optical_disc_is_blank (Device *device, gboolean value)
 }
 
 void
-device_set_optical_disc_is_appendable (Device *device, gboolean value)
+device_set_optical_disc_is_appendable (Device *device,
+                                       gboolean value)
 {
   if (G_UNLIKELY (device->priv->optical_disc_is_appendable != value))
     {
@@ -838,7 +909,8 @@ device_set_optical_disc_is_appendable (Device *device, gboolean value)
 }
 
 void
-device_set_optical_disc_is_closed (Device *device, gboolean value)
+device_set_optical_disc_is_closed (Device *device,
+                                   gboolean value)
 {
   if (G_UNLIKELY (device->priv->optical_disc_is_closed != value))
     {
@@ -848,7 +920,8 @@ device_set_optical_disc_is_closed (Device *device, gboolean value)
 }
 
 void
-device_set_optical_disc_num_tracks (Device *device, guint value)
+device_set_optical_disc_num_tracks (Device *device,
+                                    guint value)
 {
   if (G_UNLIKELY (device->priv->optical_disc_num_tracks != value))
     {
@@ -858,7 +931,8 @@ device_set_optical_disc_num_tracks (Device *device, guint value)
 }
 
 void
-device_set_optical_disc_num_audio_tracks (Device *device, guint value)
+device_set_optical_disc_num_audio_tracks (Device *device,
+                                          guint value)
 {
   if (G_UNLIKELY (device->priv->optical_disc_num_audio_tracks != value))
     {
@@ -868,7 +942,8 @@ device_set_optical_disc_num_audio_tracks (Device *device, guint value)
 }
 
 void
-device_set_optical_disc_num_sessions (Device *device, guint value)
+device_set_optical_disc_num_sessions (Device *device,
+                                      guint value)
 {
   if (G_UNLIKELY (device->priv->optical_disc_num_sessions != value))
     {
@@ -878,7 +953,8 @@ device_set_optical_disc_num_sessions (Device *device, guint value)
 }
 
 void
-device_set_luks_holder (Device *device, const gchar *value)
+device_set_luks_holder (Device *device,
+                        const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->luks_holder, value) != 0))
     {
@@ -889,7 +965,8 @@ device_set_luks_holder (Device *device, const gchar *value)
 }
 
 void
-device_set_luks_cleartext_slave (Device *device, const gchar *value)
+device_set_luks_cleartext_slave (Device *device,
+                                 const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->luks_cleartext_slave, value) != 0))
     {
@@ -900,7 +977,8 @@ device_set_luks_cleartext_slave (Device *device, const gchar *value)
 }
 
 void
-device_set_luks_cleartext_unlocked_by_uid (Device *device, guint value)
+device_set_luks_cleartext_unlocked_by_uid (Device *device,
+                                           guint value)
 {
   if (G_UNLIKELY (device->priv->luks_cleartext_unlocked_by_uid != value))
     {
@@ -910,7 +988,8 @@ device_set_luks_cleartext_unlocked_by_uid (Device *device, guint value)
 }
 
 void
-device_set_linux_md_component_level (Device *device, const gchar *value)
+device_set_linux_md_component_level (Device *device,
+                                     const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_component_level, value) != 0))
     {
@@ -921,7 +1000,8 @@ device_set_linux_md_component_level (Device *device, const gchar *value)
 }
 
 void
-device_set_linux_md_component_position (Device *device, gint value)
+device_set_linux_md_component_position (Device *device,
+                                        gint value)
 {
   if (G_UNLIKELY (device->priv->linux_md_component_position != value))
     {
@@ -931,7 +1011,8 @@ device_set_linux_md_component_position (Device *device, gint value)
 }
 
 void
-device_set_linux_md_component_num_raid_devices (Device *device, gint value)
+device_set_linux_md_component_num_raid_devices (Device *device,
+                                                gint value)
 {
   if (G_UNLIKELY (device->priv->linux_md_component_num_raid_devices != value))
     {
@@ -941,7 +1022,8 @@ device_set_linux_md_component_num_raid_devices (Device *device, gint value)
 }
 
 void
-device_set_linux_md_component_uuid (Device *device, const gchar *value)
+device_set_linux_md_component_uuid (Device *device,
+                                    const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_component_uuid, value) != 0))
     {
@@ -952,7 +1034,8 @@ device_set_linux_md_component_uuid (Device *device, const gchar *value)
 }
 
 void
-device_set_linux_md_component_home_host (Device *device, const gchar *value)
+device_set_linux_md_component_home_host (Device *device,
+                                         const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_component_home_host, value) != 0))
     {
@@ -963,7 +1046,8 @@ device_set_linux_md_component_home_host (Device *device, const gchar *value)
 }
 
 void
-device_set_linux_md_component_name (Device *device, const gchar *value)
+device_set_linux_md_component_name (Device *device,
+                                    const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_component_name, value) != 0))
     {
@@ -974,7 +1058,8 @@ device_set_linux_md_component_name (Device *device, const gchar *value)
 }
 
 void
-device_set_linux_md_component_version (Device *device, const gchar *value)
+device_set_linux_md_component_version (Device *device,
+                                       const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_component_version, value) != 0))
     {
@@ -985,7 +1070,8 @@ device_set_linux_md_component_version (Device *device, const gchar *value)
 }
 
 void
-device_set_linux_md_component_holder (Device *device, const gchar *value)
+device_set_linux_md_component_holder (Device *device,
+                                      const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_component_holder, value) != 0))
     {
@@ -996,7 +1082,8 @@ device_set_linux_md_component_holder (Device *device, const gchar *value)
 }
 
 void
-device_set_linux_md_component_state (Device *device, GStrv value)
+device_set_linux_md_component_state (Device *device,
+                                     GStrv value)
 {
   if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->linux_md_component_state, value)))
     {
@@ -1007,7 +1094,8 @@ device_set_linux_md_component_state (Device *device, GStrv value)
 }
 
 void
-device_set_linux_md_state (Device *device, const gchar *value)
+device_set_linux_md_state (Device *device,
+                           const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_state, value) != 0))
     {
@@ -1018,7 +1106,8 @@ device_set_linux_md_state (Device *device, const gchar *value)
 }
 
 void
-device_set_linux_md_level (Device *device, const gchar *value)
+device_set_linux_md_level (Device *device,
+                           const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_level, value) != 0))
     {
@@ -1029,7 +1118,8 @@ device_set_linux_md_level (Device *device, const gchar *value)
 }
 
 void
-device_set_linux_md_num_raid_devices (Device *device, gint value)
+device_set_linux_md_num_raid_devices (Device *device,
+                                      gint value)
 {
   if (G_UNLIKELY (device->priv->linux_md_num_raid_devices != value))
     {
@@ -1039,7 +1129,8 @@ device_set_linux_md_num_raid_devices (Device *device, gint value)
 }
 
 void
-device_set_linux_md_uuid (Device *device, const gchar *value)
+device_set_linux_md_uuid (Device *device,
+                          const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_uuid, value) != 0))
     {
@@ -1050,7 +1141,8 @@ device_set_linux_md_uuid (Device *device, const gchar *value)
 }
 
 void
-device_set_linux_md_home_host (Device *device, const gchar *value)
+device_set_linux_md_home_host (Device *device,
+                               const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_home_host, value) != 0))
     {
@@ -1061,7 +1153,8 @@ device_set_linux_md_home_host (Device *device, const gchar *value)
 }
 
 void
-device_set_linux_md_name (Device *device, const gchar *value)
+device_set_linux_md_name (Device *device,
+                          const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_name, value) != 0))
     {
@@ -1072,7 +1165,8 @@ device_set_linux_md_name (Device *device, const gchar *value)
 }
 
 void
-device_set_linux_md_version (Device *device, const gchar *value)
+device_set_linux_md_version (Device *device,
+                             const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_version, value) != 0))
     {
@@ -1083,7 +1177,8 @@ device_set_linux_md_version (Device *device, const gchar *value)
 }
 
 void
-device_set_linux_md_slaves (Device *device, GStrv value)
+device_set_linux_md_slaves (Device *device,
+                            GStrv value)
 {
   if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->linux_md_slaves, value)))
     {
@@ -1094,7 +1189,8 @@ device_set_linux_md_slaves (Device *device, GStrv value)
 }
 
 void
-device_set_linux_md_is_degraded (Device *device, gboolean value)
+device_set_linux_md_is_degraded (Device *device,
+                                 gboolean value)
 {
   if (G_UNLIKELY (device->priv->linux_md_is_degraded != value))
     {
@@ -1104,7 +1200,8 @@ device_set_linux_md_is_degraded (Device *device, gboolean value)
 }
 
 void
-device_set_linux_md_sync_action (Device *device, const gchar *value)
+device_set_linux_md_sync_action (Device *device,
+                                 const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->linux_md_sync_action, value) != 0))
     {
@@ -1115,7 +1212,8 @@ device_set_linux_md_sync_action (Device *device, const gchar *value)
 }
 
 void
-device_set_linux_md_sync_percentage (Device *device, gdouble value)
+device_set_linux_md_sync_percentage (Device *device,
+                                     gdouble value)
 {
   if (G_UNLIKELY (device->priv->linux_md_sync_percentage != value))
     {
@@ -1125,7 +1223,8 @@ device_set_linux_md_sync_percentage (Device *device, gdouble value)
 }
 
 void
-device_set_linux_md_sync_speed (Device *device, guint64 value)
+device_set_linux_md_sync_speed (Device *device,
+                                guint64 value)
 {
   if (G_UNLIKELY (device->priv->linux_md_sync_speed != value))
     {
@@ -1135,7 +1234,8 @@ device_set_linux_md_sync_speed (Device *device, guint64 value)
 }
 
 void
-device_set_dm_name (Device *device, const gchar *value)
+device_set_dm_name (Device *device,
+                    const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (device->priv->dm_name, value) != 0))
     {
@@ -1146,7 +1246,8 @@ device_set_dm_name (Device *device, const gchar *value)
 }
 
 void
-device_set_slaves_objpath (Device *device, GStrv value)
+device_set_slaves_objpath (Device *device,
+                           GStrv value)
 {
   if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->slaves_objpath, value)))
     {
@@ -1157,7 +1258,8 @@ device_set_slaves_objpath (Device *device, GStrv value)
 }
 
 void
-device_set_holders_objpath (Device *device, GStrv value)
+device_set_holders_objpath (Device *device,
+                            GStrv value)
 {
   if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->holders_objpath, value)))
     {
@@ -1167,9 +1269,9 @@ device_set_holders_objpath (Device *device, GStrv value)
     }
 }
 
-
 void
-device_set_drive_ata_smart_is_available (Device *device, gboolean value)
+device_set_drive_ata_smart_is_available (Device *device,
+                                         gboolean value)
 {
   if (G_UNLIKELY (device->priv->drive_ata_smart_is_available != value))
     {
@@ -1179,7 +1281,8 @@ device_set_drive_ata_smart_is_available (Device *device, gboolean value)
 }
 
 void
-device_set_drive_ata_smart_time_collected (Device *device, guint64 value)
+device_set_drive_ata_smart_time_collected (Device *device,
+                                           guint64 value)
 {
   if (G_UNLIKELY (device->priv->drive_ata_smart_time_collected != value))
     {
@@ -1189,7 +1292,8 @@ device_set_drive_ata_smart_time_collected (Device *device, guint64 value)
 }
 
 void
-device_set_drive_ata_smart_status (Device *device, SkSmartOverall value)
+device_set_drive_ata_smart_status (Device *device,
+                                   SkSmartOverall value)
 {
   if (G_UNLIKELY (device->priv->drive_ata_smart_status != value))
     {
@@ -1199,7 +1303,9 @@ device_set_drive_ata_smart_status (Device *device, SkSmartOverall value)
 }
 
 void
-device_set_drive_ata_smart_blob_steal (Device *device, gchar *blob, gsize blob_size)
+device_set_drive_ata_smart_blob_steal (Device *device,
+                                       gchar *blob,
+                                       gsize blob_size)
 {
   /* TODO: compare? Not really needed, this happens very rarely */
 

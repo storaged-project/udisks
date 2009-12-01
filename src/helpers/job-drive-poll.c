@@ -37,7 +37,8 @@ usage (void)
 }
 
 int
-main (int argc, char *argv[])
+main (int argc,
+      char *argv[])
 {
   int ret;
   const gchar *device_file;

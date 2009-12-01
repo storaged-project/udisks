@@ -86,8 +86,7 @@ guesstimate_optimal_buffer_size (guint num_samples)
 
   if (lseek (fd, 0, SEEK_SET) == -1)
     {
-      g_printerr ("Error seeking to start of disk for %s when guesstimating buffer size: %m\n",
-                  device_file);
+      g_printerr ("Error seeking to start of disk for %s when guesstimating buffer size: %m\n", device_file);
       goto out;
     }
 
@@ -118,8 +117,8 @@ guesstimate_optimal_buffer_size (guint num_samples)
     }
   g_get_current_time (&end_time);
 
-  duration_secs = ((end_time.tv_sec * G_USEC_PER_SEC + end_time.tv_usec) -
-                   (begin_time.tv_sec * G_USEC_PER_SEC + begin_time.tv_usec)) / ((gdouble) G_USEC_PER_SEC);
+  duration_secs = ((end_time.tv_sec * G_USEC_PER_SEC + end_time.tv_usec) - (begin_time.tv_sec * G_USEC_PER_SEC
+                                                                            + begin_time.tv_usec)) / ((gdouble) G_USEC_PER_SEC);
 
   /* duration_secs is (approx) the number of seconds needed to do one sample */
   if (duration_secs * num_samples > 30.0)
@@ -213,8 +212,8 @@ measure_transfer_rate (guint num_samples,
         }
       g_get_current_time (&end_time);
 
-      duration_secs = ((end_time.tv_sec * G_USEC_PER_SEC + end_time.tv_usec) -
-                       (begin_time.tv_sec * G_USEC_PER_SEC + begin_time.tv_usec)) / ((gdouble) G_USEC_PER_SEC);
+      duration_secs = ((end_time.tv_sec * G_USEC_PER_SEC + end_time.tv_usec) - (begin_time.tv_sec * G_USEC_PER_SEC
+                                                                                + begin_time.tv_usec)) / ((gdouble) G_USEC_PER_SEC);
 
       g_print ("read_transfer_rate: offset %" G_GOFFSET_FORMAT " rate %f\n",
                pos,
@@ -256,7 +255,7 @@ measure_write_transfer_rate (guint num_samples,
       pos = n * size / num_samples;
 
       /* O_DIRECT also only wants to read from page offsets */
-      pos &= ~(page_size -1);
+      pos &= ~(page_size - 1);
 
       if (lseek (fd, pos, SEEK_SET) == -1)
         {
@@ -297,17 +296,18 @@ measure_write_transfer_rate (guint num_samples,
 
         }
 
-      if (fsync (fd) != 0) {
-              g_printerr ("Error fsync()'ing after writing at %" G_GOFFSET_FORMAT " to %s: %m\n",
-                          pos + (remaining - total_written),
-                          device_file);
-              goto out;
-      }
+      if (fsync (fd) != 0)
+        {
+          g_printerr ("Error fsync()'ing after writing at %" G_GOFFSET_FORMAT " to %s: %m\n",
+                      pos + (remaining - total_written),
+                      device_file);
+          goto out;
+        }
 
       g_get_current_time (&end_time);
 
-      duration_secs = ((end_time.tv_sec * G_USEC_PER_SEC + end_time.tv_usec) -
-                       (begin_time.tv_sec * G_USEC_PER_SEC + begin_time.tv_usec)) / ((gdouble) G_USEC_PER_SEC);
+      duration_secs = ((end_time.tv_sec * G_USEC_PER_SEC + end_time.tv_usec) - (begin_time.tv_sec * G_USEC_PER_SEC
+                                                                                + begin_time.tv_usec)) / ((gdouble) G_USEC_PER_SEC);
 
       g_print ("write_transfer_rate: offset %" G_GOFFSET_FORMAT " rate %f\n",
                pos,
@@ -344,7 +344,7 @@ measure_access_time (guint num_samples,
       guint64 pos;
 
       pos = (guint64) g_rand_double_range (rand, 0, (gdouble) (size - page_size));
-      pos &= ~(page_size -1);
+      pos &= ~(page_size - 1);
 
       g_get_current_time (&begin_time);
       if (lseek (fd, pos, SEEK_SET) == -1)
@@ -364,8 +364,8 @@ measure_access_time (guint num_samples,
         }
       g_get_current_time (&end_time);
 
-      duration_secs = ((end_time.tv_sec * G_USEC_PER_SEC + end_time.tv_usec) -
-                       (begin_time.tv_sec * G_USEC_PER_SEC + begin_time.tv_usec)) / ((gdouble) G_USEC_PER_SEC);
+      duration_secs = ((end_time.tv_sec * G_USEC_PER_SEC + end_time.tv_usec) - (begin_time.tv_sec * G_USEC_PER_SEC
+                                                                                + begin_time.tv_usec)) / ((gdouble) G_USEC_PER_SEC);
 
       g_print ("access_time: offset %" G_GOFFSET_FORMAT " time %f\n",
                pos,
@@ -384,7 +384,8 @@ measure_access_time (guint num_samples,
 }
 
 int
-main (int argc, char *argv[])
+main (int argc,
+      char *argv[])
 {
   gint ret;
   guchar *buf_unaligned;
@@ -412,11 +413,14 @@ main (int argc, char *argv[])
 
   do_write_benchmark = atoi (argv[2]);
 
-  if (do_write_benchmark) {
-    fd = open (device_file, O_RDWR | O_DIRECT);
-  } else {
-    fd = open (device_file, O_RDONLY | O_DIRECT);
-  }
+  if (do_write_benchmark)
+    {
+      fd = open (device_file, O_RDWR | O_DIRECT);
+    }
+  else
+    {
+      fd = open (device_file, O_RDONLY | O_DIRECT);
+    }
   if (fd < 0)
     {
       g_printerr ("Error opening %s: %m\n", device_file);
@@ -460,10 +464,11 @@ main (int argc, char *argv[])
   if (!measure_transfer_rate (num_transfer_rate_samples, cur_task++, num_tasks))
     goto out;
 
-  if (do_write_benchmark) {
-    if (!measure_write_transfer_rate (num_transfer_rate_samples, cur_task++, num_tasks))
-      goto out;
-  }
+  if (do_write_benchmark)
+    {
+      if (!measure_write_transfer_rate (num_transfer_rate_samples, cur_task++, num_tasks))
+        goto out;
+    }
 
   if (!measure_access_time (num_access_time_samples, cur_task++, num_tasks))
     goto out;

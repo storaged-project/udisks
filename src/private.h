@@ -26,7 +26,7 @@
 G_BEGIN_DECLS
 
 Mount *_mount_new (dev_t        dev,
-                                const gchar *mount_path);
+                   const gchar *mount_path);
 
 G_END_DECLS
 

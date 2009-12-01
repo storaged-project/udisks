@@ -25,16 +25,16 @@
 
 G_BEGIN_DECLS
 
-gboolean mount_file_has_device  (const gchar  *device_file,
-                                              uid_t        *mounted_by_uid,
-                                              gboolean     *remove_dir_on_unmount);
-void     mount_file_add         (const gchar  *device_file,
-                                              const gchar  *mount_path,
-                                              uid_t         mounted_by_uid,
-                                              gboolean      remove_dir_on_unmount);
-void     mount_file_remove      (const gchar  *device_file,
-                                              const char   *mount_path);
-void     mount_file_clean_stale (GList        *existing_devices);
+gboolean mount_file_has_device (const gchar *device_file,
+                                uid_t *mounted_by_uid,
+                                gboolean *remove_dir_on_unmount);
+void mount_file_add (const gchar *device_file,
+                     const gchar *mount_path,
+                     uid_t mounted_by_uid,
+                     gboolean remove_dir_on_unmount);
+void mount_file_remove (const gchar *device_file,
+                        const char *mount_path);
+void mount_file_clean_stale (GList *existing_devices);
 
 G_END_DECLS
 

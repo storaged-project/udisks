@@ -40,174 +40,174 @@ typedef struct Job Job;
 
 struct DevicePrivate
 {
-        DBusGConnection *system_bus_connection;
-        Daemon *daemon;
-        GUdevDevice *d;
+  DBusGConnection *system_bus_connection;
+  Daemon *daemon;
+  GUdevDevice *d;
 
-        Job *job;
+  Job *job;
 
-        char *object_path;
-        char *native_path;
-        guint64 device_detection_time;
-        guint64 device_media_detection_time;
+  char *object_path;
+  char *native_path;
+  guint64 device_detection_time;
+  guint64 device_media_detection_time;
 
-        gboolean removed;
+  gboolean removed;
 
-        gboolean job_in_progress;
-        char *job_id;
-        uid_t job_initiated_by_uid;
-        gboolean job_is_cancellable;
-        double job_percentage;
+  gboolean job_in_progress;
+  char *job_id;
+  uid_t job_initiated_by_uid;
+  gboolean job_is_cancellable;
+  double job_percentage;
 
-        guint linux_md_poll_timeout_id;
+  guint linux_md_poll_timeout_id;
 
-        /* A list of current polling inhibitors (Inhibitor objects) */
-        GList *polling_inhibitors;
+  /* A list of current polling inhibitors (Inhibitor objects) */
+  GList *polling_inhibitors;
 
-        /* if non-zero, the id of the idle for emitting a 'change' signal */
-        guint emit_changed_idle_id;
+  /* if non-zero, the id of the idle for emitting a 'change' signal */
+  guint emit_changed_idle_id;
 
-        /*****************/
-        /* Disk spindown */
-        /*****************/
+  /*****************/
+  /* Disk spindown */
+  /*****************/
 
-        /* A list of current spindown configurators (Inhibitor objects)
-         *
-         * Each object will have a data element, @spindown-timeout-seconds, that is
-         * the requested timeout for the inhibitor in question. It can be read via
-         *
-         *  GPOINTER_TO_INT (g_object_get_data (G_OBJECT (inhibitor), "spindown-timeout-seconds"));
-         */
-        GList *spindown_inhibitors;
+  /* A list of current spindown configurators (Inhibitor objects)
+   *
+   * Each object will have a data element, @spindown-timeout-seconds, that is
+   * the requested timeout for the inhibitor in question. It can be read via
+   *
+   *  GPOINTER_TO_INT (g_object_get_data (G_OBJECT (inhibitor), "spindown-timeout-seconds"));
+   */
+  GList *spindown_inhibitors;
 
-        /* The timeout the disk is currently configured with, in seconds. This is 0 if spindown
-         * is not enabled. Depending on the command-set used, a slightly different rounded value
-         * may have been sent to the disk - for example, the ATA command-set has a rather peculiar
-         * mapping, see the hdparm(1) man-page, option -S.
-         *
-         * This value is computed by considering all per-disk spindown inhibitors (set
-         * via the DriveSetSpindownTimeout() method on the device) and all global spindown
-         * inhibitors (set via the DriveSetAllSpindownTimeouts() method on the daemon).
-         */
-        gint spindown_timeout;
+  /* The timeout the disk is currently configured with, in seconds. This is 0 if spindown
+   * is not enabled. Depending on the command-set used, a slightly different rounded value
+   * may have been sent to the disk - for example, the ATA command-set has a rather peculiar
+   * mapping, see the hdparm(1) man-page, option -S.
+   *
+   * This value is computed by considering all per-disk spindown inhibitors (set
+   * via the DriveSetSpindownTimeout() method on the device) and all global spindown
+   * inhibitors (set via the DriveSetAllSpindownTimeouts() method on the daemon).
+   */
+  gint spindown_timeout;
 
-        /**************/
-        /* Properties */
-        /**************/
+  /**************/
+  /* Properties */
+  /**************/
 
-        char *device_file;
-        dev_t dev;
-        GPtrArray *device_file_by_id;
-        GPtrArray *device_file_by_path;
-        gboolean device_is_system_internal;
-        gboolean device_is_partition;
-        gboolean device_is_partition_table;
-        gboolean device_is_removable;
-        gboolean device_is_media_available;
-        gboolean device_is_media_change_detected;
-        gboolean device_is_media_change_detection_polling;
-        gboolean device_is_media_change_detection_inhibitable;
-        gboolean device_is_media_change_detection_inhibited;
-        gboolean device_is_read_only;
-        gboolean device_is_drive;
-        gboolean device_is_optical_disc;
-        gboolean device_is_luks;
-        gboolean device_is_luks_cleartext;
-        gboolean device_is_linux_md_component;
-        gboolean device_is_linux_md;
-        guint64 device_size;
-        guint64 device_block_size;
-        gboolean device_is_mounted;
-        GPtrArray *device_mount_paths;
-        uid_t device_mounted_by_uid;
-        gboolean device_presentation_hide;
-        gboolean device_presentation_nopolicy;
-        char *device_presentation_name;
-        char *device_presentation_icon_name;
+  char *device_file;
+  dev_t dev;
+  GPtrArray *device_file_by_id;
+  GPtrArray *device_file_by_path;
+  gboolean device_is_system_internal;
+  gboolean device_is_partition;
+  gboolean device_is_partition_table;
+  gboolean device_is_removable;
+  gboolean device_is_media_available;
+  gboolean device_is_media_change_detected;
+  gboolean device_is_media_change_detection_polling;
+  gboolean device_is_media_change_detection_inhibitable;
+  gboolean device_is_media_change_detection_inhibited;
+  gboolean device_is_read_only;
+  gboolean device_is_drive;
+  gboolean device_is_optical_disc;
+  gboolean device_is_luks;
+  gboolean device_is_luks_cleartext;
+  gboolean device_is_linux_md_component;
+  gboolean device_is_linux_md;
+  guint64 device_size;
+  guint64 device_block_size;
+  gboolean device_is_mounted;
+  GPtrArray *device_mount_paths;
+  uid_t device_mounted_by_uid;
+  gboolean device_presentation_hide;
+  gboolean device_presentation_nopolicy;
+  char *device_presentation_name;
+  char *device_presentation_icon_name;
 
-        char *id_usage;
-        char *id_type;
-        char *id_version;
-        char *id_uuid;
-        char *id_label;
+  char *id_usage;
+  char *id_type;
+  char *id_version;
+  char *id_uuid;
+  char *id_label;
 
-        char *partition_slave;
-        char *partition_scheme;
-        char *partition_type;
-        char *partition_label;
-        char *partition_uuid;
-        GPtrArray *partition_flags;
-        int partition_number;
-        guint64 partition_offset;
-        guint64 partition_size;
+  char *partition_slave;
+  char *partition_scheme;
+  char *partition_type;
+  char *partition_label;
+  char *partition_uuid;
+  GPtrArray *partition_flags;
+  int partition_number;
+  guint64 partition_offset;
+  guint64 partition_size;
 
-        char *partition_table_scheme;
-        int partition_table_count;
+  char *partition_table_scheme;
+  int partition_table_count;
 
-        char *drive_vendor;
-        char *drive_model;
-        char *drive_revision;
-        char *drive_serial;
-        char *drive_wwn;
-        char *drive_connection_interface;
-        guint drive_connection_speed;
-        GPtrArray *drive_media_compatibility;
-        char *drive_media;
-        gboolean drive_is_media_ejectable;
-        gboolean drive_can_detach;
-        gboolean drive_can_spindown;
-        gboolean drive_is_rotational;
-        guint drive_rotation_rate;
-        char *drive_write_cache;
-        char *drive_adapter;
-        GPtrArray *drive_ports;
+  char *drive_vendor;
+  char *drive_model;
+  char *drive_revision;
+  char *drive_serial;
+  char *drive_wwn;
+  char *drive_connection_interface;
+  guint drive_connection_speed;
+  GPtrArray *drive_media_compatibility;
+  char *drive_media;
+  gboolean drive_is_media_ejectable;
+  gboolean drive_can_detach;
+  gboolean drive_can_spindown;
+  gboolean drive_is_rotational;
+  guint drive_rotation_rate;
+  char *drive_write_cache;
+  char *drive_adapter;
+  GPtrArray *drive_ports;
 
-        gboolean optical_disc_is_blank;
-        gboolean optical_disc_is_appendable;
-        gboolean optical_disc_is_closed;
-        guint optical_disc_num_tracks;
-        guint optical_disc_num_audio_tracks;
-        guint optical_disc_num_sessions;
+  gboolean optical_disc_is_blank;
+  gboolean optical_disc_is_appendable;
+  gboolean optical_disc_is_closed;
+  guint optical_disc_num_tracks;
+  guint optical_disc_num_audio_tracks;
+  guint optical_disc_num_sessions;
 
-        char *luks_holder;
+  char *luks_holder;
 
-        char *luks_cleartext_slave;
-        uid_t luks_cleartext_unlocked_by_uid;
+  char *luks_cleartext_slave;
+  uid_t luks_cleartext_unlocked_by_uid;
 
-        char *linux_md_component_level;
-        int linux_md_component_position;
-        int linux_md_component_num_raid_devices;
-        char *linux_md_component_uuid;
-        char *linux_md_component_home_host;
-        char *linux_md_component_name;
-        char *linux_md_component_version;
-        char *linux_md_component_holder;
-        GPtrArray *linux_md_component_state;
+  char *linux_md_component_level;
+  int linux_md_component_position;
+  int linux_md_component_num_raid_devices;
+  char *linux_md_component_uuid;
+  char *linux_md_component_home_host;
+  char *linux_md_component_name;
+  char *linux_md_component_version;
+  char *linux_md_component_holder;
+  GPtrArray *linux_md_component_state;
 
-        char *linux_md_state;
-        char *linux_md_level;
-        int linux_md_num_raid_devices;
-        char *linux_md_uuid;
-        char *linux_md_home_host;
-        char *linux_md_name;
-        char *linux_md_version;
-        GPtrArray *linux_md_slaves;
-        GPtrArray *linux_md_slaves_state;
-        gboolean linux_md_is_degraded;
-        char *linux_md_sync_action;
-        double linux_md_sync_percentage;
-        guint64 linux_md_sync_speed;
+  char *linux_md_state;
+  char *linux_md_level;
+  int linux_md_num_raid_devices;
+  char *linux_md_uuid;
+  char *linux_md_home_host;
+  char *linux_md_name;
+  char *linux_md_version;
+  GPtrArray *linux_md_slaves;
+  GPtrArray *linux_md_slaves_state;
+  gboolean linux_md_is_degraded;
+  char *linux_md_sync_action;
+  double linux_md_sync_percentage;
+  guint64 linux_md_sync_speed;
 
-        gboolean drive_ata_smart_is_available;
-        guint64 drive_ata_smart_time_collected;
-        SkSmartOverall drive_ata_smart_status;
-        void *drive_ata_smart_blob;
-        gsize drive_ata_smart_blob_size;
+  gboolean drive_ata_smart_is_available;
+  guint64 drive_ata_smart_time_collected;
+  SkSmartOverall drive_ata_smart_status;
+  void *drive_ata_smart_blob;
+  gsize drive_ata_smart_blob_size;
 
-        /* the following properties are not (yet) exported */
-        char *dm_name;
-        GPtrArray *slaves_objpath;
-        GPtrArray *holders_objpath;
+  /* the following properties are not (yet) exported */
+  char *dm_name;
+  GPtrArray *slaves_objpath;
+  GPtrArray *holders_objpath;
 };
 
 /* property setters */
@@ -329,7 +329,6 @@ void device_set_drive_ata_smart_is_available (Device *device, gboolean value);
 void device_set_drive_ata_smart_time_collected (Device *device, guint64 value);
 void device_set_drive_ata_smart_status (Device *device, SkSmartOverall value);
 void device_set_drive_ata_smart_blob_steal (Device *device, gchar *blob, gsize blob_size);
-
 
 G_END_DECLS
 

@@ -34,24 +34,24 @@ G_BEGIN_DECLS
 #define IS_INHIBITOR_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), TYPE_INHIBITOR))
 #define INHIBITOR_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), TYPE_INHIBITOR, InhibitorClass))
 
-typedef struct InhibitorClass   InhibitorClass;
+typedef struct InhibitorClass InhibitorClass;
 typedef struct InhibitorPrivate InhibitorPrivate;
 
 struct Inhibitor
 {
-        GObject        parent;
-        InhibitorPrivate *priv;
+  GObject parent;
+  InhibitorPrivate *priv;
 };
 
 struct InhibitorClass
 {
-        GObjectClass   parent_class;
+  GObjectClass parent_class;
 };
 
-GType                 inhibitor_get_type             (void) G_GNUC_CONST;
-Inhibitor *inhibitor_new                  (DBusGMethodInvocation *context);
-const gchar          *inhibitor_get_unique_dbus_name (Inhibitor *inhibitor);
-const gchar          *inhibitor_get_cookie           (Inhibitor *inhibitor);
+GType inhibitor_get_type (void) G_GNUC_CONST;
+Inhibitor *inhibitor_new (DBusGMethodInvocation *context);
+const gchar *inhibitor_get_unique_dbus_name (Inhibitor *inhibitor);
+const gchar *inhibitor_get_cookie (Inhibitor *inhibitor);
 
 G_END_DECLS
 

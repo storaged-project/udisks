@@ -45,48 +45,53 @@ sysfs_put_string (const gchar *sysfs_path,
                   const gchar *file,
                   const gchar *value)
 {
-        FILE *f;
-        gchar *filename;
-        gboolean ret;
+  FILE *f;
+  gchar *filename;
+  gboolean ret;
 
-        ret = FALSE;
-        filename = NULL;
+  ret = FALSE;
+  filename = NULL;
 
-        filename = g_build_filename (sysfs_path, file, NULL);
-        f = fopen (filename, "w");
-        if (f == NULL) {
-                g_printerr ("error opening %s for writing: %m\n", filename);
-                goto out;
-        } else {
-                if (fputs (value, f) == EOF) {
-                        g_printerr ("error writing '%s' to %s: %m\n", value, filename);
-                        fclose (f);
-                        goto out;
-                }
-                fclose (f);
+  filename = g_build_filename (sysfs_path, file, NULL);
+  f = fopen (filename, "w");
+  if (f == NULL)
+    {
+      g_printerr ("error opening %s for writing: %m\n", filename);
+      goto out;
+    }
+  else
+    {
+      if (fputs (value, f) == EOF)
+        {
+          g_printerr ("error writing '%s' to %s: %m\n", value, filename);
+          fclose (f);
+          goto out;
         }
+      fclose (f);
+    }
 
-        ret = TRUE;
+  ret = TRUE;
  out:
-        g_free (filename);
-        return ret;
+  g_free (filename);
+  return ret;
 }
 
 static char *
 sysfs_get_string (const gchar *sysfs_path,
                   const gchar *file)
 {
-        gchar *result;
-        gchar *filename;
+  gchar *result;
+  gchar *filename;
 
-        result = NULL;
-        filename = g_build_filename (sysfs_path, file, NULL);
-        if (!g_file_get_contents (filename, &result, NULL, NULL)) {
-                result = g_strdup ("");
-        }
-        g_free (filename);
+  result = NULL;
+  filename = g_build_filename (sysfs_path, file, NULL);
+  if (!g_file_get_contents (filename, &result, NULL, NULL))
+    {
+      result = g_strdup ("");
+    }
+  g_free (filename);
 
-        return result;
+  return result;
 }
 
 static gboolean cancelled = FALSE;
@@ -94,92 +99,106 @@ static gboolean cancelled = FALSE;
 static void
 sigterm_handler (int signum)
 {
-        cancelled = TRUE;
+  cancelled = TRUE;
 }
 
 int
-main (int argc, char **argv)
+main (int argc,
+      char **argv)
 {
-        gint ret;
-        const gchar *device;
-        const gchar *sysfs_path;
-        gchar *sync_action;
-        gboolean repair;
-        gchar **options;
-        gint n;
+  gint ret;
+  const gchar *device;
+  const gchar *sysfs_path;
+  gchar *sync_action;
+  gboolean repair;
+  gchar **options;
+  gint n;
 
-        ret = 1;
-        repair = FALSE;
-        sync_action = NULL;
+  ret = 1;
+  repair = FALSE;
+  sync_action = NULL;
 
-        if (argc < 3) {
-                g_printerr ("wrong usage\n");
-                goto out;
+  if (argc < 3)
+    {
+      g_printerr ("wrong usage\n");
+      goto out;
+    }
+  device = argv[1];
+  sysfs_path = argv[2];
+  options = argv + 3;
+
+  for (n = 0; options[n] != NULL; n++)
+    {
+      if (strcmp (options[n], "repair") == 0)
+        {
+          repair = TRUE;
         }
-        device = argv[1];
-        sysfs_path = argv[2];
-        options = argv + 3;
-
-        for (n = 0; options[n] != NULL; n++) {
-                if (strcmp (options[n], "repair") == 0) {
-                        repair = TRUE;
-                } else {
-                        g_printerr ("option %s not supported\n", options[n]);
-                        goto out;
-                }
+      else
+        {
+          g_printerr ("option %s not supported\n", options[n]);
+          goto out;
         }
+    }
 
-        g_print ("device   = '%s'\n", device);
-        g_print ("repair   = %d\n", repair);
+  g_print ("device   = '%s'\n", device);
+  g_print ("repair   = %d\n", repair);
 
-        sync_action = sysfs_get_string (sysfs_path, "md/sync_action");
-        g_strstrip (sync_action);
-        if (g_strcmp0 (sync_action, "idle") != 0) {
-                g_printerr ("device %s is not idle\n", device);
-                goto out;
+  sync_action = sysfs_get_string (sysfs_path, "md/sync_action");
+  g_strstrip (sync_action);
+  if (g_strcmp0 (sync_action, "idle") != 0)
+    {
+      g_printerr ("device %s is not idle\n", device);
+      goto out;
+    }
+
+  /* if the user cancels, catch that and make the array idle */
+  signal (SIGTERM, sigterm_handler);
+
+  if (!sysfs_put_string (sysfs_path, "md/sync_action", repair ? "repair" : "check"))
+    {
+      goto out;
+    }
+
+  g_print ("udisks-helper-progress: 0\n");
+  while (!cancelled)
+    {
+      guint64 done;
+      guint64 remaining;
+      gchar *s;
+
+      sleep (2);
+
+      sync_action = sysfs_get_string (sysfs_path, "md/sync_action");
+      g_strstrip (sync_action);
+      if (g_strcmp0 (sync_action, "idle") == 0)
+        {
+          break;
         }
+      g_free (sync_action);
+      sync_action = NULL;
 
-        /* if the user cancels, catch that and make the array idle */
-        signal (SIGTERM, sigterm_handler);
-
-        if (!sysfs_put_string (sysfs_path, "md/sync_action", repair ? "repair" : "check")) {
-                goto out;
+      s = g_strstrip (sysfs_get_string (sysfs_path, "md/sync_completed"));
+      if (sscanf (s, "%" G_GUINT64_FORMAT " / %" G_GUINT64_FORMAT "", &done, &remaining) == 2)
+        {
+          g_print ("udisks-helper-progress: %d\n", (gint) (100L * done / remaining));
         }
-
-        g_print ("udisks-helper-progress: 0\n");
-        while (!cancelled) {
-                guint64 done;
-                guint64 remaining;
-                gchar *s;
-
-                sleep (2);
-
-                sync_action = sysfs_get_string (sysfs_path, "md/sync_action");
-                g_strstrip (sync_action);
-                if (g_strcmp0 (sync_action, "idle") == 0) {
-                        break;
-                }
-                g_free (sync_action);
-                sync_action = NULL;
-
-                s = g_strstrip (sysfs_get_string (sysfs_path, "md/sync_completed"));
-                if (sscanf (s, "%" G_GUINT64_FORMAT " / %" G_GUINT64_FORMAT "", &done, &remaining) == 2) {
-                        g_print ("udisks-helper-progress: %d\n", (gint) (100L * done / remaining));
-                } else {
-                        g_printerr ("Cannot parse md/sync_completed: '%s'", s);
-                        goto out;
-                }
-                g_free (s);
+      else
+        {
+          g_printerr ("Cannot parse md/sync_completed: '%s'", s);
+          goto out;
         }
+      g_free (s);
+    }
 
-        if (cancelled) {
-                sysfs_put_string (sysfs_path, "md/sync_action", "idle");
-                goto out;
-        }
+  if (cancelled)
+    {
+      sysfs_put_string (sysfs_path, "md/sync_action", "idle");
+      goto out;
+    }
 
-        ret = 0;
+  ret = 0;
 
-out:
-        g_free (sync_action);
-        return ret;
+ out:
+  g_free (sync_action);
+  return ret;
 }

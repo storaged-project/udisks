@@ -36,9 +36,7 @@ emit_changed_idle_cb (gpointer data)
   if (!expander->priv->removed)
     {
       g_print ("**** EMITTING CHANGED for %s\n", expander->priv->native_path);
-      g_signal_emit_by_name (expander->priv->daemon,
-                             "expander-changed",
-                             expander->priv->object_path);
+      g_signal_emit_by_name (expander->priv->daemon, "expander-changed", expander->priv->object_path);
       g_signal_emit_by_name (expander, "changed");
     }
   expander->priv->emit_changed_idle_id = 0;
@@ -48,7 +46,8 @@ emit_changed_idle_cb (gpointer data)
 }
 
 static void
-emit_changed (Expander *expander, const gchar *name)
+emit_changed (Expander *expander,
+              const gchar *name)
 {
   //g_debug ("property %s changed for %s", name, expander->priv->expander_file);
 
@@ -58,18 +57,18 @@ emit_changed (Expander *expander, const gchar *name)
       if (expander->priv->emit_changed_idle_id == 0)
         {
           expander->priv->emit_changed_idle_id = g_idle_add_full (G_PRIORITY_DEFAULT,
-                                                                    emit_changed_idle_cb,
-                                                                    g_object_ref (expander),
-                                                                    (GDestroyNotify) g_object_unref);
+                                                                  emit_changed_idle_cb,
+                                                                  g_object_ref (expander),
+                                                                  (GDestroyNotify) g_object_unref);
         }
     }
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-
 static gboolean
-ptr_str_array_equals_strv (GPtrArray *a, GStrv b)
+ptr_str_array_equals_strv (GPtrArray *a,
+                           GStrv b)
 {
   guint n;
   guint b_len;
@@ -85,7 +84,7 @@ ptr_str_array_equals_strv (GPtrArray *a, GStrv b)
   for (n = 0; n < a->len; n++)
     {
       if (g_strcmp0 ((gchar *) a->pdata[n], b[n]) != 0)
-	return FALSE;
+        return FALSE;
     }
 
   return TRUE;
@@ -114,7 +113,8 @@ ptr_str_array_from_strv (GStrv s)
 /* ---------------------------------------------------------------------------------------------------- */
 
 void
-expander_set_vendor (Expander *expander, const gchar *value)
+expander_set_vendor (Expander *expander,
+                     const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (expander->priv->vendor, value) != 0))
     {
@@ -125,7 +125,8 @@ expander_set_vendor (Expander *expander, const gchar *value)
 }
 
 void
-expander_set_model (Expander *expander, const gchar *value)
+expander_set_model (Expander *expander,
+                    const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (expander->priv->model, value) != 0))
     {
@@ -136,7 +137,8 @@ expander_set_model (Expander *expander, const gchar *value)
 }
 
 void
-expander_set_revision (Expander *expander, const gchar *value)
+expander_set_revision (Expander *expander,
+                       const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (expander->priv->revision, value) != 0))
     {
@@ -147,7 +149,8 @@ expander_set_revision (Expander *expander, const gchar *value)
 }
 
 void
-expander_set_num_ports (Expander *expander, guint value)
+expander_set_num_ports (Expander *expander,
+                        guint value)
 {
   if (G_UNLIKELY (expander->priv->num_ports != value))
     {
@@ -157,7 +160,8 @@ expander_set_num_ports (Expander *expander, guint value)
 }
 
 void
-expander_set_upstream_ports (Expander *expander, GStrv value)
+expander_set_upstream_ports (Expander *expander,
+                             GStrv value)
 {
   if (G_UNLIKELY (!ptr_str_array_equals_strv (expander->priv->upstream_ports, value)))
     {
@@ -168,7 +172,8 @@ expander_set_upstream_ports (Expander *expander, GStrv value)
 }
 
 void
-expander_set_adapter (Expander *expander, const gchar *value)
+expander_set_adapter (Expander *expander,
+                      const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (expander->priv->adapter, value) != 0))
     {

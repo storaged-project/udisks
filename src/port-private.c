@@ -36,9 +36,7 @@ emit_changed_idle_cb (gpointer data)
   if (!port->priv->removed)
     {
       g_print ("**** EMITTING CHANGED for %s\n", port->priv->native_path);
-      g_signal_emit_by_name (port->priv->daemon,
-                             "port-changed",
-                             port->priv->object_path);
+      g_signal_emit_by_name (port->priv->daemon, "port-changed", port->priv->object_path);
       g_signal_emit_by_name (port, "changed");
     }
   port->priv->emit_changed_idle_id = 0;
@@ -48,7 +46,8 @@ emit_changed_idle_cb (gpointer data)
 }
 
 static void
-emit_changed (Port *port, const gchar *name)
+emit_changed (Port        *port,
+              const gchar *name)
 {
   //g_debug ("property %s changed for %s", name, port->priv->port_file);
 
@@ -58,15 +57,16 @@ emit_changed (Port *port, const gchar *name)
       if (port->priv->emit_changed_idle_id == 0)
         {
           port->priv->emit_changed_idle_id = g_idle_add_full (G_PRIORITY_DEFAULT,
-                                                                    emit_changed_idle_cb,
-                                                                    g_object_ref (port),
-                                                                    (GDestroyNotify) g_object_unref);
+                                                              emit_changed_idle_cb,
+                                                              g_object_ref (port),
+                                                              (GDestroyNotify) g_object_unref);
         }
     }
 }
 
 void
-port_set_adapter (Port *port, const gchar *value)
+port_set_adapter (Port        *port,
+                  const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (port->priv->adapter, value) != 0))
     {
@@ -77,7 +77,8 @@ port_set_adapter (Port *port, const gchar *value)
 }
 
 void
-port_set_parent (Port *port, const gchar *value)
+port_set_parent (Port        *port,
+                 const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (port->priv->parent, value) != 0))
     {
@@ -88,11 +89,12 @@ port_set_parent (Port *port, const gchar *value)
 }
 
 void
-port_set_number (Port *port, gint value)
+port_set_number (Port *port,
+                 gint value)
 {
   if (G_UNLIKELY (port->priv->number != value))
     {
-       port->priv->number = value;
+      port->priv->number = value;
       emit_changed (port, "number");
     }
 }

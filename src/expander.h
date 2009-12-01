@@ -36,38 +36,35 @@ G_BEGIN_DECLS
 #define IS_EXPANDER_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), TYPE_EXPANDER))
 #define EXPANDER_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), TYPE_EXPANDER, ExpanderClass))
 
-typedef struct ExpanderClass   ExpanderClass;
+typedef struct ExpanderClass ExpanderClass;
 typedef struct ExpanderPrivate ExpanderPrivate;
 
 struct Expander
 {
-        GObject                    parent;
-        ExpanderPrivate *priv;
+  GObject parent;
+  ExpanderPrivate *priv;
 };
 
 struct ExpanderClass
 {
-        GObjectClass parent_class;
+  GObjectClass parent_class;
 };
 
-GType              expander_get_type              (void) G_GNUC_CONST;
+GType expander_get_type (void) G_GNUC_CONST;
 
-Expander *expander_new                 (Daemon     *daemon,
-                                                                GUdevDevice           *d);
+Expander *expander_new (Daemon *daemon, GUdevDevice *d);
 
-gboolean           expander_changed               (Expander   *expander,
-                                                                GUdevDevice           *d,
-                                                                gboolean               synthesized);
+gboolean expander_changed (Expander *expander, GUdevDevice *d, gboolean synthesized);
 
-void               expander_removed               (Expander   *expander);
+void expander_removed (Expander *expander);
 
 /* local methods */
 
-const char        *expander_local_get_object_path (Expander   *expander);
-const char        *expander_local_get_native_path (Expander   *expander);
+const char *expander_local_get_object_path (Expander *expander);
+const char *expander_local_get_native_path (Expander *expander);
 
-gboolean           local_expander_encloses_native_path (Expander   *expander,
-                                                                     const gchar           *native_path);
+gboolean local_expander_encloses_native_path (Expander *expander, const gchar *native_path);
+
 G_END_DECLS
 
 #endif /* __EXPANDER_H__ */

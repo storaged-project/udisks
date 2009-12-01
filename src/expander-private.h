@@ -31,29 +31,29 @@ G_BEGIN_DECLS
 
 struct ExpanderPrivate
 {
-        DBusGConnection *system_bus_connection;
-        Daemon *daemon;
-        GUdevDevice *d;
+  DBusGConnection *system_bus_connection;
+  Daemon *daemon;
+  GUdevDevice *d;
 
-        gchar *object_path;
-        gchar *native_path;
-        gboolean removed;
+  gchar *object_path;
+  gchar *native_path;
+  gboolean removed;
 
-        gchar *native_path_for_sysfs_prefix;
+  gchar *native_path_for_sysfs_prefix;
 
-        /* if non-zero, the id of the idle for emitting a 'change' signal */
-        guint emit_changed_idle_id;
+  /* if non-zero, the id of the idle for emitting a 'change' signal */
+  guint emit_changed_idle_id;
 
-        /**************/
-        /* Properties */
-        /**************/
+  /**************/
+  /* Properties */
+  /**************/
 
-        gchar *vendor;
-        gchar *model;
-        gchar *revision;
-        guint num_ports;
-        GPtrArray *upstream_ports;
-        gchar *adapter;
+  gchar *vendor;
+  gchar *model;
+  gchar *revision;
+  guint num_ports;
+  GPtrArray *upstream_ports;
+  gchar *adapter;
 };
 
 /* property setters */

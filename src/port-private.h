@@ -29,42 +29,46 @@
 
 G_BEGIN_DECLS
 
-typedef enum {
-        PORT_TYPE_ATA,
-        PORT_TYPE_SAS
+typedef enum
+{
+  PORT_TYPE_ATA,
+  PORT_TYPE_SAS
 } PortType;
 
 struct PortPrivate
 {
-        DBusGConnection *system_bus_connection;
-        Daemon *daemon;
-        GUdevDevice *d;
+  DBusGConnection *system_bus_connection;
+  Daemon *daemon;
+  GUdevDevice *d;
 
-        gchar *object_path;
-        gchar *native_path;
-        gboolean removed;
+  gchar *object_path;
+  gchar *native_path;
+  gboolean removed;
 
-        /* if non-zero, the id of the idle for emitting a 'change' signal */
-        guint emit_changed_idle_id;
+  /* if non-zero, the id of the idle for emitting a 'change' signal */
+  guint emit_changed_idle_id;
 
-        /* used for internal bookkeeping */
-        PortType port_type;
-        gchar *native_path_for_device_prefix;
+  /* used for internal bookkeeping */
+  PortType port_type;
+  gchar *native_path_for_device_prefix;
 
-        /**************/
-        /* Properties */
-        /**************/
+  /**************/
+  /* Properties */
+  /**************/
 
-        gchar *adapter;
-        gchar *parent;
-        gint number;
+  gchar *adapter;
+  gchar *parent;
+  gint number;
 };
 
 /* property setters */
 
-void port_set_adapter (Port *port, const gchar *value);
-void port_set_parent (Port *port, const gchar *value);
-void port_set_number (Port *port, gint value);
+void port_set_adapter (Port         *port,
+                       const gchar  *value);
+void port_set_parent  (Port         *port,
+                       const gchar  *value);
+void port_set_number  (Port         *port,
+                       gint          value);
 
 G_END_DECLS
 

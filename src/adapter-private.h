@@ -31,26 +31,26 @@ G_BEGIN_DECLS
 
 struct AdapterPrivate
 {
-        DBusGConnection *system_bus_connection;
-        Daemon *daemon;
-        GUdevDevice *d;
+  DBusGConnection *system_bus_connection;
+  Daemon *daemon;
+  GUdevDevice *d;
 
-        gchar *object_path;
-        gchar *native_path;
-        gboolean removed;
+  gchar *object_path;
+  gchar *native_path;
+  gboolean removed;
 
-        /* if non-zero, the id of the idle for emitting a 'change' signal */
-        guint emit_changed_idle_id;
+  /* if non-zero, the id of the idle for emitting a 'change' signal */
+  guint emit_changed_idle_id;
 
-        /**************/
-        /* Properties */
-        /**************/
+  /**************/
+  /* Properties */
+  /**************/
 
-        gchar *vendor;
-        gchar *model;
-        gchar *driver;
-        guint num_ports;
-        gchar *fabric;
+  gchar *vendor;
+  gchar *model;
+  gchar *driver;
+  guint num_ports;
+  gchar *fabric;
 };
 
 /* property setters */

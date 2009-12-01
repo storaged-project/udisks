@@ -45,154 +45,173 @@
 #include "poller.h"
 #include "daemon.h"
 
-
 #define NAME_TO_CLAIM "org.freedesktop.UDisks"
 
 static GMainLoop *loop;
 
 static void
-name_lost (DBusGProxy *system_bus_proxy, const char *name_which_was_lost, gpointer user_data)
+name_lost (DBusGProxy *system_bus_proxy,
+           const char *name_which_was_lost,
+           gpointer user_data)
 {
-        g_warning ("got NameLost, exiting");
-        g_main_loop_quit (loop);
+  g_warning ("got NameLost, exiting");
+  g_main_loop_quit (loop);
 }
 
 static gboolean
-acquire_name_on_proxy (DBusGProxy *system_bus_proxy, gboolean replace)
+acquire_name_on_proxy (DBusGProxy *system_bus_proxy,
+                       gboolean replace)
 {
-        GError     *error;
-        guint       result;
-        gboolean    res;
-        gboolean    ret;
-        guint       flags;
+  GError *error;
+  guint result;
+  gboolean res;
+  gboolean ret;
+  guint flags;
 
-        ret = FALSE;
+  ret = FALSE;
 
-        flags = DBUS_NAME_FLAG_ALLOW_REPLACEMENT;
-        if (replace)
-                flags |= DBUS_NAME_FLAG_REPLACE_EXISTING;
+  flags = DBUS_NAME_FLAG_ALLOW_REPLACEMENT;
+  if (replace)
+    flags |= DBUS_NAME_FLAG_REPLACE_EXISTING;
 
-        if (system_bus_proxy == NULL) {
-                goto out;
+  if (system_bus_proxy == NULL)
+    {
+      goto out;
+    }
+
+  error = NULL;
+  res = dbus_g_proxy_call (system_bus_proxy,
+                           "RequestName",
+                           &error,
+                           G_TYPE_STRING,
+                           NAME_TO_CLAIM,
+                           G_TYPE_UINT,
+                           flags,
+                           G_TYPE_INVALID,
+                           G_TYPE_UINT,
+                           &result,
+                           G_TYPE_INVALID);
+  if (!res)
+    {
+      if (error != NULL)
+        {
+          g_warning ("Failed to acquire %s: %s", NAME_TO_CLAIM, error->message);
+          g_error_free (error);
         }
-
-        error = NULL;
-	res = dbus_g_proxy_call (system_bus_proxy,
-                                 "RequestName",
-                                 &error,
-                                 G_TYPE_STRING, NAME_TO_CLAIM,
-                                 G_TYPE_UINT, flags,
-                                 G_TYPE_INVALID,
-                                 G_TYPE_UINT, &result,
-                                 G_TYPE_INVALID);
-        if (! res) {
-                if (error != NULL) {
-                        g_warning ("Failed to acquire %s: %s", NAME_TO_CLAIM, error->message);
-                        g_error_free (error);
-                } else {
-                        g_warning ("Failed to acquire %s", NAME_TO_CLAIM);
-                }
-                goto out;
-	}
-
- 	if (result != DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER) {
-                if (error != NULL) {
-                        g_warning ("Failed to acquire %s: %s", NAME_TO_CLAIM, error->message);
-                        g_error_free (error);
-                } else {
-                        g_warning ("Failed to acquire %s", NAME_TO_CLAIM);
-                }
-                goto out;
+      else
+        {
+          g_warning ("Failed to acquire %s", NAME_TO_CLAIM);
         }
+      goto out;
+    }
 
-        dbus_g_proxy_add_signal (system_bus_proxy, "NameLost", G_TYPE_STRING, G_TYPE_INVALID);
-        dbus_g_proxy_connect_signal (system_bus_proxy, "NameLost", G_CALLBACK (name_lost), NULL, NULL);
+  if (result != DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER)
+    {
+      if (error != NULL)
+        {
+          g_warning ("Failed to acquire %s: %s", NAME_TO_CLAIM, error->message);
+          g_error_free (error);
+        }
+      else
+        {
+          g_warning ("Failed to acquire %s", NAME_TO_CLAIM);
+        }
+      goto out;
+    }
 
-        ret = TRUE;
+  dbus_g_proxy_add_signal (system_bus_proxy, "NameLost", G_TYPE_STRING, G_TYPE_INVALID);
+  dbus_g_proxy_connect_signal (system_bus_proxy, "NameLost", G_CALLBACK (name_lost), NULL, NULL);
+
+  ret = TRUE;
 
  out:
-        return ret;
+  return ret;
 }
 
 int
-main (int argc, char **argv)
+main (int argc,
+      char **argv)
 {
-        GError              *error;
-        Daemon              *daemon;
-        GOptionContext      *context;
-        DBusGProxy          *system_bus_proxy;
-        DBusGConnection     *bus;
-        int                  ret;
-        static gboolean      replace;
-        static GOptionEntry  entries []   = {
-                { "replace", 0, 0, G_OPTION_ARG_NONE, &replace, "Replace existing daemon", NULL },
-                { NULL }
-        };
+  GError *error;
+  Daemon *daemon;
+  GOptionContext *context;
+  DBusGProxy *system_bus_proxy;
+  DBusGConnection *bus;
+  int ret;
+  static gboolean replace;
+  static GOptionEntry entries[] =
+    {
+      { "replace", 0, 0, G_OPTION_ARG_NONE, &replace, "Replace existing daemon", NULL },
+      { NULL } };
 
-        ret = 1;
-        error = NULL;
+  ret = 1;
+  error = NULL;
 
-        g_type_init ();
+  g_type_init ();
 
-        /* fork the polling process early */
-        if (!poller_setup (argc, argv)) {
-                goto out;
-        }
+  /* fork the polling process early */
+  if (!poller_setup (argc, argv))
+    {
+      goto out;
+    }
 
-        /* run with a controlled path */
-        if (!g_setenv ("PATH", PACKAGE_LIBEXEC_DIR ":/sbin:/bin:/usr/sbin:/usr/bin", TRUE)) {
-                g_warning ("Couldn't set PATH");
-                goto out;
-        }
+  /* run with a controlled path */
+  if (!g_setenv ("PATH", PACKAGE_LIBEXEC_DIR ":/sbin:/bin:/usr/sbin:/usr/bin", TRUE))
+    {
+      g_warning ("Couldn't set PATH");
+      goto out;
+    }
 
-        /* avoid gvfs (http://bugzilla.gnome.org/show_bug.cgi?id=526454) */
-        if (!g_setenv ("GIO_USE_VFS", "local", TRUE)) {
-                g_warning ("Couldn't set GIO_USE_GVFS");
-                goto out;
-        }
+  /* avoid gvfs (http://bugzilla.gnome.org/show_bug.cgi?id=526454) */
+  if (!g_setenv ("GIO_USE_VFS", "local", TRUE))
+    {
+      g_warning ("Couldn't set GIO_USE_GVFS");
+      goto out;
+    }
 
-        context = g_option_context_new ("udisks storage daemon");
-        g_option_context_add_main_entries (context, entries, NULL);
-        g_option_context_parse (context, &argc, &argv, NULL);
-        g_option_context_free (context);
+  context = g_option_context_new ("udisks storage daemon");
+  g_option_context_add_main_entries (context, entries, NULL);
+  g_option_context_parse (context, &argc, &argv, NULL);
+  g_option_context_free (context);
 
-        bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
-        if (bus == NULL) {
-                g_warning ("Couldn't connect to system bus: %s", error->message);
-                g_error_free (error);
-                goto out;
-        }
+  bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+  if (bus == NULL)
+    {
+      g_warning ("Couldn't connect to system bus: %s", error->message);
+      g_error_free (error);
+      goto out;
+    }
 
-	system_bus_proxy = dbus_g_proxy_new_for_name (bus,
-                                               DBUS_SERVICE_DBUS,
-                                               DBUS_PATH_DBUS,
-                                               DBUS_INTERFACE_DBUS);
-        if (system_bus_proxy == NULL) {
-                g_warning ("Could not construct system_bus_proxy object; bailing out");
-                goto out;
-        }
+  system_bus_proxy = dbus_g_proxy_new_for_name (bus, DBUS_SERVICE_DBUS, DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS);
+  if (system_bus_proxy == NULL)
+    {
+      g_warning ("Could not construct system_bus_proxy object; bailing out");
+      goto out;
+    }
 
-        if (!acquire_name_on_proxy (system_bus_proxy, replace) ) {
-                g_warning ("Could not acquire name; bailing out");
-                goto out;
-        }
+  if (!acquire_name_on_proxy (system_bus_proxy, replace))
+    {
+      g_warning ("Could not acquire name; bailing out");
+      goto out;
+    }
 
-        g_debug ("Starting daemon version %s", VERSION);
+  g_debug ("Starting daemon version %s", VERSION);
 
-        daemon = daemon_new ();
+  daemon = daemon_new ();
 
-        if (daemon == NULL) {
-                goto out;
-        }
+  if (daemon == NULL)
+    {
+      goto out;
+    }
 
-        loop = g_main_loop_new (NULL, FALSE);
+  loop = g_main_loop_new (NULL, FALSE);
 
-        g_main_loop_run (loop);
+  g_main_loop_run (loop);
 
-        g_object_unref (daemon);
-        g_main_loop_unref (loop);
-        ret = 0;
+  g_object_unref (daemon);
+  g_main_loop_unref (loop);
+  ret = 0;
 
-out:
-        return ret;
+ out:
+  return ret;
 }

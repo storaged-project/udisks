@@ -36,9 +36,7 @@ emit_changed_idle_cb (gpointer data)
   if (!adapter->priv->removed)
     {
       g_print ("**** EMITTING CHANGED for %s\n", adapter->priv->native_path);
-      g_signal_emit_by_name (adapter->priv->daemon,
-                             "adapter-changed",
-                             adapter->priv->object_path);
+      g_signal_emit_by_name (adapter->priv->daemon, "adapter-changed", adapter->priv->object_path);
       g_signal_emit_by_name (adapter, "changed");
     }
   adapter->priv->emit_changed_idle_id = 0;
@@ -48,7 +46,8 @@ emit_changed_idle_cb (gpointer data)
 }
 
 static void
-emit_changed (Adapter *adapter, const gchar *name)
+emit_changed (Adapter *adapter,
+              const gchar *name)
 {
   //g_debug ("property %s changed for %s", name, adapter->priv->adapter_file);
 
@@ -58,15 +57,16 @@ emit_changed (Adapter *adapter, const gchar *name)
       if (adapter->priv->emit_changed_idle_id == 0)
         {
           adapter->priv->emit_changed_idle_id = g_idle_add_full (G_PRIORITY_DEFAULT,
-                                                                    emit_changed_idle_cb,
-                                                                    g_object_ref (adapter),
-                                                                    (GDestroyNotify) g_object_unref);
+                                                                 emit_changed_idle_cb,
+                                                                 g_object_ref (adapter),
+                                                                 (GDestroyNotify) g_object_unref);
         }
     }
 }
 
 void
-adapter_set_vendor (Adapter *adapter, const gchar *value)
+adapter_set_vendor (Adapter *adapter,
+                    const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (adapter->priv->vendor, value) != 0))
     {
@@ -77,7 +77,8 @@ adapter_set_vendor (Adapter *adapter, const gchar *value)
 }
 
 void
-adapter_set_model (Adapter *adapter, const gchar *value)
+adapter_set_model (Adapter *adapter,
+                   const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (adapter->priv->model, value) != 0))
     {
@@ -88,7 +89,8 @@ adapter_set_model (Adapter *adapter, const gchar *value)
 }
 
 void
-adapter_set_driver (Adapter *adapter, const gchar *value)
+adapter_set_driver (Adapter *adapter,
+                    const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (adapter->priv->driver, value) != 0))
     {
@@ -99,7 +101,8 @@ adapter_set_driver (Adapter *adapter, const gchar *value)
 }
 
 void
-adapter_set_num_ports (Adapter *adapter, guint value)
+adapter_set_num_ports (Adapter *adapter,
+                       guint value)
 {
   if (G_UNLIKELY (adapter->priv->num_ports != value))
     {
@@ -109,7 +112,8 @@ adapter_set_num_ports (Adapter *adapter, guint value)
 }
 
 void
-adapter_set_fabric (Adapter *adapter, const gchar *value)
+adapter_set_fabric (Adapter *adapter,
+                    const gchar *value)
 {
   if (G_UNLIKELY (g_strcmp0 (adapter->priv->fabric, value) != 0))
     {

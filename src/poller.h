@@ -26,6 +26,6 @@
 gboolean poller_setup (int argc, char *argv[]);
 
 /* media detection polling */
-void     poller_set_devices (GList *devices);
+void poller_set_devices (GList *devices);
 
 #endif /* __POLLER_H */

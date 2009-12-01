@@ -25,17 +25,15 @@
 
 G_BEGIN_DECLS
 
-typedef struct Daemon       Daemon;
-
-typedef struct Device       Device;
-typedef struct Adapter      Adapter;
-typedef struct Expander     Expander;
-typedef struct Port         Port;
+typedef struct Daemon   Daemon;
+typedef struct Device   Device;
+typedef struct Adapter  Adapter;
+typedef struct Expander Expander;
+typedef struct Port     Port;
 
 typedef struct Mount        Mount;
 typedef struct MountMonitor MountMonitor;
 typedef struct Inhibitor    Inhibitor;
-typedef struct AtaSmartDb   AtaSmartDb;
 
 G_END_DECLS
 

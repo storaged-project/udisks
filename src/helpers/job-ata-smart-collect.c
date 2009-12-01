@@ -30,76 +30,84 @@
 static void
 usage (void)
 {
-        fprintf (stderr, "incorrect usage\n");
+  fprintf (stderr, "incorrect usage\n");
 }
 
 int
-main (int argc, char *argv[])
+main (int argc,
+      char *argv[])
 {
-        int ret;
-        const char *device;
-        SkDisk *d;
-        SkBool smart_is_available;
-        SkBool awake;
-        gboolean nowakeup;
-        const void *blob;
-        size_t blob_size;
-        gchar *encoded_blob;
+  int ret;
+  const char *device;
+  SkDisk *d;
+  SkBool smart_is_available;
+  SkBool awake;
+  gboolean nowakeup;
+  const void *blob;
+  size_t blob_size;
+  gchar *encoded_blob;
 
-        d = NULL;
-        ret = 1;
+  d = NULL;
+  ret = 1;
 
-        if (argc != 3) {
-                usage ();
-                goto out;
-        }
+  if (argc != 3)
+    {
+      usage ();
+      goto out;
+    }
 
-        device = argv[1];
+  device = argv[1];
 
-        nowakeup = atoi (argv[2]);
+  nowakeup = atoi (argv[2]);
 
-        if (sk_disk_open (device, &d) != 0) {
-                g_printerr ("Failed to open disk %s: %m\n", device);
-                goto out;
-        }
+  if (sk_disk_open (device, &d) != 0)
+    {
+      g_printerr ("Failed to open disk %s: %m\n", device);
+      goto out;
+    }
 
-        if (sk_disk_check_sleep_mode (d, &awake) != 0) {
-                g_printerr ("Failed to check if disk %s is awake: %m\n", device);
-                goto out;
-        }
+  if (sk_disk_check_sleep_mode (d, &awake) != 0)
+    {
+      g_printerr ("Failed to check if disk %s is awake: %m\n", device);
+      goto out;
+    }
 
-        /* don't wake up disk unless specically asked to */
-        if (nowakeup && !awake) {
-                g_printerr ("Disk %s is asleep and nowakeup option was passed\n", device);
-                ret = 2;
-                goto out;
-        }
+  /* don't wake up disk unless specically asked to */
+  if (nowakeup && !awake)
+    {
+      g_printerr ("Disk %s is asleep and nowakeup option was passed\n", device);
+      ret = 2;
+      goto out;
+    }
 
-        if (sk_disk_smart_is_available (d, &smart_is_available) != 0) {
-                g_printerr ("Failed to determine if smart is available for %s: %m\n", device);
-                goto out;
-        }
+  if (sk_disk_smart_is_available (d, &smart_is_available) != 0)
+    {
+      g_printerr ("Failed to determine if smart is available for %s: %m\n", device);
+      goto out;
+    }
 
-        /* main smart data */
-        if (sk_disk_smart_read_data (d) != 0) {
-                g_printerr ("Failed to read smart data for %s: %m\n", device);
-                goto out;
-        }
+  /* main smart data */
+  if (sk_disk_smart_read_data (d) != 0)
+    {
+      g_printerr ("Failed to read smart data for %s: %m\n", device);
+      goto out;
+    }
 
-        if (sk_disk_get_blob (d, &blob, &blob_size) != 0) {
-                g_printerr ("Failed to read smart data for %s: %m\n", device);
-                goto out;
-        }
+  if (sk_disk_get_blob (d, &blob, &blob_size) != 0)
+    {
+      g_printerr ("Failed to read smart data for %s: %m\n", device);
+      goto out;
+    }
 
-        encoded_blob = g_base64_encode ((const guchar *) blob, (gsize) blob_size);
-        g_print ("%s\n", encoded_blob);
-        g_free (encoded_blob);
+  encoded_blob = g_base64_encode ((const guchar *) blob, (gsize) blob_size);
+  g_print ("%s\n", encoded_blob);
+  g_free (encoded_blob);
 
-        ret = 0;
+  ret = 0;
 
  out:
 
-        if (d != NULL)
-                sk_disk_free (d);
-        return ret;
+  if (d != NULL)
+    sk_disk_free (d);
+  return ret;
 }

@@ -40,22 +40,28 @@
 /* TODO: maybe move to private static library if there's a lot of shared stuff */
 
 static inline gboolean
-_do_write (int fd, void *buf, int num)
+_do_write (int fd,
+           void *buf,
+           int num)
 {
-        gboolean ret;
-        ret = FALSE;
-again:
-        if (write (fd, buf, num) != (int) num) {
-                if (errno == EAGAIN) {
-                        goto again;
-                } else {
-                        g_printerr ("%d: error writing %d bytes: %m\n", getpid (), num);
-                        goto out;
-                }
+  gboolean ret;
+  ret = FALSE;
+ again:
+  if (write (fd, buf, num) != (int) num)
+    {
+      if (errno == EAGAIN)
+        {
+          goto again;
         }
-        ret = TRUE;
-out:
-        return ret;
+      else
+        {
+          g_printerr ("%d: error writing %d bytes: %m\n", getpid (), num);
+          goto out;
+        }
+    }
+  ret = TRUE;
+ out:
+  return ret;
 }
 
 #if 0
@@ -63,40 +69,43 @@ out:
 static inline gboolean
 _scrub_signatures (int fd, guint64 offset, guint64 size)
 {
-        gboolean ret;
-        guint64 wipe_size;
-        char buf[ERASE_SIZE];
+  gboolean ret;
+  guint64 wipe_size;
+  char buf[ERASE_SIZE];
 
-        ret = FALSE;
+  ret = FALSE;
 
-        /* wipe first and last 128KB. Note that btrfs keeps signatures at 0x10000 == 64KB. */
-        wipe_size = 128 * 1024;
-        g_assert (sizeof (buf) >= wipe_size);
+  /* wipe first and last 128KB. Note that btrfs keeps signatures at 0x10000 == 64KB. */
+  wipe_size = 128 * 1024;
+  g_assert (sizeof (buf) >= wipe_size);
 
-        if (wipe_size > size) {
-                wipe_size = size;
-        }
+  if (wipe_size > size)
+    {
+      wipe_size = size;
+    }
 
-        if (lseek64 (fd, offset, SEEK_SET) == (off64_t) -1) {
-                g_printerr ("cannot seek to %" G_GINT64_FORMAT ": %m", offset);
-                goto out;
-        }
+  if (lseek64 (fd, offset, SEEK_SET) == (off64_t) -1)
+    {
+      g_printerr ("cannot seek to %" G_GINT64_FORMAT ": %m", offset);
+      goto out;
+    }
 
-        if (!_do_write (fd, buf, wipe_size))
-                goto out;
+  if (!_do_write (fd, buf, wipe_size))
+    goto out;
 
-        if (lseek64 (fd, offset + size - wipe_size, SEEK_SET) == (off64_t) -1) {
-                g_printerr ("cannot seek to %" G_GINT64_FORMAT ": %m", offset + size - wipe_size);
-                goto out;
-        }
+  if (lseek64 (fd, offset + size - wipe_size, SEEK_SET) == (off64_t) -1)
+    {
+      g_printerr ("cannot seek to %" G_GINT64_FORMAT ": %m", offset + size - wipe_size);
+      goto out;
+    }
 
-        if (!_do_write (fd, buf, wipe_size))
-                goto out;
+  if (!_do_write (fd, buf, wipe_size))
+    goto out;
 
-        ret = TRUE;
+  ret = TRUE;
 
-out:
-        return ret;
+ out:
+  return ret;
 }
 #endif
 
@@ -110,127 +119,140 @@ out:
  * signatures.
  **/
 static inline gboolean
-scrub_signatures (const char *device, guint64 offset, guint64 size)
+scrub_signatures (const char *device,
+                  guint64 offset,
+                  guint64 size)
 {
-        int fd;
-        gboolean ret;
-        char buf[128 * 1024];
-        guint64 wipe_size;
+  int fd;
+  gboolean ret;
+  char buf[128 * 1024];
+  guint64 wipe_size;
 
-        fd = 0;
-        ret = FALSE;
+  fd = 0;
+  ret = FALSE;
 
-        fd = open (device, O_WRONLY);
-        if (fd < 0) {
-                g_printerr ("cannot open device: %m\n");
-                goto out;
+  fd = open (device, O_WRONLY);
+  if (fd < 0)
+    {
+      g_printerr ("cannot open device: %m\n");
+      goto out;
+    }
+
+  if (size == 0)
+    {
+      if (ioctl (fd, BLKGETSIZE64, &size) != 0)
+        {
+          g_printerr ("cannot determine size of device: %m\n");
+          goto out;
         }
+    }
 
-        if (size == 0) {
-                if (ioctl (fd, BLKGETSIZE64, &size) != 0) {
-                        g_printerr ("cannot determine size of device: %m\n");
-                        goto out;
-                }
-        }
+  memset (buf, '\0', sizeof(buf));
 
-        memset (buf, '\0', sizeof (buf));
+  /* wipe first and last 128KB. Note that btrfs keeps signatures at 0x10000 == 64KB. */
+  wipe_size = 128 * 1024;
+  memset (buf, '\0', sizeof(buf));
 
-        /* wipe first and last 128KB. Note that btrfs keeps signatures at 0x10000 == 64KB. */
-        wipe_size = 128 * 1024;
-        memset (buf, '\0', sizeof (buf));
+  if (wipe_size > size)
+    {
+      wipe_size = size;
+    }
 
-        if (wipe_size > size) {
-                wipe_size = size;
-        }
+  if (lseek64 (fd, offset, SEEK_SET) == (off64_t) - 1)
+    {
+      g_printerr ("cannot seek to %" G_GINT64_FORMAT ": %m", offset);
+      goto out;
+    }
 
-        if (lseek64 (fd, offset, SEEK_SET) == (off64_t) -1) {
-                g_printerr ("cannot seek to %" G_GINT64_FORMAT ": %m", offset);
-                goto out;
-        }
+  if (!_do_write (fd, buf, wipe_size))
+    goto out;
 
-        if (!_do_write (fd, buf, wipe_size))
-                goto out;
+  if (lseek64 (fd, offset + size - wipe_size, SEEK_SET) == (off64_t) - 1)
+    {
+      g_printerr ("cannot seek to %" G_GINT64_FORMAT ": %m", offset + size - wipe_size);
+      goto out;
+    }
 
-        if (lseek64 (fd, offset + size - wipe_size, SEEK_SET) == (off64_t) -1) {
-                g_printerr ("cannot seek to %" G_GINT64_FORMAT ": %m", offset + size - wipe_size);
-                goto out;
-        }
+  if (!_do_write (fd, buf, wipe_size))
+    goto out;
 
-        if (!_do_write (fd, buf, wipe_size))
-                goto out;
+  ret = TRUE;
 
-        ret = TRUE;
-
-out:
-        if (fd >= 0)
-                close (fd);
-        return ret;
+ out:
+  if (fd >= 0)
+    close (fd);
+  return ret;
 }
 
-
 static inline gboolean
-validate_and_escape_label (char **label, int max_len)
+validate_and_escape_label (char **label,
+                           int max_len)
 {
-        int n;
-        gboolean ret;
-        GString *s;
+  int n;
+  gboolean ret;
+  GString *s;
 
-        ret = FALSE;
+  ret = FALSE;
 
-        if ((int) strlen (*label) > max_len) {
-                g_printerr ("given file system label exceeds %d characters\n", max_len);
-                goto out;
+  if ((int) strlen (*label) > max_len)
+    {
+      g_printerr ("given file system label exceeds %d characters\n", max_len);
+      goto out;
+    }
+
+  /* escape '"' */
+  s = g_string_new (*label);
+  for (n = 0; n < (int) s->len; n++)
+    {
+      if (s->str[n] == '"')
+        {
+          g_string_insert_c (s, n, '\\');
+          n++;
         }
+    }
+  g_free (*label);
+  *label = g_string_free (s, FALSE);
 
-        /* escape '"' */
-        s = g_string_new (*label);
-        for (n = 0; n < (int) s->len; n++) {
-                if (s->str[n] == '"') {
-                        g_string_insert_c (s, n, '\\');
-                        n++;
-                }
-        }
-        g_free (*label);
-        *label = g_string_free (s, FALSE);
-
-        ret = TRUE;
-out:
-        return ret;
+  ret = TRUE;
+ out:
+  return ret;
 }
 
 static inline gboolean
 reread_partition_table (const gchar *device_file)
 {
-        gint fd;
-        gboolean ret;
-        guint num_retries;
+  gint fd;
+  gboolean ret;
+  guint num_retries;
 
-        ret = FALSE;
-        num_retries = 0;
+  ret = FALSE;
+  num_retries = 0;
 
-        fd = open (device_file, O_RDONLY);
-        if (fd < 0) {
-                g_printerr ("cannot open %s (for BLKRRPART): %m\n", device_file);
-                goto out;
-        }
+  fd = open (device_file, O_RDONLY);
+  if (fd < 0)
+    {
+      g_printerr ("cannot open %s (for BLKRRPART): %m\n", device_file);
+      goto out;
+    }
  try_again:
-        if (ioctl (fd, BLKRRPART) != 0) {
-                if (errno == EBUSY && num_retries < 20) {
-                        usleep (250 * 1000);
-                        num_retries++;
-                        goto try_again;
-                }
-                close (fd);
-                g_printerr ("BLKRRPART ioctl failed for %s: %m\n", device_file);
-                goto out;
+  if (ioctl (fd, BLKRRPART) != 0)
+    {
+      if (errno == EBUSY && num_retries < 20)
+        {
+          usleep (250 * 1000);
+          num_retries++;
+          goto try_again;
         }
-        close (fd);
+      close (fd);
+      g_printerr ("BLKRRPART ioctl failed for %s: %m\n", device_file);
+      goto out;
+    }
+  close (fd);
 
-        ret = TRUE;
+  ret = TRUE;
 
  out:
-        return ret;
+  return ret;
 }
-
 
 #endif /* __JOB_SHARED_H__ */

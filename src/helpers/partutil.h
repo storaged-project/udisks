@@ -30,12 +30,13 @@
 #include <glib.h>
 
 /* Partition schemes understood by this library */
-typedef enum {
-	PART_TYPE_MSDOS           = 0,
-	PART_TYPE_MSDOS_EXTENDED  = 1,
-	PART_TYPE_APPLE           = 2,
-	PART_TYPE_GPT             = 3
-} PartitionScheme;
+typedef enum
+  {
+    PART_TYPE_MSDOS = 0,
+    PART_TYPE_MSDOS_EXTENDED = 1,
+    PART_TYPE_APPLE = 2,
+    PART_TYPE_GPT = 3
+  } PartitionScheme;
 
 /**
  * part_get_scheme_name:
@@ -50,11 +51,11 @@ typedef enum {
  *
  * Returns: Name of scheme or NULL for unknown scheme. Caller shall not free this string.
  */
-const char           *part_get_scheme_name (PartitionScheme scheme);
+const char *
+part_get_scheme_name (PartitionScheme scheme);
 
 struct PartitionTable_s;
 typedef struct PartitionTable_s PartitionTable;
-
 
 /**
  * part_table_load_from_disk:
@@ -64,7 +65,8 @@ typedef struct PartitionTable_s PartitionTable;
  *
  * Returns: A partition table object. Use part_table_free() to free this object.
  */
-PartitionTable       *part_table_load_from_disk   (int fd);
+PartitionTable *
+part_table_load_from_disk (int fd);
 
 /**
  * part_table_free:
@@ -72,7 +74,8 @@ PartitionTable       *part_table_load_from_disk   (int fd);
  *
  * Frees the partition table returned from part_table_load_from_disk().
  */
-void                  part_table_free             (PartitionTable *part_table);
+void
+part_table_free (PartitionTable *part_table);
 
 /* partition table inspection */
 
@@ -80,11 +83,12 @@ void                  part_table_free             (PartitionTable *part_table);
  * part_table_get_scheme:
  * @part_table: the partition table
  *
- * Get partitioning scheme. 
+ * Get partitioning scheme.
  *
  * Returns: The partitioning scheme.
  */
-PartitionScheme       part_table_get_scheme       (PartitionTable *part_table);
+PartitionScheme
+part_table_get_scheme (PartitionTable *part_table);
 
 /**
  * part_table_get_num_entries:
@@ -94,7 +98,8 @@ PartitionScheme       part_table_get_scheme       (PartitionTable *part_table);
  *
  * Returns: Number of entries.
  */
-int                   part_table_get_num_entries  (PartitionTable *part_table);
+int
+part_table_get_num_entries (PartitionTable *part_table);
 
 /**
  * part_table_get_offset:
@@ -106,7 +111,8 @@ int                   part_table_get_num_entries  (PartitionTable *part_table);
  *
  * Returns: offset, from start of disk, in bytes
  */
-guint64               part_table_get_offset (PartitionTable *part_table);
+guint64
+part_table_get_offset (PartitionTable *part_table);
 
 /**
  * part_table_get_size:
@@ -118,7 +124,8 @@ guint64               part_table_get_offset (PartitionTable *part_table);
  *
  * Returns: size of partition, in bytes
  */
-guint64               part_table_get_size   (PartitionTable *part_table);
+guint64
+part_table_get_size (PartitionTable *part_table);
 
 /**
  * part_table_find:
@@ -133,18 +140,18 @@ guint64               part_table_get_size   (PartitionTable *part_table);
  * the one passed. If the offset belongs to a primary partition then the
  * return partition_table will be the same as the passed one.
  *
- * If there is no partition at the given offset (might be free space), 
+ * If there is no partition at the given offset (might be free space),
  * out_entry will be set to -1. Note that out_part_table will always
- * be set though and free space in the primary disk space and the 
+ * be set though and free space in the primary disk space and the
  * extended partition space differs.
  *
  * This is a convenience function.
  */
-void                  part_table_find (PartitionTable *part_table, 
-				       guint64 offset,
-				       PartitionTable **out_part_table, 
-				       int *out_entry);
-
+void
+part_table_find (PartitionTable *part_table,
+                 guint64 offset,
+                 PartitionTable **out_part_table,
+                 int *out_entry);
 
 /**
  * part_table_entry_get_nested:
@@ -158,7 +165,9 @@ void                  part_table_find (PartitionTable *part_table,
  *          Do not free with part_table_free() - the object will be freed when
  *          freeing the root object.
  */
-PartitionTable       *part_table_entry_get_nested (PartitionTable *part_table, int entry);
+PartitionTable *
+part_table_entry_get_nested (PartitionTable *part_table,
+                             int entry);
 
 /**
  * part_table_entry_is_in_use:
@@ -175,7 +184,9 @@ PartitionTable       *part_table_entry_get_nested (PartitionTable *part_table, i
  *
  * Returns: Whether the partition table entry is in use
  */
-gboolean             part_table_entry_is_in_use (PartitionTable *part_table, int entry);
+gboolean
+part_table_entry_is_in_use (PartitionTable *part_table,
+                            int entry);
 
 /**
  * part_table_entry_get_type:
@@ -193,15 +204,17 @@ gboolean             part_table_entry_is_in_use (PartitionTable *part_table, int
  * For PART_TYPE_GPT, this is the GUID encoded as a string, see
  * http://en.wikipedia.org/wiki/GUID_Partition_Table for details.
  *
- * For PART_TYPE_APPLE, this is a string as defined in 
+ * For PART_TYPE_APPLE, this is a string as defined in
  * http://developer.apple.com/documentation/mac/Devices/Devices-126.html.
  * For FAT file systems, it appears that "DOS_FAT_32", "DOS_FAT_16" and
- * "DOS_FAT_12" are also recognized under Mac OS X (I've tested this too) cf. 
+ * "DOS_FAT_12" are also recognized under Mac OS X (I've tested this too) cf.
  * http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html
  *
  * Returns: The partition table type. Caller shall free this with g_free().
  */
-char                 *part_table_entry_get_type   (PartitionTable *part_table, int entry);
+char *
+part_table_entry_get_type (PartitionTable *part_table,
+                           int entry);
 
 /**
  * part_table_entry_get_label:
@@ -215,7 +228,9 @@ char                 *part_table_entry_get_type   (PartitionTable *part_table, i
  * Returns: The label or NULL if the partitioning scheme does not support
  *          labels. Caller shall free this with g_free().
  */
-char                 *part_table_entry_get_label  (PartitionTable *part_table, int entry);
+char *
+part_table_entry_get_label (PartitionTable *part_table,
+                            int entry);
 
 /**
  * part_table_entry_get_uuid:
@@ -227,7 +242,9 @@ char                 *part_table_entry_get_label  (PartitionTable *part_table, i
  * Returns: The UUID or NULL if the partitioning scheme does not support
  *          UUID/GUID. Caller shall free this with g_free().
  */
-char                 *part_table_entry_get_uuid  (PartitionTable *part_table, int entry);
+char *
+part_table_entry_get_uuid (PartitionTable *part_table,
+                           int entry);
 
 /**
  * part_table_entry_get_flags:
@@ -238,7 +255,7 @@ char                 *part_table_entry_get_uuid  (PartitionTable *part_table, in
  * scheme.
  *
  * For PART_TYPE_MSDOS and PART_TYPE_MSDOS_EXTENDED the following flags are
- * recognized: 
+ * recognized:
  * - "boot"; meaning that the bootable flag is set. This is used by some
  *   BIOS'es and boot loaders to populate a boot menu.
  *
@@ -263,7 +280,9 @@ char                 *part_table_entry_get_uuid  (PartitionTable *part_table, in
  * Returns: An array of strings, one per flag, terminated by NULL. Caller
  *          shall free this with g_strfreev().
  */
-char                **part_table_entry_get_flags  (PartitionTable *part_table, int entry);
+char **
+part_table_entry_get_flags (PartitionTable *part_table,
+                            int entry);
 
 /**
  * part_table_entry_get_offset:
@@ -275,7 +294,9 @@ char                **part_table_entry_get_flags  (PartitionTable *part_table, i
  *
  * Returns: offset, from start of disk, in bytes
  */
-guint64               part_table_entry_get_offset (PartitionTable *part_table, int entry);
+guint64
+part_table_entry_get_offset (PartitionTable *part_table,
+                             int entry);
 
 /**
  * part_table_entry_get_size:
@@ -286,8 +307,9 @@ guint64               part_table_entry_get_offset (PartitionTable *part_table, i
  *
  * Returns: size of partition, in bytes
  */
-guint64               part_table_entry_get_size   (PartitionTable *part_table, int entry);
-
+guint64
+part_table_entry_get_size (PartitionTable *part_table,
+                           int entry);
 
 /**
  * part_create_partition_table:
@@ -295,11 +317,12 @@ guint64               part_table_entry_get_size   (PartitionTable *part_table, i
  * @scheme: the partitioning scheme
  *
  * Create a new fresh partition on a disk.
- * 
+ *
  * Returns: TRUE if the operation was succesful, otherwise FALSE
  */
-gboolean              part_create_partition_table (char *device, PartitionScheme scheme);
-
+gboolean
+part_create_partition_table (char *device,
+                             PartitionScheme scheme);
 
 /**
  * part_add_partition:
@@ -316,14 +339,14 @@ gboolean              part_create_partition_table (char *device, PartitionScheme
  * @poke_kernel: whether to update the kernels in-memory representation of
  * the partition table
  *
- * Adds a new partition to a disk. 
+ * Adds a new partition to a disk.
  *
  * If geometry_hps and geomtry_spt are both positive, they will be
  * used as the geometry of the disk for CHS<->LBA conversions. Notably
  * this is only applicable for MSDOS / MSDOS_EXTENDED partition
  * tables. Also, in this case, geometry is enforced to ensure that
  * partitions start and end at cylinder boundaries.
- * 
+ *
  * If either geometry_hps or geomtry_spt are zero, geometry is
  * simply ignored and partitions will only be aligned to blocks, e.g.
  * normally 512 byte boundaries.
@@ -356,12 +379,19 @@ gboolean              part_create_partition_table (char *device, PartitionScheme
  *
  * Returns: TRUE if the operation was succesful, otherwise FALSE
  */
-gboolean              part_add_partition (char *device, 
-					  guint64 start, guint64 size, 
-					  guint64 *out_start, guint64 *out_size, guint *out_num,
-					  char *type, char *label, char **flags,
-					  int geometry_hps, int geometry_spt,
-                                          gboolean poke_kernel);
+gboolean
+part_add_partition (char *device,
+                    guint64 start,
+                    guint64 size,
+                    guint64 *out_start,
+                    guint64 *out_size,
+                    guint *out_num,
+                    char *type,
+                    char *label,
+                    char **flags,
+                    int geometry_hps,
+                    int geometry_spt,
+                    gboolean poke_kernel);
 
 /**
  * part_change_partition:
@@ -378,8 +408,8 @@ gboolean              part_add_partition (char *device,
  * @geometry_spt: sectors-per-track used for LBA<->CHS conversions
  *
  * Changes an existing partition table entry on disk. The contents of
- * the partition will not be touched. 
- * 
+ * the partition will not be touched.
+ *
  * XXX TODO FIXME: probably be careful with overlapping partitions as
  * e.g. extended MS-DOS partitions have the partition information just
  * before the partition data itself. Need to look into this.
@@ -407,12 +437,18 @@ gboolean              part_add_partition (char *device,
  *
  * Returns: TRUE if the operation was succesful, otherwise FALSE
  */
-gboolean              part_change_partition (char *device_file, 
-					     guint64 start, 
-					     guint64 new_start, guint64 new_size,
-					     guint64 *out_start, guint64 *out_size, 
-					     char *type, char *label, char **flags,
-					     int geometry_hps, int geometry_spt);
+gboolean
+part_change_partition (char *device_file,
+                       guint64 start,
+                       guint64 new_start,
+                       guint64 new_size,
+                       guint64 *out_start,
+                       guint64 *out_size,
+                       char *type,
+                       char *label,
+                       char **flags,
+                       int geometry_hps,
+                       int geometry_spt);
 
 /**
  * part_del_partition:
@@ -431,7 +467,9 @@ gboolean              part_change_partition (char *device_file,
  *
  * Returns: TRUE if the operation was succesful, otherwise FALSE
  */
-gboolean              part_del_partition (char *device, guint64 offset, gboolean poke_kernel);
-
+gboolean
+part_del_partition (char *device,
+                    guint64 offset,
+                    gboolean poke_kernel);
 
 #endif /* PARTUTIL_H */

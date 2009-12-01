@@ -32,34 +32,34 @@ G_BEGIN_DECLS
 #define IS_MOUNT_MONITOR_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), TYPE_MOUNT_MONITOR))
 #define MOUNT_MONITOR_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), TYPE_MOUNT_MONITOR, MountMonitorClass))
 
-typedef struct MountMonitorClass   MountMonitorClass;
+typedef struct MountMonitorClass MountMonitorClass;
 typedef struct MountMonitorPrivate MountMonitorPrivate;
 
 struct MountMonitor
 {
-        GObject                         parent;
+  GObject parent;
 
-        /*< private >*/
-        MountMonitorPrivate *priv;
+  /*< private >*/
+  MountMonitorPrivate *priv;
 };
 
 struct MountMonitorClass
 {
-        GObjectClass   parent_class;
+  GObjectClass parent_class;
 
-        /*< public >*/
-        /* signals */
-        void (*mount_added)   (MountMonitor *monitor,
-                               Mount        *mount);
-        void (*mount_removed) (MountMonitor *monitor,
-                               Mount        *mount);
+  /*< public >*/
+  /* signals */
+  void (*mount_added) (MountMonitor *monitor,
+                       Mount *mount);
+  void (*mount_removed) (MountMonitor *monitor,
+                         Mount *mount);
 };
 
-GType                    mount_monitor_get_type                  (void) G_GNUC_CONST;
-MountMonitor *mount_monitor_new                       (void);
-GList                   *mount_monitor_get_mounts_for_dev        (MountMonitor *monitor,
-                                                                               dev_t                    dev);
-void                     mount_monitor_invalidate                (MountMonitor *monitor);
+GType mount_monitor_get_type (void) G_GNUC_CONST;
+MountMonitor *mount_monitor_new (void);
+GList *mount_monitor_get_mounts_for_dev (MountMonitor *monitor,
+                                         dev_t dev);
+void mount_monitor_invalidate (MountMonitor *monitor);
 
 G_END_DECLS
 

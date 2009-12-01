@@ -36,37 +36,37 @@ G_BEGIN_DECLS
 #define IS_PORT_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), TYPE_PORT))
 #define PORT_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), TYPE_PORT, PortClass))
 
-typedef struct PortClass   PortClass;
+typedef struct PortClass PortClass;
 typedef struct PortPrivate PortPrivate;
 
 struct Port
 {
-        GObject                 parent;
-        PortPrivate *priv;
+  GObject parent;
+  PortPrivate *priv;
 };
 
 struct PortClass
 {
-        GObjectClass parent_class;
+  GObjectClass parent_class;
 };
 
-GType              port_get_type              (void) G_GNUC_CONST;
+GType    port_get_type (void) G_GNUC_CONST;
 
-Port *port_new               (Daemon     *daemon,
-                                                      GUdevDevice           *d);
+Port    *port_new (Daemon *daemon,
+                   GUdevDevice *d);
 
-gboolean           port_changed         (Port *port,
-                                                      GUdevDevice     *d,
-                                                      gboolean         synthesized);
+gboolean port_changed (Port *port,
+                       GUdevDevice *d,
+                       gboolean synthesized);
 
-void               port_removed         (Port *port);
+void     port_removed (Port *port);
 
 /* local methods */
 
 const char *port_local_get_object_path      (Port *port);
 const char *port_local_get_native_path      (Port *port);
 gboolean    local_port_encloses_native_path (Port *port,
-                                                          const gchar     *native_path);
+                                             const gchar *native_path);
 
 G_END_DECLS
 

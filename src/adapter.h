@@ -36,35 +36,35 @@ G_BEGIN_DECLS
 #define IS_ADAPTER_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE ((k), TYPE_ADAPTER))
 #define ADAPTER_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS ((o), TYPE_ADAPTER, AdapterClass))
 
-typedef struct AdapterClass   AdapterClass;
+typedef struct AdapterClass AdapterClass;
 typedef struct AdapterPrivate AdapterPrivate;
 
 struct Adapter
 {
-        GObject                    parent;
-        AdapterPrivate *priv;
+  GObject parent;
+  AdapterPrivate *priv;
 };
 
 struct AdapterClass
 {
-        GObjectClass parent_class;
+  GObjectClass parent_class;
 };
 
-GType              adapter_get_type              (void) G_GNUC_CONST;
+GType adapter_get_type (void) G_GNUC_CONST;
 
-Adapter *adapter_new                  (Daemon     *daemon,
-                                                               GUdevDevice           *d);
+Adapter *adapter_new (Daemon *daemon,
+                      GUdevDevice *d);
 
-gboolean           adapter_changed               (Adapter *adapter,
-                                                               GUdevDevice           *d,
-                                                               gboolean               synthesized);
+gboolean adapter_changed (Adapter *adapter,
+                          GUdevDevice *d,
+                          gboolean synthesized);
 
-void               adapter_removed               (Adapter *adapter);
+void adapter_removed (Adapter *adapter);
 
 /* local methods */
 
-const char        *adapter_local_get_object_path (Adapter *adapter);
-const char        *adapter_local_get_native_path (Adapter *adapter);
+const char *adapter_local_get_object_path (Adapter *adapter);
+const char *adapter_local_get_native_path (Adapter *adapter);
 
 G_END_DECLS
 

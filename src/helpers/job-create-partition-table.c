@@ -41,63 +41,79 @@
 #include "partutil.h"
 
 int
-main (int argc, char **argv)
+main (int argc,
+      char **argv)
 {
-        int ret;
-        const char *device;
-        const char *scheme;
-        char **options;
-        int n;
-        PartitionScheme pscheme;
-        gboolean no_partition_table;
+  int ret;
+  const char *device;
+  const char *scheme;
+  char **options;
+  int n;
+  PartitionScheme pscheme;
+  gboolean no_partition_table;
 
-        ret = 1;
-        no_partition_table = FALSE;
-        pscheme = PART_TYPE_MSDOS;
+  ret = 1;
+  no_partition_table = FALSE;
+  pscheme = PART_TYPE_MSDOS;
 
-        if (argc < 3) {
-                g_printerr ("wrong usage\n");
-                goto out;
-        }
-        device = argv[1];
-        scheme = argv[2];
-        options = argv + 3;
+  if (argc < 3)
+    {
+      g_printerr ("wrong usage\n");
+      goto out;
+    }
+  device = argv[1];
+  scheme = argv[2];
+  options = argv + 3;
 
-        for (n = 0; options[n] != NULL; n++) {
-                g_printerr ("option %s not supported\n", options[n]);
-                goto out;
-        }
+  for (n = 0; options[n] != NULL; n++)
+    {
+      g_printerr ("option %s not supported\n", options[n]);
+      goto out;
+    }
 
-        if (strcmp (scheme, "mbr") == 0) {
-                pscheme = PART_TYPE_MSDOS;
-        } else if (strcmp (scheme, "gpt") == 0) {
-                pscheme = PART_TYPE_GPT;
-        } else if (strcmp (scheme, "apm") == 0) {
-                pscheme = PART_TYPE_APPLE;
-        } else if (strcmp (scheme, "none") == 0) {
-                no_partition_table = TRUE;
-        } else {
-                g_printerr ("partitioning scheme %s not supported\n", scheme);
-                goto out;
-        }
+  if (strcmp (scheme, "mbr") == 0)
+    {
+      pscheme = PART_TYPE_MSDOS;
+    }
+  else if (strcmp (scheme, "gpt") == 0)
+    {
+      pscheme = PART_TYPE_GPT;
+    }
+  else if (strcmp (scheme, "apm") == 0)
+    {
+      pscheme = PART_TYPE_APPLE;
+    }
+  else if (strcmp (scheme, "none") == 0)
+    {
+      no_partition_table = TRUE;
+    }
+  else
+    {
+      g_printerr ("partitioning scheme %s not supported\n", scheme);
+      goto out;
+    }
 
-        /* scrub signatures */
-        if (!scrub_signatures (device, 0, 0))
-                goto out;
+  /* scrub signatures */
+  if (!scrub_signatures (device, 0, 0))
+    goto out;
 
-        if (no_partition_table) {
-                ret = 0;
-        } else {
-                if (part_create_partition_table ((char *) device, pscheme))
-                        ret = 0;
-        }
+  if (no_partition_table)
+    {
+      ret = 0;
+    }
+  else
+    {
+      if (part_create_partition_table ((char *) device, pscheme))
+        ret = 0;
+    }
 
-        /* reread partition table */
-        if (!reread_partition_table (device)) {
-                ret = 1;
-                goto out;
-        }
+  /* reread partition table */
+  if (!reread_partition_table (device))
+    {
+      ret = 1;
+      goto out;
+    }
 
-out:
-        return ret;
+ out:
+  return ret;
 }

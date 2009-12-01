@@ -27,43 +27,47 @@
 static void
 usage (void)
 {
-        fprintf (stderr, "incorrect usage\n");
+  fprintf (stderr, "incorrect usage\n");
 }
 
 int
-main (int argc, char *argv[])
+main (int argc,
+      char *argv[])
 {
-        int ret;
-        const char *device;
-        SkDisk *d;
-        SkBool smart_is_available;
+  int ret;
+  const char *device;
+  SkDisk *d;
+  SkBool smart_is_available;
 
-        d = NULL;
-        ret = 1;
+  d = NULL;
+  ret = 1;
 
-        if (argc != 2) {
-                usage ();
-                goto out;
-        }
+  if (argc != 2)
+    {
+      usage ();
+      goto out;
+    }
 
-        device = argv[1];
+  device = argv[1];
 
-        if (sk_disk_open (device, &d) < 0) {
-                fprintf (stderr, "Failed to open disk %s: %s\n", device, strerror (errno));
-                goto out;
-        }
+  if (sk_disk_open (device, &d) < 0)
+    {
+      fprintf (stderr, "Failed to open disk %s: %s\n", device, strerror (errno));
+      goto out;
+    }
 
-        if (sk_disk_smart_is_available (d, &smart_is_available) != 0) {
-                fprintf (stderr, "Failed to determine if smart is available for %s: %s\n", device, strerror (errno));
-                goto out;
-        }
+  if (sk_disk_smart_is_available (d, &smart_is_available) != 0)
+    {
+      fprintf (stderr, "Failed to determine if smart is available for %s: %s\n", device, strerror (errno));
+      goto out;
+    }
 
-        printf ("UDISKS_ATA_SMART_IS_AVAILABLE=%d\n", smart_is_available);
+  printf ("UDISKS_ATA_SMART_IS_AVAILABLE=%d\n", smart_is_available);
 
-        ret = 0;
+  ret = 0;
 
  out:
-        if (d != NULL)
-                sk_disk_free (d);
-        return ret;
+  if (d != NULL)
+    sk_disk_free (d);
+  return ret;
 }
