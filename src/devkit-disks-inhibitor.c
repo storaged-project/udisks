@@ -96,7 +96,7 @@ devkit_disks_inhibitor_new (DBusGMethodInvocation *context)
         inhibitor->priv->unique_dbus_name = g_strdup (dbus_g_method_get_sender (context));
 
         /* TODO: maybe use a real random number (if it turns out we need this to be cryptographically secure etc.) */
-        inhibitor->priv->cookie = g_strdup_printf ("devkit_disks_inhibitor_%d", inhibitor_count++);
+        inhibitor->priv->cookie = g_strdup_printf ("udisks_inhibitor_%d", inhibitor_count++);
 
         inhibitors = g_list_prepend (inhibitors, inhibitor);
 

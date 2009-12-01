@@ -216,7 +216,7 @@ compute_object_path (const char *native_path)
                 basename = native_path;
         }
 
-        s = g_string_new ("/org/freedesktop/DeviceKit/Disks/adapters/");
+        s = g_string_new ("/org/freedesktop/UDisks/adapters/");
         for (n = 0; basename[n] != '\0'; n++) {
                 gint c = basename[n];
 

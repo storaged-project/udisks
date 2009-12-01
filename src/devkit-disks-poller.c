@@ -208,9 +208,9 @@ read_more:
                         poller_timeout_id = 0;
                 }
 
-                set_proc_title ("devkit-disks-daemon: not polling any devices");
+                set_proc_title ("udisks-daemon: not polling any devices");
         } else {
-                set_proc_title ("devkit-disks-daemon: polling %s", line + strlen ("set-poll:"));
+                set_proc_title ("udisks-daemon: polling %s", line + strlen ("set-poll:"));
 
                 if (poller_timeout_id == 0) {
                         poller_timeout_id = g_timeout_add_seconds (2, poller_timeout_cb, NULL);

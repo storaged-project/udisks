@@ -45,9 +45,9 @@
 
 #include <atasmart.h>
 
-#include "devkit-disks-daemon-glue.h"
-#include "devkit-disks-device-glue.h"
-#include "devkit-disks-marshal.h"
+#include "udisks-daemon-glue.h"
+#include "udisks-device-glue.h"
+#include "udisks-marshal.h"
 
 static DBusGConnection     *bus = NULL;
 static DBusGProxy          *disks_proxy = NULL;
@@ -98,11 +98,11 @@ do_ata_smart_refresh (const gchar *object_path,
         g_ptr_array_add (options, NULL);
 
 	proxy = dbus_g_proxy_new_for_name (bus,
-                                           "org.freedesktop.DeviceKit.Disks",
+                                           "org.freedesktop.UDisks",
                                            object_path,
-                                           "org.freedesktop.DeviceKit.Disks.Device");
+                                           "org.freedesktop.UDisks.Device");
         error = NULL;
-        if (!org_freedesktop_DeviceKit_Disks_Device_drive_ata_smart_refresh_data (proxy,
+        if (!org_freedesktop_UDisks_Device_drive_ata_smart_refresh_data (proxy,
                                                                                   (const char **) options->pdata,
                                                                                   &error)) {
                 g_print ("Refreshing ATA SMART data failed: %s\n", error->message);
@@ -130,11 +130,11 @@ do_mount (const char *object_path,
                 mount_options = g_strsplit (options, ",", 0);
 
 	proxy = dbus_g_proxy_new_for_name (bus,
-                                           "org.freedesktop.DeviceKit.Disks",
+                                           "org.freedesktop.UDisks",
                                            object_path,
-                                           "org.freedesktop.DeviceKit.Disks.Device");
+                                           "org.freedesktop.UDisks.Device");
         error = NULL;
-        if (!org_freedesktop_DeviceKit_Disks_Device_filesystem_mount (proxy,
+        if (!org_freedesktop_UDisks_Device_filesystem_mount (proxy,
                                                                       filesystem_type,
                                                                       (const char **) mount_options,
                                                                       &mount_path,
@@ -163,12 +163,12 @@ do_unmount (const char *object_path,
                 unmount_options = g_strsplit (options, ",", 0);
 
 	proxy = dbus_g_proxy_new_for_name (bus,
-                                           "org.freedesktop.DeviceKit.Disks",
+                                           "org.freedesktop.UDisks",
                                            object_path,
-                                           "org.freedesktop.DeviceKit.Disks.Device");
+                                           "org.freedesktop.UDisks.Device");
 
         error = NULL;
-        if (!org_freedesktop_DeviceKit_Disks_Device_filesystem_unmount (proxy,
+        if (!org_freedesktop_UDisks_Device_filesystem_unmount (proxy,
                                                                         (const char **) unmount_options,
                                                                         &error)) {
                 g_print ("Unmount failed: %s\n", error->message);
@@ -191,12 +191,12 @@ do_detach (const char *object_path,
                 unmount_options = g_strsplit (options, ",", 0);
 
 	proxy = dbus_g_proxy_new_for_name (bus,
-                                           "org.freedesktop.DeviceKit.Disks",
+                                           "org.freedesktop.UDisks",
                                            object_path,
-                                           "org.freedesktop.DeviceKit.Disks.Device");
+                                           "org.freedesktop.UDisks.Device");
 
         error = NULL;
-        if (!org_freedesktop_DeviceKit_Disks_Device_drive_detach (proxy,
+        if (!org_freedesktop_UDisks_Device_drive_detach (proxy,
                                                                   (const char **) options,
                                                                   &error)) {
                 g_print ("Detach failed: %s\n", error->message);
@@ -285,7 +285,7 @@ device_removed_signal_handler (DBusGProxy *proxy, const char *object_path, gpoin
 /* This totally sucks; dbus-bindings-tool and dbus-glib should be able
  * to do this for us.
  *
- * TODO: keep in sync with code in tools/devkit-disks in DeviceKit-disks.
+ * TODO: keep in sync with code in tools/udisks in udisks.
  */
 
 typedef struct
@@ -733,12 +733,12 @@ device_properties_get (DBusGConnection *bus,
         GError *error;
         GHashTable *hash_table;
         DBusGProxy *prop_proxy;
-        const char *ifname = "org.freedesktop.DeviceKit.Disks.Device";
+        const char *ifname = "org.freedesktop.UDisks.Device";
 
         props = g_new0 (DeviceProperties, 1);
 
 	prop_proxy = dbus_g_proxy_new_for_name (bus,
-                                                "org.freedesktop.DeviceKit.Disks",
+                                                "org.freedesktop.UDisks",
                                                 object_path,
                                                 "org.freedesktop.DBus.Properties");
         error = NULL;
@@ -1229,12 +1229,12 @@ do_poll_for_media (const char *object_path)
         ret = 1;
 
 	proxy = dbus_g_proxy_new_for_name (bus,
-                                           "org.freedesktop.DeviceKit.Disks",
+                                           "org.freedesktop.UDisks",
                                            object_path,
-                                           "org.freedesktop.DeviceKit.Disks.Device");
+                                           "org.freedesktop.UDisks.Device");
 
         error = NULL;
-        if (!org_freedesktop_DeviceKit_Disks_Device_drive_poll_media (proxy,
+        if (!org_freedesktop_UDisks_Device_drive_poll_media (proxy,
                                                                       &error)) {
                 g_print ("Poll for media failed: %s\n", error->message);
                 g_error_free (error);
@@ -1270,12 +1270,12 @@ do_inhibit_polling (const char *object_path,
 	}
 
 	proxy = dbus_g_proxy_new_for_name (bus,
-                                           "org.freedesktop.DeviceKit.Disks",
+                                           "org.freedesktop.UDisks",
                                            object_path,
-                                           "org.freedesktop.DeviceKit.Disks.Device");
+                                           "org.freedesktop.UDisks.Device");
 
         error = NULL;
-        if (!org_freedesktop_DeviceKit_Disks_Device_drive_inhibit_polling (proxy,
+        if (!org_freedesktop_UDisks_Device_drive_inhibit_polling (proxy,
                                                                            (const char **) options,
                                                                            &cookie,
                                                                            &error)) {
@@ -1342,12 +1342,12 @@ do_inhibit_all_polling (gint         argc,
 	}
 
 	proxy = dbus_g_proxy_new_for_name (bus,
-                                           "org.freedesktop.DeviceKit.Disks",
-                                           "/org/freedesktop/DeviceKit/Disks",
-                                           "org.freedesktop.DeviceKit.Disks");
+                                           "org.freedesktop.UDisks",
+                                           "/org/freedesktop/UDisks",
+                                           "org.freedesktop.UDisks");
 
         error = NULL;
-        if (!org_freedesktop_DeviceKit_Disks_drive_inhibit_all_polling (proxy,
+        if (!org_freedesktop_UDisks_drive_inhibit_all_polling (proxy,
                                                                         (const char **) options,
                                                                         &cookie,
                                                                         &error)) {
@@ -1415,12 +1415,12 @@ do_set_spindown (const char *object_path,
 	}
 
 	proxy = dbus_g_proxy_new_for_name (bus,
-                                           "org.freedesktop.DeviceKit.Disks",
+                                           "org.freedesktop.UDisks",
                                            object_path,
-                                           "org.freedesktop.DeviceKit.Disks.Device");
+                                           "org.freedesktop.UDisks.Device");
 
         error = NULL;
-        if (!org_freedesktop_DeviceKit_Disks_Device_drive_set_spindown_timeout (proxy,
+        if (!org_freedesktop_UDisks_Device_drive_set_spindown_timeout (proxy,
                                                                                 opt_spindown_seconds,
                                                                                 (const char **) options,
                                                                                 &cookie,
@@ -1489,12 +1489,12 @@ do_set_spindown_all (gint         argc,
 	}
 
 	proxy = dbus_g_proxy_new_for_name (bus,
-                                           "org.freedesktop.DeviceKit.Disks",
-                                           "/org/freedesktop/DeviceKit/Disks",
-                                           "org.freedesktop.DeviceKit.Disks");
+                                           "org.freedesktop.UDisks",
+                                           "/org/freedesktop/UDisks",
+                                           "org.freedesktop.UDisks");
 
         error = NULL;
-        if (!org_freedesktop_DeviceKit_Disks_drive_set_all_spindown_timeouts (proxy,
+        if (!org_freedesktop_UDisks_drive_set_all_spindown_timeouts (proxy,
                                                                               opt_spindown_seconds,
                                                                               (const char **) options,
                                                                               &cookie,
@@ -1561,12 +1561,12 @@ do_inhibit (gint         argc,
 	}
 
 	proxy = dbus_g_proxy_new_for_name (bus,
-                                           "org.freedesktop.DeviceKit.Disks",
-                                           "/org/freedesktop/DeviceKit/Disks",
-                                           "org.freedesktop.DeviceKit.Disks");
+                                           "org.freedesktop.UDisks",
+                                           "/org/freedesktop/UDisks",
+                                           "org.freedesktop.UDisks");
 
         error = NULL;
-        if (!org_freedesktop_DeviceKit_Disks_inhibit (proxy,
+        if (!org_freedesktop_UDisks_inhibit (proxy,
                                                       &cookie,
                                                       &error)) {
                 g_print ("Inhibit all polling failed: %s\n", error->message);
@@ -1640,12 +1640,12 @@ device_file_to_object_path (const gchar *device_file)
         }
 
 	proxy = dbus_g_proxy_new_for_name (bus,
-                                           "org.freedesktop.DeviceKit.Disks",
-                                           "/org/freedesktop/DeviceKit/Disks",
-                                           "org.freedesktop.DeviceKit.Disks");
+                                           "org.freedesktop.UDisks",
+                                           "/org/freedesktop/UDisks",
+                                           "org.freedesktop.UDisks");
 
         error = NULL;
-        if (!org_freedesktop_DeviceKit_Disks_find_device_by_major_minor (proxy,
+        if (!org_freedesktop_UDisks_find_device_by_major_minor (proxy,
                                                                          major (statbuf.st_rdev),
                                                                          minor (statbuf.st_rdev),
                                                                          &object_path,
@@ -1707,8 +1707,8 @@ main (int argc, char **argv)
 
         g_type_init ();
 
-        context = g_option_context_new ("DeviceKit-disks tool");
-        g_option_context_set_description (context, "See the devkit-disks man page for details.");
+        context = g_option_context_new ("udisks commandline tool");
+        g_option_context_set_description (context, "See the udisks man page for details.");
         g_option_context_add_main_entries (context, entries, NULL);
         g_option_context_parse (context, &argc, &argv, NULL);
 
@@ -1722,7 +1722,7 @@ main (int argc, char **argv)
         }
 
         dbus_g_object_register_marshaller (
-                devkit_disks_marshal_VOID__BOXED_BOOLEAN_STRING_UINT_BOOLEAN_DOUBLE,
+                udisks_marshal_VOID__BOXED_BOOLEAN_STRING_UINT_BOOLEAN_DOUBLE,
                 G_TYPE_NONE,
                 DBUS_TYPE_G_OBJECT_PATH,
                 G_TYPE_BOOLEAN,
@@ -1733,9 +1733,9 @@ main (int argc, char **argv)
                 G_TYPE_INVALID);
 
 	disks_proxy = dbus_g_proxy_new_for_name (bus,
-                                                 "org.freedesktop.DeviceKit.Disks",
-                                                 "/org/freedesktop/DeviceKit/Disks",
-                                                 "org.freedesktop.DeviceKit.Disks");
+                                                 "org.freedesktop.UDisks",
+                                                 "/org/freedesktop/UDisks",
+                                                 "org.freedesktop.UDisks");
         dbus_g_proxy_add_signal (disks_proxy, "DeviceAdded", DBUS_TYPE_G_OBJECT_PATH, G_TYPE_INVALID);
         dbus_g_proxy_add_signal (disks_proxy, "DeviceRemoved", DBUS_TYPE_G_OBJECT_PATH, G_TYPE_INVALID);
         dbus_g_proxy_add_signal (disks_proxy, "DeviceChanged", DBUS_TYPE_G_OBJECT_PATH, G_TYPE_INVALID);
@@ -1751,7 +1751,7 @@ main (int argc, char **argv)
 
         if (opt_dump) {
                 GPtrArray *devices;
-                if (!org_freedesktop_DeviceKit_Disks_enumerate_devices (disks_proxy, &devices, &error)) {
+                if (!org_freedesktop_UDisks_enumerate_devices (disks_proxy, &devices, &error)) {
                         g_warning ("Couldn't enumerate devices: %s", error->message);
                         g_error_free (error);
                         goto out;
@@ -1768,7 +1768,7 @@ main (int argc, char **argv)
                 g_ptr_array_free (devices, TRUE);
         } else if (opt_enumerate) {
                 GPtrArray *devices;
-                if (!org_freedesktop_DeviceKit_Disks_enumerate_devices (disks_proxy, &devices, &error)) {
+                if (!org_freedesktop_UDisks_enumerate_devices (disks_proxy, &devices, &error)) {
                         g_warning ("Couldn't enumerate devices: %s", error->message);
                         g_error_free (error);
                         goto out;
@@ -1781,7 +1781,7 @@ main (int argc, char **argv)
                 g_ptr_array_free (devices, TRUE);
         } else if (opt_enumerate_device_files) {
                 gchar **device_files;
-                if (!org_freedesktop_DeviceKit_Disks_enumerate_device_files (disks_proxy, &device_files, &error)) {
+                if (!org_freedesktop_UDisks_enumerate_device_files (disks_proxy, &device_files, &error)) {
                         g_warning ("Couldn't enumerate device files: %s", error->message);
                         g_error_free (error);
                         goto out;

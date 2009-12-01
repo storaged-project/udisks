@@ -1,8 +1,8 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59c)
-AC_INIT(DeviceKit-disks, 010, david@fubar.dk)
-AM_INIT_AUTOMAKE(DeviceKit-disks, 010)
+AC_INIT(udisks, 1.0.0, david@fubar.dk)
+AM_INIT_AUTOMAKE(udisks, 1.0.0)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 
@@ -183,7 +183,7 @@ AC_SUBST(slashsbindir)
 # ********************
 
 IT_PROG_INTLTOOL([0.36.0])
-GETTEXT_PACKAGE=DeviceKit-disks
+GETTEXT_PACKAGE=udisks
 AC_SUBST([GETTEXT_PACKAGE])
 AM_GLIB_GNU_GETTEXT
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE],["$GETTEXT_PACKAGE"],[gettext domain])
@@ -191,7 +191,7 @@ AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE],["$GETTEXT_PACKAGE"],[gettext domain])
 AC_OUTPUT([
 Makefile
 data/Makefile
-data/DeviceKit-disks.pc
+data/udisks.pc
 src/Makefile
 tools/Makefile
 doc/Makefile
@@ -204,8 +204,8 @@ po/Makefile.in
 
 dnl ==========================================================================
 echo "
-               DeviceKit-disks $VERSION
-             =======================
+               udisks $VERSION
+             ================
 
         prefix:                     ${prefix}
         libdir:                     ${libdir}

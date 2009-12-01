@@ -1,24 +1,24 @@
-<refentry id="devkit-disks.1">
+<refentry id="udisks.1">
   <refentryinfo>
-    <title>devkit-disks</title>
+    <title>udisks</title>
     <date>April 2008</date>
-    <productname>devkit-disks</productname>
+    <productname>udisks</productname>
   </refentryinfo>
 
   <refmeta>
-    <refentrytitle>devkit-disks</refentrytitle>
+    <refentrytitle>udisks</refentrytitle>
     <manvolnum>1</manvolnum>
     <refmiscinfo class="version"></refmiscinfo>
   </refmeta>
 
   <refnamediv>
-    <refname>devkit-disks</refname>
-    <refpurpose>DeviceKit-disks command line tool</refpurpose>
+    <refname>udisks</refname>
+    <refpurpose>udisks command line tool</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>devkit-disks</command>
+      <command>udisks</command>
       <arg><option>OPTIONS</option></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
@@ -26,9 +26,9 @@
 
   <refsect1><title>DESCRIPTION</title>
     <para>
-      <emphasis><refentrytitle>devkit-disks</refentrytitle></emphasis> is a
+      <emphasis><refentrytitle>udisks</refentrytitle></emphasis> is a
       simple command line client for the
-      <citerefentry><refentrytitle>DeviceKit-disks</refentrytitle><manvolnum>7</manvolnum></citerefentry>
+      <citerefentry><refentrytitle>udisks</refentrytitle><manvolnum>7</manvolnum></citerefentry>
       system bus service.
     </para>
   </refsect1>
@@ -208,7 +208,7 @@
           <para>
             Read ATA SMART data from <replaceable>blob</replaceable> for <replaceable>device_file</replaceable>.
             This can only be done by the super user and is typically used for testing that clients
-            relying on the ATA SMART data provided by DeviceKit-disks behave correctly.
+            relying on the ATA SMART data provided by udisks behave correctly.
             The libatasmart git repository at
             <ulink url="http://git.0pointer.de/?p=libatasmart.git;a=summary"/>
             contains a collection of blobs from failing disks.
@@ -225,7 +225,7 @@
           <para>
              Inhibits clients from invoking methods on the daemon that
              require authorization (all methods will return the
-             <literal>org.freedesktop.DeviceKit.Disks.Error.Inhibited</literal> error) if
+             <literal>org.freedesktop.UDisks.Error.Inhibited</literal> error) if
              the caller is not the super user. This is typically used
              by OS installers and other programs that expects full
              control of the system, specifically to avoid automounting
@@ -251,7 +251,7 @@
           <para>
             Configures disk spindown timeout on <replaceable>device_file</replaceable> to
             <replaceable>seconds</replaceable>.
-            See <xref linkend="devkit-disks-spindown"/> for important information before using this option.
+            See <xref linkend="udisks-spindown"/> for important information before using this option.
           </para>
           <para>
             If no program is given, the spindown time will be used until Ctrl+C is pressed. Otherwise the program is
@@ -270,7 +270,7 @@
         <listitem>
           <para>
             Configures disk spindown timeout on all disks that can be spun down to <replaceable>seconds</replaceable>.
-            See <xref linkend="devkit-disks-spindown"/> for important information before using this option.
+            See <xref linkend="udisks-spindown"/> for important information before using this option.
           </para>
           <para>
             If no program is given, the spindown time will be used until Ctrl+C is pressed. Otherwise the program is
@@ -290,7 +290,7 @@
     </variablelist>
   </refsect1>
 
-  <refsect1 id="devkit-disks-spindown"><title>SPINNING DOWN DISKS</title>
+  <refsect1 id="udisks-spindown"><title>SPINNING DOWN DISKS</title>
     <para>
       Caution should be exercised when configuring disk spin down timeouts.
     </para>
@@ -332,10 +332,10 @@
     <title>SEE ALSO</title>
     <para>
       <citerefentry>
-        <refentrytitle>devkit-disks-daemon</refentrytitle><manvolnum>8</manvolnum>
+        <refentrytitle>udisks-daemon</refentrytitle><manvolnum>8</manvolnum>
       </citerefentry>,
       <citerefentry>
-        <refentrytitle>DeviceKit-disks</refentrytitle><manvolnum>7</manvolnum>
+        <refentrytitle>udisks</refentrytitle><manvolnum>7</manvolnum>
       </citerefentry>,
     </para>
   </refsect1>

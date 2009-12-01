@@ -17,51 +17,51 @@ INCLUDES = \
 	$(GLIB_CFLAGS)
 
 BUILT_SOURCES =							\
-	devkit-disks-daemon-glue.h				\
-	devkit-disks-device-glue.h				\
-	devkit-disks-marshal.h		devkit-disks-marshal.c
+	udisks-daemon-glue.h					\
+	udisks-device-glue.h					\
+	udisks-marshal.h		udisks-marshal.c
 
-devkit-disks-marshal.h: $(top_srcdir)/src/devkit-disks-marshal.list
-	glib-genmarshal $< --prefix=devkit_disks_marshal --header > $@
+udisks-marshal.h: $(top_srcdir)/src/udisks-marshal.list
+	glib-genmarshal $< --prefix=udisks_marshal --header > $@
 
-devkit-disks-marshal.c: $(top_srcdir)/src/devkit-disks-marshal.list
-	echo "#include \"devkit-disks-marshal.h\"" > $@ && glib-genmarshal $< --prefix=devkit_disks_marshal --body >> $@
+udisks-marshal.c: $(top_srcdir)/src/udisks-marshal.list
+	echo "#include \"udisks-marshal.h\"" > $@ && glib-genmarshal $< --prefix=udisks_marshal --body >> $@
 
-devkit-disks-daemon-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.xml Makefile.am
-	dbus-binding-tool --prefix=devkit_disks_daemon --mode=glib-client --output=devkit-disks-daemon-glue.h $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.xml
+udisks-daemon-glue.h: $(top_srcdir)/data/org.freedesktop.UDisks.xml Makefile.am
+	dbus-binding-tool --prefix=udisks_daemon --mode=glib-client --output=udisks-daemon-glue.h $(top_srcdir)/data/org.freedesktop.UDisks.xml
 
-devkit-disks-device-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Device.xml Makefile.am
-	dbus-binding-tool --prefix=devkit_disks_daemon --mode=glib-client --output=devkit-disks-device-glue.h $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Device.xml
+udisks-device-glue.h: $(top_srcdir)/data/org.freedesktop.UDisks.Device.xml Makefile.am
+	dbus-binding-tool --prefix=udisks_daemon --mode=glib-client --output=udisks-device-glue.h $(top_srcdir)/data/org.freedesktop.UDisks.Device.xml
 
-bin_PROGRAMS = devkit-disks
+bin_PROGRAMS = udisks
 
-devkit_disks_SOURCES = 					\
-				devkit-disks.c		\
+udisks_SOURCES = 					\
+				udisks.c		\
 	$(BUILT_SOURCES)
 
 
-devkit_disks_CPPFLAGS = 				\
-	-DG_LOG_DOMAIN=\"devkit-disks\"		        \
+udisks_CPPFLAGS = 					\
+	-DG_LOG_DOMAIN=\"udisks\"		        \
 	$(DISABLE_DEPRECATED)				\
 	$(AM_CPPFLAGS)
 
-devkit_disks_CFLAGS = 					\
+udisks_CFLAGS = 					\
 	$(LIBATASMART_CFLAGS)				\
 	$(NULL)
 
-devkit_disks_LDADD = 					\
+udisks_LDADD = 						\
 	$(LIBATASMART_LIBS)				\
 	$(DBUS_GLIB_LIBS)				\
 	$(POLKIT_DBUS_LIBS)
 
-slashsbin_PROGRAMS = umount.devkit
-umount_devkit_SOURCES = umount-devkit.c
-umount_devkit_LDADD = $(DBUS_GLIB_LIBS) $(POLKIT_DBUS_LIBS)
+slashsbin_PROGRAMS = umount.udisks
+umount_udisks_SOURCES = umount-udisks.c
+umount_udisks_LDADD = $(DBUS_GLIB_LIBS) $(POLKIT_DBUS_LIBS)
 
 CLEANFILES = $(BUILT_SOURCES)
 
 profiledir = $(sysconfdir)/profile.d
-profile_SCRIPTS = devkit-disks-bash-completion.sh
+profile_SCRIPTS = udisks-bash-completion.sh
 
 EXTRA_DIST = $(profile_SCRIPTS)
 

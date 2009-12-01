@@ -169,7 +169,7 @@ devkit_disks_error_quark (void)
         static GQuark ret = 0;
 
         if (ret == 0) {
-                ret = g_quark_from_static_string ("devkit_disks_error");
+                ret = g_quark_from_static_string ("udisks_error");
         }
 
         return ret;
@@ -607,7 +607,7 @@ devkit_disks_daemon_class_init (DevkitDisksDaemonClass *klass)
         dbus_g_object_type_install_info (DEVKIT_DISKS_TYPE_DAEMON, &dbus_glib_devkit_disks_daemon_object_info);
 
         dbus_g_error_domain_register (DEVKIT_DISKS_ERROR,
-                                      "org.freedesktop.DeviceKit.Disks.Error",
+                                      "org.freedesktop.UDisks.Error",
                                       DEVKIT_DISKS_TYPE_ERROR);
 
         g_object_class_install_property (
@@ -1711,7 +1711,7 @@ register_disks_daemon (DevkitDisksDaemon *daemon)
         }
         connection = dbus_g_connection_get_connection (daemon->priv->system_bus_connection);
 
-        dbus_g_connection_register_g_object (daemon->priv->system_bus_connection, "/org/freedesktop/DeviceKit/Disks",
+        dbus_g_connection_register_g_object (daemon->priv->system_bus_connection, "/org/freedesktop/UDisks",
                                              G_OBJECT (daemon));
 
         daemon->priv->system_bus_proxy = dbus_g_proxy_new_for_name (daemon->priv->system_bus_connection,
@@ -2480,7 +2480,7 @@ enumerate_adapter_cb (gpointer key, gpointer value, gpointer user_data)
         g_ptr_array_add (object_paths, g_strdup (devkit_disks_adapter_local_get_object_path (adapter)));
 }
 
-/* dbus-send --system --print-reply --dest=org.freedesktop.DeviceKit.Disks /org/freedesktop/DeviceKit/Disks org.freedesktop.DeviceKit.Disks.EnumerateAdapters
+/* dbus-send --system --print-reply --dest=org.freedesktop.UDisks /org/freedesktop/UDisks org.freedesktop.UDisks.EnumerateAdapters
  */
 gboolean
 devkit_disks_daemon_enumerate_adapters (DevkitDisksDaemon     *daemon,
@@ -2506,7 +2506,7 @@ enumerate_expander_cb (gpointer key, gpointer value, gpointer user_data)
         g_ptr_array_add (object_paths, g_strdup (devkit_disks_expander_local_get_object_path (expander)));
 }
 
-/* dbus-send --system --print-reply --dest=org.freedesktop.DeviceKit.Disks /org/freedesktop/DeviceKit/Disks org.freedesktop.DeviceKit.Disks.EnumerateExpanders
+/* dbus-send --system --print-reply --dest=org.freedesktop.UDisks /org/freedesktop/UDisks org.freedesktop.UDisks.EnumerateExpanders
  */
 gboolean
 devkit_disks_daemon_enumerate_expanders (DevkitDisksDaemon     *daemon,
@@ -2532,7 +2532,7 @@ enumerate_port_cb (gpointer key, gpointer value, gpointer user_data)
         g_ptr_array_add (object_paths, g_strdup (devkit_disks_port_local_get_object_path (port)));
 }
 
-/* dbus-send --system --print-reply --dest=org.freedesktop.DeviceKit.Disks /org/freedesktop/DeviceKit/Disks org.freedesktop.DeviceKit.Disks.EnumeratePorts
+/* dbus-send --system --print-reply --dest=org.freedesktop.UDisks /org/freedesktop/UDisks org.freedesktop.UDisks.EnumeratePorts
  */
 gboolean
 devkit_disks_daemon_enumerate_ports (DevkitDisksDaemon     *daemon,

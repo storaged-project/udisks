@@ -1306,7 +1306,7 @@ compute_object_path (const char *native_path)
                 basename = native_path;
         }
 
-        s = g_string_new ("/org/freedesktop/DeviceKit/Disks/devices/");
+        s = g_string_new ("/org/freedesktop/UDisks/devices/");
         for (n = 0; basename[n] != '\0'; n++) {
                 gint c = basename[n];
 
@@ -4149,7 +4149,7 @@ job_read_out (GIOChannel *channel,
                 if (strlen (line) < 256) {
                         double cur_percentage;;
 
-                        if (sscanf (line, "devkit-disks-helper-progress: %lg", &cur_percentage) == 1) {
+                        if (sscanf (line, "udisks-helper-progress: %lg", &cur_percentage) == 1) {
                                 if (job->device != NULL && job->job_id != NULL) {
                                         job->device->priv->job_percentage = cur_percentage;
                                         emit_job_changed (job->device);
@@ -4827,7 +4827,7 @@ devkit_disks_device_filesystem_mount_authorized_cb (DevkitDisksDaemon     *daemo
         if (is_device_in_fstab (device, &mount_point)) {
                 n = 0;
                 snprintf (uid_buf, sizeof uid_buf, "%d", caller_uid);
-                argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-fstab-mounter";
+                argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-fstab-mounter";
                 argv[n++] = "mount";
                 argv[n++] = device->priv->device_file;
                 argv[n++] = uid_buf;
@@ -5125,7 +5125,7 @@ devkit_disks_device_filesystem_unmount_authorized_cb (DevkitDisksDaemon     *dae
                 if (is_device_in_fstab (device, &mount_path)) {
 
                         n = 0;
-                        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-fstab-mounter";
+                        argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-fstab-mounter";
                         if (force_unmount)
                                 argv[n++] = "force_unmount";
                         else
@@ -5587,7 +5587,7 @@ devkit_disks_device_drive_detach_authorized_cb (DevkitDisksDaemon     *daemon,
         }
 
         n = 0;
-        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-drive-detach";
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-drive-detach";
         argv[n++] = device->priv->device_file;
         argv[n++] = device->priv->native_path;
         argv[n++] = NULL;
@@ -5848,7 +5848,7 @@ devkit_disks_device_partition_delete_authorized_cb (DevkitDisksDaemon     *daemo
         part_number_as_string = g_strdup_printf ("%d", device->priv->partition_number);
 
         n = 0;
-        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-delete-partition";
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-delete-partition";
         argv[n++] = enclosing_device->priv->device_file;
         argv[n++] = device->priv->device_file;
         argv[n++] = offset_as_string;
@@ -6217,7 +6217,7 @@ devkit_disks_device_filesystem_create_internal (DevkitDisksDevice       *device,
         g_free (s);
 
         n = 0;
-        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-mkfs";
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-mkfs";
         argv[n++] = (char *) fstype;
         argv[n++] = device->priv->device_file;
         argv[n++] = device->priv->device_is_partition_table ? "1" : "0";
@@ -6653,7 +6653,7 @@ devkit_disks_device_partition_create_authorized_cb (DevkitDisksDaemon     *daemo
         flags_as_string = g_strjoinv (",", flags);
 
         n = 0;
-        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-create-partition";
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-create-partition";
         argv[n++] = device->priv->device_file;;
         argv[n++] = offset_as_string;
         argv[n++] = size_as_string;
@@ -6879,7 +6879,7 @@ devkit_disks_device_partition_modify_authorized_cb (DevkitDisksDaemon     *daemo
         flags_as_string = g_strjoinv (",", flags);
 
         n = 0;
-        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-modify-partition";
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-modify-partition";
         argv[n++] = enclosing_device->priv->device_file;
         argv[n++] = offset_as_string;
         argv[n++] = size_as_string;
@@ -7107,7 +7107,7 @@ devkit_disks_device_partition_table_create_authorized_cb (DevkitDisksDaemon     
         }
 
         n = 0;
-        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-create-partition-table";
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-create-partition-table";
         argv[n++] = device->priv->device_file;
         argv[n++] = (char *) scheme;
         for (m = 0; options[m] != NULL; m++) {
@@ -7408,7 +7408,7 @@ devkit_disks_device_luks_unlock_internal (DevkitDisksDevice        *device,
                 goto out;
         }
 
-        luks_name = g_strdup_printf ("devkit-disks-luks-uuid-%s-uid%d",
+        luks_name = g_strdup_printf ("udisks-luks-uuid-%s-uid%d",
                                      device->priv->id_uuid,
                                      uid);
         secret_as_stdin = g_strdup_printf ("%s\n", secret);
@@ -7666,7 +7666,7 @@ luks_get_uid_from_dm_name (const char *dm_name, uid_t *out_uid)
 
         ret = FALSE;
 
-        if (!g_str_has_prefix (dm_name, "devkit-disks-luks-uuid"))
+        if (!g_str_has_prefix (dm_name, "udisks-luks-uuid"))
                 goto out;
 
         /* determine who unlocked the device */
@@ -7868,7 +7868,7 @@ devkit_disks_device_luks_change_passphrase_authorized_cb (DevkitDisksDaemon     
         secrets_as_stdin = g_strdup_printf ("%s\n%s\n", old_secret, new_secret);
 
         n = 0;
-        argv[n++] = "devkit-disks-helper-change-luks-password";
+        argv[n++] = "udisks-helper-change-luks-password";
         argv[n++] = device->priv->device_file;
         argv[n++] = NULL;
 
@@ -8006,7 +8006,7 @@ devkit_disks_device_filesystem_set_label_authorized_cb (DevkitDisksDaemon     *d
         }
 
         n = 0;
-        argv[n++] = "devkit-disks-helper-change-filesystem-label";
+        argv[n++] = "udisks-helper-change-filesystem-label";
         argv[n++] = device->priv->device_file;
         argv[n++] = device->priv->id_type;
         argv[n++] = (char *) new_label;
@@ -8241,7 +8241,7 @@ devkit_disks_device_drive_ata_smart_refresh_data_authorized_cb (DevkitDisksDaemo
                 argv[n++] = NULL;
         } else {
                 n = 0;
-                argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-ata-smart-collect";
+                argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-ata-smart-collect";
                 argv[n++] = device->priv->device_file;
                 argv[n++] = nowakeup ? "1" : "0";
                 argv[n++] = NULL;
@@ -8364,7 +8364,7 @@ devkit_disks_device_drive_ata_smart_initiate_selftest_authorized_cb (DevkitDisks
         }
 
         n = 0;
-        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-ata-smart-selftest";
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-ata-smart-selftest";
         argv[n++] = device->priv->device_file;
         argv[n++] = (char *) test;
         argv[n++] = NULL;
@@ -8573,7 +8573,7 @@ devkit_disks_device_linux_md_check_authorized_cb (DevkitDisksDaemon     *daemon,
         }
 
         n = 0;
-        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-linux-md-check";
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-linux-md-check";
         argv[n++] = device->priv->device_file;
         argv[n++] = device->priv->native_path;
         for (m = 0; options[m] != NULL; m++) {
@@ -8965,7 +8965,7 @@ devkit_disks_device_linux_md_remove_component_authorized_cb (DevkitDisksDaemon  
         }
 
         n = 0;
-        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-linux-md-remove-component";
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-linux-md-remove-component";
         argv[n++] = device->priv->device_file;
         argv[n++] = slave->priv->device_file;
         for (m = 0; options[m] != NULL; m++) {
@@ -10169,7 +10169,7 @@ devkit_disks_device_drive_poll_media_authorized_cb (DevkitDisksDaemon     *daemo
         char *argv[16];
 
         n = 0;
-        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-drive-poll";
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-drive-poll";
         argv[n++] = device->priv->device_file;
         argv[n++] = NULL;
 
@@ -10517,7 +10517,7 @@ devkit_disks_device_drive_benchmark_authorized_cb (DevkitDisksDaemon     *daemon
         }
 
         n = 0;
-        argv[n++] = PACKAGE_LIBEXEC_DIR "/devkit-disks-helper-drive-benchmark";
+        argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-drive-benchmark";
         argv[n++] = device->priv->device_file;
         argv[n++] = do_write_benchmark ? "1" : "0";
         argv[n++] = NULL;

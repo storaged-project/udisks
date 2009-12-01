@@ -1,34 +1,34 @@
-<refentry id="DeviceKit-disks.7">
+<refentry id="udisks.7">
   <refentryinfo>
-    <title>DeviceKit-disks</title>
+    <title>udisks</title>
     <date>March 2008</date>
-    <productname>DeviceKit-disks</productname>
+    <productname>udisks</productname>
   </refentryinfo>
 
   <refmeta>
-    <refentrytitle>DeviceKit-disks</refentrytitle>
+    <refentrytitle>udisks</refentrytitle>
     <manvolnum>7</manvolnum>
     <refmiscinfo class="version"></refmiscinfo>
   </refmeta>
 
   <refnamediv>
-    <refname>DeviceKit-disks</refname>
-    <refpurpose>Disk Management</refpurpose>
+    <refname>udisks</refname>
+    <refpurpose>Storage Management</refpurpose>
   </refnamediv>
 
   <refsect1><title>DESCRIPTION</title>
     <para>
-      DeviceKit-disks provides an interface to enumerate block
+      udisks provides an interface to enumerate storage
       devices and perform operations on them. Any application
-      can access the <emphasis>org.freedesktop.DeviceKit.Disks</emphasis>
+      can access the <emphasis>org.freedesktop.UDisks</emphasis>
       service on the system message bus. Some operations (such
-      as formatting disks etc.) is restricted using PolicyKit.
+      as formatting disks etc.) is restricted using polkit.
     </para>
   </refsect1>
 
   <refsect1><title>DEVICE INFORMATION</title>
     <para>
-      On Linux, DeviceKit-disks relies on recent versions of
+      On Linux, udisks relies on recent versions of
       <citerefentry><refentrytitle>udev</refentrytitle><manvolnum>7</manvolnum></citerefentry>
       and the kernel. Influential device properties in the udev
       database include:
@@ -93,7 +93,7 @@
         <term><option>ID_DRIVE_DETACHABLE</option></term>
         <listitem><para> Whether the device is detachable. It is only meaningful
             to set this to 0 (to avoid marking a device as detachable) since the
-            code for detaching the device is part of DeviceKit-disks itself.
+            code for detaching the device is part of udisks itself.
             If this property is not set, a heuristic will be used to determine if the
             drive is detachable (currently only devices connected through USB are
             detachable).
@@ -103,7 +103,7 @@
         <term><option>ID_DRIVE_CAN_SPINDOWN</option></term>
         <listitem><para> Whether the device can spin down. It is only meaningful
             to set this to 0 (to avoid marking a device as being capable of spinning down)
-            since the code for spinning down the device is part of DeviceKit-disks itself.
+            since the code for spinning down the device is part of udisks itself.
             If this property is not set, a heuristic will be used to determine if the
             drive can spin down (currently only ATA devices, including those USB
             devices with a SAT layer) can be spun down).
@@ -235,8 +235,8 @@
     <title>BUGS</title>
     <para>
       Please send bug reports to either the distribution or the
-      hal mailing list,
-      see <ulink url="http://lists.freedesktop.org/mailman/listinfo/hal"/>.
+      devkit-devel mailing list,
+      see <ulink url="http://lists.freedesktop.org/mailman/listinfo/devkit-devel"/>.
       to subscribe.
     </para>
   </refsect1>
@@ -245,16 +245,13 @@
     <title>SEE ALSO</title>
     <para>
       <citerefentry>
-        <refentrytitle>DeviceKit</refentrytitle><manvolnum>7</manvolnum>
+        <refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum>
       </citerefentry>,
       <citerefentry>
-        <refentrytitle>PolicyKit</refentrytitle><manvolnum>8</manvolnum>
+        <refentrytitle>udisks-daemon</refentrytitle><manvolnum>8</manvolnum>
       </citerefentry>,
       <citerefentry>
-        <refentrytitle>devkit-disks-daemon</refentrytitle><manvolnum>8</manvolnum>
-      </citerefentry>,
-      <citerefentry>
-        <refentrytitle>devkit-disks</refentrytitle><manvolnum>1</manvolnum>
+        <refentrytitle>udisks</refentrytitle><manvolnum>1</manvolnum>
       </citerefentry>
     </para>
   </refsect1>

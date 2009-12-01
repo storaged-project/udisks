@@ -26,30 +26,30 @@ BUILT_SOURCES =							\
 	devkit-disks-expander-glue.h				\
 	devkit-disks-marshal.h		devkit-disks-marshal.c
 
-devkit-disks-marshal.h: devkit-disks-marshal.list
+devkit-disks-marshal.h: udisks-marshal.list
 	glib-genmarshal $< --prefix=devkit_disks_marshal --header > $@
 
-devkit-disks-marshal.c: devkit-disks-marshal.list
+devkit-disks-marshal.c: udisks-marshal.list
 	echo "#include \"devkit-disks-marshal.h\"" > $@ && glib-genmarshal $< --prefix=devkit_disks_marshal --body >> $@
 
-devkit-disks-daemon-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.xml Makefile.am
-	dbus-binding-tool --prefix=devkit_disks_daemon --mode=glib-server --output=devkit-disks-daemon-glue.h $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.xml
+devkit-disks-daemon-glue.h: $(top_srcdir)/data/org.freedesktop.UDisks.xml Makefile.am
+	dbus-binding-tool --prefix=devkit_disks_daemon --mode=glib-server --output=devkit-disks-daemon-glue.h $(top_srcdir)/data/org.freedesktop.UDisks.xml
 
-devkit-disks-device-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Device.xml Makefile.am
-	dbus-binding-tool --prefix=devkit_disks_device --mode=glib-server --output=devkit-disks-device-glue.h $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Device.xml
+devkit-disks-device-glue.h: $(top_srcdir)/data/org.freedesktop.UDisks.Device.xml Makefile.am
+	dbus-binding-tool --prefix=devkit_disks_device --mode=glib-server --output=devkit-disks-device-glue.h $(top_srcdir)/data/org.freedesktop.UDisks.Device.xml
 
-devkit-disks-adapter-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Adapter.xml Makefile.am
-	dbus-binding-tool --prefix=devkit_disks_adapter --mode=glib-server --output=devkit-disks-adapter-glue.h $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Adapter.xml
+devkit-disks-adapter-glue.h: $(top_srcdir)/data/org.freedesktop.UDisks.Adapter.xml Makefile.am
+	dbus-binding-tool --prefix=devkit_disks_adapter --mode=glib-server --output=devkit-disks-adapter-glue.h $(top_srcdir)/data/org.freedesktop.UDisks.Adapter.xml
 
-devkit-disks-expander-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Expander.xml Makefile.am
-	dbus-binding-tool --prefix=devkit_disks_expander --mode=glib-server --output=devkit-disks-expander-glue.h $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Expander.xml
+devkit-disks-expander-glue.h: $(top_srcdir)/data/org.freedesktop.UDisks.Expander.xml Makefile.am
+	dbus-binding-tool --prefix=devkit_disks_expander --mode=glib-server --output=devkit-disks-expander-glue.h $(top_srcdir)/data/org.freedesktop.UDisks.Expander.xml
 
-devkit-disks-port-glue.h: $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Port.xml Makefile.am
-	dbus-binding-tool --prefix=devkit_disks_port --mode=glib-server --output=devkit-disks-port-glue.h $(top_srcdir)/data/org.freedesktop.DeviceKit.Disks.Port.xml
+devkit-disks-port-glue.h: $(top_srcdir)/data/org.freedesktop.UDisks.Port.xml Makefile.am
+	dbus-binding-tool --prefix=devkit_disks_port --mode=glib-server --output=devkit-disks-port-glue.h $(top_srcdir)/data/org.freedesktop.UDisks.Port.xml
 
-libexec_PROGRAMS = devkit-disks-daemon
+libexec_PROGRAMS = udisks-daemon
 
-devkit_disks_daemon_SOURCES = 								\
+udisks_daemon_SOURCES = 								\
 	devkit-disks-types.h								\
 	devkit-disks-private.h								\
 	devkit-disks-daemon.h			devkit-disks-daemon.c			\
@@ -69,18 +69,18 @@ devkit_disks_daemon_SOURCES = 								\
 	main.c										\
 	$(BUILT_SOURCES)
 
-devkit_disks_daemon_CPPFLAGS = 				\
+udisks_daemon_CPPFLAGS = 				\
 	-I$(top_srcdir)/src				\
 	-DG_LOG_DOMAIN=\"devkit-disks-daemon\"		\
 	$(DISABLE_DEPRECATED)				\
 	$(AM_CPPFLAGS)					\
 	$(NULL)
 
-devkit_disks_daemon_CFLAGS = 				\
+udisks_daemon_CFLAGS = 					\
 	$(LIBATASMART_CFLAGS)				\
 	$(NULL)
 
-devkit_disks_daemon_LDADD = 				\
+udisks_daemon_LDADD = 					\
 	$(GIO_LIBS)					\
 	$(DBUS_GLIB_LIBS)				\
 	$(POLKIT_GOBJECT_1_LIBS) 			\
@@ -93,123 +93,123 @@ libpartutil_la_SOURCES = partutil.h partutil.c
 libpartutil_la_CPPFLAGS = $(LIBPARTED_CFLAGS)
 libpartutil_la_LIBADD = $(LIBPARTED_LIBS)
 
-libexec_PROGRAMS += devkit-disks-helper-mkfs                    	\
-		    devkit-disks-helper-delete-partition        	\
-		    devkit-disks-helper-create-partition        	\
-		    devkit-disks-helper-modify-partition        	\
-		    devkit-disks-helper-create-partition-table		\
-		    devkit-disks-helper-change-filesystem-label 	\
-		    devkit-disks-helper-linux-md-remove-component	\
-		    devkit-disks-helper-fstab-mounter			\
-		    devkit-disks-helper-ata-smart-collect		\
-		    devkit-disks-helper-ata-smart-selftest		\
-		    devkit-disks-helper-drive-detach			\
-		    devkit-disks-helper-drive-poll			\
-		    devkit-disks-helper-linux-md-check			\
-		    devkit-disks-helper-drive-benchmark			\
+libexec_PROGRAMS += udisks-helper-mkfs                    		\
+		    udisks-helper-delete-partition        		\
+		    udisks-helper-create-partition        		\
+		    udisks-helper-modify-partition        		\
+		    udisks-helper-create-partition-table		\
+		    udisks-helper-change-filesystem-label 		\
+		    udisks-helper-linux-md-remove-component		\
+		    udisks-helper-fstab-mounter				\
+		    udisks-helper-ata-smart-collect			\
+		    udisks-helper-ata-smart-selftest			\
+		    udisks-helper-drive-detach				\
+		    udisks-helper-drive-poll				\
+		    udisks-helper-linux-md-check			\
+		    udisks-helper-drive-benchmark			\
 		    $(NULL)
 
-libexec_SCRIPTS = devkit-disks-helper-change-luks-password
+libexec_SCRIPTS = udisks-helper-change-luks-password
 
-devkit_disks_helper_mkfs_SOURCES = job-shared.h job-mkfs.c
-devkit_disks_helper_mkfs_CPPFLAGS = $(AM_CPPFLAGS)
-devkit_disks_helper_mkfs_LDADD = $(GLIB_LIBS)
+udisks_helper_mkfs_SOURCES = job-shared.h job-mkfs.c
+udisks_helper_mkfs_CPPFLAGS = $(AM_CPPFLAGS)
+udisks_helper_mkfs_LDADD = $(GLIB_LIBS)
 
-devkit_disks_helper_delete_partition_SOURCES = job-shared.h job-delete-partition.c
-devkit_disks_helper_delete_partition_CPPFLAGS = $(AM_CPPFLAGS)
-devkit_disks_helper_delete_partition_LDADD = $(GLIB_LIBS) libpartutil.la
+udisks_helper_delete_partition_SOURCES = job-shared.h job-delete-partition.c
+udisks_helper_delete_partition_CPPFLAGS = $(AM_CPPFLAGS)
+udisks_helper_delete_partition_LDADD = $(GLIB_LIBS) libpartutil.la
 
-devkit_disks_helper_create_partition_SOURCES = job-shared.h job-create-partition.c
-devkit_disks_helper_create_partition_CPPFLAGS = $(AM_CPPFLAGS)
-devkit_disks_helper_create_partition_LDADD = $(GLIB_LIBS) libpartutil.la
+udisks_helper_create_partition_SOURCES = job-shared.h job-create-partition.c
+udisks_helper_create_partition_CPPFLAGS = $(AM_CPPFLAGS)
+udisks_helper_create_partition_LDADD = $(GLIB_LIBS) libpartutil.la
 
-devkit_disks_helper_modify_partition_SOURCES = job-shared.h job-modify-partition.c
-devkit_disks_helper_modify_partition_CPPFLAGS = $(AM_CPPFLAGS)
-devkit_disks_helper_modify_partition_LDADD = $(GLIB_LIBS) libpartutil.la
+udisks_helper_modify_partition_SOURCES = job-shared.h job-modify-partition.c
+udisks_helper_modify_partition_CPPFLAGS = $(AM_CPPFLAGS)
+udisks_helper_modify_partition_LDADD = $(GLIB_LIBS) libpartutil.la
 
-devkit_disks_helper_create_partition_table_SOURCES = job-shared.h job-create-partition-table.c
-devkit_disks_helper_create_partition_table_CPPFLAGS = $(AM_CPPFLAGS)
-devkit_disks_helper_create_partition_table_LDADD = $(GLIB_LIBS) libpartutil.la
+udisks_helper_create_partition_table_SOURCES = job-shared.h job-create-partition-table.c
+udisks_helper_create_partition_table_CPPFLAGS = $(AM_CPPFLAGS)
+udisks_helper_create_partition_table_LDADD = $(GLIB_LIBS) libpartutil.la
 
-devkit_disks_helper_change_filesystem_label_SOURCES = job-shared.h job-change-filesystem-label.c
-devkit_disks_helper_change_filesystem_label_CPPFLAGS = $(AM_CPPFLAGS)
-devkit_disks_helper_change_filesystem_label_LDADD = $(GLIB_LIBS)
+udisks_helper_change_filesystem_label_SOURCES = job-shared.h job-change-filesystem-label.c
+udisks_helper_change_filesystem_label_CPPFLAGS = $(AM_CPPFLAGS)
+udisks_helper_change_filesystem_label_LDADD = $(GLIB_LIBS)
 
-devkit_disks_helper_ata_smart_selftest_SOURCES = job-shared.h job-ata-smart-selftest.c
-devkit_disks_helper_ata_smart_selftest_CPPFLAGS = $(AM_CPPFLAGS) $(LIBATASMART_CFLAGS) $(GLIB_CFLAGS)
-devkit_disks_helper_ata_smart_selftest_LDADD = $(LIBATASMART_LIBS) $(GLIB_LIBS)
+udisks_helper_ata_smart_selftest_SOURCES = job-shared.h job-ata-smart-selftest.c
+udisks_helper_ata_smart_selftest_CPPFLAGS = $(AM_CPPFLAGS) $(LIBATASMART_CFLAGS) $(GLIB_CFLAGS)
+udisks_helper_ata_smart_selftest_LDADD = $(LIBATASMART_LIBS) $(GLIB_LIBS)
 
-devkit_disks_helper_ata_smart_collect_SOURCES = job-ata-smart-collect.c
-devkit_disks_helper_ata_smart_collect_CPPFLAGS = $(AM_CPPFLAGS) $(LIBATASMART_CFLAGS) $(GLIB_CFLAGS)
-devkit_disks_helper_ata_smart_collect_LDADD = $(LIBATASMART_LIBS) $(GLIB_LIBS)
+udisks_helper_ata_smart_collect_SOURCES = job-ata-smart-collect.c
+udisks_helper_ata_smart_collect_CPPFLAGS = $(AM_CPPFLAGS) $(LIBATASMART_CFLAGS) $(GLIB_CFLAGS)
+udisks_helper_ata_smart_collect_LDADD = $(LIBATASMART_LIBS) $(GLIB_LIBS)
 
-devkit_disks_helper_linux_md_remove_component_SOURCES = job-shared.h job-linux-md-remove-component.c
-devkit_disks_helper_linux_md_remove_component_CPPFLAGS = $(AM_CPPFLAGS)
-devkit_disks_helper_linux_md_remove_component_LDADD = $(GLIB_LIBS)
+udisks_helper_linux_md_remove_component_SOURCES = job-shared.h job-linux-md-remove-component.c
+udisks_helper_linux_md_remove_component_CPPFLAGS = $(AM_CPPFLAGS)
+udisks_helper_linux_md_remove_component_LDADD = $(GLIB_LIBS)
 
-devkit_disks_helper_fstab_mounter_SOURCES = job-shared.h job-fstab-mounter.c
-devkit_disks_helper_fstab_mounter_CPPFLAGS = $(AM_CPPFLAGS)
-devkit_disks_helper_fstab_mounter_LDADD = $(GLIB_LIBS)
+udisks_helper_fstab_mounter_SOURCES = job-shared.h job-fstab-mounter.c
+udisks_helper_fstab_mounter_CPPFLAGS = $(AM_CPPFLAGS)
+udisks_helper_fstab_mounter_LDADD = $(GLIB_LIBS)
 
-devkit_disks_helper_drive_detach_SOURCES = job-shared.h job-drive-detach.c
-devkit_disks_helper_drive_detach_CPPFLAGS = $(AM_CPPFLAGS) $(LIBUDEV_CFLAGS) $(SGUTILS_CFLAGS)
-devkit_disks_helper_drive_detach_LDADD = $(LIBUDEV_LIBS) $(SGUTILS_LIBS) $(GLIB_LIBS)
+udisks_helper_drive_detach_SOURCES = job-shared.h job-drive-detach.c
+udisks_helper_drive_detach_CPPFLAGS = $(AM_CPPFLAGS) $(LIBUDEV_CFLAGS) $(SGUTILS_CFLAGS)
+udisks_helper_drive_detach_LDADD = $(LIBUDEV_LIBS) $(SGUTILS_LIBS) $(GLIB_LIBS)
 
-devkit_disks_helper_linux_md_check_SOURCES = job-shared.h job-linux-md-check.c
-devkit_disks_helper_linux_md_check_CPPFLAGS = $(AM_CPPFLAGS)
-devkit_disks_helper_linux_md_check_LDADD = $(GLIB_LIBS)
+udisks_helper_linux_md_check_SOURCES = job-shared.h job-linux-md-check.c
+udisks_helper_linux_md_check_CPPFLAGS = $(AM_CPPFLAGS)
+udisks_helper_linux_md_check_LDADD = $(GLIB_LIBS)
 
-devkit_disks_helper_drive_poll_SOURCES = job-shared.h job-drive-poll.c
-devkit_disks_helper_drive_poll_CPPFLAGS = $(AM_CPPFLAGS)
-devkit_disks_helper_drive_poll_LDADD =  $(GLIB_LIBS)
+udisks_helper_drive_poll_SOURCES = job-shared.h job-drive-poll.c
+udisks_helper_drive_poll_CPPFLAGS = $(AM_CPPFLAGS)
+udisks_helper_drive_poll_LDADD =  $(GLIB_LIBS)
 
-devkit_disks_helper_drive_benchmark_SOURCES = job-drive-benchmark.c
-devkit_disks_helper_drive_benchmark_CPPFLAGS = $(AM_CPPFLAGS)
-devkit_disks_helper_drive_benchmark_LDADD =  $(GLIB_LIBS)
+udisks_helper_drive_benchmark_SOURCES = job-drive-benchmark.c
+udisks_helper_drive_benchmark_CPPFLAGS = $(AM_CPPFLAGS)
+udisks_helper_drive_benchmark_LDADD =  $(GLIB_LIBS)
 
 # TODO: move to udev
 udevhelperdir = $(slashlibdir)/udev
-udevhelper_PROGRAMS = devkit-disks-part-id devkit-disks-dm-export devkit-disks-probe-ata-smart devkit-disks-probe-sas-expander
+udevhelper_PROGRAMS = udisks-part-id udisks-dm-export udisks-probe-ata-smart udisks-probe-sas-expander
 
-devkit_disks_part_id_SOURCES = part-id.c
-devkit_disks_part_id_CPPFLAGS = $(AM_CPPFLAGS) $(LIBUDEV_CFLAGS)
-devkit_disks_part_id_LDADD = $(GLIB_LIBS) $(LIBUDEV_LIBS) libpartutil.la
+udisks_part_id_SOURCES = part-id.c
+udisks_part_id_CPPFLAGS = $(AM_CPPFLAGS) $(LIBUDEV_CFLAGS)
+udisks_part_id_LDADD = $(GLIB_LIBS) $(LIBUDEV_LIBS) libpartutil.la
 
-devkit_disks_dm_export_SOURCES = devkit-disks-dm-export.c
-devkit_disks_dm_export_CPPFLAGS = $(AM_CPPFLAGS) $(DEVMAPPER_CFLAGS)
-devkit_disks_dm_export_LDADD = $(DEVMAPPER_LIBS)
+udisks_dm_export_SOURCES = devkit-disks-dm-export.c
+udisks_dm_export_CPPFLAGS = $(AM_CPPFLAGS) $(DEVMAPPER_CFLAGS)
+udisks_dm_export_LDADD = $(DEVMAPPER_LIBS)
 
-devkit_disks_probe_ata_smart_SOURCES = devkit-disks-probe-ata-smart.c
-devkit_disks_probe_ata_smart_CPPFLAGS = $(AM_CPPFLAGS) $(LIBATASMART_CFLAGS)
-devkit_disks_probe_ata_smart_LDADD = $(LIBATASMART_LIBS)
+udisks_probe_ata_smart_SOURCES = devkit-disks-probe-ata-smart.c
+udisks_probe_ata_smart_CPPFLAGS = $(AM_CPPFLAGS) $(LIBATASMART_CFLAGS)
+udisks_probe_ata_smart_LDADD = $(LIBATASMART_LIBS)
 
-devkit_disks_probe_sas_expander_SOURCES = devkit-disks-probe-sas-expander.c
-devkit_disks_probe_sas_expander_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
-devkit_disks_probe_sas_expander_LDADD = $(GLIB_LIBS)
+udisks_probe_sas_expander_SOURCES = devkit-disks-probe-sas-expander.c
+udisks_probe_sas_expander_CPPFLAGS = $(AM_CPPFLAGS) $(GLIB_CFLAGS)
+udisks_probe_sas_expander_LDADD = $(GLIB_LIBS)
 # end move to udev
 
 # ----------------------------------------------------------------------------------------------------
 
 polkitmodulesdir = $(libdir)/polkit-1/extensions
-polkitmodules_LTLIBRARIES = libdevkit-disks-action-lookup.la
+polkitmodules_LTLIBRARIES = libudisks-action-lookup.la
 
-libdevkit_disks_action_lookup_la_SOURCES =                    		\
+libudisks_action_lookup_la_SOURCES =                    		\
 	devkit-disks-polkit-action-lookup.c                             \
         $(NULL)
 
-libdevkit_disks_action_lookup_la_CFLAGS =                        	\
+libudisks_action_lookup_la_CFLAGS =                        		\
         -DPOLKIT_BACKEND_I_KNOW_API_IS_SUBJECT_TO_CHANGE                \
-        -DG_LOG_DOMAIN=\"DeviceKit-Disks-Action-Lookup\"            	\
+        -DG_LOG_DOMAIN=\"UDisks-Action-Lookup\"            		\
 	$(POLKIT_BACKEND_1_CFLAGS) 					\
         $(NULL)
 
-libdevkit_disks_action_lookup_la_LDFLAGS =                       	\
+libudisks_action_lookup_la_LDFLAGS =                       		\
 	-export_dynamic -avoid-version -module -no-undefined 		\
 	-export-symbols-regex '^g_io_module_(load|unload)' 		\
 	$(POLKIT_BACKEND_1_LIBS) 					\
         $(NULL)
 
-libdevkit_disks_action_lookup_la_LIBADD =                 		\
+libudisks_action_lookup_la_LIBADD =                 			\
         $(NULL)
 
 
@@ -219,11 +219,11 @@ CLEANFILES = $(BUILT_SOURCES)
 
 EXTRA_DIST = 						\
 	devkit-disks-marshal.list			\
-	devkit-disks-helper-change-luks-password	\
+	udisks-helper-change-luks-password		\
 	$(NULL)
 
 install-data-local:
-	-$(mkdir_p) $(DESTDIR)$(localstatedir)/lib/DeviceKit-disks
-	-chmod 0700 $(DESTDIR)$(localstatedir)/lib/DeviceKit-disks
-	-$(mkdir_p) $(DESTDIR)$(localstatedir)/run/DeviceKit-disks
-	-chmod 0700 $(DESTDIR)$(localstatedir)/run/DeviceKit-disks
+	-$(mkdir_p) $(DESTDIR)$(localstatedir)/lib/udisks
+	-chmod 0700 $(DESTDIR)$(localstatedir)/lib/udisks
+	-$(mkdir_p) $(DESTDIR)$(localstatedir)/run/udisks
+	-chmod 0700 $(DESTDIR)$(localstatedir)/run/udisks

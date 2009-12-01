@@ -1,24 +1,24 @@
-<refentry id="devkit-disks-daemon.8">
+<refentry id="udisks-daemon.8">
   <refentryinfo>
-    <title>devkit-disks-daemon</title>
+    <title>udisks-daemon</title>
     <date>April 2008</date>
-    <productname>devkit-disks-daemon</productname>
+    <productname>udisks-daemon</productname>
   </refentryinfo>
 
   <refmeta>
-    <refentrytitle>devkit-disks-daemon</refentrytitle>
+    <refentrytitle>udisks-daemon</refentrytitle>
     <manvolnum>8</manvolnum>
     <refmiscinfo class="version"></refmiscinfo>
   </refmeta>
 
   <refnamediv>
-    <refname>devkit-disks-daemon</refname>
-    <refpurpose>DeviceKit-disks Daemon</refpurpose>
+    <refname>udisks-daemon</refname>
+    <refpurpose>udisks Daemon</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>devkit-disks-daemon</command>
+      <command>udisks-daemon</command>
       <arg><option>--help</option></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
@@ -26,19 +26,19 @@
 
   <refsect1><title>DESCRIPTION</title>
     <para>
-      <emphasis><refentrytitle>devkit-disks-daemon</refentrytitle></emphasis> provides
-      the <emphasis>org.freedesktop.DeviceKit.Disks</emphasis> service on the
+      <emphasis><refentrytitle>udisks-daemon</refentrytitle></emphasis> provides
+      the <emphasis>org.freedesktop.UDisks</emphasis> service on the
       system message bus. Users or administrators should never need to
       start this daemon as it will be automatically started by
       <citerefentry><refentrytitle>dbus-daemon</refentrytitle><manvolnum>1</manvolnum></citerefentry>
-      whenever an application calls into the <emphasis>org.freedesktop.DeviceKit.Disks</emphasis>
+      whenever an application calls into the <emphasis>org.freedesktop.UDisks</emphasis>
       service.
     </para>
     <para>
       See the
-      <citerefentry><refentrytitle>DeviceKit-disks</refentrytitle><manvolnum>7</manvolnum></citerefentry>
+      <citerefentry><refentrytitle>udisks</refentrytitle><manvolnum>7</manvolnum></citerefentry>
       man page for information on how to customize
-      how <emphasis><refentrytitle>devkit-disks-daemon</refentrytitle></emphasis>
+      how <emphasis><refentrytitle>udisks-daemon</refentrytitle></emphasis>
       works.
     </para>
   </refsect1>
@@ -78,10 +78,10 @@
     <title>SEE ALSO</title>
     <para>
       <citerefentry>
-        <refentrytitle>DeviceKit-disks</refentrytitle><manvolnum>7</manvolnum>
+        <refentrytitle>udisks</refentrytitle><manvolnum>7</manvolnum>
       </citerefentry>,
       <citerefentry>
-        <refentrytitle>devkit-disks</refentrytitle><manvolnum>1</manvolnum>
+        <refentrytitle>udisks</refentrytitle><manvolnum>1</manvolnum>
       </citerefentry>,
       <citerefentry>
         <refentrytitle>dbus-daemon</refentrytitle><manvolnum>1</manvolnum>

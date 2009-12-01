@@ -41,8 +41,8 @@
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
-#include "devkit-disks-daemon-glue.h"
-#include "devkit-disks-device-glue.h"
+#include "udisks-daemon-glue.h"
+#include "udisks-device-glue.h"
 
 static DBusGConnection *bus;
 
@@ -59,14 +59,14 @@ do_unmount (const char *object_path,
                 unmount_options = g_strsplit (options, ",", 0);
 
 	proxy = dbus_g_proxy_new_for_name (bus,
-                                           "org.freedesktop.DeviceKit.Disks",
+                                           "org.freedesktop.UDisks",
                                            object_path,
-                                           "org.freedesktop.DeviceKit.Disks.Device");
+                                           "org.freedesktop.UDisks.Device");
 
         error = NULL;
-        if (!org_freedesktop_DeviceKit_Disks_Device_filesystem_unmount (proxy,
-                                                                        (const char **) unmount_options,
-                                                                        &error)) {
+        if (!org_freedesktop_UDisks_Device_filesystem_unmount (proxy,
+                                                               (const char **) unmount_options,
+                                                               &error)) {
                 g_print ("Unmount failed: %s\n", error->message);
                 g_error_free (error);
                 goto out;
@@ -106,9 +106,9 @@ main (int argc, char **argv)
         }
 
 	disks_proxy = dbus_g_proxy_new_for_name (bus,
-                                                 "org.freedesktop.DeviceKit.Disks",
-                                                 "/org/freedesktop/DeviceKit/Disks",
-                                                 "org.freedesktop.DeviceKit.Disks");
+                                                 "org.freedesktop.UDisks",
+                                                 "/org/freedesktop/UDisks",
+                                                 "org.freedesktop.UDisks");
 
         error = NULL;
 
@@ -124,10 +124,10 @@ main (int argc, char **argv)
                 path = g_strdup_printf ("/dev/block/%d:%d", major (st.st_dev), minor (st.st_dev));
         }
 
-        if (!org_freedesktop_DeviceKit_Disks_find_device_by_device_file (disks_proxy,
-                                                                         path,
-                                                                         &object_path,
-                                                                         &error)) {
+        if (!org_freedesktop_UDisks_find_device_by_device_file (disks_proxy,
+                                                                path,
+                                                                &object_path,
+                                                                &error)) {
                 fprintf (stderr, "%s: no device for %s: %s\n", argv[0], argv[1], error->message);
                 g_error_free (error);
                 goto out;

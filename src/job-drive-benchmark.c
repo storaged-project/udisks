@@ -59,7 +59,7 @@ report_progress (gdouble percent,
   now = time (NULL);
   if (last_report == 0 || now - last_report > 2)
     {
-      g_print ("devkit-disks-helper-progress: %f\n", overall);
+      g_print ("udisks-helper-progress: %f\n", overall);
       last_report = now;
     }
 }
@@ -444,7 +444,7 @@ main (int argc, char *argv[])
   /* O_DIRECT needs a page aligned buffer */
   buf = (guchar*) (((gintptr) (buf_unaligned + page_size)) & (~(page_size - 1)));
 
-  g_print ("devkit-disks-helper-progress: 0.0\n");
+  g_print ("udisks-helper-progress: 0.0\n");
 
   if (!guesstimate_optimal_buffer_size (num_transfer_rate_samples))
     goto out;

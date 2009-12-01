@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?> <!-- -*- XML -*- -->
+
+<!DOCTYPE busconfig PUBLIC
+ "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
+<busconfig>
+  <!-- Only root can own the service -->
+  <policy user="root">
+    <allow own="org.freedesktop.UDisks"/>
+  </policy>
+
+  <policy context="default">
+    <allow send_destination="org.freedesktop.UDisks"/>
+
+    <allow send_destination="org.freedesktop.UDisks"
+           send_interface="org.freedesktop.DBus.Properties"/>
+    <allow send_destination="org.freedesktop.UDisks"
+           send_interface="org.freedesktop.DBus.Introspectable"/>
+    <allow send_destination="org.freedesktop.UDisks"
+           send_interface="org.freedesktop.UDisks"/>
+    <allow send_destination="org.freedesktop.UDisks"
+           send_interface="org.freedesktop.UDisks.Device"/>
+    <allow send_destination="org.freedesktop.UDisks"
+           send_interface="org.freedesktop.UDisks.Adapter"/>
+    <allow send_destination="org.freedesktop.UDisks"
+           send_interface="org.freedesktop.UDisks.Expander"/>
+    <allow send_destination="org.freedesktop.UDisks"
+           send_interface="org.freedesktop.UDisks.Port"/>
+  </policy>
+</busconfig>

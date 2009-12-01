@@ -46,7 +46,7 @@
 #include "devkit-disks-daemon.h"
 
 
-#define NAME_TO_CLAIM "org.freedesktop.DeviceKit.Disks"
+#define NAME_TO_CLAIM "org.freedesktop.UDisks"
 
 static GMainLoop *loop;
 
@@ -151,7 +151,7 @@ main (int argc, char **argv)
                 goto out;
         }
 
-        context = g_option_context_new ("DeviceKit Disks Daemon");
+        context = g_option_context_new ("udisks storage daemon");
         g_option_context_add_main_entries (context, entries, NULL);
         g_option_context_parse (context, &argc, &argv, NULL);
         g_option_context_free (context);

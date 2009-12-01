@@ -1,19 +1,19 @@
 <!DOCTYPE node PUBLIC
 "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
 "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd" [
-  <!ENTITY ERROR_FAILED "org.freedesktop.DeviceKit.Disks.Error.Failed">
-  <!ENTITY ERROR_BUSY "org.freedesktop.DeviceKit.Disks.Error.Busy">
-  <!ENTITY ERROR_CANCELLED "org.freedesktop.DeviceKit.Disks.Error.Cancelled">
-  <!ENTITY ERROR_INHIBITED "org.freedesktop.DeviceKit.Disks.Error.Inhibited">
-  <!ENTITY ERROR_INVALID_OPTION "org.freedesktop.DeviceKit.Disks.Error.InvalidOption">
-  <!ENTITY ERROR_NOT_SUPPORTED "org.freedesktop.DeviceKit.Disks.Error.NotSupported">
-  <!ENTITY ERROR_ATA_SMART_WOULD_WAKEUP "org.freedesktop.DeviceKit.Disks.Error.NotFound">
+  <!ENTITY ERROR_FAILED "org.freedesktop.UDisks.Error.Failed">
+  <!ENTITY ERROR_BUSY "org.freedesktop.UDisks.Error.Busy">
+  <!ENTITY ERROR_CANCELLED "org.freedesktop.UDisks.Error.Cancelled">
+  <!ENTITY ERROR_INHIBITED "org.freedesktop.UDisks.Error.Inhibited">
+  <!ENTITY ERROR_INVALID_OPTION "org.freedesktop.UDisks.Error.InvalidOption">
+  <!ENTITY ERROR_NOT_SUPPORTED "org.freedesktop.UDisks.Error.NotSupported">
+  <!ENTITY ERROR_ATA_SMART_WOULD_WAKEUP "org.freedesktop.UDisks.Error.NotFound">
   <!ENTITY ERROR_NOT_AUTHORIZED "org.freedesktop.PolicyKit.Error.NotAuthorized">
-  <!ENTITY ERROR_FILESYSTEM_DRIVER_MISSING "org.freedesktop.DeviceKit.Disks.Error.FilesystemDriverMissing">
-  <!ENTITY ERROR_FILESYSTEM_TOOLS_MISSING "org.freedesktop.DeviceKit.Disks.Error.FilesystemToolsMissing">
+  <!ENTITY ERROR_FILESYSTEM_DRIVER_MISSING "org.freedesktop.UDisks.Error.FilesystemDriverMissing">
+  <!ENTITY ERROR_FILESYSTEM_TOOLS_MISSING "org.freedesktop.UDisks.Error.FilesystemToolsMissing">
 ]>
 <node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
-  <interface name="org.freedesktop.DeviceKit.Disks.Adapter">
+  <interface name="org.freedesktop.UDisks.Adapter">
     <doc:doc>
       <doc:description>
         <doc:para>

@@ -5,7 +5,7 @@
 ]>
 <book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
   <bookinfo>
-    <title>DeviceKit-disks Reference Manual</title>
+    <title>udisks Reference Manual</title>
     <releaseinfo>Version &version;</releaseinfo>
     <authorgroup>
       <author>
@@ -21,7 +21,7 @@
 
     <copyright>
       <year>2008</year>
-      <holder>The DeviceKit-disks Authors</holder>
+      <holder>The udisks Authors</holder>
     </copyright>
 
     <legalnotice>
@@ -60,26 +60,26 @@
     <partintro>
       <para>
 	This part documents the D-Bus interface used to access the
-	DeviceKit-disks daemon.
+	udisks daemon.
       </para>
     </partintro>
-    <xi:include href="dbus/org.freedesktop.DeviceKit.Disks.ref.xml"/>
-    <xi:include href="dbus/org.freedesktop.DeviceKit.Disks.Device.ref.xml"/>
-    <xi:include href="dbus/org.freedesktop.DeviceKit.Disks.Adapter.ref.xml"/>
-    <xi:include href="dbus/org.freedesktop.DeviceKit.Disks.Expander.ref.xml"/>
-    <xi:include href="dbus/org.freedesktop.DeviceKit.Disks.Port.ref.xml"/>
+    <xi:include href="dbus/org.freedesktop.UDisks.ref.xml"/>
+    <xi:include href="dbus/org.freedesktop.UDisks.Device.ref.xml"/>
+    <xi:include href="dbus/org.freedesktop.UDisks.Adapter.ref.xml"/>
+    <xi:include href="dbus/org.freedesktop.UDisks.Expander.ref.xml"/>
+    <xi:include href="dbus/org.freedesktop.UDisks.Port.ref.xml"/>
   </reference>
 
   <reference id="tools-fileformats">
     <title>Manual Pages</title>
     <partintro>
       <para>
-	This part contains the manual pages distributed with DeviceKit-disks.
+	This part contains the manual pages distributed with udisks.
       </para>
     </partintro>
-    <xi:include href="man/DeviceKit-disks.xml"/>
-    <xi:include href="man/devkit-disks-daemon.xml"/>
-    <xi:include href="man/devkit-disks.xml"/>
+    <xi:include href="man/udisks7.xml"/>
+    <xi:include href="man/udisks-daemon.xml"/>
+    <xi:include href="man/udisks.xml"/>
   </reference>
 
   <index>

@@ -86,7 +86,7 @@ main (int argc, char *argv[])
         signal (SIGTERM, sigterm_handler);
 
         /* progress at 0% initially */
-        g_print ("devkit-disks-helper-progress: 0\n");
+        g_print ("udisks-helper-progress: 0\n");
 
         /* start the test */
         if (sk_disk_smart_self_test (d, test) != 0) {
@@ -113,7 +113,7 @@ main (int argc, char *argv[])
                         break;
 
                 /* update progress */
-                g_print ("devkit-disks-helper-progress: %d\n", 100 - data->self_test_execution_percent_remaining);
+                g_print ("udisks-helper-progress: %d\n", 100 - data->self_test_execution_percent_remaining);
         }
 
         /* abort test if cancelled */

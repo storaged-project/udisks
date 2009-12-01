@@ -19,7 +19,7 @@
  */
 
 /*
- * dbus-send --system --print-reply --dest=org.freedesktop.DeviceKit.Disks /org/freedesktop/DeviceKit/Disks/expanders/expander_2d7_3a0 org.freedesktop.DBus.Properties.GetAll string:org.freedesktop.DeviceKit.Disks.Expander
+ * dbus-send --system --print-reply --dest=org.freedesktop.UDisks /org/freedesktop/UDisks/expanders/expander_2d7_3a0 org.freedesktop.DBus.Properties.GetAll string:org.freedesktop.UDisks.Expander
  */
 
 #ifdef HAVE_CONFIG_H
@@ -243,7 +243,7 @@ compute_object_path (const char *native_path)
                 basename = native_path;
         }
 
-        s = g_string_new ("/org/freedesktop/DeviceKit/Disks/expanders/");
+        s = g_string_new ("/org/freedesktop/UDisks/expanders/");
         for (n = 0; basename[n] != '\0'; n++) {
                 gint c = basename[n];
 

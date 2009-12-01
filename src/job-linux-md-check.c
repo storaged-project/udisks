@@ -146,7 +146,7 @@ main (int argc, char **argv)
                 goto out;
         }
 
-        g_print ("devkit-disks-helper-progress: 0\n");
+        g_print ("udisks-helper-progress: 0\n");
         while (!cancelled) {
                 guint64 done;
                 guint64 remaining;
@@ -164,7 +164,7 @@ main (int argc, char **argv)
 
                 s = g_strstrip (sysfs_get_string (sysfs_path, "md/sync_completed"));
                 if (sscanf (s, "%" G_GUINT64_FORMAT " / %" G_GUINT64_FORMAT "", &done, &remaining) == 2) {
-                        g_print ("devkit-disks-helper-progress: %d\n", (gint) (100L * done / remaining));
+                        g_print ("udisks-helper-progress: %d\n", (gint) (100L * done / remaining));
                 } else {
                         g_printerr ("Cannot parse md/sync_completed: '%s'", s);
                         goto out;
