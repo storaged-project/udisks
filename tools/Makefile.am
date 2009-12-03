@@ -55,8 +55,13 @@ udisks_LDADD = 						\
 	$(POLKIT_DBUS_LIBS)
 
 slashsbin_PROGRAMS = umount.udisks
+
 umount_udisks_SOURCES = umount-udisks.c
 umount_udisks_LDADD = $(DBUS_GLIB_LIBS) $(POLKIT_DBUS_LIBS)
+
+noinst_PROGRAMS = udisks-tcp-bridge
+udisks_tcp_bridge_SOURCES = udisks-tcp-bridge.c
+udisks_tcp_bridge_LDADD = $(DBUS_GLIB_LIBS)
 
 CLEANFILES = $(BUILT_SOURCES)
 
