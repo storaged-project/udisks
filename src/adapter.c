@@ -508,7 +508,6 @@ update_info_fabric_and_num_ports (Adapter *adapter)
                                adapter_local_get_native_path (adapter),
                                scsi_host_name,
                                scsi_host_name);
-          g_debug ("foo = %s", s);
           if (g_file_test (s, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR))
             {
               fabric = "scsi_sas";
