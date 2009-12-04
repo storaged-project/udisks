@@ -1060,8 +1060,7 @@ _device_changed (Daemon *daemon,
 }
 
 void
-daemon_local_synthesize_changed (Daemon *daemon,
-                                 Device *device)
+daemon_local_synthesize_changed (Daemon *daemon, Device *device)
 {
   g_object_ref (device->priv->d);
   _device_changed (daemon, device->priv->d, TRUE);

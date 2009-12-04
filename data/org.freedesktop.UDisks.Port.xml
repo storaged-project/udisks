@@ -62,6 +62,60 @@
       </doc:para></doc:description></doc:doc>
     </property>
 
+    <property name="ConnectorType" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The connector type for the port (or for wide connectors, that the port is part of) or blank if unknown.
+            <doc:list>
+              <doc:item>
+                <doc:term>ata</doc:term><doc:definition>Some kind of ATA connector</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>ata_pata</doc:term><doc:definition>Parallel ATA</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>ata_sata</doc:term><doc:definition>Serial ATA - not sure whether it's an internal or external port.</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>ata_sata_internal</doc:term><doc:definition>Internal Serial ATA</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>ata_sata_external</doc:term><doc:definition>External Serial ATA</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>scsi</doc:term><doc:definition>Some kind of SCSI connector</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>scsi_sas</doc:term><doc:definition>Some kind of SAS connector</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>scsi_sas_internal</doc:term><doc:definition>SAS (SFF-8482)</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>scsi_sas_2x</doc:term><doc:definition>SAS connector with 2 lanes</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>scsi_sas_2x_wideband</doc:term><doc:definition>SAS Hi-Density with 2 lanes (SFF-8484)</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>scsi_sas_4x</doc:term><doc:definition>Some kind of SAS connector with 4 lanes</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>scsi_sas_4x_wideband</doc:term><doc:definition>SAS Hi-Density with 4 lanes (SFF-8484)</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>scsi_sas_4x_mini</doc:term><doc:definition>Mini-SAS with 4 lanes (SFF-8087, iPass)</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>scsi_sas_4x_mini_external</doc:term><doc:definition>External Mini-SAS with 4 lanes (SFF-8088)</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>scsi_sas_4x_infiband</doc:term><doc:definition>Infiniband with 4 lanes (SFF-8470)</doc:definition>
+              </doc:item>
+            </doc:list>
+            TODO: include other connector types
+      </doc:para></doc:description></doc:doc>
+    </property>
+
   </interface>
 
 </node>

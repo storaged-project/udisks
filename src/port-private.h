@@ -58,6 +58,7 @@ struct PortPrivate
 
   gchar *adapter;
   gchar *parent;
+  gchar *connector_type;
   gint number;
 };
 
@@ -67,6 +68,8 @@ void port_set_adapter (Port         *port,
                        const gchar  *value);
 void port_set_parent  (Port         *port,
                        const gchar  *value);
+void port_set_connector_type  (Port         *port,
+                               const gchar  *value);
 void port_set_number  (Port         *port,
                        gint          value);
 

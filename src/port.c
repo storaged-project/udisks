@@ -43,15 +43,11 @@
 /*--------------------------------------------------------------------------------------------------------------*/
 #include "port-glue.h"
 
-static void
-port_class_init (PortClass *klass);
-static void
-port_init (Port *seat);
-static void
-port_finalize (GObject *object);
+static void port_class_init (PortClass *klass);
+static void port_init (Port *seat);
+static void port_finalize (GObject *object);
 
-static gboolean
-update_info (Port *port);
+static gboolean update_info (Port *port);
 
 static void
 drain_pending_changes (Port *port,
@@ -65,6 +61,7 @@ enum
     PROP_ADAPTER,
     PROP_PARENT,
     PROP_NUMBER,
+    PROP_CONNECTOR_TYPE,
   };
 
 enum
@@ -110,6 +107,10 @@ get_property (GObject *object,
 
     case PROP_NUMBER:
       g_value_set_int (value, port->priv->number);
+      break;
+
+    case PROP_CONNECTOR_TYPE:
+      g_value_set_string (value, port->priv->connector_type);
       break;
 
     default:
@@ -162,6 +163,11 @@ port_class_init (PortClass *klass)
                                                                                 G_MAXINT,
                                                                                 -1,
                                                                                 G_PARAM_READABLE));
+  g_object_class_install_property (object_class, PROP_CONNECTOR_TYPE, g_param_spec_string ("connector-type",
+                                                                                           NULL,
+                                                                                           NULL,
+                                                                                           NULL,
+                                                                                           G_PARAM_READABLE));
 }
 
 static void
@@ -197,6 +203,7 @@ port_finalize (GObject *object)
   /* free properties */
   g_free (port->priv->adapter);
   g_free (port->priv->parent);
+  g_free (port->priv->connector_type);
 
   G_OBJECT_CLASS (port_parent_class)->finalize (object);
 }
@@ -577,6 +584,8 @@ update_info_ata (Port *port,
   const gchar *basename;
   gint port_host_number;
   gint port_number;
+  const gchar *adapter_fabric;
+  const gchar *connector_type;
 
   ret = FALSE;
   port_number = -1;
@@ -642,7 +651,28 @@ update_info_ata (Port *port,
         }
     }
 
+  /* Third, guess the connector type.
+   *
+   * This can be overriden via the udev property UDISKS_ATA_PORT_CONNECTOR_TYPE -
+   * see the data/80-udisks.rules for an example.
+   */
+  connector_type = g_udev_device_get_property (port->priv->d, "UDISKS_ATA_PORT_CONNECTOR_TYPE");
+  if (connector_type == NULL)
+    {
+      connector_type = "ata";
+      adapter_fabric = adapter_local_get_fabric (adapter);
+      if (g_strcmp0 (adapter_fabric, "ata_pata") == 0)
+        {
+          connector_type = "ata_pata";
+        }
+      else if (g_strcmp0 (adapter_fabric, "ata_sata") == 0)
+        {
+          connector_type = "ata_sata";
+        }
+    }
+
   port_set_number (port, port_number);
+  port_set_connector_type (port, connector_type);
   port->priv->port_type = PORT_TYPE_ATA;
   ret = TRUE;
 
@@ -666,6 +696,9 @@ update_info_sas_phy (Port *port,
 
   port_number = g_udev_device_get_sysfs_attr_as_int (port->priv->d, "phy_identifier");
   port_set_number (port, port_number);
+  /* We can't get it any more precise than this until we read SES-2 or SAS-2.0 info */
+  port_set_connector_type (port, "scsi_sas");
+
   port->priv->port_type = PORT_TYPE_SAS;
 
   return TRUE;

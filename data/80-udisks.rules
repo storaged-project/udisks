@@ -5,6 +5,18 @@
 #
 SUBSYSTEM=="pci", ACTION=="add|change", ENV{ID_MODEL_FROM_DATABASE}=="", ATTR{class}=="0x01*", IMPORT{program}="pci-db %p"
 
+# Set eSATA port type for known eSATA CardBus adapters - first we want to ensure
+# the device is on a cardbus controller (upper PCI device) - then we check
+# vid/pid (lower PCI device)
+#
+SUBSYSTEM=="scsi_host", ATTRS{class}=="0x060700", GOTO="ata_port_cardbus"
+GOTO="ata_port_cardbus_end"
+LABEL="ata_port_cardbus"
+# Mass storage controller: Silicon Image, Inc. SiI 3512 [SATALink/SATARaid] Serial ATA Controller (rev 01)
+#
+ATTRS{vendor}=="0x1095", ATTRS{device}=="0x3512", ENV{UDISKS_ATA_PORT_CONNECTOR_TYPE}="ata_sata_external"
+LABEL="ata_port_cardbus_end"
+
 # probe SAS expanders
 #
 # (hmm, this might be racy, we might not have the BSG device just yet - if

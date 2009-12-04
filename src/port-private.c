@@ -89,6 +89,18 @@ port_set_parent (Port        *port,
 }
 
 void
+port_set_connector_type (Port        *port,
+                         const gchar *value)
+{
+  if (G_UNLIKELY (g_strcmp0 (port->priv->connector_type, value) != 0))
+    {
+      g_free (port->priv->connector_type);
+      port->priv->connector_type = g_strdup (value);
+      emit_changed (port, "connector_type");
+    }
+}
+
+void
 port_set_number (Port *port,
                  gint value)
 {

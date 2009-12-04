@@ -124,8 +124,7 @@ gboolean daemon_local_get_uid (Daemon *daemon,
 
 void daemon_local_synthesize_changed_on_all_devices (Daemon *daemon);
 
-void daemon_local_synthesize_changed (Daemon *daemon,
-                                 Device *device);
+void daemon_local_synthesize_changed (Daemon *daemon, Device *device);
 
 void daemon_local_update_poller (Daemon *daemon);
 
