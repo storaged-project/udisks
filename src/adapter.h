@@ -65,6 +65,7 @@ void adapter_removed (Adapter *adapter);
 
 const char *adapter_local_get_object_path (Adapter *adapter);
 const char *adapter_local_get_native_path (Adapter *adapter);
+const char *adapter_local_get_driver (Adapter *adapter);
 const char *adapter_local_get_fabric (Adapter *adapter);
 
 G_END_DECLS

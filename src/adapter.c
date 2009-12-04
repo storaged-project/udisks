@@ -403,6 +403,12 @@ adapter_local_get_native_path (Adapter *adapter)
 }
 
 const char *
+adapter_local_get_driver (Adapter *adapter)
+{
+  return adapter->priv->driver;
+}
+
+const char *
 adapter_local_get_fabric (Adapter *adapter)
 {
   return adapter->priv->fabric;
@@ -439,8 +445,8 @@ update_info_fabric_and_num_ports (Adapter *adapter)
   device_class = g_udev_device_get_sysfs_attr_as_uint64 (adapter->priv->d, "class");
   driver = g_udev_device_get_driver (adapter->priv->d);
 
-  class = (device_class & 0xff0000);
-  subclass = (device_class & 0x00ff00);
+  class = (device_class & 0xff0000) >> 16;
+  subclass = (device_class & 0x00ff00) >> 8;
   interface = (device_class & 0x0000ff);
 
   /* count number of scsi_host objects - this is to detect whether we are dealing with
@@ -468,8 +474,12 @@ update_info_fabric_and_num_ports (Adapter *adapter)
       g_dir_close (dir);
     }
 
+  /* Don't bother if no driver is bound */
+  if (num_scsi_host_objects == 0)
+    goto out;
+
   /* First try to use driver name to determine if this is ATA */
-  if (driver != NULL && (g_str_has_prefix (driver, "pata_") || g_strcmp0 (driver, "ata_piix") == 0))
+  if (driver != NULL && g_str_has_prefix (driver, "pata_"))
     {
       fabric = "ata_pata";
       num_ports = num_scsi_host_objects;
@@ -553,7 +563,7 @@ update_info_fabric_and_num_ports (Adapter *adapter)
   adapter_set_fabric (adapter, fabric);
   adapter_set_num_ports (adapter, num_ports);
 
-  //out:
+ out:
   g_free (scsi_host_name);
   return ret;
 }
