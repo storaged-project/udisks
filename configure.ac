@@ -211,6 +211,7 @@ doc/man/Makefile
 doc/dbus/Makefile
 policy/Makefile
 po/Makefile.in
+tests/Makefile
 ])
 
 dnl ==========================================================================

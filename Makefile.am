@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = data src doc tools policy po
+SUBDIRS = data src doc tools policy po tests
 
 # Creating ChangeLog from git log (taken from cairo/Makefile.am):
 ChangeLog: $(srcdir)/ChangeLog
@@ -28,3 +28,6 @@ DISTCHECK_CONFIGURE_FLAGS=--disable-man-pages --disable-gtk-doc
 
 clean-local :
 	rm -f *~
+
+TESTS_ENVIRONMENT = sudo
+TESTS = tests/run
