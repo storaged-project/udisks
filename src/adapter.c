@@ -462,22 +462,25 @@ update_info_fabric_and_num_ports (Adapter *adapter)
       g_dir_close (dir);
     }
 
-  if (num_scsi_host_objects > 1)
+  /* First try to use driver name to determine if this is ATA */
+  if (driver != NULL && (g_str_has_prefix (driver, "pata_") || g_strcmp0 (driver, "ata_piix") == 0))
     {
-      /* we're dealing with ATA */
+      fabric = "ata_pata";
+      num_ports = num_scsi_host_objects;
+    }
+  else if (driver != NULL && (g_str_has_prefix (driver, "sata_") || g_strcmp0 (driver, "ahci") == 0))
+    {
+      fabric = "ata_sata";
+      num_ports = num_scsi_host_objects;
+    }
+  else if (num_scsi_host_objects > 1)
+    {
+      /* we're definitely possibly (!) dealing with ATA */
       num_ports = num_scsi_host_objects;
 
       /* use PCI class to zero in - maybe we also want to use driver names? */
       fabric = "ata";
-      if (driver != NULL && (g_str_has_prefix (driver, "pata_") || g_strcmp0 (driver, "ata_piix") == 0))
-        {
-          fabric = "ata_pata";
-        }
-      else if (driver != NULL && (g_str_has_prefix (driver, "sata_") || g_strcmp0 (driver, "ahci") == 0))
-        {
-          fabric = "ata_sata";
-        }
-      else if (subclass == 0x01 || subclass == 0x05)
+      if (subclass == 0x01 || subclass == 0x05)
         {
           fabric = "ata_pata";
         }
