@@ -402,6 +402,12 @@ adapter_local_get_native_path (Adapter *adapter)
   return adapter->priv->native_path;
 }
 
+const char *
+adapter_local_get_fabric (Adapter *adapter)
+{
+  return adapter->priv->fabric;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 /* figure out the fabric and number of ports - this is a bit dicey/sketchy and involves

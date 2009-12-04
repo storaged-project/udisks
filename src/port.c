@@ -600,18 +600,6 @@ update_info_ata (Port *port,
    * As ATA drivers create one scsi_host objects for each port
    * the port number can be inferred from the numbering of the
    * scsi_host objects.
-   *
-   * We also want to check that the scsi_host object *really*
-   * stems from SATA. There doesn't seem to be an easy way of
-   * doing this so the heuristic used right now is that it
-   * the scsi_host is ATA if, and only if, there is more than
-   * one scsi_host....
-   *
-   * (TODO: we could match on driver names instead? Anyway,
-   *        there are plans to properly support the ATA
-   *        topology (including PMP) once libata switches
-   *        away from SCSI. Once this is available these
-   *        hacks can go away...)
    */
 
   basename = strrchr (port->priv->native_path, '/');
@@ -630,7 +618,6 @@ update_info_ata (Port *port,
     }
 
   numbers = g_array_new (FALSE, FALSE, sizeof(gint));
-
   while ((name = g_dir_read_name (dir)) != NULL)
     {
       gint number;
@@ -640,15 +627,6 @@ update_info_ata (Port *port,
 
       g_array_append_val (numbers, number);
     }
-
-  if (numbers->len < 2)
-    {
-      /* This is (probably, see above) ATA since there isn't at least two
-       * scsi_host objects.
-       */
-      goto out;
-    }
-
   g_array_sort (numbers, int_compare_func);
 
   for (n = 0; n < numbers->len; n++)
@@ -737,15 +715,20 @@ update_info (Port *port)
   else
     port_set_parent (port, adapter_local_get_object_path (adapter));
 
-  if (g_strcmp0 (g_udev_device_get_subsystem (port->priv->d), "scsi_host") == 0)
+  if (g_strcmp0 (g_udev_device_get_subsystem (port->priv->d), "scsi_host") == 0 &&
+      g_str_has_prefix (adapter_local_get_fabric (adapter), "ata"))
     {
       if (!update_info_ata (port, adapter))
         goto out;
     }
-  else
+  else if (g_strcmp0 (adapter_local_get_fabric (adapter), "scsi_sas") == 0)
     {
       if (!update_info_sas_phy (port, adapter))
         goto out;
+    }
+  else
+    {
+      goto out;
     }
 
   ret = TRUE;
