@@ -23,8 +23,13 @@
 #endif
 
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
+
+/* See gnome-disk-utility:gdu/src/gdu-ssh-bridge.c for the protocol used */
 
 typedef struct
 {
@@ -268,16 +273,21 @@ main (int argc, char **argv)
   Bridge *bridge;
   static GOptionEntry entries[] =
     {
-      { "port", 'p', 0, G_OPTION_ARG_INT, &port_number, "TCP port number to listen on", NULL },
+      { "port", 'p', 0, G_OPTION_ARG_INT, &port_number, "TCP port number to connect to", NULL },
       { NULL }
     };
   gchar *client_address;
+  gchar *secret_buf;
+  gsize secret_buf_len;
+  DBusMessage *message;
+  DBusMessage *reply;
 
   ret = 1;
   context = NULL;
   loop = NULL;
   bridge = NULL;
   client_address = NULL;
+  secret_buf = NULL;
 
   g_type_init ();
 
@@ -327,6 +337,19 @@ main (int argc, char **argv)
       goto out;
     }
 
+  g_printerr ("udisks-tcp-bridge: Waiting for secret\n");
+
+  secret_buf = g_new0 (gchar, 4096);
+  fgets (secret_buf, 4096, stdin);
+  secret_buf_len = strlen(secret_buf);
+  if (secret_buf_len < 1 || secret_buf_len >= 4095)
+    {
+      g_printerr ("secret_buf has length %" G_GSIZE_FORMAT "\n", secret_buf_len);
+      goto out;
+    }
+  if (secret_buf[secret_buf_len - 1] == '\n')
+    secret_buf[secret_buf_len - 1] = '\0';
+
   g_printerr ("udisks-tcp-bridge: Attempting to connect to port %d\n", port_number);
 
   client_address = g_strdup_printf ("tcp:host=localhost,port=%d", port_number);
@@ -347,12 +370,38 @@ main (int argc, char **argv)
                               bridge,
                               NULL);
 
+  /* OK, so far so good - now we need to prove we are authorized */
+  message = dbus_message_new_method_call (NULL, /* bus_name */
+                                          "/org/freedesktop/UDisks/Client",
+                                          "org.freedesktop.UDisks.Client",
+                                          "Authorize");
+  dbus_message_append_args (message,
+                            DBUS_TYPE_STRING, &secret_buf,
+                            DBUS_TYPE_INVALID);
+  reply = dbus_connection_send_with_reply_and_block (bridge->client,
+                                                     message,
+                                                     -1,
+                                                     &dbus_error);
+  dbus_message_unref (message);
+  memset (secret_buf, '\0', secret_buf_len);
+  if (reply == NULL)
+    {
+      g_printerr ("Error authorizing ourselves to `%s': %s: %s\n",
+                  client_address,
+                  dbus_error.name,
+                  dbus_error.message);
+      dbus_error_free (&dbus_error);
+      goto out;
+    }
+  dbus_message_unref (reply);
+
   loop = g_main_loop_new (NULL, FALSE);
   g_main_loop_run (loop);
 
   ret = 0;
 
  out:
+  g_free (secret_buf);
   g_free (client_address);
   if (context != NULL)
     g_option_context_free (context);
