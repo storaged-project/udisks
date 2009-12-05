@@ -22,33 +22,29 @@
 #  include "config.h"
 #endif
 
+#include <stdlib.h>
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
 typedef struct
 {
   DBusGConnection *bus;
-  DBusServer *server;
-
-  GList *connections;
+  DBusConnection *client;
 } Bridge;
 
 static void
 bridge_free (Bridge *bridge)
 {
-  GList *l;
-
-  for (l = bridge->connections; l != NULL; l = l->next)
+  if (bridge->client != NULL)
     {
-      DBusConnection *c = l->data;
-      dbus_connection_close (c);
-      dbus_connection_unref (c);
+      dbus_connection_close (bridge->client);
+      dbus_connection_unref (bridge->client);
     }
 
-  if (bridge->server != NULL)
-    dbus_server_unref (bridge->server);
   if (bridge->bus != NULL)
-    dbus_g_connection_unref (bridge->bus);
+    {
+      dbus_g_connection_unref (bridge->bus);
+    }
 
   g_free (bridge);
 }
@@ -131,7 +127,7 @@ on_forwarded_method_call_reply (DBusPendingCall *pending_call,
   forwarded_message_free (fwd);
 }
 
-/* filter function for remote connections - used to forward method calls
+/* filter function for the remote client - used to forward method calls
  * for the org.freedesktop.UDisks
  */
 static DBusHandlerResult
@@ -146,10 +142,8 @@ filter_function (DBusConnection *connection,
   if (dbus_message_is_signal (message, "org.freedesktop.DBus.Local", "Disconnected") &&
       dbus_message_get_destination (message) == NULL)
     {
-      dbus_connection_close (connection);
-      dbus_connection_unref (connection);
-      g_warn_if_fail (g_list_find (bridge->connections, connection) != NULL);
-      bridge->connections = g_list_remove (bridge->connections, connection);
+      g_print ("Client disconnected - shutting down\n");
+      exit (0);
     }
 
   /* Handle AddMatch/RemoveMatch methods for the message bus - we'll
@@ -222,24 +216,8 @@ filter_function (DBusConnection *connection,
   return DBUS_HANDLER_RESULT_HANDLED;
 }
 
-static void
-on_new_connection (DBusServer     *server,
-                   DBusConnection *new_connection,
-                   void           *user_data)
-{
-  Bridge *bridge = user_data;
-
-  dbus_connection_set_allow_anonymous (new_connection, TRUE);
-  dbus_connection_add_filter (new_connection,
-                              filter_function,
-                              bridge,
-                              NULL);
-  dbus_connection_setup_with_g_main (new_connection, NULL);
-  bridge->connections = g_list_prepend (bridge->connections, dbus_connection_ref (new_connection));
-}
-
-/* filter function for local connections - used to forward signals from
- * org.freedesktop.UDisks to all the remote connections
+/* filter function for local bus connection - used to forward signals from
+ * org.freedesktop.UDisks to the client
  */
 static DBusHandlerResult
 bus_filter_function (DBusConnection *connection,
@@ -248,6 +226,9 @@ bus_filter_function (DBusConnection *connection,
 {
   Bridge *bridge = user_data;
 
+  if (bridge->client == NULL)
+    goto out;
+
   /* Can't match on sender name because the bus rewrites it to a unique name - the
    * fact that we only add matches for org.freedesktop.UDisks means that we only
    * ever get signals from two sources - the bus and the UDisks server
@@ -255,7 +236,6 @@ bus_filter_function (DBusConnection *connection,
   if (dbus_message_get_type (message) == DBUS_MESSAGE_TYPE_SIGNAL &&
       g_strcmp0 (dbus_message_get_sender (message), "org.freedesktop.DBus") != 0)
     {
-      GList *l;
       DBusMessage *rewritten_message;
 
       /* Rewrite the message so the sender is :1.42 as per the comment in filter_function
@@ -267,15 +247,12 @@ bus_filter_function (DBusConnection *connection,
       //g_print ("TODO: forward signal\n");
       //print_message (rewritten_message);
 
-      for (l = bridge->connections; l != NULL; l = l->next)
-        {
-          DBusConnection *remote_connection = l->data;
-          dbus_connection_send (remote_connection, rewritten_message, NULL);
-        }
+      dbus_connection_send (bridge->client, rewritten_message, NULL);
 
       dbus_message_unref (rewritten_message);
     }
 
+ out:
   return DBUS_HANDLER_RESULT_HANDLED;
 }
 
@@ -288,20 +265,19 @@ main (int argc, char **argv)
   GMainLoop *loop;
   static gboolean port_number;
   DBusError dbus_error;
-  gchar *server_address;
   Bridge *bridge;
-  const gchar *auth_mechanisms[] = {"ANONYMOUS", NULL};
   static GOptionEntry entries[] =
     {
       { "port", 'p', 0, G_OPTION_ARG_INT, &port_number, "TCP port number to listen on", NULL },
       { NULL }
     };
+  gchar *client_address;
 
   ret = 1;
   context = NULL;
   loop = NULL;
-  server_address = NULL;
   bridge = NULL;
+  client_address = NULL;
 
   g_type_init ();
 
@@ -333,7 +309,6 @@ main (int argc, char **argv)
       g_error_free (error);
       goto out;
     }
-
   dbus_connection_add_filter (dbus_g_connection_get_connection (bridge->bus),
                               bus_filter_function,
                               bridge,
@@ -352,34 +327,25 @@ main (int argc, char **argv)
       goto out;
     }
 
-  /* TODO: take host as parameter */
-  server_address = g_strdup_printf ("tcp:host=0.0.0.0,port=%d", port_number);
+  g_printerr ("udisks-tcp-bridge: Attempting to connect to port %d\n", port_number);
 
+  client_address = g_strdup_printf ("tcp:host=localhost,port=%d", port_number);
   dbus_error_init (&dbus_error);
-  bridge->server = dbus_server_listen (server_address, &dbus_error);
-  if (bridge->server == NULL)
+  bridge->client = dbus_connection_open (client_address, &dbus_error);
+  if (bridge->client == NULL)
     {
-      g_printerr ("Error listening to address `%s': %s: %s\n",
-                  server_address,
+      g_printerr ("Error connecting to `%s': %s: %s\n",
+                  client_address,
                   dbus_error.name,
                   dbus_error.message);
       dbus_error_free (&dbus_error);
       goto out;
     }
-  dbus_server_setup_with_g_main (bridge->server, NULL);
-
-  dbus_server_set_new_connection_function (bridge->server,
-                                           on_new_connection,
-                                           bridge,
-                                           NULL);
-
-  /* Allow only anonymous auth */
-  if (!dbus_server_set_auth_mechanisms (bridge->server, auth_mechanisms))
-    {
-      g_printerr ("Error setting auth mechanisms\n");
-      g_error_free (error);
-      goto out;
-    }
+  dbus_connection_setup_with_g_main (bridge->client, NULL);
+  dbus_connection_add_filter (bridge->client,
+                              filter_function,
+                              bridge,
+                              NULL);
 
   loop = g_main_loop_new (NULL, FALSE);
   g_main_loop_run (loop);
@@ -387,7 +353,7 @@ main (int argc, char **argv)
   ret = 0;
 
  out:
-  g_free (server_address);
+  g_free (client_address);
   if (context != NULL)
     g_option_context_free (context);
   if (loop != NULL)
