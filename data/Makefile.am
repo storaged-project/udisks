@@ -30,12 +30,16 @@ udevrules_DATA = 80-udisks.rules
 pkgconfigdir = $(datadir)/pkgconfig
 pkgconfig_DATA = udisks.pc
 
+avahiservicedir = $(sysconfdir)/avahi/services
+avahiservice_DATA = udisks.service
+
 EXTRA_DIST = 						\
 	80-udisks.rules					\
 	$(dbusif_DATA)					\
 	$(service_in_files)				\
 	$(dbusconf_in_files)				\
 	udisks.pc.in					\
+	udisks.service					\
 	$(NULL)
 
 clean-local :
