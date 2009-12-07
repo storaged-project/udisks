@@ -33,7 +33,7 @@ udisks-daemon-glue.h: $(top_srcdir)/data/org.freedesktop.UDisks.xml Makefile.am
 udisks-device-glue.h: $(top_srcdir)/data/org.freedesktop.UDisks.Device.xml Makefile.am
 	dbus-binding-tool --prefix=udisks_daemon --mode=glib-client --output=udisks-device-glue.h $(top_srcdir)/data/org.freedesktop.UDisks.Device.xml
 
-bin_PROGRAMS = udisks
+bin_PROGRAMS = udisks udisks-tcp-bridge
 
 udisks_SOURCES = 					\
 				udisks.c		\
@@ -59,8 +59,6 @@ slashsbin_PROGRAMS = umount.udisks
 umount_udisks_SOURCES = umount-udisks.c
 umount_udisks_LDADD = $(DBUS_GLIB_LIBS) $(POLKIT_DBUS_LIBS)
 
-libudisksdir=$(prefix)/lib/udisks
-libudisks_PROGRAMS = udisks-tcp-bridge
 udisks_tcp_bridge_SOURCES = udisks-tcp-bridge.c
 udisks_tcp_bridge_LDADD = $(DBUS_GLIB_LIBS)
 
