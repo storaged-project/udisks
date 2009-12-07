@@ -1,0 +1,81 @@
+<refentry id="udisks-tcp-bridge.1">
+  <refentryinfo>
+    <title>udisks-tcp-bridge</title>
+    <date>December 2009</date>
+    <productname>udisks</productname>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>udisks-tcp-bridge</refentrytitle>
+    <manvolnum>1</manvolnum>
+    <refmiscinfo class="version"></refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>udisks-tcp-bridge</refname>
+    <refpurpose>udisks TCP/IP bridge</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>udisks-tcp-bridge </command>
+      <arg>
+        <option>--port</option>
+        <arg choice="plain"><replaceable>port</replaceable></arg>
+      </arg>
+      <arg>
+        <option>--help</option>
+      </arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1><title>DESCRIPTION</title>
+    <para>
+      This program is used by remote clients to connect to
+      the <emphasis>org.freedesktop.UDisks</emphasis> D-Bus service on
+      the system bus.
+    </para>
+    <para>
+      Users or administrators never needs to start this program as it
+      started automatically by a remote client connecting via
+      <citerefentry><refentrytitle>ssh</refentrytitle><manvolnum>1</manvolnum></citerefentry>.
+      See the
+      <citerefentry><refentrytitle>udisks</refentrytitle><manvolnum>7</manvolnum></citerefentry>
+      manual page for information about the higher level connection protocol used.
+    </para>
+  </refsect1>
+
+  <refsect1><title>AUTHOR</title>
+    <para>
+      Written by David Zeuthen <email>david@fubar.dk</email> with
+      a lot of help from many others.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>BUGS</title>
+    <para>
+      Please send bug reports to either the distribution bug tracker
+      or the upstream bug tracker at
+      <ulink url="http://bugs.freedesktop.org/enter_bug.cgi?product=udisks"/>.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para>
+      <citerefentry>
+        <refentrytitle>udisks-daemon</refentrytitle><manvolnum>8</manvolnum>
+      </citerefentry>,
+      <citerefentry>
+        <refentrytitle>udisks</refentrytitle><manvolnum>7</manvolnum>
+      </citerefentry>,
+      <citerefentry>
+        <refentrytitle>udisks</refentrytitle><manvolnum>1</manvolnum>
+      </citerefentry>,
+      <citerefentry>
+        <refentrytitle>ssh</refentrytitle><manvolnum>1</manvolnum>
+      </citerefentry>
+    </para>
+  </refsect1>
+</refentry>

@@ -80,6 +80,7 @@
     <xi:include href="man/udisks7.xml"/>
     <xi:include href="man/udisks-daemon.xml"/>
     <xi:include href="man/udisks.xml"/>
+    <xi:include href="man/udisks-tcp-bridge.xml"/>
   </reference>
 
   <index>

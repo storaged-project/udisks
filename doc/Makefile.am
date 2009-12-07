@@ -52,6 +52,7 @@ content_files =  			    			\
 	man/udisks.xml		    				\
 	man/udisks-daemon.xml		    			\
 	man/udisks7.xml		    				\
+	man/udisks-tcp-bridge.xml		    		\
 	dbus/org.freedesktop.UDisks.ref.xml			\
 	dbus/org.freedesktop.UDisks.Device.ref.xml		\
 	dbus/org.freedesktop.UDisks.Adapter.ref.xml		\

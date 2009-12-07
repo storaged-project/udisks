@@ -2,7 +2,7 @@
   <refentryinfo>
     <title>udisks-daemon</title>
     <date>April 2008</date>
-    <productname>udisks-daemon</productname>
+    <productname>udisks</productname>
   </refentryinfo>
 
   <refmeta>
@@ -83,8 +83,11 @@
         <refentrytitle>udisks</refentrytitle><manvolnum>1</manvolnum>
       </citerefentry>,
       <citerefentry>
-        <refentrytitle>dbus-daemon</refentrytitle><manvolnum>1</manvolnum>
+        <refentrytitle>udisks-tcp-bridge</refentrytitle><manvolnum>1</manvolnum>
       </citerefentry>,
+      <citerefentry>
+        <refentrytitle>dbus-daemon</refentrytitle><manvolnum>1</manvolnum>
+      </citerefentry>
     </para>
   </refsect1>
 </refentry>
