@@ -1,3 +1,55 @@
+------------
+udisks 1.0.0 <not yet released>
+------------
+
+udisks provides a daemon, D-Bus API and command line tools
+for managing disks and storage devices.
+
+All releases in the udisks 1.0 series will retain ABI compatibility at
+the D-Bus interface level. This means that any application built
+against udisks 1.0.x will work with udisks 1.0.y provided that y >=
+x. At this point we do not provide any ABI guarantees for the
+udisks(1) command-line tool (neither options nor the name). See the
+README file for more discussion of ABI guarantees.
+
+Major changes from DeviceKit-disks 009:
+
+ o  The project has been renamed from DeviceKit-disks to udisks
+
+ o  Host Adapters, Ports and Expanders are now exported as D-Bus objects
+
+ o  A program for bridging D-Bus over TCP/IP over SSH has been provided
+    (udisks-tcp-bridge). The udisks daemon is also announced via the
+    Avahi mDNS/DNS-SD framework.
+
+ o  An API for benchmarking drives has been added
+
+ABI incompatible changes from DeviceKit-disks 009:
+
+ o  The well-known system bus name has been changed from
+    org.freedesktop.DeviceKit.Disks to org.freedesktop.UDisks
+
+ o  The well-known object path /org/freedesktop/DeviceKit/Disks has
+    been changed to /org/freedesktop/UDisks.
+
+ o  The org.freedesktop.DeviceKit.Disks D-Bus interface name
+    has been changed to org.freedesktop.UDisks
+
+ o  The org.freedesktop.DeviceKit.Disks.Device D-Bus interface name
+    has been changed to org.freedesktop.UDisks.Device
+
+ o  The udev properties that udisks-daemon reads has been renamed
+    from DKD_* to UDISKS_*.
+
+Detailed changes from DeviceKit-disks 009:
+
+ <insert prettified output of 'git-log 009.. | git shortlog' here>
+
+Thanks to all our contributors.
+
+<insert your name>,
+<insert the date>
+
 -------------------
 DeviceKit-disks 009
 -------------------
