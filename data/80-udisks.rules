@@ -148,6 +148,10 @@ ENV{ID_MEDIA_PLAYER}=="?*", ENV{UDISKS_PRESENTATION_ICON_NAME}="multimedia-playe
 #
 ATTRS{idVendor}=="05ac", ATTRS{idProduct}=="1209", ENV{UDISKS_PRESENTATION_ICON_NAME}="multimedia-player-ipod-white"
 
+# APPLE SD Card Reader (MacbookPro5,4)
+#
+ATTRS{idVendor}=="05ac", ATTRS{idProduct}=="8403", ENV{ID_DRIVE_FLASH_SD}="1"
+
 ##############################################################################################################
 
 # PC floppy drives
