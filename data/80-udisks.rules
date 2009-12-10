@@ -14,7 +14,7 @@ GOTO="ata_port_cardbus_end"
 LABEL="ata_port_cardbus"
 # Mass storage controller: Silicon Image, Inc. SiI 3512 [SATALink/SATARaid] Serial ATA Controller (rev 01)
 #
-ATTRS{vendor}=="0x1095", ATTRS{device}=="0x3512", ENV{UDISKS_ATA_PORT_CONNECTOR_TYPE}="ata_sata_external"
+SUBSYSTEMS=="pci", ATTRS{vendor}=="0x1095", ATTRS{device}=="0x3512", ENV{UDISKS_ATA_PORT_CONNECTOR_TYPE}="ata_sata_external"
 LABEL="ata_port_cardbus_end"
 
 # probe SAS expanders
@@ -130,27 +130,27 @@ KERNEL=="sd*[!0-9]", ATTR{removable}=="0", ENV{ID_BUS}=="scsi", ENV{DEVTYPE}=="d
 # Example rule for tagging a device with a specific media type. Where and
 # how to store this database needs some thought.
 #
-ATTRS{idVendor}=="050d", ATTRS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:0", ENV{ID_DRIVE_FLASH_CF}="1"
-ATTRS{idVendor}=="050d", ATTRS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:1", ENV{ID_DRIVE_FLASH_MS}="1"
-ATTRS{idVendor}=="050d", ATTRS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:2", ENV{ID_DRIVE_FLASH_SM}="1"
-ATTRS{idVendor}=="050d", ATTRS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:3", ENV{ID_DRIVE_FLASH_SD}="1"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="050d", ATTRS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:0", ENV{ID_DRIVE_FLASH_CF}="1"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="050d", ATTRS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:1", ENV{ID_DRIVE_FLASH_MS}="1"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="050d", ATTRS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:2", ENV{ID_DRIVE_FLASH_SM}="1"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="050d", ATTRS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:3", ENV{ID_DRIVE_FLASH_SD}="1"
 
-ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:0", ENV{ID_DRIVE_FLASH_CF}="1"
-ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:1", ENV{ID_DRIVE_FLASH_SM}="1"
-ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:2", ENV{ID_DRIVE_FLASH_SD}="1"
-ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:3", ENV{ID_DRIVE_FLASH_MS}="1"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:0", ENV{ID_DRIVE_FLASH_CF}="1"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:1", ENV{ID_DRIVE_FLASH_SM}="1"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:2", ENV{ID_DRIVE_FLASH_SD}="1"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:3", ENV{ID_DRIVE_FLASH_MS}="1"
 
 # Generic music player
 #
-ENV{ID_MEDIA_PLAYER}=="?*", ENV{UDISKS_PRESENTATION_ICON_NAME}="multimedia-player"
+SUBSYSTEMS=="usb", ENV{ID_MEDIA_PLAYER}=="?*", ENV{UDISKS_PRESENTATION_ICON_NAME}="multimedia-player"
 
 # Apple iPod Video
 #
-ATTRS{idVendor}=="05ac", ATTRS{idProduct}=="1209", ENV{UDISKS_PRESENTATION_ICON_NAME}="multimedia-player-ipod-white"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="05ac", ATTRS{idProduct}=="1209", ENV{UDISKS_PRESENTATION_ICON_NAME}="multimedia-player-ipod-white"
 
 # APPLE SD Card Reader (MacbookPro5,4)
 #
-ATTRS{idVendor}=="05ac", ATTRS{idProduct}=="8403", ENV{ID_DRIVE_FLASH_SD}="1"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="05ac", ATTRS{idProduct}=="8403", ENV{ID_DRIVE_FLASH_SD}="1"
 
 ##############################################################################################################
 
@@ -160,7 +160,7 @@ KERNEL=="fd*", ENV{ID_DRIVE_FLOPPY}="1"
 
 # USB floppy drives
 #
-ATTRS{bInterfaceClass}=="08", ATTRS{bInterfaceSubClass}=="04", ENV{ID_DRIVE_FLOPPY}="1"
+SUBSYSTEMS=="usb", ATTRS{bInterfaceClass}=="08", ATTRS{bInterfaceSubClass}=="04", ENV{ID_DRIVE_FLOPPY}="1"
 
 # ATA Zip drives
 #
