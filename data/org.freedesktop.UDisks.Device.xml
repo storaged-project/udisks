@@ -914,6 +914,39 @@
 
     <!-- ************************************************************ -->
 
+    <method name="LinuxLvm2LVStop">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Stops a Linux LVM2 Logical Volume.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need the following PolicyKit authorization:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.udisks.linux-lvm2</doc:term>
+              <doc:definition>
+                Needed to configured Linux LVM2.
+              </doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
+          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
     <method name="LinuxMdCheck">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="options" direction="in" type="as">
@@ -1561,6 +1594,16 @@
     <property name="DeviceIsLinuxMd" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE if the device is a Linux md RAID array. See LinuxMd properties for details.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="DeviceIsLinuxLvm2LV" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if the device is a Linux LVM2 logical volume. See LinuxLvm2LV properties for details.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="DeviceIsLinuxLvm2PV" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if the device is a Linux LVM2 physical. See LinuxLvm2PV properties for details.
       </doc:para></doc:description></doc:doc>
     </property>
     <property name="DeviceSize" type="t" access="read">
@@ -2523,6 +2566,141 @@
             is TRUE and the value of the property
             <doc:ref type="property" to="Device:LinuxMdSyncAction">LinuxMdSyncAction</doc:ref>
             is not <doc:tt>idle</doc:tt>.
+      </doc:para></doc:description></doc:doc>
+    </property>
+
+    <!-- ********************* -->
+    <!-- LVM2 Physical Volumes -->
+    <!-- ********************* -->
+
+    <!-- Data about the Physical Volume itself  -->
+    <property name="LinuxLvm2PVUuid" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The UUID of the PV.
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsLinuxLvm2PV">DeviceIsLinuxLvm2PV</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="LinuxLvm2PVNumMetadataAreas" type="u" access="read">
+      <doc:doc><doc:description><doc:para>
+            The number of metadata areas on the PV.
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsLinuxLvm2PV">DeviceIsLinuxLvm2PV</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+
+    <!-- Data about the Volume Group that the Physical Volume is part of  -->
+    <property name="LinuxLvm2PVGroupName" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The name of the volume group (that this physical volume belongs to).
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsLinuxLvm2PV">DeviceIsLinuxLvm2PV</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="LinuxLvm2PVGroupUuid" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The UUID of the volume group (that this physical volume belongs to).
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsLinuxLvm2PV">DeviceIsLinuxLvm2PV</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="LinuxLvm2PVGroupSize" type="t" access="read">
+      <doc:doc><doc:description><doc:para>
+            The size of the volume group (that this physical volume belongs to) in bytes.
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsLinuxLvm2PV">DeviceIsLinuxLvm2PV</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="LinuxLvm2PVGroupUnallocatedSize" type="t" access="read">
+      <doc:doc><doc:description><doc:para>
+            The unallocated size of the volume group (that this physical volume belongs to) in bytes.
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsLinuxLvm2PV">DeviceIsLinuxLvm2PV</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="LinuxLvm2PVGroupSequenceNumber" type="t" access="read">
+      <doc:doc><doc:description><doc:para>
+            The sequence number for the volume group (that this physical volume belongs to).
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsLinuxLvm2PV">DeviceIsLinuxLvm2PV</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="LinuxLvm2PVGroupExtentSize" type="t" access="read">
+      <doc:doc><doc:description><doc:para>
+            The extent size for the volume group (that this physical volume belongs to) in bytes.
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsLinuxLvm2PV">DeviceIsLinuxLvm2PV</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="LinuxLvm2PVGroupPhysicalVolumes" type="as" access="read">
+      <doc:doc><doc:description><doc:para>
+            The physical volumes that belongs to the volume group (that this physical volume belongs to).
+            Each element is a semicolon separated list of key/value pairs. The only known key/value
+            type as this point is <literal>uuid</literal> for the UUID of the physical volume.
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsLinuxLvm2PV">DeviceIsLinuxLvm2PV</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="LinuxLvm2PVGroupLogicalVolumes" type="as" access="read">
+      <doc:doc><doc:description><doc:para>
+            The logical volumes that belongs to the volume group (that this physical volume belongs to).
+            Each element is a semicolon separated list of key/value pairs. The only known key/value
+            types as this point are
+            <literal>uuid</literal> (for the UUID of the logical volume),
+            <literal>name</literal> (for the name of the logical volume),
+            <literal>size</literal> (for the size of the logical volume) and
+            <literal>active</literal> (whether the logical volume is active).
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsLinuxLvm2PV">DeviceIsLinuxLvm2PV</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+
+
+    <!-- ******************** -->
+    <!-- LVM2 Logical Volumes -->
+    <!-- ******************** -->
+
+    <!-- Data about the LV itself -->
+    <property name="LinuxLvm2LVName" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The name of the logical volume.
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsLinuxLvm2LV">DeviceIsLinuxLvm2LV</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="LinuxLvm2LVUuid" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The UUID of the logical volume.
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsLinuxLvm2LV">DeviceIsLinuxLvm2LV</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="LinuxLvm2LVGroupName" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The name of volume group the logical volume belongs to.
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsLinuxLvm2LV">DeviceIsLinuxLvm2LV</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="LinuxLvm2LVGroupUuid" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The UUID of the volume group the logical volume belongs to.
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsLinuxLvm2LV">DeviceIsLinuxLvm2LV</doc:ref>
+            is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
 

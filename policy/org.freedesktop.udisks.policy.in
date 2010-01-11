@@ -179,6 +179,16 @@
     </defaults>
   </action>
 
+  <action id="org.freedesktop.udisks.linux-lvm2">
+    <_description>Configure Linux LVM2</_description>
+    <_message>Authentication is required to configure Linux LVM2</_message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
   <action id="org.freedesktop.udisks.cancel-job-others">
     <_description>Cancel a job initiated by another user</_description>
     <_message>Authentication is required to cancel a job initiated by another user</_message>

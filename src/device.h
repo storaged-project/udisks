@@ -204,6 +204,11 @@ gboolean device_drive_unset_spindown_timeout (Device *device,
                                               char *cookie,
                                               DBusGMethodInvocation *context);
 
+gboolean device_linux_lvm2_lv_stop (Device *device,
+                                    char **options,
+                                    DBusGMethodInvocation *context);
+
+
 G_END_DECLS
 
 #endif /* __DEVICE_H__ */

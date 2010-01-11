@@ -310,6 +310,8 @@ typedef struct
   gboolean device_is_mounted;
   gboolean device_is_linux_md_component;
   gboolean device_is_linux_md;
+  gboolean device_is_linux_lvm2_lv;
+  gboolean device_is_linux_lvm2_pv;
   char **device_mount_paths;
   uid_t device_mounted_by_uid;
   gboolean device_presentation_hide;
@@ -402,6 +404,22 @@ typedef struct
   char *linux_md_sync_action;
   double linux_md_sync_percentage;
   guint64 linux_md_sync_speed;
+
+  gchar *linux_lvm2_lv_name;
+  gchar *linux_lvm2_lv_uuid;
+  gchar *linux_lvm2_lv_group_name;
+  gchar *linux_lvm2_lv_group_uuid;
+
+  gchar *linux_lvm2_pv_uuid;
+  guint  linux_lvm2_pv_num_metadata_areas;
+  gchar *linux_lvm2_pv_group_name;
+  gchar *linux_lvm2_pv_group_uuid;
+  guint64 linux_lvm2_pv_group_size;
+  guint64 linux_lvm2_pv_group_unallocated_size;
+  guint64 linux_lvm2_pv_group_sequence_number;
+  guint64 linux_lvm2_pv_group_extent_size;
+  char **linux_lvm2_pv_group_physical_volumes;
+  char **linux_lvm2_pv_group_logical_volumes;
 } DeviceProperties;
 
 static void
@@ -460,6 +478,10 @@ collect_props (const char *key,
     props->device_is_linux_md_component = g_value_get_boolean (value);
   else if (strcmp (key, "DeviceIsLinuxMd") == 0)
     props->device_is_linux_md = g_value_get_boolean (value);
+  else if (strcmp (key, "DeviceIsLinuxLvm2LV") == 0)
+    props->device_is_linux_lvm2_lv = g_value_get_boolean (value);
+  else if (strcmp (key, "DeviceIsLinuxLvm2PV") == 0)
+    props->device_is_linux_lvm2_pv = g_value_get_boolean (value);
   else if (strcmp (key, "DeviceIsMounted") == 0)
     props->device_is_mounted = g_value_get_boolean (value);
   else if (strcmp (key, "DeviceMountPaths") == 0)
@@ -659,6 +681,36 @@ collect_props (const char *key,
   else if (strcmp (key, "LinuxMdSyncSpeed") == 0)
     props->linux_md_sync_speed = g_value_get_uint64 (value);
 
+  else if (strcmp (key, "LinuxLvm2LVName") == 0)
+    props->linux_lvm2_lv_name = g_strdup (g_value_get_string (value));
+  else if (strcmp (key, "LinuxLvm2LVUuid") == 0)
+    props->linux_lvm2_lv_uuid = g_strdup (g_value_get_string (value));
+  else if (strcmp (key, "LinuxLvm2LVGroupName") == 0)
+    props->linux_lvm2_lv_group_name = g_strdup (g_value_get_string (value));
+  else if (strcmp (key, "LinuxLvm2LVGroupUuid") == 0)
+    props->linux_lvm2_lv_group_uuid = g_strdup (g_value_get_string (value));
+
+  else if (strcmp (key, "LinuxLvm2PVUuid") == 0)
+    props->linux_lvm2_pv_uuid = g_strdup (g_value_get_string (value));
+  else if (strcmp (key, "LinuxLvm2PVNumMetadataAreas") == 0)
+    props->linux_lvm2_pv_num_metadata_areas = g_value_get_uint (value);
+  else if (strcmp (key, "LinuxLvm2PVGroupName") == 0)
+    props->linux_lvm2_pv_group_name = g_strdup (g_value_get_string (value));
+  else if (strcmp (key, "LinuxLvm2PVGroupUuid") == 0)
+    props->linux_lvm2_pv_group_uuid = g_strdup (g_value_get_string (value));
+  else if (strcmp (key, "LinuxLvm2PVGroupSize") == 0)
+    props->linux_lvm2_pv_group_size = g_value_get_uint64 (value);
+  else if (strcmp (key, "LinuxLvm2PVGroupUnallocatedSize") == 0)
+    props->linux_lvm2_pv_group_unallocated_size = g_value_get_uint64 (value);
+  else if (strcmp (key, "LinuxLvm2PVGroupSequenceNumber") == 0)
+    props->linux_lvm2_pv_group_sequence_number = g_value_get_uint64 (value);
+  else if (strcmp (key, "LinuxLvm2PVGroupExtentSize") == 0)
+    props->linux_lvm2_pv_group_extent_size = g_value_get_uint64 (value);
+  else if (strcmp (key, "LinuxLvm2PVGroupPhysicalVolumes") == 0)
+    props->linux_lvm2_pv_group_physical_volumes = g_strdupv (g_value_get_boxed (value));
+  else if (strcmp (key, "LinuxLvm2PVGroupLogicalVolumes") == 0)
+    props->linux_lvm2_pv_group_logical_volumes = g_strdupv (g_value_get_boxed (value));
+
   else
     handled = FALSE;
 
@@ -721,6 +773,18 @@ device_properties_free (DeviceProperties *props)
   g_free (props->linux_md_version);
   g_strfreev (props->linux_md_slaves);
   g_free (props->linux_md_sync_action);
+
+  g_free (props->linux_lvm2_lv_name);
+  g_free (props->linux_lvm2_lv_uuid);
+  g_free (props->linux_lvm2_lv_group_name);
+  g_free (props->linux_lvm2_lv_group_uuid);
+
+  g_free (props->linux_lvm2_pv_uuid);
+  g_free (props->linux_lvm2_pv_group_name);
+  g_free (props->linux_lvm2_pv_group_uuid);
+  g_strfreev (props->linux_lvm2_pv_group_physical_volumes);
+  g_strfreev (props->linux_lvm2_pv_group_logical_volumes);
+
   g_free (props);
 }
 
@@ -1117,6 +1181,33 @@ do_show_info (const char *object_path)
       for (n = 0; props->linux_md_slaves[n] != NULL; n++)
         g_print ("                      %s\n", props->linux_md_slaves[n]);
     }
+  if (props->device_is_linux_lvm2_lv)
+    {
+      g_print ("  LVM2 Logical Volume:\n");
+      g_print ("    LV name:                   %s\n", props->linux_lvm2_lv_name);
+      g_print ("    LV uuid:                   %s\n", props->linux_lvm2_lv_uuid);
+      g_print ("    VG name:                   %s\n", props->linux_lvm2_lv_group_name);
+      g_print ("    VG uuid:                   %s\n", props->linux_lvm2_lv_group_uuid);
+    }
+  if (props->device_is_linux_lvm2_pv)
+    {
+      g_print ("  LVM2 Physical Volume:\n");
+      g_print ("    PV uuid:                   %s\n", props->linux_lvm2_pv_uuid);
+      g_print ("    PV num mda:                %d\n", props->linux_lvm2_pv_num_metadata_areas);
+      g_print ("    VG name:                   %s\n", props->linux_lvm2_pv_group_name);
+      g_print ("    VG uuid:                   %s\n", props->linux_lvm2_pv_group_uuid);
+      g_print ("    VG size:                   %" G_GUINT64_FORMAT "\n", props->linux_lvm2_pv_group_size);
+      g_print ("    VG unallocated size:       %" G_GUINT64_FORMAT "\n", props->linux_lvm2_pv_group_unallocated_size);
+      g_print ("    VG extent size:            %" G_GUINT64_FORMAT "\n", props->linux_lvm2_pv_group_extent_size);
+      g_print ("    VG sequence number:        %" G_GUINT64_FORMAT "\n", props->linux_lvm2_pv_group_sequence_number);
+      g_print ("    Physical Volumes bound to the VG:\n");
+      for (n = 0; props->linux_lvm2_pv_group_physical_volumes[n] != NULL; n++)
+        g_print ("      %s\n", props->linux_lvm2_pv_group_physical_volumes[n]);
+      g_print ("    Logical Volumes that are part of the VG:\n");
+      for (n = 0; props->linux_lvm2_pv_group_logical_volumes[n] != NULL; n++)
+        g_print ("      %s\n", props->linux_lvm2_pv_group_logical_volumes[n]);
+    }
+
   if (props->device_is_luks)
     {
       g_print ("  luks device:\n");

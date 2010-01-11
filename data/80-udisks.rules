@@ -50,15 +50,28 @@ KERNEL=="dm-*", ACTION!="change", GOTO="udisks_end"
 # honor the flag that device-mapper sets if the device should be ignored
 ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}=="1", GOTO="udisks_end"
 
-# ignore private devices - see https://bugzilla.redhat.com/show_bug.cgi?id=528909#c24
+# import UDISKS_DM_* and UDISKS_LVM2_* properties - the long-term plan is to make the lvm2 and
+# device-mapper packages provide this information
+#
 KERNEL=="dm-*", IMPORT{program}="udisks-dm-export %M %m"
+
+# ignore private devices - see https://bugzilla.redhat.com/show_bug.cgi?id=528909#c24
 ENV{UDISKS_DM_UUID}=="CRYPT-TEMP-?*", GOTO="udisks_end"
 ENV{UDISKS_DM_UUID}!="?*", ENV{UDISKS_DM_NAME}=="temporary-cryptsetup-?*", GOTO="udisks_end"
 ENV{UDISKS_DM_NAME}=="?*-pvmove[0-9]*", GOTO="udisks_end"
 
+# Make udevd synthesize a 'change' uevent when last opener of a rw-fd closes the fd - this
+# should be part of the device-mapper rules
+KERNEL=="dm-*", OPTIONS+="watch"
+
+##############################################################################################################
+# Probe LVM2 Physical Volumes - this will eventually be part of the LVM2 package
+
+ID_FS_TYPE=="LVM2_member", IMPORT{program}="udisks-lvm-pv-export $env{ID_FS_UUID}"
+
 ##############################################################################################################
 
-# Probe for partition tables; this really should be part of udev
+# Probe for partition tables; this really should be part of udev / util-linux-ng
 #
 
 # skip rules for inappropriate block devices

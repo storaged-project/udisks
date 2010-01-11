@@ -220,6 +220,22 @@ gboolean daemon_drive_unset_all_spindown_timeouts (Daemon *daemon,
                                                    char *cookie,
                                                    DBusGMethodInvocation *context);
 
+gboolean daemon_linux_lvm2_vg_start (Daemon *daemon,
+                                     const gchar *uuid,
+                                     char **options,
+                                     DBusGMethodInvocation *context);
+
+gboolean daemon_linux_lvm2_vg_stop (Daemon *daemon,
+                                    const gchar *uuid,
+                                    char **options,
+                                    DBusGMethodInvocation *context);
+
+gboolean daemon_linux_lvm2_lv_start (Daemon *daemon,
+                                     const gchar *group_uuid,
+                                     const gchar *uuid,
+                                     char **options,
+                                     DBusGMethodInvocation *context);
+
 G_END_DECLS
 
 #endif /* __DAEMON_H__ */

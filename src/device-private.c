@@ -399,6 +399,26 @@ device_set_device_is_linux_md (Device *device,
 }
 
 void
+device_set_device_is_linux_lvm2_lv (Device *device, gboolean value)
+{
+  if (G_UNLIKELY (device->priv->device_is_linux_lvm2_lv != value))
+    {
+      device->priv->device_is_linux_lvm2_lv = value;
+      emit_changed (device, "device_is_linux_lvm2_lv");
+    }
+}
+
+void
+device_set_device_is_linux_lvm2_pv (Device *device, gboolean value)
+{
+  if (G_UNLIKELY (device->priv->device_is_linux_lvm2_pv != value))
+    {
+      device->priv->device_is_linux_lvm2_pv = value;
+      emit_changed (device, "device_is_linux_lvm2_pv");
+    }
+}
+
+void
 device_set_device_size (Device *device,
                         guint64 value)
 {
@@ -1314,4 +1334,170 @@ device_set_drive_ata_smart_blob_steal (Device *device,
   device->priv->drive_ata_smart_blob_size = blob_size;
 
   emit_changed (device, "drive_ata_smart_blob");
+}
+
+
+void
+device_set_linux_lvm2_lv_name (Device *device,
+                               const gchar *value)
+{
+  if (G_UNLIKELY (g_strcmp0 (device->priv->linux_lvm2_lv_name, value) != 0))
+    {
+      g_free (device->priv->linux_lvm2_lv_name);
+      device->priv->linux_lvm2_lv_name = g_strdup (value);
+      emit_changed (device, "linux_lvm2_lv_name");
+    }
+}
+
+void
+device_set_linux_lvm2_lv_uuid (Device *device,
+                               const gchar *value)
+{
+  if (G_UNLIKELY (g_strcmp0 (device->priv->linux_lvm2_lv_uuid, value) != 0))
+    {
+      g_free (device->priv->linux_lvm2_lv_uuid);
+      device->priv->linux_lvm2_lv_uuid = g_strdup (value);
+      emit_changed (device, "linux_lvm2_lv_uuid");
+    }
+}
+
+void
+device_set_linux_lvm2_lv_group_name (Device *device,
+                                     const gchar *value)
+{
+  if (G_UNLIKELY (g_strcmp0 (device->priv->linux_lvm2_lv_group_name, value) != 0))
+    {
+      g_free (device->priv->linux_lvm2_lv_group_name);
+      device->priv->linux_lvm2_lv_group_name = g_strdup (value);
+      emit_changed (device, "linux_lvm2_lv_group_name");
+    }
+}
+
+void
+device_set_linux_lvm2_lv_group_uuid (Device *device,
+                                     const gchar *value)
+{
+  if (G_UNLIKELY (g_strcmp0 (device->priv->linux_lvm2_lv_group_uuid, value) != 0))
+    {
+      g_free (device->priv->linux_lvm2_lv_group_uuid);
+      device->priv->linux_lvm2_lv_group_uuid = g_strdup (value);
+      emit_changed (device, "linux_lvm2_lv_group_uuid");
+    }
+}
+
+
+
+void
+device_set_linux_lvm2_pv_uuid (Device *device,
+                               const gchar *value)
+{
+  if (G_UNLIKELY (g_strcmp0 (device->priv->linux_lvm2_pv_uuid, value) != 0))
+    {
+      g_free (device->priv->linux_lvm2_pv_uuid);
+      device->priv->linux_lvm2_pv_uuid = g_strdup (value);
+      emit_changed (device, "linux_lvm2_pv_uuid");
+    }
+}
+
+void
+device_set_linux_lvm2_pv_num_metadata_areas (Device *device,
+                                             guint value)
+{
+  if (G_UNLIKELY (device->priv->linux_lvm2_pv_num_metadata_areas != value))
+    {
+      device->priv->linux_lvm2_pv_num_metadata_areas = value;
+      emit_changed (device, "linux_lvm2_pv_num_metadata_areas");
+    }
+}
+
+void
+device_set_linux_lvm2_pv_group_name (Device *device,
+                                     const gchar *value)
+{
+  if (G_UNLIKELY (g_strcmp0 (device->priv->linux_lvm2_pv_group_name, value) != 0))
+    {
+      g_free (device->priv->linux_lvm2_pv_group_name);
+      device->priv->linux_lvm2_pv_group_name = g_strdup (value);
+      emit_changed (device, "linux_lvm2_pv_group_name");
+    }
+}
+
+void
+device_set_linux_lvm2_pv_group_uuid (Device *device,
+                                     const gchar *value)
+{
+  if (G_UNLIKELY (g_strcmp0 (device->priv->linux_lvm2_pv_group_uuid, value) != 0))
+    {
+      g_free (device->priv->linux_lvm2_pv_group_uuid);
+      device->priv->linux_lvm2_pv_group_uuid = g_strdup (value);
+      emit_changed (device, "linux_lvm2_pv_group_uuid");
+    }
+}
+
+void
+device_set_linux_lvm2_pv_group_size (Device *device,
+                                     guint64 value)
+{
+  if (G_UNLIKELY (device->priv->linux_lvm2_pv_group_size != value))
+    {
+      device->priv->linux_lvm2_pv_group_size = value;
+      emit_changed (device, "linux_lvm2_pv_group_size");
+    }
+}
+
+void
+device_set_linux_lvm2_pv_group_unallocated_size (Device *device,
+                                                 guint64 value)
+{
+  if (G_UNLIKELY (device->priv->linux_lvm2_pv_group_unallocated_size != value))
+    {
+      device->priv->linux_lvm2_pv_group_unallocated_size = value;
+      emit_changed (device, "linux_lvm2_pv_group_unallocated_size");
+    }
+}
+
+void
+device_set_linux_lvm2_pv_group_extent_size (Device *device,
+                                            guint64 value)
+{
+  if (G_UNLIKELY (device->priv->linux_lvm2_pv_group_extent_size != value))
+    {
+      device->priv->linux_lvm2_pv_group_extent_size = value;
+      emit_changed (device, "linux_lvm2_pv_group_extent_size");
+    }
+}
+
+void
+device_set_linux_lvm2_pv_group_sequence_number (Device *device,
+                                                guint64 value)
+{
+  if (G_UNLIKELY (device->priv->linux_lvm2_pv_group_sequence_number != value))
+    {
+      device->priv->linux_lvm2_pv_group_sequence_number = value;
+      emit_changed (device, "linux_lvm2_pv_group_sequence_number");
+    }
+}
+
+void
+device_set_linux_lvm2_pv_group_physical_volumes (Device *device,
+                                                 GStrv value)
+{
+  if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->linux_lvm2_pv_group_physical_volumes, value)))
+    {
+      ptr_str_array_free (device->priv->linux_lvm2_pv_group_physical_volumes);
+      device->priv->linux_lvm2_pv_group_physical_volumes = ptr_str_array_from_strv (value);
+      emit_changed (device, "linux_lvm2_pv_group_physical_volumes");
+    }
+}
+
+void
+device_set_linux_lvm2_pv_group_logical_volumes (Device *device,
+                                                GStrv value)
+{
+  if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->linux_lvm2_pv_group_logical_volumes, value)))
+    {
+      ptr_str_array_free (device->priv->linux_lvm2_pv_group_logical_volumes);
+      device->priv->linux_lvm2_pv_group_logical_volumes = ptr_str_array_from_strv (value);
+      emit_changed (device, "linux_lvm2_pv_group_logical_volumes");
+    }
 }

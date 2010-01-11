@@ -163,6 +163,8 @@ enum
     PROP_DEVICE_IS_LUKS_CLEARTEXT,
     PROP_DEVICE_IS_LINUX_MD_COMPONENT,
     PROP_DEVICE_IS_LINUX_MD,
+    PROP_DEVICE_IS_LINUX_LVM2_LV,
+    PROP_DEVICE_IS_LINUX_LVM2_PV,
     PROP_DEVICE_SIZE,
     PROP_DEVICE_BLOCK_SIZE,
     PROP_DEVICE_IS_MOUNTED,
@@ -255,6 +257,22 @@ enum
     PROP_LINUX_MD_SYNC_ACTION,
     PROP_LINUX_MD_SYNC_PERCENTAGE,
     PROP_LINUX_MD_SYNC_SPEED,
+
+    PROP_LINUX_LVM2_LV_NAME,
+    PROP_LINUX_LVM2_LV_UUID,
+    PROP_LINUX_LVM2_LV_GROUP_NAME,
+    PROP_LINUX_LVM2_LV_GROUP_UUID,
+
+    PROP_LINUX_LVM2_PV_UUID,
+    PROP_LINUX_LVM2_PV_NUM_METADATA_AREAS,
+    PROP_LINUX_LVM2_PV_GROUP_NAME,
+    PROP_LINUX_LVM2_PV_GROUP_UUID,
+    PROP_LINUX_LVM2_PV_GROUP_SIZE,
+    PROP_LINUX_LVM2_PV_GROUP_UNALLOCATED_SIZE,
+    PROP_LINUX_LVM2_PV_GROUP_SEQUENCE_NUMBER,
+    PROP_LINUX_LVM2_PV_GROUP_EXTENT_SIZE,
+    PROP_LINUX_LVM2_PV_GROUP_PHYSICAL_VOLUMES,
+    PROP_LINUX_LVM2_PV_GROUP_LOGICAL_VOLUMES,
   };
 
 enum
@@ -368,6 +386,12 @@ get_property (GObject *object,
       break;
     case PROP_DEVICE_IS_LINUX_MD:
       g_value_set_boolean (value, device->priv->device_is_linux_md);
+      break;
+    case PROP_DEVICE_IS_LINUX_LVM2_LV:
+      g_value_set_boolean (value, device->priv->device_is_linux_lvm2_lv);
+      break;
+    case PROP_DEVICE_IS_LINUX_LVM2_PV:
+      g_value_set_boolean (value, device->priv->device_is_linux_lvm2_pv);
       break;
     case PROP_DEVICE_SIZE:
       g_value_set_uint64 (value, device->priv->device_size);
@@ -655,6 +679,50 @@ get_property (GObject *object,
       g_value_set_uint64 (value, device->priv->linux_md_sync_speed);
       break;
 
+    case PROP_LINUX_LVM2_LV_NAME:
+      g_value_set_string (value, device->priv->linux_lvm2_lv_name);
+      break;
+    case PROP_LINUX_LVM2_LV_UUID:
+      g_value_set_string (value, device->priv->linux_lvm2_lv_uuid);
+      break;
+    case PROP_LINUX_LVM2_LV_GROUP_NAME:
+      g_value_set_string (value, device->priv->linux_lvm2_lv_group_name);
+      break;
+    case PROP_LINUX_LVM2_LV_GROUP_UUID:
+      g_value_set_string (value, device->priv->linux_lvm2_lv_group_uuid);
+      break;
+
+    case PROP_LINUX_LVM2_PV_UUID:
+      g_value_set_string (value, device->priv->linux_lvm2_pv_uuid);
+      break;
+    case PROP_LINUX_LVM2_PV_NUM_METADATA_AREAS:
+      g_value_set_uint (value, device->priv->linux_lvm2_pv_num_metadata_areas);
+      break;
+    case PROP_LINUX_LVM2_PV_GROUP_NAME:
+      g_value_set_string (value, device->priv->linux_lvm2_pv_group_name);
+      break;
+    case PROP_LINUX_LVM2_PV_GROUP_UUID:
+      g_value_set_string (value, device->priv->linux_lvm2_pv_group_uuid);
+      break;
+    case PROP_LINUX_LVM2_PV_GROUP_SIZE:
+      g_value_set_uint64 (value, device->priv->linux_lvm2_pv_group_size);
+      break;
+    case PROP_LINUX_LVM2_PV_GROUP_UNALLOCATED_SIZE:
+      g_value_set_uint64 (value, device->priv->linux_lvm2_pv_group_unallocated_size);
+      break;
+    case PROP_LINUX_LVM2_PV_GROUP_SEQUENCE_NUMBER:
+      g_value_set_uint64 (value, device->priv->linux_lvm2_pv_group_sequence_number);
+      break;
+    case PROP_LINUX_LVM2_PV_GROUP_EXTENT_SIZE:
+      g_value_set_uint64 (value, device->priv->linux_lvm2_pv_group_extent_size);
+      break;
+    case PROP_LINUX_LVM2_PV_GROUP_PHYSICAL_VOLUMES:
+      g_value_set_boxed (value, device->priv->linux_lvm2_pv_group_physical_volumes);
+      break;
+    case PROP_LINUX_LVM2_PV_GROUP_LOGICAL_VOLUMES:
+      g_value_set_boxed (value, device->priv->linux_lvm2_pv_group_logical_volumes);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -851,6 +919,21 @@ device_class_init (DeviceClass *klass)
                                                                                                 NULL,
                                                                                                 FALSE,
                                                                                                 G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_DEVICE_IS_LINUX_LVM2_LV,
+                                   g_param_spec_boolean ("device-is-linux-lvm2-lv",
+                                                         NULL,
+                                                         NULL,
+                                                         FALSE,
+                                                         G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_DEVICE_IS_LINUX_LVM2_PV,
+                                   g_param_spec_boolean ("device-is-linux-lvm2-pv",
+                                                         NULL,
+                                                         NULL,
+                                                         FALSE,
+                                                         G_PARAM_READABLE));
+
   g_object_class_install_property (object_class, PROP_DEVICE_SIZE, g_param_spec_uint64 ("device-size",
                                                                                         NULL,
                                                                                         NULL,
@@ -1347,6 +1430,116 @@ device_class_init (DeviceClass *klass)
                                                                                                 G_MAXUINT64,
                                                                                                 0,
                                                                                                 G_PARAM_READABLE));
+
+  g_object_class_install_property (object_class,
+                                   PROP_LINUX_LVM2_LV_NAME,
+                                   g_param_spec_string ("linux-lvm2-lv-name",
+                                                        NULL,
+                                                        NULL,
+                                                        NULL,
+                                                        G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_LINUX_LVM2_LV_UUID,
+                                   g_param_spec_string ("linux-lvm2-lv-uuid",
+                                                        NULL,
+                                                        NULL,
+                                                        NULL,
+                                                        G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_LINUX_LVM2_LV_GROUP_NAME,
+                                   g_param_spec_string ("linux-lvm2-lv-group-name",
+                                                        NULL,
+                                                        NULL,
+                                                        NULL,
+                                                        G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_LINUX_LVM2_LV_GROUP_UUID,
+                                   g_param_spec_string ("linux-lvm2-lv-group-uuid",
+                                                        NULL,
+                                                        NULL,
+                                                        NULL,
+                                                        G_PARAM_READABLE));
+
+  g_object_class_install_property (object_class,
+                                   PROP_LINUX_LVM2_PV_UUID,
+                                   g_param_spec_string ("linux-lvm2-pv-uuid",
+                                                        NULL,
+                                                        NULL,
+                                                        NULL,
+                                                        G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_LINUX_LVM2_PV_NUM_METADATA_AREAS,
+                                   g_param_spec_uint ("linux-lvm2-pv-num-metadata-areas",
+                                                      NULL,
+                                                      NULL,
+                                                      0,
+                                                      G_MAXUINT,
+                                                      0,
+                                                      G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_LINUX_LVM2_PV_GROUP_NAME,
+                                   g_param_spec_string ("linux-lvm2-pv-group-name",
+                                                        NULL,
+                                                        NULL,
+                                                        NULL,
+                                                        G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_LINUX_LVM2_PV_GROUP_UUID,
+                                   g_param_spec_string ("linux-lvm2-pv-group-uuid",
+                                                        NULL,
+                                                        NULL,
+                                                        NULL,
+                                                        G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_LINUX_LVM2_PV_GROUP_SIZE,
+                                   g_param_spec_uint64 ("linux-lvm2-pv-group-size",
+                                                        NULL,
+                                                        NULL,
+                                                        0,
+                                                        G_MAXUINT64,
+                                                        0,
+                                                        G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_LINUX_LVM2_PV_GROUP_UNALLOCATED_SIZE,
+                                   g_param_spec_uint64 ("linux-lvm2-pv-group-unallocated-size",
+                                                        NULL,
+                                                        NULL,
+                                                        0,
+                                                        G_MAXUINT64,
+                                                        0,
+                                                        G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_LINUX_LVM2_PV_GROUP_SEQUENCE_NUMBER,
+                                   g_param_spec_uint64 ("linux-lvm2-pv-group-sequence-number",
+                                                        NULL,
+                                                        NULL,
+                                                        0,
+                                                        G_MAXUINT64,
+                                                        0,
+                                                        G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_LINUX_LVM2_PV_GROUP_EXTENT_SIZE,
+                                   g_param_spec_uint64 ("linux-lvm2-pv-group-extent-size",
+                                                        NULL,
+                                                        NULL,
+                                                        0,
+                                                        G_MAXUINT64,
+                                                        0,
+                                                        G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_LINUX_LVM2_PV_GROUP_PHYSICAL_VOLUMES,
+                                   g_param_spec_boxed ("linux-lvm2-pv-group-physical-volumes",
+                                                       NULL,
+                                                       NULL,
+                                                       dbus_g_type_get_collection ("GPtrArray", G_TYPE_STRING),
+                                                       G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_LINUX_LVM2_PV_GROUP_LOGICAL_VOLUMES,
+                                   g_param_spec_boxed ("linux-lvm2-pv-group-logical-volumes",
+                                                       NULL,
+                                                       NULL,
+                                                       dbus_g_type_get_collection ("GPtrArray", G_TYPE_STRING),
+                                                       G_PARAM_READABLE));
 }
 
 static void
@@ -1362,6 +1555,9 @@ device_init (Device *device)
   device->priv->drive_ports = g_ptr_array_new ();
   device->priv->linux_md_component_state = g_ptr_array_new ();
   device->priv->linux_md_slaves = g_ptr_array_new ();
+  device->priv->linux_lvm2_pv_group_physical_volumes = g_ptr_array_new ();
+  device->priv->linux_lvm2_pv_group_logical_volumes = g_ptr_array_new ();
+
   device->priv->slaves_objpath = g_ptr_array_new ();
   device->priv->holders_objpath = g_ptr_array_new ();
 
@@ -1471,6 +1667,19 @@ device_finalize (GObject *object)
   g_free (device->priv->linux_md_version);
   g_ptr_array_foreach (device->priv->linux_md_slaves, (GFunc) g_free, NULL);
   g_ptr_array_free (device->priv->linux_md_slaves, TRUE);
+
+  g_free (device->priv->linux_lvm2_lv_name);
+  g_free (device->priv->linux_lvm2_lv_uuid);
+  g_free (device->priv->linux_lvm2_lv_group_name);
+  g_free (device->priv->linux_lvm2_lv_group_uuid);
+
+  g_free (device->priv->linux_lvm2_pv_uuid);
+  g_free (device->priv->linux_lvm2_pv_group_name);
+  g_free (device->priv->linux_lvm2_pv_group_uuid);
+  g_ptr_array_foreach (device->priv->linux_lvm2_pv_group_physical_volumes, (GFunc) g_free, NULL);
+  g_ptr_array_free (device->priv->linux_lvm2_pv_group_physical_volumes, TRUE);
+  g_ptr_array_foreach (device->priv->linux_lvm2_pv_group_logical_volumes, (GFunc) g_free, NULL);
+  g_ptr_array_free (device->priv->linux_lvm2_pv_group_logical_volumes, TRUE);
 
   g_free (device->priv->drive_ata_smart_blob);
 
@@ -2635,6 +2844,92 @@ update_info_luks_cleartext (Device *device)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* update device_is_linux_lvm2_lv and linux_lvm2_lv_* properties */
+static gboolean
+update_info_linux_lvm2_lv (Device *device)
+{
+  const gchar *lv_name;
+  const gchar *lv_uuid;
+  const gchar *vg_name;
+  const gchar *vg_uuid;
+  gboolean is_lv;
+
+  lv_name = g_udev_device_get_property (device->priv->d, "UDISKS_LVM2_LV_NAME");
+  lv_uuid = g_udev_device_get_property (device->priv->d, "UDISKS_LVM2_LV_UUID");
+  vg_name = g_udev_device_get_property (device->priv->d, "UDISKS_LVM2_LV_VG_NAME");
+  vg_uuid = g_udev_device_get_property (device->priv->d, "UDISKS_LVM2_LV_VG_UUID");
+
+  is_lv = FALSE;
+
+  if (lv_name == NULL)
+    goto out;
+
+  is_lv = TRUE;
+  device_set_linux_lvm2_lv_name (device, lv_name);
+  device_set_linux_lvm2_lv_uuid (device, lv_uuid);
+  device_set_linux_lvm2_lv_group_name (device, vg_name);
+  device_set_linux_lvm2_lv_group_uuid (device, vg_uuid);
+
+  device_set_device_is_drive (device, FALSE);
+
+ out:
+  device_set_device_is_linux_lvm2_lv (device, is_lv);
+  return TRUE;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/* update device_is_linux_lvm2_pv and linux_lvm2_pv_* properties */
+static gboolean
+update_info_linux_lvm2_pv (Device *device)
+{
+  const gchar *pv_uuid;
+  guint64 pv_num_mda;
+  const gchar *vg_name;
+  const gchar *vg_uuid;
+  gboolean is_pv;
+  guint64 vg_size;
+  guint64 vg_unallocated_size;
+  guint64 vg_extent_size;
+  guint64 vg_seqnum;
+  const gchar* const *vg_pvs;
+  const gchar* const *vg_lvs;
+
+  pv_uuid               = g_udev_device_get_property (device->priv->d, "UDISKS_LVM2_PV_UUID");
+  pv_num_mda            = g_udev_device_get_property_as_uint64 (device->priv->d, "UDISKS_LVM2_PV_NUM_MDA");
+  vg_name               = g_udev_device_get_property (device->priv->d, "UDISKS_LVM2_PV_VG_NAME");
+  vg_uuid               = g_udev_device_get_property (device->priv->d, "UDISKS_LVM2_PV_VG_UUID");
+  vg_size               = g_udev_device_get_property_as_uint64 (device->priv->d, "UDISKS_LVM2_PV_VG_SIZE");
+  vg_unallocated_size   = g_udev_device_get_property_as_uint64 (device->priv->d, "UDISKS_LVM2_PV_VG_FREE_SIZE");
+  vg_extent_size        = g_udev_device_get_property_as_uint64 (device->priv->d, "UDISKS_LVM2_PV_VG_EXTENT_SIZE");
+  vg_seqnum             = g_udev_device_get_property_as_uint64 (device->priv->d, "UDISKS_LVM2_PV_VG_SEQNUM");
+  vg_pvs                = g_udev_device_get_property_as_strv (device->priv->d, "UDISKS_LVM2_PV_VG_PV_LIST");
+  vg_lvs                = g_udev_device_get_property_as_strv (device->priv->d, "UDISKS_LVM2_PV_VG_LV_LIST");
+
+  is_pv = FALSE;
+
+  if (pv_uuid == NULL)
+    goto out;
+
+  is_pv = TRUE;
+  device_set_linux_lvm2_pv_uuid (device, pv_uuid);
+  device_set_linux_lvm2_pv_num_metadata_areas (device, pv_num_mda);
+  device_set_linux_lvm2_pv_group_name (device, vg_name);
+  device_set_linux_lvm2_pv_group_uuid (device, vg_uuid);
+  device_set_linux_lvm2_pv_group_size (device, vg_size);
+  device_set_linux_lvm2_pv_group_unallocated_size (device, vg_unallocated_size);
+  device_set_linux_lvm2_pv_group_extent_size (device, vg_extent_size);
+  device_set_linux_lvm2_pv_group_sequence_number (device, vg_seqnum);
+  device_set_linux_lvm2_pv_group_physical_volumes (device, (GStrv) vg_pvs);
+  device_set_linux_lvm2_pv_group_logical_volumes (device, (GStrv) vg_lvs);
+
+ out:
+  device_set_device_is_linux_lvm2_pv (device, is_pv);
+  return TRUE;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 /* update device_is_linux_md_component and linux_md_component_* properties */
 static gboolean
 update_info_linux_md_component (Device *device)
@@ -3747,6 +4042,14 @@ update_info (Device *device)
 
   /* device_is_luks_cleartext and luks_cleartext_* properties */
   if (!update_info_luks_cleartext (device))
+    goto out;
+
+  /* device_is_linux_lvm2_lv and linux_lvm2_lv_* properties */
+  if (!update_info_linux_lvm2_lv (device))
+    goto out;
+
+  /* device_is_linux_lvm2_pv and linux_lvm2_pv_* properties */
+  if (!update_info_linux_lvm2_pv (device))
     goto out;
 
   /* device_is_linux_md_component and linux_md_component_* properties */
@@ -11229,5 +11532,477 @@ device_drive_benchmark (Device *device,
  out:
   return TRUE;
 }
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static const gchar *
+find_lvm2_vg_name_for_uuid (Daemon *daemon,
+                            const gchar *uuid)
+{
+  GList *l;
+  GList *devices;
+  const gchar *vg_name;
+
+  vg_name = NULL;
+
+  devices = daemon_local_get_all_devices (daemon);
+  for (l = devices; l != NULL; l = l->next)
+    {
+      Device *d = DEVICE (l->data);
+
+      if (d->priv->device_is_linux_lvm2_pv && g_strcmp0 (uuid, d->priv->linux_lvm2_pv_group_uuid) == 0)
+        {
+          vg_name = d->priv->linux_lvm2_pv_group_name;
+          break;
+        }
+    }
+  g_list_free (devices);
+
+  return vg_name;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+linux_lvm2_vg_stop_completed_cb (DBusGMethodInvocation *context,
+                                 Device *device,
+                                 gboolean job_was_cancelled,
+                                 int status,
+                                 const char *stderr,
+                                 const char *stdout,
+                                 gpointer user_data)
+{
+  if (WEXITSTATUS (status) == 0 && !job_was_cancelled)
+    {
+      dbus_g_method_return (context);
+    }
+  else
+    {
+      if (job_was_cancelled)
+        {
+          throw_error (context, ERROR_CANCELLED, "Job was cancelled");
+        }
+      else
+        {
+          throw_error (context,
+                       ERROR_FAILED,
+                       "Error stopping LVM2 Volume Group: vgchange exited with exit code %d: %s",
+                       WEXITSTATUS (status),
+                       stderr);
+        }
+    }
+}
+
+static void
+daemon_linux_lvm2_vg_stop_authorized_cb (Daemon *daemon,
+                                         Device *device,
+                                         DBusGMethodInvocation *context,
+                                         const gchar *action_id,
+                                         guint num_user_data,
+                                         gpointer *user_data_elements)
+{
+  const gchar *uuid = user_data_elements[0];
+  const gchar *vg_name;
+  /* TODO: use options */
+  //gchar **options            = user_data_elements[1];
+  guint n;
+  gchar *argv[10];
+
+  /* Unfortunately vgchange does not (yet - file a bug) accept UUIDs - so find the VG name for this
+   * UUID by looking at PVs
+   */
+
+  vg_name = find_lvm2_vg_name_for_uuid (daemon, uuid);
+  if (vg_name == NULL)
+    {
+      throw_error (context, ERROR_FAILED, "Cannot find VG with UUID `%s'", uuid);
+      goto out;
+    }
+
+  n = 0;
+  argv[n++] = "vgchange";
+  argv[n++] = "-an";
+  argv[n++] = (gchar *) vg_name;
+  argv[n++] = NULL;
+
+  if (!job_new (context, "LinuxLvm2VGStop", TRUE, NULL, argv, NULL, linux_lvm2_vg_stop_completed_cb, FALSE, NULL, NULL))
+    {
+      goto out;
+    }
+
+ out:
+  ;
+}
+
+gboolean
+daemon_linux_lvm2_vg_stop (Daemon *daemon,
+                           const gchar *uuid,
+                           char **options,
+                           DBusGMethodInvocation *context)
+{
+  daemon_local_check_auth (daemon,
+                           NULL,
+                           "org.freedesktop.udisks.linux-lvm2",
+                           "LinuxLvm2VGStop",
+                           TRUE,
+                           daemon_linux_lvm2_vg_stop_authorized_cb,
+                           context,
+                           2,
+                           g_strdup (uuid),
+                           g_free,
+                           g_strdupv (options),
+                           g_strfreev);
+
+  return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+linux_lvm2_vg_start_completed_cb (DBusGMethodInvocation *context,
+                                  Device *device,
+                                  gboolean job_was_cancelled,
+                                  int status,
+                                  const char *stderr,
+                                  const char *stdout,
+                                  gpointer user_data)
+{
+  if (WEXITSTATUS (status) == 0 && !job_was_cancelled)
+    {
+      dbus_g_method_return (context);
+    }
+  else
+    {
+      if (job_was_cancelled)
+        {
+          throw_error (context, ERROR_CANCELLED, "Job was cancelled");
+        }
+      else
+        {
+          throw_error (context,
+                       ERROR_FAILED,
+                       "Error starting LVM2 Volume Group: vgchange exited with exit code %d: %s",
+                       WEXITSTATUS (status),
+                       stderr);
+        }
+    }
+}
+
+static void
+daemon_linux_lvm2_vg_start_authorized_cb (Daemon *daemon,
+                                          Device *device,
+                                          DBusGMethodInvocation *context,
+                                          const gchar *action_id,
+                                          guint num_user_data,
+                                          gpointer *user_data_elements)
+{
+  const gchar *uuid = user_data_elements[0];
+  const gchar *vg_name;
+  /* TODO: use options */
+  //gchar **options            = user_data_elements[1];
+  guint n;
+  gchar *argv[10];
+
+  /* Unfortunately vgchange does not (yet - file a bug) accept UUIDs - so find the VG name for this
+   * UUID by looking at PVs
+   */
+
+  vg_name = find_lvm2_vg_name_for_uuid (daemon, uuid);
+  if (vg_name == NULL)
+    {
+      throw_error (context, ERROR_FAILED, "Cannot find VG with UUID `%s'", uuid);
+      goto out;
+    }
+
+  n = 0;
+  argv[n++] = "vgchange";
+  argv[n++] = "-ay";
+  argv[n++] = (gchar *) vg_name;
+  argv[n++] = NULL;
+
+  if (!job_new (context, "LinuxLvm2VGStart", TRUE, NULL, argv, NULL, linux_lvm2_vg_start_completed_cb, FALSE, NULL, NULL))
+    {
+      goto out;
+    }
+
+ out:
+  ;
+}
+
+gboolean
+daemon_linux_lvm2_vg_start (Daemon *daemon,
+                            const gchar *uuid,
+                            char **options,
+                            DBusGMethodInvocation *context)
+{
+  daemon_local_check_auth (daemon,
+                           NULL,
+                           "org.freedesktop.udisks.linux-lvm2",
+                           "LinuxLvm2VGStart",
+                           TRUE,
+                           daemon_linux_lvm2_vg_start_authorized_cb,
+                           context,
+                           2,
+                           g_strdup (uuid),
+                           g_free,
+                           g_strdupv (options),
+                           g_strfreev);
+
+  return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static gchar *
+find_lvm2_lv_name_for_uuids (Daemon *daemon,
+                             const gchar *group_uuid,
+                             const gchar *uuid)
+{
+  GList *l;
+  GList *devices;
+  gchar *ret;
+
+  ret = NULL;
+
+  devices = daemon_local_get_all_devices (daemon);
+  for (l = devices; l != NULL; l = l->next)
+    {
+      Device *d = DEVICE (l->data);
+
+      if (d->priv->device_is_linux_lvm2_pv &&
+          g_strcmp0 (group_uuid, d->priv->linux_lvm2_pv_group_uuid) == 0)
+        {
+          guint n;
+
+          for (n = 0; n < d->priv->linux_lvm2_pv_group_logical_volumes->len; n++)
+            {
+              const gchar *lv_data = d->priv->linux_lvm2_pv_group_logical_volumes->pdata[n];
+              gchar **tokens;
+              guint m;
+
+              tokens = g_strsplit (lv_data, ";", 0);
+              for (m = 0; tokens != NULL && tokens[m] != NULL; m++)
+                {
+                  if (g_str_has_prefix (tokens[m], "uuid=") && g_strcmp0 (tokens[m] + 5, uuid) == 0)
+                    {
+                      guint c;
+                      for (c = 0; tokens[c] != NULL; c++)
+                        {
+                          if (g_str_has_prefix (tokens[c], "name="))
+                            {
+                              ret = g_strdup_printf ("%s/%s",
+                                                     d->priv->linux_lvm2_pv_group_name,
+                                                     tokens[c] + 5);
+                              break;
+                            }
+                        }
+                    }
+                }
+              g_strfreev (tokens);
+
+              if (ret != NULL)
+                break;
+            }
+        }
+      if (ret != NULL)
+        break;
+    }
+  g_list_free (devices);
+
+  return ret;
+}
+
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+linux_lvm2_lv_start_completed_cb (DBusGMethodInvocation *context,
+                                  Device *device,
+                                  gboolean job_was_cancelled,
+                                  int status,
+                                  const char *stderr,
+                                  const char *stdout,
+                                  gpointer user_data)
+{
+  if (WEXITSTATUS (status) == 0 && !job_was_cancelled)
+    {
+      dbus_g_method_return (context);
+    }
+  else
+    {
+      if (job_was_cancelled)
+        {
+          throw_error (context, ERROR_CANCELLED, "Job was cancelled");
+        }
+      else
+        {
+          throw_error (context,
+                       ERROR_FAILED,
+                       "Error starting LVM2 Logical Volume: lvchange exited with exit code %d: %s",
+                       WEXITSTATUS (status),
+                       stderr);
+        }
+    }
+}
+
+static void
+daemon_linux_lvm2_lv_start_authorized_cb (Daemon *daemon,
+                                          Device *device,
+                                          DBusGMethodInvocation *context,
+                                          const gchar *action_id,
+                                          guint num_user_data,
+                                          gpointer *user_data_elements)
+{
+  const gchar *group_uuid = user_data_elements[0];
+  const gchar *uuid = user_data_elements[1];
+  const gchar *lv_name;
+  /* TODO: use options */
+  //gchar **options            = user_data_elements[2];
+  guint n;
+  gchar *argv[10];
+
+  /* Unfortunately vgchange does not (yet - file a bug) accept UUIDs - so find the VG name for this
+   * UUID by looking at PVs
+   */
+
+  lv_name = find_lvm2_lv_name_for_uuids (daemon, group_uuid, uuid);
+  if (lv_name == NULL)
+    {
+      throw_error (context, ERROR_FAILED, "Cannot find Logical Volume with Group UUID `%s' and UUID `%s'", group_uuid, uuid);
+      goto out;
+    }
+
+  n = 0;
+  argv[n++] = "lvchange";
+  argv[n++] = "-ay";
+  argv[n++] = (gchar *) lv_name;
+  argv[n++] = NULL;
+
+  if (!job_new (context, "LinuxLvm2LVStart", TRUE, NULL, argv, NULL, linux_lvm2_lv_start_completed_cb, FALSE, NULL, NULL))
+    {
+      goto out;
+    }
+
+ out:
+  ;
+}
+
+gboolean
+daemon_linux_lvm2_lv_start (Daemon *daemon,
+                            const gchar *group_uuid,
+                            const gchar *uuid,
+                            char **options,
+                            DBusGMethodInvocation *context)
+{
+  daemon_local_check_auth (daemon,
+                           NULL,
+                           "org.freedesktop.udisks.linux-lvm2",
+                           "LinuxLvm2LVStart",
+                           TRUE,
+                           daemon_linux_lvm2_lv_start_authorized_cb,
+                           context,
+                           3,
+                           g_strdup (group_uuid),
+                           g_free,
+                           g_strdup (uuid),
+                           g_free,
+                           g_strdupv (options),
+                           g_strfreev);
+
+  return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+linux_lvm2_lv_stop_completed_cb (DBusGMethodInvocation *context,
+                                 Device *device,
+                                 gboolean job_was_cancelled,
+                                 int status,
+                                 const char *stderr,
+                                 const char *stdout,
+                                 gpointer user_data)
+{
+  if (WEXITSTATUS (status) == 0 && !job_was_cancelled)
+    {
+      dbus_g_method_return (context);
+    }
+  else
+    {
+      if (job_was_cancelled)
+        {
+          throw_error (context, ERROR_CANCELLED, "Job was cancelled");
+        }
+      else
+        {
+          throw_error (context,
+                       ERROR_FAILED,
+                       "Error stopping LVM2 Logical Volume: lvchange exited with exit code %d: %s",
+                       WEXITSTATUS (status),
+                       stderr);
+        }
+    }
+}
+
+static void
+daemon_linux_lvm2_lv_stop_authorized_cb (Daemon *daemon,
+                                         Device *device,
+                                         DBusGMethodInvocation *context,
+                                         const gchar *action_id,
+                                         guint num_user_data,
+                                         gpointer *user_data_elements)
+{
+  gchar *name;
+  /* TODO: use options */
+  //gchar **options            = user_data_elements[0];
+  guint n;
+  gchar *argv[10];
+
+  name = NULL;
+
+  if (!device->priv->device_is_linux_lvm2_lv)
+    {
+      throw_error (context, ERROR_FAILED, "Device is not a Linux LVM2 Logical Volume");
+      goto out;
+    }
+
+  /* Unfortunately lvchange does not (yet - file a bug) accept UUIDs
+   */
+  name = g_strdup_printf ("%s/%s", device->priv->linux_lvm2_lv_group_name, device->priv->linux_lvm2_lv_name);
+
+  n = 0;
+  argv[n++] = "lvchange";
+  argv[n++] = "-an";
+  argv[n++] = name;
+  argv[n++] = NULL;
+
+  if (!job_new (context, "LinuxLvm2LVStop", TRUE, NULL, argv, NULL, linux_lvm2_lv_stop_completed_cb, FALSE, NULL, NULL))
+    {
+      goto out;
+    }
+
+ out:
+  g_free (name);
+}
+
+gboolean
+device_linux_lvm2_lv_stop (Device *device,
+                           char **options,
+                           DBusGMethodInvocation *context)
+{
+  daemon_local_check_auth (device->priv->daemon,
+                           device,
+                           "org.freedesktop.udisks.linux-lvm2",
+                           "LinuxLvm2LVStop",
+                           TRUE,
+                           daemon_linux_lvm2_lv_stop_authorized_cb,
+                           context,
+                           1,
+                           g_strdupv (options),
+                           g_strfreev);
+
+  return TRUE;
+}
+
 
 /*--------------------------------------------------------------------------------------------------------------*/

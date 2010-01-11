@@ -115,6 +115,8 @@ struct DevicePrivate
   gboolean device_is_luks_cleartext;
   gboolean device_is_linux_md_component;
   gboolean device_is_linux_md;
+  gboolean device_is_linux_lvm2_lv;
+  gboolean device_is_linux_lvm2_pv;
   guint64 device_size;
   guint64 device_block_size;
   gboolean device_is_mounted;
@@ -198,6 +200,22 @@ struct DevicePrivate
   double linux_md_sync_percentage;
   guint64 linux_md_sync_speed;
 
+  gchar *linux_lvm2_lv_name;
+  gchar *linux_lvm2_lv_uuid;
+  gchar *linux_lvm2_lv_group_name;
+  gchar *linux_lvm2_lv_group_uuid;
+
+  gchar *linux_lvm2_pv_uuid;
+  guint linux_lvm2_pv_num_metadata_areas;
+  gchar *linux_lvm2_pv_group_name;
+  gchar *linux_lvm2_pv_group_uuid;
+  guint64 linux_lvm2_pv_group_size;
+  guint64 linux_lvm2_pv_group_unallocated_size;
+  guint64 linux_lvm2_pv_group_sequence_number;
+  guint64 linux_lvm2_pv_group_extent_size;
+  GPtrArray *linux_lvm2_pv_group_physical_volumes;
+  GPtrArray *linux_lvm2_pv_group_logical_volumes;
+
   gboolean drive_ata_smart_is_available;
   guint64 drive_ata_smart_time_collected;
   SkSmartOverall drive_ata_smart_status;
@@ -239,6 +257,8 @@ void device_set_device_is_luks (Device *device, gboolean value);
 void device_set_device_is_luks_cleartext (Device *device, gboolean value);
 void device_set_device_is_linux_md_component (Device *device, gboolean value);
 void device_set_device_is_linux_md (Device *device, gboolean value);
+void device_set_device_is_linux_lvm2_lv (Device *device, gboolean value);
+void device_set_device_is_linux_lvm2_pv (Device *device, gboolean value);
 void device_set_device_size (Device *device, guint64 value);
 void device_set_device_block_size (Device *device, guint64 value);
 void device_set_device_is_mounted (Device *device, gboolean value);
@@ -320,6 +340,22 @@ void device_set_linux_md_is_degraded (Device *device, gboolean value);
 void device_set_linux_md_sync_action (Device *device, const gchar *value);
 void device_set_linux_md_sync_percentage (Device *device, gdouble value);
 void device_set_linux_md_sync_speed (Device *device, guint64 value);
+
+void device_set_linux_lvm2_lv_name (Device *device, const gchar *value);
+void device_set_linux_lvm2_lv_uuid (Device *device, const gchar *value);
+void device_set_linux_lvm2_lv_group_name (Device *device, const gchar *value);
+void device_set_linux_lvm2_lv_group_uuid (Device *device, const gchar *value);
+
+void device_set_linux_lvm2_pv_uuid (Device *device, const gchar *value);
+void device_set_linux_lvm2_pv_num_metadata_areas (Device *device, guint value);
+void device_set_linux_lvm2_pv_group_name (Device *device, const gchar *value);
+void device_set_linux_lvm2_pv_group_uuid (Device *device, const gchar *value);
+void device_set_linux_lvm2_pv_group_size (Device *device, guint64 value);
+void device_set_linux_lvm2_pv_group_unallocated_size (Device *device, guint64 value);
+void device_set_linux_lvm2_pv_group_sequence_number (Device *device, guint64 value);
+void device_set_linux_lvm2_pv_group_extent_size (Device *device, guint64 value);
+void device_set_linux_lvm2_pv_group_physical_volumes (Device *device, GStrv value);
+void device_set_linux_lvm2_pv_group_logical_volumes (Device *device, GStrv value);
 
 void device_set_dm_name (Device *device, const gchar *value);
 void device_set_slaves_objpath (Device *device, GStrv value);
