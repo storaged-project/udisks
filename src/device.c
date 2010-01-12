@@ -11889,7 +11889,7 @@ daemon_linux_lvm2_lv_start_authorized_cb (Daemon *daemon,
 {
   const gchar *group_uuid = user_data_elements[0];
   const gchar *uuid = user_data_elements[1];
-  const gchar *lv_name;
+  gchar *lv_name;
   /* TODO: use options */
   //gchar **options            = user_data_elements[2];
   guint n;
@@ -11909,7 +11909,7 @@ daemon_linux_lvm2_lv_start_authorized_cb (Daemon *daemon,
   n = 0;
   argv[n++] = "lvchange";
   argv[n++] = "-ay";
-  argv[n++] = (gchar *) lv_name;
+  argv[n++] = lv_name;
   argv[n++] = NULL;
 
   if (!job_new (context, "LinuxLvm2LVStart", TRUE, NULL, argv, NULL, linux_lvm2_lv_start_completed_cb, FALSE, NULL, NULL))
@@ -11918,7 +11918,7 @@ daemon_linux_lvm2_lv_start_authorized_cb (Daemon *daemon,
     }
 
  out:
-  ;
+  g_free (lv_name);
 }
 
 gboolean
@@ -12040,3 +12040,204 @@ device_linux_lvm2_lv_stop (Device *device,
 
 
 /*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+linux_lvm2_vg_set_name_completed_cb (DBusGMethodInvocation *context,
+                                     Device *device,
+                                     gboolean job_was_cancelled,
+                                     int status,
+                                     const char *stderr,
+                                     const char *stdout,
+                                     gpointer user_data)
+{
+  if (WEXITSTATUS (status) == 0 && !job_was_cancelled)
+    {
+      dbus_g_method_return (context);
+    }
+  else
+    {
+      if (job_was_cancelled)
+        {
+          throw_error (context, ERROR_CANCELLED, "Job was cancelled");
+        }
+      else
+        {
+          throw_error (context,
+                       ERROR_FAILED,
+                       "Error setting name for LVM2 Volume Group: vgrename exited with exit code %d: %s",
+                       WEXITSTATUS (status),
+                       stderr);
+        }
+    }
+}
+
+static void
+daemon_linux_lvm2_vg_set_name_authorized_cb (Daemon *daemon,
+                                             Device *device,
+                                             DBusGMethodInvocation *context,
+                                             const gchar *action_id,
+                                             guint num_user_data,
+                                             gpointer *user_data_elements)
+{
+  const gchar *uuid = user_data_elements[0];
+  const gchar *new_name = user_data_elements[1];
+  const gchar *vg_name;
+  guint n;
+  gchar *argv[10];
+
+  /* Unfortunately vgchange does not (yet - file a bug) accept UUIDs - so find the VG name for this
+   * UUID by looking at PVs
+   */
+
+  vg_name = find_lvm2_vg_name_for_uuid (daemon, uuid);
+  if (vg_name == NULL)
+    {
+      throw_error (context, ERROR_FAILED, "Cannot find VG with UUID `%s'", uuid);
+      goto out;
+    }
+
+  n = 0;
+  argv[n++] = "vgrename";
+  argv[n++] = (gchar *) vg_name;
+  argv[n++] = (gchar *) new_name;
+  argv[n++] = NULL;
+
+  if (!job_new (context, "LinuxLvm2VGSetName", TRUE, NULL, argv, NULL, linux_lvm2_vg_set_name_completed_cb, FALSE, NULL, NULL))
+    {
+      goto out;
+    }
+
+ out:
+  ;
+}
+
+gboolean
+daemon_linux_lvm2_vg_set_name (Daemon *daemon,
+                               const gchar *uuid,
+                               const gchar *new_name,
+                               DBusGMethodInvocation *context)
+{
+  daemon_local_check_auth (daemon,
+                           NULL,
+                           "org.freedesktop.udisks.linux-lvm2",
+                           "LinuxLvm2VGSetName",
+                           TRUE,
+                           daemon_linux_lvm2_vg_set_name_authorized_cb,
+                           context,
+                           2,
+                           g_strdup (uuid),
+                           g_free,
+                           g_strdup (new_name),
+                           g_free);
+
+  return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+linux_lvm2_lv_set_name_completed_cb (DBusGMethodInvocation *context,
+                                     Device *device,
+                                     gboolean job_was_cancelled,
+                                     int status,
+                                     const char *stderr,
+                                     const char *stdout,
+                                     gpointer user_data)
+{
+  if (WEXITSTATUS (status) == 0 && !job_was_cancelled)
+    {
+      dbus_g_method_return (context);
+    }
+  else
+    {
+      if (job_was_cancelled)
+        {
+          throw_error (context, ERROR_CANCELLED, "Job was cancelled");
+        }
+      else
+        {
+          throw_error (context,
+                       ERROR_FAILED,
+                       "Error setting name for LVM2 Volume Group: lvrename exited with exit code %d: %s",
+                       WEXITSTATUS (status),
+                       stderr);
+        }
+    }
+}
+
+static void
+daemon_linux_lvm2_lv_set_name_authorized_cb (Daemon *daemon,
+                                             Device *device,
+                                             DBusGMethodInvocation *context,
+                                             const gchar *action_id,
+                                             guint num_user_data,
+                                             gpointer *user_data_elements)
+{
+  const gchar *group_uuid = user_data_elements[0];
+  const gchar *uuid = user_data_elements[1];
+  const gchar *new_name = user_data_elements[2];
+  const gchar *vg_name;
+  gchar *lv_name;
+  guint n;
+  gchar *argv[10];
+
+  /* Unfortunately lvchange does not (yet - file a bug) accept UUIDs - so find the LV name for this
+   * UUID by looking at PVs
+   */
+
+  lv_name = NULL;
+
+  vg_name = find_lvm2_vg_name_for_uuid (daemon, group_uuid);
+  if (vg_name == NULL)
+    {
+      throw_error (context, ERROR_FAILED, "Cannot find VG with UUID `%s'", group_uuid);
+      goto out;
+    }
+
+  lv_name = find_lvm2_lv_name_for_uuids (daemon, group_uuid, uuid);
+  if (lv_name == NULL)
+    {
+      throw_error (context, ERROR_FAILED, "Cannot find LV with UUID `%s'", uuid);
+      goto out;
+    }
+
+  n = 0;
+  argv[n++] = "lvrename";
+  argv[n++] = (gchar *) vg_name;
+  argv[n++] = lv_name;
+  argv[n++] = (gchar *) new_name;
+  argv[n++] = NULL;
+
+  if (!job_new (context, "LinuxLvm2LVSetName", TRUE, NULL, argv, NULL, linux_lvm2_lv_set_name_completed_cb, FALSE, NULL, NULL))
+    {
+      goto out;
+    }
+
+ out:
+  g_free (lv_name);
+}
+
+gboolean
+daemon_linux_lvm2_lv_set_name (Daemon *daemon,
+                               const gchar *group_uuid,
+                               const gchar *uuid,
+                               const gchar *new_name,
+                               DBusGMethodInvocation *context)
+{
+  daemon_local_check_auth (daemon,
+                           NULL,
+                           "org.freedesktop.udisks.linux-lvm2",
+                           "LinuxLvm2LVSetName",
+                           TRUE,
+                           daemon_linux_lvm2_lv_set_name_authorized_cb,
+                           context,
+                           3,
+                           g_strdup (group_uuid),
+                           g_free,
+                           g_strdup (uuid),
+                           g_free,
+                           g_strdup (new_name),
+                           g_free);
+
+  return TRUE;
+}

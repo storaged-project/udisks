@@ -365,6 +365,83 @@
 
     <!-- ************************************************************ -->
 
+    <method name="LinuxLvm2VGSetName">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="uuid" direction="in" type="s">
+        <doc:doc><doc:summary>The UUID of the volume group to set the name for.</doc:summary></doc:doc>
+      </arg>
+      <arg name="name" direction="in" type="s">
+        <doc:doc><doc:summary>The new name for the volume group.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Sets the name for a volume group.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need the following PolicyKit authorization:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.udisks.linux-lvm2</doc:term>
+              <doc:definition>
+                Needed to configured Linux LVM2 devices.
+              </doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="&ERROR_BUSY;">if one of the given components are busy</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
+          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="LinuxLvm2LVSetName">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="group_uuid" direction="in" type="s">
+        <doc:doc><doc:summary>The UUID of the volume group for the logical volume.</doc:summary></doc:doc>
+      </arg>
+      <arg name="uuid" direction="in" type="s">
+        <doc:doc><doc:summary>The UUID of the logical volume to set the name for.</doc:summary></doc:doc>
+      </arg>
+      <arg name="name" direction="in" type="s">
+        <doc:doc><doc:summary>The new name for the logical volume.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Sets the name for a logical volume.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need the following PolicyKit authorization:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.udisks.linux-lvm2</doc:term>
+              <doc:definition>
+                Needed to configured Linux LVM2 devices.
+              </doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="&ERROR_BUSY;">if one of the given components are busy</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
+          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
     <method name="LinuxLvm2LVStart">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="group_uuid" direction="in" type="s">

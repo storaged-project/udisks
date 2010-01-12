@@ -236,6 +236,17 @@ gboolean daemon_linux_lvm2_lv_start (Daemon *daemon,
                                      char **options,
                                      DBusGMethodInvocation *context);
 
+gboolean daemon_linux_lvm2_vg_set_name (Daemon *daemon,
+                                        const gchar *uuid,
+                                        const gchar *name,
+                                        DBusGMethodInvocation *context);
+
+gboolean daemon_linux_lvm2_lv_set_name (Daemon *daemon,
+                                        const gchar *group_uuid,
+                                        const gchar *uuid,
+                                        const gchar *name,
+                                        DBusGMethodInvocation *context);
+
 G_END_DECLS
 
 #endif /* __DAEMON_H__ */
