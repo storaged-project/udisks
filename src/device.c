@@ -12158,7 +12158,7 @@ linux_lvm2_lv_set_name_completed_cb (DBusGMethodInvocation *context,
         {
           throw_error (context,
                        ERROR_FAILED,
-                       "Error setting name for LVM2 Volume Group: lvrename exited with exit code %d: %s",
+                       "Error setting name for LVM2 Logical Volume: lvrename exited with exit code %d: %s",
                        WEXITSTATUS (status),
                        stderr);
         }
@@ -12238,6 +12238,103 @@ daemon_linux_lvm2_lv_set_name (Daemon *daemon,
                            g_free,
                            g_strdup (new_name),
                            g_free);
+
+  return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+linux_lvm2_lv_remove_completed_cb (DBusGMethodInvocation *context,
+                                   Device *device,
+                                   gboolean job_was_cancelled,
+                                   int status,
+                                   const char *stderr,
+                                   const char *stdout,
+                                   gpointer user_data)
+{
+  if (WEXITSTATUS (status) == 0 && !job_was_cancelled)
+    {
+      dbus_g_method_return (context);
+    }
+  else
+    {
+      if (job_was_cancelled)
+        {
+          throw_error (context, ERROR_CANCELLED, "Job was cancelled");
+        }
+      else
+        {
+          throw_error (context,
+                       ERROR_FAILED,
+                       "Error removing LVM2 Logical Volume: lvremove exited with exit code %d: %s",
+                       WEXITSTATUS (status),
+                       stderr);
+        }
+    }
+}
+
+static void
+daemon_linux_lvm2_lv_remove_authorized_cb (Daemon *daemon,
+                                           Device *device,
+                                           DBusGMethodInvocation *context,
+                                           const gchar *action_id,
+                                           guint num_user_data,
+                                           gpointer *user_data_elements)
+{
+  const gchar *group_uuid = user_data_elements[0];
+  const gchar *uuid = user_data_elements[1];
+  /* TODO: use options: gchar **options = user_data_elements[2]; */
+  gchar *lv_name;
+  guint n;
+  gchar *argv[10];
+
+  /* Unfortunately lvchange does not (yet - file a bug) accept UUIDs - so find the LV name for this
+   * UUID by looking at PVs
+   */
+  lv_name = find_lvm2_lv_name_for_uuids (daemon, group_uuid, uuid);
+  if (lv_name == NULL)
+    {
+      throw_error (context, ERROR_FAILED, "Cannot find LV with UUID `%s'", uuid);
+      goto out;
+    }
+
+  n = 0;
+  argv[n++] = "lvremove";
+  argv[n++] = lv_name;
+  argv[n++] = "--force";
+  argv[n++] = NULL;
+
+  if (!job_new (context, "LinuxLvm2LVRemove", TRUE, NULL, argv, NULL, linux_lvm2_lv_remove_completed_cb, FALSE, NULL, NULL))
+    {
+      goto out;
+    }
+
+ out:
+  g_free (lv_name);
+}
+
+gboolean
+daemon_linux_lvm2_lv_remove (Daemon *daemon,
+                             const gchar *group_uuid,
+                             const gchar *uuid,
+                             gchar **options,
+                             DBusGMethodInvocation *context)
+{
+  daemon_local_check_auth (daemon,
+                           NULL,
+                           "org.freedesktop.udisks.linux-lvm2",
+                           "LinuxLvm2LVRemove",
+                           TRUE,
+                           daemon_linux_lvm2_lv_remove_authorized_cb,
+                           context,
+                           3,
+                           g_strdup (group_uuid),
+                           g_free,
+                           g_strdup (uuid),
+                           g_free,
+                           g_strdupv (options),
+                           g_strfreev);
 
   return TRUE;
 }

@@ -482,6 +482,46 @@
 
     <!-- ************************************************************ -->
 
+    <method name="LinuxLvm2LVRemove">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="group_uuid" direction="in" type="s">
+        <doc:doc><doc:summary>The UUID of the volume group of the logical volume to start belongs to.</doc:summary></doc:doc>
+      </arg>
+      <arg name="uuid" direction="in" type="s">
+        <doc:doc><doc:summary>The UUID of the logical volume to remove.</doc:summary></doc:doc>
+      </arg>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Options for remove the logical volume. Currently no options are supported.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Removes a LVM2 logical volume.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need the following PolicyKit authorization:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.udisks.linux-lvm2</doc:term>
+              <doc:definition>
+                Needed to configured Linux LVM2 devices.
+              </doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="&ERROR_BUSY;">if one of the given components are busy</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
+          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
     <method name="LinuxMdStart">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="components" direction="in" type="ao">
