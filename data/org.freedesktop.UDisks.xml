@@ -491,13 +491,83 @@
         <doc:doc><doc:summary>The UUID of the logical volume to remove.</doc:summary></doc:doc>
       </arg>
       <arg name="options" direction="in" type="as">
-        <doc:doc><doc:summary>Options for remove the logical volume. Currently no options are supported.</doc:summary></doc:doc>
+        <doc:doc><doc:summary>Options used for the removal of the logical volume. Currently no options are supported.</doc:summary></doc:doc>
       </arg>
 
       <doc:doc>
         <doc:description>
           <doc:para>
             Removes a LVM2 logical volume.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need the following PolicyKit authorization:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.udisks.linux-lvm2</doc:term>
+              <doc:definition>
+                Needed to configured Linux LVM2 devices.
+              </doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="&ERROR_BUSY;">if one of the given components are busy</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
+          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="LinuxLvm2LVCreate">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="group_uuid" direction="in" type="s">
+        <doc:doc><doc:summary>The UUID of the volume group to create a logical volume in.</doc:summary></doc:doc>
+      </arg>
+      <arg name="name" direction="in" type="s">
+        <doc:doc><doc:summary>The name for the logical volume.</doc:summary></doc:doc>
+      </arg>
+      <arg name="size" direction="in" type="t">
+        <doc:doc><doc:summary>The size of the logical volume, in bytes.</doc:summary></doc:doc>
+      </arg>
+      <arg name="num_stripes" direction="in" type="u">
+        <doc:doc><doc:summary>Number of stripes to use.</doc:summary></doc:doc>
+      </arg>
+      <arg name="stripe_size" direction="in" type="t">
+        <doc:doc><doc:summary>The stripe size to use or 0 if @num_stripes is 0. This must be a power of two.</doc:summary></doc:doc>
+      </arg>
+      <arg name="num_mirrors" direction="in" type="u">
+        <doc:doc><doc:summary>Number of mirrors to use.</doc:summary></doc:doc>
+      </arg>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Options used when creating the logical volume. Currently no options are supported.</doc:summary></doc:doc>
+      </arg>
+      <arg name="fstype" direction="in" type="s">
+        <doc:doc><doc:summary>
+            The file system to create in new logical filesystem. Leave
+            blank to skip creating a file system. See the
+            <doc:ref type="method" to="Device.FilesystemCreate">Device.FilesystemCreate()</doc:ref> method
+            for details.
+        </doc:summary></doc:doc>
+      </arg>
+      <arg name="fsoptions" direction="in" type="as">
+        <doc:doc><doc:summary>
+            Options to use for file system creation. See the
+            <doc:ref type="method" to="Device.FilesystemCreate">Device.FilesystemCreate()</doc:ref> method
+            for details.
+        </doc:summary></doc:doc>
+      </arg>
+      <arg name="created_device" direction="out" type="o">
+        <doc:doc><doc:summary>The object path of the newly added logical volume.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Creates a new LVM2 logical volume.
           </doc:para>
         </doc:description>
         <doc:permission>

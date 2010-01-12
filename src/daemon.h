@@ -253,6 +253,18 @@ gboolean daemon_linux_lvm2_lv_remove (Daemon *daemon,
                                       char **options,
                                       DBusGMethodInvocation *context);
 
+gboolean daemon_linux_lvm2_lv_create (Daemon *daemon,
+                                      const gchar *group_uuid,
+                                      const gchar *name,
+                                      guint64 size,
+                                      guint num_stripes,
+                                      guint64 stripe_size,
+                                      guint num_mirrors,
+                                      char **options,
+                                      char *fstype,
+                                      char **fsoptions,
+                                      DBusGMethodInvocation *context);
+
 G_END_DECLS
 
 #endif /* __DAEMON_H__ */

@@ -11645,7 +11645,6 @@ daemon_linux_lvm2_vg_stop_authorized_cb (Daemon *daemon,
   /* Unfortunately vgchange does not (yet - file a bug) accept UUIDs - so find the VG name for this
    * UUID by looking at PVs
    */
-
   vg_name = find_lvm2_vg_name_for_uuid (daemon, uuid);
   if (vg_name == NULL)
     {
@@ -12334,6 +12333,362 @@ daemon_linux_lvm2_lv_remove (Daemon *daemon,
                            g_strdup (uuid),
                            g_free,
                            g_strdupv (options),
+                           g_strfreev);
+
+  return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+typedef struct
+{
+  int refcount;
+
+  guint device_added_signal_handler_id;
+  guint device_added_timeout_id;
+
+  DBusGMethodInvocation *context;
+  Daemon *daemon;
+  gchar *vg_uuid;
+  gchar *lv_name;
+
+  char *fstype;
+  char **fsoptions;
+
+} CreateLvm2LVData;
+
+static CreateLvm2LVData *
+lvm2_lv_create_data_new (DBusGMethodInvocation *context,
+                         Daemon *daemon,
+                         const gchar *vg_uuid,
+                         const gchar *lv_name,
+                         const char *fstype,
+                         char **fsoptions)
+{
+  CreateLvm2LVData *data;
+
+  data = g_new0 (CreateLvm2LVData, 1);
+  data->refcount = 1;
+
+  data->context = context;
+  data->daemon = g_object_ref (daemon);
+  data->vg_uuid = g_strdup (vg_uuid);
+  data->lv_name = g_strdup (lv_name);
+  data->fstype = g_strdup (fstype);
+  data->fsoptions = g_strdupv (fsoptions);
+
+  return data;
+}
+
+static CreateLvm2LVData *
+lvm2_lv_create_data_ref (CreateLvm2LVData *data)
+{
+  data->refcount++;
+  return data;
+}
+
+static void
+lvm2_lv_create_data_unref (CreateLvm2LVData *data)
+{
+  data->refcount--;
+  if (data->refcount == 0)
+    {
+      g_object_unref (data->daemon);
+      g_free (data->vg_uuid);
+      g_free (data->lv_name);
+      g_free (data->fstype);
+      g_strfreev (data->fsoptions);
+      g_free (data);
+    }
+}
+
+static void
+lvm2_lv_create_filesystem_create_hook (DBusGMethodInvocation *context,
+                                       Device *device,
+                                       gboolean filesystem_create_succeeded,
+                                       gpointer user_data)
+{
+  if (!filesystem_create_succeeded)
+    {
+      /* dang.. FilesystemCreate already reported an error */
+    }
+  else
+    {
+      /* it worked.. */
+      dbus_g_method_return (context, device->priv->object_path);
+    }
+}
+
+static void
+lvm2_lv_create_found_device (Device *device,
+                             CreateLvm2LVData *data)
+{
+  if (strlen (data->fstype) > 0)
+    {
+      device_filesystem_create_internal (device,
+                                         data->fstype,
+                                         data->fsoptions,
+                                         lvm2_lv_create_filesystem_create_hook,
+                                         NULL,
+                                         data->context);
+    }
+  else
+    {
+      dbus_g_method_return (data->context, device->priv->object_path);
+    }
+}
+
+static void
+lvm2_lv_create_device_added_cb (Daemon *daemon,
+                                const char *object_path,
+                                gpointer user_data)
+{
+  CreateLvm2LVData *data = user_data;
+  Device *device;
+
+  /* check the device added is the partition we've created */
+  device = daemon_local_find_by_object_path (daemon, object_path);
+
+  /*  g_debug ("Looking at %d `%s' `%s'.\n"
+           "Want          `%s' `%s'.\n"
+           "------------------------------------\n",
+           device->priv->device_is_linux_lvm2_lv, device->priv->linux_lvm2_lv_group_uuid, device->priv->linux_lvm2_lv_name,
+           data->vg_uuid, data->lv_name);
+  */
+
+  if (device != NULL &&
+      device->priv->device_is_linux_lvm2_lv &&
+      g_strcmp0 (device->priv->linux_lvm2_lv_group_uuid, data->vg_uuid) == 0 &&
+      g_strcmp0 (device->priv->linux_lvm2_lv_name, data->lv_name) == 0)
+    {
+      /* yay! it is.. now create the file system if requested */
+      lvm2_lv_create_found_device (device, data);
+
+      g_signal_handler_disconnect (daemon, data->device_added_signal_handler_id);
+      g_source_remove (data->device_added_timeout_id);
+      lvm2_lv_create_data_unref (data);
+    }
+}
+
+static gboolean
+lvm2_lv_create_device_not_seen_cb (gpointer user_data)
+{
+  CreateLvm2LVData *data = user_data;
+
+  throw_error (data->context,
+               ERROR_FAILED,
+               "Error creating Logical Volume: timeout (10s) waiting for LV to show up");
+
+  g_signal_handler_disconnect (data->daemon, data->device_added_signal_handler_id);
+  lvm2_lv_create_data_unref (data);
+
+  return FALSE;
+}
+
+static void
+linux_lvm2_lv_create_completed_cb (DBusGMethodInvocation *context,
+                                   Device *device,
+                                   gboolean job_was_cancelled,
+                                   int status,
+                                   const char *stderr,
+                                   const char *stdout,
+                                   gpointer user_data)
+{
+  CreateLvm2LVData *data = user_data;
+
+  if (WEXITSTATUS (status) == 0 && !job_was_cancelled)
+    {
+      gboolean found_device;
+      GList *devices;
+      GList *l;
+
+      /* check if the device is already there */
+      found_device = FALSE;
+      devices = daemon_local_get_all_devices (data->daemon);
+      for (l = devices; l != NULL; l = l->next)
+        {
+          Device *d = DEVICE (l->data);
+
+          /*
+            g_debug ("Looking at %d `%s' `%s'.\n"
+                   "Want          `%s' `%s'.\n"
+                   "------------------------------------\n",
+                   d->priv->device_is_linux_lvm2_lv, d->priv->linux_lvm2_lv_group_uuid, d->priv->linux_lvm2_lv_name,
+                   data->vg_uuid, data->lv_name);
+          */
+
+          if (d->priv->device_is_linux_lvm2_lv &&
+              g_strcmp0 (d->priv->linux_lvm2_lv_group_uuid, data->vg_uuid) == 0 &&
+              g_strcmp0 (d->priv->linux_lvm2_lv_name, data->lv_name) == 0)
+            {
+              /* yay! it is.. now create the file system if requested */
+              lvm2_lv_create_found_device (d, data);
+              found_device = TRUE;
+              break;
+            }
+        }
+
+      if (!found_device)
+        {
+          /* otherwise sit around and wait for the new partition to appear */
+          data->device_added_signal_handler_id =
+            g_signal_connect_after (data->daemon,
+                                    "device-added",
+                                    G_CALLBACK (lvm2_lv_create_device_added_cb),
+                                    lvm2_lv_create_data_ref (data));
+
+          /* set up timeout for error reporting if waiting failed
+           *
+           * (the signal handler and the timeout handler share the ref to data
+           * as one will cancel the other)
+           */
+          data->device_added_timeout_id = g_timeout_add (10 * 1000,
+                                                         lvm2_lv_create_device_not_seen_cb,
+                                                         data);
+        }
+    }
+  else
+    {
+      if (job_was_cancelled)
+        {
+          throw_error (context, ERROR_CANCELLED, "Job was cancelled");
+        }
+      else
+        {
+          throw_error (context,
+                       ERROR_FAILED,
+                       "Error creating LVM2 Logical Volume: lvcreate exited with exit code %d: %s",
+                       WEXITSTATUS (status),
+                       stderr);
+        }
+    }
+}
+
+static void
+daemon_linux_lvm2_lv_create_authorized_cb (Daemon *daemon,
+                                           Device *device,
+                                           DBusGMethodInvocation *context,
+                                           const gchar *action_id,
+                                           guint num_user_data,
+                                           gpointer *user_data_elements)
+{
+  const gchar *group_uuid = user_data_elements[0];
+  const gchar *name = user_data_elements[1];
+  guint64 size = *((guint64 *) user_data_elements[2]);
+  guint num_stripes = GPOINTER_TO_UINT (user_data_elements[3]);
+  guint64 stripe_size = *((guint64 *) user_data_elements[4]);
+  guint num_mirrors = GPOINTER_TO_UINT (user_data_elements[5]);
+  /* TODO: use options: gchar **options = user_data_elements[6]; */
+  const gchar *fstype = user_data_elements[7];
+  gchar **fsoptions = user_data_elements[8];
+  const gchar *vg_name;
+  gchar **argv;
+  GString *s;
+
+  argv = NULL;
+  s = NULL;
+
+  /* Unfortunately lvcreate does not (yet - file a bug) accept UUIDs - so find the VG name for this
+   * UUID by looking at PVs
+   */
+  vg_name = find_lvm2_vg_name_for_uuid (daemon, group_uuid);
+  if (vg_name == NULL)
+    {
+      throw_error (context, ERROR_FAILED, "Cannot find VG with UUID `%s'", group_uuid);
+      goto out;
+    }
+
+  if (name == NULL || strlen (name) == 0)
+    {
+      throw_error (context, ERROR_FAILED, "Name cannot be blank");
+      goto out;
+    }
+
+  if (strstr (name, "\"") != NULL)
+    {
+      throw_error (context, ERROR_FAILED, "Name cannot contain the double-quote (\") character");
+      goto out;
+    }
+
+  s = g_string_new ("lvcreate ");
+
+  g_string_append_printf (s, "%s ", vg_name);
+  if (num_stripes > 0)
+    g_string_append_printf (s, "--stripes %d ", num_stripes);
+  if (stripe_size > 0)
+    g_string_append_printf (s, "--stripesize %" G_GUINT64_FORMAT " ", stripe_size);
+  if (num_mirrors > 0)
+    g_string_append_printf (s, "--mirrors %d ", num_mirrors);
+
+  size &= (~511);
+  g_string_append_printf (s, "--size %" G_GUINT64_FORMAT "b ", size);
+  if (name != NULL && strlen (name) > 0)
+    g_string_append_printf (s, "--name \"%s\"", name);
+
+  if (!g_shell_parse_argv (s->str, NULL, &argv, NULL))
+    {
+      throw_error (context, ERROR_FAILED, "Unable to parse command line `%s'", s->str);
+      goto out;
+    }
+
+  if (!job_new (context,
+                "LinuxLvm2LVCreate",
+                TRUE,
+                NULL,
+                argv,
+                NULL,
+                linux_lvm2_lv_create_completed_cb,
+                FALSE,
+                lvm2_lv_create_data_new (context, daemon, group_uuid, name, fstype, fsoptions),
+                (GDestroyNotify) lvm2_lv_create_data_unref))
+    {
+      goto out;
+    }
+
+ out:
+  if (s != NULL)
+    g_string_free (s, FALSE);
+  g_strfreev (argv);
+}
+
+gboolean
+daemon_linux_lvm2_lv_create (Daemon *daemon,
+                             const gchar *group_uuid,
+                             const gchar *name,
+                             guint64 size,
+                             guint num_stripes,
+                             guint64 stripe_size,
+                             guint num_mirrors,
+                             gchar **options,
+                             char *fstype,
+                             char **fsoptions,
+                             DBusGMethodInvocation *context)
+{
+  daemon_local_check_auth (daemon,
+                           NULL,
+                           "org.freedesktop.udisks.linux-lvm2",
+                           "LinuxLvm2LVCreate",
+                           TRUE,
+                           daemon_linux_lvm2_lv_create_authorized_cb,
+                           context,
+                           9,
+                           g_strdup (group_uuid),
+                           g_free,
+                           g_strdup (name),
+                           g_free,
+                           g_memdup (&size, sizeof (guint64)),
+                           g_free,
+                           GUINT_TO_POINTER (num_stripes),
+                           NULL,
+                           g_memdup (&stripe_size, sizeof (guint64)),
+                           g_free,
+                           GUINT_TO_POINTER (num_mirrors),
+                           NULL,
+                           g_strdupv (options),
+                           g_strfreev,
+                           g_strdup (fstype),
+                           g_free,
+                           g_strdupv (fsoptions),
                            g_strfreev);
 
   return TRUE;
