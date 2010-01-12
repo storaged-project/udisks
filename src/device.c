@@ -2844,24 +2844,56 @@ update_info_luks_cleartext (Device *device)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gchar *
+extract_lvm_uuid (const gchar *s)
+{
+  GString *str;
+
+  if (s == NULL || strlen (s) < 32)
+    return NULL;
+
+  str = g_string_new_len (s, 6);   g_string_append_c (str, '-'); s += 6;
+  g_string_append_len (str, s, 4); g_string_append_c (str, '-'); s += 4;
+  g_string_append_len (str, s, 4); g_string_append_c (str, '-'); s += 4;
+  g_string_append_len (str, s, 4); g_string_append_c (str, '-'); s += 4;
+  g_string_append_len (str, s, 4); g_string_append_c (str, '-'); s += 4;
+  g_string_append_len (str, s, 4); g_string_append_c (str, '-'); s += 4;
+  g_string_append_len (str, s, 6);
+
+  return g_string_free (str, FALSE);
+}
+
 /* update device_is_linux_lvm2_lv and linux_lvm2_lv_* properties */
 static gboolean
 update_info_linux_lvm2_lv (Device *device)
 {
   const gchar *lv_name;
-  const gchar *lv_uuid;
   const gchar *vg_name;
-  const gchar *vg_uuid;
+  const gchar *uuid;
+  gchar *lv_uuid;
+  gchar *vg_uuid;
   gboolean is_lv;
 
-  lv_name = g_udev_device_get_property (device->priv->d, "UDISKS_LVM2_LV_NAME");
-  lv_uuid = g_udev_device_get_property (device->priv->d, "UDISKS_LVM2_LV_UUID");
-  vg_name = g_udev_device_get_property (device->priv->d, "UDISKS_LVM2_LV_VG_NAME");
-  vg_uuid = g_udev_device_get_property (device->priv->d, "UDISKS_LVM2_LV_VG_UUID");
-
   is_lv = FALSE;
+  lv_uuid = NULL;
+  vg_uuid = NULL;
 
-  if (lv_name == NULL)
+  lv_name = g_udev_device_get_property (device->priv->d, "DM_LV_NAME");
+  vg_name = g_udev_device_get_property (device->priv->d, "DM_VG_NAME");
+
+  if (lv_name == NULL || vg_name == NULL)
+    goto out;
+
+  uuid = g_udev_device_get_sysfs_attr (device->priv->d, "dm/uuid");
+  if (uuid == NULL || !g_str_has_prefix (uuid, "LVM-"))
+    goto out;
+
+  vg_uuid = extract_lvm_uuid (uuid + 4);
+  if (vg_uuid == NULL)
+    goto out;
+
+  lv_uuid = extract_lvm_uuid (uuid + 4 + 32);
+  if (lv_uuid == NULL)
     goto out;
 
   is_lv = TRUE;
@@ -2874,6 +2906,8 @@ update_info_linux_lvm2_lv (Device *device)
 
  out:
   device_set_device_is_linux_lvm2_lv (device, is_lv);
+  g_free (vg_uuid);
+  g_free (lv_uuid);
   return TRUE;
 }
 
