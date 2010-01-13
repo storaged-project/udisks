@@ -402,6 +402,87 @@
 
     <!-- ************************************************************ -->
 
+    <method name="LinuxLvm2VGAddPV">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="uuid" direction="in" type="s">
+        <doc:doc><doc:summary>The UUID of the volume group to add a physical volume to.</doc:summary></doc:doc>
+      </arg>
+      <arg name="physical_volume" direction="in" type="o">
+        <doc:doc><doc:summary>The objcet path of the device to use as a physical volume.</doc:summary></doc:doc>
+      </arg>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Adds a Physical volume to a Linux LVM2 Volume Group. Existing data
+            on the given device to use for a physical volume will be erased.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need the following PolicyKit authorization:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.udisks.linux-lvm2</doc:term>
+              <doc:definition>
+                Needed to configured Linux LVM2 devices.
+              </doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="&ERROR_BUSY;">if one of the given components are busy</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
+          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="LinuxLvm2VGRemovePV">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="uuid" direction="in" type="s">
+        <doc:doc><doc:summary>The UUID of the volume group to remove the physical volume from.</doc:summary></doc:doc>
+      </arg>
+      <arg name="physical_volume" direction="in" type="o">
+        <doc:doc><doc:summary>The objcet path of the device to remove.</doc:summary></doc:doc>
+      </arg>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Removes a Physical volume from a Linux LVM2 Volume Group.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need the following PolicyKit authorization:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.udisks.linux-lvm2</doc:term>
+              <doc:definition>
+                Needed to configured Linux LVM2 devices.
+              </doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="&ERROR_BUSY;">if one of the given components are busy</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
+          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
     <method name="LinuxLvm2LVSetName">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="group_uuid" direction="in" type="s">

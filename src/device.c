@@ -12693,3 +12693,238 @@ daemon_linux_lvm2_lv_create (Daemon *daemon,
 
   return TRUE;
 }
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+linux_lvm2_vg_add_pv_completed_cb (DBusGMethodInvocation *context,
+                                     Device *device,
+                                     gboolean job_was_cancelled,
+                                     int status,
+                                     const char *stderr,
+                                     const char *stdout,
+                                     gpointer user_data)
+{
+  if (WEXITSTATUS (status) == 0 && !job_was_cancelled)
+    {
+      dbus_g_method_return (context);
+    }
+  else
+    {
+      if (job_was_cancelled)
+        {
+          throw_error (context, ERROR_CANCELLED, "Job was cancelled");
+        }
+      else
+        {
+          throw_error (context,
+                       ERROR_FAILED,
+                       "Error adding PV for LVM2 Volume Group: vgextend exited with exit code %d: %s",
+                       WEXITSTATUS (status),
+                       stderr);
+        }
+    }
+}
+
+static void
+daemon_linux_lvm2_vg_add_pv_authorized_cb (Daemon *daemon,
+                                             Device *device,
+                                             DBusGMethodInvocation *context,
+                                             const gchar *action_id,
+                                             guint num_user_data,
+                                             gpointer *user_data_elements)
+{
+  const gchar *uuid = user_data_elements[0];
+  const gchar *physical_volume = user_data_elements[1];
+  /* TODO: use options: gchar **options = user_data_elements[2]; */
+  const gchar *vg_name;
+  guint n;
+  gchar *argv[10];
+  Device *pv;
+  GError *error;
+
+  /* Unfortunately vgchange does not (yet - file a bug) accept UUIDs - so find the VG name for this
+   * UUID by looking at PVs
+   */
+
+  vg_name = find_lvm2_vg_name_for_uuid (daemon, uuid);
+  if (vg_name == NULL)
+    {
+      throw_error (context, ERROR_FAILED, "Cannot find VG with UUID `%s'", uuid);
+      goto out;
+    }
+
+  pv = daemon_local_find_by_object_path (daemon, physical_volume);
+  if (pv == NULL)
+    {
+      throw_error (context, ERROR_FAILED, "physical volume doesn't exist");
+      goto out;
+    }
+
+  error = NULL;
+  if (device_local_is_busy (pv, TRUE, &error))
+    {
+      dbus_g_method_return_error (context, error);
+      g_error_free (error);
+      goto out;
+    }
+
+
+  n = 0;
+  argv[n++] = "vgextend";
+  argv[n++] = (gchar *) vg_name;
+  argv[n++] = (gchar *) pv->priv->device_file;
+  argv[n++] = NULL;
+
+  if (!job_new (context, "LinuxLvm2VGAddPV", TRUE, NULL, argv, NULL, linux_lvm2_vg_add_pv_completed_cb, FALSE, NULL, NULL))
+    {
+      goto out;
+    }
+
+ out:
+  ;
+}
+
+gboolean
+daemon_linux_lvm2_vg_add_pv (Daemon *daemon,
+                             const gchar *uuid,
+                             const gchar *object_path,
+                             gchar **options,
+                             DBusGMethodInvocation *context)
+{
+  daemon_local_check_auth (daemon,
+                           NULL,
+                           "org.freedesktop.udisks.linux-lvm2",
+                           "LinuxLvm2VGAddPV",
+                           TRUE,
+                           daemon_linux_lvm2_vg_add_pv_authorized_cb,
+                           context,
+                           3,
+                           g_strdup (uuid),
+                           g_free,
+                           g_strdup (object_path),
+                           g_free,
+                           g_strdupv (options),
+                           g_strfreev);
+
+  return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+linux_lvm2_vg_remove_pv_completed_cb (DBusGMethodInvocation *context,
+                                      Device *device,
+                                      gboolean job_was_cancelled,
+                                      int status,
+                                      const char *stderr,
+                                      const char *stdout,
+                                      gpointer user_data)
+{
+  if (WEXITSTATUS (status) == 0 && !job_was_cancelled)
+    {
+      dbus_g_method_return (context);
+    }
+  else
+    {
+      if (job_was_cancelled)
+        {
+          throw_error (context, ERROR_CANCELLED, "Job was cancelled");
+        }
+      else
+        {
+          throw_error (context,
+                       ERROR_FAILED,
+                       "Error removing PV for LVM2 Volume Group: vgreduce exited with exit code %d: %s",
+                       WEXITSTATUS (status),
+                       stderr);
+        }
+    }
+}
+
+static void
+daemon_linux_lvm2_vg_remove_pv_authorized_cb (Daemon *daemon,
+                                              Device *device,
+                                              DBusGMethodInvocation *context,
+                                              const gchar *action_id,
+                                              guint num_user_data,
+                                              gpointer *user_data_elements)
+{
+  const gchar *uuid = user_data_elements[0];
+  const gchar *physical_volume = user_data_elements[1];
+  /* TODO: use options: gchar **options = user_data_elements[2]; */
+  const gchar *vg_name;
+  guint n;
+  gchar *argv[10];
+  Device *pv;
+  GError *error;
+
+  /* Unfortunately vgchange does not (yet - file a bug) accept UUIDs - so find the VG name for this
+   * UUID by looking at PVs
+   */
+
+  vg_name = find_lvm2_vg_name_for_uuid (daemon, uuid);
+  if (vg_name == NULL)
+    {
+      throw_error (context, ERROR_FAILED, "Cannot find VG with UUID `%s'", uuid);
+      goto out;
+    }
+
+  pv = daemon_local_find_by_object_path (daemon, physical_volume);
+  if (pv == NULL)
+    {
+      throw_error (context, ERROR_FAILED, "physical volume doesn't exist");
+      goto out;
+    }
+
+  error = NULL;
+  if (device_local_is_busy (pv, TRUE, &error))
+    {
+      dbus_g_method_return_error (context, error);
+      g_error_free (error);
+      goto out;
+    }
+
+
+  n = 0;
+  argv[n++] = "vgreduce";
+  argv[n++] = (gchar *) vg_name;
+  argv[n++] = (gchar *) pv->priv->device_file;
+  argv[n++] = NULL;
+
+  if (!job_new (context, "LinuxLvm2VGRemovePV", TRUE, NULL, argv, NULL, linux_lvm2_vg_remove_pv_completed_cb, FALSE, NULL, NULL))
+    {
+      goto out;
+    }
+
+ out:
+  ;
+}
+
+gboolean
+daemon_linux_lvm2_vg_remove_pv (Daemon *daemon,
+                                const gchar *uuid,
+                                const gchar *object_path,
+                                gchar **options,
+                                DBusGMethodInvocation *context)
+{
+  daemon_local_check_auth (daemon,
+                           NULL,
+                           "org.freedesktop.udisks.linux-lvm2",
+                           "LinuxLvm2VGRemovePV",
+                           TRUE,
+                           daemon_linux_lvm2_vg_remove_pv_authorized_cb,
+                           context,
+                           3,
+                           g_strdup (uuid),
+                           g_free,
+                           g_strdup (object_path),
+                           g_free,
+                           g_strdupv (options),
+                           g_strfreev);
+
+  return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
