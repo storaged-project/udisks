@@ -972,6 +972,11 @@ part_table_load_from_disk (int fd)
       goto out;
     }
 
+#ifdef POSIX_FADV_RANDOM
+  /* No read-ahead, please */
+  posix_fadvise(fd, 0, 0, POSIX_FADV_RANDOM);
+#endif
+
   p = part_table_parse_msdos (fd, 0, size, block_size, &found_gpt);
   if (p != NULL)
     {
