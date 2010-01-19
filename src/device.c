@@ -12850,30 +12850,44 @@ daemon_linux_lvm2_vg_remove_pv_authorized_cb (Daemon *daemon,
                                               guint num_user_data,
                                               gpointer *user_data_elements)
 {
-  const gchar *uuid = user_data_elements[0];
-  const gchar *physical_volume = user_data_elements[1];
+  const gchar *vg_uuid = user_data_elements[0];
+  const gchar *pv_uuid = user_data_elements[1];
   /* TODO: use options: gchar **options = user_data_elements[2]; */
   const gchar *vg_name;
   guint n;
   gchar *argv[10];
   Device *pv;
   GError *error;
+  GList *devices;
+  GList *l;
 
   /* Unfortunately vgchange does not (yet - file a bug) accept UUIDs - so find the VG name for this
    * UUID by looking at PVs
    */
+  pv = NULL;
 
-  vg_name = find_lvm2_vg_name_for_uuid (daemon, uuid);
+  vg_name = find_lvm2_vg_name_for_uuid (daemon, vg_uuid);
   if (vg_name == NULL)
     {
-      throw_error (context, ERROR_FAILED, "Cannot find VG with UUID `%s'", uuid);
+      throw_error (context, ERROR_FAILED, "Cannot find VG with UUID `%s'", vg_uuid);
       goto out;
     }
 
-  pv = daemon_local_find_by_object_path (daemon, physical_volume);
+  devices = daemon_local_get_all_devices (daemon);
+  for (l = devices; l != NULL; l = l->next)
+    {
+      Device *d = DEVICE (l->data);
+
+      if (d->priv->device_is_linux_lvm2_pv && g_strcmp0 (d->priv->linux_lvm2_pv_uuid, pv_uuid) == 0)
+        {
+          pv = d;
+          break;
+        }
+    }
+
   if (pv == NULL)
     {
-      throw_error (context, ERROR_FAILED, "physical volume doesn't exist");
+      throw_error (context, ERROR_FAILED, "Cannot find PV with UUID `%s'", pv_uuid);
       goto out;
     }
 
@@ -12884,7 +12898,6 @@ daemon_linux_lvm2_vg_remove_pv_authorized_cb (Daemon *daemon,
       g_error_free (error);
       goto out;
     }
-
 
   n = 0;
   argv[n++] = "vgreduce";
@@ -12903,8 +12916,8 @@ daemon_linux_lvm2_vg_remove_pv_authorized_cb (Daemon *daemon,
 
 gboolean
 daemon_linux_lvm2_vg_remove_pv (Daemon *daemon,
-                                const gchar *uuid,
-                                const gchar *object_path,
+                                const gchar *vg_uuid,
+                                const gchar *pv_uuid,
                                 gchar **options,
                                 DBusGMethodInvocation *context)
 {
@@ -12916,9 +12929,9 @@ daemon_linux_lvm2_vg_remove_pv (Daemon *daemon,
                            daemon_linux_lvm2_vg_remove_pv_authorized_cb,
                            context,
                            3,
-                           g_strdup (uuid),
+                           g_strdup (vg_uuid),
                            g_free,
-                           g_strdup (object_path),
+                           g_strdup (pv_uuid),
                            g_free,
                            g_strdupv (options),
                            g_strfreev);

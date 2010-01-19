@@ -445,11 +445,11 @@
 
     <method name="LinuxLvm2VGRemovePV">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
-      <arg name="uuid" direction="in" type="s">
+      <arg name="vg_uuid" direction="in" type="s">
         <doc:doc><doc:summary>The UUID of the volume group to remove the physical volume from.</doc:summary></doc:doc>
       </arg>
-      <arg name="physical_volume" direction="in" type="o">
-        <doc:doc><doc:summary>The objcet path of the device to remove.</doc:summary></doc:doc>
+      <arg name="pv_uuid" direction="in" type="s">
+        <doc:doc><doc:summary>The UUID of the physical volume to remove from the VG.</doc:summary></doc:doc>
       </arg>
       <arg name="options" direction="in" type="as">
         <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>

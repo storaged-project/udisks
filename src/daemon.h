@@ -272,8 +272,8 @@ gboolean daemon_linux_lvm2_vg_add_pv (Daemon *daemon,
                                       DBusGMethodInvocation *context);
 
 gboolean daemon_linux_lvm2_vg_remove_pv (Daemon *daemon,
-                                         const gchar *uuid,
-                                         const gchar *physical_volume_object_path,
+                                         const gchar *vg_uuid,
+                                         const gchar *pv_uuid,
                                          char **options,
                                          DBusGMethodInvocation *context);
 
