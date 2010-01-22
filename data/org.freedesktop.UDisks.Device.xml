@@ -2262,6 +2262,26 @@
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
+    <property name="DriveSimilarDevices" type="ao" access="read">
+      <doc:doc><doc:description><doc:para>
+            An array of object paths for devices with similar serial number and/or WWN.
+            Typically all drives with similar serial number and/or WWN
+            are configured as a multipath device (for example via the
+            Linux device-mapper target cf.
+            <doc:ref type="property" to="Device:DeviceIsLinuxDmmp">DeviceIsLinuxDmmp</doc:ref> and
+            <doc:ref type="property" to="Device:DeviceIsLinuxDmmpComponent">DeviceIsLinuxDmmpComponent</doc:ref>)
+            but in some cases the OS needs manual configuration.
+            Presentation-level software can (and should) display a
+            warning when this property is non-empty and the device
+            isn't a multipath component or multipath device e.g. when both
+            <doc:ref type="property" to="Device:DeviceIsLinuxDmmpComponent">DeviceIsLinuxDmmpComponent</doc:ref>) and
+            <doc:ref type="property" to="Device:DeviceIsLinuxDmmp">DeviceIsLinuxDmmp</doc:ref>)
+            is FALSE.
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsDrive">DeviceIsDrive</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
 
     <!-- **************************************************************************************************** -->
 
@@ -2380,6 +2400,10 @@
               <doc:item>
                 <doc:term>raid5</doc:term>
                 <doc:definition>RAID-5</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>raid6</doc:term>
+                <doc:definition>RAID-6</doc:definition>
               </doc:item>
               <doc:item>
                 <doc:term>raid10</doc:term>

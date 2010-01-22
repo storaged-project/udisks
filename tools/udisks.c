@@ -371,6 +371,7 @@ typedef struct
   char *drive_write_cache;
   char *drive_adapter;
   char **drive_ports;
+  char **drive_similar_devices;
 
   gboolean optical_disc_is_blank;
   gboolean optical_disc_is_appendable;
@@ -614,6 +615,18 @@ collect_props (const char *key,
         props->drive_ports[n] = g_strdup (object_paths->pdata[n]);
       props->drive_ports[n] = NULL;
     }
+  else if (strcmp (key, "DriveSimilarDevices") == 0)
+    {
+      guint n;
+      GPtrArray *object_paths;
+
+      object_paths = g_value_get_boxed (value);
+
+      props->drive_similar_devices = g_new0 (char *, object_paths->len + 1);
+      for (n = 0; n < object_paths->len; n++)
+        props->drive_similar_devices[n] = g_strdup (object_paths->pdata[n]);
+      props->drive_similar_devices[n] = NULL;
+    }
 
   else if (strcmp (key, "OpticalDiscIsBlank") == 0)
     props->optical_disc_is_blank = g_value_get_boolean (value);
@@ -787,6 +800,7 @@ device_properties_free (DeviceProperties *props)
   g_free (props->drive_write_cache);
   g_free (props->drive_adapter);
   g_strfreev (props->drive_ports);
+  g_strfreev (props->drive_similar_devices);
 
   g_free (props->drive_ata_smart_status);
   g_free (props->drive_ata_smart_blob);
@@ -1341,10 +1355,25 @@ do_show_info (const char *object_path)
         }
       g_print ("    ejectable:                 %d\n", props->drive_is_media_ejectable);
       g_print ("    adapter:                   %s\n", strlen (props->drive_adapter) > 1 ? props->drive_adapter : "Unknown");
-      g_print ("    ports:                     \n");
+      g_print ("    ports:\n");
       for (n = 0; props->drive_ports != NULL && props->drive_ports[n] != NULL; n++)
         {
           g_print ("      %s\n", props->drive_ports[n]);
+        }
+      g_print ("    similar devices:\n");
+      for (n = 0; props->drive_similar_devices != NULL && props->drive_similar_devices[n] != NULL; n++)
+        {
+          g_print ("      %s\n", props->drive_similar_devices[n]);
+        }
+      if (props->drive_similar_devices != NULL && g_strv_length (props->drive_similar_devices) > 0)
+        {
+          if (!props->device_is_linux_dmmp_component && !props->device_is_linux_dmmp)
+            {
+              begin_highlight ();
+              g_print ("      WARNING: Multiple devices with this serial and/or WWN has been detected\n"
+                       "               but dm-multipath is not active for these devices.\n");
+              end_highlight ();
+            }
         }
       g_print ("    media:                     %s\n", props->drive_media);
       g_print ("      compat:                 ");

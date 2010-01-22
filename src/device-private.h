@@ -166,6 +166,7 @@ struct DevicePrivate
   char *drive_write_cache;
   char *drive_adapter;
   GPtrArray *drive_ports;
+  GPtrArray *drive_similar_devices;
 
   gboolean optical_disc_is_blank;
   gboolean optical_disc_is_appendable;
@@ -316,6 +317,7 @@ void device_set_drive_rotation_rate (Device *device, guint value);
 void device_set_drive_write_cache (Device *device, const gchar *value);
 void device_set_drive_adapter (Device *device, const gchar *value);
 void device_set_drive_ports (Device *device, GStrv value);
+void device_set_drive_similar_devices (Device *device, GStrv value);
 
 void device_set_optical_disc_is_blank (Device *device, gboolean value);
 void device_set_optical_disc_is_appendable (Device *device, gboolean value);

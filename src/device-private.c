@@ -939,6 +939,18 @@ device_set_drive_ports (Device *device,
 }
 
 void
+device_set_drive_similar_devices (Device *device,
+                                  GStrv value)
+{
+  if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->drive_similar_devices, value)))
+    {
+      ptr_str_array_free (device->priv->drive_similar_devices);
+      device->priv->drive_similar_devices = ptr_str_array_from_strv (value);
+      emit_changed (device, "drive_similar_devices");
+    }
+}
+
+void
 device_set_optical_disc_is_blank (Device *device,
                                   gboolean value)
 {

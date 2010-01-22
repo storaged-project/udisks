@@ -76,6 +76,7 @@ static void spindown_inhibitor_disconnected_cb (Inhibitor *inhibitor,
                                                 Device *device);
 
 static gboolean update_info (Device *device);
+static void update_info_in_idle (Device *device);
 
 static void drain_pending_changes (Device *device,
                                    gboolean force_update);
@@ -134,6 +135,26 @@ static void force_luks_teardown (Device *device,
                                  Device *cleartext_device,
                                  ForceRemovalCompleteFunc callback,
                                  gpointer user_data);
+
+static gboolean
+ptr_array_has_string (GPtrArray *p, const gchar *str)
+{
+  guint n;
+  gboolean ret;
+
+  ret = FALSE;
+  for (n = 0; n < p->len; n++)
+    {
+      if (g_strcmp0 (p->pdata[n], str) == 0)
+        {
+          ret = TRUE;
+          goto out;
+        }
+    }
+
+ out:
+  return ret;
+}
 
 /* TODO: this is kinda a hack */
 static const gchar *
@@ -236,6 +257,7 @@ enum
     PROP_DRIVE_WRITE_CACHE,
     PROP_DRIVE_ADAPTER,
     PROP_DRIVE_PORTS,
+    PROP_DRIVE_SIMILAR_DEVICES,
 
     PROP_OPTICAL_DISC_IS_BLANK,
     PROP_OPTICAL_DISC_IS_APPENDABLE,
@@ -589,6 +611,9 @@ get_property (GObject *object,
       break;
     case PROP_DRIVE_PORTS:
       g_value_set_boxed (value, device->priv->drive_ports);
+      break;
+    case PROP_DRIVE_SIMILAR_DEVICES:
+      g_value_set_boxed (value, device->priv->drive_similar_devices);
       break;
 
     case PROP_OPTICAL_DISC_IS_BLANK:
@@ -1303,6 +1328,13 @@ device_class_init (DeviceClass *klass)
                                                        NULL,
                                                        dbus_g_type_get_collection ("GPtrArray", DBUS_TYPE_G_OBJECT_PATH),
                                                        G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_DRIVE_SIMILAR_DEVICES,
+                                   g_param_spec_boxed ("drive-similar-devices",
+                                                       NULL,
+                                                       NULL,
+                                                       dbus_g_type_get_collection ("GPtrArray", DBUS_TYPE_G_OBJECT_PATH),
+                                                       G_PARAM_READABLE));
 
   g_object_class_install_property (object_class,
                                    PROP_OPTICAL_DISC_IS_BLANK,
@@ -1642,6 +1674,7 @@ device_init (Device *device)
   device->priv->partition_flags = g_ptr_array_new ();
   device->priv->drive_media_compatibility = g_ptr_array_new ();
   device->priv->drive_ports = g_ptr_array_new ();
+  device->priv->drive_similar_devices = g_ptr_array_new ();
   device->priv->linux_md_component_state = g_ptr_array_new ();
   device->priv->linux_md_slaves = g_ptr_array_new ();
   device->priv->linux_lvm2_pv_group_physical_volumes = g_ptr_array_new ();
@@ -1740,6 +1773,8 @@ device_finalize (GObject *object)
   g_free (device->priv->drive_adapter);
   g_ptr_array_foreach (device->priv->drive_ports, (GFunc) g_free, NULL);
   g_ptr_array_free (device->priv->drive_ports, TRUE);
+  g_ptr_array_foreach (device->priv->drive_similar_devices, (GFunc) g_free, NULL);
+  g_ptr_array_free (device->priv->drive_similar_devices, TRUE);
 
   g_free (device->priv->linux_md_component_level);
   g_free (device->priv->linux_md_component_uuid);
@@ -3953,6 +3988,75 @@ update_info_drive_ports (Device *device)
   return TRUE;
 }
 
+/* drive_similar_devices property */
+static gboolean
+update_info_drive_similar_devices (Device *device)
+{
+  GList *devices;
+  GList *l;
+  GPtrArray *p;
+
+  p = g_ptr_array_new ();
+
+  if (!device->priv->device_is_drive)
+    goto out;
+
+  /* if we don't have a Serial nor a WWN, just bail */
+  if ((device->priv->drive_serial == NULL || strlen (device->priv->drive_serial) == 0) &&
+      (device->priv->drive_wwn == NULL || strlen (device->priv->drive_wwn) == 0))
+    goto out;
+
+  /* TODO: this might be slow - if so, use a hash on the Daemon class */
+  devices = daemon_local_get_all_devices (device->priv->daemon);
+  for (l = devices; l != NULL; l = l->next)
+    {
+      Device *d = DEVICE (l->data);
+
+      if (!d->priv->device_is_drive)
+        continue;
+
+      if (d == device)
+        continue;
+
+#if 0
+      g_debug ("looking at %s:\n"
+               "  %s\n"
+               "  %s\n"
+               "    %s\n"
+               "    %s\n",
+               d->priv->device_file,
+               d->priv->drive_serial,
+               device->priv->drive_serial,
+               d->priv->drive_wwn,
+               device->priv->drive_wwn);
+#endif
+
+      /* current policy is that both Serial Number _AND_ the WWN must match */
+      if (g_strcmp0 (d->priv->drive_serial, device->priv->drive_serial) == 0 &&
+          g_strcmp0 (d->priv->drive_wwn, device->priv->drive_wwn) == 0)
+        {
+          g_ptr_array_add (p, d->priv->object_path);
+
+          /* ensure that the device we added also exists in its own drive_similar_devices property */
+          if (!ptr_array_has_string (d->priv->drive_similar_devices, device->priv->object_path))
+            {
+              //g_debug ("\n************************************************************\nforcing update in idle");
+              update_info_in_idle (d);
+            }
+          else
+            {
+              //g_debug ("\n************************************************************\nNOT forcing update in idle");
+            }
+        }
+    }
+
+ out:
+  g_ptr_array_add (p, NULL);
+  device_set_drive_similar_devices (device, (GStrv) p->pdata);
+  g_ptr_array_free (p, TRUE);
+  return TRUE;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 typedef struct
@@ -4405,8 +4509,12 @@ update_info (Device *device)
   if (!update_info_drive_adapter (device))
     goto out;
 
-  /* drive_ports proprety */
+  /* drive_ports property */
   if (!update_info_drive_ports (device))
+    goto out;
+
+  /* drive_similar_devices property */
+  if (!update_info_drive_similar_devices (device))
     goto out;
 
   ret = TRUE;
