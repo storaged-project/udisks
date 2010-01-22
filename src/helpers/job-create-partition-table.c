@@ -107,11 +107,14 @@ main (int argc,
         ret = 0;
     }
 
-  /* reread partition table */
-  if (!reread_partition_table (device))
+  /* tell kernel reread partition table (but only if we are a kernel partition) */
+  if (!g_str_has_prefix (device, "/dev/mapper/mpath"))
     {
-      ret = 1;
-      goto out;
+      if (!reread_partition_table (device))
+        {
+          ret = 1;
+          goto out;
+        }
     }
 
  out:

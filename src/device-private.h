@@ -96,6 +96,7 @@ struct DevicePrivate
   /**************/
 
   char *device_file;
+  char *device_file_presentation;
   dev_t dev;
   GPtrArray *device_file_by_id;
   GPtrArray *device_file_by_path;
@@ -117,6 +118,8 @@ struct DevicePrivate
   gboolean device_is_linux_md;
   gboolean device_is_linux_lvm2_lv;
   gboolean device_is_linux_lvm2_pv;
+  gboolean device_is_linux_dmmp;
+  gboolean device_is_linux_dmmp_component;
   guint64 device_size;
   guint64 device_block_size;
   gboolean device_is_mounted;
@@ -222,6 +225,11 @@ struct DevicePrivate
   void *drive_ata_smart_blob;
   gsize drive_ata_smart_blob_size;
 
+  gchar *linux_dmmp_component_holder;
+
+  gchar *linux_dmmp_name;
+  GPtrArray *linux_dmmp_slaves;
+
   /* the following properties are not (yet) exported */
   char *dm_name;
   GPtrArray *slaves_objpath;
@@ -239,6 +247,7 @@ void device_set_job_percentage (Device *device, gdouble value);
 void device_set_device_detection_time (Device *device, guint64 value);
 void device_set_device_media_detection_time (Device *device, guint64 value);
 void device_set_device_file (Device *device, const gchar *value);
+void device_set_device_file_presentation (Device *device, const gchar *value);
 void device_set_device_file_by_id (Device *device, GStrv value);
 void device_set_device_file_by_path (Device *device, GStrv value);
 void device_set_device_is_system_internal (Device *device, gboolean value);
@@ -259,6 +268,8 @@ void device_set_device_is_linux_md_component (Device *device, gboolean value);
 void device_set_device_is_linux_md (Device *device, gboolean value);
 void device_set_device_is_linux_lvm2_lv (Device *device, gboolean value);
 void device_set_device_is_linux_lvm2_pv (Device *device, gboolean value);
+void device_set_device_is_linux_dmmp (Device *device, gboolean value);
+void device_set_device_is_linux_dmmp_component (Device *device, gboolean value);
 void device_set_device_size (Device *device, guint64 value);
 void device_set_device_block_size (Device *device, guint64 value);
 void device_set_device_is_mounted (Device *device, gboolean value);
@@ -356,6 +367,11 @@ void device_set_linux_lvm2_pv_group_sequence_number (Device *device, guint64 val
 void device_set_linux_lvm2_pv_group_extent_size (Device *device, guint64 value);
 void device_set_linux_lvm2_pv_group_physical_volumes (Device *device, GStrv value);
 void device_set_linux_lvm2_pv_group_logical_volumes (Device *device, GStrv value);
+
+void device_set_linux_dmmp_component_holder (Device *device, const gchar *value);
+
+void device_set_linux_dmmp_name (Device *device, const gchar *value);
+void device_set_linux_dmmp_slaves (Device *device, GStrv value);
 
 void device_set_dm_name (Device *device, const gchar *value);
 void device_set_slaves_objpath (Device *device, GStrv value);

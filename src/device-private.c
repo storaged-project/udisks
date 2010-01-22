@@ -199,6 +199,18 @@ device_set_device_file (Device *device,
 }
 
 void
+device_set_device_file_presentation (Device *device,
+                                     const gchar *value)
+{
+  if (G_UNLIKELY (g_strcmp0 (device->priv->device_file_presentation, value) != 0))
+    {
+      g_free (device->priv->device_file_presentation);
+      device->priv->device_file_presentation = g_strdup (value);
+      emit_changed (device, "device_file_presentation");
+    }
+}
+
+void
 device_set_device_file_by_id (Device *device,
                               GStrv value)
 {
@@ -415,6 +427,26 @@ device_set_device_is_linux_lvm2_pv (Device *device, gboolean value)
     {
       device->priv->device_is_linux_lvm2_pv = value;
       emit_changed (device, "device_is_linux_lvm2_pv");
+    }
+}
+
+void
+device_set_device_is_linux_dmmp (Device *device, gboolean value)
+{
+  if (G_UNLIKELY (device->priv->device_is_linux_dmmp != value))
+    {
+      device->priv->device_is_linux_dmmp = value;
+      emit_changed (device, "device_is_linux_dmmp");
+    }
+}
+
+void
+device_set_device_is_linux_dmmp_component (Device *device, gboolean value)
+{
+  if (G_UNLIKELY (device->priv->device_is_linux_dmmp_component != value))
+    {
+      device->priv->device_is_linux_dmmp_component = value;
+      emit_changed (device, "device_is_linux_dmmp_component");
     }
 }
 
@@ -1499,5 +1531,42 @@ device_set_linux_lvm2_pv_group_logical_volumes (Device *device,
       ptr_str_array_free (device->priv->linux_lvm2_pv_group_logical_volumes);
       device->priv->linux_lvm2_pv_group_logical_volumes = ptr_str_array_from_strv (value);
       emit_changed (device, "linux_lvm2_pv_group_logical_volumes");
+    }
+}
+
+
+void
+device_set_linux_dmmp_component_holder (Device *device,
+                                        const gchar *value)
+{
+  if (G_UNLIKELY (g_strcmp0 (device->priv->linux_dmmp_component_holder, value) != 0))
+    {
+      g_free (device->priv->linux_dmmp_component_holder);
+      device->priv->linux_dmmp_component_holder = g_strdup (value);
+      emit_changed (device, "linux_dmmp_component_holder");
+    }
+}
+
+void
+device_set_linux_dmmp_name (Device *device,
+                            const gchar *value)
+{
+  if (G_UNLIKELY (g_strcmp0 (device->priv->linux_dmmp_name, value) != 0))
+    {
+      g_free (device->priv->linux_dmmp_name);
+      device->priv->linux_dmmp_name = g_strdup (value);
+      emit_changed (device, "linux_dmmp_name");
+    }
+}
+
+void
+device_set_linux_dmmp_slaves (Device *device,
+                              GStrv value)
+{
+  if (G_UNLIKELY (!ptr_str_array_equals_strv (device->priv->linux_dmmp_slaves, value)))
+    {
+      ptr_str_array_free (device->priv->linux_dmmp_slaves);
+      device->priv->linux_dmmp_slaves = ptr_str_array_from_strv (value);
+      emit_changed (device, "linux_dmmp_slaves");
     }
 }

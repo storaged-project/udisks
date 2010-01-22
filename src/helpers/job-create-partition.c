@@ -133,33 +133,36 @@ main (int argc,
             }
         }
 
-      /* OK, now tell the kernel about the newly added partition */
-      fd = open (device, O_RDONLY);
-      if (fd < 0)
+      /* OK, now tell the kernel about the newly added partition (but only if we are a kernel partition) */
+      if (!g_str_has_prefix (device, "/dev/mapper/mpath"))
         {
-          g_printerr ("Cannot open %s: %m\n", device);
-          goto out;
-        }
-      memset (&a, '\0', sizeof(struct blkpg_ioctl_arg));
-      memset (&p, '\0', sizeof(struct blkpg_partition));
-      p.pno = out_num;
-      p.start = out_start;
-      p.length = out_size;
-      a.op = BLKPG_ADD_PARTITION;
-      a.datalen = sizeof(p);
-      a.data = &p;
-      if (ioctl (fd, BLKPG, &a) == -1)
-        {
-          g_printerr ("Error doing BLKPG ioctl with BLKPG_ADD_PARTITION for partition %d "
-                      "of size %" G_GUINT64_FORMAT " at offset %" G_GUINT64_FORMAT " on %s: %m\n",
-                      out_num,
-                      out_start,
-                      out_size,
-                      device);
+          fd = open (device, O_RDONLY);
+          if (fd < 0)
+            {
+              g_printerr ("Cannot open %s: %m\n", device);
+              goto out;
+            }
+          memset (&a, '\0', sizeof(struct blkpg_ioctl_arg));
+          memset (&p, '\0', sizeof(struct blkpg_partition));
+          p.pno = out_num;
+          p.start = out_start;
+          p.length = out_size;
+          a.op = BLKPG_ADD_PARTITION;
+          a.datalen = sizeof(p);
+          a.data = &p;
+          if (ioctl (fd, BLKPG, &a) == -1)
+            {
+              g_printerr ("Error doing BLKPG ioctl with BLKPG_ADD_PARTITION for partition %d "
+                          "of size %" G_GUINT64_FORMAT " at offset %" G_GUINT64_FORMAT " on %s: %m\n",
+                          out_num,
+                          out_start,
+                          out_size,
+                          device);
+              close (fd);
+              goto out;
+            }
           close (fd);
-          goto out;
         }
-      close (fd);
 
       /* send the start and size back to the daemon - it needs to know, to
        * wait for the created partition, because the partition may not have

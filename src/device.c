@@ -135,6 +135,17 @@ static void force_luks_teardown (Device *device,
                                  ForceRemovalCompleteFunc callback,
                                  gpointer user_data);
 
+/* TODO: this is kinda a hack */
+static const gchar *
+get_dmmp_device_node (Device *device)
+{
+  static gchar buf[1024];
+
+  g_assert (device->priv->device_is_linux_dmmp);
+  g_snprintf (buf, sizeof (buf), "/dev/mapper/%s", device->priv->linux_dmmp_name);
+  return buf;
+}
+
 enum
   {
     PROP_0,
@@ -145,6 +156,7 @@ enum
     PROP_DEVICE_MAJOR,
     PROP_DEVICE_MINOR,
     PROP_DEVICE_FILE,
+    PROP_DEVICE_FILE_PRESENTATION,
     PROP_DEVICE_FILE_BY_ID,
     PROP_DEVICE_FILE_BY_PATH,
     PROP_DEVICE_IS_SYSTEM_INTERNAL,
@@ -165,6 +177,8 @@ enum
     PROP_DEVICE_IS_LINUX_MD,
     PROP_DEVICE_IS_LINUX_LVM2_LV,
     PROP_DEVICE_IS_LINUX_LVM2_PV,
+    PROP_DEVICE_IS_LINUX_DMMP,
+    PROP_DEVICE_IS_LINUX_DMMP_COMPONENT,
     PROP_DEVICE_SIZE,
     PROP_DEVICE_BLOCK_SIZE,
     PROP_DEVICE_IS_MOUNTED,
@@ -273,6 +287,11 @@ enum
     PROP_LINUX_LVM2_PV_GROUP_EXTENT_SIZE,
     PROP_LINUX_LVM2_PV_GROUP_PHYSICAL_VOLUMES,
     PROP_LINUX_LVM2_PV_GROUP_LOGICAL_VOLUMES,
+
+    PROP_LINUX_DMMP_COMPONENT_HOLDER,
+
+    PROP_LINUX_DMMP_NAME,
+    PROP_LINUX_DMMP_SLAVES,
   };
 
 enum
@@ -333,6 +352,9 @@ get_property (GObject *object,
     case PROP_DEVICE_FILE:
       g_value_set_string (value, device->priv->device_file);
       break;
+    case PROP_DEVICE_FILE_PRESENTATION:
+      g_value_set_string (value, device->priv->device_file_presentation);
+      break;
     case PROP_DEVICE_FILE_BY_ID:
       g_value_set_boxed (value, device->priv->device_file_by_id);
       break;
@@ -392,6 +414,12 @@ get_property (GObject *object,
       break;
     case PROP_DEVICE_IS_LINUX_LVM2_PV:
       g_value_set_boolean (value, device->priv->device_is_linux_lvm2_pv);
+      break;
+    case PROP_DEVICE_IS_LINUX_DMMP:
+      g_value_set_boolean (value, device->priv->device_is_linux_dmmp);
+      break;
+    case PROP_DEVICE_IS_LINUX_DMMP_COMPONENT:
+      g_value_set_boolean (value, device->priv->device_is_linux_dmmp_component);
       break;
     case PROP_DEVICE_SIZE:
       g_value_set_uint64 (value, device->priv->device_size);
@@ -723,6 +751,21 @@ get_property (GObject *object,
       g_value_set_boxed (value, device->priv->linux_lvm2_pv_group_logical_volumes);
       break;
 
+    case PROP_LINUX_DMMP_COMPONENT_HOLDER:
+      if (device->priv->linux_dmmp_component_holder != NULL)
+        g_value_set_boxed (value, device->priv->linux_dmmp_component_holder);
+      else
+        g_value_set_boxed (value, "/");
+      break;
+
+    case PROP_LINUX_DMMP_NAME:
+      g_value_set_string (value, device->priv->linux_dmmp_name);
+      break;
+
+    case PROP_LINUX_DMMP_SLAVES:
+      g_value_set_boxed (value, device->priv->linux_dmmp_slaves);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -804,11 +847,20 @@ device_class_init (DeviceClass *klass)
                                                                                         G_MAXINT64,
                                                                                         0,
                                                                                         G_PARAM_READABLE));
-  g_object_class_install_property (object_class, PROP_DEVICE_FILE, g_param_spec_string ("device-file",
-                                                                                        NULL,
-                                                                                        NULL,
-                                                                                        NULL,
-                                                                                        G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_DEVICE_FILE,
+                                   g_param_spec_string ("device-file",
+                                                        NULL,
+                                                        NULL,
+                                                        NULL,
+                                                        G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_DEVICE_FILE_PRESENTATION,
+                                   g_param_spec_string ("device-file-presentation",
+                                                        NULL,
+                                                        NULL,
+                                                        NULL,
+                                                        G_PARAM_READABLE));
   g_object_class_install_property (object_class,
                                    PROP_DEVICE_FILE_BY_ID,
                                    g_param_spec_boxed ("device-file-by-id",
@@ -929,6 +981,20 @@ device_class_init (DeviceClass *klass)
   g_object_class_install_property (object_class,
                                    PROP_DEVICE_IS_LINUX_LVM2_PV,
                                    g_param_spec_boolean ("device-is-linux-lvm2-pv",
+                                                         NULL,
+                                                         NULL,
+                                                         FALSE,
+                                                         G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_DEVICE_IS_LINUX_DMMP,
+                                   g_param_spec_boolean ("device-is-linux-dmmp",
+                                                         NULL,
+                                                         NULL,
+                                                         FALSE,
+                                                         G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_DEVICE_IS_LINUX_DMMP_COMPONENT,
+                                   g_param_spec_boolean ("device-is-linux-dmmp-component",
                                                          NULL,
                                                          NULL,
                                                          FALSE,
@@ -1540,6 +1606,29 @@ device_class_init (DeviceClass *klass)
                                                        NULL,
                                                        dbus_g_type_get_collection ("GPtrArray", G_TYPE_STRING),
                                                        G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_LINUX_DMMP_COMPONENT_HOLDER,
+                                   g_param_spec_boxed ("linux-dmmp-component-holder",
+                                                       NULL,
+                                                       NULL,
+                                                       DBUS_TYPE_G_OBJECT_PATH,
+                                                       G_PARAM_READABLE));
+
+  g_object_class_install_property (object_class,
+                                   PROP_LINUX_DMMP_NAME,
+                                   g_param_spec_string ("linux-dmmp-name",
+                                                        NULL,
+                                                        NULL,
+                                                        NULL,
+                                                        G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_LINUX_DMMP_SLAVES,
+                                   g_param_spec_boxed ("linux-dmmp-slaves",
+                                                       NULL,
+                                                       NULL,
+                                                       dbus_g_type_get_collection ("GPtrArray",
+                                                                                   DBUS_TYPE_G_OBJECT_PATH),
+                                                       G_PARAM_READABLE));
 }
 
 static void
@@ -1557,6 +1646,7 @@ device_init (Device *device)
   device->priv->linux_md_slaves = g_ptr_array_new ();
   device->priv->linux_lvm2_pv_group_physical_volumes = g_ptr_array_new ();
   device->priv->linux_lvm2_pv_group_logical_volumes = g_ptr_array_new ();
+  device->priv->linux_dmmp_slaves = g_ptr_array_new ();
 
   device->priv->slaves_objpath = g_ptr_array_new ();
   device->priv->holders_objpath = g_ptr_array_new ();
@@ -1608,6 +1698,7 @@ device_finalize (GObject *object)
 
   /* free properties */
   g_free (device->priv->device_file);
+  g_free (device->priv->device_file_presentation);
   g_ptr_array_foreach (device->priv->device_file_by_id, (GFunc) g_free, NULL);
   g_ptr_array_foreach (device->priv->device_file_by_path, (GFunc) g_free, NULL);
   g_ptr_array_free (device->priv->device_file_by_id, TRUE);
@@ -1667,6 +1758,12 @@ device_finalize (GObject *object)
   g_free (device->priv->linux_md_version);
   g_ptr_array_foreach (device->priv->linux_md_slaves, (GFunc) g_free, NULL);
   g_ptr_array_free (device->priv->linux_md_slaves, TRUE);
+
+  g_free (device->priv->linux_dmmp_component_holder);
+
+  g_free (device->priv->linux_dmmp_name);
+  g_ptr_array_foreach (device->priv->linux_dmmp_slaves, (GFunc) g_free, NULL);
+  g_ptr_array_free (device->priv->linux_dmmp_slaves, TRUE);
 
   g_free (device->priv->linux_lvm2_lv_name);
   g_free (device->priv->linux_lvm2_lv_uuid);
@@ -2580,7 +2677,9 @@ update_info_drive (Device *device)
       device_set_drive_serial (device, g_udev_device_get_property (device->priv->d, "ID_SERIAL_SHORT"));
     }
 
-  if (g_udev_device_has_property (device->priv->d, "ID_WWN"))
+  if (g_udev_device_has_property (device->priv->d, "ID_WWN_WITH_EXTENSION"))
+    device_set_drive_wwn (device, g_udev_device_get_property (device->priv->d, "ID_WWN_WITH_EXTENSION") + 2);
+  else if (g_udev_device_has_property (device->priv->d, "ID_WWN"))
     device_set_drive_wwn (device, g_udev_device_get_property (device->priv->d, "ID_WWN") + 2);
 
   /* pick up some things (vendor, model, connection_interface, connection_speed)
@@ -2804,8 +2903,8 @@ update_info_luks_cleartext (Device *device)
 
   ret = FALSE;
 
-  dkd_dm_name = g_udev_device_get_property (device->priv->d, "UDISKS_DM_NAME");
-  dkd_dm_target_types = g_udev_device_get_property (device->priv->d, "UDISKS_DM_TARGET_TYPES");
+  dkd_dm_name = g_udev_device_get_property (device->priv->d, "DM_NAME");
+  dkd_dm_target_types = g_udev_device_get_property (device->priv->d, "UDISKS_DM_TARGETS_TYPE");
   if (dkd_dm_name != NULL && g_strcmp0 (dkd_dm_target_types, "crypt") == 0 && device->priv->slaves_objpath->len == 1)
     {
 
@@ -2908,6 +3007,182 @@ update_info_linux_lvm2_lv (Device *device)
   device_set_device_is_linux_lvm2_lv (device, is_lv);
   g_free (vg_uuid);
   g_free (lv_uuid);
+  return TRUE;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/* update device_is_linux_dmmp and linux_dmmp_* properties */
+static gboolean
+update_info_linux_dmmp (Device *device)
+{
+  const gchar *dm_name;
+  const gchar* const *target_types;
+  gboolean is_dmmp;
+  guint n;
+  GPtrArray *p;
+  Device *component;
+  gchar *s;
+
+  is_dmmp = FALSE;
+  p = NULL;
+
+  dm_name = g_udev_device_get_property (device->priv->d, "DM_NAME");
+  if (dm_name == NULL)
+    goto out;
+
+  target_types = g_udev_device_get_property_as_strv (device->priv->d, "UDISKS_DM_TARGETS_TYPE");
+  if (target_types == NULL || g_strcmp0 (target_types[0], "multipath") != 0)
+    goto out;
+
+  if (device->priv->slaves_objpath->len == 0)
+    goto out;
+
+  device_set_linux_dmmp_name (device, dm_name);
+
+  p = g_ptr_array_new ();
+  for (n = 0; n < device->priv->slaves_objpath->len; n++)
+    {
+      const gchar *component_objpath = device->priv->slaves_objpath->pdata[n];
+      if (component == NULL)
+        {
+          component = daemon_local_find_by_object_path (device->priv->daemon, component_objpath);
+        }
+      g_ptr_array_add (p, (gpointer) component_objpath);
+    }
+  g_ptr_array_add (p, NULL);
+  device_set_linux_dmmp_slaves (device, (GStrv) p->pdata);
+
+  if (component == NULL)
+    goto out;
+
+  /* copy some of the Drive* properties from the (first) components - we could check here whether
+   * it matches the other components and warn if it doesn't (it should)
+   *
+   * TODO: what about DriveAdapter and DrivePorts? Set them to NULL for now
+   */
+  device_set_drive_vendor (device, component->priv->drive_vendor);
+  device_set_drive_model (device, component->priv->drive_model);
+  device_set_drive_revision (device, component->priv->drive_revision);
+  device_set_drive_serial (device, component->priv->drive_serial);
+  device_set_drive_wwn (device, component->priv->drive_wwn);
+  device_set_drive_connection_interface (device, "virtual_multipath");
+  device_set_drive_connection_speed (device, 0);
+  /* GStrv vs GPtrArray.. device_set_drive_media_compatibility (device, component->priv->drive_media_compatibility); */
+  device_set_drive_media (device, component->priv->drive_media);
+  device_set_drive_is_media_ejectable (device, component->priv->drive_is_media_ejectable);
+  device_set_drive_can_detach (device, component->priv->drive_can_detach);
+  device_set_drive_can_spindown (device, component->priv->drive_can_spindown);
+  device_set_drive_is_rotational (device, component->priv->drive_is_rotational);
+  device_set_drive_rotation_rate (device, component->priv->drive_rotation_rate);
+  device_set_drive_write_cache (device, component->priv->drive_write_cache);
+
+  s = g_strdup_printf ("/dev/mapper/%s", dm_name);
+  device_set_device_file_presentation (device, s);
+  g_free (s);
+
+  is_dmmp = TRUE;
+
+ out:
+  if (p != NULL)
+    g_ptr_array_free (p, TRUE);
+  device_set_device_is_linux_dmmp (device, is_dmmp);
+  return TRUE;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/* updates device_is_partition and partition_* properties for dm-0 "partitions" on a multi-path device  */
+static gboolean
+update_info_partition_on_linux_dmmp (Device *device)
+{
+  const gchar *dm_name;
+  const gchar* const *targets_type;
+  const gchar* const *targets_params;
+  gchar *params;
+  gint partition_slave_major;
+  gint partition_slave_minor;
+  guint64 offset_sectors;
+  guint64 offset;
+  guint partition_number;
+  Device *partition_slave;
+  gchar *s;
+
+  params = NULL;
+
+  dm_name = g_udev_device_get_property (device->priv->d, "DM_NAME");
+  if (dm_name == NULL)
+    goto out;
+
+  targets_type = g_udev_device_get_property_as_strv (device->priv->d, "UDISKS_DM_TARGETS_TYPE");
+  if (targets_type == NULL || g_strcmp0 (targets_type[0], "linear") != 0)
+    goto out;
+
+  targets_params = g_udev_device_get_property_as_strv (device->priv->d, "UDISKS_DM_TARGETS_PARAMS");
+  if (targets_params == NULL)
+    goto out;
+  params = decode_udev_encoded_string (targets_params[0]);
+
+  if (sscanf (params,
+              "%d:%d %" G_GUINT64_FORMAT,
+              &partition_slave_major,
+              &partition_slave_minor,
+              &offset_sectors) != 3)
+    goto out;
+
+  partition_slave = daemon_local_find_by_dev (device->priv->daemon,
+                                              makedev (partition_slave_major, partition_slave_minor));
+  if (partition_slave == NULL)
+    goto out;
+
+  offset = offset_sectors * 512;
+
+  device_set_partition_slave (device, partition_slave->priv->object_path);
+  device_set_partition_offset (device, offset);
+  device_set_partition_size (device, device->priv->device_size);
+  partition_number = g_udev_device_get_property_as_int (device->priv->d, "UDISKS_PARTITION_NUMBER");
+  if (partition_number > 0)
+    device_set_partition_number (device, partition_number);
+
+  /* all the other Partition* has been set as part of update_info_partition() by reading
+   * UDISKS_PARTITION_* properties
+   */
+
+  device_set_device_is_partition (device, TRUE);
+  device_set_device_is_drive (device, FALSE);
+
+  s = g_strdup_printf ("/dev/mapper/%s", dm_name);
+  device_set_device_file_presentation (device, s);
+  g_free (s);
+
+ out:
+  g_free (params);
+  return TRUE;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/* update device_is_linux_dmmp_component and linux_dmmp_component_* properties */
+static gboolean
+update_info_linux_dmmp_component (Device *device)
+{
+  gboolean is_dmmp_component;
+
+  is_dmmp_component = FALSE;
+
+  if (device->priv->holders_objpath->len == 1)
+    {
+      Device *holder;
+
+      holder = daemon_local_find_by_object_path (device->priv->daemon, device->priv->holders_objpath->pdata[0]);
+      if (holder != NULL && holder->priv->device_is_linux_dmmp)
+        {
+          is_dmmp_component = TRUE;
+          device_set_linux_dmmp_component_holder (device, holder->priv->object_path);
+        }
+    }
+
+  device_set_device_is_linux_dmmp_component (device, is_dmmp_component);
   return TRUE;
 }
 
@@ -3799,9 +4074,9 @@ update_info (Device *device)
       goto out;
     }
 
-  /* ignore dm devices that are not active */
-  if (g_str_has_prefix (g_udev_device_get_name (device->priv->d), "dm-")
-      && g_udev_device_get_property (device->priv->d, "UDISKS_DM_STATE") == NULL)
+  /* ignore dm devices that are suspended */
+  if (g_str_has_prefix (g_udev_device_get_name (device->priv->d), "dm-") &&
+      g_strcmp0 (g_udev_device_get_property (device->priv->d, "DM_SUSPENDED"), "0") != 0)
     goto out;
 
   major = g_udev_device_get_property_as_int (device->priv->d, "MAJOR");
@@ -4086,6 +4361,18 @@ update_info (Device *device)
   if (!update_info_linux_lvm2_pv (device))
     goto out;
 
+  /* device_is_linux_dmmp and linux_dmmp_* properties */
+  if (!update_info_linux_dmmp (device))
+    goto out;
+
+  /* device_is_partition and partition_* properties for dm-0 "partitions" on a multi-path device  */
+  if (!update_info_partition_on_linux_dmmp (device))
+    goto out;
+
+  /* device_is_linux_dmmp_component and linux_dmmp_component_* properties */
+  if (!update_info_linux_dmmp_component (device))
+    goto out;
+
   /* device_is_linux_md_component and linux_md_component_* properties */
   if (!update_info_linux_md_component (device))
     goto out;
@@ -4273,8 +4560,19 @@ device_local_is_busy (Device *device,
   /* or if another block device is using/holding us (e.g. if holders/ is non-empty in sysfs) */
   if (device->priv->holders_objpath->len > 0)
     {
-      g_set_error (error, ERROR, ERROR_BUSY, "One or more block devices are holding %s", device->priv->device_file);
-      goto out;
+      if (device->priv->device_is_linux_dmmp)
+        {
+          /* This is OK */
+        }
+      else
+        {
+          g_set_error (error,
+                       ERROR,
+                       ERROR_BUSY,
+                       "One or more block devices are holding %s",
+                       device->priv->device_file);
+          goto out;
+        }
     }
 
   /* If we are an extended partition, we are also busy if one or more logical partitions are busy
@@ -6690,7 +6988,10 @@ device_partition_delete_authorized_cb (Daemon *daemon,
 
   n = 0;
   argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-delete-partition";
-  argv[n++] = enclosing_device->priv->device_file;
+  if (enclosing_device->priv->device_is_linux_dmmp)
+    argv[n++] = (gchar *) get_dmmp_device_node (enclosing_device);
+  else
+    argv[n++] = enclosing_device->priv->device_file;
   argv[n++] = device->priv->device_file;
   argv[n++] = offset_as_string;
   argv[n++] = size_as_string;
@@ -7528,8 +7829,10 @@ device_partition_create_authorized_cb (Daemon *daemon,
 
   n = 0;
   argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-create-partition";
-  argv[n++] = device->priv->device_file;
-  ;
+  if (device->priv->device_is_linux_dmmp)
+    argv[n++] = (gchar *) get_dmmp_device_node (device);
+  else
+    argv[n++] = device->priv->device_file;
   argv[n++] = offset_as_string;
   argv[n++] = size_as_string;
   argv[n++] = (char *) type;
@@ -8002,7 +8305,10 @@ device_partition_table_create_authorized_cb (Daemon *daemon,
 
   n = 0;
   argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-create-partition-table";
-  argv[n++] = device->priv->device_file;
+  if (device->priv->device_is_linux_dmmp)
+    argv[n++] = (gchar *) get_dmmp_device_node (device);
+  else
+    argv[n++] = device->priv->device_file;
   argv[n++] = (char *) scheme;
   for (m = 0; options[m] != NULL; m++)
     {

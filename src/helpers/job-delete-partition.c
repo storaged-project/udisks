@@ -91,35 +91,45 @@ main (int argc,
       goto out;
     }
 
-  /* don't ask libparted to poke the kernel - it won't work if other partitions are mounted/busy */
-  if (part_del_partition ((char *) device, offset, FALSE))
-    {
-      gint fd;
-      struct blkpg_ioctl_arg a;
-      struct blkpg_partition p;
+  gboolean is_kernel_partition;
+  is_kernel_partition = !g_str_has_prefix (device, "/dev/mapper/mpath");
 
-      /* now, ask the kernel to delete the partition */
-      fd = open (device, O_RDONLY);
-      if (fd < 0)
+  /* don't ask libparted to poke the kernel - it won't work if other
+   * partitions are mounted/busy (unless it's not a kernel partition)
+   */
+  if (part_del_partition ((char *) device,
+                          offset,
+                          is_kernel_partition ? FALSE : TRUE))
+    {
+      /* now, ask the kernel to delete the partition  (but only if we are a kernel partition) */
+      if (is_kernel_partition)
         {
-          g_printerr ("Cannot open %s: %m\n", device);
-          goto out;
-        }
-      memset (&a, '\0', sizeof(struct blkpg_ioctl_arg));
-      memset (&p, '\0', sizeof(struct blkpg_partition));
-      p.pno = part_number;
-      a.op = BLKPG_DEL_PARTITION;
-      a.datalen = sizeof(p);
-      a.data = &p;
-      if (ioctl (fd, BLKPG, &a) == -1)
-        {
-          g_printerr ("Error doing BLKPG ioctl with BLKPG_DEL_PARTITION for partition %d on %s: %m\n",
-                      part_number,
-                      device);
+          gint fd;
+          struct blkpg_ioctl_arg a;
+          struct blkpg_partition p;
+
+          fd = open (device, O_RDONLY);
+          if (fd < 0)
+            {
+              g_printerr ("Cannot open %s: %m\n", device);
+              goto out;
+            }
+          memset (&a, '\0', sizeof(struct blkpg_ioctl_arg));
+          memset (&p, '\0', sizeof(struct blkpg_partition));
+          p.pno = part_number;
+          a.op = BLKPG_DEL_PARTITION;
+          a.datalen = sizeof(p);
+          a.data = &p;
+          if (ioctl (fd, BLKPG, &a) == -1)
+            {
+              g_printerr ("Error doing BLKPG ioctl with BLKPG_DEL_PARTITION for partition %d on %s: %m\n",
+                          part_number,
+                          device);
+              close (fd);
+              goto out;
+            }
           close (fd);
-          goto out;
         }
-      close (fd);
 
       /* zero the contents of what was the _partition_
        *
@@ -129,9 +139,9 @@ main (int argc,
       /* scrub signatures */
       if (!scrub_signatures (device, offset, size))
         {
-          g_printerr        ("Cannot scrub filesystem signatures at "
-                             "offset=%" G_GINT64_FORMAT " and size=%" G_GINT64_FORMAT "\n",
-                             offset, size);
+          g_printerr ("Cannot scrub filesystem signatures at "
+                      "offset=%" G_GINT64_FORMAT " and size=%" G_GINT64_FORMAT "\n",
+                      offset, size);
         }
       else
         {

@@ -1471,6 +1471,13 @@
             UNIX special device file for device. Example: <doc:tt>/dev/sda</doc:tt>.
       </doc:para></doc:description></doc:doc>
     </property>
+    <property name="DeviceFilePresentation" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            If not blank, the preferred device file (typically a symlink to the value of the <doc:ref type="property" to="Device:DeviceFile">DeviceFile</doc:ref> property) to present in user interface.
+            Example: <doc:tt>/dev/mapper/mpathb</doc:tt> or
+            <doc:tt>/dev/vg_phobos/lv_root</doc:tt>.
+      </doc:para></doc:description></doc:doc>
+    </property>
     <property name="DeviceFileById" type="as" access="read">
       <doc:doc><doc:description><doc:para>
             Symlinks to UNIX special device file that are stable and uniquely identifies the device.
@@ -1604,6 +1611,16 @@
     <property name="DeviceIsLinuxLvm2PV" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             TRUE if the device is a Linux LVM2 physical. See LinuxLvm2PV properties for details.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="DeviceIsLinuxDmmpComponent" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if the device is a component (e.g. active path) of a Linux dm-multipath device.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="DeviceIsLinuxDmmp" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if the device is a Linux dm-multipath device.
       </doc:para></doc:description></doc:doc>
     </property>
     <property name="DeviceSize" type="t" access="read">
@@ -2700,6 +2717,40 @@
             The UUID of the volume group the logical volume belongs to.
             This property is only valid if
             <doc:ref type="property" to="Device:DeviceIsLinuxLvm2LV">DeviceIsLinuxLvm2LV</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+
+    <!-- ******************** -->
+    <!-- Multi-path Component -->
+    <!-- ******************** -->
+
+    <property name="LinuxDmmpComponentHolder" type="o" access="read">
+      <doc:doc><doc:description><doc:para>
+            The object path of the multi-path device the component is currently part of.
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsLinuxDmmpComponent">DeviceIsLinuxDmmpComponent</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+
+    <!-- ***************** -->
+    <!-- Multi-path Device -->
+    <!-- ***************** -->
+
+    <property name="LinuxDmmpName" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The symbolic name for the multipath device, e.g. <doc:tt>mpathb</doc:tt>.
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsLinuxDmmp">DeviceIsLinuxDmmp</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="LinuxDmmpSlaves" type="ao" access="read">
+      <doc:doc><doc:description><doc:para>
+            The object paths of currently active component devices, e.g. paths.
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsLinuxDmmp">DeviceIsLinuxDmmp</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
