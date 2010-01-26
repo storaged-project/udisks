@@ -3092,26 +3092,10 @@ update_info_linux_dmmp (Device *device)
   if (component == NULL)
     goto out;
 
-  /* copy some of the Drive* properties from the (first) components - we could check here whether
-   * it matches the other components and warn if it doesn't (it should)
-   *
-   * TODO: what about DriveAdapter and DrivePorts? Set them to NULL for now
+  /* We specifically avoid copying properties from each path - it is the responsibility
+   * of the clients to show e.g. vendor, model, serial, wwn from e.g. each path.
    */
-  device_set_drive_vendor (device, component->priv->drive_vendor);
-  device_set_drive_model (device, component->priv->drive_model);
-  device_set_drive_revision (device, component->priv->drive_revision);
-  device_set_drive_serial (device, component->priv->drive_serial);
-  device_set_drive_wwn (device, component->priv->drive_wwn);
   device_set_drive_connection_interface (device, "virtual_multipath");
-  device_set_drive_connection_speed (device, 0);
-  /* GStrv vs GPtrArray.. device_set_drive_media_compatibility (device, component->priv->drive_media_compatibility); */
-  device_set_drive_media (device, component->priv->drive_media);
-  device_set_drive_is_media_ejectable (device, component->priv->drive_is_media_ejectable);
-  device_set_drive_can_detach (device, component->priv->drive_can_detach);
-  device_set_drive_can_spindown (device, component->priv->drive_can_spindown);
-  device_set_drive_is_rotational (device, component->priv->drive_is_rotational);
-  device_set_drive_rotation_rate (device, component->priv->drive_rotation_rate);
-  device_set_drive_write_cache (device, component->priv->drive_write_cache);
 
   s = g_strdup_printf ("/dev/mapper/%s", dm_name);
   device_set_device_file_presentation (device, s);
