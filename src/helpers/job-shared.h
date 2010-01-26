@@ -134,7 +134,7 @@ scrub_signatures (const char *device,
   fd = open (device, O_WRONLY);
   if (fd < 0)
     {
-      g_printerr ("cannot open device: %m\n");
+      g_printerr ("cannot open %s: %m\n", device);
       goto out;
     }
 
@@ -142,7 +142,7 @@ scrub_signatures (const char *device,
     {
       if (ioctl (fd, BLKGETSIZE64, &size) != 0)
         {
-          g_printerr ("cannot determine size of device: %m\n");
+          g_printerr ("cannot determine size of %s: %m\n", device);
           goto out;
         }
     }
@@ -160,7 +160,7 @@ scrub_signatures (const char *device,
 
   if (lseek64 (fd, offset, SEEK_SET) == (off64_t) - 1)
     {
-      g_printerr ("cannot seek to %" G_GINT64_FORMAT ": %m", offset);
+      g_printerr ("cannot seek to %" G_GINT64_FORMAT " on %s: %m", offset, device);
       goto out;
     }
 
@@ -169,7 +169,7 @@ scrub_signatures (const char *device,
 
   if (lseek64 (fd, offset + size - wipe_size, SEEK_SET) == (off64_t) - 1)
     {
-      g_printerr ("cannot seek to %" G_GINT64_FORMAT ": %m", offset + size - wipe_size);
+      g_printerr ("cannot seek to %" G_GINT64_FORMAT " on %s: %m", offset + size - wipe_size, device);
       goto out;
     }
 
@@ -180,7 +180,14 @@ scrub_signatures (const char *device,
 
  out:
   if (fd >= 0)
-    close (fd);
+    {
+      if (fsync (fd) != 0)
+        {
+          g_printerr ("Error calling fsync(2) on %s: %m\n", device);
+          ret = FALSE;
+        }
+      close (fd);
+    }
   return ret;
 }
 

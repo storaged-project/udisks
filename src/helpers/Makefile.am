@@ -50,8 +50,8 @@ udisks_helper_delete_partition_CPPFLAGS = $(AM_CPPFLAGS)
 udisks_helper_delete_partition_LDADD = $(GLIB_LIBS) libpartutil.la
 
 udisks_helper_create_partition_SOURCES = job-shared.h job-create-partition.c
-udisks_helper_create_partition_CPPFLAGS = $(AM_CPPFLAGS)
-udisks_helper_create_partition_LDADD = $(GLIB_LIBS) libpartutil.la
+udisks_helper_create_partition_CPPFLAGS = $(AM_CPPFLAGS) $(GUDEV_CFLAGS)
+udisks_helper_create_partition_LDADD = $(GLIB_LIBS) $(GUDEV_LIBS)  libpartutil.la
 
 udisks_helper_modify_partition_SOURCES = job-shared.h job-modify-partition.c
 udisks_helper_modify_partition_CPPFLAGS = $(AM_CPPFLAGS)

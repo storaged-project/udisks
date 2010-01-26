@@ -37,6 +37,7 @@
 #include <linux/blkpg.h>
 
 #include <glib.h>
+#include <gudev/gudev.h>
 
 #include "job-shared.h"
 #include "partutil.h"
