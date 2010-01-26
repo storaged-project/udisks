@@ -4005,8 +4005,8 @@ update_info_drive_similar_devices (Device *device)
   if (!device->priv->device_is_drive)
     goto out;
 
-  /* if we don't have a Serial nor a WWN, just bail */
-  if ((device->priv->drive_serial == NULL || strlen (device->priv->drive_serial) == 0) &&
+  /* We need non-empty SERIAL and WWN for this to work */
+  if ((device->priv->drive_serial == NULL || strlen (device->priv->drive_serial) == 0) ||
       (device->priv->drive_wwn == NULL || strlen (device->priv->drive_wwn) == 0))
     goto out;
 
@@ -4035,7 +4035,7 @@ update_info_drive_similar_devices (Device *device)
                device->priv->drive_wwn);
 #endif
 
-      /* current policy is that both Serial Number _AND_ the WWN must match */
+      /* current policy is that *both* SERIAL and WWN must match */
       if (g_strcmp0 (d->priv->drive_serial, device->priv->drive_serial) == 0 &&
           g_strcmp0 (d->priv->drive_wwn, device->priv->drive_wwn) == 0)
         {
