@@ -3092,10 +3092,21 @@ update_info_linux_dmmp (Device *device)
   if (component == NULL)
     goto out;
 
-  /* We specifically avoid copying properties from each path - it is the responsibility
-   * of the clients to show e.g. vendor, model, serial, wwn from e.g. each path.
+  /* Copy only drive properties used for identification to the multipath device. Yes,
+   * this means, we'll get serial/wwn clashes but this is already so for each path.
+   *
+   * Also, clients *should* be smart about things and special-handle linux_dmmp and
+   * linux_dmmp_component devices.
    */
+  device_set_drive_vendor (device, component->priv->drive_vendor);
+  device_set_drive_model (device, component->priv->drive_model);
+  device_set_drive_revision (device, component->priv->drive_revision);
+  device_set_drive_serial (device, component->priv->drive_serial);
+  device_set_drive_wwn (device, component->priv->drive_wwn);
+
+  /* connection interface */
   device_set_drive_connection_interface (device, "virtual_multipath");
+  device_set_drive_connection_speed (device, 0);
 
   s = g_strdup_printf ("/dev/mapper/%s", dm_name);
   device_set_device_file_presentation (device, s);
