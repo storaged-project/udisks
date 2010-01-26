@@ -1572,6 +1572,18 @@ device_set_linux_dmmp_name (Device *device,
 }
 
 void
+device_set_linux_dmmp_parameters (Device *device,
+                                  const gchar *value)
+{
+  if (G_UNLIKELY (g_strcmp0 (device->priv->linux_dmmp_parameters, value) != 0))
+    {
+      g_free (device->priv->linux_dmmp_parameters);
+      device->priv->linux_dmmp_parameters = g_strdup (value);
+      emit_changed (device, "linux_dmmp_parameters");
+    }
+}
+
+void
 device_set_linux_dmmp_slaves (Device *device,
                               GStrv value)
 {

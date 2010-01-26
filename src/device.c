@@ -314,6 +314,7 @@ enum
 
     PROP_LINUX_DMMP_NAME,
     PROP_LINUX_DMMP_SLAVES,
+    PROP_LINUX_DMMP_PARAMETERS,
   };
 
 enum
@@ -785,6 +786,10 @@ get_property (GObject *object,
 
     case PROP_LINUX_DMMP_NAME:
       g_value_set_string (value, device->priv->linux_dmmp_name);
+      break;
+
+    case PROP_LINUX_DMMP_PARAMETERS:
+      g_value_set_string (value, device->priv->linux_dmmp_parameters);
       break;
 
     case PROP_LINUX_DMMP_SLAVES:
@@ -1654,6 +1659,13 @@ device_class_init (DeviceClass *klass)
                                                         NULL,
                                                         G_PARAM_READABLE));
   g_object_class_install_property (object_class,
+                                   PROP_LINUX_DMMP_PARAMETERS,
+                                   g_param_spec_string ("linux-dmmp-parameters",
+                                                        NULL,
+                                                        NULL,
+                                                        NULL,
+                                                        G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
                                    PROP_LINUX_DMMP_SLAVES,
                                    g_param_spec_boxed ("linux-dmmp-slaves",
                                                        NULL,
@@ -1799,6 +1811,7 @@ device_finalize (GObject *object)
   g_free (device->priv->linux_dmmp_name);
   g_ptr_array_foreach (device->priv->linux_dmmp_slaves, (GFunc) g_free, NULL);
   g_ptr_array_free (device->priv->linux_dmmp_slaves, TRUE);
+  g_free (device->priv->linux_dmmp_parameters);
 
   g_free (device->priv->linux_lvm2_lv_name);
   g_free (device->priv->linux_lvm2_lv_uuid);
@@ -3054,6 +3067,8 @@ update_info_linux_dmmp (Device *device)
 {
   const gchar *dm_name;
   const gchar* const *target_types;
+  const gchar* const *target_parameters;
+  gchar *decoded_params;
   gboolean is_dmmp;
   guint n;
   GPtrArray *p;
@@ -3062,6 +3077,7 @@ update_info_linux_dmmp (Device *device)
 
   is_dmmp = FALSE;
   p = NULL;
+  decoded_params = NULL;
 
   dm_name = g_udev_device_get_property (device->priv->d, "DM_NAME");
   if (dm_name == NULL)
@@ -3074,7 +3090,14 @@ update_info_linux_dmmp (Device *device)
   if (device->priv->slaves_objpath->len == 0)
     goto out;
 
+  target_parameters = g_udev_device_get_property_as_strv (device->priv->d, "UDISKS_DM_TARGETS_PARAMS");
+  if (target_parameters == NULL || g_strv_length ((gchar **) target_parameters) != 1)
+    goto out;
+  decoded_params = decode_udev_encoded_string (target_parameters[0]);
+
   device_set_linux_dmmp_name (device, dm_name);
+
+  device_set_linux_dmmp_parameters (device, decoded_params);
 
   p = g_ptr_array_new ();
   for (n = 0; n < device->priv->slaves_objpath->len; n++)
@@ -3115,6 +3138,7 @@ update_info_linux_dmmp (Device *device)
   is_dmmp = TRUE;
 
  out:
+  g_free (decoded_params);
   if (p != NULL)
     g_ptr_array_free (p, TRUE);
   device_set_device_is_linux_dmmp (device, is_dmmp);

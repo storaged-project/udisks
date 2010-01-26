@@ -429,6 +429,7 @@ typedef struct
 
   gchar *linux_dmmp_name;
   gchar **linux_dmmp_slaves;
+  gchar *linux_dmmp_parameters;
 
 } DeviceProperties;
 
@@ -756,6 +757,8 @@ collect_props (const char *key,
         props->linux_dmmp_slaves[n] = g_strdup (object_paths->pdata[n]);
       props->linux_dmmp_slaves[n] = NULL;
     }
+  else if (strcmp (key, "LinuxDmmpParameters") == 0)
+    props->linux_dmmp_parameters = g_strdup (g_value_get_string (value));
 
   else
     handled = FALSE;
@@ -837,6 +840,7 @@ device_properties_free (DeviceProperties *props)
 
   g_free (props->linux_dmmp_name);
   g_strfreev (props->linux_dmmp_slaves);
+  g_free (props->linux_dmmp_parameters);
 
   g_free (props);
 }
@@ -1267,6 +1271,7 @@ do_show_info (const char *object_path)
     {
       g_print ("  dm-multipath:\n");
       g_print ("    name:                      %s\n", props->linux_dmmp_name);
+      g_print ("    parameters:                %s\n", props->linux_dmmp_parameters);
       g_print ("    components:\n");
       for (n = 0; props->linux_dmmp_slaves[n] != NULL; n++)
         g_print ("      %s\n", props->linux_dmmp_slaves[n]);

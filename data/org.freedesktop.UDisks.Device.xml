@@ -2746,7 +2746,7 @@
     </property>
 
     <!-- ******************** -->
-    <!-- Multi-path Component -->
+    <!-- Multipath Component -->
     <!-- ******************** -->
 
     <property name="LinuxDmmpComponentHolder" type="o" access="read">
@@ -2759,7 +2759,7 @@
     </property>
 
     <!-- ***************** -->
-    <!-- Multi-path Device -->
+    <!-- Multipath Device -->
     <!-- ***************** -->
 
     <property name="LinuxDmmpName" type="s" access="read">
@@ -2773,6 +2773,14 @@
     <property name="LinuxDmmpSlaves" type="ao" access="read">
       <doc:doc><doc:description><doc:para>
             The object paths of currently active component devices, e.g. paths.
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsLinuxDmmp">DeviceIsLinuxDmmp</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+    <property name="LinuxDmmpParameters" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The parameters/configuration for the multipath device.
             This property is only valid if
             <doc:ref type="property" to="Device:DeviceIsLinuxDmmp">DeviceIsLinuxDmmp</doc:ref>
             is TRUE.

@@ -230,6 +230,7 @@ struct DevicePrivate
 
   gchar *linux_dmmp_name;
   GPtrArray *linux_dmmp_slaves;
+  gchar *linux_dmmp_parameters;
 
   /* the following properties are not (yet) exported */
   char *dm_name;
@@ -374,6 +375,7 @@ void device_set_linux_dmmp_component_holder (Device *device, const gchar *value)
 
 void device_set_linux_dmmp_name (Device *device, const gchar *value);
 void device_set_linux_dmmp_slaves (Device *device, GStrv value);
+void device_set_linux_dmmp_parameters (Device *device, const gchar *value);
 
 void device_set_dm_name (Device *device, const gchar *value);
 void device_set_slaves_objpath (Device *device, GStrv value);
