@@ -3037,6 +3037,7 @@ update_info_linux_lvm2_lv (Device *device)
   device_set_linux_lvm2_lv_group_uuid (device, vg_uuid);
 
   device_set_device_is_drive (device, FALSE);
+  device_set_device_is_partition (device, FALSE);
 
  out:
   device_set_device_is_linux_lvm2_lv (device, is_lv);
@@ -3168,6 +3169,9 @@ update_info_partition_on_linux_dmmp (Device *device)
   partition_slave = daemon_local_find_by_dev (device->priv->daemon,
                                               makedev (partition_slave_major, partition_slave_minor));
   if (partition_slave == NULL)
+    goto out;
+
+  if (!partition_slave->priv->device_is_linux_dmmp)
     goto out;
 
   offset = offset_sectors * 512;
