@@ -12782,6 +12782,7 @@ typedef struct
   int refcount;
 
   guint device_added_signal_handler_id;
+  guint device_changed_signal_handler_id;
   guint device_added_timeout_id;
 
   DBusGMethodInvocation *context;
@@ -12875,6 +12876,74 @@ lvm2_lv_create_found_device (Device *device,
     }
 }
 
+static gboolean
+str_has_lv_uuid (const gchar *str,
+                 const gchar *lv_uuid)
+{
+  gchar **tokens;
+  guint n;
+
+  tokens = g_strsplit (str, ";", 0);
+  for (n = 0; tokens != NULL && tokens[n] != NULL; n++)
+    {
+      if (g_str_has_prefix (tokens[n], "uuid=") && g_strcmp0 (tokens[n] + 5, lv_uuid) == 0)
+        {
+          return TRUE;
+        }
+    }
+
+  return FALSE;
+}
+
+static Device *
+lvm2_lv_create_has_lv (CreateLvm2LVData *data)
+{
+  GList *devices;
+  Device *ret;
+  GList *l;
+
+  ret = NULL;
+
+  devices = daemon_local_get_all_devices (data->daemon);
+  for (l = devices; l != NULL; l = l->next)
+    {
+      Device *d = DEVICE (l->data);
+      if (d->priv->device_is_linux_lvm2_lv &&
+          g_strcmp0 (d->priv->linux_lvm2_lv_group_uuid, data->vg_uuid) == 0 &&
+          g_strcmp0 (d->priv->linux_lvm2_lv_name, data->lv_name) == 0)
+        {
+          GList *m;
+          const gchar *lv_uuid;
+
+          lv_uuid = d->priv->linux_lvm2_lv_uuid;
+
+          /* OK, we've found the LV... now check that one of more PVs actually reference this LV */
+          for (m = devices; m != NULL; m = m->next)
+            {
+              Device *pv = DEVICE (m->data);
+              if (pv->priv->device_is_linux_lvm2_pv &&
+                  g_strcmp0 (pv->priv->linux_lvm2_pv_group_uuid, data->vg_uuid) == 0)
+                {
+                  guint n;
+                  for (n = 0; n < pv->priv->linux_lvm2_pv_group_logical_volumes->len; n++)
+                    {
+                      const gchar *str = pv->priv->linux_lvm2_pv_group_logical_volumes->pdata[n];
+                      if (str_has_lv_uuid (str, lv_uuid))
+                        {
+                          /* Return the LV, not the PV */
+                          ret = d;
+                          break;
+                        }
+                    }
+                }
+            } /* for all PVs */
+
+          break;
+        } /* if (found LV) */
+    }
+  return ret;
+}
+
 static void
 lvm2_lv_create_device_added_cb (Daemon *daemon,
                                 const char *object_path,
@@ -12883,25 +12952,39 @@ lvm2_lv_create_device_added_cb (Daemon *daemon,
   CreateLvm2LVData *data = user_data;
   Device *device;
 
-  /* check the device added is the partition we've created */
-  device = daemon_local_find_by_object_path (daemon, object_path);
+  g_debug ("added %s", object_path);
 
-  /*  g_debug ("Looking at %d `%s' `%s'.\n"
-           "Want          `%s' `%s'.\n"
-           "------------------------------------\n",
-           device->priv->device_is_linux_lvm2_lv, device->priv->linux_lvm2_lv_group_uuid, device->priv->linux_lvm2_lv_name,
-           data->vg_uuid, data->lv_name);
-  */
-
-  if (device != NULL &&
-      device->priv->device_is_linux_lvm2_lv &&
-      g_strcmp0 (device->priv->linux_lvm2_lv_group_uuid, data->vg_uuid) == 0 &&
-      g_strcmp0 (device->priv->linux_lvm2_lv_name, data->lv_name) == 0)
+  device = lvm2_lv_create_has_lv (data);
+  if (device != NULL)
     {
       /* yay! it is.. now create the file system if requested */
       lvm2_lv_create_found_device (device, data);
 
       g_signal_handler_disconnect (daemon, data->device_added_signal_handler_id);
+      g_signal_handler_disconnect (daemon, data->device_changed_signal_handler_id);
+      g_source_remove (data->device_added_timeout_id);
+      lvm2_lv_create_data_unref (data);
+    }
+}
+
+static void
+lvm2_lv_create_device_changed_cb (Daemon *daemon,
+                                  const char *object_path,
+                                  gpointer user_data)
+{
+  CreateLvm2LVData *data = user_data;
+  Device *device;
+
+  g_debug ("changed %s", object_path);
+
+  device = lvm2_lv_create_has_lv (data);
+  if (device != NULL)
+    {
+      /* yay! it is.. now create the file system if requested */
+      lvm2_lv_create_found_device (device, data);
+
+      g_signal_handler_disconnect (daemon, data->device_added_signal_handler_id);
+      g_signal_handler_disconnect (daemon, data->device_changed_signal_handler_id);
       g_source_remove (data->device_added_timeout_id);
       lvm2_lv_create_data_unref (data);
     }
@@ -12917,6 +13000,7 @@ lvm2_lv_create_device_not_seen_cb (gpointer user_data)
                "Error creating Logical Volume: timeout (10s) waiting for LV to show up");
 
   g_signal_handler_disconnect (data->daemon, data->device_added_signal_handler_id);
+  g_signal_handler_disconnect (data->daemon, data->device_changed_signal_handler_id);
   lvm2_lv_create_data_unref (data);
 
   return FALSE;
@@ -12935,53 +13019,30 @@ linux_lvm2_lv_create_completed_cb (DBusGMethodInvocation *context,
 
   if (WEXITSTATUS (status) == 0 && !job_was_cancelled)
     {
-      gboolean found_device;
-      GList *devices;
-      GList *l;
+      Device *d;
 
-      /* check if the device is already there */
-      found_device = FALSE;
-      devices = daemon_local_get_all_devices (data->daemon);
-      for (l = devices; l != NULL; l = l->next)
+      d = lvm2_lv_create_has_lv (data);
+      if (d != NULL)
         {
-          Device *d = DEVICE (l->data);
-
-          /*
-            g_debug ("Looking at %d `%s' `%s'.\n"
-                   "Want          `%s' `%s'.\n"
-                   "------------------------------------\n",
-                   d->priv->device_is_linux_lvm2_lv, d->priv->linux_lvm2_lv_group_uuid, d->priv->linux_lvm2_lv_name,
-                   data->vg_uuid, data->lv_name);
-          */
-
-          if (d->priv->device_is_linux_lvm2_lv &&
-              g_strcmp0 (d->priv->linux_lvm2_lv_group_uuid, data->vg_uuid) == 0 &&
-              g_strcmp0 (d->priv->linux_lvm2_lv_name, data->lv_name) == 0)
-            {
-              /* yay! it is.. now create the file system if requested */
-              lvm2_lv_create_found_device (d, data);
-              found_device = TRUE;
-              break;
-            }
+          /* yay! it is.. now create the file system if requested */
+          lvm2_lv_create_found_device (device, data);
         }
-
-      if (!found_device)
+      else
         {
-          /* otherwise sit around and wait for the new partition to appear */
-          data->device_added_signal_handler_id =
-            g_signal_connect_after (data->daemon,
-                                    "device-added",
-                                    G_CALLBACK (lvm2_lv_create_device_added_cb),
-                                    lvm2_lv_create_data_ref (data));
-
-          /* set up timeout for error reporting if waiting failed
-           *
-           * (the signal handler and the timeout handler share the ref to data
-           * as one will cancel the other)
-           */
+          /* otherwise sit around and wait for the new LV to appear */
+          data->device_added_signal_handler_id = g_signal_connect_after (data->daemon,
+                                                                         "device-added",
+                                                                         G_CALLBACK (lvm2_lv_create_device_added_cb),
+                                                                         data);
+          data->device_changed_signal_handler_id = g_signal_connect_after (data->daemon,
+                                                                           "device-changed",
+                                                                         G_CALLBACK (lvm2_lv_create_device_changed_cb),
+                                                                           data);
           data->device_added_timeout_id = g_timeout_add (10 * 1000,
                                                          lvm2_lv_create_device_not_seen_cb,
                                                          data);
+
+          lvm2_lv_create_data_ref (data);
         }
     }
   else
