@@ -1630,7 +1630,7 @@ daemon_local_find_by_object_path (Daemon *daemon,
 GList *
 daemon_local_get_all_devices (Daemon *daemon)
 {
-  return g_hash_table_get_values (daemon->priv->map_native_path_to_device);
+  return g_hash_table_get_values (daemon->priv->map_object_path_to_device);
 }
 
 static void
