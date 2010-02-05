@@ -804,7 +804,7 @@
 
     <!-- ************************************************************ -->
 
-    <method name="LinuxMdAddComponent">
+    <method name="LinuxMdAddSpare">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="component" direction="in" type="o">
         <doc:doc><doc:summary>Object path of the component to add</doc:summary></doc:doc>
@@ -818,6 +818,43 @@
           <doc:para>
             Adds a component to a Linux md RAID array. Existing data
             on the given component will be erased.
+          </doc:para>
+        </doc:description>
+        <doc:permission>
+          The caller will need the following PolicyKit authorization:
+          <doc:list>
+            <doc:item>
+              <doc:term>org.freedesktop.udisks.linux-md</doc:term>
+              <doc:definition>
+                Needed to configured Linux md Software RAID devices.
+              </doc:definition>
+            </doc:item>
+          </doc:list>
+        </doc:permission>
+        <doc:errors>
+          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="&ERROR_BUSY;">component to add is busy</doc:error>
+          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
+          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+        </doc:errors>
+      </doc:doc>
+    </method>
+
+    <!-- ************************************************************ -->
+
+    <method name="LinuxMdExpand">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <arg name="components" direction="in" type="ao">
+        <doc:doc><doc:summary>Object paths of the components to use for growing the array</doc:summary></doc:doc>
+      </arg>
+      <arg name="options" direction="in" type="as">
+        <doc:doc><doc:summary>Currently unused.</doc:summary></doc:doc>
+      </arg>
+
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Grows the Linux md RAID array with the given components.
           </doc:para>
         </doc:description>
         <doc:permission>

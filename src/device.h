@@ -170,10 +170,15 @@ gboolean device_linux_md_check (Device *device,
                                 char **options,
                                 DBusGMethodInvocation *context);
 
-gboolean device_linux_md_add_component (Device *device,
-                                        char *component,
-                                        char **options,
-                                        DBusGMethodInvocation *context);
+gboolean device_linux_md_add_spare (Device *device,
+                                    char *component,
+                                    char **options,
+                                    DBusGMethodInvocation *context);
+
+gboolean device_linux_md_expand (Device *device,
+                                 GPtrArray *components,
+                                 char **options,
+                                 DBusGMethodInvocation *context);
 
 gboolean device_linux_md_remove_component (Device *device,
                                            char *component,

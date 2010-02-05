@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -e
+
+MD_DEVICE=$1
+shift
+
+NEW_NUM_RAID_DEVICES=$1
+shift
+
+BACKUP_FILENAME=$1
+shift
+
+# TODO: disable bitmap if it exists and renable later
+
+for device in "$@" ; do
+    mdadm $MD_DEVICE --add $device
+done
+
+mdadm --grow $MD_DEVICE --raid-devices $NEW_NUM_RAID_DEVICES --backup-file "$BACKUP_FILENAME"
+

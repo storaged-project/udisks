@@ -10037,7 +10037,7 @@ device_linux_md_check (Device *device,
 /*--------------------------------------------------------------------------------------------------------------*/
 
 static void
-linux_md_add_component_completed_cb (DBusGMethodInvocation *context,
+linux_md_add_spare_completed_cb (DBusGMethodInvocation *context,
                                      Device *device,
                                      gboolean job_was_cancelled,
                                      int status,
@@ -10071,7 +10071,7 @@ linux_md_add_component_completed_cb (DBusGMethodInvocation *context,
         {
           throw_error (context,
                        ERROR_FAILED,
-                       "Error adding component: mdadm exited with exit code %d: %s",
+                       "Error adding spare: mdadm exited with exit code %d: %s",
                        WEXITSTATUS (status),
                        stderr);
         }
@@ -10079,7 +10079,7 @@ linux_md_add_component_completed_cb (DBusGMethodInvocation *context,
 }
 
 static void
-device_linux_md_add_component_authorized_cb (Daemon *daemon,
+device_linux_md_add_spare_authorized_cb (Daemon *daemon,
                                              Device *device,
                                              DBusGMethodInvocation *context,
                                              const gchar *action_id,
@@ -10126,12 +10126,12 @@ device_linux_md_add_component_authorized_cb (Daemon *daemon,
   argv[n++] = NULL;
 
   if (!job_new (context,
-                "LinuxMdAddComponent",
+                "LinuxMdAddSpare",
                 TRUE,
                 device,
                 argv,
                 NULL,
-                linux_md_add_component_completed_cb,
+                linux_md_add_spare_completed_cb,
                 FALSE,
                 g_object_ref (slave),
                 g_object_unref))
@@ -10144,10 +10144,10 @@ device_linux_md_add_component_authorized_cb (Daemon *daemon,
 }
 
 gboolean
-device_linux_md_add_component (Device *device,
-                               char *component,
-                               char **options,
-                               DBusGMethodInvocation *context)
+device_linux_md_add_spare (Device *device,
+                           char *component,
+                           char **options,
+                           DBusGMethodInvocation *context)
 {
   if (!device->priv->device_is_linux_md)
     {
@@ -10158,13 +10158,165 @@ device_linux_md_add_component (Device *device,
   daemon_local_check_auth (device->priv->daemon,
                            device,
                            "org.freedesktop.udisks.linux-md",
-                           "LinuxMdAddComponent",
+                           "LinuxMdAddSpare",
                            TRUE,
-                           device_linux_md_add_component_authorized_cb,
+                           device_linux_md_add_spare_authorized_cb,
                            context,
                            2,
                            g_strdup (component),
                            g_free,
+                           g_strdupv (options),
+                           g_strfreev);
+ out:
+  return TRUE;
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+static void
+linux_md_expand_completed_cb (DBusGMethodInvocation *context,
+                                     Device *device,
+                                     gboolean job_was_cancelled,
+                                     int status,
+                                     const char *stderr,
+                                     const char *stdout,
+                                     gpointer user_data)
+{
+  if (WEXITSTATUS (status) == 0 && !job_was_cancelled)
+    {
+      /* the kernel side of md currently doesn't emit a 'changed' event so
+       * generate one since state may have changed (e.g. rebuild started etc.)
+       */
+      device_generate_kernel_change_event (device);
+
+      dbus_g_method_return (context);
+
+    }
+  else
+    {
+      if (job_was_cancelled)
+        {
+          throw_error (context, ERROR_CANCELLED, "Job was cancelled");
+        }
+      else
+        {
+          throw_error (context,
+                       ERROR_FAILED,
+                       "Error expanding array: helper script exited with exit code %d: %s",
+                       WEXITSTATUS (status),
+                       stderr);
+        }
+    }
+}
+
+static void
+device_linux_md_expand_authorized_cb (Daemon *daemon,
+                                             Device *device,
+                                             DBusGMethodInvocation *context,
+                                             const gchar *action_id,
+                                             guint num_user_data,
+                                             gpointer *user_data_elements)
+{
+  gchar **components = user_data_elements[0];
+  /* TODO: use options */
+  //char                 **options   = user_data_elements[1];
+  guint n;
+  GError *error;
+  GPtrArray *args;
+  gint new_num_raid_devices;
+  gchar *backup_filename;
+  gchar *md_basename;
+
+  error = NULL;
+
+  args = g_ptr_array_new_with_free_func (g_free);
+  g_ptr_array_add (args, g_strdup (PACKAGE_LIBEXEC_DIR "/udisks-helper-mdadm-expand"));
+  g_ptr_array_add (args, g_strdup (device->priv->device_file));
+
+  new_num_raid_devices = device->priv->linux_md_num_raid_devices + g_strv_length (components);
+  g_ptr_array_add (args, g_strdup_printf ("%d", new_num_raid_devices));
+
+  /* TODO: choose a better name and better location */
+  md_basename = g_path_get_basename (device->priv->device_file);
+  backup_filename = g_strdup_printf ("/root/udisks-mdadm-expand-backup-file-%s-at-%" G_GUINT64_FORMAT,
+                                     md_basename,
+                                     (guint64) time (NULL));
+  g_free (md_basename);
+  g_ptr_array_add (args, backup_filename);
+
+  for (n = 0; components != NULL && components[n] != NULL; n++)
+    {
+      Device *slave;
+
+      slave = daemon_local_find_by_object_path (device->priv->daemon, components[n]);
+      if (slave == NULL)
+        {
+          throw_error (context,
+                       ERROR_FAILED,
+                       "Component with object path %s doesn't exist",
+                       components[n]);
+          goto out;
+        }
+
+      if (device_local_is_busy (slave, TRUE, &error))
+        {
+          dbus_g_method_return_error (context, error);
+          g_error_free (error);
+          goto out;
+        }
+
+      g_ptr_array_add (args, g_strdup (slave->priv->device_file));
+    }
+  g_ptr_array_add (args, NULL);
+
+
+  if (!job_new (context,
+                "LinuxMdExpand",
+                TRUE,
+                device,
+                (char **) args->pdata,
+                NULL,
+                linux_md_expand_completed_cb,
+                FALSE,
+                NULL,
+                NULL))
+    {
+      goto out;
+    }
+
+ out:
+  g_ptr_array_free (args, TRUE);
+}
+
+gboolean
+device_linux_md_expand (Device *device,
+                        GPtrArray *components,
+                        char **options,
+                        DBusGMethodInvocation *context)
+{
+  gchar **strv;
+  guint n;
+
+  if (!device->priv->device_is_linux_md)
+    {
+      throw_error (context, ERROR_FAILED, "Device is not a Linux md drive");
+      goto out;
+    }
+
+  strv = (gchar **) g_new0 (gchar*, components->len + 1);
+  for (n = 0; n < components->len; n++)
+    strv[n] = g_strdup (components->pdata[n]);
+
+  daemon_local_check_auth (device->priv->daemon,
+                           device,
+                           "org.freedesktop.udisks.linux-md",
+                           "LinuxMdExpand",
+                           TRUE,
+                           device_linux_md_expand_authorized_cb,
+                           context,
+                           2,
+                           strv,
+                           g_strfreev,
                            g_strdupv (options),
                            g_strfreev);
  out:

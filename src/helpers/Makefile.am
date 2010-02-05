@@ -39,7 +39,10 @@ libpartutil_la_SOURCES = partutil.h partutil.c
 libpartutil_la_CPPFLAGS = $(LIBPARTED_CFLAGS)
 libpartutil_la_LIBADD = $(LIBPARTED_LIBS)
 
-libexec_SCRIPTS = udisks-helper-change-luks-password
+libexec_SCRIPTS = 					\
+	udisks-helper-change-luks-password 		\
+	udisks-helper-mdadm-expand	 		\
+	$(NULL)
 
 udisks_helper_mkfs_SOURCES = job-shared.h job-mkfs.c
 udisks_helper_mkfs_CPPFLAGS = $(AM_CPPFLAGS)
