@@ -23,10 +23,13 @@ INCLUDES = \
 udevhelperdir = $(slashlibdir)/udev
 udevhelper_PROGRAMS =	udisks-part-id 			\
 			udisks-dm-export 		\
-			udisks-lvm-pv-export 		\
 		      	udisks-probe-ata-smart 		\
 			udisks-probe-sas-expander 	\
 			$(NULL)
+
+if LVM2APP_ENABLED
+udevhelper_PROGRAMS += udisks-lvm-pv-export
+endif
 
 udisks_part_id_SOURCES = part-id.c
 udisks_part_id_CPPFLAGS = $(AM_CPPFLAGS) $(LIBUDEV_CFLAGS)

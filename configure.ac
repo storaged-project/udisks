@@ -156,9 +156,14 @@ PKG_CHECK_MODULES(DEVMAPPER, [devmapper >= 1.02])
 AC_SUBST(DEVMAPPER_CFLAGS)
 AC_SUBST(DEVMAPPER_LIBS)
 
-PKG_CHECK_MODULES(LVM2APP, [lvm2app >= 2.1])
-AC_SUBST(LVM2APP_CFLAGS)
-AC_SUBST(LVM2APP_LIBS)
+PKG_CHECK_EXISTS(lvm2app >= 2.1, msg_lvm2app=yes, msg_lvm2app=no)
+if test "x$msg_lvm2app" = "xyes"; then
+  PKG_CHECK_MODULES(LVM2APP, [lvm2app >= 2.1])
+  AC_SUBST(LVM2APP_CFLAGS)
+  AC_SUBST(LVM2APP_LIBS)
+  AC_DEFINE(HAVE_LVM2APP, 1, [Define to 1 if lvm2app is available])
+fi
+AM_CONDITIONAL(LVM2APP_ENABLED, test x$msg_lvm2app = xyes)
 
 PKG_CHECK_MODULES(LIBATASMART, [libatasmart >= 0.14])
 AC_SUBST(LIBATASMART_CFLAGS)
@@ -229,6 +234,8 @@ echo "
         cflags:                     ${CFLAGS}
         cppflags:                   ${CPPFLAGS}
         xsltproc:                   ${XSLTPROC}
+
+        LVM2 support:               ${msg_lvm2app}
 
         Maintainer mode:            ${USE_MAINTAINER_MODE}
         Building api docs:          ${enable_gtk_doc}

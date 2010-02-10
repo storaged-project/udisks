@@ -8,8 +8,6 @@
 
 #include <libdevmapper.h>
 
-#include <lvm2app.h>
-
 static void
 usage (void)
 {
