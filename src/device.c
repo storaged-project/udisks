@@ -6077,7 +6077,7 @@ device_filesystem_mount_authorized_cb (Daemon *daemon,
     {
       n = 0;
       snprintf (uid_buf, sizeof uid_buf, "%d", caller_uid);
-      argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-fstab-mounter";
+      argv[n++] = "udisks-helper-fstab-mounter";
       argv[n++] = "mount";
       argv[n++] = device->priv->device_file;
       argv[n++] = uid_buf;
@@ -6403,7 +6403,7 @@ device_filesystem_unmount_authorized_cb (Daemon *daemon,
         {
 
           n = 0;
-          argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-fstab-mounter";
+          argv[n++] = "udisks-helper-fstab-mounter";
           if (force_unmount)
             argv[n++] = "force_unmount";
           else
@@ -6865,7 +6865,7 @@ device_drive_detach_authorized_cb (Daemon *daemon,
     }
 
   n = 0;
-  argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-drive-detach";
+  argv[n++] = "udisks-helper-drive-detach";
   argv[n++] = device->priv->device_file;
   argv[n++] = device->priv->native_path;
   argv[n++] = NULL;
@@ -7118,7 +7118,7 @@ device_partition_delete_authorized_cb (Daemon *daemon,
   part_number_as_string = g_strdup_printf ("%d", device->priv->partition_number);
 
   n = 0;
-  argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-delete-partition";
+  argv[n++] = "udisks-helper-delete-partition";
   if (enclosing_device->priv->device_is_linux_dmmp)
     argv[n++] = (gchar *) get_dmmp_device_node (enclosing_device);
   else
@@ -7508,7 +7508,7 @@ device_filesystem_create_internal (Device *device,
   g_free (s);
 
   n = 0;
-  argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-mkfs";
+  argv[n++] = "udisks-helper-mkfs";
   argv[n++] = (char *) fstype;
   argv[n++] = device->priv->device_file;
   argv[n++] = device->priv->device_is_partition_table ? "1" : "0";
@@ -7959,7 +7959,7 @@ device_partition_create_authorized_cb (Daemon *daemon,
   flags_as_string = g_strjoinv (",", flags);
 
   n = 0;
-  argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-create-partition";
+  argv[n++] = "udisks-helper-create-partition";
   if (device->priv->device_is_linux_dmmp)
     argv[n++] = (gchar *) get_dmmp_device_node (device);
   else
@@ -8196,7 +8196,7 @@ device_partition_modify_authorized_cb (Daemon *daemon,
   flags_as_string = g_strjoinv (",", flags);
 
   n = 0;
-  argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-modify-partition";
+  argv[n++] = "udisks-helper-modify-partition";
   argv[n++] = enclosing_device->priv->device_file;
   argv[n++] = offset_as_string;
   argv[n++] = size_as_string;
@@ -8435,7 +8435,7 @@ device_partition_table_create_authorized_cb (Daemon *daemon,
     }
 
   n = 0;
-  argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-create-partition-table";
+  argv[n++] = "udisks-helper-create-partition-table";
   if (device->priv->device_is_linux_dmmp)
     argv[n++] = (gchar *) get_dmmp_device_node (device);
   else
@@ -9630,7 +9630,7 @@ device_drive_ata_smart_refresh_data_authorized_cb (Daemon *daemon,
   else
     {
       n = 0;
-      argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-ata-smart-collect";
+      argv[n++] = "udisks-helper-ata-smart-collect";
       argv[n++] = device->priv->device_file;
       argv[n++] = nowakeup ? "1" : "0";
       argv[n++] = NULL;
@@ -9751,7 +9751,7 @@ device_drive_ata_smart_initiate_selftest_authorized_cb (Daemon *daemon,
     }
 
   n = 0;
-  argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-ata-smart-selftest";
+  argv[n++] = "udisks-helper-ata-smart-selftest";
   argv[n++] = device->priv->device_file;
   argv[n++] = (char *) test;
   argv[n++] = NULL;
@@ -9965,7 +9965,7 @@ device_linux_md_check_authorized_cb (Daemon *daemon,
     }
 
   n = 0;
-  argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-linux-md-check";
+  argv[n++] = "udisks-helper-linux-md-check";
   argv[n++] = device->priv->device_file;
   argv[n++] = device->priv->native_path;
   for (m = 0; options[m] != NULL; m++)
@@ -10230,7 +10230,7 @@ device_linux_md_expand_authorized_cb (Daemon *daemon,
   error = NULL;
 
   args = g_ptr_array_new_with_free_func (g_free);
-  g_ptr_array_add (args, g_strdup (PACKAGE_LIBEXEC_DIR "/udisks-helper-mdadm-expand"));
+  g_ptr_array_add (args, g_strdup ("udisks-helper-mdadm-expand"));
   g_ptr_array_add (args, g_strdup (device->priv->device_file));
 
   new_num_raid_devices = device->priv->linux_md_num_raid_devices + g_strv_length (components);
@@ -10514,7 +10514,7 @@ device_linux_md_remove_component_authorized_cb (Daemon *daemon,
     }
 
   n = 0;
-  argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-linux-md-remove-component";
+  argv[n++] = "udisks-helper-linux-md-remove-component";
   argv[n++] = device->priv->device_file;
   argv[n++] = slave->priv->device_file;
   for (m = 0; options[m] != NULL; m++)
@@ -11778,7 +11778,7 @@ device_drive_poll_media_authorized_cb (Daemon *daemon,
   char *argv[16];
 
   n = 0;
-  argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-drive-poll";
+  argv[n++] = "udisks-helper-drive-poll";
   argv[n++] = device->priv->device_file;
   argv[n++] = NULL;
 
@@ -12113,7 +12113,7 @@ device_drive_benchmark_authorized_cb (Daemon *daemon,
     }
 
   n = 0;
-  argv[n++] = PACKAGE_LIBEXEC_DIR "/udisks-helper-drive-benchmark";
+  argv[n++] = "udisks-helper-drive-benchmark";
   argv[n++] = device->priv->device_file;
   argv[n++] = do_write_benchmark ? "1" : "0";
   argv[n++] = NULL;

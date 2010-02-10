@@ -137,11 +137,15 @@ main (int argc,
   GOptionContext *context;
   DBusGProxy *system_bus_proxy;
   DBusGConnection *bus;
+  static char *helper_dir = NULL;
+  char *path;
   int ret;
   static gboolean replace;
   static GOptionEntry entries[] =
     {
       { "replace", 0, 0, G_OPTION_ARG_NONE, &replace, "Replace existing daemon", NULL },
+      { "helper-dir", 0, G_OPTION_FLAG_FILENAME, G_OPTION_ARG_STRING,
+	  &helper_dir, "Directory for helper tools",  NULL },
       { NULL } };
 
   ret = 1;
@@ -152,13 +156,6 @@ main (int argc,
   /* fork the polling process early */
   if (!poller_setup (argc, argv))
     {
-      goto out;
-    }
-
-  /* run with a controlled path */
-  if (!g_setenv ("PATH", PACKAGE_LIBEXEC_DIR ":/sbin:/bin:/usr/sbin:/usr/bin", TRUE))
-    {
-      g_warning ("Couldn't set PATH");
       goto out;
     }
 
@@ -173,6 +170,19 @@ main (int argc,
   g_option_context_add_main_entries (context, entries, NULL);
   g_option_context_parse (context, &argc, &argv, NULL);
   g_option_context_free (context);
+
+  /* run with a controlled path */
+  if (helper_dir != NULL)
+      path = g_strdup_printf ("%s:" PACKAGE_LIBEXEC_DIR ":/sbin:/bin:/usr/sbin:/usr/bin", helper_dir);
+  else
+      path = g_strdup (PACKAGE_LIBEXEC_DIR ":/sbin:/bin:/usr/sbin:/usr/bin");
+
+  if (!g_setenv ("PATH", path, TRUE))
+    {
+      g_warning ("Couldn't set PATH");
+      goto out;
+    }
+  g_free (path);
 
   bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
   if (bus == NULL)
