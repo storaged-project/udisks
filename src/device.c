@@ -4202,9 +4202,12 @@ update_info (Device *device)
     }
 
   /* ignore dm devices that are suspended */
-  if (g_str_has_prefix (g_udev_device_get_name (device->priv->d), "dm-") &&
-      g_strcmp0 (g_udev_device_get_property (device->priv->d, "DM_SUSPENDED"), "0") != 0)
-    goto out;
+  if (g_str_has_prefix (g_udev_device_get_name (device->priv->d), "dm-"))
+    { 
+      s = g_udev_device_get_property (device->priv->d, "DM_SUSPENDED");
+      if (s != NULL && strcmp (s, "0") != 0)
+	goto out;
+    }
 
   major = g_udev_device_get_property_as_int (device->priv->d, "MAJOR");
   minor = g_udev_device_get_property_as_int (device->priv->d, "MINOR");
