@@ -44,6 +44,7 @@ import dbus
 import signal
 import stat
 import optparse
+import re
 
 test_ram_dev1 = '/dev/ram8'
 test_ram_dev2 = '/dev/ram9'
@@ -74,6 +75,28 @@ class UDisksTestCase(unittest.TestCase):
 
         assert os.geteuid() == 0, 'need to be root for running this'
 
+        # run from local build tree if we are in one, otherwise use system instance
+        if (os.access ('src/udisks-daemon', os.X_OK)):
+            daemon_path = 'src/udisks-daemon'
+            daemon_args = ['--helper-dir', os.path.join(os.getcwd(), 'src',
+                'helpers')]
+            klass.tool_path = 'tools/udisks'
+            print 'Testing binaries from local build tree'
+            klass.check_build_tree_config()
+        else:
+            print 'Testing installed system binaries'
+            daemon_path = None
+            for l in open('/usr/share/dbus-1/system-services/org.freedesktop.UDisks.service'):
+                if l.startswith('Exec='):
+                    daemon_path = l.split('=', 1)[1].strip()
+                    break
+            assert daemon_path, 'could not determine daemon path from D-BUS .service file'
+
+            daemon_args = []
+            klass.tool_path = 'udisks'
+
+        print 'daemon path:', daemon_path
+
         # ensure that we can use test_ram_dev* for testing
         for r in (test_ram_dev1, test_ram_dev2, test_ram_dev3):
             assert os.path.exists(r), r + ' does not exist -- you might need to load the rd module?'
@@ -90,27 +113,6 @@ class UDisksTestCase(unittest.TestCase):
 
         # start with a clean slate: zero out device 
         klass.zero_device()
-
-        # run from local build tree if we are in one, otherwise use system instance
-        if (os.access ('src/udisks-daemon', os.X_OK)):
-            daemon_path = 'src/udisks-daemon'
-            daemon_args = ['--helper-dir', os.path.join(os.getcwd(), 'src',
-                'helpers')]
-            klass.tool_path = 'tools/udisks'
-            print 'Testing binaries from local build tree'
-        else:
-            print 'Testing installed system binaries'
-            daemon_path = None
-            for l in open('/usr/share/dbus-1/system-services/org.freedesktop.UDisks.service'):
-                if l.startswith('Exec='):
-                    daemon_path = l.split('=', 1)[1].strip()
-                    break
-            assert daemon_path, 'could not determine daemon path from D-BUS .service file'
-
-            daemon_args = []
-            klass.tool_path = 'udisks'
-
-        print 'daemon path:', daemon_path
 
         # start daemon
         if logfile:
@@ -316,6 +318,40 @@ class UDisksTestCase(unittest.TestCase):
                 print >> sys.stderr, '[busy] ',
                 time.sleep(0.3)
                 timeout -= 1
+
+    @classmethod
+    def check_build_tree_config(klass):
+        '''Check configuration of build tree'''
+
+        # read make variables
+        make_vars = {}
+        var_re = re.compile('^([a-zA-Z_]+) = (.*)$')
+        make = subprocess.Popen(['make', '-p', '/dev/null'],
+                stdout=subprocess.PIPE)
+        for l in make.stdout:
+            m = var_re.match(l)
+            if m:
+                make_vars[m.group(1)] = m.group(2)
+        make.wait()
+
+        # expand make variables
+        subst_re = re.compile('\${([a-zA-Z_]+)}')
+        for (k, v) in make_vars.iteritems():
+            while True:
+                m = subst_re.search(v)
+                if m:
+                    v = subst_re.sub(make_vars.get(m.group(1), ''), v)
+                    make_vars[k] = v
+                else:
+                    break
+
+        # check localstatedir
+        for d in (os.path.join(make_vars['localstatedir'], 'run', 'udisks'),
+                os.path.join(make_vars['localstatedir'], 'lib', 'udisks')):
+            if not os.path.exists(d):
+                print >> sys.stderr, 'The directory %s does not exist; please create it before running these tests.' % d
+                sys.exit(0)
+        
 
 # ----------------------------------------------------------------------------
 
