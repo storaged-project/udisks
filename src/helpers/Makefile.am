@@ -39,7 +39,7 @@ libpartutil_la_SOURCES = partutil.h partutil.c
 libpartutil_la_CPPFLAGS = $(LIBPARTED_CFLAGS)
 libpartutil_la_LIBADD = $(LIBPARTED_LIBS)
 
-libexec_SCRIPTS = 					\
+dist_libexec_SCRIPTS = 					\
 	udisks-helper-change-luks-password 		\
 	udisks-helper-mdadm-expand	 		\
 	$(NULL)
@@ -100,6 +100,3 @@ udisks_helper_drive_benchmark_SOURCES = job-drive-benchmark.c
 udisks_helper_drive_benchmark_CPPFLAGS = $(AM_CPPFLAGS)
 udisks_helper_drive_benchmark_LDADD =  $(GLIB_LIBS)
 
-EXTRA_DIST = 						\
-	udisks-helper-change-luks-password		\
-	$(NULL)
