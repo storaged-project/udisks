@@ -345,6 +345,7 @@ typedef struct
   char **partition_flags;
   guint64 partition_offset;
   guint64 partition_size;
+  guint64 partition_alignment_offset;
 
   char *partition_table_scheme;
   int partition_table_count;
@@ -558,6 +559,8 @@ collect_props (const char *key,
     props->partition_offset = g_value_get_uint64 (value);
   else if (strcmp (key, "PartitionSize") == 0)
     props->partition_size = g_value_get_uint64 (value);
+  else if (strcmp (key, "PartitionAlignmentOffset") == 0)
+    props->partition_alignment_offset = g_value_get_uint64 (value);
 
   else if (strcmp (key, "PartitionTableScheme") == 0)
     props->partition_table_scheme = g_strdup (g_value_get_string (value));
@@ -1311,6 +1314,11 @@ do_show_info (const char *object_path)
         g_print (" %s", (char *) props->partition_flags[n]);
       g_print ("\n");
       g_print ("    offset:                    %" G_GINT64_FORMAT "\n", props->partition_offset);
+      if (props->partition_alignment_offset != 0)
+        begin_highlight ();
+      g_print ("    alignment offset:          %" G_GINT64_FORMAT "\n", props->partition_alignment_offset);
+      if (props->partition_alignment_offset != 0)
+        end_highlight ();
       g_print ("    size:                      %" G_GINT64_FORMAT "\n", props->partition_size);
       g_print ("    label:                     %s\n", props->partition_label);
       g_print ("    uuid:                      %s\n", props->partition_uuid);

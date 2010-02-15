@@ -1955,6 +1955,16 @@
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
+    <property name="PartitionAlignmentOffset" type="t" access="read">
+      <doc:doc><doc:description><doc:para>
+
+            The amount of bytes the beginning of the partition is offset
+            from the disk's natural alignment.
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsPartition">DeviceIsPartition</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
 
     <property name="PartitionTableScheme" type="s" access="read">
       <doc:doc><doc:description><doc:para>

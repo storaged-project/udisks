@@ -165,18 +165,17 @@ get_syspath (struct udev *udev,
  * @given_device_file: The device file given on the command line.
  * @out_partition_table_syspath: Return location for sysfs path of the slave the partition is for.
  * @out_offset: Return location for offset or %NULL.
+ * @out_alignment_offset: Return location for alignment offset or %NULL.
  * @out_partition_number: Return location for partition number or %NULL.
  *
- * If @given_device_file is not a partition, returns a copy of it and
- * sets @out_offset and @out_partition_number to 0 and
- * @out_partition_table_syspath to the sysfs path for
- * @given_device_file.
+ * If @given_device_file is not a partition, returns a copy of it.
  *
  * Otherwise, returns the device file for the block device for which
  * @given_device_file is a partition of and returns the offset of the
  * partition in @out_offset and the partition number in
  * @out_partition_number. The sysfs path is set in
- * @out_partition_table_syspath.
+ * @out_partition_table_syspath. The alignment offset is returned in
+ * @out_alignment_offset.
  *
  * If something goes wrong, %NULL is returned.
  */
@@ -185,6 +184,7 @@ get_part_table_device_file (struct udev  *udev,
                             const gchar  *given_device_file,
                             gchar       **out_partition_table_syspath,
                             guint64      *out_offset,
+                            guint64      *out_alignment_offset,
                             guint        *out_partition_number)
 {
   gchar *ret;
@@ -192,11 +192,13 @@ get_part_table_device_file (struct udev  *udev,
   guint partition_number;
   gchar *devpath;
   gchar *partition_table_syspath;
+  guint64 alignment_offset;
 
   devpath = NULL;
   offset = 0;
   ret = NULL;
   partition_table_syspath = NULL;
+  alignment_offset = 0;
 
   devpath = get_syspath (udev, given_device_file);
   if (devpath == NULL)
@@ -232,6 +234,8 @@ get_part_table_device_file (struct udev  *udev,
           goto out;
         }
       offset = sysfs_get_uint64 (devpath, "start") * 512;
+
+      alignment_offset = sysfs_get_uint64 (devpath, "alignment_offset");
     }
   else
     {
@@ -308,6 +312,9 @@ get_part_table_device_file (struct udev  *udev,
                   udev_device_unref (mp_device);
                   g_free (targets_params);
                   udev_device_unref (device);
+
+                  /* TODO: set alignment_offset */
+
                   goto out;
                 }
             }
@@ -330,6 +337,8 @@ get_part_table_device_file (struct udev  *udev,
     *out_partition_table_syspath = partition_table_syspath;
   else
     g_free (partition_table_syspath);
+  if (out_alignment_offset != NULL)
+    *out_alignment_offset = alignment_offset;
 
   g_free (devpath);
 
@@ -379,6 +388,7 @@ main (int argc,
   struct udev *udev;
   PartitionTable *partition_table;
   guint64 partition_offset;
+  guint64 partition_alignment_offset;
   guint partition_number;
   gchar *partition_table_syspath;
 
@@ -421,11 +431,13 @@ main (int argc,
                                                             device_file,
                                                             &partition_table_syspath,
                                                             &partition_offset,
+                                                            &partition_alignment_offset,
                                                             &partition_number);
-  g_printerr ("using device_file=%s syspath=%s, offset=%" G_GUINT64_FORMAT " and number=%d for %s\n",
+  g_printerr ("using device_file=%s syspath=%s, offset=%" G_GUINT64_FORMAT " ao=%" G_GUINT64_FORMAT " and number=%d for %s\n",
               partition_table_device_file,
               partition_table_syspath,
               partition_offset,
+              partition_alignment_offset,
               partition_number,
               device_file);
 
@@ -500,6 +512,7 @@ main (int argc,
       g_print ("UDISKS_PARTITION_FLAGS=%s\n", flags_combined);
       g_print ("UDISKS_PARTITION_SLAVE=%s\n", partition_table_syspath);
       g_print ("UDISKS_PARTITION_OFFSET=%" G_GUINT64_FORMAT "\n", partition_offset);
+      g_print ("UDISKS_PARTITION_ALIGNMENT_OFFSET=%" G_GUINT64_FORMAT "\n", partition_alignment_offset);
 
       g_free (type);
       g_free (label);

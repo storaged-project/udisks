@@ -145,6 +145,7 @@ struct DevicePrivate
   int partition_number;
   guint64 partition_offset;
   guint64 partition_size;
+  guint64 partition_alignment_offset;
 
   char *partition_table_scheme;
   int partition_table_count;
@@ -297,6 +298,7 @@ void device_set_partition_flags (Device *device, GStrv value);
 void device_set_partition_number (Device *device, gint value);
 void device_set_partition_offset (Device *device, guint64 value);
 void device_set_partition_size (Device *device, guint64 value);
+void device_set_partition_alignment_offset (Device *device, guint64 value);
 
 void device_set_partition_table_scheme (Device *device, const gchar *value);
 void device_set_partition_table_count (Device *device, gint value);

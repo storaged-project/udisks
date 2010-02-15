@@ -231,6 +231,7 @@ enum
     PROP_PARTITION_NUMBER,
     PROP_PARTITION_OFFSET,
     PROP_PARTITION_SIZE,
+    PROP_PARTITION_ALIGNMENT_OFFSET,
 
     PROP_PARTITION_TABLE_SCHEME,
     PROP_PARTITION_TABLE_COUNT,
@@ -533,6 +534,9 @@ get_property (GObject *object,
       break;
     case PROP_PARTITION_SIZE:
       g_value_set_uint64 (value, device->priv->partition_size);
+      break;
+    case PROP_PARTITION_ALIGNMENT_OFFSET:
+      g_value_set_uint64 (value, device->priv->partition_alignment_offset);
       break;
 
     case PROP_PARTITION_TABLE_SCHEME:
@@ -1199,6 +1203,15 @@ device_class_init (DeviceClass *klass)
                                                                                            G_MAXUINT64,
                                                                                            0,
                                                                                            G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_PARTITION_ALIGNMENT_OFFSET,
+                                   g_param_spec_uint64 ("partition-alignment-offset",
+                                                        NULL,
+                                                        NULL,
+                                                        0,
+                                                        G_MAXUINT64,
+                                                        0,
+                                                        G_PARAM_READABLE));
 
   g_object_class_install_property (object_class,
                                    PROP_PARTITION_TABLE_SCHEME,
@@ -2397,6 +2410,7 @@ update_info_partition (Device *device)
       const gchar *uuid;
       const gchar* const *flags;
       guint64 offset;
+      guint64 alignment_offset;
       const gchar *slave_sysfs_path;
       gint number;
 
@@ -2407,6 +2421,7 @@ update_info_partition (Device *device)
       uuid = g_udev_device_get_property (device->priv->d, "UDISKS_PARTITION_UUID");
       flags = g_udev_device_get_property_as_strv (device->priv->d, "UDISKS_PARTITION_FLAGS");
       offset = g_udev_device_get_property_as_uint64 (device->priv->d, "UDISKS_PARTITION_OFFSET");
+      alignment_offset = g_udev_device_get_property_as_uint64 (device->priv->d, "UDISKS_PARTITION_ALIGNMENT_OFFSET");
       number = g_udev_device_get_property_as_int (device->priv->d, "UDISKS_PARTITION_NUMBER");
       slave_sysfs_path = g_udev_device_get_property (device->priv->d, "UDISKS_PARTITION_SLAVE");
 
@@ -2421,6 +2436,7 @@ update_info_partition (Device *device)
           device_set_partition_uuid (device, uuid);
           device_set_partition_flags (device, (gchar **) flags);
           device_set_partition_offset (device, offset);
+          device_set_partition_alignment_offset (device, alignment_offset);
           device_set_partition_number (device, number);
 
           s = compute_object_path (slave_sysfs_path);
@@ -2443,14 +2459,17 @@ update_info_partition (Device *device)
       guint64 start;
       guint64 size;
       guint64 offset;
+      guint64 alignment_offset;
       gchar *s;
       guint n;
 
       device_set_device_is_partition (device, TRUE);
       start = sysfs_get_uint64 (device->priv->native_path, "start");
       size = sysfs_get_uint64 (device->priv->native_path, "size");
-      device_set_partition_offset (device, start * 512); /* device->priv->device_block_size; */
+      alignment_offset = sysfs_get_uint64 (device->priv->native_path, "alignment_offset");
+
       device_set_partition_size (device, size * 512); /* device->priv->device_block_size; */
+      device_set_partition_alignment_offset (device, alignment_offset);
 
       offset = sysfs_get_uint64 (device->priv->native_path, "start") * device->priv->device_block_size;
       device_set_partition_offset (device, offset);

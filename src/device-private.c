@@ -718,6 +718,17 @@ device_set_partition_size (Device *device,
 }
 
 void
+device_set_partition_alignment_offset (Device *device,
+                                       guint64 value)
+{
+  if (G_UNLIKELY (device->priv->partition_alignment_offset != value))
+    {
+      device->priv->partition_alignment_offset = value;
+      emit_changed (device, "partition_alignment_offset");
+    }
+}
+
+void
 device_set_partition_table_scheme (Device *device,
                                    const gchar *value)
 {
