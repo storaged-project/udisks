@@ -3941,6 +3941,12 @@ update_info_media_detection (Device *device)
       polling = TRUE;
       inhibitable = TRUE;
 
+      /* custom udev rules might want to disable polling for known-broken
+       * devices (fdo #26508) */
+      if (g_udev_device_has_property (device->priv->d, "UDISKS_DISABLE_POLLING") &&
+	  g_udev_device_get_property_as_boolean (device->priv->d, "UDISKS_DISABLE_POLLING"))
+	polling = FALSE;
+
       if (device->priv->polling_inhibitors != NULL || daemon_local_has_polling_inhibitors (device->priv->daemon))
         {
 

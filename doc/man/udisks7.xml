@@ -51,6 +51,16 @@
       </varlistentry>
 
       <varlistentry>
+        <term><option>UDISKS_DISABLE_POLLING</option></term>
+        <listitem><para>If set to 1 this will disable the polling of drives
+	    for media changes, for devices which do not send out media
+	    notifications by themselves (this mostly affects CD drives).
+	    Some CD drives cause bad effects such as very high CPU usage when
+	    being polled.
+        </para></listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>DKD_PRESENTATION_NAME</option></term>
         <listitem><para>The name to user for the device when
         presenting it to the user.
