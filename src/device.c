@@ -1852,6 +1852,8 @@ compute_object_path (const char *native_path)
   GString *s;
   guint n;
 
+  g_return_val_if_fail (native_path != NULL, NULL);
+
   basename = strrchr (native_path, '/');
   if (basename != NULL)
     {
@@ -2301,31 +2303,73 @@ update_info_id (Device *device)
 static gboolean
 update_info_partition_table (Device *device)
 {
-  if (!device->priv->device_is_partition && g_udev_device_has_property (device->priv->d, "UDISKS_PARTITION_TABLE")
-      && g_udev_device_get_property_as_boolean (device->priv->d, "UDISKS_PARTITION_TABLE"))
-    {
+  gboolean is_partition_table;
 
-      /* Some times we think that vfat on the main block device looks like a Master Boot Record
-       * partition table (the on-disk formats are extremely similar). So if we already have
-       * detected a file system on the main block device and don't have any partitions, then
-       * avoid tagging the device as a partition table.
-       *
-       * See e.g. https://bugzilla.redhat.com/show_bug.cgi?id=495876.
-       */
-      if (device->priv->partition_table_count == 0 && g_strcmp0 (device->priv->id_usage, "filesystem") == 0)
-        {
-          device_set_device_is_partition_table (device, FALSE);
-        }
-      else
-        {
-          device_set_device_is_partition_table (device, TRUE);
-          device_set_partition_table_scheme (device, g_udev_device_get_property (device->priv->d,
-                                                                                 "UDISKS_PARTITION_TABLE_SCHEME"));
-        }
-    }
-  else
+  is_partition_table = FALSE;
+
+  /* Check if udisks-part-id identified the device as a partition table.. this includes
+   * identifying partition tables set up by kpartx for multipath etc.
+   */
+  if (g_udev_device_get_property_as_boolean (device->priv->d, "UDISKS_PARTITION_TABLE"))
     {
+      device_set_partition_table_scheme (device,
+                                         g_udev_device_get_property (device->priv->d,
+                                                                     "UDISKS_PARTITION_TABLE_SCHEME"));
+      device_set_partition_table_count (device,
+                                        g_udev_device_get_property_as_int (device->priv->d,
+                                                                           "UDISKS_PARTITION_TABLE_COUNT"));
+      is_partition_table = TRUE;
+    }
+
+  /* Note that udisks-part-id might not detect all partition table
+   * formats.. so in the negative case, also double check with
+   * information in sysfs.
+   *
+   * The kernel guarantees that all childs are created before the
+   * uevent for the parent is created. So if we have childs, we must
+   * be a partition table.
+   *
+   * To detect a child we check for the existance of a subdir that has
+   * the parents name as a prefix (e.g. for parent sda then sda1,
+   * sda2, sda3 ditto md0, md0p1 etc. etc. will work).
+   */
+  if (!is_partition_table)
+    {
+      gchar *s;
+      GDir *dir;
+
+      s = g_path_get_basename (device->priv->native_path);
+      if ((dir = g_dir_open (device->priv->native_path, 0, NULL)) != NULL)
+        {
+          guint partition_count;
+          const gchar *name;
+
+          partition_count = 0;
+          while ((name = g_dir_read_name (dir)) != NULL)
+            {
+              if (g_str_has_prefix (name, s))
+                {
+                  partition_count++;
+                }
+            }
+          g_dir_close (dir);
+
+          if (partition_count > 0)
+            {
+              device_set_partition_table_scheme (device, "");
+              device_set_partition_table_count (device, partition_count);
+              is_partition_table = TRUE;
+            }
+        }
+      g_free (s);
+    }
+
+  device_set_device_is_partition_table (device, is_partition_table);
+  if (!is_partition_table)
+    {
+      /* otherwise, clear all the data */
       device_set_partition_table_scheme (device, NULL);
+      device_set_partition_table_count (device, 0);
     }
 
   return TRUE;
@@ -2337,12 +2381,14 @@ update_info_partition_table (Device *device)
 static gboolean
 update_info_partition (Device *device)
 {
-  guint64 offset;
+  gboolean is_partition;
 
-  offset = sysfs_get_uint64 (device->priv->native_path, "start") * device->priv->device_block_size;
-  device_set_partition_offset (device, offset);
+  is_partition = FALSE;
 
-  if (device->priv->device_is_partition && g_udev_device_has_property (device->priv->d, "UDISKS_PARTITION"))
+  /* Check if udisks-part-id identified the device as a partition.. this includes
+   * identifying partitions set up by kpartx for multipath
+   */
+  if (g_udev_device_has_property (device->priv->d, "UDISKS_PARTITION"))
     {
       guint64 size;
       const gchar *scheme;
@@ -2350,6 +2396,9 @@ update_info_partition (Device *device)
       const gchar *label;
       const gchar *uuid;
       const gchar* const *flags;
+      guint64 offset;
+      const gchar *slave_sysfs_path;
+      gint number;
 
       scheme = g_udev_device_get_property (device->priv->d, "UDISKS_PARTITION_SCHEME");
       size = g_udev_device_get_property_as_uint64 (device->priv->d, "UDISKS_PARTITION_SIZE");
@@ -2357,17 +2406,74 @@ update_info_partition (Device *device)
       label = g_udev_device_get_property (device->priv->d, "UDISKS_PARTITION_LABEL");
       uuid = g_udev_device_get_property (device->priv->d, "UDISKS_PARTITION_UUID");
       flags = g_udev_device_get_property_as_strv (device->priv->d, "UDISKS_PARTITION_FLAGS");
+      offset = g_udev_device_get_property_as_uint64 (device->priv->d, "UDISKS_PARTITION_OFFSET");
+      number = g_udev_device_get_property_as_int (device->priv->d, "UDISKS_PARTITION_NUMBER");
+      slave_sysfs_path = g_udev_device_get_property (device->priv->d, "UDISKS_PARTITION_SLAVE");
 
-      device_set_partition_scheme (device, scheme);
-      device_set_partition_size (device, size);
-      device_set_partition_type (device, type);
-      device_set_partition_label (device, label);
-      device_set_partition_uuid (device, uuid);
-      device_set_partition_flags (device, (gchar **) flags);
+      if (slave_sysfs_path != NULL && scheme != NULL && number > 0)
+        {
+          gchar *s;
+
+          device_set_partition_scheme (device, scheme);
+          device_set_partition_size (device, size);
+          device_set_partition_type (device, type);
+          device_set_partition_label (device, label);
+          device_set_partition_uuid (device, uuid);
+          device_set_partition_flags (device, (gchar **) flags);
+          device_set_partition_offset (device, offset);
+          device_set_partition_number (device, number);
+
+          s = compute_object_path (slave_sysfs_path);
+          device_set_partition_slave (device, s);
+          g_free (s);
+
+          is_partition = TRUE;
+        }
     }
-  else
+
+  /* Also handle the case where we are partitioned by the kernel and don't have
+   * any UDISKS_PARTITION_* properties.
+   *
+   * This works without any udev UDISKS_PARTITION_* properties and is
+   * there for maximum compatibility since udisks-part-id only knows a
+   * limited set of partition table formats.
+   */
+  if (!is_partition && sysfs_file_exists (device->priv->native_path, "start"))
     {
-      /* if we don't have info from part_id, set the partition size to the same as the block device */
+      guint64 start;
+      guint64 size;
+      guint64 offset;
+      gchar *s;
+      guint n;
+
+      device_set_device_is_partition (device, TRUE);
+      start = sysfs_get_uint64 (device->priv->native_path, "start");
+      size = sysfs_get_uint64 (device->priv->native_path, "size");
+      device_set_partition_offset (device, start * 512); /* device->priv->device_block_size; */
+      device_set_partition_size (device, size * 512); /* device->priv->device_block_size; */
+
+      offset = sysfs_get_uint64 (device->priv->native_path, "start") * device->priv->device_block_size;
+      device_set_partition_offset (device, offset);
+
+      s = device->priv->native_path;
+      for (n = strlen (s) - 1; n >= 0 && g_ascii_isdigit (s[n]); n--)
+        ;
+      device_set_partition_number (device, strtol (s + n + 1, NULL, 0));
+
+      s = g_strdup (device->priv->native_path);
+      for (n = strlen (s) - 1; n >= 0 && s[n] != '/'; n--)
+        s[n] = '\0';
+      s[n] = '\0';
+      device_set_partition_slave (device, compute_object_path (s));
+      g_free (s);
+
+      is_partition = TRUE;
+    }
+
+  device_set_device_is_partition (device, is_partition);
+  if (!is_partition)
+    {
+      /* otherwise, clear all the data */
       device_set_partition_scheme (device, NULL);
       device_set_partition_size (device, device->priv->device_size);
       device_set_partition_type (device, NULL);
@@ -3155,12 +3261,10 @@ update_info_partition_on_linux_dmmp (Device *device)
   const gchar* const *targets_type;
   const gchar* const *targets_params;
   gchar *params;
-  gint partition_slave_major;
-  gint partition_slave_minor;
+  gint linear_slave_major;
+  gint linear_slave_minor;
   guint64 offset_sectors;
-  guint64 offset;
-  guint partition_number;
-  Device *partition_slave;
+  Device *linear_slave;
   gchar *s;
 
   params = NULL;
@@ -3180,38 +3284,29 @@ update_info_partition_on_linux_dmmp (Device *device)
 
   if (sscanf (params,
               "%d:%d %" G_GUINT64_FORMAT,
-              &partition_slave_major,
-              &partition_slave_minor,
+              &linear_slave_major,
+              &linear_slave_minor,
               &offset_sectors) != 3)
     goto out;
 
-  partition_slave = daemon_local_find_by_dev (device->priv->daemon,
-                                              makedev (partition_slave_major, partition_slave_minor));
-  if (partition_slave == NULL)
+  linear_slave = daemon_local_find_by_dev (device->priv->daemon,
+                                              makedev (linear_slave_major, linear_slave_minor));
+  if (linear_slave == NULL)
+    goto out;
+  if (!linear_slave->priv->device_is_linux_dmmp)
     goto out;
 
-  if (!partition_slave->priv->device_is_linux_dmmp)
-    goto out;
-
-  offset = offset_sectors * 512;
-
-  device_set_partition_slave (device, partition_slave->priv->object_path);
-  device_set_partition_offset (device, offset);
-  device_set_partition_size (device, device->priv->device_size);
-  partition_number = g_udev_device_get_property_as_int (device->priv->d, "UDISKS_PARTITION_NUMBER");
-  if (partition_number > 0)
-    device_set_partition_number (device, partition_number);
-
-  /* all the other Partition* has been set as part of update_info_partition() by reading
-   * UDISKS_PARTITION_* properties
+  /* The Partition* properties has been set as part of
+   * update_info_partition() by reading UDISKS_PARTITION_*
+   * properties.. so here we bascially just update the presentation
+   * device file name and and whether the device is a drive.
    */
-
-  device_set_device_is_partition (device, TRUE);
-  device_set_device_is_drive (device, FALSE);
 
   s = g_strdup_printf ("/dev/mapper/%s", dm_name);
   device_set_device_file_presentation (device, s);
   g_free (s);
+
+  device_set_device_is_drive (device, FALSE);
 
  out:
   g_free (params);
@@ -4159,7 +4254,6 @@ update_info_in_idle (Device *device)
 static gboolean
 update_info (Device *device)
 {
-  guint64 start, size;
   char *s;
   guint n;
   gboolean ret;
@@ -4312,61 +4406,6 @@ update_info (Device *device)
       device_set_device_is_read_only (device, FALSE);
     }
 
-  /* figure out if we're a partition and, if so, who our slave is */
-  if (sysfs_file_exists (device->priv->native_path, "start"))
-    {
-
-      /* we're partitioned by the kernel */
-      device_set_device_is_partition (device, TRUE);
-      start = sysfs_get_uint64 (device->priv->native_path, "start");
-      size = sysfs_get_uint64 (device->priv->native_path, "size");
-      device_set_partition_offset (device, start * 512); /* device->priv->device_block_size; */
-      device_set_partition_size (device, size * 512); /* device->priv->device_block_size; */
-
-      s = device->priv->native_path;
-      for (n = strlen (s) - 1; n >= 0 && g_ascii_isdigit (s[n]); n--)
-        ;
-      device_set_partition_number (device, strtol (s + n + 1, NULL, 0));
-
-      s = g_strdup (device->priv->native_path);
-      for (n = strlen (s) - 1; n >= 0 && s[n] != '/'; n--)
-        s[n] = '\0';
-      s[n] = '\0';
-      device_set_partition_slave (device, compute_object_path (s));
-      g_free (s);
-    }
-  else
-    {
-      /* TODO: handle partitions created by kpartx / dm-linear */
-    }
-
-  /* Figure out if we are a partition table - we don't want to rely on udisks-part-id
-   * for this; it might not detect all partition table formats that the kernel supports.
-   *
-   * The kernel guarantees that all childs are created before the uevent for the parent
-   * is created. So if we have childs, we must be a partition table.
-   *
-   * To detect a child we check for the existance of a subdir that has the parents
-   * name as a prefix (e.g. for parent sda then sda1, sda2, sdap1 etc. will work).
-   */
-  s = g_path_get_basename (device->priv->native_path);
-  if ((dir = g_dir_open (device->priv->native_path, 0, NULL)) != NULL)
-    {
-      guint partition_count;
-      partition_count = 0;
-      while ((name = g_dir_read_name (dir)) != NULL)
-        {
-          if (g_str_has_prefix (name, s))
-            {
-              partition_count++;
-            }
-        }
-      g_dir_close (dir);
-      device_set_partition_table_count (device, partition_count);
-      device_set_device_is_partition_table (device, (partition_count > 0));
-    }
-  g_free (s);
-
   /* Maintain (non-exported) properties holders and slaves for the holders resp. slaves
    * directories in sysfs. The entries in these arrays are object paths - we ignore
    * an entry unless it corresponds to an device in our local database.
@@ -4457,20 +4496,20 @@ update_info (Device *device)
    *
    */
 
-  /* device_presentation_hide, device_presentation_name and device_presentation_icon_name properties */
-  if (!update_info_presentation (device))
-    goto out;
-
-  /* id_* properties */
-  if (!update_info_id (device))
+  /* partition_* properties */
+  if (!update_info_partition (device))
     goto out;
 
   /* partition_table_* properties */
   if (!update_info_partition_table (device))
     goto out;
 
-  /* partition_* properties */
-  if (!update_info_partition (device))
+  /* device_presentation_hide, device_presentation_name and device_presentation_icon_name properties */
+  if (!update_info_presentation (device))
+    goto out;
+
+  /* id_* properties */
+  if (!update_info_id (device))
     goto out;
 
   /* drive_* properties */

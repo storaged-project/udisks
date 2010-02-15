@@ -163,33 +163,40 @@ get_syspath (struct udev *udev,
  * get_part_table_device_file:
  * @udev: An udev context.
  * @given_device_file: The device file given on the command line.
+ * @out_partition_table_syspath: Return location for sysfs path of the slave the partition is for.
  * @out_offset: Return location for offset or %NULL.
  * @out_partition_number: Return location for partition number or %NULL.
  *
  * If @given_device_file is not a partition, returns a copy of it and
- * sets @out_offset and @out_partition_number to 0.
+ * sets @out_offset and @out_partition_number to 0 and
+ * @out_partition_table_syspath to the sysfs path for
+ * @given_device_file.
  *
  * Otherwise, returns the device file for the block device for which
  * @given_device_file is a partition of and returns the offset of the
  * partition in @out_offset and the partition number in
- * @out_partition_number.
+ * @out_partition_number. The sysfs path is set in
+ * @out_partition_table_syspath.
  *
  * If something goes wrong, %NULL is returned.
  */
 static gchar *
-get_part_table_device_file (struct udev *udev,
-                            const gchar *given_device_file,
-                            guint64     *out_offset,
-                            guint       *out_partition_number)
+get_part_table_device_file (struct udev  *udev,
+                            const gchar  *given_device_file,
+                            gchar       **out_partition_table_syspath,
+                            guint64      *out_offset,
+                            guint        *out_partition_number)
 {
   gchar *ret;
   guint64 offset;
   guint partition_number;
   gchar *devpath;
+  gchar *partition_table_syspath;
 
   devpath = NULL;
   offset = 0;
   ret = NULL;
+  partition_table_syspath = NULL;
 
   devpath = get_syspath (udev, given_device_file);
   if (devpath == NULL)
@@ -201,19 +208,18 @@ get_part_table_device_file (struct udev *udev,
   if (partition_number > 0)
     {
       struct udev_device *device;
-      gchar *partition_table_devpath;
       guint n;
 
       /* partition */
-      partition_table_devpath = g_strdup (devpath);
-      for (n = strlen (partition_table_devpath) - 1; partition_table_devpath[n] != '/'; n--)
-        partition_table_devpath[n] = '\0';
-      partition_table_devpath[n] = '\0';
+      partition_table_syspath = g_strdup (devpath);
+      for (n = strlen (partition_table_syspath) - 1; partition_table_syspath[n] != '/'; n--)
+        partition_table_syspath[n] = '\0';
+      partition_table_syspath[n] = '\0';
 
-      device = udev_device_new_from_syspath (udev, partition_table_devpath);
+      device = udev_device_new_from_syspath (udev, partition_table_syspath);
       if (device == NULL)
         {
-          g_printerr ("Error getting udev device for syspath %s: %m\n", partition_table_devpath);
+          g_printerr ("Error getting udev device for syspath %s: %m\n", partition_table_syspath);
           goto out;
         }
       ret = g_strdup (udev_device_get_devnode (device));
@@ -222,11 +228,9 @@ get_part_table_device_file (struct udev *udev,
         {
           /* This Should Not Happen™, but was reported in a distribution upgrade
              scenario, so handle it gracefully */
-          g_printerr ("Error getting devnode from udev device path %s: %m\n", partition_table_devpath);
+          g_printerr ("Error getting devnode from udev device path %s: %m\n", partition_table_syspath);
           goto out;
         }
-      g_free (partition_table_devpath);
-
       offset = sysfs_get_uint64 (devpath, "start") * 512;
     }
   else
@@ -236,14 +240,23 @@ get_part_table_device_file (struct udev *udev,
       const char *encoded_targets_params;
 
       device = udev_device_new_from_syspath (udev, devpath);
+      g_printerr ("device=%p' for devpath=%s\n", device, devpath);
       if (device == NULL)
         {
           g_printerr ("Error getting udev device for syspath %s: %m\n", devpath);
           goto out;
         }
 
+#if 0
       targets_type = udev_device_get_property_value (device, "UDISKS_DM_TARGETS_TYPE");
       encoded_targets_params = udev_device_get_property_value (device, "UDISKS_DM_TARGETS_PARAMS");
+#else
+      targets_type = g_getenv ("UDISKS_DM_TARGETS_TYPE");
+      encoded_targets_params = g_getenv ("UDISKS_DM_TARGETS_PARAMS");
+#endif
+      g_printerr ("targets_type=%s and env is %s\n", targets_type, g_getenv ("UDISKS_DM_TARGETS_TYPE"));
+      g_printerr ("encoded_targets_params=%s and env var is %s\n", encoded_targets_params, g_getenv ("UDISKS_DM_TARGETS_PARAMS"));
+
       if (g_strcmp0 (targets_type, "linear") == 0)
         {
           gint partition_slave_major;
@@ -275,9 +288,22 @@ get_part_table_device_file (struct udev *udev,
                    * form part2-mpath-3600508b400105df70000e00000d80000
                    */
                   partition_number = 0;
+#if 0
                   dm_uuid = udev_device_get_property_value (device, "DM_UUID");
+#else
+                  dm_uuid = g_getenv ("DM_UUID");
+#endif
                   if (dm_uuid != NULL && g_str_has_prefix (dm_uuid, "part"))
                     partition_number = atoi (dm_uuid + 4);
+
+                  if (partition_number < 1)
+                    {
+                      g_free (ret);
+                      ret = NULL;
+                      goto out;
+                    }
+
+                  partition_table_syspath = g_strdup (udev_device_get_syspath (mp_device));
 
                   udev_device_unref (mp_device);
                   g_free (targets_params);
@@ -290,6 +316,7 @@ get_part_table_device_file (struct udev *udev,
       udev_device_unref (device);
 
       /* not a kernel partition */
+      partition_table_syspath = g_strdup (devpath);
       ret = g_strdup (given_device_file);
       partition_number = 0;
     }
@@ -299,6 +326,10 @@ get_part_table_device_file (struct udev *udev,
     *out_offset = offset;
   if (out_partition_number != NULL)
     *out_partition_number = partition_number;
+  if (out_partition_table_syspath != NULL)
+    *out_partition_table_syspath = partition_table_syspath;
+  else
+    g_free (partition_table_syspath);
 
   g_free (devpath);
 
@@ -347,10 +378,14 @@ main (int argc,
   gchar *partition_table_device_file;
   struct udev *udev;
   PartitionTable *partition_table;
+  guint64 partition_offset;
+  guint partition_number;
+  gchar *partition_table_syspath;
 
   udev = NULL;
   devpath = NULL;
   partition_table_device_file = NULL;
+  partition_table_syspath = NULL;
   partition_table = NULL;
 
   udev = udev_new ();
@@ -382,14 +417,17 @@ main (int argc,
       goto out;
     }
 
-  guint64 partition_offset;
-  guint partition_number;
-
   partition_table_device_file = get_part_table_device_file (udev,
                                                             device_file,
+                                                            &partition_table_syspath,
                                                             &partition_offset,
                                                             &partition_number);
-  g_printerr ("got `%s' and %" G_GUINT64_FORMAT "\n", partition_table_device_file, partition_offset);
+  g_printerr ("using device_file=%s syspath=%s, offset=%" G_GUINT64_FORMAT " and number=%d for %s\n",
+              partition_table_device_file,
+              partition_table_syspath,
+              partition_offset,
+              partition_number,
+              device_file);
 
   fd = open (partition_table_device_file, O_RDONLY);
 
@@ -460,6 +498,8 @@ main (int argc,
       g_print ("UDISKS_PARTITION_LABEL=%s\n", label != NULL ? label : "");
       g_print ("UDISKS_PARTITION_UUID=%s\n", uuid != NULL ? uuid : "");
       g_print ("UDISKS_PARTITION_FLAGS=%s\n", flags_combined);
+      g_print ("UDISKS_PARTITION_SLAVE=%s\n", partition_table_syspath);
+      g_print ("UDISKS_PARTITION_OFFSET=%" G_GUINT64_FORMAT "\n", partition_offset);
 
       g_free (type);
       g_free (label);
@@ -477,6 +517,7 @@ main (int argc,
  out:
   g_free (devpath);
   g_free (partition_table_device_file);
+  g_free (partition_table_syspath);
   if (partition_table != NULL)
     part_table_free (partition_table);
   if (udev != NULL)
