@@ -2,7 +2,6 @@ Makefile
 Makefile.in
 udisks-decl-list.txt
 udisks-decl.txt
-udisks-overrides.txt
 udisks-sections.txt
 udisks-undeclared.txt
 udisks-undocumented.txt
