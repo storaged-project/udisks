@@ -85,9 +85,9 @@ print_vg (vg_t vg)
 
   s = lvm_vg_get_uuid (vg); g_print ("UDISKS_LVM2_PV_VG_UUID=%s\n", s); dm_free (s);
   s = lvm_vg_get_name (vg); g_print ("UDISKS_LVM2_PV_VG_NAME=%s\n", s); dm_free (s);
-  g_print ("UDISKS_LVM2_PV_VG_SIZE=%" G_GUINT64_FORMAT "\n", lvm_vg_get_size (vg) * 512); /* TODO */
-  g_print ("UDISKS_LVM2_PV_VG_FREE_SIZE=%" G_GUINT64_FORMAT "\n", lvm_vg_get_free_size (vg) * 512); /* TODO */
-  g_print ("UDISKS_LVM2_PV_VG_EXTENT_SIZE=%" G_GUINT64_FORMAT "\n", lvm_vg_get_extent_size (vg) * 512); /* TODO */
+  g_print ("UDISKS_LVM2_PV_VG_SIZE=%" G_GUINT64_FORMAT "\n", lvm_vg_get_size (vg));
+  g_print ("UDISKS_LVM2_PV_VG_FREE_SIZE=%" G_GUINT64_FORMAT "\n", lvm_vg_get_free_size (vg));
+  g_print ("UDISKS_LVM2_PV_VG_EXTENT_SIZE=%" G_GUINT64_FORMAT "\n", lvm_vg_get_extent_size (vg));
   g_print ("UDISKS_LVM2_PV_VG_EXTENT_COUNT=%" G_GUINT64_FORMAT "\n", lvm_vg_get_extent_count (vg));
   g_print ("UDISKS_LVM2_PV_VG_SEQNUM=%" G_GUINT64_FORMAT "\n", lvm_vg_get_seqno (vg));
 
@@ -118,15 +118,22 @@ print_vg (vg_t vg)
       dm_list_iterate_items (pv_list, pvs)
         {
           char *uuid;
+          guint64 size;
+          guint64 free_size;
           pv_t pv = pv_list->pv;
 
           uuid = lvm_pv_get_uuid (pv);
           if (uuid != NULL)
             {
               g_string_append_printf (str, "uuid=%s", uuid);
-              g_string_append_c (str, ' ');
               dm_free (uuid);
             }
+          size = lvm_pv_get_size (pv);
+          g_string_append_printf (str, ";size=%" G_GUINT64_FORMAT, size);
+          free_size = lvm_pv_get_free (pv);
+          g_string_append_printf (str, ";allocated_size=%" G_GUINT64_FORMAT, size - free_size);
+
+          g_string_append_c (str, ' ');
         }
       g_print ("UDISKS_LVM2_PV_VG_PV_LIST=%s\n", str->str);
       g_string_free (str, TRUE);
@@ -174,7 +181,7 @@ print_vg (vg_t vg)
 
           uuid = lvm_lv_get_uuid (lv);
           name = lvm_lv_get_name (lv);
-          size = lvm_lv_get_size (lv) * 512;
+          size = lvm_lv_get_size (lv);
           is_active = lvm_lv_is_active (lv) != 0 ? 1 : 0;
 
           if (uuid != NULL && name != NULL)
