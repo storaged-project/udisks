@@ -1131,6 +1131,7 @@ class LVM(UDisksTestCase):
                 self.assertEqual(props.Get(I_D, 'DevicePresentationHide'), False)
                 self.assertEqual(props.Get(I_D, 'IdUsage'), 'filesystem')
                 self.assertEqual(props.Get(I_D, 'IdType'), 'ext3')
+                self.assertNotEqual(props.Get(I_D, 'IdUuid'), '')
 
                 # ensure that we have a UUID
                 found_uuid = False
@@ -1142,10 +1143,11 @@ class LVM(UDisksTestCase):
                 # mirror images should not have any real FS usage at all
                 self.assertEqual(props.Get(I_D, 'IdUsage'), '')
 
-                # mirror images should not have by-* symlinks (avoid probing);
+                # mirror images should not have an UUID, since they are not
+                # "real" devices (they do have by-id/ symlinks, though)
                 # that is actually the job of the lvm2 udev rules, but check it
                 # here to ensure proper system integration
-                self.assertEqual(props.Get(I_D, 'DeviceFileById'), [])
+                self.assertEqual(props.Get(I_D, 'IdUuid'), '')
 
             self.assertEqual(props.Get(I_D, 'DevicePresentationNopolicy'), True)
 
