@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -171,11 +172,8 @@ get_syspath (struct udev *udev,
  * If @given_device_file is not a partition, returns a copy of it.
  *
  * Otherwise, returns the device file for the block device for which
- * @given_device_file is a partition of and returns the offset of the
- * partition in @out_offset and the partition number in
- * @out_partition_number. The sysfs path is set in
- * @out_partition_table_syspath. The alignment offset is returned in
- * @out_alignment_offset.
+ * @given_device_file is a partition of. Other data is returned in the
+ * @out_ parameters.
  *
  * If something goes wrong, %NULL is returned.
  */
@@ -251,17 +249,21 @@ get_part_table_device_file (struct udev  *udev,
           goto out;
         }
 
-#if 0
-      targets_type = udev_device_get_property_value (device, "UDISKS_DM_TARGETS_TYPE");
-      encoded_targets_params = udev_device_get_property_value (device, "UDISKS_DM_TARGETS_PARAMS");
-#else
       targets_type = g_getenv ("UDISKS_DM_TARGETS_TYPE");
+      if (targets_type == NULL)
+        targets_type = udev_device_get_property_value (device, "UDISKS_DM_TARGETS_TYPE");
       encoded_targets_params = g_getenv ("UDISKS_DM_TARGETS_PARAMS");
-#endif
-      g_printerr ("targets_type=%s and env is %s\n", targets_type, g_getenv ("UDISKS_DM_TARGETS_TYPE"));
-      g_printerr ("encoded_targets_params=%s and env var is %s\n", encoded_targets_params, g_getenv ("UDISKS_DM_TARGETS_PARAMS"));
+      if (encoded_targets_params == NULL)
+        encoded_targets_params = udev_device_get_property_value (device, "UDISKS_DM_TARGETS_PARAMS");
 
-      if (g_strcmp0 (targets_type, "linear") == 0)
+      //g_printerr ("targets_type=`%s'\n", targets_type);
+      //g_printerr ("encoded_targets_params=`%s'\n", encoded_targets_params);
+
+      if (g_strcmp0 (targets_type, "linear") != 0)
+        {
+          g_printerr ("Expected `linear' in UDISKS_DM_TARGETS_TYPE=`%s'\n", targets_type);
+        }
+      else
         {
           gint partition_slave_major;
           gint partition_slave_minor;
@@ -269,11 +271,15 @@ get_part_table_device_file (struct udev  *udev,
           gchar *targets_params;
 
           targets_params = decode_udev_encoded_string (encoded_targets_params);
-          if (sscanf (targets_params,
-                      "%d:%d\x20%" G_GUINT64_FORMAT,
-                      &partition_slave_major,
-                      &partition_slave_minor,
-                      &offset_sectors) == 3)
+          if (targets_params == NULL || sscanf (targets_params,
+                                                "%d:%d\x20%" G_GUINT64_FORMAT,
+                                                &partition_slave_major,
+                                                &partition_slave_minor,
+                                                &offset_sectors) != 3)
+            {
+              g_printerr ("Error decoding UDISKS_DM_TARGETS_PARAMS=`%s'\n", targets_params);
+            }
+          else
             {
               struct udev_device *mp_device;
 
@@ -281,31 +287,38 @@ get_part_table_device_file (struct udev  *udev,
                                                                            partition_slave_minor));
               if (mp_device != NULL)
                 {
-                  const char *dm_uuid;
+                  const char *dm_name;
+                  gint n;
+
+                  /* now figure out the partition number... we infer this from DM_NAME */
+                  partition_number = 0;
+                  dm_name = g_getenv ("DM_NAME");
+                  if (dm_name == NULL)
+                    dm_name = udev_device_get_property_value (device, "DM_NAME");
+                  if (dm_name == NULL || strlen (dm_name) == 0)
+                    {
+                      g_printerr ("DM_NAME not available\n");
+                      goto out;
+                    }
+                  for (n = strlen (dm_name) - 1; n >= 0; n--)
+                    {
+                      if (!isdigit (dm_name[n]))
+                        break;
+                    }
+                  if (n < 0 || dm_name[n] != 'p')
+                    {
+                      g_printerr ("DM_NAME=`%s' is malformed (expected <name>p<number>)\n", dm_name);
+                      goto out;
+                    }
+                  partition_number = atoi (dm_name + n + 1);
+                  if (partition_number < 1)
+                    {
+                      g_printerr ("Error determining partition number from DM_NAME=`%s'\n", dm_name);
+                      goto out;
+                    }
 
                   ret = g_strdup (udev_device_get_devnode (mp_device));
                   offset = offset_sectors * 512;
-
-                  /* now figure out partition_number
-                   *
-                   * this is kind of a hack.. but works since UUID is of the
-                   * form part2-mpath-3600508b400105df70000e00000d80000
-                   */
-                  partition_number = 0;
-#if 0
-                  dm_uuid = udev_device_get_property_value (device, "DM_UUID");
-#else
-                  dm_uuid = g_getenv ("DM_UUID");
-#endif
-                  if (dm_uuid != NULL && g_str_has_prefix (dm_uuid, "part"))
-                    partition_number = atoi (dm_uuid + 4);
-
-                  if (partition_number < 1)
-                    {
-                      g_free (ret);
-                      ret = NULL;
-                      goto out;
-                    }
 
                   partition_table_syspath = g_strdup (udev_device_get_syspath (mp_device));
 
