@@ -187,6 +187,17 @@ fi
 AC_SUBST(slashlibdir)
 AC_SUBST(slashsbindir)
 
+# *************
+# Remote Access
+# *************
+remote_access=no
+AC_ARG_ENABLE(remote_access, AS_HELP_STRING([--disable-remote-access], [disable remote access]))
+if test "x$enable_remote_access" != "xno"; then
+   AC_DEFINE(REMOTE_ACCESS_ENABLED, 1, [Defined if remote access is enabled])
+   remote_access=yes
+fi
+AM_CONDITIONAL(REMOTE_ACCESS_ENABLED, [test "$remote_access" = "yes"])
+
 # ********************
 # Internationalization
 # ********************
@@ -237,6 +248,7 @@ echo "
         xsltproc:                   ${XSLTPROC}
 
         LVM2 support:               ${msg_lvm2app}
+        Remote Access:              ${remote_access}
 
         Maintainer mode:            ${USE_MAINTAINER_MODE}
         Building api docs:          ${enable_gtk_doc}

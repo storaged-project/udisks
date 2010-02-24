@@ -5,10 +5,13 @@ if MAN_PAGES_ENABLED
 
 man_MANS = 				\
 	udisks.1			\
-	udisks-tcp-bridge.1		\
 	udisks-daemon.8			\
 	udisks.7			\
 	$(NULL)
+
+if REMOTE_ACCESS_ENABLED
+man_MANS += udisks-tcp-bridge.1
+endif # REMOTE_ACCESS_ENABLED
 
 udisks.1 : udisks.xml
 	$(XSLTPROC) -nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<

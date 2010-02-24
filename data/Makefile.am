@@ -30,8 +30,10 @@ udevrules_DATA = 80-udisks.rules
 pkgconfigdir = $(datadir)/pkgconfig
 pkgconfig_DATA = udisks.pc
 
+if REMOTE_ACCESS_ENABLED
 avahiservicedir = $(sysconfdir)/avahi/services
 avahiservice_DATA = udisks.service
+endif # REMOTE_ACCESS_ENABLED
 
 EXTRA_DIST = 						\
 	80-udisks.rules					\
