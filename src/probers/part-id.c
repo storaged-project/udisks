@@ -456,21 +456,6 @@ main (int argc,
 
   fd = open (partition_table_device_file, O_RDONLY);
 
-  /* TODO: right now we also use part_id to determine if media is available or not. This
-   *       should probably be done elsewhere
-   */
-  if (partition_offset == 0)
-    {
-      if (fd < 0)
-        {
-          g_print ("UDISKS_MEDIA_AVAILABLE=0\n");
-        }
-      else
-        {
-          g_print ("UDISKS_MEDIA_AVAILABLE=1\n");
-        }
-    }
-
   if (fd < 0)
     {
       g_printerr ("Error opening %s: %m\n", partition_table_device_file);

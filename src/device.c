@@ -4368,9 +4368,16 @@ update_info (Device *device)
   if (device->priv->device_is_removable)
     {
       media_available = FALSE;
-      if (g_udev_device_has_property (device->priv->d, "UDISKS_MEDIA_AVAILABLE"))
+
+      if (!g_udev_device_get_property_as_boolean (device->priv->d, "ID_CDROM"))
         {
-          media_available = g_udev_device_get_property_as_boolean (device->priv->d, "UDISKS_MEDIA_AVAILABLE");
+          int fd;
+          fd = open (device->priv->device_file, O_RDONLY);
+          if (fd >= 0)
+            {
+              media_available = TRUE;
+              close (fd);
+            }
         }
       else
         {
