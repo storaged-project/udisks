@@ -207,9 +207,9 @@ ENV{UDISKS_PARTITION_SCHEME}=="gpt", \
   ENV{UDISKS_PRESENTATION_HIDE}="1"
 
 # APM recovery/tool partitions which are useless on Linux
-ENV{DKD_PARTITION_SCHEME}=="apm", \
+ENV{UDISKS_PARTITION_SCHEME}=="apm", \
   ENV{ID_CDROM}=="?*", ENV{ID_FS_TYPE}=="udf", ENV{ID_FS_LABEL}=="WD_SmartWare", \
-  ENV{DKD_PRESENTATION_HIDE}="1"
+  ENV{UDISKS_PRESENTATION_HIDE}="1"
 
 # recovery partitions (taken from old hal rules)
 ENV{ID_FS_TYPE}=="ntfs|vfat", \

@@ -61,14 +61,14 @@
       </varlistentry>
 
       <varlistentry>
-        <term><option>DKD_PRESENTATION_NAME</option></term>
+        <term><option>UDISKS_PRESENTATION_NAME</option></term>
         <listitem><para>The name to user for the device when
         presenting it to the user.
         </para></listitem>
       </varlistentry>
 
       <varlistentry>
-        <term><option>DKD_PRESENTATION_ICON_NAME</option></term>
+        <term><option>UDISKS_PRESENTATION_ICON_NAME</option></term>
         <listitem><para>The icon to use when presenting the device to
         the user. If set, the name must follow the freedesktop.org
         icon theme specification.
