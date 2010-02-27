@@ -7302,9 +7302,10 @@ filesystem_create_completed_cb (DBusGMethodInvocation *context,
         {
           throw_error (context,
                        ERROR_FAILED,
-                       "Error creating file system: helper exited with exit code %d: %s",
+                       "Error creating file system: helper exited with exit code %d: %s\n%s",
                        WEXITSTATUS (status),
-                       stderr);
+                       stderr,
+                       stdout);
         }
 
       if (data->hook_func != NULL)
