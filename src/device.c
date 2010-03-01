@@ -4381,7 +4381,7 @@ update_info (Device *device)
         }
       else
         {
-          if (g_udev_device_has_property (device->priv->d, "ID_CDROM_MEDIA_STATE"))
+          if (g_udev_device_get_property_as_boolean (device->priv->d, "ID_CDROM_MEDIA"))
             {
               media_available = TRUE;
             }
