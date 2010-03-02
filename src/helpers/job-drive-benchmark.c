@@ -172,7 +172,7 @@ measure_transfer_rate (guint num_samples,
       /* O_DIRECT also only wants to read from page offsets */
       pos &= ~(page_size - 1);
 
-      if (lseek (fd, pos, SEEK_SET) == -1)
+      if (lseek64 (fd, pos, SEEK_SET) == -1)
         {
           g_printerr ("Error seeking to position %" G_GSSIZE_FORMAT " for %s: %m\n",
                       pos,
@@ -257,7 +257,7 @@ measure_write_transfer_rate (guint num_samples,
       /* O_DIRECT also only wants to read from page offsets */
       pos &= ~(page_size - 1);
 
-      if (lseek (fd, pos, SEEK_SET) == -1)
+      if (lseek64 (fd, pos, SEEK_SET) == -1)
         {
           g_printerr ("Error seeking to position %" G_GSSIZE_FORMAT " for %s: %m\n",
                       pos,
@@ -347,7 +347,7 @@ measure_access_time (guint num_samples,
       pos &= ~(page_size - 1);
 
       g_get_current_time (&begin_time);
-      if (lseek (fd, pos, SEEK_SET) == -1)
+      if (lseek64 (fd, pos, SEEK_SET) == -1)
         {
           g_printerr ("Error seeking to position %" G_GSSIZE_FORMAT " for %s: %m\n",
                       pos,
