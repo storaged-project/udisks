@@ -1,6 +1,4 @@
 Makefile
 Makefile.in
-udisks.7
-udisks-daemon.8
-udisks.1
+*.[178]
 

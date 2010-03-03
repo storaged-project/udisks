@@ -1,5 +1,3 @@
 Makefile
 Makefile.in
-org.freedesktop.UDisks.Device.ref.xml
-org.freedesktop.UDisks.ref.xml
-
+*.ref.xml

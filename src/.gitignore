@@ -1,5 +1,7 @@
 .deps
 .libs
+marshal.c
+marshal.h
 Makefile
 Makefile.in
 *.o
@@ -7,16 +9,3 @@ Makefile.in
 *.la
 udisks-daemon
 *-glue.h
-udisks-helper-change-filesystem-label
-udisks-helper-create-partition
-udisks-helper-create-partition-table
-udisks-helper-delete-partition
-udisks-helper-erase
-udisks-helper-fstab-mounter
-udisks-helper-linux-md-remove-component
-udisks-helper-mkfs
-udisks-helper-modify-partition
-udisks-helper-smart-selftest
-udisks-marshal.c
-udisks-marshal.h
-
