@@ -340,7 +340,11 @@ main (int argc, char **argv)
   g_printerr ("udisks-tcp-bridge: Waiting for secret\n");
 
   secret_buf = g_new0 (gchar, 4096);
-  fgets (secret_buf, 4096, stdin);
+  if (fgets (secret_buf, 4096, stdin) == NULL)
+    {
+      g_printerr ("failed to read secret\n");
+      goto out;
+    }
   secret_buf_len = strlen(secret_buf);
   if (secret_buf_len < 1 || secret_buf_len >= 4095)
     {

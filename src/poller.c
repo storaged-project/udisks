@@ -30,6 +30,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
+#include <errno.h>
 
 #include "poller.h"
 #include "device.h"
@@ -340,7 +341,8 @@ poller_set_devices (GList *devices)
 #ifdef POLL_SHOW_DEBUG
       g_print ("**** POLLER (%d): Sending poll command: '%s'\n", getpid (), devices_currently_polled);
 #endif
-      write (poller_daemon_write_end_fd, devices_currently_polled, strlen (devices_currently_polled));
+      if (write (poller_daemon_write_end_fd, devices_currently_polled, strlen (devices_currently_polled)) < 0)
+        g_error ("**** POLLER (%d): Failed to send polled devices: %s", getpid (), g_strerror (errno));
     }
   else
     {

@@ -2700,11 +2700,14 @@ daemon_find_device_by_device_file (Daemon *daemon,
   Device *device;
   gchar canonical_device_file[PATH_MAX];
 
-  realpath (device_file, canonical_device_file);
+  if (realpath (device_file, canonical_device_file) != NULL)
+      device = daemon_local_find_by_device_file (daemon, canonical_device_file);
+  else
+      /* Hm, not an existing device? Let's try with the original file name */
+      device = daemon_local_find_by_device_file (daemon, device_file);
 
   object_path = NULL;
 
-  device = daemon_local_find_by_device_file (daemon, canonical_device_file);
   if (device != NULL)
     {
       object_path = device_local_get_object_path (device);

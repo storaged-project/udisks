@@ -234,9 +234,9 @@ typedef struct efi_guid_s
 }__attribute__ ((packed)) efi_guid;
 
 static char *
-get_le_guid (const guint8 *buf)
+get_le_guid (const void *buf)
 {
-  efi_guid *guid = (efi_guid *) buf;
+  const efi_guid *guid = (const efi_guid *) buf;
 
   return g_strdup_printf ("%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X",
                           get_le32 (&(guid->data1)),
