@@ -3227,6 +3227,7 @@ update_info_linux_dmmp (Device *device)
   device_set_linux_dmmp_parameters (device, decoded_params);
 
   p = g_ptr_array_new ();
+  component = NULL;
   for (n = 0; n < device->priv->slaves_objpath->len; n++)
     {
       const gchar *component_objpath = device->priv->slaves_objpath->pdata[n];
