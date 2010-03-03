@@ -22,6 +22,11 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_ARG_ENABLE(ansi,             [  --enable-ansi           enable -ansi -pedantic gcc flags],enable_ansi=$enableval,enable_ansi=no)
 AC_ARG_ENABLE(verbose-mode,     [  --enable-verbose-mode   support verbose debug mode],enable_verbose_mode=$enableval,enable_verbose_mode=$USE_MAINTAINER_MODE)
 AC_ARG_ENABLE(man-pages,        [  --enable-man-pages      build manual pages],enable_man_pages=$enableval,enable_man_pages=yes)
+AC_ARG_ENABLE(profiling,        [  --enable-profiling      add tracing instrumentation for plot-timeline.py], enable_profiling=$enableval,enable_profiling=$USE_MAINTAINER_MODE)
+
+if test "x$enable_profiling" = "xyes"; then
+  AC_DEFINE(PROFILING, 1, [Define to 1 if profiling is enabled ])
+fi
 
 if test "${enable_man_page}" != no; then
 dnl
@@ -251,6 +256,7 @@ echo "
         Remote Access:              ${remote_access}
 
         Maintainer mode:            ${USE_MAINTAINER_MODE}
+        Profiling:                  ${enable_profiling}
         Building api docs:          ${enable_gtk_doc}
         Building man pages:         ${enable_man_pages}
 "

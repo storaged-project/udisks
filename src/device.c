@@ -62,6 +62,8 @@
 #include "adapter.h"
 #include "port.h"
 
+#include "profile.h"
+
 /*--------------------------------------------------------------------------------------------------------------*/
 #include "device-glue.h"
 
@@ -4296,6 +4298,8 @@ update_info (Device *device)
 
   ret = FALSE;
 
+  PROFILE ("update_info(device=%s) start", device->priv->native_path);
+
   g_print ("**** UPDATING %s\n", device->priv->native_path);
 
   /* need the slaves/holders to synthesize 'change' events if a device goes away (since the kernel
@@ -4724,6 +4728,7 @@ update_info (Device *device)
   g_list_foreach (cur_holders_objpath, (GFunc) g_free, NULL);
   g_list_free (cur_holders_objpath);
 
+  PROFILE ("update_info(device=%s) end", device->priv->native_path);
   return ret;
 }
 
@@ -4977,6 +4982,8 @@ device_new (Daemon *daemon,
       || g_str_has_prefix (native_path, "/sys/devices/virtual/block/loop"))
     goto out;
 
+  PROFILE ("device_new(native_path=%s): start", native_path);
+
   device = DEVICE (g_object_new (TYPE_DEVICE, NULL));
   device->priv->d = g_object_ref (d);
   device->priv->daemon = g_object_ref (daemon);
@@ -4988,6 +4995,7 @@ device_new (Daemon *daemon,
    */
   device->priv->device_detection_time = (guint64) time (NULL);
 
+  PROFILE ("device_new(native_path=%s): update_info", native_path);
   if (!update_info (device))
     {
       g_object_unref (device);
@@ -4995,6 +5003,7 @@ device_new (Daemon *daemon,
       goto out;
     }
 
+  PROFILE ("device_new(native_path=%s): register_disks_device", native_path);
   if (!register_disks_device (DEVICE (device)))
     {
       g_object_unref (device);
@@ -5005,10 +5014,12 @@ device_new (Daemon *daemon,
   /* if just added, update the smart data if applicable */
   if (device->priv->drive_ata_smart_is_available)
     {
+      PROFILE ("device_new(native_path=%s): refresh ATA SMART DATA", native_path);
       gchar *ata_smart_refresh_data_options[] = { NULL };
       device_drive_ata_smart_refresh_data (device, ata_smart_refresh_data_options, NULL);
     }
 
+  PROFILE ("device_new(native_path=%s): end", native_path);
  out:
   return device;
 }
@@ -5320,6 +5331,7 @@ job_child_watch_cb (GPid pid,
       g_free (buf);
     }
 
+  PROFILE ("job finish (id=%s, pid=%i, device=%s)", job->job_id, job->pid, job->device ? job->device->priv->device_file : "none");
   g_print ("helper(pid %5d): completed with exit code %d\n", job->pid, WEXITSTATUS (status));
 
   job->status = status;
@@ -5515,6 +5527,8 @@ job_new (DBusGMethodInvocation *context,
   ret = FALSE;
   job = NULL;
 
+  PROFILE ("job_new(id=%s, device=%s): start", job_id ? job_id : argv[0], device ? device->priv->device_file : "none");
+
   if (device != NULL)
     {
       if (device->priv->job != NULL || device->priv->job_in_progress)
@@ -5625,6 +5639,7 @@ job_new (DBusGMethodInvocation *context,
  out:
   if (!ret && job != NULL)
     job_free (job);
+  PROFILE ("job_new(id=%s, device=%s): end", job_id, device ? device->priv->device_file : "none");
   return ret;
 }
 
@@ -9545,6 +9560,8 @@ drive_ata_smart_refresh_data_completed_cb (DBusGMethodInvocation *context,
   time_t time_collected;
   SkSmartOverall overall;
 
+  PROFILE ("drive_ata_smart_refresh_data_completed_cb(device=%s) start", device->priv->native_path);
+
   d = NULL;
   blob = NULL;
 
@@ -9592,8 +9609,10 @@ drive_ata_smart_refresh_data_completed_cb (DBusGMethodInvocation *context,
       goto out;
     }
 
+  PROFILE ("drive_ata_smart_refresh_data_completed_cb(device=%s) decode blob", device->priv->native_path);
   blob = (gchar *) g_base64_decode (stdout, &blob_size);
 
+  PROFILE ("drive_ata_smart_refresh_data_completed_cb(device=%s) set blob", device->priv->native_path);
   if (blob == NULL)
     {
       if (context != NULL)
@@ -9625,9 +9644,11 @@ drive_ata_smart_refresh_data_completed_cb (DBusGMethodInvocation *context,
       goto out;
     }
 
+  PROFILE ("drive_ata_smart_refresh_data_completed_cb(device=%s) time collected", device->priv->native_path);
   time_collected = time (NULL);
   device_set_drive_ata_smart_time_collected (device, time_collected);
 
+  PROFILE ("drive_ata_smart_refresh_data_completed_cb(device=%s) overall smart status", device->priv->native_path);
   if (sk_disk_smart_get_overall (d, &overall) != 0)
     overall = -1;
   device_set_drive_ata_smart_status (device, overall);
@@ -9635,6 +9656,7 @@ drive_ata_smart_refresh_data_completed_cb (DBusGMethodInvocation *context,
   blob = NULL;
 
   /* emit change event since we've updated the smart data */
+  PROFILE ("drive_ata_smart_refresh_data_completed_cb(device=%s) drain pending changes", device->priv->native_path);
   drain_pending_changes (device, FALSE);
 
   if (context != NULL)
@@ -9644,6 +9666,7 @@ drive_ata_smart_refresh_data_completed_cb (DBusGMethodInvocation *context,
   g_free (blob);
   if (d != NULL)
     sk_disk_free (d);
+  PROFILE ("drive_ata_smart_refresh_data_completed_cb(device=%s) end", device->priv->native_path);
 }
 
 static void
@@ -9662,6 +9685,7 @@ device_drive_ata_smart_refresh_data_authorized_cb (Daemon *daemon,
   gboolean nowakeup;
   uid_t caller_uid;
 
+  PROFILE ("device_drive_ata_smart_refresh_data_authorized_cb(device=%s) start", device->priv->native_path);
   daemon_local_get_uid (device->priv->daemon, &caller_uid, context);
 
   simuldata = NULL;
@@ -9719,6 +9743,7 @@ device_drive_ata_smart_refresh_data_authorized_cb (Daemon *daemon,
 
  out:
   ;
+  PROFILE ("device_drive_ata_smart_refresh_data_authorized_cb(device=%s) end", device->priv->native_path);
 }
 
 /* may be called with context==NULL */

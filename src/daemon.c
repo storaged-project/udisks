@@ -74,6 +74,8 @@
 #include "daemon-glue.h"
 #include "marshal.h"
 
+#include "profile.h"
+
 /*--------------------------------------------------------------------------------------------------------------*/
 
 enum
@@ -1848,8 +1850,11 @@ daemon_new (void)
   Device *device;
   GHashTableIter device_iter;
 
+  PROFILE ("daemon_new(): start");
+
   daemon = DAEMON (g_object_new (TYPE_DAEMON, NULL));
 
+  PROFILE ("daemon_new(): register_disks_daemon");
   if (!register_disks_daemon (DAEMON (daemon)))
     {
       g_object_unref (daemon);
@@ -1857,6 +1862,7 @@ daemon_new (void)
     }
 
   /* process storage adapters */
+  PROFILE ("daemon_new(): storage adapters");
   devices = g_udev_client_query_by_subsystem (daemon->priv->gudev_client, "pci");
   for (l = devices; l != NULL; l = l->next)
     {
@@ -1867,6 +1873,7 @@ daemon_new (void)
   g_list_free (devices);
 
   /* process ATA ports */
+  PROFILE ("daemon_new(): ATA ports");
   devices = g_udev_client_query_by_subsystem (daemon->priv->gudev_client, "scsi_host");
   for (l = devices; l != NULL; l = l->next)
     {
@@ -1877,6 +1884,7 @@ daemon_new (void)
   g_list_free (devices);
 
   /* process SAS Expanders */
+  PROFILE ("daemon_new(): SAS Expanders");
   devices = g_udev_client_query_by_subsystem (daemon->priv->gudev_client, "sas_expander");
   for (l = devices; l != NULL; l = l->next)
     {
@@ -1887,6 +1895,7 @@ daemon_new (void)
   g_list_free (devices);
 
   /* process SAS PHYs */
+  PROFILE ("daemon_new(): process SAS PHYs");
   devices = g_udev_client_query_by_subsystem (daemon->priv->gudev_client, "sas_phy");
   for (l = devices; l != NULL; l = l->next)
     {
@@ -1901,6 +1910,7 @@ daemon_new (void)
    * TODO: ideally there would be a way to properly traverse a whole subtree using gudev
    * so we could visit everything in the proper order.
    */
+  PROFILE ("daemon_new(): reprocess SAS expanders");
   devices = g_udev_client_query_by_subsystem (daemon->priv->gudev_client, "sas_expander");
   for (l = devices; l != NULL; l = l->next)
     {
@@ -1911,6 +1921,7 @@ daemon_new (void)
   g_list_free (devices);
 
   /* process block devices (disks and partitions) */
+  PROFILE ("daemon_new(): block devices");
   devices = g_udev_client_query_by_subsystem (daemon->priv->gudev_client, "block");
   for (l = devices; l != NULL; l = l->next)
     {
@@ -1923,6 +1934,7 @@ daemon_new (void)
   /* now refresh data for all devices just added to get slave/holder relationships
    * properly initialized
    */
+  PROFILE ("daemon_new(): refresh");
   g_hash_table_iter_init (&device_iter, daemon->priv->map_object_path_to_device);
   while (g_hash_table_iter_next (&device_iter, NULL, (gpointer) & device))
     {
@@ -1932,6 +1944,7 @@ daemon_new (void)
   /* clean stale directories in /media as well as stale
    * entries in /var/lib/udisks/mtab
    */
+  PROFILE ("daemon_new(): clean up stale locks and mount points");
   l = g_hash_table_get_values (daemon->priv->map_native_path_to_device);
   mount_file_clean_stale (l);
   g_list_free (l);
@@ -1943,9 +1956,11 @@ daemon_new (void)
                                                                     (GSourceFunc) refresh_ata_smart_data,
                                                                     daemon);
 
+  PROFILE ("daemon_new(): end");
   return daemon;
 
  error:
+  PROFILE ("daemon_new(): existing with error");
   return NULL;
 }
 

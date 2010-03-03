@@ -45,6 +45,8 @@
 #include "poller.h"
 #include "daemon.h"
 
+#include "profile.h"
+
 #define NAME_TO_CLAIM "org.freedesktop.UDisks"
 
 static GMainLoop *loop;
@@ -148,6 +150,8 @@ main (int argc,
 	  &helper_dir, "Directory for helper tools",  NULL },
       { NULL } };
 
+  PROFILE ("main(): start");
+
   ret = 1;
   error = NULL;
 
@@ -184,6 +188,8 @@ main (int argc,
     }
   g_free (path);
 
+  PROFILE ("main(): basic initialization done");
+
   bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
   if (bus == NULL)
     {
@@ -205,6 +211,8 @@ main (int argc,
       goto out;
     }
 
+  PROFILE ("main(): D-Bus initialization done");
+
   g_debug ("Starting daemon version %s", VERSION);
 
   daemon = daemon_new ();
@@ -214,6 +222,7 @@ main (int argc,
       goto out;
     }
 
+  PROFILE ("main(): starting main loop");
   loop = g_main_loop_new (NULL, FALSE);
 
   g_main_loop_run (loop);
