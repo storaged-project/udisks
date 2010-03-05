@@ -29,6 +29,7 @@ endif # MAN_PAGES_ENABLED
 
 EXTRA_DIST= 				\
 	udisks.xml			\
+	udisks-tcp-bridge.xml		\
 	udisks-daemon.xml		\
 	udisks7.xml             	\
 	$(NULL)
