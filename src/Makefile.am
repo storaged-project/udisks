@@ -54,6 +54,7 @@ libexec_PROGRAMS = udisks-daemon
 udisks_daemon_SOURCES = 						\
 	types.h								\
 	private.h							\
+	profile.h							\
 	daemon.h			daemon.c			\
 	device.h			device.c			\
 	device-private.h		device-private.c		\
