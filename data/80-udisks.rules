@@ -49,6 +49,7 @@ KERNEL=="dm-*", ACTION!="change", GOTO="udisks_end"
 
 # honor the flag that device-mapper sets if the device should be ignored
 ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}=="1", GOTO="udisks_end"
+ENV{DM_UDEV_DISABLE_DISK_RULES_FLAG}=="1", GOTO="udisks_end"
 
 # import UDISKS_DM_* and UDISKS_LVM2_* properties - the long-term plan is to make the lvm2 and
 # device-mapper packages provide this information
