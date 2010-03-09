@@ -56,11 +56,6 @@ ENV{DM_UDEV_DISABLE_DISK_RULES_FLAG}=="1", GOTO="udisks_end"
 #
 KERNEL=="dm-*", IMPORT{program}="udisks-dm-export %M %m"
 
-# ignore private devices - see https://bugzilla.redhat.com/show_bug.cgi?id=528909#c24
-ENV{UDISKS_DM_UUID}=="CRYPT-TEMP-?*", GOTO="udisks_end"
-ENV{UDISKS_DM_UUID}!="?*", ENV{UDISKS_DM_NAME}=="temporary-cryptsetup-?*", GOTO="udisks_end"
-ENV{UDISKS_DM_NAME}=="?*-pvmove[0-9]*", GOTO="udisks_end"
-
 # Make udevd synthesize a 'change' uevent when last opener of a rw-fd closes the fd - this
 # should be part of the device-mapper rules
 KERNEL=="dm-*", OPTIONS+="watch"
