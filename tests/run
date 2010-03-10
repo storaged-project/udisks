@@ -470,6 +470,7 @@ class FS(UDisksTestCase):
 
         self.assertEqual(i['type'], type)
         self.assertEqual(i['label'], label or '')
+        self.failIf ('partition_scheme' in i)
         if type != 'swap':
             self.assertEqual(i['is mounted'], '0')
             self.assertEqual(i['mount paths'], '')
@@ -541,6 +542,7 @@ class FS(UDisksTestCase):
             self.assertEqual(i['is mounted'], '0')
             self.assertEqual(i['mount paths'], '')
         self.assertEqual(i['presentation name'], '')
+        self.failIf ('partition_scheme' in i)
         if type != 'minix':
             self.assertEqual(i['uuid'], self.get_uuid())
 
