@@ -80,9 +80,9 @@ KERNEL=="hd*[0-9]", ATTR{removable}=="1", GOTO="probe_parttable_end"
 # don't scan for partition tables on empty discs
 KERNEL=="sr*", ENV{ID_CDROM_MEDIA}!="?*", GOTO="probe_parttable_end"
 
-# scan for partition tables both on whole-disk and partitions, unless we
-# already know that there is a file system
-ENV{ID_FS_TYPE}=="", IMPORT{program}="udisks-part-id $tempnode"
+# scan for partition tables both on whole-disk and partitions
+#
+IMPORT{program}="udisks-part-id $tempnode"
 
 LABEL="probe_parttable_end"
 
