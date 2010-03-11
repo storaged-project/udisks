@@ -39,6 +39,7 @@
 #include <linux/fs.h>
 #include <sys/ioctl.h>
 #include <linux/cdrom.h>
+#include <linux/loop.h>
 
 #include <glib.h>
 #include <glib/gstdio.h>
@@ -202,6 +203,7 @@ enum
     PROP_DEVICE_IS_LINUX_LVM2_PV,
     PROP_DEVICE_IS_LINUX_DMMP,
     PROP_DEVICE_IS_LINUX_DMMP_COMPONENT,
+    PROP_DEVICE_IS_LINUX_LOOP,
     PROP_DEVICE_SIZE,
     PROP_DEVICE_BLOCK_SIZE,
     PROP_DEVICE_IS_MOUNTED,
@@ -318,6 +320,8 @@ enum
     PROP_LINUX_DMMP_NAME,
     PROP_LINUX_DMMP_SLAVES,
     PROP_LINUX_DMMP_PARAMETERS,
+
+    PROP_LINUX_LOOP_FILENAME,
   };
 
 enum
@@ -446,6 +450,9 @@ get_property (GObject *object,
       break;
     case PROP_DEVICE_IS_LINUX_DMMP_COMPONENT:
       g_value_set_boolean (value, device->priv->device_is_linux_dmmp_component);
+      break;
+    case PROP_DEVICE_IS_LINUX_LOOP:
+      g_value_set_boolean (value, device->priv->device_is_linux_loop);
       break;
     case PROP_DEVICE_SIZE:
       g_value_set_uint64 (value, device->priv->device_size);
@@ -802,6 +809,10 @@ get_property (GObject *object,
       g_value_set_boxed (value, device->priv->linux_dmmp_slaves);
       break;
 
+    case PROP_LINUX_LOOP_FILENAME:
+      g_value_set_string (value, device->priv->linux_loop_filename);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1031,6 +1042,13 @@ device_class_init (DeviceClass *klass)
   g_object_class_install_property (object_class,
                                    PROP_DEVICE_IS_LINUX_DMMP_COMPONENT,
                                    g_param_spec_boolean ("device-is-linux-dmmp-component",
+                                                         NULL,
+                                                         NULL,
+                                                         FALSE,
+                                                         G_PARAM_READABLE));
+  g_object_class_install_property (object_class,
+                                   PROP_DEVICE_IS_LINUX_LOOP,
+                                   g_param_spec_boolean ("device-is-linux-loop",
                                                          NULL,
                                                          NULL,
                                                          FALSE,
@@ -1688,6 +1706,14 @@ device_class_init (DeviceClass *klass)
                                                        dbus_g_type_get_collection ("GPtrArray",
                                                                                    DBUS_TYPE_G_OBJECT_PATH),
                                                        G_PARAM_READABLE));
+
+  g_object_class_install_property (object_class,
+                                   PROP_LINUX_LOOP_FILENAME,
+                                   g_param_spec_string ("linux-loop-filename",
+                                                        NULL,
+                                                        NULL,
+                                                        NULL,
+                                                        G_PARAM_READABLE));
 }
 
 static void
@@ -1827,6 +1853,8 @@ device_finalize (GObject *object)
   g_ptr_array_foreach (device->priv->linux_dmmp_slaves, (GFunc) g_free, NULL);
   g_ptr_array_free (device->priv->linux_dmmp_slaves, TRUE);
   g_free (device->priv->linux_dmmp_parameters);
+
+  g_free (device->priv->linux_loop_filename);
 
   g_free (device->priv->linux_lvm2_lv_name);
   g_free (device->priv->linux_lvm2_lv_uuid);
@@ -2501,6 +2529,10 @@ update_info_partition (Device *device)
       device_set_partition_label (device, NULL);
       device_set_partition_uuid (device, NULL);
       device_set_partition_flags (device, NULL);
+    }
+  else
+    {
+      device_set_device_is_drive (device, FALSE);
     }
 
   return TRUE;
@@ -4205,6 +4237,56 @@ update_info_drive_similar_devices (Device *device)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* update device_is_linux_loop and linux_loop_* properties */
+static gboolean
+update_info_linux_loop (Device *device)
+{
+  gboolean ret;
+  gint fd;
+  struct loop_info64 loop_info_buf;
+  gboolean is_loop;
+  gchar *s;
+  gchar *s2;
+
+  is_loop = FALSE;
+  ret = FALSE;
+  fd = -1;
+
+  if (!g_str_has_prefix (device->priv->native_path, "/sys/devices/virtual/block/loop"))
+    {
+      ret = TRUE;
+      goto out;
+    }
+
+  fd = open (device->priv->device_file, O_RDONLY);
+  if (fd < 0)
+    goto out;
+
+  if (ioctl (fd, LOOP_GET_STATUS64, &loop_info_buf) != 0)
+    goto out;
+
+  /* TODO: is lo_file_name really NUL-terminated? */
+  device_set_linux_loop_filename (device, (const gchar *) loop_info_buf.lo_file_name);
+
+  ret = TRUE;
+  is_loop = TRUE;
+
+  device_set_drive_vendor (device, "Linux");
+  s2 = g_path_get_basename ((gchar *) loop_info_buf.lo_file_name);
+  s = g_strdup_printf ("Loop: %s", s2);
+  g_free (s2);
+  device_set_drive_model (device, s);
+  g_free (s);
+
+ out:
+  if (fd > 0)
+    close (fd);
+  device_set_device_is_linux_loop (device, is_loop);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 typedef struct
 {
   guint idle_id;
@@ -4525,6 +4607,10 @@ update_info (Device *device)
    *  - partition_slave
    *
    */
+
+  /* device_is_linux_loop and linux_loop_* properties */
+  if (!update_info_linux_loop (device))
+    goto out;
 
   /* partition_* properties */
   if (!update_info_partition (device))
@@ -4978,9 +5064,8 @@ device_new (Daemon *daemon,
   device = NULL;
   native_path = g_udev_device_get_sysfs_path (d);
 
-  /* ignore ram and loop devices */
-  if (g_str_has_prefix (native_path, "/sys/devices/virtual/block/ram")
-      || g_str_has_prefix (native_path, "/sys/devices/virtual/block/loop"))
+  /* ignore ram devices */
+  if (g_str_has_prefix (native_path, "/sys/devices/virtual/block/ram"))
     goto out;
 
   PROFILE ("device_new(native_path=%s): start", native_path);

@@ -120,6 +120,7 @@ struct DevicePrivate
   gboolean device_is_linux_lvm2_pv;
   gboolean device_is_linux_dmmp;
   gboolean device_is_linux_dmmp_component;
+  gboolean device_is_linux_loop;
   guint64 device_size;
   guint64 device_block_size;
   gboolean device_is_mounted;
@@ -233,6 +234,8 @@ struct DevicePrivate
   GPtrArray *linux_dmmp_slaves;
   gchar *linux_dmmp_parameters;
 
+  gchar *linux_loop_filename;
+
   /* the following properties are not (yet) exported */
   char *dm_name;
   GPtrArray *slaves_objpath;
@@ -273,6 +276,7 @@ void device_set_device_is_linux_lvm2_lv (Device *device, gboolean value);
 void device_set_device_is_linux_lvm2_pv (Device *device, gboolean value);
 void device_set_device_is_linux_dmmp (Device *device, gboolean value);
 void device_set_device_is_linux_dmmp_component (Device *device, gboolean value);
+void device_set_device_is_linux_loop (Device *device, gboolean value);
 void device_set_device_size (Device *device, guint64 value);
 void device_set_device_block_size (Device *device, guint64 value);
 void device_set_device_is_mounted (Device *device, gboolean value);
@@ -378,6 +382,8 @@ void device_set_linux_dmmp_component_holder (Device *device, const gchar *value)
 void device_set_linux_dmmp_name (Device *device, const gchar *value);
 void device_set_linux_dmmp_slaves (Device *device, GStrv value);
 void device_set_linux_dmmp_parameters (Device *device, const gchar *value);
+
+void device_set_linux_loop_filename (Device *device, const gchar *value);
 
 void device_set_dm_name (Device *device, const gchar *value);
 void device_set_slaves_objpath (Device *device, GStrv value);

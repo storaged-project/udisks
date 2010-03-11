@@ -451,6 +451,16 @@ device_set_device_is_linux_dmmp_component (Device *device, gboolean value)
 }
 
 void
+device_set_device_is_linux_loop (Device *device, gboolean value)
+{
+  if (G_UNLIKELY (device->priv->device_is_linux_loop != value))
+    {
+      device->priv->device_is_linux_loop = value;
+      emit_changed (device, "device_is_linux_loop");
+    }
+}
+
+void
 device_set_device_size (Device *device,
                         guint64 value)
 {
@@ -1603,5 +1613,17 @@ device_set_linux_dmmp_slaves (Device *device,
       ptr_str_array_free (device->priv->linux_dmmp_slaves);
       device->priv->linux_dmmp_slaves = ptr_str_array_from_strv (value);
       emit_changed (device, "linux_dmmp_slaves");
+    }
+}
+
+void
+device_set_linux_loop_filename (Device *device,
+                                const gchar *value)
+{
+  if (G_UNLIKELY (g_strcmp0 (device->priv->linux_loop_filename, value) != 0))
+    {
+      g_free (device->priv->linux_loop_filename);
+      device->priv->linux_loop_filename = g_strdup (value);
+      emit_changed (device, "linux_loop_filename");
     }
 }

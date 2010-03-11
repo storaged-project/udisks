@@ -30,7 +30,7 @@ SUBSYSTEM=="sas_expander", ACTION=="add|change", IMPORT{program}="udisks-probe-s
 # from here on, we only care about block devices
 ACTION!="add|change", GOTO="udisks_end"
 SUBSYSTEM!="block", GOTO="udisks_end"
-KERNEL=="loop*|ram*", GOTO="udisks_end"
+KERNEL=="ram*", GOTO="udisks_end"
 
 # Mark devices that shouldn't be automounted / autoassembled etc.
 #

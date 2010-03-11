@@ -1660,6 +1660,11 @@
             TRUE if the device is a Linux dm-multipath device.
       </doc:para></doc:description></doc:doc>
     </property>
+    <property name="DeviceIsLinuxLoop" type="b" access="read">
+      <doc:doc><doc:description><doc:para>
+            TRUE if the device is a Linux loop device.
+      </doc:para></doc:description></doc:doc>
+    </property>
     <property name="DeviceSize" type="t" access="read">
       <doc:doc><doc:description><doc:para>
             The size of the device in bytes.
@@ -2830,6 +2835,15 @@
             The parameters/configuration for the multipath device.
             This property is only valid if
             <doc:ref type="property" to="Device:DeviceIsLinuxDmmp">DeviceIsLinuxDmmp</doc:ref>
+            is TRUE.
+      </doc:para></doc:description></doc:doc>
+    </property>
+
+    <property name="LinuxLoopFilename" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            The file backing the loop device.
+            This property is only valid if
+            <doc:ref type="property" to="Device:DeviceIsLinuxLoop">DeviceIsLinuxLoop</doc:ref>
             is TRUE.
       </doc:para></doc:description></doc:doc>
     </property>
