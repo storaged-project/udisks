@@ -1,77 +1,47 @@
 
 ------------------------------------------------------------------------
-- Current dependencies
-------------------------------------------------------------------------
-
- - udev-139 with some patches
-
- - mdadm-2.6.5 with some patches
-
- - device-mapper with some patches
-
- - DeviceKit 003
-
- - D-Bus GLib 0.75 with some patches
-
- - Linux >= 2.6.25
-
- - PolicyKit >= 0.9
-
- - D-Bus >= 1.1.20
-
- - parted
-
- - smartmontools
-
- - sqlite3
-
- - util-linux-ng
-
-------------------------------------------------------------------------
 - TODO List
 ------------------------------------------------------------------------
 
- - Port to libatasmart
+ - D-Bus interface optimizations
+   - problem: right now a lot of round-tripping is needed
+   - solution: for Foo=Device,Adapter,Expander,Port
+     - EnumerateFoo() should return a(oa{sv}) instead of just 'ao'
+       where the a{sv} contains the properties
+     - FooAdded() should be 'oa{sv}' instead of just 'o'
+       where the a{sv} contains all properties
+     - FooChanged() should be 'oa{sv}' instead of just 'o'
+       where the a{sv} contains the properties that has
+       changed
+   - this will break the D-Bus interface so we we need to bump the
+     minor number (e.g. 1.0.x -> 1.1.0 transition)
 
- - Port to PolicyKit 1.0
+ - We should probably use "Phy" instead of "Port"
+   - do this when breaking the D-Bus interface for other reasons
 
- - Port to EggDBus
+ - When the GDBus stuff lands in GLib we should probably start using it
 
- - Split out Linux specific bits into separate files
+ - We probably have too many polkit actions - probably just two are enough
+   - reads should require org.fd.udisks.read
+     - this should be yes
+   - write/modification should require org.fd.udisks.write
+     - this should be auth_admin_keep
 
- - General cleanup + documentation
-   - devkit-disk-device.c is way too long right now
-
- - Finish up Linux MD Software RAID support
-   - Major thing missing right now is creating an array
-
- - General project management tasks
-   - review licenses, NEWS, TODO, HACKING etc. file
-
- - Should we allow operations on an unlocked encrypted device
-   unlocked by someone else? Should probably require a separate
-   authorization
-
- - Document what udev properties we rely on
+ - It would be nice to be able to have different back-ends
 
 ------------------------------------------------------------------------
 - Future features
 ------------------------------------------------------------------------
 
- - Share drives via iSCSI
+ - iSCSI
    - initiator (connect to drive)
-   - target (offer drive)
+   - target (share drive)
    - see notes in doc/TODO-ISCSI
 
  - Filesystem check
    - how can we do interactive fsck? Connect to a socket on the
-     client and the client includes a terminal emulator? Yuck
+     client and then make the client includes a terminal emulator?
+     Yuck
 
  - Partition/Filesystem resizing
    - Maybe just enhance PartitionModify
-
- - Support for recognizing LVM2 PV's and LV's
-
- - Support for recognizing partitioned disks setup via e.g. kpartx
-
- - Support for non-Linux
