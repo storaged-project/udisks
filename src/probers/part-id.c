@@ -130,15 +130,14 @@ sysfs_get_uint64 (const char *dir,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gchar *
-get_syspath (struct udev *udev,
+static struct udev_device*
+get_udev_device_from_device_file (struct udev *udev,
              const gchar *device_file)
 {
   struct udev_device *device;
   struct stat statbuf;
-  gchar *ret;
 
-  ret = NULL;
+  device = NULL;
 
   if (stat (device_file, &statbuf) != 0)
     {
@@ -152,42 +151,38 @@ get_syspath (struct udev *udev,
       g_printerr ("Error getting udev device for %s: %m\n", device_file);
       goto out;
     }
-  ret = g_strdup (udev_device_get_syspath (device));
-  udev_device_unref (device);
 
  out:
-  return ret;
+  return device;
 }
 
 /**
  * get_part_table_device_file:
- * @udev: An udev context.
- * @given_device_file: The device file given on the command line.
+ * @given_device: udev_device for the device given on the command line
  * @out_partition_table_syspath: Return location for sysfs path of the slave the partition is for.
  * @out_offset: Return location for offset or %NULL.
  * @out_alignment_offset: Return location for alignment offset or %NULL.
  * @out_partition_number: Return location for partition number or %NULL.
  *
- * If @given_device_file is not a partition, returns a copy of it.
+ * If @given_device is not a partition, returns a copy of its device file.
  *
  * Otherwise, returns the device file for the block device for which
- * @given_device_file is a partition of. Other data is returned in the
+ * @given_device is a partition of. Other data is returned in the
  * @out_ parameters.
  *
  * If something goes wrong, %NULL is returned.
  */
 static gchar *
-get_part_table_device_file (struct udev  *udev,
-                            const gchar  *given_device_file,
-                            gchar       **out_partition_table_syspath,
-                            guint64      *out_offset,
-                            guint64      *out_alignment_offset,
-                            guint        *out_partition_number)
+get_part_table_device_file (struct udev_device *given_device,
+                            gchar             **out_partition_table_syspath,
+                            guint64            *out_offset,
+                            guint64            *out_alignment_offset,
+                            guint              *out_partition_number)
 {
   gchar *ret;
   guint64 offset;
   guint partition_number;
-  gchar *devpath;
+  const gchar *devpath;
   gchar *partition_table_syspath;
   guint64 alignment_offset;
 
@@ -197,7 +192,7 @@ get_part_table_device_file (struct udev  *udev,
   partition_table_syspath = NULL;
   alignment_offset = 0;
 
-  devpath = get_syspath (udev, given_device_file);
+  devpath = udev_device_get_syspath (given_device);
   if (devpath == NULL)
     goto out;
 
@@ -215,7 +210,7 @@ get_part_table_device_file (struct udev  *udev,
         partition_table_syspath[n] = '\0';
       partition_table_syspath[n] = '\0';
 
-      device = udev_device_new_from_syspath (udev, partition_table_syspath);
+      device = udev_device_new_from_syspath (udev_device_get_udev (given_device), partition_table_syspath);
       if (device == NULL)
         {
           g_printerr ("Error getting udev device for syspath %s: %m\n", partition_table_syspath);
@@ -240,7 +235,7 @@ get_part_table_device_file (struct udev  *udev,
       const char *targets_type;
       const char *encoded_targets_params;
 
-      device = udev_device_new_from_syspath (udev, devpath);
+      device = udev_device_new_from_syspath (udev_device_get_udev (given_device), devpath);
       g_printerr ("device=%p' for devpath=%s\n", device, devpath);
       if (device == NULL)
         {
@@ -282,8 +277,9 @@ get_part_table_device_file (struct udev  *udev,
             {
               struct udev_device *mp_device;
 
-              mp_device = udev_device_new_from_devnum (udev, 'b', makedev (partition_slave_major,
-                                                                           partition_slave_minor));
+              mp_device = udev_device_new_from_devnum (udev_device_get_udev (given_device), 
+                                                       'b', makedev (partition_slave_major,
+                                                       partition_slave_minor));
               if (mp_device != NULL)
                 {
                   const char *dm_name;
@@ -336,7 +332,7 @@ get_part_table_device_file (struct udev  *udev,
 
       /* not a kernel partition */
       partition_table_syspath = g_strdup (devpath);
-      ret = g_strdup (given_device_file);
+      ret = g_strdup (udev_device_get_devnode (given_device));
       partition_number = 0;
     }
 
@@ -351,8 +347,6 @@ get_part_table_device_file (struct udev  *udev,
     g_free (partition_table_syspath);
   if (out_alignment_offset != NULL)
     *out_alignment_offset = alignment_offset;
-
-  g_free (devpath);
 
   return ret;
 }
@@ -398,6 +392,7 @@ main (int argc,
   const gchar *device_file;
   gchar *partition_table_device_file;
   struct udev *udev;
+  struct udev_device *device;
   PartitionTable *partition_table;
   guint64 partition_offset;
   guint64 partition_alignment_offset;
@@ -439,8 +434,9 @@ main (int argc,
       goto out;
     }
 
-  partition_table_device_file = get_part_table_device_file (udev,
-                                                            device_file,
+  device = get_udev_device_from_device_file (udev, device_file);
+
+  partition_table_device_file = get_part_table_device_file (device,
                                                             &partition_table_syspath,
                                                             &partition_offset,
                                                             &partition_alignment_offset,
