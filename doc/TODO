@@ -29,6 +29,11 @@
 
  - It would be nice to be able to have different back-ends
 
+ - The D-BUS API is supposed to be synchronous, but property updates are racy
+   in many cases (tests/run --no-workarounds exposes those). These should get
+   fixed by having the methods only return after the properties that were
+   affected by the call got updated.
+
 ------------------------------------------------------------------------
 - Future features
 ------------------------------------------------------------------------
