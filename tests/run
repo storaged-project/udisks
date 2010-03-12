@@ -12,9 +12,9 @@
 # - Run only a particular class of tests:
 #   tests/run Luks
 # - Run only a single test:
-#   tests/run FS.text_ext3
+#   tests/run FS.test_ext3
 
-# Copyright: (C) 2009 Martin Pitt <martin.pitt@ubuntu.com>
+# Copyright: (C) 2009, 2010 Martin Pitt <martin.pitt@ubuntu.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -43,13 +43,11 @@ import time
 import shutil
 import dbus
 import signal
-import stat
 import optparse
 import re
 
-test_ram_dev1 = '/dev/ram8'
-test_ram_dev2 = '/dev/ram9'
-test_ram_dev3 = '/dev/ram10'
+NUM_VDEV = 3 # number of virtual test devices that we need
+VDEV_SIZE = 60000000 # size of virtual test devices
 test_md_dev = '/dev/md125'
 
 I_D = 'org.freedesktop.UDisks.Device'
@@ -98,19 +96,12 @@ class UDisksTestCase(unittest.TestCase):
 
         print 'daemon path:', daemon_path
 
-        # ensure that we can use test_ram_dev* for testing
-        for r in (test_ram_dev1, test_ram_dev2, test_ram_dev3):
-            assert os.path.exists(r), r + ' does not exist -- you might need to load the rd module?'
-            assert stat.S_ISBLK(os.stat(r).st_mode), r + ' is not a block device'
-            assert r not in open('/proc/mounts').read(), r + ' is already in use'
-            subprocess.call(['dd', 'if=/dev/zero', 'of='+r],
-                    stderr=subprocess.PIPE)
+        klass.setup_vdevs()
 
         assert test_md_dev not in open('/proc/mdstat').read(), test_md_dev + 'is already in use'
-
         klass.device = test_md_dev
         assert subprocess.call(['mdadm', '--create', test_md_dev, '--force', '-n',
-            '1', '-l', 'raid0', test_ram_dev1]) == 0
+            '1', '-l', 'raid0', klass.test_vdev[0]]) == 0
 
         # start with a clean slate: zero out device 
         klass.zero_device()
@@ -146,6 +137,10 @@ class UDisksTestCase(unittest.TestCase):
         os.kill(klass.daemon.pid, signal.SIGTERM)
         os.wait()
         klass.daemon = None
+
+        # release loop devices
+        for vdev in klass.test_vdev:
+            subprocess.call(['losetup', '-d', vdev])
 
         # resume GNOME automounting/nautilus pop ups
         subprocess.call(['killall', '-CONT', 'gvfs-gdu-volume-monitor'])
@@ -359,6 +354,34 @@ class UDisksTestCase(unittest.TestCase):
                 print >> sys.stderr, 'The directory %s does not exist; please create it before running these tests.' % d
                 sys.exit(0)
         
+    @classmethod
+    def setup_vdevs(klass):
+        '''create virtual test devices
+        
+        This creates an array klass.test_vdev with NUM_VDEV temporary loop
+        devices.
+        '''
+        klass.test_vdev = []
+        for i in range(NUM_VDEV):
+            # find a free loop device
+            losetup = subprocess.Popen(['losetup', '--find'],
+                    stdout=subprocess.PIPE)
+            loopdev = losetup.communicate()[0].strip()
+            assert losetup.returncode == 0, 'losetup failed to find a free loop device'
+            klass.test_vdev.append(loopdev)
+
+            # create a backing store for it
+            blob = tempfile.NamedTemporaryFile()
+            blob.truncate(VDEV_SIZE)
+
+            # set up loop device
+            assert subprocess.call(['losetup', loopdev, blob.name]) == 0
+
+            # now we can close this, so that the file will disappear again and
+            # the device can actually be written to
+            blob.close()
+
+        print 'Set up temporary loop devices:', ' '.join(klass.test_vdev)
 
 # ----------------------------------------------------------------------------
 
@@ -1086,18 +1109,18 @@ class LVM(UDisksTestCase):
     def setUp(self):
         '''Create a VG "udtest".
 
-        This uses two RAM disks as PV.
+        This uses two virtual disks as PV.
         '''
         if subprocess.call(['which', 'pvcreate'], stdout=subprocess.PIPE) != 0:
             self.fail('lvm tools not installed')
             return
-        self.assertEqual(subprocess.call(['pvcreate', test_ram_dev2],
+        self.assertEqual(subprocess.call(['pvcreate', self.test_vdev[1]],
             stdout=subprocess.PIPE), 0)
-        self.assertEqual(subprocess.call(['pvcreate', test_ram_dev3],
+        self.assertEqual(subprocess.call(['pvcreate', self.test_vdev[2]],
             stdout=subprocess.PIPE), 0)
         self.vgname = 'udtest'
         self.assertEqual(subprocess.call(['vgcreate', self.vgname,
-            test_ram_dev2, test_ram_dev3], stdout=subprocess.PIPE), 0)
+            self.test_vdev[1], self.test_vdev[2]], stdout=subprocess.PIPE), 0)
 
     def tearDown(self):
         '''Remove udtest VG.'''
