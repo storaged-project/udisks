@@ -50,6 +50,14 @@ NUM_VDEV = 3 # number of virtual test devices that we need
 VDEV_SIZE = 60000000 # size of virtual test devices
 test_md_dev = '/dev/md125'
 
+# Some D-BUS API methods cause properties to not be up to date yet when a
+# method call finishes, thus we do an udevadm settle as a workaround. Those
+# methods should eventually get fixed properly, but it's unnerving to have
+# the tests fail on them when you are working on something else. This flag
+# gets set by the --no-workarounds option to disable those syncs, so that these
+# race conditions can be fixed.
+disable_dbus_udev_syncs = False
+
 I_D = 'org.freedesktop.UDisks.Device'
 
 # ----------------------------------------------------------------------------
@@ -147,9 +155,27 @@ class UDisksTestCase(unittest.TestCase):
 
     @classmethod
     def sync(klass):
-        '''Wait until pending events finished processing.'''
-
+        '''Wait until pending events finished processing.
+        
+        This should only be called for situations where we genuinely have an
+        asynchronous response, like invoking a CLI program and waiting for
+        udev/udisks to catch up on the change events.
+        '''
         subprocess.call(['udevadm', 'settle'])
+
+    @classmethod
+    def sync_workaround(klass):
+        '''Wait until pending events finished processing (bug workaround).
+        
+        This should be called for race conditions in the D-BUS API which cause
+        properties to not be up to date yet when a method call finishes. Those
+        should eventually get fixed properly, but it's unnerving to have the
+        tests fail on them when you are working on something else.
+
+        This sync is not done if running with --no-workarounds.
+        '''
+        if not disable_dbus_udev_syncs:
+            subprocess.call(['udevadm', 'settle'])
 
     @classmethod
     def zero_device(klass):
@@ -304,7 +330,7 @@ class UDisksTestCase(unittest.TestCase):
         klass.partition_iface(partition).FilesystemCreate(type, options)
         # .FilesystemCreate() already blocks until the mkfs job is done; but
         # without udevsettle the property updating is racy
-        klass.sync()
+        klass.sync_workaround()
 
     @classmethod
     def retry_busy(klass, fn, *args):
@@ -639,7 +665,7 @@ class FS(UDisksTestCase):
         if supports_label_rename:
             l = 'rename' + type
             iface.FilesystemSetLabel(l)
-            self.sync()
+            self.sync_workaround()
             i = self.get_info()
             if type == 'vfat':
                 # EXFAIL: often (but not always) the label appears in all upper case
@@ -774,7 +800,7 @@ class Luks(UDisksTestCase):
         # change it back so that order of tests does not matter
         self.partition_iface().LuksChangePassphrase('cl4ss1f13d', 's3kr1t')
 
-        self.sync()
+        self.sync_workaround()
 
 # ----------------------------------------------------------------------------
 
@@ -840,7 +866,7 @@ class Partitions(UDisksTestCase):
 
         # create partition table
         self.partition_iface().PartitionTableCreate(schema, [])
-        self.sync()
+        self.sync_workaround()
 
         info = self.get_info()
         self.assertEqual(info['partition_scheme'], schema)
@@ -934,7 +960,7 @@ class Partitions(UDisksTestCase):
 
         # delete
         p1_iface.PartitionDelete([])
-        self.sync()
+        self.sync_workaround()
         self.assertRaises(dbus.DBusException, p1_iface.PartitionModify, type2, '', [flag])
         self.assertRaises(dbus.DBusException, p1_props.Get, I_D, 'PartitionType')
 
@@ -948,7 +974,7 @@ class Partitions(UDisksTestCase):
         # recreate p1: flagged, with fs
         p1 = self.partition_iface().PartitionCreate(0, 10000000, type1, 
                 '', [flag], [], 'ext3', ['label=e3part'])
-        self.sync()
+        self.sync_workaround()
         self.assert_(p1 in self.manager_iface.EnumerateDevices())
 
         p1_obj = dbus.SystemBus().get_object('org.freedesktop.UDisks',
@@ -1184,7 +1210,7 @@ class LVM(UDisksTestCase):
         iface = dbus.Interface(dbus.SystemBus().get_object(
                 'org.freedesktop.UDisks', real_lv_obj), I_D)
         iface.FilesystemCreate('ext3', [])
-        self.sync()
+        self.sync_workaround()
 
         for o in lv_objs:
             props = dbus.Interface(dbus.SystemBus().get_object(
@@ -1310,7 +1336,12 @@ if __name__ == '__main__':
     optparser = optparse.OptionParser('%prog [options] [test class] [test name] [...]')
     optparser.add_option('-l', '--log-file', dest='logfile',
             help='write daemon log to a file')
+    optparser.add_option('-w', '--no-workarounds', dest='noworkarounds',
+            action="store_true", default=False,
+            help='Disable workarounds for race conditions in the D-BUS API')
     (opts, args) = optparser.parse_args()
+
+    disable_dbus_udev_syncs = opts.noworkarounds
 
     UDisksTestCase.init(logfile=opts.logfile)
     if len(args) == 0:
