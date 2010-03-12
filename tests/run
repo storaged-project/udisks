@@ -31,6 +31,7 @@
 #   and check added/removed devices and emitted signals
 # - Add LUKS stresstest (was racy in the past)
 # - Test LinuxMd* D-BUS interface
+# - Test loop devices (without MD on top), udisks supports them now
 
 import subprocess
 import os
