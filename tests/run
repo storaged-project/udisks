@@ -772,16 +772,29 @@ class Partitions(UDisksTestCase):
         self.assertEqual([k for k in info if k.startswith('partition_')], [])
         self.assertEqual(self.fdisk_list(), None)
 
-    def test_mbr(self):
-        '''Partitions: mbr'''
+    def test_mbr_nofs(self):
+        '''Partitions: mbr (no file system)'''
 
-        self._do_schema('mbr', '0x82', '0x06', 'boot')
+        self._do_schema('mbr', '0x82', '0x06', 'boot', filesystem=False)
 
-    def test_gpt(self):
-        '''Partitions: GUID'''
+    def test_mbr_fs(self):
+        '''Partitions: mbr (with file system)'''
+
+        self._do_schema('mbr', '0x82', '0x06', 'boot', filesystem=True)
+
+    def test_gpt_nofs(self):
+        '''Partitions: GUID (no file system)'''
 
         self._do_schema('gpt', 'EBD0A0A2-B9E5-4433-87C0-68B6B72699C7', 
-                '0657FD6D-A4AB-43C4-84E5-0933C84B4F4F', 'required')
+                '0657FD6D-A4AB-43C4-84E5-0933C84B4F4F', 'required',
+                filesystem=False)
+
+    def test_gpt_fs(self):
+        '''Partitions: GUID (with file system)'''
+
+        self._do_schema('gpt', 'EBD0A0A2-B9E5-4433-87C0-68B6B72699C7', 
+                '0657FD6D-A4AB-43C4-84E5-0933C84B4F4F', 'required',
+                filesystem=True)
 
     # TODO: fails in various ways
     def disabled_test_apm(self):
@@ -799,7 +812,7 @@ class Partitions(UDisksTestCase):
                 first_offset=3000000)
 
     def _do_schema(self, schema, type1, type2, flag,
-            exp_default_partitions=0, first_offset=0):
+            exp_default_partitions=0, first_offset=0, filesystem=False):
         '''Run tests for a particular schema/type'''
 
         # create partition table
@@ -821,11 +834,21 @@ class Partitions(UDisksTestCase):
         self.assertEqual(props.Get(I_D, 'PartitionTableScheme'), schema)
         self.assertEqual(props.Get(I_D, 'PartitionTableCount'), exp_default_partitions)
 
-        # p1: non-flagged, no fs
-        p1 = self.partition_iface().PartitionCreate(first_offset, 10000000, type1, 
-                '', [], [], '', [])
+        # p1: non-flagged
+        if filesystem:
+            p1 = self.partition_iface().PartitionCreate(first_offset, 10000000,
+                    type1, '', [], [], 'vfat', ['label=testp1'])
+        else:
+            p1 = self.partition_iface().PartitionCreate(first_offset, 10000000,
+                    type1, '', [], [], '', [])
         self.assert_(p1 in self.manager_iface.EnumerateDevices())
  
+        # udisks internally sets the new partition flags from the
+        # PartitionCreate() call; trigger udev to ensure that we actually read
+        # and check the values from the udev probers
+        subprocess.call(['udevadm', 'trigger', '--action=change', '--subsystem-match=block'])
+        self.sync()
+
         if schema == 'mbr':
             fdisk = self.fdisk_list()
             self.assertEqual(len(fdisk), 1)
@@ -862,8 +885,14 @@ class Partitions(UDisksTestCase):
         self.assertEqual(p1_props.Get(I_D, 'PartitionLabel'), (schema == 'apm' and 'untitled' or ''))
         self.assertEqual(p1_props.Get(I_D, 'PartitionFlags'), [])
         self.assertEqual(p1_props.Get(I_D, 'PartitionNumber'), (schema == 'apm' and 2 or 1))
-        self.assertEqual(p1_props.Get(I_D, 'IdUsage'), '')
-        self.assertEqual(p1_props.Get(I_D, 'IdType'), '')
+        if filesystem:
+            self.assertEqual(p1_props.Get(I_D, 'IdUsage'), 'filesystem')
+            self.assertEqual(p1_props.Get(I_D, 'IdType'), 'vfat')
+            self.assertEqual(p1_props.Get(I_D, 'IdLabel'), 'testp1')
+        else:
+            self.assertEqual(p1_props.Get(I_D, 'IdUsage'), '')
+            self.assertEqual(p1_props.Get(I_D, 'IdType'), '')
+            self.assertEqual(p1_props.Get(I_D, 'IdLabel'), '')
         off = p1_props.Get(I_D, 'PartitionOffset')
         self.assert_(off >= first_offset and off <= first_offset+20000)
         size = p1_props.Get(I_D, 'PartitionSize')
@@ -872,6 +901,10 @@ class Partitions(UDisksTestCase):
 
         # modify
         p1_iface.PartitionModify(type2, '', [flag])
+        # udisks internally sets the new partition flags from the
+        # PartitionCreate() call; trigger udev to ensure that we actually read
+        # and check the values from the udev probers
+        subprocess.call(['udevadm', 'trigger', '--action=change', '--subsystem-match=block'])
         self.sync()
         self.assertEqual(p1_props.Get(I_D, 'PartitionType'), type2)
         self.assertEqual(p1_props.Get(I_D, 'PartitionFlags'), [flag])
