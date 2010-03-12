@@ -520,7 +520,9 @@ main (int argc,
        * partition table; in general, if we already know that a device has a
        * file system, it can't also be a partition table. */
       const char* fs = NULL;
-      fs = udev_device_get_property_value (device, "ID_FS_TYPE");
+      fs = g_getenv ("ID_FS_TYPE");
+      if (fs == NULL)
+	  fs = udev_device_get_property_value (device, "ID_FS_TYPE");
       if (fs == NULL || *fs == '\0') {
 	  g_print ("UDISKS_PARTITION_TABLE=1\n");
 	  g_print ("UDISKS_PARTITION_TABLE_SCHEME=%s\n", part_get_scheme_name (part_table_get_scheme (partition_table)));
