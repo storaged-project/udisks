@@ -115,6 +115,9 @@ class UDisksTestCase(unittest.TestCase):
         # start with a clean slate: zero out device 
         klass.zero_device()
 
+        # inhibit GNOME automounting/nautilus pop ups
+        subprocess.call(['killall', '-STOP', 'gvfs-gdu-volume-monitor'])
+
         # start daemon
         if logfile:
             klass.daemon_log = open(logfile, 'w')
@@ -143,6 +146,9 @@ class UDisksTestCase(unittest.TestCase):
         os.kill(klass.daemon.pid, signal.SIGTERM)
         os.wait()
         klass.daemon = None
+
+        # resume GNOME automounting/nautilus pop ups
+        subprocess.call(['killall', '-CONT', 'gvfs-gdu-volume-monitor'])
 
     @classmethod
     def sync(klass):
