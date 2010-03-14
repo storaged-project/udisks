@@ -11743,7 +11743,8 @@ force_removal (Device *device,
     {
       gboolean remove_dir_on_unmount;
 
-      if (mount_file_has_device (device->priv->device_file, NULL, &remove_dir_on_unmount))
+      if (mount_file_has_device (device->priv->device_file, NULL, &remove_dir_on_unmount) ||
+          is_device_in_fstab (device, NULL))
         {
           g_print ("**** NOTE: Force unmounting device %s\n", device->priv->device_file);
           force_unmount (device, callback, user_data);
