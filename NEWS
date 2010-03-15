@@ -1,5 +1,28 @@
 ------------
-udisks 1.0.0 <not yet released>
+udisks 1.0.1 <not yet released>
+------------
+
+udisks provides a daemon, D-Bus API and command line tools
+for managing disks and storage devices.
+
+All releases in the udisks 1.0 series will retain ABI compatibility at
+the D-Bus interface level. This means that any application built
+against udisks 1.0.x will work with udisks 1.0.y provided that y >=
+x. At this point we do not provide any ABI guarantees for the
+udisks(1) command-line tool (neither options nor the name). See the
+README file for more discussion of ABI guarantees.
+
+Changes from udisks 1.0.0:
+
+ <insert prettified output of 'git-log 1.0.0.. | git shortlog' here>
+
+Thanks to all our contributors.
+
+<insert your name>,
+<insert the date>
+
+------------
+udisks 1.0.0
 ------------
 
 udisks provides a daemon, D-Bus API and command line tools
@@ -24,6 +47,8 @@ Major changes from DeviceKit-disks 009:
 
  o  An API for benchmarking drives has been added
 
+ o  Support for LVM2 and Multipath has been added
+
 ABI incompatible changes from DeviceKit-disks 009:
 
  o  The well-known system bus name has been changed from
@@ -43,12 +68,152 @@ ABI incompatible changes from DeviceKit-disks 009:
 
 Detailed changes from DeviceKit-disks 009:
 
- <insert prettified output of 'git-log 009.. | git shortlog' here>
+Daniele Napolitano (1):
+      Bug 26822 — Fix benchmarking for large files
+
+David Zeuthen (87):
+      Post-release version bump to 010
+      Update udev rules to cope better with device-mapper
+      Add a method to benchmark drives
+      Add DriveWwn, DriveRotationalRate and DriveWriteCache properties
+      Abort benchmark on IO errors
+      Guesstimate the buffer size to use for benchmarking
+      Initial stab at exporting storage controllers via D-Bus
+      Fix type in udev rules for pci-id
+      Also generate D-Bus docs for the Controller interface
+      Add support for Port objects
+      Rename Controller interface to Adapter
+      Fix doc fallout from the Controller -> Adapter rename
+      Export Fabric and NumPorts for ATA
+      For SAS, report number of PHYs for the NumPorts property on Adapter
+      Change Device::DrivePort (of type 'o') to Device::DrivePorts (of type 'ao')
+      Export Port objects for SAS PHYs on the HBA
+      Add support for SAS expanders
+      Forgot to add prober for SAS expanders
+      Fix typos in udev rules
+      Rename from DeviceKit-disks to udisks, part 1
+      Rename to udisks - udev property names
+      Rename to udisks - move helpers and probers to separate subdirs
+      Rename to udisks - rename source files and symbols
+      Update/add mode lines to all source files
+      Reindent source code to adhere to the GNU-style
+      Rename to udisks - nuke remaining references to Device-disks
+      Update HACKING, README and COPYING files
+      Update bug tracker address
+      Update udev property names in the udisks(7) man page
+      Add experimental bridging program for providing D-Bus access over TCP/IP
+      Handle ATA controllers with only one port
+      Remove debugging spew
+      Avoid multiple inconsistent checks for adapter fabric type
+      Fix up SATA/PATA detection slightly
+      Export connector type on Port objects
+      Make udisks-tcp-bridge connect to a DBusServer, not be a DBusServer
+      Install udisks-tcp-bridge in $prefix/lib/udisks
+      Take a secret from the client via stdin and use this to authorize ourselves
+      Make Avahi announce a service of type _udisks-ssh._tcp for us
+      Install udisks-tcp-bridge in /usr/bin
+      Add a man page for udisks-tcp-bridge(1)
+      Update NEWS
+      Add media type udev rule for SD card reader in MacbookPro5,4
+      Use SUBSYSTEMS whenever using ATTRS
+      First cut at LVM2 support
+      Fix typo in udev rule for udisks-lvm-pv-export
+      Get the LVM LV UUIDs from sysfs to avoid using liblvm2 in the dm prober
+      Add methods for setting LVM2 VG and LV names
+      Add method to remove/delete a LVM LV
+      Add a method to create LVM2 Logical Volumes
+      Minor update to LVM2 PV export routines
+      Add methods for adding/removing PVs to a VG
+      Use the PV UUID in LinuxLvm2VGRemovePV() to identify the PV
+      First cut at device-mapper multipath support
+      Add a DriveSimilarDevices property
+      Make sure to fsync(2) the main block device when scrubbing signatures
+      Tighten up checks for detecting kpartx partitions for dm-multipath
+      Add udev rules for detecting some common USB card readers
+      Require both SERIAL and WWN to be non-empty when matching up similar drives
+      Don't copy data from each path into the virtual multipath device
+      Copy identifying data from multipath components onto the multipath device
+      Export multipath parameters as a textual string
+      Make sure all devices are returned, even when handling change events
+      When creating a LV, ensure that it is part of PV metadata until returning
+      Add LinuxMdExpand method and rename LinuxMdAddComponent to LinuxMdAddSpare
+      Rework partition table probing
+      Export alignment offset for a partition
+      Fix compiler warning
+      Add doc/udisks-overrides.txt so 'make dist' works
+      Update for new liblvm2app library
+      Use DM_NAME instead of DM_UUID when determining partition number
+      Improve debug output and support for the detach helper
+      Update detach helper for current sysfs interface
+      Add a --disable-remote-access option
+      We're using the UDISKS_ prefix, not DKD_
+      Bug 24424 - Move UDISKS_MEDIA_AVAILABLE out of the part table prober
+      Include stdout in mkfs error output
+      Initialize variable before use
+      Update TODO
+      Revert "Bug 26996 — wrongly detects partition on unpartitioned VFAT device"
+      Handle loopback devices
+      Fix partition table probing during coldplug
+      Update TODO
+      Make it possible to disable LVM2 and dm-multipath support
+      Guarantee that DeviceFilePresentation always contain something meaningful
+      Add TODO item about UTF-8 and D-Bus properties
+      Update NEWS for release
+
+Linus Torvalds (1):
+      Speed up DeviceKit device probing on really slow devices
+
+Martin Pitt (32):
+      Bug 24885 — LVM LVs now have NOPOLICY=0
+      Bug 25034 — PartitionModify() for GUID partitions does not work
+      Bug 25043 — Crashes with atasmart.c:2701: sk_disk_set_blob: Assertion `blob' failed.
+      Bug 25009 — ignore Western Digital SmartWare partitions
+      Bug 24772 — Allow simulated SMART data on non-SMART devices
+      Bug 24999 — Hide Compaq recovery partition type 0x12
+      Support building without lvm2app
+      Bug 24446 — Add --helper-dir option
+      Bug 24446 — Add a test suite
+      Bug 24446 — automake integration of test suite
+      Robustify evaluation of DM_SUSPEND
+      testsuite: check --localstatedir configuration
+      Add support for "disable polling" udev property
+      testsuite: Fix LVM tests
+      fix media detection of CD-ROMs
+      Bug 26725 — add profiling
+      in maintainer mode, build with -Werror
+      fix compiler warnings
+      Update .gitignore files
+      testsuite: Ensure that volumes on raw partitions don't have a partition table
+      Bug 26996 — wrongly detects partition on unpartitioned VFAT device
+      testsuite: Add TODO item to test new support for loop devices
+      testsuite: Get along with running gvfs/nautilus
+      testsuite: Check partitions with filesystems
+      udisks-part-id: Shuffle code to keep udev_device in main()
+      Bug 26996 — wrongly detects partition on unpartitioned VFAT device
+      udisks-part-id: Check ID_FS_TYPE from environment first
+      testsuite: Use loop devices instead of ram disks
+      testsuite: Add option to disable workarounds for race conditions
+      TODO update for property update race conditions
+      Bug 27072 — does not force-unmount for drives in fstab
+      udisks-part-id: Simplify code
+
+Michael Biebl (8):
+      Bug 24606 — Add support for ReiserFS
+      Make sure udisks-helper-mdadm-expand is included in the dist tarball
+      Include profile.h in dist tarball
+      Include udisks-tcp-bridge.xml in dist tarball
+      Respect DM_UDEV_DISABLE_DISK_RULES_FLAG from current LVM
+      Drop obsolete rules for private LVM devices
+      Drop obsolete rule for suspended LVM devices
+      Bug 25424 — Update to stable API of udev/gudev/dbus
+
+tuxce (1):
+      Bug 25012 ­Add "usefree" to vfat available options
 
 Thanks to all our contributors.
 
-<insert your name>,
-<insert the date>
+David Zeuthen,
+March 15, 2010
 
 -------------------
 DeviceKit-disks 009
