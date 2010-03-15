@@ -27,7 +27,7 @@ udevhelper_PROGRAMS =	udisks-part-id 			\
 			udisks-probe-sas-expander 	\
 			$(NULL)
 
-if LVM2APP_ENABLED
+if HAVE_LVM2
 udevhelper_PROGRAMS += udisks-lvm-pv-export
 endif
 
@@ -36,12 +36,12 @@ udisks_part_id_CPPFLAGS = $(AM_CPPFLAGS) $(LIBUDEV_CFLAGS)
 udisks_part_id_LDADD = $(GLIB_LIBS) $(LIBUDEV_LIBS) $(top_builddir)/src/helpers/libpartutil.la
 
 udisks_dm_export_SOURCES = udisks-dm-export.c
-udisks_dm_export_CPPFLAGS = $(AM_CPPFLAGS) $(DEVMAPPER_CFLAGS) $(LVM2APP_CFLAGS) $(GLIB_CFLAGS)
-udisks_dm_export_LDADD = $(DEVMAPPER_LIBS) $(LVM2APP_LIBS) $(GLIB_LIBS)
+udisks_dm_export_CPPFLAGS = $(AM_CPPFLAGS) $(DEVMAPPER_CFLAGS) $(GLIB_CFLAGS)
+udisks_dm_export_LDADD = $(DEVMAPPER_LIBS) $(GLIB_LIBS)
 
 udisks_lvm_pv_export_SOURCES = udisks-lvm-pv-export.c
-udisks_lvm_pv_export_CPPFLAGS = $(AM_CPPFLAGS) $(DEVMAPPER_CFLAGS) $(LVM2APP_CFLAGS) $(GLIB_CFLAGS)
-udisks_lvm_pv_export_LDADD = $(DEVMAPPER_LIBS) $(LVM2APP_LIBS) $(GLIB_LIBS)
+udisks_lvm_pv_export_CPPFLAGS = $(AM_CPPFLAGS) $(DEVMAPPER_CFLAGS) $(LVM2_CFLAGS) $(GLIB_CFLAGS)
+udisks_lvm_pv_export_LDADD = $(DEVMAPPER_LIBS) $(LVM2_LIBS) $(GLIB_LIBS)
 
 udisks_probe_ata_smart_SOURCES = udisks-probe-ata-smart.c
 udisks_probe_ata_smart_CPPFLAGS = $(AM_CPPFLAGS) $(LIBATASMART_CFLAGS)

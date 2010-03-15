@@ -63,7 +63,7 @@ KERNEL=="dm-*", OPTIONS+="watch"
 ##############################################################################################################
 # Probe LVM2 Physical Volumes - this will eventually be part of the LVM2 package
 
-ENV{ID_FS_TYPE}=="LVM2_member", IMPORT{program}="udisks-lvm-pv-export $env{ID_FS_UUID}"
+ENV{ID_FS_TYPE}=="LVM2_member", TEST=="/lib/udev/udisks-lvm-pv-export", IMPORT{program}="udisks-lvm-pv-export $env{ID_FS_UUID}"
 
 ##############################################################################################################
 

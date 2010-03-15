@@ -3150,6 +3150,7 @@ update_info_luks_cleartext (Device *device)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+#ifdef HAVE_LVM2
 static gchar *
 extract_lvm_uuid (const gchar *s)
 {
@@ -3217,9 +3218,11 @@ update_info_linux_lvm2_lv (Device *device)
   g_free (lv_uuid);
   return TRUE;
 }
+#endif
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+#ifdef HAVE_DMMP
 /* update device_is_linux_dmmp and linux_dmmp_* properties */
 static gboolean
 update_info_linux_dmmp (Device *device)
@@ -3304,9 +3307,11 @@ update_info_linux_dmmp (Device *device)
   device_set_device_is_linux_dmmp (device, is_dmmp);
   return TRUE;
 }
+#endif
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+#ifdef HAVE_DMMP
 /* updates device_is_partition and partition_* properties for dm-0 "partitions" on a multi-path device  */
 static gboolean
 update_info_partition_on_linux_dmmp (Device *device)
@@ -3366,9 +3371,11 @@ update_info_partition_on_linux_dmmp (Device *device)
   g_free (params);
   return TRUE;
 }
+#endif
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+#ifdef HAVE_DMMP
 /* update device_is_linux_dmmp_component and linux_dmmp_component_* properties */
 static gboolean
 update_info_linux_dmmp_component (Device *device)
@@ -3392,9 +3399,11 @@ update_info_linux_dmmp_component (Device *device)
   device_set_device_is_linux_dmmp_component (device, is_dmmp_component);
   return TRUE;
 }
+#endif
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+#ifdef HAVE_LVM2
 /* update device_is_linux_lvm2_pv and linux_lvm2_pv_* properties */
 static gboolean
 update_info_linux_lvm2_pv (Device *device)
@@ -3443,6 +3452,7 @@ update_info_linux_lvm2_pv (Device *device)
   device_set_device_is_linux_lvm2_pv (device, is_pv);
   return TRUE;
 }
+#endif
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -4644,6 +4654,7 @@ update_info (Device *device)
   if (!update_info_luks_cleartext (device))
     goto out;
 
+#ifdef HAVE_LVM2
   /* device_is_linux_lvm2_lv and linux_lvm2_lv_* properties */
   if (!update_info_linux_lvm2_lv (device))
     goto out;
@@ -4651,7 +4662,9 @@ update_info (Device *device)
   /* device_is_linux_lvm2_pv and linux_lvm2_pv_* properties */
   if (!update_info_linux_lvm2_pv (device))
     goto out;
+#endif
 
+#ifdef HAVE_DMMP
   /* device_is_linux_dmmp and linux_dmmp_* properties */
   if (!update_info_linux_dmmp (device))
     goto out;
@@ -4663,6 +4676,7 @@ update_info (Device *device)
   /* device_is_linux_dmmp_component and linux_dmmp_component_* properties */
   if (!update_info_linux_dmmp_component (device))
     goto out;
+#endif
 
   /* device_is_linux_md_component and linux_md_component_* properties */
   if (!update_info_linux_md_component (device))

@@ -167,14 +167,27 @@ PKG_CHECK_MODULES(DEVMAPPER, [devmapper >= 1.02])
 AC_SUBST(DEVMAPPER_CFLAGS)
 AC_SUBST(DEVMAPPER_LIBS)
 
-PKG_CHECK_EXISTS(lvm2app >= 2.1, msg_lvm2app=yes, msg_lvm2app=no)
-if test "x$msg_lvm2app" = "xyes"; then
-  PKG_CHECK_MODULES(LVM2APP, [lvm2app >= 2.1])
-  AC_SUBST(LVM2APP_CFLAGS)
-  AC_SUBST(LVM2APP_LIBS)
-  AC_DEFINE(HAVE_LVM2APP, 1, [Define to 1 if lvm2app is available])
+have_lvm2=no
+AC_ARG_ENABLE(lvm2, AS_HELP_STRING([--disable-lvm2], [disable LVM2 support]))
+if test "x$enable_lvm2" != "xno"; then
+  PKG_CHECK_MODULES(LVM2, lvm2app >= 2.1,
+                    [AC_DEFINE(HAVE_LVM2, 1, [Define if LVM2 is available]) have_lvm2=yes],
+                    have_lvm2=no)
+  AC_SUBST(LVM2_CFLAGS)
+  AC_SUBST(LVM2_LIBS)
+  if test "x$have_lvm2" = xno -a "x$enable_lvm2" = xyes; then
+    AC_MSG_ERROR([lvm2 support requested but libraries not found])
+  fi
 fi
-AM_CONDITIONAL(LVM2APP_ENABLED, test x$msg_lvm2app = xyes)
+AM_CONDITIONAL(HAVE_LVM2, [test "$have_lvm2" = "yes"])
+
+have_dmmp=no
+AC_ARG_ENABLE(dmmp, AS_HELP_STRING([--disable-dmmp], [disable dm-multipath support]))
+if test "x$enable_dmmp" != "xno"; then
+  have_dmmp=yes
+  AC_DEFINE(HAVE_DMMP, 1, [Define to 1 if dmmp is available])
+fi
+AM_CONDITIONAL(HAVE_DMMP, [test "$have_dmmp" = "yes"])
 
 PKG_CHECK_MODULES(LIBATASMART, [libatasmart >= 0.14])
 AC_SUBST(LIBATASMART_CFLAGS)
@@ -258,7 +271,8 @@ echo "
         cppflags:                   ${CPPFLAGS}
         xsltproc:                   ${XSLTPROC}
 
-        LVM2 support:               ${msg_lvm2app}
+        LVM2 support:               ${have_lvm2}
+        dm-multipath:               ${have_dmmp}
         Remote Access:              ${remote_access}
 
         Maintainer mode:            ${USE_MAINTAINER_MODE}
