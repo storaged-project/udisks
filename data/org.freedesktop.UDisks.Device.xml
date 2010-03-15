@@ -1510,7 +1510,11 @@
     </property>
     <property name="DeviceFilePresentation" type="s" access="read">
       <doc:doc><doc:description><doc:para>
-            If not blank, the preferred device file (typically a symlink to the value of the <doc:ref type="property" to="Device:DeviceFile">DeviceFile</doc:ref> property) to present in user interface.
+            Either the value of the
+            <doc:ref type="property" to="Device:DeviceFile">DeviceFile</doc:ref>
+            property, otherwise the preferred device file (typically a symlink to the value of the
+            <doc:ref type="property" to="Device:DeviceFile">DeviceFile</doc:ref>
+            property) to present in user interface.
             Example: <doc:tt>/dev/mapper/mpathb</doc:tt> or
             <doc:tt>/dev/vg_phobos/lv_root</doc:tt>.
       </doc:para></doc:description></doc:doc>

@@ -383,7 +383,10 @@ get_property (GObject *object,
       g_value_set_string (value, device->priv->device_file);
       break;
     case PROP_DEVICE_FILE_PRESENTATION:
-      g_value_set_string (value, device->priv->device_file_presentation);
+      if (device->priv->device_file_presentation != NULL)
+        g_value_set_string (value, device->priv->device_file_presentation);
+      else
+        g_value_set_string (value, device->priv->device_file);
       break;
     case PROP_DEVICE_FILE_BY_ID:
       g_value_set_boxed (value, device->priv->device_file_by_id);
