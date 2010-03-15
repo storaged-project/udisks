@@ -22,6 +22,13 @@
  - When the GDBus stuff lands in GLib we should probably start using it
    - probably do this when breaking the D-Bus interface for other reasons
 
+ - UTF-8 assumptions
+   - Some properties contain file paths. Since Linux/UNIX allows any
+     NUL-terminated string of bytes as file names (restricting file
+     names to UTF-8 is clearly insane, *boggle*), we could end up with
+     strings that are not UTF-8. We should probably use the type 'ay'
+     instead of 's' for such things.
+
  - We probably have too many polkit actions - probably just two are enough
    - reads should require org.fd.udisks.read
      - this should be 'yes'
