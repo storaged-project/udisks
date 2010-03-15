@@ -159,6 +159,7 @@ get_udev_device_from_device_file (struct udev *udev,
 /**
  * get_part_table_device_file:
  * @given_device: udev_device for the device given on the command line
+ * @given_device_file: the device file given on the command line
  * @out_partition_table_syspath: Return location for sysfs path of the slave the partition is for.
  * @out_offset: Return location for offset or %NULL.
  * @out_alignment_offset: Return location for alignment offset or %NULL.
@@ -174,6 +175,7 @@ get_udev_device_from_device_file (struct udev *udev,
  */
 static gchar *
 get_part_table_device_file (struct udev_device *given_device,
+                            const gchar        *given_device_file,
                             gchar             **out_partition_table_syspath,
                             guint64            *out_offset,
                             guint64            *out_alignment_offset,
@@ -244,11 +246,7 @@ get_part_table_device_file (struct udev_device *given_device,
       //g_printerr ("targets_type=`%s'\n", targets_type);
       //g_printerr ("encoded_targets_params=`%s'\n", encoded_targets_params);
 
-      if (g_strcmp0 (targets_type, "linear") != 0)
-        {
-          g_printerr ("Expected `linear' in UDISKS_DM_TARGETS_TYPE=`%s'\n", targets_type);
-        }
-      else
+      if (g_strcmp0 (targets_type, "linear") == 0)
         {
           gint partition_slave_major;
           gint partition_slave_minor;
@@ -318,9 +316,10 @@ get_part_table_device_file (struct udev_device *given_device,
             }
           g_free (targets_params);
         }
+
       /* not a kernel partition */
       partition_table_syspath = g_strdup (devpath);
-      ret = g_strdup (udev_device_get_devnode (given_device));
+      ret = g_strdup (given_device_file);
       partition_number = 0;
     }
 
@@ -425,10 +424,12 @@ main (int argc,
   device = get_udev_device_from_device_file (udev, device_file);
 
   partition_table_device_file = get_part_table_device_file (device,
+                                                            device_file,
                                                             &partition_table_syspath,
                                                             &partition_offset,
                                                             &partition_alignment_offset,
                                                             &partition_number);
+
   g_printerr ("using device_file=%s syspath=%s, offset=%" G_GUINT64_FORMAT " ao=%" G_GUINT64_FORMAT " and number=%d for %s\n",
               partition_table_device_file,
               partition_table_syspath,
@@ -438,7 +439,6 @@ main (int argc,
               device_file);
 
   fd = open (partition_table_device_file, O_RDONLY);
-
   if (fd < 0)
     {
       g_printerr ("Error opening %s: %m\n", partition_table_device_file);
@@ -507,15 +507,17 @@ main (int argc,
        * partitionless MBR header, so we must not advertise a VFAT device as a
        * partition table; in general, if we already know that a device has a
        * file system, it can't also be a partition table. */
+
       const char* fs = NULL;
       fs = g_getenv ("ID_FS_TYPE");
       if (fs == NULL)
 	  fs = udev_device_get_property_value (device, "ID_FS_TYPE");
-      if (fs == NULL || *fs == '\0') {
+      if (fs == NULL || *fs == '\0')
+        {
 	  g_print ("UDISKS_PARTITION_TABLE=1\n");
 	  g_print ("UDISKS_PARTITION_TABLE_SCHEME=%s\n", part_get_scheme_name (part_table_get_scheme (partition_table)));
 	  g_print ("UDISKS_PARTITION_TABLE_COUNT=%d\n", count_entries (partition_table));
-      }
+        }
     }
 
  out:
