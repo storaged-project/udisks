@@ -231,24 +231,15 @@ get_part_table_device_file (struct udev_device *given_device,
     }
   else
     {
-      struct udev_device *device;
       const char *targets_type;
       const char *encoded_targets_params;
 
-      device = udev_device_new_from_syspath (udev_device_get_udev (given_device), devpath);
-      g_printerr ("device=%p' for devpath=%s\n", device, devpath);
-      if (device == NULL)
-        {
-          g_printerr ("Error getting udev device for syspath %s: %m\n", devpath);
-          goto out;
-        }
-
       targets_type = g_getenv ("UDISKS_DM_TARGETS_TYPE");
       if (targets_type == NULL)
-        targets_type = udev_device_get_property_value (device, "UDISKS_DM_TARGETS_TYPE");
+        targets_type = udev_device_get_property_value (given_device, "UDISKS_DM_TARGETS_TYPE");
       encoded_targets_params = g_getenv ("UDISKS_DM_TARGETS_PARAMS");
       if (encoded_targets_params == NULL)
-        encoded_targets_params = udev_device_get_property_value (device, "UDISKS_DM_TARGETS_PARAMS");
+        encoded_targets_params = udev_device_get_property_value (given_device, "UDISKS_DM_TARGETS_PARAMS");
 
       //g_printerr ("targets_type=`%s'\n", targets_type);
       //g_printerr ("encoded_targets_params=`%s'\n", encoded_targets_params);
@@ -289,7 +280,7 @@ get_part_table_device_file (struct udev_device *given_device,
                   partition_number = 0;
                   dm_name = g_getenv ("DM_NAME");
                   if (dm_name == NULL)
-                    dm_name = udev_device_get_property_value (device, "DM_NAME");
+                    dm_name = udev_device_get_property_value (given_device, "DM_NAME");
                   if (dm_name == NULL || strlen (dm_name) == 0)
                     {
                       g_printerr ("DM_NAME not available\n");
@@ -319,7 +310,6 @@ get_part_table_device_file (struct udev_device *given_device,
 
                   udev_device_unref (mp_device);
                   g_free (targets_params);
-                  udev_device_unref (device);
 
                   /* TODO: set alignment_offset */
 
@@ -328,8 +318,6 @@ get_part_table_device_file (struct udev_device *given_device,
             }
           g_free (targets_params);
         }
-      udev_device_unref (device);
-
       /* not a kernel partition */
       partition_table_syspath = g_strdup (devpath);
       ret = g_strdup (udev_device_get_devnode (given_device));
