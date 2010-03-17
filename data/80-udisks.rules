@@ -149,6 +149,7 @@ SUBSYSTEMS=="usb", ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INS
 # Generic music player
 #
 SUBSYSTEMS=="usb", ENV{ID_MEDIA_PLAYER}=="?*", ENV{UDISKS_PRESENTATION_ICON_NAME}="multimedia-player"
+SUBSYSTEMS=="usb", ENV{ID_MEDIA_PLAYER}=="apple-ipod", ENV{UDISKS_PRESENTATION_ICON_NAME}="multimedia-player-ipod"
 
 # Apple iPod Video
 #
