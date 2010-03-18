@@ -131,7 +131,6 @@ KERNEL=="sd*[!0-9]", ATTR{removable}=="0", ENV{ID_BUS}=="ata", ENV{DEVTYPE}=="di
 # ATA disks connected via SAS (not driven by libata)
 KERNEL=="sd*[!0-9]", ATTR{removable}=="0", ENV{ID_BUS}=="scsi", ENV{DEVTYPE}=="disk", ENV{ID_VENDOR}=="ATA", IMPORT{program}="udisks-probe-ata-smart $tempnode"
 
-##############################################################################################################
 
 # Example rule for tagging a device with a specific media type. Where and
 # how to store this database needs some thought.
@@ -146,15 +145,6 @@ SUBSYSTEMS=="usb", ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INS
 SUBSYSTEMS=="usb", ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:2", ENV{ID_DRIVE_FLASH_SD}="1"
 SUBSYSTEMS=="usb", ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:3", ENV{ID_DRIVE_FLASH_MS}="1"
 
-# Generic music player
-#
-SUBSYSTEMS=="usb", ENV{ID_MEDIA_PLAYER}=="?*", ENV{UDISKS_PRESENTATION_ICON_NAME}="multimedia-player"
-SUBSYSTEMS=="usb", ENV{ID_MEDIA_PLAYER}=="apple-ipod", ENV{UDISKS_PRESENTATION_ICON_NAME}="multimedia-player-ipod"
-
-# Apple iPod Video
-#
-SUBSYSTEMS=="usb", ATTRS{idVendor}=="05ac", ATTRS{idProduct}=="1209", ENV{UDISKS_PRESENTATION_ICON_NAME}="multimedia-player-ipod-white"
-
 # APPLE SD Card Reader (MacbookPro5,4)
 #
 SUBSYSTEMS=="usb", ATTRS{idVendor}=="05ac", ATTRS{idProduct}=="8403", ENV{ID_DRIVE_FLASH_SD}="1"
@@ -165,6 +155,21 @@ SUBSYSTEMS=="usb", ENV{ID_MODEL}=="*SD_Reader*", ENV{ID_DRIVE_FLASH_SD}="1"
 SUBSYSTEMS=="usb", ENV{ID_MODEL}=="*CF_Reader*", ENV{ID_DRIVE_FLASH_CF}="1"
 SUBSYSTEMS=="usb", ENV{ID_MODEL}=="*SM_Reader*", ENV{ID_DRIVE_FLASH_SM}="1"
 SUBSYSTEMS=="usb", ENV{ID_MODEL}=="*MS_Reader*", ENV{ID_DRIVE_FLASH_MS}="1"
+
+##############################################################################################################
+
+# If previous rules did not set an icon, provide a default one for media players
+
+ENV{UDISKS_PRESENTATION_ICON_NAME}=="?*", GOTO="udisks_media_player_end"
+
+ENV{ID_MEDIA_PLAYER}=="?*", ENV{UDISKS_PRESENTATION_ICON_NAME}="multimedia-player"
+ENV{ID_MEDIA_PLAYER}=="apple-ipod", ENV{UDISKS_PRESENTATION_ICON_NAME}="multimedia-player-ipod"
+
+# Apple iPod Video
+#
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="05ac", ATTRS{idProduct}=="1209", ENV{UDISKS_PRESENTATION_ICON_NAME}="multimedia-player-ipod-white"
+
+LABEL="udisks_media_player_end"
 
 ##############################################################################################################
 
