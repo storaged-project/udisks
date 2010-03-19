@@ -46,13 +46,14 @@
 
 static DBusGConnection *bus;
 
-static void
+static int
 do_unmount (const char *object_path,
             const char *options)
 {
   DBusGProxy *proxy;
   GError *error;
   char **unmount_options;
+  int ret = 1;
 
   unmount_options = NULL;
   if (options != NULL)
@@ -67,8 +68,10 @@ do_unmount (const char *object_path,
       g_error_free (error);
       goto out;
     }
+  ret = 0; /* success */
  out:
   g_strfreev (unmount_options);
+  return ret;
 }
 
 int
@@ -132,7 +135,7 @@ main (int argc,
       g_error_free (error);
       goto out;
     }
-  do_unmount (object_path, NULL);
+  ret = do_unmount (object_path, NULL);
   g_free (object_path);
 
  out:
