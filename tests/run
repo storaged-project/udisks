@@ -728,6 +728,12 @@ class Luks(UDisksTestCase):
             self.assertEqual(ci['mount paths'], '')
             self.assertEqual(ci['presentation name'], '')
 
+            # check that we do not leak key information
+            udev_dump = subprocess.Popen(['udevadm', 'info', '--export-db'],
+                    stdout=subprocess.PIPE)
+            out = udev_dump.communicate()[0]
+            self.failIf('essiv:sha' in out, 'key information in udev properties')
+
         finally:
             # tear down cleartext device
             self.partition_iface().LuksLock([])
