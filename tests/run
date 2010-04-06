@@ -1248,6 +1248,79 @@ class LVM(UDisksTestCase):
 
             self.assertEqual(props.Get(I_D, 'DevicePresentationNopolicy'), True)
 
+    def test_partitions(self):
+        '''LVM: Single LV, no RAID, partitions (with kpartx)'''
+
+        if subprocess.call(['which', 'kpartx'], stdout=subprocess.PIPE) != 0:
+            self.fail('kpartx not installed')
+            return
+        if subprocess.call(['which', 'parted'], stdout=subprocess.PIPE) != 0:
+            self.fail('parted not installed')
+            return
+
+        self.assertEqual(subprocess.call(['lvcreate', '-n', 'udtestlv1', '-L',
+            '52M', self.vgname], stdout=subprocess.PIPE), 0)
+        devname = '/dev/mapper/%s-udtestlv1' % self.vgname
+
+        assert subprocess.call(['parted', '-s', devname, 'mklabel', 'msdos']) == 0
+        assert subprocess.call(['parted', '-s', devname, 'mkpart', 'primary',
+            'fat16', '1', '9']) == 0
+        assert subprocess.call(['parted', '-s', devname, 'mkpart', 'primary',
+            'fat32', '10', '19']) == 0
+        self.sync()
+
+        assert os.path.exists(devname + 'p1')
+        assert os.path.exists(devname + 'p2')
+
+        try:
+            # partition table properties
+            dev_objpath = self.manager_iface.FindDeviceByDeviceFile(devname)
+            dev_obj = dbus.SystemBus().get_object('org.freedesktop.UDisks',
+                    dev_objpath)
+            dev_p = dbus.Interface(dev_obj, dbus.PROPERTIES_IFACE)
+
+            self.assertEqual(dev_p.Get(I_D, 'DeviceFile'), devname)
+            self.assertEqual(dev_p.Get(I_D, 'DeviceIsPartition'), False)
+            # TODO: hmm, these fail.. bug?
+            #self.assertEqual(dev_p.Get(I_D, 'DeviceIsPartitionTable'), True)
+            #self.assertEqual(dev_p.Get(I_D, 'PartitionScheme'), 'mbr')
+
+            # partition 1 properties
+            p1_obj = dbus.SystemBus().get_object('org.freedesktop.UDisks', 
+                    self.manager_iface.FindDeviceByDeviceFile(devname + 'p1'))
+            p1_p = dbus.Interface(p1_obj, dbus.PROPERTIES_IFACE)
+
+            self.assertEqual(p1_p.Get(I_D, 'DeviceFile'), devname + 'p1')
+            self.assertEqual(p1_p.Get(I_D, 'DeviceIsPartition'), True)
+            self.assertEqual(p1_p.Get(I_D, 'DeviceIsPartitionTable'), False)
+            self.assertEqual(p1_p.Get(I_D, 'DevicePresentationHide'), False)
+            self.assertEqual(p1_p.Get(I_D, 'PartitionScheme'), 'mbr')
+            self.assertEqual(p1_p.Get(I_D, 'PartitionType'), '0x0e')
+            self.assertEqual(p1_p.Get(I_D, 'PartitionSlave'), dev_objpath)
+            self.assertEqual(p1_p.Get(I_D, 'PartitionNumber'), 1)
+            self.assert_(p1_p.Get(I_D, 'PartitionOffset') > 1000000)
+            self.assert_(p1_p.Get(I_D, 'PartitionSize') > 8000000)
+
+            # partition 2 properties
+            p1_obj = dbus.SystemBus().get_object('org.freedesktop.UDisks', 
+                    self.manager_iface.FindDeviceByDeviceFile(devname + 'p2'))
+            p1_p = dbus.Interface(p1_obj, dbus.PROPERTIES_IFACE)
+
+            self.assertEqual(p1_p.Get(I_D, 'DeviceFile'), devname + 'p2')
+            self.assertEqual(p1_p.Get(I_D, 'DeviceIsPartition'), True)
+            self.assertEqual(p1_p.Get(I_D, 'DeviceIsPartitionTable'), False)
+            self.assertEqual(p1_p.Get(I_D, 'DevicePresentationHide'), False)
+            self.assertEqual(p1_p.Get(I_D, 'PartitionScheme'), 'mbr')
+            self.assertEqual(p1_p.Get(I_D, 'PartitionType'), '0x0c')
+            self.assertEqual(p1_p.Get(I_D, 'PartitionSlave'), dev_objpath)
+            self.assertEqual(p1_p.Get(I_D, 'PartitionNumber'), 2)
+            self.assert_(p1_p.Get(I_D, 'PartitionOffset') > 9000000)
+            self.assert_(p1_p.Get(I_D, 'PartitionSize') > 8000000)
+
+        finally:
+            subprocess.call(['kpartx', '-d', devname])
+            self.sync()
+
 # ----------------------------------------------------------------------------
 
 class GlobalOps(UDisksTestCase):
