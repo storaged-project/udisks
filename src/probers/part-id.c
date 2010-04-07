@@ -246,6 +246,8 @@ get_part_table_device_file (struct udev_device *given_device,
       //g_printerr ("targets_type=`%s'\n", targets_type);
       //g_printerr ("encoded_targets_params=`%s'\n", encoded_targets_params);
 
+      /* If we ever need this for other types than "linear", remember to update
+         udisks-dm-export.c as well. */
       if (g_strcmp0 (targets_type, "linear") == 0)
         {
           gint partition_slave_major;

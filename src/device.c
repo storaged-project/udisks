@@ -3336,6 +3336,8 @@ update_info_partition_on_linux_dmmp (Device *device)
     goto out;
 
   targets_type = g_udev_device_get_property_as_strv (device->priv->d, "UDISKS_DM_TARGETS_TYPE");
+  /* If we ever need this for other types than "linear", remember to update
+     udisks-dm-export.c as well. */
   if (targets_type == NULL || g_strcmp0 (targets_type[0], "linear") != 0)
     goto out;
 

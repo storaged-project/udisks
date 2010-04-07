@@ -287,7 +287,10 @@ dm_export (int major, int minor)
           g_string_append (target_types_str, target_type);
           g_string_append_printf (start_str, "%" G_GUINT64_FORMAT, start);
           g_string_append_printf (length_str, "%" G_GUINT64_FORMAT, length);
-          if (params != NULL && strlen (params) > 0)
+          /* Set target_params for known-safe and known-needed target types only. In particular,
+           * we must not export it for "crypto", since that would expose
+           * information about the key. */
+          if (g_strcmp0 (target_type, "linear") == 0 && params != NULL && strlen (params) > 0)
             {
               _udev_util_encode_string (params, buf, sizeof (buf));
               g_string_append (params_str, buf);
