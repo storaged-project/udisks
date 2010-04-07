@@ -291,29 +291,28 @@ get_part_table_device_file (struct udev_device *given_device,
                       if (!isdigit (dm_name[n]))
                         break;
                     }
-                  if (n < 0 || dm_name[n] != 'p')
+                  /* if we have a partition, set partition number and parent device */
+                  if (n > 0 && dm_name[n] == 'p')
                     {
-                      g_printerr ("DM_NAME=`%s' is malformed (expected <name>p<number>)\n", dm_name);
+                      partition_number = atoi (dm_name + n + 1);
+                      if (partition_number < 1)
+                        {
+                          g_printerr ("Error determining partition number from DM_NAME=`%s'\n", dm_name);
+                          goto out;
+                        }
+
+                      ret = g_strdup (udev_device_get_devnode (mp_device));
+                      offset = offset_sectors * 512;
+
+                      partition_table_syspath = g_strdup (udev_device_get_syspath (mp_device));
+
+                      udev_device_unref (mp_device);
+                      g_free (targets_params);
+
+                      /* TODO: set alignment_offset */
+
                       goto out;
                     }
-                  partition_number = atoi (dm_name + n + 1);
-                  if (partition_number < 1)
-                    {
-                      g_printerr ("Error determining partition number from DM_NAME=`%s'\n", dm_name);
-                      goto out;
-                    }
-
-                  ret = g_strdup (udev_device_get_devnode (mp_device));
-                  offset = offset_sectors * 512;
-
-                  partition_table_syspath = g_strdup (udev_device_get_syspath (mp_device));
-
-                  udev_device_unref (mp_device);
-                  g_free (targets_params);
-
-                  /* TODO: set alignment_offset */
-
-                  goto out;
                 }
             }
           g_free (targets_params);

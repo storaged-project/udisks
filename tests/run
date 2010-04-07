@@ -1280,9 +1280,9 @@ class LVM(UDisksTestCase):
 
             self.assertEqual(dev_p.Get(I_D, 'DeviceFile'), devname)
             self.assertEqual(dev_p.Get(I_D, 'DeviceIsPartition'), False)
-            # TODO: hmm, these fail.. bug?
-            #self.assertEqual(dev_p.Get(I_D, 'DeviceIsPartitionTable'), True)
-            #self.assertEqual(dev_p.Get(I_D, 'PartitionScheme'), 'mbr')
+            self.assertEqual(dev_p.Get(I_D, 'PartitionScheme'), '')
+            self.assertEqual(dev_p.Get(I_D, 'DeviceIsPartitionTable'), True)
+            self.assertEqual(dev_p.Get(I_D, 'PartitionTableScheme'), 'mbr')
 
             # partition 1 properties
             p1_obj = dbus.SystemBus().get_object('org.freedesktop.UDisks', 
