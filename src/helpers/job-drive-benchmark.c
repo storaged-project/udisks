@@ -103,7 +103,7 @@ guesstimate_optimal_buffer_size (guint num_samples)
         }
       else if (num_read < 0)
         {
-          g_printerr ("Error reading %" G_GSSIZE_FORMAT " bytes at %" G_GOFFSET_FORMAT " from %s "
+          g_printerr ("Error reading %" G_GUINT64_FORMAT " bytes at %" G_GSSIZE_FORMAT " from %s "
                       "when guesstimating buffer size: %m\n",
                       buffer_size,
                       (remaining - total_read),
@@ -174,7 +174,7 @@ measure_transfer_rate (guint num_samples,
 
       if (lseek64 (fd, pos, SEEK_SET) == -1)
         {
-          g_printerr ("Error seeking to position %" G_GSSIZE_FORMAT " for %s: %m\n",
+          g_printerr ("Error seeking to position %" G_GOFFSET_FORMAT " for %s: %m\n",
                       pos,
                       device_file);
           goto out;
@@ -198,7 +198,7 @@ measure_transfer_rate (guint num_samples,
             }
           else if (num_read < 0)
             {
-              g_printerr ("Error reading %" G_GSSIZE_FORMAT " bytes at %" G_GOFFSET_FORMAT " from %s: %m\n",
+              g_printerr ("Error reading %" G_GUINT64_FORMAT " bytes at %" G_GOFFSET_FORMAT " from %s: %m\n",
                           sample_size,
                           pos + (remaining - total_read),
                           device_file);
@@ -259,7 +259,7 @@ measure_write_transfer_rate (guint num_samples,
 
       if (lseek64 (fd, pos, SEEK_SET) == -1)
         {
-          g_printerr ("Error seeking to position %" G_GSSIZE_FORMAT " for %s: %m\n",
+          g_printerr ("Error seeking to position %" G_GOFFSET_FORMAT " for %s: %m\n",
                       pos,
                       device_file);
           goto out;
@@ -283,7 +283,7 @@ measure_write_transfer_rate (guint num_samples,
             }
           else if (num_written < 0)
             {
-              g_printerr ("Error writing %" G_GSSIZE_FORMAT " bytes at %" G_GOFFSET_FORMAT " to %s: %m\n",
+              g_printerr ("Error writing %" G_GUINT64_FORMAT " bytes at %" G_GOFFSET_FORMAT " to %s: %m\n",
                           sample_size,
                           pos + (remaining - total_written),
                           device_file);
@@ -349,14 +349,14 @@ measure_access_time (guint num_samples,
       g_get_current_time (&begin_time);
       if (lseek64 (fd, pos, SEEK_SET) == -1)
         {
-          g_printerr ("Error seeking to position %" G_GSSIZE_FORMAT " for %s: %m\n",
+          g_printerr ("Error seeking to position %" G_GUINT64_FORMAT " for %s: %m\n",
                       pos,
                       device_file);
           goto out;
         }
       if (read (fd, buf, page_size) < 0)
         {
-          g_printerr ("Error reading %d bytes at %" G_GOFFSET_FORMAT " from %s: %m\n",
+          g_printerr ("Error reading %d bytes at %" G_GUINT64_FORMAT " from %s: %m\n",
                       page_size,
                       pos,
                       device_file);
@@ -367,7 +367,7 @@ measure_access_time (guint num_samples,
       duration_secs = ((end_time.tv_sec * G_USEC_PER_SEC + end_time.tv_usec) - (begin_time.tv_sec * G_USEC_PER_SEC
                                                                                 + begin_time.tv_usec)) / ((gdouble) G_USEC_PER_SEC);
 
-      g_print ("access_time: offset %" G_GOFFSET_FORMAT " time %f\n",
+      g_print ("access_time: offset %" G_GUINT64_FORMAT " time %f\n",
                pos,
                duration_secs);
 
