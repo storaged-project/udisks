@@ -1,5 +1,5 @@
 ------------
-udisks 1.0.1 <not yet released>
+udisks 1.0.1
 ------------
 
 udisks provides a daemon, D-Bus API and command line tools
@@ -12,20 +12,38 @@ x. At this point we do not provide any ABI guarantees for the
 udisks(1) command-line tool (neither options nor the name). See the
 README file for more discussion of ABI guarantees.
 
-ATTENTION: This release fixes a local information disclosure: The device-mapper
-udev prober exposed the plaintext password of encrypted LUKS devices as an udev
-property "UDISKS_DM_TARGETS_PARAMS", which all local users can read without
-restriction. (CVE-2010-1149) The only affected version is udisks 1.0.0 (it was
-introduced in commit 2f0154); No release of DeviceKit-Disks is affected.
+ATTENTION: This release fixes a local information disclosure: The
+device-mapper udev prober exposed the plaintext password of encrypted
+LUKS devices as an udev property "UDISKS_DM_TARGETS_PARAMS", which all
+local users can read without restriction. (CVE-2010-1149) The only
+affected version is udisks 1.0.0 (it was introduced in commit 2f0154);
+No release of DeviceKit-Disks is affected. See fdo #27494 for more
+details.
 
 Changes from udisks 1.0.0:
 
- <insert prettified output of 'git shortlog 1.0.0..' here>
+David Zeuthen (3):
+      Update NEWS for release
+      Post-release version bump to 1.0.1
+      Update NEWS for release
+
+Martin Pitt (11):
+      Set multimedia-player-ipod icon for iPod media players
+      Allow other rules to set a more specific presentation icon
+      Fix exit code of umount.udisks
+      testsuite: Check that our udev probers do not leak key information
+      testsuite: Test detection of kpartx LVM partitions
+      Bug 27494 — publicly exports dm key information
+      testsuite: Check presence and properties of loop devices
+      part-id: Fix DM partition table detection
+      job-drive-benchmark.c: Fix data types in error messages
+      Hide Sony E-Book launcher partition
+      add information about CVE-2010-1149 to NEWS
 
 Thanks to all our contributors.
 
-<insert your name>,
-<insert the date>
+David Zeuthen,
+April 9, 2010
 
 ------------
 udisks 1.0.0
