@@ -12,9 +12,15 @@ x. At this point we do not provide any ABI guarantees for the
 udisks(1) command-line tool (neither options nor the name). See the
 README file for more discussion of ABI guarantees.
 
+ATTENTION: This release fixes a local information disclosure: The device-mapper
+udev prober exposed the plaintext password of encrypted LUKS devices as an udev
+property "UDISKS_DM_TARGETS_PARAMS", which all local users can read without
+restriction. (CVE-2010-1149) The only affected version is udisks 1.0.0 (it was
+introduced in commit 2f0154); No release of DeviceKit-Disks is affected.
+
 Changes from udisks 1.0.0:
 
- <insert prettified output of 'git-log 1.0.0.. | git shortlog' here>
+ <insert prettified output of 'git shortlog 1.0.0..' here>
 
 Thanks to all our contributors.
 
