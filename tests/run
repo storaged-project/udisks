@@ -51,7 +51,7 @@ test_md_dev = '/dev/md125'
 
 # Those file systems are known to have a broken handling of permissions, in
 # particular the executable bit
-BROKEN_PERMISSIONS_FS = ['vfat', 'ntfs']
+BROKEN_PERMISSIONS_FS = ['ntfs']
 
 # Some D-BUS API methods cause properties to not be up to date yet when a
 # method call finishes, thus we do an udevadm settle as a workaround. Those

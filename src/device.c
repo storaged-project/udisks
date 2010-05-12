@@ -5848,8 +5848,8 @@ typedef struct
 
 /* ---------------------- vfat -------------------- */
 
-static const char *vfat_defaults[] = { "uid=", "gid=", "shortname=mixed", "dmask=0077", "utf8=1", NULL };
-static const char *vfat_allow[] = { "flush", "utf8=", "shortname=", "umask=", "dmask=", "fmask=", "codepage=", "iocharset=", "usefree", NULL };
+static const char *vfat_defaults[] = { "uid=", "gid=", "shortname=mixed", "dmask=0077", "utf8=1", "showexec", NULL };
+static const char *vfat_allow[] = { "flush", "utf8=", "shortname=", "umask=", "dmask=", "fmask=", "codepage=", "iocharset=", "usefree", "showexec", NULL };
 static const char *vfat_allow_uid_self[] = { "uid=", NULL };
 static const char *vfat_allow_gid_self[] = { "gid=", NULL };
 
