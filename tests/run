@@ -49,6 +49,10 @@ NUM_VDEV = 3 # number of virtual test devices that we need
 VDEV_SIZE = 60000000 # size of virtual test devices
 test_md_dev = '/dev/md125'
 
+# Those file systems are known to have a broken handling of permissions, in
+# particular the executable bit
+BROKEN_PERMISSIONS_FS = ['vfat', 'ntfs']
+
 # Some D-BUS API methods cause properties to not be up to date yet when a
 # method call finishes, thus we do an udevadm settle as a workaround. Those
 # methods should eventually get fixed properly, but it's unnerving to have
@@ -641,6 +645,8 @@ class FS(UDisksTestCase):
             f.close()
             self.assertEqual(iface.FilesystemListOpenFiles(), [])
 
+            self._do_file_perms_checks(type, mount_path)
+
             # unmount
             self.retry_busy(self.partition_iface().FilesystemUnmount, [])
             self.failIf(os.path.exists(mount_path), 'mount point was not removed')
@@ -676,6 +682,40 @@ class FS(UDisksTestCase):
 
         # check fs
         self.assertEqual(iface.FilesystemCheck([]), True)
+
+    def _do_file_perms_checks(self, type, mount_point):
+        '''Check for permissions for data files and executables.
+
+        This particularly checks sane and useful permissions on non-Unix file
+        systems like vfat.
+        '''
+        if type in BROKEN_PERMISSIONS_FS:
+            return
+
+        f = os.path.join(mount_point, 'simpledata.txt')
+        open(f, 'w').close()
+        self.assert_(os.access(f, os.R_OK))
+        self.assert_(os.access(f, os.W_OK))
+        self.failIf(os.access(f, os.X_OK))
+
+        f = os.path.join(mount_point, 'simple.exe')
+        shutil.copy('/bin/bash', f)
+        self.assert_(os.access(f, os.R_OK))
+        self.assert_(os.access(f, os.W_OK))
+        self.assert_(os.access(f, os.X_OK))
+
+        os.mkdir(os.path.join(mount_point, 'subdir'))
+        f = os.path.join(mount_point, 'subdir', 'subdirdata.txt')
+        open(f, 'w').close()
+        self.assert_(os.access(f, os.R_OK))
+        self.assert_(os.access(f, os.W_OK))
+        self.failIf(os.access(f, os.X_OK))
+
+        f = os.path.join(mount_point, 'subdir', 'subdir.exe')
+        shutil.copy('/bin/bash', f)
+        self.assert_(os.access(f, os.R_OK))
+        self.assert_(os.access(f, os.W_OK))
+        self.assert_(os.access(f, os.X_OK))
 
 
 # ----------------------------------------------------------------------------
