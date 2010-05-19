@@ -47,7 +47,7 @@ find_vg_for_pv_uuid (lvm_t        lvm_ctx,
               struct lvm_pv_list *pv_list;
               dm_list_iterate_items (pv_list, pvs)
                 {
-                  char *uuid;
+                  const char *uuid;
                   pv_t pv = pv_list->pv;
 
                   uuid = lvm_pv_get_uuid (pv);
@@ -58,10 +58,8 @@ find_vg_for_pv_uuid (lvm_t        lvm_ctx,
                           if (out_pv != NULL)
                             *out_pv = pv;
                           ret = vg;
-                          dm_free (uuid);
                           goto out;
                         }
-                      dm_free (uuid);
                     }
                 }
             }
@@ -79,12 +77,12 @@ find_vg_for_pv_uuid (lvm_t        lvm_ctx,
 static void
 print_vg (vg_t vg)
 {
-  char *s;
+  const char *s;
   struct dm_list *pvs;
   struct dm_list *lvs;
 
-  s = lvm_vg_get_uuid (vg); g_print ("UDISKS_LVM2_PV_VG_UUID=%s\n", s); dm_free (s);
-  s = lvm_vg_get_name (vg); g_print ("UDISKS_LVM2_PV_VG_NAME=%s\n", s); dm_free (s);
+  s = lvm_vg_get_uuid (vg); g_print ("UDISKS_LVM2_PV_VG_UUID=%s\n", s);
+  s = lvm_vg_get_name (vg); g_print ("UDISKS_LVM2_PV_VG_NAME=%s\n", s);
   g_print ("UDISKS_LVM2_PV_VG_SIZE=%" G_GUINT64_FORMAT "\n", lvm_vg_get_size (vg));
   g_print ("UDISKS_LVM2_PV_VG_FREE_SIZE=%" G_GUINT64_FORMAT "\n", lvm_vg_get_free_size (vg));
   g_print ("UDISKS_LVM2_PV_VG_EXTENT_SIZE=%" G_GUINT64_FORMAT "\n", lvm_vg_get_extent_size (vg));
@@ -117,17 +115,14 @@ print_vg (vg_t vg)
       str = g_string_new (NULL);
       dm_list_iterate_items (pv_list, pvs)
         {
-          char *uuid;
+          const char *uuid;
           guint64 size;
           guint64 free_size;
           pv_t pv = pv_list->pv;
 
           uuid = lvm_pv_get_uuid (pv);
           if (uuid != NULL)
-            {
-              g_string_append_printf (str, "uuid=%s", uuid);
-              dm_free (uuid);
-            }
+            g_string_append_printf (str, "uuid=%s", uuid);
           size = lvm_pv_get_size (pv);
           g_string_append_printf (str, ";size=%" G_GUINT64_FORMAT, size);
           free_size = lvm_pv_get_free (pv);
@@ -173,8 +168,8 @@ print_vg (vg_t vg)
       str = g_string_new (NULL);
       dm_list_iterate_items (lv_list, lvs)
         {
-          char *uuid;
-          char *name;
+          const char *uuid;
+          const char *name;
           gboolean is_active;
           guint64 size;
           lv_t lv = lv_list->lv;
@@ -195,11 +190,6 @@ print_vg (vg_t vg)
               g_string_append_printf (str, "active=%d", is_active);
               g_string_append_c (str, ' ');
             }
-
-          if (uuid != NULL)
-            dm_free (uuid);
-          if (name != NULL)
-            dm_free (name);
         }
       g_print ("UDISKS_LVM2_PV_VG_LV_LIST=%s\n", str->str);
       g_string_free (str, TRUE);
@@ -212,9 +202,9 @@ print_vg (vg_t vg)
 static void
 print_pv (pv_t pv)
 {
-  char *s;
+  const char *s;
 
-  s = lvm_pv_get_uuid (pv); g_print ("UDISKS_LVM2_PV_UUID=%s\n", s); dm_free (s);
+  s = lvm_pv_get_uuid (pv); g_print ("UDISKS_LVM2_PV_UUID=%s\n", s);
   g_print ("UDISKS_LVM2_PV_NUM_MDA=%" G_GUINT64_FORMAT "\n", lvm_pv_get_mda_count (pv));
 
   /* TODO: ask for more API in liblvm - pvdisplay(8) suggests more information

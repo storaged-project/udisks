@@ -170,7 +170,7 @@ AC_SUBST(DEVMAPPER_LIBS)
 have_lvm2=no
 AC_ARG_ENABLE(lvm2, AS_HELP_STRING([--disable-lvm2], [disable LVM2 support]))
 if test "x$enable_lvm2" != "xno"; then
-  PKG_CHECK_MODULES(LVM2, lvm2app >= 2.1,
+  PKG_CHECK_MODULES(LVM2, lvm2app >= 2.2,
                     [AC_DEFINE(HAVE_LVM2, 1, [Define if LVM2 is available]) have_lvm2=yes],
                     have_lvm2=no)
   AC_SUBST(LVM2_CFLAGS)
