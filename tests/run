@@ -285,39 +285,26 @@ class UDisksTestCase(unittest.TestCase):
     def mkfs(klass, type, label=None, partition=None):
         '''Create file system using mkfs.'''
 
-        no_stderr = False
-        if type == 'vfat':
-            cmd = ['mkfs.vfat', '-F', '32']
-            if label:
-                cmd += ['-n', label]
-        elif type == 'reiserfs':
-            cmd = ['mkfs.reiserfs', '-q']
-            if label:
-                cmd += ['-l', label]
-            no_stderr = True
-        elif type == 'minix':
+        if type == 'minix':
             assert label is None, 'minix does not support labels'
-            cmd = ['mkfs.minix']
-        elif type == 'swap':
-            cmd = ['mkswap', '-f']
-            if label:
-                cmd += ['-L', label]
-        else:
-            cmd = ['mkfs.' + type, '-q']
-            if label:
-                cmd += ['-L', label]
 
-        if type == 'xfs':
-            # XFS complains if there's an existing FS, so --force
-            cmd.append('-f')
+        mkcmd =     { 'swap': 'mkswap',
+                    }
+        label_opt = { 'vfat': '-n', 
+                      'reiserfs': '-l',
+                    }
+        extra_opt = { 'vfat': [ '-F', '32'],
+                      'swap': ['-f'],
+                      'xfs': ['-f'], # XFS complains if there's an existing FS, so --force
+                    }
 
+        cmd = [mkcmd.get(type, 'mkfs.' + type)] + extra_opt.get(type, [])
+        if label:
+            cmd += [label_opt.get(type, '-L'), label]
         cmd.append(klass.devname(partition))
 
-        if no_stderr:
-            assert subprocess.call(cmd, stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE) == 0
-        else:
-            assert subprocess.call(cmd, stdout=subprocess.PIPE) == 0
+        assert subprocess.call(cmd, stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE) == 0
 
         # kernel/udev generally detect those changes itself, but do not quite
         # tell us when they are done; so do a little kludge here to know how
