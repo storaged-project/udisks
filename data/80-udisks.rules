@@ -80,6 +80,9 @@ KERNEL=="hd*[0-9]", ATTR{removable}=="1", GOTO="probe_parttable_end"
 # don't scan for partition tables on empty discs
 KERNEL=="sr*", ENV{ID_CDROM_MEDIA}!="?*", GOTO="probe_parttable_end"
 
+# skip non-data discs (see https://bugzilla.kernel.org/show_bug.cgi?id=15757 for the udev bits)
+KERNEL=="sr*", ENV{ID_CDROM_MEDIA_TRACK_COUNT_DATA}=="", GOTO="probe_parttable_end"
+
 # scan for partition tables both on whole-disk and partitions
 #
 IMPORT{program}="udisks-part-id $tempnode"
