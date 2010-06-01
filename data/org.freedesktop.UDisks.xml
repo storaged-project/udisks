@@ -1,15 +1,6 @@
 <!DOCTYPE node PUBLIC
 "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
-"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd" [
-  <!ENTITY ERROR_FAILED "org.freedesktop.UDisks.Error.Failed">
-  <!ENTITY ERROR_BUSY "org.freedesktop.UDisks.Error.Busy">
-  <!ENTITY ERROR_CANCELLED "org.freedesktop.UDisks.Error.Cancelled">
-  <!ENTITY ERROR_INHIBITED "org.freedesktop.UDisks.Error.Inhibited">
-  <!ENTITY ERROR_INVALID_OPTION "org.freedesktop.UDisks.Error.InvalidOption">
-  <!ENTITY ERROR_NOT_SUPPORTED "org.freedesktop.UDisks.Error.NotSupported">
-  <!ENTITY ERROR_ATA_SMART_WOULD_WAKEUP "org.freedesktop.UDisks.Error.NotFound">
-  <!ENTITY ERROR_NOT_AUTHORIZED "org.freedesktop.PolicyKit.Error.NotAuthorized">
-]>
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
 <node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
 
   <interface name="org.freedesktop.UDisks">
@@ -174,8 +165,8 @@
           </doc:list>
         </doc:permission>
         <doc:errors>
-          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.NotAuthorized">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Failed">if the operation failed</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -199,7 +190,7 @@
           </doc:para>
         </doc:description>
         <doc:errors>
-          <doc:error name="&ERROR_FAILED;">if the given cookie is malformed</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Failed">if the given cookie is malformed</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -247,9 +238,9 @@
           </doc:list>
         </doc:permission>
         <doc:errors>
-          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
-          <doc:error name="&ERROR_INVALID_OPTION;">if an invalid or malformed option was given</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.NotAuthorized">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Failed">if the operation failed</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.InvalidOption">if an invalid or malformed option was given</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -282,8 +273,8 @@
           </doc:list>
         </doc:permission>
         <doc:errors>
-          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.NotAuthorized">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Failed">if the operation failed</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -318,10 +309,10 @@
           </doc:list>
         </doc:permission>
         <doc:errors>
-          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_BUSY;">if one of the given components are busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
-          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.NotAuthorized">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Busy">if one of the given components are busy</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Failed">if the operation failed</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Cancelled">if the job was cancelled</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -355,10 +346,10 @@
           </doc:list>
         </doc:permission>
         <doc:errors>
-          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_BUSY;">if one of the given components are busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
-          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.NotAuthorized">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Busy">if one of the given components are busy</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Failed">if the operation failed</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Cancelled">if the job was cancelled</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -392,10 +383,10 @@
           </doc:list>
         </doc:permission>
         <doc:errors>
-          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_BUSY;">if one of the given components are busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
-          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.NotAuthorized">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Busy">if one of the given components are busy</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Failed">if the operation failed</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Cancelled">if the job was cancelled</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -433,10 +424,10 @@
           </doc:list>
         </doc:permission>
         <doc:errors>
-          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_BUSY;">if one of the given components are busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
-          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.NotAuthorized">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Busy">if one of the given components are busy</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Failed">if the operation failed</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Cancelled">if the job was cancelled</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -473,10 +464,10 @@
           </doc:list>
         </doc:permission>
         <doc:errors>
-          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_BUSY;">if one of the given components are busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
-          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.NotAuthorized">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Busy">if one of the given components are busy</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Failed">if the operation failed</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Cancelled">if the job was cancelled</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -513,10 +504,10 @@
           </doc:list>
         </doc:permission>
         <doc:errors>
-          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_BUSY;">if one of the given components are busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
-          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.NotAuthorized">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Busy">if one of the given components are busy</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Failed">if the operation failed</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Cancelled">if the job was cancelled</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -553,10 +544,10 @@
           </doc:list>
         </doc:permission>
         <doc:errors>
-          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_BUSY;">if one of the given components are busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
-          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.NotAuthorized">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Busy">if one of the given components are busy</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Failed">if the operation failed</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Cancelled">if the job was cancelled</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -593,10 +584,10 @@
           </doc:list>
         </doc:permission>
         <doc:errors>
-          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_BUSY;">if one of the given components are busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
-          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.NotAuthorized">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Busy">if one of the given components are busy</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Failed">if the operation failed</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Cancelled">if the job was cancelled</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -663,10 +654,10 @@
           </doc:list>
         </doc:permission>
         <doc:errors>
-          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_BUSY;">if one of the given components are busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
-          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.NotAuthorized">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Busy">if one of the given components are busy</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Failed">if the operation failed</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Cancelled">if the job was cancelled</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -706,10 +697,10 @@
           </doc:list>
         </doc:permission>
         <doc:errors>
-          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_BUSY;">if one of the given components are busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
-          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.NotAuthorized">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Busy">if one of the given components are busy</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Failed">if the operation failed</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Cancelled">if the job was cancelled</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -757,10 +748,10 @@
           </doc:list>
         </doc:permission>
         <doc:errors>
-          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller lacks the appropriate PolicyKit authorization</doc:error>
-          <doc:error name="&ERROR_BUSY;">if one of the given components are busy</doc:error>
-          <doc:error name="&ERROR_FAILED;">if the operation failed</doc:error>
-          <doc:error name="&ERROR_CANCELLED;">if the job was cancelled</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.NotAuthorized">if the caller lacks the appropriate PolicyKit authorization</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Busy">if one of the given components are busy</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Failed">if the operation failed</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Cancelled">if the job was cancelled</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -782,7 +773,7 @@
           <doc:para>
             Inhibits clients from invoking methods on the daemon
             of the daemon that require authorization (all methods
-            will return the <doc:tt>&ERROR_INHIBITED;</doc:tt> error)
+            will return the <doc:tt>org.freedesktop.PolicyKit.Error.Inhibited</doc:tt> error)
             if the caller is not the super user.
             This is typically used by OS installers and other
             programs that expects full control of the system, specifically
@@ -793,7 +784,7 @@
           Only the super user can invoke this method.
         </doc:permission>
         <doc:errors>
-          <doc:error name="&ERROR_NOT_AUTHORIZED;">if the caller is not the super user</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.NotAuthorized">if the caller is not the super user</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
@@ -817,7 +808,7 @@
           </doc:para>
         </doc:description>
         <doc:errors>
-          <doc:error name="&ERROR_FAILED;">if the given cookie is malformed</doc:error>
+          <doc:error name="org.freedesktop.PolicyKit.Error.Failed">if the given cookie is malformed</doc:error>
         </doc:errors>
       </doc:doc>
     </method>
