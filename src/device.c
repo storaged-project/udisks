@@ -4471,7 +4471,8 @@ update_info (Device *device)
     {
       media_available = FALSE;
 
-      if (!g_udev_device_get_property_as_boolean (device->priv->d, "ID_CDROM"))
+      if (!g_udev_device_get_property_as_boolean (device->priv->d, "ID_CDROM") &&
+          !g_udev_device_get_property_as_boolean (device->priv->d, "ID_DRIVE_FLOPPY"))
         {
           int fd;
           fd = open (device->priv->device_file, O_RDONLY);
