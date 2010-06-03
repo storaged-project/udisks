@@ -5857,7 +5857,7 @@ static const char *vfat_allow_gid_self[] = { "gid=", NULL };
 /* ---------------------- ntfs -------------------- */
 /* this is assuming that ntfs-3g is used */
 
-static const char *ntfs_defaults[] = { "uid=", "gid=", "dmask=0077", NULL };
+static const char *ntfs_defaults[] = { "uid=", "gid=", "dmask=0077", "fmask=0177", NULL };
 static const char *ntfs_allow[] = { "umask=", "dmask=", "fmask=", NULL };
 static const char *ntfs_allow_uid_self[] = { "uid=", NULL };
 static const char *ntfs_allow_gid_self[] = { "gid=", NULL };
