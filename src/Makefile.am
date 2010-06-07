@@ -5,72 +5,73 @@ SUBDIRS = helpers probers
 NULL =
 
 INCLUDES = \
-	-I$(top_builddir)/src -I$(top_srcdir)/src \
-	-DPACKAGE_LIBEXEC_DIR=\""$(libexecdir)"\" \
-	-DPACKAGE_SYSCONF_DIR=\""$(sysconfdir)"\" \
-	-DPACKAGE_DATA_DIR=\""$(datadir)"\" \
-	-DPACKAGE_BIN_DIR=\""$(bindir)"\" \
-	-DPACKAGE_LOCALSTATE_DIR=\""$(localstatedir)"\" \
-	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\" \
-	-DPACKAGE_LIB_DIR=\""$(libdir)"\" \
-	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT	\
-	$(DBUS_GLIB_CFLAGS) \
-	$(POLKIT_GOBJECT_1_CFLAGS) \
-	$(GUDEV_CFLAGS) \
-	$(GLIB_CFLAGS) \
-	$(GIO_CFLAGS)
+	-I$(top_builddir)/src -I$(top_srcdir)/src 		\
+	-DPACKAGE_LIBEXEC_DIR=\""$(libexecdir)"\" 		\
+	-DPACKAGE_SYSCONF_DIR=\""$(sysconfdir)"\" 		\
+	-DPACKAGE_DATA_DIR=\""$(datadir)"\" 			\
+	-DPACKAGE_BIN_DIR=\""$(bindir)"\" 			\
+	-DPACKAGE_LOCALSTATE_DIR=\""$(localstatedir)"\" 	\
+	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\" 		\
+	-DPACKAGE_LIB_DIR=\""$(libdir)"\" 			\
+	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT			\
+	$(DBUS_GLIB_CFLAGS) 					\
+	$(POLKIT_GOBJECT_1_CFLAGS) 				\
+	$(GUDEV_CFLAGS) 					\
+	$(GLIB_CFLAGS) 						\
+	$(GIO_CFLAGS)						\
+	$(NULL)
 
-BUILT_SOURCES =						\
-	daemon-glue.h					\
-	device-glue.h					\
-	adapter-glue.h					\
-	port-glue.h					\
-	expander-glue.h					\
-	marshal.h		marshal.c
+generated-bindings.stamp : Makefile.am $(top_srcdir)/data/org.freedesktop.UDisks.xml $(top_srcdir)/data/org.freedesktop.UDisks.Device.xml
+	gdbus-binding-tool                                                      \
+		--strip-prefix org.freedesktop.UDisks.                          \
+		--output-prefix generated                                       \
+		$(top_srcdir)/data/org.freedesktop.UDisks.xml         		\
+		$(top_srcdir)/data/org.freedesktop.UDisks.Device.xml         	\
+		$(NULL)
 
-marshal.h: marshal.list
-	glib-genmarshal $< --prefix=marshal --header > $@
-
-marshal.c: marshal.list
-	echo "#include \"marshal.h\"" > $@ && glib-genmarshal $< --prefix=marshal --body >> $@
-
-daemon-glue.h: $(top_srcdir)/data/org.freedesktop.UDisks.xml Makefile.am
-	dbus-binding-tool --prefix=daemon --mode=glib-server --output=daemon-glue.h $(top_srcdir)/data/org.freedesktop.UDisks.xml
-
-device-glue.h: $(top_srcdir)/data/org.freedesktop.UDisks.Device.xml Makefile.am
-	dbus-binding-tool --prefix=device --mode=glib-server --output=device-glue.h $(top_srcdir)/data/org.freedesktop.UDisks.Device.xml
-
-adapter-glue.h: $(top_srcdir)/data/org.freedesktop.UDisks.Adapter.xml Makefile.am
-	dbus-binding-tool --prefix=adapter --mode=glib-server --output=adapter-glue.h $(top_srcdir)/data/org.freedesktop.UDisks.Adapter.xml
-
-expander-glue.h: $(top_srcdir)/data/org.freedesktop.UDisks.Expander.xml Makefile.am
-	dbus-binding-tool --prefix=expander --mode=glib-server --output=expander-glue.h $(top_srcdir)/data/org.freedesktop.UDisks.Expander.xml
-
-port-glue.h: $(top_srcdir)/data/org.freedesktop.UDisks.Port.xml Makefile.am
-	dbus-binding-tool --prefix=port --mode=glib-server --output=port-glue.h $(top_srcdir)/data/org.freedesktop.UDisks.Port.xml
+BUILT_SOURCES =								\
+	generated-bindings.stamp					\
+	generated-bindings.h						\
+	generated-daemon.h		generated-daemon.c		\
+	generated-device.h		generated-device.c		\
+	generated-marshallers.h		generated-marshallers.c		\
+	generated-typemappers.h						\
+	$(NULL)
 
 libexec_PROGRAMS = udisks-daemon
 
 udisks_daemon_SOURCES = 						\
 	types.h								\
+	error.h				error.c				\
+					main.c				\
+	linuxdaemon.h			linuxdaemon.c			\
 	private.h							\
 	profile.h							\
-	daemon.h			daemon.c			\
-	device.h			device.c			\
-	device-private.h		device-private.c		\
-	adapter.h			adapter.c			\
-	adapter-private.h		adapter-private.c		\
-	expander.h			expander.c			\
-	expander-private.h		expander-private.c		\
-	port.h				port.c				\
-	port-private.h			port-private.c			\
-	mount-file.h			mount-file.c			\
-	mount.h				mount.c				\
-	mount-monitor.h			mount-monitor.c			\
-	inhibitor.h			inhibitor.c			\
-	poller.h			poller.c			\
-	main.c								\
-	$(BUILT_SOURCES)
+	$(BUILT_SOURCES)						\
+	$(NULL)
+
+#udisks_daemon_SOURCES = 						\
+#	types.h								\
+#	private.h							\
+#	profile.h							\
+#	daemon.h			daemon.c			\
+#	device.h			device.c			\
+#	device-private.h		device-private.c		\
+#	adapter.h			adapter.c			\
+#	adapter-private.h		adapter-private.c		\
+#	expander.h			expander.c			\
+#	expander-private.h		expander-private.c		\
+#	port.h				port.c				\
+#	port-private.h			port-private.c			\
+#	mount-file.h			mount-file.c			\
+#	mount.h				mount.c				\
+#	mount-monitor.h			mount-monitor.c			\
+#	inhibitor.h			inhibitor.c			\
+#	poller.h			poller.c			\
+#	main.c								\
+#	$(BUILT_SOURCES)						\
+#	$(NULL)
+#
 
 udisks_daemon_CPPFLAGS = 				\
 	-I$(top_srcdir)/src				\

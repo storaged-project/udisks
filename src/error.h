@@ -1,6 +1,6 @@
 /* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*-
  *
- * Copyright (C) 2008 David Zeuthen <david@fubar.dk>
+ * Copyright (C) 2007-2010 David Zeuthen <david@fubar.dk>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,20 +18,31 @@
  *
  */
 
-#ifndef __TYPES_H__
-#define __TYPES_H__
 
-#include <gio/gio.h>
-#include "generated-bindings.h"
+#ifndef __ERROR_H__
+#define __ERROR_H__
+
+#include "types.h"
 
 G_BEGIN_DECLS
 
-typedef struct _LinuxDaemon  LinuxDaemon;
+typedef enum
+{
+  ERROR_FAILED,
+  ERROR_PERMISSION_DENIED,
+  ERROR_BUSY,
+  ERROR_CANCELLED,
+  ERROR_INHIBITED,
+  ERROR_INVALID_OPTION,
+  ERROR_NOT_SUPPORTED,
+  ERROR_ATA_SMART_WOULD_WAKEUP,
+  ERROR_FILESYSTEM_DRIVER_MISSING,
+  ERROR_FILESYSTEM_TOOLS_MISSING
+} Error;
 
-typedef struct Mount        Mount;
-typedef struct MountMonitor MountMonitor;
-typedef struct Inhibitor    Inhibitor;
+#define ERROR (error_quark ())
+GQuark error_quark (void);
 
 G_END_DECLS
 
-#endif /* __TYPES_H__ */
+#endif /* __ERROR_H__ */

@@ -4,6 +4,7 @@
 <node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
 
   <interface name="org.freedesktop.UDisks">
+    <annotation name="org.gtk.GDBus.Name" value="Daemon"/>
 
     <!-- ************************************************************ -->
 
