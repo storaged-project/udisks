@@ -274,12 +274,23 @@ linux_device_update (LinuxDevice *device)
 {
   g_return_if_fail (IS_LINUX_DEVICE (device));
 
+  /* Handle first init, typically one-time / constant properties etc. is computed here */
+  if (device->priv->object_path == NULL)
+    {
+      device->priv->object_path = util_compute_object_path (g_udev_device_get_sysfs_path (device->priv->udev_device));
+    }
+
+  /* set all properties that can vary */
   device_set_native_path (DEVICE (device), g_udev_device_get_sysfs_path (device->priv->udev_device));
 
-  /* TODO */
+  /* TODO: actually compute whether the object is visible */
   device->priv->visible = TRUE;
-  device->priv->object_path = util_compute_object_path (device_get_native_path (DEVICE (device)));
 
+  /* TODO: this is just for fun to show that the PropertiesChanged() signal is
+   * emitted - e.g. if you do 'udevadm trigger --sysname-match=sda' then
+   * the daemon receives a 'change' uevent for sda and this function is called
+   * by the LinuxDaemon logic.
+   */
   device_set_device_detection_time (DEVICE (device), device_get_device_detection_time (DEVICE (device)) + 1);
   device_set_device_media_detection_time (DEVICE (device), device_get_device_media_detection_time (DEVICE (device)) + 2);
 }
