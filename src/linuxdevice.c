@@ -274,7 +274,7 @@ linux_device_update (LinuxDevice *device)
 {
   g_return_if_fail (IS_LINUX_DEVICE (device));
 
-  device_set_native_path (DEVICE (device), (gchar *) g_udev_device_get_sysfs_path (device->priv->udev_device));
+  device_set_native_path (DEVICE (device), g_udev_device_get_sysfs_path (device->priv->udev_device));
 
   /* TODO */
   device->priv->visible = TRUE;
