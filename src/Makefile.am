@@ -34,6 +34,7 @@ BUILT_SOURCES =								\
 	generated-bindings.h						\
 	generated-daemon.h		generated-daemon.c		\
 	generated-device.h		generated-device.c		\
+	generated-marshallers.list					\
 	generated-marshallers.h		generated-marshallers.c		\
 	generated-typemappers.h						\
 	$(NULL)
@@ -45,6 +46,7 @@ udisks_daemon_SOURCES = 						\
 	error.h				error.c				\
 					main.c				\
 	linuxdaemon.h			linuxdaemon.c			\
+	linuxdevice.h			linuxdevice.c			\
 	private.h							\
 	profile.h							\
 	$(BUILT_SOURCES)						\

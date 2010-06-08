@@ -27,6 +27,7 @@
 G_BEGIN_DECLS
 
 typedef struct _LinuxDaemon  LinuxDaemon;
+typedef struct _LinuxDevice  LinuxDevice;
 
 typedef struct Mount        Mount;
 typedef struct MountMonitor MountMonitor;

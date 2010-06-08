@@ -49,6 +49,7 @@ on_bus_acquired (GDBusConnection *connection,
   g_assert (the_daemon == NULL);
   the_daemon = g_object_new (TYPE_LINUX_DAEMON,
                              "daemon-version", PACKAGE_VERSION,
+                             "connection", connection,
                              NULL);
 
   error = NULL;
