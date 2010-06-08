@@ -20,11 +20,15 @@
 
 #include "config.h"
 
+#include <signal.h>
+
 #include <gio/gio.h>
 
 #include "profile.h"
-
 #include "linuxdaemon.h"
+#include "gposixsignal.h"
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 static Daemon *the_daemon = NULL;
 static GMainLoop *loop = NULL;
@@ -84,6 +88,14 @@ on_name_acquired (GDBusConnection *connection,
   g_print ("Acquired the name org.freedesktop.UDisks on the system bus\n");
 }
 
+static gboolean
+on_sigint (gpointer user_data)
+{
+  g_print ("Handling SIGINT\n");
+  g_main_loop_quit (loop);
+  return FALSE;
+}
+
 int
 main (int    argc,
       char **argv)
@@ -93,6 +105,7 @@ main (int    argc,
   gchar *s;
   gint ret;
   guint name_owner_id;
+  guint sigint_id;
 
   PROFILE ("main(): start");
 
@@ -100,6 +113,7 @@ main (int    argc,
   loop = NULL;
   opt_context = NULL;
   name_owner_id = 0;
+  sigint_id = 0;
 
   g_type_init ();
 
@@ -140,6 +154,14 @@ main (int    argc,
     }
   g_free (s);
 
+  loop = g_main_loop_new (NULL, FALSE);
+
+  sigint_id = _g_posix_signal_watch_add (SIGINT,
+                                         G_PRIORITY_DEFAULT,
+                                         on_sigint,
+                                         NULL,
+                                         NULL);
+
   name_owner_id = g_bus_own_name (G_BUS_TYPE_SYSTEM,
                                   "org.freedesktop.UDisks",
                                   G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT |
@@ -150,15 +172,17 @@ main (int    argc,
                                   NULL,
                                   NULL);
 
+  g_print ("Entering main event loop\n");
+
   PROFILE ("main(): starting main loop");
-
-  loop = g_main_loop_new (NULL, FALSE);
-
   g_main_loop_run (loop);
 
   ret = 0;
 
+  g_print ("Shutting down\n");
  out:
+  if (sigint_id > 0)
+    g_source_remove (sigint_id);
   if (name_owner_id != 0)
     g_bus_unown_name (name_owner_id);
   if (the_daemon != NULL)
@@ -167,5 +191,7 @@ main (int    argc,
     g_main_loop_unref (loop);
   if (opt_context != NULL)
     g_option_context_free (opt_context);
+
+  g_print ("Exiting with code %d\n", ret);
   return ret;
 }

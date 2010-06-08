@@ -49,6 +49,7 @@ udisks_daemon_SOURCES = 						\
 	linuxdevice.h			linuxdevice.c			\
 	private.h							\
 	profile.h							\
+	gposixsignal.h			gposixsignal.c			\
 	$(BUILT_SOURCES)						\
 	$(NULL)
 
