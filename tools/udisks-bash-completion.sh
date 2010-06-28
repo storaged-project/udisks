@@ -18,6 +18,8 @@ __udisks() {
         COMPREPLY=($(compgen -W "$(udisks --enumerate-device-files)" -- $cur))
     elif [ "${COMP_WORDS[$(($COMP_CWORD - 1))]}" = "--detach" ] ; then
         COMPREPLY=($(compgen -W "$(udisks --enumerate-device-files)" -- $cur))
+    elif [ "${COMP_WORDS[$(($COMP_CWORD - 1))]}" = "--eject" ] ; then
+        COMPREPLY=($(compgen -W "$(udisks --enumerate-device-files)" -- $cur))
     elif [ "${COMP_WORDS[$(($COMP_CWORD - 1))]}" = "--ata-smart-refresh" ] ; then
         COMPREPLY=($(compgen -W "$(udisks --enumerate-device-files)" -- $cur))
     elif [ "${COMP_WORDS[$(($COMP_CWORD - 1))]}" = "--ata-smart-simulate" ] ; then
@@ -27,7 +29,7 @@ __udisks() {
     elif [ "${COMP_WORDS[$(($COMP_CWORD - 1))]}" = "--poll-for-media" ] ; then
         COMPREPLY=($(compgen -W "$(udisks --enumerate-device-files)" -- $cur))
     else
-        COMPREPLY=($(IFS=: compgen -W "--dump:--inhibit-polling:--inhibit-all-polling:--enumerate:--enumerate-device-files:--monitor:--monitor-detail:--show-info:--help:--mount:--mount-fstype:--mount-options:--unmount:--unmount-options:--detach:--detach-options:--ata-smart-refresh:--ata-smart-wakeup:--ata-smart-simulate:--set-spindown:--set-spindown-all:--spindown-timeout:--poll-for-media" -- $cur))
+        COMPREPLY=($(IFS=: compgen -W "--dump:--inhibit-polling:--inhibit-all-polling:--enumerate:--enumerate-device-files:--monitor:--monitor-detail:--show-info:--help:--mount:--mount-fstype:--mount-options:--unmount:--unmount-options:--detach:--detach-options:--eject:--eject-options:--ata-smart-refresh:--ata-smart-wakeup:--ata-smart-simulate:--set-spindown:--set-spindown-all:--spindown-timeout:--poll-for-media" -- $cur))
     fi
 }
 

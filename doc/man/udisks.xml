@@ -185,6 +185,22 @@
 
       <varlistentry>
         <term>
+          <option>--eject</option>
+          <arg choice="plain"><replaceable>device_file</replaceable></arg>
+          <arg><option>--eject-options</option><arg choice="plain"><replaceable>options</replaceable></arg></arg>
+        </term>
+        <listitem>
+          <para>
+            Ejects media from the device represented
+            by <replaceable>device_file</replaceable> using a
+            comma-separated list
+            of <replaceable>options</replaceable>.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>
           <option>--ata-smart-refresh</option>
           <arg choice="plain"><replaceable>device_file</replaceable></arg>
           <arg><option>--ata-smart-wakeup</option></arg>

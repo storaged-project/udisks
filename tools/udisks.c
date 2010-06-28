@@ -73,6 +73,8 @@ static char *opt_unmount = NULL;
 static char *opt_unmount_options = NULL;
 static char *opt_detach = NULL;
 static char *opt_detach_options = NULL;
+static char *opt_eject = NULL;
+static char *opt_eject_options = NULL;
 static char *opt_ata_smart_refresh = NULL;
 static gboolean opt_ata_smart_wakeup = FALSE;
 static char *opt_ata_smart_simulate = NULL;
@@ -191,6 +193,30 @@ do_detach (const char *object_path,
     }
 
   g_strfreev (unmount_options);
+}
+
+static void
+do_eject (const char *object_path,
+           const char *options)
+{
+  DBusGProxy *proxy;
+  GError *error;
+  char **eject_options;
+
+  eject_options = NULL;
+  if (options != NULL)
+    eject_options = g_strsplit (options, ",", 0);
+
+  proxy = dbus_g_proxy_new_for_name (bus, "org.freedesktop.UDisks", object_path, "org.freedesktop.UDisks.Device");
+
+  error = NULL;
+  if (!org_freedesktop_UDisks_Device_drive_eject (proxy, (const char **) options, &error))
+    {
+      g_print ("Eject failed: %s\n", error->message);
+      g_error_free (error);
+    }
+
+  g_strfreev (eject_options);
 }
 
 static void
@@ -1959,6 +1985,8 @@ main (int argc,
       { "detach", 0, 0, G_OPTION_ARG_STRING, &opt_detach, "Detach the given device", NULL },
       { "detach-options", 0, 0, G_OPTION_ARG_STRING, &opt_detach_options, "Detach options separated by comma",
         NULL },
+      { "eject", 0, 0, G_OPTION_ARG_STRING, &opt_eject, "Eject the given device", NULL },
+      { "eject-options", 0, 0, G_OPTION_ARG_STRING, &opt_eject_options, "Eject options separated by comma", NULL },
       { "ata-smart-refresh", 0, 0, G_OPTION_ARG_STRING, &opt_ata_smart_refresh, "Refresh ATA SMART data", NULL },
       { "ata-smart-wakeup", 0, 0, G_OPTION_ARG_NONE, &opt_ata_smart_wakeup,
         "Wake up the disk if it is not awake", NULL },
@@ -2139,6 +2167,13 @@ main (int argc,
       if (device_file == NULL)
         goto out;
       do_detach (device_file, opt_detach_options);
+    }
+  else if (opt_eject != NULL)
+    {
+      device_file = device_file_to_object_path (opt_eject);
+      if (device_file == NULL)
+        goto out;
+      do_eject (device_file, opt_eject_options);
     }
   else if (opt_ata_smart_refresh != NULL)
     {
