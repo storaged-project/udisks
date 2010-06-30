@@ -22,7 +22,7 @@ INCLUDES = \
 	$(NULL)
 
 generated-bindings.stamp : Makefile.am $(top_srcdir)/data/org.freedesktop.UDisks.xml $(top_srcdir)/data/org.freedesktop.UDisks.Device.xml
-	gdbus-binding-tool                                                      \
+	gdbus-codegen                                                      	\
 		--strip-prefix org.freedesktop.UDisks.                          \
 		--output-prefix generated                                       \
 		$(top_srcdir)/data/org.freedesktop.UDisks.xml         		\

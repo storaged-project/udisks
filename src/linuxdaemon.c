@@ -202,6 +202,7 @@ maybe_export_unexport_object (LinuxDaemon *daemon,
             }
           g_object_set_data (G_OBJECT (device), "daemon-export-id", GUINT_TO_POINTER (id));
           ret = TRUE;
+          g_print ("registered object path `%s'\n", linux_device_get_object_path (device));
         }
       else
         {
@@ -212,9 +213,10 @@ maybe_export_unexport_object (LinuxDaemon *daemon,
     {
       if (daemon_export_id > 0)
         {
-          g_dbus_connection_unregister_object (daemon->priv->connection, daemon_export_id);
+          g_warn_if_fail (g_dbus_connection_unregister_object (daemon->priv->connection, daemon_export_id));
           g_object_set_data (G_OBJECT (device), "daemon-export-id", GUINT_TO_POINTER (0));
           ret = TRUE;
+          g_print ("unregistered object path `%s'\n", linux_device_get_object_path (device));
         }
       else
         {
