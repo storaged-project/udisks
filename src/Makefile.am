@@ -32,11 +32,12 @@ generated-bindings.stamp : Makefile.am $(top_srcdir)/data/org.freedesktop.UDisks
 BUILT_SOURCES =								\
 	generated-bindings.stamp					\
 	generated-bindings.h						\
+	generated-bindingsprivate.h	generated-bindingsprivate.c	\
 	generated-daemon.h		generated-daemon.c		\
 	generated-device.h		generated-device.c		\
 	generated-marshallers.list					\
 	generated-marshallers.h		generated-marshallers.c		\
-	generated-typemappers.h						\
+	generated-types.h						\
 	$(NULL)
 
 libexec_PROGRAMS = udisks-daemon
