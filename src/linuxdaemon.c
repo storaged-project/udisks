@@ -231,7 +231,15 @@ static void
 emit_added (LinuxDaemon  *daemon,
             LinuxDevice  *device)
 {
-  daemon_emit_device_added (DAEMON (daemon), linux_device_get_object_path (device));
+  GVariantBuilder builder;
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a{sa{sv}}"));
+  g_variant_builder_add (&builder,
+                         "{s@a{sv}}",
+                         device_interface_info ()->name,
+                         device_properties (DEVICE (device)));
+  daemon_emit_device_added (DAEMON (daemon),
+                            linux_device_get_object_path (device),
+                            g_variant_builder_end (&builder));
 }
 
 static void
@@ -239,6 +247,25 @@ emit_removed (LinuxDaemon  *daemon,
               LinuxDevice  *device)
 {
   daemon_emit_device_removed (DAEMON (daemon), linux_device_get_object_path (device));
+}
+
+static gboolean
+on_properties_changed_emitted (LinuxDevice         *exported_object,
+                               GVariant            *changed_properties,
+                               const gchar* const  *invalidated_properties,
+                               gpointer             user_data)
+{
+  LinuxDaemon *daemon = LINUX_DAEMON (user_data);
+  GVariantBuilder builder;
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a{sa{sv}}"));
+  g_variant_builder_add (&builder,
+                         "{s@a{sv}}",
+                         device_interface_info ()->name,
+                         changed_properties);
+  daemon_emit_device_changed (DAEMON (daemon),
+                              linux_device_get_object_path (LINUX_DEVICE (exported_object)),
+                              g_variant_builder_end (&builder));
+  return FALSE; /* don't consume the signal */
 }
 
 static void
@@ -257,6 +284,10 @@ handle_device_uevent (LinuxDaemon  *daemon,
         {
           if (maybe_export_unexport_object (daemon, device, FALSE))
             emit_removed (daemon, device);
+
+          g_warn_if_fail (g_signal_handlers_disconnect_by_func (device,
+                                                                G_CALLBACK (on_properties_changed_emitted),
+                                                                daemon) == 1);
 
           g_hash_table_remove (daemon->priv->map_sysfs_path_to_object, sysfs_path);
           g_print ("removed object with sysfs path `%s'\n", sysfs_path);
@@ -289,6 +320,11 @@ handle_device_uevent (LinuxDaemon  *daemon,
           device = linux_device_new (udev_device);
           object_path = linux_device_get_object_path (device);
           visible = linux_device_get_visible (device);
+
+          g_signal_connect (device,
+                            "g-properties-changed-emitted",
+                            G_CALLBACK (on_properties_changed_emitted),
+                            daemon);
 
           g_hash_table_insert (daemon->priv->map_sysfs_path_to_object,
                                g_strdup (sysfs_path),

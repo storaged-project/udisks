@@ -822,6 +822,10 @@
         <doc:doc><doc:summary>Object path of device that was added.</doc:summary></doc:doc>
       </arg>
 
+      <arg name="properties" type="a{sa{sv}}">
+        <doc:doc><doc:summary>Properties for the interfaces for the device that was added.</doc:summary></doc:doc>
+      </arg>
+
       <doc:doc>
         <doc:description>
           <doc:para>
@@ -852,6 +856,10 @@
     <signal name="DeviceChanged">
       <arg name="device" type="o">
         <doc:doc><doc:summary>Object path of device that was changed.</doc:summary></doc:doc>
+      </arg>
+
+      <arg name="changed_properties" type="a{sa{sv}}">
+        <doc:doc><doc:summary>The properties that changed.</doc:summary></doc:doc>
       </arg>
 
       <doc:doc>
