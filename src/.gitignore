@@ -9,3 +9,7 @@ Makefile.in
 *.la
 udisks-daemon
 *-glue.h
+generated-*.c
+generated-*.h
+generated-*.list
+generated-*.stamp
