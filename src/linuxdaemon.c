@@ -103,9 +103,9 @@ linux_daemon_finalize (GObject *object)
 {
   LinuxDaemon *daemon = LINUX_DAEMON (object);
 
+  g_hash_table_unref (daemon->priv->map_sysfs_path_to_object);
   g_object_unref (daemon->priv->connection);
   g_object_unref (daemon->priv->udev_client);
-  g_hash_table_unref (daemon->priv->map_sysfs_path_to_object);
 
   if (G_OBJECT_CLASS (linux_daemon_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (linux_daemon_parent_class)->finalize (object);
