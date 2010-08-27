@@ -57,10 +57,10 @@ on_bus_acquired (GDBusConnection *connection,
                              NULL);
 
   error = NULL;
-  daemon_register_object (the_daemon,
-                          connection,
-                          "/org/freedesktop/UDisks",
-                          &error);
+  g_dbus_interface_register_object (G_DBUS_INTERFACE (the_daemon),
+                                    connection,
+                                    "/org/freedesktop/UDisks",
+                                    &error);
   if (error != NULL)
     {
       g_printerr ("Error registering object at /org/freedesktop/UDisks: %s", error->message);

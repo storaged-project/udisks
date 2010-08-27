@@ -190,10 +190,10 @@ maybe_export_unexport_object (LinuxDaemon *daemon,
           GError *error;
           guint id;
           error = NULL;
-          id = device_register_object (DEVICE (device),
-                                       daemon->priv->connection,
-                                       linux_device_get_object_path (device),
-                                       &error);
+          id = g_dbus_interface_register_object (G_DBUS_INTERFACE (device),
+                                                 daemon->priv->connection,
+                                                 linux_device_get_object_path (device),
+                                                 &error);
           if (id == 0)
             {
               g_printerr ("Error registering object: %s\n",
@@ -236,7 +236,7 @@ emit_added (LinuxDaemon  *daemon,
   g_variant_builder_add (&builder,
                          "{s@a{sv}}",
                          device_interface_info ()->name,
-                         device_properties (DEVICE (device)));
+                         g_dbus_interface_get_properties (G_DBUS_INTERFACE (device)));
   daemon_emit_device_added (DAEMON (daemon),
                             linux_device_get_object_path (device),
                             g_variant_builder_end (&builder));
