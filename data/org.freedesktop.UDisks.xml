@@ -13,7 +13,11 @@
   </interface>
 
   <interface name="org.freedesktop.UDisks.BlockDevice">
-    <property name="DeviceFile" type="s" access="read"/>
+    <property name="Device" type="s" access="read"/>
+    <property name="Symlinks" type="as" access="read"/>
+    <property name="Major" type="x" access="read"/>
+    <property name="Minor" type="x" access="read"/>
+    <property name="Size" type="t" access="read"/>
   </interface>
 
 </node>

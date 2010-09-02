@@ -81,9 +81,21 @@ linux_block_update (LinuxBlock  *block,
   /* org.freedesktop.UDisks.BlockDevice */
   if (block->iface_block_device == NULL)
     {
+      GUdevDeviceNumber dev;
+
+      dev = g_udev_device_get_device_number (block->device);
+
       block->iface_block_device = udisks_block_device_stub_new ();
-      udisks_block_device_set_device_file (block->iface_block_device,
-                                           g_udev_device_get_device_file (block->device));
+      udisks_block_device_set_device (block->iface_block_device,
+                                      g_udev_device_get_device_file (block->device));
+      udisks_block_device_set_symlinks (block->iface_block_device,
+                                        g_udev_device_get_device_file_symlinks (block->device));
+      udisks_block_device_set_major (block->iface_block_device,
+                                     major (dev));
+      udisks_block_device_set_minor (block->iface_block_device,
+                                     minor (dev));
+      udisks_block_device_set_size (block->iface_block_device,
+                                    g_udev_device_get_sysfs_attr_as_uint64 (block->device, "size") * 512);
       g_dbus_object_add_interface (block->object, G_DBUS_INTERFACE (block->iface_block_device));
     }
 }
