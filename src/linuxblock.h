@@ -23,7 +23,7 @@
 
 #include "types.h"
 
-void linux_block_init (GDBusObjectManager *manager);
+void linux_block_init (GDBusObjectManager *object_manager);
 void linux_block_shutdown (void);
 
 #endif /* __LINUX_BLOCK_H__ */

@@ -3,6 +3,15 @@
 "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
 <node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
 
+  <interface name="org.freedesktop.UDisks.LinuxSysfsDevice">
+    <property name="SysfsPath" type="s" access="read"/>
+    <property name="Subsystem" type="s" access="read"/>
+
+    <signal name="UEvent">
+      <arg name="action" type="s"/>
+    </signal>
+  </interface>
+
   <interface name="org.freedesktop.UDisks.BlockDevice">
     <property name="DeviceFile" type="s" access="read"/>
   </interface>

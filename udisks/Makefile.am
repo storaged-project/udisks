@@ -35,6 +35,7 @@ BUILT_SOURCES =										\
 	generated-marshallers.h			generated-marshallers.c			\
 	generated-types.h								\
 	generated-udisksblockdevice.h		generated-udisksblockdevice.c		\
+	generated-udiskslinuxsysfsdevice.h	generated-udiskslinuxsysfsdevice.c	\
 	$(NULL)
 
 lib_LTLIBRARIES=libudisks.la
