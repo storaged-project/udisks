@@ -24,7 +24,8 @@
 
 #include "gposixsignal.h"
 
-#include <udisks/udisks.h>
+#include "types.h"
+#include "linuxblock.h"
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -37,12 +38,18 @@ static GOptionEntry opt_entries[] = {
   {NULL }
 };
 
+static GDBusObjectManager *object_manager = NULL;
+
 static void
 on_bus_acquired (GDBusConnection *connection,
                  const gchar     *name,
                  gpointer         user_data)
 {
   g_print ("Connected to the system bus\n");
+
+  object_manager = g_dbus_object_manager_new (connection, "/org/freedesktop/UDisks");
+
+  linux_block_init (object_manager);
 
   UDisksBlockDevice *b;
   b = udisks_block_device_stub_new ();
@@ -151,8 +158,11 @@ main (int    argc,
 
   g_print ("Shutting down\n");
  out:
+  linux_block_shutdown ();
   if (sigint_id > 0)
     g_source_remove (sigint_id);
+  if (object_manager != NULL)
+    g_object_unref (object_manager);
   if (name_owner_id != 0)
     g_bus_unown_name (name_owner_id);
   if (loop != NULL)

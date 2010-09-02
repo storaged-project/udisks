@@ -26,7 +26,8 @@ libexec_PROGRAMS = udisks-daemon
 udisks_daemon_SOURCES = 						\
 					main.c				\
 	gposixsignal.h			gposixsignal.c			\
-	$(BUILT_SOURCES)						\
+	types.h								\
+	linuxblock.h			linuxblock.c			\
 	$(NULL)
 
 udisks_daemon_CPPFLAGS = 				\
