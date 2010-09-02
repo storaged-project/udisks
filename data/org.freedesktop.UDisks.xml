@@ -20,7 +20,7 @@
     <property name="Size" type="t" access="read"/>
   </interface>
 
-  <interface name="org.freedesktop.UDisks.ProbedBlockDevice">
+  <interface name="org.freedesktop.UDisks.BlockDevice.Probed">
     <property name="Usage" type="s" access="read"/>
     <property name="Kind" type="s" access="read"/>
     <property name="Version" type="s" access="read"/>
