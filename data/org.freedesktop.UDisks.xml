@@ -28,4 +28,18 @@
     <property name="UUID" type="s" access="read"/>
   </interface>
 
+  <interface name="org.freedesktop.UDisks.Filesystem">
+    <property name="MountPoint" type="s" access="read"/>
+
+    <method name="Mount">
+      <arg name="filesystem_type" direction="in" type="s"/>
+      <arg name="options" direction="in" type="as"/>
+      <arg name="mount_path" direction="out" type="s"/>
+    </method>
+
+    <method name="Unmount">
+      <arg name="options" direction="in" type="as"/>
+    </method>
+  </interface>
+
 </node>

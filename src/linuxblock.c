@@ -45,6 +45,7 @@ typedef struct
 
   /* interfaces that may or may not be implemented */
   UDisksBlockDeviceProbed *iface_block_device_probed;
+  UDisksFilesystem *iface_filesystem;
 } LinuxBlock;
 
 static void
@@ -60,6 +61,8 @@ linux_block_free (LinuxBlock *block)
     g_object_unref (block->iface_block_device);
   if (block->iface_block_device_probed != NULL)
     g_object_unref (block->iface_block_device_probed);
+  if (block->iface_filesystem != NULL)
+    g_object_unref (block->iface_filesystem);
   g_free (block);
 }
 
@@ -70,6 +73,7 @@ linux_block_update (LinuxBlock  *block,
                     const gchar *uevent_action)
 {
   gboolean add_block_device_probed;
+  gboolean add_filesystem;
 
   /* org.freedesktop.UDisks.LinuxSysfsDevice */
   if (block->iface_linux_sysfs_device == NULL)
@@ -137,6 +141,33 @@ linux_block_update (LinuxBlock  *block,
                                            g_udev_device_get_property (block->device, "ID_FS_UUID_ENC"));
       if (add_block_device_probed)
         g_dbus_object_add_interface (block->object, G_DBUS_INTERFACE (block->iface_block_device_probed));
+    }
+
+  /* org.freedesktop.UDisks.Filesystem */
+  add_filesystem = FALSE;
+  if (block->iface_filesystem == NULL)
+    {
+      if (g_strcmp0 (g_udev_device_get_property (block->device, "ID_FS_USAGE"), "filesystem") == 0)
+        {
+          /* TODO: use a derived class that implements the Mount() and Unmount() methods */
+          block->iface_filesystem = udisks_filesystem_stub_new ();
+          add_filesystem = TRUE;
+        }
+    }
+  else
+    {
+      if (g_strcmp0 (g_udev_device_get_property (block->device, "ID_FS_USAGE"), "filesystem") != 0)
+        {
+          g_dbus_object_remove_interface (block->object, G_DBUS_INTERFACE (block->iface_filesystem));
+          g_object_unref (block->iface_filesystem);
+          block->iface_filesystem = NULL;
+        }
+    }
+  if (block->iface_filesystem != NULL)
+    {
+      /* TODO: set mount_point property */
+      if (add_filesystem)
+        g_dbus_object_add_interface (block->object, G_DBUS_INTERFACE (block->iface_filesystem));
     }
 }
 
