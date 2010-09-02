@@ -24,6 +24,8 @@
 
 #include "gposixsignal.h"
 
+#include <udisks/udisks.h>
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static GMainLoop *loop = NULL;
@@ -41,6 +43,13 @@ on_bus_acquired (GDBusConnection *connection,
                  gpointer         user_data)
 {
   g_print ("Connected to the system bus\n");
+
+  UDisksBlockDevice *b;
+  b = udisks_block_device_stub_new ();
+  g_dbus_interface_register_object (G_DBUS_INTERFACE (b),
+                                    connection,
+                                    "/devices/blah",
+                                    NULL);
 }
 
 static void

@@ -236,9 +236,8 @@ AC_OUTPUT([
 Makefile
 data/Makefile
 data/udisks.pc
+udisks/Makefile
 src/Makefile
-src/helpers/Makefile
-src/probers/Makefile
 tools/Makefile
 doc/Makefile
 doc/version.xml
