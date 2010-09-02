@@ -26,15 +26,13 @@ generated-bindings.stamp : Makefile.am $(top_srcdir)/data/org.freedesktop.UDisks
 		--strip-prefix org.freedesktop.UDisks.                          \
 		--output-prefix generated                                       \
 		$(top_srcdir)/data/org.freedesktop.UDisks.xml         		\
-		$(top_srcdir)/data/org.freedesktop.UDisks.Device.xml         	\
 		$(NULL)
 
 BUILT_SOURCES =								\
 	generated-bindings.stamp					\
 	generated-bindings.h						\
 	generated-bindingsprivate.h	generated-bindingsprivate.c	\
-	generated-daemon.h		generated-daemon.c		\
-	generated-device.h		generated-device.c		\
+	generated-blockdevice.h		generated-blockdevice.c		\
 	generated-marshallers.list					\
 	generated-marshallers.h		generated-marshallers.c		\
 	generated-types.h						\
@@ -43,13 +41,7 @@ BUILT_SOURCES =								\
 libexec_PROGRAMS = udisks-daemon
 
 udisks_daemon_SOURCES = 						\
-	types.h								\
-	error.h				error.c				\
 					main.c				\
-	linuxdaemon.h			linuxdaemon.c			\
-	linuxdevice.h			linuxdevice.c			\
-	private.h							\
-	profile.h							\
 	gposixsignal.h			gposixsignal.c			\
 	$(BUILT_SOURCES)						\
 	$(NULL)

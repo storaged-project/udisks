@@ -19,18 +19,13 @@
  */
 
 #include "config.h"
-
 #include <signal.h>
-
 #include <gio/gio.h>
 
-#include "profile.h"
-#include "linuxdaemon.h"
 #include "gposixsignal.h"
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static Daemon *the_daemon = NULL;
 static GMainLoop *loop = NULL;
 static gchar *opt_helper_dir = NULL;
 static gboolean opt_replace = FALSE;
@@ -45,28 +40,7 @@ on_bus_acquired (GDBusConnection *connection,
                  const gchar     *name,
                  gpointer         user_data)
 {
-  GError *error;
-
-  PROFILE ("Connected to the system bus");
   g_print ("Connected to the system bus\n");
-
-  g_assert (the_daemon == NULL);
-  the_daemon = g_object_new (TYPE_LINUX_DAEMON,
-                             "daemon-version", PACKAGE_VERSION,
-                             "connection", connection,
-                             NULL);
-
-  error = NULL;
-  g_dbus_interface_register_object (G_DBUS_INTERFACE (the_daemon),
-                                    connection,
-                                    "/org/freedesktop/UDisks",
-                                    &error);
-  if (error != NULL)
-    {
-      g_printerr ("Error registering object at /org/freedesktop/UDisks: %s", error->message);
-      g_error_free (error);
-      g_main_loop_quit (loop); /* exit */
-    }
 }
 
 static void
@@ -74,8 +48,7 @@ on_name_lost (GDBusConnection *connection,
               const gchar     *name,
               gpointer         user_data)
 {
-  PROFILE ("Lost the name org.freedesktop.UDisks - exiting");
-  g_print ("Lost the name org.freedesktop.UDisks - exiting\n");
+  g_print ("Lost (or failed to acquire) the name org.freedesktop.UDisks - exiting\n");
   g_main_loop_quit (loop);
 }
 
@@ -84,7 +57,6 @@ on_name_acquired (GDBusConnection *connection,
                   const gchar     *name,
                   gpointer         user_data)
 {
-  PROFILE ("Acquired the name org.freedesktop.UDisks on the system bus");
   g_print ("Acquired the name org.freedesktop.UDisks on the system bus\n");
 }
 
@@ -107,8 +79,6 @@ main (int    argc,
   guint name_owner_id;
   guint sigint_id;
 
-  PROFILE ("main(): start");
-
   ret = 1;
   loop = NULL;
   opt_context = NULL;
@@ -116,14 +86,6 @@ main (int    argc,
   sigint_id = 0;
 
   g_type_init ();
-
-#if 0
-  /* fork the polling process early */
-  if (!poller_setup (argc, argv))
-    {
-      goto out;
-    }
-#endif
 
   /* avoid gvfs (http://bugzilla.gnome.org/show_bug.cgi?id=526454) */
   if (!g_setenv ("GIO_USE_VFS", "local", TRUE))
@@ -174,7 +136,6 @@ main (int    argc,
 
   g_print ("Entering main event loop\n");
 
-  PROFILE ("main(): starting main loop");
   g_main_loop_run (loop);
 
   ret = 0;
@@ -185,8 +146,6 @@ main (int    argc,
     g_source_remove (sigint_id);
   if (name_owner_id != 0)
     g_bus_unown_name (name_owner_id);
-  if (the_daemon != NULL)
-    g_object_unref (the_daemon);
   if (loop != NULL)
     g_main_loop_unref (loop);
   if (opt_context != NULL)
