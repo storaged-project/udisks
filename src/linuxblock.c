@@ -39,8 +39,11 @@ typedef struct
   GDBusObject *object;
   GUdevDevice *device;
 
+  /* interfaces that are definitely implemented */
   UDisksLinuxSysfsDevice *iface_linux_sysfs_device;
   UDisksBlockDevice *iface_block_device;
+
+  /* interfaces that may or may not be implemented */
 } LinuxBlock;
 
 static void
@@ -50,6 +53,10 @@ linux_block_free (LinuxBlock *block)
                                   g_dbus_object_get_object_path (block->object));
   g_object_unref (block->object);
   g_object_unref (block->device);
+  if (block->iface_linux_sysfs_device != NULL)
+    g_object_unref (block->iface_linux_sysfs_device);
+  if (block->iface_block_device != NULL)
+    g_object_unref (block->iface_block_device);
   g_free (block);
 }
 
@@ -57,8 +64,9 @@ linux_block_free (LinuxBlock *block)
 
 static void
 linux_block_update (LinuxBlock  *block,
-                    const gchar *action)
+                    const gchar *uevent_action)
 {
+  /* org.freedesktop.UDisks.LinuxSysfsDevice */
   if (block->iface_linux_sysfs_device == NULL)
     {
       block->iface_linux_sysfs_device = udisks_linux_sysfs_device_stub_new ();
@@ -67,9 +75,10 @@ linux_block_update (LinuxBlock  *block,
                                                 g_udev_device_get_sysfs_path (block->device));
       g_dbus_object_add_interface (block->object, G_DBUS_INTERFACE (block->iface_linux_sysfs_device));
     }
-  if (action != NULL)
-    udisks_linux_sysfs_device_emit_uevent (block->iface_linux_sysfs_device, action);
+  if (uevent_action != NULL)
+    udisks_linux_sysfs_device_emit_uevent (block->iface_linux_sysfs_device, uevent_action);
 
+  /* org.freedesktop.UDisks.BlockDevice */
   if (block->iface_block_device == NULL)
     {
       block->iface_block_device = udisks_block_device_stub_new ();
