@@ -35,6 +35,7 @@ BUILT_SOURCES =										\
 	generated-marshallers.h			generated-marshallers.c			\
 	generated-types.h								\
 	generated-udisksblockdevice.h		generated-udisksblockdevice.c		\
+	generated-udisksprobedblockdevice.h	generated-udisksprobedblockdevice.c	\
 	generated-udiskslinuxsysfsdevice.h	generated-udiskslinuxsysfsdevice.c	\
 	$(NULL)
 
@@ -44,7 +45,9 @@ libudisksincludedir=$(includedir)/udisks-1.2/udisks
 libudisksinclude_HEADERS=
 	udisks.h					\
 	generated-bindings.h				\
+	generated-udiskslinuxsysfsdevice.h		\
 	generated-udisksblockdevice.h			\
+	generated-udisksprobedblockdevice.h		\
 	$(NULL)
 
 libudisks_la_SOURCES =					\

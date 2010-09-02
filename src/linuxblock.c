@@ -44,6 +44,7 @@ typedef struct
   UDisksBlockDevice *iface_block_device;
 
   /* interfaces that may or may not be implemented */
+  UDisksProbedBlockDevice *iface_probed_block_device;
 } LinuxBlock;
 
 static void
@@ -57,6 +58,8 @@ linux_block_free (LinuxBlock *block)
     g_object_unref (block->iface_linux_sysfs_device);
   if (block->iface_block_device != NULL)
     g_object_unref (block->iface_block_device);
+  if (block->iface_probed_block_device != NULL)
+    g_object_unref (block->iface_probed_block_device);
   g_free (block);
 }
 
@@ -66,6 +69,8 @@ static void
 linux_block_update (LinuxBlock  *block,
                     const gchar *uevent_action)
 {
+  gboolean add_probed_block_device;
+
   /* org.freedesktop.UDisks.LinuxSysfsDevice */
   if (block->iface_linux_sysfs_device == NULL)
     {
@@ -97,6 +102,41 @@ linux_block_update (LinuxBlock  *block,
       udisks_block_device_set_size (block->iface_block_device,
                                     g_udev_device_get_sysfs_attr_as_uint64 (block->device, "size") * 512);
       g_dbus_object_add_interface (block->object, G_DBUS_INTERFACE (block->iface_block_device));
+    }
+
+  /* org.freedesktop.UDisks.ProbedBlockDevice */
+  add_probed_block_device = FALSE;
+  if (block->iface_probed_block_device == NULL)
+    {
+      if (g_udev_device_has_property (block->device, "ID_FS_USAGE"))
+        {
+          block->iface_probed_block_device = udisks_probed_block_device_stub_new ();
+          add_probed_block_device = TRUE;
+        }
+    }
+  else
+    {
+      if (!g_udev_device_has_property (block->device, "ID_FS_USAGE"))
+        {
+          g_dbus_object_remove_interface (block->object, G_DBUS_INTERFACE (block->iface_probed_block_device));
+          g_object_unref (block->iface_probed_block_device);
+          block->iface_probed_block_device = NULL;
+        }
+    }
+  if (block->iface_probed_block_device != NULL)
+    {
+      udisks_probed_block_device_set_usage (block->iface_probed_block_device,
+                                            g_udev_device_get_property (block->device, "ID_FS_USAGE"));
+      udisks_probed_block_device_set_kind (block->iface_probed_block_device,
+                                           g_udev_device_get_property (block->device, "ID_FS_TYPE"));
+      udisks_probed_block_device_set_version (block->iface_probed_block_device,
+                                              g_udev_device_get_property (block->device, "ID_FS_VERSION"));
+      udisks_probed_block_device_set_label (block->iface_probed_block_device,
+                                            g_udev_device_get_property (block->device, "ID_FS_LABEL_ENC"));
+      udisks_probed_block_device_set_uuid (block->iface_probed_block_device,
+                                           g_udev_device_get_property (block->device, "ID_FS_UUID_ENC"));
+      if (add_probed_block_device)
+        g_dbus_object_add_interface (block->object, G_DBUS_INTERFACE (block->iface_probed_block_device));
     }
 }
 

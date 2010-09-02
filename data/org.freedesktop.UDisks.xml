@@ -20,4 +20,12 @@
     <property name="Size" type="t" access="read"/>
   </interface>
 
+  <interface name="org.freedesktop.UDisks.ProbedBlockDevice">
+    <property name="Usage" type="s" access="read"/>
+    <property name="Kind" type="s" access="read"/>
+    <property name="Version" type="s" access="read"/>
+    <property name="Label" type="s" access="read"/>
+    <property name="UUID" type="s" access="read"/>
+  </interface>
+
 </node>
