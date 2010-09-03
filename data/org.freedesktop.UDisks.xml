@@ -28,7 +28,7 @@
 
   <interface name="org.freedesktop.UDisks.BlockDevice.Probed">
     <property name="Usage" type="s" access="read"/>
-    <property name="Kind" type="s" access="read"/>
+    <property name="Type" type="s" access="read"/>
     <property name="Version" type="s" access="read"/>
     <property name="Label" type="s" access="read"/>
     <property name="UUID" type="s" access="read"/>

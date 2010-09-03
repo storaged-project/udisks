@@ -165,7 +165,7 @@ block_device_probed_update (LinuxBlock      *block,
   UDisksBlockDeviceProbed *iface = UDISKS_BLOCK_DEVICE_PROBED (_iface);
 
   udisks_block_device_probed_set_usage (iface, g_udev_device_get_property (block->device, "ID_FS_USAGE"));
-  udisks_block_device_probed_set_kind (iface, g_udev_device_get_property (block->device, "ID_FS_TYPE"));
+  udisks_block_device_probed_set_type (iface, g_udev_device_get_property (block->device, "ID_FS_TYPE"));
   udisks_block_device_probed_set_version (iface, g_udev_device_get_property (block->device, "ID_FS_VERSION"));
   udisks_block_device_probed_set_label (iface, g_udev_device_get_property (block->device, "ID_FS_LABEL_ENC"));
   udisks_block_device_probed_set_uuid (iface, g_udev_device_get_property (block->device, "ID_FS_UUID_ENC"));
