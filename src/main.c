@@ -25,7 +25,6 @@
 #include "gposixsignal.h"
 
 #include "types.h"
-#include "linuxblock.h"
 #include "udisksdaemon.h"
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -49,7 +48,7 @@ on_bus_acquired (GDBusConnection *connection,
   g_print ("Connected to the system bus\n");
 
   the_daemon = udisks_daemon_new (connection);
-  linux_block_init (udisks_daemon_get_object_manager (the_daemon));
+  //linux_block_init (udisks_daemon_get_object_manager (the_daemon));
 }
 
 static void
@@ -151,7 +150,6 @@ main (int    argc,
 
   g_print ("Shutting down\n");
  out:
-  linux_block_shutdown ();
   if (sigint_id > 0)
     g_source_remove (sigint_id);
   if (the_daemon != NULL)

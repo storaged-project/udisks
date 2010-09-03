@@ -18,12 +18,21 @@
  *
  */
 
-#ifndef __LINUX_BLOCK_H__
-#define __LINUX_BLOCK_H__
+#ifndef __UDISKS_LINUX_PROVIDER_H__
+#define __UDISKS_LINUX_PROVIDER_H__
 
 #include "types.h"
 
-void linux_block_init (GDBusObjectManager *object_manager);
-void linux_block_shutdown (void);
+G_BEGIN_DECLS
 
-#endif /* __LINUX_BLOCK_H__ */
+#define UDISKS_TYPE_LINUX_PROVIDER         (udisks_linux_provider_get_type ())
+#define UDISKS_LINUX_PROVIDER(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_LINUX_PROVIDER, UDisksLinuxProvider))
+#define UDISKS_IS_LINUX_PROVIDER(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_LINUX_PROVIDER))
+
+GType                  udisks_linux_provider_get_type   (void) G_GNUC_CONST;
+UDisksLinuxProvider   *udisks_linux_provider_new        (UDisksDaemon     *daemon);
+UDisksDaemon          *udisks_linux_provider_get_daemon (UDisksLinuxProvider *provider);
+
+G_END_DECLS
+
+#endif /* __UDISKS_LINUX_PROVIDER_H__ */

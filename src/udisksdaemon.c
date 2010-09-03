@@ -21,6 +21,7 @@
 #include "config.h"
 
 #include "udisksdaemon.h"
+#include "udiskslinuxprovider.h"
 
 typedef struct _UDisksDaemonClass   UDisksDaemonClass;
 
@@ -29,6 +30,8 @@ struct _UDisksDaemon
   GObject parent_instance;
   GDBusConnection *connection;
   GDBusObjectManager *object_manager;
+
+  UDisksLinuxProvider *linux_provider;
 };
 
 struct _UDisksDaemonClass
@@ -50,6 +53,8 @@ udisks_daemon_finalize (GObject *object)
 {
   UDisksDaemon *daemon = UDISKS_DAEMON (object);
 
+  g_object_unref (daemon->object_manager);
+  g_object_unref (daemon->linux_provider);
   g_object_unref (daemon->connection);
 
   if (G_OBJECT_CLASS (udisks_daemon_parent_class)->finalize != NULL)
@@ -112,6 +117,9 @@ udisks_daemon_constructed (GObject *object)
   UDisksDaemon *daemon = UDISKS_DAEMON (object);
 
   daemon->object_manager = g_dbus_object_manager_new (daemon->connection, "/org/freedesktop/UDisks");
+
+  /* now add providers */
+  daemon->linux_provider = udisks_linux_provider_new (daemon);
 
   if (G_OBJECT_CLASS (udisks_daemon_parent_class)->constructed != NULL)
     G_OBJECT_CLASS (udisks_daemon_parent_class)->constructed (object);

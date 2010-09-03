@@ -28,6 +28,12 @@
 struct _UDisksDaemon;
 typedef struct _UDisksDaemon UDisksDaemon;
 
+struct _UDisksLinuxProvider;
+typedef struct _UDisksLinuxProvider UDisksLinuxProvider;
+
+struct _UDisksLinuxBlock;
+typedef struct _UDisksLinuxBlock UDisksLinuxBlock;
+
 struct _UDisksFilesystemImpl;
 typedef struct _UDisksFilesystemImpl UDisksFilesystemImpl;
 

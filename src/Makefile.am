@@ -28,7 +28,8 @@ udisks_daemon_SOURCES = 						\
 	gposixsignal.h			gposixsignal.c			\
 	types.h								\
 	udisksdaemon.h			udisksdaemon.c			\
-	linuxblock.h			linuxblock.c			\
+	udiskslinuxprovider.h		udiskslinuxprovider.c		\
+	udiskslinuxblock.h		udiskslinuxblock.c		\
 	udisksfilesystemimpl.h		udisksfilesystemimpl.c		\
 	udisksjobimpl.h			udisksjobimpl.c			\
 	$(NULL)
