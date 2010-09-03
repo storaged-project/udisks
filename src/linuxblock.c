@@ -68,107 +68,154 @@ linux_block_free (LinuxBlock *block)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+typedef gboolean (*HasInterfaceFunc)    (LinuxBlock     *block);
+typedef void     (*UpdateInterfaceFunc) (LinuxBlock     *block,
+                                         GDBusInterface *interface);
+
+static void
+update_iface (LinuxBlock           *block,
+              HasInterfaceFunc      has_func,
+              UpdateInterfaceFunc   update_func,
+              GType                 stub_type,
+              gpointer              _interface_pointer)
+{
+  gboolean has;
+  gboolean add;
+  GDBusInterface **interface_pointer = _interface_pointer;
+
+  g_return_if_fail (block != NULL);
+  g_return_if_fail (has_func != NULL);
+  g_return_if_fail (update_func != NULL);
+  g_return_if_fail (g_type_is_a (stub_type, G_TYPE_OBJECT));
+  g_return_if_fail (g_type_is_a (stub_type, G_TYPE_DBUS_INTERFACE));
+  g_return_if_fail (interface_pointer != NULL);
+  g_return_if_fail (*interface_pointer == NULL || G_IS_DBUS_INTERFACE (*interface_pointer));
+
+  add = FALSE;
+  has = has_func (block);
+  if (*interface_pointer == NULL)
+    {
+      if (has)
+        {
+          *interface_pointer = g_object_new (stub_type, NULL);
+          add = TRUE;
+        }
+    }
+  else
+    {
+      if (!has)
+        {
+          g_dbus_object_remove_interface (block->object, G_DBUS_INTERFACE (*interface_pointer));
+          g_object_unref (*interface_pointer);
+          *interface_pointer = NULL;
+        }
+    }
+
+  if (*interface_pointer != NULL)
+    {
+      update_func (block, G_DBUS_INTERFACE (*interface_pointer));
+      if (add)
+        g_dbus_object_add_interface (block->object, G_DBUS_INTERFACE (*interface_pointer));
+    }
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+/* org.freedesktop.UDisks.BlockDevice */
+
+static gboolean
+block_device_check (LinuxBlock *block)
+{
+  return TRUE;
+}
+
+static void
+block_device_update (LinuxBlock      *block,
+                     GDBusInterface  *_iface)
+{
+  UDisksBlockDevice *iface = UDISKS_BLOCK_DEVICE (_iface);
+  GUdevDeviceNumber dev;
+
+  dev = g_udev_device_get_device_number (block->device);
+
+  udisks_block_device_set_device (iface, g_udev_device_get_device_file (block->device));
+  udisks_block_device_set_symlinks (iface, g_udev_device_get_device_file_symlinks (block->device));
+  udisks_block_device_set_major (iface, major (dev));
+  udisks_block_device_set_minor (iface, minor (dev));
+  udisks_block_device_set_size (iface, g_udev_device_get_sysfs_attr_as_uint64 (block->device, "size") * 512);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+/* org.freedesktop.UDisks.BlockDeviceProbed */
+
+static gboolean
+block_device_probed_check (LinuxBlock *block)
+{
+  return g_udev_device_has_property (block->device, "ID_FS_USAGE");
+}
+
+static void
+block_device_probed_update (LinuxBlock      *block,
+                            GDBusInterface  *_iface)
+{
+  UDisksBlockDeviceProbed *iface = UDISKS_BLOCK_DEVICE_PROBED (_iface);
+
+  udisks_block_device_probed_set_usage (iface, g_udev_device_get_property (block->device, "ID_FS_USAGE"));
+  udisks_block_device_probed_set_kind (iface, g_udev_device_get_property (block->device, "ID_FS_TYPE"));
+  udisks_block_device_probed_set_version (iface, g_udev_device_get_property (block->device, "ID_FS_VERSION"));
+  udisks_block_device_probed_set_label (iface, g_udev_device_get_property (block->device, "ID_FS_LABEL_ENC"));
+  udisks_block_device_probed_set_uuid (iface, g_udev_device_get_property (block->device, "ID_FS_UUID_ENC"));
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+/* org.freedesktop.UDisks.LinuxSysfsDevice */
+
+static gboolean
+linux_sysfs_device_check (LinuxBlock *block)
+{
+  return TRUE;
+}
+
+static void
+linux_sysfs_device_update (LinuxBlock      *block,
+                           GDBusInterface  *_iface)
+{
+  UDisksLinuxSysfsDevice *iface = UDISKS_LINUX_SYSFS_DEVICE (_iface);
+
+  udisks_linux_sysfs_device_set_subsystem (iface, "block");
+  udisks_linux_sysfs_device_set_sysfs_path (iface, g_udev_device_get_sysfs_path (block->device));
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+/* org.freedesktop.UDisks.Filesystem */
+
+static gboolean
+filesystem_check (LinuxBlock *block)
+{
+  return g_strcmp0 (g_udev_device_get_property (block->device, "ID_FS_USAGE"), "filesystem") == 0;
+}
+
+static void
+filesystem_update (LinuxBlock      *block,
+                   GDBusInterface  *_iface)
+{
+  //UDisksFilesystem *iface = UDISKS_FILESYSTEM (_iface);
+  /* TODO: use a derived class that implements the Mount() and Unmount() methods */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 linux_block_update (LinuxBlock  *block,
                     const gchar *uevent_action)
 {
-  gboolean add_block_device_probed;
-  gboolean add_filesystem;
-
-  /* org.freedesktop.UDisks.LinuxSysfsDevice */
-  if (block->iface_linux_sysfs_device == NULL)
-    {
-      block->iface_linux_sysfs_device = udisks_linux_sysfs_device_stub_new ();
-      udisks_linux_sysfs_device_set_subsystem (block->iface_linux_sysfs_device, "block");
-      udisks_linux_sysfs_device_set_sysfs_path (block->iface_linux_sysfs_device,
-                                                g_udev_device_get_sysfs_path (block->device));
-      g_dbus_object_add_interface (block->object, G_DBUS_INTERFACE (block->iface_linux_sysfs_device));
-    }
-  if (uevent_action != NULL)
-    udisks_linux_sysfs_device_emit_uevent (block->iface_linux_sysfs_device, uevent_action);
-
-  /* org.freedesktop.UDisks.BlockDevice */
-  if (block->iface_block_device == NULL)
-    {
-      GUdevDeviceNumber dev;
-
-      dev = g_udev_device_get_device_number (block->device);
-
-      block->iface_block_device = udisks_block_device_stub_new ();
-      udisks_block_device_set_device (block->iface_block_device,
-                                      g_udev_device_get_device_file (block->device));
-      udisks_block_device_set_symlinks (block->iface_block_device,
-                                        g_udev_device_get_device_file_symlinks (block->device));
-      udisks_block_device_set_major (block->iface_block_device,
-                                     major (dev));
-      udisks_block_device_set_minor (block->iface_block_device,
-                                     minor (dev));
-      udisks_block_device_set_size (block->iface_block_device,
-                                    g_udev_device_get_sysfs_attr_as_uint64 (block->device, "size") * 512);
-      g_dbus_object_add_interface (block->object, G_DBUS_INTERFACE (block->iface_block_device));
-    }
-
-  /* org.freedesktop.UDisks.BlockDevice.Probed */
-  add_block_device_probed = FALSE;
-  if (block->iface_block_device_probed == NULL)
-    {
-      if (g_udev_device_has_property (block->device, "ID_FS_USAGE"))
-        {
-          block->iface_block_device_probed = udisks_block_device_probed_stub_new ();
-          add_block_device_probed = TRUE;
-        }
-    }
-  else
-    {
-      if (!g_udev_device_has_property (block->device, "ID_FS_USAGE"))
-        {
-          g_dbus_object_remove_interface (block->object, G_DBUS_INTERFACE (block->iface_block_device_probed));
-          g_object_unref (block->iface_block_device_probed);
-          block->iface_block_device_probed = NULL;
-        }
-    }
-  if (block->iface_block_device_probed != NULL)
-    {
-      udisks_block_device_probed_set_usage (block->iface_block_device_probed,
-                                            g_udev_device_get_property (block->device, "ID_FS_USAGE"));
-      udisks_block_device_probed_set_kind (block->iface_block_device_probed,
-                                           g_udev_device_get_property (block->device, "ID_FS_TYPE"));
-      udisks_block_device_probed_set_version (block->iface_block_device_probed,
-                                              g_udev_device_get_property (block->device, "ID_FS_VERSION"));
-      udisks_block_device_probed_set_label (block->iface_block_device_probed,
-                                            g_udev_device_get_property (block->device, "ID_FS_LABEL_ENC"));
-      udisks_block_device_probed_set_uuid (block->iface_block_device_probed,
-                                           g_udev_device_get_property (block->device, "ID_FS_UUID_ENC"));
-      if (add_block_device_probed)
-        g_dbus_object_add_interface (block->object, G_DBUS_INTERFACE (block->iface_block_device_probed));
-    }
-
-  /* org.freedesktop.UDisks.Filesystem */
-  add_filesystem = FALSE;
-  if (block->iface_filesystem == NULL)
-    {
-      if (g_strcmp0 (g_udev_device_get_property (block->device, "ID_FS_USAGE"), "filesystem") == 0)
-        {
-          /* TODO: use a derived class that implements the Mount() and Unmount() methods */
-          block->iface_filesystem = udisks_filesystem_stub_new ();
-          add_filesystem = TRUE;
-        }
-    }
-  else
-    {
-      if (g_strcmp0 (g_udev_device_get_property (block->device, "ID_FS_USAGE"), "filesystem") != 0)
-        {
-          g_dbus_object_remove_interface (block->object, G_DBUS_INTERFACE (block->iface_filesystem));
-          g_object_unref (block->iface_filesystem);
-          block->iface_filesystem = NULL;
-        }
-    }
-  if (block->iface_filesystem != NULL)
-    {
-      /* TODO: set mount_point property */
-      if (add_filesystem)
-        g_dbus_object_add_interface (block->object, G_DBUS_INTERFACE (block->iface_filesystem));
-    }
+  update_iface (block, linux_sysfs_device_check, linux_sysfs_device_update,
+                UDISKS_TYPE_LINUX_SYSFS_DEVICE_STUB, &block->iface_linux_sysfs_device);
+  update_iface (block, block_device_check, block_device_update,
+                UDISKS_TYPE_BLOCK_DEVICE_STUB, &block->iface_block_device);
+  update_iface (block, block_device_probed_check, block_device_probed_update,
+                UDISKS_TYPE_BLOCK_DEVICE_PROBED_STUB, &block->iface_block_device_probed);
+  update_iface (block, filesystem_check, filesystem_update,
+                UDISKS_TYPE_FILESYSTEM_STUB, &block->iface_filesystem);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
