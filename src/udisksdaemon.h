@@ -18,19 +18,22 @@
  *
  */
 
-#ifndef __UDISKS_FILESYSTEM_IMPL_H__
-#define __UDISKS_FILESYSTEM_IMPL_H__
+#ifndef __UDISKS_DAEMON_H__
+#define __UDISKS_DAEMON_H__
 
 #include "types.h"
 
 G_BEGIN_DECLS
 
-#define UDISKS_TYPE_FILESYSTEM_IMPL         (udisks_filesystem_impl_get_type ())
-#define UDISKS_FILESYSTEM_IMPL(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_FILESYSTEM_IMPL, UDisksFilesystemImpl))
-#define UDISKS_IS_FILESYSTEM_IMPL(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_FILESYSTEM_IMPL))
+#define UDISKS_TYPE_DAEMON         (udisks_daemon_get_type ())
+#define UDISKS_DAEMON(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_DAEMON, UDisksDaemon))
+#define UDISKS_IS_DAEMON(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_DAEMON))
 
-GType             udisks_filesystem_impl_get_type (void) G_GNUC_CONST;
+GType               udisks_daemon_get_type           (void) G_GNUC_CONST;
+UDisksDaemon       *udisks_daemon_new                (GDBusConnection *connection);
+GDBusConnection    *udisks_daemon_get_connection     (UDisksDaemon *daemon);
+GDBusObjectManager *udisks_daemon_get_object_manager (UDisksDaemon *daemon);
 
 G_END_DECLS
 
-#endif /* __UDISKS_FILESYSTEM_IMPL_H__ */
+#endif /* __UDISKS_DAEMON_H__ */

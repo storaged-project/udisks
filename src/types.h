@@ -25,6 +25,9 @@
 #include <udisks/udisks.h>
 #include <gdbusobjectmanager.h>
 
+struct _UDisksDaemon;
+typedef struct _UDisksDaemon UDisksDaemon;
+
 struct _UDisksFilesystemImpl;
 typedef struct _UDisksFilesystemImpl UDisksFilesystemImpl;
 

@@ -26,6 +26,7 @@
 
 #include "types.h"
 #include "linuxblock.h"
+#include "udisksdaemon.h"
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -38,7 +39,7 @@ static GOptionEntry opt_entries[] = {
   {NULL }
 };
 
-static GDBusObjectManager *object_manager = NULL;
+static UDisksDaemon *the_daemon = NULL;
 
 static void
 on_bus_acquired (GDBusConnection *connection,
@@ -47,9 +48,8 @@ on_bus_acquired (GDBusConnection *connection,
 {
   g_print ("Connected to the system bus\n");
 
-  object_manager = g_dbus_object_manager_new (connection, "/org/freedesktop/UDisks");
-
-  linux_block_init (object_manager);
+  the_daemon = udisks_daemon_new (connection);
+  linux_block_init (udisks_daemon_get_object_manager (the_daemon));
 }
 
 static void
@@ -154,8 +154,8 @@ main (int    argc,
   linux_block_shutdown ();
   if (sigint_id > 0)
     g_source_remove (sigint_id);
-  if (object_manager != NULL)
-    g_object_unref (object_manager);
+  if (the_daemon != NULL)
+    g_object_unref (the_daemon);
   if (name_owner_id != 0)
     g_bus_unown_name (name_owner_id);
   if (loop != NULL)

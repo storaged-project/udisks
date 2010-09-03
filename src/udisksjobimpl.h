@@ -32,5 +32,6 @@ G_BEGIN_DECLS
 GType      udisks_job_impl_get_type (void) G_GNUC_CONST;
 UDisksJob *udisks_job_impl_new      (void);
 
+G_END_DECLS
 
 #endif /* __UDISKS_JOB_IMPL_H__ */

@@ -27,6 +27,7 @@ udisks_daemon_SOURCES = 						\
 					main.c				\
 	gposixsignal.h			gposixsignal.c			\
 	types.h								\
+	udisksdaemon.h			udisksdaemon.c			\
 	linuxblock.h			linuxblock.c			\
 	udisksfilesystemimpl.h		udisksfilesystemimpl.c		\
 	udisksjobimpl.h			udisksjobimpl.c			\
