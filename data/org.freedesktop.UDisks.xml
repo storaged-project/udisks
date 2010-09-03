@@ -3,6 +3,8 @@
 "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
 <node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
 
+  <!-- ********************************************************************** -->
+
   <interface name="org.freedesktop.UDisks.LinuxSysfsDevice">
     <property name="SysfsPath" type="s" access="read"/>
     <property name="Subsystem" type="s" access="read"/>
@@ -12,6 +14,8 @@
     </signal>
   </interface>
 
+  <!-- ********************************************************************** -->
+
   <interface name="org.freedesktop.UDisks.BlockDevice">
     <property name="Device" type="s" access="read"/>
     <property name="Symlinks" type="as" access="read"/>
@@ -20,6 +24,8 @@
     <property name="Size" type="t" access="read"/>
   </interface>
 
+  <!-- ********************************************************************** -->
+
   <interface name="org.freedesktop.UDisks.BlockDevice.Probed">
     <property name="Usage" type="s" access="read"/>
     <property name="Kind" type="s" access="read"/>
@@ -27,6 +33,8 @@
     <property name="Label" type="s" access="read"/>
     <property name="UUID" type="s" access="read"/>
   </interface>
+
+  <!-- ********************************************************************** -->
 
   <interface name="org.freedesktop.UDisks.Filesystem">
     <property name="MountPoint" type="s" access="read"/>
@@ -38,6 +46,18 @@
     </method>
 
     <method name="Unmount">
+      <arg name="options" direction="in" type="as"/>
+    </method>
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+  <interface name="org.freedesktop.UDisks.Job">
+    <property name="Progress" type="d" access="read"/>
+    <property name="StartTime" type="t" access="read"/>
+    <property name="ExpectedEndTime" type="t" access="read"/>
+
+    <method name="Cancel">
       <arg name="options" direction="in" type="as"/>
     </method>
   </interface>

@@ -18,17 +18,19 @@
  *
  */
 
-#ifndef __UDISKS_FILESYSTEM_IMPL_H__
-#define __UDISKS_FILESYSTEM_IMPL_H__
+#ifndef __UDISKS_JOB_IMPL_H__
+#define __UDISKS_JOB_IMPL_H__
 
 #include "types.h"
 
 G_BEGIN_DECLS
 
-#define UDISKS_TYPE_FILESYSTEM_IMPL         (udisks_filesystem_impl_get_type ())
-#define UDISKS_FILESYSTEM_IMPL(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_FILESYSTEM_IMPL, UDisksFilesystemImpl))
-#define UDISKS_IS_FILESYSTEM_IMPL(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_FILESYSTEM_IMPL))
+#define UDISKS_TYPE_JOB_IMPL         (udisks_job_impl_get_type ())
+#define UDISKS_JOB_IMPL(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_JOB_IMPL, UDisksJobImpl))
+#define UDISKS_IS_JOB_IMPL(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_JOB_IMPL))
 
-GType             udisks_filesystem_impl_get_type (void) G_GNUC_CONST;
+GType      udisks_job_impl_get_type (void) G_GNUC_CONST;
+UDisksJob *udisks_job_impl_new      (void);
 
-#endif /* __UDISKS_FILESYSTEM_IMPL_H__ */
+
+#endif /* __UDISKS_JOB_IMPL_H__ */

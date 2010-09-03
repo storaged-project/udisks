@@ -38,6 +38,7 @@ BUILT_SOURCES =										\
 	generated-udisksblockdeviceprobed.h	generated-udisksblockdeviceprobed.c	\
 	generated-udiskslinuxsysfsdevice.h	generated-udiskslinuxsysfsdevice.c	\
 	generated-udisksfilesystem.h		generated-udisksfilesystem.c		\
+	generated-udisksjob.h			generated-udisksjob.c			\
 	$(NULL)
 
 lib_LTLIBRARIES=libudisks.la
@@ -50,6 +51,7 @@ libudisksinclude_HEADERS=
 	generated-udisksblockdevice.h			\
 	generated-udisksblockdeviceprobed.h		\
 	generated-udisksfilesystem.h			\
+	generated-udisksjob.h				\
 	$(NULL)
 
 libudisks_la_SOURCES =					\

@@ -32,7 +32,6 @@ struct _UDisksFilesystemImpl
 struct _UDisksFilesystemImplClass
 {
   UDisksFilesystemStubClass parent_class;
-  gpointer padding[8];
 };
 
 static void filesystem_iface_init (UDisksFilesystemIface *iface);
@@ -48,12 +47,6 @@ udisks_filesystem_impl_init (UDisksFilesystemImpl *filesystem)
 static void
 udisks_filesystem_impl_class_init (UDisksFilesystemImplClass *klass)
 {
-}
-
-UDisksFilesystem *
-udisks_filesystem_impl_new (void)
-{
-  return UDISKS_FILESYSTEM (g_object_new (UDISKS_TYPE_FILESYSTEM_IMPL, NULL));
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

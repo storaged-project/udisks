@@ -28,4 +28,7 @@
 struct _UDisksFilesystemImpl;
 typedef struct _UDisksFilesystemImpl UDisksFilesystemImpl;
 
+struct _UDisksJobImpl;
+typedef struct _UDisksJobImpl UDisksJobImpl;
+
 #endif

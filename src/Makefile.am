@@ -29,6 +29,7 @@ udisks_daemon_SOURCES = 						\
 	types.h								\
 	linuxblock.h			linuxblock.c			\
 	udisksfilesystemimpl.h		udisksfilesystemimpl.c		\
+	udisksjobimpl.h			udisksjobimpl.c			\
 	$(NULL)
 
 udisks_daemon_CPPFLAGS = 				\
