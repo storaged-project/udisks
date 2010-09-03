@@ -50,13 +50,6 @@ on_bus_acquired (GDBusConnection *connection,
   object_manager = g_dbus_object_manager_new (connection, "/org/freedesktop/UDisks");
 
   linux_block_init (object_manager);
-
-  UDisksBlockDevice *b;
-  b = udisks_block_device_stub_new ();
-  g_dbus_interface_register_object (G_DBUS_INTERFACE (b),
-                                    connection,
-                                    "/devices/blah",
-                                    NULL);
 }
 
 static void
