@@ -70,10 +70,12 @@ linux_block_free (LinuxBlock *block)
 
 typedef gboolean (*HasInterfaceFunc)    (LinuxBlock     *block);
 typedef void     (*UpdateInterfaceFunc) (LinuxBlock     *block,
+                                         const gchar    *uevent_action,
                                          GDBusInterface *interface);
 
 static void
 update_iface (LinuxBlock           *block,
+              const gchar          *uevent_action,
               HasInterfaceFunc      has_func,
               UpdateInterfaceFunc   update_func,
               GType                 stub_type,
@@ -113,7 +115,7 @@ update_iface (LinuxBlock           *block,
 
   if (*interface_pointer != NULL)
     {
-      update_func (block, G_DBUS_INTERFACE (*interface_pointer));
+      update_func (block, uevent_action, G_DBUS_INTERFACE (*interface_pointer));
       if (add)
         g_dbus_object_add_interface (block->object, G_DBUS_INTERFACE (*interface_pointer));
     }
@@ -130,6 +132,7 @@ block_device_check (LinuxBlock *block)
 
 static void
 block_device_update (LinuxBlock      *block,
+                     const gchar     *uevent_action,
                      GDBusInterface  *_iface)
 {
   UDisksBlockDevice *iface = UDISKS_BLOCK_DEVICE (_iface);
@@ -155,6 +158,7 @@ block_device_probed_check (LinuxBlock *block)
 
 static void
 block_device_probed_update (LinuxBlock      *block,
+                            const gchar     *uevent_action,
                             GDBusInterface  *_iface)
 {
   UDisksBlockDeviceProbed *iface = UDISKS_BLOCK_DEVICE_PROBED (_iface);
@@ -177,12 +181,16 @@ linux_sysfs_device_check (LinuxBlock *block)
 
 static void
 linux_sysfs_device_update (LinuxBlock      *block,
+                           const gchar     *uevent_action,
                            GDBusInterface  *_iface)
 {
   UDisksLinuxSysfsDevice *iface = UDISKS_LINUX_SYSFS_DEVICE (_iface);
 
   udisks_linux_sysfs_device_set_subsystem (iface, "block");
   udisks_linux_sysfs_device_set_sysfs_path (iface, g_udev_device_get_sysfs_path (block->device));
+
+  if (uevent_action != NULL)
+    udisks_linux_sysfs_device_emit_uevent (iface, uevent_action);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -196,6 +204,7 @@ filesystem_check (LinuxBlock *block)
 
 static void
 filesystem_update (LinuxBlock      *block,
+                   const gchar     *uevent_action,
                    GDBusInterface  *_iface)
 {
   //UDisksFilesystem *iface = UDISKS_FILESYSTEM (_iface);
@@ -208,13 +217,13 @@ static void
 linux_block_update (LinuxBlock  *block,
                     const gchar *uevent_action)
 {
-  update_iface (block, linux_sysfs_device_check, linux_sysfs_device_update,
+  update_iface (block, uevent_action, linux_sysfs_device_check, linux_sysfs_device_update,
                 UDISKS_TYPE_LINUX_SYSFS_DEVICE_STUB, &block->iface_linux_sysfs_device);
-  update_iface (block, block_device_check, block_device_update,
+  update_iface (block, uevent_action, block_device_check, block_device_update,
                 UDISKS_TYPE_BLOCK_DEVICE_STUB, &block->iface_block_device);
-  update_iface (block, block_device_probed_check, block_device_probed_update,
+  update_iface (block, uevent_action, block_device_probed_check, block_device_probed_update,
                 UDISKS_TYPE_BLOCK_DEVICE_PROBED_STUB, &block->iface_block_device_probed);
-  update_iface (block, filesystem_check, filesystem_update,
+  update_iface (block, uevent_action, filesystem_check, filesystem_update,
                 UDISKS_TYPE_FILESYSTEM_STUB, &block->iface_filesystem);
 }
 
