@@ -28,6 +28,7 @@ udisks_daemon_SOURCES = 						\
 	gposixsignal.h			gposixsignal.c			\
 	types.h								\
 	linuxblock.h			linuxblock.c			\
+	udisksfilesystemimpl.h		udisksfilesystemimpl.c		\
 	$(NULL)
 
 udisks_daemon_CPPFLAGS = 				\

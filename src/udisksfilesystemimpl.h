@@ -18,14 +18,19 @@
  *
  */
 
-#ifndef __TYPES_H__
-#define __TYPES_H__
+#ifndef __UDISKS_FILESYSTEM_IMPL_H__
+#define __UDISKS_FILESYSTEM_IMPL_H__
 
-#include <gio/gio.h>
-#include <udisks/udisks.h>
-#include <gdbusobjectmanager.h>
+#include "types.h"
 
-struct _UDisksFilesystemImpl;
-typedef struct _UDisksFilesystemImpl UDisksFilesystemImpl;
+G_BEGIN_DECLS
 
-#endif
+#define UDISKS_TYPE_FILESYSTEM_IMPL         (udisks_filesystem_impl_get_type ())
+#define UDISKS_FILESYSTEM_IMPL(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_FILESYSTEM_IMPL, UDisksFilesystemImpl))
+#define UDISKS_IS_FILESYSTEM_IMPL(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_FILESYSTEM_IMPL))
+
+GType             udisks_filesystem_impl_get_type (void) G_GNUC_CONST;
+UDisksFilesystem *udisks_filesystem_impl_new      (void);
+
+
+#endif /* __UDISKS_FILESYSTEM_IMPL_H__ */

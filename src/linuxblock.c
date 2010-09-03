@@ -20,9 +20,10 @@
 
 #include "config.h"
 
-#include "linuxblock.h"
-
 #include <gudev/gudev.h>
+
+#include "linuxblock.h"
+#include "udisksfilesystemimpl.h"
 
 typedef struct
 {
@@ -224,7 +225,7 @@ linux_block_update (LinuxBlock  *block,
   update_iface (block, uevent_action, block_device_probed_check, block_device_probed_update,
                 UDISKS_TYPE_BLOCK_DEVICE_PROBED_STUB, &block->iface_block_device_probed);
   update_iface (block, uevent_action, filesystem_check, filesystem_update,
-                UDISKS_TYPE_FILESYSTEM_STUB, &block->iface_filesystem);
+                UDISKS_TYPE_FILESYSTEM_IMPL, &block->iface_filesystem);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
