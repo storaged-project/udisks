@@ -72,22 +72,18 @@ lookup_object_proxy_by_device (const gchar *device)
   for (l = object_proxies; l != NULL; l = l->next)
     {
       GDBusObjectProxy *object_proxy = G_DBUS_OBJECT_PROXY (l->data);
-      GDBusProxy *proxy;
+      UDisksBlockDevice *block;
 
       /* TODO: use UDISKS_{HAS,PEEK,GET}_BLOCK_DEVICE macros from codegen (when available) */
-      proxy = g_dbus_object_proxy_lookup (object_proxy, "org.freedesktop.UDisks.BlockDevice");
-      if (proxy != NULL)
+      block = UDISKS_PEEK_BLOCK_DEVICE (object_proxy);
+      if (block != NULL)
         {
-          UDisksBlockDevice *block = UDISKS_BLOCK_DEVICE (proxy);
           const gchar * const *symlinks;
           guint n;
-
-          block = UDISKS_BLOCK_DEVICE (proxy);
 
           if (g_strcmp0 (udisks_block_device_get_device (block), device) == 0)
             {
               ret = g_object_ref (object_proxy);
-              g_object_unref (proxy);
               goto out;
             }
 
@@ -97,11 +93,9 @@ lookup_object_proxy_by_device (const gchar *device)
               if (g_strcmp0 (symlinks[n], device) == 0)
                 {
                   ret = g_object_ref (object_proxy);
-                  g_object_unref (proxy);
                   goto out;
                 }
             }
-          g_object_unref (proxy);
         }
     }
 
@@ -139,7 +133,6 @@ handle_command_info (gint        *argc,
   GList *l;
   GList *object_proxies;
   GDBusObjectProxy *object_proxy;
-  GDBusProxy *proxy;
   UDisksBlockDevice *block;
   guint n;
 
@@ -213,20 +206,14 @@ handle_command_info (gint        *argc,
       for (l = object_proxies; l != NULL; l = l->next)
         {
           object_proxy = G_DBUS_OBJECT_PROXY (l->data);
-
-          /* TODO: use UDISKS_{HAS,PEEK,GET}_BLOCK_DEVICE macros from codegen (when available) */
-          proxy = g_dbus_object_proxy_lookup (object_proxy, "org.freedesktop.UDisks.BlockDevice");
-          if (proxy != NULL)
+          block = UDISKS_PEEK_BLOCK_DEVICE (object_proxy);
+          if (block != NULL)
             {
               const gchar * const *symlinks;
-
-              block = UDISKS_BLOCK_DEVICE (proxy);
-
               g_print ("%s \n", udisks_block_device_get_device (block));
               symlinks = udisks_block_device_get_symlinks (block);
               for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
                 g_print ("%s \n", symlinks[n]);
-              g_object_unref (proxy);
             }
         }
       g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
