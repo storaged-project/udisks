@@ -4,33 +4,30 @@
 
 ####################################################################################################
 
+
 __udisks() {
     local IFS=$'\n'
-    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local cur=`_get_cword :`
 
-    if [ "${COMP_WORDS[$(($COMP_CWORD - 1))]}" = "--show-info" ] ; then
-        COMPREPLY=($(compgen -W "$(udisks --enumerate-device-files)" -- $cur))
-    elif [ "${COMP_WORDS[$(($COMP_CWORD - 1))]}" = "--inhibit-polling" ] ; then
-        COMPREPLY=($(compgen -W "$(udisks --enumerate-device-files)" -- $cur))
-    elif [ "${COMP_WORDS[$(($COMP_CWORD - 1))]}" = "--mount" ] ; then
-        COMPREPLY=($(compgen -W "$(udisks --enumerate-device-files)" -- $cur))
-    elif [ "${COMP_WORDS[$(($COMP_CWORD - 1))]}" = "--unmount" ] ; then
-        COMPREPLY=($(compgen -W "$(udisks --enumerate-device-files)" -- $cur))
-    elif [ "${COMP_WORDS[$(($COMP_CWORD - 1))]}" = "--detach" ] ; then
-        COMPREPLY=($(compgen -W "$(udisks --enumerate-device-files)" -- $cur))
-    elif [ "${COMP_WORDS[$(($COMP_CWORD - 1))]}" = "--ata-smart-refresh" ] ; then
-        COMPREPLY=($(compgen -W "$(udisks --enumerate-device-files)" -- $cur))
-    elif [ "${COMP_WORDS[$(($COMP_CWORD - 1))]}" = "--ata-smart-simulate" ] ; then
-        _filedir || return 0
-    elif [ "${COMP_WORDS[$(($COMP_CWORD - 1))]}" = "--set-spindown" ] ; then
-        COMPREPLY=($(compgen -W "$(udisks --enumerate-device-files)" -- $cur))
-    elif [ "${COMP_WORDS[$(($COMP_CWORD - 1))]}" = "--poll-for-media" ] ; then
-        COMPREPLY=($(compgen -W "$(udisks --enumerate-device-files)" -- $cur))
-    else
-        COMPREPLY=($(IFS=: compgen -W "--dump:--inhibit-polling:--inhibit-all-polling:--enumerate:--enumerate-device-files:--monitor:--monitor-detail:--show-info:--help:--mount:--mount-fstype:--mount-options:--unmount:--unmount-options:--detach:--detach-options:--ata-smart-refresh:--ata-smart-wakeup:--ata-smart-simulate:--set-spindown:--set-spindown-all:--spindown-timeout:--poll-for-media" -- $cur))
-    fi
+    local suggestions=$(udisks complete "${COMP_LINE}" ${COMP_POINT})
+    COMPREPLY=($(compgen -W "$suggestions" -- "$cur"))
+
+    # Remove colon-word prefix from COMPREPLY items
+    case "$cur" in
+        *:*)
+            case "$COMP_WORDBREAKS" in
+                *:*)
+                    local colon_word=${cur%${cur##*:}}
+                    local i=${#COMPREPLY[*]}
+                    while [ $((--i)) -ge 0 ]; do
+                        COMPREPLY[$i]=${COMPREPLY[$i]#"$colon_word"}
+                    done
+                    ;;
+            esac
+            ;;
+    esac
 }
 
 ####################################################################################################
 
-complete -o filenames -F __udisks udisks
+complete -o nospace -F __udisks udisks
