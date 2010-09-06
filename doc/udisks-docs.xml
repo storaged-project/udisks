@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
-               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
 <!ENTITY version SYSTEM "version.xml">
 ]>
-<book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
+<book id="udisks" xmlns:xi="http://www.w3.org/2003/XInclude">
   <bookinfo>
-    <title>udisks Reference Manual</title>
+    <title>UDisks Reference Manual</title>
     <releaseinfo>Version &version;</releaseinfo>
     <authorgroup>
       <author>
@@ -13,15 +13,18 @@
 	<surname>Zeuthen</surname>
 	<affiliation>
 	  <address>
-	    <email>david@fubar.dk</email>
+	    <email>zeuthen@gmail.com</email>
 	  </address>
 	</affiliation>
       </author>
     </authorgroup>
 
     <copyright>
+      <year>2007</year>
       <year>2008</year>
-      <holder>The udisks Authors</holder>
+      <year>2009</year>
+      <year>2010</year>
+      <holder>The UDisks Authors</holder>
     </copyright>
 
     <legalnotice>
@@ -36,73 +39,64 @@
 	Foundation by visiting <ulink type="http"
 	url="http://www.fsf.org">their Web site</ulink> or by writing
 	to:
-
 	<address>
-	  The Free Software Foundation, Inc.,
-	  <street>59 Temple Place</street> - Suite 330,
-	  <city>Boston</city>, <state>MA</state> <postcode>02111-1307</postcode>,
-	  <country>USA</country>
+          <street>51 Franklin Street</street>, Suite 500
+          <city>Boston</city>, <state>MA</state> <postcode>02110-1335</postcode>
+          <country>USA</country>
 	</address>
       </para>
-
       <para>
 	Many of the names used by companies to distinguish their
 	products and services are claimed as trademarks. Where those
-	names appear in any GNOME documentation, and those trademarks
-	are made aware to the members of the GNOME Documentation
-	Project, the names have been printed in caps or initial caps.
+	names appear in any freedesktop.org documentation, and those
+	trademarks are made aware to the members of the
+	freedesktop.org project, the names have been printed in caps
+	or initial caps.
       </para>
     </legalnotice>
   </bookinfo>
 
-  <reference id="ref-library">
+  <part id="overview">
+    <title>UDisks Overview</title>
+  </part>
+
+  <part id="ref-library">
     <title>Library API Reference</title>
-    <partintro>
-      <para>
-	This part documents the library interfaces in libudisks.
-      </para>
-    </partintro>
-  </reference>
+  </part>
 
-  <reference id="ref-dbus-api">
+  <part id="ref-api">
     <title>D-Bus API Reference</title>
-    <partintro>
-      <para>
-	This part documents the D-Bus interfaces exposed by udisks.
-      </para>
-    </partintro>
-    <xi:include href="xml/generated-udisksblockdevice.xml"/>
-    <xi:include href="xml/generated-udisksblockdeviceprobed.xml"/>
-    <xi:include href="xml/generated-udisksfilesystem.xml"/>
-    <xi:include href="xml/generated-udisksjob.xml"/>
-    <xi:include href="xml/generated-udiskslinuxsysfsdevice.xml"/>
-  </reference>
+    <chapter id="ref-api-identification">
+      <title>Identification</title>
+      <xi:include href="xml/generated-udisksblockdevice.xml"/>
+      <xi:include href="xml/generated-udisksblockdeviceprobed.xml"/>
+      <xi:include href="xml/generated-udisksfilesystem.xml"/>
+    </chapter>
+    <chapter id="ref-api-os">
+      <title>OS-Specific Interfaces</title>
+      <xi:include href="xml/generated-udiskslinuxsysfsdevice.xml"/>
+    </chapter>
+    <chapter id="ref-api-jobs">
+      <title>Jobs</title>
+      <xi:include href="xml/generated-udisksjob.xml"/>
+    </chapter>
+  </part>
 
-  <reference id="ref-daemon">
+  <part id="ref-daemon">
     <title>Daemon Implementation Details</title>
-    <partintro>
-      <para>
-	This part documents the daemon implementation.
-      </para>
-    </partintro>
     <xi:include href="xml/udisksdaemon.xml"/>
     <xi:include href="xml/udisksfilesystemimpl.xml"/>
     <xi:include href="xml/udiskslinuxblock.xml"/>
     <xi:include href="xml/udiskslinuxprovider.xml"/>
-  </reference>
+  </part>
 
-  <reference id="tools-fileformats">
-    <title>Manual Pages</title>
-    <partintro>
-      <para>
-	This part contains the manual pages distributed with udisks.
-      </para>
-    </partintro>
+  <part id="tools-fileformats">
+    <title>Tools, File Formats and Manual Pages</title>
     <xi:include href="man/udisks7.xml"/>
     <xi:include href="man/udisks-daemon.xml"/>
     <xi:include href="man/udisks.xml"/>
     <xi:include href="man/udisks-tcp-bridge.xml"/>
-  </reference>
+  </part>
 
   <index>
     <title>Index</title>
