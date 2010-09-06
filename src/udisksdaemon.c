@@ -23,8 +23,22 @@
 #include "udisksdaemon.h"
 #include "udiskslinuxprovider.h"
 
+/**
+ * SECTION:udisksdaemon
+ * @title: UDisksDaemon
+ * @short_description: Main daemon object
+ *
+ * Object holding all global state.
+ */
+
 typedef struct _UDisksDaemonClass   UDisksDaemonClass;
 
+/**
+ * UDisksDaemon:
+ *
+ * The #UDisksDaemon structure contains only private data and should
+ * only be accessed using the provided API.
+ */
 struct _UDisksDaemon
 {
   GObject parent_instance;

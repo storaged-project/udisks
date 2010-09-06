@@ -1,0 +1,56 @@
+<SECTION>
+<FILE>udisksdaemon</FILE>
+<TITLE>UDisksDaemon</TITLE>
+UDisksDaemon
+udisks_daemon_new
+udisks_daemon_get_connection
+udisks_daemon_get_object_manager
+<SUBSECTION Standard>
+UDISKS_TYPE_DAEMON
+UDISKS_DAEMON
+UDISKS_IS_DAEMON
+<SUBSECTION Private>
+udisks_daemon_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udisksfilesystemimpl</FILE>
+<TITLE>UDisksFilesystemImpl</TITLE>
+UDisksFilesystemImpl
+<SUBSECTION Standard>
+UDISKS_TYPE_FILESYSTEM_IMPL
+UDISKS_FILESYSTEM_IMPL
+UDISKS_IS_FILESYSTEM_IMPL
+<SUBSECTION Private>
+udisks_filesystem_impl_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxblock</FILE>
+<TITLE>UDisksLinuxBlock</TITLE>
+UDisksLinuxBlock
+udisks_linux_block_new
+udisks_linux_block_uevent
+udisks_linux_block_get_daemon
+udisks_linux_block_get_device
+<SUBSECTION Standard>
+UDISKS_TYPE_LINUX_BLOCK
+UDISKS_LINUX_BLOCK
+UDISKS_IS_LINUX_BLOCK
+<SUBSECTION Private>
+udisks_linux_block_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxprovider</FILE>
+<TITLE>UDisksLinuxProvider</TITLE>
+UDisksLinuxProvider
+udisks_linux_provider_new
+udisks_linux_provider_get_daemon
+<SUBSECTION Standard>
+UDISKS_TYPE_LINUX_PROVIDER
+UDISKS_LINUX_PROVIDER
+UDISKS_IS_LINUX_PROVIDER
+<SUBSECTION Private>
+udisks_linux_provider_get_type
+</SECTION>

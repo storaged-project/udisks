@@ -22,8 +22,29 @@
 
 #include "udisksfilesystemimpl.h"
 
+/**
+ * SECTION:udisksfilesystemimpl
+ * @title: UDisksFilesystemImpl
+ * @short_description: Filesystem Implementation
+ *
+ * This type provides an implementation of the #UDisksFilesystem
+ * interface that uses the <command>mount</command> and
+ * <command>umount</command> commands.
+ *
+ * TODO: mention other impl details like
+ * <filename>/var/lib/udisks/mtab</filename>, how mount options work,
+ * what role <filename>/etc/fstab</filename> plays and so on.
+ */
+
+
 typedef struct _UDisksFilesystemImplClass   UDisksFilesystemImplClass;
 
+/**
+ * UDisksFilesystemImpl:
+ *
+ * The #UDisksFilesystemImpl structure contains only private data and
+ * should only be accessed using the provided API.
+ */
 struct _UDisksFilesystemImpl
 {
   UDisksFilesystemStub parent_instance;

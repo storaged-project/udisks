@@ -24,8 +24,22 @@
 #include "udiskslinuxblock.h"
 #include "udisksfilesystemimpl.h"
 
+/**
+ * SECTION:udiskslinuxblock
+ * @title: UDisksLinuxBlock
+ * @short_description: Linux block devices
+ *
+ * Object corresponding to a Linux block device.
+ */
+
 typedef struct _UDisksLinuxBlockClass   UDisksLinuxBlockClass;
 
+/**
+ * UDisksLinuxBlock:
+ *
+ * The #UDisksLinuxBlock structure contains only private data and
+ * should only be accessed using the provided API.
+ */
 struct _UDisksLinuxBlock
 {
   GDBusObject parent_instance;
@@ -273,7 +287,7 @@ udisks_linux_block_class_init (UDisksLinuxBlockClass *klass)
 /**
  * udisks_linux_block_new:
  * @daemon: A #UDisksDaemon.
- * @object_path: The object path to use for the new object.
+ * @device: The #GUdevDevice for the sysfs block device.
  *
  * Create a new block object.
  *

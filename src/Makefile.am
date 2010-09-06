@@ -21,12 +21,13 @@ INCLUDES = \
 	$(GIO_CFLAGS)						\
 	$(NULL)
 
-libexec_PROGRAMS = udisks-daemon
+# ----------------------------------------------------------------------------------------------------
 
-udisks_daemon_SOURCES = 						\
-					main.c				\
-	gposixsignal.h			gposixsignal.c			\
+noinst_LTLIBRARIES = libudisks-daemon.la
+
+libudisks_daemon_la_SOURCES =						\
 	types.h								\
+	gposixsignal.h			gposixsignal.c			\
 	udisksdaemon.h			udisksdaemon.c			\
 	udiskslinuxprovider.h		udiskslinuxprovider.c		\
 	udiskslinuxblock.h		udiskslinuxblock.c		\
@@ -34,22 +35,42 @@ udisks_daemon_SOURCES = 						\
 	udisksjobimpl.h			udisksjobimpl.c			\
 	$(NULL)
 
-udisks_daemon_CPPFLAGS = 				\
+libudisks_daemon_la_CFLAGS =				\
 	-I$(top_srcdir)					\
 	-DG_LOG_DOMAIN=\"udisks-daemon\"		\
-	$(AM_CPPFLAGS)					\
+	$(GLIB_CFLAGS)					\
+	$(GIO_CFLAGS)					\
+	$(GUDEV_CFLAGS)					\
+	$(LIBATASMART_CFLAGS)				\
+	$(POLKIT_GOBJECT_1_CFLAGS) 			\
+	$(NULL)
+
+libudisks_daemon_la_LIBADD =				\
+	$(GLIB_LIBS)					\
+	$(GIO_LIBS)					\
+	$(GUDEV_LIBS)					\
+	$(LIBATASMART_LIBS)				\
+	$(POLKIT_GOBJECT_1_LIBS) 			\
+	$(top_builddir)/udisks/libudisks.la		\
+	$(NULL)
+
+# ----------------------------------------------------------------------------------------------------
+
+libexec_PROGRAMS = udisks-daemon
+
+udisks_daemon_SOURCES = 				\
+				main.c			\
 	$(NULL)
 
 udisks_daemon_CFLAGS = 					\
+	-DG_LOG_DOMAIN=\"udisks-daemon\"		\
 	$(LIBATASMART_CFLAGS)				\
 	$(NULL)
 
 udisks_daemon_LDADD = 					\
+	$(GLIB_LIBS)					\
 	$(GIO_LIBS)					\
-	$(POLKIT_GOBJECT_1_LIBS) 			\
-	$(GUDEV_LIBS)					\
-	$(LIBATASMART_LIBS)				\
-	$(top_builddir)/udisks/libudisks.la		\
+	$(top_builddir)/src/libudisks-daemon.la		\
 	$(NULL)
 
 # ----------------------------------------------------------------------------------------------------

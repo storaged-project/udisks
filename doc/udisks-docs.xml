@@ -55,19 +55,40 @@
     </legalnotice>
   </bookinfo>
 
-  <reference id="ref-dbus">
+  <reference id="ref-library">
+    <title>Library API Reference</title>
+    <partintro>
+      <para>
+	This part documents the library interfaces in libudisks.
+      </para>
+    </partintro>
+  </reference>
+
+  <reference id="ref-dbus-api">
     <title>D-Bus API Reference</title>
     <partintro>
       <para>
-	This part documents the D-Bus interface used to access the
-	udisks daemon.
+	This part documents the D-Bus interfaces exposed by udisks.
       </para>
     </partintro>
-    <xi:include href="dbus/org.freedesktop.UDisks.ref.xml"/>
-    <xi:include href="dbus/org.freedesktop.UDisks.Device.ref.xml"/>
-    <xi:include href="dbus/org.freedesktop.UDisks.Adapter.ref.xml"/>
-    <xi:include href="dbus/org.freedesktop.UDisks.Expander.ref.xml"/>
-    <xi:include href="dbus/org.freedesktop.UDisks.Port.ref.xml"/>
+    <xi:include href="xml/generated-udisksblockdevice.xml"/>
+    <xi:include href="xml/generated-udisksblockdeviceprobed.xml"/>
+    <xi:include href="xml/generated-udisksfilesystem.xml"/>
+    <xi:include href="xml/generated-udisksjob.xml"/>
+    <xi:include href="xml/generated-udiskslinuxsysfsdevice.xml"/>
+  </reference>
+
+  <reference id="ref-daemon">
+    <title>Daemon Implementation Details</title>
+    <partintro>
+      <para>
+	This part documents the daemon implementation.
+      </para>
+    </partintro>
+    <xi:include href="xml/udisksdaemon.xml"/>
+    <xi:include href="xml/udisksfilesystemimpl.xml"/>
+    <xi:include href="xml/udiskslinuxblock.xml"/>
+    <xi:include href="xml/udiskslinuxprovider.xml"/>
   </reference>
 
   <reference id="tools-fileformats">
@@ -87,12 +108,8 @@
     <title>Index</title>
   </index>
 
-  <!-- License -->
-
-  <appendix id="license">
-    <title>License</title>
-    <para>
-<programlisting><xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../COPYING" parse="text"><xi:fallback>FIXME: MISSING XINCLUDE CONTENT</xi:fallback></xi:include></programlisting>
-    </para>
-  </appendix>
+  <chapter id="gio-hierarchy">
+    <title>Object Hierarchy</title>
+      <xi:include href="xml/tree_index.sgml"/>
+  </chapter>
 </book>

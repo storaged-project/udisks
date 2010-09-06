@@ -24,8 +24,23 @@
 #include "udiskslinuxprovider.h"
 #include "udiskslinuxblock.h"
 
+/**
+ * SECTION:udiskslinuxprovider
+ * @title: UDisksLinuxProvider
+ * @short_description: Provider of Linux-specific objects
+ *
+ * This object is used to add/remove Linux specific objects. Right now
+ * it only handles #UDisksLinuxBlock devices.
+ */
+
 typedef struct _UDisksLinuxProviderClass   UDisksLinuxProviderClass;
 
+/**
+ * UDisksLinuxProvider:
+ *
+ * The #UDisksLinuxProvider structure contains only private data and
+ * should only be accessed using the provided API.
+ */
 struct _UDisksLinuxProvider
 {
   GObject parent_instance;
