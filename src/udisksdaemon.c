@@ -22,6 +22,7 @@
 
 #include "udisksdaemon.h"
 #include "udiskslinuxprovider.h"
+#include "udisksspawnedjob.h"
 
 /**
  * SECTION:udisksdaemon
@@ -227,5 +228,86 @@ udisks_daemon_get_object_manager (UDisksDaemon *daemon)
 {
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
   return daemon->object_manager;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static void
+on_job_completed (UDisksJob    *job,
+                  gboolean      success,
+                  const gchar  *message,
+                  gpointer      user_data)
+{
+  UDisksDaemon *daemon = UDISKS_DAEMON (user_data);
+  GDBusObject *object;
+
+  object = g_dbus_interface_get_object (G_DBUS_INTERFACE (job));
+  g_assert (object != NULL);
+
+  /* Unexport job */
+  g_dbus_object_manager_unexport (daemon->object_manager, g_dbus_object_get_object_path (object));
+  g_dbus_object_remove_interface (object, G_DBUS_INTERFACE (job));
+  g_object_unref (object);
+
+  /* This gives up the last reference */
+  g_object_unref (job);
+
+  /* returns the reference we added when connecting
+   * to the UDisksJob::completed signal
+   */
+  g_object_unref (daemon);
+}
+
+/**
+ * udisks_daemon_launch_spawned_job:
+ * @daemon: A #UDisksDaemon.
+ * @cancellable: A #GCancellable or %NULL.
+ * @command_line_format: printf()-style format for the command line to spawn.
+ * @...: Arguments for @command_line_format.
+ *
+ * Launches a new job for @command_line_format.
+ *
+ * The returned object will be exported on the bus until the
+ * #UDisksJob::completed signal is emitted on the object.
+ *
+ * Returns: A #UDisksSpawnedJob object. Do not free, the object
+ * belongs to @manager.
+ */
+UDisksSpawnedJob *
+udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
+                                  GCancellable    *cancellable,
+                                  const gchar     *command_line_format,
+                                  ...)
+{
+  va_list var_args;
+  gchar *command_line;
+  UDisksSpawnedJob *job;
+  GDBusObject *object;
+  static guint job_id = 0;
+  gchar *object_path;
+
+  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
+  g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+  g_return_val_if_fail (command_line_format != NULL, NULL);
+
+  va_start (var_args, command_line_format);
+  command_line = g_strdup_vprintf (command_line_format, var_args);
+  va_end (var_args);
+  job = udisks_spawned_job_new (command_line, cancellable);
+  g_free (command_line);
+
+  /* TODO: protect job_id by a mutex */
+  object_path = g_strdup_printf ("/org/freedesktop/UDisks/jobs/%d", job_id++);
+  object = g_dbus_object_new (object_path);
+  g_dbus_object_add_interface (object, G_DBUS_INTERFACE (job));
+  g_free (object_path);
+
+  g_dbus_object_manager_export (daemon->object_manager, object);
+  g_signal_connect (job,
+                    "completed",
+                    G_CALLBACK (on_job_completed),
+                    g_object_ref (daemon));
+
+  return job;
 }
 

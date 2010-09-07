@@ -5,6 +5,7 @@ UDisksDaemon
 udisks_daemon_new
 udisks_daemon_get_connection
 udisks_daemon_get_object_manager
+udisks_daemon_launch_spawned_job
 <SUBSECTION Standard>
 UDISKS_TYPE_DAEMON
 UDISKS_DAEMON
@@ -26,16 +27,17 @@ udisks_filesystem_impl_get_type
 </SECTION>
 
 <SECTION>
-<FILE>udisksjobimpl</FILE>
-<TITLE>UDisksJobImpl</TITLE>
-UDisksJobImpl
-udisks_job_impl_new
+<FILE>udisksspawnedjob</FILE>
+<TITLE>UDisksSpawnedJob</TITLE>
+UDisksSpawnedJob
+udisks_spawned_job_new
+udisks_spawned_job_get_command_line
 <SUBSECTION Standard>
-UDISKS_TYPE_JOB_IMPL
-UDISKS_JOB_IMPL
-UDISKS_IS_JOB_IMPL
+UDISKS_TYPE_SPAWNED_JOB
+UDISKS_SPAWNED_JOB
+UDISKS_IS_SPAWNED_JOB
 <SUBSECTION Private>
-udisks_job_impl_get_type
+udisks_spawned_job_get_type
 </SECTION>
 
 <SECTION>

@@ -1,0 +1,605 @@
+/* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*-
+ *
+ * Copyright (C) 2007-2010 David Zeuthen <zeuthen@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
+
+#include "config.h"
+
+#include <sys/types.h>
+#include <sys/wait.h>
+
+#include "udisksspawnedjob.h"
+#include "udisks-daemon-marshal.h"
+
+/**
+ * SECTION:udisksspawnedjob
+ * @title: UDisksSpawnedJob
+ * @short_description: Job that spawns a command
+ *
+ * This type provides an implementation of the #UDisksJob interface
+ * for jobs that are implemented by spawning a command.
+ */
+
+typedef struct _UDisksSpawnedJobClass   UDisksSpawnedJobClass;
+
+/**
+ * UDisksSpawnedJob:
+ *
+ * The #UDisksSpawnedJob structure contains only private data and should
+ * only be accessed using the provided API.
+ */
+struct _UDisksSpawnedJob
+{
+  UDisksJobStub parent_instance;
+
+  gchar *command_line;
+  GCancellable *cancellable;
+  gulong cancellable_handler_id;
+
+  GMainContext *main_context;
+
+  GPid child_pid;
+  gint child_stdout_fd;
+  gint child_stderr_fd;
+
+  GIOChannel *child_stdout_channel;
+  GIOChannel *child_stderr_channel;
+
+  GSource *child_watch_source;
+  GSource *child_stdout_source;
+  GSource *child_stderr_source;
+
+  GString *child_stdout;
+  GString *child_stderr;
+};
+
+struct _UDisksSpawnedJobClass
+{
+  UDisksJobStubClass parent_class;
+
+  gboolean (*command_line_completed) (UDisksSpawnedJob  *job,
+                                      GError            *error,
+                                      gint               status,
+                                      const gchar       *standard_output,
+                                      const gchar       *standard_error);
+};
+
+static void job_iface_init (UDisksJobIface *iface);
+
+enum
+{
+  PROP_0,
+  PROP_COMMAND_LINE,
+  PROP_CANCELLABLE
+};
+
+enum
+{
+  COMMAND_LINE_COMPLETED_SIGNAL,
+  LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL] = { 0 };
+
+static gboolean
+udisks_spawned_job_command_line_completed_default (UDisksSpawnedJob  *job,
+                                                   GError            *error,
+                                                   gint               status,
+                                                   const gchar       *standard_output,
+                                                   const gchar       *standard_error);
+
+G_DEFINE_TYPE_WITH_CODE (UDisksSpawnedJob, udisks_spawned_job, UDISKS_TYPE_JOB_STUB,
+                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_JOB, job_iface_init));
+
+static void
+udisks_spawned_job_finalize (GObject *object)
+{
+  UDisksSpawnedJob *job = UDISKS_SPAWNED_JOB (object);
+
+  if (job->child_stdout != NULL)
+    g_string_free (job->child_stdout, TRUE);
+
+  if (job->child_stderr != NULL)
+    g_string_free (job->child_stderr, TRUE);
+
+  if (job->child_stdout_channel != NULL)
+    g_io_channel_unref (job->child_stdout_channel);
+  if (job->child_stderr_channel != NULL)
+    g_io_channel_unref (job->child_stderr_channel);
+
+  if (job->child_watch_source != NULL)
+    g_source_destroy (job->child_watch_source);
+  if (job->child_stdout_source != NULL)
+    g_source_destroy (job->child_stdout_source);
+  if (job->child_stderr_source != NULL)
+    g_source_destroy (job->child_stderr_source);
+
+  if (job->child_stdout_fd != -1)
+    g_warn_if_fail (close (job->child_stdout_fd) == 0);
+  if (job->child_stderr_fd != -1)
+    g_warn_if_fail (close (job->child_stderr_fd) == 0);
+
+  if (job->cancellable_handler_id > 0)
+    g_cancellable_disconnect (job->cancellable, job->cancellable_handler_id);
+  g_object_unref (job->cancellable);
+
+  if (job->main_context != NULL)
+    g_main_context_unref (job->main_context);
+
+  g_free (job->command_line);
+
+  if (G_OBJECT_CLASS (udisks_spawned_job_parent_class)->finalize != NULL)
+    G_OBJECT_CLASS (udisks_spawned_job_parent_class)->finalize (object);
+}
+
+static void
+udisks_spawned_job_get_property (GObject    *object,
+                                 guint       prop_id,
+                                 GValue     *value,
+                                 GParamSpec *pspec)
+{
+  UDisksSpawnedJob *job = UDISKS_SPAWNED_JOB (object);
+
+  switch (prop_id)
+    {
+    case PROP_COMMAND_LINE:
+      g_value_set_string (value, udisks_spawned_job_get_command_line (job));
+      break;
+
+    case PROP_CANCELLABLE:
+      g_value_set_object (value, job->cancellable);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+    }
+}
+
+static void
+udisks_spawned_job_set_property (GObject      *object,
+                                 guint         prop_id,
+                                 const GValue *value,
+                                 GParamSpec   *pspec)
+{
+  UDisksSpawnedJob *job = UDISKS_SPAWNED_JOB (object);
+
+  switch (prop_id)
+    {
+    case PROP_COMMAND_LINE:
+      g_assert (job->command_line == NULL);
+      job->command_line = g_value_dup_string (value);
+      break;
+
+    case PROP_CANCELLABLE:
+      g_assert (job->cancellable == NULL);
+      job->cancellable = g_value_dup_object (value);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+    }
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+typedef struct
+{
+  UDisksSpawnedJob *job;
+  GError *error;
+} EmitCompletedData;
+
+static gboolean
+emit_completed_with_error_in_idle_cb (gpointer user_data)
+{
+  EmitCompletedData *data = user_data;
+  gboolean ret;
+
+  g_signal_emit (data->job, signals[COMMAND_LINE_COMPLETED_SIGNAL], 0,
+                 data->error,
+                 0,     /* status */
+                 NULL,  /* standard_output */
+                 NULL,  /* standard_error */
+                 &ret);
+  g_object_unref (data->job);
+  g_error_free (data->error);
+  g_free (data);
+  return FALSE;
+}
+
+static void
+emit_completed_with_error_in_idle (UDisksSpawnedJob *job,
+                                   GError           *error)
+{
+  EmitCompletedData *data;
+  GSource *idle_source;
+
+  g_return_if_fail (UDISKS_IS_SPAWNED_JOB (job));
+  g_return_if_fail (error != NULL);
+
+  data = g_new0 (EmitCompletedData, 1);
+  data->job = g_object_ref (job);
+  data->error = g_error_copy (error);
+  idle_source = g_idle_source_new ();
+  g_source_set_priority (idle_source, G_PRIORITY_DEFAULT);
+  g_source_set_callback (idle_source,
+                         emit_completed_with_error_in_idle_cb,
+                         data,
+                         NULL);
+  g_source_attach (idle_source, job->main_context);
+  g_source_unref (idle_source);
+}
+
+/* called in the thread where @cancellable was cancelled */
+static void
+on_cancelled (GCancellable *cancellable,
+              gpointer      user_data)
+{
+  UDisksSpawnedJob *job = UDISKS_SPAWNED_JOB (user_data);
+  GError *error;
+
+  error = NULL;
+  g_warn_if_fail (g_cancellable_set_error_if_cancelled (job->cancellable, &error));
+  emit_completed_with_error_in_idle (job, error);
+  g_error_free (error);
+}
+
+static gboolean
+read_child_stderr (GIOChannel *channel,
+                   GIOCondition condition,
+                   gpointer user_data)
+{
+  UDisksSpawnedJob *job = UDISKS_SPAWNED_JOB (user_data);
+  gchar buf[1024];
+  gsize bytes_read;
+
+  g_io_channel_read_chars (channel, buf, sizeof buf, &bytes_read, NULL);
+  g_string_append_len (job->child_stderr, buf, bytes_read);
+  return TRUE;
+}
+
+static gboolean
+read_child_stdout (GIOChannel *channel,
+                   GIOCondition condition,
+                   gpointer user_data)
+{
+  UDisksSpawnedJob *job = UDISKS_SPAWNED_JOB (user_data);
+  gchar buf[1024];
+  gsize bytes_read;
+
+  g_io_channel_read_chars (channel, buf, sizeof buf, &bytes_read, NULL);
+  g_string_append_len (job->child_stdout, buf, bytes_read);
+  return TRUE;
+}
+
+static void
+child_watch_cb (GPid     pid,
+                gint     status,
+                gpointer user_data)
+{
+  UDisksSpawnedJob *job = UDISKS_SPAWNED_JOB (user_data);
+  gchar *buf;
+  gsize buf_size;
+  gboolean ret;
+
+  if (g_io_channel_read_to_end (job->child_stderr_channel, &buf, &buf_size, NULL) == G_IO_STATUS_NORMAL)
+    {
+      g_string_append_len (job->child_stdout, buf, buf_size);
+      g_free (buf);
+    }
+  if (g_io_channel_read_to_end (job->child_stdout_channel, &buf, &buf_size, NULL) == G_IO_STATUS_NORMAL)
+    {
+      g_string_append_len (job->child_stderr, buf, buf_size);
+      g_free (buf);
+    }
+
+  g_print ("helper(pid %5d): completed with exit code %d\n", job->child_pid, WEXITSTATUS (status));
+
+  g_signal_emit (job, signals[COMMAND_LINE_COMPLETED_SIGNAL], 0,
+                 NULL, /* GError */
+                 status,
+                 job->child_stdout->str,
+                 job->child_stderr->str,
+                 &ret);
+}
+
+
+static void
+udisks_spawned_job_constructed (GObject *object)
+{
+  UDisksSpawnedJob *job = UDISKS_SPAWNED_JOB (object);
+  GError *error;
+  gint child_argc;
+  gchar **child_argv;
+
+  if (job->cancellable == NULL)
+    job->cancellable = g_cancellable_new ();
+
+  job->main_context = g_main_context_get_thread_default ();
+  if (job->main_context != NULL)
+    g_main_context_ref (job->main_context);
+
+  /* could already be cancelled */
+  error = NULL;
+  if (g_cancellable_set_error_if_cancelled (job->cancellable, &error))
+    {
+      emit_completed_with_error_in_idle (job, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  job->cancellable_handler_id = g_cancellable_connect (job->cancellable,
+                                                       G_CALLBACK (on_cancelled),
+                                                       job,
+                                                       NULL);
+
+  error = NULL;
+  if (!g_shell_parse_argv (job->command_line,
+                           &child_argc,
+                           &child_argv,
+                           &error))
+    {
+      g_prefix_error (&error,
+                      "Error parsing command-line `%s': ",
+                      job->command_line);
+      emit_completed_with_error_in_idle (job, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  error = NULL;
+  if (!g_spawn_async_with_pipes (NULL, /* working directory */
+                                 child_argv,
+                                 NULL, /* envp */
+                                 G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD,
+                                 NULL, /* child_setup */
+                                 NULL, /* child_setup's user_data */
+                                 &(job->child_pid),
+                                 NULL, // TODO:stdin: stdin_str != NULL ? &(job->stdin_fd) : NULL,
+                                 &(job->child_stdout_fd),
+                                 &(job->child_stderr_fd),
+                                 &error))
+    {
+      g_prefix_error (&error,
+                      "Error spawning command-line `%s': ",
+                      job->command_line);
+      emit_completed_with_error_in_idle (job, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  job->child_watch_source = g_child_watch_source_new (job->child_pid);
+  g_source_set_callback (job->child_watch_source, (GSourceFunc) child_watch_cb, job, NULL);
+  g_source_attach (job->child_watch_source, job->main_context);
+  g_source_unref (job->child_watch_source);
+
+  job->child_stdout = g_string_new (NULL);
+  job->child_stdout_channel = g_io_channel_unix_new (job->child_stdout_fd);
+  g_io_channel_set_flags (job->child_stdout_channel, G_IO_FLAG_NONBLOCK, NULL);
+  job->child_stdout_source = g_io_create_watch (job->child_stdout_channel, G_IO_IN);
+  g_source_set_callback (job->child_stdout_source, (GSourceFunc) read_child_stdout, job, NULL);
+  g_source_attach (job->child_stdout_source, job->main_context);
+  g_source_unref (job->child_stdout_source);
+
+  job->child_stderr = g_string_new (NULL);
+  job->child_stderr_channel = g_io_channel_unix_new (job->child_stderr_fd);
+  g_io_channel_set_flags (job->child_stderr_channel, G_IO_FLAG_NONBLOCK, NULL);
+  job->child_stderr_source = g_io_create_watch (job->child_stderr_channel, G_IO_IN);
+  g_source_set_callback (job->child_stderr_source, (GSourceFunc) read_child_stderr, job, NULL);
+  g_source_attach (job->child_stderr_source, job->main_context);
+  g_source_unref (job->child_stderr_source);
+
+ out:
+  if (G_OBJECT_CLASS (udisks_spawned_job_parent_class)->constructed != NULL)
+    G_OBJECT_CLASS (udisks_spawned_job_parent_class)->constructed (object);
+}
+
+static void
+udisks_spawned_job_init (UDisksSpawnedJob *job)
+{
+  job->child_stderr_fd = -1;
+  job->child_stdout_fd = -1;
+}
+
+static void
+udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
+{
+  GObjectClass *gobject_class;
+
+  klass->command_line_completed = udisks_spawned_job_command_line_completed_default;
+
+  gobject_class = G_OBJECT_CLASS (klass);
+  gobject_class->finalize     = udisks_spawned_job_finalize;
+  gobject_class->constructed  = udisks_spawned_job_constructed;
+  gobject_class->set_property = udisks_spawned_job_set_property;
+  gobject_class->get_property = udisks_spawned_job_get_property;
+
+  /**
+   * UDisksSpawnedJob:command-line:
+   *
+   * The command-line to run.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_COMMAND_LINE,
+                                   g_param_spec_string ("command-line",
+                                                        "Command Line",
+                                                        "The command-line to run",
+                                                        NULL,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_STRINGS));
+
+  /**
+   * UDisksSpawnedJob:cancellable:
+   *
+   * The #GCancellable to use.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_CANCELLABLE,
+                                   g_param_spec_object ("cancellable",
+                                                        "Cancellable",
+                                                        "The GCancellable to use",
+                                                        G_TYPE_CANCELLABLE,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_STRINGS));
+
+  /**
+   * UDisksSpawnedJob::command-line-completed:
+   * @job: The #UDisksSpawnedJob emitting the signal.
+   * @error: %NULL if running the whole command line succeeded, otherwise a #GError that is set.
+   * @status: The exit status of the command line that was run.
+   * @standard_output: Standard output from the command line that was run.
+   * @standard_error: Standard error output from the command line that was run.
+   *
+   * Emitted when the command-line has completed. If spawning the
+   * command failed or if the job was cancelled, @error will
+   * non-%NULL. Otherwise you can use macros such as WIFEXITED() and
+   * WEXITSTATUS() on the @status integer to obtain more information.
+   *
+   * The default implementation simply emits the #UDisksJob::completed
+   * signal with @success set to %TRUE if, and only if, @error is
+   * %NULL, WIFEXITED() evaluates to %TRUE and WEXITSTATUS() is
+   * zero. Additionally, @message on that signal is set to
+   * @standard_error. You can avoid the default implementation by
+   * returning %TRUE from your signal handler.
+   *
+   * Returns: %TRUE if the signal was handled, %FALSE to let other
+   * handlers run.
+   */
+  signals[COMMAND_LINE_COMPLETED_SIGNAL] =
+    g_signal_new ("command-line-completed",
+                  UDISKS_TYPE_SPAWNED_JOB,
+                  G_SIGNAL_RUN_LAST,
+                  G_STRUCT_OFFSET (UDisksSpawnedJobClass, command_line_completed),
+                  g_signal_accumulator_true_handled,
+                  NULL,
+                  udisks_daemon_marshal_BOOLEAN__BOXED_INT_STRING_STRING,
+                  G_TYPE_BOOLEAN,
+                  4,
+                  G_TYPE_ERROR,
+                  G_TYPE_INT,
+                  G_TYPE_STRING,
+                  G_TYPE_STRING);
+}
+
+/**
+ * udisks_spawned_job_new:
+ * @command_line: The command line to run.
+ * @cancellable: A #GCancellable or %NULL.
+ *
+ * Creates a new #UDisksSpawnedJob instance.
+ *
+ * Returns: A new #UDisksSpawnedJob. Free with g_object_unref().
+ */
+UDisksSpawnedJob *
+udisks_spawned_job_new (const gchar  *command_line,
+                        GCancellable *cancellable)
+{
+  g_return_val_if_fail (command_line != NULL, NULL);
+  g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+  return UDISKS_SPAWNED_JOB (g_object_new (UDISKS_TYPE_SPAWNED_JOB,
+                                           "command-line", command_line,
+                                           "cancellable", cancellable,
+                                           NULL));
+}
+
+/**
+ * udisks_spawned_job_get_command_line:
+ * @job: A #UDisksSpawnedJob.
+ *
+ * Gets the command line that @job was constructed with.
+ *
+ * Returns: A string owned by @job. Do not free.
+ */
+const gchar *
+udisks_spawned_job_get_command_line (UDisksSpawnedJob *job)
+{
+  g_return_val_if_fail (UDISKS_IS_SPAWNED_JOB (job), NULL);
+  return job->command_line;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+handle_cancel (UDisksJob              *object,
+               GDBusMethodInvocation  *invocation,
+               const gchar* const     *options)
+{
+  //UDisksSpawnedJob *job = UDISKS_SPAWNED_JOB (object);
+  g_dbus_method_invocation_return_dbus_error (invocation, "org.foo.error.job.cancel", "no, not yet implemented");
+  return TRUE;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static void
+job_iface_init (UDisksJobIface *iface)
+{
+  iface->handle_cancel   = handle_cancel;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+udisks_spawned_job_command_line_completed_default (UDisksSpawnedJob  *job,
+                                                   GError            *error,
+                                                   gint               status,
+                                                   const gchar       *standard_output,
+                                                   const gchar       *standard_error)
+{
+  g_debug ("in udisks_spawned_job_command_line_completed_default()\n"
+           " command_line `%s'\n"
+           " error->message=`%s'\n"
+           " status=%d (WIFEXITED=%d WEXITSTATUS=%d)\n"
+           " standard_output=`%s'\n"
+           " standard_error=`%s'\n",
+           job->command_line,
+           error != NULL ? error->message : "(error not set)",
+           status,
+           WIFEXITED (status), WEXITSTATUS (status),
+           standard_output,
+           standard_error);
+
+  if (WIFEXITED (status) && WEXITSTATUS (status) == 0)
+    {
+      udisks_job_emit_completed (UDISKS_JOB (job),
+                                 TRUE,
+                                 "");
+    }
+  else
+    {
+      gchar *message;
+      message = g_strdup_printf ("stdout:\n"
+                                 "%s\n"
+                                 "\n"
+                                 "stderr:\n"
+                                 "%s\n",
+                                 standard_output,
+                                 standard_error);
+      udisks_job_emit_completed (UDISKS_JOB (job),
+                                 FALSE,
+                                 message);
+      g_free (message);
+    }
+  return TRUE;
+}
+

@@ -20,6 +20,9 @@
 
 #include "config.h"
 
+#include "udisksdaemon.h"
+#include "udiskslinuxblock.h"
+
 #include "udisksfilesystemimpl.h"
 
 /**
@@ -73,13 +76,33 @@ udisks_filesystem_impl_class_init (UDisksFilesystemImplClass *klass)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-handle_mount (UDisksFilesystem       *object,
+handle_mount (UDisksFilesystem       *interface,
               GDBusMethodInvocation  *invocation,
               const gchar            *filesystem_type,
               const gchar* const     *options)
 {
-  //UDisksFilesystemImpl *filesystem = UDISKS_FILESYSTEM_IMPL (object);
-  g_dbus_method_invocation_return_dbus_error (invocation, "org.foo.error.mount", "no, not yet implemented");
+  GDBusObject *object;
+  UDisksBlockDevice *block;
+  UDisksDaemon *daemon;
+  UDisksJob *job;
+
+  object = g_dbus_interface_get_object (G_DBUS_INTERFACE (interface));
+  block = UDISKS_BLOCK_DEVICE (g_dbus_object_lookup_interface (object, "org.freedesktop.UDisks.BlockDevice"));
+  daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
+
+  job = UDISKS_JOB (udisks_daemon_launch_spawned_job (daemon,
+                                                      NULL, /* GCancellable */
+                                                      "sleep %d",
+                                                      5));
+
+  g_dbus_method_invocation_return_error (invocation,
+                                         G_DBUS_ERROR,
+                                         G_DBUS_ERROR_FAILED,
+                                         "no, not yet implemented; device=%s",
+                                         udisks_block_device_get_device (block));
+
+  g_object_unref (block);
+  g_object_unref (object);
   return TRUE;
 }
 

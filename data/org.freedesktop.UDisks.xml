@@ -60,6 +60,11 @@
     <method name="Cancel">
       <arg name="options" direction="in" type="as"/>
     </method>
+
+    <signal name="Completed">
+      <arg name="success" type="b"/>
+      <arg name="message" type="s"/>
+    </signal>
   </interface>
 
 </node>

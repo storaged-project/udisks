@@ -31,8 +31,13 @@ G_BEGIN_DECLS
 
 GType               udisks_daemon_get_type           (void) G_GNUC_CONST;
 UDisksDaemon       *udisks_daemon_new                (GDBusConnection *connection);
-GDBusConnection    *udisks_daemon_get_connection     (UDisksDaemon *daemon);
-GDBusObjectManager *udisks_daemon_get_object_manager (UDisksDaemon *daemon);
+GDBusConnection    *udisks_daemon_get_connection     (UDisksDaemon    *daemon);
+GDBusObjectManager *udisks_daemon_get_object_manager (UDisksDaemon    *daemon);
+
+UDisksSpawnedJob   *udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
+                                                      GCancellable    *cancellable,
+                                                      const gchar     *command_line_format,
+                                                      ...) G_GNUC_PRINTF (3, 4);
 
 G_END_DECLS
 

@@ -4,6 +4,8 @@ SUBDIRS =
 
 NULL =
 
+EXTRA_DIST =
+
 INCLUDES = \
 	-I$(top_builddir)/src -I$(top_srcdir)/src 		\
 	-DPACKAGE_LIBEXEC_DIR=\""$(libexecdir)"\" 		\
@@ -23,6 +25,20 @@ INCLUDES = \
 
 # ----------------------------------------------------------------------------------------------------
 
+BUILT_SOURCES = 							\
+	udisks-daemon-marshal.h		udisks-daemon-marshal.c		\
+	$(NULL)
+
+udisks-daemon-marshal.h: udisks-daemon-marshal.list
+	glib-genmarshal $< --prefix=udisks_daemon_marshal --header > $@
+
+udisks-daemon-marshal.c: udisks-daemon-marshal.list
+	echo "#include \"udisks-daemon-marshal.h\"" > $@ && glib-genmarshal $< --prefix=udisks_daemon_marshal --body >> $@
+
+EXTRA_DIST += udisks-daemon-marshal.list
+
+# ----------------------------------------------------------------------------------------------------
+
 noinst_LTLIBRARIES = libudisks-daemon.la
 
 libudisks_daemon_la_SOURCES =						\
@@ -32,7 +48,8 @@ libudisks_daemon_la_SOURCES =						\
 	udiskslinuxprovider.h		udiskslinuxprovider.c		\
 	udiskslinuxblock.h		udiskslinuxblock.c		\
 	udisksfilesystemimpl.h		udisksfilesystemimpl.c		\
-	udisksjobimpl.h			udisksjobimpl.c			\
+	udisksspawnedjob.h		udisksspawnedjob.c		\
+	$(BUILT_SOURCES)						\
 	$(NULL)
 
 libudisks_daemon_la_CFLAGS =				\

@@ -18,20 +18,22 @@
  *
  */
 
-#ifndef __UDISKS_JOB_IMPL_H__
-#define __UDISKS_JOB_IMPL_H__
+#ifndef __UDISKS_SPAWNED_JOB_H__
+#define __UDISKS_SPAWNED_JOB_H__
 
 #include "types.h"
 
 G_BEGIN_DECLS
 
-#define UDISKS_TYPE_JOB_IMPL         (udisks_job_impl_get_type ())
-#define UDISKS_JOB_IMPL(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_JOB_IMPL, UDisksJobImpl))
-#define UDISKS_IS_JOB_IMPL(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_JOB_IMPL))
+#define UDISKS_TYPE_SPAWNED_JOB         (udisks_spawned_job_get_type ())
+#define UDISKS_SPAWNED_JOB(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_SPAWNED_JOB, UDisksSpawnedJob))
+#define UDISKS_IS_SPAWNED_JOB(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_SPAWNED_JOB))
 
-GType      udisks_job_impl_get_type (void) G_GNUC_CONST;
-UDisksJob *udisks_job_impl_new      (void);
+GType              udisks_spawned_job_get_type         (void) G_GNUC_CONST;
+UDisksSpawnedJob  *udisks_spawned_job_new              (const gchar *command_line,
+                                                        GCancellable *cancellable);
+const gchar       *udisks_spawned_job_get_command_line (UDisksSpawnedJob *job);
 
 G_END_DECLS
 
-#endif /* __UDISKS_JOB_IMPL_H__ */
+#endif /* __UDISKS_SPAWNED_JOB_H__ */
