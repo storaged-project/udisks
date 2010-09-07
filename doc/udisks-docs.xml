@@ -85,9 +85,10 @@
   <part id="ref-daemon">
     <title>Daemon Implementation Details</title>
     <xi:include href="xml/udisksdaemon.xml"/>
-    <xi:include href="xml/udisksfilesystemimpl.xml"/>
     <xi:include href="xml/udiskslinuxblock.xml"/>
     <xi:include href="xml/udiskslinuxprovider.xml"/>
+    <xi:include href="xml/udisksfilesystemimpl.xml"/>
+    <xi:include href="xml/udisksjobimpl.xml"/>
   </part>
 
   <part id="tools-fileformats">

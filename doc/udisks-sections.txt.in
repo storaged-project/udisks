@@ -26,6 +26,19 @@ udisks_filesystem_impl_get_type
 </SECTION>
 
 <SECTION>
+<FILE>udisksjobimpl</FILE>
+<TITLE>UDisksJobImpl</TITLE>
+UDisksJobImpl
+udisks_job_impl_new
+<SUBSECTION Standard>
+UDISKS_TYPE_JOB_IMPL
+UDISKS_JOB_IMPL
+UDISKS_IS_JOB_IMPL
+<SUBSECTION Private>
+udisks_job_impl_get_type
+</SECTION>
+
+<SECTION>
 <FILE>udiskslinuxblock</FILE>
 <TITLE>UDisksLinuxBlock</TITLE>
 UDisksLinuxBlock

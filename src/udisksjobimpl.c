@@ -22,8 +22,22 @@
 
 #include "udisksjobimpl.h"
 
+/**
+ * SECTION:udisksjobimpl
+ * @title: UDisksJobImpl
+ * @short_description: Job Implementation
+ *
+ * This type provides an implementation of the #UDisksJob interface.
+ */
+
 typedef struct _UDisksJobImplClass   UDisksJobImplClass;
 
+/**
+ * UDisksJobImpl:
+ *
+ * The #UDisksJobImpl structure contains only private data and should
+ * only be accessed using the provided API.
+ */
 struct _UDisksJobImpl
 {
   UDisksJobStub parent_instance;
@@ -49,6 +63,13 @@ udisks_job_impl_class_init (UDisksJobImplClass *klass)
 {
 }
 
+/**
+ * udisks_job_impl_new:
+ *
+ * Creates a new #UDisksJobImpl instance.
+ *
+ * Returns: A new #UDisksJob. Free with g_object_unref().
+ */
 UDisksJob *
 udisks_job_impl_new (void)
 {
