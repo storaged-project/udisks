@@ -32,6 +32,8 @@ main (int argc, char *argv[])
 {
   gint ret;
 
+  g_type_init ();
+
   ret = 1;
 
   g_assert_cmpint (argc, ==, 2);

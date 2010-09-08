@@ -191,7 +191,7 @@ read_stdout_on_spawned_job_completed (UDisksSpawnedJob *job,
                                       GString          *standard_error,
                                       gpointer          user_data)
 {
-  g_assert (error == NULL);
+  g_assert_no_error (error);
   g_assert_cmpstr (standard_output->str, ==,
                    "Hello Stdout\n"
                    "Line 2\n");
@@ -224,7 +224,7 @@ read_stderr_on_spawned_job_completed (UDisksSpawnedJob *job,
                                       GString          *standard_error,
                                       gpointer          user_data)
 {
-  g_assert (error == NULL);
+  g_assert_no_error (error);
   g_assert_cmpstr (standard_output->str, ==, "");
   g_assert_cmpstr (standard_error->str, ==,
                    "Hello Stderr\n"
@@ -257,7 +257,7 @@ exit_status_on_spawned_job_completed (UDisksSpawnedJob *job,
                                       GString          *standard_error,
                                       gpointer          user_data)
 {
-  g_assert (error == NULL);
+  g_assert_no_error (error);
   g_assert_cmpstr (standard_output->str, ==, "");
   g_assert_cmpstr (standard_error->str, ==, "");
   g_assert (WIFEXITED (status));
@@ -327,7 +327,7 @@ binary_output_on_spawned_job_completed (UDisksSpawnedJob *job,
 {
   guint n;
 
-  g_assert (error == NULL);
+  g_assert_no_error (error);
   g_assert_cmpstr (standard_error->str, ==, "");
   g_assert (WIFEXITED (status));
   g_assert (WEXITSTATUS (status) == 0);
