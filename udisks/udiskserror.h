@@ -18,19 +18,28 @@
  *
  */
 
-#ifndef __UDISKS_H__
-#define __UDISKS_H__
-
-#if !defined(UDISKS_API_IS_SUBJECT_TO_CHANGE) && !defined(UDISKS_COMPILATION)
-#error  libudisks is unstable API. You must define UDISKS_API_IS_SUBJECT_TO_CHANGE before including udisks/udisks.h
+#if !defined (__UDISKS_INSIDE_UDISKS_H__) && !defined (UDISKS_COMPILATION)
+#error "Only <udisks/udisks.h> can be included directly."
 #endif
 
-#define __UDISKS_INSIDE_UDISKS_H__
-#include <udisks/udiskstypes.h>
-#include <udisks/udisksenums.h>
-#include <udisks/udisksenumtypes.h>
-#include <udisks/udiskserror.h>
-#include <udisks/generated-bindings.h>
-#undef __UDISKS_INSIDE_UDISKS_H__
+#ifndef __UDISKS_ERROR_H__
+#define __UDISKS_ERROR_H__
 
-#endif /* __UDISKS_H__ */
+#include <udisks/udiskstypes.h>
+
+G_BEGIN_DECLS
+
+/**
+ * UDISKS_ERROR:
+ *
+ * Error domain for UDisks. Errors in this domain will be form the
+ * #UDisksError enumeration. See #GError for more information on error
+ * domains.
+ */
+#define UDISKS_ERROR (udisks_error_quark ())
+
+GQuark udisks_error_quark (void);
+
+G_END_DECLS
+
+#endif /* __UDISKS_ERROR_H__ */

@@ -89,8 +89,8 @@ mount_on_job_completed (UDisksJob    *job,
   if (!success)
     {
       g_dbus_method_invocation_return_error (invocation,
-                                             G_DBUS_ERROR,
-                                             G_DBUS_ERROR_FAILED,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
                                              "Mounting the device failed: %s",
                                              message);
     }
@@ -119,7 +119,7 @@ handle_mount (UDisksFilesystem       *interface,
   job = UDISKS_JOB (udisks_daemon_launch_spawned_job (daemon,
                                                       NULL, /* GCancellable */
                                                       NULL, /* input string */
-                                                      "sleep %d", 2));
+                                                      "/bin/false"));
   /* this blows a little bit - would be nice to have an easier way to
    * get back to the object from the job
    */

@@ -18,19 +18,28 @@
  *
  */
 
-#ifndef __UDISKS_H__
-#define __UDISKS_H__
-
-#if !defined(UDISKS_API_IS_SUBJECT_TO_CHANGE) && !defined(UDISKS_COMPILATION)
-#error  libudisks is unstable API. You must define UDISKS_API_IS_SUBJECT_TO_CHANGE before including udisks/udisks.h
+#if !defined (__UDISKS_INSIDE_UDISKS_H__) && !defined (UDISKS_COMPILATION)
+#error "Only <udisks/udisks.h> can be included directly."
 #endif
 
-#define __UDISKS_INSIDE_UDISKS_H__
-#include <udisks/udiskstypes.h>
-#include <udisks/udisksenums.h>
-#include <udisks/udisksenumtypes.h>
-#include <udisks/udiskserror.h>
-#include <udisks/generated-bindings.h>
-#undef __UDISKS_INSIDE_UDISKS_H__
+#ifndef __UDISKS_ENUMS_H__
+#define __UDISKS_ENUMS_H__
 
-#endif /* __UDISKS_H__ */
+#include <gio/gio.h>
+
+G_BEGIN_DECLS
+
+/**
+ * UDisksError:
+ * @UDISKS_ERROR_FAILED: The operation failed.
+ *
+ *  Error codes for the #UDISKS_ERROR error domain.
+ */
+typedef enum
+{
+  UDISKS_ERROR_FAILED
+} UDisksError;
+
+G_END_DECLS
+
+#endif /* __UDISKS_ENUMS_H__ */

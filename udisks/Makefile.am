@@ -14,6 +14,7 @@ INCLUDES = \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\" 		\
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\" 			\
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT			\
+	-DUDISKS_COMPILATION					\
 	$(GLIB_CFLAGS) 						\
 	$(GIO_CFLAGS)						\
 	$(NULL)
@@ -27,6 +28,18 @@ generated-bindings.stamp : Makefile.am $(top_srcdir)/data/org.freedesktop.UDisks
 		$(top_srcdir)/data/org.freedesktop.UDisks.xml         			\
 		$(NULL)
 
+udisksenumtypes.h: udisksenums.h udisksenumtypes.h.template
+	( top_builddir=`cd $(top_builddir) && pwd`; \
+	 cd $(srcdir) && glib-mkenums --template udisksenumtypes.h.template udisksenums.h ) | \
+	   sed 's,U_TYPE_DISKS,UDISKS_TYPE,' | sed 's,u_disks,udisks,' > \
+	   udisksenumtypes.h.tmp && mv udisksenumtypes.h.tmp udisksenumtypes.h
+
+udisksenumtypes.c: udisksenums.h udisksenumtypes.c.template
+	( top_builddir=`cd $(top_builddir) && pwd`; \
+	 cd $(srcdir) && glib-mkenums --template udisksenumtypes.c.template udisksenums.h ) | \
+	   sed 's,U_TYPE_DISKS,UDISKS_TYPE,' | sed 's,u_disks,udisks,' > \
+	   udisksenumtypes.c.tmp && mv udisksenumtypes.c.tmp udisksenumtypes.c
+
 BUILT_SOURCES =										\
 	generated-bindings.stamp							\
 	generated-bindings.h								\
@@ -39,28 +52,34 @@ BUILT_SOURCES =										\
 	generated-udiskslinuxsysfsdevice.h	generated-udiskslinuxsysfsdevice.c	\
 	generated-udisksfilesystem.h		generated-udisksfilesystem.c		\
 	generated-udisksjob.h			generated-udisksjob.c			\
+	udisksenumtypes.h			udisksenumtypes.c			\
 	$(NULL)
 
 lib_LTLIBRARIES=libudisks.la
 
 libudisksincludedir=$(includedir)/udisks-1.2/udisks
+
 libudisksinclude_HEADERS=
-	udisks.h					\
-	generated-bindings.h				\
-	generated-udiskslinuxsysfsdevice.h		\
-	generated-udisksblockdevice.h			\
-	generated-udisksblockdeviceprobed.h		\
-	generated-udisksfilesystem.h			\
-	generated-udisksjob.h				\
+	udisks.h									\
+	udisksenums.h									\
+	udisksenumtypes.h								\
+	udiskserror.h									\
+	generated-bindings.h								\
+	generated-udiskslinuxsysfsdevice.h						\
+	generated-udisksblockdevice.h							\
+	generated-udisksblockdeviceprobed.h						\
+	generated-udisksfilesystem.h							\
+	generated-udisksjob.h								\
 	$(NULL)
 
-libudisks_la_SOURCES =					\
-	$(BUILT_SOURCES)				\
+libudisks_la_SOURCES =									\
+	$(BUILT_SOURCES)								\
+	udisksenums.h									\
+	udiskserror.h				udiskserror.c				\
 	$(NULL)
 
 libudisks_la_CPPFLAGS = 				\
 	-DG_LOG_DOMAIN=\"libudisks\"			\
-	$(AM_CPPFLAGS)					\
 	$(NULL)
 
 libudisks_la_CFLAGS = 					\

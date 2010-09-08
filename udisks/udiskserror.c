@@ -18,19 +18,23 @@
  *
  */
 
-#ifndef __UDISKS_H__
-#define __UDISKS_H__
+#include "config.h"
 
-#if !defined(UDISKS_API_IS_SUBJECT_TO_CHANGE) && !defined(UDISKS_COMPILATION)
-#error  libudisks is unstable API. You must define UDISKS_API_IS_SUBJECT_TO_CHANGE before including udisks/udisks.h
-#endif
+#include "udiskserror.h"
 
-#define __UDISKS_INSIDE_UDISKS_H__
-#include <udisks/udiskstypes.h>
-#include <udisks/udisksenums.h>
-#include <udisks/udisksenumtypes.h>
-#include <udisks/udiskserror.h>
-#include <udisks/generated-bindings.h>
-#undef __UDISKS_INSIDE_UDISKS_H__
+static const GDBusErrorEntry dbus_error_entries[] =
+{
+  {UDISKS_ERROR_FAILED,            "org.freedesktop.UDisks.Error.Failed"},
+};
 
-#endif /* __UDISKS_H__ */
+GQuark
+udisks_error_quark (void)
+{
+  G_STATIC_ASSERT (G_N_ELEMENTS (dbus_error_entries) - 1 == UDISKS_ERROR_FAILED);
+  static volatile gsize quark_volatile = 0;
+  g_dbus_error_register_error_domain ("udisks-error-quark",
+                                      &quark_volatile,
+                                      dbus_error_entries,
+                                      G_N_ELEMENTS (dbus_error_entries));
+  return (GQuark) quark_volatile;
+}

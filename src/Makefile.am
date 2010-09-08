@@ -16,7 +16,7 @@ INCLUDES = \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\" 		\
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\" 			\
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT			\
-	-DUDISKS_API_IS_SUBJECT_TO_CHANGE			\
+	-DUDISKS_COMPILATION					\
 	$(POLKIT_GOBJECT_1_CFLAGS) 				\
 	$(GUDEV_CFLAGS) 					\
 	$(GLIB_CFLAGS) 						\
@@ -87,7 +87,7 @@ udisks_daemon_CFLAGS = 					\
 udisks_daemon_LDADD = 					\
 	$(GLIB_LIBS)					\
 	$(GIO_LIBS)					\
-	$(top_builddir)/src/libudisks-daemon.la		\
+	libudisks-daemon.la				\
 	$(NULL)
 
 # ----------------------------------------------------------------------------------------------------
