@@ -62,6 +62,7 @@
 
   <part id="ref-library">
     <title>Library API Reference</title>
+      <xi:include href="xml/udiskserror.xml"/>
   </part>
 
   <part id="ref-api">

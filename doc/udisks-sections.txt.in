@@ -69,3 +69,14 @@ UDISKS_IS_LINUX_PROVIDER
 <SUBSECTION Private>
 udisks_linux_provider_get_type
 </SECTION>
+
+<SECTION>
+<FILE>udiskserror</FILE>
+<TITLE>UDisksError</TITLE>
+UDISKS_ERROR
+UDisksError
+<SUBSECTION Private>
+UDISKS_TYPE_ERROR
+udisks_error_get_type
+udisks_error_quark
+</SECTION>

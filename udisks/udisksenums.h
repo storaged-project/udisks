@@ -33,11 +33,12 @@ G_BEGIN_DECLS
  * UDisksError:
  * @UDISKS_ERROR_FAILED: The operation failed.
  *
- *  Error codes for the #UDISKS_ERROR error domain.
+ *  Error codes for the #UDISKS_ERROR error domain and the
+ *  corresponding D-Bus error names.
  */
 typedef enum
 {
-  UDISKS_ERROR_FAILED
+  UDISKS_ERROR_FAILED   /* org.freedesktop.UDisks.Error.Failed */
 } UDisksError;
 
 G_END_DECLS

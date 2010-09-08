@@ -22,6 +22,14 @@
 
 #include "udiskserror.h"
 
+/**
+ * SECTION:udiskserror
+ * @title: UDisksError
+ * @short_description: Possible errors that can be returned
+ *
+ * Error codes and D-Bus errors.
+ */
+
 static const GDBusErrorEntry dbus_error_entries[] =
 {
   {UDISKS_ERROR_FAILED,            "org.freedesktop.UDisks.Error.Failed"},
