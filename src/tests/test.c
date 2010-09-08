@@ -20,6 +20,9 @@
 
 #include "config.h"
 
+#include <sys/types.h>
+#include <sys/wait.h>
+
 #include <types.h>
 #include <udisksdaemon.h>
 #include <udisksspawnedjob.h>
@@ -46,7 +49,8 @@ on_completed_expect_failure (UDisksJob   *object,
                              gpointer     user_data)
 {
   const gchar *expected_message = user_data;
-  g_assert_cmpstr (message, ==, expected_message);
+  if (expected_message != NULL)
+    g_assert_cmpstr (message, ==, expected_message);
   g_assert (!success);
 }
 
@@ -71,8 +75,7 @@ test_spawned_job_failure (void)
 
   job = udisks_spawned_job_new ("/bin/false", NULL);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
-                             "Command-line `/bin/false' exited with non-zero exit code 1\n"
-                             "\n"
+                             "Command-line `/bin/false' exited with non-zero exit status 1.\n"
                              "stdout: `'\n"
                              "\n"
                              "stderr: `'\n");
@@ -142,8 +145,8 @@ static gboolean
 on_spawned_job_completed (UDisksSpawnedJob *job,
                           GError           *error,
                           gint              status,
-                          gchar            *standard_output,
-                          gchar            *standard_error,
+                          GString          *standard_output,
+                          GString          *standard_error,
                           gpointer          user_data)
 {
   gboolean *handler_ran = user_data;
@@ -181,6 +184,142 @@ test_spawned_job_premature_termination (void)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+read_stdout_on_spawned_job_completed (UDisksSpawnedJob *job,
+                                      GError           *error,
+                                      gint              status,
+                                      GString          *standard_output,
+                                      GString          *standard_error,
+                                      gpointer          user_data)
+{
+  g_assert (error == NULL);
+  g_assert_cmpstr (standard_output->str, ==,
+                   "Hello Stdout\n"
+                   "Line 2\n");
+  g_assert_cmpstr (standard_error->str, ==, "");
+  g_assert (WIFEXITED (status));
+  g_assert (WEXITSTATUS (status) == 0);
+  return FALSE;
+}
+
+static void
+test_spawned_job_read_stdout (void)
+{
+  UDisksSpawnedJob *job;
+  gchar *s;
+
+  s = g_strdup_printf (UDISKS_TEST_DIR "/udisks-test-helper 0");
+  job = udisks_spawned_job_new (s, NULL);
+  _g_assert_signal_received (job, "spawned-job-completed", G_CALLBACK (read_stdout_on_spawned_job_completed), NULL);
+  g_object_unref (job);
+  g_free (s);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+read_stderr_on_spawned_job_completed (UDisksSpawnedJob *job,
+                                      GError           *error,
+                                      gint              status,
+                                      GString          *standard_output,
+                                      GString          *standard_error,
+                                      gpointer          user_data)
+{
+  g_assert (error == NULL);
+  g_assert_cmpstr (standard_output->str, ==, "");
+  g_assert_cmpstr (standard_error->str, ==,
+                   "Hello Stderr\n"
+                   "Line 2\n");
+  g_assert (WIFEXITED (status));
+  g_assert (WEXITSTATUS (status) == 0);
+  return FALSE;
+}
+
+static void
+test_spawned_job_read_stderr (void)
+{
+  UDisksSpawnedJob *job;
+  gchar *s;
+
+  s = g_strdup_printf (UDISKS_TEST_DIR "/udisks-test-helper 1");
+  job = udisks_spawned_job_new (s, NULL);
+  _g_assert_signal_received (job, "spawned-job-completed", G_CALLBACK (read_stderr_on_spawned_job_completed), NULL);
+  g_object_unref (job);
+  g_free (s);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+exit_status_on_spawned_job_completed (UDisksSpawnedJob *job,
+                                      GError           *error,
+                                      gint              status,
+                                      GString          *standard_output,
+                                      GString          *standard_error,
+                                      gpointer          user_data)
+{
+  g_assert (error == NULL);
+  g_assert_cmpstr (standard_output->str, ==, "");
+  g_assert_cmpstr (standard_error->str, ==, "");
+  g_assert (WIFEXITED (status));
+  g_assert (WEXITSTATUS (status) == GPOINTER_TO_INT (user_data));
+  return FALSE;
+}
+
+static void
+test_spawned_job_exit_status (void)
+{
+  UDisksSpawnedJob *job;
+  gchar *s;
+
+  s = g_strdup_printf (UDISKS_TEST_DIR "/udisks-test-helper 2");
+  job = udisks_spawned_job_new (s, NULL);
+  _g_assert_signal_received (job, "spawned-job-completed", G_CALLBACK (exit_status_on_spawned_job_completed),
+                             GINT_TO_POINTER (1));
+  g_object_unref (job);
+  g_free (s);
+
+  s = g_strdup_printf (UDISKS_TEST_DIR "/udisks-test-helper 3");
+  job = udisks_spawned_job_new (s, NULL);
+  _g_assert_signal_received (job, "spawned-job-completed", G_CALLBACK (exit_status_on_spawned_job_completed),
+                             GINT_TO_POINTER (2));
+  g_object_unref (job);
+  g_free (s);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static void
+test_spawned_job_abnormal_termination (void)
+{
+  UDisksSpawnedJob *job;
+  gchar *s;
+
+  s = g_strdup_printf (UDISKS_TEST_DIR "/udisks-test-helper 4");
+  job = udisks_spawned_job_new (s, NULL);
+  _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
+                             "Command-line `./udisks-test-helper 4' was signaled with signal SIGSEGV (11).\n"
+                             "stdout: `OK, deliberately causing a segfault\n"
+                             "'\n"
+                             "\n"
+                             "stderr: `'\n");
+  g_object_unref (job);
+  g_free (s);
+
+  s = g_strdup_printf (UDISKS_TEST_DIR "/udisks-test-helper 5");
+  job = udisks_spawned_job_new (s, NULL);
+  _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
+                             "Command-line `./udisks-test-helper 5' was signaled with signal SIGABRT (6).\n"
+                             "stdout: `OK, deliberately abort()'ing\n"
+                             "'\n"
+                             "\n"
+                             "stderr: `'\n");
+  g_object_unref (job);
+  g_free (s);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 int
 main (int    argc,
       char **argv)
@@ -199,6 +338,10 @@ main (int    argc,
   g_test_add_func ("/udisks/daemon/spawned_job/cancelled_midway", test_spawned_job_cancelled_midway);
   g_test_add_func ("/udisks/daemon/spawned_job/override_signal_handler", test_spawned_job_override_signal_handler);
   g_test_add_func ("/udisks/daemon/spawned_job/premature_termination", test_spawned_job_premature_termination);
+  g_test_add_func ("/udisks/daemon/spawned_job/read_stdout", test_spawned_job_read_stdout);
+  g_test_add_func ("/udisks/daemon/spawned_job/read_stderr", test_spawned_job_read_stderr);
+  g_test_add_func ("/udisks/daemon/spawned_job/exit_status", test_spawned_job_exit_status);
+  g_test_add_func ("/udisks/daemon/spawned_job/abnormal_termination", test_spawned_job_abnormal_termination);
 
   ret = g_test_run();
 

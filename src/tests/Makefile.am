@@ -17,6 +17,7 @@ INCLUDES = \
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\" 			\
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT			\
 	-DUDISKS_API_IS_SUBJECT_TO_CHANGE			\
+	-DUDISKS_TEST_DIR=\""$(builddir)"\"			\
 	$(POLKIT_GOBJECT_1_CFLAGS) 				\
 	$(GUDEV_CFLAGS) 					\
 	$(GLIB_CFLAGS) 						\
@@ -25,7 +26,7 @@ INCLUDES = \
 
 # ----------------------------------------------------------------------------------------------------
 
-noinst_PROGRAMS = udisks-test
+noinst_PROGRAMS = udisks-test udisks-test-helper
 
 udisks_test_SOURCES = 					\
 				test.c			\
@@ -34,12 +35,25 @@ udisks_test_SOURCES = 					\
 
 udisks_test_CFLAGS = 					\
 	-DG_LOG_DOMAIN=\"udisks-test\"			\
-	$(LIBATASMART_CFLAGS)				\
 	$(NULL)
 
 udisks_test_LDADD = 					\
 	$(GLIB_LIBS)					\
 	$(GIO_LIBS)					\
 	$(top_builddir)/src/libudisks-daemon.la		\
+	$(NULL)
+
+udisks_test_helper_SOURCES = 				\
+				helper.c		\
+	testutil.h		testutil.c		\
+	$(NULL)
+
+udisks_test_helper_CFLAGS = 				\
+	-DG_LOG_DOMAIN=\"udisks-test-helper\"		\
+	$(NULL)
+
+udisks_test_helper_LDADD = 				\
+	$(GLIB_LIBS)					\
+	$(GIO_LIBS)					\
 	$(NULL)
 

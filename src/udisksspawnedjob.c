@@ -75,8 +75,8 @@ struct _UDisksSpawnedJobClass
   gboolean (*spawned_job_completed) (UDisksSpawnedJob  *job,
                                      GError            *error,
                                      gint               status,
-                                     const gchar       *standard_output,
-                                     const gchar       *standard_error);
+                                     GString           *standard_output,
+                                     GString           *standard_error);
 };
 
 static void job_iface_init (UDisksJobIface *iface);
@@ -99,8 +99,8 @@ static guint signals[LAST_SIGNAL] = { 0 };
 static gboolean udisks_spawned_job_spawned_job_completed_default (UDisksSpawnedJob  *job,
                                                                   GError            *error,
                                                                   gint               status,
-                                                                  const gchar       *standard_output,
-                                                                  const gchar       *standard_error);
+                                                                  GString           *standard_output,
+                                                                  GString           *standard_error);
 
 static void udisks_spawned_job_release_resources (UDisksSpawnedJob *job);
 
@@ -290,8 +290,8 @@ child_watch_cb (GPid     pid,
   g_signal_emit (job, signals[SPAWNED_JOB_COMPLETED_SIGNAL], 0,
                  NULL, /* GError */
                  status,
-                 job->child_stdout->str,
-                 job->child_stderr->str,
+                 job->child_stdout,
+                 job->child_stderr,
                  &ret);
 
   job->child_pid = 0;
@@ -471,13 +471,13 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
                   G_STRUCT_OFFSET (UDisksSpawnedJobClass, spawned_job_completed),
                   g_signal_accumulator_true_handled,
                   NULL,
-                  udisks_daemon_marshal_BOOLEAN__BOXED_INT_STRING_STRING,
+                  udisks_daemon_marshal_BOOLEAN__BOXED_INT_BOXED_BOXED,
                   G_TYPE_BOOLEAN,
                   4,
                   G_TYPE_ERROR,
                   G_TYPE_INT,
-                  G_TYPE_STRING,
-                  G_TYPE_STRING);
+                  G_TYPE_GSTRING,
+                  G_TYPE_GSTRING);
 }
 
 /**
@@ -538,26 +538,67 @@ job_iface_init (UDisksJobIface *iface)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static const gchar *
+get_signal_name (gint signal_number)
+{
+  switch (signal_number)
+    {
+#define _HANDLE_SIG(sig) case sig: return #sig;
+    _HANDLE_SIG (SIGHUP);
+    _HANDLE_SIG (SIGINT);
+    _HANDLE_SIG (SIGQUIT);
+    _HANDLE_SIG (SIGILL);
+    _HANDLE_SIG (SIGABRT);
+    _HANDLE_SIG (SIGFPE);
+    _HANDLE_SIG (SIGKILL);
+    _HANDLE_SIG (SIGSEGV);
+    _HANDLE_SIG (SIGPIPE);
+    _HANDLE_SIG (SIGALRM);
+    _HANDLE_SIG (SIGTERM);
+    _HANDLE_SIG (SIGUSR1);
+    _HANDLE_SIG (SIGUSR2);
+    _HANDLE_SIG (SIGCHLD);
+    _HANDLE_SIG (SIGCONT);
+    _HANDLE_SIG (SIGSTOP);
+    _HANDLE_SIG (SIGTSTP);
+    _HANDLE_SIG (SIGTTIN);
+    _HANDLE_SIG (SIGTTOU);
+    _HANDLE_SIG (SIGBUS);
+    _HANDLE_SIG (SIGPOLL);
+    _HANDLE_SIG (SIGPROF);
+    _HANDLE_SIG (SIGSYS);
+    _HANDLE_SIG (SIGTRAP);
+    _HANDLE_SIG (SIGURG);
+    _HANDLE_SIG (SIGVTALRM);
+    _HANDLE_SIG (SIGXCPU);
+    _HANDLE_SIG (SIGXFSZ);
+#undef _HANDLE_SIG
+    default:
+      break;
+    }
+  return "UNKNOWN_SIGNAL";
+}
+
 static gboolean
 udisks_spawned_job_spawned_job_completed_default (UDisksSpawnedJob  *job,
                                                   GError            *error,
                                                   gint               status,
-                                                  const gchar       *standard_output,
-                                                  const gchar       *standard_error)
+                                                  GString           *standard_output,
+                                                  GString           *standard_error)
 {
 #if 0
   g_debug ("in udisks_spawned_job_spawned_job_completed_default()\n"
            " command_line `%s'\n"
            " error->message=`%s'\n"
            " status=%d (WIFEXITED=%d WEXITSTATUS=%d)\n"
-           " standard_output=`%s'\n"
-           " standard_error=`%s'\n",
+           " standard_output=`%s' (%d bytes)\n"
+           " standard_error=`%s' (%d bytes)\n",
            job->command_line,
            error != NULL ? error->message : "(error not set)",
            status,
            WIFEXITED (status), WEXITSTATUS (status),
-           standard_output,
-           standard_error);
+           standard_output->str, (gint) standard_output->len,
+           standard_error->str, (gint) standard_error->len);
 #endif
 
   if (error != NULL)
@@ -581,20 +622,33 @@ udisks_spawned_job_spawned_job_completed_default (UDisksSpawnedJob  *job,
     }
   else
     {
-      gchar *message;
-      message = g_strdup_printf ("Command-line `%s' exited with non-zero exit code %d\n"
-                                 "\n"
-                                 "stdout: `%s'\n"
-                                 "\n"
-                                 "stderr: `%s'\n",
-                                 job->command_line,
-                                 WEXITSTATUS (status),
-                                 standard_output,
-                                 standard_error);
+      GString *message;
+      message = g_string_new (NULL);
+      if (WIFEXITED (status))
+        {
+          g_string_append_printf (message,
+                                  "Command-line `%s' exited with non-zero exit status %d.\n",
+                                  job->command_line,
+                                  WEXITSTATUS (status));
+        }
+      else if (WIFSIGNALED (status))
+        {
+          g_string_append_printf (message,
+                                  "Command-line `%s' was signaled with signal %s (%d).\n",
+                                  job->command_line,
+                                  get_signal_name (WTERMSIG (status)),
+                                  WTERMSIG (status));
+        }
+      g_string_append_printf (message,
+                              "stdout: `%s'\n"
+                              "\n"
+                              "stderr: `%s'\n",
+                              standard_output->str,
+                              standard_error->str);
       udisks_job_emit_completed (UDISKS_JOB (job),
                                  FALSE,
-                                 message);
-      g_free (message);
+                                 message->str);
+      g_string_free (message, TRUE);
     }
   return TRUE;
 }
