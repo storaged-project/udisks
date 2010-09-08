@@ -241,8 +241,6 @@ on_job_completed (UDisksJob    *job,
   UDisksDaemon *daemon = UDISKS_DAEMON (user_data);
   GDBusObject *object;
 
-  g_debug ("on_job_completed");
-
   object = g_dbus_interface_get_object (G_DBUS_INTERFACE (job));
   g_assert (object != NULL);
 

@@ -340,6 +340,8 @@ child_watch_cb (GPid     pid,
 
   //g_debug ("helper(pid %5d): completed with exit code %d\n", job->child_pid, WEXITSTATUS (status));
 
+  /* take a reference so it's safe for a signal-handler to release the last one */
+  g_object_ref (job);
   g_signal_emit (job,
                  signals[SPAWNED_JOB_COMPLETED_SIGNAL],
                  0,
@@ -348,10 +350,10 @@ child_watch_cb (GPid     pid,
                  job->child_stdout,
                  job->child_stderr,
                  &ret);
-
   job->child_pid = 0;
   job->child_watch_source = NULL;
   udisks_spawned_job_release_resources (job);
+  g_object_unref (job);
 }
 
 

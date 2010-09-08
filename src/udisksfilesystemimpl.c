@@ -84,9 +84,7 @@ mount_on_job_completed (UDisksJob    *job,
   GDBusMethodInvocation *invocation = G_DBUS_METHOD_INVOCATION (user_data);
   UDisksFilesystem *interface;
 
-  g_debug ("mount_on_job_completed");
-
-  interface = g_object_get_data (G_OBJECT (job), "filesystem-interface");
+  interface = UDISKS_FILESYSTEM (g_object_get_data (G_OBJECT (job), "filesystem-interface"));
 
   if (!success)
     {
@@ -127,7 +125,7 @@ handle_mount (UDisksFilesystem       *interface,
    */
   g_object_set_data_full (G_OBJECT (job),
                           "filesystem-interface",
-                          g_object_ref (job),
+                          g_object_ref (interface),
                           (GDestroyNotify) g_object_unref);
   g_signal_connect (job,
                     "completed",
