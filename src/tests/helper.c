@@ -74,6 +74,19 @@ main (int argc, char *argv[])
       g_assert_not_reached ();
       break;
 
+    case 6:
+      /* write binary output to stdout (including NUL bytes) */
+      {
+        guint n;
+        for (n = 0; n < 100; n++)
+          {
+            g_assert_cmpint (fputc (n, stdout), !=, EOF);
+            g_assert_cmpint (fputc (0, stdout), !=, EOF);
+          }
+        ret = 0;
+      }
+      break;
+
     default:
       g_assert_not_reached ();
       break;

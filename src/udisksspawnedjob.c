@@ -187,7 +187,9 @@ emit_completed_with_error_in_idle_cb (gpointer user_data)
   EmitCompletedData *data = user_data;
   gboolean ret;
 
-  g_signal_emit (data->job, signals[SPAWNED_JOB_COMPLETED_SIGNAL], 0,
+  g_signal_emit (data->job,
+                 signals[SPAWNED_JOB_COMPLETED_SIGNAL],
+                 0,
                  data->error,
                  0,     /* status */
                  NULL,  /* standard_output */
@@ -287,7 +289,9 @@ child_watch_cb (GPid     pid,
 
   //g_debug ("helper(pid %5d): completed with exit code %d\n", job->child_pid, WEXITSTATUS (status));
 
-  g_signal_emit (job, signals[SPAWNED_JOB_COMPLETED_SIGNAL], 0,
+  g_signal_emit (job,
+                 signals[SPAWNED_JOB_COMPLETED_SIGNAL],
+                 0,
                  NULL, /* GError */
                  status,
                  job->child_stdout,
@@ -295,6 +299,7 @@ child_watch_cb (GPid     pid,
                  &ret);
 
   job->child_pid = 0;
+  job->child_watch_source = NULL;
   udisks_spawned_job_release_resources (job);
 }
 
@@ -641,8 +646,7 @@ udisks_spawned_job_spawned_job_completed_default (UDisksSpawnedJob  *job,
         }
       g_string_append_printf (message,
                               "stdout: `%s'\n"
-                              "\n"
-                              "stderr: `%s'\n",
+                              "stderr: `%s'",
                               standard_output->str,
                               standard_error->str);
       udisks_job_emit_completed (UDISKS_JOB (job),

@@ -77,8 +77,7 @@ test_spawned_job_failure (void)
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
                              "Command-line `/bin/false' exited with non-zero exit status 1.\n"
                              "stdout: `'\n"
-                             "\n"
-                             "stderr: `'\n");
+                             "stderr: `'");
   g_object_unref (job);
 }
 
@@ -301,8 +300,7 @@ test_spawned_job_abnormal_termination (void)
                              "Command-line `./udisks-test-helper 4' was signaled with signal SIGSEGV (11).\n"
                              "stdout: `OK, deliberately causing a segfault\n"
                              "'\n"
-                             "\n"
-                             "stderr: `'\n");
+                             "stderr: `'");
   g_object_unref (job);
   g_free (s);
 
@@ -312,8 +310,46 @@ test_spawned_job_abnormal_termination (void)
                              "Command-line `./udisks-test-helper 5' was signaled with signal SIGABRT (6).\n"
                              "stdout: `OK, deliberately abort()'ing\n"
                              "'\n"
-                             "\n"
-                             "stderr: `'\n");
+                             "stderr: `'");
+  g_object_unref (job);
+  g_free (s);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+binary_output_on_spawned_job_completed (UDisksSpawnedJob *job,
+                                        GError           *error,
+                                        gint              status,
+                                        GString          *standard_output,
+                                        GString          *standard_error,
+                                        gpointer          user_data)
+{
+  guint n;
+
+  g_assert (error == NULL);
+  g_assert_cmpstr (standard_error->str, ==, "");
+  g_assert (WIFEXITED (status));
+  g_assert (WEXITSTATUS (status) == 0);
+
+  g_assert_cmpint (standard_output->len, ==, 200);
+  for (n = 0; n < 100; n++)
+    {
+      g_assert_cmpint (standard_output->str[n*2+0], ==, n);
+      g_assert_cmpint (standard_output->str[n*2+1], ==, 0);
+    }
+  return FALSE;
+}
+
+static void
+test_spawned_job_binary_output (void)
+{
+  UDisksSpawnedJob *job;
+  gchar *s;
+
+  s = g_strdup_printf (UDISKS_TEST_DIR "/udisks-test-helper 6");
+  job = udisks_spawned_job_new (s, NULL);
+  _g_assert_signal_received (job, "spawned-job-completed", G_CALLBACK (binary_output_on_spawned_job_completed), NULL);
   g_object_unref (job);
   g_free (s);
 }
@@ -342,6 +378,7 @@ main (int    argc,
   g_test_add_func ("/udisks/daemon/spawned_job/read_stderr", test_spawned_job_read_stderr);
   g_test_add_func ("/udisks/daemon/spawned_job/exit_status", test_spawned_job_exit_status);
   g_test_add_func ("/udisks/daemon/spawned_job/abnormal_termination", test_spawned_job_abnormal_termination);
+  g_test_add_func ("/udisks/daemon/spawned_job/binary_output", test_spawned_job_binary_output);
 
   ret = g_test_run();
 

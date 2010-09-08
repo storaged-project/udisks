@@ -75,6 +75,34 @@ udisks_filesystem_impl_class_init (UDisksFilesystemImplClass *klass)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static void
+mount_on_job_completed (UDisksJob    *job,
+                        gboolean      success,
+                        const gchar  *message,
+                        gpointer      user_data)
+{
+  GDBusMethodInvocation *invocation = G_DBUS_METHOD_INVOCATION (user_data);
+  UDisksFilesystem *interface;
+
+  g_debug ("mount_on_job_completed");
+
+  interface = g_object_get_data (G_OBJECT (job), "filesystem-interface");
+
+  if (!success)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             G_DBUS_ERROR,
+                                             G_DBUS_ERROR_FAILED,
+                                             "Mounting the device failed: %s",
+                                             message);
+    }
+  else
+    {
+      /* TODO: determine mount point */
+      udisks_filesystem_complete_mount (interface, invocation, "/foobar");
+    }
+}
+
 static gboolean
 handle_mount (UDisksFilesystem       *interface,
               GDBusMethodInvocation  *invocation,
@@ -92,14 +120,18 @@ handle_mount (UDisksFilesystem       *interface,
 
   job = UDISKS_JOB (udisks_daemon_launch_spawned_job (daemon,
                                                       NULL, /* GCancellable */
-                                                      "sleep %d",
-                                                      5));
-
-  g_dbus_method_invocation_return_error (invocation,
-                                         G_DBUS_ERROR,
-                                         G_DBUS_ERROR_FAILED,
-                                         "no, not yet implemented; device=%s",
-                                         udisks_block_device_get_device (block));
+                                                      "sleep %d", 2));
+  /* this blows a little bit - would be nice to have an easier way to
+   * get back to the object from the job
+   */
+  g_object_set_data_full (G_OBJECT (job),
+                          "filesystem-interface",
+                          g_object_ref (job),
+                          (GDestroyNotify) g_object_unref);
+  g_signal_connect (job,
+                    "completed",
+                    G_CALLBACK (mount_on_job_completed),
+                    invocation);
 
   g_object_unref (block);
   g_object_unref (object);

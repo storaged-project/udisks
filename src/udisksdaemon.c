@@ -241,6 +241,8 @@ on_job_completed (UDisksJob    *job,
   UDisksDaemon *daemon = UDISKS_DAEMON (user_data);
   GDBusObject *object;
 
+  g_debug ("on_job_completed");
+
   object = g_dbus_interface_get_object (G_DBUS_INTERFACE (job));
   g_assert (object != NULL);
 
@@ -252,8 +254,9 @@ on_job_completed (UDisksJob    *job,
   /* This gives up the last reference */
   g_object_unref (job);
 
-  /* returns the reference we added when connecting
-   * to the UDisksJob::completed signal
+  /* returns the reference we took when connecting to the
+   * UDisksJob::completed signal in udisks_daemon_launch_spawned_job()
+   * below
    */
   g_object_unref (daemon);
 }
@@ -303,10 +306,10 @@ udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
   g_free (object_path);
 
   g_dbus_object_manager_export (daemon->object_manager, object);
-  g_signal_connect (job,
-                    "completed",
-                    G_CALLBACK (on_job_completed),
-                    g_object_ref (daemon));
+  g_signal_connect_after (job,
+                          "completed",
+                          G_CALLBACK (on_job_completed),
+                          g_object_ref (daemon));
 
   return job;
 }
