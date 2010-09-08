@@ -26,6 +26,8 @@ INCLUDES = \
 
 # ----------------------------------------------------------------------------------------------------
 
+TESTS = udisks-test
+
 noinst_PROGRAMS = udisks-test udisks-test-helper
 
 udisks_test_SOURCES = 					\
