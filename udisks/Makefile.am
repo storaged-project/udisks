@@ -42,6 +42,8 @@ udisksenumtypes.c: udisksenums.h udisksenumtypes.c.template
 
 BUILT_SOURCES =										\
 	generated-bindings.stamp							\
+	generated-bindings-sections.txt							\
+	generated-bindings.types							\
 	generated-bindings.h								\
 	generated-bindingsprivate.h		generated-bindingsprivate.c		\
 	generated-marshallers.list							\
@@ -59,7 +61,7 @@ lib_LTLIBRARIES=libudisks.la
 
 libudisksincludedir=$(includedir)/udisks-1.2/udisks
 
-libudisksinclude_HEADERS=
+libudisksinclude_HEADERS=								\
 	udisks.h									\
 	udisksenums.h									\
 	udisksenumtypes.h								\
@@ -94,7 +96,10 @@ libudisks_la_LIBADD = 					\
 
 # ----------------------------------------------------------------------------------------------------
 
-CLEANFILES = $(BUILT_SOURCES)
+CLEANFILES =
 
 EXTRA_DIST = 						\
 	$(NULL)
+
+clean-local :
+	rm -f *~ $(BUILT_SOURCES)
