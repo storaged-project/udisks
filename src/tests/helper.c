@@ -89,6 +89,21 @@ main (int argc, char *argv[])
       }
       break;
 
+    case 7:
+      /* read from stdin.. echo that back */
+      {
+        GString *s;
+        gint c;
+
+        s = g_string_new (NULL);
+        while ((c = fgetc (stdin)) != EOF)
+          g_string_append_c (s, c);
+        g_print ("Woah, you said `%s', partner!\n", s->str);
+        g_string_free (s, TRUE);
+        ret = 0;
+      }
+      break;
+
     default:
       g_assert_not_reached ();
       break;

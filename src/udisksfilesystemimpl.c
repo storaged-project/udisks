@@ -120,6 +120,7 @@ handle_mount (UDisksFilesystem       *interface,
 
   job = UDISKS_JOB (udisks_daemon_launch_spawned_job (daemon,
                                                       NULL, /* GCancellable */
+                                                      NULL, /* input string */
                                                       "sleep %d", 2));
   /* this blows a little bit - would be nice to have an easier way to
    * get back to the object from the job

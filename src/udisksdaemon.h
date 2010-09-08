@@ -36,8 +36,9 @@ GDBusObjectManager *udisks_daemon_get_object_manager (UDisksDaemon    *daemon);
 
 UDisksSpawnedJob   *udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
                                                       GCancellable    *cancellable,
+                                                      const gchar     *input_string,
                                                       const gchar     *command_line_format,
-                                                      ...) G_GNUC_PRINTF (3, 4);
+                                                      ...) G_GNUC_PRINTF (4, 5);
 
 G_END_DECLS
 

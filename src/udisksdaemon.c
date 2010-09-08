@@ -265,6 +265,7 @@ on_job_completed (UDisksJob    *job,
  * udisks_daemon_launch_spawned_job:
  * @daemon: A #UDisksDaemon.
  * @cancellable: A #GCancellable or %NULL.
+ * @input_string: A string to write to stdin of the spawned program or %NULL.
  * @command_line_format: printf()-style format for the command line to spawn.
  * @...: Arguments for @command_line_format.
  *
@@ -279,6 +280,7 @@ on_job_completed (UDisksJob    *job,
 UDisksSpawnedJob *
 udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
                                   GCancellable    *cancellable,
+                                  const gchar     *input_string,
                                   const gchar     *command_line_format,
                                   ...)
 {
@@ -296,7 +298,7 @@ udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
   va_start (var_args, command_line_format);
   command_line = g_strdup_vprintf (command_line_format, var_args);
   va_end (var_args);
-  job = udisks_spawned_job_new (command_line, cancellable);
+  job = udisks_spawned_job_new (command_line, input_string, cancellable);
   g_free (command_line);
 
   /* TODO: protect job_id by a mutex */

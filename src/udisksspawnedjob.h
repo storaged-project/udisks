@@ -30,7 +30,8 @@ G_BEGIN_DECLS
 #define UDISKS_IS_SPAWNED_JOB(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_SPAWNED_JOB))
 
 GType              udisks_spawned_job_get_type         (void) G_GNUC_CONST;
-UDisksSpawnedJob  *udisks_spawned_job_new              (const gchar *command_line,
+UDisksSpawnedJob  *udisks_spawned_job_new              (const gchar  *command_line,
+                                                        const gchar  *input_string,
                                                         GCancellable *cancellable);
 const gchar       *udisks_spawned_job_get_command_line (UDisksSpawnedJob *job);
 

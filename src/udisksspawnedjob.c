@@ -32,7 +32,7 @@
  * @short_description: Job that spawns a command
  *
  * This type provides an implementation of the #UDisksJob interface
- * for jobs that are implemented by spawning a command.
+ * for jobs that are implemented by spawning a command line.
  */
 
 typedef struct _UDisksSpawnedJobClass   UDisksSpawnedJobClass;
@@ -53,14 +53,20 @@ struct _UDisksSpawnedJob
 
   GMainContext *main_context;
 
+  gchar *input_string;
+  const gchar *input_string_cursor;
+
   GPid child_pid;
+  gint child_stdin_fd;
   gint child_stdout_fd;
   gint child_stderr_fd;
 
+  GIOChannel *child_stdin_channel;
   GIOChannel *child_stdout_channel;
   GIOChannel *child_stderr_channel;
 
   GSource *child_watch_source;
+  GSource *child_stdin_source;
   GSource *child_stdout_source;
   GSource *child_stderr_source;
 
@@ -85,6 +91,7 @@ enum
 {
   PROP_0,
   PROP_COMMAND_LINE,
+  PROP_INPUT_STRING,
   PROP_CANCELLABLE
 };
 
@@ -118,6 +125,13 @@ udisks_spawned_job_finalize (GObject *object)
     g_main_context_unref (job->main_context);
 
   g_free (job->command_line);
+
+  /* input string may contain key material - nuke contents */
+  if (job->input_string != NULL)
+    {
+      memset (job->input_string, '\0', strlen (job->input_string));
+      g_free (job->input_string);
+    }
 
   if (G_OBJECT_CLASS (udisks_spawned_job_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_spawned_job_parent_class)->finalize (object);
@@ -160,6 +174,11 @@ udisks_spawned_job_set_property (GObject      *object,
     case PROP_COMMAND_LINE:
       g_assert (job->command_line == NULL);
       job->command_line = g_value_dup_string (value);
+      break;
+
+    case PROP_INPUT_STRING:
+      g_assert (job->input_string == NULL);
+      job->input_string = g_value_dup_string (value);
       break;
 
     case PROP_CANCELLABLE:
@@ -266,6 +285,38 @@ read_child_stdout (GIOChannel *channel,
   return TRUE;
 }
 
+static gboolean
+write_child_stdin (GIOChannel *channel,
+                   GIOCondition condition,
+                   gpointer user_data)
+{
+  UDisksSpawnedJob *job = UDISKS_SPAWNED_JOB (user_data);
+  gsize bytes_written;
+
+  if (job->input_string_cursor == NULL || *job->input_string_cursor == '\0')
+    {
+      /* nothing left to write; close our end so the child will get EOF */
+      g_io_channel_unref (job->child_stdin_channel);
+      g_source_destroy (job->child_stdin_source);
+      g_warn_if_fail (close (job->child_stdin_fd) == 0);
+      job->child_stdin_channel = NULL;
+      job->child_stdin_source = NULL;
+      job->child_stdin_fd = -1;
+      return FALSE;
+    }
+
+  g_io_channel_write_chars (channel,
+                            job->input_string_cursor,
+                            strlen (job->input_string_cursor),
+                            &bytes_written,
+                            NULL);
+  g_io_channel_flush (channel, NULL);
+  job->input_string_cursor += bytes_written;
+
+  /* keep writing */
+  return TRUE;
+}
+
 static void
 child_watch_cb (GPid     pid,
                 gint     status,
@@ -355,7 +406,7 @@ udisks_spawned_job_constructed (GObject *object)
                                  NULL, /* child_setup */
                                  NULL, /* child_setup's user_data */
                                  &(job->child_pid),
-                                 NULL, // TODO:stdin: stdin_str != NULL ? &(job->stdin_fd) : NULL,
+                                 job->input_string != NULL ? &(job->child_stdin_fd) : NULL,
                                  &(job->child_stdout_fd),
                                  &(job->child_stderr_fd),
                                  &error))
@@ -372,6 +423,18 @@ udisks_spawned_job_constructed (GObject *object)
   g_source_set_callback (job->child_watch_source, (GSourceFunc) child_watch_cb, job, NULL);
   g_source_attach (job->child_watch_source, job->main_context);
   g_source_unref (job->child_watch_source);
+
+  if (job->child_stdin_fd != -1)
+    {
+      job->input_string_cursor = job->input_string;
+
+      job->child_stdin_channel = g_io_channel_unix_new (job->child_stdin_fd);
+      g_io_channel_set_flags (job->child_stdin_channel, G_IO_FLAG_NONBLOCK, NULL);
+      job->child_stdin_source = g_io_create_watch (job->child_stdin_channel, G_IO_OUT);
+      g_source_set_callback (job->child_stdin_source, (GSourceFunc) write_child_stdin, job, NULL);
+      g_source_attach (job->child_stdin_source, job->main_context);
+      g_source_unref (job->child_stdin_source);
+    }
 
   job->child_stdout = g_string_new (NULL);
   job->child_stdout_channel = g_io_channel_unix_new (job->child_stdout_fd);
@@ -397,8 +460,9 @@ udisks_spawned_job_constructed (GObject *object)
 static void
 udisks_spawned_job_init (UDisksSpawnedJob *job)
 {
-  job->child_stderr_fd = -1;
+  job->child_stdin_fd = -1;
   job->child_stdout_fd = -1;
+  job->child_stderr_fd = -1;
 }
 
 static void
@@ -431,6 +495,22 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
                                                         G_PARAM_STATIC_STRINGS));
 
   /**
+   * UDisksSpawnedJob:input-string:
+   *
+   * String that will be written to stdin of the spawned program or
+   * %NULL to not write anything.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_INPUT_STRING,
+                                   g_param_spec_string ("input-string",
+                                                        "Input String",
+                                                        "String to write to stdin of the spawned program",
+                                                        NULL,
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_STRINGS));
+
+  /**
    * UDisksSpawnedJob:cancellable:
    *
    * The #GCancellable to use.
@@ -454,8 +534,8 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
    * @standard_output: Standard output from the command line that was run.
    * @standard_error: Standard error output from the command line that was run.
    *
-   * Emitted when the spawned job has completed. If spawning the
-   * command failed or if the job was cancelled, @error will
+   * Emitted when the spawned job is complete. If spawning the command
+   * failed or if the job was cancelled, @error will
    * non-%NULL. Otherwise you can use macros such as WIFEXITED() and
    * WEXITSTATUS() on the @status integer to obtain more information.
    *
@@ -488,6 +568,7 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
 /**
  * udisks_spawned_job_new:
  * @command_line: The command line to run.
+ * @input_string: A string to write to stdin of the spawned program or %NULL.
  * @cancellable: A #GCancellable or %NULL.
  *
  * Creates a new #UDisksSpawnedJob instance.
@@ -496,12 +577,14 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
  */
 UDisksSpawnedJob *
 udisks_spawned_job_new (const gchar  *command_line,
+                        const gchar  *input_string,
                         GCancellable *cancellable)
 {
   g_return_val_if_fail (command_line != NULL, NULL);
   g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
   return UDISKS_SPAWNED_JOB (g_object_new (UDISKS_TYPE_SPAWNED_JOB,
                                            "command-line", command_line,
+                                           "input-string", input_string,
                                            "cancellable", cancellable,
                                            NULL));
 }
@@ -717,6 +800,11 @@ udisks_spawned_job_release_resources (UDisksSpawnedJob *job)
       job->child_stderr = NULL;
     }
 
+  if (job->child_stdin_channel != NULL)
+    {
+      g_io_channel_unref (job->child_stdin_channel);
+      job->child_stdin_channel = NULL;
+    }
   if (job->child_stdout_channel != NULL)
     {
       g_io_channel_unref (job->child_stdout_channel);
@@ -728,6 +816,11 @@ udisks_spawned_job_release_resources (UDisksSpawnedJob *job)
       job->child_stderr_channel = NULL;
     }
 
+  if (job->child_stdin_source != NULL)
+    {
+      g_source_destroy (job->child_stdin_source);
+      job->child_stdin_source = NULL;
+    }
   if (job->child_stdout_source != NULL)
     {
       g_source_destroy (job->child_stdout_source);
@@ -739,6 +832,11 @@ udisks_spawned_job_release_resources (UDisksSpawnedJob *job)
       job->child_stderr_source = NULL;
     }
 
+  if (job->child_stdin_fd != -1)
+    {
+      g_warn_if_fail (close (job->child_stdin_fd) == 0);
+      job->child_stdin_fd = -1;
+    }
   if (job->child_stdout_fd != -1)
     {
       g_warn_if_fail (close (job->child_stdout_fd) == 0);
