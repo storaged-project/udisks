@@ -238,6 +238,7 @@ data/Makefile
 data/udisks.pc
 udisks/Makefile
 src/Makefile
+src/tests/Makefile
 tools/Makefile
 doc/Makefile
 doc/version.xml

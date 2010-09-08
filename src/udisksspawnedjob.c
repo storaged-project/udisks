@@ -72,11 +72,11 @@ struct _UDisksSpawnedJobClass
 {
   UDisksJobStubClass parent_class;
 
-  gboolean (*command_line_completed) (UDisksSpawnedJob  *job,
-                                      GError            *error,
-                                      gint               status,
-                                      const gchar       *standard_output,
-                                      const gchar       *standard_error);
+  gboolean (*spawned_job_completed) (UDisksSpawnedJob  *job,
+                                     GError            *error,
+                                     gint               status,
+                                     const gchar       *standard_output,
+                                     const gchar       *standard_error);
 };
 
 static void job_iface_init (UDisksJobIface *iface);
@@ -90,18 +90,19 @@ enum
 
 enum
 {
-  COMMAND_LINE_COMPLETED_SIGNAL,
+  SPAWNED_JOB_COMPLETED_SIGNAL,
   LAST_SIGNAL
 };
 
 static guint signals[LAST_SIGNAL] = { 0 };
 
-static gboolean
-udisks_spawned_job_command_line_completed_default (UDisksSpawnedJob  *job,
-                                                   GError            *error,
-                                                   gint               status,
-                                                   const gchar       *standard_output,
-                                                   const gchar       *standard_error);
+static gboolean udisks_spawned_job_spawned_job_completed_default (UDisksSpawnedJob  *job,
+                                                                  GError            *error,
+                                                                  gint               status,
+                                                                  const gchar       *standard_output,
+                                                                  const gchar       *standard_error);
+
+static void udisks_spawned_job_release_resources (UDisksSpawnedJob *job);
 
 G_DEFINE_TYPE_WITH_CODE (UDisksSpawnedJob, udisks_spawned_job, UDISKS_TYPE_JOB_STUB,
                          G_IMPLEMENT_INTERFACE (UDISKS_TYPE_JOB, job_iface_init));
@@ -111,32 +112,7 @@ udisks_spawned_job_finalize (GObject *object)
 {
   UDisksSpawnedJob *job = UDISKS_SPAWNED_JOB (object);
 
-  if (job->child_stdout != NULL)
-    g_string_free (job->child_stdout, TRUE);
-
-  if (job->child_stderr != NULL)
-    g_string_free (job->child_stderr, TRUE);
-
-  if (job->child_stdout_channel != NULL)
-    g_io_channel_unref (job->child_stdout_channel);
-  if (job->child_stderr_channel != NULL)
-    g_io_channel_unref (job->child_stderr_channel);
-
-  if (job->child_watch_source != NULL)
-    g_source_destroy (job->child_watch_source);
-  if (job->child_stdout_source != NULL)
-    g_source_destroy (job->child_stdout_source);
-  if (job->child_stderr_source != NULL)
-    g_source_destroy (job->child_stderr_source);
-
-  if (job->child_stdout_fd != -1)
-    g_warn_if_fail (close (job->child_stdout_fd) == 0);
-  if (job->child_stderr_fd != -1)
-    g_warn_if_fail (close (job->child_stderr_fd) == 0);
-
-  if (job->cancellable_handler_id > 0)
-    g_cancellable_disconnect (job->cancellable, job->cancellable_handler_id);
-  g_object_unref (job->cancellable);
+  udisks_spawned_job_release_resources (job);
 
   if (job->main_context != NULL)
     g_main_context_unref (job->main_context);
@@ -211,7 +187,7 @@ emit_completed_with_error_in_idle_cb (gpointer user_data)
   EmitCompletedData *data = user_data;
   gboolean ret;
 
-  g_signal_emit (data->job, signals[COMMAND_LINE_COMPLETED_SIGNAL], 0,
+  g_signal_emit (data->job, signals[SPAWNED_JOB_COMPLETED_SIGNAL], 0,
                  data->error,
                  0,     /* status */
                  NULL,  /* standard_output */
@@ -309,14 +285,17 @@ child_watch_cb (GPid     pid,
       g_free (buf);
     }
 
-  g_print ("helper(pid %5d): completed with exit code %d\n", job->child_pid, WEXITSTATUS (status));
+  //g_debug ("helper(pid %5d): completed with exit code %d\n", job->child_pid, WEXITSTATUS (status));
 
-  g_signal_emit (job, signals[COMMAND_LINE_COMPLETED_SIGNAL], 0,
+  g_signal_emit (job, signals[SPAWNED_JOB_COMPLETED_SIGNAL], 0,
                  NULL, /* GError */
                  status,
                  job->child_stdout->str,
                  job->child_stderr->str,
                  &ret);
+
+  job->child_pid = 0;
+  udisks_spawned_job_release_resources (job);
 }
 
 
@@ -422,7 +401,7 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
 {
   GObjectClass *gobject_class;
 
-  klass->command_line_completed = udisks_spawned_job_command_line_completed_default;
+  klass->spawned_job_completed = udisks_spawned_job_spawned_job_completed_default;
 
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->finalize     = udisks_spawned_job_finalize;
@@ -463,14 +442,14 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
                                                         G_PARAM_STATIC_STRINGS));
 
   /**
-   * UDisksSpawnedJob::command-line-completed:
+   * UDisksSpawnedJob::spawned-job-completed:
    * @job: The #UDisksSpawnedJob emitting the signal.
    * @error: %NULL if running the whole command line succeeded, otherwise a #GError that is set.
    * @status: The exit status of the command line that was run.
    * @standard_output: Standard output from the command line that was run.
    * @standard_error: Standard error output from the command line that was run.
    *
-   * Emitted when the command-line has completed. If spawning the
+   * Emitted when the spawned job has completed. If spawning the
    * command failed or if the job was cancelled, @error will
    * non-%NULL. Otherwise you can use macros such as WIFEXITED() and
    * WEXITSTATUS() on the @status integer to obtain more information.
@@ -485,11 +464,11 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
    * Returns: %TRUE if the signal was handled, %FALSE to let other
    * handlers run.
    */
-  signals[COMMAND_LINE_COMPLETED_SIGNAL] =
-    g_signal_new ("command-line-completed",
+  signals[SPAWNED_JOB_COMPLETED_SIGNAL] =
+    g_signal_new ("spawned-job-completed",
                   UDISKS_TYPE_SPAWNED_JOB,
                   G_SIGNAL_RUN_LAST,
-                  G_STRUCT_OFFSET (UDisksSpawnedJobClass, command_line_completed),
+                  G_STRUCT_OFFSET (UDisksSpawnedJobClass, spawned_job_completed),
                   g_signal_accumulator_true_handled,
                   NULL,
                   udisks_daemon_marshal_BOOLEAN__BOXED_INT_STRING_STRING,
@@ -560,13 +539,14 @@ job_iface_init (UDisksJobIface *iface)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-udisks_spawned_job_command_line_completed_default (UDisksSpawnedJob  *job,
-                                                   GError            *error,
-                                                   gint               status,
-                                                   const gchar       *standard_output,
-                                                   const gchar       *standard_error)
+udisks_spawned_job_spawned_job_completed_default (UDisksSpawnedJob  *job,
+                                                  GError            *error,
+                                                  gint               status,
+                                                  const gchar       *standard_output,
+                                                  const gchar       *standard_error)
 {
-  g_debug ("in udisks_spawned_job_command_line_completed_default()\n"
+#if 0
+  g_debug ("in udisks_spawned_job_spawned_job_completed_default()\n"
            " command_line `%s'\n"
            " error->message=`%s'\n"
            " status=%d (WIFEXITED=%d WEXITSTATUS=%d)\n"
@@ -578,8 +558,22 @@ udisks_spawned_job_command_line_completed_default (UDisksSpawnedJob  *job,
            WIFEXITED (status), WEXITSTATUS (status),
            standard_output,
            standard_error);
+#endif
 
-  if (WIFEXITED (status) && WEXITSTATUS (status) == 0)
+  if (error != NULL)
+    {
+      gchar *message;
+      message = g_strdup_printf ("Failed to execute command-line `%s': %s (%s, %d)",
+                                 job->command_line,
+                                 error->message,
+                                 g_quark_to_string (error->domain),
+                                 error->code);
+      udisks_job_emit_completed (UDISKS_JOB (job),
+                                 FALSE,
+                                 message);
+      g_free (message);
+    }
+  else if (WIFEXITED (status) && WEXITSTATUS (status) == 0)
     {
       udisks_job_emit_completed (UDISKS_JOB (job),
                                  TRUE,
@@ -588,11 +582,13 @@ udisks_spawned_job_command_line_completed_default (UDisksSpawnedJob  *job,
   else
     {
       gchar *message;
-      message = g_strdup_printf ("stdout:\n"
-                                 "%s\n"
+      message = g_strdup_printf ("Command-line `%s' exited with non-zero exit code %d\n"
                                  "\n"
-                                 "stderr:\n"
-                                 "%s\n",
+                                 "stdout: `%s'\n"
+                                 "\n"
+                                 "stderr: `%s'\n",
+                                 job->command_line,
+                                 WEXITSTATUS (status),
                                  standard_output,
                                  standard_error);
       udisks_job_emit_completed (UDISKS_JOB (job),
@@ -601,5 +597,110 @@ udisks_spawned_job_command_line_completed_default (UDisksSpawnedJob  *job,
       g_free (message);
     }
   return TRUE;
+}
+
+static void
+child_watch_from_release_cb (GPid     pid,
+                             gint     status,
+                             gpointer user_data)
+{
+  //g_debug ("in child_watch_from_release_cb");
+}
+
+/* called when we're done running the command line */
+static void
+udisks_spawned_job_release_resources (UDisksSpawnedJob *job)
+{
+  /* Nuke the child, if necessary */
+  if (job->child_watch_source != NULL)
+    {
+      g_source_destroy (job->child_watch_source);
+      job->child_watch_source = NULL;
+    }
+
+  if (job->child_pid != 0)
+    {
+      GSource *source;
+
+      //g_debug ("ugh, need to kill %d", (gint) job->child_pid);
+      kill (job->child_pid, SIGTERM);
+
+      /* OK, we need to reap for the child ourselves - we don't want
+       * to use waitpid() because that might block the calling
+       * thread (the child might handle SIGTERM and use several
+       * seconds for cleanup/rollback).
+       *
+       * So we use GChildWatch instead.
+       *
+       * Note that we might be called from the finalizer so avoid
+       * taking references to ourselves. We do need to pass the
+       * GSource so we can nuke it once handled.
+       */
+      source = g_child_watch_source_new (job->child_pid);
+      g_source_set_callback (source,
+                             (GSourceFunc) child_watch_from_release_cb,
+                             source,
+                             (GDestroyNotify) g_source_destroy);
+      g_source_attach (source, job->main_context);
+      g_source_unref (source);
+
+      job->child_pid = 0;
+    }
+
+  if (job->child_stdout != NULL)
+    {
+      g_string_free (job->child_stdout, TRUE);
+      job->child_stdout = NULL;
+    }
+
+  if (job->child_stderr != NULL)
+    {
+      g_string_free (job->child_stderr, TRUE);
+      job->child_stderr = NULL;
+    }
+
+  if (job->child_stdout_channel != NULL)
+    {
+      g_io_channel_unref (job->child_stdout_channel);
+      job->child_stdout_channel = NULL;
+    }
+  if (job->child_stderr_channel != NULL)
+    {
+      g_io_channel_unref (job->child_stderr_channel);
+      job->child_stderr_channel = NULL;
+    }
+
+  if (job->child_stdout_source != NULL)
+    {
+      g_source_destroy (job->child_stdout_source);
+      job->child_stdout_source = NULL;
+    }
+  if (job->child_stderr_source != NULL)
+    {
+      g_source_destroy (job->child_stderr_source);
+      job->child_stderr_source = NULL;
+    }
+
+  if (job->child_stdout_fd != -1)
+    {
+      g_warn_if_fail (close (job->child_stdout_fd) == 0);
+      job->child_stdout_fd = -1;
+    }
+  if (job->child_stderr_fd != -1)
+    {
+      g_warn_if_fail (close (job->child_stderr_fd) == 0);
+      job->child_stderr_fd = -1;
+    }
+
+  if (job->cancellable_handler_id > 0)
+    {
+      g_cancellable_disconnect (job->cancellable, job->cancellable_handler_id);
+      job->cancellable_handler_id = 0;
+    }
+  if (job->cancellable != NULL)
+    {
+      g_object_unref (job->cancellable);
+      job->cancellable = NULL;
+    }
 }
 
