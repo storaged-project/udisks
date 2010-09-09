@@ -41,6 +41,20 @@ udisks_spawned_job_get_type
 </SECTION>
 
 <SECTION>
+<FILE>udisksthreadedjob</FILE>
+<TITLE>UDisksThreadedJob</TITLE>
+UDisksThreadedJob
+UDisksThreadedJobFunc
+udisks_threaded_job_new
+<SUBSECTION Standard>
+UDISKS_TYPE_THREADED_JOB
+UDISKS_THREADED_JOB
+UDISKS_IS_THREADED_JOB
+<SUBSECTION Private>
+udisks_threaded_job_get_type
+</SECTION>
+
+<SECTION>
 <FILE>udiskslinuxblock</FILE>
 <TITLE>UDisksLinuxBlock</TITLE>
 UDisksLinuxBlock

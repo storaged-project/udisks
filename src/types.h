@@ -40,4 +40,7 @@ typedef struct _UDisksFilesystemImpl UDisksFilesystemImpl;
 struct _UDisksSpawnedJob;
 typedef struct _UDisksSpawnedJob UDisksSpawnedJob;
 
+struct _UDisksThreadedJob;
+typedef struct _UDisksThreadedJob UDisksThreadedJob;
+
 #endif

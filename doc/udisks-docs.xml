@@ -90,6 +90,7 @@
     <xi:include href="xml/udiskslinuxprovider.xml"/>
     <xi:include href="xml/udisksfilesystemimpl.xml"/>
     <xi:include href="xml/udisksspawnedjob.xml"/>
+    <xi:include href="xml/udisksthreadedjob.xml"/>
   </part>
 
   <part id="tools-fileformats">

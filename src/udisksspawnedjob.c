@@ -548,6 +548,10 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
    * @standard_error. You can avoid the default implementation by
    * returning %TRUE from your signal handler.
    *
+   * This signal is emitted in the
+   * <link linkend="g-main-context-push-thread-default">thread-default main loop</link>
+   * of the thread that @job was created in.
+   *
    * Returns: %TRUE if the signal was handled, %FALSE to let other
    * handlers run.
    */
@@ -574,6 +578,10 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
  * @cancellable: A #GCancellable or %NULL.
  *
  * Creates a new #UDisksSpawnedJob instance.
+ *
+ * The job is started immediately - connect to the
+ * #UDisksSpawnedJob::spawned-job-completed or #UDisksJob::completed
+ * signals to get notified when the job is done.
  *
  * Returns: A new #UDisksSpawnedJob. Free with g_object_unref().
  */

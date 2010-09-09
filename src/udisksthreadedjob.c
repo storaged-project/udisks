@@ -1,0 +1,415 @@
+/* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*-
+ *
+ * Copyright (C) 2007-2010 David Zeuthen <zeuthen@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
+
+#include "config.h"
+
+#include <sys/types.h>
+#include <sys/wait.h>
+
+#include "udisksthreadedjob.h"
+#include "udisks-daemon-marshal.h"
+
+/**
+ * SECTION:udisksthreadedjob
+ * @title: UDisksThreadedJob
+ * @short_description: Job that runs in a thread
+ *
+ * This type provides an implementation of the #UDisksJob interface
+ * for jobs that run in a thread.
+ */
+
+typedef struct _UDisksThreadedJobClass   UDisksThreadedJobClass;
+
+/**
+ * UDisksThreadedJob:
+ *
+ * The #UDisksThreadedJob structure contains only private data and should
+ * only be accessed using the provided API.
+ */
+struct _UDisksThreadedJob
+{
+  UDisksJobStub parent_instance;
+
+  GCancellable *cancellable;
+
+  UDisksThreadedJobFunc job_func;
+  gpointer job_func_user_data;
+
+  gboolean job_result;
+  GError *job_error;
+};
+
+struct _UDisksThreadedJobClass
+{
+  UDisksJobStubClass parent_class;
+
+  gboolean (*threaded_job_completed) (UDisksThreadedJob  *job,
+                                      gboolean            result,
+                                      GError             *error);
+};
+
+static void job_iface_init (UDisksJobIface *iface);
+
+enum
+{
+  PROP_0,
+  PROP_CANCELLABLE,
+  PROP_JOB_FUNC,
+  PROP_JOB_FUNC_USER_DATA
+};
+
+enum
+{
+  THREADED_JOB_COMPLETED_SIGNAL,
+  LAST_SIGNAL
+};
+
+static gulong signals[LAST_SIGNAL] = { 0 };
+
+static gboolean udisks_threaded_job_threaded_job_completed_default (UDisksThreadedJob  *job,
+                                                                    gboolean            result,
+                                                                    GError             *error);
+
+G_DEFINE_TYPE_WITH_CODE (UDisksThreadedJob, udisks_threaded_job, UDISKS_TYPE_JOB_STUB,
+                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_JOB, job_iface_init));
+
+static void
+udisks_threaded_job_finalize (GObject *object)
+{
+  UDisksThreadedJob *job = UDISKS_THREADED_JOB (object);
+
+  if (job->cancellable != NULL)
+    {
+      g_object_unref (job->cancellable);
+      job->cancellable = NULL;
+    }
+
+  if (G_OBJECT_CLASS (udisks_threaded_job_parent_class)->finalize != NULL)
+    G_OBJECT_CLASS (udisks_threaded_job_parent_class)->finalize (object);
+}
+
+static void
+udisks_threaded_job_get_property (GObject    *object,
+                                  guint       prop_id,
+                                  GValue     *value,
+                                  GParamSpec *pspec)
+{
+  UDisksThreadedJob *job = UDISKS_THREADED_JOB (object);
+
+  switch (prop_id)
+    {
+    case PROP_CANCELLABLE:
+      g_value_set_object (value, job->cancellable);
+      break;
+
+    case PROP_JOB_FUNC:
+      g_value_set_pointer (value, job->job_func);
+      break;
+
+    case PROP_JOB_FUNC_USER_DATA:
+      g_value_set_pointer (value, job->job_func);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+    }
+}
+
+static void
+udisks_threaded_job_set_property (GObject      *object,
+                                  guint         prop_id,
+                                  const GValue *value,
+                                  GParamSpec   *pspec)
+{
+  UDisksThreadedJob *job = UDISKS_THREADED_JOB (object);
+
+  switch (prop_id)
+    {
+    case PROP_CANCELLABLE:
+      g_assert (job->cancellable == NULL);
+      job->cancellable = g_value_dup_object (value);
+      break;
+
+    case PROP_JOB_FUNC:
+      g_assert (job->job_func == NULL);
+      job->job_func = g_value_get_pointer (value);
+      break;
+
+    case PROP_JOB_FUNC_USER_DATA:
+      g_assert (job->job_func_user_data == NULL);
+      job->job_func_user_data = g_value_get_pointer (value);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+    }
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+job_complete (gpointer user_data)
+{
+  UDisksThreadedJob *job = UDISKS_THREADED_JOB (user_data);
+  gboolean ret;
+
+  /* take a reference so it's safe for a signal-handler to release the last one */
+  g_object_ref (job);
+  g_signal_emit (job,
+                 signals[THREADED_JOB_COMPLETED_SIGNAL],
+                 0,
+                 job->job_result,
+                 job->job_error,
+                 &ret);
+  g_object_unref (job);
+  return FALSE;
+}
+
+static gboolean
+run_io_scheduler_job (GIOSchedulerJob  *io_scheduler_job,
+                      GCancellable     *cancellable,
+                      gpointer          user_data)
+{
+  UDisksThreadedJob *job = UDISKS_THREADED_JOB (user_data);
+
+  g_assert (!job->job_result);
+  g_assert_no_error (job->job_error);
+
+  if (!g_cancellable_set_error_if_cancelled (cancellable, &job->job_error))
+    {
+      job->job_result = job->job_func (job,
+                                       cancellable,
+                                       job->job_func_user_data,
+                                       &job->job_error);
+    }
+
+  g_io_scheduler_job_send_to_mainloop (io_scheduler_job,
+                                       job_complete,
+                                       job,
+                                       NULL);
+
+  return FALSE; /* job is complete (or cancelled) */
+}
+
+static void
+udisks_threaded_job_constructed (GObject *object)
+{
+  UDisksThreadedJob *job = UDISKS_THREADED_JOB (object);
+
+  g_assert (g_thread_supported ());
+
+  if (job->cancellable == NULL)
+    job->cancellable = g_cancellable_new ();
+
+  g_io_scheduler_push_job (run_io_scheduler_job,
+                           job,
+                           NULL,
+                           G_PRIORITY_DEFAULT,
+                           job->cancellable);
+
+  if (G_OBJECT_CLASS (udisks_threaded_job_parent_class)->constructed != NULL)
+    G_OBJECT_CLASS (udisks_threaded_job_parent_class)->constructed (object);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static void
+udisks_threaded_job_init (UDisksThreadedJob *job)
+{
+}
+
+static void
+udisks_threaded_job_class_init (UDisksThreadedJobClass *klass)
+{
+  GObjectClass *gobject_class;
+
+  klass->threaded_job_completed = udisks_threaded_job_threaded_job_completed_default;
+
+  gobject_class = G_OBJECT_CLASS (klass);
+  gobject_class->finalize     = udisks_threaded_job_finalize;
+  gobject_class->constructed  = udisks_threaded_job_constructed;
+  gobject_class->set_property = udisks_threaded_job_set_property;
+  gobject_class->get_property = udisks_threaded_job_get_property;
+
+  /**
+   * UDisksThreadedJob:job-func:
+   *
+   * The #UDisksThreadedJobFunc to use.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_JOB_FUNC,
+                                   g_param_spec_pointer ("job-func",
+                                                         "Job Function",
+                                                         "The Job Function",
+                                                         G_PARAM_READABLE |
+                                                         G_PARAM_WRITABLE |
+                                                         G_PARAM_CONSTRUCT_ONLY |
+                                                         G_PARAM_STATIC_STRINGS));
+
+  /**
+   * UDisksThreadedJob:job-func-user-data:
+   *
+   * User data for the #UDisksThreadedJobFunc.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_JOB_FUNC_USER_DATA,
+                                   g_param_spec_pointer ("job-func-user-data",
+                                                         "Job Function's user data",
+                                                         "The Job Function user data",
+                                                         G_PARAM_READABLE |
+                                                         G_PARAM_WRITABLE |
+                                                         G_PARAM_CONSTRUCT_ONLY |
+                                                         G_PARAM_STATIC_STRINGS));
+
+  /**
+   * UDisksThreadedJob:cancellable:
+   *
+   * The #GCancellable to use.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_CANCELLABLE,
+                                   g_param_spec_object ("cancellable",
+                                                        "Cancellable",
+                                                        "The GCancellable to use",
+                                                        G_TYPE_CANCELLABLE,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_STRINGS));
+
+
+  /**
+   * UDisksThreadedJob::threaded-job-completed:
+   * @job: The #UDisksThreadedJob emitting the signal.
+   * @result: The #gboolean returned by the #UDisksThreadedJobFunc.
+   * @error: The #GError set by the #UDisksThreadedJobFunc.
+   *
+   * Emitted when the threaded job is complete.
+   *
+   * The default implementation simply emits the #UDisksJob::completed
+   * signal with @success set to %TRUE if, and only if, @error is
+   * %NULL. Otherwise, @message on that signal is set to a string
+   * describing @error. You can avoid the default implementation by
+   * returning %TRUE from your signal handler.
+   *
+   * This signal is emitted in the
+   * <link linkend="g-main-context-push-thread-default">thread-default main loop</link>
+   * of the thread that @job was created in.
+   *
+   * Returns: %TRUE if the signal was handled, %FALSE to let other
+   * handlers run.
+   */
+  signals[THREADED_JOB_COMPLETED_SIGNAL] =
+    g_signal_new ("threaded-job-completed",
+                  UDISKS_TYPE_THREADED_JOB,
+                  G_SIGNAL_RUN_LAST,
+                  G_STRUCT_OFFSET (UDisksThreadedJobClass, threaded_job_completed),
+                  g_signal_accumulator_true_handled,
+                  NULL,
+                  udisks_daemon_marshal_BOOLEAN__BOOLEAN_BOXED,
+                  G_TYPE_BOOLEAN,
+                  2,
+                  G_TYPE_BOOLEAN,
+                  G_TYPE_ERROR);
+}
+
+/**
+ * udisks_threaded_job_new:
+ * @job_func: The function to run in another thread.
+ * @user_data: User data to pass to @job_func.
+ * @cancellable: A #GCancellable or %NULL.
+ *
+ * Creates a new #UDisksThreadedJob instance.
+ *
+ * The job is started immediately - connect to the
+ * #UDisksThreadedJob::threaded-job-completed or #UDisksJob::completed
+ * signals to get notified when the job is done.
+ *
+ * Returns: A new #UDisksThreadedJob. Free with g_object_unref().
+ */
+UDisksThreadedJob *
+udisks_threaded_job_new (UDisksThreadedJobFunc  job_func,
+                         gpointer               user_data,
+                         GCancellable          *cancellable)
+{
+  g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
+  return UDISKS_THREADED_JOB (g_object_new (UDISKS_TYPE_THREADED_JOB,
+                                            "job-func", job_func,
+                                            "job-func-user-data", user_data,
+                                            "cancellable", cancellable,
+                                            NULL));
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+handle_cancel (UDisksJob              *object,
+               GDBusMethodInvocation  *invocation,
+               const gchar* const     *options)
+{
+  //UDisksThreadedJob *job = UDISKS_THREADED_JOB (object);
+  g_dbus_method_invocation_return_dbus_error (invocation, "org.foo.error.job.cancel", "no, not yet implemented");
+  return TRUE;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static void
+job_iface_init (UDisksJobIface *iface)
+{
+  iface->handle_cancel   = handle_cancel;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+udisks_threaded_job_threaded_job_completed_default (UDisksThreadedJob  *job,
+                                                    gboolean            result,
+                                                    GError            *error)
+{
+  if (result)
+    {
+      udisks_job_emit_completed (UDISKS_JOB (job),
+                                 TRUE,
+                                 "");
+    }
+  else
+    {
+      GString *message;
+
+      g_assert (error != NULL);
+
+      message = g_string_new (NULL);
+      g_string_append_printf (message,
+                              "Threaded job failed with error: %s (%s, %d)",
+                              error->message,
+                              g_quark_to_string (error->domain),
+                              error->code);
+      udisks_job_emit_completed (UDISKS_JOB (job),
+                                 FALSE,
+                                 message->str);
+      g_string_free (message, TRUE);
+    }
+
+  return TRUE;
+}
+

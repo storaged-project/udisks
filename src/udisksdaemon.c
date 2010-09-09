@@ -269,6 +269,10 @@ on_job_completed (UDisksJob    *job,
  *
  * Launches a new job for @command_line_format.
  *
+ * The job is started immediately - connect to the
+ * #UDisksSpawnedJob::spawned-job-completed or #UDisksJob::completed
+ * signals to get notified when the job is done.
+ *
  * The returned object will be exported on the bus until the
  * #UDisksJob::completed signal is emitted on the object.
  *
