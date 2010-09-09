@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include "udisksbasejob.h"
 #include "udisksthreadedjob.h"
 #include "udisks-daemon-marshal.h"
 
@@ -45,9 +46,7 @@ typedef struct _UDisksThreadedJobClass   UDisksThreadedJobClass;
  */
 struct _UDisksThreadedJob
 {
-  UDisksJobStub parent_instance;
-
-  GCancellable *cancellable;
+  UDisksBaseJob parent_instance;
 
   UDisksThreadedJobFunc job_func;
   gpointer job_func_user_data;
@@ -58,7 +57,7 @@ struct _UDisksThreadedJob
 
 struct _UDisksThreadedJobClass
 {
-  UDisksJobStubClass parent_class;
+  UDisksBaseJobClass parent_class;
 
   gboolean (*threaded_job_completed) (UDisksThreadedJob  *job,
                                       gboolean            result,
@@ -70,7 +69,6 @@ static void job_iface_init (UDisksJobIface *iface);
 enum
 {
   PROP_0,
-  PROP_CANCELLABLE,
   PROP_JOB_FUNC,
   PROP_JOB_FUNC_USER_DATA
 };
@@ -87,7 +85,7 @@ static gboolean udisks_threaded_job_threaded_job_completed_default (UDisksThread
                                                                     gboolean            result,
                                                                     GError             *error);
 
-G_DEFINE_TYPE_WITH_CODE (UDisksThreadedJob, udisks_threaded_job, UDISKS_TYPE_JOB_STUB,
+G_DEFINE_TYPE_WITH_CODE (UDisksThreadedJob, udisks_threaded_job, UDISKS_TYPE_BASE_JOB,
                          G_IMPLEMENT_INTERFACE (UDISKS_TYPE_JOB, job_iface_init));
 
 static void
@@ -95,11 +93,8 @@ udisks_threaded_job_finalize (GObject *object)
 {
   UDisksThreadedJob *job = UDISKS_THREADED_JOB (object);
 
-  if (job->cancellable != NULL)
-    {
-      g_object_unref (job->cancellable);
-      job->cancellable = NULL;
-    }
+  if (job->job_error != NULL)
+    g_error_free (job->job_error);
 
   if (G_OBJECT_CLASS (udisks_threaded_job_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_threaded_job_parent_class)->finalize (object);
@@ -115,10 +110,6 @@ udisks_threaded_job_get_property (GObject    *object,
 
   switch (prop_id)
     {
-    case PROP_CANCELLABLE:
-      g_value_set_object (value, job->cancellable);
-      break;
-
     case PROP_JOB_FUNC:
       g_value_set_pointer (value, job->job_func);
       break;
@@ -143,11 +134,6 @@ udisks_threaded_job_set_property (GObject      *object,
 
   switch (prop_id)
     {
-    case PROP_CANCELLABLE:
-      g_assert (job->cancellable == NULL);
-      job->cancellable = g_value_dup_object (value);
-      break;
-
     case PROP_JOB_FUNC:
       g_assert (job->job_func == NULL);
       job->job_func = g_value_get_pointer (value);
@@ -215,19 +201,15 @@ udisks_threaded_job_constructed (GObject *object)
 {
   UDisksThreadedJob *job = UDISKS_THREADED_JOB (object);
 
+  if (G_OBJECT_CLASS (udisks_threaded_job_parent_class)->constructed != NULL)
+    G_OBJECT_CLASS (udisks_threaded_job_parent_class)->constructed (object);
+
   g_assert (g_thread_supported ());
-
-  if (job->cancellable == NULL)
-    job->cancellable = g_cancellable_new ();
-
   g_io_scheduler_push_job (run_io_scheduler_job,
                            job,
                            NULL,
                            G_PRIORITY_DEFAULT,
-                           job->cancellable);
-
-  if (G_OBJECT_CLASS (udisks_threaded_job_parent_class)->constructed != NULL)
-    G_OBJECT_CLASS (udisks_threaded_job_parent_class)->constructed (object);
+                           udisks_base_job_get_cancellable (UDISKS_BASE_JOB (job)));
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -279,23 +261,6 @@ udisks_threaded_job_class_init (UDisksThreadedJobClass *klass)
                                                          G_PARAM_WRITABLE |
                                                          G_PARAM_CONSTRUCT_ONLY |
                                                          G_PARAM_STATIC_STRINGS));
-
-  /**
-   * UDisksThreadedJob:cancellable:
-   *
-   * The #GCancellable to use.
-   */
-  g_object_class_install_property (gobject_class,
-                                   PROP_CANCELLABLE,
-                                   g_param_spec_object ("cancellable",
-                                                        "Cancellable",
-                                                        "The GCancellable to use",
-                                                        G_TYPE_CANCELLABLE,
-                                                        G_PARAM_READABLE |
-                                                        G_PARAM_WRITABLE |
-                                                        G_PARAM_CONSTRUCT_ONLY |
-                                                        G_PARAM_STATIC_STRINGS));
-
 
   /**
    * UDisksThreadedJob::threaded-job-completed:

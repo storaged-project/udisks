@@ -37,6 +37,9 @@ typedef struct _UDisksLinuxBlock UDisksLinuxBlock;
 struct _UDisksFilesystemImpl;
 typedef struct _UDisksFilesystemImpl UDisksFilesystemImpl;
 
+struct _UDisksBaseJob;
+typedef struct _UDisksBaseJob UDisksBaseJob;
+
 struct _UDisksSpawnedJob;
 typedef struct _UDisksSpawnedJob UDisksSpawnedJob;
 

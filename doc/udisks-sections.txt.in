@@ -27,6 +27,24 @@ udisks_filesystem_impl_get_type
 </SECTION>
 
 <SECTION>
+<FILE>udisksbasejob</FILE>
+<TITLE>UDisksBaseJob</TITLE>
+UDisksBaseJob
+UDisksBaseJobClass
+udisks_base_job_get_cancellable
+<SUBSECTION Standard>
+UDISKS_TYPE_BASE_JOB
+UDISKS_BASE_JOB
+UDISKS_IS_BASE_JOB
+UDISKS_BASE_JOB_CLASS
+UDISKS_BASE_JOB_GET_CLASS
+UDISKS_IS_BASE_JOB_CLASS
+UDisksBaseJobPrivate
+<SUBSECTION Private>
+udisks_base_job_get_type
+</SECTION>
+
+<SECTION>
 <FILE>udisksspawnedjob</FILE>
 <TITLE>UDisksSpawnedJob</TITLE>
 UDisksSpawnedJob

@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include "udisksbasejob.h"
 #include "udisksspawnedjob.h"
 #include "udisks-daemon-marshal.h"
 
@@ -45,10 +46,9 @@ typedef struct _UDisksSpawnedJobClass   UDisksSpawnedJobClass;
  */
 struct _UDisksSpawnedJob
 {
-  UDisksJobStub parent_instance;
+  UDisksBaseJob parent_instance;
 
   gchar *command_line;
-  GCancellable *cancellable;
   gulong cancellable_handler_id;
 
   GMainContext *main_context;
@@ -76,7 +76,7 @@ struct _UDisksSpawnedJob
 
 struct _UDisksSpawnedJobClass
 {
-  UDisksJobStubClass parent_class;
+  UDisksBaseJobClass parent_class;
 
   gboolean (*spawned_job_completed) (UDisksSpawnedJob  *job,
                                      GError            *error,
@@ -91,8 +91,7 @@ enum
 {
   PROP_0,
   PROP_COMMAND_LINE,
-  PROP_INPUT_STRING,
-  PROP_CANCELLABLE
+  PROP_INPUT_STRING
 };
 
 enum
@@ -111,7 +110,7 @@ static gboolean udisks_spawned_job_spawned_job_completed_default (UDisksSpawnedJ
 
 static void udisks_spawned_job_release_resources (UDisksSpawnedJob *job);
 
-G_DEFINE_TYPE_WITH_CODE (UDisksSpawnedJob, udisks_spawned_job, UDISKS_TYPE_JOB_STUB,
+G_DEFINE_TYPE_WITH_CODE (UDisksSpawnedJob, udisks_spawned_job, UDISKS_TYPE_BASE_JOB,
                          G_IMPLEMENT_INTERFACE (UDISKS_TYPE_JOB, job_iface_init));
 
 static void
@@ -151,10 +150,6 @@ udisks_spawned_job_get_property (GObject    *object,
       g_value_set_string (value, udisks_spawned_job_get_command_line (job));
       break;
 
-    case PROP_CANCELLABLE:
-      g_value_set_object (value, job->cancellable);
-      break;
-
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -179,11 +174,6 @@ udisks_spawned_job_set_property (GObject      *object,
     case PROP_INPUT_STRING:
       g_assert (job->input_string == NULL);
       job->input_string = g_value_dup_string (value);
-      break;
-
-    case PROP_CANCELLABLE:
-      g_assert (job->cancellable == NULL);
-      job->cancellable = g_value_dup_object (value);
       break;
 
     default:
@@ -252,7 +242,7 @@ on_cancelled (GCancellable *cancellable,
   GError *error;
 
   error = NULL;
-  g_warn_if_fail (g_cancellable_set_error_if_cancelled (job->cancellable, &error));
+  g_warn_if_fail (g_cancellable_set_error_if_cancelled (cancellable, &error));
   emit_completed_with_error_in_idle (job, error);
   g_error_free (error);
 }
@@ -365,8 +355,8 @@ udisks_spawned_job_constructed (GObject *object)
   gint child_argc;
   gchar **child_argv;
 
-  if (job->cancellable == NULL)
-    job->cancellable = g_cancellable_new ();
+  if (G_OBJECT_CLASS (udisks_spawned_job_parent_class)->constructed != NULL)
+    G_OBJECT_CLASS (udisks_spawned_job_parent_class)->constructed (object);
 
   job->main_context = g_main_context_get_thread_default ();
   if (job->main_context != NULL)
@@ -374,14 +364,14 @@ udisks_spawned_job_constructed (GObject *object)
 
   /* could already be cancelled */
   error = NULL;
-  if (g_cancellable_set_error_if_cancelled (job->cancellable, &error))
+  if (g_cancellable_set_error_if_cancelled (udisks_base_job_get_cancellable (UDISKS_BASE_JOB (job)), &error))
     {
       emit_completed_with_error_in_idle (job, error);
       g_error_free (error);
       goto out;
     }
 
-  job->cancellable_handler_id = g_cancellable_connect (job->cancellable,
+  job->cancellable_handler_id = g_cancellable_connect (udisks_base_job_get_cancellable (UDISKS_BASE_JOB (job)),
                                                        G_CALLBACK (on_cancelled),
                                                        job,
                                                        NULL);
@@ -455,8 +445,7 @@ udisks_spawned_job_constructed (GObject *object)
   g_source_unref (job->child_stderr_source);
 
  out:
-  if (G_OBJECT_CLASS (udisks_spawned_job_parent_class)->constructed != NULL)
-    G_OBJECT_CLASS (udisks_spawned_job_parent_class)->constructed (object);
+  ;
 }
 
 static void
@@ -508,22 +497,6 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
                                                         "Input String",
                                                         "String to write to stdin of the spawned program",
                                                         NULL,
-                                                        G_PARAM_WRITABLE |
-                                                        G_PARAM_CONSTRUCT_ONLY |
-                                                        G_PARAM_STATIC_STRINGS));
-
-  /**
-   * UDisksSpawnedJob:cancellable:
-   *
-   * The #GCancellable to use.
-   */
-  g_object_class_install_property (gobject_class,
-                                   PROP_CANCELLABLE,
-                                   g_param_spec_object ("cancellable",
-                                                        "Cancellable",
-                                                        "The GCancellable to use",
-                                                        G_TYPE_CANCELLABLE,
-                                                        G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
                                                         G_PARAM_STATIC_STRINGS));
@@ -860,13 +833,8 @@ udisks_spawned_job_release_resources (UDisksSpawnedJob *job)
 
   if (job->cancellable_handler_id > 0)
     {
-      g_cancellable_disconnect (job->cancellable, job->cancellable_handler_id);
+      g_cancellable_disconnect (udisks_base_job_get_cancellable (UDISKS_BASE_JOB (job)), job->cancellable_handler_id);
       job->cancellable_handler_id = 0;
-    }
-  if (job->cancellable != NULL)
-    {
-      g_object_unref (job->cancellable);
-      job->cancellable = NULL;
     }
 }
 
