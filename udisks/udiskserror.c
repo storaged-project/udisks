@@ -33,12 +33,14 @@
 static const GDBusErrorEntry dbus_error_entries[] =
 {
   {UDISKS_ERROR_FAILED,            "org.freedesktop.UDisks.Error.Failed"},
+  {UDISKS_ERROR_CANCELLED,         "org.freedesktop.UDisks.Error.Cancelled"},
+  {UDISKS_ERROR_ALREADY_CANCELLED, "org.freedesktop.UDisks.Error.AlreadyCancelled"},
 };
 
 GQuark
 udisks_error_quark (void)
 {
-  G_STATIC_ASSERT (G_N_ELEMENTS (dbus_error_entries) - 1 == UDISKS_ERROR_FAILED);
+  G_STATIC_ASSERT (G_N_ELEMENTS (dbus_error_entries) == UDISKS_ERROR_NUM_ENTRIES);
   static volatile gsize quark_volatile = 0;
   g_dbus_error_register_error_domain ("udisks-error-quark",
                                       &quark_volatile,

@@ -75,30 +75,43 @@ udisks_filesystem_impl_class_init (UDisksFilesystemImplClass *klass)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static void
-mount_on_job_completed (UDisksJob    *job,
-                        gboolean      success,
-                        const gchar  *message,
-                        gpointer      user_data)
+static gboolean
+mount_on_spawned_job_completed (UDisksJob       *job,
+                                GError           *error,
+                                gint              status,
+                                GString          *standard_output,
+                                GString          *standard_error,
+                                gpointer          user_data)
 {
   GDBusMethodInvocation *invocation = G_DBUS_METHOD_INVOCATION (user_data);
   UDisksFilesystem *interface;
 
   interface = UDISKS_FILESYSTEM (g_object_get_data (G_OBJECT (job), "filesystem-interface"));
 
-  if (!success)
+  if (error != NULL)
     {
+      gint error_code;
+      error_code = UDISKS_ERROR_FAILED;
+      if (error->domain == G_IO_ERROR && error->code == G_IO_ERROR_CANCELLED)
+        error_code = UDISKS_ERROR_CANCELLED;
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Mounting the device failed: %s",
-                                             message);
+                                             error_code,
+                                             "Mounting the device failed: %s (%s, %d)\n"
+                                             "stdout: `%s'\n"
+                                             "stderr: `%s'\n",
+                                             error->message,
+                                             g_quark_to_string (error->domain), error_code,
+                                             standard_output->str,
+                                             standard_error->str);
     }
   else
     {
       /* TODO: determine mount point */
       udisks_filesystem_complete_mount (interface, invocation, "/foobar");
     }
+
+  return FALSE; /* pass on to ::completed */
 }
 
 static gboolean
@@ -119,7 +132,7 @@ handle_mount (UDisksFilesystem       *interface,
   job = UDISKS_JOB (udisks_daemon_launch_spawned_job (daemon,
                                                       NULL, /* GCancellable */
                                                       NULL, /* input string */
-                                                      "/bin/false"));
+                                                      "sleep 10"));
   /* this blows a little bit - would be nice to have an easier way to
    * get back to the object from the job
    */
@@ -128,8 +141,8 @@ handle_mount (UDisksFilesystem       *interface,
                           g_object_ref (interface),
                           (GDestroyNotify) g_object_unref);
   g_signal_connect (job,
-                    "completed",
-                    G_CALLBACK (mount_on_job_completed),
+                    "spawned-job-completed",
+                    G_CALLBACK (mount_on_spawned_job_completed),
                     invocation);
 
   g_object_unref (block);

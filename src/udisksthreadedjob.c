@@ -326,22 +326,11 @@ udisks_threaded_job_new (UDisksThreadedJobFunc  job_func,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gboolean
-handle_cancel (UDisksJob              *object,
-               GDBusMethodInvocation  *invocation,
-               const gchar* const     *options)
-{
-  //UDisksThreadedJob *job = UDISKS_THREADED_JOB (object);
-  g_dbus_method_invocation_return_dbus_error (invocation, "org.foo.error.job.cancel", "no, not yet implemented");
-  return TRUE;
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
-
 static void
 job_iface_init (UDisksJobIface *iface)
 {
-  iface->handle_cancel   = handle_cancel;
+  /* For Cancel(), just use the implementation from our super class (UDisksBaseJob) */
+  /* iface->handle_cancel   = handle_cancel; */
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

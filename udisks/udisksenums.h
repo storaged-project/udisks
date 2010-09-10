@@ -32,14 +32,20 @@ G_BEGIN_DECLS
 /**
  * UDisksError:
  * @UDISKS_ERROR_FAILED: The operation failed.
+ * @UDISKS_ERROR_CANCELLED: The operation was cancelled.
+ * @UDISKS_ERROR_ALREADY_CANCELLED: The operation has already been cancelled.
  *
  *  Error codes for the #UDISKS_ERROR error domain and the
  *  corresponding D-Bus error names.
  */
 typedef enum
 {
-  UDISKS_ERROR_FAILED   /* org.freedesktop.UDisks.Error.Failed */
+  UDISKS_ERROR_FAILED,             /* org.freedesktop.UDisks.Error.Failed */
+  UDISKS_ERROR_CANCELLED,          /* org.freedesktop.UDisks.Error.Cancelled */
+  UDISKS_ERROR_ALREADY_CANCELLED   /* org.freedesktop.UDisks.Error.AlreadyCancelled */
 } UDisksError;
+
+#define UDISKS_ERROR_NUM_ENTRIES  (UDISKS_ERROR_ALREADY_CANCELLED + 1)
 
 G_END_DECLS
 

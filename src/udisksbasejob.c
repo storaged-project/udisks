@@ -182,8 +182,21 @@ handle_cancel (UDisksJob              *object,
                GDBusMethodInvocation  *invocation,
                const gchar* const     *options)
 {
-  //UDisksBaseJob *job = UDISKS_BASE_JOB (object);
-  g_dbus_method_invocation_return_dbus_error (invocation, "org.foo.error.job.cancel", "no, not yet implemented");
+  UDisksBaseJob *job = UDISKS_BASE_JOB (object);
+
+  if (g_cancellable_is_cancelled (job->priv->cancellable))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_ALREADY_CANCELLED,
+                                             "The job has already been cancelled");
+    }
+  else
+    {
+      g_cancellable_cancel (job->priv->cancellable);
+      udisks_job_complete_cancel (object, invocation);
+    }
+
   return TRUE;
 }
 

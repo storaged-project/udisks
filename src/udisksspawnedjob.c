@@ -200,9 +200,9 @@ emit_completed_with_error_in_idle_cb (gpointer user_data)
                  signals[SPAWNED_JOB_COMPLETED_SIGNAL],
                  0,
                  data->error,
-                 0,     /* status */
-                 NULL,  /* standard_output */
-                 NULL,  /* standard_error */
+                 0,                        /* status */
+                 data->job->child_stdout,  /* standard_output */
+                 data->job->child_stderr,  /* standard_error */
                  &ret);
   g_object_unref (data->job);
   g_error_free (data->error);
@@ -428,7 +428,6 @@ udisks_spawned_job_constructed (GObject *object)
       g_source_unref (job->child_stdin_source);
     }
 
-  job->child_stdout = g_string_new (NULL);
   job->child_stdout_channel = g_io_channel_unix_new (job->child_stdout_fd);
   g_io_channel_set_flags (job->child_stdout_channel, G_IO_FLAG_NONBLOCK, NULL);
   job->child_stdout_source = g_io_create_watch (job->child_stdout_channel, G_IO_IN);
@@ -436,7 +435,6 @@ udisks_spawned_job_constructed (GObject *object)
   g_source_attach (job->child_stdout_source, job->main_context);
   g_source_unref (job->child_stdout_source);
 
-  job->child_stderr = g_string_new (NULL);
   job->child_stderr_channel = g_io_channel_unix_new (job->child_stderr_fd);
   g_io_channel_set_flags (job->child_stderr_channel, G_IO_FLAG_NONBLOCK, NULL);
   job->child_stderr_source = g_io_create_watch (job->child_stderr_channel, G_IO_IN);
@@ -451,6 +449,8 @@ udisks_spawned_job_constructed (GObject *object)
 static void
 udisks_spawned_job_init (UDisksSpawnedJob *job)
 {
+  job->child_stdout = g_string_new (NULL);
+  job->child_stderr = g_string_new (NULL);
   job->child_stdin_fd = -1;
   job->child_stdout_fd = -1;
   job->child_stderr_fd = -1;
@@ -589,22 +589,11 @@ udisks_spawned_job_get_command_line (UDisksSpawnedJob *job)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gboolean
-handle_cancel (UDisksJob              *object,
-               GDBusMethodInvocation  *invocation,
-               const gchar* const     *options)
-{
-  //UDisksSpawnedJob *job = UDISKS_SPAWNED_JOB (object);
-  g_dbus_method_invocation_return_dbus_error (invocation, "org.foo.error.job.cancel", "no, not yet implemented");
-  return TRUE;
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
-
 static void
 job_iface_init (UDisksJobIface *iface)
 {
-  iface->handle_cancel   = handle_cancel;
+  /* For Cancel(), just use the implementation from our super class (UDisksBaseJob) */
+  /* iface->handle_cancel   = handle_cancel; */
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
