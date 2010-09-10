@@ -35,8 +35,8 @@ G_BEGIN_DECLS
  * @UDISKS_ERROR_CANCELLED: The operation was cancelled.
  * @UDISKS_ERROR_ALREADY_CANCELLED: The operation has already been cancelled.
  *
- *  Error codes for the #UDISKS_ERROR error domain and the
- *  corresponding D-Bus error names.
+ * Error codes for the #UDISKS_ERROR error domain and the
+ * corresponding D-Bus error names.
  */
 typedef enum
 {
