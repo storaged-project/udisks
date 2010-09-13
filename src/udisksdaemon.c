@@ -22,6 +22,7 @@
 
 #include "udisksdaemon.h"
 #include "udiskslinuxprovider.h"
+#include "udisksmountmonitor.h"
 #include "udisksspawnedjob.h"
 
 /**
@@ -46,6 +47,8 @@ struct _UDisksDaemon
   GDBusConnection *connection;
   GDBusObjectManager *object_manager;
 
+  UDisksMountMonitor *mount_monitor;
+
   UDisksLinuxProvider *linux_provider;
 };
 
@@ -58,7 +61,8 @@ enum
 {
   PROP_0,
   PROP_CONNECTION,
-  PROP_OBJECT_MANAGER
+  PROP_OBJECT_MANAGER,
+  PROP_MOUNT_MONITOR
 };
 
 G_DEFINE_TYPE (UDisksDaemon, udisks_daemon, G_TYPE_OBJECT);
@@ -68,6 +72,7 @@ udisks_daemon_finalize (GObject *object)
 {
   UDisksDaemon *daemon = UDISKS_DAEMON (object);
 
+  g_object_unref (daemon->mount_monitor);
   g_object_unref (daemon->object_manager);
   g_object_unref (daemon->linux_provider);
   g_object_unref (daemon->connection);
@@ -92,6 +97,10 @@ udisks_daemon_get_property (GObject    *object,
 
     case PROP_OBJECT_MANAGER:
       g_value_set_object (value, udisks_daemon_get_object_manager (daemon));
+      break;
+
+    case PROP_MOUNT_MONITOR:
+      g_value_set_object (value, udisks_daemon_get_mount_monitor (daemon));
       break;
 
     default:
@@ -132,6 +141,8 @@ udisks_daemon_constructed (GObject *object)
   UDisksDaemon *daemon = UDISKS_DAEMON (object);
 
   daemon->object_manager = g_dbus_object_manager_new (daemon->connection, "/org/freedesktop/UDisks");
+
+  daemon->mount_monitor = udisks_mount_monitor_new ();
 
   /* now add providers */
   daemon->linux_provider = udisks_linux_provider_new (daemon);
@@ -181,6 +192,20 @@ udisks_daemon_class_init (UDisksDaemonClass *klass)
                                                         G_TYPE_DBUS_OBJECT_MANAGER,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_STATIC_STRINGS));
+
+  /**
+   * UDisksDaemon:mount-monitor:
+   *
+   * The #UDisksMountMonitor used by the daemon
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_MOUNT_MONITOR,
+                                   g_param_spec_object ("mount-monitor",
+                                                        "Mount Monitor",
+                                                        "The mount monitor",
+                                                        UDISKS_TYPE_MOUNT_MONITOR,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_STATIC_STRINGS));
 }
 
 /**
@@ -228,6 +253,21 @@ udisks_daemon_get_object_manager (UDisksDaemon *daemon)
 {
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
   return daemon->object_manager;
+}
+
+/**
+ * udisks_daemon_get_mount_monitor:
+ * @daemon: A #UDisksDaemon
+ *
+ * Gets the mount monitor used by @daemon.
+ *
+ * Returns: A #UDisksMountMonitor. Do not free, the object is owned by @daemon.
+ */
+UDisksMountMonitor *
+udisks_daemon_get_mount_monitor (UDisksDaemon *daemon)
+{
+  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
+  return daemon->mount_monitor;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

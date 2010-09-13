@@ -33,6 +33,7 @@ GType               udisks_daemon_get_type           (void) G_GNUC_CONST;
 UDisksDaemon       *udisks_daemon_new                (GDBusConnection *connection);
 GDBusConnection    *udisks_daemon_get_connection     (UDisksDaemon    *daemon);
 GDBusObjectManager *udisks_daemon_get_object_manager (UDisksDaemon    *daemon);
+UDisksMountMonitor *udisks_daemon_get_mount_monitor  (UDisksDaemon    *daemon);
 
 UDisksSpawnedJob   *udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
                                                       GCancellable    *cancellable,

@@ -25,6 +25,8 @@
 #include <udisks/udisks.h>
 #include <gdbusobjectmanager.h>
 
+#include <sys/types.h>
+
 struct _UDisksDaemon;
 typedef struct _UDisksDaemon UDisksDaemon;
 
@@ -45,5 +47,11 @@ typedef struct _UDisksSpawnedJob UDisksSpawnedJob;
 
 struct _UDisksThreadedJob;
 typedef struct _UDisksThreadedJob UDisksThreadedJob;
+
+struct _UDisksMountMonitor;
+typedef struct _UDisksMountMonitor UDisksMountMonitor;
+
+struct _UDisksMount;
+typedef struct _UDisksMount UDisksMount;
 
 #endif

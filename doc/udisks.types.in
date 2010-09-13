@@ -5,3 +5,5 @@ udisks_linux_provider_get_type
 udisks_base_job_get_type
 udisks_spawned_job_get_type
 udisks_threaded_job_get_type
+udisks_mount_get_type
+udisks_mount_monitor_get_type
