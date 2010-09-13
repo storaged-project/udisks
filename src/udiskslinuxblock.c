@@ -23,6 +23,8 @@
 #include "udisksdaemon.h"
 #include "udiskslinuxblock.h"
 #include "udisksfilesystemimpl.h"
+#include "udisksmount.h"
+#include "udisksmountmonitor.h"
 
 /**
  * SECTION:udiskslinuxblock
@@ -45,6 +47,8 @@ struct _UDisksLinuxBlock
   GDBusObject parent_instance;
 
   UDisksDaemon *daemon;
+  UDisksMountMonitor *mount_monitor;
+
   GUdevDevice *device;
 
   /* interface */
@@ -68,12 +72,21 @@ enum
 
 G_DEFINE_TYPE (UDisksLinuxBlock, udisks_linux_block, G_TYPE_DBUS_OBJECT);
 
+static void on_mount_monitor_mount_added   (UDisksMountMonitor  *monitor,
+                                            UDisksMount         *mount,
+                                            gpointer             user_data);
+static void on_mount_monitor_mount_removed (UDisksMountMonitor  *monitor,
+                                            UDisksMount         *mount,
+                                            gpointer             user_data);
+
 static void
 udisks_linux_block_finalize (GObject *object)
 {
   UDisksLinuxBlock *block = UDISKS_LINUX_BLOCK (object);
 
-  /* note: we don't hold a ref to block->daemon */
+  /* note: we don't hold a ref to block->daemon or block->mount_monitor */
+  g_signal_handlers_disconnect_by_func (block->mount_monitor, on_mount_monitor_mount_added, block);
+  g_signal_handlers_disconnect_by_func (block->mount_monitor, on_mount_monitor_mount_removed, block);
 
   g_object_unref (block->device);
 
@@ -225,10 +238,21 @@ udisks_linux_block_constructor (GType                  type,
                                                                         n_construct_properties,
                                                                         construct_properties);
 }
+
 static void
 udisks_linux_block_constructed (GObject *object)
 {
   UDisksLinuxBlock *block = UDISKS_LINUX_BLOCK (object);
+
+  block->mount_monitor = udisks_daemon_get_mount_monitor (block->daemon);
+  g_signal_connect (block->mount_monitor,
+                    "mount-added",
+                    G_CALLBACK (on_mount_monitor_mount_added),
+                    block);
+  g_signal_connect (block->mount_monitor,
+                    "mount-removed",
+                    G_CALLBACK (on_mount_monitor_mount_removed),
+                    block);
 
   /* initial coldplug */
   udisks_linux_block_uevent (block, "add", NULL);
@@ -480,8 +504,30 @@ filesystem_update (UDisksLinuxBlock      *block,
                    const gchar     *uevent_action,
                    GDBusInterface  *_iface)
 {
-  //UDisksFilesystem *iface = UDISKS_FILESYSTEM (_iface);
-  /* TODO: current no properties */
+  UDisksFilesystem *iface = UDISKS_FILESYSTEM (_iface);
+  GList *mounts;
+  const gchar *mount_point;
+
+  /* TODO: For now, the way the API works is that we only report a
+   * single mount point. We might want to change that... we might
+   * not..
+   */
+  mount_point = NULL;
+  mounts = udisks_mount_monitor_get_mounts_for_dev (block->mount_monitor,
+                                                    g_udev_device_get_device_number (block->device));
+  /* we are guaranteed that the list is sorted so if there are
+   * multiple mounts we'll always get the same order
+   */
+  if (mounts != NULL)
+    {
+      UDisksMount *mount = UDISKS_MOUNT (mounts->data);
+      mount_point = udisks_mount_get_mount_path (mount);
+    }
+
+  udisks_filesystem_set_mount_point (iface, mount_point);
+
+  g_list_foreach (mounts, (GFunc) g_object_unref, NULL);
+  g_list_free (mounts);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -518,3 +564,27 @@ udisks_linux_block_uevent (UDisksLinuxBlock *block,
   update_iface (block, action, filesystem_check, filesystem_update,
                 UDISKS_TYPE_FILESYSTEM_IMPL, &block->iface_filesystem);
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static void
+on_mount_monitor_mount_added (UDisksMountMonitor  *monitor,
+                              UDisksMount         *mount,
+                              gpointer             user_data)
+{
+  UDisksLinuxBlock *block = UDISKS_LINUX_BLOCK (user_data);
+  if (udisks_mount_get_dev (mount) == g_udev_device_get_device_number (block->device))
+    udisks_linux_block_uevent (block, NULL, NULL);
+}
+
+static void
+on_mount_monitor_mount_removed (UDisksMountMonitor  *monitor,
+                                UDisksMount         *mount,
+                                gpointer             user_data)
+{
+  UDisksLinuxBlock *block = UDISKS_LINUX_BLOCK (user_data);
+  if (udisks_mount_get_dev (mount) == g_udev_device_get_device_number (block->device))
+    udisks_linux_block_uevent (block, NULL, NULL);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
