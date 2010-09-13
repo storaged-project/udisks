@@ -229,8 +229,6 @@ mounts_changed_event (GIOChannel *channel,
   if (cond & ~G_IO_ERR)
     goto out;
 
-  g_print ("**** /proc/self/mountinfo changed\n");
-
   udisks_mount_monitor_ensure (monitor);
 
   old_mounts = g_list_copy (monitor->mounts);
