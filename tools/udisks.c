@@ -30,6 +30,7 @@
 #include <gdbusproxymanager.h>
 
 static GDBusProxyManager *manager = NULL;
+static GMainLoop *loop = NULL;
 
 /* Uncomment to get debug traces in /tmp/udisks-completion-debug.txt - use tail(1) to
  * inspect this file
@@ -45,6 +46,48 @@ static void remove_arg (gint num, gint *argc, gchar **argv[]);
 static void modify_argv0_for_command (gint *argc, gchar **argv[], const gchar *command);
 
 /* ---------------------------------------------------------------------------------------------------- */
+
+static gchar *
+variant_to_string_with_indent (GVariant *value,
+                               guint     indent)
+{
+  gchar *value_str;
+
+  if (g_variant_is_of_type (value, G_VARIANT_TYPE_STRING))
+    {
+      value_str = g_variant_dup_string (value, NULL);
+    }
+  else if (g_variant_is_of_type (value, G_VARIANT_TYPE_BYTESTRING))
+    {
+      value_str = g_variant_dup_bytestring (value, NULL);
+    }
+  else if (g_variant_is_of_type (value, G_VARIANT_TYPE_STRING_ARRAY) ||
+           g_variant_is_of_type (value, G_VARIANT_TYPE_BYTESTRING_ARRAY))
+    {
+      const gchar **strv;
+      guint m;
+      GString *str;
+      if (g_variant_is_of_type (value, G_VARIANT_TYPE_BYTESTRING_ARRAY))
+        strv = g_variant_get_bytestring_array (value, NULL);
+      else
+        strv = g_variant_get_strv (value, NULL);
+      str = g_string_new (NULL);
+      for (m = 0; strv != NULL && strv[m] != NULL; m++)
+        {
+          if (m > 0)
+            g_string_append_printf (str, "\n%*s",
+                                    indent, "");
+          g_string_append (str, strv[m]);
+        }
+      value_str = g_string_free (str, FALSE);
+      g_free (strv);
+    }
+  else
+    {
+      value_str = g_variant_print (value, FALSE);
+    }
+  return value_str;
+}
 
 static gint
 if_proxy_cmp (GDBusProxy *a,
@@ -93,8 +136,8 @@ print_object (GDBusObjectProxy *proxy,
           if (max_property_name_len < property_name_len)
             max_property_name_len = property_name_len;
         }
-      value_column = ((max_property_name_len + 7) / 8) * 8 + 8;
 
+      value_column = ((max_property_name_len + 7) / 8) * 8 + 8;
       if (value_column < 24)
         value_column = 24;
       else if (value_column > 64)
@@ -115,39 +158,7 @@ print_object (GDBusObjectProxy *proxy,
 
           value = g_dbus_proxy_get_cached_property (iproxy, property_name);
 
-          if (g_variant_is_of_type (value, G_VARIANT_TYPE_STRING))
-            {
-              value_str = g_variant_dup_string (value, NULL);
-            }
-          else if (g_variant_is_of_type (value, G_VARIANT_TYPE_BYTESTRING))
-            {
-              value_str = g_variant_dup_bytestring (value, NULL);
-            }
-          else if (g_variant_is_of_type (value, G_VARIANT_TYPE_STRING_ARRAY) ||
-                   g_variant_is_of_type (value, G_VARIANT_TYPE_BYTESTRING_ARRAY))
-            {
-              const gchar **strv;
-              guint m;
-              GString *str;
-              if (g_variant_is_of_type (value, G_VARIANT_TYPE_BYTESTRING_ARRAY))
-                strv = g_variant_get_bytestring_array (value, NULL);
-              else
-                strv = g_variant_get_strv (value, NULL);
-              str = g_string_new (NULL);
-              for (m = 0; strv != NULL && strv[m] != NULL; m++)
-                {
-                  if (m > 0)
-                    g_string_append_printf (str, "\n%*s",
-                                            (gint) (indent + 4 + strlen (property_name) + 2 + value_indent), "");
-                  g_string_append (str, strv[m]);
-                }
-              value_str = g_string_free (str, FALSE);
-              g_free (strv);
-            }
-          else
-            {
-              value_str = g_variant_print (value, FALSE);
-            }
+          value_str = variant_to_string_with_indent (value, indent + 4 + strlen (property_name) + 2 + value_indent);
 
           g_print ("%*s%s: %*s%s\n",
                    indent + 4, "",
@@ -466,6 +477,294 @@ handle_command_dump (gint        *argc,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
+monitor_print_timestamp (void)
+{
+  GTimeVal now;
+  time_t now_time;
+  struct tm *now_tm;
+  gchar time_buf[128];
+
+  g_get_current_time (&now);
+  now_time = (time_t) now.tv_sec;
+  now_tm = localtime (&now_time);
+  strftime (time_buf, sizeof time_buf, "%H:%M:%S", now_tm);
+
+  g_print ("%s.%03d: ", time_buf, (gint) now.tv_usec / 1000);
+}
+
+static gboolean
+monitor_has_name_owner (void)
+{
+  gchar *name_owner;
+  gboolean ret;
+  name_owner = g_dbus_proxy_manager_get_name_owner (manager);
+  ret = (name_owner != NULL);
+  g_free (name_owner);
+  return ret;
+}
+
+static void
+monitor_print_name_owner (void)
+{
+  gchar *name_owner;
+  name_owner = g_dbus_proxy_manager_get_name_owner (manager);
+  monitor_print_timestamp ();
+  if (name_owner != NULL)
+    g_print ("The udisks-daemon is running (name-owner %s).\n", name_owner);
+  else
+    g_print ("The udisks-daemon is not running.\n");
+  g_free (name_owner);
+}
+
+static void
+monitor_on_notify_name_owner (GObject    *object,
+                              GParamSpec *pspec,
+                              gpointer    user_data)
+{
+  monitor_print_name_owner ();
+}
+
+static void
+monitor_on_object_proxy_added (GDBusProxyManager  *manager,
+                               GDBusObjectProxy   *object_proxy,
+                               gpointer            user_data)
+{
+  if (!monitor_has_name_owner ())
+    goto out;
+  monitor_print_timestamp ();
+  g_print ("Added %s\n",
+           g_dbus_object_proxy_get_object_path (object_proxy));
+ out:
+  ;
+}
+
+static void
+monitor_on_object_proxy_removed (GDBusProxyManager  *manager,
+                                 GDBusObjectProxy   *object_proxy,
+                                 gpointer            user_data)
+{
+  if (!monitor_has_name_owner ())
+    goto out;
+  monitor_print_timestamp ();
+  g_print ("Removed %s\n",
+           g_dbus_object_proxy_get_object_path (object_proxy));
+ out:
+  ;
+}
+
+static void
+monitor_on_interface_proxy_added (GDBusProxyManager  *manager,
+                                  GDBusObjectProxy   *object_proxy,
+                                  GDBusProxy         *interface_proxy,
+                                  gpointer            user_data)
+{
+  if (!monitor_has_name_owner ())
+    goto out;
+  monitor_print_timestamp ();
+  g_print ("%s: Added interface %s\n",
+           g_dbus_object_proxy_get_object_path (object_proxy),
+           g_dbus_proxy_get_interface_name (interface_proxy));
+ out:
+  ;
+}
+
+static void
+monitor_on_interface_proxy_removed (GDBusProxyManager  *manager,
+                                    GDBusObjectProxy   *object_proxy,
+                                    GDBusProxy         *interface_proxy,
+                                    gpointer            user_data)
+{
+  if (!monitor_has_name_owner ())
+    goto out;
+  monitor_print_timestamp ();
+  g_print ("%s: Removed interface %s\n",
+           g_dbus_object_proxy_get_object_path (object_proxy),
+           g_dbus_proxy_get_interface_name (interface_proxy));
+ out:
+  ;
+}
+
+static void
+monitor_on_interface_proxy_properties_changed (GDBusProxyManager  *manager,
+                                               GDBusObjectProxy   *object_proxy,
+                                               GDBusProxy         *interface_proxy,
+                                               GVariant           *changed_properties,
+                                               const gchar* const *invalidated_properties,
+                                               gpointer            user_data)
+{
+  GVariantIter *iter;
+  const gchar *property_name;
+  GVariant *value;
+  guint max_property_name_len;
+  guint value_column;
+
+  if (!monitor_has_name_owner ())
+    goto out;
+
+  monitor_print_timestamp ();
+  g_print ("%s: %s: Properties Changed\n",
+           g_dbus_object_proxy_get_object_path (object_proxy),
+           g_dbus_proxy_get_interface_name (interface_proxy));
+
+  /* the daemon doesn't use the invalidated properties feature */
+  g_warn_if_fail (g_strv_length ((gchar **) invalidated_properties) == 0);
+
+  g_variant_get (changed_properties, "a{sv}", &iter);
+  max_property_name_len = 0;
+  while (g_variant_iter_next (iter, "{&sv}", &property_name, NULL))
+    {
+      guint property_name_len;
+      property_name_len = strlen (property_name);
+      if (max_property_name_len < property_name_len)
+        max_property_name_len = property_name_len;
+    }
+
+  value_column = ((max_property_name_len + 7) / 8) * 8 + 8;
+  if (value_column < 24)
+    value_column = 24;
+  else if (value_column > 64)
+    value_column = 64;
+
+  g_variant_get (changed_properties, "a{sv}", &iter);
+  while (g_variant_iter_next (iter, "{&sv}", &property_name, &value))
+    {
+      gchar *value_str;
+      guint rightmost;
+      gint value_indent;
+
+      rightmost = 2 + strlen (property_name) + 2;
+      value_indent = value_column - rightmost;
+      if (value_indent < 0)
+        value_indent = 0;
+
+      value_str = variant_to_string_with_indent (value, 2 + strlen (property_name) + 2 + value_indent);
+
+      g_print ("  %s: %*s%s\n",
+               property_name,
+               value_indent, "",
+               value_str);
+
+      g_free (value_str);
+      g_variant_unref (value);
+    }
+ out:
+  ;
+}
+
+static void
+monitor_on_interface_proxy_signal (GDBusProxyManager  *manager,
+                                   GDBusObjectProxy   *object_proxy,
+                                   GDBusProxy         *interface_proxy,
+                                   const gchar        *sender_name,
+                                   const gchar        *signal_name,
+                                   GVariant           *parameters,
+                                   gpointer            user_data)
+{
+  gchar *param_str;
+  if (!monitor_has_name_owner ())
+    goto out;
+
+  param_str = g_variant_print (parameters, TRUE);
+  monitor_print_timestamp ();
+  g_print ("%s: Received signal %s::%s %s\n",
+           g_dbus_object_proxy_get_object_path (object_proxy),
+           g_dbus_proxy_get_interface_name (interface_proxy),
+           signal_name,
+           param_str);
+  g_free (param_str);
+ out:
+  ;
+}
+
+
+static const GOptionEntry command_monitor_entries[] =
+{
+  { NULL }
+};
+
+static gint
+handle_command_monitor (gint        *argc,
+                        gchar      **argv[],
+                        gboolean     request_completion,
+                        const gchar *completion_cur,
+                        const gchar *completion_prev)
+{
+  gint ret;
+  GOptionContext *o;
+  gchar *s;
+
+  ret = 1;
+
+  modify_argv0_for_command (argc, argv, "monitor");
+
+  o = g_option_context_new (NULL);
+  if (request_completion)
+    g_option_context_set_ignore_unknown_options (o, TRUE);
+  g_option_context_set_help_enabled (o, FALSE);
+  g_option_context_set_summary (o, "Monitor changes to objects.");
+  g_option_context_add_main_entries (o, command_monitor_entries, NULL /* GETTEXT_PACKAGE*/);
+
+  if (!g_option_context_parse (o, argc, argv, NULL))
+    {
+      if (!request_completion)
+        {
+          s = g_option_context_get_help (o, FALSE, NULL);
+          g_printerr ("%s", s);
+          g_free (s);
+          goto out;
+        }
+    }
+
+  /* done with completion */
+  if (request_completion)
+    goto out;
+
+  g_print ("Monitoring the udisks daemon. Press Ctrl+C to exit.\n");
+
+  g_signal_connect (manager,
+                    "notify::name-owner",
+                    G_CALLBACK (monitor_on_notify_name_owner),
+                    NULL);
+
+  g_signal_connect (manager,
+                    "object-proxy-added",
+                    G_CALLBACK (monitor_on_object_proxy_added),
+                    NULL);
+  g_signal_connect (manager,
+                    "object-proxy-removed",
+                    G_CALLBACK (monitor_on_object_proxy_removed),
+                    NULL);
+  g_signal_connect (manager,
+                    "interface-proxy-added",
+                    G_CALLBACK (monitor_on_interface_proxy_added),
+                    NULL);
+  g_signal_connect (manager,
+                    "interface-proxy-removed",
+                    G_CALLBACK (monitor_on_interface_proxy_removed),
+                    NULL);
+  g_signal_connect (manager,
+                    "interface-proxy-properties-changed",
+                    G_CALLBACK (monitor_on_interface_proxy_properties_changed),
+                    NULL);
+  g_signal_connect (manager,
+                    "interface-proxy-signal",
+                    G_CALLBACK (monitor_on_interface_proxy_signal),
+                    NULL);
+
+  monitor_print_name_owner ();
+
+  g_main_loop_run (loop);
+
+  ret = 0;
+
+ out:
+  g_option_context_free (o);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static void
 usage (gint *argc, gchar **argv[], gboolean use_stdout)
 {
   GOptionContext *o;
@@ -481,6 +780,7 @@ usage (gint *argc, gchar **argv[], gboolean use_stdout)
                        "  help         Shows this information\n"
                        "  info         Shows information about an object\n"
                        "  dump         Shows information about all objects\n"
+                       "  monitor      Monitor changes to objects\n"
                        "\n"
                        "Use \"%s COMMAND --help\" to get help on each command.\n",
                        program_name);
@@ -593,6 +893,7 @@ main (int argc,
   completion_cur = NULL;
   completion_prev = NULL;
   manager = NULL;
+  loop = NULL;
 
   g_type_init ();
 
@@ -601,6 +902,8 @@ main (int argc,
       usage (&argc, &argv, FALSE);
       goto out;
     }
+
+  loop = g_main_loop_new (NULL, FALSE);
 
   error = NULL;
   manager = g_dbus_proxy_manager_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
@@ -654,6 +957,15 @@ main (int argc,
                                  request_completion,
                                  completion_cur,
                                  completion_prev);
+      goto out;
+    }
+  else if (g_strcmp0 (command, "monitor") == 0)
+    {
+      ret = handle_command_monitor (&argc,
+                                    &argv,
+                                    request_completion,
+                                    completion_cur,
+                                    completion_prev);
       goto out;
     }
   else if (g_strcmp0 (command, "complete") == 0 && argc == 4 && !request_completion)
@@ -724,6 +1036,7 @@ main (int argc,
           g_print ("help \n"
                    "info \n"
                    "dump \n"
+                   "monitor \n"
                    );
           ret = 0;
           goto out;
@@ -738,6 +1051,8 @@ main (int argc,
 
 
  out:
+  if (loop != NULL)
+    g_main_loop_unref (loop);
   if (manager != NULL)
     g_object_unref (manager);
   return ret;
