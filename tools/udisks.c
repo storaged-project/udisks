@@ -162,9 +162,6 @@ print_object (GDBusObjectProxy *proxy,
 
   g_return_if_fail (G_IS_DBUS_OBJECT_PROXY (proxy));
 
-  g_print ("%*s%s:\n",
-           indent, "", g_dbus_object_proxy_get_object_path (proxy));
-
   interface_proxies = g_dbus_object_proxy_get_all (proxy);
 
   /* We want to print the interfaces in order */
@@ -174,8 +171,8 @@ print_object (GDBusObjectProxy *proxy,
     {
       GDBusProxy *iproxy = G_DBUS_PROXY (l->data);
       g_print ("%*s%s:\n",
-               indent + 2, "", g_dbus_proxy_get_interface_name (iproxy));
-      print_interface_properties (iproxy, indent + 4);
+               indent, "", g_dbus_proxy_get_interface_name (iproxy));
+      print_interface_properties (iproxy, indent + 2);
     }
   g_list_foreach (interface_proxies, (GFunc) g_object_unref, NULL);
   g_list_free (interface_proxies);
@@ -388,7 +385,8 @@ handle_command_info (gint        *argc,
       goto out;
     }
 
-  print_object (object_proxy, 0);
+  g_print ("%s:\n", g_dbus_object_proxy_get_object_path (object_proxy));
+  print_object (object_proxy, 2);
   g_object_unref (object_proxy);
 
   ret = 0;
@@ -466,7 +464,8 @@ handle_command_dump (gint        *argc,
       if (!first)
         g_print ("\n");
       first = FALSE;
-      print_object (object_proxy, 0);
+      g_print ("%s:\n", g_dbus_object_proxy_get_object_path (object_proxy));
+      print_object (object_proxy, 2);
     }
   g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
   g_list_free (object_proxies);
@@ -538,6 +537,7 @@ monitor_on_object_proxy_added (GDBusProxyManager  *manager,
   monitor_print_timestamp ();
   g_print ("Added %s\n",
            g_dbus_object_proxy_get_object_path (object_proxy));
+  print_object (object_proxy, 2);
  out:
   ;
 }
