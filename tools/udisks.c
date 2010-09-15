@@ -97,6 +97,63 @@ if_proxy_cmp (GDBusProxy *a,
 }
 
 static void
+print_interface_properties (GDBusProxy *proxy,
+                            guint       indent)
+{
+  gchar **cached_properties;
+  guint n;
+  guint value_column;
+  guint max_property_name_len;
+
+  /* note: this is guaranteed to be sorted */
+  cached_properties = g_dbus_proxy_get_cached_property_names (proxy);
+
+  max_property_name_len = 0;
+  for (n = 0; cached_properties != NULL && cached_properties[n] != NULL; n++)
+    {
+      const gchar *property_name = cached_properties[n];
+      guint property_name_len;
+      property_name_len = strlen (property_name);
+      if (max_property_name_len < property_name_len)
+        max_property_name_len = property_name_len;
+    }
+
+  value_column = ((max_property_name_len + 7) / 8) * 8 + 8;
+  if (value_column < 24)
+    value_column = 24;
+  else if (value_column > 64)
+    value_column = 64;
+
+  for (n = 0; cached_properties != NULL && cached_properties[n] != NULL; n++)
+    {
+      const gchar *property_name = cached_properties[n];
+      GVariant *value;
+      gchar *value_str;
+      guint rightmost;
+      gint value_indent;
+
+      rightmost = indent + strlen (property_name) + 2;
+      value_indent = value_column - rightmost;
+      if (value_indent < 0)
+        value_indent = 0;
+
+      value = g_dbus_proxy_get_cached_property (proxy, property_name);
+
+      value_str = variant_to_string_with_indent (value, indent + strlen (property_name) + 2 + value_indent);
+
+      g_print ("%*s%s: %*s%s\n",
+               indent, "",
+               property_name,
+               value_indent, "",
+               value_str);
+
+      g_free (value_str);
+      g_variant_unref (value);
+    }
+  g_strfreev (cached_properties);
+}
+
+static void
 print_object (GDBusObjectProxy *proxy,
               guint             indent)
 {
@@ -116,65 +173,12 @@ print_object (GDBusObjectProxy *proxy,
   for (l = interface_proxies; l != NULL; l = l->next)
     {
       GDBusProxy *iproxy = G_DBUS_PROXY (l->data);
-      gchar **cached_properties;
-      guint n;
-      guint value_column;
-      guint max_property_name_len;
-
       g_print ("%*s%s:\n",
                indent + 2, "", g_dbus_proxy_get_interface_name (iproxy));
-
-      /* note: this is guaranteed to be sorted */
-      cached_properties = g_dbus_proxy_get_cached_property_names (iproxy);
-
-      max_property_name_len = 0;
-      for (n = 0; cached_properties != NULL && cached_properties[n] != NULL; n++)
-        {
-          const gchar *property_name = cached_properties[n];
-          guint property_name_len;
-          property_name_len = strlen (property_name);
-          if (max_property_name_len < property_name_len)
-            max_property_name_len = property_name_len;
-        }
-
-      value_column = ((max_property_name_len + 7) / 8) * 8 + 8;
-      if (value_column < 24)
-        value_column = 24;
-      else if (value_column > 64)
-        value_column = 64;
-
-      for (n = 0; cached_properties != NULL && cached_properties[n] != NULL; n++)
-        {
-          const gchar *property_name = cached_properties[n];
-          GVariant *value;
-          gchar *value_str;
-          guint rightmost;
-          gint value_indent;
-
-          rightmost = indent + 4 + strlen (property_name) + 2;
-          value_indent = value_column - rightmost;
-          if (value_indent < 0)
-            value_indent = 0;
-
-          value = g_dbus_proxy_get_cached_property (iproxy, property_name);
-
-          value_str = variant_to_string_with_indent (value, indent + 4 + strlen (property_name) + 2 + value_indent);
-
-          g_print ("%*s%s: %*s%s\n",
-                   indent + 4, "",
-                   property_name,
-                   value_indent, "",
-                   value_str);
-
-          g_free (value_str);
-          g_variant_unref (value);
-        }
-      g_strfreev (cached_properties);
+      print_interface_properties (iproxy, indent + 4);
     }
   g_list_foreach (interface_proxies, (GFunc) g_object_unref, NULL);
   g_list_free (interface_proxies);
-
-
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -564,6 +568,8 @@ monitor_on_interface_proxy_added (GDBusProxyManager  *manager,
   g_print ("%s: Added interface %s\n",
            g_dbus_object_proxy_get_object_path (object_proxy),
            g_dbus_proxy_get_interface_name (interface_proxy));
+
+  print_interface_properties (interface_proxy, 2);
  out:
   ;
 }
