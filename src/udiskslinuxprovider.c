@@ -255,6 +255,8 @@ udisks_linux_provider_handle_uevent (UDisksLinuxProvider *provider,
       block = g_hash_table_lookup (provider->sysfs_to_block, sysfs_path);
       if (block != NULL)
         {
+          g_dbus_object_manager_unexport (udisks_daemon_get_object_manager (provider->daemon),
+                                          g_dbus_object_get_object_path (G_DBUS_OBJECT (block)));
           g_warn_if_fail (g_hash_table_remove (provider->sysfs_to_block, sysfs_path));
         }
     }
