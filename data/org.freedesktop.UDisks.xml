@@ -6,19 +6,19 @@
   <!-- ********************************************************************** -->
 
   <interface name="org.freedesktop.UDisks.LinuxSysfsDevice">
-    <property name="SysfsPath" type="s" access="read"/>
-    <property name="Subsystem" type="s" access="read"/>
+    <property name="SysfsPath" type="ay" access="read"/>
+    <property name="Subsystem" type="ay" access="read"/>
 
     <signal name="UEvent">
-      <arg name="action" type="s"/>
+      <arg name="action" type="ay"/>
     </signal>
   </interface>
 
   <!-- ********************************************************************** -->
 
   <interface name="org.freedesktop.UDisks.BlockDevice">
-    <property name="Device" type="s" access="read"/>
-    <property name="Symlinks" type="as" access="read"/>
+    <property name="Device" type="ay" access="read"/>
+    <property name="Symlinks" type="aay" access="read"/>
     <property name="Major" type="x" access="read"/>
     <property name="Minor" type="x" access="read"/>
     <property name="Size" type="t" access="read"/>
@@ -30,19 +30,19 @@
     <property name="Usage" type="s" access="read"/>
     <property name="Type" type="s" access="read"/>
     <property name="Version" type="s" access="read"/>
-    <property name="Label" type="s" access="read"/>
-    <property name="UUID" type="s" access="read"/>
+    <property name="Label" type="ay" access="read"/>
+    <property name="UUID" type="ay" access="read"/>
   </interface>
 
   <!-- ********************************************************************** -->
 
   <interface name="org.freedesktop.UDisks.Filesystem">
-    <property name="MountPoint" type="s" access="read"/>
+    <property name="MountPoint" type="ay" access="read"/>
 
     <method name="Mount">
       <arg name="filesystem_type" direction="in" type="s"/>
       <arg name="options" direction="in" type="as"/>
-      <arg name="mount_path" direction="out" type="s"/>
+      <arg name="mount_path" direction="out" type="ay"/>
     </method>
 
     <method name="Unmount">
