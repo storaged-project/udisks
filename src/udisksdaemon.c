@@ -72,9 +72,9 @@ udisks_daemon_finalize (GObject *object)
 {
   UDisksDaemon *daemon = UDISKS_DAEMON (object);
 
-  g_object_unref (daemon->mount_monitor);
-  g_object_unref (daemon->object_manager);
   g_object_unref (daemon->linux_provider);
+  g_object_unref (daemon->object_manager);
+  g_object_unref (daemon->mount_monitor);
   g_object_unref (daemon->connection);
 
   if (G_OBJECT_CLASS (udisks_daemon_parent_class)->finalize != NULL)
