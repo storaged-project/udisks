@@ -46,6 +46,128 @@ static void modify_argv0_for_command (gint *argc, gchar **argv[], const gchar *c
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gint
+if_proxy_cmp (GDBusProxy *a,
+              GDBusProxy *b)
+{
+  return g_strcmp0 (g_dbus_proxy_get_interface_name (a), g_dbus_proxy_get_interface_name (b));
+}
+
+static void
+print_object (GDBusObjectProxy *proxy,
+              guint             indent)
+{
+  GList *interface_proxies;
+  GList *l;
+
+  g_return_if_fail (G_IS_DBUS_OBJECT_PROXY (proxy));
+
+  g_print ("%*s%s:\n",
+           indent, "", g_dbus_object_proxy_get_object_path (proxy));
+
+  interface_proxies = g_dbus_object_proxy_get_all (proxy);
+
+  /* We want to print the interfaces in order */
+  interface_proxies = g_list_sort (interface_proxies, (GCompareFunc) if_proxy_cmp);
+
+  for (l = interface_proxies; l != NULL; l = l->next)
+    {
+      GDBusProxy *iproxy = G_DBUS_PROXY (l->data);
+      gchar **cached_properties;
+      guint n;
+      guint value_column;
+      guint max_property_name_len;
+
+      g_print ("%*s%s:\n",
+               indent + 2, "", g_dbus_proxy_get_interface_name (iproxy));
+
+      /* note: this is guaranteed to be sorted */
+      cached_properties = g_dbus_proxy_get_cached_property_names (iproxy);
+
+      max_property_name_len = 0;
+      for (n = 0; cached_properties != NULL && cached_properties[n] != NULL; n++)
+        {
+          const gchar *property_name = cached_properties[n];
+          guint property_name_len;
+          property_name_len = strlen (property_name);
+          if (max_property_name_len < property_name_len)
+            max_property_name_len = property_name_len;
+        }
+      value_column = ((max_property_name_len + 7) / 8) * 8 + 8;
+
+      if (value_column < 24)
+        value_column = 24;
+      else if (value_column > 64)
+        value_column = 64;
+
+      for (n = 0; cached_properties != NULL && cached_properties[n] != NULL; n++)
+        {
+          const gchar *property_name = cached_properties[n];
+          GVariant *value;
+          gchar *value_str;
+          guint rightmost;
+          gint value_indent;
+
+          rightmost = indent + 4 + strlen (property_name) + 2;
+          value_indent = value_column - rightmost;
+          if (value_indent < 0)
+            value_indent = 0;
+
+          value = g_dbus_proxy_get_cached_property (iproxy, property_name);
+
+          if (g_variant_is_of_type (value, G_VARIANT_TYPE_STRING))
+            {
+              value_str = g_variant_dup_string (value, NULL);
+            }
+          else if (g_variant_is_of_type (value, G_VARIANT_TYPE_BYTESTRING))
+            {
+              value_str = g_variant_dup_bytestring (value, NULL);
+            }
+          else if (g_variant_is_of_type (value, G_VARIANT_TYPE_STRING_ARRAY) ||
+                   g_variant_is_of_type (value, G_VARIANT_TYPE_BYTESTRING_ARRAY))
+            {
+              const gchar **strv;
+              guint m;
+              GString *str;
+              if (g_variant_is_of_type (value, G_VARIANT_TYPE_BYTESTRING_ARRAY))
+                strv = g_variant_get_bytestring_array (value, NULL);
+              else
+                strv = g_variant_get_strv (value, NULL);
+              str = g_string_new (NULL);
+              for (m = 0; strv != NULL && strv[m] != NULL; m++)
+                {
+                  if (m > 0)
+                    g_string_append_printf (str, "\n%*s",
+                                            (gint) (indent + 4 + strlen (property_name) + 2 + value_indent), "");
+                  g_string_append (str, strv[m]);
+                }
+              value_str = g_string_free (str, FALSE);
+              g_free (strv);
+            }
+          else
+            {
+              value_str = g_variant_print (value, FALSE);
+            }
+
+          g_print ("%*s%s: %*s%s\n",
+                   indent + 4, "",
+                   property_name,
+                   value_indent, "",
+                   value_str);
+
+          g_free (value_str);
+          g_variant_unref (value);
+        }
+      g_strfreev (cached_properties);
+    }
+  g_list_foreach (interface_proxies, (GFunc) g_object_unref, NULL);
+  g_list_free (interface_proxies);
+
+
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static GDBusObjectProxy *
 lookup_object_proxy_by_path (const gchar *path)
 {
@@ -74,7 +196,6 @@ lookup_object_proxy_by_device (const gchar *device)
       GDBusObjectProxy *object_proxy = G_DBUS_OBJECT_PROXY (l->data);
       UDisksBlockDevice *block;
 
-      /* TODO: use UDISKS_{HAS,PEEK,GET}_BLOCK_DEVICE macros from codegen (when available) */
       block = UDISKS_PEEK_BLOCK_DEVICE (object_proxy);
       if (block != NULL)
         {
@@ -252,8 +373,7 @@ handle_command_info (gint        *argc,
       goto out;
     }
 
-  /* TODO */
-  g_print ("TODO: print info for %s\n", g_dbus_object_proxy_get_object_path (object_proxy));
+  print_object (object_proxy, 0);
   g_object_unref (object_proxy);
 
   ret = 0;
@@ -262,6 +382,84 @@ handle_command_info (gint        *argc,
   g_option_context_free (o);
   g_free (opt_info_object);
   g_free (opt_info_device);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+
+static gint
+obj_proxy_cmp (GDBusObjectProxy *a,
+               GDBusObjectProxy *b)
+{
+  return g_strcmp0 (g_dbus_object_proxy_get_object_path (a), g_dbus_object_proxy_get_object_path (b));
+}
+
+
+static const GOptionEntry command_dump_entries[] =
+{
+  { NULL }
+};
+
+static gint
+handle_command_dump (gint        *argc,
+                     gchar      **argv[],
+                     gboolean     request_completion,
+                     const gchar *completion_cur,
+                     const gchar *completion_prev)
+{
+  gint ret;
+  GOptionContext *o;
+  GList *l;
+  GList *object_proxies;
+  gchar *s;
+  gboolean first;
+
+  ret = 1;
+
+  modify_argv0_for_command (argc, argv, "dump");
+
+  o = g_option_context_new (NULL);
+  if (request_completion)
+    g_option_context_set_ignore_unknown_options (o, TRUE);
+  g_option_context_set_help_enabled (o, FALSE);
+  g_option_context_set_summary (o, "Show information about all objects.");
+  g_option_context_add_main_entries (o, command_dump_entries, NULL /* GETTEXT_PACKAGE*/);
+
+  if (!g_option_context_parse (o, argc, argv, NULL))
+    {
+      if (!request_completion)
+        {
+          s = g_option_context_get_help (o, FALSE, NULL);
+          g_printerr ("%s", s);
+          g_free (s);
+          goto out;
+        }
+    }
+
+  /* done with completion */
+  if (request_completion)
+    goto out;
+
+  object_proxies = g_dbus_proxy_manager_get_all (manager);
+  /* We want to print the objects in order */
+  object_proxies = g_list_sort (object_proxies, (GCompareFunc) obj_proxy_cmp);
+  first = TRUE;
+  for (l = object_proxies; l != NULL; l = l->next)
+    {
+      GDBusObjectProxy *object_proxy = G_DBUS_OBJECT_PROXY (l->data);
+      if (!first)
+        g_print ("\n");
+      first = FALSE;
+      print_object (object_proxy, 0);
+    }
+  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
+  g_list_free (object_proxies);
+
+  ret = 0;
+
+ out:
+  g_option_context_free (o);
   return ret;
 }
 
@@ -282,6 +480,7 @@ usage (gint *argc, gchar **argv[], gboolean use_stdout)
   s = g_strdup_printf ("Commands:\n"
                        "  help         Shows this information\n"
                        "  info         Shows information about an object\n"
+                       "  dump         Shows information about all objects\n"
                        "\n"
                        "Use \"%s COMMAND --help\" to get help on each command.\n",
                        program_name);
@@ -448,6 +647,15 @@ main (int argc,
                                  completion_prev);
       goto out;
     }
+  else if (g_strcmp0 (command, "dump") == 0)
+    {
+      ret = handle_command_dump (&argc,
+                                 &argv,
+                                 request_completion,
+                                 completion_cur,
+                                 completion_prev);
+      goto out;
+    }
   else if (g_strcmp0 (command, "complete") == 0 && argc == 4 && !request_completion)
     {
       const gchar *completion_line;
@@ -515,6 +723,7 @@ main (int argc,
         {
           g_print ("help \n"
                    "info \n"
+                   "dump \n"
                    );
           ret = 0;
           goto out;
