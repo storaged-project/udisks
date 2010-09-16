@@ -72,15 +72,26 @@ typedef enum
 } _Color;
 
 static gboolean _color_stdin_is_tty = FALSE;
+static gboolean _color_initialized = FALSE;
+static FILE *_color_pager_out = NULL;
 
 static void
 _color_init (void)
 {
-  static gboolean initialized = FALSE;
-  if (initialized)
+  if (_color_initialized)
     return;
-  initialized = TRUE;
+  _color_initialized = TRUE;
   _color_stdin_is_tty = (isatty (STDIN_FILENO) != 0 && isatty (STDOUT_FILENO) != 0);
+}
+
+static void
+_color_shutdown (void)
+{
+  if (!_color_initialized)
+    return;
+  _color_initialized = FALSE;
+  if (_color_pager_out != NULL)
+    pclose (_color_pager_out);
 }
 
 static const gchar *
@@ -120,6 +131,34 @@ _color_get (_Color color)
       break;
     }
   return str;
+}
+
+static void
+_color_run_pager (void)
+{
+  const gchar *pager_program;
+
+  _color_init ();
+  if (!_color_stdin_is_tty)
+    goto out;
+
+  pager_program = g_getenv ("PAGER");
+  if (pager_program == NULL)
+    pager_program = "less -R";
+
+  _color_pager_out = popen (pager_program, "w");
+  if (_color_pager_out == NULL)
+    {
+      g_printerr ("Error spawning pager `%s': %m\n", pager_program);
+    }
+  else
+    {
+      fclose (stdout);
+      stdout = _color_pager_out;
+    }
+
+ out:
+  ;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -532,6 +571,8 @@ handle_command_dump (gint        *argc,
   /* done with completion */
   if (request_completion)
     goto out;
+
+  _color_run_pager ();
 
   object_proxies = g_dbus_proxy_manager_get_all (manager);
   /* We want to print the objects in order */
@@ -1019,6 +1060,7 @@ main (int argc,
   loop = NULL;
 
   g_type_init ();
+  _color_init ();
 
   if (argc < 2)
     {
@@ -1178,6 +1220,7 @@ main (int argc,
     g_main_loop_unref (loop);
   if (manager != NULL)
     g_object_unref (manager);
+  _color_shutdown ();
   return ret;
 }
 
