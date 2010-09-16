@@ -45,6 +45,83 @@ G_GNUC_UNUSED static void completion_debug (const gchar *format, ...);
 static void remove_arg (gint num, gint *argc, gchar **argv[]);
 static void modify_argv0_for_command (gint *argc, gchar **argv[], const gchar *command);
 
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+typedef enum
+{
+  _COLOR_RESET,
+  _COLOR_BOLD_ON,
+  _COLOR_INVERSE_ON,
+  _COLOR_BOLD_OFF,
+  _COLOR_FG_BLACK,
+  _COLOR_FG_RED,
+  _COLOR_FG_GREEN,
+  _COLOR_FG_YELLOW,
+  _COLOR_FG_BLUE,
+  _COLOR_FG_MAGENTA,
+  _COLOR_FG_CYAN,
+  _COLOR_FG_WHITE,
+  _COLOR_BG_RED,
+  _COLOR_BG_GREEN,
+  _COLOR_BG_YELLOW,
+  _COLOR_BG_BLUE,
+  _COLOR_BG_MAGENTA,
+  _COLOR_BG_CYAN,
+  _COLOR_BG_WHITE
+} _Color;
+
+static gboolean _color_stdin_is_tty = FALSE;
+
+static void
+_color_init (void)
+{
+  static gboolean initialized = FALSE;
+  if (initialized)
+    return;
+  initialized = TRUE;
+  _color_stdin_is_tty = (isatty (STDIN_FILENO) != 0 && isatty (STDOUT_FILENO) != 0);
+}
+
+static const gchar *
+_color_get (_Color color)
+{
+  const gchar *str;
+
+  _color_init ();
+
+  if (!_color_stdin_is_tty)
+    return "";
+
+  str = NULL;
+  switch (color)
+    {
+    case _COLOR_RESET:      str="\x1b[0m"; break;
+    case _COLOR_BOLD_ON:    str="\x1b[1m"; break;
+    case _COLOR_INVERSE_ON: str="\x1b[7m"; break;
+    case _COLOR_BOLD_OFF:   str="\x1b[22m"; break;
+    case _COLOR_FG_BLACK:   str="\x1b[30m"; break;
+    case _COLOR_FG_RED:     str="\x1b[31m"; break;
+    case _COLOR_FG_GREEN:   str="\x1b[32m"; break;
+    case _COLOR_FG_YELLOW:  str="\x1b[33m"; break;
+    case _COLOR_FG_BLUE:    str="\x1b[34m"; break;
+    case _COLOR_FG_MAGENTA: str="\x1b[35m"; break;
+    case _COLOR_FG_CYAN:    str="\x1b[36m"; break;
+    case _COLOR_FG_WHITE:   str="\x1b[37m"; break;
+    case _COLOR_BG_RED:     str="\x1b[41m"; break;
+    case _COLOR_BG_GREEN:   str="\x1b[42m"; break;
+    case _COLOR_BG_YELLOW:  str="\x1b[43m"; break;
+    case _COLOR_BG_BLUE:    str="\x1b[44m"; break;
+    case _COLOR_BG_MAGENTA: str="\x1b[45m"; break;
+    case _COLOR_BG_CYAN:    str="\x1b[46m"; break;
+    case _COLOR_BG_WHITE:   str="\x1b[47m"; break;
+    default:
+      g_assert_not_reached ();
+      break;
+    }
+  return str;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gchar *
@@ -141,9 +218,9 @@ print_interface_properties (GDBusProxy *proxy,
 
       value_str = variant_to_string_with_indent (value, indent + strlen (property_name) + 2 + value_indent);
 
-      g_print ("%*s%s: %*s%s\n",
+      g_print ("%*s%s%s:%s %*s%s\n",
                indent, "",
-               property_name,
+               _color_get (_COLOR_FG_WHITE), property_name, _color_get (_COLOR_RESET),
                value_indent, "",
                value_str);
 
@@ -170,8 +247,9 @@ print_object (GDBusObjectProxy *proxy,
   for (l = interface_proxies; l != NULL; l = l->next)
     {
       GDBusProxy *iproxy = G_DBUS_PROXY (l->data);
-      g_print ("%*s%s:\n",
-               indent, "", g_dbus_proxy_get_interface_name (iproxy));
+      g_print ("%*s%s%s%s:%s\n",
+               indent, "",
+               _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_MAGENTA), g_dbus_proxy_get_interface_name (iproxy), _color_get (_COLOR_RESET));
       print_interface_properties (iproxy, indent + 2);
     }
   g_list_foreach (interface_proxies, (GFunc) g_object_unref, NULL);
@@ -385,7 +463,8 @@ handle_command_info (gint        *argc,
       goto out;
     }
 
-  g_print ("%s:\n", g_dbus_object_proxy_get_object_path (object_proxy));
+  g_print ("%s%s%s:%s\n",
+           _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_BLUE), g_dbus_object_proxy_get_object_path (object_proxy), _color_get (_COLOR_RESET));
   print_object (object_proxy, 2);
   g_object_unref (object_proxy);
 
@@ -464,7 +543,8 @@ handle_command_dump (gint        *argc,
       if (!first)
         g_print ("\n");
       first = FALSE;
-      g_print ("%s:\n", g_dbus_object_proxy_get_object_path (object_proxy));
+      g_print ("%s%s%s:%s\n",
+               _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_BLUE), g_dbus_object_proxy_get_object_path (object_proxy), _color_get (_COLOR_RESET));
       print_object (object_proxy, 2);
     }
   g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
@@ -492,7 +572,10 @@ monitor_print_timestamp (void)
   now_tm = localtime (&now_time);
   strftime (time_buf, sizeof time_buf, "%H:%M:%S", now_tm);
 
-  g_print ("%s.%03d: ", time_buf, (gint) now.tv_usec / 1000);
+  g_print ("%s%s%s.%03d:%s ",
+           _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_YELLOW),
+           time_buf, (gint) now.tv_usec / 1000,
+           _color_get (_COLOR_RESET));
 }
 
 static gboolean
@@ -535,8 +618,10 @@ monitor_on_object_proxy_added (GDBusProxyManager  *manager,
   if (!monitor_has_name_owner ())
     goto out;
   monitor_print_timestamp ();
-  g_print ("Added %s\n",
-           g_dbus_object_proxy_get_object_path (object_proxy));
+  g_print ("%s%sAdded %s%s\n",
+           _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_GREEN),
+             g_dbus_object_proxy_get_object_path (object_proxy),
+           _color_get (_COLOR_RESET));
   print_object (object_proxy, 2);
  out:
   ;
@@ -550,8 +635,10 @@ monitor_on_object_proxy_removed (GDBusProxyManager  *manager,
   if (!monitor_has_name_owner ())
     goto out;
   monitor_print_timestamp ();
-  g_print ("Removed %s\n",
-           g_dbus_object_proxy_get_object_path (object_proxy));
+  g_print ("%s%sRemoved %s%s\n",
+           _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_RED),
+             g_dbus_object_proxy_get_object_path (object_proxy),
+           _color_get (_COLOR_RESET));
  out:
   ;
 }
@@ -565,9 +652,13 @@ monitor_on_interface_proxy_added (GDBusProxyManager  *manager,
   if (!monitor_has_name_owner ())
     goto out;
   monitor_print_timestamp ();
-  g_print ("%s: Added interface %s\n",
-           g_dbus_object_proxy_get_object_path (object_proxy),
-           g_dbus_proxy_get_interface_name (interface_proxy));
+  g_print ("%s%s%s:%s %s%sAdded interface %s%s\n",
+           _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_BLUE),
+             g_dbus_object_proxy_get_object_path (object_proxy),
+           _color_get (_COLOR_RESET),
+           _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_GREEN),
+             g_dbus_proxy_get_interface_name (interface_proxy),
+           _color_get (_COLOR_RESET));
 
   print_interface_properties (interface_proxy, 2);
  out:
@@ -583,9 +674,13 @@ monitor_on_interface_proxy_removed (GDBusProxyManager  *manager,
   if (!monitor_has_name_owner ())
     goto out;
   monitor_print_timestamp ();
-  g_print ("%s: Removed interface %s\n",
-           g_dbus_object_proxy_get_object_path (object_proxy),
-           g_dbus_proxy_get_interface_name (interface_proxy));
+  g_print ("%s%s%s:%s %s%sRemoved interface %s%s\n",
+           _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_BLUE),
+             g_dbus_object_proxy_get_object_path (object_proxy),
+           _color_get (_COLOR_RESET),
+           _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_RED),
+             g_dbus_proxy_get_interface_name (interface_proxy),
+           _color_get (_COLOR_RESET));
  out:
   ;
 }
@@ -608,9 +703,16 @@ monitor_on_interface_proxy_properties_changed (GDBusProxyManager  *manager,
     goto out;
 
   monitor_print_timestamp ();
-  g_print ("%s: %s: Properties Changed\n",
-           g_dbus_object_proxy_get_object_path (object_proxy),
-           g_dbus_proxy_get_interface_name (interface_proxy));
+
+  g_print ("%s%s%s:%s %s%s%s:%s %s%sProperties Changed%s\n",
+           _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_BLUE),
+             g_dbus_object_proxy_get_object_path (object_proxy),
+           _color_get (_COLOR_RESET),
+           _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_MAGENTA),
+             g_dbus_proxy_get_interface_name (interface_proxy),
+           _color_get (_COLOR_RESET),
+           _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_YELLOW),
+           _color_get (_COLOR_RESET));
 
   /* the daemon doesn't use the invalidated properties feature */
   g_warn_if_fail (g_strv_length ((gchar **) invalidated_properties) == 0);
@@ -645,8 +747,8 @@ monitor_on_interface_proxy_properties_changed (GDBusProxyManager  *manager,
 
       value_str = variant_to_string_with_indent (value, 2 + strlen (property_name) + 2 + value_indent);
 
-      g_print ("  %s: %*s%s\n",
-               property_name,
+      g_print ("  %s%s:%s %*s%s\n",
+               _color_get (_COLOR_FG_WHITE), property_name, _color_get (_COLOR_RESET),
                value_indent, "",
                value_str);
 
@@ -672,11 +774,20 @@ monitor_on_interface_proxy_signal (GDBusProxyManager  *manager,
 
   param_str = g_variant_print (parameters, TRUE);
   monitor_print_timestamp ();
-  g_print ("%s: Received signal %s::%s %s\n",
-           g_dbus_object_proxy_get_object_path (object_proxy),
-           g_dbus_proxy_get_interface_name (interface_proxy),
+
+  g_print ("%s%s%s:%s %s%s%s%s%s%s::%s%s %s%s%s%s\n",
+           _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_BLUE),
+             g_dbus_object_proxy_get_object_path (object_proxy),
+           _color_get (_COLOR_RESET),
+           _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_MAGENTA),
+             g_dbus_proxy_get_interface_name (interface_proxy),
+           _color_get (_COLOR_RESET),
+           _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_YELLOW),
            signal_name,
-           param_str);
+           _color_get (_COLOR_RESET),
+           _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_WHITE),
+           param_str,
+           _color_get (_COLOR_RESET));
   g_free (param_str);
  out:
   ;
@@ -883,6 +994,12 @@ get_proxy_type_func (GDBusProxyManager *manager,
   else
     return G_TYPE_DBUS_PROXY;
 }
+
+/* TODO: would be nice with generic options that can be used before any verb such as
+ *
+ *  -n, --no-color   Turn colorization off always.
+ *  -C, --color      Turn colorization on always.
+ */
 
 int
 main (int argc,
