@@ -358,6 +358,265 @@ lookup_object_proxy_by_device (const gchar *device)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gchar *opt_mount_unmount_object = NULL;
+static gchar *opt_mount_unmount_device = NULL;
+
+static const GOptionEntry command_mount_unmount_entries[] =
+{
+  { "object", 'o', 0, G_OPTION_ARG_STRING, &opt_mount_unmount_object, "Object to get perform operation on", NULL},
+  { "block-device", 'b', 0, G_OPTION_ARG_STRING, &opt_mount_unmount_device, "Block device to perform operation on", NULL},
+  { NULL }
+};
+
+/* TODO: make 'mount' and 'unmount' take options? Probably... */
+
+static gint
+handle_command_mount_unmount (gint        *argc,
+                              gchar      **argv[],
+                              gboolean     request_completion,
+                              const gchar *completion_cur,
+                              const gchar *completion_prev,
+                              gboolean     is_mount)
+{
+  gint ret;
+  GOptionContext *o;
+  gchar *s;
+  gboolean complete_objects;
+  gboolean complete_devices;
+  GList *l;
+  GList *object_proxies;
+  GDBusObjectProxy *object_proxy;
+  UDisksBlockDevice *block;
+  UDisksFilesystem *filesystem;
+  guint n;
+
+  ret = 1;
+  opt_mount_unmount_object = NULL;
+  opt_mount_unmount_device = NULL;
+  object_proxy = NULL;
+
+  if (is_mount)
+    modify_argv0_for_command (argc, argv, "mount");
+  else
+    modify_argv0_for_command (argc, argv, "unmount");
+
+  o = g_option_context_new (NULL);
+  if (request_completion)
+    g_option_context_set_ignore_unknown_options (o, TRUE);
+  g_option_context_set_help_enabled (o, FALSE);
+  if (is_mount)
+    g_option_context_set_summary (o, "Mount a device.");
+  else
+    g_option_context_set_summary (o, "Unmount a device.");
+  g_option_context_add_main_entries (o, command_mount_unmount_entries, NULL /* GETTEXT_PACKAGE*/);
+
+  complete_objects = FALSE;
+  if (request_completion && (g_strcmp0 (completion_prev, "--object") == 0 || g_strcmp0 (completion_prev, "-o") == 0))
+    {
+      complete_objects = TRUE;
+      remove_arg ((*argc) - 1, argc, argv);
+    }
+
+  complete_devices = FALSE;
+  if (request_completion && (g_strcmp0 (completion_prev, "--block-device") == 0 || g_strcmp0 (completion_prev, "-b") == 0))
+    {
+      complete_devices = TRUE;
+      remove_arg ((*argc) - 1, argc, argv);
+    }
+
+  if (!g_option_context_parse (o, argc, argv, NULL))
+    {
+      if (!request_completion)
+        {
+          s = g_option_context_get_help (o, FALSE, NULL);
+          g_printerr ("%s", s);
+          g_free (s);
+          goto out;
+        }
+    }
+
+  if (request_completion &&
+      (opt_mount_unmount_object == NULL && !complete_objects) &&
+      (opt_mount_unmount_device == NULL && !complete_devices))
+    {
+      g_print ("--object \n"
+               "--block-device \n");
+    }
+
+  if (complete_objects)
+    {
+      const gchar *object_path;
+
+      object_proxies = g_dbus_proxy_manager_get_all (manager);
+      for (l = object_proxies; l != NULL; l = l->next)
+        {
+          object_proxy = G_DBUS_OBJECT_PROXY (l->data);
+          filesystem = UDISKS_PEEK_FILESYSTEM (object_proxy);
+
+          if (filesystem == NULL)
+            continue;
+
+          if ((is_mount && strlen (udisks_filesystem_get_mount_point (filesystem)) == 0) ||
+              (!is_mount && strlen (udisks_filesystem_get_mount_point (filesystem)) > 0))
+            {
+              object_path = g_dbus_object_proxy_get_object_path (object_proxy);
+              g_assert (g_str_has_prefix (object_path, "/org/freedesktop/UDisks/"));
+              g_print ("%s \n", object_path + sizeof ("/org/freedesktop/UDisks/") - 1);
+            }
+        }
+      g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
+      g_list_free (object_proxies);
+      goto out;
+    }
+
+  if (complete_devices)
+    {
+      object_proxies = g_dbus_proxy_manager_get_all (manager);
+      for (l = object_proxies; l != NULL; l = l->next)
+        {
+          object_proxy = G_DBUS_OBJECT_PROXY (l->data);
+          block = UDISKS_PEEK_BLOCK_DEVICE (object_proxy);
+          filesystem = UDISKS_PEEK_FILESYSTEM (object_proxy);
+
+          if (block != NULL && filesystem != NULL)
+            {
+              if ((is_mount && strlen (udisks_filesystem_get_mount_point (filesystem)) == 0) ||
+                  (!is_mount && strlen (udisks_filesystem_get_mount_point (filesystem)) > 0))
+                {
+                  const gchar * const *symlinks;
+                  g_print ("%s \n", udisks_block_device_get_device (block));
+                  symlinks = udisks_block_device_get_symlinks (block);
+                  for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
+                    g_print ("%s \n", symlinks[n]);
+                }
+            }
+        }
+      g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
+      g_list_free (object_proxies);
+      goto out;
+    }
+
+  /* done with completion */
+  if (request_completion)
+    goto out;
+
+  if (opt_mount_unmount_object != NULL)
+    {
+      object_proxy = lookup_object_proxy_by_path (opt_mount_unmount_object);
+      if (object_proxy == NULL)
+        {
+          g_printerr ("Error looking up object with path %s\n", opt_mount_unmount_object);
+          goto out;
+        }
+    }
+  else if (opt_mount_unmount_device != NULL)
+    {
+      object_proxy = lookup_object_proxy_by_device (opt_mount_unmount_device);
+      if (object_proxy == NULL)
+        {
+          g_printerr ("Error looking up object for device %s\n", opt_mount_unmount_device);
+          goto out;
+        }
+    }
+  else
+    {
+      s = g_option_context_get_help (o, FALSE, NULL);
+      g_printerr ("%s", s);
+      g_free (s);
+      goto out;
+    }
+
+  block = UDISKS_PEEK_BLOCK_DEVICE (object_proxy);
+  if (block == NULL)
+    {
+      g_printerr ("Object %s is not a block device.\n", g_dbus_object_proxy_get_object_path (object_proxy));
+      g_object_unref (object_proxy);
+      goto out;
+    }
+
+  filesystem = UDISKS_PEEK_FILESYSTEM (object_proxy);
+  if (filesystem == NULL)
+    {
+      g_printerr ("Device %s is not a filesystem.\n", udisks_block_device_get_device (block));
+      g_object_unref (object_proxy);
+      goto out;
+    }
+
+  if (is_mount)
+    {
+      GError *error;
+      gchar *mount_path;
+      const gchar *options[1] = {NULL};
+
+      if (strlen (udisks_filesystem_get_mount_point (filesystem)) > 0)
+        {
+          g_printerr ("Device %s is already mounted.\n", udisks_block_device_get_device (block));
+          g_object_unref (object_proxy);
+          goto out;
+        }
+
+      error = NULL;
+      if (!udisks_filesystem_call_mount_sync (filesystem,
+                                              "",           /* filesystem_type */
+                                              options,      /* options */
+                                              &mount_path,
+                                              NULL,         /* GCancellable */
+                                              &error))
+        {
+          g_printerr ("Error mounting %s: %s\n",
+                      udisks_block_device_get_device (block),
+                      error->message);
+          g_error_free (error);
+          g_object_unref (object_proxy);
+          goto out;
+        }
+      g_print ("Mounted %s at %s.\n",
+               udisks_block_device_get_device (block),
+               mount_path);
+      g_free (mount_path);
+    }
+  else
+    {
+      GError *error;
+      const gchar *options[1] = {NULL};
+
+      if (strlen (udisks_filesystem_get_mount_point (filesystem)) == 0)
+        {
+          g_printerr ("Device %s is not mounted.\n", udisks_block_device_get_device (block));
+          g_object_unref (object_proxy);
+          goto out;
+        }
+
+      error = NULL;
+      if (!udisks_filesystem_call_unmount_sync (filesystem,
+                                                options,      /* options */
+                                                NULL,         /* GCancellable */
+                                                &error))
+        {
+          g_printerr ("Error unmounting %s: %s\n",
+                      udisks_block_device_get_device (block),
+                      error->message);
+          g_error_free (error);
+          g_object_unref (object_proxy);
+          goto out;
+        }
+      g_print ("Unmounted %s.\n",
+               udisks_block_device_get_device (block));
+    }
+
+  ret = 0;
+
+  g_object_unref (object_proxy);
+
+ out:
+  g_option_context_free (o);
+  g_free (opt_mount_unmount_object);
+  g_free (opt_mount_unmount_device);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static gchar *opt_info_object = NULL;
 static gchar *opt_info_device = NULL;
 
@@ -939,6 +1198,8 @@ usage (gint *argc, gchar **argv[], gboolean use_stdout)
                        "  info         Shows information about an object\n"
                        "  dump         Shows information about all objects\n"
                        "  monitor      Monitor changes to objects\n"
+                       "  mount        Mount a device\n"
+                       "  unmount      Unmount a device\n"
                        "\n"
                        "Use \"%s COMMAND --help\" to get help on each command.\n",
                        program_name);
@@ -1032,6 +1293,8 @@ get_proxy_type_func (GDBusProxyManager *manager,
 {
   if (g_strcmp0 (interface_name, "org.freedesktop.UDisks.BlockDevice") == 0)
     return UDISKS_TYPE_BLOCK_DEVICE_PROXY;
+  else if (g_strcmp0 (interface_name, "org.freedesktop.UDisks.Filesystem") == 0)
+    return UDISKS_TYPE_FILESYSTEM_PROXY;
   else
     return G_TYPE_DBUS_PROXY;
 }
@@ -1113,6 +1376,16 @@ main (int argc,
                                  request_completion,
                                  completion_cur,
                                  completion_prev);
+      goto out;
+    }
+  else if (g_strcmp0 (command, "mount") == 0 || g_strcmp0 (command, "unmount") == 0)
+    {
+      ret = handle_command_mount_unmount (&argc,
+                                          &argv,
+                                          request_completion,
+                                          completion_cur,
+                                          completion_prev,
+                                          g_strcmp0 (command, "mount") == 0);
       goto out;
     }
   else if (g_strcmp0 (command, "dump") == 0)
@@ -1202,6 +1475,8 @@ main (int argc,
                    "info \n"
                    "dump \n"
                    "monitor \n"
+                   "mount \n"
+                   "unmount \n"
                    );
           ret = 0;
           goto out;
