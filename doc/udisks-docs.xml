@@ -67,6 +67,10 @@
 
   <part id="ref-api">
     <title>D-Bus API Reference</title>
+    <chapter id="ref-api-core">
+      <title>Core</title>
+      <xi:include href="xml/generated-udisksproxymanager.xml"/>
+    </chapter>
     <chapter id="ref-api-identification">
       <title>Identification</title>
       <xi:include href="xml/generated-udisksblockdevice.xml"/>

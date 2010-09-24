@@ -1284,21 +1284,6 @@ pick_word_at (const gchar  *s,
   return g_strndup (s + begin, end - begin);
 }
 
-/* TODO: should get this function from the codegen */
-static GType
-get_proxy_type_func (GDBusProxyManager *manager,
-                     const gchar       *object_path,
-                     const gchar       *interface_name,
-                     gpointer           user_data)
-{
-  if (g_strcmp0 (interface_name, "org.freedesktop.UDisks.BlockDevice") == 0)
-    return UDISKS_TYPE_BLOCK_DEVICE_PROXY;
-  else if (g_strcmp0 (interface_name, "org.freedesktop.UDisks.Filesystem") == 0)
-    return UDISKS_TYPE_FILESYSTEM_PROXY;
-  else
-    return G_TYPE_DBUS_PROXY;
-}
-
 /* TODO: would be nice with generic options that can be used before any verb such as
  *
  *  -n, --no-color   Turn colorization off always.
@@ -1334,12 +1319,10 @@ main (int argc,
   loop = g_main_loop_new (NULL, FALSE);
 
   error = NULL;
-  manager = g_dbus_proxy_manager_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+  manager = udisks_proxy_manager_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
                                                    G_DBUS_PROXY_MANAGER_FLAGS_NONE,
                                                    "org.freedesktop.UDisks",
                                                    "/org/freedesktop/UDisks",
-                                                   get_proxy_type_func, /* TODO: codegen */
-                                                   NULL, /* user_data for get_proxy_func */
                                                    NULL, /* GCancellable */
                                                    &error);
   if (manager == NULL)
