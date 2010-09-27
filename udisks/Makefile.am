@@ -55,6 +55,7 @@ BUILT_SOURCES =										\
 	generated-udisksfilesystem.h		generated-udisksfilesystem.c		\
 	generated-udisksjob.h			generated-udisksjob.c			\
 	generated-udisksproxymanager.h		generated-udisksproxymanager.c		\
+	generated-udisksconfigurationitem.h	generated-udisksconfigurationitem.c	\
 	udisksenumtypes.h			udisksenumtypes.c			\
 	$(NULL)
 

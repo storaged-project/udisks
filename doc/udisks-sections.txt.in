@@ -90,17 +90,46 @@ udisks_linux_block_get_type
 </SECTION>
 
 <SECTION>
+<FILE>udisksprovider</FILE>
+<TITLE>UDisksProvider</TITLE>
+UDisksProvider
+udisks_provider_get_daemon
+<SUBSECTION Standard>
+UDISKS_TYPE_PROVIDER
+UDISKS_PROVIDER
+UDISKS_PROVIDER_GET_CLASS
+UDISKS_PROVIDER_CLASS
+UDISKS_IS_PROVIDER
+UDISKS_IS_PROVIDER_CLASS
+<SUBSECTION Private>
+udisks_provider_get_type
+</SECTION>
+
+
+<SECTION>
 <FILE>udiskslinuxprovider</FILE>
 <TITLE>UDisksLinuxProvider</TITLE>
 UDisksLinuxProvider
 udisks_linux_provider_new
-udisks_linux_provider_get_daemon
 <SUBSECTION Standard>
 UDISKS_TYPE_LINUX_PROVIDER
 UDISKS_LINUX_PROVIDER
 UDISKS_IS_LINUX_PROVIDER
 <SUBSECTION Private>
 udisks_linux_provider_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udisksfstabprovider</FILE>
+<TITLE>UDisksFstabProvider</TITLE>
+UDisksFstabProvider
+udisks_fstab_provider_new
+<SUBSECTION Standard>
+UDISKS_TYPE_FSTAB_PROVIDER
+UDISKS_FSTAB_PROVIDER
+UDISKS_IS_FSTAB_PROVIDER
+<SUBSECTION Private>
+udisks_fstab_provider_get_type
 </SECTION>
 
 <SECTION>

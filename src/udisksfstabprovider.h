@@ -18,20 +18,20 @@
  *
  */
 
-#ifndef __UDISKS_LINUX_PROVIDER_H__
-#define __UDISKS_LINUX_PROVIDER_H__
+#ifndef __UDISKS_FSTAB_PROVIDER_H__
+#define __UDISKS_FSTAB_PROVIDER_H__
 
 #include "types.h"
 
 G_BEGIN_DECLS
 
-#define UDISKS_TYPE_LINUX_PROVIDER         (udisks_linux_provider_get_type ())
-#define UDISKS_LINUX_PROVIDER(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_LINUX_PROVIDER, UDisksLinuxProvider))
-#define UDISKS_IS_LINUX_PROVIDER(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_LINUX_PROVIDER))
+#define UDISKS_TYPE_FSTAB_PROVIDER         (udisks_fstab_provider_get_type ())
+#define UDISKS_FSTAB_PROVIDER(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_FSTAB_PROVIDER, UDisksFstabProvider))
+#define UDISKS_IS_FSTAB_PROVIDER(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_FSTAB_PROVIDER))
 
-GType                  udisks_linux_provider_get_type   (void) G_GNUC_CONST;
-UDisksLinuxProvider   *udisks_linux_provider_new        (UDisksDaemon     *daemon);
+GType                  udisks_fstab_provider_get_type   (void) G_GNUC_CONST;
+UDisksFstabProvider   *udisks_fstab_provider_new        (UDisksDaemon     *daemon);
 
 G_END_DECLS
 
-#endif /* __UDISKS_LINUX_PROVIDER_H__ */
+#endif /* __UDISKS_FSTAB_PROVIDER_H__ */

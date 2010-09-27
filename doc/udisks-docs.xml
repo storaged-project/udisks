@@ -85,19 +85,28 @@
       <title>Jobs</title>
       <xi:include href="xml/generated-udisksjob.xml"/>
     </chapter>
+    <chapter id="ref-api-conf">
+      <title>Configuration</title>
+      <xi:include href="xml/generated-udisksconfigurationitem.xml"/>
+    </chapter>
   </part>
 
   <part id="ref-daemon">
     <title>Daemon Implementation Details</title>
     <xi:include href="xml/udisksdaemon.xml"/>
     <xi:include href="xml/udiskslinuxblock.xml"/>
-    <xi:include href="xml/udiskslinuxprovider.xml"/>
     <xi:include href="xml/udisksfilesystemimpl.xml"/>
     <xi:include href="xml/udisksbasejob.xml"/>
     <xi:include href="xml/udisksspawnedjob.xml"/>
     <xi:include href="xml/udisksthreadedjob.xml"/>
     <xi:include href="xml/udisksmount.xml"/>
     <xi:include href="xml/udisksmountmonitor.xml"/>
+    <chapter id="ref-daemon-providers">
+      <title>Data Providers</title>
+      <xi:include href="xml/udisksprovider.xml"/>
+      <xi:include href="xml/udiskslinuxprovider.xml"/>
+      <xi:include href="xml/udisksfstabprovider.xml"/>
+    </chapter>
   </part>
 
   <part id="tools-fileformats">

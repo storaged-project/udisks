@@ -22,6 +22,7 @@
 
 #include "udisksdaemon.h"
 #include "udiskslinuxprovider.h"
+#include "udisksfstabprovider.h"
 #include "udisksmountmonitor.h"
 #include "udisksspawnedjob.h"
 
@@ -50,6 +51,7 @@ struct _UDisksDaemon
   UDisksMountMonitor *mount_monitor;
 
   UDisksLinuxProvider *linux_provider;
+  UDisksFstabProvider *fstab_provider;
 };
 
 struct _UDisksDaemonClass
@@ -72,6 +74,7 @@ udisks_daemon_finalize (GObject *object)
 {
   UDisksDaemon *daemon = UDISKS_DAEMON (object);
 
+  g_object_unref (daemon->fstab_provider);
   g_object_unref (daemon->linux_provider);
   g_object_unref (daemon->object_manager);
   g_object_unref (daemon->mount_monitor);
@@ -146,6 +149,7 @@ udisks_daemon_constructed (GObject *object)
 
   /* now add providers */
   daemon->linux_provider = udisks_linux_provider_new (daemon);
+  daemon->fstab_provider = udisks_fstab_provider_new (daemon);
 
   if (G_OBJECT_CLASS (udisks_daemon_parent_class)->constructed != NULL)
     G_OBJECT_CLASS (udisks_daemon_parent_class)->constructed (object);

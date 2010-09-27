@@ -45,7 +45,9 @@ libudisks_daemon_la_SOURCES =						\
 	types.h								\
 	gposixsignal.h			gposixsignal.c			\
 	udisksdaemon.h			udisksdaemon.c			\
+	udisksprovider.h		udisksprovider.c		\
 	udiskslinuxprovider.h		udiskslinuxprovider.c		\
+	udisksfstabprovider.h		udisksfstabprovider.c		\
 	udiskslinuxblock.h		udiskslinuxblock.c		\
 	udisksfilesystemimpl.h		udisksfilesystemimpl.c		\
 	udisksbasejob.h			udisksbasejob.c			\

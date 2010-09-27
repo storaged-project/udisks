@@ -21,6 +21,7 @@
 #include "config.h"
 
 #include "udisksdaemon.h"
+#include "udisksprovider.h"
 #include "udiskslinuxprovider.h"
 #include "udiskslinuxblock.h"
 
@@ -43,9 +44,7 @@ typedef struct _UDisksLinuxProviderClass   UDisksLinuxProviderClass;
  */
 struct _UDisksLinuxProvider
 {
-  GObject parent_instance;
-
-  UDisksDaemon *daemon;
+  UDisksProvider parent_instance;
 
   GUdevClient *gudev_client;
 
@@ -55,13 +54,7 @@ struct _UDisksLinuxProvider
 
 struct _UDisksLinuxProviderClass
 {
-  GObjectClass parent_class;
-};
-
-enum
-{
-  PROP_0,
-  PROP_DAEMON
+  UDisksProviderClass parent_class;
 };
 
 static void
@@ -69,62 +62,18 @@ udisks_linux_provider_handle_uevent (UDisksLinuxProvider *provider,
                                      const gchar         *action,
                                      GUdevDevice         *device);
 
-G_DEFINE_TYPE (UDisksLinuxProvider, udisks_linux_provider, G_TYPE_OBJECT);
+G_DEFINE_TYPE (UDisksLinuxProvider, udisks_linux_provider, UDISKS_TYPE_PROVIDER);
 
 static void
 udisks_linux_provider_finalize (GObject *object)
 {
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (object);
 
-  /* note: we don't hold a ref to provider->daemon */
-
   g_hash_table_unref (provider->sysfs_to_block);
   g_object_unref (provider->gudev_client);
 
   if (G_OBJECT_CLASS (udisks_linux_provider_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_provider_parent_class)->finalize (object);
-}
-
-static void
-udisks_linux_provider_get_property (GObject    *object,
-                            guint       prop_id,
-                            GValue     *value,
-                            GParamSpec *pspec)
-{
-  UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (object);
-
-  switch (prop_id)
-    {
-    case PROP_DAEMON:
-      g_value_set_object (value, udisks_linux_provider_get_daemon (provider));
-      break;
-
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-    }
-}
-
-static void
-udisks_linux_provider_set_property (GObject      *object,
-                            guint         prop_id,
-                            const GValue *value,
-                            GParamSpec   *pspec)
-{
-  UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (object);
-
-  switch (prop_id)
-    {
-    case PROP_DAEMON:
-      g_assert (provider->daemon == NULL);
-      /* we don't take a reference to the daemon */
-      provider->daemon = g_value_get_object (value);
-      break;
-
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-    }
 }
 
 static void
@@ -183,25 +132,6 @@ udisks_linux_provider_class_init (UDisksLinuxProviderClass *klass)
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->finalize     = udisks_linux_provider_finalize;
   gobject_class->constructed  = udisks_linux_provider_constructed;
-  gobject_class->set_property = udisks_linux_provider_set_property;
-  gobject_class->get_property = udisks_linux_provider_get_property;
-
-  /**
-   * UDisksLinuxProvider:daemon:
-   *
-   * The #UDisksDaemon the provider is for.
-   */
-  g_object_class_install_property (gobject_class,
-                                   PROP_DAEMON,
-                                   g_param_spec_object ("daemon",
-                                                        "Daemon",
-                                                        "The daemon the provider is for",
-                                                        UDISKS_TYPE_DAEMON,
-                                                        G_PARAM_READABLE |
-                                                        G_PARAM_WRITABLE |
-                                                        G_PARAM_CONSTRUCT_ONLY |
-                                                        G_PARAM_STATIC_STRINGS));
-
 }
 
 /**
@@ -219,21 +149,6 @@ udisks_linux_provider_new (UDisksDaemon  *daemon)
   return UDISKS_LINUX_PROVIDER (g_object_new (UDISKS_TYPE_LINUX_PROVIDER,
                                               "daemon", daemon,
                                               NULL));
-}
-
-/**
- * udisks_linux_provider_get_daemon:
- * @provider: A #UDisksLinuxProvider.
- *
- * Gets thedaemon used by @provider.
- *
- * Returns: A #UDisksDaemon. Do not free, the object is owned by @provider.
- */
-UDisksDaemon *
-udisks_linux_provider_get_daemon (UDisksLinuxProvider *provider)
-{
-  g_return_val_if_fail (UDISKS_IS_LINUX_PROVIDER (provider), NULL);
-  return provider->daemon;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -255,7 +170,7 @@ udisks_linux_provider_handle_uevent (UDisksLinuxProvider *provider,
       block = g_hash_table_lookup (provider->sysfs_to_block, sysfs_path);
       if (block != NULL)
         {
-          g_dbus_object_manager_unexport (udisks_daemon_get_object_manager (provider->daemon),
+          g_dbus_object_manager_unexport (udisks_daemon_get_object_manager (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))),
                                           g_dbus_object_get_object_path (G_DBUS_OBJECT (block)));
           g_warn_if_fail (g_hash_table_remove (provider->sysfs_to_block, sysfs_path));
         }
@@ -269,8 +184,9 @@ udisks_linux_provider_handle_uevent (UDisksLinuxProvider *provider,
         }
       else
         {
-          block = udisks_linux_block_new (provider->daemon, device);
-          g_dbus_object_manager_export (udisks_daemon_get_object_manager (provider->daemon), G_DBUS_OBJECT (block));
+          block = udisks_linux_block_new (udisks_provider_get_daemon (UDISKS_PROVIDER (provider)), device);
+          g_dbus_object_manager_export (udisks_daemon_get_object_manager (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))),
+                                        G_DBUS_OBJECT (block));
           g_hash_table_insert (provider->sysfs_to_block, g_strdup (sysfs_path), block);
         }
     }
