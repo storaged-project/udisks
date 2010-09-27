@@ -6,6 +6,8 @@ udisks_daemon_new
 udisks_daemon_get_connection
 udisks_daemon_get_object_manager
 udisks_daemon_get_mount_monitor
+udisks_daemon_get_linux_provider
+udisks_daemon_get_fstab_provider
 udisks_daemon_launch_spawned_job
 <SUBSECTION Standard>
 UDISKS_TYPE_DAEMON
@@ -103,6 +105,7 @@ UDISKS_IS_PROVIDER
 UDISKS_IS_PROVIDER_CLASS
 <SUBSECTION Private>
 udisks_provider_get_type
+UDisksProviderPrivate
 </SECTION>
 
 
@@ -111,6 +114,7 @@ udisks_provider_get_type
 <TITLE>UDisksLinuxProvider</TITLE>
 UDisksLinuxProvider
 udisks_linux_provider_new
+udisks_linux_provider_get_udev_client
 <SUBSECTION Standard>
 UDISKS_TYPE_LINUX_PROVIDER
 UDISKS_LINUX_PROVIDER

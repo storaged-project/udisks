@@ -22,6 +22,7 @@
 #define __UDISKS_LINUX_PROVIDER_H__
 
 #include "types.h"
+#include <gudev/gudev.h>
 
 G_BEGIN_DECLS
 
@@ -29,8 +30,9 @@ G_BEGIN_DECLS
 #define UDISKS_LINUX_PROVIDER(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_LINUX_PROVIDER, UDisksLinuxProvider))
 #define UDISKS_IS_LINUX_PROVIDER(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_LINUX_PROVIDER))
 
-GType                  udisks_linux_provider_get_type   (void) G_GNUC_CONST;
-UDisksLinuxProvider   *udisks_linux_provider_new        (UDisksDaemon     *daemon);
+GType                  udisks_linux_provider_get_type        (void) G_GNUC_CONST;
+UDisksLinuxProvider   *udisks_linux_provider_new             (UDisksDaemon        *daemon);
+GUdevClient           *udisks_linux_provider_get_udev_client (UDisksLinuxProvider *provider);
 
 G_END_DECLS
 

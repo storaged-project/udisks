@@ -151,6 +151,23 @@ udisks_linux_provider_new (UDisksDaemon  *daemon)
                                               NULL));
 }
 
+/**
+ * udisks_linux_provider_get_udev_client:
+ * @provider: A #UDisksLinuxProvider.
+ *
+ * Gets the #GUdevClient used by @provider. The returned object is set
+ * up so it emits #GUdevClient::uevent signals only for the
+ * <literal>block</literal> subsystems.
+ *
+ * Returns: A #GUdevClient owned by @provider. Do not free.
+ */
+GUdevClient *
+udisks_linux_provider_get_udev_client (UDisksLinuxProvider *provider)
+{
+  g_return_val_if_fail (UDISKS_IS_LINUX_PROVIDER (provider), NULL);
+  return provider->gudev_client;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void

@@ -274,6 +274,36 @@ udisks_daemon_get_mount_monitor (UDisksDaemon *daemon)
   return daemon->mount_monitor;
 }
 
+/**
+ * udisks_daemon_get_linux_provider:
+ * @daemon: A #UDisksDaemon.
+ *
+ * Gets the Linux Provider, if any.
+ *
+ * Returns: A #UDisksLinuxProvider or %NULL. Do not free, the object is owned by @daemon.
+ */
+UDisksLinuxProvider *
+udisks_daemon_get_linux_provider (UDisksDaemon *daemon)
+{
+  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
+  return daemon->linux_provider;
+}
+
+/**
+ * udisks_daemon_get_fstab_provider:
+ * @daemon: A #UDisksDaemon.
+ *
+ * Gets the /etc/fstab Provider, if any.
+ *
+ * Returns: A #UDisksFstabProvider or %NULL. Do not free, the object is owned by @daemon.
+ */
+UDisksFstabProvider *
+udisks_daemon_get_fstab_provider (UDisksDaemon *daemon)
+{
+  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
+  return daemon->fstab_provider;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void

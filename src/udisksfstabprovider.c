@@ -32,6 +32,7 @@
 #include "udisksmount.h"
 #include "udisksmountmonitor.h"
 #include "udisksfstabprovider.h"
+#include "udiskslinuxprovider.h"
 
 /**
  * SECTION:udisksfstabprovider
@@ -188,7 +189,7 @@ udisks_fstab_provider_finalize (GObject *object)
   UDisksFstabProvider *provider = UDISKS_FSTAB_PROVIDER (object);
   GList *l;
 
-  g_object_unref (provider->gudev_client);
+  /* note: provider->gudev_client is owned by the Linux provider */
 
   /* note: we don't hold a ref to provider->mount_monitor */
   g_signal_handlers_disconnect_by_func (provider->mount_monitor, on_mount_monitor_mount_added, provider);
@@ -223,12 +224,11 @@ static void
 udisks_fstab_provider_constructed (GObject *object)
 {
   UDisksFstabProvider *provider = UDISKS_FSTAB_PROVIDER (object);
-  const gchar *subsystems[] = {"block", NULL};
   GFile *file;
   GError *error;
 
-  /* get ourselves an udev client (TODO: share with others) */
-  provider->gudev_client = g_udev_client_new (subsystems);
+  /* use the same GUdevClient as the Linux provider */
+  provider->gudev_client = udisks_linux_provider_get_udev_client (udisks_daemon_get_linux_provider (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))));
   g_signal_connect (provider->gudev_client,
                     "uevent",
                     G_CALLBACK (on_uevent),
