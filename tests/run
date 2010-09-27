@@ -1226,16 +1226,20 @@ class LVM(UDisksTestCase):
             'org.freedesktop.UDisks', lvname), dbus.PROPERTIES_IFACE)
 
         # the LV is a real volume which should be shown, but not automounted
-        self.assert_(lv_props.Get(I_D, 'DeviceFile').startswith('/dev/mapper/'))
+        self.assert_(lv_props.Get(I_D, 'DeviceFile').startswith('/dev/dm-'))
         self.assertEqual(lv_props.Get(I_D, 'DevicePresentationHide'), False)
         self.assertEqual(lv_props.Get(I_D, 'DevicePresentationNopolicy'), True)
 
-        # ensure that we have a UUID
+        # ensure that we have a by-name and a by-UUID link
         found_uuid = False
+        found_name = False
         for i in lv_props.Get(I_D, 'DeviceFileById'):
             if 'uuid-LVM' in i:
                 found_uuid = True
+            if 'udtestlv1' in i:
+                found_name = True
         self.assert_(found_uuid, 'no by-uuid found in ' + str(i))
+        self.assert_(found_uuid, 'no by-name found in ' + str(i))
 
     def test_single_lv_raid(self):
         '''LVM: Single LV, RAID-1'''
@@ -1271,7 +1275,6 @@ class LVM(UDisksTestCase):
                 'org.freedesktop.UDisks', o), dbus.PROPERTIES_IFACE)
 
             if o == real_lv_obj:
-                self.assert_(props.Get(I_D, 'DeviceFile').startswith('/dev/mapper/'))
                 # never hide the real LV
                 self.assertEqual(props.Get(I_D, 'DevicePresentationHide'), False)
                 self.assertEqual(props.Get(I_D, 'IdUsage'), 'filesystem')
@@ -1327,7 +1330,7 @@ class LVM(UDisksTestCase):
                     dev_objpath)
             dev_p = dbus.Interface(dev_obj, dbus.PROPERTIES_IFACE)
 
-            self.assertEqual(dev_p.Get(I_D, 'DeviceFile'), devname)
+            self.assertEqual(dev_p.Get(I_D, 'DeviceFile'), os.path.realpath(devname))
             self.assertEqual(dev_p.Get(I_D, 'DeviceIsPartition'), False)
             self.assertEqual(dev_p.Get(I_D, 'PartitionScheme'), '')
             self.assertEqual(dev_p.Get(I_D, 'DeviceIsPartitionTable'), True)
@@ -1338,7 +1341,6 @@ class LVM(UDisksTestCase):
                     self.manager_iface.FindDeviceByDeviceFile(devname + 'p1'))
             p1_p = dbus.Interface(p1_obj, dbus.PROPERTIES_IFACE)
 
-            self.assertEqual(p1_p.Get(I_D, 'DeviceFile'), devname + 'p1')
             self.assertEqual(p1_p.Get(I_D, 'DeviceIsPartition'), True)
             self.assertEqual(p1_p.Get(I_D, 'DeviceIsPartitionTable'), False)
             self.assertEqual(p1_p.Get(I_D, 'DevicePresentationHide'), False)
@@ -1354,7 +1356,6 @@ class LVM(UDisksTestCase):
                     self.manager_iface.FindDeviceByDeviceFile(devname + 'p2'))
             p1_p = dbus.Interface(p1_obj, dbus.PROPERTIES_IFACE)
 
-            self.assertEqual(p1_p.Get(I_D, 'DeviceFile'), devname + 'p2')
             self.assertEqual(p1_p.Get(I_D, 'DeviceIsPartition'), True)
             self.assertEqual(p1_p.Get(I_D, 'DeviceIsPartitionTable'), False)
             self.assertEqual(p1_p.Get(I_D, 'DevicePresentationHide'), False)
