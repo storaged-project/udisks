@@ -30,7 +30,7 @@ udisks_CFLAGS = 					\
 udisks_LDADD = 						\
 	$(GLIB_LIBS) 					\
 	$(GIO_LIBS)					\
-	$(top_builddir)/udisks/libudisks.la		\
+	$(top_builddir)/udisks/libudisks-2.0.la		\
 	$(NULL)
 
 # ----------------------------------------------------------------------------------------------------

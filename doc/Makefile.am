@@ -42,7 +42,7 @@ INCLUDES = \
 GTKDOC_LIBS = 					\
 	$(GLIB_LIBS)				\
 	$(GIO_LIBS)				\
-	$(top_builddir)/udisks/libudisks.la	\
+	$(top_builddir)/udisks/libudisks-2.0.la	\
 	$(top_builddir)/src/libudisks-daemon.la	\
 	$(NULL)
 

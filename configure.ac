@@ -237,6 +237,7 @@ Makefile
 data/Makefile
 data/udisks.pc
 udisks/Makefile
+udisks/udisks-2.0.pc
 src/Makefile
 src/tests/Makefile
 tools/Makefile

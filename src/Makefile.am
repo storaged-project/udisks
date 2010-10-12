@@ -75,7 +75,7 @@ libudisks_daemon_la_LIBADD =				\
 	$(GUDEV_LIBS)					\
 	$(LIBATASMART_LIBS)				\
 	$(POLKIT_GOBJECT_1_LIBS) 			\
-	$(top_builddir)/udisks/libudisks.la		\
+	$(top_builddir)/udisks/libudisks-2.0.la		\
 	$(NULL)
 
 # ----------------------------------------------------------------------------------------------------
