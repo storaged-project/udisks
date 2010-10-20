@@ -1794,7 +1794,16 @@ register_disks_daemon (Daemon *daemon)
       "sas_expander", /* SAS Expanders */
       NULL };
 
-  daemon->priv->authority = polkit_authority_get ();
+  daemon->priv->authority = polkit_authority_get_sync ((GCancellable *) NULL, &error);
+  if (daemon->priv->authority == NULL)
+    {
+      if (error != NULL)
+        {
+          g_critical ("error getting authority reference: %s", error->message);
+          g_error_free (error);
+        }
+      goto error;
+    }
 
   error = NULL;
   daemon->priv->system_bus_connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
