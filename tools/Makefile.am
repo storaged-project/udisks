@@ -35,9 +35,22 @@ udisks_LDADD = 						\
 
 # ----------------------------------------------------------------------------------------------------
 
-#slashsbin_PROGRAMS = umount.udisks
-#umount_udisks_SOURCES = umount-udisks.c
-#umount_udisks_LDADD = $(DBUS_GLIB_LIBS) $(POLKIT_DBUS_LIBS)
+slashsbin_PROGRAMS = umount.udisks-2.0
+
+umount_udisks_2_0_SOURCES = 				\
+				umount-udisks.c		\
+	$(NULL)
+
+umount_udisks_2_0_CFLAGS = 				\
+	$(GLIB_CFLAGS) 					\
+	$(GIO_CFLAGS)					\
+	$(NULL)
+
+umount_udisks_2_0_LDADD = 				\
+	$(GLIB_LIBS) 					\
+	$(GIO_LIBS)					\
+	$(top_builddir)/udisks/libudisks-2.0.la		\
+	$(NULL)
 
 # ----------------------------------------------------------------------------------------------------
 

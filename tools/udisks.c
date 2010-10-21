@@ -450,14 +450,21 @@ handle_command_mount_unmount (gint        *argc,
       object_proxies = g_dbus_proxy_manager_get_all (manager);
       for (l = object_proxies; l != NULL; l = l->next)
         {
+          const gchar * const *mount_points;
+          gboolean is_mounted;
+
           object_proxy = G_DBUS_OBJECT_PROXY (l->data);
           filesystem = UDISKS_PEEK_FILESYSTEM (object_proxy);
 
           if (filesystem == NULL)
             continue;
 
-          if ((is_mount && strlen (udisks_filesystem_get_mount_point (filesystem)) == 0) ||
-              (!is_mount && strlen (udisks_filesystem_get_mount_point (filesystem)) > 0))
+          is_mounted = FALSE;
+          mount_points = udisks_filesystem_get_mount_points (filesystem);
+          if (mount_points != NULL && g_strv_length ((gchar **) mount_points) > 0)
+            is_mounted = TRUE;
+
+          if ((is_mount && !is_mounted) || (!is_mount && is_mounted))
             {
               object_path = g_dbus_object_proxy_get_object_path (object_proxy);
               g_assert (g_str_has_prefix (object_path, "/org/freedesktop/UDisks/"));
@@ -480,8 +487,15 @@ handle_command_mount_unmount (gint        *argc,
 
           if (block != NULL && filesystem != NULL)
             {
-              if ((is_mount && strlen (udisks_filesystem_get_mount_point (filesystem)) == 0) ||
-                  (!is_mount && strlen (udisks_filesystem_get_mount_point (filesystem)) > 0))
+              const gchar * const *mount_points;
+              gboolean is_mounted;
+
+              is_mounted = FALSE;
+              mount_points = udisks_filesystem_get_mount_points (filesystem);
+              if (mount_points != NULL && g_strv_length ((gchar **) mount_points) > 0)
+                is_mounted = TRUE;
+
+              if ((is_mount && !is_mounted) || (!is_mount && is_mounted))
                 {
                   const gchar * const *symlinks;
                   g_print ("%s \n", udisks_block_device_get_device (block));
@@ -548,13 +562,6 @@ handle_command_mount_unmount (gint        *argc,
       gchar *mount_path;
       const gchar *options[1] = {NULL};
 
-      if (strlen (udisks_filesystem_get_mount_point (filesystem)) > 0)
-        {
-          g_printerr ("Device %s is already mounted.\n", udisks_block_device_get_device (block));
-          g_object_unref (object_proxy);
-          goto out;
-        }
-
       error = NULL;
       if (!udisks_filesystem_call_mount_sync (filesystem,
                                               "",           /* filesystem_type */
@@ -579,13 +586,6 @@ handle_command_mount_unmount (gint        *argc,
     {
       GError *error;
       const gchar *options[1] = {NULL};
-
-      if (strlen (udisks_filesystem_get_mount_point (filesystem)) == 0)
-        {
-          g_printerr ("Device %s is not mounted.\n", udisks_block_device_get_device (block));
-          g_object_unref (object_proxy);
-          goto out;
-        }
 
       error = NULL;
       if (!udisks_filesystem_call_unmount_sync (filesystem,

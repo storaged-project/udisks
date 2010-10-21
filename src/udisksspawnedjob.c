@@ -664,8 +664,7 @@ udisks_spawned_job_spawned_job_completed_default (UDisksSpawnedJob  *job,
   if (error != NULL)
     {
       gchar *message;
-      message = g_strdup_printf ("Failed to execute command-line `%s': %s (%s, %d)",
-                                 job->command_line,
+      message = g_strdup_printf ("%s (%s, %d)",
                                  error->message,
                                  g_quark_to_string (error->domain),
                                  error->code);
@@ -717,7 +716,6 @@ child_watch_from_release_cb (GPid     pid,
                              gint     status,
                              gpointer user_data)
 {
-  //g_debug ("in child_watch_from_release_cb");
 }
 
 /* called when we're done running the command line */

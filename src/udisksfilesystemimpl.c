@@ -20,10 +20,20 @@
 
 #include "config.h"
 
+#include <stdlib.h>
+
+#include <sys/types.h>
+#include <pwd.h>
+#include <grp.h>
+
+#include <glib/gstdio.h>
+
 #include "udisksdaemon.h"
 #include "udiskslinuxblock.h"
-
+#include "udisksbasejob.h"
+#include "udiskssimplejob.h"
 #include "udisksfilesystemimpl.h"
+#include "udiskspersistentstore.h"
 
 /**
  * SECTION:udisksfilesystemimpl
@@ -66,6 +76,8 @@ G_DEFINE_TYPE_WITH_CODE (UDisksFilesystemImpl, udisks_filesystem_impl, UDISKS_TY
 static void
 udisks_filesystem_impl_init (UDisksFilesystemImpl *filesystem)
 {
+  g_dbus_interface_set_flags (G_DBUS_INTERFACE (filesystem),
+                              G_DBUS_INTERFACE_FLAGS_RUN_IN_THREAD);
 }
 
 static void
@@ -76,89 +88,981 @@ udisks_filesystem_impl_class_init (UDisksFilesystemImplClass *klass)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-mount_on_spawned_job_completed (UDisksJob       *job,
-                                GError           *error,
-                                gint              status,
-                                GString          *standard_output,
-                                GString          *standard_error,
-                                gpointer          user_data)
+get_uid_sync (GDBusMethodInvocation   *invocation,
+              GCancellable            *cancellable,
+              uid_t                   *out_uid,
+              GError                 **error)
 {
-  GDBusMethodInvocation *invocation = G_DBUS_METHOD_INVOCATION (user_data);
-  UDisksFilesystem *interface;
+  gboolean ret;
+  const gchar *caller;
+  GVariant *value;
+  GError *local_error;
 
-  interface = UDISKS_FILESYSTEM (g_object_get_data (G_OBJECT (job), "filesystem-interface"));
+  ret = FALSE;
 
-  if (error != NULL)
+  caller = g_dbus_method_invocation_get_sender (invocation);
+
+  local_error = NULL;
+  value = g_dbus_connection_call_sync (g_dbus_method_invocation_get_connection (invocation),
+                                       "org.freedesktop.DBus",  /* bus name */
+                                       "/org/freedesktop/DBus", /* object path */
+                                       "org.freedesktop.DBus",  /* interface */
+                                       "GetConnectionUnixUser", /* method */
+                                       g_variant_new ("(s)", caller),
+                                       G_VARIANT_TYPE ("(u)"),
+                                       G_DBUS_CALL_FLAGS_NONE,
+                                       -1, /* timeout_msec */
+                                       cancellable,
+                                       &local_error);
+  if (value == NULL)
     {
-      gint error_code;
-      error_code = UDISKS_ERROR_FAILED;
-      if (error->domain == G_IO_ERROR && error->code == G_IO_ERROR_CANCELLED)
-        error_code = UDISKS_ERROR_CANCELLED;
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             error_code,
-                                             "Mounting the device failed: %s (%s, %d)\n"
-                                             "stdout: `%s'\n"
-                                             "stderr: `%s'\n",
-                                             error->message,
-                                             g_quark_to_string (error->domain), error_code,
-                                             standard_output->str,
-                                             standard_error->str);
-    }
-  else
-    {
-      /* TODO: determine mount point */
-      udisks_filesystem_complete_mount (interface, invocation, "/foobar");
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "Error determining uid of caller %s: %s (%s, %d)",
+                   caller,
+                   local_error->message,
+                   g_quark_to_string (local_error->domain),
+                   local_error->code);
+      g_error_free (local_error);
+      goto out;
     }
 
-  return FALSE; /* pass on to ::completed */
-}
+  G_STATIC_ASSERT (sizeof (uid_t) == sizeof (guint32));
+  g_variant_get (value, "(u)", out_uid);
 
-static gboolean
-handle_mount (UDisksFilesystem       *interface,
-              GDBusMethodInvocation  *invocation,
-              const gchar            *filesystem_type,
-              const gchar* const     *options)
-{
-  GDBusObject *object;
-  UDisksBlockDevice *block;
-  UDisksDaemon *daemon;
-  UDisksJob *job;
+  ret = TRUE;
 
-  object = g_dbus_interface_get_object (G_DBUS_INTERFACE (interface));
-  block = UDISKS_BLOCK_DEVICE (g_dbus_object_lookup_interface (object, "org.freedesktop.UDisks.BlockDevice"));
-  daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
-
-  job = UDISKS_JOB (udisks_daemon_launch_spawned_job (daemon,
-                                                      NULL, /* GCancellable */
-                                                      NULL, /* input string */
-                                                      "sleep 10"));
-  /* this blows a little bit - would be nice to have an easier way to
-   * get back to the object from the job
-   */
-  g_object_set_data_full (G_OBJECT (job),
-                          "filesystem-interface",
-                          g_object_ref (interface),
-                          (GDestroyNotify) g_object_unref);
-  g_signal_connect (job,
-                    "spawned-job-completed",
-                    G_CALLBACK (mount_on_spawned_job_completed),
-                    invocation);
-
-  g_object_unref (block);
-  g_object_unref (object);
-  return TRUE;
+ out:
+  return ret;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+typedef struct
+{
+  const char *fstype;
+  const char * const *defaults;
+  const char * const *allow;
+  const char * const *allow_uid_self;
+  const char * const *allow_gid_self;
+} FSMountOptions;
+
+/* ---------------------- vfat -------------------- */
+
+static const char *vfat_defaults[] = { "uid=", "gid=", "shortname=mixed", "dmask=0077", "utf8=1", "showexec", NULL };
+static const char *vfat_allow[] = { "flush", "utf8=", "shortname=", "umask=", "dmask=", "fmask=", "codepage=", "iocharset=", "usefree", "showexec", NULL };
+static const char *vfat_allow_uid_self[] = { "uid=", NULL };
+static const char *vfat_allow_gid_self[] = { "gid=", NULL };
+
+/* ---------------------- ntfs -------------------- */
+/* this is assuming that ntfs-3g is used */
+
+static const char *ntfs_defaults[] = { "uid=", "gid=", "dmask=0077", "fmask=0177", NULL };
+static const char *ntfs_allow[] = { "umask=", "dmask=", "fmask=", NULL };
+static const char *ntfs_allow_uid_self[] = { "uid=", NULL };
+static const char *ntfs_allow_gid_self[] = { "gid=", NULL };
+
+/* ---------------------- iso9660 -------------------- */
+
+static const char *iso9660_defaults[] = { "uid=", "gid=", "iocharset=utf8", "mode=0400", "dmode=0500", NULL };
+static const char *iso9660_allow[] = { "norock", "nojoliet", "iocharset=", "mode=", "dmode=", NULL };
+static const char *iso9660_allow_uid_self[] = { "uid=", NULL };
+static const char *iso9660_allow_gid_self[] = { "gid=", NULL };
+
+/* ---------------------- udf -------------------- */
+
+static const char *udf_defaults[] = { "uid=", "gid=", "iocharset=utf8", "umask=0077", NULL };
+static const char *udf_allow[] = { "iocharset=", "umask=", NULL };
+static const char *udf_allow_uid_self[] = { "uid=", NULL };
+static const char *udf_allow_gid_self[] = { "gid=", NULL };
+
+/* ------------------------------------------------ */
+/* TODO: support context= */
+
+static const char *any_allow[] = { "exec", "noexec", "nodev", "nosuid", "atime", "noatime", "nodiratime", "ro", "rw", "sync", "dirsync", NULL };
+
+static const FSMountOptions fs_mount_options[] =
+  {
+    { "vfat", vfat_defaults, vfat_allow, vfat_allow_uid_self, vfat_allow_gid_self },
+    { "ntfs", ntfs_defaults, ntfs_allow, ntfs_allow_uid_self, ntfs_allow_gid_self },
+    { "iso9660", iso9660_defaults, iso9660_allow, iso9660_allow_uid_self, iso9660_allow_gid_self },
+    { "udf", udf_defaults, udf_allow, udf_allow_uid_self, udf_allow_gid_self },
+  };
+
+/* ------------------------------------------------ */
+
+static int num_fs_mount_options = sizeof(fs_mount_options) / sizeof(FSMountOptions);
+
+static const FSMountOptions *
+find_mount_options_for_fs (const char *fstype)
+{
+  int n;
+  const FSMountOptions *fsmo;
+
+  for (n = 0; n < num_fs_mount_options; n++)
+    {
+      fsmo = fs_mount_options + n;
+      if (strcmp (fsmo->fstype, fstype) == 0)
+        goto out;
+    }
+
+  fsmo = NULL;
+ out:
+  return fsmo;
+}
+
+static gid_t
+find_primary_gid (uid_t uid)
+{
+  struct passwd *pw;
+  gid_t gid;
+
+  gid = (gid_t) - 1;
+
+  pw = getpwuid (uid);
+  if (pw == NULL)
+    {
+      g_warning ("Couldn't look up uid %d: %m", uid);
+      goto out;
+    }
+  gid = pw->pw_gid;
+
+ out:
+  return gid;
+}
+
 static gboolean
-handle_unmount (UDisksFilesystem       *object,
+is_uid_in_gid (uid_t uid,
+               gid_t gid)
+{
+  gboolean ret;
+  struct passwd *pw;
+  static gid_t supplementary_groups[128];
+  int num_supplementary_groups = 128;
+  int n;
+
+  /* TODO: use some #define instead of harcoding some random number like 128 */
+
+  ret = FALSE;
+
+  pw = getpwuid (uid);
+  if (pw == NULL)
+    {
+      g_warning ("Couldn't look up uid %d: %m", uid);
+      goto out;
+    }
+  if (pw->pw_gid == gid)
+    {
+      ret = TRUE;
+      goto out;
+    }
+
+  if (getgrouplist (pw->pw_name, pw->pw_gid, supplementary_groups, &num_supplementary_groups) < 0)
+    {
+      g_warning ("Couldn't find supplementary groups for uid %d: %m", uid);
+      goto out;
+    }
+
+  for (n = 0; n < num_supplementary_groups; n++)
+    {
+      if (supplementary_groups[n] == gid)
+        {
+          ret = TRUE;
+          goto out;
+        }
+    }
+
+ out:
+  return ret;
+}
+
+static gboolean
+is_mount_option_allowed (const FSMountOptions *fsmo,
+                         const char *option,
+                         uid_t caller_uid)
+{
+  int n;
+  char *endp;
+  uid_t uid;
+  gid_t gid;
+  gboolean allowed;
+  const char *ep;
+  gsize ep_len;
+
+  allowed = FALSE;
+
+  /* first run through the allowed mount options */
+  if (fsmo != NULL)
+    {
+      for (n = 0; fsmo->allow != NULL && fsmo->allow[n] != NULL; n++)
+        {
+          ep = strstr (fsmo->allow[n], "=");
+          if (ep != NULL && ep[1] == '\0')
+            {
+              ep_len = ep - fsmo->allow[n] + 1;
+              if (strncmp (fsmo->allow[n], option, ep_len) == 0)
+                {
+                  allowed = TRUE;
+                  goto out;
+                }
+            }
+          else
+            {
+              if (strcmp (fsmo->allow[n], option) == 0)
+                {
+                  allowed = TRUE;
+                  goto out;
+                }
+            }
+        }
+    }
+  for (n = 0; any_allow[n] != NULL; n++)
+    {
+      ep = strstr (any_allow[n], "=");
+      if (ep != NULL && ep[1] == '\0')
+        {
+          ep_len = ep - any_allow[n] + 1;
+          if (strncmp (any_allow[n], option, ep_len) == 0)
+            {
+              allowed = TRUE;
+              goto out;
+            }
+        }
+      else
+        {
+          if (strcmp (any_allow[n], option) == 0)
+            {
+              allowed = TRUE;
+              goto out;
+            }
+        }
+    }
+
+  /* .. then check for mount options where the caller is allowed to pass
+   * in his own uid
+   */
+  if (fsmo != NULL)
+    {
+      for (n = 0; fsmo->allow_uid_self != NULL && fsmo->allow_uid_self[n] != NULL; n++)
+        {
+          const char *r_mount_option = fsmo->allow_uid_self[n];
+          if (g_str_has_prefix (option, r_mount_option))
+            {
+              uid = strtol (option + strlen (r_mount_option), &endp, 10);
+              if (*endp != '\0')
+                continue;
+              if (uid == caller_uid)
+                {
+                  allowed = TRUE;
+                  goto out;
+                }
+            }
+        }
+    }
+
+  /* .. ditto for gid
+   */
+  if (fsmo != NULL)
+    {
+      for (n = 0; fsmo->allow_gid_self != NULL && fsmo->allow_gid_self[n] != NULL; n++)
+        {
+          const char *r_mount_option = fsmo->allow_gid_self[n];
+          if (g_str_has_prefix (option, r_mount_option))
+            {
+              gid = strtol (option + strlen (r_mount_option), &endp, 10);
+              if (*endp != '\0')
+                continue;
+              if (is_uid_in_gid (caller_uid, gid))
+                {
+                  allowed = TRUE;
+                  goto out;
+                }
+            }
+        }
+    }
+
+ out:
+  return allowed;
+}
+
+static char **
+prepend_default_mount_options (const FSMountOptions *fsmo,
+                               uid_t caller_uid,
+                               const gchar * const *given_options)
+{
+  GPtrArray *options;
+  int n;
+  char *s;
+  gid_t gid;
+
+  options = g_ptr_array_new ();
+  if (fsmo != NULL)
+    {
+      for (n = 0; fsmo->defaults != NULL && fsmo->defaults[n] != NULL; n++)
+        {
+          const char *option = fsmo->defaults[n];
+
+          if (strcmp (option, "uid=") == 0)
+            {
+              s = g_strdup_printf ("uid=%d", caller_uid);
+              g_ptr_array_add (options, s);
+            }
+          else if (strcmp (option, "gid=") == 0)
+            {
+              gid = find_primary_gid (caller_uid);
+              if (gid != (gid_t) - 1)
+                {
+                  s = g_strdup_printf ("gid=%d", gid);
+                  g_ptr_array_add (options, s);
+                }
+            }
+          else
+            {
+              g_ptr_array_add (options, g_strdup (option));
+            }
+        }
+    }
+  for (n = 0; given_options[n] != NULL; n++)
+    {
+      g_ptr_array_add (options, g_strdup (given_options[n]));
+    }
+
+  g_ptr_array_add (options, NULL);
+
+  return (char **) g_ptr_array_free (options, FALSE);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/*
+ * calculate_fs_type: <internal>
+ * @block: A #UDisksBlockDevice.
+ * @block_probed: A #UDisksBlockDeviceProbed or %NULL.
+ * @requested_fs_type: The requested file system type or %NULL.
+ * @error: Return location for error or %NULL.
+ *
+ * Calculates the file system type to use.
+ *
+ * Returns: A string with the filesystem type (may be "auto") or %NULL if @error is set. Free with g_free().
+ */
+static gchar *
+calculate_fs_type (UDisksBlockDevice         *block,
+                   UDisksBlockDeviceProbed   *block_probed,
+                   const gchar               *requested_fs_type,
+                   GError                   **error)
+{
+  gchar *fs_type_to_use;
+  const gchar *probed_fs_usage;
+  const gchar *probed_fs_type;
+
+  probed_fs_usage = NULL;
+  probed_fs_type = NULL;
+  if (block_probed != NULL)
+    {
+      probed_fs_usage = udisks_block_device_probed_get_usage (block_probed);
+      probed_fs_type = udisks_block_device_probed_get_type (block_probed);
+    }
+
+  fs_type_to_use = NULL;
+  if (requested_fs_type != NULL && strlen (requested_fs_type) > 0)
+    {
+      /* TODO: maybe check that it's compatible with probed_fs_type */
+      fs_type_to_use = g_strdup (requested_fs_type);
+    }
+  else
+    {
+      if (probed_fs_type != NULL && strlen (probed_fs_type) > 0)
+        fs_type_to_use = g_strdup (probed_fs_type);
+      else
+        fs_type_to_use = g_strdup ("auto");
+    }
+
+  return fs_type_to_use;
+}
+
+/*
+ * calculate_mount_options: <internal>
+ * @block: A #UDisksBlockDevice.
+ * @block_probed: A #UDisksBlockDeviceProbed or %NULL.
+ * @caller_uid: The uid of the caller making the request.
+ * @fs_type: The filesystem type to use or %NULL.
+ * @requested_options: Options requested by the caller.
+ * @error: Return location for error or %NULL.
+ *
+ * Calculates the mount option string to use. Ensures (by returning an
+ * error) that only safe options are used.
+ *
+ * Returns: A string with mount options or %NULL if @error is set. Free with g_free().
+ */
+static gchar *
+calculate_mount_options (UDisksBlockDevice         *block,
+                         UDisksBlockDeviceProbed   *block_probed,
+                         uid_t                      caller_uid,
+                         const gchar               *fs_type,
+                         const gchar *const        *requested_options,
+                         GError                   **error)
+{
+  const FSMountOptions *fsmo;
+  gchar **options_to_use;
+  gchar *options_to_use_str;
+  GString *str;
+  guint n;
+
+  options_to_use = NULL;
+  options_to_use_str = NULL;
+
+  fsmo = find_mount_options_for_fs (fs_type);
+
+  /* always prepend some reasonable default mount options; these are
+   * chosen here; the user can override them if he wants to
+   */
+  options_to_use = prepend_default_mount_options (fsmo, caller_uid, requested_options);
+
+  /* validate mount options */
+  str = g_string_new ("uhelper=udisks-2.0,nodev,nosuid");
+  for (n = 0; options_to_use[n] != NULL; n++)
+    {
+      const gchar *option = options_to_use[n];
+
+      /* avoid attacks like passing "shortname=lower,uid=0" as a single mount option */
+      if (strstr (option, ",") != NULL)
+        {
+          g_set_error (error,
+                       UDISKS_ERROR,
+                       UDISKS_ERROR_FAILED,
+                       "Malformed mount option `%s'",
+                       option);
+          g_string_free (str, TRUE);
+          goto out;
+        }
+
+      /* first check if the mount option is allowed */
+      if (!is_mount_option_allowed (fsmo, option, caller_uid))
+        {
+          g_set_error (error,
+                       UDISKS_ERROR,
+                       UDISKS_ERROR_FAILED,
+                       "Mount option `%s' is not allowed",
+                       option);
+          g_string_free (str, TRUE);
+          goto out;
+        }
+
+      g_string_append_c (str, ',');
+      g_string_append (str, option);
+    }
+  options_to_use_str = g_string_free (str, FALSE);
+
+ out:
+  g_strfreev (options_to_use);
+  return options_to_use_str;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/*
+ * calculate_mount_point: <internal>
+ * @block: A #UDisksBlockDevice.
+ * @block_probed: A #UDisksBlockDeviceProbed or %NULL.
+ * @fs_type: The file system type to mount with
+ * @error: Return location for error or %NULL.
+ *
+ * Calculates the mount point to use.
+ *
+ * Returns: A string with the mount point to use or %NULL if @error is set. Free with g_free().
+ */
+static gchar *
+calculate_mount_point (UDisksBlockDevice         *block,
+                       UDisksBlockDeviceProbed   *block_probed,
+                       const gchar               *fs_type,
+                       GError                   **error)
+{
+  const gchar *label;
+  const gchar *uuid;
+  gchar *mount_point;
+  gchar *orig_mount_point;
+  GString *str;
+  guint n;
+
+  label = NULL;
+  uuid = NULL;
+  if (block_probed != NULL)
+    {
+      label = udisks_block_device_probed_get_label (block_probed);
+      uuid = udisks_block_device_probed_get_uuid (block_probed);
+    }
+
+  if (label != NULL && strlen (label) > 0)
+    {
+      str = g_string_new ("/media/");
+      for (n = 0; label[n] != '\0'; n++)
+        {
+          gint c = label[n];
+          if (c == '/')
+            g_string_append_c (str, '_');
+          else
+            g_string_append_c (str, c);
+        }
+      mount_point = g_string_free (str, FALSE);
+    }
+  else if (uuid != NULL && strlen (uuid) > 0)
+    {
+      str = g_string_new ("/media/");
+      for (n = 0; uuid[n] != '\0'; n++)
+        {
+          gint c = uuid[n];
+          if (c == '/')
+            g_string_append_c (str, '_');
+          else
+            g_string_append_c (str, c);
+        }
+      mount_point = g_string_free (str, FALSE);
+    }
+  else
+    {
+      mount_point = g_strdup ("/media/disk");
+    }
+
+  /* ... then uniqify the mount point */
+  orig_mount_point = g_strdup (mount_point);
+  n = 1;
+  while (TRUE)
+    {
+      if (!g_file_test (mount_point, G_FILE_TEST_EXISTS))
+        {
+          break;
+        }
+      else
+        {
+          g_free (mount_point);
+          mount_point = g_strdup_printf ("%s%d", orig_mount_point, n++);
+        }
+    }
+  g_free (orig_mount_point);
+
+  return mount_point;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/* runs in thread dedicated to handling method call */
+static gboolean
+handle_mount (UDisksFilesystem       *filesystem,
+              GDBusMethodInvocation  *invocation,
+              const gchar            *requested_fs_type,
+              const gchar* const     *requested_options)
+{
+  GDBusObject *object;
+  UDisksDaemon *daemon;
+  UDisksPersistentStore *store;
+  gboolean ret;
+  gchar *mount_point_to_use;
+  uid_t caller_uid;
+  UDisksBlockDevice *block;
+  UDisksBlockDeviceProbed *block_probed;
+  GDBusInterface *iface;
+  const gchar * const *existing_mount_points;
+  const gchar *probed_fs_usage;
+  const gchar *probed_fs_type;
+  gchar *fs_type_to_use;
+  gchar *mount_options_to_use;
+  gchar *error_message;
+  GError *error;
+
+  ret = FALSE;
+  object = NULL;
+  daemon = NULL;
+  block = NULL;
+  block_probed = NULL;
+  fs_type_to_use = NULL;
+  mount_options_to_use = NULL;
+  mount_point_to_use = NULL;
+  error_message = NULL;
+
+  object = g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem));
+  block = UDISKS_BLOCK_DEVICE (g_dbus_object_lookup_interface (object, "org.freedesktop.UDisks.BlockDevice"));
+  iface = g_dbus_object_lookup_interface (object, "org.freedesktop.UDisks.BlockDevice.Probed");
+  block_probed = iface != NULL ? UDISKS_BLOCK_DEVICE_PROBED (iface) : NULL;
+
+  daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
+  store = udisks_daemon_get_persistent_store (daemon);
+
+  /* TODO: check if mount point is managed by e.g. /etc/fstab or
+   *       similar - if so, use that instead of managing mount points
+   *       in /media
+   */
+
+  /* TODO: check authorization */
+
+
+  /* Fail if the device is already mounted */
+  existing_mount_points = udisks_filesystem_get_mount_points (filesystem);
+  if (existing_mount_points != NULL && g_strv_length ((gchar **) existing_mount_points) > 0)
+    {
+      GString *str;
+      guint n;
+      str = g_string_new (NULL);
+      for (n = 0; existing_mount_points[n] != NULL; n++)
+        {
+          if (n > 0)
+            g_string_append (str, ", ");
+          g_string_append_printf (str, "`%s'", existing_mount_points[n]);
+        }
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Device %s is already mounted at %s.\n",
+                                             udisks_block_device_get_device (block),
+                                             str->str);
+      g_string_free (str, TRUE);
+      goto out;
+    }
+
+  /* Fail if the device is not mountable - we actually allow mounting
+   * devices that are not probed since since it could be that we just
+   * don't have the data in the udev database but the device has a
+   * filesystem *anyway*...
+   *
+   * For example, this applies to PC floppy devices - automatically
+   * probing for media them creates annoying noise. So they won't
+   * appear in the udev database.
+   */
+  probed_fs_usage = NULL;
+  probed_fs_type = NULL;
+  if (block_probed != NULL)
+    {
+      probed_fs_usage = udisks_block_device_probed_get_usage (block_probed);
+      probed_fs_type = udisks_block_device_probed_get_type (block_probed);
+    }
+  if (probed_fs_usage != NULL && strlen (probed_fs_usage) > 0 &&
+      g_strcmp0 (probed_fs_usage, "filesystem") != 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Cannot mount block device %s with probed usage `%s' - expected `filesystem'",
+                                             udisks_block_device_get_device (block),
+                                             probed_fs_usage);
+      goto out;
+    }
+
+  /* we need the uid of the caller to check mount options */
+  error = NULL;
+  if (!get_uid_sync (invocation, NULL /* GCancellable */, &caller_uid, &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  /* calculate filesystem type */
+  error = NULL;
+  fs_type_to_use = calculate_fs_type (block,
+                                      block_probed,
+                                      requested_fs_type,
+                                      &error);
+  if (fs_type_to_use == NULL)
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  /* calculate mount options */
+  error = NULL;
+  mount_options_to_use = calculate_mount_options (block,
+                                                  block_probed,
+                                                  caller_uid,
+                                                  fs_type_to_use,
+                                                  requested_options,
+                                                  &error);
+  if (mount_options_to_use == NULL)
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  /* calculate mount point */
+  error = NULL;
+  mount_point_to_use = calculate_mount_point (block,
+                                              block_probed,
+                                              fs_type_to_use,
+                                              &error);
+  if (mount_point_to_use == NULL)
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  /* TODO: ensure that mount point is UTF-8 .. */
+
+  /* create the mount point */
+  if (g_mkdir (mount_point_to_use, 0700) != 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error creating mount point `%s': %m",
+                                             mount_point_to_use);
+      goto out;
+    }
+
+  /* update the mounted-fs file */
+  if (!udisks_persistent_store_mounted_fs_add (store,
+                                               udisks_block_device_get_device (block),
+                                               mount_point_to_use,
+                                               caller_uid,
+                                               &error))
+    goto out;
+
+  /* run mount(8) */
+  if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              NULL,  /* GCancellable */
+                                              &error_message,
+                                              NULL,  /* input_string */
+                                              "mount -t \"%s\" -o \"%s\" \"%s\" \"%s\"",
+                                              /* TODO: ensure that passed args does not have double-quotes in them... */
+                                              fs_type_to_use,
+                                              mount_options_to_use,
+                                              udisks_block_device_get_device (block),
+                                              mount_point_to_use))
+    {
+      /* ugh, something went wrong.. we need to clean up the created mount point
+       * and also remove the entry from our mounted-fs file
+       *
+       * Either of these operations shouldn't really fail...
+       */
+      error = NULL;
+      if (!udisks_persistent_store_mounted_fs_remove (store,
+                                                      mount_point_to_use,
+                                                      &error))
+        {
+          g_warning ("Error removing mount point %s from filesystems file: %s (%s, %d)",
+                     mount_point_to_use,
+                     error->message,
+                     g_quark_to_string (error->domain),
+                     error->code);
+          g_error_free (error);
+        }
+      if (g_rmdir (mount_point_to_use) != 0)
+        {
+          g_warning ("Error removing directory %s: %m", mount_point_to_use);
+        }
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error mounting %s at %s: %s",
+                                             udisks_block_device_get_device (block),
+                                             mount_point_to_use,
+                                             error_message);
+      goto out;
+    }
+
+  udisks_daemon_log (daemon,
+                     UDISKS_LOG_LEVEL_INFO,
+                     "Mounted %s at %s on behalf of uid %d",
+                     udisks_block_device_get_device (block),
+                     mount_point_to_use,
+                     caller_uid);
+
+  udisks_filesystem_complete_mount (filesystem, invocation, mount_point_to_use);
+
+ out:
+  g_free (error_message);
+  g_free (mount_point_to_use);
+  g_free (mount_options_to_use);
+  g_free (fs_type_to_use);
+  if (object != NULL)
+    g_object_unref (object);
+  if (block != NULL)
+    g_object_unref (block);
+  if (block_probed != NULL)
+    g_object_unref (block_probed);
+
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/* runs in thread dedicated to handling method call */
+static gboolean
+handle_unmount (UDisksFilesystem       *filesystem,
                 GDBusMethodInvocation  *invocation,
                 const gchar* const     *options)
 {
-  //UDisksFilesystemImpl *filesystem = UDISKS_FILESYSTEM_IMPL (object);
-  g_dbus_method_invocation_return_dbus_error (invocation, "org.foo.error.unmount", "no, not yet implemented");
+  GDBusObject *object;
+  UDisksBlockDevice *block;
+  UDisksDaemon *daemon;
+  UDisksPersistentStore *store;
+  gchar *mount_point;
+  GError *error;
+  uid_t mounted_by_uid;
+  uid_t caller_uid;
+  gchar *error_message;
+  const gchar *const *mount_points;
+
+  mount_point = NULL;
+  error_message = NULL;
+
+  object = g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem));
+  block = UDISKS_BLOCK_DEVICE (g_dbus_object_lookup_interface (object, "org.freedesktop.UDisks.BlockDevice"));
+  daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
+  store = udisks_daemon_get_persistent_store (daemon);
+
+  mount_points = udisks_filesystem_get_mount_points (filesystem);
+  if (mount_points == NULL || g_strv_length ((gchar **) mount_points) == 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Device `%s' is not mounted",
+                                             udisks_block_device_get_device (block));
+      g_error_free (error);
+      goto out;
+    }
+
+  error = NULL;
+  mount_point = udisks_persistent_store_mounted_fs_find (store,
+                                                         udisks_block_device_get_device (block),
+                                                         &mounted_by_uid,
+                                                         &error);
+  if (error != NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error when looking for entry `%s' in mounted-fs: %s (%s, %d)",
+                                             udisks_block_device_get_device (block),
+                                             error->message,
+                                             g_quark_to_string (error->domain),
+                                             error->code);
+      g_error_free (error);
+      goto out;
+    }
+  if (mount_point == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Entry for `%s' not found in mounted-fs",
+                                             udisks_block_device_get_device (block));
+      goto out;
+    }
+
+  /* TODO: allow unmounting stuff not in the mounted-fs file? */
+
+  error = NULL;
+  if (!get_uid_sync (invocation, NULL, &caller_uid, &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  if (caller_uid != 0 && (caller_uid != mounted_by_uid))
+    {
+      /* TODO: allow with special authorization (unmount-others) */
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Cannot unmount filesystem at `%s' mounted by other user with uid %d",
+                                             mount_point,
+                                             mounted_by_uid);
+      goto out;
+    }
+
+  /* otherwise go ahead and unmount the filesystem */
+  if (!udisks_persistent_store_mounted_fs_currently_unmounting_add (store, mount_point))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Cannot unmount %s: Mount point `%s' is currently being unmounted",
+                                             udisks_block_device_get_device (block),
+                                             mount_point);
+      goto out;
+    }
+  if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              NULL,  /* GCancellable */
+                                              &error_message,
+                                              NULL,  /* input_string */
+                                              "umount \"%s\"",
+                                              mount_point))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error unmounting %s from %s: %s",
+                                             udisks_block_device_get_device (block),
+                                             mount_point,
+                                             error_message);
+      udisks_persistent_store_mounted_fs_currently_unmounting_remove (store, mount_point);
+      goto out;
+    }
+
+  /* OK, filesystem unmounted.. now to remove the entry from mounted-fs as well as the mount point */
+  error = NULL;
+  if (!udisks_persistent_store_mounted_fs_remove (store,
+                                                  mount_point,
+                                                  &error))
+    {
+      if (error == NULL)
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error removing entry for `%s' from mounted-fs: Entry not found",
+                                                 mount_point);
+        }
+      else
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error removing entry for `%s' from mounted-fs: %s (%s, %d)",
+                                                 mount_point,
+                                                 error->message,
+                                                 g_quark_to_string (error->domain),
+                                                 error->code);
+          g_error_free (error);
+        }
+      udisks_persistent_store_mounted_fs_currently_unmounting_remove (store, mount_point);
+      goto out;
+    }
+  udisks_persistent_store_mounted_fs_currently_unmounting_remove (store, mount_point);
+
+  /* OK, removed the entry. Finally: nuke the mount point */
+  if (g_rmdir (mount_point) != 0)
+    {
+      udisks_daemon_log (daemon,
+                         UDISKS_LOG_LEVEL_ERROR,
+                         "Error removing mount point `%s': %m",
+                         mount_point);
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error removing mount point `%s': %m",
+                                             mount_point);
+      goto out;
+    }
+
+  udisks_daemon_log (daemon,
+                     UDISKS_LOG_LEVEL_INFO,
+                     "Unmounted %s from %s on behalf of uid %d",
+                     udisks_block_device_get_device (block),
+                     mount_point,
+                     caller_uid);
+
+  udisks_filesystem_complete_unmount (filesystem, invocation);
+
+ out:
+  g_free (error_message);
+  g_free (mount_point);
+  g_object_unref (block);
+  g_object_unref (object);
   return TRUE;
 }
 

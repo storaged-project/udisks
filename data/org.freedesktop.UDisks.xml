@@ -37,7 +37,7 @@
   <!-- ********************************************************************** -->
 
   <interface name="org.freedesktop.UDisks.Filesystem">
-    <property name="MountPoint" type="ay" access="read"/>
+    <property name="MountPoints" type="aay" access="read"/>
 
     <method name="Mount">
       <arg name="filesystem_type" direction="in" type="s"/>

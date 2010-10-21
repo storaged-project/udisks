@@ -506,25 +506,23 @@ filesystem_update (UDisksLinuxBlock      *block,
 {
   UDisksFilesystem *iface = UDISKS_FILESYSTEM (_iface);
   GList *mounts;
-  const gchar *mount_point;
+  GList *l;
+  GPtrArray *p;
 
-  /* TODO: For now, the way the API works is that we only report a
-   * single mount point. We might want to change that... we might
-   * not..
-   */
-  mount_point = NULL;
+  p = g_ptr_array_new ();
   mounts = udisks_mount_monitor_get_mounts_for_dev (block->mount_monitor,
                                                     g_udev_device_get_device_number (block->device));
   /* we are guaranteed that the list is sorted so if there are
    * multiple mounts we'll always get the same order
    */
-  if (mounts != NULL)
+  for (l = mounts; l != NULL; l = l->next)
     {
-      UDisksMount *mount = UDISKS_MOUNT (mounts->data);
-      mount_point = udisks_mount_get_mount_path (mount);
+      UDisksMount *mount = UDISKS_MOUNT (l->data);
+      g_ptr_array_add (p, (gpointer) udisks_mount_get_mount_path (mount));
     }
-
-  udisks_filesystem_set_mount_point (iface, mount_point);
+  g_ptr_array_add (p, NULL);
+  udisks_filesystem_set_mount_points (iface, (const gchar *const *) p->pdata);
+  g_ptr_array_free (p, TRUE);
 
   g_list_foreach (mounts, (GFunc) g_object_unref, NULL);
   g_list_free (mounts);

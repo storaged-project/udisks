@@ -53,8 +53,10 @@ libudisks_daemon_la_SOURCES =						\
 	udisksbasejob.h			udisksbasejob.c			\
 	udisksspawnedjob.h		udisksspawnedjob.c		\
 	udisksthreadedjob.h		udisksthreadedjob.c		\
+	udiskssimplejob.h		udiskssimplejob.c		\
 	udisksmount.h			udisksmount.c			\
 	udisksmountmonitor.h		udisksmountmonitor.c		\
+	udiskspersistentstore.h		udiskspersistentstore.c		\
 	udisksprivate.h							\
 	$(BUILT_SOURCES)						\
 	$(NULL)

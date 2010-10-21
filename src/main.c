@@ -32,8 +32,11 @@
 static GMainLoop *loop = NULL;
 static gchar *opt_helper_dir = NULL;
 static gboolean opt_replace = FALSE;
-static GOptionEntry opt_entries[] = {
+static gboolean opt_no_sigint = FALSE;
+static GOptionEntry opt_entries[] =
+{
   {"replace", 0, 0, G_OPTION_ARG_NONE, &opt_replace, "Replace existing daemon", NULL},
+  {"no-sigint", 0, 0, G_OPTION_ARG_NONE, &opt_no_sigint, "Do not handle SIGINT for controlled shutdown", NULL},
   {"helper-dir", 0, G_OPTION_FLAG_FILENAME, G_OPTION_ARG_STRING, &opt_helper_dir, "Directory for helper tools", NULL},
   {NULL }
 };
@@ -45,10 +48,10 @@ on_bus_acquired (GDBusConnection *connection,
                  const gchar     *name,
                  gpointer         user_data)
 {
-  g_print ("Connected to the system bus\n");
-
   the_daemon = udisks_daemon_new (connection);
-  //linux_block_init (udisks_daemon_get_object_manager (the_daemon));
+  udisks_daemon_log (the_daemon,
+                     UDISKS_LOG_LEVEL_DEBUG,
+                     "Connected to the system bus");
 }
 
 static void
@@ -56,7 +59,19 @@ on_name_lost (GDBusConnection *connection,
               const gchar     *name,
               gpointer         user_data)
 {
-  g_print ("Lost (or failed to acquire) the name org.freedesktop.UDisks - exiting\n");
+  if (the_daemon == NULL)
+    {
+      udisks_daemon_log (NULL,
+                         UDISKS_LOG_LEVEL_ERROR,
+                         "Failed to connect to the system message bus");
+    }
+  else
+    {
+      udisks_daemon_log (the_daemon,
+                         UDISKS_LOG_LEVEL_INFO,
+                         "Lost (or failed to acquire) the name %s on the system message bus",
+                         name);
+    }
   g_main_loop_quit (loop);
 }
 
@@ -65,13 +80,18 @@ on_name_acquired (GDBusConnection *connection,
                   const gchar     *name,
                   gpointer         user_data)
 {
-  g_print ("Acquired the name org.freedesktop.UDisks on the system bus\n");
+  udisks_daemon_log (the_daemon,
+                     UDISKS_LOG_LEVEL_DEBUG,
+                     "Acquired the name %s on the system message bus",
+                     name);
 }
 
 static gboolean
 on_sigint (gpointer user_data)
 {
-  g_print ("Handling SIGINT\n");
+  udisks_daemon_log (the_daemon,
+                     UDISKS_LOG_LEVEL_INFO,
+                     "Caught SIGINT. Initiating shutdown");
   g_main_loop_quit (loop);
   return FALSE;
 }
@@ -98,7 +118,7 @@ main (int    argc,
   /* avoid gvfs (http://bugzilla.gnome.org/show_bug.cgi?id=526454) */
   if (!g_setenv ("GIO_USE_VFS", "local", TRUE))
     {
-      g_printerr ("Error setting GIO_USE_GVFS");
+      g_printerr ("Error setting GIO_USE_GVFS\n");
       goto out;
     }
 
@@ -107,7 +127,7 @@ main (int    argc,
   error = NULL;
   if (!g_option_context_parse (opt_context, &argc, &argv, &error))
     {
-      g_printerr ("Error parsing options: %s", error->message);
+      g_printerr ("Error parsing options: %s\n", error->message);
       g_error_free (error);
       goto out;
     }
@@ -124,13 +144,22 @@ main (int    argc,
     }
   g_free (s);
 
+  udisks_daemon_log (NULL,
+                     UDISKS_LOG_LEVEL_INFO,
+                     "udisks daemon version %s starting",
+                     PACKAGE_VERSION);
+
   loop = g_main_loop_new (NULL, FALSE);
 
-  sigint_id = _g_posix_signal_watch_add (SIGINT,
-                                         G_PRIORITY_DEFAULT,
-                                         on_sigint,
-                                         NULL,
-                                         NULL);
+  sigint_id = 0;
+  if (!opt_no_sigint)
+    {
+      sigint_id = _g_posix_signal_watch_add (SIGINT,
+                                             G_PRIORITY_DEFAULT,
+                                             on_sigint,
+                                             NULL,
+                                             NULL);
+    }
 
   name_owner_id = g_bus_own_name (G_BUS_TYPE_SYSTEM,
                                   "org.freedesktop.UDisks",
@@ -142,13 +171,13 @@ main (int    argc,
                                   NULL,
                                   NULL);
 
-  g_print ("Entering main event loop\n");
+
+  udisks_daemon_log (the_daemon, UDISKS_LOG_LEVEL_DEBUG, "Entering main event loop");
 
   g_main_loop_run (loop);
 
   ret = 0;
 
-  g_print ("Shutting down\n");
  out:
   if (sigint_id > 0)
     g_source_remove (sigint_id);
@@ -161,6 +190,10 @@ main (int    argc,
   if (opt_context != NULL)
     g_option_context_free (opt_context);
 
-  g_print ("Exiting with code %d\n", ret);
+  udisks_daemon_log (NULL,
+                     UDISKS_LOG_LEVEL_INFO,
+                     "udisks daemon version %s exiting",
+                     PACKAGE_VERSION);
+
   return ret;
 }

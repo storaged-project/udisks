@@ -22,127 +22,153 @@
 #  include "config.h"
 #endif
 
-#include <stdlib.h>
 #include <stdio.h>
-#include <unistd.h>
-#include <signal.h>
-#include <errno.h>
-#include <string.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <pwd.h>
-#include <grp.h>
+#include <unistd.h>
 
-#include <glib.h>
-#include <glib/gi18n-lib.h>
-#include <glib-object.h>
+#include <udisks/udisks.h>
 
-#include <dbus/dbus-glib.h>
-#include <dbus/dbus-glib-lowlevel.h>
+/* TODO: Temporary include */
+#include <gdbusproxymanager.h>
 
-#include "udisks-daemon-glue.h"
-#include "udisks-device-glue.h"
-
-static DBusGConnection *bus;
-
-static int
-do_unmount (const char *object_path,
-            const char *options)
+static GDBusObjectProxy *
+lookup_object_proxy_by_block_device_file (GDBusProxyManager *manager,
+                                          const gchar       *block_device_file)
 {
-  DBusGProxy *proxy;
-  GError *error;
-  char **unmount_options;
-  int ret = 1;
+  GDBusObjectProxy *ret;
+  GList *object_proxies;
+  GList *l;
 
-  unmount_options = NULL;
-  if (options != NULL)
-    unmount_options = g_strsplit (options, ",", 0);
+  ret = NULL;
 
-  proxy = dbus_g_proxy_new_for_name (bus, "org.freedesktop.UDisks", object_path, "org.freedesktop.UDisks.Device");
-
-  error = NULL;
-  if (!org_freedesktop_UDisks_Device_filesystem_unmount (proxy, (const char **) unmount_options, &error))
+  object_proxies = g_dbus_proxy_manager_get_all (manager);
+  for (l = object_proxies; l != NULL; l = l->next)
     {
-      g_print ("Unmount failed: %s\n", error->message);
-      g_error_free (error);
-      goto out;
+      GDBusObjectProxy *object_proxy = G_DBUS_OBJECT_PROXY (l->data);
+      UDisksBlockDevice *block;
+
+      block = UDISKS_PEEK_BLOCK_DEVICE (object_proxy);
+      if (block != NULL)
+        {
+          const gchar * const *symlinks;
+          guint n;
+
+          if (g_strcmp0 (udisks_block_device_get_device (block), block_device_file) == 0)
+            {
+              ret = g_object_ref (object_proxy);
+              goto out;
+            }
+
+          symlinks = udisks_block_device_get_symlinks (block);
+          for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
+            {
+              if (g_strcmp0 (symlinks[n], block_device_file) == 0)
+                {
+                  ret = g_object_ref (object_proxy);
+                  goto out;
+                }
+            }
+        }
     }
-  ret = 0; /* success */
+
  out:
-  g_strfreev (unmount_options);
+  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
+  g_list_free (object_proxies);
+
   return ret;
 }
 
 int
-main (int argc,
-      char **argv)
+main (int argc, char *argv[])
 {
+  gint ret;
+  gchar *block_device_file;
+  GDBusProxyManager *manager;
   GError *error;
-  DBusGProxy *disks_proxy;
-  int ret;
-  char *object_path;
-  struct stat st;
-  char *path;
+  struct stat statbuf;
+  GDBusObjectProxy *object_proxy;
+  UDisksFilesystem *filesystem;
+  const gchar *unmount_options[1] = {NULL};
 
   ret = 1;
-  bus = NULL;
-  path = NULL;
-  disks_proxy = NULL;
+  manager = NULL;
+  block_device_file = NULL;
+  object_proxy = NULL;
+  filesystem = NULL;
 
   g_type_init ();
 
   if (argc < 2 || strlen (argv[1]) == 0)
     {
-      fprintf (stderr, "%s: this program is only supposed to be invoked by umount(8).\n", argv[0]);
+      g_printerr ("%s: this program is only supposed to be invoked by umount(8).\n", argv[0]);
       goto out;
     }
 
-  error = NULL;
-  bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
-  if (bus == NULL)
+  if (stat (argv[1], &statbuf) < 0)
     {
-      g_warning ("Couldn't connect to system bus: %s", error->message);
-      g_error_free (error);
+      g_printerr ("%s: error calling stat on %s: %m\n", argv[0], argv[1]);
       goto out;
     }
 
-  disks_proxy = dbus_g_proxy_new_for_name (bus,
-                                           "org.freedesktop.UDisks",
-                                           "/org/freedesktop/UDisks",
-                                           "org.freedesktop.UDisks");
-
-  error = NULL;
-
-  if (stat (argv[1], &st) < 0)
+  if (S_ISBLK (statbuf.st_mode))
     {
-      fprintf (stderr, "%s: could not stat %s: %s\n", argv[0], argv[1], strerror (errno));
-      goto out;
-    }
-
-  if (S_ISBLK (st.st_mode))
-    {
-      path = g_strdup (argv[1]);
+      block_device_file = g_strdup (argv[1]);
     }
   else
     {
-      path = g_strdup_printf ("/dev/block/%d:%d", major (st.st_dev), minor (st.st_dev));
+      block_device_file = g_strdup_printf ("/dev/block/%d:%d", major (statbuf.st_dev), minor (statbuf.st_dev));
     }
 
-  if (!org_freedesktop_UDisks_find_device_by_device_file (disks_proxy, path, &object_path, &error))
+  error = NULL;
+  manager = udisks_proxy_manager_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+                                                   G_DBUS_PROXY_MANAGER_FLAGS_NONE,
+                                                   "org.freedesktop.UDisks",
+                                                   "/org/freedesktop/UDisks",
+                                                   NULL, /* GCancellable */
+                                                   &error);
+  if (manager == NULL)
     {
-      fprintf (stderr, "%s: no device for %s: %s\n", argv[0], argv[1], error->message);
+      g_printerr ("Error connecting to the udisks daemon: %s\n", error->message);
       g_error_free (error);
       goto out;
     }
-  ret = do_unmount (object_path, NULL);
-  g_free (object_path);
+
+  object_proxy = lookup_object_proxy_by_block_device_file (manager, block_device_file);
+  if (object_proxy == NULL)
+    {
+      g_printerr ("Error finding object for block device file %s\n", block_device_file);
+      goto out;
+    }
+
+  filesystem = UDISKS_GET_FILESYSTEM (object_proxy);
+  if (filesystem == NULL)
+    {
+      g_printerr ("Object for block device file %s does not appear to be a file system\n", block_device_file);
+      goto out;
+    }
+
+  error = NULL;
+  if (!udisks_filesystem_call_unmount_sync (filesystem,
+                                            unmount_options,
+                                            NULL, /* GCancellable */
+                                            &error))
+    {
+      g_printerr ("Error unmounting %s: %s\n", block_device_file, error->message);
+      g_error_free (error);
+      goto out;
+    }
+
+  ret = 0;
 
  out:
-  g_free (path);
-  if (disks_proxy != NULL)
-    g_object_unref (disks_proxy);
-  if (bus != NULL)
-    dbus_g_connection_unref (bus);
+  if (filesystem != NULL)
+    g_object_unref (filesystem);
+  if (object_proxy != NULL)
+    g_object_unref (object_proxy);
+  g_free (block_device_file);
+  if (manager != NULL)
+    g_object_unref (manager);
   return ret;
 }

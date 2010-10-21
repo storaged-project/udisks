@@ -29,29 +29,12 @@ G_BEGIN_DECLS
 #define UDISKS_THREADED_JOB(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_THREADED_JOB, UDisksThreadedJob))
 #define UDISKS_IS_THREADED_JOB(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_THREADED_JOB))
 
-/**
- * UDisksThreadedJobFunc:
- * @job: A #UDisksThreadedJob.
- * @cancellable: A #GCancellable (never %NULL).
- * @user_data: User data passed when creating @job.
- * @error: Return location for error (never %NULL).
- *
- * Job function that runs in a separate thread.
- *
- * Long-running jobs should periodically check @cancellable to see if
- * they have been cancelled.
- *
- * Returns: %TRUE if the job succeeded, %FALSE if @error is set.
- */
-typedef gboolean (*UDisksThreadedJobFunc) (UDisksThreadedJob   *job,
-                                           GCancellable        *cancellable,
-                                           gpointer             user_data,
-                                           GError             **error);
-
 GType              udisks_threaded_job_get_type         (void) G_GNUC_CONST;
 UDisksThreadedJob *udisks_threaded_job_new              (UDisksThreadedJobFunc  job_func,
                                                          gpointer               user_data,
+                                                         GDestroyNotify         user_data_free_func,
                                                          GCancellable          *cancellable);
+gpointer           udisks_threaded_job_get_user_data    (UDisksThreadedJob     *job);
 
 G_END_DECLS
 

@@ -49,7 +49,8 @@ struct _UDisksThreadedJob
   UDisksBaseJob parent_instance;
 
   UDisksThreadedJobFunc job_func;
-  gpointer job_func_user_data;
+  gpointer user_data;
+  GDestroyNotify user_data_free_func;
 
   gboolean job_result;
   GError *job_error;
@@ -70,7 +71,8 @@ enum
 {
   PROP_0,
   PROP_JOB_FUNC,
-  PROP_JOB_FUNC_USER_DATA
+  PROP_USER_DATA,
+  PROP_USER_DATA_FREE_FUNC
 };
 
 enum
@@ -96,6 +98,9 @@ udisks_threaded_job_finalize (GObject *object)
   if (job->job_error != NULL)
     g_error_free (job->job_error);
 
+  if (job->user_data_free_func != NULL)
+    job->user_data_free_func (job->user_data);
+
   if (G_OBJECT_CLASS (udisks_threaded_job_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_threaded_job_parent_class)->finalize (object);
 }
@@ -114,8 +119,12 @@ udisks_threaded_job_get_property (GObject    *object,
       g_value_set_pointer (value, job->job_func);
       break;
 
-    case PROP_JOB_FUNC_USER_DATA:
-      g_value_set_pointer (value, job->job_func);
+    case PROP_USER_DATA:
+      g_value_set_pointer (value, job->user_data);
+      break;
+
+    case PROP_USER_DATA_FREE_FUNC:
+      g_value_set_pointer (value, job->user_data_free_func);
       break;
 
     default:
@@ -139,9 +148,14 @@ udisks_threaded_job_set_property (GObject      *object,
       job->job_func = g_value_get_pointer (value);
       break;
 
-    case PROP_JOB_FUNC_USER_DATA:
-      g_assert (job->job_func_user_data == NULL);
-      job->job_func_user_data = g_value_get_pointer (value);
+    case PROP_USER_DATA:
+      g_assert (job->user_data == NULL);
+      job->user_data = g_value_get_pointer (value);
+      break;
+
+    case PROP_USER_DATA_FREE_FUNC:
+      g_assert (job->user_data_free_func == NULL);
+      job->user_data_free_func = g_value_get_pointer (value);
       break;
 
     default:
@@ -177,6 +191,8 @@ run_io_scheduler_job (GIOSchedulerJob  *io_scheduler_job,
 {
   UDisksThreadedJob *job = UDISKS_THREADED_JOB (user_data);
 
+  /* TODO: probably want to create a GMainContext dedicated to the thread */
+
   g_assert (!job->job_result);
   g_assert_no_error (job->job_error);
 
@@ -184,7 +200,7 @@ run_io_scheduler_job (GIOSchedulerJob  *io_scheduler_job,
     {
       job->job_result = job->job_func (job,
                                        cancellable,
-                                       job->job_func_user_data,
+                                       job->user_data,
                                        &job->job_error);
     }
 
@@ -248,15 +264,30 @@ udisks_threaded_job_class_init (UDisksThreadedJobClass *klass)
                                                          G_PARAM_STATIC_STRINGS));
 
   /**
-   * UDisksThreadedJob:job-func-user-data:
+   * UDisksThreadedJob:user-data:
    *
    * User data for the #UDisksThreadedJobFunc.
    */
   g_object_class_install_property (gobject_class,
-                                   PROP_JOB_FUNC_USER_DATA,
-                                   g_param_spec_pointer ("job-func-user-data",
+                                   PROP_USER_DATA,
+                                   g_param_spec_pointer ("user-data",
                                                          "Job Function's user data",
                                                          "The Job Function user data",
+                                                         G_PARAM_READABLE |
+                                                         G_PARAM_WRITABLE |
+                                                         G_PARAM_CONSTRUCT_ONLY |
+                                                         G_PARAM_STATIC_STRINGS));
+
+  /**
+   * UDisksThreadedJob:user-data-free-func:
+   *
+   * Free function for user data for the #UDisksThreadedJobFunc.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_USER_DATA_FREE_FUNC,
+                                   g_param_spec_pointer ("user-data-free-func",
+                                                         "Job Function's user data free function",
+                                                         "The Job Function user data free function",
                                                          G_PARAM_READABLE |
                                                          G_PARAM_WRITABLE |
                                                          G_PARAM_CONSTRUCT_ONLY |
@@ -301,6 +332,7 @@ udisks_threaded_job_class_init (UDisksThreadedJobClass *klass)
  * udisks_threaded_job_new:
  * @job_func: The function to run in another thread.
  * @user_data: User data to pass to @job_func.
+ * @user_data_free_func: Function to free @user_data with or %NULL.
  * @cancellable: A #GCancellable or %NULL.
  *
  * Creates a new #UDisksThreadedJob instance.
@@ -314,14 +346,31 @@ udisks_threaded_job_class_init (UDisksThreadedJobClass *klass)
 UDisksThreadedJob *
 udisks_threaded_job_new (UDisksThreadedJobFunc  job_func,
                          gpointer               user_data,
+                         GDestroyNotify         user_data_free_func,
                          GCancellable          *cancellable)
 {
   g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
   return UDISKS_THREADED_JOB (g_object_new (UDISKS_TYPE_THREADED_JOB,
                                             "job-func", job_func,
-                                            "job-func-user-data", user_data,
+                                            "user-data", user_data,
+                                            "user-data-free-func", user_data_free_func,
                                             "cancellable", cancellable,
                                             NULL));
+}
+
+/**
+ * udisks_threaded_job_get_user_data:
+ * @job: A #UDisksThreadedJob.
+ *
+ * Gets the @user_data parameter that @job was constructed with.
+ *
+ * Returns: A #gpointer owned by @job.
+ */
+gpointer
+udisks_threaded_job_get_user_data (UDisksThreadedJob *job)
+{
+  g_return_val_if_fail (UDISKS_IS_THREADED_JOB (job), NULL);
+  return job->user_data;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

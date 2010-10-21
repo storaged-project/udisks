@@ -96,11 +96,16 @@
     <xi:include href="xml/udisksdaemon.xml"/>
     <xi:include href="xml/udiskslinuxblock.xml"/>
     <xi:include href="xml/udisksfilesystemimpl.xml"/>
-    <xi:include href="xml/udisksbasejob.xml"/>
-    <xi:include href="xml/udisksspawnedjob.xml"/>
-    <xi:include href="xml/udisksthreadedjob.xml"/>
     <xi:include href="xml/udisksmount.xml"/>
     <xi:include href="xml/udisksmountmonitor.xml"/>
+    <xi:include href="xml/udiskspersistentstore.xml"/>
+    <chapter id="ref-daemon-jobs">
+      <title>Jobs</title>
+      <xi:include href="xml/udisksbasejob.xml"/>
+      <xi:include href="xml/udiskssimplejob.xml"/>
+      <xi:include href="xml/udisksthreadedjob.xml"/>
+      <xi:include href="xml/udisksspawnedjob.xml"/>
+    </chapter>
     <chapter id="ref-daemon-providers">
       <title>Data Providers</title>
       <xi:include href="xml/udisksprovider.xml"/>

@@ -8,7 +8,13 @@ udisks_daemon_get_object_manager
 udisks_daemon_get_mount_monitor
 udisks_daemon_get_linux_provider
 udisks_daemon_get_fstab_provider
+udisks_daemon_get_persistent_store
+udisks_daemon_launch_simple_job
 udisks_daemon_launch_spawned_job
+udisks_daemon_launch_spawned_job_sync
+udisks_daemon_launch_threaded_job
+UDisksLogLevel
+udisks_daemon_log
 <SUBSECTION Standard>
 UDISKS_TYPE_DAEMON
 UDISKS_DAEMON
@@ -67,12 +73,27 @@ udisks_spawned_job_get_type
 UDisksThreadedJob
 UDisksThreadedJobFunc
 udisks_threaded_job_new
+udisks_threaded_job_get_user_data
 <SUBSECTION Standard>
 UDISKS_TYPE_THREADED_JOB
 UDISKS_THREADED_JOB
 UDISKS_IS_THREADED_JOB
 <SUBSECTION Private>
 udisks_threaded_job_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskssimplejob</FILE>
+<TITLE>UDisksSimpleJob</TITLE>
+UDisksSimpleJob
+udisks_simple_job_new
+udisks_simple_job_complete
+<SUBSECTION Standard>
+UDISKS_TYPE_SIMPLE_JOB
+UDISKS_SIMPLE_JOB
+UDISKS_IS_SIMPLE_JOB
+<SUBSECTION Private>
+udisks_simple_job_get_type
 </SECTION>
 
 <SECTION>
@@ -174,4 +195,29 @@ UDISKS_MOUNT_MONITOR
 UDISKS_IS_MOUNT_MONITOR
 <SUBSECTION Private>
 udisks_mount_monitor_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskspersistentstore</FILE>
+<TITLE>UDisksPersistentStore</TITLE>
+UDisksPersistentStore
+udisks_persistent_store_new
+udisks_persistent_store_get_daemon
+udisks_persistent_store_get_path
+udisks_persistent_store_get_temp_path
+UDisksPersistentFlags
+udisks_persistent_store_get
+udisks_persistent_store_set
+udisks_persistent_store_mounted_fs_add
+udisks_persistent_store_mounted_fs_remove
+udisks_persistent_store_mounted_fs_find
+udisks_persistent_store_mounted_fs_cleanup
+udisks_persistent_store_mounted_fs_currently_unmounting_add
+udisks_persistent_store_mounted_fs_currently_unmounting_remove
+<SUBSECTION Standard>
+UDISKS_TYPE_PERSISTENT_STORE
+UDISKS_PERSISTENT_STORE
+UDISKS_IS_PERSISTENT_STORE
+<SUBSECTION Private>
+udisks_persistent_store_get_type
 </SECTION>

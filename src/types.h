@@ -48,6 +48,9 @@ typedef struct _UDisksSpawnedJob UDisksSpawnedJob;
 struct _UDisksThreadedJob;
 typedef struct _UDisksThreadedJob UDisksThreadedJob;
 
+struct _UDisksSimpleJob;
+typedef struct _UDisksSimpleJob UDisksSimpleJob;
+
 struct _UDisksMountMonitor;
 typedef struct _UDisksMountMonitor UDisksMountMonitor;
 
@@ -59,5 +62,27 @@ typedef struct _UDisksFstabProvider UDisksFstabProvider;
 
 struct _UDisksProvider;
 typedef struct _UDisksProvider UDisksProvider;
+
+/**
+ * UDisksThreadedJobFunc:
+ * @job: A #UDisksThreadedJob.
+ * @cancellable: A #GCancellable (never %NULL).
+ * @user_data: User data passed when creating @job.
+ * @error: Return location for error (never %NULL).
+ *
+ * Job function that runs in a separate thread.
+ *
+ * Long-running jobs should periodically check @cancellable to see if
+ * they have been cancelled.
+ *
+ * Returns: %TRUE if the job succeeded, %FALSE if @error is set.
+ */
+typedef gboolean (*UDisksThreadedJobFunc) (UDisksThreadedJob   *job,
+                                           GCancellable        *cancellable,
+                                           gpointer             user_data,
+                                           GError             **error);
+
+struct _UDisksPersistentStore;
+typedef struct _UDisksPersistentStore UDisksPersistentStore;
 
 #endif

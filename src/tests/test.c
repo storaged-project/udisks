@@ -20,6 +20,7 @@
 
 #include "config.h"
 
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
@@ -27,6 +28,7 @@
 #include <udisksdaemon.h>
 #include <udisksspawnedjob.h>
 #include <udisksthreadedjob.h>
+#include <udiskspersistentstore.h>
 
 #include "testutil.h"
 
@@ -94,7 +96,7 @@ test_spawned_job_missing_program (void)
 
   job = udisks_spawned_job_new ("/path/to/unknown/file", NULL, NULL);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
-                             "Failed to execute command-line `/path/to/unknown/file': Error spawning command-line `/path/to/unknown/file': Failed to execute child process \"/path/to/unknown/file\" (No such file or directory) (g-exec-error-quark, 8)");
+                             "Error spawning command-line `/path/to/unknown/file': Failed to execute child process \"/path/to/unknown/file\" (No such file or directory) (g-exec-error-quark, 8)");
   g_object_unref (job);
 }
 
@@ -110,7 +112,7 @@ test_spawned_job_cancelled_at_start (void)
   g_cancellable_cancel (cancellable);
   job = udisks_spawned_job_new ("/bin/true", NULL, cancellable);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
-                             "Failed to execute command-line `/bin/true': Operation was cancelled (g-io-error-quark, 19)");
+                             "Operation was cancelled (g-io-error-quark, 19)");
   g_object_unref (job);
   g_object_unref (cancellable);
 }
@@ -137,7 +139,7 @@ test_spawned_job_cancelled_midway (void)
   g_timeout_add (10, on_timeout, cancellable); /* 10 msec */
   g_main_loop_run (loop);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
-                             "Failed to execute command-line `/bin/sleep 0.5': Operation was cancelled (g-io-error-quark, 19)");
+                             "Operation was cancelled (g-io-error-quark, 19)");
   g_object_unref (job);
   g_object_unref (cancellable);
 }
@@ -169,7 +171,7 @@ test_spawned_job_override_signal_handler (void)
   handler_ran = FALSE;
   g_signal_connect (job, "spawned-job-completed", G_CALLBACK (on_spawned_job_completed), &handler_ran);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
-                             "Failed to execute command-line `/path/to/unknown/file': Error spawning command-line `/path/to/unknown/file': Failed to execute child process \"/path/to/unknown/file\" (No such file or directory) (g-exec-error-quark, 8)");
+                             "Error spawning command-line `/path/to/unknown/file': Failed to execute child process \"/path/to/unknown/file\" (No such file or directory) (g-exec-error-quark, 8)");
   g_assert (handler_ran);
   g_object_unref (job);
 }
@@ -406,7 +408,7 @@ test_threaded_job_successful (void)
 {
   UDisksThreadedJob *job;
 
-  job = udisks_threaded_job_new (threaded_job_successful_func, NULL, NULL);
+  job = udisks_threaded_job_new (threaded_job_successful_func, NULL, NULL, NULL);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_success), NULL);
   g_object_unref (job);
 }
@@ -432,7 +434,7 @@ test_threaded_job_failure (void)
 {
   UDisksThreadedJob *job;
 
-  job = udisks_threaded_job_new (threaded_job_failure_func, NULL, NULL);
+  job = udisks_threaded_job_new (threaded_job_failure_func, NULL, NULL, NULL);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
                              "Threaded job failed with error: some error (g-key-file-error-quark, 5)");
   g_object_unref (job);
@@ -448,7 +450,7 @@ test_threaded_job_cancelled_at_start (void)
 
   cancellable = g_cancellable_new ();
   g_cancellable_cancel (cancellable);
-  job = udisks_threaded_job_new (threaded_job_successful_func, NULL, cancellable);
+  job = udisks_threaded_job_new (threaded_job_successful_func, NULL, NULL, cancellable);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
                              "Threaded job failed with error: Operation was cancelled (g-io-error-quark, 19)");
   g_object_unref (job);
@@ -487,7 +489,7 @@ test_threaded_job_cancelled_midway (void)
 
   cancellable = g_cancellable_new ();
   count = 0;
-  job = udisks_threaded_job_new (threaded_job_sleep_until_cancelled, &count, cancellable);
+  job = udisks_threaded_job_new (threaded_job_sleep_until_cancelled, &count, NULL, cancellable);
   g_timeout_add (10, on_timeout, cancellable); /* 10 msec */
   g_main_loop_run (loop);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
@@ -520,13 +522,166 @@ test_threaded_job_override_signal_handler (void)
   UDisksThreadedJob *job;
   gboolean handler_ran;
 
-  job = udisks_threaded_job_new (threaded_job_failure_func, NULL, NULL);
+  job = udisks_threaded_job_new (threaded_job_failure_func, NULL, NULL, NULL);
   handler_ran = FALSE;
   g_signal_connect (job, "threaded-job-completed", G_CALLBACK (on_threaded_job_completed), &handler_ran);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
                              "Threaded job failed with error: some error (g-key-file-error-quark, 5)");
   g_assert (handler_ran);
   g_object_unref (job);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static void
+check_store (UDisksPersistentStore *store)
+{
+  GError *error;
+  GVariant *value;
+  gchar *s;
+
+  error = NULL;
+  value = udisks_persistent_store_get (store,
+                                       UDISKS_PERSISTENT_FLAGS_NORMAL_STORE,
+                                       "non-existing",
+                                       G_VARIANT_TYPE ("(sss)"),
+                                       &error);
+  g_assert_no_error (error);
+  g_assert (value == NULL);
+
+  error = NULL;
+  value = udisks_persistent_store_get (store,
+                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
+                                       "non-existing",
+                                       G_VARIANT_TYPE ("(sss)"),
+                                       &error);
+  g_assert_no_error (error);
+  g_assert (value == NULL);
+
+  error = NULL;
+  value = udisks_persistent_store_get (store,
+                                       UDISKS_PERSISTENT_FLAGS_NORMAL_STORE,
+                                       "ducks",
+                                       G_VARIANT_TYPE ("(sss)"),
+                                       &error);
+  g_assert_no_error (error);
+  g_assert (value != NULL);
+  s = g_variant_print (value, TRUE);
+  g_assert_cmpstr (s, ==, "('Huey', 'Dewey', 'Louie')");
+  g_free (s);
+  g_variant_unref (value);
+
+  error = NULL;
+  value = udisks_persistent_store_get (store,
+                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
+                                       "ducks",
+                                       G_VARIANT_TYPE ("(sss)"),
+                                       &error);
+  g_assert_no_error (error);
+  g_assert (value != NULL);
+  s = g_variant_print (value, TRUE);
+  g_assert_cmpstr (s, ==, "('Rip', 'Rap', 'Rup')");
+  g_free (s);
+  g_variant_unref (value);
+}
+
+static void
+cleanup_dir (const gchar *dirname)
+{
+  gchar *command;
+
+  g_assert (g_str_has_prefix (dirname, "/tmp/test-udisks-persistent-store-"));
+  g_assert (strstr (dirname, "\"") == NULL);
+  command = g_strdup_printf ("rm -rf \"%s\"", dirname);
+  g_assert_cmpint (system (command), ==, 0);
+  g_free (command);
+}
+
+static void
+test_persistent_store (void)
+{
+  UDisksPersistentStore *store;
+  gchar *dirname;
+  gchar *dirname_temp;
+  GError *error;
+  gboolean rc;
+  GVariant *value;
+  gchar *s;
+
+  dirname = g_strdup ("/tmp/test-udisks-persistent-store-XXXXXX");
+  if (mkdtemp (dirname) == 0)
+    {
+      g_warning ("Error creating temp dir with template %s: %m", dirname);
+      g_assert_not_reached ();
+    }
+
+  dirname_temp = g_strdup ("/tmp/test-udisks-persistent-store-temp-XXXXXX");
+  if (mkdtemp (dirname_temp) == 0)
+    {
+      g_warning ("Error creating temp dir with template %s: %m", dirname_temp);
+      g_assert_not_reached ();
+    }
+
+  store = udisks_persistent_store_new (NULL, dirname, dirname_temp);
+
+  error = NULL;
+  rc = udisks_persistent_store_set (store,
+                                    UDISKS_PERSISTENT_FLAGS_NORMAL_STORE,
+                                    "ducks",
+                                    G_VARIANT_TYPE ("(sss)"),
+                                    g_variant_new ("(sss)", "Huey", "Dewey", "Louie"),
+                                    &error);
+  g_assert_no_error (error);
+  g_assert (rc);
+
+  error = NULL;
+  rc = udisks_persistent_store_set (store,
+                                    UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
+                                    "ducks",
+                                    G_VARIANT_TYPE ("(sss)"),
+                                    g_variant_new ("(sss)", "Rip", "Rap", "Rup"),
+                                    &error);
+  g_assert_no_error (error);
+  g_assert (rc);
+
+  check_store (store);
+
+  /* now nuke the store object and create a new object - we should see
+   * the same data (since it's persistent!)
+   */
+  g_object_unref (store);
+  store = udisks_persistent_store_new (NULL, dirname, dirname_temp);
+  check_store (store);
+
+  /* check we can replace one of the entries */
+  error = NULL;
+  rc = udisks_persistent_store_set (store,
+                                    UDISKS_PERSISTENT_FLAGS_NORMAL_STORE,
+                                    "ducks",
+                                    G_VARIANT_TYPE ("(sss)"),
+                                    g_variant_new ("(sss)", "April", "May", "June"),
+                                    &error);
+  g_assert_no_error (error);
+  g_assert (rc);
+  /* and we can read it back */
+  error = NULL;
+  value = udisks_persistent_store_get (store,
+                                       UDISKS_PERSISTENT_FLAGS_NORMAL_STORE,
+                                       "ducks",
+                                       G_VARIANT_TYPE ("(sss)"),
+                                       &error);
+  g_assert_no_error (error);
+  g_assert (value != NULL);
+  s = g_variant_print (value, TRUE);
+  g_assert_cmpstr (s, ==, "('April', 'May', 'June')");
+  g_free (s);
+  g_variant_unref (value);
+
+  /* ok, done */
+  g_object_unref (store);
+
+  cleanup_dir (dirname);
+  cleanup_dir (dirname_temp);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -561,6 +716,7 @@ main (int    argc,
   g_test_add_func ("/udisks/daemon/threaded_job/cancelled_at_start", test_threaded_job_cancelled_at_start);
   g_test_add_func ("/udisks/daemon/threaded_job/cancelled_midway", test_threaded_job_cancelled_midway);
   g_test_add_func ("/udisks/daemon/threaded_job/override_signal_handler", test_threaded_job_override_signal_handler);
+  g_test_add_func ("/udisks/daemon/persistent_store", test_persistent_store);
 
   ret = g_test_run();
 
