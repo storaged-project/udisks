@@ -190,6 +190,7 @@ get_part_table_device_file (struct udev_device *given_device,
 
   devpath = NULL;
   offset = 0;
+  partition_number = 0;
   ret = NULL;
   partition_table_syspath = NULL;
   alignment_offset = 0;
