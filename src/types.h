@@ -22,6 +22,7 @@
 #define __TYPES_H__
 
 #include <gio/gio.h>
+#include <polkit/polkit.h>
 #include <udisks/udisks.h>
 #include <gdbusobjectmanager.h>
 

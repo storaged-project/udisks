@@ -62,6 +62,8 @@ struct _UDisksDaemon
 
   UDisksLinuxProvider *linux_provider;
   UDisksFstabProvider *fstab_provider;
+
+  PolkitAuthority *authority;
 };
 
 struct _UDisksDaemonClass
@@ -84,6 +86,7 @@ udisks_daemon_finalize (GObject *object)
 {
   UDisksDaemon *daemon = UDISKS_DAEMON (object);
 
+  g_object_unref (daemon->authority);
   g_object_unref (daemon->persistent_store);
   g_object_unref (daemon->fstab_provider);
   g_object_unref (daemon->object_manager);
@@ -164,6 +167,18 @@ static void
 udisks_daemon_constructed (GObject *object)
 {
   UDisksDaemon *daemon = UDISKS_DAEMON (object);
+  GError *error;
+
+  error = NULL;
+  daemon->authority = polkit_authority_get_sync (NULL, &error);
+  if (daemon->authority == NULL)
+    {
+      g_warning ("Error initializing PolicyKit authority: %s (%s, %d)",
+                 error->message,
+                 g_quark_to_string (error->domain),
+                 error->code);
+      g_error_free (error);
+    }
 
   daemon->object_manager = g_dbus_object_manager_new (daemon->connection, "/org/freedesktop/UDisks");
 
@@ -365,6 +380,21 @@ udisks_daemon_get_persistent_store (UDisksDaemon *daemon)
 {
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
   return daemon->persistent_store;
+}
+
+/**
+ * udisks_daemon_get_authority:
+ * @daemon: A #UDisksDaemon.
+ *
+ * Gets the PolicyKit authority used by @daemon.
+ *
+ * Returns: A #PolkitAuthority instance. Do not free, the object is owned by @daemon.
+ */
+PolkitAuthority *
+udisks_daemon_get_authority (UDisksDaemon *daemon)
+{
+  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
+  return daemon->authority;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

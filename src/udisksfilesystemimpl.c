@@ -444,7 +444,7 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
  *
  * Calculates the file system type to use.
  *
- * Returns: A string with the filesystem type (may be "auto") or %NULL if @error is set. Free with g_free().
+ * Returns: A valid UTF-8 string with the filesystem type (may be "auto") or %NULL if @error is set. Free with g_free().
  */
 static gchar *
 calculate_fs_type (UDisksBlockDevice         *block,
@@ -478,6 +478,8 @@ calculate_fs_type (UDisksBlockDevice         *block,
         fs_type_to_use = g_strdup ("auto");
     }
 
+  g_assert (fs_type_to_use == NULL || g_utf8_validate (fs_type_to_use, -1, NULL));
+
   return fs_type_to_use;
 }
 
@@ -488,6 +490,7 @@ calculate_fs_type (UDisksBlockDevice         *block,
  * @caller_uid: The uid of the caller making the request.
  * @fs_type: The filesystem type to use or %NULL.
  * @requested_options: Options requested by the caller.
+ * @out_auth_no_user_interaction: Return location for whether the 'auth_no_user_interaction' option was passed or %NULL.
  * @error: Return location for error or %NULL.
  *
  * Calculates the mount option string to use. Ensures (by returning an
@@ -501,6 +504,7 @@ calculate_mount_options (UDisksBlockDevice         *block,
                          uid_t                      caller_uid,
                          const gchar               *fs_type,
                          const gchar *const        *requested_options,
+                         gboolean                  *out_auth_no_user_interaction,
                          GError                   **error)
 {
   const FSMountOptions *fsmo;
@@ -508,9 +512,11 @@ calculate_mount_options (UDisksBlockDevice         *block,
   gchar *options_to_use_str;
   GString *str;
   guint n;
+  gboolean auth_no_user_interaction;
 
   options_to_use = NULL;
   options_to_use_str = NULL;
+  auth_no_user_interaction = FALSE;
 
   fsmo = find_mount_options_for_fs (fs_type);
 
@@ -524,6 +530,12 @@ calculate_mount_options (UDisksBlockDevice         *block,
   for (n = 0; options_to_use[n] != NULL; n++)
     {
       const gchar *option = options_to_use[n];
+
+      if (g_strcmp0 (option, "auth_no_user_interaction") == 0)
+        {
+          auth_no_user_interaction = TRUE;
+          continue;
+        }
 
       /* avoid attacks like passing "shortname=lower,uid=0" as a single mount option */
       if (strstr (option, ",") != NULL)
@@ -556,7 +568,39 @@ calculate_mount_options (UDisksBlockDevice         *block,
 
  out:
   g_strfreev (options_to_use);
+
+  g_assert (options_to_use_str == NULL || g_utf8_validate (options_to_use_str, -1, NULL));
+
+  if (out_auth_no_user_interaction != NULL)
+    *out_auth_no_user_interaction = auth_no_user_interaction;
+
   return options_to_use_str;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gchar *
+ensure_utf8 (const gchar *s)
+{
+  const gchar *end;
+  gchar *ret;
+
+  if (!g_utf8_validate (s, -1, &end))
+    {
+      gchar *tmp;
+      gint pos;
+      /* TODO: could possibly return a nicer UTF-8 string  */
+      pos = (gint) (end - s);
+      tmp = g_strndup (s, end - s);
+      ret = g_strdup_printf ("%s (Invalid UTF-8 at byte %d)", tmp, pos);
+      g_free (tmp);
+    }
+  else
+    {
+      ret = g_strdup (s);
+    }
+
+  return ret;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -570,7 +614,7 @@ calculate_mount_options (UDisksBlockDevice         *block,
  *
  * Calculates the mount point to use.
  *
- * Returns: A string with the mount point to use or %NULL if @error is set. Free with g_free().
+ * Returns: A UTF-8 string with the mount point to use or %NULL if @error is set. Free with g_free().
  */
 static gchar *
 calculate_mount_point (UDisksBlockDevice         *block,
@@ -583,6 +627,7 @@ calculate_mount_point (UDisksBlockDevice         *block,
   gchar *mount_point;
   gchar *orig_mount_point;
   GString *str;
+  gchar *s;
   guint n;
 
   label = NULL;
@@ -593,31 +638,41 @@ calculate_mount_point (UDisksBlockDevice         *block,
       uuid = udisks_block_device_probed_get_uuid (block_probed);
     }
 
+  /* NOTE: UTF-8 has the nice property that valid UTF-8 strings only contains
+   *       the byte 0x2F if it's for the '/' character (U+002F SOLIDUS).
+   *
+   *       See http://en.wikipedia.org/wiki/UTF-8 for details.
+   */
+
   if (label != NULL && strlen (label) > 0)
     {
       str = g_string_new ("/media/");
-      for (n = 0; label[n] != '\0'; n++)
+      s = ensure_utf8 (label);
+      for (n = 0; s[n] != '\0'; n++)
         {
-          gint c = label[n];
+          gint c = s[n];
           if (c == '/')
             g_string_append_c (str, '_');
           else
             g_string_append_c (str, c);
         }
       mount_point = g_string_free (str, FALSE);
+      g_free (s);
     }
   else if (uuid != NULL && strlen (uuid) > 0)
     {
       str = g_string_new ("/media/");
-      for (n = 0; uuid[n] != '\0'; n++)
+      s = ensure_utf8 (uuid);
+      for (n = 0; s[n] != '\0'; n++)
         {
-          gint c = uuid[n];
+          gint c = s[n];
           if (c == '/')
             g_string_append_c (str, '_');
           else
             g_string_append_c (str, c);
         }
       mount_point = g_string_free (str, FALSE);
+      g_free (s);
     }
   else
     {
@@ -657,7 +712,6 @@ handle_mount (UDisksFilesystem       *filesystem,
   UDisksDaemon *daemon;
   UDisksPersistentStore *store;
   gboolean ret;
-  gchar *mount_point_to_use;
   uid_t caller_uid;
   UDisksBlockDevice *block;
   UDisksBlockDeviceProbed *block_probed;
@@ -667,18 +721,35 @@ handle_mount (UDisksFilesystem       *filesystem,
   const gchar *probed_fs_type;
   gchar *fs_type_to_use;
   gchar *mount_options_to_use;
+  gchar *mount_point_to_use;
+  gchar *escaped_fs_type_to_use;
+  gchar *escaped_mount_options_to_use;
+  gchar *escaped_mount_point_to_use;
   gchar *error_message;
   GError *error;
+  PolkitSubject *auth_subject;
+  const gchar *auth_action_id;
+  PolkitDetails *auth_details;
+  gboolean auth_no_user_interaction;
+  PolkitCheckAuthorizationFlags auth_flags;
+  PolkitAuthorizationResult *auth_result;
 
   ret = FALSE;
   object = NULL;
   daemon = NULL;
   block = NULL;
   block_probed = NULL;
+  error_message = NULL;
   fs_type_to_use = NULL;
   mount_options_to_use = NULL;
   mount_point_to_use = NULL;
-  error_message = NULL;
+  escaped_fs_type_to_use = NULL;
+  escaped_mount_options_to_use = NULL;
+  escaped_mount_point_to_use = NULL;
+  auth_subject = NULL;
+  auth_details = NULL;
+  auth_result = NULL;
+  auth_no_user_interaction = FALSE;
 
   object = g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem));
   block = UDISKS_BLOCK_DEVICE (g_dbus_object_lookup_interface (object, "org.freedesktop.UDisks.BlockDevice"));
@@ -692,9 +763,6 @@ handle_mount (UDisksFilesystem       *filesystem,
    *       similar - if so, use that instead of managing mount points
    *       in /media
    */
-
-  /* TODO: check authorization */
-
 
   /* Fail if the device is already mounted */
   existing_mount_points = udisks_filesystem_get_mount_points (filesystem);
@@ -756,7 +824,7 @@ handle_mount (UDisksFilesystem       *filesystem,
       goto out;
     }
 
-  /* calculate filesystem type */
+  /* calculate filesystem type (guaranteed to be valid UTF-8) */
   error = NULL;
   fs_type_to_use = calculate_fs_type (block,
                                       block_probed,
@@ -769,13 +837,14 @@ handle_mount (UDisksFilesystem       *filesystem,
       goto out;
     }
 
-  /* calculate mount options */
+  /* calculate mount options (guaranteed to be valid UTF-8) */
   error = NULL;
   mount_options_to_use = calculate_mount_options (block,
                                                   block_probed,
                                                   caller_uid,
                                                   fs_type_to_use,
                                                   requested_options,
+                                                  &auth_no_user_interaction,
                                                   &error);
   if (mount_options_to_use == NULL)
     {
@@ -784,7 +853,7 @@ handle_mount (UDisksFilesystem       *filesystem,
       goto out;
     }
 
-  /* calculate mount point */
+  /* calculate mount point (guaranteed to be valid UTF-8) */
   error = NULL;
   mount_point_to_use = calculate_mount_point (block,
                                               block_probed,
@@ -797,7 +866,43 @@ handle_mount (UDisksFilesystem       *filesystem,
       goto out;
     }
 
-  /* TODO: ensure that mount point is UTF-8 .. */
+  /* now check that the user is actually authorized to mount the device
+   *
+   * (TODO: fill in details and pick the right action_id)
+   */
+  auth_action_id = "org.freedesktop.udisks.filesystem-mount-system-internal",
+  auth_subject = polkit_system_bus_name_new (g_dbus_method_invocation_get_sender (invocation));
+  auth_flags = POLKIT_CHECK_AUTHORIZATION_FLAGS_NONE;
+  if (!auth_no_user_interaction)
+    auth_flags = POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION;
+  error = NULL;
+  auth_result = polkit_authority_check_authorization_sync (udisks_daemon_get_authority (daemon),
+                                                           auth_subject,
+                                                           auth_action_id,
+                                                           auth_details,
+                                                           auth_flags,
+                                                           NULL, /* GCancellable* */
+                                                           &error);
+  if (auth_result == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error checking authorization: %s (%s, %d)",
+                                             error->message,
+                                             g_quark_to_string (error->domain),
+                                             error->code);
+      g_error_free (error);
+      goto out;
+    }
+  if (!polkit_authorization_result_get_is_authorized (auth_result))
+    {
+      g_dbus_method_invocation_return_error_literal (invocation,
+                                                     UDISKS_ERROR,
+                                                     UDISKS_ERROR_FAILED,
+                                                     "Not authorized");
+      goto out;
+    }
 
   /* create the mount point */
   if (g_mkdir (mount_point_to_use, 0700) != 0)
@@ -818,17 +923,20 @@ handle_mount (UDisksFilesystem       *filesystem,
                                                &error))
     goto out;
 
+  escaped_fs_type_to_use       = g_strescape (fs_type_to_use, NULL);
+  escaped_mount_options_to_use = g_strescape (mount_options_to_use, NULL);
+  escaped_mount_point_to_use   = g_strescape (mount_point_to_use, NULL);
+
   /* run mount(8) */
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               NULL,  /* GCancellable */
                                               &error_message,
                                               NULL,  /* input_string */
                                               "mount -t \"%s\" -o \"%s\" \"%s\" \"%s\"",
-                                              /* TODO: ensure that passed args does not have double-quotes in them... */
-                                              fs_type_to_use,
-                                              mount_options_to_use,
+                                              escaped_fs_type_to_use,
+                                              escaped_mount_options_to_use,
                                               udisks_block_device_get_device (block),
-                                              mount_point_to_use))
+                                              escaped_mount_point_to_use))
     {
       /* ugh, something went wrong.. we need to clean up the created mount point
        * and also remove the entry from our mounted-fs file
@@ -840,16 +948,21 @@ handle_mount (UDisksFilesystem       *filesystem,
                                                       mount_point_to_use,
                                                       &error))
         {
-          g_warning ("Error removing mount point %s from filesystems file: %s (%s, %d)",
-                     mount_point_to_use,
-                     error->message,
-                     g_quark_to_string (error->domain),
-                     error->code);
+          udisks_daemon_log (daemon,
+                             UDISKS_LOG_LEVEL_WARNING,
+                             "Error removing mount point %s from filesystems file: %s (%s, %d)",
+                             mount_point_to_use,
+                             error->message,
+                             g_quark_to_string (error->domain),
+                             error->code);
           g_error_free (error);
         }
       if (g_rmdir (mount_point_to_use) != 0)
         {
-          g_warning ("Error removing directory %s: %m", mount_point_to_use);
+          udisks_daemon_log (daemon,
+                             UDISKS_LOG_LEVEL_WARNING,
+                             "Error removing directory %s: %m",
+                             mount_point_to_use);
         }
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
@@ -871,10 +984,19 @@ handle_mount (UDisksFilesystem       *filesystem,
   udisks_filesystem_complete_mount (filesystem, invocation, mount_point_to_use);
 
  out:
+  if (auth_subject != NULL)
+    g_object_unref (auth_subject);
+  if (auth_details != NULL)
+    g_object_unref (auth_details);
+  if (auth_result != NULL)
+    g_object_unref (auth_result);
   g_free (error_message);
-  g_free (mount_point_to_use);
-  g_free (mount_options_to_use);
+  g_free (escaped_fs_type_to_use);
+  g_free (escaped_mount_options_to_use);
+  g_free (escaped_mount_point_to_use);
   g_free (fs_type_to_use);
+  g_free (mount_options_to_use);
+  g_free (mount_point_to_use);
   if (object != NULL)
     g_object_unref (object);
   if (block != NULL)
@@ -898,19 +1020,43 @@ handle_unmount (UDisksFilesystem       *filesystem,
   UDisksDaemon *daemon;
   UDisksPersistentStore *store;
   gchar *mount_point;
+  gchar *escaped_mount_point;
   GError *error;
   uid_t mounted_by_uid;
   uid_t caller_uid;
   gchar *error_message;
   const gchar *const *mount_points;
+  guint n;
+  gboolean opt_force;
+  gboolean rc;
 
   mount_point = NULL;
+  escaped_mount_point = NULL;
   error_message = NULL;
+  opt_force = FALSE;
 
   object = g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem));
   block = UDISKS_BLOCK_DEVICE (g_dbus_object_lookup_interface (object, "org.freedesktop.UDisks.BlockDevice"));
   daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
   store = udisks_daemon_get_persistent_store (daemon);
+
+  for (n = 0; options != NULL && options[n] != NULL; n++)
+    {
+      const gchar *option = options[n];
+      if (g_strcmp0 (option, "force") == 0)
+        {
+          opt_force = TRUE;
+        }
+      else
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Unsupported option `%s'",
+                                                 option);
+          goto out;
+        }
+    }
 
   mount_points = udisks_filesystem_get_mount_points (filesystem);
   if (mount_points == NULL || g_strv_length ((gchar **) mount_points) == 0)
@@ -920,7 +1066,6 @@ handle_unmount (UDisksFilesystem       *filesystem,
                                              UDISKS_ERROR_FAILED,
                                              "Device `%s' is not mounted",
                                              udisks_block_device_get_device (block));
-      g_error_free (error);
       goto out;
     }
 
@@ -985,12 +1130,28 @@ handle_unmount (UDisksFilesystem       *filesystem,
                                              mount_point);
       goto out;
     }
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              NULL,  /* GCancellable */
-                                              &error_message,
-                                              NULL,  /* input_string */
-                                              "umount \"%s\"",
-                                              mount_point))
+
+  escaped_mount_point = g_strescape (mount_point, NULL);
+  if (opt_force)
+    {
+      /* right now -l is the only way to "force unmount" file systems... */
+      rc = udisks_daemon_launch_spawned_job_sync (daemon,
+                                                  NULL,  /* GCancellable */
+                                                  &error_message,
+                                                  NULL,  /* input_string */
+                                                  "umount -l \"%s\"",
+                                                  escaped_mount_point);
+    }
+  else
+    {
+      rc = udisks_daemon_launch_spawned_job_sync (daemon,
+                                                  NULL,  /* GCancellable */
+                                                  &error_message,
+                                                  NULL,  /* input_string */
+                                                  "umount \"%s\"",
+                                                  escaped_mount_point);
+    }
+  if (!rc)
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
@@ -1060,6 +1221,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
 
  out:
   g_free (error_message);
+  g_free (escaped_mount_point);
   g_free (mount_point);
   g_object_unref (block);
   g_object_unref (object);

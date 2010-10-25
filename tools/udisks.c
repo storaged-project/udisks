@@ -358,14 +358,86 @@ lookup_object_proxy_by_device (const gchar *device)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gchar *opt_mount_unmount_object = NULL;
-static gchar *opt_mount_unmount_device = NULL;
+static gchar  *opt_mount_unmount_object_path = NULL;
+static gchar  *opt_mount_unmount_device = NULL;
+static gchar **opt_mount_unmount_options = NULL;
+static gchar  *opt_mount_filesystem_type = NULL;
 
-static const GOptionEntry command_mount_unmount_entries[] =
+static const GOptionEntry command_mount_entries[] =
 {
-  { "object", 'o', 0, G_OPTION_ARG_STRING, &opt_mount_unmount_object, "Object to get perform operation on", NULL},
-  { "block-device", 'b', 0, G_OPTION_ARG_STRING, &opt_mount_unmount_device, "Block device to perform operation on", NULL},
-  { NULL }
+  {
+    "object-path",
+    'p',
+    0,
+    G_OPTION_ARG_STRING,
+    &opt_mount_unmount_object_path,
+    "Object to mount",
+    NULL
+  },
+  {
+    "block-device",
+    'b',
+    0,
+    G_OPTION_ARG_STRING,
+    &opt_mount_unmount_device,
+    "Block device to mount",
+    NULL
+  },
+  {
+    "filesystem-type",
+    't',
+    0,
+    G_OPTION_ARG_STRING,
+    &opt_mount_filesystem_type,
+    "Filesystem type to use",
+    NULL
+  },
+  {
+    "option",
+    'o',
+    0,
+    G_OPTION_ARG_STRING_ARRAY,
+    &opt_mount_unmount_options,
+    "Mount option (can be used several times)",
+    NULL
+  },
+  {
+    NULL
+  }
+};
+
+static const GOptionEntry command_unmount_entries[] =
+{
+  {
+    "object-path",
+    'p',
+    0,
+    G_OPTION_ARG_STRING,
+    &opt_mount_unmount_object_path,
+    "Object to unmount",
+    NULL
+  },
+  {
+    "block-device",
+    'b',
+    0,
+    G_OPTION_ARG_STRING,
+    &opt_mount_unmount_device,
+    "Block device to unmount",
+    NULL
+  },
+  {
+    "option",
+    'o',
+    0,
+    G_OPTION_ARG_STRING_ARRAY,
+    &opt_mount_unmount_options,
+    "Unmount option (can be used several times)",
+    NULL
+  },
+  {
+    NULL
+  }
 };
 
 /* TODO: make 'mount' and 'unmount' take options? Probably... */
@@ -391,8 +463,10 @@ handle_command_mount_unmount (gint        *argc,
   guint n;
 
   ret = 1;
-  opt_mount_unmount_object = NULL;
+  opt_mount_unmount_object_path = NULL;
   opt_mount_unmount_device = NULL;
+  opt_mount_unmount_options = NULL;
+  opt_mount_filesystem_type = NULL;
   object_proxy = NULL;
 
   if (is_mount)
@@ -408,10 +482,12 @@ handle_command_mount_unmount (gint        *argc,
     g_option_context_set_summary (o, "Mount a device.");
   else
     g_option_context_set_summary (o, "Unmount a device.");
-  g_option_context_add_main_entries (o, command_mount_unmount_entries, NULL /* GETTEXT_PACKAGE*/);
+  g_option_context_add_main_entries (o,
+                                     is_mount ? command_mount_entries : command_unmount_entries,
+                                     NULL /* GETTEXT_PACKAGE*/);
 
   complete_objects = FALSE;
-  if (request_completion && (g_strcmp0 (completion_prev, "--object") == 0 || g_strcmp0 (completion_prev, "-o") == 0))
+  if (request_completion && (g_strcmp0 (completion_prev, "--object-path") == 0 || g_strcmp0 (completion_prev, "-p") == 0))
     {
       complete_objects = TRUE;
       remove_arg ((*argc) - 1, argc, argv);
@@ -436,10 +512,10 @@ handle_command_mount_unmount (gint        *argc,
     }
 
   if (request_completion &&
-      (opt_mount_unmount_object == NULL && !complete_objects) &&
+      (opt_mount_unmount_object_path == NULL && !complete_objects) &&
       (opt_mount_unmount_device == NULL && !complete_devices))
     {
-      g_print ("--object \n"
+      g_print ("--object-path \n"
                "--block-device \n");
     }
 
@@ -514,12 +590,12 @@ handle_command_mount_unmount (gint        *argc,
   if (request_completion)
     goto out;
 
-  if (opt_mount_unmount_object != NULL)
+  if (opt_mount_unmount_object_path != NULL)
     {
-      object_proxy = lookup_object_proxy_by_path (opt_mount_unmount_object);
+      object_proxy = lookup_object_proxy_by_path (opt_mount_unmount_object_path);
       if (object_proxy == NULL)
         {
-          g_printerr ("Error looking up object with path %s\n", opt_mount_unmount_object);
+          g_printerr ("Error looking up object with path %s\n", opt_mount_unmount_object_path);
           goto out;
         }
     }
@@ -556,18 +632,22 @@ handle_command_mount_unmount (gint        *argc,
       goto out;
     }
 
+  if (opt_mount_filesystem_type == NULL)
+    opt_mount_filesystem_type = g_strdup ("");
+  if (opt_mount_unmount_options == NULL)
+    opt_mount_unmount_options = g_new0 (gchar *, 1);
+
   if (is_mount)
     {
       GError *error;
       gchar *mount_path;
-      const gchar *options[1] = {NULL};
 
       error = NULL;
       if (!udisks_filesystem_call_mount_sync (filesystem,
-                                              "",           /* filesystem_type */
-                                              options,      /* options */
+                                              opt_mount_filesystem_type,
+                                              (const gchar *const *) opt_mount_unmount_options,
                                               &mount_path,
-                                              NULL,         /* GCancellable */
+                                              NULL,                       /* GCancellable */
                                               &error))
         {
           g_printerr ("Error mounting %s: %s\n",
@@ -585,11 +665,10 @@ handle_command_mount_unmount (gint        *argc,
   else
     {
       GError *error;
-      const gchar *options[1] = {NULL};
 
       error = NULL;
       if (!udisks_filesystem_call_unmount_sync (filesystem,
-                                                options,      /* options */
+                                                (const gchar *const *) opt_mount_unmount_options,
                                                 NULL,         /* GCancellable */
                                                 &error))
         {
@@ -610,8 +689,10 @@ handle_command_mount_unmount (gint        *argc,
 
  out:
   g_option_context_free (o);
-  g_free (opt_mount_unmount_object);
+  g_free (opt_mount_unmount_object_path);
   g_free (opt_mount_unmount_device);
+  g_strfreev (opt_mount_unmount_options);
+  g_free (opt_mount_filesystem_type);
   return ret;
 }
 

@@ -447,6 +447,60 @@ block_device_update (UDisksLinuxBlock      *block,
 /* ---------------------------------------------------------------------------------------------------- */
 /* org.freedesktop.UDisks.BlockDeviceProbed */
 
+/* Unescapes sequences like \x20 to " " and ensures the returned string is valid UTF-8.
+ *
+ * If the string is not valid UTF-8, return as much as possible and complain on stderr.
+ *
+ * See udev_util_encode_string() in libudev/libudev-util.c in the udev
+ * tree for the encoder.
+ */
+static gchar *
+decode_udev_encoded_string (const gchar *str)
+{
+  GString *s;
+  gchar *ret;
+  const gchar *end_valid;
+  guint n;
+
+  s = g_string_new (NULL);
+  for (n = 0; str[n] != '\0'; n++)
+    {
+      if (str[n] == '\\')
+        {
+          gint val;
+
+          if (str[n + 1] != 'x' || str[n + 2] == '\0' || str[n + 3] == '\0')
+            {
+              g_warning ("**** NOTE: malformed encoded string `%s'", str);
+              break;
+            }
+
+          val = (g_ascii_xdigit_value (str[n + 2]) << 4) | g_ascii_xdigit_value (str[n + 3]);
+
+          g_string_append_c (s, val);
+
+          n += 3;
+        }
+      else
+        {
+          g_string_append_c (s, str[n]);
+        }
+    }
+
+  if (!g_utf8_validate (s->str, -1, &end_valid))
+    {
+      g_warning ("The string `%s' is not valid UTF-8. Invalid characters begins at `%s'", s->str, end_valid);
+      ret = g_strndup (s->str, end_valid - s->str);
+      g_string_free (s, TRUE);
+    }
+  else
+    {
+      ret = g_string_free (s, FALSE);
+    }
+
+  return ret;
+}
+
 static gboolean
 block_device_probed_check (UDisksLinuxBlock *block)
 {
@@ -459,12 +513,19 @@ block_device_probed_update (UDisksLinuxBlock      *block,
                             GDBusInterface  *_iface)
 {
   UDisksBlockDeviceProbed *iface = UDISKS_BLOCK_DEVICE_PROBED (_iface);
+  gchar *s;
 
   udisks_block_device_probed_set_usage (iface, g_udev_device_get_property (block->device, "ID_FS_USAGE"));
   udisks_block_device_probed_set_type (iface, g_udev_device_get_property (block->device, "ID_FS_TYPE"));
   udisks_block_device_probed_set_version (iface, g_udev_device_get_property (block->device, "ID_FS_VERSION"));
-  udisks_block_device_probed_set_label (iface, g_udev_device_get_property (block->device, "ID_FS_LABEL_ENC"));
-  udisks_block_device_probed_set_uuid (iface, g_udev_device_get_property (block->device, "ID_FS_UUID_ENC"));
+
+  s = decode_udev_encoded_string (g_udev_device_get_property (block->device, "ID_FS_LABEL_ENC"));
+  udisks_block_device_probed_set_label (iface, s);
+  g_free (s);
+
+  s = decode_udev_encoded_string (g_udev_device_get_property (block->device, "ID_FS_UUID_ENC"));
+  udisks_block_device_probed_set_uuid (iface, s);
+  g_free (s);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
