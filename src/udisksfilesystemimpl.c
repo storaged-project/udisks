@@ -870,7 +870,7 @@ handle_mount (UDisksFilesystem       *filesystem,
    *
    * (TODO: fill in details and pick the right action_id)
    */
-  auth_action_id = "org.freedesktop.udisks.filesystem-mount-system-internal",
+  auth_action_id = "org.freedesktop.udisks2.filesystem-mount",
   auth_subject = polkit_system_bus_name_new (g_dbus_method_invocation_get_sender (invocation));
   auth_flags = POLKIT_CHECK_AUTHORIZATION_FLAGS_NONE;
   if (!auth_no_user_interaction)
@@ -899,8 +899,10 @@ handle_mount (UDisksFilesystem       *filesystem,
     {
       g_dbus_method_invocation_return_error_literal (invocation,
                                                      UDISKS_ERROR,
-                                                     UDISKS_ERROR_FAILED,
-                                                     "Not authorized");
+                                                     polkit_authorization_result_get_is_challenge (auth_result) ?
+                                                     UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN :
+                                                     UDISKS_ERROR_NOT_AUTHORIZED,
+                                                     "Not authorized to perform operation");
       goto out;
     }
 

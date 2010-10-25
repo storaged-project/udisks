@@ -1,6 +1,6 @@
 
 policydir = $(datadir)/polkit-1/actions
-dist_policy_DATA = org.freedesktop.udisks.policy
+dist_policy_DATA = org.freedesktop.udisks2.policy
 @INTLTOOL_POLICY_RULE@
 
 clean-local :

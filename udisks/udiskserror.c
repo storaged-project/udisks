@@ -32,9 +32,11 @@
 
 static const GDBusErrorEntry dbus_error_entries[] =
 {
-  {UDISKS_ERROR_FAILED,            "org.freedesktop.UDisks.Error.Failed"},
-  {UDISKS_ERROR_CANCELLED,         "org.freedesktop.UDisks.Error.Cancelled"},
-  {UDISKS_ERROR_ALREADY_CANCELLED, "org.freedesktop.UDisks.Error.AlreadyCancelled"},
+  {UDISKS_ERROR_FAILED,                       "org.freedesktop.UDisks.Error.Failed"},
+  {UDISKS_ERROR_CANCELLED,                    "org.freedesktop.UDisks.Error.Cancelled"},
+  {UDISKS_ERROR_ALREADY_CANCELLED,            "org.freedesktop.UDisks.Error.AlreadyCancelled"},
+  {UDISKS_ERROR_NOT_AUTHORIZED,               "org.freedesktop.UDisks.Error.NotAuthorized"},
+  {UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN,    "org.freedesktop.UDisks.Error.NotAuthorizedCanObtain"},
 };
 
 GQuark

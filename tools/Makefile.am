@@ -25,11 +25,15 @@ udisks_SOURCES = 					\
 udisks_CFLAGS = 					\
 	$(GLIB_CFLAGS) 					\
 	$(GIO_CFLAGS)					\
+	$(POLKIT_GOBJECT_1_CFLAGS)			\
+	$(POLKIT_AGENT_1_CFLAGS)			\
 	$(NULL)
 
 udisks_LDADD = 						\
 	$(GLIB_LIBS) 					\
 	$(GIO_LIBS)					\
+	$(POLKIT_GOBJECT_1_LIBS)			\
+	$(POLKIT_AGENT_1_LIBS)				\
 	$(top_builddir)/udisks/libudisks-2.0.la		\
 	$(NULL)
 

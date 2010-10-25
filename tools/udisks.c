@@ -26,6 +26,10 @@
 #include <stdlib.h>
 #include <udisks/udisks.h>
 
+#include <polkit/polkit.h>
+#define POLKIT_AGENT_I_KNOW_API_IS_SUBJECT_TO_CHANGE
+#include <polkitagent/polkitagent.h>
+
 /* TODO: Temporary include */
 #include <gdbusproxymanager.h>
 
@@ -44,6 +48,72 @@ G_GNUC_UNUSED static void completion_debug (const gchar *format, ...);
 
 static void remove_arg (gint num, gint *argc, gchar **argv[]);
 static void modify_argv0_for_command (gint *argc, gchar **argv[], const gchar *command);
+
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static PolkitAgentListener *local_polkit_agent = NULL;
+static gpointer local_agent_handle = NULL;
+
+static gboolean
+setup_local_polkit_agent (void)
+{
+  gboolean ret;
+  GError *error;
+  PolkitSubject *subject;
+
+  ret = FALSE;
+  subject = NULL;
+
+  if (local_polkit_agent != NULL)
+    goto out;
+
+  subject = polkit_unix_process_new (getpid ());
+
+  error = NULL;
+  /* this will fail if we can't find a controlling terminal */
+  local_polkit_agent = polkit_agent_text_listener_new (NULL, &error);
+  if (local_polkit_agent == NULL)
+    {
+      g_printerr ("Error creating textual authentication agent: %s (%s, %d)\n",
+                  error->message,
+                  g_quark_to_string (error->domain),
+                  error->code);
+      g_error_free (error);
+      goto out;
+    }
+  local_agent_handle = polkit_agent_listener_register (local_polkit_agent,
+                                                       POLKIT_AGENT_REGISTER_FLAGS_RUN_IN_THREAD,
+                                                       subject,
+                                                       NULL, /* object_path */
+                                                       NULL, /* GCancellable */
+                                                       &error);
+  if (local_agent_handle == NULL)
+    {
+      g_printerr ("Error registering local authentication agent: %s (%s, %d)\n",
+                  error->message,
+                  g_quark_to_string (error->domain),
+                  error->code);
+      g_error_free (error);
+      goto out;
+    }
+
+  ret = TRUE;
+
+ out:
+  if (subject != NULL)
+    g_object_unref (subject);
+  return ret;
+}
+
+static void
+shutdown_local_polkit_agent (void)
+{
+  if (local_agent_handle != NULL)
+    polkit_agent_listener_unregister (local_agent_handle);
+  if (local_polkit_agent != NULL)
+    g_object_unref (local_polkit_agent);
+}
 
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -637,6 +707,7 @@ handle_command_mount_unmount (gint        *argc,
   if (opt_mount_unmount_options == NULL)
     opt_mount_unmount_options = g_new0 (gchar *, 1);
 
+ try_again:
   if (is_mount)
     {
       GError *error;
@@ -650,6 +721,13 @@ handle_command_mount_unmount (gint        *argc,
                                               NULL,                       /* GCancellable */
                                               &error))
         {
+          if (error->domain == UDISKS_ERROR &&
+              error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
+              setup_local_polkit_agent ())
+            {
+              g_error_free (error);
+              goto try_again;
+            }
           g_printerr ("Error mounting %s: %s\n",
                       udisks_block_device_get_device (block),
                       error->message);
@@ -672,6 +750,13 @@ handle_command_mount_unmount (gint        *argc,
                                                 NULL,         /* GCancellable */
                                                 &error))
         {
+          if (error->domain == UDISKS_ERROR &&
+              error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
+              setup_local_polkit_agent ())
+            {
+              g_error_free (error);
+              goto try_again;
+            }
           g_printerr ("Error unmounting %s: %s\n",
                       udisks_block_device_get_device (block),
                       error->message);
@@ -1381,6 +1466,7 @@ main (int argc,
   gchar *completion_cur;
   gchar *completion_prev;
   GError *error;
+  static volatile GQuark gdbus_error_domain = 0;
 
   ret = 1;
   completion_cur = NULL;
@@ -1390,6 +1476,9 @@ main (int argc,
 
   g_type_init ();
   _color_init ();
+
+  /* ensure that the D-Bus error mapping is initialized */
+  gdbus_error_domain = UDISKS_ERROR;
 
   if (argc < 2)
     {
@@ -1560,6 +1649,7 @@ main (int argc,
   if (manager != NULL)
     g_object_unref (manager);
   _color_shutdown ();
+  shutdown_local_polkit_agent ();
   return ret;
 }
 

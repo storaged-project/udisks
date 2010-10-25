@@ -34,18 +34,22 @@ G_BEGIN_DECLS
  * @UDISKS_ERROR_FAILED: The operation failed.
  * @UDISKS_ERROR_CANCELLED: The operation was cancelled.
  * @UDISKS_ERROR_ALREADY_CANCELLED: The operation has already been cancelled.
+ * @UDISKS_ERROR_NOT_AUTHORIZED: Not authorized to perform the requested operation.
+ * @UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN: Like %UDISKS_ERROR_NOT_AUTHORIZED but authorization can be obtained through e.g. authentication.
  *
  * Error codes for the #UDISKS_ERROR error domain and the
  * corresponding D-Bus error names.
  */
 typedef enum
 {
-  UDISKS_ERROR_FAILED,             /* org.freedesktop.UDisks.Error.Failed */
-  UDISKS_ERROR_CANCELLED,          /* org.freedesktop.UDisks.Error.Cancelled */
-  UDISKS_ERROR_ALREADY_CANCELLED   /* org.freedesktop.UDisks.Error.AlreadyCancelled */
+  UDISKS_ERROR_FAILED,                     /* org.freedesktop.UDisks.Error.Failed */
+  UDISKS_ERROR_CANCELLED,                  /* org.freedesktop.UDisks.Error.Cancelled */
+  UDISKS_ERROR_ALREADY_CANCELLED,          /* org.freedesktop.UDisks.Error.AlreadyCancelled */
+  UDISKS_ERROR_NOT_AUTHORIZED,             /* org.freedesktop.UDisks.Error.NotAuthorized */
+  UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN   /* org.freedesktop.UDisks.Error.NotAuthorizedCanObtain */
 } UDisksError;
 
-#define UDISKS_ERROR_NUM_ENTRIES  (UDISKS_ERROR_ALREADY_CANCELLED + 1)
+#define UDISKS_ERROR_NUM_ENTRIES  (UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN + 1)
 
 G_END_DECLS
 
