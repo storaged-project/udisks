@@ -141,46 +141,46 @@ get_uid_sync (GDBusMethodInvocation   *invocation,
 
 typedef struct
 {
-  const char *fstype;
-  const char * const *defaults;
-  const char * const *allow;
-  const char * const *allow_uid_self;
-  const char * const *allow_gid_self;
+  const gchar *fstype;
+  const gchar * const *defaults;
+  const gchar * const *allow;
+  const gchar * const *allow_uid_self;
+  const gchar * const *allow_gid_self;
 } FSMountOptions;
 
 /* ---------------------- vfat -------------------- */
 
-static const char *vfat_defaults[] = { "uid=", "gid=", "shortname=mixed", "dmask=0077", "utf8=1", "showexec", NULL };
-static const char *vfat_allow[] = { "flush", "utf8=", "shortname=", "umask=", "dmask=", "fmask=", "codepage=", "iocharset=", "usefree", "showexec", NULL };
-static const char *vfat_allow_uid_self[] = { "uid=", NULL };
-static const char *vfat_allow_gid_self[] = { "gid=", NULL };
+static const gchar *vfat_defaults[] = { "uid=", "gid=", "shortname=mixed", "dmask=0077", "utf8=1", "showexec", NULL };
+static const gchar *vfat_allow[] = { "flush", "utf8=", "shortname=", "umask=", "dmask=", "fmask=", "codepage=", "iocharset=", "usefree", "showexec", NULL };
+static const gchar *vfat_allow_uid_self[] = { "uid=", NULL };
+static const gchar *vfat_allow_gid_self[] = { "gid=", NULL };
 
 /* ---------------------- ntfs -------------------- */
 /* this is assuming that ntfs-3g is used */
 
-static const char *ntfs_defaults[] = { "uid=", "gid=", "dmask=0077", "fmask=0177", NULL };
-static const char *ntfs_allow[] = { "umask=", "dmask=", "fmask=", NULL };
-static const char *ntfs_allow_uid_self[] = { "uid=", NULL };
-static const char *ntfs_allow_gid_self[] = { "gid=", NULL };
+static const gchar *ntfs_defaults[] = { "uid=", "gid=", "dmask=0077", "fmask=0177", NULL };
+static const gchar *ntfs_allow[] = { "umask=", "dmask=", "fmask=", NULL };
+static const gchar *ntfs_allow_uid_self[] = { "uid=", NULL };
+static const gchar *ntfs_allow_gid_self[] = { "gid=", NULL };
 
 /* ---------------------- iso9660 -------------------- */
 
-static const char *iso9660_defaults[] = { "uid=", "gid=", "iocharset=utf8", "mode=0400", "dmode=0500", NULL };
-static const char *iso9660_allow[] = { "norock", "nojoliet", "iocharset=", "mode=", "dmode=", NULL };
-static const char *iso9660_allow_uid_self[] = { "uid=", NULL };
-static const char *iso9660_allow_gid_self[] = { "gid=", NULL };
+static const gchar *iso9660_defaults[] = { "uid=", "gid=", "iocharset=utf8", "mode=0400", "dmode=0500", NULL };
+static const gchar *iso9660_allow[] = { "norock", "nojoliet", "iocharset=", "mode=", "dmode=", NULL };
+static const gchar *iso9660_allow_uid_self[] = { "uid=", NULL };
+static const gchar *iso9660_allow_gid_self[] = { "gid=", NULL };
 
 /* ---------------------- udf -------------------- */
 
-static const char *udf_defaults[] = { "uid=", "gid=", "iocharset=utf8", "umask=0077", NULL };
-static const char *udf_allow[] = { "iocharset=", "umask=", NULL };
-static const char *udf_allow_uid_self[] = { "uid=", NULL };
-static const char *udf_allow_gid_self[] = { "gid=", NULL };
+static const gchar *udf_defaults[] = { "uid=", "gid=", "iocharset=utf8", "umask=0077", NULL };
+static const gchar *udf_allow[] = { "iocharset=", "umask=", NULL };
+static const gchar *udf_allow_uid_self[] = { "uid=", NULL };
+static const gchar *udf_allow_gid_self[] = { "gid=", NULL };
 
 /* ------------------------------------------------ */
 /* TODO: support context= */
 
-static const char *any_allow[] = { "exec", "noexec", "nodev", "nosuid", "atime", "noatime", "nodiratime", "ro", "rw", "sync", "dirsync", NULL };
+static const gchar *any_allow[] = { "exec", "noexec", "nodev", "nosuid", "atime", "noatime", "nodiratime", "ro", "rw", "sync", "dirsync", NULL };
 
 static const FSMountOptions fs_mount_options[] =
   {
@@ -195,7 +195,7 @@ static const FSMountOptions fs_mount_options[] =
 static int num_fs_mount_options = sizeof(fs_mount_options) / sizeof(FSMountOptions);
 
 static const FSMountOptions *
-find_mount_options_for_fs (const char *fstype)
+find_mount_options_for_fs (const gchar *fstype)
 {
   int n;
   const FSMountOptions *fsmo;
@@ -279,15 +279,15 @@ is_uid_in_gid (uid_t uid,
 
 static gboolean
 is_mount_option_allowed (const FSMountOptions *fsmo,
-                         const char *option,
-                         uid_t caller_uid)
+                         const gchar          *option,
+                         uid_t                 caller_uid)
 {
   int n;
-  char *endp;
+  gchar *endp;
   uid_t uid;
   gid_t gid;
   gboolean allowed;
-  const char *ep;
+  const gchar *ep;
   gsize ep_len;
 
   allowed = FALSE;
@@ -346,7 +346,7 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
     {
       for (n = 0; fsmo->allow_uid_self != NULL && fsmo->allow_uid_self[n] != NULL; n++)
         {
-          const char *r_mount_option = fsmo->allow_uid_self[n];
+          const gchar *r_mount_option = fsmo->allow_uid_self[n];
           if (g_str_has_prefix (option, r_mount_option))
             {
               uid = strtol (option + strlen (r_mount_option), &endp, 10);
@@ -367,7 +367,7 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
     {
       for (n = 0; fsmo->allow_gid_self != NULL && fsmo->allow_gid_self[n] != NULL; n++)
         {
-          const char *r_mount_option = fsmo->allow_gid_self[n];
+          const gchar *r_mount_option = fsmo->allow_gid_self[n];
           if (g_str_has_prefix (option, r_mount_option))
             {
               gid = strtol (option + strlen (r_mount_option), &endp, 10);
@@ -386,14 +386,14 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
   return allowed;
 }
 
-static char **
+static gchar **
 prepend_default_mount_options (const FSMountOptions *fsmo,
                                uid_t caller_uid,
                                const gchar * const *given_options)
 {
   GPtrArray *options;
   int n;
-  char *s;
+  gchar *s;
   gid_t gid;
 
   options = g_ptr_array_new ();
@@ -401,7 +401,7 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
     {
       for (n = 0; fsmo->defaults != NULL && fsmo->defaults[n] != NULL; n++)
         {
-          const char *option = fsmo->defaults[n];
+          const gchar *option = fsmo->defaults[n];
 
           if (strcmp (option, "uid=") == 0)
             {
