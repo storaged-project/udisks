@@ -19,307 +19,250 @@
   <refsynopsisdiv>
     <cmdsynopsis>
       <command>udisks</command>
-      <arg><option>OPTIONS</option></arg>
+      <arg choice="plain">info</arg>
+      <group choice="req">
+        <arg choice="plain">--object-path <replaceable>OBJECT</replaceable></arg>
+        <arg choice="plain">--block-device <replaceable>DEVICE</replaceable></arg>
+      </group>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>udisks</command>
+      <arg choice="plain">mount </arg>
+      <group choice="req">
+        <arg choice="plain">--object-path <replaceable>OBJECT</replaceable></arg>
+        <arg choice="plain">--block-device <replaceable>DEVICE</replaceable></arg>
+      </group>
+      <group>
+        <arg choice="plain">--filesystem-type <replaceable>TYPE</replaceable></arg>
+      </group>
+      <arg choice="opt" rep="repeat">--option <replaceable>OPTION</replaceable></arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>udisks</command>
+      <arg choice="plain">unmount </arg>
+      <group choice="req">
+        <arg choice="plain">--object-path <replaceable>OBJECT</replaceable></arg>
+        <arg choice="plain">--block-device <replaceable>DEVICE</replaceable></arg>
+      </group>
+      <arg choice="opt" rep="repeat">--option <replaceable>OPTION</replaceable></arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>udisks</command>
+      <arg choice="plain">monitor</arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>udisks</command>
+      <arg choice="plain">dump</arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>udisks</command>
+      <arg choice="plain">help</arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 
-
-  <refsect1><title>DESCRIPTION</title>
+  <refsect1><title>Description</title>
     <para>
-      <emphasis><refentrytitle>udisks</refentrytitle></emphasis> is a
-      simple command line client for the
-      <citerefentry><refentrytitle>udisks</refentrytitle><manvolnum>7</manvolnum></citerefentry>
-      system bus service.
+      <command>udisks</command> is a command-line program used
+      to interact with the udisks daemon.
+    </para>
+
+    <refsect2>
+      <title>Commands</title>
+      <variablelist>
+
+        <varlistentry>
+          <term><option>mount</option></term>
+          <listitem>
+            <para>
+              Mounts a device. The device will be mounted in a
+              subdirectory in the <filename>/media</filename>
+              hierarchy - upon successful completion, the mount point
+              will be printed to standard output.
+            </para>
+            <para>
+              The device will be mounted with a safe set of default
+              options. You can influence the options passed to the
+              <citerefentry><refentrytitle>mount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+              command with
+              <literal>--option</literal> - do not use a comma to
+              separate options into one word - instead simply use the
+              option several times. Note that only safe options are
+              allowed - requests with inherently unsafe options such
+              as <parameter>suid</parameter> or
+              <parameter>dev</parameter> that would allow the caller
+              to gain additional privileges, are rejected.
+            </para>
+            <para>
+              The special option
+              <parameter>auth_no_user_interaction</parameter> can
+              be used to request that no interaction (such as the user
+              being presented with an authentication dialog) must
+              occur when checking with
+              <citerefentry><refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+              whether the caller is authorized to perform the
+              requested action.
+            </para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>unmount</option></term>
+          <listitem>
+            <para>
+              Unmounts a device previously mounted with udisks. The
+              special option <parameter>force</parameter> can be used
+              to request that the device is unmounted even if active
+              references exists.
+            </para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>monitor</option></term>
+          <listitem><para>
+            Monitors the daemon for events.
+          </para></listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>dump</option></term>
+          <listitem><para>
+            Prints the current state of the daemon.
+          </para></listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>help</option></term>
+          <listitem><para>
+            Prints help and exit.
+          </para></listitem>
+        </varlistentry>
+
+      </variablelist>
+    </refsect2>
+
+  </refsect1>
+
+  <refsect1><title>Audience</title>
+    <para>
+      This program does not assume that the caller is the super user -
+      it is intended to be used by unprivileged users and
+      authorizations are checked by the udisks daemon using
+      <citerefentry><refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+      Additionally, this program is not intended to be used by scripts
+      or other programs - options/commands may change in incompatible
+      ways in the future even in maintenance releases. Scripts and/or
+      other programs should either use the D-Bus APIs of
+      <citerefentry><refentrytitle>udisks-daemon</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+      or native low-level commands such as
+      <citerefentry><refentrytitle>mount</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+    </para>
+  </refsect1>
+
+  <refsect1><title>Bash completion</title>
+    <para>
+      <command>udisks</command> ships with a bash completion script to
+      complete commands, objects, block devices and some options.
     </para>
   </refsect1>
 
   <refsect1>
-    <title>OPTIONS</title>
-    <variablelist>
-      <varlistentry>
-        <term><option>--dump</option></term>
-        <listitem>
-          <para>
-            Dump all information about all devices. Please include this when filing bugs.
-          </para>
-        </listitem>
-      </varlistentry>
+    <title>Examples</title>
 
-      <varlistentry>
-        <term><option>--enumerate</option></term>
-        <listitem>
-          <para>
-            Lists all object paths of devices know to the daemon.
-          </para>
-        </listitem>
-      </varlistentry>
+    <para>
+      Mounting and unmounting devices:
+    </para>
+    <programlisting>
+$ udisks mount --block-device /dev/mmcblk0p2
+Mounted /dev/mmcblk0p2 at /media/stuff
 
-      <varlistentry>
-        <term><option>--enumerate-device-files</option></term>
-        <listitem>
-          <para>
-            Lists all device files of devices know to the daemon.
-          </para>
-        </listitem>
-      </varlistentry>
+$ udisks unmount --block-device /dev/mmcblk0p2
+Unmounted /dev/mmcblk0p2
+    </programlisting>
 
-      <varlistentry>
-        <term><option>--monitor</option></term>
-        <listitem>
-          <para>
-            Connect to the daemon and print a line every time an event
-            happens.
-          </para>
-        </listitem>
-      </varlistentry>
+    <para>
+      Mounting with non-standard options:
+    </para>
+    <programlisting>
+$ udisks mount --block-device /dev/mmcblk0p2 --option flush --option utf8=0 --option iocharset=iso8859-15
+Mounted /dev/mmcblk0p2 at /media/stuff
 
-      <varlistentry>
-        <term><option>--monitor-detail</option></term>
-        <listitem>
-          <para>
-            Like <option>--monitor</option> but prints the full
-            details of the device whenever an event happens.
-          </para>
-        </listitem>
-      </varlistentry>
+$ udisks mount --block-device /dev/mmcblk0p2 --option suid
+Error mounting /dev/mmcblk0p2: GDBus.Error:org.freedesktop.UDisks.Error.Failed: Mount option `suid' is not allowed
+    </programlisting>
 
-      <varlistentry>
-        <term>
-          <option>--show-info</option>
-          <arg choice="plain"><replaceable>device_file</replaceable></arg>
-        </term>
-        <listitem>
-          <para>
-            Shows information about <replaceable>device_file</replaceable>.
-          </para>
-        </listitem>
-      </varlistentry>
+    <para>
+      Showing information about a device:
+    </para>
+    <programlisting>
+$ udisks info --block-device /dev/mmcblk0p2
+/org/freedesktop/UDisks/devices/mmcblk0p2:
+  org.freedesktop.UDisks.BlockDevice:
+    Device:             /dev/mmcblk0p2
+    Major:              179
+    Minor:              2
+    Size:               15794176
+    Symlinks:           /dev/block/179:2
+                        /dev/disk/by-id/mmc-SD01G_0x50882907-part2
+                        /dev/disk/by-path/pci-0000:05:00.2-part2
+                        /dev/disk/by-uuid/6DA7-F983
+                        /dev/disk/by-label/stuff\x22
+  org.freedesktop.UDisks.BlockDevice.Probed:
+    Label:              stuff"
+    Type:               vfat
+    UUID:               6DA7-F983
+    Usage:              filesystem
+    Version:            FAT16
+  org.freedesktop.UDisks.Filesystem:
+    MountPoints:
+  org.freedesktop.UDisks.LinuxSysfsDevice:
+    Subsystem:          block
+    SysfsPath:          /sys/devices/pci0000:00/0000:00:1e.0/0000:05:00.2/mmc_host/mmc0/mmc0:9ffc/block/mmcblk0/mmcblk0p2    </programlisting>
 
-      <varlistentry>
-        <term>
-          <option>--inhibit-polling</option>
-          <arg choice="plain"><replaceable>device_file</replaceable></arg>
-          <arg><option>-- program arg ...</option></arg>
-        </term>
-        <listitem>
-          <para>
-            Inhibits polling on <replaceable>device_file</replaceable>. If no program is given,
-            polling is inhibited until Ctrl+C is pressed. Otherwise the program is spawned and the polling
-            is only inhibited until the program terminates.
-          </para>
-        </listitem>
-      </varlistentry>
+    <para>
+      Monitoring the daemon:
+    </para>
+    <programlisting>
+$ udisks monitor
+Monitoring the udisks daemon. Press Ctrl+C to exit.
+14:33:21.363: The udisks-daemon is running (name-owner :1.1254).
 
-      <varlistentry>
-        <term>
-          <option>--poll-for-media</option>
-          <arg choice="plain"><replaceable>device_file</replaceable></arg>
-        </term>
-        <listitem>
-          <para>
-            Polls <replaceable>device_file</replaceable> to perform media detection.
-          </para>
-        </listitem>
-      </varlistentry>
+14:33:27.616: Added /org/freedesktop/UDisks/jobs/10
+  org.freedesktop.UDisks.Job:
+    ExpectedEndTime:    0
+    Progress:           0.0
+    StartTime:          0
+14:33:27.663: /org/freedesktop/UDisks/devices/mmcblk0p2: org.freedesktop.UDisks.Filesystem: Properties Changed
+  MountPoints:          /media/stuff"
+14:33:27.663: /org/freedesktop/UDisks/jobs/10: org.freedesktop.UDisks.Job::Completed (true, '')
+14:33:27.664: Removed /org/freedesktop/UDisks/jobs/10
 
-      <varlistentry>
-        <term>
-          <option>--inhibit-all-polling</option>
-          <arg><option>-- program arg ...</option></arg>
-        </term>
-        <listitem>
-          <para>
-            Inhibits polling on all devices. If no program is given,
-            polling is inhibited until Ctrl+C is pressed. Otherwise the program is spawned and the polling
-            is only inhibited until the program terminates.
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>
-          <option>--mount</option>
-          <arg choice="plain"><replaceable>device_file</replaceable></arg>
-          <arg><option>--mount-fstype</option><arg choice="plain"><replaceable>fstype</replaceable></arg></arg>
-          <arg><option>--mount-options</option><arg choice="plain"><replaceable>options</replaceable></arg></arg>
-        </term>
-        <listitem>
-          <para>
-            Mounts the device represented by <replaceable>device_file</replaceable> using
-            the file system <replaceable>fstype</replaceable> and a comma-separated list
-            of <replaceable>options</replaceable>.
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>
-          <option>--unmount</option>
-          <arg choice="plain"><replaceable>device_file</replaceable></arg>
-          <arg><option>--unmount-options</option><arg choice="plain"><replaceable>options</replaceable></arg></arg>
-        </term>
-        <listitem>
-          <para>
-            Unmounts the device represented by <replaceable>device_file</replaceable> using
-            a comma-separated list of <replaceable>options</replaceable>.
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>
-          <option>--detach</option>
-          <arg choice="plain"><replaceable>device_file</replaceable></arg>
-          <arg><option>--detach-options</option><arg choice="plain"><replaceable>options</replaceable></arg></arg>
-        </term>
-        <listitem>
-          <para>
-            Detaches (e.g. powering down the physical port the device
-            is connected to) the device represented
-            by <replaceable>device_file</replaceable> using a
-            comma-separated list
-            of <replaceable>options</replaceable>.
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>
-          <option>--ata-smart-refresh</option>
-          <arg choice="plain"><replaceable>device_file</replaceable></arg>
-          <arg><option>--ata-smart-wakeup</option></arg>
-        </term>
-        <listitem>
-          <para>
-            Refreshes ATA SMART data for <replaceable>device_file</replaceable>. If the disk is
-            sleeping it will not be woken up unless <option>--ata-smart-wakeup</option> is passed.
-            will be used.
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>
-          <option>--ata-smart-refresh</option>
-          <arg choice="plain"><replaceable>device_file</replaceable></arg>
-          <option>--ata-smart-simulate</option> <replaceable>blob</replaceable>
-        </term>
-        <listitem>
-          <para>
-            Read ATA SMART data from <replaceable>blob</replaceable> for <replaceable>device_file</replaceable>.
-            This can only be done by the super user and is typically used for testing that clients
-            relying on the ATA SMART data provided by udisks behave correctly.
-            The libatasmart git repository at
-            <ulink url="http://git.0pointer.de/?p=libatasmart.git;a=summary"/>
-            contains a collection of blobs from failing disks.
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>
-          <option>--inhibit</option>
-          <arg><option>-- program arg ...</option></arg>
-        </term>
-        <listitem>
-          <para>
-             Inhibits clients from invoking methods on the daemon that
-             require authorization (all methods will return the
-             <literal>org.freedesktop.UDisks.Error.Inhibited</literal> error) if
-             the caller is not the super user. This is typically used
-             by OS installers and other programs that expects full
-             control of the system, specifically to avoid automounting
-             devices. Only the super user can do this.
-          </para>
-          <para>
-            If no program is given, the daemon is inhibited until
-            Ctrl+C is pressed. Otherwise the program is spawned and
-            the daemon is only inhibited until the program terminates.
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>
-          <option>--set-spindown</option>
-          <arg choice="plain"><replaceable>device_file</replaceable></arg>
-          <option>--spindown-timeout</option>
-          <arg choice="plain"><replaceable>seconds</replaceable></arg>
-          <arg><option>-- program arg ...</option></arg>
-        </term>
-        <listitem>
-          <para>
-            Configures disk spindown timeout on <replaceable>device_file</replaceable> to
-            <replaceable>seconds</replaceable>.
-            See <xref linkend="udisks-spindown"/> for important information before using this option.
-          </para>
-          <para>
-            If no program is given, the spindown time will be used until Ctrl+C is pressed. Otherwise the program is
-            spawned and the the spindown timeout will only be used until the program terminates.
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>
-          <option>--set-spindown-all</option>
-          <option>--spindown-timeout</option>
-          <arg choice="plain"><replaceable>seconds</replaceable></arg>
-          <arg><option>-- program arg ...</option></arg>
-        </term>
-        <listitem>
-          <para>
-            Configures disk spindown timeout on all disks that can be spun down to <replaceable>seconds</replaceable>.
-            See <xref linkend="udisks-spindown"/> for important information before using this option.
-          </para>
-          <para>
-            If no program is given, the spindown time will be used until Ctrl+C is pressed. Otherwise the program is
-            spawned and the the spindown timeout will only be used until the program terminates.
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>--help</option></term>
-        <listitem>
-          <para>
-            Show help options.
-          </para>
-        </listitem>
-      </varlistentry>
-    </variablelist>
+14:33:29.751: Added /org/freedesktop/UDisks/jobs/11
+  org.freedesktop.UDisks.Job:
+    ExpectedEndTime:    0
+    Progress:           0.0
+    StartTime:          0
+14:33:29.752: /org/freedesktop/UDisks/devices/mmcblk0p2: org.freedesktop.UDisks.Filesystem: Properties Changed
+  MountPoints:
+14:33:29.759: /org/freedesktop/UDisks/jobs/11: org.freedesktop.UDisks.Job::Completed (true, '')
+14:33:29.759: Removed /org/freedesktop/UDisks/jobs/11
+    </programlisting>
   </refsect1>
 
-  <refsect1 id="udisks-spindown"><title>SPINNING DOWN DISKS</title>
+  <refsect1><title>Author</title>
     <para>
-      Caution should be exercised when configuring disk spin down timeouts.
-    </para>
-    <para>
-      Note that every time a disk is spun down,
-      the <quote>start-stop-count</quote> ATA SMART attribute will
-      increase by 1 and most disks are only good for a limited number
-      (typically 50,000 but it varies by manufacturer and model). In
-      addition, the drive may take as long as 30 seconds to respond to
-      subsequent disk access – most drives are typically faster, see
-      the <quote>spin-up-time</quote> ATA SMART attribute.
-    </para>
-    <para>
-      On the other hand, cautious use (e.g. using conservative
-      timeouts) of the ability to spin down disks, can be a good way
-      to trade power consumption (typically 8 vs 1 Watts for 3.5&#34;
-      drives) and heat emission for a slightly higher latency.
-    </para>
-  </refsect1>
-
-  <refsect1><title>AUTHOR</title>
-    <para>
-      Written by David Zeuthen <email>david@fubar.dk</email> with
+      Written by David Zeuthen <email>zeuthen@gmail.com</email> with
       a lot of help from many others.
     </para>
   </refsect1>
 
   <refsect1>
-    <title>BUGS</title>
+    <title>Bugs</title>
     <para>
       Please send bug reports to either the distribution bug tracker
       or the upstream bug tracker at
@@ -328,7 +271,7 @@
   </refsect1>
 
   <refsect1>
-    <title>SEE ALSO</title>
+    <title>See also</title>
     <para>
       <citerefentry>
         <refentrytitle>udisks-daemon</refentrytitle><manvolnum>8</manvolnum>
