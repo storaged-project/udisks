@@ -542,7 +542,7 @@ calculate_mount_options (UDisksBlockDevice         *block,
         {
           g_set_error (error,
                        UDISKS_ERROR,
-                       UDISKS_ERROR_FAILED,
+                       UDISKS_ERROR_OPTION_NOT_PERMITTED,
                        "Malformed mount option `%s'",
                        option);
           g_string_free (str, TRUE);
@@ -554,7 +554,7 @@ calculate_mount_options (UDisksBlockDevice         *block,
         {
           g_set_error (error,
                        UDISKS_ERROR,
-                       UDISKS_ERROR_FAILED,
+                       UDISKS_ERROR_OPTION_NOT_PERMITTED,
                        "Mount option `%s' is not allowed",
                        option);
           g_string_free (str, TRUE);
@@ -779,7 +779,7 @@ handle_mount (UDisksFilesystem       *filesystem,
         }
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
+                                             UDISKS_ERROR_ALREADY_MOUNTED,
                                              "Device %s is already mounted at %s.\n",
                                              udisks_block_device_get_device (block),
                                              str->str);
@@ -1053,7 +1053,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
         {
           g_dbus_method_invocation_return_error (invocation,
                                                  UDISKS_ERROR,
-                                                 UDISKS_ERROR_FAILED,
+                                                 UDISKS_ERROR_OPTION_NOT_PERMITTED,
                                                  "Unsupported option `%s'",
                                                  option);
           goto out;
@@ -1065,7 +1065,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
+                                             UDISKS_ERROR_NOT_MOUNTED,
                                              "Device `%s' is not mounted",
                                              udisks_block_device_get_device (block));
       goto out;
@@ -1114,7 +1114,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
       /* TODO: allow with special authorization (unmount-others) */
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
+                                             UDISKS_ERROR_MOUNTED_BY_OTHER_USER,
                                              "Cannot unmount filesystem at `%s' mounted by other user with uid %d",
                                              mount_point,
                                              mounted_by_uid);
@@ -1126,7 +1126,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
+                                             UDISKS_ERROR_ALREADY_UNMOUNTING,
                                              "Cannot unmount %s: Mount point `%s' is currently being unmounted",
                                              udisks_block_device_get_device (block),
                                              mount_point);
