@@ -703,7 +703,7 @@ static gchar *opt_info_device = NULL;
 
 static const GOptionEntry command_info_entries[] =
 {
-  { "object", 'o', 0, G_OPTION_ARG_STRING, &opt_info_object, "Object to get information about", NULL},
+  { "object-path", 'p', 0, G_OPTION_ARG_STRING, &opt_info_object, "Object to get information about", NULL},
   { "block-device", 'b', 0, G_OPTION_ARG_STRING, &opt_info_device, "Block device to get information about", NULL},
   { NULL }
 };
@@ -740,7 +740,7 @@ handle_command_info (gint        *argc,
   g_option_context_add_main_entries (o, command_info_entries, NULL /* GETTEXT_PACKAGE*/);
 
   complete_objects = FALSE;
-  if (request_completion && (g_strcmp0 (completion_prev, "--object") == 0 || g_strcmp0 (completion_prev, "-o") == 0))
+  if (request_completion && (g_strcmp0 (completion_prev, "--object-path") == 0 || g_strcmp0 (completion_prev, "-p") == 0))
     {
       complete_objects = TRUE;
       remove_arg ((*argc) - 1, argc, argv);
@@ -768,7 +768,7 @@ handle_command_info (gint        *argc,
       (opt_info_object == NULL && !complete_objects) &&
       (opt_info_device == NULL && !complete_devices))
     {
-      g_print ("--object \n"
+      g_print ("--object-path \n"
                "--block-device \n");
     }
 
