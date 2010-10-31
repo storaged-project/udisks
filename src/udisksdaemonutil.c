@@ -32,11 +32,13 @@
 
 /**
  * udisks_decode_udev_string:
- * @str: An udev-encoded string.
+ * @str: An udev-encoded string or %NULL.
  *
  * Unescapes sequences like \x20 to " " and ensures the returned string is valid UTF-8.
  *
  * If the string is not valid UTF-8, try as hard as possible to convert to UTF-8.
+ *
+ * If %NULL is passed, then %NULL is returned.
  *
  * See udev_util_encode_string() in libudev/libudev-util.c in the udev
  * tree for what kinds of strings can be used.
@@ -50,6 +52,12 @@ udisks_decode_udev_string (const gchar *str)
   gchar *ret;
   const gchar *end_valid;
   guint n;
+
+  if (str == NULL)
+    {
+      ret = NULL;
+      goto out;
+    }
 
   s = g_string_new (NULL);
   for (n = 0; str[n] != '\0'; n++)
@@ -87,5 +95,6 @@ udisks_decode_udev_string (const gchar *str)
       ret = g_string_free (s, FALSE);
     }
 
+ out:
   return ret;
 }
