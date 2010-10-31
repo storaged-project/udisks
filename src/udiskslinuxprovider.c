@@ -24,6 +24,7 @@
 #include "udisksprovider.h"
 #include "udiskslinuxprovider.h"
 #include "udiskslinuxblock.h"
+#include "udiskslinuxdrive.h"
 
 /**
  * SECTION:udiskslinuxprovider
@@ -31,7 +32,7 @@
  * @short_description: Provider of Linux-specific objects
  *
  * This object is used to add/remove Linux specific objects. Right now
- * it only handles #UDisksLinuxBlock devices.
+ * it handles #UDisksLinuxBlock and #UDisksLinuxDrive objects.
  */
 
 typedef struct _UDisksLinuxProviderClass   UDisksLinuxProviderClass;
@@ -48,8 +49,11 @@ struct _UDisksLinuxProvider
 
   GUdevClient *gudev_client;
 
-  /* maps from sysfs path to LinuxBlock instance */
+  /* maps from sysfs path to UDisksLinuxBlock objects */
   GHashTable *sysfs_to_block;
+
+  /* maps from sysfs path to UDisksLinuxDrive objects */
+  GHashTable *sysfs_to_drive;
 };
 
 struct _UDisksLinuxProviderClass
@@ -70,6 +74,7 @@ udisks_linux_provider_finalize (GObject *object)
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (object);
 
   g_hash_table_unref (provider->sysfs_to_block);
+  g_hash_table_unref (provider->sysfs_to_drive);
   g_object_unref (provider->gudev_client);
 
   if (G_OBJECT_CLASS (udisks_linux_provider_parent_class)->finalize != NULL)
@@ -96,7 +101,7 @@ static void
 udisks_linux_provider_constructed (GObject *object)
 {
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (object);
-  const gchar *subsystems[] = {"block", NULL};
+  const gchar *subsystems[] = {"block", "scsi", NULL};
   GList *devices;
   GList *l;
 
@@ -111,8 +116,18 @@ udisks_linux_provider_constructed (GObject *object)
                                                     g_str_equal,
                                                     g_free,
                                                     (GDestroyNotify) g_object_unref);
+  provider->sysfs_to_drive = g_hash_table_new_full (g_str_hash,
+                                                    g_str_equal,
+                                                    g_free,
+                                                    (GDestroyNotify) g_object_unref);
 
   /* TODO: maybe do two loops to properly handle dependency SNAFU? */
+  devices = g_udev_client_query_by_subsystem (provider->gudev_client, "scsi");
+  for (l = devices; l != NULL; l = l->next)
+    udisks_linux_provider_handle_uevent (provider, "add", G_UDEV_DEVICE (l->data));
+  g_list_foreach (devices, (GFunc) g_object_unref, NULL);
+  g_list_free (devices);
+
   devices = g_udev_client_query_by_subsystem (provider->gudev_client, "block");
   for (l = devices; l != NULL; l = l->next)
     udisks_linux_provider_handle_uevent (provider, "add", G_UDEV_DEVICE (l->data));
@@ -157,7 +172,7 @@ udisks_linux_provider_new (UDisksDaemon  *daemon)
  *
  * Gets the #GUdevClient used by @provider. The returned object is set
  * up so it emits #GUdevClient::uevent signals only for the
- * <literal>block</literal> subsystems.
+ * <literal>block</literal> and <literal>scsi</literal> subsystems.
  *
  * Returns: A #GUdevClient owned by @provider. Do not free.
  */
@@ -171,23 +186,23 @@ udisks_linux_provider_get_udev_client (UDisksLinuxProvider *provider)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
-udisks_linux_provider_handle_uevent (UDisksLinuxProvider *provider,
-                                     const gchar         *action,
-                                     GUdevDevice         *device)
+handle_block_uevent (UDisksLinuxProvider *provider,
+                     const gchar         *action,
+                     GUdevDevice         *device)
 {
   const gchar *sysfs_path;
   UDisksLinuxBlock *block;
+  UDisksDaemon *daemon;
 
-  g_print ("%s:%s: %s %s\n", G_STRLOC, G_STRFUNC,
-           action, g_udev_device_get_sysfs_path (device));
-
+  daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
   sysfs_path = g_udev_device_get_sysfs_path (device);
+
   if (g_strcmp0 (action, "remove") == 0)
     {
       block = g_hash_table_lookup (provider->sysfs_to_block, sysfs_path);
       if (block != NULL)
         {
-          g_dbus_object_manager_unexport (udisks_daemon_get_object_manager (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))),
+          g_dbus_object_manager_unexport (udisks_daemon_get_object_manager (daemon),
                                           g_dbus_object_get_object_path (G_DBUS_OBJECT (block)));
           g_warn_if_fail (g_hash_table_remove (provider->sysfs_to_block, sysfs_path));
         }
@@ -201,10 +216,79 @@ udisks_linux_provider_handle_uevent (UDisksLinuxProvider *provider,
         }
       else
         {
-          block = udisks_linux_block_new (udisks_provider_get_daemon (UDISKS_PROVIDER (provider)), device);
-          g_dbus_object_manager_export (udisks_daemon_get_object_manager (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))),
+          block = udisks_linux_block_new (daemon, device);
+          g_dbus_object_manager_export (udisks_daemon_get_object_manager (daemon),
                                         G_DBUS_OBJECT (block));
           g_hash_table_insert (provider->sysfs_to_block, g_strdup (sysfs_path), block);
         }
+    }
+}
+
+static void
+handle_scsi_uevent (UDisksLinuxProvider *provider,
+                    const gchar         *action,
+                    GUdevDevice         *device)
+{
+  const gchar *sysfs_path;
+  UDisksLinuxDrive *drive;
+  UDisksDaemon *daemon;
+
+  daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
+  sysfs_path = g_udev_device_get_sysfs_path (device);
+
+  if (g_strcmp0 (action, "remove") == 0)
+    {
+      drive = g_hash_table_lookup (provider->sysfs_to_drive, sysfs_path);
+      if (drive != NULL)
+        {
+          g_dbus_object_manager_unexport (udisks_daemon_get_object_manager (daemon),
+                                          g_dbus_object_get_object_path (G_DBUS_OBJECT (drive)));
+          g_warn_if_fail (g_hash_table_remove (provider->sysfs_to_drive, sysfs_path));
+        }
+    }
+  else
+    {
+      drive = g_hash_table_lookup (provider->sysfs_to_drive, sysfs_path);
+      if (drive != NULL)
+        {
+          udisks_linux_drive_uevent (drive, action, device);
+        }
+      else
+        {
+          drive = udisks_linux_drive_new (daemon, device);
+          if (drive != NULL)
+            {
+              g_dbus_object_manager_export (udisks_daemon_get_object_manager (daemon),
+                                            G_DBUS_OBJECT (drive));
+              g_hash_table_insert (provider->sysfs_to_drive, g_strdup (sysfs_path), drive);
+            }
+        }
+    }
+}
+
+static void
+udisks_linux_provider_handle_uevent (UDisksLinuxProvider *provider,
+                                     const gchar         *action,
+                                     GUdevDevice         *device)
+{
+  const gchar *subsystem;
+  UDisksDaemon *daemon;
+
+  daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
+
+  udisks_daemon_log (daemon,
+                     UDISKS_LOG_LEVEL_DEBUG,
+                     "uevent %s %s",
+                     action,
+                     g_udev_device_get_sysfs_path (device));
+
+  subsystem = g_udev_device_get_subsystem (device);
+  if (g_strcmp0 (subsystem, "block") == 0)
+    {
+      handle_block_uevent (provider, action, device);
+    }
+  else if (g_strcmp0 (subsystem, "scsi") == 0)
+    {
+      handle_scsi_uevent (provider, action, device);
     }
 }

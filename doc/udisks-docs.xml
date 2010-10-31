@@ -77,6 +77,12 @@
       <xi:include href="xml/generated-udisksblockdeviceprobed.xml"/>
       <xi:include href="xml/generated-udisksfilesystem.xml"/>
     </chapter>
+    <chapter id="ref-api-drives">
+      <title>Drives</title>
+      <xi:include href="xml/generated-udisksdrive.xml"/>
+      <xi:include href="xml/generated-udisksscsidrive.xml"/>
+      <xi:include href="xml/generated-udisksatadrive.xml"/>
+    </chapter>
     <chapter id="ref-api-os">
       <title>OS-Specific Interfaces</title>
       <xi:include href="xml/generated-udiskslinuxsysfsdevice.xml"/>
@@ -94,7 +100,9 @@
   <part id="ref-daemon">
     <title>Daemon Implementation Details</title>
     <xi:include href="xml/udisksdaemon.xml"/>
+    <xi:include href="xml/udisksdaemonutil.xml"/>
     <xi:include href="xml/udiskslinuxblock.xml"/>
+    <xi:include href="xml/udiskslinuxdrive.xml"/>
     <xi:include href="xml/udisksfilesystemimpl.xml"/>
     <xi:include href="xml/udisksmount.xml"/>
     <xi:include href="xml/udisksmountmonitor.xml"/>

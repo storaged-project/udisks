@@ -49,6 +49,7 @@ libudisks_daemon_la_SOURCES =						\
 	udiskslinuxprovider.h		udiskslinuxprovider.c		\
 	udisksfstabprovider.h		udisksfstabprovider.c		\
 	udiskslinuxblock.h		udiskslinuxblock.c		\
+	udiskslinuxdrive.h		udiskslinuxdrive.c		\
 	udisksfilesystemimpl.h		udisksfilesystemimpl.c		\
 	udisksbasejob.h			udisksbasejob.c			\
 	udisksspawnedjob.h		udisksspawnedjob.c		\
@@ -57,6 +58,7 @@ libudisks_daemon_la_SOURCES =						\
 	udisksmount.h			udisksmount.c			\
 	udisksmountmonitor.h		udisksmountmonitor.c		\
 	udiskspersistentstore.h		udiskspersistentstore.c		\
+	udisksdaemonutil.h		udisksdaemonutil.c		\
 	udisksprivate.h							\
 	$(BUILT_SOURCES)						\
 	$(NULL)

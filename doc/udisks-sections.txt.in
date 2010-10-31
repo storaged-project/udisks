@@ -114,6 +114,22 @@ udisks_linux_block_get_type
 </SECTION>
 
 <SECTION>
+<FILE>udiskslinuxdrive</FILE>
+<TITLE>UDisksLinuxDrive</TITLE>
+UDisksLinuxDrive
+udisks_linux_drive_new
+udisks_linux_drive_uevent
+udisks_linux_drive_get_daemon
+udisks_linux_drive_get_device
+<SUBSECTION Standard>
+UDISKS_TYPE_LINUX_DRIVE
+UDISKS_LINUX_DRIVE
+UDISKS_IS_LINUX_DRIVE
+<SUBSECTION Private>
+udisks_linux_drive_get_type
+</SECTION>
+
+<SECTION>
 <FILE>udisksprovider</FILE>
 <TITLE>UDisksProvider</TITLE>
 UDisksProvider
@@ -222,3 +238,9 @@ UDISKS_IS_PERSISTENT_STORE
 <SUBSECTION Private>
 udisks_persistent_store_get_type
 </SECTION>
+
+<SECTION>
+<FILE>udisksdaemonutil</FILE>
+udisks_decode_udev_string
+</SECTION>
+

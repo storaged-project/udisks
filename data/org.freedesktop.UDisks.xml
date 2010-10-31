@@ -16,6 +16,36 @@
 
   <!-- ********************************************************************** -->
 
+  <interface name="org.freedesktop.UDisks.Drive">
+    <property name="Vendor" type="ay" access="read"/>
+    <property name="Model" type="ay" access="read"/>
+    <property name="Revision" type="ay" access="read"/>
+    <property name="Serial" type="ay" access="read"/>
+    <property name="WWN" type="s" access="read"/>
+  </interface>
+
+
+  <interface name="org.freedesktop.UDisks.ScsiDrive">
+    <!-- Prereq: org.freedesktop.UDisks.Drive -->
+
+    <!-- Type:    The SCSI device type obtained as a result of the INQUIRY command.
+         Version: The version of SCSI implemented by the device.
+
+         See section "6.4 INQUIRY command" in SPC-4.
+
+         TODO: Move this to a generic ScsiDevice interface that non-drive
+               SCSI devices (enclosures, processors etc.) can implement
+      -->
+    <property name="Type" type="i" access="read"/>
+    <property name="Version" type="i" access="read"/>
+  </interface>
+
+  <interface name="org.freedesktop.UDisks.AtaDrive">
+    <!-- Prereq: org.freedesktop.UDisks.Drive -->
+  </interface>
+
+  <!-- ********************************************************************** -->
+
   <interface name="org.freedesktop.UDisks.BlockDevice">
     <property name="Device" type="ay" access="read"/>
     <property name="Symlinks" type="aay" access="read"/>
@@ -24,9 +54,9 @@
     <property name="Size" type="t" access="read"/>
   </interface>
 
-  <!-- ********************************************************************** -->
-
   <interface name="org.freedesktop.UDisks.BlockDevice.Probed">
+    <!-- Prereq: org.freedesktop.UDisks.BlockDevice -->
+
     <property name="Usage" type="s" access="read"/>
     <property name="Type" type="s" access="read"/>
     <property name="Version" type="s" access="read"/>
@@ -34,9 +64,9 @@
     <property name="UUID" type="ay" access="read"/>
   </interface>
 
-  <!-- ********************************************************************** -->
-
   <interface name="org.freedesktop.UDisks.Filesystem">
+    <!-- Prereq: org.freedesktop.UDisks.BlockDevice -->
+
     <property name="MountPoints" type="aay" access="read"/>
 
     <method name="Mount">
