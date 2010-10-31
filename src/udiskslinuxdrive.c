@@ -569,6 +569,7 @@ static gboolean
 udisks_linux_drive_check_device (GUdevDevice *device)
 {
   gboolean ret;
+  gint type;
 
   ret = FALSE;
 
@@ -582,6 +583,18 @@ udisks_linux_drive_check_device (GUdevDevice *device)
    * and we are only interested in the first.
    */
   if (g_strcmp0 (g_udev_device_get_devtype (device), "scsi_device") != 0)
+    goto out;
+
+  /* In fact, we are only interested in SCSI devices with peripheral type
+   * 0x00 (Direct-access block device) and 0x05 (CD/DVD device). If we
+   * didn't do this check we'd end up adding Enclosure Services Devices
+   * and RAID controllers here.
+   *
+   * See SPC-4, section 6.4.2: Standard INQUIRY data for where
+   * the various peripheral types are defined.
+   */
+  type = g_udev_device_get_sysfs_attr_as_int (device, "type");
+  if (!(type == 0x00 || type == 0x05))
     goto out;
 
   ret = TRUE;
