@@ -23,6 +23,7 @@
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
 #include "udiskslinuxdrive.h"
+#include "udiskslinuxcontroller.h"
 
 /**
  * SECTION:udiskslinuxdrive
@@ -435,12 +436,59 @@ drive_check (UDisksLinuxDrive *drive)
   return TRUE;
 }
 
+
+static gchar *
+find_controller (GDBusObjectManager *object_manager,
+                 GUdevDevice        *drive_device)
+{
+  const gchar *drive_device_sysfs_path;
+  gchar *ret;
+  GList *objects;
+  GList *l;
+
+  ret = NULL;
+
+  drive_device_sysfs_path = g_udev_device_get_sysfs_path (drive_device);
+
+  objects = g_dbus_object_manager_get_all (object_manager);
+  for (l = objects; l != NULL; l = l->next)
+    {
+      GDBusObject *object = G_DBUS_OBJECT (l->data);
+      UDisksLinuxController *controller;
+      GUdevDevice *controller_device;
+      const gchar *controller_sysfs_path;
+
+      if (!UDISKS_IS_LINUX_CONTROLLER (object))
+        continue;
+
+      controller = UDISKS_LINUX_CONTROLLER (object);
+      controller_device = udisks_linux_controller_get_device (controller);
+
+      controller_sysfs_path = g_udev_device_get_sysfs_path (controller_device);
+
+      if (g_str_has_prefix (drive_device_sysfs_path, controller_sysfs_path))
+        {
+          ret = g_dbus_object_get_object_path (object);
+          g_object_unref (controller_device);
+          goto out;
+        }
+      g_object_unref (controller_device);
+    }
+
+ out:
+  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+  g_list_free (objects);
+  return ret;
+}
+
 static void
 drive_update (UDisksLinuxDrive      *drive,
               const gchar           *uevent_action,
               GDBusInterface        *_iface)
 {
   UDisksDrive *iface = UDISKS_DRIVE (_iface);
+  GDBusObjectManager *object_manager;
+  gchar *controller_object_path;
 
   /* this is the _almost_ the same for both ATA and SCSI devices (cf. udev's ata_id and scsi_id)
    * but we special case since there are subtle differences...
@@ -496,6 +544,20 @@ drive_update (UDisksLinuxDrive      *drive,
       udisks_drive_set_ctds (iface, g_udev_device_get_name (drive->device));
     }
 
+  /* TODO: if this is slow we could have a cache or ensure that we
+   * only do this once or something else
+   */
+  object_manager = udisks_daemon_get_object_manager (drive->daemon);
+  controller_object_path = find_controller (object_manager, drive->device);
+  if (controller_object_path != NULL)
+    {
+      udisks_drive_set_controller (iface, controller_object_path);
+      g_free (controller_object_path);
+    }
+  else
+    {
+      udisks_drive_set_controller (iface, "/");
+    }
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

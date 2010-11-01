@@ -16,14 +16,30 @@
 
   <!-- ********************************************************************** -->
 
+  <interface name="org.freedesktop.UDisks.Controller">
+    <property name="Vendor" type="ay" access="read"/>
+    <property name="Model" type="ay" access="read"/>
+    <property name="Revision" type="ay" access="read"/>
+    <property name="Serial" type="ay" access="read"/>
+    <!-- TODO: slot number etc -->
+  </interface>
+
+  <!-- ********************************************************************** -->
+
   <interface name="org.freedesktop.UDisks.Drive">
     <property name="Vendor" type="ay" access="read"/>
     <property name="Model" type="ay" access="read"/>
     <property name="Revision" type="ay" access="read"/>
     <property name="Serial" type="ay" access="read"/>
     <property name="WWN" type="s" access="read"/>
+
     <!-- The OS supplied Controller-Target-Disk-Slice address -->
     <property name="CTDS" type="s" access="read"/>
+
+    <!-- The org.freedesktop.UDisks.Controller object that the drive belongs
+         to, or '/' if no such object exists.
+      -->
+    <property name="Controller" type="o" access="read"/>
   </interface>
 
 

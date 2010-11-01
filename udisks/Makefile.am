@@ -63,6 +63,7 @@ dbus_built_sources =									\
 	generated-udisksdrive.h			generated-udisksdrive.c			\
 	generated-udisksscsidrive.h		generated-udisksscsidrive.c		\
 	generated-udisksatadrive.h		generated-udisksatadrive.c		\
+	generated-udiskscontroller.h		generated-udiskscontroller.c		\
 	$(NULL)
 
 BUILT_SOURCES =										\

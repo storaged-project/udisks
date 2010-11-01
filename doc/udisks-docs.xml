@@ -78,6 +78,10 @@
       <xi:include href="xml/generated-udisksfilesystem.xml"/>
     </chapter>
     <chapter id="ref-api-drives">
+      <title>Controllers</title>
+      <xi:include href="xml/generated-udiskscontroller.xml"/>
+    </chapter>
+    <chapter id="ref-api-drives">
       <title>Drives</title>
       <xi:include href="xml/generated-udisksdrive.xml"/>
       <xi:include href="xml/generated-udisksscsidrive.xml"/>
