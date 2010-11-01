@@ -108,6 +108,9 @@ udisks_decode_udev_string (const gchar *str)
  * used in a D-Bus object path will be used. E.g. a character not in
  * <literal>[A-Z][a-z][0-9]_</literal> will be escaped as _HEX where
  * HEX is a two-digit hexadecimal number.
+ *
+ * Note that his mapping is not bijective - e.g. you cannot go back
+ * to the original string.
  */
 void
 udisks_safe_append_to_object_path (GString      *str,
@@ -121,7 +124,7 @@ udisks_safe_append_to_object_path (GString      *str,
        *
        * Each element must only contain the ASCII characters "[A-Z][a-z][0-9]_"
        */
-      if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'))
+      if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_')
         {
           g_string_append_c (str, c);
         }

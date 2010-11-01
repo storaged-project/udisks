@@ -187,21 +187,44 @@ udisks_linux_drive_constructor (GType                  type,
 }
 
 static void
+strip_and_replace_with_uscore (gchar *s)
+{
+  guint n;
+
+  if (s == NULL)
+    goto out;
+
+  g_strstrip (s);
+
+  for (n = 0; s != NULL && s[n] != '\0'; n++)
+    {
+      if (s[n] == ' ' || s[n] == '-')
+        s[n] = '_';
+    }
+
+ out:
+  ;
+}
+
+static void
 udisks_linux_drive_constructed (GObject *object)
 {
   UDisksLinuxDrive *drive = UDISKS_LINUX_DRIVE (object);
-  const gchar *vendor;
-  const gchar *model;
-  const gchar *serial;
+  gchar *vendor;
+  gchar *model;
+  gchar *serial;
   GString *str;
 
   /* initial coldplug */
   udisks_linux_drive_uevent (drive, "add", NULL);
 
   /* compute the object path */
-  vendor = udisks_drive_get_vendor (drive->iface_drive);
-  model = udisks_drive_get_model (drive->iface_drive);
-  serial = udisks_drive_get_serial (drive->iface_drive);
+  vendor = g_strdup (udisks_drive_get_vendor (drive->iface_drive));
+  model = g_strdup (udisks_drive_get_model (drive->iface_drive));
+  serial = g_strdup (udisks_drive_get_serial (drive->iface_drive));
+  strip_and_replace_with_uscore (vendor);
+  strip_and_replace_with_uscore (model);
+  strip_and_replace_with_uscore (serial);
   str = g_string_new ("/org/freedesktop/UDisks/drives/");
   if (vendor == NULL && model == NULL && serial == NULL)
     {
@@ -209,13 +232,27 @@ udisks_linux_drive_constructed (GObject *object)
     }
   else
     {
-      if (vendor != NULL)
-        udisks_safe_append_to_object_path (str, vendor);
-      if (model != NULL)
-        udisks_safe_append_to_object_path (str, model);
-      if (serial != NULL)
-        udisks_safe_append_to_object_path (str, serial);
+      /* <VENDOR>_<MODEL>_<SERIAL> */
+      if (vendor != NULL && strlen (vendor) > 0)
+        {
+          udisks_safe_append_to_object_path (str, vendor);
+        }
+      if (model != NULL && strlen (model) > 0)
+        {
+          if (str->str[str->len - 1] != '/')
+            g_string_append_c (str, '_');
+          udisks_safe_append_to_object_path (str, model);
+        }
+      if (serial != NULL && strlen (serial) > 0)
+        {
+          if (str->str[str->len - 1] != '/')
+            g_string_append_c (str, '_');
+          udisks_safe_append_to_object_path (str, serial);
+        }
     }
+  g_free (vendor);
+  g_free (model);
+  g_free (serial);
   g_dbus_object_set_object_path (G_DBUS_OBJECT (drive), str->str);
   g_string_free (str, TRUE);
 
