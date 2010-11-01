@@ -460,6 +460,7 @@ drive_update (UDisksLinuxDrive      *drive,
       udisks_drive_set_revision (iface, g_udev_device_get_property (drive->device, "ID_REVISION"));
       udisks_drive_set_serial (iface, g_udev_device_get_property (drive->device, "ID_SERIAL_SHORT"));
       udisks_drive_set_wwn (iface, g_udev_device_get_property (drive->device, "ID_WWN_WITH_EXTENSION"));
+      udisks_drive_set_ctds (iface, g_udev_device_get_name (drive->device));
     }
   else if (g_udev_device_get_property_as_boolean (drive->device, "ID_SCSI"))
     {
@@ -482,6 +483,7 @@ drive_update (UDisksLinuxDrive      *drive,
       udisks_drive_set_revision (iface, g_udev_device_get_property (drive->device, "ID_REVISION"));
       udisks_drive_set_serial (iface, g_udev_device_get_property (drive->device, "ID_SCSI_SERIAL"));
       udisks_drive_set_wwn (iface, g_udev_device_get_property (drive->device, "ID_WWN_WITH_EXTENSION"));
+      udisks_drive_set_ctds (iface, g_udev_device_get_name (drive->device));
     }
   else
     {
@@ -491,6 +493,7 @@ drive_update (UDisksLinuxDrive      *drive,
       udisks_drive_set_revision (iface, g_udev_device_get_property (drive->device, "ID_REVISION"));
       udisks_drive_set_serial (iface, g_udev_device_get_property (drive->device, "ID_SERIAL_SHORT"));
       udisks_drive_set_wwn (iface, g_udev_device_get_property (drive->device, "ID_WWN_WITH_EXTENSION"));
+      udisks_drive_set_ctds (iface, g_udev_device_get_name (drive->device));
     }
 
 }

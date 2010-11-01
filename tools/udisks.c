@@ -1347,6 +1347,143 @@ handle_command_monitor (gint        *argc,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gint
+obj_proxy_cmp_ctds (GDBusObjectProxy *a,
+                    GDBusObjectProxy *b)
+{
+  UDisksDrive *da;
+  UDisksDrive *db;
+
+  da = UDISKS_PEEK_DRIVE (a);
+  db = UDISKS_PEEK_DRIVE (b);
+
+  if (da != NULL && db != NULL)
+    return g_strcmp0 (udisks_drive_get_ctds (da), udisks_drive_get_ctds (db));
+  else
+    return obj_proxy_cmp (a, b);
+}
+
+static const GOptionEntry command_status_entries[] =
+{
+  { NULL }
+};
+
+static gint
+handle_command_status (gint        *argc,
+                        gchar      **argv[],
+                        gboolean     request_completion,
+                        const gchar *completion_cur,
+                        const gchar *completion_prev)
+{
+  gint ret;
+  GOptionContext *o;
+  gchar *s;
+  GList *l;
+  GList *object_proxies;
+
+  ret = 1;
+
+  modify_argv0_for_command (argc, argv, "status");
+
+  o = g_option_context_new (NULL);
+  if (request_completion)
+    g_option_context_set_ignore_unknown_options (o, TRUE);
+  g_option_context_set_help_enabled (o, FALSE);
+  g_option_context_set_summary (o, "Shows high-level status.");
+  g_option_context_add_main_entries (o, command_status_entries, NULL /* GETTEXT_PACKAGE*/);
+
+  if (!g_option_context_parse (o, argc, argv, NULL))
+    {
+      if (!request_completion)
+        {
+          s = g_option_context_get_help (o, FALSE, NULL);
+          g_printerr ("%s", s);
+          g_free (s);
+          goto out;
+        }
+    }
+
+  /* done with completion */
+  if (request_completion)
+    goto out;
+
+  object_proxies = g_dbus_proxy_manager_get_all (manager);
+
+  /* first, print all drives (TODO: sort in another way?)
+   *
+   * We are guaranteed that, usually,
+   *
+   *  - CTDS      <= 12
+   *  - model     <= 16   (SCSI: 16, ATA: 40)
+   *  - vendor    <= 8    (SCSI: 8, ATA: 0)
+   *  - revision  <= 8    (SCSI: 6, ATA: 8)
+   *  - serial    <= 20   (SCSI: 16, ATA: 20)
+   */
+  g_print ("CTDS          MODEL                     REVISION  SERIAL               BLOCK\n"
+           "--------------------------------------------------------------------------------\n");
+         /* (10,11,12,0)  SEAGATE ST3300657SS       0006      3SJ1QNMQ00009052NECM sdaa     */
+         /* 01234567890123456789012345678901234567890123456789012345678901234567890123456789 */
+
+  object_proxies = g_list_sort (object_proxies, (GCompareFunc) obj_proxy_cmp_ctds);
+  for (l = object_proxies; l != NULL; l = l->next)
+    {
+      GDBusObjectProxy *object_proxy = G_DBUS_OBJECT_PROXY (l->data);
+      UDisksDrive *drive;
+      const gchar *block;
+      const gchar *ctds;
+      const gchar *vendor;
+      const gchar *model;
+      const gchar *revision;
+      const gchar *serial;
+      gchar *vendor_model;
+
+      drive = UDISKS_PEEK_DRIVE (object_proxy);
+      if (drive == NULL)
+        continue;
+
+      block = "-";
+      //block = "MULTI";
+
+      ctds = udisks_drive_get_ctds (drive);
+      vendor = udisks_drive_get_vendor (drive);
+      model = udisks_drive_get_model (drive);
+      revision = udisks_drive_get_revision (drive);
+      serial = udisks_drive_get_serial (drive);
+
+      if (strlen (vendor) == 0)
+        vendor = NULL;
+      if (strlen (model) == 0)
+        model = NULL;
+      if (vendor != NULL && model != NULL)
+        vendor_model = g_strdup_printf ("%s %s", vendor, model);
+      else if (model != NULL)
+        vendor_model = g_strdup (model);
+      else if (vendor != NULL)
+        vendor_model = g_strdup (vendor);
+      else
+        vendor_model = g_strdup ("-");
+
+      g_print ("%-13s %-25s %-9s %-20s %-8s\n",
+               ctds,
+               vendor_model,
+               revision,
+               serial,
+               block);
+    }
+
+
+  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
+  g_list_free (object_proxies);
+
+  ret = 0;
+
+ out:
+  g_option_context_free (o);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 usage (gint *argc, gchar **argv[], gboolean use_stdout)
 {
@@ -1363,6 +1500,7 @@ usage (gint *argc, gchar **argv[], gboolean use_stdout)
                        "  help         Shows this information\n"
                        "  info         Shows information about an object\n"
                        "  dump         Shows information about all objects\n"
+                       "  status       Shows high-level status\n"
                        "  monitor      Monitor changes to objects\n"
                        "  mount        Mount a device\n"
                        "  unmount      Unmount a device\n"
@@ -1559,6 +1697,15 @@ main (int argc,
                                     completion_prev);
       goto out;
     }
+  else if (g_strcmp0 (command, "status") == 0)
+    {
+      ret = handle_command_status (&argc,
+                                   &argv,
+                                   request_completion,
+                                   completion_cur,
+                                   completion_prev);
+      goto out;
+    }
   else if (g_strcmp0 (command, "complete") == 0 && argc == 4 && !request_completion)
     {
       const gchar *completion_line;
@@ -1628,6 +1775,7 @@ main (int argc,
                    "info \n"
                    "dump \n"
                    "monitor \n"
+                   "status \n"
                    "mount \n"
                    "unmount \n"
                    );

@@ -22,6 +22,8 @@
     <property name="Revision" type="ay" access="read"/>
     <property name="Serial" type="ay" access="read"/>
     <property name="WWN" type="s" access="read"/>
+    <!-- The OS supplied Controller-Target-Disk-Slice address -->
+    <property name="CTDS" type="s" access="read"/>
   </interface>
 
 
