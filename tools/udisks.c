@@ -426,6 +426,43 @@ lookup_object_proxy_by_device (const gchar *device)
   return ret;
 }
 
+static GDBusObjectProxy *
+lookup_object_proxy_by_drive (const gchar *drive)
+{
+  GDBusObjectProxy *ret;
+  GList *object_proxies;
+  GList *l;
+  gchar *full_drive_object_path;
+
+  ret = NULL;
+
+  full_drive_object_path = g_strdup_printf ("/org/freedesktop/UDisks/drives/%s", drive);
+
+  object_proxies = g_dbus_proxy_manager_get_all (manager);
+  for (l = object_proxies; l != NULL; l = l->next)
+    {
+      GDBusObjectProxy *object_proxy = G_DBUS_OBJECT_PROXY (l->data);
+      UDisksDrive *drive;
+
+      if (g_strcmp0 (g_dbus_object_proxy_get_object_path (object_proxy), full_drive_object_path) != 0)
+        continue;
+
+      drive = UDISKS_PEEK_DRIVE (object_proxy);
+      if (drive != NULL)
+        {
+          ret = g_object_ref (object_proxy);
+          goto out;
+        }
+    }
+
+ out:
+  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
+  g_list_free (object_proxies);
+  g_free (full_drive_object_path);
+
+  return ret;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gchar  *opt_mount_unmount_object_path = NULL;
@@ -785,11 +822,13 @@ handle_command_mount_unmount (gint        *argc,
 
 static gchar *opt_info_object = NULL;
 static gchar *opt_info_device = NULL;
+static gchar *opt_info_drive = NULL;
 
 static const GOptionEntry command_info_entries[] =
 {
   { "object-path", 'p', 0, G_OPTION_ARG_STRING, &opt_info_object, "Object to get information about", NULL},
   { "block-device", 'b', 0, G_OPTION_ARG_STRING, &opt_info_device, "Block device to get information about", NULL},
+  { "drive", 'd', 0, G_OPTION_ARG_STRING, &opt_info_drive, "Drive to get information about", NULL},
   { NULL }
 };
 
@@ -805,15 +844,18 @@ handle_command_info (gint        *argc,
   gchar *s;
   gboolean complete_objects;
   gboolean complete_devices;
+  gboolean complete_drives;
   GList *l;
   GList *object_proxies;
   GDBusObjectProxy *object_proxy;
   UDisksBlockDevice *block;
+  UDisksDrive *drive;
   guint n;
 
   ret = 1;
   opt_info_object = NULL;
   opt_info_device = NULL;
+  opt_info_drive = NULL;
 
   modify_argv0_for_command (argc, argv, "info");
 
@@ -838,6 +880,13 @@ handle_command_info (gint        *argc,
       remove_arg ((*argc) - 1, argc, argv);
     }
 
+  complete_drives = FALSE;
+  if (request_completion && (g_strcmp0 (completion_prev, "--drive") == 0 || g_strcmp0 (completion_prev, "-d") == 0))
+    {
+      complete_drives = TRUE;
+      remove_arg ((*argc) - 1, argc, argv);
+    }
+
   if (!g_option_context_parse (o, argc, argv, NULL))
     {
       if (!request_completion)
@@ -851,10 +900,12 @@ handle_command_info (gint        *argc,
 
   if (request_completion &&
       (opt_info_object == NULL && !complete_objects) &&
-      (opt_info_device == NULL && !complete_devices))
+      (opt_info_device == NULL && !complete_devices) &&
+      (opt_info_drive == NULL && !complete_drives))
     {
       g_print ("--object-path \n"
-               "--block-device \n");
+               "--block-device \n"
+               "--drive \n");
     }
 
   if (complete_objects)
@@ -896,6 +947,25 @@ handle_command_info (gint        *argc,
       goto out;
     }
 
+  if (complete_drives)
+    {
+      object_proxies = g_dbus_proxy_manager_get_all (manager);
+      for (l = object_proxies; l != NULL; l = l->next)
+        {
+          object_proxy = G_DBUS_OBJECT_PROXY (l->data);
+          drive = UDISKS_PEEK_DRIVE (object_proxy);
+          if (drive != NULL)
+            {
+              const gchar *base;
+              base = g_strrstr (g_dbus_object_proxy_get_object_path (object_proxy), "/") + 1;
+              g_print ("%s \n", base);
+            }
+        }
+      g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
+      g_list_free (object_proxies);
+      goto out;
+    }
+
   /* done with completion */
   if (request_completion)
     goto out;
@@ -919,6 +989,15 @@ handle_command_info (gint        *argc,
           goto out;
         }
     }
+  else if (opt_info_drive != NULL)
+    {
+      object_proxy = lookup_object_proxy_by_drive (opt_info_drive);
+      if (object_proxy == NULL)
+        {
+          g_printerr ("Error looking up object for drive %s\n", opt_info_drive);
+          goto out;
+        }
+    }
   else
     {
       s = g_option_context_get_help (o, FALSE, NULL);
@@ -938,6 +1017,7 @@ handle_command_info (gint        *argc,
   g_option_context_free (o);
   g_free (opt_info_object);
   g_free (opt_info_device);
+  g_free (opt_info_drive);
   return ret;
 }
 
