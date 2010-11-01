@@ -21,7 +21,10 @@
     <property name="Model" type="ay" access="read"/>
     <property name="Revision" type="ay" access="read"/>
     <property name="Serial" type="ay" access="read"/>
-    <!-- TODO: slot number etc -->
+
+    <!-- TODO: probably move to separate PCI-specific interface -->
+    <property name="Address" type="s" access="read"/>
+    <property name="PhysicalSlot" type="s" access="read"/>
   </interface>
 
   <!-- ********************************************************************** -->

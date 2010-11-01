@@ -437,15 +437,79 @@ controller_update (UDisksLinuxController  *controller,
                    GDBusInterface         *_iface)
 {
   UDisksController *iface = UDISKS_CONTROLLER (_iface);
-  const gchar *vendor;
-  const gchar *model;
+  gchar *vendor;
+  gchar *model;
+  gchar *address;
 
-  vendor = g_udev_device_get_property (controller->device, "ID_VENDOR_FROM_DATABASE");
-  model = g_udev_device_get_property (controller->device, "ID_MODEL_FROM_DATABASE");
+  vendor = g_strdup (g_udev_device_get_property (controller->device, "ID_VENDOR_FROM_DATABASE"));
+  if (vendor == NULL)
+    {
+      vendor = g_strdup_printf ("[vendor=0x%04x subsys=0x%04x]",
+                                g_udev_device_get_sysfs_attr_as_int (controller->device, "vendor"),
+                                g_udev_device_get_sysfs_attr_as_int (controller->device, "subsystem_vendor"));
+    }
+
+  model = g_strdup (g_udev_device_get_property (controller->device, "ID_MODEL_FROM_DATABASE"));
+  if (model == NULL)
+    {
+      vendor = g_strdup_printf ("[model=0x%04x subsys=0x%04x]",
+                                g_udev_device_get_sysfs_attr_as_int (controller->device, "device"),
+                                g_udev_device_get_sysfs_attr_as_int (controller->device, "subsystem_device"));
+    }
 
   udisks_controller_set_vendor (iface, vendor);
   udisks_controller_set_model (iface, model);
-  /* TODO */
+
+  address = g_strdup (g_udev_device_get_property (controller->device, "PCI_SLOT_NAME"));
+  if (address != NULL)
+    {
+      gchar *s;
+
+      g_strstrip (address);
+      udisks_controller_set_address (iface, address);
+
+      s = g_strrstr (address, ".");
+      if (s != NULL)
+        {
+          GDir *dir;
+          gchar *slot_name;
+
+          *s = '\0';
+
+          /* Now look in /sys/bus/pci/slots/SLOTNAME/address - annoyingly, there
+           * are no symlinks... grr..
+           */
+          slot_name = NULL;
+          dir = g_dir_open ("/sys/bus/pci/slots", 0, NULL);
+          if (dir != NULL)
+            {
+              const gchar *name;
+              while ((name = g_dir_read_name (dir)) != NULL && slot_name == NULL)
+                {
+                  gchar *address_file;
+                  gchar *address_for_slot;
+                  address_file = g_strdup_printf ("/sys/bus/pci/slots/%s/address", name);
+                  if (g_file_get_contents (address_file, &address_for_slot, NULL, NULL))
+                    {
+                      g_strstrip (address_for_slot);
+                      if (g_strcmp0 (address, address_for_slot) == 0)
+                        {
+                          slot_name = g_strdup (name);
+                        }
+                      g_free (address_for_slot);
+                    }
+                  g_free (address_file);
+                }
+              g_dir_close (dir);
+            }
+
+          udisks_controller_set_physical_slot (iface, slot_name);
+        }
+    }
+
+  g_free (vendor);
+  g_free (model);
+  g_free (address);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
