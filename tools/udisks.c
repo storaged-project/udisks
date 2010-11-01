@@ -1347,6 +1347,23 @@ handle_command_monitor (gint        *argc,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static void
+parse_ctds (const gchar *ctds,
+            guint       *c,
+            guint       *d,
+            guint       *t,
+            guint       *s)
+{
+  if (sscanf (ctds, "%d:%d:%d:%d", c, d, t, s) != 4)
+    {
+      g_warning ("Error parsing `%s'", ctds);
+      *c = 0;
+      *d = 0;
+      *t = 0;
+      *s = 0;
+    }
+}
+
 static gint
 obj_proxy_cmp_ctds (GDBusObjectProxy *a,
                     GDBusObjectProxy *b)
@@ -1358,7 +1375,35 @@ obj_proxy_cmp_ctds (GDBusObjectProxy *a,
   db = UDISKS_PEEK_DRIVE (b);
 
   if (da != NULL && db != NULL)
-    return g_strcmp0 (udisks_drive_get_ctds (da), udisks_drive_get_ctds (db));
+    {
+      guint c_a, t_a, d_a, s_a;
+      guint c_b, t_b, d_b, s_b;
+
+      parse_ctds (udisks_drive_get_ctds (da), &c_a, &t_a, &d_a, &s_a);
+      parse_ctds (udisks_drive_get_ctds (db), &c_b, &t_b, &d_b, &s_b);
+
+      if (c_a > c_b)
+        return 1;
+      else if (c_a < c_b)
+        return -1;
+
+      if (t_a > t_b)
+        return 1;
+      else if (t_a < t_b)
+        return -1;
+
+      if (d_a > d_b)
+        return 1;
+      else if (d_a < d_b)
+        return -1;
+
+      if (s_a > s_b)
+        return 1;
+      else if (s_a < s_b)
+        return -1;
+
+      return 0;
+    }
   else
     return obj_proxy_cmp (a, b);
 }
