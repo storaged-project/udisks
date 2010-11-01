@@ -98,3 +98,37 @@ udisks_decode_udev_string (const gchar *str)
  out:
   return ret;
 }
+
+/**
+ * udisks_safe_append_to_object_path:
+ * @str: A #GString to append to.
+ * @s: A UTF-8 string.
+ *
+ * Appends @s to @str in a way such that only characters that can be
+ * used in a D-Bus object path will be used. E.g. a character not in
+ * <literal>[A-Z][a-z][0-9]_</literal> will be escaped as _HEX where
+ * HEX is a two-digit hexadecimal number.
+ */
+void
+udisks_safe_append_to_object_path (GString      *str,
+                                   const gchar  *s)
+{
+  guint n;
+  for (n = 0; s[n] != '\0'; n++)
+    {
+      gint c = s[n];
+      /* D-Bus spec sez:
+       *
+       * Each element must only contain the ASCII characters "[A-Z][a-z][0-9]_"
+       */
+      if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'))
+        {
+          g_string_append_c (str, c);
+        }
+      else
+        {
+          /* Escape bytes not in [A-Z][a-z][0-9] as _<hex-with-two-digits> */
+          g_string_append_printf (str, "_%02x", c);
+        }
+    }
+}

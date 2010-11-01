@@ -242,5 +242,6 @@ udisks_persistent_store_get_type
 <SECTION>
 <FILE>udisksdaemonutil</FILE>
 udisks_decode_udev_string
+udisks_safe_append_to_object_path
 </SECTION>
 

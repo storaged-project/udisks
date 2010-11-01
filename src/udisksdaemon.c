@@ -407,12 +407,15 @@ on_job_completed (UDisksJob    *job,
 {
   UDisksDaemon *daemon = UDISKS_DAEMON (user_data);
   GDBusObject *object;
+  gchar *object_path;
 
   object = g_dbus_interface_get_object (G_DBUS_INTERFACE (job));
   g_assert (object != NULL);
 
   /* Unexport job */
-  g_dbus_object_manager_unexport (daemon->object_manager, g_dbus_object_get_object_path (object));
+  object_path = g_dbus_object_get_object_path (object);
+  g_dbus_object_manager_unexport (daemon->object_manager, object_path);
+  g_free (object_path);
   g_dbus_object_remove_interface (object, G_DBUS_INTERFACE (job));
   g_object_unref (object);
 

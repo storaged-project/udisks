@@ -161,89 +161,11 @@ udisks_linux_block_init (UDisksLinuxBlock *block)
 {
 }
 
-static gchar *
-util_compute_object_path (const gchar *path)
-{
-  const gchar *basename;
-  GString *s;
-  guint n;
-
-  g_return_val_if_fail (path != NULL, NULL);
-
-  basename = strrchr (path, '/');
-  if (basename != NULL)
-    basename++;
-  else
-    basename = path;
-
-  s = g_string_new ("/org/freedesktop/UDisks/devices/");
-  for (n = 0; basename[n] != '\0'; n++)
-    {
-      gint c = basename[n];
-
-      /* D-Bus spec sez:
-       *
-       * Each element must only contain the ASCII characters "[A-Z][a-z][0-9]_"
-       */
-      if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'))
-        {
-          g_string_append_c (s, c);
-        }
-      else
-        {
-          /* Escape bytes not in [A-Z][a-z][0-9] as _<hex-with-two-digits> */
-          g_string_append_printf (s, "_%02x", c);
-        }
-    }
-
-  return g_string_free (s, FALSE);
-}
-
-static GObjectConstructParam *
-find_construct_property (guint                  n_construct_properties,
-                         GObjectConstructParam *construct_properties,
-                         const gchar           *name)
-{
-  guint n;
-  for (n = 0; n < n_construct_properties; n++)
-    if (g_strcmp0 (g_param_spec_get_name (construct_properties[n].pspec), name) == 0)
-      return &construct_properties[n];
-  return NULL;
-}
-
-/* unless given, compute object path from sysfs path */
-static GObject *
-udisks_linux_block_constructor (GType                  type,
-                                guint                  n_construct_properties,
-                                GObjectConstructParam *construct_properties)
-{
-  GObjectConstructParam *device_cp;
-  GObjectConstructParam *object_path_cp;
-  GUdevDevice *device;
-  gchar *object_path;
-
-  device_cp = find_construct_property (n_construct_properties, construct_properties, "device");
-  object_path_cp = find_construct_property (n_construct_properties, construct_properties, "object-path");
-  g_assert (device_cp != NULL && object_path_cp != NULL);
-
-  device = G_UDEV_DEVICE (g_value_get_object (device_cp->value));
-  g_assert (device != NULL);
-
-  if (g_value_get_string (object_path_cp->value) == NULL)
-    {
-      object_path = util_compute_object_path (g_udev_device_get_sysfs_path (device));
-      g_value_take_string (object_path_cp->value, object_path);
-    }
-
-  return G_OBJECT_CLASS (udisks_linux_block_parent_class)->constructor (type,
-                                                                        n_construct_properties,
-                                                                        construct_properties);
-}
-
 static void
 udisks_linux_block_constructed (GObject *object)
 {
   UDisksLinuxBlock *block = UDISKS_LINUX_BLOCK (object);
+  GString *str;
 
   block->mount_monitor = udisks_daemon_get_mount_monitor (block->daemon);
   g_signal_connect (block->mount_monitor,
@@ -258,6 +180,12 @@ udisks_linux_block_constructed (GObject *object)
   /* initial coldplug */
   udisks_linux_block_uevent (block, "add", NULL);
 
+  /* compute the object path */
+  str = g_string_new ("/org/freedesktop/UDisks/devices/");
+  udisks_safe_append_to_object_path (str, g_udev_device_get_name (block->device));
+  g_dbus_object_set_object_path (G_DBUS_OBJECT (block), str->str);
+  g_string_free (str, TRUE);
+
   if (G_OBJECT_CLASS (udisks_linux_block_parent_class)->constructed != NULL)
     G_OBJECT_CLASS (udisks_linux_block_parent_class)->constructed (object);
 }
@@ -268,7 +196,6 @@ udisks_linux_block_class_init (UDisksLinuxBlockClass *klass)
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
-  gobject_class->constructor  = udisks_linux_block_constructor;
   gobject_class->finalize     = udisks_linux_block_finalize;
   gobject_class->constructed  = udisks_linux_block_constructed;
   gobject_class->set_property = udisks_linux_block_set_property;

@@ -202,8 +202,11 @@ handle_block_uevent (UDisksLinuxProvider *provider,
       block = g_hash_table_lookup (provider->sysfs_to_block, sysfs_path);
       if (block != NULL)
         {
+          gchar *object_path;
+          object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (block));
           g_dbus_object_manager_unexport (udisks_daemon_get_object_manager (daemon),
-                                          g_dbus_object_get_object_path (G_DBUS_OBJECT (block)));
+                                          object_path);
+          g_free (object_path);
           g_warn_if_fail (g_hash_table_remove (provider->sysfs_to_block, sysfs_path));
         }
     }
@@ -217,8 +220,8 @@ handle_block_uevent (UDisksLinuxProvider *provider,
       else
         {
           block = udisks_linux_block_new (daemon, device);
-          g_dbus_object_manager_export (udisks_daemon_get_object_manager (daemon),
-                                        G_DBUS_OBJECT (block));
+          g_dbus_object_manager_export_and_uniquify (udisks_daemon_get_object_manager (daemon),
+                                                     G_DBUS_OBJECT (block));
           g_hash_table_insert (provider->sysfs_to_block, g_strdup (sysfs_path), block);
         }
     }
@@ -241,8 +244,11 @@ handle_scsi_uevent (UDisksLinuxProvider *provider,
       drive = g_hash_table_lookup (provider->sysfs_to_drive, sysfs_path);
       if (drive != NULL)
         {
+          gchar *object_path;
+          object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (drive));
           g_dbus_object_manager_unexport (udisks_daemon_get_object_manager (daemon),
-                                          g_dbus_object_get_object_path (G_DBUS_OBJECT (drive)));
+                                          object_path);
+          g_free (object_path);
           g_warn_if_fail (g_hash_table_remove (provider->sysfs_to_drive, sysfs_path));
         }
     }
@@ -258,8 +264,8 @@ handle_scsi_uevent (UDisksLinuxProvider *provider,
           drive = udisks_linux_drive_new (daemon, device);
           if (drive != NULL)
             {
-              g_dbus_object_manager_export (udisks_daemon_get_object_manager (daemon),
-                                            G_DBUS_OBJECT (drive));
+              g_dbus_object_manager_export_and_uniquify (udisks_daemon_get_object_manager (daemon),
+                                                         G_DBUS_OBJECT (drive));
               g_hash_table_insert (provider->sysfs_to_drive, g_strdup (sysfs_path), drive);
             }
         }

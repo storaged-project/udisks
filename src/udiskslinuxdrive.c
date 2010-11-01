@@ -147,44 +147,6 @@ udisks_linux_drive_init (UDisksLinuxDrive *drive)
 {
 }
 
-static gchar *
-util_compute_object_path (const gchar *path)
-{
-  const gchar *basename;
-  GString *s;
-  guint n;
-
-  g_return_val_if_fail (path != NULL, NULL);
-
-  basename = strrchr (path, '/');
-  if (basename != NULL)
-    basename++;
-  else
-    basename = path;
-
-  s = g_string_new ("/org/freedesktop/UDisks/drives/");
-  for (n = 0; basename[n] != '\0'; n++)
-    {
-      gint c = basename[n];
-
-      /* D-Bus spec sez:
-       *
-       * Each element must only contain the ASCII characters "[A-Z][a-z][0-9]_"
-       */
-      if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'))
-        {
-          g_string_append_c (s, c);
-        }
-      else
-        {
-          /* Escape bytes not in [A-Z][a-z][0-9] as _<hex-with-two-digits> */
-          g_string_append_printf (s, "_%02x", c);
-        }
-    }
-
-  return g_string_free (s, FALSE);
-}
-
 static GObjectConstructParam *
 find_construct_property (guint                  n_construct_properties,
                          GObjectConstructParam *construct_properties,
@@ -204,13 +166,10 @@ udisks_linux_drive_constructor (GType                  type,
                                 GObjectConstructParam *construct_properties)
 {
   GObjectConstructParam *device_cp;
-  GObjectConstructParam *object_path_cp;
   GUdevDevice *device;
-  gchar *object_path;
 
   device_cp = find_construct_property (n_construct_properties, construct_properties, "device");
-  object_path_cp = find_construct_property (n_construct_properties, construct_properties, "object-path");
-  g_assert (device_cp != NULL && object_path_cp != NULL);
+  g_assert (device_cp != NULL);
 
   device = G_UDEV_DEVICE (g_value_get_object (device_cp->value));
   g_assert (device != NULL);
@@ -221,11 +180,6 @@ udisks_linux_drive_constructor (GType                  type,
     }
   else
     {
-      if (g_value_get_string (object_path_cp->value) == NULL)
-        {
-          object_path = util_compute_object_path (g_udev_device_get_sysfs_path (device));
-          g_value_take_string (object_path_cp->value, object_path);
-        }
       return G_OBJECT_CLASS (udisks_linux_drive_parent_class)->constructor (type,
                                                                             n_construct_properties,
                                                                             construct_properties);
@@ -236,9 +190,34 @@ static void
 udisks_linux_drive_constructed (GObject *object)
 {
   UDisksLinuxDrive *drive = UDISKS_LINUX_DRIVE (object);
+  const gchar *vendor;
+  const gchar *model;
+  const gchar *serial;
+  GString *str;
 
   /* initial coldplug */
   udisks_linux_drive_uevent (drive, "add", NULL);
+
+  /* compute the object path */
+  vendor = udisks_drive_get_vendor (drive->iface_drive);
+  model = udisks_drive_get_model (drive->iface_drive);
+  serial = udisks_drive_get_serial (drive->iface_drive);
+  str = g_string_new ("/org/freedesktop/UDisks/drives/");
+  if (vendor == NULL && model == NULL && serial == NULL)
+    {
+      g_string_append (str, "drive");
+    }
+  else
+    {
+      if (vendor != NULL)
+        udisks_safe_append_to_object_path (str, vendor);
+      if (model != NULL)
+        udisks_safe_append_to_object_path (str, model);
+      if (serial != NULL)
+        udisks_safe_append_to_object_path (str, serial);
+    }
+  g_dbus_object_set_object_path (G_DBUS_OBJECT (drive), str->str);
+  g_string_free (str, TRUE);
 
   if (G_OBJECT_CLASS (udisks_linux_drive_parent_class)->constructed != NULL)
     G_OBJECT_CLASS (udisks_linux_drive_parent_class)->constructed (object);
