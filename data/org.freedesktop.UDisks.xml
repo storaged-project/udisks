@@ -54,6 +54,11 @@
     <property name="Major" type="x" access="read"/>
     <property name="Minor" type="x" access="read"/>
     <property name="Size" type="t" access="read"/>
+
+    <!-- The org.freedesktop.UDisks.Drive object that the block device belongs
+         to, or '/' if no such object exists.
+      -->
+    <property name="Drive" type="o" access="read"/>
   </interface>
 
   <interface name="org.freedesktop.UDisks.BlockDevice.Probed">

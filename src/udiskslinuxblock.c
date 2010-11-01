@@ -26,6 +26,7 @@
 #include "udisksfilesystemimpl.h"
 #include "udisksmount.h"
 #include "udisksmountmonitor.h"
+#include "udiskslinuxdrive.h"
 
 /**
  * SECTION:udiskslinuxblock
@@ -355,6 +356,50 @@ block_device_check (UDisksLinuxBlock *block)
   return TRUE;
 }
 
+static gchar *
+find_drive (GDBusObjectManager *object_manager,
+            GUdevDevice        *block_device)
+{
+  const gchar *block_device_sysfs_path;
+  gchar *ret;
+  GList *objects;
+  GList *l;
+
+  ret = NULL;
+
+  block_device_sysfs_path = g_udev_device_get_sysfs_path (block_device);
+
+  objects = g_dbus_object_manager_get_all (object_manager);
+  for (l = objects; l != NULL; l = l->next)
+    {
+      GDBusObject *object = G_DBUS_OBJECT (l->data);
+      UDisksLinuxDrive *drive;
+      GUdevDevice *drive_device;
+      const gchar *drive_sysfs_path;
+
+      if (!UDISKS_IS_LINUX_DRIVE (object))
+        continue;
+
+      drive = UDISKS_LINUX_DRIVE (object);
+      drive_device = udisks_linux_drive_get_device (drive);
+
+      drive_sysfs_path = g_udev_device_get_sysfs_path (drive_device);
+
+      if (g_str_has_prefix (block_device_sysfs_path, drive_sysfs_path))
+        {
+          ret = g_dbus_object_get_object_path (object);
+          g_object_unref (drive_device);
+          goto out;
+        }
+      g_object_unref (drive_device);
+    }
+
+ out:
+  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+  g_list_free (objects);
+  return ret;
+}
+
 static void
 block_device_update (UDisksLinuxBlock      *block,
                      const gchar     *uevent_action,
@@ -362,6 +407,8 @@ block_device_update (UDisksLinuxBlock      *block,
 {
   UDisksBlockDevice *iface = UDISKS_BLOCK_DEVICE (_iface);
   GUdevDeviceNumber dev;
+  GDBusObjectManager *object_manager;
+  gchar *drive_object_path;
 
   dev = g_udev_device_get_device_number (block->device);
 
@@ -370,6 +417,21 @@ block_device_update (UDisksLinuxBlock      *block,
   udisks_block_device_set_major (iface, major (dev));
   udisks_block_device_set_minor (iface, minor (dev));
   udisks_block_device_set_size (iface, g_udev_device_get_sysfs_attr_as_uint64 (block->device, "size") * 512);
+
+  /* TODO: if this is slow we could have a cache or ensure that we
+   * only do this once or something else
+   */
+  object_manager = udisks_daemon_get_object_manager (block->daemon);
+  drive_object_path = find_drive (object_manager, block->device);
+  if (drive_object_path != NULL)
+    {
+      udisks_block_device_set_drive (iface, drive_object_path);
+      g_free (drive_object_path);
+    }
+  else
+    {
+      udisks_block_device_set_drive (iface, "/");
+    }
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

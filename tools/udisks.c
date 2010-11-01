@@ -1408,6 +1408,35 @@ obj_proxy_cmp_ctds (GDBusObjectProxy *a,
     return obj_proxy_cmp (a, b);
 }
 
+/* built-in assumption: there is only one block device per drive */
+static UDisksBlockDevice *
+find_block_for_drive (GList       *object_proxies,
+                      const gchar *drive_object_path)
+{
+  UDisksBlockDevice *ret;
+  GList *l;
+
+  ret = NULL;
+  for (l = object_proxies; l != NULL; l = l->next)
+    {
+      GDBusObjectProxy *object_proxy = G_DBUS_OBJECT_PROXY (l->data);
+      UDisksBlockDevice *block;
+
+      block = UDISKS_GET_BLOCK_DEVICE (object_proxy);
+      if (block == NULL)
+        continue;
+
+      if (g_strcmp0 (udisks_block_device_get_drive (block), drive_object_path) == 0)
+        {
+          ret = block;
+          goto out;
+        }
+      g_object_unref (block);
+    }
+ out:
+  return ret;
+}
+
 static const GOptionEntry command_status_entries[] =
 {
   { NULL }
@@ -1474,7 +1503,8 @@ handle_command_status (gint        *argc,
     {
       GDBusObjectProxy *object_proxy = G_DBUS_OBJECT_PROXY (l->data);
       UDisksDrive *drive;
-      const gchar *block;
+      UDisksBlockDevice *block;
+      const gchar *block_device;
       const gchar *ctds;
       const gchar *vendor;
       const gchar *model;
@@ -1486,8 +1516,16 @@ handle_command_status (gint        *argc,
       if (drive == NULL)
         continue;
 
-      block = "-";
-      //block = "MULTI";
+      block = find_block_for_drive (object_proxies, g_dbus_object_proxy_get_object_path (object_proxy));
+      if (block != NULL)
+        {
+          block_device = udisks_block_device_get_device (block);
+          g_object_unref (block);
+        }
+      else
+        {
+          block_device = "-";
+        }
 
       ctds = udisks_drive_get_ctds (drive);
       vendor = udisks_drive_get_vendor (drive);
@@ -1513,7 +1551,7 @@ handle_command_status (gint        *argc,
                vendor_model,
                revision,
                serial,
-               block);
+               block_device);
     }
 
 
