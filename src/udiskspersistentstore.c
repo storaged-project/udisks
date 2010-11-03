@@ -559,8 +559,8 @@ mounted_fs_entry_is_valid (UDisksPersistentStore   *store,
                            GVariant                *value)
 {
   const gchar *mount_point;
-  GVariant *details;
-  GVariant *block_device_file_value;
+  GVariant *details = NULL;
+  GVariant *block_device_file_value = NULL;
   const gchar *block_device_file;
   gboolean ret;
   gchar *s;
@@ -649,8 +649,10 @@ mounted_fs_entry_is_valid (UDisksPersistentStore   *store,
   ret = TRUE;
 
  out:
-  g_variant_unref (block_device_file_value);
-  g_variant_unref (details);
+  if (block_device_file_value != NULL)
+    g_variant_unref (block_device_file_value);
+  if (details != NULL)
+    g_variant_unref (details);
 
   /* clean up mount point if entry was invalid */
   if (!ret)
