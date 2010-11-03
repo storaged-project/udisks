@@ -827,6 +827,10 @@ udisks_daemon_log_valist (UDisksDaemon    *daemon,
       syslog_priority = LOG_ERR;
       level_color_str = _color_get (_COLOR_FG_RED);
       break;
+
+    default:
+      g_assert_not_reached ();
+      break;
     }
   g_print ("%s%s%s.%03d:%s %s%s%s:%s %s\n",
            _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_YELLOW),
