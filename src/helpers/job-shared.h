@@ -30,6 +30,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <stdint.h>
 #include <linux/fs.h>
 
 #include <glib.h>

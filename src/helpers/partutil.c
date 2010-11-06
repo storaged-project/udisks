@@ -34,6 +34,7 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 #include <ctype.h>
+#include <stdint.h>
 #include <linux/fs.h>
 
 #include <linux/hdreg.h>
