@@ -26,6 +26,8 @@
 #include <stdlib.h>
 #include <udisks/udisks.h>
 
+#include <locale.h>
+
 #include <polkit/polkit.h>
 #define POLKIT_AGENT_I_KNOW_API_IS_SUBJECT_TO_CHANGE
 #include <polkitagent/polkitagent.h>
@@ -1525,6 +1527,26 @@ parse_ctds (const gchar *ctds,
 }
 
 static gint
+obj_proxy_cmp_controller (GDBusObjectProxy *a,
+                          GDBusObjectProxy *b)
+{
+  UDisksController *ca;
+  UDisksController *cb;
+
+  ca = UDISKS_PEEK_CONTROLLER (a);
+  cb = UDISKS_PEEK_CONTROLLER (b);
+
+  if (ca != NULL && cb != NULL)
+    {
+      return g_strcmp0 (udisks_controller_get_address (ca), udisks_controller_get_address (cb));
+    }
+  else
+    {
+      return obj_proxy_cmp (a, b);
+    }
+}
+
+static gint
 obj_proxy_cmp_ctds (GDBusObjectProxy *a,
                     GDBusObjectProxy *b)
 {
@@ -1602,6 +1624,32 @@ static const GOptionEntry command_status_entries[] =
   { NULL }
 };
 
+static void
+print_with_padding_and_ellipsis (const gchar *str,
+                                 gint         max_len)
+{
+  gint len;
+  len = str != NULL ? strlen (str) : 0;
+  if (len == 0)
+    {
+      g_print ("%-*s", max_len, "-");
+    }
+  else if (len <= max_len - 1)
+    {
+      g_print ("%-*s", max_len, str);
+    }
+  else
+    {
+      gchar *s;
+      s = g_strndup (str, max_len - 2);
+      /* … U+2026 HORIZONTAL ELLIPSIS
+       * UTF-8: 0xE2 0x80 0xA6
+       */
+      g_print ("%s… ", s);
+      g_free (s);
+    }
+}
+
 static gint
 handle_command_status (gint        *argc,
                         gchar      **argv[],
@@ -1614,6 +1662,7 @@ handle_command_status (gint        *argc,
   gchar *s;
   GList *l;
   GList *object_proxies;
+  guint n;
 
   ret = 1;
 
@@ -1643,7 +1692,35 @@ handle_command_status (gint        *argc,
 
   object_proxies = g_dbus_proxy_manager_get_all (manager);
 
-  /* first, print all drives (TODO: sort in another way?)
+  /* first, print all controllers
+   */
+
+  g_print ("NUM ADDRESS       SLOT     VENDOR      MODEL  \n"
+           "--------------------------------------------------------------------------------\n");
+         /*   1 0000:00:1f.1  SLOT 1   Intel Corp… 82801HBM/HEM (ICH8M/ICH8M-E) SATA AH…    */
+         /* 01234567890123456789012345678901234567890123456789012345678901234567890123456789 */
+
+  /* sort according to e.g. PCI address */
+  object_proxies = g_list_sort (object_proxies, (GCompareFunc) obj_proxy_cmp_controller);
+  for (l = object_proxies, n = 0; l != NULL; l = l->next, n++)
+    {
+      GDBusObjectProxy *object_proxy = G_DBUS_OBJECT_PROXY (l->data);
+      UDisksController *controller;
+
+      controller = UDISKS_PEEK_CONTROLLER (object_proxy);
+      if (controller == NULL)
+        continue;
+
+      g_print ("% 3d ", n);
+      print_with_padding_and_ellipsis (udisks_controller_get_address (controller), 14);
+      print_with_padding_and_ellipsis (udisks_controller_get_physical_slot (controller), 9);
+      print_with_padding_and_ellipsis (udisks_controller_get_vendor (controller), 12);
+      print_with_padding_and_ellipsis (udisks_controller_get_model (controller), 40);
+      g_print ("\n");
+    }
+  g_print ("\n");
+
+  /* then, print all drives
    *
    * We are guaranteed that, usually,
    *
@@ -1658,6 +1735,7 @@ handle_command_status (gint        *argc,
          /* (10,11,12,0)  SEAGATE ST3300657SS       0006      3SJ1QNMQ00009052NECM sdaa     */
          /* 01234567890123456789012345678901234567890123456789012345678901234567890123456789 */
 
+  /* sort according to Controller-Target-Drive */
   object_proxies = g_list_sort (object_proxies, (GCompareFunc) obj_proxy_cmp_ctds);
   for (l = object_proxies; l != NULL; l = l->next)
     {
@@ -1857,6 +1935,8 @@ main (int argc,
 
   g_type_init ();
   _color_init ();
+
+  setlocale (LC_ALL, "");
 
   /* ensure that the D-Bus error mapping is initialized */
   gdbus_error_domain = UDISKS_ERROR;

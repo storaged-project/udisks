@@ -496,13 +496,16 @@ drive_update (UDisksLinuxDrive      *drive,
   if (g_udev_device_get_property_as_boolean (drive->device, "ID_ATA"))
     {
       const gchar *model;
-      gchar *s;
 
       model = g_udev_device_get_property (drive->device, "ID_MODEL_ENC");
-      s = udisks_decode_udev_string (model);
-      g_strstrip (s);
-      udisks_drive_set_model (iface, s);
-      g_free (s);
+      if (model != NULL)
+        {
+          gchar *s;
+          s = udisks_decode_udev_string (model);
+          g_strstrip (s);
+          udisks_drive_set_model (iface, s);
+          g_free (s);
+        }
 
       udisks_drive_set_vendor (iface, g_udev_device_get_property (drive->device, ""));
       udisks_drive_set_revision (iface, g_udev_device_get_property (drive->device, "ID_REVISION"));
@@ -514,19 +517,26 @@ drive_update (UDisksLinuxDrive      *drive,
     {
       const gchar *vendor;
       const gchar *model;
-      gchar *s;
 
       vendor = g_udev_device_get_property (drive->device, "ID_VENDOR_ENC");
-      s = udisks_decode_udev_string (vendor);
-      g_strstrip (s);
-      udisks_drive_set_vendor (iface, s);
-      g_free (s);
+      if (vendor != NULL)
+        {
+          gchar *s;
+          s = udisks_decode_udev_string (vendor);
+          g_strstrip (s);
+          udisks_drive_set_vendor (iface, s);
+          g_free (s);
+        }
 
       model = g_udev_device_get_property (drive->device, "ID_MODEL_ENC");
-      s = udisks_decode_udev_string (model);
-      g_strstrip (s);
-      udisks_drive_set_model (iface, s);
-      g_free (s);
+      if (model != NULL)
+        {
+          gchar *s;
+          s = udisks_decode_udev_string (model);
+          g_strstrip (s);
+          udisks_drive_set_model (iface, s);
+          g_free (s);
+        }
 
       udisks_drive_set_revision (iface, g_udev_device_get_property (drive->device, "ID_REVISION"));
       udisks_drive_set_serial (iface, g_udev_device_get_property (drive->device, "ID_SCSI_SERIAL"));
