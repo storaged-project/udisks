@@ -30,7 +30,7 @@
 #include <udisks/udisksenums.h>
 #include <udisks/udisksenumtypes.h>
 #include <udisks/udiskserror.h>
-#include <udisks/generated-bindings.h>
+#include <udisks/udisks-generated.h>
 #undef __UDISKS_INSIDE_UDISKS_H__
 
 #endif /* __UDISKS_H__ */

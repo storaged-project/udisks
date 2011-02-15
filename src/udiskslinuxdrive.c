@@ -20,6 +20,8 @@
 
 #include "config.h"
 
+#include <string.h>
+
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
 #include "udiskslinuxdrive.h"

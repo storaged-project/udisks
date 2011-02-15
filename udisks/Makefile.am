@@ -20,11 +20,10 @@ INCLUDES = \
 	$(NULL)
 
 $(dbus_built_sources) : Makefile.am $(top_srcdir)/data/org.freedesktop.UDisks.xml
-	gdbus-codegen                                                      		\
+	gdbus-codegen							                \
 		--strip-prefix org.freedesktop.UDisks.                          	\
 		--namespace UDisks							\
-		--output-prefix generated                                       	\
-		--include-dir udisks							\
+		--generate-c-code udisks-generated                             		\
 		$(top_srcdir)/data/org.freedesktop.UDisks.xml         			\
 		$(NULL)
 
@@ -45,25 +44,7 @@ enum_built_sources =									\
 	$(NULL)
 
 dbus_built_sources =									\
-	generated-bindings.stamp							\
-	generated-bindings-sections.txt							\
-	generated-bindings.types							\
-	generated-bindings.h								\
-	generated-bindingsprivate.h		generated-bindingsprivate.c		\
-	generated-marshallers.list							\
-	generated-marshallers.h			generated-marshallers.c			\
-	generated-types.h								\
-	generated-udisksblockdevice.h		generated-udisksblockdevice.c		\
-	generated-udisksblockdeviceprobed.h	generated-udisksblockdeviceprobed.c	\
-	generated-udiskslinuxsysfsdevice.h	generated-udiskslinuxsysfsdevice.c	\
-	generated-udisksfilesystem.h		generated-udisksfilesystem.c		\
-	generated-udisksjob.h			generated-udisksjob.c			\
-	generated-udisksproxymanager.h		generated-udisksproxymanager.c		\
-	generated-udisksconfigurationitem.h	generated-udisksconfigurationitem.c	\
-	generated-udisksdrive.h			generated-udisksdrive.c			\
-	generated-udisksscsidrive.h		generated-udisksscsidrive.c		\
-	generated-udisksatadrive.h		generated-udisksatadrive.c		\
-	generated-udiskscontroller.h		generated-udiskscontroller.c		\
+	udisks-generated.h			udisks-generated.c			\
 	$(NULL)
 
 BUILT_SOURCES =										\
@@ -80,12 +61,7 @@ libudisks_2_0include_HEADERS=								\
 	udisksenums.h									\
 	udisksenumtypes.h								\
 	udiskserror.h									\
-	generated-bindings.h								\
-	generated-udiskslinuxsysfsdevice.h						\
-	generated-udisksblockdevice.h							\
-	generated-udisksblockdeviceprobed.h						\
-	generated-udisksfilesystem.h							\
-	generated-udisksjob.h								\
+	udisks-generated.h								\
 	$(NULL)
 
 libudisks_2_0_la_SOURCES =								\

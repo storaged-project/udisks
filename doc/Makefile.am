@@ -9,12 +9,6 @@ DOC_MODULE=udisks
 # The top-level SGML file.
 DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.xml
 
-udisks.types : udisks.types.in $(top_srcdir)/udisks/generated-bindings.types udisks-sections.txt.in $(top_srcdir)/udisks/generated-bindings-sections.txt
-	cat $(top_srcdir)/udisks/generated-bindings.types udisks.types.in > udisks.types
-	cat $(top_srcdir)/udisks/generated-bindings-sections.txt udisks-sections.txt.in > udisks-sections.txt
-
-scan-build.stamp : udisks.types
-
 # Extra options to supply to gtkdoc-scan
 SCAN_OPTIONS=
 
@@ -72,7 +66,6 @@ CLEANFILES +=   		\
 	$(DOC_MODULE)-decl-list.txt	\
 	$(DOC_MODULE)-decl.txt		\
 	$(DOC_MODULE)-overrides.txt	\
-	$(DOC_MODULE)-sections.txt	\
 	$(DOC_MODULE)-undeclared.txt	\
 	$(DOC_MODULE)-undocumented.txt	\
 	$(DOC_MODULE)-unused.txt	\
@@ -81,7 +74,6 @@ CLEANFILES +=   		\
 	$(DOC_MODULE).interfaces	\
 	$(DOC_MODULE).prerequisites	\
 	$(DOC_MODULE).signals		\
-	$(DOC_MODULE).types		\
 	*.stamp				\
 	-rf xml html tmpl		\
 	$(NULL)

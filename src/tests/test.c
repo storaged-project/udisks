@@ -24,6 +24,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include <string.h>
+
 #include <types.h>
 #include <udisksdaemon.h>
 #include <udisksspawnedjob.h>

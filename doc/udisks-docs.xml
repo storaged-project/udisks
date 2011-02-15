@@ -67,37 +67,9 @@
 
   <part id="ref-api">
     <title>D-Bus API Reference</title>
-    <chapter id="ref-api-core">
-      <title>Core</title>
-      <xi:include href="xml/generated-udisksproxymanager.xml"/>
-    </chapter>
-    <chapter id="ref-api-identification">
-      <title>Identification</title>
-      <xi:include href="xml/generated-udisksblockdevice.xml"/>
-      <xi:include href="xml/generated-udisksblockdeviceprobed.xml"/>
-      <xi:include href="xml/generated-udisksfilesystem.xml"/>
-    </chapter>
-    <chapter id="ref-api-drives">
-      <title>Controllers</title>
-      <xi:include href="xml/generated-udiskscontroller.xml"/>
-    </chapter>
-    <chapter id="ref-api-drives">
-      <title>Drives</title>
-      <xi:include href="xml/generated-udisksdrive.xml"/>
-      <xi:include href="xml/generated-udisksscsidrive.xml"/>
-      <xi:include href="xml/generated-udisksatadrive.xml"/>
-    </chapter>
-    <chapter id="ref-api-os">
-      <title>OS-Specific Interfaces</title>
-      <xi:include href="xml/generated-udiskslinuxsysfsdevice.xml"/>
-    </chapter>
     <chapter id="ref-api-jobs">
       <title>Jobs</title>
-      <xi:include href="xml/generated-udisksjob.xml"/>
-    </chapter>
-    <chapter id="ref-api-conf">
-      <title>Configuration</title>
-      <xi:include href="xml/generated-udisksconfigurationitem.xml"/>
+      <xi:include href="xml/udisksjob.xml"/>
     </chapter>
   </part>
 

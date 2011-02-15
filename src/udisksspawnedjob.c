@@ -23,6 +23,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include <string.h>
+
 #include "udisksbasejob.h"
 #include "udisksspawnedjob.h"
 #include "udisks-daemon-marshal.h"

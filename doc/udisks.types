@@ -12,3 +12,6 @@ udisks_provider_get_type
 udisks_fstab_provider_get_type
 udisks_linux_provider_get_type
 udisks_persistent_store_get_type
+udisks_job_get_gtype
+udisks_job_proxy_get_gtype
+udisks_job_stub_get_gtype

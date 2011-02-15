@@ -26,6 +26,8 @@
 #include <stdlib.h>
 #include <udisks/udisks.h>
 
+#include <string.h>
+
 #include <locale.h>
 
 #include <polkit/polkit.h>

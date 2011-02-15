@@ -28,6 +28,8 @@
 
 #include <glib/gstdio.h>
 
+#include <string.h>
+
 #include "udisksdaemon.h"
 #include "udiskslinuxblock.h"
 #include "udisksbasejob.h"

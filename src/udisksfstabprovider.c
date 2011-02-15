@@ -27,6 +27,8 @@
 #include <unistd.h>
 #include <gudev/gudev.h>
 
+#include <string.h>
+
 #include "udisksdaemon.h"
 #include "udisksprovider.h"
 #include "udisksmount.h"
