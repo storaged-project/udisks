@@ -5,11 +5,11 @@
 ####################################################################################################
 
 
-__udisks() {
+__udisksctl() {
     local IFS=$'\n'
     local cur=`_get_cword :`
 
-    local suggestions=$(udisks complete "${COMP_LINE}" ${COMP_POINT})
+    local suggestions=$(udisksctl complete "${COMP_LINE}" ${COMP_POINT})
     COMPREPLY=($(compgen -W "$suggestions" -- "$cur"))
 
     # Remove colon-word prefix from COMPREPLY items
@@ -30,4 +30,4 @@ __udisks() {
 
 ####################################################################################################
 
-complete -o nospace -F __udisks udisks
+complete -o nospace -F __udisksctl udisksctl

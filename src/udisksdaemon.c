@@ -161,7 +161,7 @@ mount_monitor_on_mount_removed (UDisksMountMonitor *monitor,
   udisks_persistent_store_mounted_fs_cleanup (daemon->persistent_store);
 }
 
-#define TMP_STATEDIR "/dev/.udisks-2.0"
+#define TMP_STATEDIR "/dev/.udisks2"
 
 static void
 udisks_daemon_constructed (GObject *object)
@@ -193,7 +193,7 @@ udisks_daemon_constructed (GObject *object)
   daemon->mount_monitor = udisks_mount_monitor_new ();
 
   daemon->persistent_store = udisks_persistent_store_new (daemon,
-                                                          PACKAGE_LOCALSTATE_DIR "/lib/udisks",
+                                                          PACKAGE_LOCALSTATE_DIR "/lib/udisks2",
                                                           TMP_STATEDIR);
 
   /* Cleanup stale mount points
@@ -788,7 +788,7 @@ udisks_daemon_log_valist (UDisksDaemon    *daemon,
 
   if (!have_called_openlog)
     {
-      openlog ("udisks-daemon",
+      openlog ("udisksd",
                LOG_CONS|LOG_NDELAY|LOG_PID,
                LOG_DAEMON);
       have_called_openlog = TRUE;

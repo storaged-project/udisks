@@ -162,7 +162,7 @@ main (int    argc,
     }
 
   name_owner_id = g_bus_own_name (G_BUS_TYPE_SYSTEM,
-                                  "org.freedesktop.UDisks",
+                                  "org.freedesktop.UDisks2",
                                   G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT |
                                     (opt_replace ? G_BUS_NAME_OWNER_FLAGS_REPLACE : 0),
                                   on_bus_acquired,

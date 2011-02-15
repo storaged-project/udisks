@@ -40,7 +40,7 @@
 static GDBusProxyManager *manager = NULL;
 static GMainLoop *loop = NULL;
 
-/* Uncomment to get debug traces in /tmp/udisks-completion-debug.txt - use tail(1) to
+/* Uncomment to get debug traces in /tmp/udisksctl-completion-debug.txt - use tail(1) to
  * inspect this file
  */
 /* #define COMPLETION_DEBUG */
@@ -1954,7 +1954,7 @@ main (int argc,
   error = NULL;
   manager = udisks_proxy_manager_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
                                                    G_DBUS_PROXY_MANAGER_FLAGS_NONE,
-                                                   "org.freedesktop.UDisks",
+                                                   "org.freedesktop.UDisks2",
                                                    "/org/freedesktop/UDisks",
                                                    NULL, /* GCancellable */
                                                    &error);
@@ -2138,7 +2138,7 @@ completion_debug (const gchar *format, ...)
   s = g_strdup_vprintf (format, var_args);
   if (f == NULL)
     {
-      f = fopen ("/tmp/udisks-completion-debug.txt", "a+");
+      f = fopen ("/tmp/udisksctl-completion-debug.txt", "a+");
     }
   fprintf (f, "%s\n", s);
   g_free (s);

@@ -528,7 +528,7 @@ calculate_mount_options (UDisksBlockDevice         *block,
   options_to_use = prepend_default_mount_options (fsmo, caller_uid, requested_options);
 
   /* validate mount options */
-  str = g_string_new ("uhelper=udisks-2.0,nodev,nosuid");
+  str = g_string_new ("uhelper=udisks2,nodev,nosuid");
   for (n = 0; options_to_use[n] != NULL; n++)
     {
       const gchar *option = options_to_use[n];

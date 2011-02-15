@@ -4,7 +4,7 @@ NULL =
 SUBDIRS = man
 
 # The name of the module.
-DOC_MODULE=udisks
+DOC_MODULE=udisks2
 
 # The top-level SGML file.
 DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.xml
@@ -36,7 +36,7 @@ INCLUDES = \
 GTKDOC_LIBS = 					\
 	$(GLIB_LIBS)				\
 	$(GIO_LIBS)				\
-	$(top_builddir)/udisks/libudisks-2.0.la	\
+	$(top_builddir)/udisks/libudisks2.la	\
 	$(top_builddir)/src/libudisks-daemon.la	\
 	$(NULL)
 
@@ -68,6 +68,7 @@ CLEANFILES +=   		\
 	$(DOC_MODULE)-overrides.txt	\
 	$(DOC_MODULE)-undeclared.txt	\
 	$(DOC_MODULE)-undocumented.txt	\
+	$(DOC_MODULE)-overrides.txt	\
 	$(DOC_MODULE)-unused.txt	\
 	$(DOC_MODULE).args		\
 	$(DOC_MODULE).hierarchy		\

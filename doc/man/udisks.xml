@@ -1,260 +1,240 @@
-<refentry id="udisks.1">
+<refentry id="udisks.7">
   <refentryinfo>
     <title>udisks</title>
-    <date>April 2008</date>
+    <date>March 2008</date>
     <productname>udisks</productname>
   </refentryinfo>
 
   <refmeta>
     <refentrytitle>udisks</refentrytitle>
-    <manvolnum>1</manvolnum>
+    <manvolnum>7</manvolnum>
     <refmiscinfo class="version"></refmiscinfo>
   </refmeta>
 
   <refnamediv>
     <refname>udisks</refname>
-    <refpurpose>udisks command line tool</refpurpose>
+    <refpurpose>Storage Management</refpurpose>
   </refnamediv>
 
-  <refsynopsisdiv>
-    <cmdsynopsis>
-      <command>udisks</command>
-      <arg choice="plain">info</arg>
-      <group choice="req">
-        <arg choice="plain">--object-path <replaceable>OBJECT</replaceable></arg>
-        <arg choice="plain">--block-device <replaceable>DEVICE</replaceable></arg>
-      </group>
-    </cmdsynopsis>
-
-    <cmdsynopsis>
-      <command>udisks</command>
-      <arg choice="plain">mount </arg>
-      <group choice="req">
-        <arg choice="plain">--object-path <replaceable>OBJECT</replaceable></arg>
-        <arg choice="plain">--block-device <replaceable>DEVICE</replaceable></arg>
-      </group>
-      <group>
-        <arg choice="plain">--filesystem-type <replaceable>TYPE</replaceable></arg>
-      </group>
-      <arg choice="opt" rep="repeat">--option <replaceable>OPTION</replaceable></arg>
-    </cmdsynopsis>
-
-    <cmdsynopsis>
-      <command>udisks</command>
-      <arg choice="plain">unmount </arg>
-      <group choice="req">
-        <arg choice="plain">--object-path <replaceable>OBJECT</replaceable></arg>
-        <arg choice="plain">--block-device <replaceable>DEVICE</replaceable></arg>
-      </group>
-      <arg choice="opt" rep="repeat">--option <replaceable>OPTION</replaceable></arg>
-    </cmdsynopsis>
-
-    <cmdsynopsis>
-      <command>udisks</command>
-      <arg choice="plain">monitor</arg>
-    </cmdsynopsis>
-
-    <cmdsynopsis>
-      <command>udisks</command>
-      <arg choice="plain">dump</arg>
-    </cmdsynopsis>
-
-    <cmdsynopsis>
-      <command>udisks</command>
-      <arg choice="plain">help</arg>
-    </cmdsynopsis>
-  </refsynopsisdiv>
-
-  <refsect1><title>Description</title>
+  <refsect1><title>DESCRIPTION</title>
     <para>
-      <command>udisks</command> is a command-line program used
-      to interact with the udisks daemon.
-    </para>
-
-    <refsect2>
-      <title>Commands</title>
-      <variablelist>
-
-        <varlistentry>
-          <term><option>mount</option></term>
-          <listitem>
-            <para>
-              Mounts a device. The device will be mounted in a
-              subdirectory in the <filename>/media</filename>
-              hierarchy - upon successful completion, the mount point
-              will be printed to standard output.
-            </para>
-            <para>
-              The device will be mounted with a safe set of default
-              options. You can influence the options passed to the
-              <citerefentry><refentrytitle>mount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
-              command with
-              <literal>--option</literal> - do not use a comma to
-              separate options into one word - instead simply use the
-              option several times. Note that only safe options are
-              allowed - requests with inherently unsafe options such
-              as <parameter>suid</parameter> or
-              <parameter>dev</parameter> that would allow the caller
-              to gain additional privileges, are rejected.
-            </para>
-            <para>
-              The special option
-              <parameter>auth_no_user_interaction</parameter> can
-              be used to request that no interaction (such as the user
-              being presented with an authentication dialog) must
-              occur when checking with
-              <citerefentry><refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum></citerefentry>
-              whether the caller is authorized to perform the
-              requested action.
-            </para>
-          </listitem>
-        </varlistentry>
-
-        <varlistentry>
-          <term><option>unmount</option></term>
-          <listitem>
-            <para>
-              Unmounts a device previously mounted with udisks. The
-              special option <parameter>force</parameter> can be used
-              to request that the device is unmounted even if active
-              references exists.
-            </para>
-          </listitem>
-        </varlistentry>
-
-        <varlistentry>
-          <term><option>monitor</option></term>
-          <listitem><para>
-            Monitors the daemon for events.
-          </para></listitem>
-        </varlistentry>
-
-        <varlistentry>
-          <term><option>dump</option></term>
-          <listitem><para>
-            Prints the current state of the daemon.
-          </para></listitem>
-        </varlistentry>
-
-        <varlistentry>
-          <term><option>help</option></term>
-          <listitem><para>
-            Prints help and exit.
-          </para></listitem>
-        </varlistentry>
-
-      </variablelist>
-    </refsect2>
-
-  </refsect1>
-
-  <refsect1><title>Audience</title>
-    <para>
-      This program does not assume that the caller is the super user -
-      it is intended to be used by unprivileged users and
-      authorizations are checked by the udisks daemon using
-      <citerefentry><refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
-      Additionally, this program is not intended to be used by scripts
-      or other programs - options/commands may change in incompatible
-      ways in the future even in maintenance releases. Scripts and/or
-      other programs should either use the D-Bus APIs of
-      <citerefentry><refentrytitle>udisks-daemon</refentrytitle><manvolnum>8</manvolnum></citerefentry>
-      or native low-level commands such as
-      <citerefentry><refentrytitle>mount</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+      udisks provides an interface to enumerate storage
+      devices and perform operations on them. Any application
+      can access the <emphasis>org.freedesktop.UDisks2</emphasis>
+      service on the system message bus. Some operations (such
+      as formatting disks etc.) is restricted using polkit.
     </para>
   </refsect1>
 
-  <refsect1><title>Bash completion</title>
+  <refsect1><title>DEVICE INFORMATION</title>
     <para>
-      <command>udisks</command> ships with a bash completion script to
-      complete commands, objects, block devices and some options.
+      On Linux, udisks relies on recent versions of
+      <citerefentry><refentrytitle>udev</refentrytitle><manvolnum>7</manvolnum></citerefentry>
+      and the kernel. Influential device properties in the udev
+      database include:
     </para>
+    <variablelist>
+      <varlistentry>
+        <term><option>UDISKS_PRESENTATION_HIDE</option></term>
+        <listitem><para>If set to 1 this is a hint to presentation
+            level software that the device should not be shown to the
+            user.
+        </para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>UDISKS_PRESENTATION_NOPOLICY</option></term>
+        <listitem><para>If set to 1 this is a hint to presentation
+            level software that the device should not be automounted
+            or autoassembled (for e.g. components of a multi-disk device).
+        </para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>UDISKS_DISABLE_POLLING</option></term>
+        <listitem><para>If set to 1 this will disable the polling of drives
+	    for media changes, for devices which do not send out media
+	    notifications by themselves (this mostly affects CD drives).
+	    Some CD drives cause bad effects such as very high CPU usage when
+	    being polled.
+        </para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>UDISKS_PRESENTATION_NAME</option></term>
+        <listitem><para>The name to user for the device when
+        presenting it to the user.
+        </para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>UDISKS_PRESENTATION_ICON_NAME</option></term>
+        <listitem><para>The icon to use when presenting the device to
+        the user. If set, the name must follow the freedesktop.org
+        icon theme specification.
+        </para></listitem>
+      </varlistentry>
+    </variablelist>
+    <para>
+      The <option>ID_DRIVE_*</option> properties are used to describe what
+      kind of physical media can be used in a device. These are typically
+      set on the main block device (e.g. <literal>/dev/sdb</literal>) and
+      more than one these properties can be set if the device supports
+      multiple kinds of media.
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term><option>ID_DRIVE_EJECTABLE</option></term>
+        <listitem><para>Whether the media in the drive is physically ejectable. Only
+            set this to 1 (or 0) if the drive truly uses (or doesn't) ejectable media.
+            In particular, it is not necessary to set this for e.g. iPod or Kindle
+            devices where it is necessary to send a command via
+            <citerefentry>
+              <refentrytitle>eject</refentrytitle><manvolnum>1</manvolnum>
+            </citerefentry>
+            since the desktop user session will offer this option for
+            removable devices regardless of whether they are
+            ejectable.  If this property is not set, a heuristic will
+            be used to determine if the media is ejectable (drives
+            using optical, Zip or Jaz media are considered ejectable).
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_DETACHABLE</option></term>
+        <listitem><para> Whether the device is detachable. It is only meaningful
+            to set this to 0 (to avoid marking a device as detachable) since the
+            code for detaching the device is part of udisks itself.
+            If this property is not set, a heuristic will be used to determine if the
+            drive is detachable (currently only devices connected through USB are
+            detachable).
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_CAN_SPINDOWN</option></term>
+        <listitem><para> Whether the device can spin down. It is only meaningful
+            to set this to 0 (to avoid marking a device as being capable of spinning down)
+            since the code for spinning down the device is part of udisks itself.
+            If this property is not set, a heuristic will be used to determine if the
+            drive can spin down (currently only ATA devices, including those USB
+            devices with a SAT layer) can be spun down).
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_FLASH</option></term>
+        <listitem><para>The device is compatible with flash.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_FLASH_CF</option></term>
+        <listitem><para>The device is compatible with Compact Flash.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_FLASH_MS</option></term>
+        <listitem><para>The device is compatible with Memory Stick.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_FLASH_SM</option></term>
+        <listitem><para>The device is compatible with SmartMedia.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_FLASH_SD</option></term>
+        <listitem><para>The device is compatible with SecureDigital.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_FLASH_SDHC</option></term>
+        <listitem><para>The device is compatible with High-Capicity SecureDigital.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_FLASH_MMC</option></term>
+        <listitem><para>The device is compatible with MultiMediaCard.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_FLOPPY</option></term>
+        <listitem><para>The device is compatible with floppy disk.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_FLOPPY_ZIP</option></term>
+        <listitem><para>The device is compatible with Zip.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_FLOPPY_JAZ</option></term>
+        <listitem><para>The device is compatible with Jaz.
+        </para></listitem>
+      </varlistentry>
+
+    </variablelist>
+    <para>
+      The <option>ID_DRIVE_MEDIA_*</option> properties describe the
+      current media in a device. As with
+      the <option>ID_DRIVE_*</option> properties, these properties are
+      typically set on the main block device
+      (e.g. <literal>/dev/sdb</literal>). Typically only one of these
+      properties are set.
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term><option>ID_DRIVE_MEDIA_FLASH</option></term>
+        <listitem><para>The physical media currently inserted into the device is flash.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_MEDIA_FLASH_CF</option></term>
+        <listitem><para>The physical media currently inserted into the device is Compact Flash.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_MEDIA_FLASH_MS</option></term>
+        <listitem><para>The physical media currently inserted into the device is Memory Stick.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_MEDIA_FLASH_SM</option></term>
+        <listitem><para>The physical media currently inserted into the device is SmartMedia.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_MEDIA_FLASH_SD</option></term>
+        <listitem><para>The physical media currently inserted into the device is SecureDigital.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_MEDIA_FLASH_SDHC</option></term>
+        <listitem><para>The physical media currently inserted into the device is High-Capicity SecureDigital.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_MEDIA_FLASH_MMC</option></term>
+        <listitem><para>The physical media currently inserted into the device is MultiMediaCard.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_MEDIA_FLOPPY</option></term>
+        <listitem><para>The physical media currently inserted into the device is floppy disk.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_MEDIA_FLOPPY_ZIP</option></term>
+        <listitem><para>The physical media currently inserted into the device is Zip.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_MEDIA_FLOPPY_JAZ</option></term>
+        <listitem><para>The physical media currently inserted into the device is Jaz.
+        </para></listitem>
+      </varlistentry>
+
+    </variablelist>
   </refsect1>
 
-  <refsect1>
-    <title>Examples</title>
-
-    <para>
-      Mounting and unmounting devices:
-    </para>
-    <programlisting>
-$ udisks mount --block-device /dev/mmcblk0p2
-Mounted /dev/mmcblk0p2 at /media/stuff
-
-$ udisks unmount --block-device /dev/mmcblk0p2
-Unmounted /dev/mmcblk0p2
-    </programlisting>
-
-    <para>
-      Mounting with non-standard options:
-    </para>
-    <programlisting>
-$ udisks mount --block-device /dev/mmcblk0p2 --option flush --option utf8=0 --option iocharset=iso8859-15
-Mounted /dev/mmcblk0p2 at /media/stuff
-
-$ udisks mount --block-device /dev/mmcblk0p2 --option suid
-Error mounting /dev/mmcblk0p2: GDBus.Error:org.freedesktop.UDisks.Error.Failed: Mount option `suid' is not allowed
-    </programlisting>
-
-    <para>
-      Showing information about a device:
-    </para>
-    <programlisting>
-$ udisks info --block-device /dev/mmcblk0p2
-/org/freedesktop/UDisks/devices/mmcblk0p2:
-  org.freedesktop.UDisks.BlockDevice:
-    Device:             /dev/mmcblk0p2
-    Major:              179
-    Minor:              2
-    Size:               15794176
-    Symlinks:           /dev/block/179:2
-                        /dev/disk/by-id/mmc-SD01G_0x50882907-part2
-                        /dev/disk/by-path/pci-0000:05:00.2-part2
-                        /dev/disk/by-uuid/6DA7-F983
-                        /dev/disk/by-label/stuff\x22
-  org.freedesktop.UDisks.BlockDevice.Probed:
-    Label:              stuff"
-    Type:               vfat
-    UUID:               6DA7-F983
-    Usage:              filesystem
-    Version:            FAT16
-  org.freedesktop.UDisks.Filesystem:
-    MountPoints:
-  org.freedesktop.UDisks.LinuxSysfsDevice:
-    Subsystem:          block
-    SysfsPath:          /sys/devices/pci0000:00/0000:00:1e.0/0000:05:00.2/mmc_host/mmc0/mmc0:9ffc/block/mmcblk0/mmcblk0p2    </programlisting>
-
-    <para>
-      Monitoring the daemon:
-    </para>
-    <programlisting>
-$ udisks monitor
-Monitoring the udisks daemon. Press Ctrl+C to exit.
-14:33:21.363: The udisks-daemon is running (name-owner :1.1254).
-
-14:33:27.616: Added /org/freedesktop/UDisks/jobs/10
-  org.freedesktop.UDisks.Job:
-    ExpectedEndTime:    0
-    Progress:           0.0
-    StartTime:          0
-14:33:27.663: /org/freedesktop/UDisks/devices/mmcblk0p2: org.freedesktop.UDisks.Filesystem: Properties Changed
-  MountPoints:          /media/stuff"
-14:33:27.663: /org/freedesktop/UDisks/jobs/10: org.freedesktop.UDisks.Job::Completed (true, '')
-14:33:27.664: Removed /org/freedesktop/UDisks/jobs/10
-
-14:33:29.751: Added /org/freedesktop/UDisks/jobs/11
-  org.freedesktop.UDisks.Job:
-    ExpectedEndTime:    0
-    Progress:           0.0
-    StartTime:          0
-14:33:29.752: /org/freedesktop/UDisks/devices/mmcblk0p2: org.freedesktop.UDisks.Filesystem: Properties Changed
-  MountPoints:
-14:33:29.759: /org/freedesktop/UDisks/jobs/11: org.freedesktop.UDisks.Job::Completed (true, '')
-14:33:29.759: Removed /org/freedesktop/UDisks/jobs/11
-    </programlisting>
-  </refsect1>
-
-  <refsect1><title>Author</title>
+  <refsect1><title>AUTHOR</title>
     <para>
       Written by David Zeuthen <email>zeuthen@gmail.com</email> with
       a lot of help from many others.
@@ -262,7 +242,7 @@ Monitoring the udisks daemon. Press Ctrl+C to exit.
   </refsect1>
 
   <refsect1>
-    <title>Bugs</title>
+    <title>BUGS</title>
     <para>
       Please send bug reports to either the distribution bug tracker
       or the upstream bug tracker at
@@ -271,14 +251,20 @@ Monitoring the udisks daemon. Press Ctrl+C to exit.
   </refsect1>
 
   <refsect1>
-    <title>See also</title>
+    <title>SEE ALSO</title>
     <para>
       <citerefentry>
-        <refentrytitle>udisks-daemon</refentrytitle><manvolnum>8</manvolnum>
+        <refentrytitle>udev</refentrytitle><manvolnum>7</manvolnum>
       </citerefentry>,
       <citerefentry>
-        <refentrytitle>udisks</refentrytitle><manvolnum>7</manvolnum>
+        <refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum>
       </citerefentry>,
+      <citerefentry>
+        <refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum>
+      </citerefentry>,
+      <citerefentry>
+        <refentrytitle>udisksctl</refentrytitle><manvolnum>1</manvolnum>
+      </citerefentry>
     </para>
   </refsect1>
 </refentry>

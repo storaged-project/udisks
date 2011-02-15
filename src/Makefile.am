@@ -80,23 +80,23 @@ libudisks_daemon_la_LIBADD =				\
 	$(GUDEV_LIBS)					\
 	$(LIBATASMART_LIBS)				\
 	$(POLKIT_GOBJECT_1_LIBS) 			\
-	$(top_builddir)/udisks/libudisks-2.0.la		\
+	$(top_builddir)/udisks/libudisks2.la		\
 	$(NULL)
 
 # ----------------------------------------------------------------------------------------------------
 
-libexec_PROGRAMS = udisks-daemon
+privlib_PROGRAMS = udisksd
 
-udisks_daemon_SOURCES = 				\
+udisksd_SOURCES = 					\
 				main.c			\
 	$(NULL)
 
-udisks_daemon_CFLAGS = 					\
-	-DG_LOG_DOMAIN=\"udisks-daemon\"		\
+udisksd_CFLAGS = 					\
+	-DG_LOG_DOMAIN=\"udisks2-daemon\"		\
 	$(LIBATASMART_CFLAGS)				\
 	$(NULL)
 
-udisks_daemon_LDADD = 					\
+udisksd_LDADD = 					\
 	$(GLIB_LIBS)					\
 	$(GIO_LIBS)					\
 	libudisks-daemon.la				\
@@ -105,7 +105,5 @@ udisks_daemon_LDADD = 					\
 # ----------------------------------------------------------------------------------------------------
 
 install-data-local:
-	-$(mkdir_p) $(DESTDIR)$(localstatedir)/lib/udisks
-	-chmod 0700 $(DESTDIR)$(localstatedir)/lib/udisks
-	-$(mkdir_p) $(DESTDIR)$(localstatedir)/run/udisks
-	-chmod 0700 $(DESTDIR)$(localstatedir)/run/udisks
+	-$(mkdir_p) $(DESTDIR)$(localstatedir)/lib/udisks2
+	-chmod 0700 $(DESTDIR)$(localstatedir)/lib/udisks2

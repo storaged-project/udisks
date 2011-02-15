@@ -16,58 +16,50 @@ INCLUDES = \
 	-DUDISKS_API_IS_SUBJECT_TO_CHANGE			\
 	$(NULL)
 
-bin_PROGRAMS = udisks
+bin_PROGRAMS = udisksctl
 
-udisks_SOURCES = 					\
-				udisks.c		\
+udisksctl_SOURCES = 					\
+				udisksctl.c		\
 	$(NULL)
 
-udisks_CFLAGS = 					\
+udisksctl_CFLAGS = 					\
 	$(GLIB_CFLAGS) 					\
 	$(GIO_CFLAGS)					\
 	$(POLKIT_GOBJECT_1_CFLAGS)			\
 	$(POLKIT_AGENT_1_CFLAGS)			\
 	$(NULL)
 
-udisks_LDADD = 						\
+udisksctl_LDADD = 					\
 	$(GLIB_LIBS) 					\
 	$(GIO_LIBS)					\
 	$(POLKIT_GOBJECT_1_LIBS)			\
 	$(POLKIT_AGENT_1_LIBS)				\
-	$(top_builddir)/udisks/libudisks-2.0.la		\
+	$(top_builddir)/udisks/libudisks2.la		\
 	$(NULL)
 
 # ----------------------------------------------------------------------------------------------------
 
-slashsbin_PROGRAMS = umount.udisks-2.0
+slashsbin_PROGRAMS = umount.udisks2
 
-umount_udisks_2_0_SOURCES = 				\
+umount_udisks2_SOURCES = 				\
 				umount-udisks.c		\
 	$(NULL)
 
-umount_udisks_2_0_CFLAGS = 				\
+umount_udisks2_CFLAGS = 				\
 	$(GLIB_CFLAGS) 					\
 	$(GIO_CFLAGS)					\
 	$(NULL)
 
-umount_udisks_2_0_LDADD = 				\
+umount_udisks2_LDADD = 					\
 	$(GLIB_LIBS) 					\
 	$(GIO_LIBS)					\
-	$(top_builddir)/udisks/libudisks-2.0.la		\
+	$(top_builddir)/udisks/libudisks2.la		\
 	$(NULL)
 
 # ----------------------------------------------------------------------------------------------------
 
-#if REMOTE_ACCESS_ENABLED
-#bin_PROGRAMS += udisks-tcp-bridge
-#endif # REMOTE_ACCESS_ENABLED
-#udisks_tcp_bridge_SOURCES = udisks-tcp-bridge.c
-#udisks_tcp_bridge_LDADD = $(DBUS_GLIB_LIBS)
-
-# ----------------------------------------------------------------------------------------------------
-
 profiledir = $(sysconfdir)/profile.d
-profile_SCRIPTS = udisks-bash-completion.sh
+profile_SCRIPTS = udisksctl-bash-completion.sh
 
 EXTRA_DIST = $(profile_SCRIPTS)
 

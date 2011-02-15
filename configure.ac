@@ -1,8 +1,8 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59c)
-AC_INIT(udisks, 1.1.0, http://bugs.freedesktop.org/enter_bug.cgi?product=udisks)
-AM_INIT_AUTOMAKE(udisks, 1.1.0)
+AC_INIT(udisks, 1.90.0, http://bugs.freedesktop.org/enter_bug.cgi?product=udisks)
+AM_INIT_AUTOMAKE(udisks, 1.90.0)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 
@@ -206,51 +206,30 @@ if test "x$GCC" = "xyes"; then
 fi
 
 if test "$prefix" = "/usr" -o "$prefix" = "/usr/local" ; then
+  privlibdir=/lib/udisks2
   slashlibdir=/lib
   slashsbindir=/sbin
 else
+  privlibdir=$prefix/udisks2
   slashlibdir=$prefix/lib
   slashsbindir=$prefix/sbin
 fi
+AC_SUBST(privlibdir)
 AC_SUBST(slashlibdir)
 AC_SUBST(slashsbindir)
-
-# *************
-# Remote Access
-# *************
-remote_access=no
-AC_ARG_ENABLE(remote_access, AS_HELP_STRING([--disable-remote-access], [disable remote access]))
-if test "x$enable_remote_access" != "xno"; then
-   AC_DEFINE(REMOTE_ACCESS_ENABLED, 1, [Defined if remote access is enabled])
-   remote_access=yes
-fi
-AM_CONDITIONAL(REMOTE_ACCESS_ENABLED, [test "$remote_access" = "yes"])
-
-# ********************
-# Internationalization
-# ********************
-
-IT_PROG_INTLTOOL([0.36.0])
-GETTEXT_PACKAGE=udisks
-AC_SUBST([GETTEXT_PACKAGE])
-AM_GLIB_GNU_GETTEXT
-AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE],["$GETTEXT_PACKAGE"],[gettext domain])
 
 AC_OUTPUT([
 Makefile
 data/Makefile
-data/udisks.pc
 udisks/Makefile
-udisks/udisks-2.0.pc
+udisks/udisks2.pc
 src/Makefile
 src/tests/Makefile
 tools/Makefile
 doc/Makefile
 doc/version.xml
 doc/man/Makefile
-doc/dbus/Makefile
 policy/Makefile
-po/Makefile.in
 tests/Makefile
 ])
 
@@ -268,18 +247,18 @@ echo "
         sysconfdir:                 ${sysconfdir}
         localstatedir:              ${localstatedir}
         docdir:                     ${docdir}
+        privlibdir:                 ${privlibdir}
         slashlibdir:                ${slashlibdir}
         slashsbindir:               ${slashsbindir}
 
         compiler:                   ${CC}
         cflags:                     ${CFLAGS}
         cppflags:                   ${CPPFLAGS}
-        strict (-Werror etc):       ${enable_strict}
+        strict (-Werror):           ${enable_strict}
         xsltproc:                   ${XSLTPROC}
 
         LVM2 support:               ${have_lvm2}
         dm-multipath:               ${have_dmmp}
-        Remote Access:              ${remote_access}
 
         Maintainer mode:            ${USE_MAINTAINER_MODE}
         Profiling:                  ${enable_profiling}

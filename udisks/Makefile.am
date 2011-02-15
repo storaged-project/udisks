@@ -52,11 +52,11 @@ BUILT_SOURCES =										\
 	$(dbus_built_sources)								\
 	$(NULL)
 
-lib_LTLIBRARIES=libudisks-2.0.la
+lib_LTLIBRARIES=libudisks2.la
 
-libudisks_2_0includedir=$(includedir)/udisks-2.0/udisks
+libudisks2includedir=$(includedir)/udisks2/udisks
 
-libudisks_2_0include_HEADERS=								\
+libudisks2include_HEADERS=								\
 	udisks.h									\
 	udisksenums.h									\
 	udisksenumtypes.h								\
@@ -64,22 +64,22 @@ libudisks_2_0include_HEADERS=								\
 	udisks-generated.h								\
 	$(NULL)
 
-libudisks_2_0_la_SOURCES =								\
+libudisks2_la_SOURCES =									\
 	$(BUILT_SOURCES)								\
 	udisksenums.h									\
 	udiskserror.h				udiskserror.c				\
 	$(NULL)
 
-libudisks_2_0_la_CPPFLAGS = 				\
-	-DG_LOG_DOMAIN=\"libudisks-2.0\"		\
+libudisks2_la_CPPFLAGS = 				\
+	-DG_LOG_DOMAIN=\"libudisks2\"			\
 	$(NULL)
 
-libudisks_2_0_la_CFLAGS = 				\
+libudisks2_la_CFLAGS = 					\
 	$(GLIB_CFLAGS)					\
 	$(GIO_CFLAGS)					\
 	$(NULL)
 
-libudisks_2_0_la_LIBADD = 				\
+libudisks2_la_LIBADD = 					\
 	$(GLIB_LIBS)					\
 	$(GIO_LIBS)					\
 	$(NULL)
@@ -87,14 +87,14 @@ libudisks_2_0_la_LIBADD = 				\
 # ----------------------------------------------------------------------------------------------------
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = udisks-2.0.pc
+pkgconfig_DATA = udisks2.pc
 
 # ----------------------------------------------------------------------------------------------------
 
 CLEANFILES =
 
 EXTRA_DIST = 						\
-	udisks-2.0.pc.in				\
+	udisks2.pc.in					\
 	$(NULL)
 
 clean-local :

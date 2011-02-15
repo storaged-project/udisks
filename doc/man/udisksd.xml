@@ -1,44 +1,45 @@
-<refentry id="udisks-daemon.8">
+<refentry id="udisksd.8">
   <refentryinfo>
-    <title>udisks-daemon</title>
+    <title>udisksd</title>
     <date>April 2008</date>
     <productname>udisks</productname>
   </refentryinfo>
 
   <refmeta>
-    <refentrytitle>udisks-daemon</refentrytitle>
+    <refentrytitle>udisksd</refentrytitle>
     <manvolnum>8</manvolnum>
     <refmiscinfo class="version"></refmiscinfo>
   </refmeta>
 
   <refnamediv>
-    <refname>udisks-daemon</refname>
+    <refname>udisksd</refname>
     <refpurpose>udisks Daemon</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>udisks-daemon</command>
+      <command>udisksd</command>
       <arg><option>--help</option></arg>
+      <arg><option>--replace</option></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 
 
   <refsect1><title>DESCRIPTION</title>
     <para>
-      <emphasis><refentrytitle>udisks-daemon</refentrytitle></emphasis> provides
-      the <emphasis>org.freedesktop.UDisks</emphasis> service on the
+      <emphasis><refentrytitle>udisksd</refentrytitle></emphasis> provides
+      the <emphasis>org.freedesktop.UDisks2</emphasis> name on the
       system message bus. Users or administrators should never need to
       start this daemon as it will be automatically started by
       <citerefentry><refentrytitle>dbus-daemon</refentrytitle><manvolnum>1</manvolnum></citerefentry>
-      whenever an application calls into the <emphasis>org.freedesktop.UDisks</emphasis>
-      service.
+      whenever an application calls into the <emphasis>org.freedesktop.UDisks2</emphasis>
+      name.
     </para>
     <para>
       See the
       <citerefentry><refentrytitle>udisks</refentrytitle><manvolnum>7</manvolnum></citerefentry>
       man page for information on how to customize
-      how <emphasis><refentrytitle>udisks-daemon</refentrytitle></emphasis>
+      how <emphasis><refentrytitle>udisksd</refentrytitle></emphasis>
       works.
     </para>
   </refsect1>
@@ -59,7 +60,7 @@
 
   <refsect1><title>AUTHOR</title>
     <para>
-      Written by David Zeuthen <email>david@fubar.dk</email> with
+      Written by David Zeuthen <email>zeuthen@gmail.com</email> with
       a lot of help from many others.
     </para>
   </refsect1>
@@ -80,10 +81,7 @@
         <refentrytitle>udisks</refentrytitle><manvolnum>7</manvolnum>
       </citerefentry>,
       <citerefentry>
-        <refentrytitle>udisks</refentrytitle><manvolnum>1</manvolnum>
-      </citerefentry>,
-      <citerefentry>
-        <refentrytitle>udisks-tcp-bridge</refentrytitle><manvolnum>1</manvolnum>
+        <refentrytitle>udisksctl</refentrytitle><manvolnum>1</manvolnum>
       </citerefentry>,
       <citerefentry>
         <refentrytitle>dbus-daemon</refentrytitle><manvolnum>1</manvolnum>

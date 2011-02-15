@@ -100,10 +100,9 @@
 
   <part id="tools-fileformats">
     <title>Tools, File Formats and Manual Pages</title>
-    <xi:include href="man/udisks7.xml"/>
-    <xi:include href="man/udisks-daemon.xml"/>
     <xi:include href="man/udisks.xml"/>
-    <xi:include href="man/udisks-tcp-bridge.xml"/>
+    <xi:include href="man/udisksd.xml"/>
+    <xi:include href="man/udisksctl.xml"/>
   </part>
 
   <index>

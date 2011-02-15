@@ -6,25 +6,25 @@
 <busconfig>
   <!-- Only root can own the service -->
   <policy user="root">
-    <allow own="org.freedesktop.UDisks"/>
+    <allow own="org.freedesktop.UDisks2"/>
   </policy>
 
   <policy context="default">
-    <allow send_destination="org.freedesktop.UDisks"/>
+    <allow send_destination="org.freedesktop.UDisks2"/>
 
-    <allow send_destination="org.freedesktop.UDisks"
+    <allow send_destination="org.freedesktop.UDisks2"
            send_interface="org.freedesktop.DBus.Properties"/>
-    <allow send_destination="org.freedesktop.UDisks"
+    <allow send_destination="org.freedesktop.UDisks2"
            send_interface="org.freedesktop.DBus.Introspectable"/>
-    <allow send_destination="org.freedesktop.UDisks"
+    <allow send_destination="org.freedesktop.UDisks2"
            send_interface="org.freedesktop.UDisks"/>
-    <allow send_destination="org.freedesktop.UDisks"
+    <allow send_destination="org.freedesktop.UDisks2"
            send_interface="org.freedesktop.UDisks.Device"/>
-    <allow send_destination="org.freedesktop.UDisks"
+    <allow send_destination="org.freedesktop.UDisks2"
            send_interface="org.freedesktop.UDisks.Adapter"/>
-    <allow send_destination="org.freedesktop.UDisks"
+    <allow send_destination="org.freedesktop.UDisks2"
            send_interface="org.freedesktop.UDisks.Expander"/>
-    <allow send_destination="org.freedesktop.UDisks"
+    <allow send_destination="org.freedesktop.UDisks2"
            send_interface="org.freedesktop.UDisks.Port"/>
   </policy>
 </busconfig>

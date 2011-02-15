@@ -32,7 +32,6 @@
 #include <mntent.h>
 
 #include <glib.h>
-#include <glib/gi18n-lib.h>
 #include <glib-object.h>
 #include <glib/gstdio.h>
 
@@ -291,8 +290,8 @@ udisks_persistent_store_class_init (UDisksPersistentStoreClass *klass)
 /**
  * udisks_persistent_store_new:
  * @daemon: A #UDisksDaemon the store is for.
- * @path: Path to where to store data that will persist across reboots (e.g. <filename>/var/lib/udisks</filename>).
- * @temp_path: Path to where to store data that will persist only until next reboot (e.g. <filename>/dev/.udisks</filename>).
+ * @path: Path to where to store data that will persist across reboots (e.g. <filename>/var/lib/udisks2</filename>).
+ * @temp_path: Path to where to store data that will persist only until next reboot (e.g. <filename>/dev/.udisks2</filename>).
  *
  * Creates a new #UDisksPersistentStore object.
  *
@@ -776,8 +775,7 @@ udisks_persistent_store_mounted_fs_cleanup (UDisksPersistentStore *store)
  *
  * High-level function to add an entry to the
  * <literal>mounted-fs</literal>. The entry represents a mount-point
- * automatically created and managed by the
- * <command>udisks-daemon</command>.
+ * automatically created and managed by <command>udisksd</command>.
  *
  * Returns: %TRUE if the entry was added, %FALSE if @error is set.
  */
