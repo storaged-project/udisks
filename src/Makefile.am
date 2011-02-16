@@ -50,7 +50,6 @@ libudisks_daemon_la_SOURCES =						\
 	udisksfstabprovider.h		udisksfstabprovider.c		\
 	udiskslinuxblock.h		udiskslinuxblock.c		\
 	udiskslinuxdrive.h		udiskslinuxdrive.c		\
-	udiskslinuxcontroller.h		udiskslinuxcontroller.c		\
 	udisksfilesystemimpl.h		udisksfilesystemimpl.c		\
 	udisksbasejob.h			udisksbasejob.c			\
 	udisksspawnedjob.h		udisksspawnedjob.c		\

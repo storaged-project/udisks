@@ -16,53 +16,12 @@
 
   <!-- ********************************************************************** -->
 
-  <interface name="org.freedesktop.UDisks2.Controller">
-    <property name="Vendor" type="ay" access="read"/>
-    <property name="Model" type="ay" access="read"/>
-    <property name="Revision" type="ay" access="read"/>
-    <property name="Serial" type="ay" access="read"/>
-
-    <!-- TODO: probably move to separate PCI-specific interface -->
-    <property name="Address" type="s" access="read"/>
-    <property name="PhysicalSlot" type="s" access="read"/>
-  </interface>
-
-  <!-- ********************************************************************** -->
-
   <interface name="org.freedesktop.UDisks2.Drive">
     <property name="Vendor" type="ay" access="read"/>
     <property name="Model" type="ay" access="read"/>
     <property name="Revision" type="ay" access="read"/>
     <property name="Serial" type="ay" access="read"/>
     <property name="WWN" type="s" access="read"/>
-
-    <!-- The OS supplied Controller-Target-Disk-Slice address -->
-    <property name="CTDS" type="s" access="read"/>
-
-    <!-- The org.freedesktop.UDisks2.Controller object that the drive belongs
-         to, or '/' if no such object exists.
-      -->
-    <property name="Controller" type="o" access="read"/>
-  </interface>
-
-
-  <interface name="org.freedesktop.UDisks2.ScsiDrive">
-    <!-- Prereq: org.freedesktop.UDisks2.Drive -->
-
-    <!-- Type:    The SCSI device type obtained as a result of the INQUIRY command.
-         Version: The version of SCSI implemented by the device.
-
-         See section "6.4 INQUIRY command" in SPC-4.
-
-         TODO: Move this to a generic ScsiDevice interface that non-drive
-               SCSI devices (enclosures, processors etc.) can implement
-      -->
-    <property name="Type" type="i" access="read"/>
-    <property name="Version" type="i" access="read"/>
-  </interface>
-
-  <interface name="org.freedesktop.UDisks2.AtaDrive">
-    <!-- Prereq: org.freedesktop.UDisks2.Drive -->
   </interface>
 
   <!-- ********************************************************************** -->

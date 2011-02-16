@@ -25,7 +25,6 @@
 #include "udiskslinuxprovider.h"
 #include "udiskslinuxblock.h"
 #include "udiskslinuxdrive.h"
-#include "udiskslinuxcontroller.h"
 
 /**
  * SECTION:udiskslinuxprovider
@@ -106,7 +105,7 @@ static void
 udisks_linux_provider_constructed (GObject *object)
 {
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (object);
-  const gchar *subsystems[] = {"block", "scsi", "pci", NULL};
+  const gchar *subsystems[] = {"block", "scsi", NULL};
   GList *devices;
   GList *l;
 
@@ -129,13 +128,6 @@ udisks_linux_provider_constructed (GObject *object)
                                                          g_str_equal,
                                                          g_free,
                                                          (GDestroyNotify) g_object_unref);
-
-  /* TODO: maybe do two loops to properly handle dependency SNAFU? */
-  devices = g_udev_client_query_by_subsystem (provider->gudev_client, "pci");
-  for (l = devices; l != NULL; l = l->next)
-    udisks_linux_provider_handle_uevent (provider, "add", G_UDEV_DEVICE (l->data));
-  g_list_foreach (devices, (GFunc) g_object_unref, NULL);
-  g_list_free (devices);
 
   devices = g_udev_client_query_by_subsystem (provider->gudev_client, "scsi");
   for (l = devices; l != NULL; l = l->next)
@@ -288,51 +280,6 @@ handle_scsi_uevent (UDisksLinuxProvider *provider,
 }
 
 static void
-handle_pci_uevent (UDisksLinuxProvider *provider,
-                   const gchar         *action,
-                   GUdevDevice         *device)
-{
-  const gchar *sysfs_path;
-  UDisksLinuxController *controller;
-  UDisksDaemon *daemon;
-
-  daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
-  sysfs_path = g_udev_device_get_sysfs_path (device);
-
-  if (g_strcmp0 (action, "remove") == 0)
-    {
-      controller = g_hash_table_lookup (provider->sysfs_to_controller, sysfs_path);
-      if (controller != NULL)
-        {
-          gchar *object_path;
-          object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (controller));
-          g_dbus_object_manager_unexport (udisks_daemon_get_object_manager (daemon),
-                                          object_path);
-          g_free (object_path);
-          g_warn_if_fail (g_hash_table_remove (provider->sysfs_to_controller, sysfs_path));
-        }
-    }
-  else
-    {
-      controller = g_hash_table_lookup (provider->sysfs_to_controller, sysfs_path);
-      if (controller != NULL)
-        {
-          udisks_linux_controller_uevent (controller, action, device);
-        }
-      else
-        {
-          controller = udisks_linux_controller_new (daemon, device);
-          if (controller != NULL)
-            {
-              g_dbus_object_manager_export_and_uniquify (udisks_daemon_get_object_manager (daemon),
-                                                         G_DBUS_OBJECT (controller));
-              g_hash_table_insert (provider->sysfs_to_controller, g_strdup (sysfs_path), controller);
-            }
-        }
-    }
-}
-
-static void
 udisks_linux_provider_handle_uevent (UDisksLinuxProvider *provider,
                                      const gchar         *action,
                                      GUdevDevice         *device)
@@ -356,9 +303,5 @@ udisks_linux_provider_handle_uevent (UDisksLinuxProvider *provider,
   else if (g_strcmp0 (subsystem, "scsi") == 0)
     {
       handle_scsi_uevent (provider, action, device);
-    }
-  else if (g_strcmp0 (subsystem, "pci") == 0)
-    {
-      handle_pci_uevent (provider, action, device);
     }
 }

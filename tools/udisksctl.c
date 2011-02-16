@@ -467,43 +467,6 @@ lookup_object_proxy_by_drive (const gchar *drive)
   return ret;
 }
 
-static GDBusObjectProxy *
-lookup_object_proxy_by_controller (const gchar *controller)
-{
-  GDBusObjectProxy *ret;
-  GList *object_proxies;
-  GList *l;
-  gchar *full_controller_object_path;
-
-  ret = NULL;
-
-  full_controller_object_path = g_strdup_printf ("/org/freedesktop/UDisks2/controllers/%s", controller);
-
-  object_proxies = g_dbus_proxy_manager_get_all (manager);
-  for (l = object_proxies; l != NULL; l = l->next)
-    {
-      GDBusObjectProxy *object_proxy = G_DBUS_OBJECT_PROXY (l->data);
-      UDisksController *controller;
-
-      if (g_strcmp0 (g_dbus_object_proxy_get_object_path (object_proxy), full_controller_object_path) != 0)
-        continue;
-
-      controller = UDISKS_PEEK_CONTROLLER (object_proxy);
-      if (controller != NULL)
-        {
-          ret = g_object_ref (object_proxy);
-          goto out;
-        }
-    }
-
- out:
-  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-  g_list_free (object_proxies);
-  g_free (full_controller_object_path);
-
-  return ret;
-}
-
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gchar  *opt_mount_unmount_object_path = NULL;
@@ -864,14 +827,12 @@ handle_command_mount_unmount (gint        *argc,
 static gchar *opt_info_object = NULL;
 static gchar *opt_info_device = NULL;
 static gchar *opt_info_drive = NULL;
-static gchar *opt_info_controller = NULL;
 
 static const GOptionEntry command_info_entries[] =
 {
   { "object-path", 'p', 0, G_OPTION_ARG_STRING, &opt_info_object, "Object to get information about", NULL},
   { "block-device", 'b', 0, G_OPTION_ARG_STRING, &opt_info_device, "Block device to get information about", NULL},
   { "drive", 'd', 0, G_OPTION_ARG_STRING, &opt_info_drive, "Drive to get information about", NULL},
-  { "controller", 'c', 0, G_OPTION_ARG_STRING, &opt_info_controller, "Controller to get information about", NULL},
   { NULL }
 };
 
@@ -888,20 +849,17 @@ handle_command_info (gint        *argc,
   gboolean complete_objects;
   gboolean complete_devices;
   gboolean complete_drives;
-  gboolean complete_controllers;
   GList *l;
   GList *object_proxies;
   GDBusObjectProxy *object_proxy;
   UDisksBlockDevice *block;
   UDisksDrive *drive;
-  UDisksController *controller;
   guint n;
 
   ret = 1;
   opt_info_object = NULL;
   opt_info_device = NULL;
   opt_info_drive = NULL;
-  opt_info_controller = NULL;
 
   modify_argv0_for_command (argc, argv, "info");
 
@@ -933,13 +891,6 @@ handle_command_info (gint        *argc,
       remove_arg ((*argc) - 1, argc, argv);
     }
 
-  complete_controllers = FALSE;
-  if (request_completion && (g_strcmp0 (completion_prev, "--controller") == 0 || g_strcmp0 (completion_prev, "-c") == 0))
-    {
-      complete_controllers = TRUE;
-      remove_arg ((*argc) - 1, argc, argv);
-    }
-
   if (!g_option_context_parse (o, argc, argv, NULL))
     {
       if (!request_completion)
@@ -954,13 +905,11 @@ handle_command_info (gint        *argc,
   if (request_completion &&
       (opt_info_object == NULL && !complete_objects) &&
       (opt_info_device == NULL && !complete_devices) &&
-      (opt_info_drive == NULL && !complete_drives) &&
-      (opt_info_controller == NULL && !complete_controllers))
+      (opt_info_drive == NULL && !complete_drives))
     {
       g_print ("--object-path \n"
                "--block-device \n"
-               "--drive \n"
-               "--controller \n");
+               "--drive \n");
     }
 
   if (complete_objects)
@@ -1021,25 +970,6 @@ handle_command_info (gint        *argc,
       goto out;
     }
 
-  if (complete_controllers)
-    {
-      object_proxies = g_dbus_proxy_manager_get_all (manager);
-      for (l = object_proxies; l != NULL; l = l->next)
-        {
-          object_proxy = G_DBUS_OBJECT_PROXY (l->data);
-          controller = UDISKS_PEEK_CONTROLLER (object_proxy);
-          if (controller != NULL)
-            {
-              const gchar *base;
-              base = g_strrstr (g_dbus_object_proxy_get_object_path (object_proxy), "/") + 1;
-              g_print ("%s \n", base);
-            }
-        }
-      g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-      g_list_free (object_proxies);
-      goto out;
-    }
-
   /* done with completion */
   if (request_completion)
     goto out;
@@ -1072,15 +1002,6 @@ handle_command_info (gint        *argc,
           goto out;
         }
     }
-  else if (opt_info_controller != NULL)
-    {
-      object_proxy = lookup_object_proxy_by_controller (opt_info_controller);
-      if (object_proxy == NULL)
-        {
-          g_printerr ("Error looking up object for controller %s\n", opt_info_controller);
-          goto out;
-        }
-    }
   else
     {
       s = g_option_context_get_help (o, FALSE, NULL);
@@ -1101,7 +1022,6 @@ handle_command_info (gint        *argc,
   g_free (opt_info_object);
   g_free (opt_info_device);
   g_free (opt_info_drive);
-  g_free (opt_info_controller);
   return ret;
 }
 
@@ -1511,87 +1431,6 @@ handle_command_monitor (gint        *argc,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static void
-parse_ctds (const gchar *ctds,
-            guint       *c,
-            guint       *d,
-            guint       *t,
-            guint       *s)
-{
-  if (sscanf (ctds, "%d:%d:%d:%d", c, d, t, s) != 4)
-    {
-      g_warning ("Error parsing `%s'", ctds);
-      *c = 0;
-      *d = 0;
-      *t = 0;
-      *s = 0;
-    }
-}
-
-static gint
-obj_proxy_cmp_controller (GDBusObjectProxy *a,
-                          GDBusObjectProxy *b)
-{
-  UDisksController *ca;
-  UDisksController *cb;
-
-  ca = UDISKS_PEEK_CONTROLLER (a);
-  cb = UDISKS_PEEK_CONTROLLER (b);
-
-  if (ca != NULL && cb != NULL)
-    {
-      return g_strcmp0 (udisks_controller_get_address (ca), udisks_controller_get_address (cb));
-    }
-  else
-    {
-      return obj_proxy_cmp (a, b);
-    }
-}
-
-static gint
-obj_proxy_cmp_ctds (GDBusObjectProxy *a,
-                    GDBusObjectProxy *b)
-{
-  UDisksDrive *da;
-  UDisksDrive *db;
-
-  da = UDISKS_PEEK_DRIVE (a);
-  db = UDISKS_PEEK_DRIVE (b);
-
-  if (da != NULL && db != NULL)
-    {
-      guint c_a, t_a, d_a, s_a;
-      guint c_b, t_b, d_b, s_b;
-
-      parse_ctds (udisks_drive_get_ctds (da), &c_a, &t_a, &d_a, &s_a);
-      parse_ctds (udisks_drive_get_ctds (db), &c_b, &t_b, &d_b, &s_b);
-
-      if (c_a > c_b)
-        return 1;
-      else if (c_a < c_b)
-        return -1;
-
-      if (t_a > t_b)
-        return 1;
-      else if (t_a < t_b)
-        return -1;
-
-      if (d_a > d_b)
-        return 1;
-      else if (d_a < d_b)
-        return -1;
-
-      if (s_a > s_b)
-        return 1;
-      else if (s_a < s_b)
-        return -1;
-
-      return 0;
-    }
-  else
-    return obj_proxy_cmp (a, b);
-}
-
 /* built-in assumption: there is only one block device per drive */
 static UDisksBlockDevice *
 find_block_for_drive (GList       *object_proxies,
@@ -1626,6 +1465,7 @@ static const GOptionEntry command_status_entries[] =
   { NULL }
 };
 
+#if 0
 static void
 print_with_padding_and_ellipsis (const gchar *str,
                                  gint         max_len)
@@ -1651,6 +1491,7 @@ print_with_padding_and_ellipsis (const gchar *str,
       g_free (s);
     }
 }
+#endif
 
 static gint
 handle_command_status (gint        *argc,
@@ -1664,7 +1505,6 @@ handle_command_status (gint        *argc,
   gchar *s;
   GList *l;
   GList *object_proxies;
-  guint n;
 
   ret = 1;
 
@@ -1694,58 +1534,28 @@ handle_command_status (gint        *argc,
 
   object_proxies = g_dbus_proxy_manager_get_all (manager);
 
-  /* first, print all controllers
-   */
-
-  g_print ("NUM ADDRESS       SLOT     VENDOR      MODEL  \n"
-           "--------------------------------------------------------------------------------\n");
-         /*   1 0000:00:1f.1  SLOT 1   Intel Corp… 82801HBM/HEM (ICH8M/ICH8M-E) SATA AH…    */
-         /* 01234567890123456789012345678901234567890123456789012345678901234567890123456789 */
-
-  /* sort according to e.g. PCI address */
-  object_proxies = g_list_sort (object_proxies, (GCompareFunc) obj_proxy_cmp_controller);
-  for (l = object_proxies, n = 0; l != NULL; l = l->next, n++)
-    {
-      GDBusObjectProxy *object_proxy = G_DBUS_OBJECT_PROXY (l->data);
-      UDisksController *controller;
-
-      controller = UDISKS_PEEK_CONTROLLER (object_proxy);
-      if (controller == NULL)
-        continue;
-
-      g_print ("% 3d ", n);
-      print_with_padding_and_ellipsis (udisks_controller_get_address (controller), 14);
-      print_with_padding_and_ellipsis (udisks_controller_get_physical_slot (controller), 9);
-      print_with_padding_and_ellipsis (udisks_controller_get_vendor (controller), 12);
-      print_with_padding_and_ellipsis (udisks_controller_get_model (controller), 40);
-      g_print ("\n");
-    }
-  g_print ("\n");
-
-  /* then, print all drives
+  /* print all drives
    *
    * We are guaranteed that, usually,
    *
-   *  - CTDS      <= 12
    *  - model     <= 16   (SCSI: 16, ATA: 40)
    *  - vendor    <= 8    (SCSI: 8, ATA: 0)
    *  - revision  <= 8    (SCSI: 6, ATA: 8)
    *  - serial    <= 20   (SCSI: 16, ATA: 20)
    */
-  g_print ("CTDS          MODEL                     REVISION  SERIAL               BLOCK\n"
+  g_print ("LOCATION      MODEL                     REVISION  SERIAL               BLOCK\n"
            "--------------------------------------------------------------------------------\n");
-         /* (10,11,12,0)  SEAGATE ST3300657SS       0006      3SJ1QNMQ00009052NECM sdaa     */
+         /*               SEAGATE ST3300657SS       0006      3SJ1QNMQ00009052NECM sdaa     */
          /* 01234567890123456789012345678901234567890123456789012345678901234567890123456789 */
 
-  /* sort according to Controller-Target-Drive */
-  object_proxies = g_list_sort (object_proxies, (GCompareFunc) obj_proxy_cmp_ctds);
+  /* TODO: sort */
+  //object_proxies = g_list_sort (object_proxies, (GCompareFunc) obj_proxy_cmp_ctds);
   for (l = object_proxies; l != NULL; l = l->next)
     {
       GDBusObjectProxy *object_proxy = G_DBUS_OBJECT_PROXY (l->data);
       UDisksDrive *drive;
       UDisksBlockDevice *block;
       const gchar *block_device;
-      const gchar *ctds;
       const gchar *vendor;
       const gchar *model;
       const gchar *revision;
@@ -1767,7 +1577,6 @@ handle_command_status (gint        *argc,
           block_device = "-";
         }
 
-      ctds = udisks_drive_get_ctds (drive);
       vendor = udisks_drive_get_vendor (drive);
       model = udisks_drive_get_model (drive);
       revision = udisks_drive_get_revision (drive);
@@ -1786,8 +1595,9 @@ handle_command_status (gint        *argc,
       else
         vendor_model = g_strdup ("-");
 
+      /* TODO: need to figure out LOCATION */
       g_print ("%-13s %-25s %-9s %-20s %-8s\n",
-               ctds,
+               "",
                vendor_model,
                revision,
                serial,

@@ -40,9 +40,6 @@ typedef struct _UDisksLinuxBlock UDisksLinuxBlock;
 struct _UDisksLinuxDrive;
 typedef struct _UDisksLinuxDrive UDisksLinuxDrive;
 
-struct _UDisksLinuxController;
-typedef struct _UDisksLinuxController UDisksLinuxController;
-
 struct _UDisksFilesystemImpl;
 typedef struct _UDisksFilesystemImpl UDisksFilesystemImpl;
 

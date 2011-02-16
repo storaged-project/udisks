@@ -25,7 +25,6 @@
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
 #include "udiskslinuxdrive.h"
-#include "udiskslinuxcontroller.h"
 
 /**
  * SECTION:udiskslinuxdrive
@@ -53,8 +52,6 @@ struct _UDisksLinuxDrive
 
   /* interfaces */
   UDisksDrive *iface_drive;
-  UDisksScsiDrive *iface_scsi_drive;
-  UDisksAtaDrive *iface_ata_drive;
 };
 
 struct _UDisksLinuxDriveClass
@@ -84,10 +81,6 @@ udisks_linux_drive_finalize (GObject *object)
 
   if (drive->iface_drive != NULL)
     g_object_unref (drive->iface_drive);
-  if (drive->iface_scsi_drive != NULL)
-    g_object_unref (drive->iface_scsi_drive);
-  if (drive->iface_ata_drive != NULL)
-    g_object_unref (drive->iface_ata_drive);
 
   if (G_OBJECT_CLASS (udisks_linux_drive_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_drive_parent_class)->finalize (object);
@@ -438,59 +431,12 @@ drive_check (UDisksLinuxDrive *drive)
   return TRUE;
 }
 
-
-static gchar *
-find_controller (GDBusObjectManager *object_manager,
-                 GUdevDevice        *drive_device)
-{
-  const gchar *drive_device_sysfs_path;
-  gchar *ret;
-  GList *objects;
-  GList *l;
-
-  ret = NULL;
-
-  drive_device_sysfs_path = g_udev_device_get_sysfs_path (drive_device);
-
-  objects = g_dbus_object_manager_get_all (object_manager);
-  for (l = objects; l != NULL; l = l->next)
-    {
-      GDBusObject *object = G_DBUS_OBJECT (l->data);
-      UDisksLinuxController *controller;
-      GUdevDevice *controller_device;
-      const gchar *controller_sysfs_path;
-
-      if (!UDISKS_IS_LINUX_CONTROLLER (object))
-        continue;
-
-      controller = UDISKS_LINUX_CONTROLLER (object);
-      controller_device = udisks_linux_controller_get_device (controller);
-
-      controller_sysfs_path = g_udev_device_get_sysfs_path (controller_device);
-
-      if (g_str_has_prefix (drive_device_sysfs_path, controller_sysfs_path))
-        {
-          ret = g_dbus_object_get_object_path (object);
-          g_object_unref (controller_device);
-          goto out;
-        }
-      g_object_unref (controller_device);
-    }
-
- out:
-  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-  g_list_free (objects);
-  return ret;
-}
-
 static void
 drive_update (UDisksLinuxDrive      *drive,
               const gchar           *uevent_action,
               GDBusInterface        *_iface)
 {
   UDisksDrive *iface = UDISKS_DRIVE (_iface);
-  GDBusObjectManager *object_manager;
-  gchar *controller_object_path;
 
   /* this is the _almost_ the same for both ATA and SCSI devices (cf. udev's ata_id and scsi_id)
    * but we special case since there are subtle differences...
@@ -513,7 +459,6 @@ drive_update (UDisksLinuxDrive      *drive,
       udisks_drive_set_revision (iface, g_udev_device_get_property (drive->device, "ID_REVISION"));
       udisks_drive_set_serial (iface, g_udev_device_get_property (drive->device, "ID_SERIAL_SHORT"));
       udisks_drive_set_wwn (iface, g_udev_device_get_property (drive->device, "ID_WWN_WITH_EXTENSION"));
-      udisks_drive_set_ctds (iface, g_udev_device_get_name (drive->device));
     }
   else if (g_udev_device_get_property_as_boolean (drive->device, "ID_SCSI"))
     {
@@ -543,7 +488,6 @@ drive_update (UDisksLinuxDrive      *drive,
       udisks_drive_set_revision (iface, g_udev_device_get_property (drive->device, "ID_REVISION"));
       udisks_drive_set_serial (iface, g_udev_device_get_property (drive->device, "ID_SCSI_SERIAL"));
       udisks_drive_set_wwn (iface, g_udev_device_get_property (drive->device, "ID_WWN_WITH_EXTENSION"));
-      udisks_drive_set_ctds (iface, g_udev_device_get_name (drive->device));
     }
   else
     {
@@ -553,66 +497,7 @@ drive_update (UDisksLinuxDrive      *drive,
       udisks_drive_set_revision (iface, g_udev_device_get_property (drive->device, "ID_REVISION"));
       udisks_drive_set_serial (iface, g_udev_device_get_property (drive->device, "ID_SERIAL_SHORT"));
       udisks_drive_set_wwn (iface, g_udev_device_get_property (drive->device, "ID_WWN_WITH_EXTENSION"));
-      udisks_drive_set_ctds (iface, g_udev_device_get_name (drive->device));
     }
-
-  /* TODO: if this is slow we could have a cache or ensure that we
-   * only do this once or something else
-   */
-  object_manager = udisks_daemon_get_object_manager (drive->daemon);
-  controller_object_path = find_controller (object_manager, drive->device);
-  if (controller_object_path != NULL)
-    {
-      udisks_drive_set_controller (iface, controller_object_path);
-      g_free (controller_object_path);
-    }
-  else
-    {
-      udisks_drive_set_controller (iface, "/");
-    }
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
-/* org.freedesktop.UDisks.AtaDrive */
-
-static gboolean
-ata_drive_check (UDisksLinuxDrive *drive)
-{
-  if (g_udev_device_get_property_as_boolean (drive->device, "ID_ATA"))
-    return TRUE;
-  else
-    return FALSE;
-}
-
-static void
-ata_drive_update (UDisksLinuxDrive  *drive,
-                  const gchar       *uevent_action,
-                  GDBusInterface    *_iface)
-{
-  //UDisksAtaDrive *iface = UDISKS_DRIVE (_iface);
-
-  /* TODO */
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
-/* org.freedesktop.UDisks.ScsiDrive */
-
-static gboolean
-scsi_drive_check (UDisksLinuxDrive *drive)
-{
-  if (g_udev_device_get_property_as_boolean (drive->device, "ID_SCSI"))
-    return TRUE;
-  else
-    return FALSE;
-}
-
-static void
-scsi_drive_update (UDisksLinuxDrive  *drive,
-                  const gchar       *uevent_action,
-                  GDBusInterface    *_iface)
-{
-  //UDisksScsiDrive *iface = UDISKS_DRIVE (_iface);
-  /* TODO */
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -642,10 +527,6 @@ udisks_linux_drive_uevent (UDisksLinuxDrive *drive,
 
   update_iface (drive, action, drive_check, drive_update,
                 UDISKS_TYPE_DRIVE_STUB, &drive->iface_drive);
-  update_iface (drive, action, ata_drive_check, ata_drive_update,
-                UDISKS_TYPE_ATA_DRIVE_STUB, &drive->iface_ata_drive);
-  update_iface (drive, action, scsi_drive_check, scsi_drive_update,
-                UDISKS_TYPE_SCSI_DRIVE_STUB, &drive->iface_scsi_drive);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
