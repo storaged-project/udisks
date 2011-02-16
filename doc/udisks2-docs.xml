@@ -24,6 +24,7 @@
       <year>2008</year>
       <year>2009</year>
       <year>2010</year>
+      <year>2011</year>
       <holder>The UDisks Authors</holder>
     </copyright>
 
@@ -65,21 +66,12 @@
       <xi:include href="xml/udiskserror.xml"/>
   </part>
 
-  <part id="ref-api">
-    <title>D-Bus API Reference</title>
-    <chapter id="ref-api-jobs">
-      <title>Jobs</title>
-      <xi:include href="xml/udisksjob.xml"/>
-    </chapter>
-  </part>
-
   <part id="ref-daemon">
     <title>Daemon Implementation Details</title>
     <xi:include href="xml/udisksdaemon.xml"/>
     <xi:include href="xml/udisksdaemonutil.xml"/>
     <xi:include href="xml/udiskslinuxblock.xml"/>
     <xi:include href="xml/udiskslinuxdrive.xml"/>
-    <xi:include href="xml/udisksfilesystemimpl.xml"/>
     <xi:include href="xml/udisksmount.xml"/>
     <xi:include href="xml/udisksmountmonitor.xml"/>
     <xi:include href="xml/udiskspersistentstore.xml"/>
