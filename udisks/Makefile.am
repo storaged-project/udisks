@@ -19,12 +19,12 @@ INCLUDES = \
 	$(GIO_CFLAGS)						\
 	$(NULL)
 
-$(dbus_built_sources) : Makefile.am $(top_srcdir)/data/org.freedesktop.UDisks.xml
+$(dbus_built_sources) : Makefile.am $(top_srcdir)/data/org.freedesktop.UDisks2.xml
 	gdbus-codegen							                \
-		--strip-prefix org.freedesktop.UDisks.                          	\
+		--strip-prefix org.freedesktop.UDisks2.                          	\
 		--namespace UDisks							\
 		--generate-c-code udisks-generated                             		\
-		$(top_srcdir)/data/org.freedesktop.UDisks.xml         			\
+		$(top_srcdir)/data/org.freedesktop.UDisks2.xml         			\
 		$(NULL)
 
 udisksenumtypes.h: udisksenums.h udisksenumtypes.h.template

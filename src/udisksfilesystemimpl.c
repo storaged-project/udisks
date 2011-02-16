@@ -754,8 +754,8 @@ handle_mount (UDisksFilesystem       *filesystem,
   auth_no_user_interaction = FALSE;
 
   object = g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem));
-  block = UDISKS_BLOCK_DEVICE (g_dbus_object_lookup_interface (object, "org.freedesktop.UDisks.BlockDevice"));
-  iface = g_dbus_object_lookup_interface (object, "org.freedesktop.UDisks.BlockDevice.Probed");
+  block = UDISKS_BLOCK_DEVICE (g_dbus_object_lookup_interface (object, "org.freedesktop.UDisks2.BlockDevice"));
+  iface = g_dbus_object_lookup_interface (object, "org.freedesktop.UDisks2.BlockDevice.Probed");
   block_probed = iface != NULL ? UDISKS_BLOCK_DEVICE_PROBED (iface) : NULL;
 
   daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
@@ -1040,7 +1040,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
   opt_force = FALSE;
 
   object = g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem));
-  block = UDISKS_BLOCK_DEVICE (g_dbus_object_lookup_interface (object, "org.freedesktop.UDisks.BlockDevice"));
+  block = UDISKS_BLOCK_DEVICE (g_dbus_object_lookup_interface (object, "org.freedesktop.UDisks2.BlockDevice"));
   daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
   store = udisks_daemon_get_persistent_store (daemon);
 

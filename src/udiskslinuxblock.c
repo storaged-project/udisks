@@ -182,7 +182,7 @@ udisks_linux_block_constructed (GObject *object)
   udisks_linux_block_uevent (block, "add", NULL);
 
   /* compute the object path */
-  str = g_string_new ("/org/freedesktop/UDisks/devices/");
+  str = g_string_new ("/org/freedesktop/UDisks2/block_devices/");
   udisks_safe_append_to_object_path (str, g_udev_device_get_name (block->device));
   g_dbus_object_set_object_path (G_DBUS_OBJECT (block), str->str);
   g_string_free (str, TRUE);

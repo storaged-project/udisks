@@ -20,7 +20,7 @@ udevrules_DATA = 80-udisks2.rules
 
 EXTRA_DIST = 						\
 	80-udisks2.rules				\
-	org.freedesktop.UDisks.xml			\
+	org.freedesktop.UDisks2.xml			\
 	$(service_in_files)				\
 	$(dbusconf_in_files)				\
 	udisks2.service					\

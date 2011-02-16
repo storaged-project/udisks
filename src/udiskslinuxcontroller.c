@@ -222,7 +222,7 @@ udisks_linux_controller_constructed (GObject *object)
   strip_and_replace_with_uscore (vendor);
   strip_and_replace_with_uscore (model);
   strip_and_replace_with_uscore (serial);
-  str = g_string_new ("/org/freedesktop/UDisks/controllers/");
+  str = g_string_new ("/org/freedesktop/UDisks2/controllers/");
   if (vendor == NULL && model == NULL && serial == NULL)
     {
       g_string_append (str, "controller");

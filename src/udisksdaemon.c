@@ -180,7 +180,7 @@ udisks_daemon_constructed (GObject *object)
       g_error_free (error);
     }
 
-  daemon->object_manager = g_dbus_object_manager_new (daemon->connection, "/org/freedesktop/UDisks");
+  daemon->object_manager = g_dbus_object_manager_new (daemon->connection, "/org/freedesktop/UDisks2");
 
   if (!g_file_test (TMP_STATEDIR, G_FILE_TEST_IS_DIR))
     {
@@ -466,7 +466,7 @@ udisks_daemon_launch_simple_job (UDisksDaemon    *daemon,
   job = udisks_simple_job_new (cancellable);
 
   /* TODO: protect job_id by a mutex */
-  object_path = g_strdup_printf ("/org/freedesktop/UDisks/jobs/%d", job_id++);
+  object_path = g_strdup_printf ("/org/freedesktop/UDisks2/jobs/%d", job_id++);
   object = g_dbus_object_new (object_path);
   g_dbus_object_add_interface (object, G_DBUS_INTERFACE (job));
   g_free (object_path);
@@ -525,7 +525,7 @@ udisks_daemon_launch_threaded_job  (UDisksDaemon    *daemon,
                                  cancellable);
 
   /* TODO: protect job_id by a mutex */
-  object_path = g_strdup_printf ("/org/freedesktop/UDisks/jobs/%d", job_id++);
+  object_path = g_strdup_printf ("/org/freedesktop/UDisks2/jobs/%d", job_id++);
   object = g_dbus_object_new (object_path);
   g_dbus_object_add_interface (object, G_DBUS_INTERFACE (job));
   g_free (object_path);
@@ -585,7 +585,7 @@ udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
   g_free (command_line);
 
   /* TODO: protect job_id by a mutex */
-  object_path = g_strdup_printf ("/org/freedesktop/UDisks/jobs/%d", job_id++);
+  object_path = g_strdup_printf ("/org/freedesktop/UDisks2/jobs/%d", job_id++);
   object = g_dbus_object_new (object_path);
   g_dbus_object_add_interface (object, G_DBUS_INTERFACE (job));
   g_free (object_path);

@@ -450,7 +450,7 @@ export_entry (UDisksFstabProvider *provider,
     }
 
   /* compute a pleasant object path and handle possible collisions */
-  entry->object_path = util_compute_object_path ("/org/freedesktop/UDisks/configuration/fstab/", name);
+  entry->object_path = util_compute_object_path ("/org/freedesktop/UDisks2/configuration/fstab/", name);
  again:
   for (l = provider->entries; l != NULL; l = l->next)
     {

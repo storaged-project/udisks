@@ -5,7 +5,7 @@
 
   <!-- ********************************************************************** -->
 
-  <interface name="org.freedesktop.UDisks.LinuxSysfsDevice">
+  <interface name="org.freedesktop.UDisks2.LinuxSysfsDevice">
     <property name="SysfsPath" type="ay" access="read"/>
     <property name="Subsystem" type="ay" access="read"/>
 
@@ -16,7 +16,7 @@
 
   <!-- ********************************************************************** -->
 
-  <interface name="org.freedesktop.UDisks.Controller">
+  <interface name="org.freedesktop.UDisks2.Controller">
     <property name="Vendor" type="ay" access="read"/>
     <property name="Model" type="ay" access="read"/>
     <property name="Revision" type="ay" access="read"/>
@@ -29,7 +29,7 @@
 
   <!-- ********************************************************************** -->
 
-  <interface name="org.freedesktop.UDisks.Drive">
+  <interface name="org.freedesktop.UDisks2.Drive">
     <property name="Vendor" type="ay" access="read"/>
     <property name="Model" type="ay" access="read"/>
     <property name="Revision" type="ay" access="read"/>
@@ -39,15 +39,15 @@
     <!-- The OS supplied Controller-Target-Disk-Slice address -->
     <property name="CTDS" type="s" access="read"/>
 
-    <!-- The org.freedesktop.UDisks.Controller object that the drive belongs
+    <!-- The org.freedesktop.UDisks2.Controller object that the drive belongs
          to, or '/' if no such object exists.
       -->
     <property name="Controller" type="o" access="read"/>
   </interface>
 
 
-  <interface name="org.freedesktop.UDisks.ScsiDrive">
-    <!-- Prereq: org.freedesktop.UDisks.Drive -->
+  <interface name="org.freedesktop.UDisks2.ScsiDrive">
+    <!-- Prereq: org.freedesktop.UDisks2.Drive -->
 
     <!-- Type:    The SCSI device type obtained as a result of the INQUIRY command.
          Version: The version of SCSI implemented by the device.
@@ -61,27 +61,27 @@
     <property name="Version" type="i" access="read"/>
   </interface>
 
-  <interface name="org.freedesktop.UDisks.AtaDrive">
-    <!-- Prereq: org.freedesktop.UDisks.Drive -->
+  <interface name="org.freedesktop.UDisks2.AtaDrive">
+    <!-- Prereq: org.freedesktop.UDisks2.Drive -->
   </interface>
 
   <!-- ********************************************************************** -->
 
-  <interface name="org.freedesktop.UDisks.BlockDevice">
+  <interface name="org.freedesktop.UDisks2.BlockDevice">
     <property name="Device" type="ay" access="read"/>
     <property name="Symlinks" type="aay" access="read"/>
     <property name="Major" type="x" access="read"/>
     <property name="Minor" type="x" access="read"/>
     <property name="Size" type="t" access="read"/>
 
-    <!-- The org.freedesktop.UDisks.Drive object that the block device belongs
+    <!-- The org.freedesktop.UDisks2.Drive object that the block device belongs
          to, or '/' if no such object exists.
       -->
     <property name="Drive" type="o" access="read"/>
   </interface>
 
-  <interface name="org.freedesktop.UDisks.BlockDevice.Probed">
-    <!-- Prereq: org.freedesktop.UDisks.BlockDevice -->
+  <interface name="org.freedesktop.UDisks2.BlockDevice.Probed">
+    <!-- Prereq: org.freedesktop.UDisks2.BlockDevice -->
 
     <property name="Usage" type="s" access="read"/>
     <property name="Type" type="s" access="read"/>
@@ -90,8 +90,8 @@
     <property name="UUID" type="ay" access="read"/>
   </interface>
 
-  <interface name="org.freedesktop.UDisks.Filesystem">
-    <!-- Prereq: org.freedesktop.UDisks.BlockDevice -->
+  <interface name="org.freedesktop.UDisks2.Filesystem">
+    <!-- Prereq: org.freedesktop.UDisks2.BlockDevice -->
 
     <property name="MountPoints" type="aay" access="read"/>
 
@@ -108,7 +108,7 @@
 
   <!-- ********************************************************************** -->
 
-  <interface name="org.freedesktop.UDisks.Job">
+  <interface name="org.freedesktop.UDisks2.Job">
     <property name="Progress" type="d" access="read"/>
     <property name="StartTime" type="t" access="read"/>
     <property name="ExpectedEndTime" type="t" access="read"/>
@@ -125,7 +125,7 @@
 
   <!-- ********************************************************************** -->
 
-  <interface name="org.freedesktop.UDisks.ConfigurationItem">
+  <interface name="org.freedesktop.UDisks2.ConfigurationItem">
 
     <!-- Possible configuration types:
 

@@ -377,7 +377,7 @@ lookup_object_proxy_by_path (const gchar *path)
   GDBusObjectProxy *ret;
   gchar *s;
 
-  s = g_strdup_printf ("/org/freedesktop/UDisks/%s", path);
+  s = g_strdup_printf ("/org/freedesktop/UDisks2/%s", path);
   ret = g_dbus_proxy_manager_lookup (manager, s);
   g_free (s);
 
@@ -440,7 +440,7 @@ lookup_object_proxy_by_drive (const gchar *drive)
 
   ret = NULL;
 
-  full_drive_object_path = g_strdup_printf ("/org/freedesktop/UDisks/drives/%s", drive);
+  full_drive_object_path = g_strdup_printf ("/org/freedesktop/UDisks2/drives/%s", drive);
 
   object_proxies = g_dbus_proxy_manager_get_all (manager);
   for (l = object_proxies; l != NULL; l = l->next)
@@ -477,7 +477,7 @@ lookup_object_proxy_by_controller (const gchar *controller)
 
   ret = NULL;
 
-  full_controller_object_path = g_strdup_printf ("/org/freedesktop/UDisks/controllers/%s", controller);
+  full_controller_object_path = g_strdup_printf ("/org/freedesktop/UDisks2/controllers/%s", controller);
 
   object_proxies = g_dbus_proxy_manager_get_all (manager);
   for (l = object_proxies; l != NULL; l = l->next)
@@ -691,8 +691,8 @@ handle_command_mount_unmount (gint        *argc,
           if ((is_mount && !is_mounted) || (!is_mount && is_mounted))
             {
               object_path = g_dbus_object_proxy_get_object_path (object_proxy);
-              g_assert (g_str_has_prefix (object_path, "/org/freedesktop/UDisks/"));
-              g_print ("%s \n", object_path + sizeof ("/org/freedesktop/UDisks/") - 1);
+              g_assert (g_str_has_prefix (object_path, "/org/freedesktop/UDisks2/"));
+              g_print ("%s \n", object_path + sizeof ("/org/freedesktop/UDisks2/") - 1);
             }
         }
       g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
@@ -973,8 +973,8 @@ handle_command_info (gint        *argc,
           object_proxy = G_DBUS_OBJECT_PROXY (l->data);
 
           object_path = g_dbus_object_proxy_get_object_path (object_proxy);
-          g_assert (g_str_has_prefix (object_path, "/org/freedesktop/UDisks/"));
-          g_print ("%s \n", object_path + sizeof ("/org/freedesktop/UDisks/") - 1);
+          g_assert (g_str_has_prefix (object_path, "/org/freedesktop/UDisks2/"));
+          g_print ("%s \n", object_path + sizeof ("/org/freedesktop/UDisks2/") - 1);
         }
       g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
       g_list_free (object_proxies);
@@ -1955,7 +1955,7 @@ main (int argc,
   manager = udisks_proxy_manager_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
                                                    G_DBUS_PROXY_MANAGER_FLAGS_NONE,
                                                    "org.freedesktop.UDisks2",
-                                                   "/org/freedesktop/UDisks",
+                                                   "/org/freedesktop/UDisks2",
                                                    NULL, /* GCancellable */
                                                    &error);
   if (manager == NULL)

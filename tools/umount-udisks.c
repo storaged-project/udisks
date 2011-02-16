@@ -125,7 +125,7 @@ main (int argc, char *argv[])
   manager = udisks_proxy_manager_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
                                                    G_DBUS_PROXY_MANAGER_FLAGS_NONE,
                                                    "org.freedesktop.UDisks2",
-                                                   "/org/freedesktop/UDisks",
+                                                   "/org/freedesktop/UDisks2",
                                                    NULL, /* GCancellable */
                                                    &error);
   if (manager == NULL)

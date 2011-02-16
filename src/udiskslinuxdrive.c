@@ -228,7 +228,7 @@ udisks_linux_drive_constructed (GObject *object)
   strip_and_replace_with_uscore (vendor);
   strip_and_replace_with_uscore (model);
   strip_and_replace_with_uscore (serial);
-  str = g_string_new ("/org/freedesktop/UDisks/drives/");
+  str = g_string_new ("/org/freedesktop/UDisks2/drives/");
   if (vendor == NULL && model == NULL && serial == NULL)
     {
       g_string_append (str, "drive");
