@@ -27,6 +27,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <string.h>
 
 #include <udisks/udisks.h>
 
@@ -89,14 +90,14 @@ main (int argc, char *argv[])
   GError *error;
   struct stat statbuf;
   GDBusObjectProxy *object_proxy;
-  UDisksFilesystem *filesystem;
+  UDisksBlockDevice *block;
   const gchar *unmount_options[1] = {NULL};
 
   ret = 1;
   manager = NULL;
   block_device_file = NULL;
   object_proxy = NULL;
-  filesystem = NULL;
+  block = NULL;
 
   g_type_init ();
 
@@ -142,18 +143,13 @@ main (int argc, char *argv[])
       goto out;
     }
 
-  filesystem = UDISKS_GET_FILESYSTEM (object_proxy);
-  if (filesystem == NULL)
-    {
-      g_printerr ("Object for block device file %s does not appear to be a file system\n", block_device_file);
-      goto out;
-    }
+  block = UDISKS_PEEK_BLOCK_DEVICE (object_proxy);
 
   error = NULL;
-  if (!udisks_filesystem_call_unmount_sync (filesystem,
-                                            unmount_options,
-                                            NULL, /* GCancellable */
-                                            &error))
+  if (!udisks_block_device_call_filesystem_unmount_sync (block,
+                                                         unmount_options,
+                                                         NULL, /* GCancellable */
+                                                         &error))
     {
       g_printerr ("Error unmounting %s: %s\n", block_device_file, error->message);
       g_error_free (error);
@@ -163,8 +159,6 @@ main (int argc, char *argv[])
   ret = 0;
 
  out:
-  if (filesystem != NULL)
-    g_object_unref (filesystem);
   if (object_proxy != NULL)
     g_object_unref (object_proxy);
   g_free (block_device_file);

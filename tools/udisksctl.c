@@ -570,8 +570,8 @@ handle_command_mount_unmount (gint        *argc,
   GList *object_proxies;
   GDBusObjectProxy *object_proxy;
   UDisksBlockDevice *block;
-  UDisksFilesystem *filesystem;
   guint n;
+  const gchar * const *mount_points;
 
   ret = 1;
   opt_mount_unmount_object_path = NULL;
@@ -637,17 +637,16 @@ handle_command_mount_unmount (gint        *argc,
       object_proxies = g_dbus_proxy_manager_get_all (manager);
       for (l = object_proxies; l != NULL; l = l->next)
         {
-          const gchar * const *mount_points;
           gboolean is_mounted;
 
           object_proxy = G_DBUS_OBJECT_PROXY (l->data);
-          filesystem = UDISKS_PEEK_FILESYSTEM (object_proxy);
+          block = UDISKS_PEEK_BLOCK_DEVICE (object_proxy);
 
-          if (filesystem == NULL)
+          if (block == NULL)
             continue;
 
           is_mounted = FALSE;
-          mount_points = udisks_filesystem_get_mount_points (filesystem);
+          mount_points = udisks_block_device_get_filesystem_mount_points (block);
           if (mount_points != NULL && g_strv_length ((gchar **) mount_points) > 0)
             is_mounted = TRUE;
 
@@ -670,15 +669,13 @@ handle_command_mount_unmount (gint        *argc,
         {
           object_proxy = G_DBUS_OBJECT_PROXY (l->data);
           block = UDISKS_PEEK_BLOCK_DEVICE (object_proxy);
-          filesystem = UDISKS_PEEK_FILESYSTEM (object_proxy);
 
-          if (block != NULL && filesystem != NULL)
+          if (block != NULL)
             {
-              const gchar * const *mount_points;
               gboolean is_mounted;
 
               is_mounted = FALSE;
-              mount_points = udisks_filesystem_get_mount_points (filesystem);
+              mount_points = udisks_block_device_get_filesystem_mount_points (block);
               if (mount_points != NULL && g_strv_length ((gchar **) mount_points) > 0)
                 is_mounted = TRUE;
 
@@ -735,8 +732,9 @@ handle_command_mount_unmount (gint        *argc,
       goto out;
     }
 
-  filesystem = UDISKS_PEEK_FILESYSTEM (object_proxy);
-  if (filesystem == NULL)
+  mount_points = udisks_block_device_get_filesystem_mount_points (block);
+  if (g_strv_length ((gchar **) mount_points) == 0 &&
+      g_strcmp0 (udisks_block_device_get_id_usage (block), "filesystem") != 0)
     {
       g_printerr ("Device %s is not a filesystem.\n", udisks_block_device_get_device (block));
       g_object_unref (object_proxy);
@@ -755,12 +753,12 @@ handle_command_mount_unmount (gint        *argc,
       gchar *mount_path;
 
       error = NULL;
-      if (!udisks_filesystem_call_mount_sync (filesystem,
-                                              opt_mount_filesystem_type,
-                                              (const gchar *const *) opt_mount_unmount_options,
-                                              &mount_path,
-                                              NULL,                       /* GCancellable */
-                                              &error))
+      if (!udisks_block_device_call_filesystem_mount_sync (block,
+                                                           opt_mount_filesystem_type,
+                                                           (const gchar *const *) opt_mount_unmount_options,
+                                                           &mount_path,
+                                                           NULL,                       /* GCancellable */
+                                                           &error))
         {
           if (error->domain == UDISKS_ERROR &&
               error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
@@ -786,10 +784,10 @@ handle_command_mount_unmount (gint        *argc,
       GError *error;
 
       error = NULL;
-      if (!udisks_filesystem_call_unmount_sync (filesystem,
-                                                (const gchar *const *) opt_mount_unmount_options,
-                                                NULL,         /* GCancellable */
-                                                &error))
+      if (!udisks_block_device_call_filesystem_unmount_sync (block,
+                                                             (const gchar *const *) opt_mount_unmount_options,
+                                                             NULL,         /* GCancellable */
+                                                             &error))
         {
           if (error->domain == UDISKS_ERROR &&
               error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&

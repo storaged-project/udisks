@@ -37,30 +37,22 @@
          to, or '/' if no such object exists.
       -->
     <property name="Drive" type="o" access="read"/>
-  </interface>
 
-  <interface name="org.freedesktop.UDisks2.BlockDevice.Probed">
-    <!-- Prereq: org.freedesktop.UDisks2.BlockDevice -->
+    <!-- Properties related what's on the block device -->
+    <property name="IdUsage" type="s" access="read"/>
+    <property name="IdType" type="s" access="read"/>
+    <property name="IdVersion" type="s" access="read"/>
+    <property name="IdLabel" type="ay" access="read"/>
+    <property name="IdUUID" type="ay" access="read"/>
 
-    <property name="Usage" type="s" access="read"/>
-    <property name="Type" type="s" access="read"/>
-    <property name="Version" type="s" access="read"/>
-    <property name="Label" type="ay" access="read"/>
-    <property name="UUID" type="ay" access="read"/>
-  </interface>
-
-  <interface name="org.freedesktop.UDisks2.Filesystem">
-    <!-- Prereq: org.freedesktop.UDisks2.BlockDevice -->
-
-    <property name="MountPoints" type="aay" access="read"/>
-
-    <method name="Mount">
+    <!-- Properties related to whether the device holds a filesystem -->
+    <property name="FilesystemMountPoints" type="aay" access="read"/>
+    <method name="FilesystemMount">
       <arg name="filesystem_type" direction="in" type="s"/>
       <arg name="options" direction="in" type="as"/>
       <arg name="mount_path" direction="out" type="ay"/>
     </method>
-
-    <method name="Unmount">
+    <method name="FilesystemUnmount">
       <arg name="options" direction="in" type="as"/>
     </method>
   </interface>
