@@ -374,24 +374,31 @@ find_drive (GDBusObjectManager *object_manager,
     {
       GDBusObject *object = G_DBUS_OBJECT (l->data);
       UDisksLinuxDrive *drive;
-      GUdevDevice *drive_device;
-      const gchar *drive_sysfs_path;
+      GList *drive_devices;
+      GList *j;
 
       if (!UDISKS_IS_LINUX_DRIVE (object))
         continue;
 
       drive = UDISKS_LINUX_DRIVE (object);
-      drive_device = udisks_linux_drive_get_device (drive);
+      drive_devices = udisks_linux_drive_get_devices (drive);
 
-      drive_sysfs_path = g_udev_device_get_sysfs_path (drive_device);
-
-      if (g_str_has_prefix (block_device_sysfs_path, drive_sysfs_path))
+      for (j = drive_devices; j != NULL; j = j->next)
         {
-          ret = g_dbus_object_get_object_path (object);
-          g_object_unref (drive_device);
-          goto out;
+          GUdevDevice *drive_device = G_UDEV_DEVICE (j->data);
+          const gchar *drive_sysfs_path;
+
+          drive_sysfs_path = g_udev_device_get_sysfs_path (drive_device);
+          if (g_str_has_prefix (block_device_sysfs_path, drive_sysfs_path))
+            {
+              ret = g_dbus_object_get_object_path (object);
+              g_list_foreach (drive_devices, (GFunc) g_object_unref, NULL);
+              g_list_free (drive_devices);
+              goto out;
+            }
         }
-      g_object_unref (drive_device);
+      g_list_foreach (drive_devices, (GFunc) g_object_unref, NULL);
+      g_list_free (drive_devices);
     }
 
  out:

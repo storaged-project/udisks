@@ -1431,12 +1431,11 @@ handle_command_monitor (gint        *argc,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-/* built-in assumption: there is only one block device per drive */
-static UDisksBlockDevice *
-find_block_for_drive (GList       *object_proxies,
-                      const gchar *drive_object_path)
+static GList *
+find_block_devices_for_drive (GList       *object_proxies,
+                              const gchar *drive_object_path)
 {
-  UDisksBlockDevice *ret;
+  GList *ret;
   GList *l;
 
   ret = NULL;
@@ -1451,12 +1450,10 @@ find_block_for_drive (GList       *object_proxies,
 
       if (g_strcmp0 (udisks_block_device_get_drive (block), drive_object_path) == 0)
         {
-          ret = block;
-          goto out;
+          ret = g_list_append (ret, g_object_ref (block));
         }
       g_object_unref (block);
     }
- out:
   return ret;
 }
 
@@ -1543,39 +1540,50 @@ handle_command_status (gint        *argc,
    *  - revision  <= 8    (SCSI: 6, ATA: 8)
    *  - serial    <= 20   (SCSI: 16, ATA: 20)
    */
-  g_print ("LOCATION      MODEL                     REVISION  SERIAL               BLOCK\n"
+  g_print ("PORT  MODEL                     REVISION  SERIAL               BLOCK\n"
            "--------------------------------------------------------------------------------\n");
-         /*               SEAGATE ST3300657SS       0006      3SJ1QNMQ00009052NECM sdaa     */
+         /*       SEAGATE ST3300657SS       0006      3SJ1QNMQ00009052NECM sdaa sdab dm-32   */
          /* 01234567890123456789012345678901234567890123456789012345678901234567890123456789 */
 
   /* TODO: sort */
-  //object_proxies = g_list_sort (object_proxies, (GCompareFunc) obj_proxy_cmp_ctds);
+  object_proxies = g_list_sort (object_proxies, (GCompareFunc) obj_proxy_cmp);
   for (l = object_proxies; l != NULL; l = l->next)
     {
       GDBusObjectProxy *object_proxy = G_DBUS_OBJECT_PROXY (l->data);
       UDisksDrive *drive;
-      UDisksBlockDevice *block;
-      const gchar *block_device;
+      GList *block_devices;
       const gchar *vendor;
       const gchar *model;
       const gchar *revision;
       const gchar *serial;
       gchar *vendor_model;
+      GString *str;
+      gchar *block_device;
+      GList *j;
 
       drive = UDISKS_PEEK_DRIVE (object_proxy);
       if (drive == NULL)
         continue;
 
-      block = find_block_for_drive (object_proxies, g_dbus_object_proxy_get_object_path (object_proxy));
-      if (block != NULL)
+      str = g_string_new (NULL);
+      block_devices = find_block_devices_for_drive (object_proxies, g_dbus_object_proxy_get_object_path (object_proxy));
+      for (j = block_devices; j != NULL; j = j->next)
         {
-          block_device = udisks_block_device_get_device (block);
-          g_object_unref (block);
+          UDisksBlockDevice *block = UDISKS_BLOCK_DEVICE (j->data);
+          const gchar *device_file;
+          if (str->len > 0)
+            g_string_append (str, " ");
+          device_file = udisks_block_device_get_device (block);
+          if (g_str_has_prefix (device_file, "/dev/"))
+            g_string_append (str, device_file + 5);
+          else
+            g_string_append (str, device_file);
         }
-      else
-        {
-          block_device = "-";
-        }
+      if (str->len == 0)
+        g_string_append (str, "-");
+      block_device = g_string_free (str, FALSE);
+      g_list_foreach (block_devices, (GFunc) g_object_unref, NULL);
+      g_list_free (block_devices);
 
       vendor = udisks_drive_get_vendor (drive);
       model = udisks_drive_get_model (drive);
@@ -1596,12 +1604,13 @@ handle_command_status (gint        *argc,
         vendor_model = g_strdup ("-");
 
       /* TODO: need to figure out LOCATION */
-      g_print ("%-13s %-25s %-9s %-20s %-8s\n",
+      g_print ("%-5s %-25s %-9s %-20s %-8s\n",
                "",
                vendor_model,
                revision,
                serial,
                block_device);
+      g_free (block_device);
     }
 
 

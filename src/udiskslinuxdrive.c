@@ -48,7 +48,8 @@ struct _UDisksLinuxDrive
 
   UDisksDaemon *daemon;
 
-  GUdevDevice *device;
+  /* list of GUdevDevice objects for scsi_device objects */
+  GList *devices;
 
   /* interfaces */
   UDisksDrive *iface_drive;
@@ -77,7 +78,8 @@ udisks_linux_drive_finalize (GObject *object)
 
   /* note: we don't hold a ref to drive->daemon or drive->mount_monitor */
 
-  g_object_unref (drive->device);
+  g_list_foreach (drive->devices, (GFunc) g_object_unref, NULL);
+  g_list_free (drive->devices);
 
   if (drive->iface_drive != NULL)
     g_object_unref (drive->iface_drive);
@@ -98,10 +100,6 @@ udisks_linux_drive_get_property (GObject    *object,
     {
     case PROP_DAEMON:
       g_value_set_object (value, udisks_linux_drive_get_daemon (drive));
-      break;
-
-    case PROP_DEVICE:
-      g_value_set_object (value, udisks_linux_drive_get_device (drive));
       break;
 
     default:
@@ -127,8 +125,8 @@ udisks_linux_drive_set_property (GObject      *object,
       break;
 
     case PROP_DEVICE:
-      g_assert (drive->device == NULL);
-      drive->device = g_value_dup_object (value);
+      g_assert (drive->devices == NULL);
+      drive->devices = g_list_prepend (NULL, g_value_dup_object (value));
       break;
 
     default:
@@ -212,7 +210,7 @@ udisks_linux_drive_constructed (GObject *object)
   GString *str;
 
   /* initial coldplug */
-  udisks_linux_drive_uevent (drive, "add", NULL);
+  udisks_linux_drive_uevent (drive, "add", drive->devices->data);
 
   /* compute the object path */
   vendor = g_strdup (udisks_drive_get_vendor (drive->iface_drive));
@@ -296,7 +294,6 @@ udisks_linux_drive_class_init (UDisksLinuxDriveClass *klass)
                                                         "Device",
                                                         "The device for the object",
                                                         G_UDEV_TYPE_DEVICE,
-                                                        G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
                                                         G_PARAM_STATIC_STRINGS));
@@ -348,20 +345,22 @@ udisks_linux_drive_get_daemon (UDisksLinuxDrive *drive)
 }
 
 /**
- * udisks_linux_drive_get_device:
+ * udisks_linux_drive_get_devices:
  * @drive: A #UDisksLinuxDrive.
  *
- * Gets the current #GUdevDevice for @drive. Connect to
- * #GObject::notify to track changes to the #UDisksLinuxDrive:device
- * property.
+ * Gets the current #GUdevDevice objects associated with @drive.
  *
- * Returns: A #GUdevDevice. Free with g_object_unref().
+ * Returns: A list of #GUdevDevice objects. Free each element with
+ * g_object_unref(), then free the list with g_list_free().
  */
-GUdevDevice *
-udisks_linux_drive_get_device (UDisksLinuxDrive *drive)
+GList *
+udisks_linux_drive_get_devices (UDisksLinuxDrive *drive)
 {
+  GList *ret;
   g_return_val_if_fail (UDISKS_IS_LINUX_DRIVE (drive), NULL);
-  return g_object_ref (drive->device);
+  ret = g_list_copy (drive->devices);
+  g_list_foreach (ret, (GFunc) g_object_ref, NULL);
+  return ret;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -420,9 +419,6 @@ update_iface (UDisksLinuxDrive           *drive,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
-
-
-/* ---------------------------------------------------------------------------------------------------- */
 /* org.freedesktop.UDisks.Drive */
 
 static gboolean
@@ -437,15 +433,21 @@ drive_update (UDisksLinuxDrive      *drive,
               GDBusInterface        *_iface)
 {
   UDisksDrive *iface = UDISKS_DRIVE (_iface);
+  GUdevDevice *device;
+
+  if (drive->devices == NULL)
+    goto out;
+
+  device = G_UDEV_DEVICE (drive->devices->data);
 
   /* this is the _almost_ the same for both ATA and SCSI devices (cf. udev's ata_id and scsi_id)
    * but we special case since there are subtle differences...
    */
-  if (g_udev_device_get_property_as_boolean (drive->device, "ID_ATA"))
+  if (g_udev_device_get_property_as_boolean (device, "ID_ATA"))
     {
       const gchar *model;
 
-      model = g_udev_device_get_property (drive->device, "ID_MODEL_ENC");
+      model = g_udev_device_get_property (device, "ID_MODEL_ENC");
       if (model != NULL)
         {
           gchar *s;
@@ -455,17 +457,17 @@ drive_update (UDisksLinuxDrive      *drive,
           g_free (s);
         }
 
-      udisks_drive_set_vendor (iface, g_udev_device_get_property (drive->device, ""));
-      udisks_drive_set_revision (iface, g_udev_device_get_property (drive->device, "ID_REVISION"));
-      udisks_drive_set_serial (iface, g_udev_device_get_property (drive->device, "ID_SERIAL_SHORT"));
-      udisks_drive_set_wwn (iface, g_udev_device_get_property (drive->device, "ID_WWN_WITH_EXTENSION"));
+      udisks_drive_set_vendor (iface, g_udev_device_get_property (device, ""));
+      udisks_drive_set_revision (iface, g_udev_device_get_property (device, "ID_REVISION"));
+      udisks_drive_set_serial (iface, g_udev_device_get_property (device, "ID_SERIAL_SHORT"));
+      udisks_drive_set_wwn (iface, g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION"));
     }
-  else if (g_udev_device_get_property_as_boolean (drive->device, "ID_SCSI"))
+  else if (g_udev_device_get_property_as_boolean (device, "ID_SCSI"))
     {
       const gchar *vendor;
       const gchar *model;
 
-      vendor = g_udev_device_get_property (drive->device, "ID_VENDOR_ENC");
+      vendor = g_udev_device_get_property (device, "ID_VENDOR_ENC");
       if (vendor != NULL)
         {
           gchar *s;
@@ -475,7 +477,7 @@ drive_update (UDisksLinuxDrive      *drive,
           g_free (s);
         }
 
-      model = g_udev_device_get_property (drive->device, "ID_MODEL_ENC");
+      model = g_udev_device_get_property (device, "ID_MODEL_ENC");
       if (model != NULL)
         {
           gchar *s;
@@ -485,22 +487,45 @@ drive_update (UDisksLinuxDrive      *drive,
           g_free (s);
         }
 
-      udisks_drive_set_revision (iface, g_udev_device_get_property (drive->device, "ID_REVISION"));
-      udisks_drive_set_serial (iface, g_udev_device_get_property (drive->device, "ID_SCSI_SERIAL"));
-      udisks_drive_set_wwn (iface, g_udev_device_get_property (drive->device, "ID_WWN_WITH_EXTENSION"));
+      udisks_drive_set_revision (iface, g_udev_device_get_property (device, "ID_REVISION"));
+      udisks_drive_set_serial (iface, g_udev_device_get_property (device, "ID_SCSI_SERIAL"));
+      udisks_drive_set_wwn (iface, g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION"));
     }
   else
     {
       /* generic fallback... */
-      udisks_drive_set_vendor (iface, g_udev_device_get_property (drive->device, "ID_VENDOR"));
-      udisks_drive_set_model (iface, g_udev_device_get_property (drive->device, "ID_MODEL"));
-      udisks_drive_set_revision (iface, g_udev_device_get_property (drive->device, "ID_REVISION"));
-      udisks_drive_set_serial (iface, g_udev_device_get_property (drive->device, "ID_SERIAL_SHORT"));
-      udisks_drive_set_wwn (iface, g_udev_device_get_property (drive->device, "ID_WWN_WITH_EXTENSION"));
+      udisks_drive_set_vendor (iface, g_udev_device_get_property (device, "ID_VENDOR"));
+      udisks_drive_set_model (iface, g_udev_device_get_property (device, "ID_MODEL"));
+      udisks_drive_set_revision (iface, g_udev_device_get_property (device, "ID_REVISION"));
+      udisks_drive_set_serial (iface, g_udev_device_get_property (device, "ID_SERIAL_SHORT"));
+      udisks_drive_set_wwn (iface, g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION"));
     }
+
+ out:
+  ;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
+
+static GList *
+find_link_for_sysfs_path (UDisksLinuxDrive *drive,
+                    const gchar *sysfs_path)
+{
+  GList *l;
+  GList *ret;
+  ret = NULL;
+  for (l = drive->devices; l != NULL; l = l->next)
+    {
+      GUdevDevice *device = G_UDEV_DEVICE (l->data);
+      if (g_strcmp0 (g_udev_device_get_sysfs_path (device), sysfs_path) == 0)
+        {
+          ret = l;
+          goto out;
+        }
+    }
+ out:
+  return ret;
+}
 
 /**
  * udisks_linux_drive_uevent:
@@ -515,14 +540,38 @@ udisks_linux_drive_uevent (UDisksLinuxDrive *drive,
                            const gchar      *action,
                            GUdevDevice      *device)
 {
-  g_return_if_fail (UDISKS_IS_LINUX_DRIVE (drive));
-  g_return_if_fail (device == NULL || G_UDEV_IS_DEVICE (device));
+  GList *link;
 
-  if (device != NULL)
+  g_return_if_fail (UDISKS_IS_LINUX_DRIVE (drive));
+  g_return_if_fail (G_UDEV_IS_DEVICE (device));
+
+  link = find_link_for_sysfs_path (drive, g_udev_device_get_sysfs_path (device));
+  if (g_strcmp0 (action, "remove") == 0)
     {
-      g_object_unref (drive->device);
-      drive->device = g_object_ref (device);
-      g_object_notify (G_OBJECT (drive), "device");
+      if (link != NULL)
+        {
+          g_object_unref (G_UDEV_DEVICE (link->data));
+          drive->devices = g_list_delete_link (drive->devices, link);
+        }
+      else
+        {
+          udisks_daemon_log (drive->daemon,
+                             UDISKS_LOG_LEVEL_WARNING,
+                             "Drive doesn't have device with sysfs path %s on remove event",
+                             g_udev_device_get_sysfs_path (device));
+        }
+    }
+  else
+    {
+      if (link != NULL)
+        {
+          g_object_unref (G_UDEV_DEVICE (link->data));
+          link->data = g_object_ref (device);
+        }
+      else
+        {
+          drive->devices = g_list_append (drive->devices, g_object_ref (device));
+        }
     }
 
   update_iface (drive, action, drive_check, drive_update,
