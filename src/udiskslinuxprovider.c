@@ -244,25 +244,17 @@ handle_scsi_uevent (UDisksLinuxProvider *provider,
   UDisksLinuxDrive *drive;
   UDisksDaemon *daemon;
   const gchar *sysfs_path;
-  const gchar *serial;
-  const gchar *wwn;
-  const gchar *vpd;
+  gchar *vpd;
+
+  vpd = NULL;
 
   daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
   sysfs_path = g_udev_device_get_sysfs_path (device);
 
-  /* prefer WWN to serial */
-  serial = g_udev_device_get_property (device, "ID_SERIAL");
-  wwn = g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION");
-  if (wwn != NULL && strlen (wwn) > 0)
-    {
-      vpd = wwn;
-    }
-  else if (serial != NULL && strlen (serial) > 0)
-    {
-      vpd = serial;
-    }
-  else
+  if (!udisks_linux_drive_should_include_device (device, &vpd))
+    goto out;
+
+  if (vpd == NULL)
     {
       udisks_daemon_log (daemon,
                          UDISKS_LOG_LEVEL_WARNING,
@@ -270,6 +262,7 @@ handle_scsi_uevent (UDisksLinuxProvider *provider,
                          g_udev_device_get_sysfs_path (device));
       goto out;
     }
+
 
   if (g_strcmp0 (action, "remove") == 0)
     {
@@ -314,7 +307,7 @@ handle_scsi_uevent (UDisksLinuxProvider *provider,
     }
 
  out:
-  ;
+  g_free (vpd);
 }
 
 static void

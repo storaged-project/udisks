@@ -39,6 +39,9 @@ void                udisks_linux_drive_uevent      (UDisksLinuxDrive *drive,
 UDisksDaemon       *udisks_linux_drive_get_daemon  (UDisksLinuxDrive *drive);
 GList              *udisks_linux_drive_get_devices (UDisksLinuxDrive *drive);
 
+gboolean            udisks_linux_drive_should_include_device (GUdevDevice  *device,
+                                                              gchar       **out_vpd);
+
 G_END_DECLS
 
 #endif /* __UDISKS_LINUX_DRIVE_H__ */

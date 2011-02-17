@@ -67,8 +67,6 @@ enum
   PROP_DEVICE
 };
 
-static gboolean udisks_linux_drive_check_device (GUdevDevice *device);
-
 G_DEFINE_TYPE (UDisksLinuxDrive, udisks_linux_drive, G_TYPE_DBUS_OBJECT);
 
 static void
@@ -168,7 +166,7 @@ udisks_linux_drive_constructor (GType                  type,
   device = G_UDEV_DEVICE (g_value_get_object (device_cp->value));
   g_assert (device != NULL);
 
-  if (!udisks_linux_drive_check_device (device))
+  if (!udisks_linux_drive_should_include_device (device, NULL))
     {
       return NULL;
     }
@@ -446,6 +444,7 @@ drive_update (UDisksLinuxDrive      *drive,
   if (g_udev_device_get_property_as_boolean (device, "ID_ATA"))
     {
       const gchar *model;
+      const gchar *serial;
 
       model = g_udev_device_get_property (device, "ID_MODEL_ENC");
       if (model != NULL)
@@ -459,7 +458,10 @@ drive_update (UDisksLinuxDrive      *drive,
 
       udisks_drive_set_vendor (iface, g_udev_device_get_property (device, ""));
       udisks_drive_set_revision (iface, g_udev_device_get_property (device, "ID_REVISION"));
-      udisks_drive_set_serial (iface, g_udev_device_get_property (device, "ID_SERIAL_SHORT"));
+      serial = g_udev_device_get_property (device, "ID_SERIAL_SHORT");
+      if (serial == NULL)
+        serial = g_udev_device_get_property (device, "ID_SERIAL");
+      udisks_drive_set_serial (iface, serial);
       udisks_drive_set_wwn (iface, g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION"));
     }
   else if (g_udev_device_get_property_as_boolean (device, "ID_SCSI"))
@@ -581,18 +583,23 @@ udisks_linux_drive_uevent (UDisksLinuxDrive *drive,
 /* ---------------------------------------------------------------------------------------------------- */
 
 /* <internal>
- * udisks_linux_drive_check_device:
+ * udisks_linux_drive_should_include_device:
  * @device: A #GUdevDevice.
+ * @out_vpd: Return location for unique ID or %NULL.
  *
  * Checks if we should even construct a #UDisksLinuxDrive for @device.
  *
  * Returns: %TRUE if we should construct an object, %FALSE otherwise.
  */
-static gboolean
-udisks_linux_drive_check_device (GUdevDevice *device)
+gboolean
+udisks_linux_drive_should_include_device (GUdevDevice  *device,
+                                          gchar       **out_vpd)
 {
   gboolean ret;
   gint type;
+  const gchar *serial;
+  const gchar *wwn;
+  const gchar *vpd;
 
   ret = FALSE;
 
@@ -620,6 +627,24 @@ udisks_linux_drive_check_device (GUdevDevice *device)
   if (!(type == 0x00 || type == 0x05))
     goto out;
 
+  /* prefer WWN to serial */
+  serial = g_udev_device_get_property (device, "ID_SERIAL");
+  wwn = g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION");
+  if (wwn != NULL && strlen (wwn) > 0)
+    {
+      vpd = wwn;
+    }
+  else if (serial != NULL && strlen (serial) > 0)
+    {
+      vpd = serial;
+    }
+  else
+    {
+      vpd = NULL;
+    }
+
+  if (out_vpd != NULL)
+    *out_vpd = g_strdup (vpd);
   ret = TRUE;
 
  out:
