@@ -543,11 +543,11 @@ block_device_update (UDisksLinuxBlock      *block,
   is_partition_table = FALSE;
   is_partition_entry = FALSE;
   if (g_strcmp0 (g_udev_device_get_devtype (block->device), "partition") == 0 ||
-      g_udev_device_get_property_as_boolean (block->device, "UDISKS_PARTITON"))
+      g_udev_device_get_property_as_boolean (block->device, "UDISKS_PARTITION"))
     {
       is_partition_entry = TRUE;
     }
-  else if (g_udev_device_get_property_as_boolean (block->device, "UDISKS_PARTITON_TABLE"))
+  else if (g_udev_device_get_property_as_boolean (block->device, "UDISKS_PARTITION_TABLE"))
     {
       is_partition_table = TRUE;
     }
@@ -592,7 +592,7 @@ block_device_update (UDisksLinuxBlock      *block,
             }
           else
             {
-              g_warning ("No UDISKS_PARTITON_SLAVE property and DEVTYPE is not partition for block device %s",
+              g_warning ("No UDISKS_PARTITION_SLAVE property and DEVTYPE is not partition for block device %s",
                          g_udev_device_get_sysfs_path (block->device));
             }
         }
