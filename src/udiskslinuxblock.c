@@ -437,6 +437,40 @@ find_drive (GDBusObjectManager *object_manager,
   return ret;
 }
 
+static gchar *
+find_block_device_by_sysfs_path (GDBusObjectManager *object_manager,
+                                 const gchar        *sysfs_path)
+{
+  gchar *ret;
+  GList *objects;
+  GList *l;
+
+  ret = NULL;
+
+  objects = g_dbus_object_manager_get_all (object_manager);
+  for (l = objects; l != NULL; l = l->next)
+    {
+      GDBusObject *object = G_DBUS_OBJECT (l->data);
+      UDisksLinuxBlock *block;
+
+      if (!UDISKS_IS_LINUX_BLOCK (object))
+        continue;
+
+      block = UDISKS_LINUX_BLOCK (object);
+
+      if (g_strcmp0 (sysfs_path, g_udev_device_get_sysfs_path (block->device)) == 0)
+        {
+          ret = g_dbus_object_get_object_path (object);
+          goto out;
+        }
+    }
+
+ out:
+  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+  g_list_free (objects);
+  return ret;
+}
+
 static void
 block_device_update (UDisksLinuxBlock      *block,
                      const gchar     *uevent_action,
@@ -450,6 +484,8 @@ block_device_update (UDisksLinuxBlock      *block,
   GList *mounts;
   GList *l;
   GPtrArray *p;
+  gboolean is_partition_table;
+  gboolean is_partition_entry;
 
   dev = g_udev_device_get_device_number (block->device);
 
@@ -500,6 +536,99 @@ block_device_update (UDisksLinuxBlock      *block,
   g_ptr_array_free (p, TRUE);
   g_list_foreach (mounts, (GFunc) g_object_unref, NULL);
   g_list_free (mounts);
+
+  /* TODO: port this to blkid properties */
+
+  /* Update the partition table and partition entry properties */
+  is_partition_table = FALSE;
+  is_partition_entry = FALSE;
+  if (g_strcmp0 (g_udev_device_get_devtype (block->device), "partition") == 0 ||
+      g_udev_device_get_property_as_boolean (block->device, "UDISKS_PARTITON"))
+    {
+      is_partition_entry = TRUE;
+    }
+  else if (g_udev_device_get_property_as_boolean (block->device, "UDISKS_PARTITON_TABLE"))
+    {
+      is_partition_table = TRUE;
+    }
+
+  /* partition table */
+  if (is_partition_table)
+    {
+      udisks_block_device_set_part_table (iface, TRUE);
+      udisks_block_device_set_part_table_scheme (iface,
+                                                 g_udev_device_get_property (block->device,
+                                                                             "UDISKS_PARTITION_TABLE_SCHEME"));
+    }
+  else
+    {
+      udisks_block_device_set_part_table (iface, FALSE);
+      udisks_block_device_set_part_table_scheme (iface, "");
+    }
+
+  /* partition entry */
+  if (is_partition_entry)
+    {
+      gchar *slave_sysfs_path;
+      udisks_block_device_set_part_entry (iface, TRUE);
+      udisks_block_device_set_part_entry_scheme (iface,
+                                                 g_udev_device_get_property (block->device,
+                                                                             "UDISKS_PARTITION_SCHEME"));
+      udisks_block_device_set_part_entry_type (iface,
+                                               g_udev_device_get_property (block->device,
+                                                                           "UDISKS_PARTITION_TYPE"));
+      udisks_block_device_set_part_entry_flags (iface,
+                                                g_udev_device_get_property (block->device,
+                                                                            "UDISKS_PARTITION_FLAGS"));
+      slave_sysfs_path = g_strdup (g_udev_device_get_property (block->device, "UDISKS_PARTITION_SLAVE"));
+      if (slave_sysfs_path == NULL)
+        {
+          if (g_strcmp0 (g_udev_device_get_devtype (block->device), "partition") == 0)
+            {
+              GUdevDevice *parent;
+              parent = g_udev_device_get_parent (block->device);
+              slave_sysfs_path = g_strdup (g_udev_device_get_sysfs_path (parent));
+              g_object_unref (parent);
+            }
+          else
+            {
+              g_warning ("No UDISKS_PARTITON_SLAVE property and DEVTYPE is not partition for block device %s",
+                         g_udev_device_get_sysfs_path (block->device));
+            }
+        }
+      if (slave_sysfs_path != NULL)
+        {
+          gchar *slave_object_path;
+          slave_object_path = find_block_device_by_sysfs_path (udisks_daemon_get_object_manager (block->daemon),
+                                                               slave_sysfs_path);
+          if (slave_object_path != NULL)
+            udisks_block_device_set_part_entry_table (iface, slave_object_path);
+          else
+            udisks_block_device_set_part_entry_table (iface, "/");
+          g_free (slave_object_path);
+          g_free (slave_sysfs_path);
+        }
+      else
+        {
+          udisks_block_device_set_part_entry_table (iface, "/");
+        }
+      udisks_block_device_set_part_entry_offset (iface,
+                                                 g_udev_device_get_property_as_uint64 (block->device,
+                                                                                       "UDISKS_PARTITION_OFFSET"));
+      udisks_block_device_set_part_entry_size (iface,
+                                               g_udev_device_get_property_as_uint64 (block->device,
+                                                                                     "UDISKS_PARTITION_SIZE"));
+    }
+  else
+    {
+      udisks_block_device_set_part_entry (iface, FALSE);
+      udisks_block_device_set_part_entry_scheme (iface, "");
+      udisks_block_device_set_part_entry_type (iface, "");
+      udisks_block_device_set_part_entry_flags (iface, "");
+      udisks_block_device_set_part_entry_table (iface, "/");
+      udisks_block_device_set_part_entry_offset (iface, 0);
+      udisks_block_device_set_part_entry_size (iface, 0);
+    }
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

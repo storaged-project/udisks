@@ -45,6 +45,20 @@
     <property name="IdLabel" type="ay" access="read"/>
     <property name="IdUUID" type="ay" access="read"/>
 
+    <!-- Partition Table -->
+    <property name="PartTable" type="b" access="read"/>
+    <property name="PartTableScheme" type="s" access="read"/>
+
+    <!-- Partition Table Entry -->
+    <property name="PartEntry" type="b" access="read"/>
+    <property name="PartEntryScheme" type="s" access="read"/>
+    <property name="PartEntryType" type="s" access="read"/>
+    <property name="PartEntryFlags" type="s" access="read"/>
+    <property name="PartEntryOffset" type="t" access="read"/>
+    <property name="PartEntrySize" type="t" access="read"/>
+    <!-- The BlockDevice object the entry is part of ('/' if not an entry) -->
+    <property name="PartEntryTable" type="o" access="read"/>
+
     <!-- Properties related to whether the device holds a filesystem -->
     <property name="FilesystemMountPoints" type="aay" access="read"/>
     <method name="FilesystemMount">
