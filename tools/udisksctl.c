@@ -1538,7 +1538,7 @@ handle_command_status (gint        *argc,
    *  - revision  <= 8    (SCSI: 6, ATA: 8)
    *  - serial    <= 20   (SCSI: 16, ATA: 20)
    */
-  g_print ("PORT  MODEL                     REVISION  SERIAL               BLOCK\n"
+  g_print ("PORT  MODEL                     REVISION  SERIAL               DEVICE\n"
            "--------------------------------------------------------------------------------\n");
          /*       SEAGATE ST3300657SS       0006      3SJ1QNMQ00009052NECM sdaa sdab dm-32   */
          /* 01234567890123456789012345678901234567890123456789012345678901234567890123456789 */
@@ -1568,14 +1568,17 @@ handle_command_status (gint        *argc,
       for (j = block_devices; j != NULL; j = j->next)
         {
           UDisksBlockDevice *block = UDISKS_BLOCK_DEVICE (j->data);
-          const gchar *device_file;
-          if (str->len > 0)
-            g_string_append (str, " ");
-          device_file = udisks_block_device_get_device (block);
-          if (g_str_has_prefix (device_file, "/dev/"))
-            g_string_append (str, device_file + 5);
-          else
-            g_string_append (str, device_file);
+          if (!udisks_block_device_get_part_entry (block))
+            {
+              const gchar *device_file;
+              if (str->len > 0)
+                g_string_append (str, " ");
+              device_file = udisks_block_device_get_device (block);
+              if (g_str_has_prefix (device_file, "/dev/"))
+                g_string_append (str, device_file + 5);
+              else
+                g_string_append (str, device_file);
+            }
         }
       if (str->len == 0)
         g_string_append (str, "-");
