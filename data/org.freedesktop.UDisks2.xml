@@ -33,6 +33,11 @@
     <property name="Minor" type="x" access="read"/>
     <property name="Size" type="t" access="read"/>
 
+    <!-- The preferred device to present in the UI - could be e.g.
+         /dev/mapper/mpathk instead of /dev/dm-10
+    -->
+    <property name="PreferredDevice" type="ay" access="read"/>
+
     <!-- The org.freedesktop.UDisks2.Drive object that the block device belongs
          to, or '/' if no such object exists.
       -->

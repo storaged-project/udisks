@@ -486,16 +486,45 @@ block_device_update (UDisksLinuxBlock      *block,
   GPtrArray *p;
   gboolean is_partition_table;
   gboolean is_partition_entry;
+  const gchar *device_file;
+  const gchar *const *symlinks;
+  const gchar *preferred_device_file;
 
   dev = g_udev_device_get_device_number (block->device);
+  device_file = g_udev_device_get_device_file (block->device);
+  symlinks = g_udev_device_get_device_file_symlinks (block->device);
 
-  udisks_block_device_set_device (iface, g_udev_device_get_device_file (block->device));
-  udisks_block_device_set_symlinks (iface, g_udev_device_get_device_file_symlinks (block->device));
+  udisks_block_device_set_device (iface, device_file);
+  udisks_block_device_set_symlinks (iface, symlinks);
   udisks_block_device_set_major (iface, major (dev));
   udisks_block_device_set_minor (iface, minor (dev));
   udisks_block_device_set_size (iface, g_udev_device_get_sysfs_attr_as_uint64 (block->device, "size") * 512);
 
-  /* TODO: if this is slow we could have a cache or ensure that we
+  /* Sort out preferred device... this is what UI shells should
+   * display. We default to the block device name.
+   *
+   * This is mostly for things like device-mapper where device file is
+   * a name of the form dm-%d and a symlink name conveys more
+   * information.
+   */
+  preferred_device_file = g_udev_device_get_device_file (block->device);
+  if (g_str_has_prefix (device_file, "/dev/dm-"))
+    {
+      guint n;
+      for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
+        {
+          if (g_str_has_prefix (symlinks[n], "/dev/mapper/mpath"))
+            {
+              preferred_device_file = symlinks[n];
+              break;
+            }
+        }
+    }
+  udisks_block_device_set_preferred_device (iface, preferred_device_file);
+
+  /* Determine the drive this block device belongs to
+   *
+   * TODO: if this is slow we could have a cache or ensure that we
    * only do this once or something else
    */
   object_manager = udisks_daemon_get_object_manager (block->daemon);
