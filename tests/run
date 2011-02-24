@@ -90,10 +90,10 @@ class UDisksTestCase(unittest.TestCase):
             daemon_args = ['--helper-dir', os.path.join(os.getcwd(), 'src',
                 'helpers')]
             klass.tool_path = 'tools/udisks'
-            print 'Testing binaries from local build tree'
+            print('Testing binaries from local build tree')
             klass.check_build_tree_config()
         else:
-            print 'Testing installed system binaries'
+            print('Testing installed system binaries')
             daemon_path = None
             for l in open('/usr/share/dbus-1/system-services/org.freedesktop.UDisks.service'):
                 if l.startswith('Exec='):
@@ -104,7 +104,7 @@ class UDisksTestCase(unittest.TestCase):
             daemon_args = []
             klass.tool_path = 'udisks'
 
-        print 'daemon path:', daemon_path
+        print('daemon path: ' + daemon_path)
 
         klass.device = klass.setup_vdev()
 
@@ -325,10 +325,10 @@ class UDisksTestCase(unittest.TestCase):
         while timeout >= 0:
             try:
                 return fn(*args)
-            except dbus.DBusException, e:
+            except dbus.DBusException as e:
                 if e._dbus_error_name != 'org.freedesktop.UDisks.Error.Busy':
                     raise
-                print >> sys.stderr, '[busy] ',
+                sys.stderr.write('[busy] ')
                 time.sleep(0.3)
                 timeout -= 1
 
@@ -349,7 +349,7 @@ class UDisksTestCase(unittest.TestCase):
 
         # expand make variables
         subst_re = re.compile('\${([a-zA-Z_]+)}')
-        for (k, v) in make_vars.iteritems():
+        for (k, v) in make_vars.items():
             while True:
                 m = subst_re.search(v)
                 if m:
@@ -362,7 +362,7 @@ class UDisksTestCase(unittest.TestCase):
         for d in (os.path.join(make_vars['localstatedir'], 'run', 'udisks'),
                 os.path.join(make_vars['localstatedir'], 'lib', 'udisks')):
             if not os.path.exists(d):
-                print >> sys.stderr, 'The directory %s does not exist; please create it before running these tests.' % d
+                sys.stderr.write('The directory %s does not exist; please create it before running these tests.\n' % d)
                 sys.exit(0)
         
     @classmethod
@@ -375,7 +375,7 @@ class UDisksTestCase(unittest.TestCase):
         '''
         # ensure that the scsi_debug module is loaded
         if os.path.isdir('/sys/module/scsi_debug'):
-            print >> sys.stderr, 'The scsi_debug module is already loaded; please remove before running this test.'
+            sys.stderr.write('The scsi_debug module is already loaded; please remove before running this test.\n')
             sys.exit(1)
 
         assert subprocess.call(['modprobe', 'scsi_debug', 'dev_size_mb=%i' % (
@@ -397,7 +397,7 @@ class UDisksTestCase(unittest.TestCase):
         # let's be 100% sure that we pick a virtual one
         assert open('/sys/block/%s/device/model' % devs[0]).read().strip() == 'scsi_debug'
 
-        print 'Set up test device:', dev
+        print('Set up test device: ' + dev)
         return dev
 
     @classmethod
@@ -445,7 +445,7 @@ class FS(UDisksTestCase):
 
     def tearDown(self):
         if subprocess.call(['umount', self.device], stderr=subprocess.PIPE) == 0:
-            print >> sys.stderr, '[cleanup unmount] ',
+            sys.stderr.write('[cleanup unmount] ')
         shutil.rmtree (self.workdir)
 
     def test_zero(self):
@@ -541,13 +541,13 @@ class FS(UDisksTestCase):
 
         if type != 'swap' and subprocess.call(['which', 'mkfs.' + type],
                 stdout=subprocess.PIPE) != 0:
-            print >> sys.stderr, '[no mkfs.%s, skip] ' % type,
+            sys.stderr.write('[no mkfs.%s, skip] ' % type)
 
             # check correct D-Bus exception
             try:
                 self.fs_create(None, type, [])
                 self.fail('Expected failure for missing mkfs.' + type)
-            except dbus.DBusException, e:
+            except dbus.DBusException as e:
                 self.assertEqual(e._dbus_error_name,
                         'org.freedesktop.UDisks.Error.FilesystemToolsMissing',
                         str(e))
@@ -555,7 +555,7 @@ class FS(UDisksTestCase):
             return
 
         # do checks with command line tools (mkfs/mount/umount)
-        print >> sys.stderr, '[cli]',
+        sys.stderr.write('[cli] ')
 
         self._do_mkfs_check(type)
         if type != 'minix':
@@ -570,7 +570,7 @@ class FS(UDisksTestCase):
             self.mkfs('ext3')
 
         # do checks with DK-Disks D-BUS operations
-        print >> sys.stderr, '[ud] ',
+        sys.stderr.write('[ud] ')
         self._do_dbus_fs_check(type)
         if type != 'minix':
             self._do_dbus_fs_check(type, 'test%stst' % type)
@@ -610,7 +610,7 @@ class FS(UDisksTestCase):
 
         if ret == 32:
             # missing fs driver
-            print >> sys.stderr, '[missing kernel driver, skip] ',
+            sys.stderr.write('[missing kernel driver, skip] ')
             return
 
         self.assertEqual(ret, 0)
@@ -672,11 +672,11 @@ class FS(UDisksTestCase):
             # mount
             try:
                 mount_path = iface.FilesystemMount('', [])
-            except dbus.DBusException, e:
+            except dbus.DBusException as e:
                 self.assertEqual(e._dbus_error_name,
                         'org.freedesktop.UDisks.Error.FilesystemDriverMissing',
                         str(e))
-                print >> sys.stderr, '[missing kernel driver, skip] ',
+                sys.stderr.write('[missing kernel driver, skip] ')
                 return
 
             if label:
@@ -1009,7 +1009,7 @@ class Partitions(UDisksTestCase):
             self._do_schema('apm', 'Apple_Unix_SVR2', 'Foo', 'allow_write',
                     exp_default_partitions=2) # Apple creates bootstrap stuff by default
             self.fail('creating apple partition at offset 0 should fail due to default bootstrap partitions')
-        except dbus.DBusException, e:
+        except dbus.DBusException as e:
             self.assert_("Can't have overlapping partitions." in str(e))
 
         self._do_schema('apm', 'Apple_Unix_SVR2', 'Foo', 'allow_write',
@@ -1066,7 +1066,7 @@ class Partitions(UDisksTestCase):
         # create /dev/md5p2 and following
         #self.partition_iface().PartitionCreate(0, 10000000, type2, '',
         #        [flag], [], '', [])
-        #print self.fdisk_list()
+        #print (self.fdisk_list())
 
         # the device is not a partition, so calls should fail
         self.assertRaises(dbus.DBusException,
@@ -1185,7 +1185,7 @@ class Smart(UDisksTestCase):
         hd = '/dev/sda'
 
         if not os.path.exists(hd):
-            print >> sys.stderr, '[skip]',
+            sys.stderr.write('[skip] ')
             return
 
         has_smart = subprocess.call(['skdump', '--can-smart', hd],
@@ -1200,11 +1200,11 @@ class Smart(UDisksTestCase):
                 has_smart)
 
         if has_smart:
-            print >> sys.stderr, '[avail] ',
+            sys.stderr.write('[avail] ')
 
             # wait for SMART data to be read
             while props.Get(I_D, 'DriveAtaSmartTimeCollected') == 0:
-                print >> sys.stderr, '[wait for data] ',
+                sys.stderr.write('[wait for data] ')
                 time.sleep(0.5)
 
             info = self.get_info(devname=hd)
@@ -1219,10 +1219,10 @@ class Smart(UDisksTestCase):
             try:
                 self.partition_iface().DriveAtaSmartInitiateSelftest('bogus', [])
                 self.fail('bogus mode succeeded')
-            except dbus.DBusException, e:
+            except dbus.DBusException as e:
                 self.assertEqual(e._dbus_error_name, 'org.freedesktop.UDisks.Error.Failed')
         else:
-            print >> sys.stderr, '[N/A] ',
+            sys.stderr.write('[N/A] ')
             self.assertEqual(info['ATA SMART'], 'not available')
             self.assertEqual(props.Get(I_D, 'DriveAtaSmartTimeCollected'), 0)
             self.assertEqual(props.Get(I_D, 'DriveAtaSmartBlob'), [])
@@ -1231,7 +1231,7 @@ class Smart(UDisksTestCase):
             try:
                 self.partition_iface().DriveAtaSmartInitiateSelftest('short', [])
                 self.fail('device did not report to have SMART capabilities')
-            except dbus.DBusException, e:
+            except dbus.DBusException as e:
                 self.assert_('does not support ATA SMART' in str(e))
 
     def test_simulate(self):
@@ -1243,7 +1243,7 @@ class Smart(UDisksTestCase):
         global hd_smart_blob
     
         if not hd_smart_blob:
-            print >> sys.stderr, '[skip]',
+            sys.stderr.write('[skip] ')
             return
     
         props = self.partition_props()
@@ -1255,12 +1255,12 @@ class Smart(UDisksTestCase):
         try:
             self.partition_iface().DriveAtaSmartRefreshData([])
             self.fail('expected "Device does not support ATA SMART"')
-        except dbus.DBusException, e:
+        except dbus.DBusException as e:
             self.assert_('does not support ATA SMART' in str(e))
         try:
             self.partition_iface().DriveAtaSmartInitiateSelftest('short', [])
             self.fail('fake device is not expected to have SMART capabilities')
-        except dbus.DBusException, e:
+        except dbus.DBusException as e:
             self.assert_('does not support ATA SMART' in str(e))
     
         # load the blob
@@ -1552,7 +1552,7 @@ class GlobalOps(UDisksTestCase):
         try:
             self.partition_iface().FilesystemMount('', [])
             self.fail('.FilesystemMount() succeeded while inhibited')
-        except dbus.DBusException, e:
+        except dbus.DBusException as e:
             self.assert_(e._dbus_error_name.endswith('Error.Inhibited'))
 
         # Inhibit() another time
