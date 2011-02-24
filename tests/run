@@ -1326,6 +1326,7 @@ class LVM(UDisksTestCase):
     def test_single_lv(self):
         '''LVM: Single LV, no RAID'''
 
+        self.sync()
         objs_old = set(self.manager_iface.EnumerateDevices())
 
         self.assertEqual(subprocess.call(['lvcreate', '-n', 'udtestlv1', '-L',
@@ -1334,7 +1335,7 @@ class LVM(UDisksTestCase):
 
         # there should be exactly one new device for the LV
         objs_new = set(self.manager_iface.EnumerateDevices())
-        self.assertEqual(len(objs_old) + 1, len(objs_new))
+        self.assertEqual(len(objs_old) + 1, len(objs_new), objs_new - objs_old)
         lvname = list(objs_new - objs_old)[0]
 
         lv_props = dbus.Interface(dbus.SystemBus().get_object(
@@ -1359,6 +1360,7 @@ class LVM(UDisksTestCase):
     def test_single_lv_raid(self):
         '''LVM: Single LV, RAID-1'''
 
+        self.sync()
         objs_old = set(self.manager_iface.EnumerateDevices())
 
         self.assertEqual(subprocess.call(['lvcreate', '-n', 'udtestlvr1', '-L',
