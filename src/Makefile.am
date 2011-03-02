@@ -49,7 +49,7 @@ libudisks_daemon_la_SOURCES =						\
 	udiskslinuxprovider.h		udiskslinuxprovider.c		\
 	udisksfstabprovider.h		udisksfstabprovider.c		\
 	udiskslinuxblock.h		udiskslinuxblock.c		\
-	udiskslinuxdrive.h		udiskslinuxdrive.c		\
+	udiskslinuxlun.h		udiskslinuxlun.c		\
 	udisksbasejob.h			udisksbasejob.c			\
 	udisksspawnedjob.h		udisksspawnedjob.c		\
 	udisksthreadedjob.h		udisksthreadedjob.c		\
@@ -64,7 +64,7 @@ libudisks_daemon_la_SOURCES =						\
 
 libudisks_daemon_la_CFLAGS =				\
 	-I$(top_srcdir)					\
-	-DG_LOG_DOMAIN=\"udisks-daemon\"		\
+	-DG_LOG_DOMAIN=\"udisksd\"			\
 	$(GLIB_CFLAGS)					\
 	$(GIO_CFLAGS)					\
 	$(GUDEV_CFLAGS)					\

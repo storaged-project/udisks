@@ -26,7 +26,7 @@
 #include "udisksprovider.h"
 #include "udiskslinuxprovider.h"
 #include "udiskslinuxblock.h"
-#include "udiskslinuxdrive.h"
+#include "udiskslinuxlun.h"
 
 /**
  * SECTION:udiskslinuxprovider
@@ -34,7 +34,7 @@
  * @short_description: Provider of Linux-specific objects
  *
  * This object is used to add/remove Linux specific objects. Right now
- * it handles #UDisksLinuxBlock and #UDisksLinuxDrive objects.
+ * it handles #UDisksLinuxBlock and #UDisksLinuxLun objects.
  */
 
 typedef struct _UDisksLinuxProviderClass   UDisksLinuxProviderClass;
@@ -54,9 +54,9 @@ struct _UDisksLinuxProvider
   /* maps from sysfs path to UDisksLinuxBlock objects */
   GHashTable *sysfs_to_block;
 
-  /* maps from VPD (serial, wwn) and sysfs_path to UDisksLinuxDrive objects */
-  GHashTable *vpd_to_drive;
-  GHashTable *sysfs_path_to_drive;
+  /* maps from VPD (serial, wwn) and sysfs_path to UDisksLinuxLun objects */
+  GHashTable *vpd_to_lun;
+  GHashTable *sysfs_path_to_lun;
 
   /* maps from sysfs path to UDisksLinuxController objects */
   GHashTable *sysfs_to_controller;
@@ -80,8 +80,8 @@ udisks_linux_provider_finalize (GObject *object)
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (object);
 
   g_hash_table_unref (provider->sysfs_to_block);
-  g_hash_table_unref (provider->vpd_to_drive);
-  g_hash_table_unref (provider->sysfs_path_to_drive);
+  g_hash_table_unref (provider->vpd_to_lun);
+  g_hash_table_unref (provider->sysfs_path_to_lun);
   g_hash_table_unref (provider->sysfs_to_controller);
   g_object_unref (provider->gudev_client);
 
@@ -124,14 +124,14 @@ udisks_linux_provider_constructed (GObject *object)
                                                     g_str_equal,
                                                     g_free,
                                                     (GDestroyNotify) g_object_unref);
-  provider->vpd_to_drive = g_hash_table_new_full (g_str_hash,
-                                                  g_str_equal,
-                                                  g_free,
-                                                  (GDestroyNotify) g_object_unref);
-  provider->sysfs_path_to_drive = g_hash_table_new_full (g_str_hash,
-                                                         g_str_equal,
-                                                         g_free,
-                                                         NULL);
+  provider->vpd_to_lun = g_hash_table_new_full (g_str_hash,
+                                                g_str_equal,
+                                                g_free,
+                                                (GDestroyNotify) g_object_unref);
+  provider->sysfs_path_to_lun = g_hash_table_new_full (g_str_hash,
+                                                       g_str_equal,
+                                                       g_free,
+                                                       NULL);
   provider->sysfs_to_controller = g_hash_table_new_full (g_str_hash,
                                                          g_str_equal,
                                                          g_free,
@@ -247,7 +247,7 @@ handle_scsi_uevent (UDisksLinuxProvider *provider,
                     const gchar         *action,
                     GUdevDevice         *device)
 {
-  UDisksLinuxDrive *drive;
+  UDisksLinuxLun *lun;
   UDisksDaemon *daemon;
   const gchar *sysfs_path;
   gchar *vpd;
@@ -258,28 +258,28 @@ handle_scsi_uevent (UDisksLinuxProvider *provider,
 
   if (g_strcmp0 (action, "remove") == 0)
     {
-      drive = g_hash_table_lookup (provider->sysfs_path_to_drive, sysfs_path);
-      if (drive != NULL)
+      lun = g_hash_table_lookup (provider->sysfs_path_to_lun, sysfs_path);
+      if (lun != NULL)
         {
           GList *devices;
 
-          udisks_linux_drive_uevent (drive, action, device);
+          udisks_linux_lun_uevent (lun, action, device);
 
-          g_warn_if_fail (g_hash_table_remove (provider->sysfs_path_to_drive, sysfs_path));
+          g_warn_if_fail (g_hash_table_remove (provider->sysfs_path_to_lun, sysfs_path));
 
-          devices = udisks_linux_drive_get_devices (drive);
+          devices = udisks_linux_lun_get_devices (lun);
           if (devices == NULL)
             {
               gchar *object_path;
               const gchar *vpd;
 
-              vpd = g_object_get_data (G_OBJECT (drive), "x-vpd");
+              vpd = g_object_get_data (G_OBJECT (lun), "x-vpd");
 
-              object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (drive));
+              object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (lun));
               g_dbus_object_manager_unexport (udisks_daemon_get_object_manager (daemon),
                                               object_path);
               g_free (object_path);
-              g_warn_if_fail (g_hash_table_remove (provider->vpd_to_drive, vpd));
+              g_warn_if_fail (g_hash_table_remove (provider->vpd_to_lun, vpd));
             }
           g_list_foreach (devices, (GFunc) g_object_unref, NULL);
           g_list_free (devices);
@@ -287,7 +287,7 @@ handle_scsi_uevent (UDisksLinuxProvider *provider,
     }
   else
     {
-      if (!udisks_linux_drive_should_include_device (device, &vpd))
+      if (!udisks_linux_lun_should_include_device (device, &vpd))
         goto out;
 
       if (vpd == NULL)
@@ -298,23 +298,23 @@ handle_scsi_uevent (UDisksLinuxProvider *provider,
                              g_udev_device_get_sysfs_path (device));
           goto out;
         }
-      drive = g_hash_table_lookup (provider->vpd_to_drive, vpd);
-      if (drive != NULL)
+      lun = g_hash_table_lookup (provider->vpd_to_lun, vpd);
+      if (lun != NULL)
         {
-          if (g_hash_table_lookup (provider->sysfs_path_to_drive, sysfs_path) == NULL)
-            g_hash_table_insert (provider->sysfs_path_to_drive, g_strdup (sysfs_path), drive);
-          udisks_linux_drive_uevent (drive, action, device);
+          if (g_hash_table_lookup (provider->sysfs_path_to_lun, sysfs_path) == NULL)
+            g_hash_table_insert (provider->sysfs_path_to_lun, g_strdup (sysfs_path), lun);
+          udisks_linux_lun_uevent (lun, action, device);
         }
       else
         {
-          drive = udisks_linux_drive_new (daemon, device);
-          if (drive != NULL)
+          lun = udisks_linux_lun_new (daemon, device);
+          if (lun != NULL)
             {
-              g_object_set_data_full (G_OBJECT (drive), "x-vpd", g_strdup (vpd), g_free);
+              g_object_set_data_full (G_OBJECT (lun), "x-vpd", g_strdup (vpd), g_free);
               g_dbus_object_manager_export_and_uniquify (udisks_daemon_get_object_manager (daemon),
-                                                         G_DBUS_OBJECT (drive));
-              g_hash_table_insert (provider->vpd_to_drive, g_strdup (vpd), drive);
-              g_hash_table_insert (provider->sysfs_path_to_drive, g_strdup (sysfs_path), drive);
+                                                         G_DBUS_OBJECT (lun));
+              g_hash_table_insert (provider->vpd_to_lun, g_strdup (vpd), lun);
+              g_hash_table_insert (provider->sysfs_path_to_lun, g_strdup (sysfs_path), lun);
             }
         }
     }

@@ -1,6 +1,6 @@
 udisks_daemon_get_type
 udisks_linux_block_get_type
-udisks_linux_drive_get_type
+udisks_linux_lun_get_type
 udisks_base_job_get_type
 udisks_spawned_job_get_type
 udisks_threaded_job_get_type

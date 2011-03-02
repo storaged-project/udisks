@@ -16,7 +16,7 @@
 
   <!-- ********************************************************************** -->
 
-  <interface name="org.freedesktop.UDisks2.Drive">
+  <interface name="org.freedesktop.UDisks2.Lun">
     <property name="Vendor" type="ay" access="read"/>
     <property name="Model" type="ay" access="read"/>
     <property name="Revision" type="ay" access="read"/>
@@ -38,10 +38,10 @@
     -->
     <property name="PreferredDevice" type="ay" access="read"/>
 
-    <!-- The org.freedesktop.UDisks2.Drive object that the block device belongs
+    <!-- The org.freedesktop.UDisks2.Lun object that the block device belongs
          to, or '/' if no such object exists.
       -->
-    <property name="Drive" type="o" access="read"/>
+    <property name="Lun" type="o" access="read"/>
 
     <!-- Properties related what's on the block device -->
     <property name="IdUsage" type="s" access="read"/>

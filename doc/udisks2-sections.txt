@@ -102,19 +102,19 @@ udisks_linux_block_get_type
 </SECTION>
 
 <SECTION>
-<FILE>udiskslinuxdrive</FILE>
-<TITLE>UDisksLinuxDrive</TITLE>
-UDisksLinuxDrive
-udisks_linux_drive_new
-udisks_linux_drive_uevent
-udisks_linux_drive_get_daemon
-udisks_linux_drive_get_devices
+<FILE>udiskslinuxlun</FILE>
+<TITLE>UDisksLinuxLun</TITLE>
+UDisksLinuxLun
+udisks_linux_lun_new
+udisks_linux_lun_uevent
+udisks_linux_lun_get_daemon
+udisks_linux_lun_get_devices
 <SUBSECTION Standard>
-UDISKS_TYPE_LINUX_DRIVE
-UDISKS_LINUX_DRIVE
-UDISKS_IS_LINUX_DRIVE
+UDISKS_TYPE_LINUX_LUN
+UDISKS_LINUX_LUN
+UDISKS_IS_LINUX_LUN
 <SUBSECTION Private>
-udisks_linux_drive_get_type
+udisks_linux_lun_get_type
 </SECTION>
 
 <SECTION>
