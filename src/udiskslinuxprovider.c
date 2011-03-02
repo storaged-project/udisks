@@ -54,8 +54,9 @@ struct _UDisksLinuxProvider
   /* maps from sysfs path to UDisksLinuxBlock objects */
   GHashTable *sysfs_to_block;
 
-  /* maps from VPD (serial, wwn) to UDisksLinuxDrive objects */
+  /* maps from VPD (serial, wwn) and sysfs_path to UDisksLinuxDrive objects */
   GHashTable *vpd_to_drive;
+  GHashTable *sysfs_path_to_drive;
 
   /* maps from sysfs path to UDisksLinuxController objects */
   GHashTable *sysfs_to_controller;
@@ -80,6 +81,7 @@ udisks_linux_provider_finalize (GObject *object)
 
   g_hash_table_unref (provider->sysfs_to_block);
   g_hash_table_unref (provider->vpd_to_drive);
+  g_hash_table_unref (provider->sysfs_path_to_drive);
   g_hash_table_unref (provider->sysfs_to_controller);
   g_object_unref (provider->gudev_client);
 
@@ -126,6 +128,10 @@ udisks_linux_provider_constructed (GObject *object)
                                                   g_str_equal,
                                                   g_free,
                                                   (GDestroyNotify) g_object_unref);
+  provider->sysfs_path_to_drive = g_hash_table_new_full (g_str_hash,
+                                                         g_str_equal,
+                                                         g_free,
+                                                         NULL);
   provider->sysfs_to_controller = g_hash_table_new_full (g_str_hash,
                                                          g_str_equal,
                                                          g_free,
@@ -247,36 +253,28 @@ handle_scsi_uevent (UDisksLinuxProvider *provider,
   gchar *vpd;
 
   vpd = NULL;
-
   daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
   sysfs_path = g_udev_device_get_sysfs_path (device);
 
-  if (!udisks_linux_drive_should_include_device (device, &vpd))
-    goto out;
-
-  if (vpd == NULL)
-    {
-      udisks_daemon_log (daemon,
-                         UDISKS_LOG_LEVEL_WARNING,
-                         "Ignoring scsi_device %s with no serial or WWN",
-                         g_udev_device_get_sysfs_path (device));
-      goto out;
-    }
-
-
   if (g_strcmp0 (action, "remove") == 0)
     {
-      drive = g_hash_table_lookup (provider->vpd_to_drive, vpd);
+      drive = g_hash_table_lookup (provider->sysfs_path_to_drive, sysfs_path);
       if (drive != NULL)
         {
           GList *devices;
 
           udisks_linux_drive_uevent (drive, action, device);
 
+          g_warn_if_fail (g_hash_table_remove (provider->sysfs_path_to_drive, sysfs_path));
+
           devices = udisks_linux_drive_get_devices (drive);
           if (devices == NULL)
             {
               gchar *object_path;
+              const gchar *vpd;
+
+              vpd = g_object_get_data (G_OBJECT (drive), "x-vpd");
+
               object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (drive));
               g_dbus_object_manager_unexport (udisks_daemon_get_object_manager (daemon),
                                               object_path);
@@ -289,9 +287,22 @@ handle_scsi_uevent (UDisksLinuxProvider *provider,
     }
   else
     {
+      if (!udisks_linux_drive_should_include_device (device, &vpd))
+        goto out;
+
+      if (vpd == NULL)
+        {
+          udisks_daemon_log (daemon,
+                             UDISKS_LOG_LEVEL_WARNING,
+                             "Ignoring scsi_device %s with no serial or WWN",
+                             g_udev_device_get_sysfs_path (device));
+          goto out;
+        }
       drive = g_hash_table_lookup (provider->vpd_to_drive, vpd);
       if (drive != NULL)
         {
+          if (g_hash_table_lookup (provider->sysfs_path_to_drive, sysfs_path) == NULL)
+            g_hash_table_insert (provider->sysfs_path_to_drive, g_strdup (sysfs_path), drive);
           udisks_linux_drive_uevent (drive, action, device);
         }
       else
@@ -299,9 +310,11 @@ handle_scsi_uevent (UDisksLinuxProvider *provider,
           drive = udisks_linux_drive_new (daemon, device);
           if (drive != NULL)
             {
+              g_object_set_data_full (G_OBJECT (drive), "x-vpd", g_strdup (vpd), g_free);
               g_dbus_object_manager_export_and_uniquify (udisks_daemon_get_object_manager (daemon),
                                                          G_DBUS_OBJECT (drive));
               g_hash_table_insert (provider->vpd_to_drive, g_strdup (vpd), drive);
+              g_hash_table_insert (provider->sysfs_path_to_drive, g_strdup (sysfs_path), drive);
             }
         }
     }
