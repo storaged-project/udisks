@@ -61,6 +61,7 @@ libudisks2include_HEADERS=								\
 	udisksenums.h									\
 	udisksenumtypes.h								\
 	udiskserror.h									\
+	udiskstypes.h									\
 	udisks-generated.h								\
 	$(NULL)
 
@@ -68,6 +69,7 @@ libudisks2_la_SOURCES =									\
 	$(BUILT_SOURCES)								\
 	udisksenums.h									\
 	udiskserror.h				udiskserror.c				\
+	udiskstypes.h									\
 	$(NULL)
 
 libudisks2_la_CPPFLAGS = 				\
