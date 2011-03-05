@@ -505,15 +505,47 @@ lun_update (UDisksLinuxLun      *lun,
     }
   else
     {
+      const gchar *vendor;
+      const gchar *model;
+
       /* generic fallback... */
-      udisks_lun_set_vendor (iface, g_udev_device_get_property (device, "ID_VENDOR"));
-      udisks_lun_set_model (iface, g_udev_device_get_property (device, "ID_MODEL"));
+      vendor = g_udev_device_get_property (device, "ID_VENDOR_ENC");
+      if (vendor != NULL)
+        {
+          gchar *s;
+          s = udisks_decode_udev_string (vendor);
+          g_strstrip (s);
+          udisks_lun_set_vendor (iface, s);
+          g_free (s);
+        }
+      else
+        {
+          udisks_lun_set_vendor (iface, g_udev_device_get_property (device, "ID_VENDOR"));
+        }
+
+      model = g_udev_device_get_property (device, "ID_MODEL_ENC");
+      if (model != NULL)
+        {
+          gchar *s;
+          s = udisks_decode_udev_string (model);
+          g_strstrip (s);
+          udisks_lun_set_model (iface, s);
+          g_free (s);
+        }
+      else
+        {
+          udisks_lun_set_model (iface, g_udev_device_get_property (device, "ID_MODEL"));
+        }
+
       udisks_lun_set_revision (iface, g_udev_device_get_property (device, "ID_REVISION"));
       if (g_udev_device_has_property (device, "ID_SERIAL_SHORT"))
         udisks_lun_set_serial (iface, g_udev_device_get_property (device, "ID_SERIAL_SHORT"));
       else
         udisks_lun_set_serial (iface, g_udev_device_get_property (device, "ID_SERIAL"));
-      udisks_lun_set_wwn (iface, g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION"));
+      if (g_udev_device_has_property (device, "ID_WWN_WITH_EXTENSION"))
+        udisks_lun_set_wwn (iface, g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION"));
+      else
+        udisks_lun_set_wwn (iface, g_udev_device_get_property (device, "ID_WWN"));
     }
 
  out:
