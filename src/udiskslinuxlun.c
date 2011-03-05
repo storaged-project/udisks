@@ -48,7 +48,7 @@ struct _UDisksLinuxLun
 
   UDisksDaemon *daemon;
 
-  /* list of GUdevDevice objects for scsi_device objects */
+  /* list of GUdevDevice objects for block objects */
   GList *devices;
 
   /* interfaces */
@@ -301,7 +301,7 @@ udisks_linux_lun_class_init (UDisksLinuxLunClass *klass)
 /**
  * udisks_linux_lun_new:
  * @daemon: A #UDisksDaemon.
- * @device: The #GUdevDevice for the sysfs scsi device.
+ * @device: The #GUdevDevice for the sysfs block device.
  *
  * Create a new lun object.
  *
@@ -493,13 +493,26 @@ lun_update (UDisksLinuxLun      *lun,
       udisks_lun_set_serial (iface, g_udev_device_get_property (device, "ID_SCSI_SERIAL"));
       udisks_lun_set_wwn (iface, g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION"));
     }
+  else if (g_str_has_prefix (g_udev_device_get_name (device), "mmcblk"))
+    {
+      /* sigh, mmc is non-standard and using ID_NAME instead of ID_MODEL.. */
+      udisks_lun_set_model (iface, g_udev_device_get_property (device, "ID_NAME"));
+      udisks_lun_set_serial (iface, g_udev_device_get_property (device, "ID_SERIAL"));
+      /* TODO:
+       *  - lookup Vendor from manfid and oemid in sysfs
+       *  - lookup Revision from fwrev and hwrev in sysfs
+       */
+    }
   else
     {
       /* generic fallback... */
       udisks_lun_set_vendor (iface, g_udev_device_get_property (device, "ID_VENDOR"));
       udisks_lun_set_model (iface, g_udev_device_get_property (device, "ID_MODEL"));
       udisks_lun_set_revision (iface, g_udev_device_get_property (device, "ID_REVISION"));
-      udisks_lun_set_serial (iface, g_udev_device_get_property (device, "ID_SERIAL_SHORT"));
+      if (g_udev_device_has_property (device, "ID_SERIAL_SHORT"))
+        udisks_lun_set_serial (iface, g_udev_device_get_property (device, "ID_SERIAL_SHORT"));
+      else
+        udisks_lun_set_serial (iface, g_udev_device_get_property (device, "ID_SERIAL"));
       udisks_lun_set_wwn (iface, g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION"));
     }
 
@@ -596,35 +609,21 @@ udisks_linux_lun_should_include_device (GUdevDevice  *device,
                                         gchar       **out_vpd)
 {
   gboolean ret;
-  gint type;
   const gchar *serial;
   const gchar *wwn;
   const gchar *vpd;
 
   ret = FALSE;
 
-  /* The 'scsi' subsystem encompasses several objects with varying
+  /* The 'block' subsystem encompasses several objects with varying
    * DEVTYPE including
    *
-   *  - scsi_device
-   *  - scsi_target
-   *  - scsi_host
+   *  - disk
+   *  - partition
    *
    * and we are only interested in the first.
    */
-  if (g_strcmp0 (g_udev_device_get_devtype (device), "scsi_device") != 0)
-    goto out;
-
-  /* In fact, we are only interested in SCSI devices with peripheral type
-   * 0x00 (Direct-access block device) and 0x05 (CD/DVD device). If we
-   * didn't do this check we'd end up adding Enclosure Services Devices
-   * and RAID controllers here.
-   *
-   * See SPC-4, section 6.4.2: Standard INQUIRY data for where
-   * the various peripheral types are defined.
-   */
-  type = g_udev_device_get_sysfs_attr_as_int (device, "type");
-  if (!(type == 0x00 || type == 0x05))
+  if (g_strcmp0 (g_udev_device_get_devtype (device), "disk") != 0)
     goto out;
 
   /* prefer WWN to serial */

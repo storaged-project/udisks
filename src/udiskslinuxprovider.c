@@ -109,7 +109,7 @@ static void
 udisks_linux_provider_constructed (GObject *object)
 {
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (object);
-  const gchar *subsystems[] = {"block", "scsi", NULL};
+  const gchar *subsystems[] = {"block", NULL};
   GList *devices;
   GList *l;
 
@@ -136,12 +136,6 @@ udisks_linux_provider_constructed (GObject *object)
                                                          g_str_equal,
                                                          g_free,
                                                          (GDestroyNotify) g_object_unref);
-
-  devices = g_udev_client_query_by_subsystem (provider->gudev_client, "scsi");
-  for (l = devices; l != NULL; l = l->next)
-    udisks_linux_provider_handle_uevent (provider, "add", G_UDEV_DEVICE (l->data));
-  g_list_foreach (devices, (GFunc) g_object_unref, NULL);
-  g_list_free (devices);
 
   devices = g_udev_client_query_by_subsystem (provider->gudev_client, "block");
   for (l = devices; l != NULL; l = l->next)
@@ -187,7 +181,7 @@ udisks_linux_provider_new (UDisksDaemon  *daemon)
  *
  * Gets the #GUdevClient used by @provider. The returned object is set
  * up so it emits #GUdevClient::uevent signals only for the
- * <literal>block</literal> and <literal>scsi</literal> subsystems.
+ * <literal>block</literal>.
  *
  * Returns: A #GUdevClient owned by @provider. Do not free.
  */
@@ -201,51 +195,9 @@ udisks_linux_provider_get_udev_client (UDisksLinuxProvider *provider)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
-handle_block_uevent (UDisksLinuxProvider *provider,
-                     const gchar         *action,
-                     GUdevDevice         *device)
-{
-  const gchar *sysfs_path;
-  UDisksLinuxBlock *block;
-  UDisksDaemon *daemon;
-
-  daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
-  sysfs_path = g_udev_device_get_sysfs_path (device);
-
-  if (g_strcmp0 (action, "remove") == 0)
-    {
-      block = g_hash_table_lookup (provider->sysfs_to_block, sysfs_path);
-      if (block != NULL)
-        {
-          gchar *object_path;
-          object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (block));
-          g_dbus_object_manager_unexport (udisks_daemon_get_object_manager (daemon),
-                                          object_path);
-          g_free (object_path);
-          g_warn_if_fail (g_hash_table_remove (provider->sysfs_to_block, sysfs_path));
-        }
-    }
-  else
-    {
-      block = g_hash_table_lookup (provider->sysfs_to_block, sysfs_path);
-      if (block != NULL)
-        {
-          udisks_linux_block_uevent (block, action, device);
-        }
-      else
-        {
-          block = udisks_linux_block_new (daemon, device);
-          g_dbus_object_manager_export_and_uniquify (udisks_daemon_get_object_manager (daemon),
-                                                     G_DBUS_OBJECT (block));
-          g_hash_table_insert (provider->sysfs_to_block, g_strdup (sysfs_path), block);
-        }
-    }
-}
-
-static void
-handle_scsi_uevent (UDisksLinuxProvider *provider,
-                    const gchar         *action,
-                    GUdevDevice         *device)
+handle_block_uevent_for_lun (UDisksLinuxProvider *provider,
+                             const gchar         *action,
+                             GUdevDevice         *device)
 {
   UDisksLinuxLun *lun;
   UDisksDaemon *daemon;
@@ -294,7 +246,7 @@ handle_scsi_uevent (UDisksLinuxProvider *provider,
         {
           udisks_daemon_log (daemon,
                              UDISKS_LOG_LEVEL_WARNING,
-                             "Ignoring scsi_device %s with no serial or WWN",
+                             "Ignoring block %s with no serial or WWN",
                              g_udev_device_get_sysfs_path (device));
           goto out;
         }
@@ -324,6 +276,70 @@ handle_scsi_uevent (UDisksLinuxProvider *provider,
 }
 
 static void
+handle_block_uevent_for_block (UDisksLinuxProvider *provider,
+                               const gchar         *action,
+                               GUdevDevice         *device)
+{
+  const gchar *sysfs_path;
+  UDisksLinuxBlock *block;
+  UDisksDaemon *daemon;
+
+  daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
+  sysfs_path = g_udev_device_get_sysfs_path (device);
+
+  if (g_strcmp0 (action, "remove") == 0)
+    {
+      block = g_hash_table_lookup (provider->sysfs_to_block, sysfs_path);
+      if (block != NULL)
+        {
+          gchar *object_path;
+          object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (block));
+          g_dbus_object_manager_unexport (udisks_daemon_get_object_manager (daemon),
+                                          object_path);
+          g_free (object_path);
+          g_warn_if_fail (g_hash_table_remove (provider->sysfs_to_block, sysfs_path));
+        }
+    }
+  else
+    {
+      block = g_hash_table_lookup (provider->sysfs_to_block, sysfs_path);
+      if (block != NULL)
+        {
+          udisks_linux_block_uevent (block, action, device);
+        }
+      else
+        {
+          block = udisks_linux_block_new (daemon, device);
+          g_dbus_object_manager_export_and_uniquify (udisks_daemon_get_object_manager (daemon),
+                                                     G_DBUS_OBJECT (block));
+          g_hash_table_insert (provider->sysfs_to_block, g_strdup (sysfs_path), block);
+        }
+    }
+}
+
+
+static void
+handle_block_uevent (UDisksLinuxProvider *provider,
+                     const gchar         *action,
+                     GUdevDevice         *device)
+{
+  /* We use the sysfs block device for both LUNs and BlockDevice
+   * objects. Ensure that LUNs are added before and removed after
+   * BlockDevice
+   */
+  if (g_strcmp0 (action, "remove") == 0)
+    {
+      handle_block_uevent_for_block (provider, action, device);
+      handle_block_uevent_for_lun (provider, action, device);
+    }
+  else
+    {
+      handle_block_uevent_for_lun (provider, action, device);
+      handle_block_uevent_for_block (provider, action, device);
+    }
+}
+
+static void
 udisks_linux_provider_handle_uevent (UDisksLinuxProvider *provider,
                                      const gchar         *action,
                                      GUdevDevice         *device)
@@ -343,9 +359,5 @@ udisks_linux_provider_handle_uevent (UDisksLinuxProvider *provider,
   if (g_strcmp0 (subsystem, "block") == 0)
     {
       handle_block_uevent (provider, action, device);
-    }
-  else if (g_strcmp0 (subsystem, "scsi") == 0)
-    {
-      handle_scsi_uevent (provider, action, device);
     }
 }
