@@ -131,8 +131,6 @@ udisks_client_class_init (UDisksClientClass *klass)
                                                         G_PARAM_STATIC_STRINGS));
 }
 
-/* TODO: do this correctly and use Initable and AsyncInitable - also use singleton pattern */
-
 /**
  * udisks_client_new:
  * @cancellable: A #GCancellable or %NULL.
