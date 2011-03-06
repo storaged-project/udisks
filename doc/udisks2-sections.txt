@@ -1,4 +1,33 @@
 <SECTION>
+<FILE>udiskserror</FILE>
+<TITLE>UDisksError</TITLE>
+UDISKS_ERROR
+UDisksError
+<SUBSECTION Private>
+UDISKS_TYPE_ERROR
+udisks_error_get_type
+udisks_error_quark
+</SECTION>
+
+<SECTION>
+<FILE>udisksclient</FILE>
+<TITLE>UDisksClient</TITLE>
+UDisksClient
+udisks_client_new
+udisks_client_new_finish
+udisks_client_new_sync
+udisks_client_get_proxy_manager
+<SUBSECTION Standard>
+UDISKS_TYPE_CLIENT
+UDISKS_CLIENT
+UDISKS_IS_CLIENT
+<SUBSECTION Private>
+udisks_client_get_type
+</SECTION>
+
+
+
+<SECTION>
 <FILE>udisksdaemon</FILE>
 <TITLE>UDisksDaemon</TITLE>
 UDisksDaemon
@@ -160,17 +189,6 @@ UDISKS_FSTAB_PROVIDER
 UDISKS_IS_FSTAB_PROVIDER
 <SUBSECTION Private>
 udisks_fstab_provider_get_type
-</SECTION>
-
-<SECTION>
-<FILE>udiskserror</FILE>
-<TITLE>UDisksError</TITLE>
-UDISKS_ERROR
-UDisksError
-<SUBSECTION Private>
-UDISKS_TYPE_ERROR
-udisks_error_get_type
-udisks_error_quark
 </SECTION>
 
 <SECTION>

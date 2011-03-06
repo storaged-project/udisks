@@ -30,6 +30,9 @@
 
 G_BEGIN_DECLS
 
+struct _UDisksClient;
+typedef struct _UDisksClient UDisksClient;
+
 G_END_DECLS
 
 #endif /* __UDISKS_TYPES_H__ */

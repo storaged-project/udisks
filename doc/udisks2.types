@@ -1,3 +1,5 @@
+udisks_client_get_type
+
 udisks_daemon_get_type
 udisks_linux_block_get_type
 udisks_linux_lun_get_type
