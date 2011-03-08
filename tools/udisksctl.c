@@ -37,6 +37,7 @@
 /* TODO: Temporary include */
 #include <gdbusproxymanager.h>
 
+static UDisksClient *client = NULL;
 static GDBusProxyManager *manager = NULL;
 static GMainLoop *loop = NULL;
 
@@ -1747,7 +1748,6 @@ main (int argc,
   gchar *completion_cur;
   gchar *completion_prev;
   GError *error;
-  static volatile GQuark gdbus_error_domain = 0;
 
   ret = 1;
   completion_cur = NULL;
@@ -1760,9 +1760,6 @@ main (int argc,
 
   setlocale (LC_ALL, "");
 
-  /* ensure that the D-Bus error mapping is initialized */
-  gdbus_error_domain = UDISKS_ERROR;
-
   if (argc < 2)
     {
       usage (&argc, &argv, FALSE);
@@ -1772,18 +1769,15 @@ main (int argc,
   loop = g_main_loop_new (NULL, FALSE);
 
   error = NULL;
-  manager = udisks_proxy_manager_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
-                                                   G_DBUS_PROXY_MANAGER_FLAGS_NONE,
-                                                   "org.freedesktop.UDisks2",
-                                                   "/org/freedesktop/UDisks2",
-                                                   NULL, /* GCancellable */
-                                                   &error);
-  if (manager == NULL)
+  client = udisks_client_new_sync (NULL, /* GCancellable */
+                                   &error);
+  if (client == NULL)
     {
       g_printerr ("Error connecting to the udisks daemon: %s\n", error->message);
       g_error_free (error);
       goto out;
     }
+  manager = udisks_client_get_proxy_manager (client);
 
   request_completion = FALSE;
 
@@ -1939,8 +1933,8 @@ main (int argc,
  out:
   if (loop != NULL)
     g_main_loop_unref (loop);
-  if (manager != NULL)
-    g_object_unref (manager);
+  if (client != NULL)
+    g_object_unref (client);
   _color_shutdown ();
   shutdown_local_polkit_agent ();
   return ret;

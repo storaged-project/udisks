@@ -20,6 +20,12 @@
 
 #include "config.h"
 
+#include <string.h>
+
+//#include <glib/gi18n-lib.h>
+#define _(x) x
+
+
 #include "udisksclient.h"
 #include "udiskserror.h"
 #include "udisks-generated.h"
@@ -35,6 +41,12 @@
 
 G_LOCK_DEFINE_STATIC (init_lock);
 
+/**
+ * UDisksClient:
+ *
+ * The #UDisksClient structure contains only private data and should
+ * only be accessed using the provided API.
+ */
 struct _UDisksClient
 {
   GObject parent_instance;
@@ -71,6 +83,7 @@ udisks_client_finalize (GObject *object)
 
   if (client->initialization_error != NULL)
     g_error_free (client->initialization_error);
+
   g_object_unref (client->proxy_manager);
 
   G_OBJECT_CLASS (udisks_client_parent_class)->finalize (object);
@@ -278,5 +291,6 @@ async_initable_iface_init (GAsyncInitableIface *async_initable_iface)
 GDBusProxyManager *
 udisks_client_get_proxy_manager (UDisksClient        *client)
 {
+  g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
   return client->proxy_manager;
 }
