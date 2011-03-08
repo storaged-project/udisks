@@ -500,6 +500,47 @@ block_device_update (UDisksLinuxBlock      *block,
   udisks_block_device_set_minor (iface, minor (dev));
   udisks_block_device_set_size (iface, g_udev_device_get_sysfs_attr_as_uint64 (block->device, "size") * 512);
 
+  if (g_str_has_prefix (g_udev_device_get_name (block->device), "loop"))
+    {
+      gchar *filename;
+      gchar *backing_file;
+      GError *error;
+      filename = g_strconcat (g_udev_device_get_sysfs_path (block->device),
+                              "/loop/backing_file",
+                              NULL);
+      error = NULL;
+      if (!g_file_get_contents (filename,
+                               &backing_file,
+                               NULL,
+                               &error))
+        {
+          /* ENOENT is not unexpected */
+          if (!(error->domain == G_FILE_ERROR && error->code == G_FILE_ERROR_NOENT))
+            {
+              udisks_daemon_log (block->daemon,
+                                 UDISKS_LOG_LEVEL_WARNING,
+                                 "Error loading %s: %s (%s, %d)",
+                                 filename,
+                                 error->message,
+                                 g_quark_to_string (error->domain),
+                                 error->code);
+            }
+          g_error_free (error);
+          udisks_block_device_set_loop_backing_file (iface, "");
+        }
+      else
+        {
+          g_strstrip (backing_file);
+          udisks_block_device_set_loop_backing_file (iface, backing_file);
+          g_free (backing_file);
+        }
+      g_free (filename);
+    }
+  else
+    {
+      udisks_block_device_set_loop_backing_file (iface, "");
+    }
+
   /* Sort out preferred device... this is what UI shells should
    * display. We default to the block device name.
    *

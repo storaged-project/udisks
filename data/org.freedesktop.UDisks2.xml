@@ -74,6 +74,9 @@
     <method name="FilesystemUnmount">
       <arg name="options" direction="in" type="as"/>
     </method>
+
+    <!-- Loop Device -->
+    <property name="LoopBackingFile" type="ay" access="read"/>
   </interface>
 
   <!-- ********************************************************************** -->
