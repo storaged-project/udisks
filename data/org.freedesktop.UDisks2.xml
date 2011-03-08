@@ -22,6 +22,7 @@
     <property name="Revision" type="ay" access="read"/>
     <property name="Serial" type="ay" access="read"/>
     <property name="WWN" type="s" access="read"/>
+    <property name="Size" type="t" access="read"/>
   </interface>
 
   <!-- ********************************************************************** -->

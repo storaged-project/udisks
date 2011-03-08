@@ -548,6 +548,11 @@ lun_update (UDisksLinuxLun      *lun,
         udisks_lun_set_wwn (iface, g_udev_device_get_property (device, "ID_WWN"));
     }
 
+  /* common bits go here */
+  udisks_lun_set_size (iface,
+                       g_udev_device_get_sysfs_attr_as_uint64 (device, "size") * 512);
+
+
  out:
   ;
 }
