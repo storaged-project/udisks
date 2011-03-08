@@ -245,7 +245,7 @@ handle_block_uevent_for_lun (UDisksLinuxProvider *provider,
       if (vpd == NULL)
         {
           udisks_daemon_log (daemon,
-                             UDISKS_LOG_LEVEL_WARNING,
+                             UDISKS_LOG_LEVEL_DEBUG,
                              "Ignoring block %s with no serial or WWN",
                              g_udev_device_get_sysfs_path (device));
           goto out;
