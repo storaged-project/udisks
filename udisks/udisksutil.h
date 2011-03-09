@@ -18,21 +18,28 @@
  *
  */
 
-#ifndef __UDISKS_H__
-#define __UDISKS_H__
-
-#if !defined(UDISKS_API_IS_SUBJECT_TO_CHANGE) && !defined(UDISKS_COMPILATION)
-#error  libudisks is unstable API. You must define UDISKS_API_IS_SUBJECT_TO_CHANGE before including udisks/udisks.h
+#if !defined (__UDISKS_INSIDE_UDISKS_H__) && !defined (UDISKS_COMPILATION)
+#error "Only <udisks/udisks.h> can be included directly."
 #endif
 
-#define __UDISKS_INSIDE_UDISKS_H__
-#include <udisks/udiskstypes.h>
-#include <udisks/udisksenums.h>
-#include <udisks/udisksenumtypes.h>
-#include <udisks/udiskserror.h>
-#include <udisks/udisks-generated.h>
-#include <udisks/udisksclient.h>
-#include <udisks/udisksutil.h>
-#undef __UDISKS_INSIDE_UDISKS_H__
+#ifndef __UDISKS_UTIL_H__
+#define __UDISKS_UTIL_H__
 
-#endif /* __UDISKS_H__ */
+#include <udisks/udiskstypes.h>
+#include <udisks/udisks-generated.h>
+
+G_BEGIN_DECLS
+
+gchar *udisks_util_get_size_for_display (guint64 size,
+                                         gboolean use_pow2,
+                                         gboolean long_string);
+
+void udisks_util_get_lun_info (UDisksLun  *lun,
+                               gchar     **out_name,
+                               gchar     **out_description,
+                               GIcon     **out_icon,
+                               GIcon     **out_media_icon);
+
+G_END_DECLS
+
+#endif /* __UDISKS_UTIL_H__ */

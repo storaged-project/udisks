@@ -22,7 +22,65 @@
     <property name="Revision" type="ay" access="read"/>
     <property name="Serial" type="ay" access="read"/>
     <property name="WWN" type="s" access="read"/>
+
+    <!-- Whether the media can be removed -->
+    <property name="MediaRemovable" type="b" access="read"/>
+
+    <!-- Is set to 0 if, and only if, no media is inserted -->
     <property name="Size" type="t" access="read"/>
+
+    <!--
+      The physical kind of media the drive uses. Known values include
+
+       - flash: Flash Card
+       - flash_cf: CompactFlash
+       - flash_ms: MemoryStick
+       - flash_sm: SmartMedia
+       - flash_sd: Secure Digital
+       - flash_sdhc: Secure Digital High-Capacity
+       - flash_mmc: MultiMediaCard
+       - floppy: Floppy Disk
+       - floppy_zip: Zip Disk
+       - floppy_jaz: Jaz Disk
+       - optical: Optical Disc
+       - optical_cd: Compact Disc
+       - optical_cd_r: Compact Disc Recordable
+       - optical_cd_rw: Compact Disc Rewritable
+       - optical_dvd: Digital Versatile Disc
+       - optical_dvd_r: DVD-R
+       - optical_dvd_rw: DVD-RW
+       - optical_dvd_ram: DVD-RAM
+       - optical_dvd_plus_r: DVD+R
+       - optical_dvd_plus_rw: DVD+RW
+       - optical_dvd_plus_r_dl: DVD+R Dual Layer
+       - optical_dvd_plus_rw_dl: DVD+RW Dual Layer
+       - optical_bd: Blu-ray Disc
+       - optical_bd_r: Blu-ray Recordable
+       - optical_bd_re: Blu-ray Rewritable
+       - optical_hddvd: HD-DVD
+       - optical_hddvd_r: HD-DVD Recordable
+       - optical_hddvd_rw: HD-DVD Rewritable
+       - optical_mo: Magneto Optical
+       - optical_mrw: Can read Mount Rainer media
+       - optical_mrw_w: Can write Mount Rainer media
+    -->
+    <property name="MediaCompatibility" type="as" access="read"/>
+
+    <!--
+      The kind of media currently in the drive. Known values
+      include the ones listed for the MediaCompatibility property
+      above.
+    -->
+    <property name="Media" type="s" access="read"/>
+
+    <!--
+      The rotational rate of the drive.
+
+       o -1 if known to be rotating media but rotation rate isn't known
+       o 0 if known to be non-rotating media
+       o the rotation rate in rounds per minute otherwise
+    -->
+    <property name="RotationRate" type="i" access="read"/>
   </interface>
 
   <!-- ********************************************************************** -->

@@ -65,6 +65,7 @@
     <title>Library API Reference</title>
       <xi:include href="xml/udisksclient.xml"/>
       <xi:include href="xml/udiskserror.xml"/>
+      <xi:include href="xml/udisksutil.xml"/>
   </part>
 
   <part id="ref-daemon">

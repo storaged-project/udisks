@@ -1,4 +1,10 @@
 <SECTION>
+<FILE>udisksutil</FILE>
+udisks_util_get_size_for_display
+udisks_util_get_lun_info
+</SECTION>
+
+<SECTION>
 <FILE>udiskserror</FILE>
 <TITLE>UDisksError</TITLE>
 UDISKS_ERROR

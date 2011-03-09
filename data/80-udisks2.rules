@@ -19,3 +19,24 @@ ACTION!="remove", SUBSYSTEM=="scsi", ENV{DEVTYPE}=="scsi_device", ENV{ID_SERIAL}
 # ATA/ATAPI devices is of type 0x05 and vendor is usually not ATA
 ACTION!="remove", SUBSYSTEM=="scsi", ENV{DEVTYPE}=="scsi_device", ENV{ID_SERIAL}!="?*", ATTR{type}=="5", IMPORT{program}="ata_id --export $root/bsg/$kernel"
 ACTION!="remove", SUBSYSTEM=="scsi", ENV{DEVTYPE}=="scsi_device", ENV{ID_SERIAL}!="?*", IMPORT{program}="scsi_id --whitelisted --export --device $root/bsg/$kernel"
+
+# ------------------------------------------------------------------------
+# Tag floppy drives since they need special care
+
+# PC floppy drives
+#
+KERNEL=="fd*", ENV{ID_DRIVE_FLOPPY}="1"
+
+# USB floppy drives
+#
+SUBSYSTEMS=="usb", ATTRS{bInterfaceClass}=="08", ATTRS{bInterfaceSubClass}=="04", ENV{ID_DRIVE_FLOPPY}="1"
+
+# ATA Zip drives
+#
+ENV{ID_VENDOR}=="*IOMEGA*", ENV{ID_MODEL}=="*ZIP*", ENV{ID_DRIVE_FLOPPY_ZIP}="1"
+
+# TODO: figure out if the drive supports SD and SDHC and what the current
+# kind of media is - right now we just assume SD
+KERNEL=="mmcblk[0-9]", SUBSYSTEMS=="mmc", ENV{DEVTYPE}=="disk", ENV{ID_DRIVE_FLASH_SD}="1", ENV{ID_DRIVE_MEDIA_FLASH_SD}="1"
+# ditto for memstick
+KERNEL=="mspblk[0-9]", SUBSYSTEMS=="memstick", ENV{DEVTYPE}=="disk", ENV{ID_DRIVE_FLASH_MS}="1", ENV{ID_DRIVE_MEDIA_FLASH_MS}="1"
