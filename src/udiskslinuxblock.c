@@ -706,6 +706,12 @@ block_device_update (UDisksLinuxBlock      *block,
       udisks_block_device_set_part_entry_flags (iface,
                                                 g_udev_device_get_property (block->device,
                                                                             "UDISKS_PARTITION_FLAGS"));
+      udisks_block_device_set_part_entry_label (iface,
+                                                g_udev_device_get_property (block->device,
+                                                                            "UDISKS_PARTITION_LABEL"));
+      udisks_block_device_set_part_entry_uuid (iface,
+                                               g_udev_device_get_property (block->device,
+                                                                           "UDISKS_PARTITION_UUID"));
       slave_sysfs_path = g_strdup (g_udev_device_get_property (block->device, "UDISKS_PARTITION_SLAVE"));
       if (slave_sysfs_path == NULL)
         {

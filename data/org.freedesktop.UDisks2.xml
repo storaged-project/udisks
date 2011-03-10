@@ -121,6 +121,8 @@
     <property name="PartEntryFlags" type="s" access="read"/>
     <property name="PartEntryOffset" type="t" access="read"/>
     <property name="PartEntrySize" type="t" access="read"/>
+    <property name="PartEntryLabel" type="ay" access="read"/>
+    <property name="PartEntryUUID" type="ay" access="read"/>
     <!-- The BlockDevice object the entry is part of ('/' if not an entry) -->
     <property name="PartEntryTable" type="o" access="read"/>
 
