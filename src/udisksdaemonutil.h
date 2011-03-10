@@ -30,6 +30,9 @@ gchar *udisks_decode_udev_string (const gchar *str);
 void udisks_safe_append_to_object_path (GString      *str,
                                         const gchar  *s);
 
+guint64 udisks_daemon_util_block_get_size (GUdevDevice *block_device);
+
+
 
 G_END_DECLS
 

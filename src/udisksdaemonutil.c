@@ -20,6 +20,10 @@
 
 #include "config.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include "udisksdaemonutil.h"
 
 /**
@@ -135,3 +139,55 @@ udisks_safe_append_to_object_path (GString      *str,
         }
     }
 }
+
+/**
+ * udisks_daemon_util_block_get_size:
+ * @device: A #GUdevDevice for a top-level block device.
+ *
+ * Gets the size of the @device top-level block device, checking for media in the process
+ *
+ * Returns: The size of @device or 0 if no media is available.
+ */
+guint64
+udisks_daemon_util_block_get_size (GUdevDevice *device)
+{
+  gboolean media_available;
+
+  /* figuring out if media is available is a bit tricky */
+  media_available = FALSE;
+  if (g_udev_device_get_sysfs_attr_as_boolean (device, "removable"))
+    {
+      /* never try to open optical drives (might cause the door to close) or
+       * floppy drives (makes noise)
+       */
+      media_available = FALSE;
+      if (!(g_udev_device_get_property_as_boolean (device, "ID_CDROM") ||
+            g_udev_device_get_property_as_boolean (device, "ID_DRIVE_FLOPPY")))
+        {
+          gint fd;
+          fd = open (g_udev_device_get_device_file (device), O_RDONLY);
+          if (fd >= 0)
+            {
+              media_available = TRUE;
+              close (fd);
+            }
+        }
+      else
+        {
+          if (g_udev_device_get_property_as_boolean (device, "ID_CDROM_MEDIA"))
+            media_available = TRUE;
+          else
+            media_available = FALSE;
+        }
+    }
+  else
+    {
+      media_available = TRUE;
+    }
+
+  if (media_available)
+    return g_udev_device_get_sysfs_attr_as_uint64 (device, "size") * 512;
+  else
+    return 0;
+}
+

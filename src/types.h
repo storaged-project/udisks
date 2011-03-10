@@ -24,6 +24,7 @@
 #include <gio/gio.h>
 #include <polkit/polkit.h>
 #include <udisks/udisks.h>
+#include <gudev/gudev.h>
 #include <gdbusobjectmanager.h>
 
 #include <sys/types.h>

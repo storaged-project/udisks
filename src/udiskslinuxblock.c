@@ -498,7 +498,7 @@ block_device_update (UDisksLinuxBlock      *block,
   udisks_block_device_set_symlinks (iface, symlinks);
   udisks_block_device_set_major (iface, major (dev));
   udisks_block_device_set_minor (iface, minor (dev));
-  udisks_block_device_set_size (iface, g_udev_device_get_sysfs_attr_as_uint64 (block->device, "size") * 512);
+  udisks_block_device_set_size (iface, udisks_daemon_util_block_get_size (block->device));
 
   if (g_str_has_prefix (g_udev_device_get_name (block->device), "loop"))
     {

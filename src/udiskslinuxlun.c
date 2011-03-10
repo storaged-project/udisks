@@ -20,10 +20,6 @@
 
 #include "config.h"
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-
 #include <string.h>
 
 #include "udisksdaemon.h"
@@ -551,52 +547,6 @@ lun_set_media (UDisksLinuxLun *lun,
 }
 
 static void
-lun_set_size (UDisksLinuxLun *lun,
-              UDisksLun      *iface,
-              GUdevDevice    *device)
-{
-  gboolean media_available;
-
-  /* figuring out if media is available is a bit tricky */
-  media_available = FALSE;
-  if (udisks_lun_get_media_removable (iface))
-    {
-      /* never try to open optical drives (might cause the door to close) or
-       * floppy drives (makes noise)
-       */
-      media_available = FALSE;
-      if (!(g_udev_device_get_property_as_boolean (device, "ID_CDROM") ||
-            g_udev_device_get_property_as_boolean (device, "ID_DRIVE_FLOPPY")))
-        {
-          gint fd;
-          fd = open (g_udev_device_get_device_file (device), O_RDONLY);
-          if (fd >= 0)
-            {
-              media_available = TRUE;
-              close (fd);
-            }
-        }
-      else
-        {
-          if (g_udev_device_get_property_as_boolean (device, "ID_CDROM_MEDIA"))
-            media_available = TRUE;
-          else
-            media_available = FALSE;
-        }
-    }
-  else
-    {
-      media_available = TRUE;
-    }
-
-  if (media_available)
-    udisks_lun_set_size (iface, g_udev_device_get_sysfs_attr_as_uint64 (device, "size") * 512);
-  else
-    udisks_lun_set_size (iface, 0);
-}
-
-
-static void
 lun_set_rotation_rate (UDisksLinuxLun *lun,
                        UDisksLun      *iface,
                        GUdevDevice    *device)
@@ -747,7 +697,7 @@ lun_update (UDisksLinuxLun      *lun,
 
   /* common bits go here */
   udisks_lun_set_media_removable (iface, g_udev_device_get_sysfs_attr_as_boolean (device, "removable"));
-  lun_set_size (lun, iface, device);
+  udisks_lun_set_size (iface, udisks_daemon_util_block_get_size (device));
   lun_set_media (lun, iface, device);
   lun_set_rotation_rate (lun, iface, device);
  out:
