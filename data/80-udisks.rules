@@ -155,6 +155,7 @@ SUBSYSTEMS=="usb", ATTRS{idVendor}=="05ac", ATTRS{idProduct}=="8403", ENV{ID_DRI
 # Common theme
 #
 SUBSYSTEMS=="usb", ENV{ID_MODEL}=="*SD_Reader*", ENV{ID_DRIVE_FLASH_SD}="1"
+SUBSYSTEMS=="usb", ENV{ID_MODEL}=="*Reader*SD*", ENV{ID_DRIVE_FLASH_SD}="1"
 SUBSYSTEMS=="usb", ENV{ID_MODEL}=="*CF_Reader*", ENV{ID_DRIVE_FLASH_CF}="1"
 SUBSYSTEMS=="usb", ENV{ID_MODEL}=="*SM_Reader*", ENV{ID_DRIVE_FLASH_SM}="1"
 SUBSYSTEMS=="usb", ENV{ID_MODEL}=="*MS_Reader*", ENV{ID_DRIVE_FLASH_MS}="1"
