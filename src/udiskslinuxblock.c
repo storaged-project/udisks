@@ -471,6 +471,26 @@ find_block_device_by_sysfs_path (GDBusObjectManager *object_manager,
   return ret;
 }
 
+static gchar *
+get_sysfs_attr (GUdevDevice *device,
+                const gchar *attr)
+{
+  gchar *filename;
+  gchar *value;
+  filename = g_strconcat (g_udev_device_get_sysfs_path (device),
+                          "/",
+                          attr,
+                          NULL);
+  value = NULL;
+  /* don't care about errors */
+  g_file_get_contents (filename,
+                       &value,
+                       NULL,
+                       NULL);
+  g_free (filename);
+  return value;
+}
+
 static void
 block_device_update (UDisksLinuxBlock      *block,
                      const gchar     *uevent_action,
@@ -539,6 +559,39 @@ block_device_update (UDisksLinuxBlock      *block,
   else
     {
       udisks_block_device_set_loop_backing_file (iface, "");
+    }
+
+
+  /* dm-crypt
+   *
+   * TODO: this might not be the best way to determine if the device-mapper device
+   *       is a dm-crypt device.. but unfortunately device-mapper keeps all this stuff
+   *       in user-space and wants you to use libdevmapper to obtain it...
+   */
+  udisks_block_device_set_crypto_backing_device (iface, "/");
+  if (g_str_has_prefix (g_udev_device_get_name (block->device), "dm-"))
+    {
+      gchar *dm_uuid;
+      dm_uuid = get_sysfs_attr (block->device, "dm/uuid");
+      if (dm_uuid != NULL && g_str_has_prefix (dm_uuid, "CRYPT-LUKS1"))
+        {
+          gchar **slaves;
+          slaves = udisks_daemon_util_resolve_links (g_udev_device_get_sysfs_path (block->device),
+                                                     "slaves");
+          if (g_strv_length (slaves) == 1)
+            {
+              gchar *slave_object_path;
+              slave_object_path = find_block_device_by_sysfs_path (udisks_daemon_get_object_manager (block->daemon),
+                                                                   slaves[0]);
+              if (slave_object_path != NULL)
+                {
+                  udisks_block_device_set_crypto_backing_device (iface, slave_object_path);
+                }
+              g_free (slave_object_path);
+            }
+          g_strfreev (slaves);
+        }
+      g_free (dm_uuid);
     }
 
   /* Sort out preferred device... this is what UI shells should

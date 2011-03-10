@@ -256,4 +256,6 @@ udisks_persistent_store_get_type
 udisks_decode_udev_string
 udisks_safe_append_to_object_path
 udisks_daemon_util_block_get_size
+udisks_daemon_util_resolve_link
+udisks_daemon_util_resolve_links
 </SECTION>

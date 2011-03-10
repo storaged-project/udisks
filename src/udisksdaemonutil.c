@@ -24,6 +24,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include <limits.h>
+#include <stdlib.h>
+
 #include "udisksdaemonutil.h"
 
 /**
@@ -189,5 +192,92 @@ udisks_daemon_util_block_get_size (GUdevDevice *device)
     return g_udev_device_get_sysfs_attr_as_uint64 (device, "size") * 512;
   else
     return 0;
+}
+
+
+/**
+ * udisks_daemon_util_resolve_link:
+ * @path: A path
+ * @name: Name of a symlink in @path.
+ *
+ * Resolves the symlink @path/@name.
+ *
+ * Returns: A canonicalized absolute pathname or %NULL if the symlink
+ * could not be resolved. Free with g_free().
+ */
+gchar *
+udisks_daemon_util_resolve_link (const gchar *path,
+                                 const gchar *name)
+{
+  gchar *full_path;
+  gchar link_path[PATH_MAX];
+  gchar resolved_path[PATH_MAX];
+  gssize num;
+  gboolean found_it;
+
+  found_it = FALSE;
+
+  full_path = g_build_filename (path, name, NULL);
+
+  num = readlink (full_path, link_path, sizeof(link_path) - 1);
+  if (num != -1)
+    {
+      char *absolute_path;
+
+      link_path[num] = '\0';
+
+      absolute_path = g_build_filename (path, link_path, NULL);
+      if (realpath (absolute_path, resolved_path) != NULL)
+        {
+          found_it = TRUE;
+        }
+      g_free (absolute_path);
+    }
+  g_free (full_path);
+
+  if (found_it)
+    return g_strdup (resolved_path);
+  else
+    return NULL;
+}
+
+/**
+ * udisks_daemon_util_resolve_links:
+ * @path: A path
+ * @dir_name: Name of a directory in @path holding symlinks.
+ *
+ * Resolves all symlinks in @path/@dir_name. This can be used to
+ * easily walk e.g. holders or slaves of block devices.
+ *
+ * Returns: An array of canonicalized absolute pathnames. Free with g_strfreev().
+ */
+gchar **
+udisks_daemon_util_resolve_links (const gchar *path,
+                                  const gchar *dir_name)
+{
+  gchar *s;
+  GDir *dir;
+  const gchar *name;
+  GPtrArray *p;
+
+  p = g_ptr_array_new ();
+
+  s = g_build_filename (path, dir_name, NULL);
+  dir = g_dir_open (s, 0, NULL);
+  if (dir == NULL)
+    goto out;
+  while ((name = g_dir_read_name (dir)) != NULL)
+    {
+      gchar *resolved;
+      resolved = udisks_daemon_util_resolve_link (s, name);
+      if (resolved != NULL)
+        g_ptr_array_add (p, resolved);
+    }
+  g_ptr_array_add (p, NULL);
+
+ out:
+  g_free (s);
+
+  return (gchar **) g_ptr_array_free (p, FALSE);
 }
 

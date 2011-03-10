@@ -124,7 +124,7 @@
     <!-- The BlockDevice object the entry is part of ('/' if not an entry) -->
     <property name="PartEntryTable" type="o" access="read"/>
 
-    <!-- Properties related to whether the device holds a filesystem -->
+    <!-- Properties and Methods related to whether the device holds a filesystem -->
     <property name="FilesystemMountPoints" type="aay" access="read"/>
     <method name="FilesystemMount">
       <arg name="filesystem_type" direction="in" type="s"/>
@@ -134,6 +134,9 @@
     <method name="FilesystemUnmount">
       <arg name="options" direction="in" type="as"/>
     </method>
+
+    <!-- The BlockDevice object that is backing the device ('/' if unknown or not a crypto device)  -->
+    <property name="CryptoBackingDevice" type="o" access="read"/>
 
     <!-- Loop Device -->
     <property name="LoopBackingFile" type="ay" access="read"/>

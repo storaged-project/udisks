@@ -32,6 +32,12 @@ void udisks_safe_append_to_object_path (GString      *str,
 
 guint64 udisks_daemon_util_block_get_size (GUdevDevice *block_device);
 
+gchar *udisks_daemon_util_resolve_link (const gchar *path,
+                                        const gchar *name);
+
+gchar **udisks_daemon_util_resolve_links (const gchar *path,
+                                          const gchar *dir_name);
+
 
 
 G_END_DECLS
