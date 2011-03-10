@@ -115,6 +115,7 @@
 
     <!-- Partition Table Entry -->
     <property name="PartEntry" type="b" access="read"/>
+    <property name="PartEntryNumber" type="u" access="read"/>
     <property name="PartEntryScheme" type="s" access="read"/>
     <property name="PartEntryType" type="s" access="read"/>
     <property name="PartEntryFlags" type="s" access="read"/>

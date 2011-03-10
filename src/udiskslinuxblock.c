@@ -644,6 +644,9 @@ block_device_update (UDisksLinuxBlock      *block,
       udisks_block_device_set_part_entry_scheme (iface,
                                                  g_udev_device_get_property (block->device,
                                                                              "UDISKS_PARTITION_SCHEME"));
+      udisks_block_device_set_part_entry_number (iface,
+                                                 g_udev_device_get_property_as_int (block->device,
+                                                                                    "UDISKS_PARTITION_NUMBER"));
       udisks_block_device_set_part_entry_type (iface,
                                                g_udev_device_get_property (block->device,
                                                                            "UDISKS_PARTITION_TYPE"));
