@@ -2,6 +2,9 @@
 <FILE>udisksutil</FILE>
 udisks_util_get_size_for_display
 udisks_util_get_lun_info
+udisks_util_get_part_scheme_for_display
+udisks_util_get_part_type_for_display
+udisks_util_get_id_for_display
 </SECTION>
 
 <SECTION>

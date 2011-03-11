@@ -34,6 +34,16 @@ gchar *udisks_util_get_size_for_display (guint64 size,
                                          gboolean use_pow2,
                                          gboolean long_string);
 
+gchar *udisks_util_get_part_scheme_for_display (const gchar *scheme);
+
+gchar *udisks_util_get_part_type_for_display (const gchar *scheme,
+                                              const gchar *type);
+
+gchar *udisks_util_get_id_for_display (const gchar *usage,
+                                       const gchar *id,
+                                       const gchar *version,
+                                       gboolean     long_string);
+
 void udisks_util_get_lun_info (UDisksLun  *lun,
                                gchar     **out_name,
                                gchar     **out_description,
