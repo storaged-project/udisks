@@ -861,6 +861,34 @@ const static struct
 };
 
 /**
+ * udisks_util_get_part_types_for_scheme:
+ * @scheme: A partitioning scheme id.
+ *
+ * Gets all known types for @scheme.
+ *
+ * Returns: (transfer container): A %NULL-terminated array of
+ * strings. Only the container should be freed with g_free().
+ */
+const gchar **
+udisks_util_get_part_types_for_scheme (const gchar *scheme)
+{
+  guint n;
+  GPtrArray *p;
+
+  p = g_ptr_array_new();
+  for (n = 0; part_type[n].name != NULL; n++)
+    {
+      if (g_strcmp0 (part_type[n].scheme, scheme) == 0)
+        {
+          g_ptr_array_add (p, (gpointer) part_type[n].type);
+        }
+    }
+  g_ptr_array_add (p, NULL);
+
+  return (const gchar **) g_ptr_array_free (p, FALSE);
+}
+
+/**
  * udisks_util_get_part_type_for_display:
  * @scheme: A partitioning scheme id.
  * @type: A partition type.

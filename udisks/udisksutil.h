@@ -39,6 +39,9 @@ gchar *udisks_util_get_part_scheme_for_display (const gchar *scheme);
 gchar *udisks_util_get_part_type_for_display (const gchar *scheme,
                                               const gchar *type);
 
+const gchar **udisks_util_get_part_types_for_scheme (const gchar *scheme);
+
+
 gchar *udisks_util_get_id_for_display (const gchar *usage,
                                        const gchar *id,
                                        const gchar *version,
