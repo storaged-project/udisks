@@ -2032,7 +2032,7 @@ handle_set_label (UDisksBlockDevice      *block,
                                              probed_fs_type);
       goto out;
     }
-  supports_online = FALSE;
+  supports_online = TRUE;
 
   /* Fail if the device is already mounted and the tools/drivers doesn't
    * support changing the label in that case
