@@ -136,6 +136,10 @@
     <method name="FilesystemUnmount">
       <arg name="options" direction="in" type="as"/>
     </method>
+    <method name="FilesystemSetLabel">
+      <arg name="label" direction="in" type="ay"/>
+      <arg name="options" direction="in" type="as"/>
+    </method>
 
     <!-- The BlockDevice object that is backing the device ('/' if unknown or not a crypto device)  -->
     <property name="CryptoBackingDevice" type="o" access="read"/>

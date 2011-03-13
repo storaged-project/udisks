@@ -41,6 +41,7 @@ G_BEGIN_DECLS
  * @UDISKS_ERROR_OPTION_NOT_PERMITTED: Not permitted to use the requested option.
  * @UDISKS_ERROR_MOUNTED_BY_OTHER_USER: The device is mounted by another user.
  * @UDISKS_ERROR_ALREADY_UNMOUNTING: The device is already unmounting.
+ * @UDISKS_ERROR_NOT_SUPPORTED: The operation is not supported due to missing driver/tool support.
  *
  * Error codes for the #UDISKS_ERROR error domain and the
  * corresponding D-Bus error names.
@@ -56,10 +57,11 @@ typedef enum
   UDISKS_ERROR_NOT_MOUNTED,                /* org.freedesktop.UDisks.Error.NotMounted */
   UDISKS_ERROR_OPTION_NOT_PERMITTED,       /* org.freedesktop.UDisks.Error.OptionNotPermitted */
   UDISKS_ERROR_MOUNTED_BY_OTHER_USER,      /* org.freedesktop.UDisks.Error.MountedByOtherUser */
-  UDISKS_ERROR_ALREADY_UNMOUNTING          /* org.freedesktop.UDisks.Error.AlreadyUnmounting */
+  UDISKS_ERROR_ALREADY_UNMOUNTING,         /* org.freedesktop.UDisks.Error.AlreadyUnmounting */
+  UDISKS_ERROR_NOT_SUPPORTED               /* org.freedesktop.UDisks.Error.NotSupported */
 } UDisksError;
 
-#define UDISKS_ERROR_NUM_ENTRIES  (UDISKS_ERROR_ALREADY_UNMOUNTING + 1)
+#define UDISKS_ERROR_NUM_ENTRIES  (UDISKS_ERROR_NOT_SUPPORTED + 1)
 
 G_END_DECLS
 

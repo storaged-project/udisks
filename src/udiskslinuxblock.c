@@ -373,6 +373,12 @@ handle_unmount (UDisksBlockDevice      *block,
                 GDBusMethodInvocation  *invocation,
                 const gchar* const     *options);
 
+static gboolean
+handle_set_label (UDisksBlockDevice      *block,
+                  GDBusMethodInvocation  *invocation,
+                  const gchar            *label,
+                  const gchar* const     *options);
+
 static void
 block_device_connect (UDisksLinuxBlock *block)
 {
@@ -383,6 +389,10 @@ block_device_connect (UDisksLinuxBlock *block)
   g_signal_connect (block->iface_block_device,
                     "handle-filesystem-unmount",
                     G_CALLBACK (handle_unmount),
+                    NULL);
+  g_signal_connect (block->iface_block_device,
+                    "handle-filesystem-set-label",
+                    G_CALLBACK (handle_set_label),
                     NULL);
 }
 
@@ -1945,4 +1955,183 @@ handle_unmount (UDisksBlockDevice      *block,
   g_free (mount_point);
   g_object_unref (object);
   return TRUE;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static void
+on_set_label_job_completed (UDisksJob   *job,
+                            gboolean     success,
+                            const gchar *message,
+                            gpointer     user_data)
+{
+  GDBusMethodInvocation *invocation = G_DBUS_METHOD_INVOCATION (user_data);
+  UDisksBlockDevice *block;
+
+  block = UDISKS_BLOCK_DEVICE (g_dbus_method_invocation_get_user_data (invocation));
+
+  if (success)
+    udisks_block_device_complete_filesystem_set_label (block, invocation);
+  else
+    g_dbus_method_invocation_return_error (invocation,
+                                           UDISKS_ERROR,
+                                           UDISKS_ERROR_FAILED,
+                                           "Error setting filesystem label: %s",
+                                           message);
+}
+
+/* runs in thread dedicated to handling method call */
+static gboolean
+handle_set_label (UDisksBlockDevice      *block,
+                  GDBusMethodInvocation  *invocation,
+                  const gchar            *label,
+                  const gchar* const     *requested_options)
+{
+  GDBusObject *object;
+  UDisksDaemon *daemon;
+  const gchar *probed_fs_usage;
+  const gchar *probed_fs_type;
+  GError *error;
+  PolkitSubject *auth_subject;
+  const gchar *auth_action_id;
+  PolkitDetails *auth_details;
+  gboolean auth_no_user_interaction;
+  PolkitCheckAuthorizationFlags auth_flags;
+  PolkitAuthorizationResult *auth_result;
+  gboolean supports_online;
+  guint n;
+  UDisksBaseJob *job;
+  gchar *escaped_label;
+
+  object = NULL;
+  daemon = NULL;
+  auth_subject = NULL;
+  auth_details = NULL;
+  auth_result = NULL;
+  auth_no_user_interaction = FALSE;
+  supports_online = FALSE;
+  escaped_label = NULL;
+
+  object = g_dbus_interface_get_object (G_DBUS_INTERFACE (block));
+  daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
+
+  probed_fs_usage = udisks_block_device_get_id_usage (block);
+  probed_fs_type = udisks_block_device_get_id_type (block);
+
+  /* TODO: add support for other fstypes */
+  if (!(g_strcmp0 (probed_fs_usage, "filesystem") == 0 &&
+        (g_strcmp0 (probed_fs_type, "ext2") == 0 ||
+         g_strcmp0 (probed_fs_type, "ext3") == 0 ||
+         g_strcmp0 (probed_fs_type, "ext4") == 0)))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_NOT_SUPPORTED,
+                                             "Don't know how to change label on device of type %s:%s",
+                                             probed_fs_usage,
+                                             probed_fs_type);
+      goto out;
+    }
+  supports_online = FALSE;
+
+  /* Fail if the device is already mounted and the tools/drivers doesn't
+   * support changing the label in that case
+   */
+  if (!supports_online)
+    {
+      const gchar * const *existing_mount_points;
+      existing_mount_points = udisks_block_device_get_filesystem_mount_points (block);
+      if (existing_mount_points != NULL && g_strv_length ((gchar **) existing_mount_points) > 0)
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_NOT_SUPPORTED,
+                                                 "Cannot change label on mounted device of type %s:%s.\n",
+                                                 probed_fs_usage,
+                                                 probed_fs_type);
+          goto out;
+        }
+    }
+
+  for (n = 0; requested_options != NULL && requested_options[n] != NULL; n++)
+    {
+      const gchar *option = requested_options[n];
+      if (g_strcmp0 (option, "auth_no_user_interaction") == 0)
+        {
+          auth_no_user_interaction = TRUE;
+          continue;
+        }
+
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_OPTION_NOT_PERMITTED,
+                                             "Option `%s' is not allowed",
+                                             option);
+      goto out;
+    }
+
+  /* now check that the user is actually authorized to change the filesystem label
+   *
+   * (TODO: fill in details and pick the right action_id)
+   */
+  auth_action_id = "org.freedesktop.udisks2.modify",
+  auth_subject = polkit_system_bus_name_new (g_dbus_method_invocation_get_sender (invocation));
+  auth_flags = POLKIT_CHECK_AUTHORIZATION_FLAGS_NONE;
+  if (!auth_no_user_interaction)
+    auth_flags = POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION;
+  error = NULL;
+  auth_result = polkit_authority_check_authorization_sync (udisks_daemon_get_authority (daemon),
+                                                           auth_subject,
+                                                           auth_action_id,
+                                                           auth_details,
+                                                           auth_flags,
+                                                           NULL, /* GCancellable* */
+                                                           &error);
+  if (auth_result == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error checking authorization: %s (%s, %d)",
+                                             error->message,
+                                             g_quark_to_string (error->domain),
+                                             error->code);
+      g_error_free (error);
+      goto out;
+    }
+  if (!polkit_authorization_result_get_is_authorized (auth_result))
+    {
+      g_dbus_method_invocation_return_error_literal (invocation,
+                                                     UDISKS_ERROR,
+                                                     polkit_authorization_result_get_is_challenge (auth_result) ?
+                                                     UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN :
+                                                     UDISKS_ERROR_NOT_AUTHORIZED,
+                                                     "Not authorized to perform operation");
+      goto out;
+    }
+
+  escaped_label = g_shell_quote (label);
+  job = udisks_daemon_launch_spawned_job (daemon,
+                                          NULL, /* cancellable */
+                                          NULL, /* input_string */
+                                          "e2label %s %s",
+                                          udisks_block_device_get_device (block),
+                                          escaped_label);
+  g_signal_connect (job,
+                    "completed",
+                    G_CALLBACK (on_set_label_job_completed),
+                    invocation);
+
+ out:
+  g_free (escaped_label);
+  if (auth_subject != NULL)
+    g_object_unref (auth_subject);
+  if (auth_details != NULL)
+    g_object_unref (auth_details);
+  if (auth_result != NULL)
+    g_object_unref (auth_result);
+  if (object != NULL)
+    g_object_unref (object);
+
+  return TRUE; /* returning TRUE means that we handled the method invocation */
 }

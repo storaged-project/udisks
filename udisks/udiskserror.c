@@ -41,7 +41,8 @@ static const GDBusErrorEntry dbus_error_entries[] =
   {UDISKS_ERROR_NOT_MOUNTED,                  "org.freedesktop.UDisks.Error.NotMounted"},
   {UDISKS_ERROR_OPTION_NOT_PERMITTED,         "org.freedesktop.UDisks.Error.OptionNotPermitted"},
   {UDISKS_ERROR_MOUNTED_BY_OTHER_USER,        "org.freedesktop.UDisks.Error.MountedByOtherUser"},
-  {UDISKS_ERROR_ALREADY_UNMOUNTING,           "org.freedesktop.UDisks.Error.AlreadyUnmounting"}
+  {UDISKS_ERROR_ALREADY_UNMOUNTING,           "org.freedesktop.UDisks.Error.AlreadyUnmounting"},
+  {UDISKS_ERROR_NOT_SUPPORTED,                "org.freedesktop.UDisks.Error.NotSupported"}
 };
 
 GQuark
