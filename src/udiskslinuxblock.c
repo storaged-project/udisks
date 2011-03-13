@@ -1205,16 +1205,11 @@ calculate_fs_type (UDisksBlockDevice         *block,
                    GError                   **error)
 {
   gchar *fs_type_to_use;
-  const gchar *probed_fs_usage;
   const gchar *probed_fs_type;
 
-  probed_fs_usage = NULL;
   probed_fs_type = NULL;
   if (block != NULL)
-    {
-      probed_fs_usage = udisks_block_device_get_id_usage (block);
-      probed_fs_type = udisks_block_device_get_id_type (block);
-    }
+    probed_fs_type = udisks_block_device_get_id_type (block);
 
   fs_type_to_use = NULL;
   if (requested_fs_type != NULL && strlen (requested_fs_type) > 0)
@@ -1459,11 +1454,9 @@ handle_mount (UDisksBlockDevice      *block,
   GDBusObject *object;
   UDisksDaemon *daemon;
   UDisksPersistentStore *store;
-  gboolean ret;
   uid_t caller_uid;
   const gchar * const *existing_mount_points;
   const gchar *probed_fs_usage;
-  const gchar *probed_fs_type;
   gchar *fs_type_to_use;
   gchar *mount_options_to_use;
   gchar *mount_point_to_use;
@@ -1479,7 +1472,6 @@ handle_mount (UDisksBlockDevice      *block,
   PolkitCheckAuthorizationFlags auth_flags;
   PolkitAuthorizationResult *auth_result;
 
-  ret = FALSE;
   object = NULL;
   daemon = NULL;
   error_message = NULL;
@@ -1536,12 +1528,8 @@ handle_mount (UDisksBlockDevice      *block,
    * appear in the udev database.
    */
   probed_fs_usage = NULL;
-  probed_fs_type = NULL;
   if (block != NULL)
-    {
-      probed_fs_usage = udisks_block_device_get_id_usage (block);
-      probed_fs_type = udisks_block_device_get_id_type (block);
-    }
+    probed_fs_usage = udisks_block_device_get_id_usage (block);
   if (probed_fs_usage != NULL && strlen (probed_fs_usage) > 0 &&
       g_strcmp0 (probed_fs_usage, "filesystem") != 0)
     {
