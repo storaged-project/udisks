@@ -30,14 +30,12 @@
 /* ---------------------------------------------------------------------------------------------------- */
 
 static GMainLoop *loop = NULL;
-static gchar *opt_helper_dir = NULL;
 static gboolean opt_replace = FALSE;
 static gboolean opt_no_sigint = FALSE;
 static GOptionEntry opt_entries[] =
 {
   {"replace", 0, 0, G_OPTION_ARG_NONE, &opt_replace, "Replace existing daemon", NULL},
   {"no-sigint", 0, 0, G_OPTION_ARG_NONE, &opt_no_sigint, "Do not handle SIGINT for controlled shutdown", NULL},
-  {"helper-dir", 0, G_OPTION_FLAG_FILENAME, G_OPTION_ARG_STRING, &opt_helper_dir, "Directory for helper tools", NULL},
   {NULL }
 };
 
@@ -102,7 +100,6 @@ main (int    argc,
 {
   GError *error;
   GOptionContext *opt_context;
-  gchar *s;
   gint ret;
   guint name_owner_id;
   guint sigint_id;
@@ -131,18 +128,6 @@ main (int    argc,
       g_error_free (error);
       goto out;
     }
-
-  /* run with a controlled path */
-  if (opt_helper_dir != NULL)
-    s = g_strdup_printf ("%s:" PACKAGE_LIBEXEC_DIR ":/sbin:/bin:/usr/sbin:/usr/bin", opt_helper_dir);
-  else
-    s = g_strdup (PACKAGE_LIBEXEC_DIR ":/sbin:/bin:/usr/sbin:/usr/bin");
-  if (!g_setenv ("PATH", s, TRUE))
-    {
-      g_printerr ("Error setting PATH\n");
-      goto out;
-    }
-  g_free (s);
 
   udisks_daemon_log (NULL,
                      UDISKS_LOG_LEVEL_INFO,
