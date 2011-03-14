@@ -1043,7 +1043,10 @@ udisks_util_get_id_for_display (const gchar *usage,
     }
   else
     {
-      ret = g_strdup (type);
+      if (strlen (type) > 0)
+        ret = g_strdup (type);
+      else
+        ret = g_strdup (_("Unknown"));
     }
 
  out:
