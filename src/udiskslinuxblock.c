@@ -619,6 +619,13 @@ block_device_update (UDisksLinuxBlock      *block,
         {
           if (g_str_has_prefix (symlinks[n], "/dev/mapper/mpath"))
             {
+              /* multipath */
+              preferred_device_file = symlinks[n];
+              break;
+            }
+          else if (g_str_has_prefix (symlinks[n], "/dev/mapper/vg_"))
+            {
+              /* LVM2 */
               preferred_device_file = symlinks[n];
               break;
             }
