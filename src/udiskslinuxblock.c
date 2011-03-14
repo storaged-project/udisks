@@ -652,7 +652,9 @@ block_device_update (UDisksLinuxBlock      *block,
 
   udisks_block_device_set_id_usage (iface, g_udev_device_get_property (block->device, "ID_FS_USAGE"));
   udisks_block_device_set_id_type (iface, g_udev_device_get_property (block->device, "ID_FS_TYPE"));
-  udisks_block_device_set_id_version (iface, g_udev_device_get_property (block->device, "ID_FS_VERSION"));
+  s = udisks_decode_udev_string (g_udev_device_get_property (block->device, "ID_FS_VERSION"));
+  udisks_block_device_set_id_version (iface, s);
+  g_free (s);
   s = udisks_decode_udev_string (g_udev_device_get_property (block->device, "ID_FS_LABEL_ENC"));
   udisks_block_device_set_id_label (iface, s);
   g_free (s);
