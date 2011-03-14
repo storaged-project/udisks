@@ -376,138 +376,6 @@ lun_get_media_icon_name (UDisksLun *lun)
   return ret;
 }
 
-static void
-get_lun_name_from_media_compat (UDisksLun *lun,
-                                GString   *result)
-{
-  guint n;
-  gboolean optical_cd;
-  gboolean optical_dvd;
-  gboolean optical_bd;
-  gboolean optical_hddvd;
-  const gchar* const *media_compat;
-
-  media_compat = udisks_lun_get_media_compatibility (lun);
-
-  optical_cd = FALSE;
-  optical_dvd = FALSE;
-  optical_bd = FALSE;
-  optical_hddvd = FALSE;
-
-  for (n = 0; media_compat != NULL && media_compat[n] != NULL; n++) {
-    const gchar *media_name;
-    const gchar *media;
-
-    media = media_compat[n];
-    media_name = NULL;
-    if (g_strcmp0 (media, "flash_cf") == 0)
-      {
-        /* Translators: This word is used to describe the media inserted into a device */
-        media_name = _("CompactFlash");
-      }
-    else if (g_strcmp0 (media, "flash_ms") == 0)
-      {
-        /* Translators: This word is used to describe the media inserted into a device */
-        media_name = _("MemoryStick");
-      }
-    else if (g_strcmp0 (media, "flash_sm") == 0)
-      {
-        /* Translators: This word is used to describe the media inserted into a device */
-        media_name = _("SmartMedia");
-      }
-    else if (g_strcmp0 (media, "flash_sd") == 0)
-      {
-        /* Translators: This word is used to describe the media inserted into a device */
-        media_name = _("SecureDigital");
-      }
-    else if (g_strcmp0 (media, "flash_sdhc") == 0)
-      {
-        /* Translators: This word is used to describe the media inserted into a device */
-        media_name = _("SD High Capacity");
-      }
-    else if (g_strcmp0 (media, "floppy") == 0)
-      {
-        /* Translators: This word is used to describe the media inserted into a device */
-        media_name = _("Floppy");
-      }
-    else if (g_strcmp0 (media, "floppy_zip") == 0)
-      {
-        /* Translators: This word is used to describe the media inserted into a device */
-        media_name = _("Zip");
-      }
-    else if (g_strcmp0 (media, "floppy_jaz") == 0)
-      {
-        /* Translators: This word is used to describe the media inserted into a device */
-        media_name = _("Jaz");
-      }
-    else if (g_str_has_prefix (media, "flash"))
-      {
-        /* Translators: This word is used to describe the media inserted into a device */
-        media_name = _("Flash");
-      }
-    else if (g_str_has_prefix (media, "optical_cd"))
-      {
-        optical_cd = TRUE;
-      }
-    else if (g_str_has_prefix (media, "optical_dvd"))
-      {
-        optical_dvd = TRUE;
-      }
-    else if (g_str_has_prefix (media, "optical_bd"))
-      {
-      optical_bd = TRUE;
-      }
-    else if (g_str_has_prefix (media, "optical_hddvd"))
-      {
-        optical_hddvd = TRUE;
-      }
-
-    if (media_name != NULL)
-      {
-        if (result->len > 0)
-          g_string_append_c (result, '/');
-        g_string_append (result, media_name);
-      }
-  }
-
-  if (optical_cd)
-    {
-      if (result->len > 0)
-        g_string_append_c (result, '/');
-      /* Translators: This word is used to describe the optical disc type, it may appear
-       * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-       */
-      g_string_append (result, _("CD"));
-    }
-  if (optical_dvd)
-    {
-      if (result->len > 0)
-        g_string_append_c (result, '/');
-      /* Translators: This word is used to describe the optical disc type, it may appear
-       * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-       */
-      g_string_append (result, _("DVD"));
-    }
-  if (optical_bd)
-    {
-      if (result->len > 0)
-        g_string_append_c (result, '/');
-      /* Translators: This word is used to describe the optical disc type, it may appear
-       * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-       */
-      g_string_append (result, _("Blu-Ray"));
-    }
-  if (optical_hddvd)
-    {
-      if (result->len > 0)
-        g_string_append_c (result, '/');
-      /* Translators: This word is used to describe the optical disc type, it may appear
-       * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-       */
-      g_string_append (result, _("HDDVD"));
-    }
-}
-
 /**
  * udisks_util_get_lun_info:
  * @lun: A #UDisksLun.
@@ -567,7 +435,14 @@ udisks_util_get_lun_info (UDisksLun  *lun,
 
   if (is_removable)
     {
-      get_lun_name_from_media_compat (lun, result);
+      gchar *media;
+
+      media = udisks_util_get_media_compat_for_display (udisks_lun_get_media_compatibility (lun));
+      if (media != NULL)
+        {
+          g_string_append (result, media);
+          g_free (media);
+        }
 
       /* If we know the media type, just append Drive */
       if (result->len > 0)
@@ -598,10 +473,17 @@ udisks_util_get_lun_info (UDisksLun  *lun,
     }
   else
     {
+      gchar *media;
+
       /* Media is not removable, use "Hard Disk" resp. "Solid-State Disk"
        * unless we actually know what media types the drive is compatible with
        */
-      get_lun_name_from_media_compat (lun, result);
+      media = udisks_util_get_media_compat_for_display (udisks_lun_get_media_compatibility (lun));
+      if (media != NULL)
+        {
+          g_string_append (result, media);
+          g_free (media);
+        }
 
       if (result->len > 0)
         {
@@ -1051,4 +933,153 @@ udisks_util_get_id_for_display (const gchar *usage,
 
  out:
   return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_util_get_media_compat_for_display:
+ * @media_compat: An array of media types.
+ *
+ * Gets a human-readable string of the media in @media_compat. The
+ * returned information is localized.
+ *
+ * Returns: A string that should be freed with g_free() or %NULL if unknown.
+ */
+gchar *
+udisks_util_get_media_compat_for_display (const gchar* const *media_compat)
+{
+  guint n;
+  gboolean optical_cd;
+  gboolean optical_dvd;
+  gboolean optical_bd;
+  gboolean optical_hddvd;
+  GString *result;
+
+  optical_cd = FALSE;
+  optical_dvd = FALSE;
+  optical_bd = FALSE;
+  optical_hddvd = FALSE;
+
+  result = g_string_new (NULL);
+
+  for (n = 0; media_compat != NULL && media_compat[n] != NULL; n++)
+    {
+      const gchar *media_name;
+      const gchar *media;
+
+      media = media_compat[n];
+      media_name = NULL;
+      if (g_strcmp0 (media, "flash_cf") == 0)
+        {
+          /* Translators: This word is used to describe the media inserted into a device */
+          media_name = _("CompactFlash");
+        }
+      else if (g_strcmp0 (media, "flash_ms") == 0)
+        {
+          /* Translators: This word is used to describe the media inserted into a device */
+          media_name = _("MemoryStick");
+        }
+      else if (g_strcmp0 (media, "flash_sm") == 0)
+        {
+          /* Translators: This word is used to describe the media inserted into a device */
+          media_name = _("SmartMedia");
+        }
+      else if (g_strcmp0 (media, "flash_sd") == 0)
+        {
+          /* Translators: This word is used to describe the media inserted into a device */
+          media_name = _("SecureDigital");
+        }
+      else if (g_strcmp0 (media, "flash_sdhc") == 0)
+        {
+          /* Translators: This word is used to describe the media inserted into a device */
+          media_name = _("SD High Capacity");
+        }
+      else if (g_strcmp0 (media, "floppy") == 0)
+        {
+          /* Translators: This word is used to describe the media inserted into a device */
+          media_name = _("Floppy");
+        }
+      else if (g_strcmp0 (media, "floppy_zip") == 0)
+        {
+          /* Translators: This word is used to describe the media inserted into a device */
+          media_name = _("Zip");
+        }
+      else if (g_strcmp0 (media, "floppy_jaz") == 0)
+        {
+          /* Translators: This word is used to describe the media inserted into a device */
+          media_name = _("Jaz");
+        }
+      else if (g_str_has_prefix (media, "flash"))
+        {
+          /* Translators: This word is used to describe the media inserted into a device */
+          media_name = _("Flash");
+        }
+      else if (g_str_has_prefix (media, "optical_cd"))
+        {
+          optical_cd = TRUE;
+        }
+      else if (g_str_has_prefix (media, "optical_dvd"))
+        {
+          optical_dvd = TRUE;
+        }
+      else if (g_str_has_prefix (media, "optical_bd"))
+        {
+          optical_bd = TRUE;
+        }
+      else if (g_str_has_prefix (media, "optical_hddvd"))
+        {
+          optical_hddvd = TRUE;
+        }
+
+      if (media_name != NULL)
+        {
+          if (result->len > 0)
+            g_string_append_c (result, '/');
+          g_string_append (result, media_name);
+        }
+    }
+
+  if (optical_cd)
+    {
+      if (result->len > 0)
+        g_string_append_c (result, '/');
+      /* Translators: This word is used to describe the optical disc type, it may appear
+       * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
+       */
+      g_string_append (result, _("CD"));
+    }
+  if (optical_dvd)
+    {
+      if (result->len > 0)
+        g_string_append_c (result, '/');
+      /* Translators: This word is used to describe the optical disc type, it may appear
+       * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
+       */
+      g_string_append (result, _("DVD"));
+    }
+  if (optical_bd)
+    {
+      if (result->len > 0)
+        g_string_append_c (result, '/');
+      /* Translators: This word is used to describe the optical disc type, it may appear
+       * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
+       */
+      g_string_append (result, _("Blu-Ray"));
+    }
+  if (optical_hddvd)
+    {
+      if (result->len > 0)
+        g_string_append_c (result, '/');
+      /* Translators: This word is used to describe the optical disc type, it may appear
+       * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
+       */
+      g_string_append (result, _("HDDVD"));
+    }
+
+  if (result->len > 0)
+    return g_string_free (result, FALSE);
+
+  g_string_free (result, TRUE);
+  return NULL;
 }
