@@ -6266,7 +6266,8 @@ is_in_filesystem_file (const gchar *filesystems_file,
                             NULL, /* gsize *out_length */
                             &error))
     {
-      g_warning ("Error reading /etc/filesystems: %s (%s %d)",
+      g_warning ("Error reading %s: %s (%s %d)",
+                 filesystems_file,
                  error->message,
                  g_quark_to_string (error->domain),
                  error->code);
