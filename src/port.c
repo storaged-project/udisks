@@ -262,7 +262,6 @@ compute_object_path (Port *port)
 static gboolean
 register_disks_port (Port *port)
 {
-  DBusConnection *connection;
   GError *error = NULL;
 
   port->priv->system_bus_connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
@@ -275,7 +274,6 @@ register_disks_port (Port *port)
         }
       goto error;
     }
-  connection = dbus_g_connection_get_connection (port->priv->system_bus_connection);
 
   port->priv->object_path = compute_object_path (port);
 

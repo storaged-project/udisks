@@ -851,7 +851,6 @@ part_table_parse_apple (int fd,
     /* more stuff */
   }__attribute__ ((packed)) mac_part;
   int block_size;
-  int block_count;
   int map_count;
 
   DEBUG ("Entering Apple parser");
@@ -876,7 +875,6 @@ part_table_parse_apple (int fd,
     }
 
   block_size = GUINT16_FROM_BE (mac_header.block_size);
-  block_count = GUINT32_FROM_BE (mac_header.block_count); /* num blocks on whole disk */
 
   DEBUG ("Mac MAGIC found, block_size=%d", block_size);
 

@@ -344,9 +344,6 @@ device_constructor (GType type,
                     GObjectConstructParam *construct_properties)
 {
   Device *device;
-  DeviceClass *klass;
-
-  klass = DEVICE_CLASS (g_type_class_peek (TYPE_DEVICE));
 
   device = DEVICE (G_OBJECT_CLASS (device_parent_class)->constructor (type,
                                                                       n_construct_properties,
@@ -1937,7 +1934,6 @@ compute_object_path (const char *native_path)
 static gboolean
 register_disks_device (Device *device)
 {
-  DBusConnection *connection;
   GError *error = NULL;
 
   device->priv->system_bus_connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
@@ -1950,8 +1946,6 @@ register_disks_device (Device *device)
         }
       goto error;
     }
-  connection = dbus_g_connection_get_connection (device->priv->system_bus_connection);
-
   device->priv->object_path = compute_object_path (device->priv->native_path);
 
   /* safety first */
@@ -2490,7 +2484,6 @@ update_info_partition (Device *device)
    */
   if (!is_partition && sysfs_file_exists (device->priv->native_path, "start"))
     {
-      guint64 start;
       guint64 size;
       guint64 offset;
       guint64 alignment_offset;
@@ -2498,7 +2491,6 @@ update_info_partition (Device *device)
       guint n;
 
       device_set_device_is_partition (device, TRUE);
-      start = sysfs_get_uint64 (device->priv->native_path, "start");
       size = sysfs_get_uint64 (device->priv->native_path, "size");
       alignment_offset = sysfs_get_uint64 (device->priv->native_path, "alignment_offset");
 
@@ -6707,7 +6699,6 @@ device_filesystem_unmount_authorized_cb (Daemon *daemon,
   gchar **options = user_data_elements[0];
   int n;
   char *argv[16];
-  GError *error;
   gboolean force_unmount;
   char *mount_path;
   uid_t uid;
@@ -6774,7 +6765,6 @@ device_filesystem_unmount_authorized_cb (Daemon *daemon,
   argv[n++] = NULL;
 
  run_job:
-  error = NULL;
   if (!job_new (context,
                 "FilesystemUnmount",
                 FALSE,
@@ -6959,7 +6949,6 @@ device_filesystem_list_open_files_authorized_cb (Daemon *daemon,
 {
   int n;
   char *argv[16];
-  GError *error;
 
   if (!device->priv->device_is_mounted || device->priv->device_mount_paths->len == 0)
     {
@@ -6973,7 +6962,6 @@ device_filesystem_list_open_files_authorized_cb (Daemon *daemon,
   argv[n++] = ((gchar **) device->priv->device_mount_paths->pdata)[0];
   argv[n++] = NULL;
 
-  error = NULL;
   if (!job_new (context, NULL, /* don't run this as a job */
                 FALSE, device, argv, NULL, filesystem_list_open_files_completed_cb, FALSE, NULL, NULL))
     {
@@ -7053,10 +7041,8 @@ device_drive_eject_authorized_cb (Daemon *daemon,
   int n;
   char *argv[16];
   GError *error;
-  char *mount_path;
 
   error = NULL;
-  mount_path = NULL;
 
   if (!device->priv->device_is_drive)
     {
@@ -7175,10 +7161,8 @@ device_drive_detach_authorized_cb (Daemon *daemon,
   int n;
   char *argv[16];
   GError *error;
-  char *mount_path;
 
   error = NULL;
-  mount_path = NULL;
 
   if (!device->priv->device_is_drive)
     {
@@ -7307,7 +7291,6 @@ device_filesystem_check_authorized_cb (Daemon *daemon,
   //gchar **options = user_data_elements[0];
   int n;
   char *argv[16];
-  GError *error;
 
   /* TODO: change when we have a file system that supports online fsck */
   if (device->priv->device_is_mounted)
@@ -7322,7 +7305,6 @@ device_filesystem_check_authorized_cb (Daemon *daemon,
   argv[n++] = device->priv->device_file;
   argv[n++] = NULL;
 
-  error = NULL;
   if (!job_new (context, "FilesystemCheck", FALSE, device, argv, NULL, filesystem_check_completed_cb, FALSE, NULL, NULL))
     {
       goto out;
@@ -9403,7 +9385,6 @@ device_luks_lock_authorized_cb (Daemon *daemon,
   Device *cleartext_device;
   int n;
   char *argv[10];
-  GError *error;
 
   if (device->priv->id_usage == NULL || strcmp (device->priv->id_usage, "crypto") != 0)
     {
@@ -9430,7 +9411,6 @@ device_luks_lock_authorized_cb (Daemon *daemon,
   argv[n++] = cleartext_device->priv->dm_name;
   argv[n++] = NULL;
 
-  error = NULL;
   if (!job_new (context,
                 "LuksLock",
                 FALSE,
@@ -9562,7 +9542,6 @@ device_luks_change_passphrase_authorized_cb (Daemon *daemon,
   const char *new_secret = user_data_elements[1];
   int n;
   char *argv[10];
-  GError *error;
   char *secrets_as_stdin;
 
   secrets_as_stdin = NULL;
@@ -9580,7 +9559,6 @@ device_luks_change_passphrase_authorized_cb (Daemon *daemon,
   argv[n++] = device->priv->device_file;
   argv[n++] = NULL;
 
-  error = NULL;
   if (!job_new (context,
                 "LuksChangePassphrase",
                 FALSE,
@@ -9934,7 +9912,6 @@ device_drive_ata_smart_refresh_data_authorized_cb (Daemon *daemon,
   char **options = user_data_elements[0];
   int n;
   char *argv[10];
-  GError *error;
   const char *simuldata;
   gboolean nowakeup;
   uid_t caller_uid;
@@ -9986,8 +9963,6 @@ device_drive_ata_smart_refresh_data_authorized_cb (Daemon *daemon,
       argv[n++] = nowakeup ? "1" : "0";
       argv[n++] = NULL;
     }
-
-  error = NULL;
 
   if (!job_new (context, NULL, /* don't run this as a job */
                 FALSE, device, argv, NULL, drive_ata_smart_refresh_data_completed_cb, FALSE, NULL, NULL))
@@ -10081,7 +10056,6 @@ device_drive_ata_smart_initiate_selftest_authorized_cb (Daemon *daemon,
   //gchar       **options = user_data_elements[1];
   int n;
   char *argv[10];
-  GError *error;
   const gchar *job_name;
 
   if (g_strcmp0 (test, "short") == 0)
@@ -10108,7 +10082,6 @@ device_drive_ata_smart_initiate_selftest_authorized_cb (Daemon *daemon,
   argv[n++] = (char *) test;
   argv[n++] = NULL;
 
-  error = NULL;
   if (!job_new (context,
                 job_name,
                 TRUE,
@@ -10208,7 +10181,6 @@ device_linux_md_stop_authorized_cb (Daemon *daemon,
   //gchar       **options = user_data_elements[0];
   int n;
   char *argv[10];
-  GError *error;
 
   n = 0;
   argv[n++] = "mdadm";
@@ -10216,7 +10188,6 @@ device_linux_md_stop_authorized_cb (Daemon *daemon,
   argv[n++] = device->priv->device_file;
   argv[n++] = NULL;
 
-  error = NULL;
   if (!job_new (context, "LinuxMdStop", TRUE, device, argv, NULL, linux_md_stop_completed_cb, FALSE, NULL, NULL))
     {
       goto out;
@@ -10297,12 +10268,9 @@ device_linux_md_check_authorized_cb (Daemon *daemon,
                                      gpointer *user_data_elements)
 {
   gchar **options = user_data_elements[0];
-  gchar *filename;
   int n, m;
   char *argv[128];
   const gchar *job_name;
-
-  filename = NULL;
 
   if (!device->priv->device_is_linux_md)
     {
@@ -10843,7 +10811,6 @@ device_linux_md_remove_component_authorized_cb (Daemon *daemon,
   char **options = user_data_elements[1];
   int n, m;
   char *argv[128];
-  GError *error;
   Device *slave;
 
   slave = daemon_local_find_by_object_path (device->priv->daemon, component);
@@ -10881,7 +10848,6 @@ device_linux_md_remove_component_authorized_cb (Daemon *daemon,
     }
   argv[n++] = NULL;
 
-  error = NULL;
   if (!job_new (context,
                 "LinuxMdRemoveComponent",
                 TRUE,

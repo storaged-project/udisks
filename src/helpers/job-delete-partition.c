@@ -47,7 +47,6 @@ main (int argc,
 {
   int ret;
   const char *device;
-  const char *partition_device;
   char **options;
   int n;
   guint64 offset;
@@ -63,7 +62,6 @@ main (int argc,
       goto out;
     }
   device = argv[1];
-  partition_device = argv[2];
   offset = strtoll (argv[3], &endp, 10);
   if (*endp != '\0')
     {
