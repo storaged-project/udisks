@@ -93,30 +93,6 @@ udisks_daemon_LDADD = 					\
 
 # ----------------------------------------------------------------------------------------------------
 
-polkitmodulesdir = $(libdir)/polkit-1/extensions
-polkitmodules_LTLIBRARIES = libudisks-action-lookup.la
-
-libudisks_action_lookup_la_SOURCES =                    		\
-	polkit-action-lookup.c                             		\
-        $(NULL)
-
-libudisks_action_lookup_la_CFLAGS =                        		\
-        -DPOLKIT_BACKEND_I_KNOW_API_IS_SUBJECT_TO_CHANGE                \
-        -DG_LOG_DOMAIN=\"UDisks-Action-Lookup\"            		\
-	$(POLKIT_BACKEND_1_CFLAGS) 					\
-        $(NULL)
-
-libudisks_action_lookup_la_LDFLAGS =                       		\
-	-export_dynamic -avoid-version -module -no-undefined 		\
-	-export-symbols-regex '^g_io_module_(load|unload)' 		\
-	$(POLKIT_BACKEND_1_LIBS) 					\
-        $(NULL)
-
-libudisks_action_lookup_la_LIBADD =                 			\
-        $(NULL)
-
-# ----------------------------------------------------------------------------------------------------
-
 CLEANFILES = $(BUILT_SOURCES)
 
 EXTRA_DIST = 						\

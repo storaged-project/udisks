@@ -2259,63 +2259,7 @@ daemon_local_check_auth (Daemon *daemon,
   else if (action_id != NULL)
     {
       PolkitSubject *subject;
-      PolkitDetails *details;
       PolkitCheckAuthorizationFlags flags;
-      gchar partition_number_buf[32];
-
-      /* Set details - see polkit-action-lookup.c for where
-       * these key/value pairs are used
-       */
-      details = polkit_details_new ();
-      if (operation != NULL)
-        {
-          polkit_details_insert (details, "operation", (gpointer) operation);
-        }
-      if (device != NULL)
-        {
-          Device *drive;
-
-          polkit_details_insert (details, "unix-device", device->priv->device_file);
-          if (device->priv->device_file_by_id->len > 0)
-            polkit_details_insert (details, "unix-device-by-id", device->priv->device_file_by_id->pdata[0]);
-          if (device->priv->device_file_by_path->len > 0)
-            polkit_details_insert (details, "unix-device-by-path", device->priv->device_file_by_path->pdata[0]);
-
-          if (device->priv->device_is_drive)
-            {
-              drive = device;
-            }
-          else if (device->priv->device_is_partition)
-            {
-              polkit_details_insert (details, "is-partition", "1");
-              g_snprintf (partition_number_buf, sizeof partition_number_buf, "%d", device->priv->partition_number);
-              polkit_details_insert (details, "partition-number", partition_number_buf);
-              drive = daemon_local_find_by_object_path (device->priv->daemon, device->priv->partition_slave);
-            }
-          else
-            {
-              drive = NULL;
-            }
-
-          if (drive != NULL)
-            {
-              polkit_details_insert (details, "drive-unix-device", drive->priv->device_file);
-              if (drive->priv->device_file_by_id->len > 0)
-                polkit_details_insert (details, "drive-unix-device-by-id", drive->priv->device_file_by_id->pdata[0]);
-              if (drive->priv->device_file_by_path->len > 0)
-                polkit_details_insert (details, "drive-unix-device-by-path", drive->priv->device_file_by_path->pdata[0]);
-              if (drive->priv->drive_vendor != NULL)
-                polkit_details_insert (details, "drive-vendor", drive->priv->drive_vendor);
-              if (drive->priv->drive_model != NULL)
-                polkit_details_insert (details, "drive-model", drive->priv->drive_model);
-              if (drive->priv->drive_revision != NULL)
-                polkit_details_insert (details, "drive-revision", drive->priv->drive_revision);
-              if (drive->priv->drive_serial != NULL)
-                polkit_details_insert (details, "drive-serial", drive->priv->drive_serial);
-              if (drive->priv->drive_connection_interface != NULL)
-                polkit_details_insert (details, "drive-connection-interface", drive->priv->drive_connection_interface);
-            }
-        }
 
       subject = polkit_system_bus_name_new (dbus_g_method_get_sender (context));
 
@@ -2328,14 +2272,13 @@ daemon_local_check_auth (Daemon *daemon,
       polkit_authority_check_authorization (daemon->priv->authority,
                                             subject,
                                             action_id,
-                                            details,
+                                            NULL, /* PolkitDetails */
                                             flags,
                                             data->cancellable,
                                             (GAsyncReadyCallback) lca_check_authorization_callback,
                                             data);
 
       g_object_unref (subject);
-      g_object_unref (details);
     }
   else
     {
