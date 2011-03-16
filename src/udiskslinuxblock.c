@@ -54,7 +54,7 @@ typedef struct _UDisksLinuxBlockClass   UDisksLinuxBlockClass;
  */
 struct _UDisksLinuxBlock
 {
-  GDBusObject parent_instance;
+  GDBusObjectStub parent_instance;
 
   UDisksDaemon *daemon;
   UDisksMountMonitor *mount_monitor;
@@ -68,7 +68,7 @@ struct _UDisksLinuxBlock
 
 struct _UDisksLinuxBlockClass
 {
-  GDBusObjectClass parent_class;
+  GDBusObjectStubClass parent_class;
 };
 
 enum
@@ -78,7 +78,7 @@ enum
   PROP_DEVICE
 };
 
-G_DEFINE_TYPE (UDisksLinuxBlock, udisks_linux_block, G_TYPE_DBUS_OBJECT);
+G_DEFINE_TYPE (UDisksLinuxBlock, udisks_linux_block, G_TYPE_DBUS_OBJECT_STUB);
 
 static void on_mount_monitor_mount_added   (UDisksMountMonitor  *monitor,
                                             UDisksMount         *mount,
@@ -186,7 +186,7 @@ udisks_linux_block_constructed (GObject *object)
   /* compute the object path */
   str = g_string_new ("/org/freedesktop/UDisks2/block_devices/");
   udisks_safe_append_to_object_path (str, g_udev_device_get_name (block->device));
-  g_dbus_object_set_object_path (G_DBUS_OBJECT (block), str->str);
+  g_dbus_object_stub_set_object_path (G_DBUS_OBJECT_STUB (block), str->str);
   g_string_free (str, TRUE);
 
   if (G_OBJECT_CLASS (udisks_linux_block_parent_class)->constructed != NULL)
@@ -336,7 +336,7 @@ update_iface (UDisksLinuxBlock           *block,
     {
       if (!has)
         {
-          g_dbus_object_remove_interface (G_DBUS_OBJECT (block), G_DBUS_INTERFACE (*interface_pointer));
+          g_dbus_object_stub_remove_interface (G_DBUS_OBJECT_STUB (block), G_DBUS_INTERFACE_STUB (*interface_pointer));
           g_object_unref (*interface_pointer);
           *interface_pointer = NULL;
         }
@@ -346,7 +346,7 @@ update_iface (UDisksLinuxBlock           *block,
     {
       update_func (block, uevent_action, G_DBUS_INTERFACE (*interface_pointer));
       if (add)
-        g_dbus_object_add_interface (G_DBUS_OBJECT (block), G_DBUS_INTERFACE (*interface_pointer));
+        g_dbus_object_stub_add_interface (G_DBUS_OBJECT_STUB (block), G_DBUS_INTERFACE_STUB (*interface_pointer));
     }
 }
 
@@ -412,7 +412,7 @@ find_lun (GDBusObjectManager *object_manager,
   objects = g_dbus_object_manager_get_all (object_manager);
   for (l = objects; l != NULL; l = l->next)
     {
-      GDBusObject *object = G_DBUS_OBJECT (l->data);
+      GDBusObjectStub *object = G_DBUS_OBJECT_STUB (l->data);
       UDisksLinuxLun *lun;
       GList *lun_devices;
       GList *j;
@@ -431,7 +431,7 @@ find_lun (GDBusObjectManager *object_manager,
           lun_sysfs_path = g_udev_device_get_sysfs_path (lun_device);
           if (g_str_has_prefix (block_device_sysfs_path, lun_sysfs_path))
             {
-              ret = g_dbus_object_get_object_path (object);
+              ret = g_strdup (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
               g_list_foreach (lun_devices, (GFunc) g_object_unref, NULL);
               g_list_free (lun_devices);
               goto out;
@@ -460,7 +460,7 @@ find_block_device_by_sysfs_path (GDBusObjectManager *object_manager,
   objects = g_dbus_object_manager_get_all (object_manager);
   for (l = objects; l != NULL; l = l->next)
     {
-      GDBusObject *object = G_DBUS_OBJECT (l->data);
+      GDBusObjectStub *object = G_DBUS_OBJECT_STUB (l->data);
       UDisksLinuxBlock *block;
 
       if (!UDISKS_IS_LINUX_BLOCK (object))
@@ -470,7 +470,7 @@ find_block_device_by_sysfs_path (GDBusObjectManager *object_manager,
 
       if (g_strcmp0 (sysfs_path, g_udev_device_get_sysfs_path (block->device)) == 0)
         {
-          ret = g_dbus_object_get_object_path (object);
+          ret = g_strdup (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
           goto out;
         }
     }
@@ -1470,7 +1470,7 @@ handle_mount (UDisksBlockDevice      *block,
               const gchar            *requested_fs_type,
               const gchar* const     *requested_options)
 {
-  GDBusObject *object;
+  GDBusObjectStub *object;
   UDisksDaemon *daemon;
   UDisksPersistentStore *store;
   uid_t caller_uid;
@@ -1505,7 +1505,7 @@ handle_mount (UDisksBlockDevice      *block,
   auth_result = NULL;
   auth_no_user_interaction = FALSE;
 
-  object = g_dbus_interface_get_object (G_DBUS_INTERFACE (block));
+  object = G_DBUS_OBJECT_STUB (g_dbus_interface_get_object (G_DBUS_INTERFACE (block)));
   daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
   store = udisks_daemon_get_persistent_store (daemon);
 
@@ -1742,8 +1742,6 @@ handle_mount (UDisksBlockDevice      *block,
   g_free (fs_type_to_use);
   g_free (mount_options_to_use);
   g_free (mount_point_to_use);
-  if (object != NULL)
-    g_object_unref (object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -1962,7 +1960,6 @@ handle_unmount (UDisksBlockDevice      *block,
   g_free (error_message);
   g_free (escaped_mount_point);
   g_free (mount_point);
-  g_object_unref (object);
   return TRUE;
 }
 
@@ -2139,8 +2136,6 @@ handle_set_label (UDisksBlockDevice      *block,
     g_object_unref (auth_details);
   if (auth_result != NULL)
     g_object_unref (auth_result);
-  if (object != NULL)
-    g_object_unref (object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }

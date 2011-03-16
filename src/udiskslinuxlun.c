@@ -44,7 +44,7 @@ typedef struct _UDisksLinuxLunClass   UDisksLinuxLunClass;
  */
 struct _UDisksLinuxLun
 {
-  GDBusObject parent_instance;
+  GDBusObjectStub parent_instance;
 
   UDisksDaemon *daemon;
 
@@ -57,7 +57,7 @@ struct _UDisksLinuxLun
 
 struct _UDisksLinuxLunClass
 {
-  GDBusObjectClass parent_class;
+  GDBusObjectStubClass parent_class;
 };
 
 enum
@@ -67,7 +67,7 @@ enum
   PROP_DEVICE
 };
 
-G_DEFINE_TYPE (UDisksLinuxLun, udisks_linux_lun, G_TYPE_DBUS_OBJECT);
+G_DEFINE_TYPE (UDisksLinuxLun, udisks_linux_lun, G_TYPE_DBUS_OBJECT_STUB);
 
 static void
 udisks_linux_lun_finalize (GObject *object)
@@ -245,7 +245,7 @@ udisks_linux_lun_constructed (GObject *object)
   g_free (vendor);
   g_free (model);
   g_free (serial);
-  g_dbus_object_set_object_path (G_DBUS_OBJECT (lun), str->str);
+  g_dbus_object_stub_set_object_path (G_DBUS_OBJECT_STUB (lun), str->str);
   g_string_free (str, TRUE);
 
   if (G_OBJECT_CLASS (udisks_linux_lun_parent_class)->constructed != NULL)
@@ -402,7 +402,7 @@ update_iface (UDisksLinuxLun           *lun,
     {
       if (!has)
         {
-          g_dbus_object_remove_interface (G_DBUS_OBJECT (lun), G_DBUS_INTERFACE (*interface_pointer));
+          g_dbus_object_stub_remove_interface (G_DBUS_OBJECT_STUB (lun), G_DBUS_INTERFACE_STUB (*interface_pointer));
           g_object_unref (*interface_pointer);
           *interface_pointer = NULL;
         }
@@ -412,7 +412,7 @@ update_iface (UDisksLinuxLun           *lun,
     {
       update_func (lun, uevent_action, G_DBUS_INTERFACE (*interface_pointer));
       if (add)
-        g_dbus_object_add_interface (G_DBUS_OBJECT (lun), G_DBUS_INTERFACE (*interface_pointer));
+        g_dbus_object_stub_add_interface (G_DBUS_OBJECT_STUB (lun), G_DBUS_INTERFACE_STUB (*interface_pointer));
     }
 }
 

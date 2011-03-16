@@ -345,15 +345,15 @@ print_interface_properties (GDBusProxy *proxy,
 }
 
 static void
-print_object (GDBusObjectProxy *proxy,
-              guint             indent)
+print_object (GDBusObject *object,
+              guint        indent)
 {
   GList *interface_proxies;
   GList *l;
 
-  g_return_if_fail (G_IS_DBUS_OBJECT_PROXY (proxy));
+  g_return_if_fail (G_IS_DBUS_OBJECT (object));
 
-  interface_proxies = g_dbus_object_proxy_get_all (proxy);
+  interface_proxies = g_dbus_object_get_interfaces (object);
 
   /* We want to print the interfaces in order */
   interface_proxies = g_list_sort (interface_proxies, (GCompareFunc) if_proxy_cmp);
@@ -372,35 +372,35 @@ print_object (GDBusObjectProxy *proxy,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static GDBusObjectProxy *
-lookup_object_proxy_by_path (const gchar *path)
+static GDBusObject *
+lookup_object_by_path (const gchar *path)
 {
-  GDBusObjectProxy *ret;
+  GDBusObject *ret;
   gchar *s;
 
   s = g_strdup_printf ("/org/freedesktop/UDisks2/%s", path);
-  ret = g_dbus_proxy_manager_lookup (manager, s);
+  ret = g_dbus_proxy_manager_get_object (manager, s);
   g_free (s);
 
   return ret;
 }
 
-static GDBusObjectProxy *
-lookup_object_proxy_by_device (const gchar *device)
+static GDBusObject *
+lookup_object_by_device (const gchar *device)
 {
-  GDBusObjectProxy *ret;
-  GList *object_proxies;
+  GDBusObject *ret;
+  GList *objects;
   GList *l;
 
   ret = NULL;
 
-  object_proxies = g_dbus_proxy_manager_get_all (manager);
-  for (l = object_proxies; l != NULL; l = l->next)
+  objects = g_dbus_proxy_manager_get_objects (manager);
+  for (l = objects; l != NULL; l = l->next)
     {
-      GDBusObjectProxy *object_proxy = G_DBUS_OBJECT_PROXY (l->data);
+      GDBusObject *object = G_DBUS_OBJECT (l->data);
       UDisksBlockDevice *block;
 
-      block = UDISKS_PEEK_BLOCK_DEVICE (object_proxy);
+      block = UDISKS_PEEK_BLOCK_DEVICE (object);
       if (block != NULL)
         {
           const gchar * const *symlinks;
@@ -408,7 +408,7 @@ lookup_object_proxy_by_device (const gchar *device)
 
           if (g_strcmp0 (udisks_block_device_get_device (block), device) == 0)
             {
-              ret = g_object_ref (object_proxy);
+              ret = g_object_ref (object);
               goto out;
             }
 
@@ -417,7 +417,7 @@ lookup_object_proxy_by_device (const gchar *device)
             {
               if (g_strcmp0 (symlinks[n], device) == 0)
                 {
-                  ret = g_object_ref (object_proxy);
+                  ret = g_object_ref (object);
                   goto out;
                 }
             }
@@ -425,17 +425,17 @@ lookup_object_proxy_by_device (const gchar *device)
     }
 
  out:
-  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-  g_list_free (object_proxies);
+  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+  g_list_free (objects);
 
   return ret;
 }
 
-static GDBusObjectProxy *
-lookup_object_proxy_by_lun (const gchar *lun)
+static GDBusObject *
+lookup_object_by_lun (const gchar *lun)
 {
-  GDBusObjectProxy *ret;
-  GList *object_proxies;
+  GDBusObject *ret;
+  GList *objects;
   GList *l;
   gchar *full_lun_object_path;
 
@@ -443,26 +443,26 @@ lookup_object_proxy_by_lun (const gchar *lun)
 
   full_lun_object_path = g_strdup_printf ("/org/freedesktop/UDisks2/LUNs/%s", lun);
 
-  object_proxies = g_dbus_proxy_manager_get_all (manager);
-  for (l = object_proxies; l != NULL; l = l->next)
+  objects = g_dbus_proxy_manager_get_objects (manager);
+  for (l = objects; l != NULL; l = l->next)
     {
-      GDBusObjectProxy *object_proxy = G_DBUS_OBJECT_PROXY (l->data);
+      GDBusObject *object = G_DBUS_OBJECT (l->data);
       UDisksLun *lun;
 
-      if (g_strcmp0 (g_dbus_object_proxy_get_object_path (object_proxy), full_lun_object_path) != 0)
+      if (g_strcmp0 (g_dbus_object_get_object_path (object), full_lun_object_path) != 0)
         continue;
 
-      lun = UDISKS_PEEK_LUN (object_proxy);
+      lun = UDISKS_PEEK_LUN (object);
       if (lun != NULL)
         {
-          ret = g_object_ref (object_proxy);
+          ret = g_object_ref (object);
           goto out;
         }
     }
 
  out:
-  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-  g_list_free (object_proxies);
+  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+  g_list_free (objects);
   g_free (full_lun_object_path);
 
   return ret;
@@ -568,8 +568,8 @@ handle_command_mount_unmount (gint        *argc,
   gboolean complete_objects;
   gboolean complete_devices;
   GList *l;
-  GList *object_proxies;
-  GDBusObjectProxy *object_proxy;
+  GList *objects;
+  GDBusObject *object;
   UDisksBlockDevice *block;
   guint n;
   const gchar * const *mount_points;
@@ -579,7 +579,7 @@ handle_command_mount_unmount (gint        *argc,
   opt_mount_unmount_device = NULL;
   opt_mount_unmount_options = NULL;
   opt_mount_filesystem_type = NULL;
-  object_proxy = NULL;
+  object = NULL;
 
   if (is_mount)
     modify_argv0_for_command (argc, argv, "mount");
@@ -635,13 +635,13 @@ handle_command_mount_unmount (gint        *argc,
     {
       const gchar *object_path;
 
-      object_proxies = g_dbus_proxy_manager_get_all (manager);
-      for (l = object_proxies; l != NULL; l = l->next)
+      objects = g_dbus_proxy_manager_get_objects (manager);
+      for (l = objects; l != NULL; l = l->next)
         {
           gboolean is_mounted;
 
-          object_proxy = G_DBUS_OBJECT_PROXY (l->data);
-          block = UDISKS_PEEK_BLOCK_DEVICE (object_proxy);
+          object = G_DBUS_OBJECT (l->data);
+          block = UDISKS_PEEK_BLOCK_DEVICE (object);
 
           if (block == NULL)
             continue;
@@ -653,23 +653,23 @@ handle_command_mount_unmount (gint        *argc,
 
           if ((is_mount && !is_mounted) || (!is_mount && is_mounted))
             {
-              object_path = g_dbus_object_proxy_get_object_path (object_proxy);
+              object_path = g_dbus_object_get_object_path (object);
               g_assert (g_str_has_prefix (object_path, "/org/freedesktop/UDisks2/"));
               g_print ("%s \n", object_path + sizeof ("/org/freedesktop/UDisks2/") - 1);
             }
         }
-      g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-      g_list_free (object_proxies);
+      g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+      g_list_free (objects);
       goto out;
     }
 
   if (complete_devices)
     {
-      object_proxies = g_dbus_proxy_manager_get_all (manager);
-      for (l = object_proxies; l != NULL; l = l->next)
+      objects = g_dbus_proxy_manager_get_objects (manager);
+      for (l = objects; l != NULL; l = l->next)
         {
-          object_proxy = G_DBUS_OBJECT_PROXY (l->data);
-          block = UDISKS_PEEK_BLOCK_DEVICE (object_proxy);
+          object = G_DBUS_OBJECT (l->data);
+          block = UDISKS_PEEK_BLOCK_DEVICE (object);
 
           if (block != NULL)
             {
@@ -690,8 +690,8 @@ handle_command_mount_unmount (gint        *argc,
                 }
             }
         }
-      g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-      g_list_free (object_proxies);
+      g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+      g_list_free (objects);
       goto out;
     }
 
@@ -701,8 +701,8 @@ handle_command_mount_unmount (gint        *argc,
 
   if (opt_mount_unmount_object_path != NULL)
     {
-      object_proxy = lookup_object_proxy_by_path (opt_mount_unmount_object_path);
-      if (object_proxy == NULL)
+      object = lookup_object_by_path (opt_mount_unmount_object_path);
+      if (object == NULL)
         {
           g_printerr ("Error looking up object with path %s\n", opt_mount_unmount_object_path);
           goto out;
@@ -710,8 +710,8 @@ handle_command_mount_unmount (gint        *argc,
     }
   else if (opt_mount_unmount_device != NULL)
     {
-      object_proxy = lookup_object_proxy_by_device (opt_mount_unmount_device);
-      if (object_proxy == NULL)
+      object = lookup_object_by_device (opt_mount_unmount_device);
+      if (object == NULL)
         {
           g_printerr ("Error looking up object for device %s\n", opt_mount_unmount_device);
           goto out;
@@ -725,11 +725,11 @@ handle_command_mount_unmount (gint        *argc,
       goto out;
     }
 
-  block = UDISKS_PEEK_BLOCK_DEVICE (object_proxy);
+  block = UDISKS_PEEK_BLOCK_DEVICE (object);
   if (block == NULL)
     {
-      g_printerr ("Object %s is not a block device.\n", g_dbus_object_proxy_get_object_path (object_proxy));
-      g_object_unref (object_proxy);
+      g_printerr ("Object %s is not a block device.\n", g_dbus_object_get_object_path (object));
+      g_object_unref (object);
       goto out;
     }
 
@@ -738,7 +738,7 @@ handle_command_mount_unmount (gint        *argc,
       g_strcmp0 (udisks_block_device_get_id_usage (block), "filesystem") != 0)
     {
       g_printerr ("Device %s is not a filesystem.\n", udisks_block_device_get_device (block));
-      g_object_unref (object_proxy);
+      g_object_unref (object);
       goto out;
     }
 
@@ -772,7 +772,7 @@ handle_command_mount_unmount (gint        *argc,
                       udisks_block_device_get_device (block),
                       error->message);
           g_error_free (error);
-          g_object_unref (object_proxy);
+          g_object_unref (object);
           goto out;
         }
       g_print ("Mounted %s at %s.\n",
@@ -801,7 +801,7 @@ handle_command_mount_unmount (gint        *argc,
                       udisks_block_device_get_device (block),
                       error->message);
           g_error_free (error);
-          g_object_unref (object_proxy);
+          g_object_unref (object);
           goto out;
         }
       g_print ("Unmounted %s.\n",
@@ -810,7 +810,7 @@ handle_command_mount_unmount (gint        *argc,
 
   ret = 0;
 
-  g_object_unref (object_proxy);
+  g_object_unref (object);
 
  out:
   g_option_context_free (o);
@@ -849,8 +849,8 @@ handle_command_info (gint        *argc,
   gboolean complete_devices;
   gboolean complete_luns;
   GList *l;
-  GList *object_proxies;
-  GDBusObjectProxy *object_proxy;
+  GList *objects;
+  GDBusObject *object;
   UDisksBlockDevice *block;
   UDisksLun *lun;
   guint n;
@@ -915,27 +915,27 @@ handle_command_info (gint        *argc,
     {
       const gchar *object_path;
 
-      object_proxies = g_dbus_proxy_manager_get_all (manager);
-      for (l = object_proxies; l != NULL; l = l->next)
+      objects = g_dbus_proxy_manager_get_objects (manager);
+      for (l = objects; l != NULL; l = l->next)
         {
-          object_proxy = G_DBUS_OBJECT_PROXY (l->data);
+          object = G_DBUS_OBJECT (l->data);
 
-          object_path = g_dbus_object_proxy_get_object_path (object_proxy);
+          object_path = g_dbus_object_get_object_path (object);
           g_assert (g_str_has_prefix (object_path, "/org/freedesktop/UDisks2/"));
           g_print ("%s \n", object_path + sizeof ("/org/freedesktop/UDisks2/") - 1);
         }
-      g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-      g_list_free (object_proxies);
+      g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+      g_list_free (objects);
       goto out;
     }
 
   if (complete_devices)
     {
-      object_proxies = g_dbus_proxy_manager_get_all (manager);
-      for (l = object_proxies; l != NULL; l = l->next)
+      objects = g_dbus_proxy_manager_get_objects (manager);
+      for (l = objects; l != NULL; l = l->next)
         {
-          object_proxy = G_DBUS_OBJECT_PROXY (l->data);
-          block = UDISKS_PEEK_BLOCK_DEVICE (object_proxy);
+          object = G_DBUS_OBJECT (l->data);
+          block = UDISKS_PEEK_BLOCK_DEVICE (object);
           if (block != NULL)
             {
               const gchar * const *symlinks;
@@ -945,27 +945,27 @@ handle_command_info (gint        *argc,
                 g_print ("%s \n", symlinks[n]);
             }
         }
-      g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-      g_list_free (object_proxies);
+      g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+      g_list_free (objects);
       goto out;
     }
 
   if (complete_luns)
     {
-      object_proxies = g_dbus_proxy_manager_get_all (manager);
-      for (l = object_proxies; l != NULL; l = l->next)
+      objects = g_dbus_proxy_manager_get_objects (manager);
+      for (l = objects; l != NULL; l = l->next)
         {
-          object_proxy = G_DBUS_OBJECT_PROXY (l->data);
-          lun = UDISKS_PEEK_LUN (object_proxy);
+          object = G_DBUS_OBJECT (l->data);
+          lun = UDISKS_PEEK_LUN (object);
           if (lun != NULL)
             {
               const gchar *base;
-              base = g_strrstr (g_dbus_object_proxy_get_object_path (object_proxy), "/") + 1;
+              base = g_strrstr (g_dbus_object_get_object_path (object), "/") + 1;
               g_print ("%s \n", base);
             }
         }
-      g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-      g_list_free (object_proxies);
+      g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+      g_list_free (objects);
       goto out;
     }
 
@@ -976,8 +976,8 @@ handle_command_info (gint        *argc,
 
   if (opt_info_object != NULL)
     {
-      object_proxy = lookup_object_proxy_by_path (opt_info_object);
-      if (object_proxy == NULL)
+      object = lookup_object_by_path (opt_info_object);
+      if (object == NULL)
         {
           g_printerr ("Error looking up object with path %s\n", opt_info_object);
           goto out;
@@ -985,8 +985,8 @@ handle_command_info (gint        *argc,
     }
   else if (opt_info_device != NULL)
     {
-      object_proxy = lookup_object_proxy_by_device (opt_info_device);
-      if (object_proxy == NULL)
+      object = lookup_object_by_device (opt_info_device);
+      if (object == NULL)
         {
           g_printerr ("Error looking up object for device %s\n", opt_info_device);
           goto out;
@@ -994,8 +994,8 @@ handle_command_info (gint        *argc,
     }
   else if (opt_info_lun != NULL)
     {
-      object_proxy = lookup_object_proxy_by_lun (opt_info_lun);
-      if (object_proxy == NULL)
+      object = lookup_object_by_lun (opt_info_lun);
+      if (object == NULL)
         {
           g_printerr ("Error looking up object for LUN %s\n", opt_info_lun);
           goto out;
@@ -1010,9 +1010,9 @@ handle_command_info (gint        *argc,
     }
 
   g_print ("%s%s%s:%s\n",
-           _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_BLUE), g_dbus_object_proxy_get_object_path (object_proxy), _color_get (_COLOR_RESET));
-  print_object (object_proxy, 2);
-  g_object_unref (object_proxy);
+           _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_BLUE), g_dbus_object_get_object_path (object), _color_get (_COLOR_RESET));
+  print_object (object, 2);
+  g_object_unref (object);
 
   ret = 0;
 
@@ -1028,10 +1028,10 @@ handle_command_info (gint        *argc,
 
 
 static gint
-obj_proxy_cmp (GDBusObjectProxy *a,
-               GDBusObjectProxy *b)
+obj_proxy_cmp (GDBusObject *a,
+               GDBusObject *b)
 {
-  return g_strcmp0 (g_dbus_object_proxy_get_object_path (a), g_dbus_object_proxy_get_object_path (b));
+  return g_strcmp0 (g_dbus_object_get_object_path (a), g_dbus_object_get_object_path (b));
 }
 
 
@@ -1050,7 +1050,7 @@ handle_command_dump (gint        *argc,
   gint ret;
   GOptionContext *o;
   GList *l;
-  GList *object_proxies;
+  GList *objects;
   gchar *s;
   gboolean first;
 
@@ -1082,22 +1082,22 @@ handle_command_dump (gint        *argc,
 
   _color_run_pager ();
 
-  object_proxies = g_dbus_proxy_manager_get_all (manager);
+  objects = g_dbus_proxy_manager_get_objects (manager);
   /* We want to print the objects in order */
-  object_proxies = g_list_sort (object_proxies, (GCompareFunc) obj_proxy_cmp);
+  objects = g_list_sort (objects, (GCompareFunc) obj_proxy_cmp);
   first = TRUE;
-  for (l = object_proxies; l != NULL; l = l->next)
+  for (l = objects; l != NULL; l = l->next)
     {
-      GDBusObjectProxy *object_proxy = G_DBUS_OBJECT_PROXY (l->data);
+      GDBusObject *object = G_DBUS_OBJECT (l->data);
       if (!first)
         g_print ("\n");
       first = FALSE;
       g_print ("%s%s%s:%s\n",
-               _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_BLUE), g_dbus_object_proxy_get_object_path (object_proxy), _color_get (_COLOR_RESET));
-      print_object (object_proxy, 2);
+               _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_BLUE), g_dbus_object_get_object_path (object), _color_get (_COLOR_RESET));
+      print_object (object, 2);
     }
-  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-  g_list_free (object_proxies);
+  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+  g_list_free (objects);
 
   ret = 0;
 
@@ -1160,8 +1160,8 @@ monitor_on_notify_name_owner (GObject    *object,
 }
 
 static void
-monitor_on_object_proxy_added (GDBusProxyManager  *manager,
-                               GDBusObjectProxy   *object_proxy,
+monitor_on_object_added (GDBusProxyManager  *manager,
+                               GDBusObject   *object,
                                gpointer            user_data)
 {
   if (!monitor_has_name_owner ())
@@ -1169,16 +1169,16 @@ monitor_on_object_proxy_added (GDBusProxyManager  *manager,
   monitor_print_timestamp ();
   g_print ("%s%sAdded %s%s\n",
            _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_GREEN),
-             g_dbus_object_proxy_get_object_path (object_proxy),
+             g_dbus_object_get_object_path (object),
            _color_get (_COLOR_RESET));
-  print_object (object_proxy, 2);
+  print_object (object, 2);
  out:
   ;
 }
 
 static void
-monitor_on_object_proxy_removed (GDBusProxyManager  *manager,
-                                 GDBusObjectProxy   *object_proxy,
+monitor_on_object_removed (GDBusProxyManager  *manager,
+                                 GDBusObject   *object,
                                  gpointer            user_data)
 {
   if (!monitor_has_name_owner ())
@@ -1186,7 +1186,7 @@ monitor_on_object_proxy_removed (GDBusProxyManager  *manager,
   monitor_print_timestamp ();
   g_print ("%s%sRemoved %s%s\n",
            _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_RED),
-             g_dbus_object_proxy_get_object_path (object_proxy),
+             g_dbus_object_get_object_path (object),
            _color_get (_COLOR_RESET));
  out:
   ;
@@ -1194,7 +1194,7 @@ monitor_on_object_proxy_removed (GDBusProxyManager  *manager,
 
 static void
 monitor_on_interface_proxy_added (GDBusProxyManager  *manager,
-                                  GDBusObjectProxy   *object_proxy,
+                                  GDBusObject   *object,
                                   GDBusProxy         *interface_proxy,
                                   gpointer            user_data)
 {
@@ -1203,7 +1203,7 @@ monitor_on_interface_proxy_added (GDBusProxyManager  *manager,
   monitor_print_timestamp ();
   g_print ("%s%s%s:%s %s%sAdded interface %s%s\n",
            _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_BLUE),
-             g_dbus_object_proxy_get_object_path (object_proxy),
+             g_dbus_object_get_object_path (object),
            _color_get (_COLOR_RESET),
            _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_GREEN),
              g_dbus_proxy_get_interface_name (interface_proxy),
@@ -1216,7 +1216,7 @@ monitor_on_interface_proxy_added (GDBusProxyManager  *manager,
 
 static void
 monitor_on_interface_proxy_removed (GDBusProxyManager  *manager,
-                                    GDBusObjectProxy   *object_proxy,
+                                    GDBusObject   *object,
                                     GDBusProxy         *interface_proxy,
                                     gpointer            user_data)
 {
@@ -1225,7 +1225,7 @@ monitor_on_interface_proxy_removed (GDBusProxyManager  *manager,
   monitor_print_timestamp ();
   g_print ("%s%s%s:%s %s%sRemoved interface %s%s\n",
            _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_BLUE),
-             g_dbus_object_proxy_get_object_path (object_proxy),
+             g_dbus_object_get_object_path (object),
            _color_get (_COLOR_RESET),
            _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_RED),
              g_dbus_proxy_get_interface_name (interface_proxy),
@@ -1236,7 +1236,7 @@ monitor_on_interface_proxy_removed (GDBusProxyManager  *manager,
 
 static void
 monitor_on_interface_proxy_properties_changed (GDBusProxyManager  *manager,
-                                               GDBusObjectProxy   *object_proxy,
+                                               GDBusObject   *object,
                                                GDBusProxy         *interface_proxy,
                                                GVariant           *changed_properties,
                                                const gchar* const *invalidated_properties,
@@ -1255,7 +1255,7 @@ monitor_on_interface_proxy_properties_changed (GDBusProxyManager  *manager,
 
   g_print ("%s%s%s:%s %s%s%s:%s %s%sProperties Changed%s\n",
            _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_BLUE),
-             g_dbus_object_proxy_get_object_path (object_proxy),
+             g_dbus_object_get_object_path (object),
            _color_get (_COLOR_RESET),
            _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_MAGENTA),
              g_dbus_proxy_get_interface_name (interface_proxy),
@@ -1310,7 +1310,7 @@ monitor_on_interface_proxy_properties_changed (GDBusProxyManager  *manager,
 
 static void
 monitor_on_interface_proxy_signal (GDBusProxyManager  *manager,
-                                   GDBusObjectProxy   *object_proxy,
+                                   GDBusObject   *object,
                                    GDBusProxy         *interface_proxy,
                                    const gchar        *sender_name,
                                    const gchar        *signal_name,
@@ -1326,7 +1326,7 @@ monitor_on_interface_proxy_signal (GDBusProxyManager  *manager,
 
   g_print ("%s%s%s:%s %s%s%s%s%s%s::%s%s %s%s%s%s\n",
            _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_BLUE),
-             g_dbus_object_proxy_get_object_path (object_proxy),
+             g_dbus_object_get_object_path (object),
            _color_get (_COLOR_RESET),
            _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_MAGENTA),
              g_dbus_proxy_get_interface_name (interface_proxy),
@@ -1394,11 +1394,11 @@ handle_command_monitor (gint        *argc,
 
   g_signal_connect (manager,
                     "object-proxy-added",
-                    G_CALLBACK (monitor_on_object_proxy_added),
+                    G_CALLBACK (monitor_on_object_added),
                     NULL);
   g_signal_connect (manager,
                     "object-proxy-removed",
-                    G_CALLBACK (monitor_on_object_proxy_removed),
+                    G_CALLBACK (monitor_on_object_removed),
                     NULL);
   g_signal_connect (manager,
                     "interface-proxy-added",
@@ -1431,19 +1431,19 @@ handle_command_monitor (gint        *argc,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static GList *
-find_block_devices_for_lun (GList       *object_proxies,
+find_block_devices_for_lun (GList       *objects,
                             const gchar *lun_object_path)
 {
   GList *ret;
   GList *l;
 
   ret = NULL;
-  for (l = object_proxies; l != NULL; l = l->next)
+  for (l = objects; l != NULL; l = l->next)
     {
-      GDBusObjectProxy *object_proxy = G_DBUS_OBJECT_PROXY (l->data);
+      GDBusObject *object = G_DBUS_OBJECT (l->data);
       UDisksBlockDevice *block;
 
-      block = UDISKS_GET_BLOCK_DEVICE (object_proxy);
+      block = UDISKS_GET_BLOCK_DEVICE (object);
       if (block == NULL)
         continue;
 
@@ -1500,7 +1500,7 @@ handle_command_status (gint        *argc,
   GOptionContext *o;
   gchar *s;
   GList *l;
-  GList *object_proxies;
+  GList *objects;
 
   ret = 1;
 
@@ -1528,7 +1528,7 @@ handle_command_status (gint        *argc,
   if (request_completion)
     goto out;
 
-  object_proxies = g_dbus_proxy_manager_get_all (manager);
+  objects = g_dbus_proxy_manager_get_objects (manager);
 
   /* print all LUNs
    *
@@ -1545,10 +1545,10 @@ handle_command_status (gint        *argc,
          /* 01234567890123456789012345678901234567890123456789012345678901234567890123456789 */
 
   /* TODO: sort */
-  object_proxies = g_list_sort (object_proxies, (GCompareFunc) obj_proxy_cmp);
-  for (l = object_proxies; l != NULL; l = l->next)
+  objects = g_list_sort (objects, (GCompareFunc) obj_proxy_cmp);
+  for (l = objects; l != NULL; l = l->next)
     {
-      GDBusObjectProxy *object_proxy = G_DBUS_OBJECT_PROXY (l->data);
+      GDBusObject *object = G_DBUS_OBJECT (l->data);
       UDisksLun *lun;
       GList *block_devices;
       const gchar *vendor;
@@ -1560,12 +1560,12 @@ handle_command_status (gint        *argc,
       gchar *block_device;
       GList *j;
 
-      lun = UDISKS_PEEK_LUN (object_proxy);
+      lun = UDISKS_PEEK_LUN (object);
       if (lun == NULL)
         continue;
 
       str = g_string_new (NULL);
-      block_devices = find_block_devices_for_lun (object_proxies, g_dbus_object_proxy_get_object_path (object_proxy));
+      block_devices = find_block_devices_for_lun (objects, g_dbus_object_get_object_path (object));
       for (j = block_devices; j != NULL; j = j->next)
         {
           UDisksBlockDevice *block = UDISKS_BLOCK_DEVICE (j->data);
@@ -1616,8 +1616,8 @@ handle_command_status (gint        *argc,
     }
 
 
-  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-  g_list_free (object_proxies);
+  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+  g_list_free (objects);
 
   ret = 0;
 

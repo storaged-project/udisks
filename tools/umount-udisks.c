@@ -39,13 +39,13 @@ lookup_object_proxy_by_block_device_file (GDBusProxyManager *manager,
                                           const gchar       *block_device_file)
 {
   GDBusObjectProxy *ret;
-  GList *object_proxies;
+  GList *objects;
   GList *l;
 
   ret = NULL;
 
-  object_proxies = g_dbus_proxy_manager_get_all (manager);
-  for (l = object_proxies; l != NULL; l = l->next)
+  objects = g_dbus_proxy_manager_get_objects (manager);
+  for (l = objects; l != NULL; l = l->next)
     {
       GDBusObjectProxy *object_proxy = G_DBUS_OBJECT_PROXY (l->data);
       UDisksBlockDevice *block;
@@ -75,8 +75,8 @@ lookup_object_proxy_by_block_device_file (GDBusProxyManager *manager,
     }
 
  out:
-  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
-  g_list_free (object_proxies);
+  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+  g_list_free (objects);
 
   return ret;
 }
