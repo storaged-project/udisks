@@ -397,8 +397,8 @@ block_device_connect (UDisksLinuxBlock *block)
 }
 
 static gchar *
-find_lun (GDBusObjectManager *object_manager,
-          GUdevDevice        *block_device)
+find_lun (GDBusObjectManagerServer *object_manager,
+          GUdevDevice              *block_device)
 {
   const gchar *block_device_sysfs_path;
   gchar *ret;
@@ -409,7 +409,7 @@ find_lun (GDBusObjectManager *object_manager,
 
   block_device_sysfs_path = g_udev_device_get_sysfs_path (block_device);
 
-  objects = g_dbus_object_manager_get_all (object_manager);
+  objects = g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (object_manager));
   for (l = objects; l != NULL; l = l->next)
     {
       GDBusObjectStub *object = G_DBUS_OBJECT_STUB (l->data);
@@ -448,8 +448,8 @@ find_lun (GDBusObjectManager *object_manager,
 }
 
 static gchar *
-find_block_device_by_sysfs_path (GDBusObjectManager *object_manager,
-                                 const gchar        *sysfs_path)
+find_block_device_by_sysfs_path (GDBusObjectManagerServer *object_manager,
+                                 const gchar              *sysfs_path)
 {
   gchar *ret;
   GList *objects;
@@ -457,7 +457,7 @@ find_block_device_by_sysfs_path (GDBusObjectManager *object_manager,
 
   ret = NULL;
 
-  objects = g_dbus_object_manager_get_all (object_manager);
+  objects = g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (object_manager));
   for (l = objects; l != NULL; l = l->next)
     {
       GDBusObjectStub *object = G_DBUS_OBJECT_STUB (l->data);
@@ -508,7 +508,7 @@ block_device_update (UDisksLinuxBlock      *block,
 {
   UDisksBlockDevice *iface = UDISKS_BLOCK_DEVICE (_iface);
   GUdevDeviceNumber dev;
-  GDBusObjectManager *object_manager;
+  GDBusObjectManagerServer *object_manager;
   gchar *lun_object_path;
   gchar *s;
   GList *mounts;

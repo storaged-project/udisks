@@ -34,11 +34,7 @@
 #define POLKIT_AGENT_I_KNOW_API_IS_SUBJECT_TO_CHANGE
 #include <polkitagent/polkitagent.h>
 
-/* TODO: Temporary include */
-#include <gdbusproxymanager.h>
-
 static UDisksClient *client = NULL;
-static GDBusProxyManager *manager = NULL;
 static GMainLoop *loop = NULL;
 
 /* Uncomment to get debug traces in /tmp/udisksctl-completion-debug.txt - use tail(1) to
@@ -379,7 +375,7 @@ lookup_object_by_path (const gchar *path)
   gchar *s;
 
   s = g_strdup_printf ("/org/freedesktop/UDisks2/%s", path);
-  ret = g_dbus_proxy_manager_get_object (manager, s);
+  ret = g_dbus_object_manager_get_object (udisks_client_get_object_manager (client), s);
   g_free (s);
 
   return ret;
@@ -394,7 +390,7 @@ lookup_object_by_device (const gchar *device)
 
   ret = NULL;
 
-  objects = g_dbus_proxy_manager_get_objects (manager);
+  objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
   for (l = objects; l != NULL; l = l->next)
     {
       GDBusObject *object = G_DBUS_OBJECT (l->data);
@@ -443,7 +439,7 @@ lookup_object_by_lun (const gchar *lun)
 
   full_lun_object_path = g_strdup_printf ("/org/freedesktop/UDisks2/LUNs/%s", lun);
 
-  objects = g_dbus_proxy_manager_get_objects (manager);
+  objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
   for (l = objects; l != NULL; l = l->next)
     {
       GDBusObject *object = G_DBUS_OBJECT (l->data);
@@ -635,7 +631,7 @@ handle_command_mount_unmount (gint        *argc,
     {
       const gchar *object_path;
 
-      objects = g_dbus_proxy_manager_get_objects (manager);
+      objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
       for (l = objects; l != NULL; l = l->next)
         {
           gboolean is_mounted;
@@ -665,7 +661,7 @@ handle_command_mount_unmount (gint        *argc,
 
   if (complete_devices)
     {
-      objects = g_dbus_proxy_manager_get_objects (manager);
+      objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
       for (l = objects; l != NULL; l = l->next)
         {
           object = G_DBUS_OBJECT (l->data);
@@ -915,7 +911,7 @@ handle_command_info (gint        *argc,
     {
       const gchar *object_path;
 
-      objects = g_dbus_proxy_manager_get_objects (manager);
+      objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
       for (l = objects; l != NULL; l = l->next)
         {
           object = G_DBUS_OBJECT (l->data);
@@ -931,7 +927,7 @@ handle_command_info (gint        *argc,
 
   if (complete_devices)
     {
-      objects = g_dbus_proxy_manager_get_objects (manager);
+      objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
       for (l = objects; l != NULL; l = l->next)
         {
           object = G_DBUS_OBJECT (l->data);
@@ -952,7 +948,7 @@ handle_command_info (gint        *argc,
 
   if (complete_luns)
     {
-      objects = g_dbus_proxy_manager_get_objects (manager);
+      objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
       for (l = objects; l != NULL; l = l->next)
         {
           object = G_DBUS_OBJECT (l->data);
@@ -1082,7 +1078,7 @@ handle_command_dump (gint        *argc,
 
   _color_run_pager ();
 
-  objects = g_dbus_proxy_manager_get_objects (manager);
+  objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
   /* We want to print the objects in order */
   objects = g_list_sort (objects, (GCompareFunc) obj_proxy_cmp);
   first = TRUE;
@@ -1132,7 +1128,7 @@ monitor_has_name_owner (void)
 {
   gchar *name_owner;
   gboolean ret;
-  name_owner = g_dbus_proxy_manager_get_name_owner (manager);
+  name_owner = g_dbus_object_manager_client_get_name_owner (G_DBUS_OBJECT_MANAGER_CLIENT (udisks_client_get_object_manager (client)));
   ret = (name_owner != NULL);
   g_free (name_owner);
   return ret;
@@ -1142,7 +1138,7 @@ static void
 monitor_print_name_owner (void)
 {
   gchar *name_owner;
-  name_owner = g_dbus_proxy_manager_get_name_owner (manager);
+  name_owner = g_dbus_object_manager_client_get_name_owner (G_DBUS_OBJECT_MANAGER_CLIENT (udisks_client_get_object_manager (client)));
   monitor_print_timestamp ();
   if (name_owner != NULL)
     g_print ("The udisks-daemon is running (name-owner %s).\n", name_owner);
@@ -1160,9 +1156,9 @@ monitor_on_notify_name_owner (GObject    *object,
 }
 
 static void
-monitor_on_object_added (GDBusProxyManager  *manager,
-                               GDBusObject   *object,
-                               gpointer            user_data)
+monitor_on_object_added (GDBusObjectManager  *manager,
+                         GDBusObject         *object,
+                         gpointer             user_data)
 {
   if (!monitor_has_name_owner ())
     goto out;
@@ -1177,9 +1173,9 @@ monitor_on_object_added (GDBusProxyManager  *manager,
 }
 
 static void
-monitor_on_object_removed (GDBusProxyManager  *manager,
-                                 GDBusObject   *object,
-                                 gpointer            user_data)
+monitor_on_object_removed (GDBusObjectManager *manager,
+                           GDBusObject        *object,
+                           gpointer            user_data)
 {
   if (!monitor_has_name_owner ())
     goto out;
@@ -1193,10 +1189,10 @@ monitor_on_object_removed (GDBusProxyManager  *manager,
 }
 
 static void
-monitor_on_interface_proxy_added (GDBusProxyManager  *manager,
-                                  GDBusObject   *object,
-                                  GDBusProxy         *interface_proxy,
-                                  gpointer            user_data)
+monitor_on_interface_proxy_added (GDBusObjectManager  *manager,
+                                  GDBusObject         *object,
+                                  GDBusInterface      *interface,
+                                  gpointer             user_data)
 {
   if (!monitor_has_name_owner ())
     goto out;
@@ -1206,19 +1202,19 @@ monitor_on_interface_proxy_added (GDBusProxyManager  *manager,
              g_dbus_object_get_object_path (object),
            _color_get (_COLOR_RESET),
            _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_GREEN),
-             g_dbus_proxy_get_interface_name (interface_proxy),
+             g_dbus_proxy_get_interface_name (G_DBUS_PROXY (interface)),
            _color_get (_COLOR_RESET));
 
-  print_interface_properties (interface_proxy, 2);
+  print_interface_properties (G_DBUS_PROXY (interface), 2);
  out:
   ;
 }
 
 static void
-monitor_on_interface_proxy_removed (GDBusProxyManager  *manager,
-                                    GDBusObject   *object,
-                                    GDBusProxy         *interface_proxy,
-                                    gpointer            user_data)
+monitor_on_interface_proxy_removed (GDBusObjectManager  *manager,
+                                    GDBusObject         *object,
+                                    GDBusInterface      *interface,
+                                    gpointer             user_data)
 {
   if (!monitor_has_name_owner ())
     goto out;
@@ -1228,19 +1224,19 @@ monitor_on_interface_proxy_removed (GDBusProxyManager  *manager,
              g_dbus_object_get_object_path (object),
            _color_get (_COLOR_RESET),
            _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_RED),
-             g_dbus_proxy_get_interface_name (interface_proxy),
+             g_dbus_proxy_get_interface_name (G_DBUS_PROXY (interface)),
            _color_get (_COLOR_RESET));
  out:
   ;
 }
 
 static void
-monitor_on_interface_proxy_properties_changed (GDBusProxyManager  *manager,
-                                               GDBusObject   *object,
-                                               GDBusProxy         *interface_proxy,
-                                               GVariant           *changed_properties,
-                                               const gchar* const *invalidated_properties,
-                                               gpointer            user_data)
+monitor_on_interface_proxy_properties_changed (GDBusObjectManagerClient *manager,
+                                               GDBusObjectProxy         *object_proxy,
+                                               GDBusProxy               *interface_proxy,
+                                               GVariant                 *changed_properties,
+                                               const gchar* const       *invalidated_properties,
+                                               gpointer                  user_data)
 {
   GVariantIter *iter;
   const gchar *property_name;
@@ -1255,7 +1251,7 @@ monitor_on_interface_proxy_properties_changed (GDBusProxyManager  *manager,
 
   g_print ("%s%s%s:%s %s%s%s:%s %s%sProperties Changed%s\n",
            _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_BLUE),
-             g_dbus_object_get_object_path (object),
+             g_dbus_object_get_object_path (G_DBUS_OBJECT (object_proxy)),
            _color_get (_COLOR_RESET),
            _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_MAGENTA),
              g_dbus_proxy_get_interface_name (interface_proxy),
@@ -1309,13 +1305,13 @@ monitor_on_interface_proxy_properties_changed (GDBusProxyManager  *manager,
 }
 
 static void
-monitor_on_interface_proxy_signal (GDBusProxyManager  *manager,
-                                   GDBusObject   *object,
-                                   GDBusProxy         *interface_proxy,
-                                   const gchar        *sender_name,
-                                   const gchar        *signal_name,
-                                   GVariant           *parameters,
-                                   gpointer            user_data)
+monitor_on_interface_proxy_signal (GDBusObjectManagerClient  *manager,
+                                   GDBusObjectProxy          *object_proxy,
+                                   GDBusProxy                *interface_proxy,
+                                   const gchar               *sender_name,
+                                   const gchar               *signal_name,
+                                   GVariant                  *parameters,
+                                   gpointer                   user_data)
 {
   gchar *param_str;
   if (!monitor_has_name_owner ())
@@ -1326,7 +1322,7 @@ monitor_on_interface_proxy_signal (GDBusProxyManager  *manager,
 
   g_print ("%s%s%s:%s %s%s%s%s%s%s::%s%s %s%s%s%s\n",
            _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_BLUE),
-             g_dbus_object_get_object_path (object),
+           g_dbus_object_get_object_path (G_DBUS_OBJECT (object_proxy)),
            _color_get (_COLOR_RESET),
            _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_MAGENTA),
              g_dbus_proxy_get_interface_name (interface_proxy),
@@ -1358,6 +1354,7 @@ handle_command_monitor (gint        *argc,
   gint ret;
   GOptionContext *o;
   gchar *s;
+  GDBusObjectManager *manager;
 
   ret = 1;
 
@@ -1387,6 +1384,7 @@ handle_command_monitor (gint        *argc,
 
   g_print ("Monitoring the udisks daemon. Press Ctrl+C to exit.\n");
 
+  manager = udisks_client_get_object_manager (client);
   g_signal_connect (manager,
                     "notify::name-owner",
                     G_CALLBACK (monitor_on_notify_name_owner),
@@ -1528,7 +1526,7 @@ handle_command_status (gint        *argc,
   if (request_completion)
     goto out;
 
-  objects = g_dbus_proxy_manager_get_objects (manager);
+  objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
 
   /* print all LUNs
    *
@@ -1752,7 +1750,6 @@ main (int argc,
   ret = 1;
   completion_cur = NULL;
   completion_prev = NULL;
-  manager = NULL;
   loop = NULL;
 
   g_type_init ();
@@ -1777,7 +1774,6 @@ main (int argc,
       g_error_free (error);
       goto out;
     }
-  manager = udisks_client_get_proxy_manager (client);
 
   request_completion = FALSE;
 

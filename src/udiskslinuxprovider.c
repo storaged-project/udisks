@@ -224,8 +224,8 @@ handle_block_uevent_for_lun (UDisksLinuxProvider *provider,
             {
               const gchar *vpd;
               vpd = g_object_get_data (G_OBJECT (lun), "x-vpd");
-              g_dbus_object_manager_unexport (udisks_daemon_get_object_manager (daemon),
-                                              g_dbus_object_get_object_path (G_DBUS_OBJECT (lun)));
+              g_dbus_object_manager_server_unexport (udisks_daemon_get_object_manager (daemon),
+                                                     g_dbus_object_get_object_path (G_DBUS_OBJECT (lun)));
               g_warn_if_fail (g_hash_table_remove (provider->vpd_to_lun, vpd));
             }
           g_list_foreach (devices, (GFunc) g_object_unref, NULL);
@@ -258,8 +258,8 @@ handle_block_uevent_for_lun (UDisksLinuxProvider *provider,
           if (lun != NULL)
             {
               g_object_set_data_full (G_OBJECT (lun), "x-vpd", g_strdup (vpd), g_free);
-              g_dbus_object_manager_export_and_uniquify (udisks_daemon_get_object_manager (daemon),
-                                                         G_DBUS_OBJECT_STUB (lun));
+              g_dbus_object_manager_server_export_and_uniquify (udisks_daemon_get_object_manager (daemon),
+                                                                G_DBUS_OBJECT_STUB (lun));
               g_hash_table_insert (provider->vpd_to_lun, g_strdup (vpd), lun);
               g_hash_table_insert (provider->sysfs_path_to_lun, g_strdup (sysfs_path), lun);
             }
@@ -287,8 +287,8 @@ handle_block_uevent_for_block (UDisksLinuxProvider *provider,
       block = g_hash_table_lookup (provider->sysfs_to_block, sysfs_path);
       if (block != NULL)
         {
-          g_dbus_object_manager_unexport (udisks_daemon_get_object_manager (daemon),
-                                          g_dbus_object_get_object_path (G_DBUS_OBJECT (block)));
+          g_dbus_object_manager_server_unexport (udisks_daemon_get_object_manager (daemon),
+                                                 g_dbus_object_get_object_path (G_DBUS_OBJECT (block)));
           g_warn_if_fail (g_hash_table_remove (provider->sysfs_to_block, sysfs_path));
         }
     }
@@ -302,8 +302,8 @@ handle_block_uevent_for_block (UDisksLinuxProvider *provider,
       else
         {
           block = udisks_linux_block_new (daemon, device);
-          g_dbus_object_manager_export_and_uniquify (udisks_daemon_get_object_manager (daemon),
-                                                     G_DBUS_OBJECT_STUB (block));
+          g_dbus_object_manager_server_export_and_uniquify (udisks_daemon_get_object_manager (daemon),
+                                                            G_DBUS_OBJECT_STUB (block));
           g_hash_table_insert (provider->sysfs_to_block, g_strdup (sysfs_path), block);
         }
     }

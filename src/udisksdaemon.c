@@ -54,7 +54,7 @@ struct _UDisksDaemon
 {
   GObject parent_instance;
   GDBusConnection *connection;
-  GDBusObjectManager *object_manager;
+  GDBusObjectManagerServer *object_manager;
 
   UDisksMountMonitor *mount_monitor;
 
@@ -180,7 +180,7 @@ udisks_daemon_constructed (GObject *object)
       g_error_free (error);
     }
 
-  daemon->object_manager = g_dbus_object_manager_new (daemon->connection, "/org/freedesktop/UDisks2");
+  daemon->object_manager = g_dbus_object_manager_server_new (daemon->connection, "/org/freedesktop/UDisks2");
 
   if (!g_file_test (TMP_STATEDIR, G_FILE_TEST_IS_DIR))
     {
@@ -254,8 +254,8 @@ udisks_daemon_class_init (UDisksDaemonClass *klass)
                                    PROP_OBJECT_MANAGER,
                                    g_param_spec_object ("object-manager",
                                                         "Object Manager",
-                                                        "The D-Bus Object Manager used by the daemon",
-                                                        G_TYPE_DBUS_OBJECT_MANAGER,
+                                                        "The D-Bus Object Manager server used by the daemon",
+                                                        G_TYPE_DBUS_OBJECT_MANAGER_SERVER,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_STATIC_STRINGS));
 
@@ -312,9 +312,9 @@ udisks_daemon_get_connection (UDisksDaemon *daemon)
  *
  * Gets the D-Bus object manager used by @daemon.
  *
- * Returns: A #GDBusObjectManager. Do not free, the object is owned by @daemon.
+ * Returns: A #GDBusObjectManagerServer. Do not free, the object is owned by @daemon.
  */
-GDBusObjectManager *
+GDBusObjectManagerServer *
 udisks_daemon_get_object_manager (UDisksDaemon *daemon)
 {
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
@@ -412,8 +412,8 @@ on_job_completed (UDisksJob    *job,
   g_assert (object != NULL);
 
   /* Unexport job */
-  g_dbus_object_manager_unexport (daemon->object_manager,
-                                  g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
+  g_dbus_object_manager_server_unexport (daemon->object_manager,
+                                         g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
   g_dbus_object_stub_remove_interface (object, G_DBUS_INTERFACE_STUB (job));
   g_object_unref (object);
 
@@ -466,7 +466,7 @@ udisks_daemon_launch_simple_job (UDisksDaemon    *daemon,
   g_dbus_object_stub_add_interface (object, G_DBUS_INTERFACE_STUB (job));
   g_free (object_path);
 
-  g_dbus_object_manager_export (daemon->object_manager, object);
+  g_dbus_object_manager_server_export (daemon->object_manager, object);
   g_signal_connect_after (job,
                           "completed",
                           G_CALLBACK (on_job_completed),
@@ -525,7 +525,7 @@ udisks_daemon_launch_threaded_job  (UDisksDaemon    *daemon,
   g_dbus_object_stub_add_interface (object, G_DBUS_INTERFACE_STUB (job));
   g_free (object_path);
 
-  g_dbus_object_manager_export (daemon->object_manager, object);
+  g_dbus_object_manager_server_export (daemon->object_manager, object);
   g_signal_connect_after (job,
                           "completed",
                           G_CALLBACK (on_job_completed),
@@ -585,7 +585,7 @@ udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
   g_dbus_object_stub_add_interface (object, G_DBUS_INTERFACE_STUB (job));
   g_free (object_path);
 
-  g_dbus_object_manager_export (daemon->object_manager, object);
+  g_dbus_object_manager_server_export (daemon->object_manager, object);
   g_signal_connect_after (job,
                           "completed",
                           G_CALLBACK (on_job_completed),

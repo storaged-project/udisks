@@ -496,8 +496,8 @@ export_entry (UDisksFstabProvider *provider,
 
   entry->object = g_dbus_object_stub_new (entry->object_path);
   g_dbus_object_stub_add_interface (entry->object, G_DBUS_INTERFACE_STUB (entry->item));
-  g_dbus_object_manager_export (udisks_daemon_get_object_manager (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))),
-                                entry->object);
+  g_dbus_object_manager_server_export (udisks_daemon_get_object_manager (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))),
+                                       entry->object);
 
   exported = TRUE;
 
@@ -514,8 +514,8 @@ unexport_entry (UDisksFstabProvider *provider,
                 FstabEntry          *entry)
 {
   g_assert (entry->object_path != NULL);
-  g_dbus_object_manager_unexport (udisks_daemon_get_object_manager (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))),
-                                  entry->object_path);
+  g_dbus_object_manager_server_unexport (udisks_daemon_get_object_manager (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))),
+                                         entry->object_path);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

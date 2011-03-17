@@ -31,26 +31,23 @@
 
 #include <udisks/udisks.h>
 
-/* TODO: Temporary include */
-#include <gdbusproxymanager.h>
-
-static GDBusObjectProxy *
-lookup_object_proxy_by_block_device_file (GDBusProxyManager *manager,
-                                          const gchar       *block_device_file)
+static GDBusObject *
+lookup_object_for_block_device_file (UDisksClient  *client,
+                                     const gchar   *block_device_file)
 {
-  GDBusObjectProxy *ret;
+  GDBusObject *ret;
   GList *objects;
   GList *l;
 
   ret = NULL;
 
-  objects = g_dbus_proxy_manager_get_objects (manager);
+  objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
   for (l = objects; l != NULL; l = l->next)
     {
-      GDBusObjectProxy *object_proxy = G_DBUS_OBJECT_PROXY (l->data);
+      GDBusObject *object = G_DBUS_OBJECT (l->data);
       UDisksBlockDevice *block;
 
-      block = UDISKS_PEEK_BLOCK_DEVICE (object_proxy);
+      block = UDISKS_PEEK_BLOCK_DEVICE (object);
       if (block != NULL)
         {
           const gchar * const *symlinks;
@@ -58,7 +55,7 @@ lookup_object_proxy_by_block_device_file (GDBusProxyManager *manager,
 
           if (g_strcmp0 (udisks_block_device_get_device (block), block_device_file) == 0)
             {
-              ret = g_object_ref (object_proxy);
+              ret = g_object_ref (object);
               goto out;
             }
 
@@ -67,7 +64,7 @@ lookup_object_proxy_by_block_device_file (GDBusProxyManager *manager,
             {
               if (g_strcmp0 (symlinks[n], block_device_file) == 0)
                 {
-                  ret = g_object_ref (object_proxy);
+                  ret = g_object_ref (object);
                   goto out;
                 }
             }
@@ -86,18 +83,16 @@ main (int argc, char *argv[])
 {
   gint ret;
   gchar *block_device_file;
-  GDBusProxyManager *manager;
+  UDisksClient *client;
   GError *error;
   struct stat statbuf;
-  GDBusObjectProxy *object_proxy;
-  UDisksBlockDevice *block;
+  GDBusObject *object;
   const gchar *unmount_options[1] = {NULL};
 
   ret = 1;
-  manager = NULL;
+  client = NULL;
   block_device_file = NULL;
-  object_proxy = NULL;
-  block = NULL;
+  object = NULL;
 
   g_type_init ();
 
@@ -123,30 +118,24 @@ main (int argc, char *argv[])
     }
 
   error = NULL;
-  manager = udisks_proxy_manager_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
-                                                   G_DBUS_PROXY_MANAGER_FLAGS_NONE,
-                                                   "org.freedesktop.UDisks2",
-                                                   "/org/freedesktop/UDisks2",
-                                                   NULL, /* GCancellable */
-                                                   &error);
-  if (manager == NULL)
+  client = udisks_client_new_sync (NULL, /* GCancellable */
+                                   &error);
+  if (client == NULL)
     {
       g_printerr ("Error connecting to the udisks daemon: %s\n", error->message);
       g_error_free (error);
       goto out;
     }
 
-  object_proxy = lookup_object_proxy_by_block_device_file (manager, block_device_file);
-  if (object_proxy == NULL)
+  object = lookup_object_for_block_device_file (client, block_device_file);
+  if (object == NULL)
     {
       g_printerr ("Error finding object for block device file %s\n", block_device_file);
       goto out;
     }
 
-  block = UDISKS_PEEK_BLOCK_DEVICE (object_proxy);
-
   error = NULL;
-  if (!udisks_block_device_call_filesystem_unmount_sync (block,
+  if (!udisks_block_device_call_filesystem_unmount_sync (UDISKS_PEEK_BLOCK_DEVICE (object),
                                                          unmount_options,
                                                          NULL, /* GCancellable */
                                                          &error))
@@ -159,10 +148,10 @@ main (int argc, char *argv[])
   ret = 0;
 
  out:
-  if (object_proxy != NULL)
-    g_object_unref (object_proxy);
+  if (object != NULL)
+    g_object_unref (object);
   g_free (block_device_file);
-  if (manager != NULL)
-    g_object_unref (manager);
+  if (client != NULL)
+    g_object_unref (client);
   return ret;
 }

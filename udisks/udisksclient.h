@@ -34,15 +34,15 @@ G_BEGIN_DECLS
 #define UDISKS_CLIENT(o)    (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_CLIENT, UDisksClient))
 #define UDISKS_IS_CLIENT(o) (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_CLIENT))
 
-GType              udisks_client_get_type          (void) G_GNUC_CONST;
-void               udisks_client_new               (GCancellable        *cancellable,
-                                                    GAsyncReadyCallback  callback,
-                                                    gpointer             user_data);
-UDisksClient      *udisks_client_new_finish        (GAsyncResult        *res,
-                                                    GError             **error);
-UDisksClient      *udisks_client_new_sync          (GCancellable        *cancellable,
-                                                    GError             **error);
-GDBusProxyManager *udisks_client_get_proxy_manager (UDisksClient        *client);
+GType               udisks_client_get_type           (void) G_GNUC_CONST;
+void                udisks_client_new                (GCancellable        *cancellable,
+                                                      GAsyncReadyCallback  callback,
+                                                      gpointer             user_data);
+UDisksClient       *udisks_client_new_finish         (GAsyncResult        *res,
+                                                      GError             **error);
+UDisksClient       *udisks_client_new_sync           (GCancellable        *cancellable,
+                                                      GError             **error);
+GDBusObjectManager *udisks_client_get_object_manager (UDisksClient        *client);
 
 G_END_DECLS
 

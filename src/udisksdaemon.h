@@ -29,33 +29,33 @@ G_BEGIN_DECLS
 #define UDISKS_DAEMON(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_DAEMON, UDisksDaemon))
 #define UDISKS_IS_DAEMON(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_DAEMON))
 
-GType                  udisks_daemon_get_type             (void) G_GNUC_CONST;
-UDisksDaemon          *udisks_daemon_new                   (GDBusConnection *connection);
-GDBusConnection       *udisks_daemon_get_connection        (UDisksDaemon    *daemon);
-GDBusObjectManager    *udisks_daemon_get_object_manager    (UDisksDaemon    *daemon);
-UDisksMountMonitor    *udisks_daemon_get_mount_monitor     (UDisksDaemon    *daemon);
-UDisksLinuxProvider   *udisks_daemon_get_linux_provider    (UDisksDaemon    *daemon);
-UDisksFstabProvider   *udisks_daemon_get_fstab_provider    (UDisksDaemon    *daemon);
-UDisksPersistentStore *udisks_daemon_get_persistent_store  (UDisksDaemon    *daemon);
-PolkitAuthority       *udisks_daemon_get_authority         (UDisksDaemon    *daemon);
-UDisksBaseJob         *udisks_daemon_launch_simple_job     (UDisksDaemon    *daemon,
-                                                            GCancellable    *cancellable);
-UDisksBaseJob         *udisks_daemon_launch_spawned_job    (UDisksDaemon    *daemon,
-                                                            GCancellable    *cancellable,
-                                                            const gchar     *input_string,
-                                                            const gchar     *command_line_format,
-                                                            ...) G_GNUC_PRINTF (4, 5);
-gboolean               udisks_daemon_launch_spawned_job_sync (UDisksDaemon    *daemon,
-                                                              GCancellable    *cancellable,
-                                                              gchar          **out_message,
-                                                              const gchar     *input_string,
-                                                              const gchar     *command_line_format,
-                                                              ...) G_GNUC_PRINTF (5, 6);
-UDisksBaseJob         *udisks_daemon_launch_threaded_job   (UDisksDaemon    *daemon,
-                                                            UDisksThreadedJobFunc job_func,
-                                                            gpointer         user_data,
-                                                            GDestroyNotify   user_data_free_func,
-                                                            GCancellable    *cancellable);
+GType                     udisks_daemon_get_type             (void) G_GNUC_CONST;
+UDisksDaemon             *udisks_daemon_new                   (GDBusConnection *connection);
+GDBusConnection          *udisks_daemon_get_connection        (UDisksDaemon    *daemon);
+GDBusObjectManagerServer *udisks_daemon_get_object_manager    (UDisksDaemon    *daemon);
+UDisksMountMonitor       *udisks_daemon_get_mount_monitor     (UDisksDaemon    *daemon);
+UDisksLinuxProvider      *udisks_daemon_get_linux_provider    (UDisksDaemon    *daemon);
+UDisksFstabProvider      *udisks_daemon_get_fstab_provider    (UDisksDaemon    *daemon);
+UDisksPersistentStore    *udisks_daemon_get_persistent_store  (UDisksDaemon    *daemon);
+PolkitAuthority          *udisks_daemon_get_authority         (UDisksDaemon    *daemon);
+UDisksBaseJob            *udisks_daemon_launch_simple_job     (UDisksDaemon    *daemon,
+                                                               GCancellable    *cancellable);
+UDisksBaseJob            *udisks_daemon_launch_spawned_job    (UDisksDaemon    *daemon,
+                                                               GCancellable    *cancellable,
+                                                               const gchar     *input_string,
+                                                               const gchar     *command_line_format,
+                                                               ...) G_GNUC_PRINTF (4, 5);
+gboolean                  udisks_daemon_launch_spawned_job_sync (UDisksDaemon    *daemon,
+                                                                 GCancellable    *cancellable,
+                                                                 gchar          **out_message,
+                                                                 const gchar     *input_string,
+                                                                 const gchar     *command_line_format,
+                                                                 ...) G_GNUC_PRINTF (5, 6);
+UDisksBaseJob            *udisks_daemon_launch_threaded_job   (UDisksDaemon    *daemon,
+                                                               UDisksThreadedJobFunc job_func,
+                                                               gpointer         user_data,
+                                                               GDestroyNotify   user_data_free_func,
+                                                               GCancellable    *cancellable);
 
 /**
  * UDisksLogLevel:

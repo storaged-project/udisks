@@ -27,7 +27,7 @@ UDisksClient
 udisks_client_new
 udisks_client_new_finish
 udisks_client_new_sync
-udisks_client_get_proxy_manager
+udisks_client_get_object_manager
 <SUBSECTION Standard>
 UDISKS_TYPE_CLIENT
 UDISKS_CLIENT

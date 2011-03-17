@@ -54,7 +54,7 @@ struct _UDisksClient
   gboolean is_initialized;
   GError *initialization_error;
 
-  GDBusProxyManager *proxy_manager;
+  GDBusObjectManager *object_manager;
 };
 
 typedef struct
@@ -65,7 +65,7 @@ typedef struct
 enum
 {
   PROP_0,
-  PROP_PROXY_MANAGER
+  PROP_OBJECT_MANAGER
 };
 
 static void initable_iface_init       (GInitableIface      *initable_iface);
@@ -84,7 +84,7 @@ udisks_client_finalize (GObject *object)
   if (client->initialization_error != NULL)
     g_error_free (client->initialization_error);
 
-  g_object_unref (client->proxy_manager);
+  g_object_unref (client->object_manager);
 
   G_OBJECT_CLASS (udisks_client_parent_class)->finalize (object);
 }
@@ -110,8 +110,8 @@ udisks_client_get_property (GObject    *object,
 
   switch (prop_id)
     {
-    case PROP_PROXY_MANAGER:
-      g_value_set_object (value, udisks_client_get_proxy_manager (client));
+    case PROP_OBJECT_MANAGER:
+      g_value_set_object (value, udisks_client_get_object_manager (client));
       break;
 
     default:
@@ -130,16 +130,16 @@ udisks_client_class_init (UDisksClientClass *klass)
   gobject_class->get_property = udisks_client_get_property;
 
   /**
-   * UDisksClient:proxy-manager:
+   * UDisksClient:object-manager:
    *
-   * The #GDBusProxyManager used by the #UDisksClient instance.
+   * The #GDBusObjectManager used by the #UDisksClient instance.
    */
   g_object_class_install_property (gobject_class,
-                                   PROP_PROXY_MANAGER,
-                                   g_param_spec_object ("proxy-manager",
-                                                        "proxy manager",
-                                                        "The #GDBusProxyManager used by the UDisksClient",
-                                                        G_TYPE_DBUS_PROXY_MANAGER,
+                                   PROP_OBJECT_MANAGER,
+                                   g_param_spec_object ("object-manager",
+                                                        "object manager",
+                                                        "The GDBusObjectManager used by the UDisksClient",
+                                                        G_TYPE_DBUS_OBJECT_MANAGER,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_STATIC_STRINGS));
 }
@@ -237,7 +237,7 @@ initable_init (GInitable     *initable,
   G_LOCK (init_lock);
   if (client->is_initialized)
     {
-      if (client->proxy_manager != NULL)
+      if (client->object_manager != NULL)
         ret = TRUE;
       else
         g_assert (client->initialization_error != NULL);
@@ -245,13 +245,13 @@ initable_init (GInitable     *initable,
     }
   g_assert (client->initialization_error == NULL);
 
-  client->proxy_manager = udisks_proxy_manager_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
-                                                                 G_DBUS_PROXY_MANAGER_FLAGS_NONE,
-                                                                 "org.freedesktop.UDisks2",
-                                                                 "/org/freedesktop/UDisks2",
-                                                                 cancellable,
-                                                                 &client->initialization_error);
-  if (client->proxy_manager == NULL)
+  client->object_manager = udisks_object_manager_client_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+                                                                          G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_NONE,
+                                                                          "org.freedesktop.UDisks2",
+                                                                          "/org/freedesktop/UDisks2",
+                                                                          cancellable,
+                                                                          &client->initialization_error);
+  if (client->object_manager == NULL)
     goto out;
 
   ret = TRUE;
@@ -280,17 +280,17 @@ async_initable_iface_init (GAsyncInitableIface *async_initable_iface)
 }
 
 /**
- * udisks_client_get_proxy_manager:
+ * udisks_client_get_object_manager:
  * @client: A #UDisksClient.
  *
- * Gets the #GDBusProxyManager used by @client.
+ * Gets the #GDBusObjectManager used by @client.
  *
- * Returns: (transfer none): A #GDBusProxyManager. Do not free, the
+ * Returns: (transfer none): A #GDBusObjectManager. Do not free, the
  * instance is owned by @client.
  */
-GDBusProxyManager *
-udisks_client_get_proxy_manager (UDisksClient        *client)
+GDBusObjectManager *
+udisks_client_get_object_manager (UDisksClient        *client)
 {
   g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
-  return client->proxy_manager;
+  return client->object_manager;
 }
