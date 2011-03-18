@@ -74,6 +74,7 @@
     <xi:include href="xml/udisksdaemonutil.xml"/>
     <xi:include href="xml/udiskslinuxblock.xml"/>
     <xi:include href="xml/udiskslinuxlun.xml"/>
+    <xi:include href="xml/udiskslinuxfilesystem.xml"/>
     <xi:include href="xml/udisksmount.xml"/>
     <xi:include href="xml/udisksmountmonitor.xml"/>
     <xi:include href="xml/udiskspersistentstore.xml"/>

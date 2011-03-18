@@ -126,26 +126,33 @@
     <!-- The BlockDevice object the entry is part of ('/' if not an entry) -->
     <property name="PartEntryTable" type="o" access="read"/>
 
-    <!-- Properties and Methods related to whether the device holds a filesystem -->
-    <property name="FilesystemMountPoints" type="aay" access="read"/>
-    <method name="FilesystemMount">
-      <arg name="filesystem_type" direction="in" type="s"/>
-      <arg name="options" direction="in" type="as"/>
-      <arg name="mount_path" direction="out" type="ay"/>
-    </method>
-    <method name="FilesystemUnmount">
-      <arg name="options" direction="in" type="as"/>
-    </method>
-    <method name="FilesystemSetLabel">
-      <arg name="label" direction="in" type="ay"/>
-      <arg name="options" direction="in" type="as"/>
-    </method>
-
     <!-- The BlockDevice object that is backing the device ('/' if unknown or not a crypto device)  -->
     <property name="CryptoBackingDevice" type="o" access="read"/>
 
     <!-- Loop Device -->
     <property name="LoopBackingFile" type="ay" access="read"/>
+
+    <method name="SetLabel">
+      <arg name="label" direction="in" type="ay"/>
+      <arg name="options" direction="in" type="as"/>
+    </method>
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+  <interface name="org.freedesktop.UDisks2.Filesystem">
+    <!-- prereq: org.freedesktop.UDisks2.BlockDevice -->
+
+    <property name="MountPoints" type="aay" access="read"/>
+
+    <method name="Mount">
+      <arg name="filesystem_type" direction="in" type="s"/>
+      <arg name="options" direction="in" type="as"/>
+      <arg name="mount_path" direction="out" type="ay"/>
+    </method>
+    <method name="Unmount">
+      <arg name="options" direction="in" type="as"/>
+    </method>
   </interface>
 
   <!-- ********************************************************************** -->

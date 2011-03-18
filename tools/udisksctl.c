@@ -567,6 +567,7 @@ handle_command_mount_unmount (gint        *argc,
   GList *objects;
   GDBusObject *object;
   UDisksBlockDevice *block;
+  UDisksFilesystem *filesystem;
   guint n;
   const gchar * const *mount_points;
 
@@ -638,12 +639,13 @@ handle_command_mount_unmount (gint        *argc,
 
           object = G_DBUS_OBJECT (l->data);
           block = UDISKS_PEEK_BLOCK_DEVICE (object);
+          filesystem = UDISKS_PEEK_FILESYSTEM (object);
 
-          if (block == NULL)
+          if (filesystem == NULL)
             continue;
 
           is_mounted = FALSE;
-          mount_points = udisks_block_device_get_filesystem_mount_points (block);
+          mount_points = udisks_filesystem_get_mount_points (filesystem);
           if (mount_points != NULL && g_strv_length ((gchar **) mount_points) > 0)
             is_mounted = TRUE;
 
@@ -666,15 +668,19 @@ handle_command_mount_unmount (gint        *argc,
         {
           object = G_DBUS_OBJECT (l->data);
           block = UDISKS_PEEK_BLOCK_DEVICE (object);
+          filesystem = UDISKS_PEEK_FILESYSTEM (object);
 
           if (block != NULL)
             {
               gboolean is_mounted;
 
               is_mounted = FALSE;
-              mount_points = udisks_block_device_get_filesystem_mount_points (block);
-              if (mount_points != NULL && g_strv_length ((gchar **) mount_points) > 0)
-                is_mounted = TRUE;
+              if (filesystem != NULL)
+                {
+                  mount_points = udisks_filesystem_get_mount_points (filesystem);
+                  if (mount_points != NULL && g_strv_length ((gchar **) mount_points) > 0)
+                    is_mounted = TRUE;
+                }
 
               if ((is_mount && !is_mounted) || (!is_mount && is_mounted))
                 {
@@ -722,18 +728,10 @@ handle_command_mount_unmount (gint        *argc,
     }
 
   block = UDISKS_PEEK_BLOCK_DEVICE (object);
-  if (block == NULL)
+  filesystem = UDISKS_PEEK_FILESYSTEM (object);
+  if (filesystem == NULL)
     {
-      g_printerr ("Object %s is not a block device.\n", g_dbus_object_get_object_path (object));
-      g_object_unref (object);
-      goto out;
-    }
-
-  mount_points = udisks_block_device_get_filesystem_mount_points (block);
-  if (g_strv_length ((gchar **) mount_points) == 0 &&
-      g_strcmp0 (udisks_block_device_get_id_usage (block), "filesystem") != 0)
-    {
-      g_printerr ("Device %s is not a filesystem.\n", udisks_block_device_get_device (block));
+      g_printerr ("Object %s is not a mountable filesystem.\n", g_dbus_object_get_object_path (object));
       g_object_unref (object);
       goto out;
     }
@@ -750,12 +748,12 @@ handle_command_mount_unmount (gint        *argc,
       gchar *mount_path;
 
       error = NULL;
-      if (!udisks_block_device_call_filesystem_mount_sync (block,
-                                                           opt_mount_filesystem_type,
-                                                           (const gchar *const *) opt_mount_unmount_options,
-                                                           &mount_path,
-                                                           NULL,                       /* GCancellable */
-                                                           &error))
+      if (!udisks_filesystem_call_mount_sync (filesystem,
+                                              opt_mount_filesystem_type,
+                                              (const gchar *const *) opt_mount_unmount_options,
+                                              &mount_path,
+                                              NULL,                       /* GCancellable */
+                                              &error))
         {
           if (error->domain == UDISKS_ERROR &&
               error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
@@ -781,10 +779,10 @@ handle_command_mount_unmount (gint        *argc,
       GError *error;
 
       error = NULL;
-      if (!udisks_block_device_call_filesystem_unmount_sync (block,
-                                                             (const gchar *const *) opt_mount_unmount_options,
-                                                             NULL,         /* GCancellable */
-                                                             &error))
+      if (!udisks_filesystem_call_unmount_sync (filesystem,
+                                                (const gchar *const *) opt_mount_unmount_options,
+                                                NULL,         /* GCancellable */
+                                                &error))
         {
           if (error->domain == UDISKS_ERROR &&
               error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&

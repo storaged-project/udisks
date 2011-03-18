@@ -223,6 +223,7 @@ udisks_mount_get_type
 UDisksMountMonitor
 udisks_mount_monitor_new
 udisks_mount_monitor_get_mounts_for_dev
+udisks_mount_monitor_is_dev_mounted
 <SUBSECTION Standard>
 UDISKS_TYPE_MOUNT_MONITOR
 UDISKS_MOUNT_MONITOR
@@ -263,4 +264,15 @@ udisks_safe_append_to_object_path
 udisks_daemon_util_block_get_size
 udisks_daemon_util_resolve_link
 udisks_daemon_util_resolve_links
+udisks_daemon_util_check_authorization_sync
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxfilesystem</FILE>
+udisks_linux_filesystem_new
+<SUBSECTION Standard>
+UDISKS_LINUX_FILESYSTEM
+UDISKS_IS_LINUX_FILESYSTEM
+UDISKS_TYPE_LINUX_FILESYSTEM
+udisks_linux_filesystem_get_type
 </SECTION>

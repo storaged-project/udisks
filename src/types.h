@@ -68,6 +68,9 @@ typedef struct _UDisksFstabProvider UDisksFstabProvider;
 struct _UDisksProvider;
 typedef struct _UDisksProvider UDisksProvider;
 
+struct _UDisksLinuxFilesystem;
+typedef struct _UDisksLinuxFilesystem UDisksLinuxFilesystem;
+
 /**
  * UDisksThreadedJobFunc:
  * @job: A #UDisksThreadedJob.

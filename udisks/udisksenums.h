@@ -36,6 +36,7 @@ G_BEGIN_DECLS
  * @UDISKS_ERROR_ALREADY_CANCELLED: The operation has already been cancelled.
  * @UDISKS_ERROR_NOT_AUTHORIZED: Not authorized to perform the requested operation.
  * @UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN: Like %UDISKS_ERROR_NOT_AUTHORIZED but authorization can be obtained through e.g. authentication.
+ * @UDISKS_ERROR_NOT_AUTHORIZED_DISMISSED: Like %UDISKS_ERROR_NOT_AUTHORIZED but an authentication was shown and the user dimissed it.
  * @UDISKS_ERROR_ALREADY_MOUNTED: The device is already mounted.
  * @UDISKS_ERROR_NOT_MOUNTED: The device is not mounted.
  * @UDISKS_ERROR_OPTION_NOT_PERMITTED: Not permitted to use the requested option.
@@ -53,6 +54,7 @@ typedef enum
   UDISKS_ERROR_ALREADY_CANCELLED,          /* org.freedesktop.UDisks.Error.AlreadyCancelled */
   UDISKS_ERROR_NOT_AUTHORIZED,             /* org.freedesktop.UDisks.Error.NotAuthorized */
   UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN,  /* org.freedesktop.UDisks.Error.NotAuthorizedCanObtain */
+  UDISKS_ERROR_NOT_AUTHORIZED_DISMISSED,   /* org.freedesktop.UDisks.Error.NotAuthorizedDismissed */
   UDISKS_ERROR_ALREADY_MOUNTED,            /* org.freedesktop.UDisks.Error.AlreadyMounted */
   UDISKS_ERROR_NOT_MOUNTED,                /* org.freedesktop.UDisks.Error.NotMounted */
   UDISKS_ERROR_OPTION_NOT_PERMITTED,       /* org.freedesktop.UDisks.Error.OptionNotPermitted */

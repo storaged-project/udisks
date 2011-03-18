@@ -509,3 +509,36 @@ udisks_mount_monitor_get_mounts_for_dev (UDisksMountMonitor *monitor,
 
   return ret;
 }
+
+/**
+ * udisks_mount_monitor_is_dev_mounted:
+ * @monitor: A #UDisksMountMonitor.
+ * @dev: A #dev_t device number.
+ *
+ * Checks if @dev is mounted.
+ *
+ * Returns: %TRUE if mounted, %FALSE otherwise.
+ */
+gboolean
+udisks_mount_monitor_is_dev_mounted (UDisksMountMonitor  *monitor,
+                                     dev_t                dev)
+{
+  gboolean ret;
+  GList *l;
+
+  ret = FALSE;
+  udisks_mount_monitor_ensure (monitor);
+  for (l = monitor->mounts; l != NULL; l = l->next)
+    {
+      UDisksMount *mount = UDISKS_MOUNT (l->data);
+
+      if (udisks_mount_get_dev (mount) == dev)
+        {
+          ret = TRUE;
+          goto out;
+        }
+    }
+
+ out:
+  return ret;
+}

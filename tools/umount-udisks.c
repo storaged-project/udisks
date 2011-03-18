@@ -87,6 +87,7 @@ main (int argc, char *argv[])
   GError *error;
   struct stat statbuf;
   GDBusObject *object;
+  UDisksFilesystem *filesystem;
   const gchar *unmount_options[1] = {NULL};
 
   ret = 1;
@@ -134,11 +135,18 @@ main (int argc, char *argv[])
       goto out;
     }
 
+  filesystem = UDISKS_PEEK_FILESYSTEM (object);
+  if (filesystem == NULL)
+    {
+      g_printerr ("Block device file %s is not a mountable filesystem.\n", block_device_file);
+      goto out;
+    }
+
   error = NULL;
-  if (!udisks_block_device_call_filesystem_unmount_sync (UDISKS_PEEK_BLOCK_DEVICE (object),
-                                                         unmount_options,
-                                                         NULL, /* GCancellable */
-                                                         &error))
+  if (!udisks_filesystem_call_unmount_sync (filesystem,
+                                            unmount_options,
+                                            NULL, /* GCancellable */
+                                            &error))
     {
       g_printerr ("Error unmounting %s: %s\n", block_device_file, error->message);
       g_error_free (error);

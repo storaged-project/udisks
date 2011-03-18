@@ -38,6 +38,12 @@ gchar *udisks_daemon_util_resolve_link (const gchar *path,
 gchar **udisks_daemon_util_resolve_links (const gchar *path,
                                           const gchar *dir_name);
 
+gboolean udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
+                                                      GDBusObject           *object,
+                                                      const gchar           *action_id,
+                                                      gboolean               auth_no_user_interaction,
+                                                      const gchar           *message,
+                                                      GDBusMethodInvocation *invocation);
 
 
 G_END_DECLS

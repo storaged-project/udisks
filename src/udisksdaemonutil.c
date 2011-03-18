@@ -27,6 +27,7 @@
 #include <limits.h>
 #include <stdlib.h>
 
+#include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
 
 /**
@@ -279,5 +280,115 @@ udisks_daemon_util_resolve_links (const gchar *path,
   g_free (s);
 
   return (gchar **) g_ptr_array_free (p, FALSE);
+}
+
+
+/**
+ * udisks_daemon_util_check_authorization_sync:
+ * @daemon: A #UDisksDaemon.
+ * @object: The #GDBusObject that the call is on.
+ * @action_id: The action id to check for.
+ * @auth_no_user_interaction: If %TRUE, user interaction will never happen.
+ * @message: The message to convey (use N_).
+ * @invocation: The invocation to check for.
+ *
+ * Checks if the caller represented by @invocation is authorized for
+ * the action identified by @action_id, optionally displaying @message
+ * if authentication is needed. Additionally, if the caller is not
+ * authorized, the appropriate error is already returned to the caller
+ * via @invocation.
+ *
+ * The calling thread is blocked for the duration of the
+ * authentication which may be a very long time unless
+ * @auth_no_user_interaction is %TRUE.
+ *
+ * The follow variables can be used in @message
+ *
+ * - udisks2.device - If @object has a #UDisksBlockDevice interface, this property is set to the value of the #UDisksBlockDevice::preferred-device property.
+ *
+ * Returns: %TRUE if caller is authorized, %FALSE if not.
+ */
+gboolean
+udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
+                                             GDBusObject           *object,
+                                             const gchar           *action_id,
+                                             gboolean               auth_no_user_interaction,
+                                             const gchar           *message,
+                                             GDBusMethodInvocation *invocation)
+{
+  PolkitSubject *subject;
+  PolkitDetails *details;
+  PolkitCheckAuthorizationFlags flags;
+  PolkitAuthorizationResult *result;
+  GError *error;
+  gboolean ret;
+  UDisksBlockDevice *block;
+
+  ret = FALSE;
+  subject = NULL;
+  details = NULL;
+  result = NULL;
+  flags = POLKIT_CHECK_AUTHORIZATION_FLAGS_NONE;
+
+  subject = polkit_system_bus_name_new (g_dbus_method_invocation_get_sender (invocation));
+  if (!auth_no_user_interaction)
+    flags = POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION;
+
+  details = polkit_details_new ();
+  polkit_details_insert (details, "polkit.message", message);
+  polkit_details_insert (details, "polkit.gettext_domain", "udisks2"); /* TODO: set up translation */
+
+  /* setup other details that @message can use */
+  block = UDISKS_PEEK_BLOCK_DEVICE (object);
+  if (block != NULL)
+    polkit_details_insert (details, "udisks2.device", udisks_block_device_get_preferred_device (block));
+
+  error = NULL;
+  result = polkit_authority_check_authorization_sync (udisks_daemon_get_authority (daemon),
+                                                      subject,
+                                                      action_id,
+                                                      details,
+                                                      flags,
+                                                      NULL, /* GCancellable* */
+                                                      &error);
+  if (result == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error checking authorization: %s (%s, %d)",
+                                             error->message,
+                                             g_quark_to_string (error->domain),
+                                             error->code);
+      g_error_free (error);
+      goto out;
+    }
+  if (!polkit_authorization_result_get_is_authorized (result))
+    {
+      if (polkit_authorization_result_get_dismissed (result))
+        g_dbus_method_invocation_return_error_literal (invocation,
+                                                       UDISKS_ERROR,
+                                                       UDISKS_ERROR_NOT_AUTHORIZED_DISMISSED,
+                                                       "The authentication dialog was dismissed");
+      else
+        g_dbus_method_invocation_return_error_literal (invocation,
+                                                       UDISKS_ERROR,
+                                                       polkit_authorization_result_get_is_challenge (result) ?
+                                                       UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN :
+                                                       UDISKS_ERROR_NOT_AUTHORIZED,
+                                                       "Not authorized to perform operation");
+      goto out;
+    }
+
+  ret = TRUE;
+
+ out:
+  if (subject != NULL)
+    g_object_unref (subject);
+  if (details != NULL)
+    g_object_unref (details);
+  if (result != NULL)
+    g_object_unref (result);
+  return ret;
 }
 

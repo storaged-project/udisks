@@ -37,6 +37,7 @@ static const GDBusErrorEntry dbus_error_entries[] =
   {UDISKS_ERROR_ALREADY_CANCELLED,            "org.freedesktop.UDisks.Error.AlreadyCancelled"},
   {UDISKS_ERROR_NOT_AUTHORIZED,               "org.freedesktop.UDisks.Error.NotAuthorized"},
   {UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN,    "org.freedesktop.UDisks.Error.NotAuthorizedCanObtain"},
+  {UDISKS_ERROR_NOT_AUTHORIZED_DISMISSED,     "org.freedesktop.UDisks.Error.NotAuthorizedDismissed"},
   {UDISKS_ERROR_ALREADY_MOUNTED,              "org.freedesktop.UDisks.Error.AlreadyMounted"},
   {UDISKS_ERROR_NOT_MOUNTED,                  "org.freedesktop.UDisks.Error.NotMounted"},
   {UDISKS_ERROR_OPTION_NOT_PERMITTED,         "org.freedesktop.UDisks.Error.OptionNotPermitted"},
