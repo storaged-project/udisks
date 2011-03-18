@@ -366,33 +366,36 @@ static gboolean
 handle_mount (UDisksBlockDevice      *block,
               GDBusMethodInvocation  *invocation,
               const gchar            *requested_fs_type,
-              const gchar* const     *requested_options);
+              const gchar* const     *requested_options,
+              gpointer                user_data);
 
 static gboolean
 handle_unmount (UDisksBlockDevice      *block,
                 GDBusMethodInvocation  *invocation,
-                const gchar* const     *options);
+                const gchar* const     *options,
+                gpointer                user_data);
 
 static gboolean
 handle_set_label (UDisksBlockDevice      *block,
                   GDBusMethodInvocation  *invocation,
                   const gchar            *label,
-                  const gchar* const     *options);
+                  const gchar* const     *options,
+                  gpointer                user_data);
 
 static void
 block_device_connect (UDisksLinuxBlock *block)
 {
   g_signal_connect (block->iface_block_device,
                     "handle-filesystem-mount",
-                    G_CALLBACK (handle_mount),
+                    UDISKS_BLOCK_DEVICE_HANDLE_FILESYSTEM_MOUNT_CALLBACK (handle_mount, gpointer),
                     NULL);
   g_signal_connect (block->iface_block_device,
                     "handle-filesystem-unmount",
-                    G_CALLBACK (handle_unmount),
+                    UDISKS_BLOCK_DEVICE_HANDLE_FILESYSTEM_UNMOUNT_CALLBACK (handle_unmount, gpointer),
                     NULL);
   g_signal_connect (block->iface_block_device,
                     "handle-filesystem-set-label",
-                    G_CALLBACK (handle_set_label),
+                    UDISKS_BLOCK_DEVICE_HANDLE_FILESYSTEM_SET_LABEL_CALLBACK (handle_set_label, gpointer),
                     NULL);
 }
 
@@ -1468,7 +1471,8 @@ static gboolean
 handle_mount (UDisksBlockDevice      *block,
               GDBusMethodInvocation  *invocation,
               const gchar            *requested_fs_type,
-              const gchar* const     *requested_options)
+              const gchar* const     *requested_options,
+              gpointer                user_data)
 {
   GDBusObjectStub *object;
   UDisksDaemon *daemon;
@@ -1752,7 +1756,8 @@ handle_mount (UDisksBlockDevice      *block,
 static gboolean
 handle_unmount (UDisksBlockDevice      *block,
                 GDBusMethodInvocation  *invocation,
-                const gchar* const     *options)
+                const gchar* const     *options,
+                gpointer                user_data)
 {
   GDBusObject *object;
   UDisksDaemon *daemon;
@@ -1991,7 +1996,8 @@ static gboolean
 handle_set_label (UDisksBlockDevice      *block,
                   GDBusMethodInvocation  *invocation,
                   const gchar            *label,
-                  const gchar* const     *requested_options)
+                  const gchar* const     *requested_options,
+                  gpointer                user_data)
 {
   GDBusObject *object;
   UDisksDaemon *daemon;
