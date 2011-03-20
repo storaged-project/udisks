@@ -1389,19 +1389,19 @@ handle_command_monitor (gint        *argc,
                     NULL);
 
   g_signal_connect (manager,
-                    "object-proxy-added",
+                    "object-added",
                     G_CALLBACK (monitor_on_object_added),
                     NULL);
   g_signal_connect (manager,
-                    "object-proxy-removed",
+                    "object-removed",
                     G_CALLBACK (monitor_on_object_removed),
                     NULL);
   g_signal_connect (manager,
-                    "interface-proxy-added",
+                    "interface-added",
                     G_CALLBACK (monitor_on_interface_proxy_added),
                     NULL);
   g_signal_connect (manager,
-                    "interface-proxy-removed",
+                    "interface-removed",
                     G_CALLBACK (monitor_on_interface_proxy_removed),
                     NULL);
   g_signal_connect (manager,
