@@ -90,11 +90,6 @@ udisks_linux_provider_finalize (GObject *object)
 }
 
 static void
-udisks_linux_provider_init (UDisksLinuxProvider *provider)
-{
-}
-
-static void
 on_uevent (GUdevClient  *client,
            const gchar  *action,
            GUdevDevice  *device,
@@ -106,12 +101,9 @@ on_uevent (GUdevClient  *client,
 }
 
 static void
-udisks_linux_provider_constructed (GObject *object)
+udisks_linux_provider_init (UDisksLinuxProvider *provider)
 {
-  UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (object);
-  const gchar *subsystems[] = {"block", NULL};
-  GList *devices;
-  GList *l;
+  const gchar *subsystems[] = {"block", "iscsi_connection", "scsi", NULL};
 
   /* get ourselves an udev client */
   provider->gudev_client = g_udev_client_new (subsystems);
@@ -119,6 +111,17 @@ udisks_linux_provider_constructed (GObject *object)
                     "uevent",
                     G_CALLBACK (on_uevent),
                     provider);
+}
+
+static void
+udisks_linux_provider_start (UDisksProvider *_provider)
+{
+  UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (_provider);
+  GList *devices;
+  GList *l;
+
+  if (UDISKS_PROVIDER_CLASS (udisks_linux_provider_parent_class)->start != NULL)
+    UDISKS_PROVIDER_CLASS (udisks_linux_provider_parent_class)->start (_provider);
 
   provider->sysfs_to_block = g_hash_table_new_full (g_str_hash,
                                                     g_str_equal,
@@ -142,9 +145,6 @@ udisks_linux_provider_constructed (GObject *object)
     udisks_linux_provider_handle_uevent (provider, "add", G_UDEV_DEVICE (l->data));
   g_list_foreach (devices, (GFunc) g_object_unref, NULL);
   g_list_free (devices);
-
-  if (G_OBJECT_CLASS (udisks_linux_provider_parent_class)->constructed != NULL)
-    G_OBJECT_CLASS (udisks_linux_provider_parent_class)->constructed (object);
 }
 
 
@@ -152,10 +152,13 @@ static void
 udisks_linux_provider_class_init (UDisksLinuxProviderClass *klass)
 {
   GObjectClass *gobject_class;
+  UDisksProviderClass *provider_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->finalize     = udisks_linux_provider_finalize;
-  gobject_class->constructed  = udisks_linux_provider_constructed;
+
+  provider_class        = UDISKS_PROVIDER_CLASS (klass);
+  provider_class->start = udisks_linux_provider_start;
 }
 
 /**
@@ -179,9 +182,7 @@ udisks_linux_provider_new (UDisksDaemon  *daemon)
  * udisks_linux_provider_get_udev_client:
  * @provider: A #UDisksLinuxProvider.
  *
- * Gets the #GUdevClient used by @provider. The returned object is set
- * up so it emits #GUdevClient::uevent signals only for the
- * <literal>block</literal>.
+ * Gets the #GUdevClient used by @provider.
  *
  * Returns: A #GUdevClient owned by @provider. Do not free.
  */

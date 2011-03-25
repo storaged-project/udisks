@@ -51,12 +51,15 @@ struct _UDisksProvider
 /**
  * UDisksProviderClass:
  * @parent_class: The parent class.
+ * @start: Virtual function for udisks_provider_start(). The default implementation does nothing.
  *
  * Class structure for #UDisksProvider.
  */
 struct _UDisksProviderClass
 {
   GObjectClass parent_class;
+
+  void (*start) (UDisksProvider *provider);
 
   /*< private >*/
   gpointer padding[8];
@@ -65,6 +68,7 @@ struct _UDisksProviderClass
 
 GType           udisks_provider_get_type   (void) G_GNUC_CONST;
 UDisksDaemon   *udisks_provider_get_daemon (UDisksProvider *provider);
+void            udisks_provider_start      (UDisksProvider *provider);
 
 G_END_DECLS
 

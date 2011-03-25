@@ -118,6 +118,11 @@ udisks_provider_init (UDisksProvider *provider)
   provider->priv = G_TYPE_INSTANCE_GET_PRIVATE (provider, UDISKS_TYPE_PROVIDER, UDisksProviderPrivate);
 }
 
+static void
+udisks_provider_start_default (UDisksProvider *provider)
+{
+  /* do nothing */
+}
 
 static void
 udisks_provider_class_init (UDisksProviderClass *klass)
@@ -128,6 +133,8 @@ udisks_provider_class_init (UDisksProviderClass *klass)
   gobject_class->finalize     = udisks_provider_finalize;
   gobject_class->set_property = udisks_provider_set_property;
   gobject_class->get_property = udisks_provider_get_property;
+
+  klass->start = udisks_provider_start_default;
 
   /**
    * UDisksProvider:daemon:
@@ -162,5 +169,19 @@ udisks_provider_get_daemon (UDisksProvider *provider)
   g_return_val_if_fail (UDISKS_IS_PROVIDER (provider), NULL);
   return provider->priv->daemon;
 }
+
+/**
+ * udisks_provider_start:
+ * @provider: A #UDisksProvider.
+ *
+ * Starts the provider.
+ */
+void
+udisks_provider_start  (UDisksProvider *provider)
+{
+  g_return_if_fail (UDISKS_IS_PROVIDER (provider));
+  UDISKS_PROVIDER_GET_CLASS (provider)->start (provider);
+}
+
 
 /* ---------------------------------------------------------------------------------------------------- */

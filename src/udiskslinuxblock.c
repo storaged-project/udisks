@@ -40,6 +40,7 @@
 #include "udiskslinuxlun.h"
 #include "udiskslinuxfilesystem.h"
 #include "udiskspersistentstore.h"
+#include "udiskslinuxprovider.h"
 
 /**
  * SECTION:udiskslinuxblock
@@ -490,9 +491,9 @@ get_sysfs_attr (GUdevDevice *device,
 }
 
 static void
-block_device_update (UDisksLinuxBlock      *block,
-                     const gchar     *uevent_action,
-                     GDBusInterface  *_iface)
+block_device_update (UDisksLinuxBlock *block,
+                     const gchar      *uevent_action,
+                     GDBusInterface   *_iface)
 {
   UDisksBlockDevice *iface = UDISKS_BLOCK_DEVICE (_iface);
   GUdevDeviceNumber dev;

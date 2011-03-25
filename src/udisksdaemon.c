@@ -25,8 +25,10 @@
 #include <glib/gstdio.h>
 
 #include "udisksdaemon.h"
+#include "udisksprovider.h"
 #include "udiskslinuxprovider.h"
 #include "udisksfstabprovider.h"
+#include "udisksiscsiprovider.h"
 #include "udisksmountmonitor.h"
 #include "udiskspersistentstore.h"
 #include "udisksbasejob.h"
@@ -62,6 +64,7 @@ struct _UDisksDaemon
 
   UDisksLinuxProvider *linux_provider;
   UDisksFstabProvider *fstab_provider;
+  UDisksIScsiProvider *iscsi_provider;
 
   PolkitAuthority *authority;
 };
@@ -89,6 +92,7 @@ udisks_daemon_finalize (GObject *object)
   g_object_unref (daemon->authority);
   g_object_unref (daemon->persistent_store);
   g_object_unref (daemon->fstab_provider);
+  g_object_unref (daemon->iscsi_provider);
   g_object_unref (daemon->object_manager);
   g_object_unref (daemon->linux_provider);
   g_object_unref (daemon->mount_monitor);
@@ -212,6 +216,12 @@ udisks_daemon_constructed (GObject *object)
   /* now add providers */
   daemon->linux_provider = udisks_linux_provider_new (daemon);
   daemon->fstab_provider = udisks_fstab_provider_new (daemon);
+  daemon->iscsi_provider = udisks_iscsi_provider_new (daemon);
+
+  /* need to add iSCSI targets before LUN and block devices */
+  udisks_provider_start (UDISKS_PROVIDER (daemon->iscsi_provider));
+  udisks_provider_start (UDISKS_PROVIDER (daemon->linux_provider));
+  udisks_provider_start (UDISKS_PROVIDER (daemon->fstab_provider));
 
   if (G_OBJECT_CLASS (udisks_daemon_parent_class)->constructed != NULL)
     G_OBJECT_CLASS (udisks_daemon_parent_class)->constructed (object);
@@ -364,6 +374,21 @@ udisks_daemon_get_fstab_provider (UDisksDaemon *daemon)
 {
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
   return daemon->fstab_provider;
+}
+
+/**
+ * udisks_daemon_get_iscsi_provider:
+ * @daemon: A #UDisksDaemon.
+ *
+ * Gets the iSCSI target provider, if any.
+ *
+ * Returns: A #UDisksIScsiProvider or %NULL. Do not free, the object is owned by @daemon.
+ */
+UDisksIScsiProvider *
+udisks_daemon_get_iscsi_provider (UDisksDaemon *daemon)
+{
+  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
+  return daemon->iscsi_provider;
 }
 
 

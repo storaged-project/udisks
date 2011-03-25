@@ -520,8 +520,10 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
    * signal with @success set to %TRUE if, and only if, @error is
    * %NULL, WIFEXITED() evaluates to %TRUE and WEXITSTATUS() is
    * zero. Additionally, @message on that signal is set to
-   * @standard_error. You can avoid the default implementation by
-   * returning %TRUE from your signal handler.
+   * @standard_error regards of whether @success is %TRUE or %FALSE.
+   *
+   * You can avoid the default implementation by returning %TRUE from
+   * your signal handler.
    *
    * This signal is emitted in the
    * <link linkend="g-main-context-push-thread-default">thread-default main loop</link>
@@ -679,7 +681,7 @@ udisks_spawned_job_spawned_job_completed_default (UDisksSpawnedJob  *job,
     {
       udisks_job_emit_completed (UDISKS_JOB (job),
                                  TRUE,
-                                 "");
+                                 standard_error->str);
     }
   else
     {

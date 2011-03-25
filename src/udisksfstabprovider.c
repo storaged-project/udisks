@@ -223,11 +223,14 @@ udisks_fstab_provider_init (UDisksFstabProvider *provider)
 }
 
 static void
-udisks_fstab_provider_constructed (GObject *object)
+udisks_fstab_provider_start (UDisksProvider *_provider)
 {
-  UDisksFstabProvider *provider = UDISKS_FSTAB_PROVIDER (object);
+  UDisksFstabProvider *provider = UDISKS_FSTAB_PROVIDER (_provider);
   GFile *file;
   GError *error;
+
+  if (UDISKS_PROVIDER_CLASS (udisks_fstab_provider_parent_class)->start != NULL)
+    UDISKS_PROVIDER_CLASS (udisks_fstab_provider_parent_class)->start (_provider);
 
   /* use the same GUdevClient as the Linux provider */
   provider->gudev_client = udisks_linux_provider_get_udev_client (udisks_daemon_get_linux_provider (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))));
@@ -266,9 +269,6 @@ udisks_fstab_provider_constructed (GObject *object)
   g_object_unref (file);
 
   load_and_process_fstab (provider);
-
-  if (G_OBJECT_CLASS (udisks_fstab_provider_parent_class)->constructed != NULL)
-    G_OBJECT_CLASS (udisks_fstab_provider_parent_class)->constructed (object);
 }
 
 
@@ -276,10 +276,13 @@ static void
 udisks_fstab_provider_class_init (UDisksFstabProviderClass *klass)
 {
   GObjectClass *gobject_class;
+  UDisksProviderClass *provider_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->finalize     = udisks_fstab_provider_finalize;
-  gobject_class->constructed  = udisks_fstab_provider_constructed;
+
+  provider_class        = UDISKS_PROVIDER_CLASS (klass);
+  provider_class->start = udisks_fstab_provider_start;
 }
 
 /**

@@ -21,9 +21,12 @@
 #include "config.h"
 
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
+#include "udiskslinuxprovider.h"
 #include "udiskslinuxlun.h"
 
 /**
@@ -419,6 +422,39 @@ update_iface (UDisksLinuxLun           *lun,
 /* ---------------------------------------------------------------------------------------------------- */
 /* org.freedesktop.UDisks.Lun */
 
+static const gchar *
+find_iscsi_target (GDBusObjectManagerServer *object_manager,
+                   const gchar              *target_name)
+{
+  const gchar *ret;
+  GList *objects;
+  GList *l;
+
+  ret = NULL;
+
+  objects = g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (object_manager));
+  for (l = objects; l != NULL; l = l->next)
+    {
+      GDBusObjectStub *object = G_DBUS_OBJECT_STUB (l->data);
+      UDisksIScsiTarget *target;
+
+      target = UDISKS_PEEK_ISCSI_TARGET (object);
+      if (target == NULL)
+        continue;
+
+      if (g_strcmp0 (udisks_iscsi_target_get_name (target), target_name) == 0)
+        {
+          ret = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
+          goto out;
+        }
+    }
+
+ out:
+  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+  g_list_free (objects);
+  return ret;
+}
+
 static const struct
 {
   const gchar *udev_property;
@@ -572,6 +608,176 @@ lun_check (UDisksLinuxLun *lun)
   return TRUE;
 }
 
+static gboolean
+find_iscsi_devices_for_block (GUdevClient  *udev_client,
+                              GUdevDevice  *block_device,
+                              GUdevDevice **out_session_device,
+                              GUdevDevice **out_connection_device)
+{
+  gchar *s;
+  gchar *session_sysfs_path;
+  gchar *connection_sysfs_path;
+  GDir *session_dir;
+  GDir *connection_dir;
+  const gchar *name;
+  gboolean ret;
+  GUdevDevice *session_device;
+  GUdevDevice *connection_device;
+
+  ret = FALSE;
+  session_device = NULL;
+  connection_device = NULL;
+
+  session_dir = NULL;
+  connection_dir = NULL;
+  s = NULL;
+  session_sysfs_path = NULL;
+  connection_sysfs_path = NULL;
+
+  /* This is a bit sketchy and includes assumptions about what sysfs
+   * currently looks like...
+   */
+
+  if (out_session_device != NULL)
+    {
+      s = g_strdup_printf ("%s/device/../../iscsi_session", g_udev_device_get_sysfs_path (block_device));
+      if (!g_file_test (s, G_FILE_TEST_IS_DIR))
+        goto out;
+      session_dir = g_dir_open (s, 0, NULL);
+      if (session_dir == NULL)
+        goto out;
+      while ((name = g_dir_read_name (session_dir)) != NULL)
+        {
+          gint session_num;
+          if (sscanf (name, "session%d", &session_num) == 1)
+            {
+              session_sysfs_path = g_strdup_printf ("%s/%s", s, name);
+              break;
+            }
+        }
+      if (session_sysfs_path == NULL)
+        goto out;
+      session_device = g_udev_client_query_by_sysfs_path (udev_client, session_sysfs_path);
+      if (session_device == NULL)
+        goto out;
+    }
+
+  if (out_connection_device != NULL)
+    {
+      /* here we assume there is only one connection per session... this could end up not being true */
+      g_free (s);
+      s = g_strdup_printf ("%s/device/../..", g_udev_device_get_sysfs_path (block_device));
+      if (!g_file_test (s, G_FILE_TEST_IS_DIR))
+        goto out;
+      connection_dir = g_dir_open (s, 0, NULL);
+      if (connection_dir == NULL)
+        goto out;
+      while ((name = g_dir_read_name (connection_dir)) != NULL)
+        {
+          gint connection_num;
+          if (sscanf (name, "connection%d", &connection_num) == 1)
+            {
+              connection_sysfs_path = g_strdup_printf ("%s/%s/iscsi_connection/%s", s, name, name);
+              break;
+            }
+        }
+      if (connection_sysfs_path == NULL)
+        goto out;
+      connection_device = g_udev_client_query_by_sysfs_path (udev_client, connection_sysfs_path);
+      if (connection_device == NULL)
+        goto out;
+    }
+
+  ret = TRUE;
+
+ out:
+  g_free (s);
+  g_free (session_sysfs_path);
+  if (session_dir != NULL)
+    g_dir_close (session_dir);
+  g_free (connection_sysfs_path);
+  if (connection_dir != NULL)
+    g_dir_close (connection_dir);
+
+  if (ret)
+    {
+      if (out_session_device != NULL)
+        *out_session_device = session_device;
+      else
+        g_object_unref (session_device);
+
+      if (out_connection_device != NULL)
+        *out_connection_device = connection_device;
+      else
+        g_object_unref (connection_device);
+    }
+  else
+    {
+      if (session_device != NULL)
+        g_object_unref (session_device);
+      if (connection_device != NULL)
+        g_object_unref (connection_device);
+    }
+
+  return ret;
+}
+
+static void
+lun_update_iscsi (UDisksLinuxLun *lun,
+                  UDisksLun      *iface,
+                  GUdevDevice    *device)
+{
+  GUdevClient *udev_client;
+  GUdevDevice *session_device;
+  GUdevDevice *connection_device;
+
+  /* note: @device may vary - it can be any path for lun */
+  session_device = NULL;
+  connection_device = NULL;
+
+  udisks_lun_set_iscsi_target (iface, "/");
+
+  udev_client = udisks_linux_provider_get_udev_client (udisks_daemon_get_linux_provider (lun->daemon));
+  if (find_iscsi_devices_for_block (udev_client,
+                                    device,
+                                    &session_device,
+                                    &connection_device))
+    {
+      GDBusObjectManagerServer *object_manager;
+      const gchar *target_name;
+      const gchar *target_object_path;
+
+      target_name = g_udev_device_get_sysfs_attr (session_device, "targetname");
+      if (target_name == NULL)
+        {
+          udisks_daemon_log (lun->daemon,
+                             UDISKS_LOG_LEVEL_WARNING,
+                             "Cannot find iSCSI target name for sysfs path %s",
+                             g_udev_device_get_sysfs_path (session_device));
+          goto out;
+        }
+
+      object_manager = udisks_daemon_get_object_manager (lun->daemon);
+      target_object_path = find_iscsi_target (object_manager, target_name);
+      if (target_object_path == NULL)
+        {
+          udisks_daemon_log (lun->daemon,
+                             UDISKS_LOG_LEVEL_WARNING,
+                             "Cannot find iSCSI target object for name `%s'",
+                             target_name);
+          goto out;
+        }
+      udisks_lun_set_iscsi_target (iface, target_object_path);
+
+    }
+ out:
+  if (connection_device != NULL)
+    g_object_unref (connection_device);
+  if (session_device != NULL)
+    g_object_unref (session_device);
+}
+
+
 static void
 lun_update (UDisksLinuxLun      *lun,
             const gchar         *uevent_action,
@@ -639,6 +845,8 @@ lun_update (UDisksLinuxLun      *lun,
       udisks_lun_set_revision (iface, g_udev_device_get_property (device, "ID_REVISION"));
       udisks_lun_set_serial (iface, g_udev_device_get_property (device, "ID_SCSI_SERIAL"));
       udisks_lun_set_wwn (iface, g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION"));
+
+      lun_update_iscsi (lun, iface, device);
     }
   else if (g_str_has_prefix (g_udev_device_get_name (device), "mmcblk"))
     {

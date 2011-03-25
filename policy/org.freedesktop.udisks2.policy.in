@@ -15,13 +15,23 @@
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
-      <allow_active>auth_admin</allow_active>
+      <allow_active>auth_admin_keep</allow_active>
     </defaults>
   </action>
 
   <action id="org.freedesktop.udisks2.modify">
     <_description>Modify a device</_description>
     <_message>Authentication is required to modify a device</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.udisks2.iscsi">
+    <_description>Configure iSCSI devices</_description>
+    <_message>Authentication is required to configure iSCSI devices</_message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>

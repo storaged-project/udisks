@@ -81,6 +81,55 @@
        o the rotation rate in rounds per minute otherwise
     -->
     <property name="RotationRate" type="i" access="read"/>
+
+    <!-- The org.freedesktop.UDisks2.IScsiTarget object that the LUN belongs
+         to, or '/' if no such object exists.
+      -->
+    <property name="IScsiTarget" type="o" access="read"/>
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+  <!-- TODO: use the name iSCSITarget when we can force the g-names to be
+       UDisksiSCSITarget and udisks_iscsi_target
+  -->
+  <interface name="org.freedesktop.UDisks2.IScsiTarget">
+    <!-- e.g. iqn.2000-07.dk.fubar:storage.ma.burlington.scratch0 or
+              eui.02004567A425678D or
+              naa.52004567BA64678D
+    -->
+    <property name="Name" type="ay" access="read"/>
+
+    <!-- TODO: Alias property cf. RFC 3721 2.2 -->
+
+    <!-- Array of (String    portal_address,
+                   int       portal_port_number,
+                   int       tpgt,
+                   Array of  (String  interface_name,
+                              String  state))
+
+         where state is the empty string if there is no
+         connection, otherwise LOGGED_IN or FAILED.
+    -->
+    <property name="PortalsAndInterfaces" type="a(ayiia(ays))" access="read"/>
+
+    <method name="Login">
+      <arg name="options" direction="in" type="as"/>
+      <!-- if blank, log into all portals -->
+      <arg name="portal_address" direction="in" type="ay"/>
+      <!-- can only be set to zero if portal_address is blank -->
+      <arg name="portal_port" direction="in" type="i"/>
+      <!-- if blank, log in via all interfaces -->
+      <arg name="interface" direction="in" type="ay"/>
+    </method>
+
+    <method name="Logout">
+      <arg name="options" direction="in" type="as"/>
+      <!-- same as for Login() method -->
+      <arg name="portal_address" direction="in" type="ay"/>
+      <arg name="portal_port" direction="in" type="i"/>
+      <arg name="interface_name" direction="in" type="ay"/>
+    </method>
   </interface>
 
   <!-- ********************************************************************** -->
