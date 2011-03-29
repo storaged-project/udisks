@@ -51,6 +51,7 @@ void udisks_util_get_lun_info (UDisksLun  *lun,
                                gchar     **out_name,
                                gchar     **out_description,
                                GIcon     **out_icon,
+                               gchar     **out_media_description,
                                GIcon     **out_media_icon);
 
 gchar *udisks_util_get_media_compat_for_display (const gchar* const *media_compat);

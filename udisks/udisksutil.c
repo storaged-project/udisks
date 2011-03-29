@@ -377,24 +377,135 @@ lun_get_media_icon_name (UDisksLun *lun)
  * @out_name: (out allow-none): Return location for name or %NULL.
  * @out_description: (out allow-none): Return location for description or %NULL.
  * @out_drive_icon: (out allow-none): Return location for icon representing the drive or %NULL.
+ * @out_media_description: (out allow-none): Return location for description of the media or %NULL.
  * @out_media_icon: (out allow-none): Return location for icon representing the media or %NULL.
  *
  * Gets information about a #UDisksLun object that is suitable to
- * present in an user interface. The returned information is
- * localized.
+ * present in an user interface. The returned strings are localized.
  *
- * If the @lun doesn't support removable media, then the returned icon
- * for the media is always the same as for the drive.
+ * If there is no media in @lun, then @out_media_icon is set to the
+ * same value as @out_drive_icon.
+ *
+ * If the @lun doesn't support removable media, then %NULL is always
+ * returned for @out_media_description and @out_media_icon.
+ *
+ * The returned data is best described by example:
+ * <informaltable>
+ *   <tgroup cols="6">
+ *     <thead>
+ *       <row>
+ *         <entry>Device / Media</entry>
+ *         <entry>name</entry>
+ *         <entry>description</entry>
+ *         <entry>icon</entry>
+ *         <entry>media_description</entry>
+ *         <entry>media_icon</entry>
+ *       </row>
+ *     </thead>
+ *     <tbody>
+ *       <row>
+ *         <entry>Internal System Disk (Hard Disk)</entry>
+ *         <entry>ST3320620AS</entry>
+ *         <entry>320 GB Hard Disk</entry>
+ *         <entry>drive-harddisk</entry>
+ *         <entry>NULL</entry>
+ *         <entry>NULL</entry>
+ *       </row>
+ *       <row>
+ *         <entry>Internal System Disk (Solid State)</entry>
+ *         <entry>INTEL SSDSA2MH080G1GC</entry>
+ *         <entry>80 GB Disk</entry>
+ *         <entry>drive-harddisk</entry>
+ *         <entry>NULL</entry>
+ *         <entry>NULL</entry>
+ *       </row>
+ *       <row>
+ *         <entry>Optical Drive (empty)</entry>
+ *         <entry>LITE-ON DVDRW SOHW-812S</entry>
+ *         <entry>CD/DVD Drive</entry>
+ *         <entry>drive-optical</entry>
+ *         <entry>NULL</entry>
+ *         <entry>NULL</entry>
+ *       </row>
+ *       <row>
+ *         <entry>Optical Drive (with CD-ROM data disc)</entry>
+ *         <entry>LITE-ON DVDRW SOHW-812S</entry>
+ *         <entry>CD/DVD Drive</entry>
+ *         <entry>drive-optical</entry>
+ *         <entry>CD-ROM Disc</entry>
+ *         <entry>media-optical-cd-rom</entry>
+ *       </row>
+ *       <row>
+ *         <entry>Optical Drive (with mixed disc)</entry>
+ *         <entry>LITE-ON DVDRW SOHW-812S</entry>
+ *         <entry>CD/DVD Drive</entry>
+ *         <entry>drive-optical</entry>
+ *         <entry>Audio/Data CD-ROM Disc</entry>
+ *         <entry>media-optical-cd-rom</entry>
+ *       </row>
+ *       <row>
+ *         <entry>Optical Drive (with audio disc)</entry>
+ *         <entry>LITE-ON DVDRW SOHW-812S</entry>
+ *         <entry>CD/DVD Drive</entry>
+ *         <entry>drive-optical</entry>
+ *         <entry>Audio Disc</entry>
+ *         <entry>media-optical-cd-audio</entry>
+ *       </row>
+ *       <row>
+ *         <entry>Optical Drive (with DVD-ROM disc)</entry>
+ *         <entry>LITE-ON DVDRW SOHW-812S</entry>
+ *         <entry>CD/DVD Drive</entry>
+ *         <entry>drive-optical</entry>
+ *         <entry>DVD-ROM Disc</entry>
+ *         <entry>media-optical-dvd-rom</entry>
+ *       </row>
+ *       <row>
+ *         <entry>Optical Drive (with blank DVD-R disc)</entry>
+ *         <entry>LITE-ON DVDRW SOHW-812S</entry>
+ *         <entry>CD/DVD Drive</entry>
+ *         <entry>drive-optical</entry>
+ *         <entry>Blank DVD-R Disc</entry>
+ *         <entry>media-optical-dvd-r</entry>
+ *       </row>
+ *       <row>
+ *         <entry>External USB Hard Disk</entry>
+ *         <entry>WD 2500JB External</entry>
+ *         <entry>250 GB Hard Disk</entry>
+ *         <entry>drive-harddisk-usb</entry>
+ *         <entry>NULL</entry>
+ *         <entry>NULL</entry>
+ *       </row>
+ *       <row>
+ *         <entry>USB Compact Flash Reader (without media)</entry>
+ *         <entry>BELKIN USB 2 HS-CF</entry>
+ *         <entry>Compact Flash Drive</entry>
+ *         <entry>drive-removable-media-flash-cf</entry>
+ *         <entry>NULL</entry>
+ *         <entry>NULL</entry>
+ *       </row>
+ *       <row>
+ *         <entry>USB Compact Flash Reader (with media)</entry>
+ *         <entry>BELKIN USB 2 HS-CF</entry>
+ *         <entry>Compact Flash Drive</entry>
+ *         <entry>drive-removable-media-flash-cf</entry>
+ *         <entry>Compact Flash media</entry>
+ *         <entry>media-flash-cf</entry>
+ *       </row>
+ *     </tbody>
+ *   </tgroup>
+ * </informaltable>
  */
 void
 udisks_util_get_lun_info (UDisksLun  *lun,
                           gchar     **out_name,
                           gchar     **out_description,
-                          GIcon     **out_drive_icon,
+                          GIcon     **out_icon,
+                          gchar     **out_media_description,
                           GIcon     **out_media_icon)
 {
   gchar *name;
   gchar *description;
+  gchar *media_description;
   const gchar *vendor;
   const gchar *model;
   guint64 size;
@@ -403,10 +514,13 @@ udisks_util_get_lun_info (UDisksLun  *lun,
   gboolean rotation_rate;
   gchar *strsize;
 
+  /* TODO: actually implement the behavior specified above... */
+
   g_return_if_fail (UDISKS_IS_LUN (lun));
 
   name = NULL;
   description = NULL;
+  media_description = NULL;
 
   strsize = NULL;
   result = g_string_new (NULL);
@@ -553,16 +667,29 @@ udisks_util_get_lun_info (UDisksLun  *lun,
     *out_name = name;
   else
     g_free (name);
-
   if (out_description != NULL)
     *out_description = description;
   else
     g_free (description);
+  if (out_icon != NULL)
+    *out_icon = g_themed_icon_new_with_default_fallbacks (lun_get_drive_icon_name (lun));
 
-  if (out_drive_icon != NULL)
-    *out_drive_icon = g_themed_icon_new_with_default_fallbacks (lun_get_drive_icon_name (lun));
-  if (out_media_icon != NULL)
-    *out_media_icon = g_themed_icon_new_with_default_fallbacks (lun_get_media_icon_name (lun));
+  if (is_removable)
+    {
+      if (out_media_description != NULL)
+        *out_media_description = media_description;
+      else
+        g_free (media_description);
+      if (out_media_icon != NULL)
+        *out_media_icon = g_themed_icon_new_with_default_fallbacks (lun_get_media_icon_name (lun));
+    }
+  else
+    {
+      if (out_media_description != NULL)
+        *out_media_description = NULL;
+      if (out_media_icon != NULL)
+        *out_media_icon = NULL;
+    }
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
