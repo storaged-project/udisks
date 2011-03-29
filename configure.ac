@@ -92,7 +92,6 @@ doc/version.xml
 doc/man/Makefile
 po/Makefile.in
 policy/Makefile
-tests/Makefile
 ])
 
 dnl ==========================================================================
