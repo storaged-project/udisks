@@ -83,6 +83,22 @@
     -->
     <property name="RotationRate" type="i" access="read"/>
 
+    <!--
+      The physical connection bus used for the drive as seen by the
+      user. This is typically used to draw a USB or Firewire emblem
+      on top of an icon in an user interface.
+
+      Note that this property has _nothing_ to do with the low-level
+      command-set used (such as ATA-8) or what low-level connection
+      bus (such as SATA, eSATA, PATA, SAS2 etc) is used.
+
+      Known values include
+
+       - usb: connected via USB
+       - firewire: connected via Firewire
+    -->
+    <property name="ConnectionBus" type="s" access="read"/>
+
     <!-- The org.freedesktop.UDisks2.IScsiTarget object that the LUN belongs
          to, or '/' if no such object exists.
       -->

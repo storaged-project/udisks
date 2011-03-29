@@ -406,6 +406,8 @@ udisks_util_get_lun_info (UDisksLun  *lun,
   guint n;
   GString *desc_str;
   DriveType desc_type;
+  gchar *hyphenated_connection_bus;
+  const gchar *connection_bus;
 
   /* TODO: support presentation-name for overrides */
 
@@ -427,6 +429,11 @@ udisks_util_get_lun_info (UDisksLun  *lun,
     size_str = udisks_util_get_size_for_display (size, FALSE, FALSE);
   media = udisks_lun_get_media (lun);
   media_compat = udisks_lun_get_media_compatibility (lun);
+  connection_bus = udisks_lun_get_connection_bus (lun);
+  if (strlen (connection_bus) > 0)
+    hyphenated_connection_bus = g_strdup_printf ("-%s", connection_bus);
+  else
+    hyphenated_connection_bus = g_strdup ("");
 
   /* Name is easy - that's just "$vendor $model" */
   if (strlen (vendor) == 0)
@@ -535,20 +542,25 @@ udisks_util_get_lun_info (UDisksLun  *lun,
     }
   g_string_free (desc_str, TRUE);
 
-  /* TODO: use -usb and -ieee1394 suffixes where appropriate */
   if (media_icon == NULL)
     {
+      gchar *s;
       if (removable)
-        media_icon = g_themed_icon_new_with_default_fallbacks ("drive-removable-media");
+        s = g_strdup_printf ("drive-removable-media%s", hyphenated_connection_bus);
       else
-        media_icon = g_themed_icon_new_with_default_fallbacks ("drive-harddisk");
+        s = g_strdup_printf ("drive-harddisk%s", hyphenated_connection_bus);
+      media_icon = g_themed_icon_new_with_default_fallbacks (s);
+      g_free (s);
     }
   if (icon == NULL)
     {
+      gchar *s;
       if (removable)
-        icon = g_themed_icon_new_with_default_fallbacks ("drive-removable-media");
+        s = g_strdup_printf ("drive-removable-media%s", hyphenated_connection_bus);
       else
-        icon = g_themed_icon_new_with_default_fallbacks ("drive-harddisk");
+        s = g_strdup_printf ("drive-harddisk%s", hyphenated_connection_bus);
+      icon = g_themed_icon_new_with_default_fallbacks (s);
+      g_free (s);
     }
 
   /* TODO: prepend "Blank ", "Mixed " or "Audio " for optical discs */
@@ -575,6 +587,7 @@ udisks_util_get_lun_info (UDisksLun  *lun,
   else if (media_icon != NULL)
     g_object_unref (media_icon);
 
+  g_free (hyphenated_connection_bus);
   g_free (size_str);
 }
 

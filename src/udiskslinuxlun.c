@@ -780,6 +780,27 @@ lun_update_iscsi (UDisksLinuxLun *lun,
     g_object_unref (session_device);
 }
 
+static void
+lun_set_connection_bus (UDisksLinuxLun *lun,
+                        UDisksLun      *iface,
+                        GUdevDevice    *device)
+{
+  GUdevDevice *parent;
+
+  /* note: @device may vary - it can be any path for lun */
+
+  udisks_lun_set_connection_bus (iface, "");
+  parent = g_udev_device_get_parent_with_subsystem (device, "usb", "usb_interface");
+  if (parent != NULL)
+    {
+      /* TODO: should probably check that it's a storage interface */
+      udisks_lun_set_connection_bus (iface, "usb");
+      g_object_unref (parent);
+    }
+
+  /* TODO: detect firewire */
+}
+
 
 static void
 lun_update (UDisksLinuxLun      *lun,
@@ -911,6 +932,7 @@ lun_update (UDisksLinuxLun      *lun,
   udisks_lun_set_size (iface, udisks_daemon_util_block_get_size (device));
   lun_set_media (lun, iface, device);
   lun_set_rotation_rate (lun, iface, device);
+  lun_set_connection_bus (lun, iface, device);
  out:
   ;
 }
