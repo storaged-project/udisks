@@ -468,6 +468,7 @@ static const struct
   { "ID_DRIVE_FLASH_SM", "flash_sm" },
   { "ID_DRIVE_FLASH_SD", "flash_sd" },
   { "ID_DRIVE_FLASH_SDHC", "flash_sdhc" },
+  { "ID_DRIVE_FLASH_SDXC", "flash_sdxc" },
   { "ID_DRIVE_FLASH_MMC", "flash_mmc" },
   { "ID_DRIVE_FLOPPY", "floppy" },
   { "ID_DRIVE_FLOPPY_ZIP", "floppy_zip" },
@@ -507,6 +508,7 @@ static const struct
   { "ID_DRIVE_MEDIA_FLASH_SM", "flash_sm" },
   { "ID_DRIVE_MEDIA_FLASH_SD", "flash_sd" },
   { "ID_DRIVE_MEDIA_FLASH_SDHC", "flash_sdhc" },
+  { "ID_DRIVE_MEDIA_FLASH_SDXC", "flash_sdxc" },
   { "ID_DRIVE_MEDIA_FLASH_MMC", "flash_mmc" },
   { "ID_DRIVE_MEDIA_FLOPPY", "floppy" },
   { "ID_DRIVE_MEDIA_FLOPPY_ZIP", "floppy_zip" },
@@ -574,7 +576,7 @@ lun_set_media (UDisksLinuxLun *lun,
       /* If the media isn't set (from e.g. udev rules), just pick the first one in media_compat - note
        * that this may be NULL (if we don't know what media is compatible with the drive) which is OK.
        */
-      if (media_in_drive == NULL)
+      if (strlen (media_in_drive) == 0)
         media_in_drive = ((const gchar **) media_compat_array->pdata)[0];
     }
 

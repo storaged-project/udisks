@@ -181,6 +181,61 @@ udisks_util_get_size_for_display (guint64  size,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+typedef enum
+{
+  DRIVE_TYPE_UNSET,
+  DRIVE_TYPE_DISK,
+  DRIVE_TYPE_CARD,
+  DRIVE_TYPE_DISC
+} DriveType;
+
+static const struct
+{
+  const gchar *id;
+  const gchar *media_name;
+  const gchar *media_family;
+  const gchar *media_icon;
+  DriveType    media_type;
+  const gchar *drive_icon;
+} media_data[] =
+{
+  {"floppy",     N_("Floppy"),       N_("Floppy"), "media-floppy",      DRIVE_TYPE_DISK, "drive-removable-media-floppy"},
+  {"floppy_zip", N_("Zip"),          N_("Zip"),    "media-floppy-jaz",  DRIVE_TYPE_DISK, "drive-removable-media-floppy-jaz"},
+  {"floppy_jaz", N_("Jaz"),          N_("Jaz"),    "media-floppy-zip",  DRIVE_TYPE_DISK, "drive-removable-media-floppy-zip"},
+
+  {"flash",      N_("Flash"),        N_("Flash"),        "media-flash",       DRIVE_TYPE_CARD, "drive-removable-media-flash"},
+  {"flash_ms",   N_("MemoryStick"),  N_("MemoryStick"),  "media-flash-ms",    DRIVE_TYPE_CARD, "drive-removable-media-flash-ms"},
+  {"flash_sm",   N_("SmartMedia"),   N_("SmartMedia"),   "media-flash-sm",    DRIVE_TYPE_CARD, "drive-removable-media-flash-sm"},
+  {"flash_cf",   N_("CompactFlash"), N_("CompactFlash"), "media-flash-cf",    DRIVE_TYPE_CARD, "drive-removable-media-flash-cf"},
+  {"flash_mmc",  N_("MMC"),          N_("SD"),           "media-flash-mmc",   DRIVE_TYPE_CARD, "drive-removable-media-flash-mmc"},
+  {"flash_sd",   N_("SD"),           N_("SD"),           "media-flash-sd",    DRIVE_TYPE_CARD, "drive-removable-media-flash-sd"},
+  {"flash_sdxc", N_("SDXC"),         N_("SD"),           "media-flash-sd-xc", DRIVE_TYPE_CARD, "drive-removable-media-flash-sd-xc"},
+  {"flash_sdhc", N_("SDHC"),         N_("SD"),           "media-flash-sd-hc", DRIVE_TYPE_CARD, "drive-removable-media-flash-sd-hc"},
+
+  {"optical_cd",             N_("CD-ROM"),    N_("CD"),      "media-optical-cd-rom",        DRIVE_TYPE_DISC, "drive-optical"},
+  {"optical_cd_r",           N_("CD-R"),      N_("CD"),      "media-optical-cd-r",          DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_cd_rw",          N_("CD-RW"),     N_("CD"),      "media-optical-cd-rw",         DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_dvd",            N_("DVD"),       N_("DVD"),     "media-optical-dvd-rom",       DRIVE_TYPE_DISC, "drive-optical"},
+  {"optical_dvd_r",          N_("DVD-R"),     N_("DVD"),     "media-optical-dvd-r",         DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_dvd_rw",         N_("DVD-RW"),    N_("DVD"),     "media-optical-dvd-rw",        DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_dvd_ram",        N_("DVD-RAM"),   N_("DVD"),     "media-optical-dvd-ram",       DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_dvd_plus_r",     N_("DVD+R"),     N_("DVD"),     "media-optical-dvd-r-plus",    DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_dvd_plus_rw",    N_("DVD+RW"),    N_("DVD"),     "media-optical-dvd-rw-plus",   DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_dvd_plus_r_dl",  N_("DVD+R DL"),  N_("DVD"),     "media-optical-dvd-dl-r-plus", DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_dvd_plus_rw_dl", N_("DVD+RW DL"), N_("DVD"),     "media-optical-dvd-dl-r-plus", DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_bd",             N_("BD-ROM"),    N_("Blu-Ray"), "media-optical-bd-rom",        DRIVE_TYPE_DISC, "drive-optical"},
+  {"optical_bd_r",           N_("BD-R"),      N_("Blu-Ray"), "media-optical-bd-r",          DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_bd_re",          N_("BD-RE"),     N_("Blu-Ray"), "media-optical-bd-re",         DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_hddvd",          N_("HDDVD"),     N_("HDDVD"),   "media-optical-hddvd-rom",     DRIVE_TYPE_DISC, "drive-optical"},
+  {"optical_hddvd_r",        N_("HDDVD-R"),   N_("HDDVD"),   "media-optical-hddvd-r",       DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_hddvd_rw",       N_("HDDVD-RW"),  N_("HDDVD"),   "media-optical-hddvd-rw",      DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_mo",             N_("MO"),        N_("CD"),      "media-optical-mo",            DRIVE_TYPE_DISC, "drive-optical"},
+  {"optical_mrw",            N_("MRW"),       N_("CD"),      "media-optical-mrw",           DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_mrw_w",          N_("MRW-W"),     N_("CD"),      "media-optical-mrw-w",         DRIVE_TYPE_DISC, "drive-optical-recorder"},
+};
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static gboolean
 strv_has (const gchar * const *haystack,
           const gchar          *needle)
@@ -198,174 +253,6 @@ strv_has (const gchar * const *haystack,
           goto out;
         }
     }
-
- out:
-  return ret;
-}
-
-static gboolean
-strv_has_prefix (const gchar * const *haystack,
-                 const gchar          *needle_prefix)
-{
-  gboolean ret;
-  guint n;
-
-  ret = FALSE;
-
-  for (n = 0; haystack != NULL && haystack[n] != NULL; n++)
-    {
-      if (g_str_has_prefix (haystack[n], needle_prefix))
-        {
-          ret = TRUE;
-          goto out;
-        }
-    }
-
- out:
-  return ret;
-}
-
-static const gchar *
-lun_get_drive_icon_name (UDisksLun *lun)
-{
-  const gchar *ret;
-  const gchar* const *media_compat;
-
-  ret = NULL;
-
-  media_compat = udisks_lun_get_media_compatibility (lun);
-
-  /* TODO: it would probably be nice to export a property whether this device can
-   *       burn discs etc. so we can use the 'drive-optical-recorder' icon when
-   *       applicable.
-   */
-
-  /* first, try to switch on media type */
-  if (strv_has (media_compat, "optical_cd"))
-    ret = "drive-optical";
-  else if (strv_has (media_compat, "floppy"))
-    ret = "drive-removable-media-floppy";
-  else if (strv_has (media_compat, "floppy_zip"))
-    ret = "drive-removable-media-floppy-zip";
-  else if (strv_has (media_compat, "floppy_jaz"))
-    ret = "drive-removable-media-floppy-jaz";
-  else if (strv_has (media_compat, "flash_cf"))
-    ret = "drive-removable-media-flash-cf";
-  else if (strv_has (media_compat, "flash_ms"))
-    ret = "drive-removable-media-flash-ms";
-  else if (strv_has (media_compat, "flash_sm"))
-    ret = "drive-removable-media-flash-sm";
-  else if (strv_has (media_compat, "flash_sd"))
-    ret = "drive-removable-media-flash-sd";
-  else if (strv_has (media_compat, "flash_sdhc"))
-    ret = "drive-removable-media-flash-sd"; /* TODO: get icon name for sdhc */
-  else if (strv_has (media_compat, "flash_mmc"))
-    ret = "drive-removable-media-flash-sd"; /* TODO: get icon for mmc */
-  else if (strv_has_prefix (media_compat, "flash"))
-    ret = "drive-removable-media-flash";
-
-  if (ret != NULL)
-    goto out;
-
-  /* TODO: check something like connection-interface to choose USB/Firewire/etc icons */
-  if (udisks_lun_get_media_removable (lun))
-    {
-      ret = "drive-removable-media";
-      goto out;
-    }
-  ret = "drive-harddisk";
-
- out:
-  return ret;
-
-}
-
-static const struct
-{
-        const char *disc_type;
-        const char *icon_name;
-} disc_data[] = {
-  {"optical_cd",             "media-optical-cd-rom",        },
-  {"optical_cd_r",           "media-optical-cd-r",          },
-  {"optical_cd_rw",          "media-optical-cd-rw",         },
-  {"optical_dvd",            "media-optical-dvd-rom",       },
-  {"optical_dvd_r",          "media-optical-dvd-r",         },
-  {"optical_dvd_rw",         "media-optical-dvd-rw",        },
-  {"optical_dvd_ram",        "media-optical-dvd-ram",       },
-  {"optical_dvd_plus_r",     "media-optical-dvd-r-plus",    },
-  {"optical_dvd_plus_rw",    "media-optical-dvd-rw-plus",   },
-  {"optical_dvd_plus_r_dl",  "media-optical-dvd-dl-r-plus", },
-  {"optical_dvd_plus_rw_dl", "media-optical-dvd-dl-r-plus", },
-  {"optical_bd",             "media-optical-bd-rom",        },
-  {"optical_bd_r",           "media-optical-bd-r",          },
-  {"optical_bd_re",          "media-optical-bd-re",         },
-  {"optical_hddvd",          "media-optical-hddvd-rom",     },
-  {"optical_hddvd_r",        "media-optical-hddvd-r",       },
-  {"optical_hddvd_rw",       "media-optical-hddvd-rw",      },
-  {"optical_mo",             "media-optical-mo",            },
-  {"optical_mrw",            "media-optical-mrw",           },
-  {"optical_mrw_w",          "media-optical-mrw-w",         },
-  {NULL, NULL}
-};
-
-static const gchar *
-lun_get_media_icon_name (UDisksLun *lun)
-{
-  const gchar *ret;
-  const gchar *media;
-
-  ret = NULL;
-
-  /* first try the media */
-  media = udisks_lun_get_media (lun);
-  if (strlen (media) > 0)
-    {
-      if (g_strcmp0 (media, "flash_cf") == 0)
-        ret = "media-flash-cf";
-      else if (g_strcmp0 (media, "flash_ms") == 0)
-        ret = "media-flash-ms";
-      else if (g_strcmp0 (media, "flash_sm") == 0)
-        ret = "media-flash-sm";
-      else if (g_strcmp0 (media, "flash_sd") == 0)
-        ret = "media-flash-sd";
-      else if (g_strcmp0 (media, "flash_sdhc") == 0)
-        ret = "media-flash-sd"; /* TODO: get icon name for sdhc */
-      else if (g_strcmp0 (media, "flash_mmc") == 0)
-        ret = "media-flash-sd"; /* TODO: get icon for mmc */
-      else if (g_strcmp0 (media, "floppy") == 0)
-        ret = "media-floppy";
-      else if (g_strcmp0 (media, "floppy_zip") == 0)
-        ret = "media-floppy-zip";
-      else if (g_strcmp0 (media, "floppy_jaz") == 0)
-        ret = "media-floppy-jaz";
-      else if (g_str_has_prefix (media, "flash"))
-        ret = "media-flash";
-      else if (g_str_has_prefix (media, "optical"))
-        {
-          guint n;
-          for (n = 0; disc_data[n].disc_type != NULL; n++)
-            {
-              if (g_strcmp0 (disc_data[n].disc_type, media) == 0)
-                {
-                  ret = disc_data[n].icon_name;
-                  break;
-                }
-            }
-          if (ret == NULL)
-            ret = "media-optical";
-        }
-    }
-
-  if (ret != NULL)
-    goto out;
-
-  /* TODO: check something like connection-interface to choose USB/Firewire/etc icons */
-  if (udisks_lun_get_media_removable (lun))
-    {
-      ret = "drive-removable-media";
-      goto out;
-    }
-  ret = "drive-harddisk";
 
  out:
   return ret;
@@ -505,164 +392,168 @@ udisks_util_get_lun_info (UDisksLun  *lun,
 {
   gchar *name;
   gchar *description;
+  GIcon *icon;
   gchar *media_description;
+  GIcon *media_icon;
   const gchar *vendor;
   const gchar *model;
-  guint64 size;
-  gboolean is_removable;
-  GString *result;
+  const gchar *media;
+  const gchar *const *media_compat;
+  gboolean removable;
   gboolean rotation_rate;
-  gchar *strsize;
+  guint64 size;
+  gchar *size_str;
+  guint n;
+  GString *desc_str;
+  DriveType desc_type;
 
-  /* TODO: actually implement the behavior specified above... */
+  /* TODO: support presentation-name for overrides */
 
   g_return_if_fail (UDISKS_IS_LUN (lun));
 
   name = NULL;
   description = NULL;
+  icon = NULL;
   media_description = NULL;
-
-  strsize = NULL;
-  result = g_string_new (NULL);
-
-  /* TODO: support presentation-name for overrides */
+  media_icon = NULL;
+  size_str = NULL;
 
   vendor = udisks_lun_get_vendor (lun);
   model = udisks_lun_get_model (lun);
+  size = udisks_lun_get_size (lun);
+  removable = udisks_lun_get_media_removable (lun);
+  rotation_rate = udisks_lun_get_rotation_rate (lun);
+  if (size > 0)
+    size_str = udisks_util_get_size_for_display (size, FALSE, FALSE);
+  media = udisks_lun_get_media (lun);
+  media_compat = udisks_lun_get_media_compatibility (lun);
+
+  /* Name is easy - that's just "$vendor $model" */
   if (strlen (vendor) == 0)
     vendor = NULL;
   if (strlen (model) == 0)
     model = NULL;
-
-  size = udisks_lun_get_size (lun);
-
-  is_removable = udisks_lun_get_media_removable (lun);
-  rotation_rate = udisks_lun_get_rotation_rate (lun);
-
-  if (size > 0)
-    strsize = udisks_util_get_size_for_display (size, FALSE, FALSE);
-
-  if (is_removable)
-    {
-      gchar *media;
-
-      media = udisks_util_get_media_compat_for_display (udisks_lun_get_media_compatibility (lun));
-      if (media != NULL)
-        {
-          g_string_append (result, media);
-          g_free (media);
-        }
-
-      /* If we know the media type, just append Drive */
-      if (result->len > 0)
-        {
-          GString *new_result;
-
-          new_result = g_string_new (NULL);
-          /* Translators: %s is the media type e.g. 'CD/DVD' or 'CompactFlash' */
-          g_string_append_printf (new_result, _("%s Drive"), result->str);
-          g_string_free (result, TRUE);
-          result = new_result;
-        }
-      else
-        {
-          /* Otherwise just "Removable Drive", possibly with the size */
-          if (strsize != NULL)
-            {
-              g_string_append_printf (result,
-                                      _("%s Removable Drive"),
-                                      strsize);
-            }
-          else
-            {
-              g_string_append (result,
-                               _("Removable Drive"));
-            }
-        }
-    }
-  else
-    {
-      gchar *media;
-
-      /* Media is not removable, use "Hard Disk" resp. "Solid-State Disk"
-       * unless we actually know what media types the drive is compatible with
-       */
-      media = udisks_util_get_media_compat_for_display (udisks_lun_get_media_compatibility (lun));
-      if (media != NULL)
-        {
-          g_string_append (result, media);
-          g_free (media);
-        }
-
-      if (result->len > 0)
-        {
-          GString *new_result;
-          new_result = g_string_new (NULL);
-          if (strsize != NULL)
-            {
-              /* Translators: first %s is the size, second %s is the media type
-               * e.g. 'CD/DVD' or 'CompactFlash'
-               */
-              g_string_append_printf (new_result, _("%s %s Drive"),
-                                      strsize,
-                                      result->str);
-            }
-          else
-            {
-              /* Translators: %s is the media type e.g. 'CD/DVD' or 'CompactFlash' */
-              g_string_append_printf (new_result, _("%s Drive"),
-                                      result->str);
-            }
-          g_string_free (result, TRUE);
-          result = new_result;
-        }
-      else
-        {
-          if (rotation_rate != 0)
-            {
-              if (strsize != NULL)
-                {
-                  /* Translators: This string is used to describe a hard disk.
-                   * The first %s is the size of the drive e.g. '45 GB'.
-                   */
-                  g_string_append_printf (result, _("%s Hard Disk"), strsize);
-                }
-              else
-                {
-                  /* Translators: This string is used to describe a hard disk where the size
-                   * is not known.
-                   */
-                  g_string_append (result, _("Hard Disk"));
-                }
-            }
-          else
-            {
-              if (strsize != NULL)
-                {
-                  /* Translators: This string is used to describe a non-rotating disk. The first %s is
-                   * the size of the drive e.g. '45 GB'.
-                   */
-                  g_string_append_printf (result, _("%s Disk"),
-                                          strsize);
-                }
-              else
-                {
-                  /* Translators: This string is used to describe a non-rotating disk where the size
-                   * is not known.
-                   */
-                  g_string_append (result, _("Disk"));
-                }
-            }
-        }
-    }
-
-  description = g_string_free (result, FALSE);
-
   name = g_strdup_printf ("%s%s%s",
                           vendor != NULL ? vendor : "",
                           vendor != NULL ? " " : "",
                           model != NULL ? model : "");
 
+  desc_type = DRIVE_TYPE_UNSET;
+  desc_str = g_string_new (NULL);
+  for (n = 0; n < G_N_ELEMENTS (media_data) - 1; n++)
+    {
+      /* media_compat */
+      if (strv_has (media_compat, media_data[n].id))
+        {
+          if (icon == NULL)
+            icon = g_themed_icon_new_with_default_fallbacks (media_data[n].drive_icon);
+          if (strstr (desc_str->str, media_data[n].media_family) == NULL)
+            {
+              if (desc_str->len > 0)
+                g_string_append (desc_str, "/");
+              g_string_append (desc_str, _(media_data[n].media_family));
+            }
+          desc_type = media_data[n].media_type;
+        }
+
+      /* media */
+      if (g_strcmp0 (media, media_data[n].id) == 0)
+        {
+          if (media_description == NULL)
+            {
+              switch (media_data[n].media_type)
+                {
+                case DRIVE_TYPE_UNSET:
+                  g_assert_not_reached ();
+                  break;
+                case DRIVE_TYPE_DISK:
+                  media_description = g_strdup_printf (_("%s Disk"), _(media_data[n].media_name));
+                  break;
+                case DRIVE_TYPE_CARD:
+                  media_description = g_strdup_printf (_("%s Card"), _(media_data[n].media_name));
+                  break;
+                case DRIVE_TYPE_DISC:
+                  media_description = g_strdup_printf (_("%s Disc"), _(media_data[n].media_name));
+                  break;
+                }
+            }
+          if (media_icon == NULL)
+            media_icon = g_themed_icon_new_with_default_fallbacks (media_data[n].media_icon);
+        }
+    }
+
+  switch (desc_type)
+    {
+    case DRIVE_TYPE_UNSET:
+      if (removable)
+        {
+          if (size_str != NULL)
+            {
+              description = g_strdup_printf (_("%s Drive"), size_str);
+            }
+          else
+            {
+              description = g_strdup (_("Drive"));
+            }
+        }
+      else
+        {
+          if (rotation_rate == 0)
+            {
+              if (size_str != NULL)
+                {
+                  description = g_strdup_printf (_("%s Disk"), size_str);
+                }
+              else
+                {
+                  description = g_strdup (_("Disk"));
+                }
+            }
+          else
+            {
+              if (size_str != NULL)
+                {
+                  description = g_strdup_printf (_("%s Hard Disk"), size_str);
+                }
+              else
+                {
+                  description = g_strdup (_("Hard Disk"));
+                }
+            }
+        }
+      break;
+
+    case DRIVE_TYPE_CARD:
+      description = g_strdup_printf (_("%s Card Reader"), desc_str->str);
+      break;
+
+    case DRIVE_TYPE_DISK:
+      /* explicit fall-through */
+    case DRIVE_TYPE_DISC:
+      description = g_strdup_printf (_("%s Drive"), desc_str->str);
+      break;
+    }
+  g_string_free (desc_str, TRUE);
+
+  /* TODO: use -usb and -ieee1394 suffixes where appropriate */
+  if (media_icon == NULL)
+    {
+      if (removable)
+        media_icon = g_themed_icon_new_with_default_fallbacks ("drive-removable-media");
+      else
+        media_icon = g_themed_icon_new_with_default_fallbacks ("drive-harddisk");
+    }
+  if (icon == NULL)
+    {
+      if (removable)
+        icon = g_themed_icon_new_with_default_fallbacks ("drive-removable-media");
+      else
+        icon = g_themed_icon_new_with_default_fallbacks ("drive-harddisk");
+    }
+
+  /* TODO: prepend "Blank ", "Mixed " or "Audio " for optical discs */
+
+  /* return values to caller */
   if (out_name != NULL)
     *out_name = name;
   else
@@ -672,24 +563,19 @@ udisks_util_get_lun_info (UDisksLun  *lun,
   else
     g_free (description);
   if (out_icon != NULL)
-    *out_icon = g_themed_icon_new_with_default_fallbacks (lun_get_drive_icon_name (lun));
-
-  if (is_removable)
-    {
-      if (out_media_description != NULL)
-        *out_media_description = media_description;
-      else
-        g_free (media_description);
-      if (out_media_icon != NULL)
-        *out_media_icon = g_themed_icon_new_with_default_fallbacks (lun_get_media_icon_name (lun));
-    }
+    *out_icon = icon;
+  else if (icon != NULL)
+    g_object_unref (icon);
+  if (out_media_description != NULL)
+    *out_media_description = media_description;
   else
-    {
-      if (out_media_description != NULL)
-        *out_media_description = NULL;
-      if (out_media_icon != NULL)
-        *out_media_icon = NULL;
-    }
+    g_free (media_description);
+  if (out_media_icon != NULL)
+    *out_media_icon = media_icon;
+  else if (media_icon != NULL)
+    g_object_unref (media_icon);
+
+  g_free (size_str);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

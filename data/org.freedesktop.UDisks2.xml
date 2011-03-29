@@ -37,7 +37,8 @@
        - flash_ms: MemoryStick
        - flash_sm: SmartMedia
        - flash_sd: Secure Digital
-       - flash_sdhc: Secure Digital High-Capacity
+       - flash_sdhc: Secure Digital High Capacity
+       - flash_sdxc: Secure Digital eXtended Capacity
        - flash_mmc: MultiMediaCard
        - floppy: Floppy Disk
        - floppy_zip: Zip Disk
