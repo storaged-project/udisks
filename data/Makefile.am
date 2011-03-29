@@ -23,7 +23,6 @@ EXTRA_DIST = 						\
 	org.freedesktop.UDisks2.xml			\
 	$(service_in_files)				\
 	$(dbusconf_in_files)				\
-	udisks2.service					\
 	$(NULL)
 
 clean-local :

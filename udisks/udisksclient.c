@@ -19,12 +19,7 @@
  */
 
 #include "config.h"
-
-#include <string.h>
-
-//#include <glib/gi18n-lib.h>
-#define _(x) x
-
+#include <glib/gi18n-lib.h>
 
 #include "udisksclient.h"
 #include "udiskserror.h"

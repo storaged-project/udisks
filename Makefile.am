@@ -3,7 +3,7 @@
 NULL =
 
 # NOTE: 'tests' subdir is disabled for now
-SUBDIRS = data udisks src tools policy doc
+SUBDIRS = data udisks src tools policy po doc
 
 EXTRA_DIST = 			\
 	HACKING 		\

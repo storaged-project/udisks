@@ -19,10 +19,10 @@
  */
 
 #include "config.h"
+#include <glib/gi18n-lib.h>
 
 #include <sys/types.h>
 #include <sys/wait.h>
-
 #include <string.h>
 
 #include "udisksbasejob.h"

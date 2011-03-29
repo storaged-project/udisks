@@ -22,6 +22,7 @@
  */
 
 #include "config.h"
+#include <glib/gi18n-lib.h>
 
 #include <unistd.h>
 #include <sys/signalfd.h>

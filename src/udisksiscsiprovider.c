@@ -19,10 +19,7 @@
  */
 
 #include "config.h"
-
-/* TODO: fix up */
-#define N_(x) x
-#define _(x) x
+#include <glib/gi18n-lib.h>
 
 /* TODO:
  *

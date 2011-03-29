@@ -19,6 +19,7 @@
  */
 
 #include "config.h"
+#include <glib/gi18n-lib.h>
 
 #include <sys/types.h>
 #include <pwd.h>
@@ -33,10 +34,6 @@
 #include "udisksdaemon.h"
 #include "udiskspersistentstore.h"
 #include "udisksdaemonutil.h"
-
-/* TODO: fix up */
-#define N_(x) x
-#define _(x) x
 
 /**
  * SECTION:udiskslinuxfilesystem

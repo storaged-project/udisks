@@ -1,8 +1,6 @@
 
 NULL =
 
-if MAN_PAGES_ENABLED
-
 man_MANS = 				\
 	udisksctl.1			\
 	udisksd.8			\
@@ -17,8 +15,6 @@ udisksd.8 : udisksd.xml
 
 udisks.7 : udisks.xml
 	$(XSLTPROC) -nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
-
-endif # MAN_PAGES_ENABLED
 
 EXTRA_DIST= 				\
 	udisksctl.xml			\

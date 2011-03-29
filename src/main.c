@@ -19,6 +19,8 @@
  */
 
 #include "config.h"
+#include <glib/gi18n.h>
+
 #include <signal.h>
 #include <gio/gio.h>
 
