@@ -17,6 +17,7 @@ INCLUDES = \
 	-DUDISKS_COMPILATION					\
 	$(GLIB_CFLAGS) 						\
 	$(GIO_CFLAGS)						\
+	$(WARN_CFLAGS)						\
 	$(NULL)
 
 $(dbus_built_sources) : Makefile.am $(top_srcdir)/data/org.freedesktop.UDisks2.xml
