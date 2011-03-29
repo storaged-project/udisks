@@ -3,8 +3,7 @@
 NULL =
 
 INCLUDES = \
-	-I$(top_builddir)					\
-	-I$(top_srcdir)	 					\
+	-I$(top_builddir) -I$(top_srcdir)	 		\
 	-DPACKAGE_LIBEXEC_DIR=\""$(libexecdir)"\" 		\
 	-DPACKAGE_SYSCONF_DIR=\""$(sysconfdir)"\" 		\
 	-DPACKAGE_DATA_DIR=\""$(datadir)"\" 			\

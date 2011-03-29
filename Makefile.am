@@ -8,8 +8,7 @@ EXTRA_DIST = 			\
 	HACKING 		\
 	$(NULL)
 
-# xsltproc barfs on 'make distcheck'; disable for now
-DISTCHECK_CONFIGURE_FLAGS=--disable-man-pages --disable-gtk-doc
+DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
 clean-local :
 	rm -f *~
