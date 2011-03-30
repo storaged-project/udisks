@@ -4,23 +4,6 @@
 #
 
 # ------------------------------------------------------------------------
-# Probe the LUN itself for information. NOTE: This will eventually be
-# moved into udev - for now it's here because of the reason given in
-#
-#  http://git.kernel.org/?p=linux/hotplug/udev.git;a=commitdiff;h=310f99d33595afdc1962611a913c429785f9ad40
-#
-# The reason we want this information is given here
-#
-#  http://git.kernel.org/?p=linux/hotplug/udev.git;a=commitdiff;h=2938220037862b7698df091a1e5cd45f44132d73
-#
-
-# run scsi_id and ata_id on the actual SCSI device
-ACTION!="remove", SUBSYSTEM=="scsi", ENV{DEVTYPE}=="scsi_device", ENV{ID_SERIAL}!="?*", ATTR{vendor}=="ATA", IMPORT{program}="ata_id --export $root/bsg/$kernel"
-# ATA/ATAPI devices is of type 0x05 and vendor is usually not ATA
-ACTION!="remove", SUBSYSTEM=="scsi", ENV{DEVTYPE}=="scsi_device", ENV{ID_SERIAL}!="?*", ATTR{type}=="5", IMPORT{program}="ata_id --export $root/bsg/$kernel"
-ACTION!="remove", SUBSYSTEM=="scsi", ENV{DEVTYPE}=="scsi_device", ENV{ID_SERIAL}!="?*", IMPORT{program}="scsi_id --whitelisted --export --device $root/bsg/$kernel"
-
-# ------------------------------------------------------------------------
 # Tag floppy drives since they need special care
 
 # PC floppy drives
