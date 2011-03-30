@@ -21,7 +21,7 @@
 #ifndef __UDISKS_MOUNT_H__
 #define __UDISKS_MOUNT_H__
 
-#include "types.h"
+#include "udisksdaemontypes.h"
 
 G_BEGIN_DECLS
 

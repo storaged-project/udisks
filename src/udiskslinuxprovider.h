@@ -21,7 +21,7 @@
 #ifndef __UDISKS_LINUX_PROVIDER_H__
 #define __UDISKS_LINUX_PROVIDER_H__
 
-#include "types.h"
+#include "udisksdaemontypes.h"
 #include <gudev/gudev.h>
 
 G_BEGIN_DECLS

@@ -43,7 +43,7 @@ EXTRA_DIST += udisks-daemon-marshal.list
 noinst_LTLIBRARIES = libudisks-daemon.la
 
 libudisks_daemon_la_SOURCES =						\
-	types.h								\
+	udisksdaemontypes.h						\
 	gposixsignal.h			gposixsignal.c			\
 	udisksdaemon.h			udisksdaemon.c			\
 	udisksprovider.h		udisksprovider.c		\

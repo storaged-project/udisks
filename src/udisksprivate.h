@@ -21,7 +21,7 @@
 #ifndef __UDISKS_PRIVATE_H__
 #define __UDISKS_PRIVATE_H__
 
-#include "types.h"
+#include "udisksdaemontypes.h"
 
 G_BEGIN_DECLS
 

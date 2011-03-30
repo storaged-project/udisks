@@ -26,7 +26,7 @@
 
 #include "gposixsignal.h"
 
-#include "types.h"
+#include "udisksdaemontypes.h"
 #include "udisksdaemon.h"
 
 /* ---------------------------------------------------------------------------------------------------- */

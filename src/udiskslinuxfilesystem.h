@@ -21,7 +21,7 @@
 #ifndef __UDISKS_LINUX_FILESYSTEM_H__
 #define __UDISKS_LINUX_FILESYSTEM_H__
 
-#include "types.h"
+#include "udisksdaemontypes.h"
 
 G_BEGIN_DECLS
 

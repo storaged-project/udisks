@@ -26,7 +26,7 @@
 
 #include <string.h>
 
-#include <types.h>
+#include <udisksdaemontypes.h>
 #include <udisksdaemon.h>
 #include <udisksspawnedjob.h>
 #include <udisksthreadedjob.h>
