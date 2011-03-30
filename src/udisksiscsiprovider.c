@@ -1037,7 +1037,7 @@ handle_iscsi_connection_uevent (UDisksIScsiProvider *provider,
             }
           else
             {
-              g_warning ("blah");
+              g_warning ("no session device for %s", connection->session_sysfs_path);
             }
         }
     }
