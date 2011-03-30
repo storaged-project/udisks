@@ -95,7 +95,7 @@
       Known values include
 
        - usb: connected via USB
-       - firewire: connected via Firewire
+       - ieee1394: connected via Firewire
     -->
     <property name="ConnectionBus" type="s" access="read"/>
 

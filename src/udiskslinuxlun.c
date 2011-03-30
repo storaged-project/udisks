@@ -796,9 +796,20 @@ lun_set_connection_bus (UDisksLinuxLun *lun,
       /* TODO: should probably check that it's a storage interface */
       udisks_lun_set_connection_bus (iface, "usb");
       g_object_unref (parent);
+      goto out;
     }
 
-  /* TODO: detect firewire */
+  parent = g_udev_device_get_parent_with_subsystem (device, "firewire", NULL);
+  if (parent != NULL)
+    {
+      /* TODO: should probably check that it's a storage interface */
+      udisks_lun_set_connection_bus (iface, "ieee1394");
+      g_object_unref (parent);
+      goto out;
+    }
+
+ out:
+  ;
 }
 
 
