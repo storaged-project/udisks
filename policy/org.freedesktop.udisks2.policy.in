@@ -39,4 +39,14 @@
     </defaults>
   </action>
 
+  <action id="org.freedesktop.udisks2.swap">
+    <_description>Configure swap devices</_description>
+    <_message>Authentication is required to configure swap devices</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
 </policyconfig>
