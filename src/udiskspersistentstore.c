@@ -622,7 +622,8 @@ mounted_fs_entry_is_valid (UDisksPersistentStore   *store,
   for (l = mounts; l != NULL; l = l->next)
     {
       UDisksMount *mount = UDISKS_MOUNT (l->data);
-      if (g_strcmp0 (udisks_mount_get_mount_path (mount), mount_point) == 0)
+      if (udisks_mount_get_mount_type (mount) == UDISKS_MOUNT_TYPE_FILESYSTEM &&
+          g_strcmp0 (udisks_mount_get_mount_path (mount), mount_point) == 0)
         {
           found_mount = TRUE;
           break;

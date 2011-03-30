@@ -29,11 +29,12 @@ G_BEGIN_DECLS
 #define UDISKS_MOUNT(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_MOUNT, UDisksMount))
 #define UDISKS_IS_MOUNT(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_MOUNT))
 
-GType        udisks_mount_get_type       (void) G_GNUC_CONST;
-const gchar *udisks_mount_get_mount_path (UDisksMount  *mount);
-dev_t        udisks_mount_get_dev        (UDisksMount  *mount);
-gint         udisks_mount_compare        (UDisksMount  *mount,
-                                          UDisksMount  *other_mount);
+GType            udisks_mount_get_type       (void) G_GNUC_CONST;
+UDisksMountType  udisks_mount_get_mount_type (UDisksMount *mount);
+const gchar     *udisks_mount_get_mount_path (UDisksMount *mount);
+dev_t            udisks_mount_get_dev        (UDisksMount *mount);
+gint             udisks_mount_compare        (UDisksMount *mount,
+                                              UDisksMount *other_mount);
 
 G_END_DECLS
 

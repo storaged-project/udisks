@@ -223,6 +223,21 @@
 
   <!-- ********************************************************************** -->
 
+  <interface name="org.freedesktop.UDisks2.Swapspace">
+    <!-- prereq: org.freedesktop.UDisks2.BlockDevice -->
+
+    <property name="Active" type="b" access="read"/>
+
+    <method name="Start">
+      <arg name="options" direction="in" type="as"/>
+    </method>
+    <method name="Stop">
+      <arg name="options" direction="in" type="as"/>
+    </method>
+  </interface>
+
+  <!-- ********************************************************************** -->
+
   <interface name="org.freedesktop.UDisks2.Job">
     <property name="Progress" type="d" access="read"/>
     <property name="StartTime" type="t" access="read"/>

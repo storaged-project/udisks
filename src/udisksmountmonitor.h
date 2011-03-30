@@ -33,8 +33,9 @@ GType                udisks_mount_monitor_get_type           (void) G_GNUC_CONST
 UDisksMountMonitor  *udisks_mount_monitor_new                (void);
 GList               *udisks_mount_monitor_get_mounts_for_dev (UDisksMountMonitor  *monitor,
                                                               dev_t                dev);
-gboolean             udisks_mount_monitor_is_dev_mounted     (UDisksMountMonitor  *monitor,
-                                                              dev_t                dev);
+gboolean             udisks_mount_monitor_is_dev_in_use      (UDisksMountMonitor  *monitor,
+                                                              dev_t                dev,
+                                                              UDisksMountType     *out_type);
 
 G_END_DECLS
 

@@ -565,7 +565,8 @@ update_entry (UDisksFstabProvider  *provider,
     {
       UDisksMount *mount = UDISKS_MOUNT (l->data);
 
-      if (g_strcmp0 (udisks_mount_get_mount_path (mount), entry->path) == 0)
+      if (udisks_mount_get_mount_type (mount) == UDISKS_MOUNT_TYPE_FILESYSTEM &&
+          g_strcmp0 (udisks_mount_get_mount_path (mount), entry->path) == 0)
         {
           is_applied = TRUE;
           break;

@@ -68,6 +68,7 @@ struct _UDisksLinuxBlock
   UDisksLinuxSysfsDevice *iface_linux_sysfs_device;
   UDisksBlockDevice *iface_block_device;
   UDisksFilesystem *iface_filesystem;
+  UDisksSwapspace *iface_swapspace;
 };
 
 struct _UDisksLinuxBlockClass
@@ -778,10 +779,14 @@ static gboolean
 filesystem_check (UDisksLinuxBlock *block)
 {
   gboolean ret;
+  UDisksMountType mount_type;
 
   ret = FALSE;
-  if (udisks_block_device_get_id_usage (block->iface_block_device) ||
-      udisks_mount_monitor_is_dev_mounted (block->mount_monitor, g_udev_device_get_device_number (block->device)))
+  if (g_strcmp0 (udisks_block_device_get_id_usage (block->iface_block_device), "filesystem") == 0 ||
+      (udisks_mount_monitor_is_dev_in_use (block->mount_monitor,
+                                           g_udev_device_get_device_number (block->device),
+                                           &mount_type) &&
+       mount_type == UDISKS_MOUNT_TYPE_FILESYSTEM))
     ret = TRUE;
 
   return ret;
@@ -806,13 +811,53 @@ filesystem_update (UDisksLinuxBlock  *block,
   for (l = mounts; l != NULL; l = l->next)
     {
       UDisksMount *mount = UDISKS_MOUNT (l->data);
-      g_ptr_array_add (p, (gpointer) udisks_mount_get_mount_path (mount));
+      if (udisks_mount_get_mount_type (mount) == UDISKS_MOUNT_TYPE_FILESYSTEM)
+        g_ptr_array_add (p, (gpointer) udisks_mount_get_mount_path (mount));
     }
   g_ptr_array_add (p, NULL);
   udisks_filesystem_set_mount_points (iface, (const gchar *const *) p->pdata);
   g_ptr_array_free (p, TRUE);
   g_list_foreach (mounts, (GFunc) g_object_unref, NULL);
   g_list_free (mounts);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+/* org.freedesktop.UDisks.Swapspace */
+
+static gboolean
+swapspace_check (UDisksLinuxBlock *block)
+{
+  gboolean ret;
+  UDisksMountType mount_type;
+
+  ret = FALSE;
+  if ((g_strcmp0 (udisks_block_device_get_id_usage (block->iface_block_device), "other") == 0 &&
+       g_strcmp0 (udisks_block_device_get_id_type (block->iface_block_device), "swap") == 0)
+      || (udisks_mount_monitor_is_dev_in_use (block->mount_monitor,
+                                              g_udev_device_get_device_number (block->device),
+                                              &mount_type)
+          && mount_type == UDISKS_MOUNT_TYPE_SWAP))
+    ret = TRUE;
+
+  return ret;
+}
+
+static void
+swapspace_update (UDisksLinuxBlock  *block,
+                  const gchar       *uevent_action,
+                  GDBusInterface    *_iface)
+{
+  UDisksSwapspace *iface = UDISKS_SWAPSPACE (_iface);
+  UDisksMountType mount_type;
+  gboolean active;
+
+  active = FALSE;
+  if (udisks_mount_monitor_is_dev_in_use (block->mount_monitor,
+                                          g_udev_device_get_device_number (block->device),
+                                          &mount_type)
+      && mount_type == UDISKS_MOUNT_TYPE_SWAP)
+    active = TRUE;
+  udisks_swapspace_set_active (iface, active);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -846,6 +891,9 @@ udisks_linux_block_uevent (UDisksLinuxBlock *block,
                 UDISKS_TYPE_BLOCK_DEVICE_STUB, &block->iface_block_device);
   update_iface (block, action, filesystem_check, NULL, filesystem_update,
                 UDISKS_TYPE_LINUX_FILESYSTEM, &block->iface_filesystem);
+  /* TODO: need to hook up Start() and Stop() methods */
+  update_iface (block, action, swapspace_check, NULL, swapspace_update,
+                UDISKS_TYPE_SWAPSPACE_STUB, &block->iface_swapspace);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

@@ -208,7 +208,9 @@ udisks_fstab_provider_get_type
 <FILE>udisksmount</FILE>
 <TITLE>UDisksMount</TITLE>
 UDisksMount
+UDisksMountType
 udisks_mount_get_dev
+udisks_mount_get_mount_type
 udisks_mount_get_mount_path
 udisks_mount_compare
 <SUBSECTION Standard>
@@ -225,7 +227,7 @@ udisks_mount_get_type
 UDisksMountMonitor
 udisks_mount_monitor_new
 udisks_mount_monitor_get_mounts_for_dev
-udisks_mount_monitor_is_dev_mounted
+udisks_mount_monitor_is_dev_in_use
 <SUBSECTION Standard>
 UDISKS_TYPE_MOUNT_MONITOR
 UDISKS_MOUNT_MONITOR

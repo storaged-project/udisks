@@ -40,11 +40,12 @@
 /**
  * SECTION:udisksmountmonitor
  * @title: UDisksMountMonitor
- * @short_description: Monitors mounted devices
+ * @short_description: Monitors mounted filesystems or in-use swap devices
  *
- * This type is used for monitoring mounted devices. On Linux, this is
- * done by inspecting and monitoring the
- * <literal>/proc/self/mountinfo</literal> file.
+ * This type is used for monitoring mounted devices and swap devices
+ * in use. On Linux, this is done by inspecting and monitoring the
+ * <literal>/proc/self/mountinfo</literal> and
+ * <literal>/proc/swaps</literal> files.
  */
 
 /**
@@ -58,7 +59,11 @@ struct _UDisksMountMonitor
   GObject parent_instance;
 
   GIOChannel *mounts_channel;
-  GSource *watch_source;
+  GSource *mounts_watch_source;
+
+  GIOChannel *swaps_channel;
+  GSource *swaps_watch_source;
+
   gboolean have_data;
   GList *mounts;
 };
@@ -99,9 +104,13 @@ udisks_mount_monitor_finalize (GObject *object)
 
   if (monitor->mounts_channel != NULL)
     g_io_channel_unref (monitor->mounts_channel);
+  if (monitor->mounts_watch_source != NULL)
+    g_source_destroy (monitor->mounts_watch_source);
 
-  if (monitor->watch_source != NULL)
-    g_source_destroy (monitor->watch_source);
+  if (monitor->swaps_channel != NULL)
+    g_io_channel_unref (monitor->swaps_channel);
+  if (monitor->swaps_watch_source != NULL)
+    g_source_destroy (monitor->swaps_watch_source);
 
   g_list_foreach (monitor->mounts, (GFunc) g_object_unref, NULL);
   g_list_free (monitor->mounts);
@@ -212,20 +221,14 @@ diff_sorted_lists (GList *list1,
     }
 }
 
-static gboolean
-mounts_changed_event (GIOChannel *channel,
-                      GIOCondition cond,
-                      gpointer user_data)
+static void
+reload_mounts (UDisksMountMonitor *monitor)
 {
-  UDisksMountMonitor *monitor = UDISKS_MOUNT_MONITOR (user_data);
   GList *old_mounts;
   GList *cur_mounts;
   GList *added;
   GList *removed;
   GList *l;
-
-  if (cond & ~G_IO_ERR)
-    goto out;
 
   udisks_mount_monitor_ensure (monitor);
 
@@ -258,7 +261,30 @@ mounts_changed_event (GIOChannel *channel,
   g_list_free (cur_mounts);
   g_list_free (removed);
   g_list_free (added);
+}
 
+static gboolean
+mounts_changed_event (GIOChannel *channel,
+                      GIOCondition cond,
+                      gpointer user_data)
+{
+  UDisksMountMonitor *monitor = UDISKS_MOUNT_MONITOR (user_data);
+  if (cond & ~G_IO_ERR)
+    goto out;
+  reload_mounts (monitor);
+ out:
+  return TRUE;
+}
+
+static gboolean
+swaps_changed_event (GIOChannel *channel,
+                     GIOCondition cond,
+                     gpointer user_data)
+{
+  UDisksMountMonitor *monitor = UDISKS_MOUNT_MONITOR (user_data);
+  if (cond & ~G_IO_ERR)
+    goto out;
+  reload_mounts (monitor);
  out:
   return TRUE;
 }
@@ -273,14 +299,29 @@ udisks_mount_monitor_constructed (GObject *object)
   monitor->mounts_channel = g_io_channel_new_file ("/proc/self/mountinfo", "r", &error);
   if (monitor->mounts_channel != NULL)
     {
-      monitor->watch_source = g_io_create_watch (monitor->mounts_channel, G_IO_ERR);
-      g_source_set_callback (monitor->watch_source, (GSourceFunc) mounts_changed_event, monitor, NULL);
-      g_source_attach (monitor->watch_source, g_main_context_get_thread_default ());
-      g_source_unref (monitor->watch_source);
+      monitor->mounts_watch_source = g_io_create_watch (monitor->mounts_channel, G_IO_ERR);
+      g_source_set_callback (monitor->mounts_watch_source, (GSourceFunc) mounts_changed_event, monitor, NULL);
+      g_source_attach (monitor->mounts_watch_source, g_main_context_get_thread_default ());
+      g_source_unref (monitor->mounts_watch_source);
     }
   else
     {
       g_error ("No /proc/self/mountinfo file: %s", error->message);
+      g_error_free (error);
+    }
+
+  error = NULL;
+  monitor->swaps_channel = g_io_channel_new_file ("/proc/swaps", "r", &error);
+  if (monitor->swaps_channel != NULL)
+    {
+      monitor->swaps_watch_source = g_io_create_watch (monitor->swaps_channel, G_IO_ERR);
+      g_source_set_callback (monitor->swaps_watch_source, (GSourceFunc) swaps_changed_event, monitor, NULL);
+      g_source_attach (monitor->swaps_watch_source, g_main_context_get_thread_default ());
+      g_source_unref (monitor->swaps_watch_source);
+    }
+  else
+    {
+      g_error ("No /proc/swaps file: %s", error->message);
       g_error_free (error);
     }
 
@@ -339,25 +380,24 @@ have_mount (UDisksMountMonitor *monitor,
   return ret;
 }
 
-static void
-udisks_mount_monitor_ensure (UDisksMountMonitor *monitor)
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+udisks_mount_monitor_get_mountinfo (UDisksMountMonitor  *monitor,
+                                    GError             **error)
 {
+  gboolean ret;
   gchar *contents;
   gchar **lines;
-  GError *error;
   guint n;
 
+  ret = FALSE;
   contents = NULL;
   lines = NULL;
 
-  if (monitor->have_data)
-    goto out;
-
-  error = NULL;
-  if (!g_file_get_contents ("/proc/self/mountinfo", &contents, NULL, &error))
+  if (!g_file_get_contents ("/proc/self/mountinfo", &contents, NULL, error))
     {
-      g_warning ("Error reading /proc/self/mountinfo: %s", error->message);
-      g_error_free (error);
+      g_prefix_error (error, "Error reading /proc/self/mountinfo: ");
       goto out;
     }
 
@@ -365,7 +405,6 @@ udisks_mount_monitor_ensure (UDisksMountMonitor *monitor)
    *
    * Note that things like space are encoded as \020.
    */
-
   lines = g_strsplit (contents, "\n", 0);
   for (n = 0; lines[n] != NULL; n++)
     {
@@ -389,7 +428,7 @@ udisks_mount_monitor_ensure (UDisksMountMonitor *monitor)
                   encoded_root,
                   encoded_mount_point) != 6)
         {
-          g_warning ("Error parsing line '%s'", lines[n]);
+          g_warning ("%s: Error parsing line '%s'", G_STRFUNC, lines[n]);
           continue;
         }
 
@@ -416,7 +455,7 @@ udisks_mount_monitor_ensure (UDisksMountMonitor *monitor)
 
               if (sscanf (sep + 3, "%s %s", fstype, mount_source) != 2)
                 {
-                  g_warning ("Error parsing things past - for '%s'", lines[n]);
+                  g_warning ("%s: Error parsing things past - for '%s'", G_STRFUNC, lines[n]);
                   continue;
                 }
 
@@ -428,13 +467,13 @@ udisks_mount_monitor_ensure (UDisksMountMonitor *monitor)
 
               if (stat (mount_source, &statbuf) != 0)
                 {
-                  g_warning ("Error statting %s: %m", mount_source);
+                  g_warning ("%s: Error statting %s: %m", G_STRFUNC, mount_source);
                   continue;
                 }
 
               if (!S_ISBLK (statbuf.st_mode))
                 {
-                  g_warning ("%s is not a block device", mount_source);
+                  g_warning ("%s: %s is not a block device", G_STRFUNC, mount_source);
                   continue;
                 }
 
@@ -456,19 +495,118 @@ udisks_mount_monitor_ensure (UDisksMountMonitor *monitor)
       if (!have_mount (monitor, dev, mount_point))
         {
           UDisksMount *mount;
-          mount = _udisks_mount_new (dev, mount_point);
+          mount = _udisks_mount_new (dev, mount_point, UDISKS_MOUNT_TYPE_FILESYSTEM);
           monitor->mounts = g_list_prepend (monitor->mounts, mount);
-          //g_debug ("SUP ADDING %d:%d on %s", major, minor, mount_point);
         }
 
       g_free (mount_point);
     }
 
-  monitor->have_data = TRUE;
+  ret = TRUE;
 
  out:
   g_free (contents);
   g_strfreev (lines);
+
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+udisks_mount_monitor_get_swaps (UDisksMountMonitor  *monitor,
+                                GError             **error)
+{
+  gboolean ret;
+  gchar *contents;
+  gchar **lines;
+  guint n;
+
+  ret = FALSE;
+  contents = NULL;
+  lines = NULL;
+
+  if (!g_file_get_contents ("/proc/swaps", &contents, NULL, error))
+    {
+      g_prefix_error (error, "Error reading /proc/self/mountinfo: ");
+      goto out;
+    }
+
+  lines = g_strsplit (contents, "\n", 0);
+  for (n = 0; lines[n] != NULL; n++)
+    {
+      gchar filename[PATH_MAX];
+      struct stat statbuf;
+      dev_t dev;
+
+      /* skip first line of explanatory text */
+      if (n == 0)
+        continue;
+
+      if (strlen (lines[n]) == 0)
+        continue;
+
+      if (sscanf (lines[n], "%s", filename) != 1)
+        {
+          g_warning ("%s: Error parsing line '%s'", G_STRFUNC, lines[n]);
+          continue;
+        }
+
+      if (stat (filename, &statbuf) != 0)
+        {
+          g_warning ("%s: Error statting %s: %m", G_STRFUNC, filename);
+          continue;
+        }
+
+      dev = statbuf.st_rdev;
+
+      if (!have_mount (monitor, dev, NULL))
+        {
+          UDisksMount *mount;
+          mount = _udisks_mount_new (dev, NULL, UDISKS_MOUNT_TYPE_SWAP);
+          monitor->mounts = g_list_prepend (monitor->mounts, mount);
+        }
+    }
+
+  ret = TRUE;
+
+ out:
+  g_free (contents);
+  g_strfreev (lines);
+
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static void
+udisks_mount_monitor_ensure (UDisksMountMonitor *monitor)
+{
+  GError *error;
+
+  if (monitor->have_data)
+    goto out;
+
+  error = NULL;
+  if (!udisks_mount_monitor_get_mountinfo (monitor, &error))
+    {
+      g_warning ("Error getting mounts: %s (%s, %d)",
+                 error->message, g_quark_to_string (error->domain), error->code);
+      g_error_free (error);
+    }
+
+  error = NULL;
+  if (!udisks_mount_monitor_get_swaps (monitor, &error))
+    {
+      g_warning ("Error getting swaps: %s (%s, %d)",
+                 error->message, g_quark_to_string (error->domain), error->code);
+      g_error_free (error);
+    }
+
+  monitor->have_data = TRUE;
+
+ out:
+  ;
 }
 
 /**
@@ -510,17 +648,19 @@ udisks_mount_monitor_get_mounts_for_dev (UDisksMountMonitor *monitor,
 }
 
 /**
- * udisks_mount_monitor_is_dev_mounted:
+ * udisks_mount_monitor_is_dev_in_use:
  * @monitor: A #UDisksMountMonitor.
  * @dev: A #dev_t device number.
+ * @out_type: (out allow-none): Return location for mount type, if in use or %NULL.
  *
- * Checks if @dev is mounted.
+ * Checks if @dev is in use (e.g. mounted or swap-area in-use).
  *
- * Returns: %TRUE if mounted, %FALSE otherwise.
+ * Returns: %TRUE if in use, %FALSE otherwise.
  */
 gboolean
-udisks_mount_monitor_is_dev_mounted (UDisksMountMonitor  *monitor,
-                                     dev_t                dev)
+udisks_mount_monitor_is_dev_in_use (UDisksMountMonitor  *monitor,
+                                    dev_t                dev,
+                                    UDisksMountType     *out_type)
 {
   gboolean ret;
   GList *l;
@@ -533,6 +673,8 @@ udisks_mount_monitor_is_dev_mounted (UDisksMountMonitor  *monitor,
 
       if (udisks_mount_get_dev (mount) == dev)
         {
+          if (out_type != NULL)
+            *out_type = udisks_mount_get_mount_type (mount);
           ret = TRUE;
           goto out;
         }

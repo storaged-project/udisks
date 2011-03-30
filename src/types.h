@@ -96,4 +96,17 @@ typedef gboolean (*UDisksThreadedJobFunc) (UDisksThreadedJob   *job,
 struct _UDisksPersistentStore;
 typedef struct _UDisksPersistentStore UDisksPersistentStore;
 
+/**
+ * UDisksMountType:
+ * @UDISKS_MOUNT_TYPE_FILESYSTEM: Object correspond to a mounted filesystem.
+ * @UDISKS_MOUNT_TYPE_SWAP: Object correspond to an in-use swap device.
+ *
+ * Types of a mount.
+ */
+typedef enum
+{
+  UDISKS_MOUNT_TYPE_FILESYSTEM,
+  UDISKS_MOUNT_TYPE_SWAP
+} UDisksMountType;
+
 #endif

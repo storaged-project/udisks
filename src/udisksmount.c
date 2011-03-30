@@ -39,10 +39,10 @@
 /**
  * SECTION:udisksmount
  * @title: UDisksMount
- * @short_description: Object corresponding to a mount
+ * @short_description: Object corresponding to a filesystem mount or in-use swap device
  *
- * Object corresponding to mount. You cannot instantiate this type
- * yourself – use #UDisksMountMonitor.
+ * Object corresponding to mount or in-use swap device. You cannot
+ * instantiate this type yourself – use #UDisksMountMonitor.
  */
 
 /**
@@ -57,6 +57,7 @@ struct _UDisksMount
 
   gchar *mount_path;
   dev_t dev;
+  UDisksMountType type;
 };
 
 typedef struct _UDisksMountClass UDisksMountClass;
@@ -95,13 +96,15 @@ udisks_mount_class_init (UDisksMountClass *klass)
 
 UDisksMount *
 _udisks_mount_new (dev_t dev,
-                   const gchar *mount_path)
+                   const gchar *mount_path,
+                   UDisksMountType type)
 {
   UDisksMount *mount;
 
   mount = UDISKS_MOUNT (g_object_new (UDISKS_TYPE_MOUNT, NULL));
   mount->dev = dev;
   mount->mount_path = g_strdup (mount_path);
+  mount->type = type;
 
   return mount;
 }
@@ -110,7 +113,9 @@ _udisks_mount_new (dev_t dev,
  * udisks_mount_get_mount_path:
  * @mount: A #UDisksMount
  *
- * Gets the mount path for @mount.
+ * Gets the mount path for a #UDISKS_MOUNT_TYPE_FILESYSTEM<!-- -->-type mount.
+ *
+ * It is a programming error to call this on any other type of #UDisksMount.
  *
  * Returns: A string owned by @mount. Do not free.
  */
@@ -118,6 +123,7 @@ const gchar *
 udisks_mount_get_mount_path (UDisksMount *mount)
 {
   g_return_val_if_fail (UDISKS_IS_MOUNT (mount), NULL);
+  g_return_val_if_fail (mount->type == UDISKS_MOUNT_TYPE_FILESYSTEM, NULL);
   return mount->mount_path;
 }
 
@@ -159,7 +165,25 @@ udisks_mount_compare (UDisksMount  *mount,
     goto out;
 
   ret = (mount->dev - other_mount->dev);
+  if (ret != 0)
+    goto out;
+
+  ret = mount->type - other_mount->type;
 
  out:
   return ret;
+}
+
+/**
+ * udisks_mount_get_mount_type:
+ * @mount: A #UDisksMount.
+ *
+ * Gets the #UDisksMountType for @mount.
+ *
+ * Returns: A value from the #UDisksMountType enumeration.
+ */
+UDisksMountType
+udisks_mount_get_mount_type (UDisksMount *mount)
+{
+  return mount->type;
 }
