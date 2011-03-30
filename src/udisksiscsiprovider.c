@@ -984,8 +984,8 @@ handle_iscsi_connection_uevent (UDisksIScsiProvider *provider,
           connection->target_name = g_strdup (g_udev_device_get_sysfs_attr (session_device, "targetname"));
           connection->iface_name = g_strdup (g_udev_device_get_sysfs_attr (session_device, "ifacename"));
           connection->tpgt = g_udev_device_get_sysfs_attr_as_int (session_device, "tpgt");
-          connection->address = g_strdup (g_udev_device_get_sysfs_attr (device, "address"));
-          connection->port = g_udev_device_get_sysfs_attr_as_int (device, "port");
+          connection->address = g_strdup (g_udev_device_get_sysfs_attr (device, "persistent_address"));
+          connection->port = g_udev_device_get_sysfs_attr_as_int (device, "persistent_port");
           connection->session_sysfs_path = g_strdup (g_udev_device_get_sysfs_path (session_device));
 
           if (is_null (connection->target_name) ||
