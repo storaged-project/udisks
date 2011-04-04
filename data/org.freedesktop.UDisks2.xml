@@ -16,91 +16,120 @@
 
   <!-- ********************************************************************** -->
 
+  <!--
+      org.freedesktop.UDisks2.Lun:
+      @short_description: Storage Device
+
+      This interface is used to represent disk drives with or without
+      removable media.
+
+      This interface should not to be confused with the
+      #org.freedesktop.UDisks2.BlockDevice interface that is used for
+      any low-level block devices the OS knows about. For example, if
+      <filename>/dev/sda</filename> and <filename>/dev/sdb</filename>
+      are block devices for two paths to the same drive, there will be
+      only one #org.freedesktop.UDisks2.Lun object but two
+      #org.freedesktop.UDisks2.BlockDevice objects.
+  -->
   <interface name="org.freedesktop.UDisks2.Lun">
+    <!-- Vendor: A name for the vendor of the drive or blank if unknown. -->
     <property name="Vendor" type="ay" access="read"/>
+    <!-- Model: A name for the model of the drive or blank if unknown. -->
     <property name="Model" type="ay" access="read"/>
+    <!-- Revision: Firmware Revision or blank if unknown. -->
     <property name="Revision" type="ay" access="read"/>
+    <!-- Serial: Serial number of the drive or blank if unknown. -->
     <property name="Serial" type="ay" access="read"/>
+    <!-- WWN:
+
+         The <ulink
+         url="http://en.wikipedia.org/wiki/World_Wide_Name">World Wide
+         Name</ulink> of the drive or blank if unknown.
+    -->
     <property name="WWN" type="s" access="read"/>
 
-    <!-- Whether the media can be removed -->
+    <!-- MediaRemovable: Whether the media can be removed from the drive. -->
     <property name="MediaRemovable" type="b" access="read"/>
 
-    <!-- Is set to 0 if, and only if, no media is inserted -->
+    <!-- Size: The size of the drive. Is set to 0 if, and only if, no media is inserted. -->
     <property name="Size" type="t" access="read"/>
 
-    <!--
-      The physical kind of media the drive uses. Known values include
-
-       - flash: Flash Card
-       - flash_cf: CompactFlash
-       - flash_ms: MemoryStick
-       - flash_sm: SmartMedia
-       - flash_sd: Secure Digital
-       - flash_sdhc: Secure Digital High Capacity
-       - flash_sdxc: Secure Digital eXtended Capacity
-       - flash_mmc: MultiMediaCard
-       - floppy: Floppy Disk
-       - floppy_zip: Zip Disk
-       - floppy_jaz: Jaz Disk
-       - optical: Optical Disc
-       - optical_cd: Compact Disc
-       - optical_cd_r: Compact Disc Recordable
-       - optical_cd_rw: Compact Disc Rewritable
-       - optical_dvd: Digital Versatile Disc
-       - optical_dvd_r: DVD-R
-       - optical_dvd_rw: DVD-RW
-       - optical_dvd_ram: DVD-RAM
-       - optical_dvd_plus_r: DVD+R
-       - optical_dvd_plus_rw: DVD+RW
-       - optical_dvd_plus_r_dl: DVD+R Dual Layer
-       - optical_dvd_plus_rw_dl: DVD+RW Dual Layer
-       - optical_bd: Blu-ray Disc
-       - optical_bd_r: Blu-ray Recordable
-       - optical_bd_re: Blu-ray Rewritable
-       - optical_hddvd: HD-DVD
-       - optical_hddvd_r: HD-DVD Recordable
-       - optical_hddvd_rw: HD-DVD Rewritable
-       - optical_mo: Magneto Optical
-       - optical_mrw: Can read Mount Rainer media
-       - optical_mrw_w: Can write Mount Rainer media
+    <!-- MediaCompatibility:
+      The physical kind of media the drive uses or blank if unknown.
+      Known values include
+      <variablelist>
+      <varlistentry><term>flash</term><listitem><para>Flash Card</para></listitem></varlistentry>
+      <varlistentry><term>flash_cf</term><listitem><para>CompactFlash</para></listitem></varlistentry>
+      <varlistentry><term>flash_ms</term><listitem><para>MemoryStick</para></listitem></varlistentry>
+      <varlistentry><term>flash_sm</term><listitem><para>SmartMedia</para></listitem></varlistentry>
+      <varlistentry><term>flash_sd</term><listitem><para>Secure Digital</para></listitem></varlistentry>
+      <varlistentry><term>flash_sdhc</term><listitem><para>Secure Digital High Capacity</para></listitem></varlistentry>
+      <varlistentry><term>flash_sdxc</term><listitem><para>Secure Digital eXtended Capacity</para></listitem></varlistentry>
+      <varlistentry><term>flash_mmc</term><listitem><para>MultiMediaCard</para></listitem></varlistentry>
+      <varlistentry><term>floppy</term><listitem><para>Floppy Disk</para></listitem></varlistentry>
+      <varlistentry><term>floppy_zip</term><listitem><para>Zip Disk</para></listitem></varlistentry>
+      <varlistentry><term>floppy_jaz</term><listitem><para>Jaz Disk</para></listitem></varlistentry>
+      <varlistentry><term>optical</term><listitem><para>Optical Disc</para></listitem></varlistentry>
+      <varlistentry><term>optical_cd</term><listitem><para>Compact Disc</para></listitem></varlistentry>
+      <varlistentry><term>optical_cd_r</term><listitem><para>Compact Disc Recordable</para></listitem></varlistentry>
+      <varlistentry><term>optical_cd_rw</term><listitem><para>Compact Disc Rewritable</para></listitem></varlistentry>
+      <varlistentry><term>optical_dvd</term><listitem><para>Digital Versatile Disc</para></listitem></varlistentry>
+      <varlistentry><term>optical_dvd_r</term><listitem><para>DVD-R</para></listitem></varlistentry>
+      <varlistentry><term>optical_dvd_rw</term><listitem><para>DVD-RW</para></listitem></varlistentry>
+      <varlistentry><term>optical_dvd_ram</term><listitem><para>DVD-RAM</para></listitem></varlistentry>
+      <varlistentry><term>optical_dvd_plus_r</term><listitem><para>DVD+R</para></listitem></varlistentry>
+      <varlistentry><term>optical_dvd_plus_rw</term><listitem><para>DVD+RW</para></listitem></varlistentry>
+      <varlistentry><term>optical_dvd_plus_r_dl</term><listitem><para>DVD+R Dual Layer</para></listitem></varlistentry>
+      <varlistentry><term>optical_dvd_plus_rw_dl</term><listitem><para>DVD+RW Dual Layer</para></listitem></varlistentry>
+      <varlistentry><term>optical_bd</term><listitem><para>Blu-ray Disc</para></listitem></varlistentry>
+      <varlistentry><term>optical_bd_r</term><listitem><para>Blu-ray Recordable</para></listitem></varlistentry>
+      <varlistentry><term>optical_bd_re</term><listitem><para>Blu-ray Rewritable</para></listitem></varlistentry>
+      <varlistentry><term>optical_hddvd</term><listitem><para>HD-DVD</para></listitem></varlistentry>
+      <varlistentry><term>optical_hddvd_r</term><listitem><para>HD-DVD Recordable</para></listitem></varlistentry>
+      <varlistentry><term>optical_hddvd_rw</term><listitem><para>HD-DVD Rewritable</para></listitem></varlistentry>
+      <varlistentry><term>optical_mo</term><listitem><para>Magneto Optical</para></listitem></varlistentry>
+      <varlistentry><term>optical_mrw</term><listitem><para>Can read Mount Rainer media</para></listitem></varlistentry>
+      <varlistentry><term>optical_mrw_w</term><listitem><para>Can write Mount Rainer media</para></listitem></varlistentry>
+      </variablelist>
     -->
     <property name="MediaCompatibility" type="as" access="read"/>
 
-    <!--
-      The kind of media currently in the drive. Known values
-      include the ones listed for the MediaCompatibility property
-      above.
+    <!-- Media: The kind of media currently in the drive or blank if unknown.
+         See the #org.freedesktop.UDisks2.Lun:MediaCompatibility property for known values.
     -->
     <property name="Media" type="s" access="read"/>
 
-    <!--
-      The rotational rate of the drive.
-
-       o -1 if known to be rotating media but rotation rate isn't known
-       o 0 if known to be non-rotating media
-       o the rotation rate in rounds per minute otherwise
+    <!-- RotationRate: The rotational rate of the drive.
+      <itemizedlist>
+        <listitem><para>-1 if known to be rotating media but rotation rate isn't known</para></listitem>
+        <listitem><para>0 if known to be non-rotating media</para></listitem>
+        <listitem><para>the rotation rate in rounds per minute otherwise</para></listitem>
+      </itemizedlist>
     -->
     <property name="RotationRate" type="i" access="read"/>
 
-    <!--
+    <!-- ConnectionBus:
       The physical connection bus used for the drive as seen by the
       user. This is typically used to draw a USB or Firewire emblem
       on top of an icon in an user interface.
 
-      Note that this property has _nothing_ to do with the low-level
-      command-set used (such as ATA-8) or what low-level connection
-      bus (such as SATA, eSATA, PATA, SAS2 etc) is used.
+      Note that this property has <emphasis>nothing</emphasis> to do
+      with the low-level command-set used (such as ATA-8) or what
+      low-level connection bus (such as SATA, eSATA, PATA, SAS2 etc)
+      is used.
 
-      Known values include
-
-       - usb: connected via USB
-       - ieee1394: connected via Firewire
+      Known values include:
+      <variablelist>
+      <varlistentry><term>usb</term><listitem><para>Connected via USB</para></listitem></varlistentry>
+      <varlistentry><term>ieee1394</term><listitem><para>Connected via Firewire</para></listitem></varlistentry>
+      </variablelist>
     -->
     <property name="ConnectionBus" type="s" access="read"/>
 
-    <!-- The org.freedesktop.UDisks2.IScsiTarget object that the LUN belongs
-         to, or '/' if no such object exists.
+    <!-- IScsiTarget:
+         An object implementing the
+         #org.freedesktop.UDisks2.IScsiTarget interface that the drive
+         belongs to, or <literal>/</literal> if no such object exists.
       -->
     <property name="IScsiTarget" type="o" access="read"/>
   </interface>
@@ -110,39 +139,60 @@
   <!-- TODO: use the name iSCSITarget when we can force the g-names to be
        UDisksiSCSITarget and udisks_iscsi_target
   -->
+
+  <!-- org.freedesktop.UDisks2.IScsiTarget:
+       @short_description: Remote iSCSI Targets
+
+       This interface is used to represent remote iSCSI targets that
+       the system knows about.
+    -->
   <interface name="org.freedesktop.UDisks2.IScsiTarget">
-    <!-- e.g. iqn.2000-07.dk.fubar:storage.ma.burlington.scratch0 or
-              eui.02004567A425678D or
-              naa.52004567BA64678D
+
+    <!-- Name: The name of the iSCSI target
+         Example target names include
+         <literal>iqn.2000-07.dk.fubar:storage.ma.burlington.scratch0</literal> or
+         <literal>eui.02004567A425678D</literal> or
+         <literal>naa.52004567BA64678D</literal>.
     -->
     <property name="Name" type="ay" access="read"/>
 
     <!-- TODO: Alias property cf. RFC 3721 2.2 -->
 
-    <!-- Array of (String    portal_address,
-                   int       portal_port_number,
-                   int       tpgt,
-                   Array of  (String  interface_name,
-                              String  state))
+    <!-- PortalsAndInterfaces:
 
-         where state is the empty string if there is no
-         connection, otherwise LOGGED_IN or FAILED.
+         The various portals that can be used to connect to the target.
+
+         This is a property of the form
+<programlisting>
+Array of (String    portal_address,
+          int       portal_port_number,
+          int       tpgt,
+          Array of  (String  interface_name,
+                             String  state))
+</programlisting>
+         where state is the empty string if there is no connection,
+         otherwise <literal>LOGGED_IN</literal> or
+         <literal>FAILED</literal>.
     -->
     <property name="PortalsAndInterfaces" type="a(ayiia(ays))" access="read"/>
 
+    <!--
+        Login:
+        @options: Options.
+        @portal_address: If blank, will log into all targets.
+
+        Logs into the target. (TODO: update)
+      -->
     <method name="Login">
       <arg name="options" direction="in" type="as"/>
-      <!-- if blank, log into all portals -->
       <arg name="portal_address" direction="in" type="ay"/>
-      <!-- can only be set to zero if portal_address is blank -->
       <arg name="portal_port" direction="in" type="i"/>
-      <!-- if blank, log in via all interfaces -->
       <arg name="interface" direction="in" type="ay"/>
     </method>
 
+    <!-- Logout: Logs out of the target -->
     <method name="Logout">
       <arg name="options" direction="in" type="as"/>
-      <!-- same as for Login() method -->
       <arg name="portal_address" direction="in" type="ay"/>
       <arg name="portal_port" direction="in" type="i"/>
       <arg name="interface_name" direction="in" type="ay"/>
@@ -151,51 +201,181 @@
 
   <!-- ********************************************************************** -->
 
+  <!--
+    org.freedesktop.UDisks2.BlockDevice:
+    @short_description: Low-level Block Device
+
+    This interface represents a block device.
+
+    This should not be confused with the #org.freedesktop.UDisks2.Lun
+    interface that is used to represent disk drives. For example, the
+    #org.freedesktop.UDisks2.BlockDevice interface is also used for
+    block devices that do not correspond to drives at all (e.g. <ulink
+    url="http://en.wikipedia.org/wiki/Loop_device">Loop
+    Devices</ulink>).
+  -->
   <interface name="org.freedesktop.UDisks2.BlockDevice">
+    <!-- Device: The special device file for the block device e.g. <filename>/dev/sda2</filename>. -->
     <property name="Device" type="ay" access="read"/>
+    <!-- Symlinks:
+
+         Known symlinks in <filename>/dev</filename> that points to
+         the device file in the
+         #org.freedesktop.UDisks2.BlockDevice:Device property.
+
+         For example, this array could include symlinks such as
+         <filename>/dev/disk/by-id/ata-INTEL_SSDSA2MH080G1GC_CVEM842101HD080DGN</filename>
+         and
+         <filename>/dev/disk/by-id/wwn-0x5001517387d61905</filename>.
+    -->
     <property name="Symlinks" type="aay" access="read"/>
+    <!-- Major: The major number of the device. -->
     <property name="Major" type="x" access="read"/>
+    <!-- Minor: The minor number of the device. -->
     <property name="Minor" type="x" access="read"/>
+    <!-- Size: The size of the block device. -->
     <property name="Size" type="t" access="read"/>
 
-    <!-- The preferred device to present in the UI - could be e.g.
-         /dev/mapper/mpathk instead of /dev/dm-10
+    <!-- PreferredDevice:
+         The special device file to present in the UI instead of the value
+         of the #org.freedesktop.UDisks2.BlockDevice:Device property.
+
+         For example this could be
+         e.g. <filename>/dev/mapper/mpathk</filename> for a multipath
+         device with special device file <filename>/dev/dm-9</filename>.
     -->
     <property name="PreferredDevice" type="ay" access="read"/>
 
-    <!-- The org.freedesktop.UDisks2.Lun object that the block device belongs
-         to, or '/' if no such object exists.
+    <!-- Lun:
+         The #org.freedesktop.UDisks2.Lun object that the block device
+         belongs to, or '/' if no such object exists.
       -->
     <property name="Lun" type="o" access="read"/>
 
-    <!-- Properties related what's on the block device -->
+    <!-- IdUsage:
+         A result of probing for signatures on the block device. Known values include:
+         <variablelist>
+         <varlistentry>
+           <term>filesystem</term>
+           <listitem><para>Used for mountable filesystems</para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>crypto</term>
+           <listitem><para>Used for e.g. LUKS devices</para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>raid</term>
+           <listitem><para>Used for e.g. RAID members and LVM PVs</para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>other</term>
+           <listitem><para>Something else was detected.</para></listitem>
+         </varlistentry>
+         </variablelist>
+         If blank, no known signature was detected. This doesn't
+         necessarily mean the device contains no structured data; it
+         only means that no signature known to the probing code was
+         detected.
+    -->
     <property name="IdUsage" type="s" access="read"/>
+    <!--
+        IdType:
+        This property contains more information about the result of
+        probing the block device. Its value depends of the value the
+        #org.freedesktop.UDisks2.BlockDevice:IdUsage property:
+        <variablelist>
+        <varlistentry><term>filesystem</term>
+          <listitem><para>The mountable file system that was detected (e.g. <literal>vfat</literal>).</para></listitem>
+        </varlistentry>
+        <varlistentry><term>crypto</term>
+          <listitem><para>Encrypted data. Known values include <literal>crypto_LUKS</literal>.</para></listitem>
+        </varlistentry>
+        <varlistentry><term>raid</term>
+          <listitem><para><ulink url="http://en.wikipedia.org/wiki/RAID">RAID</ulink> or similar. Known values include <literal>LVM2_member</literal> (for LVM2 components), <literal>linux_raid_member</literal> (for MD-RAID components.)</para></listitem>
+        </varlistentry>
+        <varlistentry><term>other</term>
+          <listitem><para>Something else. Known values include <literal>swap</literal> (for swap space), <literal>suspend</literal> (data used when resuming from suspend-to-disk.</para></listitem>
+        </varlistentry>
+        </variablelist>
+    -->
     <property name="IdType" type="s" access="read"/>
+    <!-- IdVersion:
+         The version of the filesystem or other structured data on the block device.
+         Do not make any assumptions about the format.
+
+         This property is blank if there is no version or the version is unknown.
+    -->
     <property name="IdVersion" type="s" access="read"/>
+    <!-- IdLabel:
+         The label of the filesystem or other structured data on the block device.
+
+         This property is blank if there is no label or the label is unknown.
+    -->
     <property name="IdLabel" type="ay" access="read"/>
+    <!-- IdUUID:
+         The <ulink url="http://en.wikipedia.org/wiki/UUID">UUID</ulink> of the
+         filesystem or other structured data on the block device. Do not make
+         any assumptions about the UUID as its format depends on what kind of
+         data is on the device.
+
+         This property is blank if there is no UUID or the UUID is unknown.
+    -->
     <property name="IdUUID" type="ay" access="read"/>
 
-    <!-- Partition Table -->
+    <!-- PartTable: Set to TRUE if a partition table signature was detected on the device. -->
     <property name="PartTable" type="b" access="read"/>
+    <!-- PartTableScheme: The type of partition table detected.
+         Known values include <literal>mbr</literal> (for <ulink
+         url="http://en.wikipedia.org/wiki/Master_Boot_Record">Master
+         Boot Record</ulink>), <literal>gpt</literal> (for <ulink
+         url="http://en.wikipedia.org/wiki/GUID_Partition_Table">GUID
+         Partition Table</ulink>) and <literal>apm</literal> (for
+         <ulink
+         url="http://en.wikipedia.org/wiki/Apple_Partition_Map">Apple
+         Partition Map</ulink>). If blank, and
+         #org.freedesktop.UDisks2.BlockDevice:PartTable is TRUE, a
+         partition table was detected but its scheme is unknown.
+    -->
     <property name="PartTableScheme" type="s" access="read"/>
 
-    <!-- Partition Table Entry -->
+    <!-- PartEntry: Set to TRUE if the block device represents a partition. -->
     <property name="PartEntry" type="b" access="read"/>
+    <!-- PartEntryNumber: The number of the partition in the partition table. -->
     <property name="PartEntryNumber" type="u" access="read"/>
+    <!-- PartEntryScheme: The partition table scheme or blank if unknown.
+         See the #org.freedesktop.UDisks2.BlockDevice:PartTable property for known schemes.
+    -->
     <property name="PartEntryScheme" type="s" access="read"/>
+    <!-- PartEntryType: The type of the partition. -->
     <property name="PartEntryType" type="s" access="read"/>
+    <!-- PartEntryFlags: Partition flags, e.g. <literal>boot</literal>. -->
     <property name="PartEntryFlags" type="s" access="read"/>
+    <!-- PartEntryOffset: Offset of partition. -->
     <property name="PartEntryOffset" type="t" access="read"/>
+    <!-- PartEntrySize: Size of partition. -->
     <property name="PartEntrySize" type="t" access="read"/>
+    <!-- PartEntryLabel: Label of partition or blank if not supported or unknown. -->
     <property name="PartEntryLabel" type="ay" access="read"/>
+    <!-- PartEntryUUID: The UUID of the partition or blank if not supported or unknown. -->
     <property name="PartEntryUUID" type="ay" access="read"/>
-    <!-- The BlockDevice object the entry is part of ('/' if not an entry) -->
+    <!-- PartEntryTable:
+         The object path of the #org.freedesktop.UDisks2.BlockDevice
+         partition table that the partition entry belongs to or
+         <literal>/</literal> if the device is not a partition.
+    -->
     <property name="PartEntryTable" type="o" access="read"/>
 
-    <!-- The BlockDevice object that is backing the device ('/' if unknown or not a crypto device)  -->
+    <!-- CryptoBackingDevice:
+         The #org.freedesktop.UDisks2.BlockDevice object that is
+         backing the device or <literal>/</literal> if unknown or not
+         an encrypted device.
+    -->
     <property name="CryptoBackingDevice" type="o" access="read"/>
 
-    <!-- Loop Device -->
+    <!-- LoopBackingFile:
+         A path to the file that is backing the block device or blank
+         if unknown or not a loop device.
+    -->
     <property name="LoopBackingFile" type="ay" access="read"/>
 
     <method name="SetLabel">
@@ -206,16 +386,43 @@
 
   <!-- ********************************************************************** -->
 
+  <!--
+      org.freedesktop.UDisks2.Filesystem:
+      @short_description: Block device containing a mountable filesystem
+
+      This interface is used for #org.freedesktop.UDisks2.BlockDevice
+      devices that contain a mountable filesystem.
+  -->
   <interface name="org.freedesktop.UDisks2.Filesystem">
     <!-- prereq: org.freedesktop.UDisks2.BlockDevice -->
 
+    <!-- MountPoints:
+         An array of filesystems paths for where the file system on
+         the device is mounted. If the device is not mounted, this
+         array is empty.
+    -->
     <property name="MountPoints" type="aay" access="read"/>
 
+    <!--
+        Mount:
+        @filesystem_type: Filesystem type to use or blank to use the detected type.
+        @options: Options.
+        @mount_path: The filesystem path where the device was mounted.
+
+        Mount the filesystem.
+    -->
     <method name="Mount">
       <arg name="filesystem_type" direction="in" type="s"/>
       <arg name="options" direction="in" type="as"/>
       <arg name="mount_path" direction="out" type="ay"/>
     </method>
+
+    <!--
+        Unmount:
+        @options: Options.
+
+        Unmount a mounted device.
+    -->
     <method name="Unmount">
       <arg name="options" direction="in" type="as"/>
     </method>
@@ -223,14 +430,33 @@
 
   <!-- ********************************************************************** -->
 
+  <!--
+      org.freedesktop.UDisks2.Swapspace:
+      @short_description: Block device containing swap data
+
+      This interface is used for #org.freedesktop.UDisks2.BlockDevice
+      devices that contain swap space.
+  -->
   <interface name="org.freedesktop.UDisks2.Swapspace">
     <!-- prereq: org.freedesktop.UDisks2.BlockDevice -->
 
+    <!-- Active: Set to TRUE if the device is currently in use by the OS. -->
     <property name="Active" type="b" access="read"/>
 
+    <!-- Start:
+         @options: Options
+
+         Activates the swap device.
+    -->
     <method name="Start">
       <arg name="options" direction="in" type="as"/>
     </method>
+
+    <!-- Stop:
+         @options: Options
+
+         Deactivates the swap device.
+    -->
     <method name="Stop">
       <arg name="options" direction="in" type="as"/>
     </method>
@@ -238,15 +464,48 @@
 
   <!-- ********************************************************************** -->
 
+  <!--
+      org.freedesktop.UDisks2.Job:
+      @short_description: Long-running tasks
+
+      This interface is used for long-running tasks.
+  -->
   <interface name="org.freedesktop.UDisks2.Job">
+
+    <!-- Progress: How much progress has been made. Values are in the range 0 to 1. -->
     <property name="Progress" type="d" access="read"/>
+    <!-- StartTime:
+
+         The point in time (seconds since the <ulink
+         url="http://en.wikipedia.org/wiki/Unix_epoch">Unix
+         Epoch</ulink>) that the job was started.
+    -->
     <property name="StartTime" type="t" access="read"/>
+    <!-- ExpectedEndTime:
+
+         The expected point in time (seconds since the <ulink
+         url="http://en.wikipedia.org/wiki/Unix_epoch">Unix
+         Epoch</ulink>) that the job will complete.
+    -->
     <property name="ExpectedEndTime" type="t" access="read"/>
 
+    <!--
+        Cancel:
+        @options: Options.
+
+        Cancels the job.
+    -->
     <method name="Cancel">
       <arg name="options" direction="in" type="as"/>
     </method>
 
+    <!--
+        Completed:
+        @success: If TRUE, the job completed successfully.
+        @message: A message describing the completion of the job, e.g. an error message.
+
+        Emitted when a job completes.
+    -->
     <signal name="Completed">
       <arg name="success" type="b"/>
       <arg name="message" type="s"/>

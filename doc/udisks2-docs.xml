@@ -61,6 +61,49 @@
     <title>UDisks Overview</title>
   </part>
 
+  <part id="ref-dbus">
+    <title>D-Bus API Reference</title>
+    <chapter id="ref-dbus-overview">
+      <title>Overview</title>
+      <sect1 id="ref-dbus-well-known-name">
+        <title>The org.freedesktop.UDisks2 bus name</title>
+        <para>
+          The D-Bus name <literal>org.freedesktop.UDisks2</literal> on
+          the system bus is used by the UDisks Daemon, <link
+          linkend="udisksd.8">udisksd</link>. If this daemon isn't
+          running, it will be started if D-Bus messages are sent to
+          the name.
+        </para>
+      </sect1>
+      <sect1 id="ref-dbus-well-known-object">
+        <title>The /org/freedesktop/UDisks2 object</title>
+        <para>
+          The process that owns the well-known D-Bus name <link
+          linkend="ref-dbus-well-known-name">org.freedesktop.UDisks2</link>
+          on the system bus (typically <link
+          linkend="udisksd.8">udisksd</link>) exports an object at the
+          well-known path <literal>/org/freedesktop/UDisks2</literal>.
+          This object implements the <ulink
+          url="http://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-objectmanager">org.freedesktop.DBus.ObjectManager</ulink>
+          interface and should be used by clients to discover other
+          objects.
+        </para>
+      </sect1>
+    </chapter>
+
+    <chapter>
+      <title>D-Bus Interfaces</title>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Lun.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.BlockDevice.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Filesystem.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Swapspace.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.IScsiTarget.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Job.xml"/>
+      <!-- xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.ConfigurationItem.xml"/ -->
+      <!-- xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.LinuxSysfsDevice.xml"/ -->
+    </chapter>
+  </part>
+
   <part id="ref-library">
     <title>Library API Reference</title>
       <xi:include href="xml/udisksclient.xml"/>

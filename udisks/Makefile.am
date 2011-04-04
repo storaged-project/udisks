@@ -22,9 +22,10 @@ INCLUDES = \
 
 $(dbus_built_sources) : Makefile.am $(top_srcdir)/data/org.freedesktop.UDisks2.xml
 	gdbus-codegen							                \
-		--strip-prefix org.freedesktop.UDisks2.                          	\
-		--namespace UDisks							\
+		--interface-prefix org.freedesktop.UDisks2.                          	\
+		--c-namespace UDisks							\
 		--generate-c-code udisks-generated                             		\
+		--generate-docbook udisks-generated-doc					\
 		$(top_srcdir)/data/org.freedesktop.UDisks2.xml         			\
 		$(NULL)
 
@@ -98,7 +99,7 @@ pkgconfig_DATA = udisks2.pc
 
 # ----------------------------------------------------------------------------------------------------
 
-CLEANFILES =
+CLEANFILES = udisks-generated-doc-*.xml
 
 EXTRA_DIST = 						\
 	udisks2.pc.in					\
