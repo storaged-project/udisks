@@ -65,7 +65,6 @@ struct _UDisksLinuxBlock
   GUdevDevice *device;
 
   /* interface */
-  UDisksLinuxSysfsDevice *iface_linux_sysfs_device;
   UDisksBlockDevice *iface_block_device;
   UDisksFilesystem *iface_filesystem;
   UDisksSwapspace *iface_swapspace;
@@ -103,10 +102,12 @@ udisks_linux_block_finalize (GObject *object)
 
   g_object_unref (block->device);
 
-  if (block->iface_linux_sysfs_device != NULL)
-    g_object_unref (block->iface_linux_sysfs_device);
   if (block->iface_block_device != NULL)
     g_object_unref (block->iface_block_device);
+  if (block->iface_filesystem != NULL)
+    g_object_unref (block->iface_filesystem);
+  if (block->iface_swapspace != NULL)
+    g_object_unref (block->iface_swapspace);
 
   if (G_OBJECT_CLASS (udisks_linux_block_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_block_parent_class)->finalize (object);
@@ -750,29 +751,6 @@ block_device_update (UDisksLinuxBlock *block,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
-/* org.freedesktop.UDisks.LinuxSysfsDevice */
-
-static gboolean
-linux_sysfs_device_check (UDisksLinuxBlock *block)
-{
-  return TRUE;
-}
-
-static void
-linux_sysfs_device_update (UDisksLinuxBlock      *block,
-                           const gchar     *uevent_action,
-                           GDBusInterface  *_iface)
-{
-  UDisksLinuxSysfsDevice *iface = UDISKS_LINUX_SYSFS_DEVICE (_iface);
-
-  udisks_linux_sysfs_device_set_subsystem (iface, "block");
-  udisks_linux_sysfs_device_set_sysfs_path (iface, g_udev_device_get_sysfs_path (block->device));
-
-  if (uevent_action != NULL)
-    udisks_linux_sysfs_device_emit_uevent (iface, uevent_action);
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
 /* org.freedesktop.UDisks.Filesystem */
 
 static gboolean
@@ -1053,13 +1031,10 @@ udisks_linux_block_uevent (UDisksLinuxBlock *block,
       g_object_notify (G_OBJECT (block), "device");
     }
 
-  update_iface (block, action, linux_sysfs_device_check, NULL, linux_sysfs_device_update,
-                UDISKS_TYPE_LINUX_SYSFS_DEVICE_STUB, &block->iface_linux_sysfs_device);
   update_iface (block, action, block_device_check, block_device_connect, block_device_update,
                 UDISKS_TYPE_BLOCK_DEVICE_STUB, &block->iface_block_device);
   update_iface (block, action, filesystem_check, NULL, filesystem_update,
                 UDISKS_TYPE_LINUX_FILESYSTEM, &block->iface_filesystem);
-  /* TODO: need to hook up Start() and Stop() methods */
   update_iface (block, action, swapspace_check, swapspace_connect, swapspace_update,
                 UDISKS_TYPE_SWAPSPACE_STUB, &block->iface_swapspace);
 }

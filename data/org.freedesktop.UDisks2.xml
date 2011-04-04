@@ -5,17 +5,6 @@
 
   <!-- ********************************************************************** -->
 
-  <interface name="org.freedesktop.UDisks2.LinuxSysfsDevice">
-    <property name="SysfsPath" type="ay" access="read"/>
-    <property name="Subsystem" type="ay" access="read"/>
-
-    <signal name="UEvent">
-      <arg name="action" type="ay"/>
-    </signal>
-  </interface>
-
-  <!-- ********************************************************************** -->
-
   <!--
       org.freedesktop.UDisks2.Lun:
       @short_description: Storage Device
