@@ -48,7 +48,7 @@ typedef struct _UDisksLinuxLunClass   UDisksLinuxLunClass;
  */
 struct _UDisksLinuxLun
 {
-  GDBusObjectStub parent_instance;
+  GDBusObjectSkeleton parent_instance;
 
   UDisksDaemon *daemon;
 
@@ -61,7 +61,7 @@ struct _UDisksLinuxLun
 
 struct _UDisksLinuxLunClass
 {
-  GDBusObjectStubClass parent_class;
+  GDBusObjectSkeletonClass parent_class;
 };
 
 enum
@@ -71,7 +71,7 @@ enum
   PROP_DEVICE
 };
 
-G_DEFINE_TYPE (UDisksLinuxLun, udisks_linux_lun, G_TYPE_DBUS_OBJECT_STUB);
+G_DEFINE_TYPE (UDisksLinuxLun, udisks_linux_lun, G_TYPE_DBUS_OBJECT_SKELETON);
 
 static void
 udisks_linux_lun_finalize (GObject *object)
@@ -249,7 +249,7 @@ udisks_linux_lun_constructed (GObject *object)
   g_free (vendor);
   g_free (model);
   g_free (serial);
-  g_dbus_object_stub_set_object_path (G_DBUS_OBJECT_STUB (lun), str->str);
+  g_dbus_object_skeleton_set_object_path (G_DBUS_OBJECT_SKELETON (lun), str->str);
   g_string_free (str, TRUE);
 
   if (G_OBJECT_CLASS (udisks_linux_lun_parent_class)->constructed != NULL)
@@ -377,7 +377,7 @@ update_iface (UDisksLinuxLun           *lun,
               const gchar          *uevent_action,
               HasInterfaceFunc      has_func,
               UpdateInterfaceFunc   update_func,
-              GType                 stub_type,
+              GType                 skeleton_type,
               gpointer              _interface_pointer)
 {
   gboolean has;
@@ -387,8 +387,8 @@ update_iface (UDisksLinuxLun           *lun,
   g_return_if_fail (lun != NULL);
   g_return_if_fail (has_func != NULL);
   g_return_if_fail (update_func != NULL);
-  g_return_if_fail (g_type_is_a (stub_type, G_TYPE_OBJECT));
-  g_return_if_fail (g_type_is_a (stub_type, G_TYPE_DBUS_INTERFACE));
+  g_return_if_fail (g_type_is_a (skeleton_type, G_TYPE_OBJECT));
+  g_return_if_fail (g_type_is_a (skeleton_type, G_TYPE_DBUS_INTERFACE));
   g_return_if_fail (interface_pointer != NULL);
   g_return_if_fail (*interface_pointer == NULL || G_IS_DBUS_INTERFACE (*interface_pointer));
 
@@ -398,7 +398,7 @@ update_iface (UDisksLinuxLun           *lun,
     {
       if (has)
         {
-          *interface_pointer = g_object_new (stub_type, NULL);
+          *interface_pointer = g_object_new (skeleton_type, NULL);
           add = TRUE;
         }
     }
@@ -406,7 +406,7 @@ update_iface (UDisksLinuxLun           *lun,
     {
       if (!has)
         {
-          g_dbus_object_stub_remove_interface (G_DBUS_OBJECT_STUB (lun), G_DBUS_INTERFACE_STUB (*interface_pointer));
+          g_dbus_object_skeleton_remove_interface (G_DBUS_OBJECT_SKELETON (lun), G_DBUS_INTERFACE_SKELETON (*interface_pointer));
           g_object_unref (*interface_pointer);
           *interface_pointer = NULL;
         }
@@ -416,7 +416,7 @@ update_iface (UDisksLinuxLun           *lun,
     {
       update_func (lun, uevent_action, G_DBUS_INTERFACE (*interface_pointer));
       if (add)
-        g_dbus_object_stub_add_interface (G_DBUS_OBJECT_STUB (lun), G_DBUS_INTERFACE_STUB (*interface_pointer));
+        g_dbus_object_skeleton_add_interface (G_DBUS_OBJECT_SKELETON (lun), G_DBUS_INTERFACE_SKELETON (*interface_pointer));
     }
 }
 
@@ -436,7 +436,7 @@ find_iscsi_target (GDBusObjectManagerServer *object_manager,
   objects = g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (object_manager));
   for (l = objects; l != NULL; l = l->next)
     {
-      GDBusObjectStub *object = G_DBUS_OBJECT_STUB (l->data);
+      GDBusObjectSkeleton *object = G_DBUS_OBJECT_SKELETON (l->data);
       UDisksIScsiTarget *target;
 
       target = UDISKS_PEEK_ISCSI_TARGET (object);
@@ -1018,7 +1018,7 @@ udisks_linux_lun_uevent (UDisksLinuxLun *lun,
     }
 
   update_iface (lun, action, lun_check, lun_update,
-                UDISKS_TYPE_LUN_STUB, &lun->iface_lun);
+                UDISKS_TYPE_LUN_SKELETON, &lun->iface_lun);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

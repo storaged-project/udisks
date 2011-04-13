@@ -60,7 +60,7 @@ typedef struct
   gint   passno;
 
   gchar *object_path;
-  GDBusObjectStub *object;
+  GDBusObjectSkeleton *object;
   UDisksConfigurationItem *item;
 } FstabEntry;
 
@@ -469,7 +469,7 @@ export_entry (UDisksFstabProvider *provider,
         }
     }
 
-  entry->item = udisks_configuration_item_stub_new ();
+  entry->item = udisks_configuration_item_skeleton_new ();
 
   udisks_configuration_item_set_type (entry->item, "fsmount");
 
@@ -498,8 +498,8 @@ export_entry (UDisksFstabProvider *provider,
   /* set the transient fields */
   update_entry (provider, entry);
 
-  entry->object = g_dbus_object_stub_new (entry->object_path);
-  g_dbus_object_stub_add_interface (entry->object, G_DBUS_INTERFACE_STUB (entry->item));
+  entry->object = g_dbus_object_skeleton_new (entry->object_path);
+  g_dbus_object_skeleton_add_interface (entry->object, G_DBUS_INTERFACE_SKELETON (entry->item));
   g_dbus_object_manager_server_export (udisks_daemon_get_object_manager (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))),
                                        entry->object);
 

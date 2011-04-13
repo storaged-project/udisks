@@ -54,17 +54,17 @@ typedef struct _UDisksLinuxFilesystemClass   UDisksLinuxFilesystemClass;
  */
 struct _UDisksLinuxFilesystem
 {
-  UDisksFilesystemStub parent_instance;
+  UDisksFilesystemSkeleton parent_instance;
 };
 
 struct _UDisksLinuxFilesystemClass
 {
-  UDisksFilesystemStubClass parent_class;
+  UDisksFilesystemSkeletonClass parent_class;
 };
 
 static void filesystem_iface_init (UDisksFilesystemIface *iface);
 
-G_DEFINE_TYPE_WITH_CODE (UDisksLinuxFilesystem, udisks_linux_filesystem, UDISKS_TYPE_FILESYSTEM_STUB,
+G_DEFINE_TYPE_WITH_CODE (UDisksLinuxFilesystem, udisks_linux_filesystem, UDISKS_TYPE_FILESYSTEM_SKELETON,
                          G_IMPLEMENT_INTERFACE (UDISKS_TYPE_FILESYSTEM, filesystem_iface_init));
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -72,8 +72,8 @@ G_DEFINE_TYPE_WITH_CODE (UDisksLinuxFilesystem, udisks_linux_filesystem, UDISKS_
 static void
 udisks_linux_filesystem_init (UDisksLinuxFilesystem *filesystem)
 {
-  g_dbus_interface_stub_set_flags (G_DBUS_INTERFACE_STUB (filesystem),
-                                   G_DBUS_INTERFACE_STUB_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
+  g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (filesystem),
+                                       G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
 }
 
 static void

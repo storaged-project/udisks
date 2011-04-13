@@ -241,7 +241,7 @@ typedef struct
   gchar *dir_name;
 
   gchar *object_path;
-  GDBusObjectStub *object;
+  GDBusObjectSkeleton *object;
   UDisksIScsiTarget *iface;
 
   GList *portals;
@@ -799,9 +799,9 @@ load_and_process_iscsi (UDisksIScsiProvider *provider)
     {
       IScsiTarget *target = l->data;
       target->object_path = util_compute_object_path ("/org/freedesktop/UDisks2/iSCSI/", target->target_name);
-      target->iface = udisks_iscsi_target_stub_new ();
-      g_dbus_interface_stub_set_flags (G_DBUS_INTERFACE_STUB (target->iface),
-                                       G_DBUS_INTERFACE_STUB_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
+      target->iface = udisks_iscsi_target_skeleton_new ();
+      g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (target->iface),
+                                           G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
       g_signal_connect (target->iface,
                         "handle-login",
                         G_CALLBACK (on_iscsi_target_handle_login),
@@ -827,8 +827,8 @@ load_and_process_iscsi (UDisksIScsiProvider *provider)
   for (l = added; l != NULL; l = l->next)
     {
       IScsiTarget *target = l->data;
-      target->object = g_dbus_object_stub_new (target->object_path);
-      g_dbus_object_stub_add_interface (target->object, G_DBUS_INTERFACE_STUB (target->iface));
+      target->object = g_dbus_object_skeleton_new (target->object_path);
+      g_dbus_object_skeleton_add_interface (target->object, G_DBUS_INTERFACE_SKELETON (target->iface));
       g_dbus_object_manager_server_export_uniquely (udisks_daemon_get_object_manager (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))),
                                                     target->object);
     }

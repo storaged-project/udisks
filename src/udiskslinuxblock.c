@@ -57,7 +57,7 @@ typedef struct _UDisksLinuxBlockClass   UDisksLinuxBlockClass;
  */
 struct _UDisksLinuxBlock
 {
-  GDBusObjectStub parent_instance;
+  GDBusObjectSkeleton parent_instance;
 
   UDisksDaemon *daemon;
   UDisksMountMonitor *mount_monitor;
@@ -72,7 +72,7 @@ struct _UDisksLinuxBlock
 
 struct _UDisksLinuxBlockClass
 {
-  GDBusObjectStubClass parent_class;
+  GDBusObjectSkeletonClass parent_class;
 };
 
 enum
@@ -82,7 +82,7 @@ enum
   PROP_DEVICE
 };
 
-G_DEFINE_TYPE (UDisksLinuxBlock, udisks_linux_block, G_TYPE_DBUS_OBJECT_STUB);
+G_DEFINE_TYPE (UDisksLinuxBlock, udisks_linux_block, G_TYPE_DBUS_OBJECT_SKELETON);
 
 static void on_mount_monitor_mount_added   (UDisksMountMonitor  *monitor,
                                             UDisksMount         *mount,
@@ -192,7 +192,7 @@ udisks_linux_block_constructed (GObject *object)
   /* compute the object path */
   str = g_string_new ("/org/freedesktop/UDisks2/block_devices/");
   udisks_safe_append_to_object_path (str, g_udev_device_get_name (block->device));
-  g_dbus_object_stub_set_object_path (G_DBUS_OBJECT_STUB (block), str->str);
+  g_dbus_object_skeleton_set_object_path (G_DBUS_OBJECT_SKELETON (block), str->str);
   g_string_free (str, TRUE);
 
   if (G_OBJECT_CLASS (udisks_linux_block_parent_class)->constructed != NULL)
@@ -311,7 +311,7 @@ update_iface (UDisksLinuxBlock           *block,
               HasInterfaceFunc      has_func,
               ConnectInterfaceFunc   connect_func,
               UpdateInterfaceFunc   update_func,
-              GType                 stub_type,
+              GType                 skeleton_type,
               gpointer              _interface_pointer)
 {
   gboolean has;
@@ -321,8 +321,8 @@ update_iface (UDisksLinuxBlock           *block,
   g_return_if_fail (block != NULL);
   g_return_if_fail (has_func != NULL);
   g_return_if_fail (update_func != NULL);
-  g_return_if_fail (g_type_is_a (stub_type, G_TYPE_OBJECT));
-  g_return_if_fail (g_type_is_a (stub_type, G_TYPE_DBUS_INTERFACE));
+  g_return_if_fail (g_type_is_a (skeleton_type, G_TYPE_OBJECT));
+  g_return_if_fail (g_type_is_a (skeleton_type, G_TYPE_DBUS_INTERFACE));
   g_return_if_fail (interface_pointer != NULL);
   g_return_if_fail (*interface_pointer == NULL || G_IS_DBUS_INTERFACE (*interface_pointer));
 
@@ -332,7 +332,7 @@ update_iface (UDisksLinuxBlock           *block,
     {
       if (has)
         {
-          *interface_pointer = g_object_new (stub_type, NULL);
+          *interface_pointer = g_object_new (skeleton_type, NULL);
           if (connect_func != NULL)
             connect_func (block);
           add = TRUE;
@@ -342,7 +342,7 @@ update_iface (UDisksLinuxBlock           *block,
     {
       if (!has)
         {
-          g_dbus_object_stub_remove_interface (G_DBUS_OBJECT_STUB (block), G_DBUS_INTERFACE_STUB (*interface_pointer));
+          g_dbus_object_skeleton_remove_interface (G_DBUS_OBJECT_SKELETON (block), G_DBUS_INTERFACE_SKELETON (*interface_pointer));
           g_object_unref (*interface_pointer);
           *interface_pointer = NULL;
         }
@@ -352,7 +352,7 @@ update_iface (UDisksLinuxBlock           *block,
     {
       update_func (block, uevent_action, G_DBUS_INTERFACE (*interface_pointer));
       if (add)
-        g_dbus_object_stub_add_interface (G_DBUS_OBJECT_STUB (block), G_DBUS_INTERFACE_STUB (*interface_pointer));
+        g_dbus_object_skeleton_add_interface (G_DBUS_OBJECT_SKELETON (block), G_DBUS_INTERFACE_SKELETON (*interface_pointer));
     }
 }
 
@@ -400,7 +400,7 @@ find_lun (GDBusObjectManagerServer *object_manager,
   objects = g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (object_manager));
   for (l = objects; l != NULL; l = l->next)
     {
-      GDBusObjectStub *object = G_DBUS_OBJECT_STUB (l->data);
+      GDBusObjectSkeleton *object = G_DBUS_OBJECT_SKELETON (l->data);
       UDisksLinuxLun *lun;
       GList *lun_devices;
       GList *j;
@@ -448,7 +448,7 @@ find_block_device_by_sysfs_path (GDBusObjectManagerServer *object_manager,
   objects = g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (object_manager));
   for (l = objects; l != NULL; l = l->next)
     {
-      GDBusObjectStub *object = G_DBUS_OBJECT_STUB (l->data);
+      GDBusObjectSkeleton *object = G_DBUS_OBJECT_SKELETON (l->data);
       UDisksLinuxBlock *block;
 
       if (!UDISKS_IS_LINUX_BLOCK (object))
@@ -976,8 +976,8 @@ static void
 swapspace_connect (UDisksLinuxBlock *block)
 {
   /* indicate that we want to handle the method invocations in a thread */
-  g_dbus_interface_stub_set_flags (G_DBUS_INTERFACE_STUB (block->iface_swapspace),
-                                   G_DBUS_INTERFACE_STUB_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
+  g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (block->iface_swapspace),
+                                       G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
   g_signal_connect (block->iface_swapspace,
                     "handle-start",
                     G_CALLBACK (swapspace_handle_start),
@@ -1032,11 +1032,11 @@ udisks_linux_block_uevent (UDisksLinuxBlock *block,
     }
 
   update_iface (block, action, block_device_check, block_device_connect, block_device_update,
-                UDISKS_TYPE_BLOCK_DEVICE_STUB, &block->iface_block_device);
+                UDISKS_TYPE_BLOCK_DEVICE_SKELETON, &block->iface_block_device);
   update_iface (block, action, filesystem_check, NULL, filesystem_update,
                 UDISKS_TYPE_LINUX_FILESYSTEM, &block->iface_filesystem);
   update_iface (block, action, swapspace_check, swapspace_connect, swapspace_update,
-                UDISKS_TYPE_SWAPSPACE_STUB, &block->iface_swapspace);
+                UDISKS_TYPE_SWAPSPACE_SKELETON, &block->iface_swapspace);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

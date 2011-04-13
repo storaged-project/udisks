@@ -261,7 +261,7 @@ handle_block_uevent_for_lun (UDisksLinuxProvider *provider,
             {
               g_object_set_data_full (G_OBJECT (lun), "x-vpd", g_strdup (vpd), g_free);
               g_dbus_object_manager_server_export_uniquely (udisks_daemon_get_object_manager (daemon),
-                                                            G_DBUS_OBJECT_STUB (lun));
+                                                            G_DBUS_OBJECT_SKELETON (lun));
               g_hash_table_insert (provider->vpd_to_lun, g_strdup (vpd), lun);
               g_hash_table_insert (provider->sysfs_path_to_lun, g_strdup (sysfs_path), lun);
             }
@@ -305,7 +305,7 @@ handle_block_uevent_for_block (UDisksLinuxProvider *provider,
         {
           block = udisks_linux_block_new (daemon, device);
           g_dbus_object_manager_server_export_uniquely (udisks_daemon_get_object_manager (daemon),
-                                                        G_DBUS_OBJECT_STUB (block));
+                                                        G_DBUS_OBJECT_SKELETON (block));
           g_hash_table_insert (provider->sysfs_to_block, g_strdup (sysfs_path), block);
         }
     }

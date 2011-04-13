@@ -48,7 +48,7 @@ enum
   PROP_CANCELLABLE,
 };
 
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (UDisksBaseJob, udisks_base_job, UDISKS_TYPE_JOB_STUB,
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (UDisksBaseJob, udisks_base_job, UDISKS_TYPE_JOB_SKELETON,
                                   G_IMPLEMENT_INTERFACE (UDISKS_TYPE_JOB, job_iface_init));
 
 static void

@@ -44,7 +44,7 @@ typedef struct _UDisksBaseJobPrivate   UDisksBaseJobPrivate;
 struct _UDisksBaseJob
 {
   /*< private >*/
-  UDisksJobStub parent_instance;
+  UDisksJobSkeleton parent_instance;
   UDisksBaseJobPrivate *priv;
 };
 
@@ -56,7 +56,7 @@ struct _UDisksBaseJob
  */
 struct _UDisksBaseJobClass
 {
-  UDisksJobStubClass parent_class;
+  UDisksJobSkeletonClass parent_class;
   /*< private >*/
   gpointer padding[8];
 };
