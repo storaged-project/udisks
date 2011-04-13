@@ -380,7 +380,7 @@ block_device_connect (UDisksLinuxBlock *block)
 {
   g_signal_connect (block->iface_block_device,
                     "handle-set-label",
-                    UDISKS_BLOCK_DEVICE_HANDLE_SET_LABEL_CALLBACK (handle_set_label, gpointer),
+                    G_CALLBACK (handle_set_label),
                     NULL);
 }
 
@@ -980,11 +980,11 @@ swapspace_connect (UDisksLinuxBlock *block)
                                    G_DBUS_INTERFACE_STUB_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
   g_signal_connect (block->iface_swapspace,
                     "handle-start",
-                    UDISKS_SWAPSPACE_HANDLE_START_CALLBACK (swapspace_handle_start, gpointer),
+                    G_CALLBACK (swapspace_handle_start),
                     NULL);
   g_signal_connect (block->iface_swapspace,
                     "handle-stop",
-                    UDISKS_SWAPSPACE_HANDLE_START_CALLBACK (swapspace_handle_stop, gpointer),
+                    G_CALLBACK (swapspace_handle_stop),
                     NULL);
 }
 

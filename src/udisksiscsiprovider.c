@@ -804,11 +804,11 @@ load_and_process_iscsi (UDisksIScsiProvider *provider)
                                        G_DBUS_INTERFACE_STUB_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
       g_signal_connect (target->iface,
                         "handle-login",
-                        UDISKS_ISCSI_TARGET_HANDLE_LOGIN_CALLBACK (on_iscsi_target_handle_login, UDisksIScsiProvider*),
+                        G_CALLBACK (on_iscsi_target_handle_login),
                         provider);
       g_signal_connect (target->iface,
                         "handle-logout",
-                        UDISKS_ISCSI_TARGET_HANDLE_LOGOUT_CALLBACK (on_iscsi_target_handle_logout, UDisksIScsiProvider*),
+                        G_CALLBACK (on_iscsi_target_handle_logout),
                         provider);
       udisks_iscsi_target_set_name (target->iface, target->target_name);
       provider->targets = g_list_prepend (provider->targets, iscsi_target_ref (target));
@@ -829,8 +829,8 @@ load_and_process_iscsi (UDisksIScsiProvider *provider)
       IScsiTarget *target = l->data;
       target->object = g_dbus_object_stub_new (target->object_path);
       g_dbus_object_stub_add_interface (target->object, G_DBUS_INTERFACE_STUB (target->iface));
-      g_dbus_object_manager_server_export_and_uniquify (udisks_daemon_get_object_manager (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))),
-                                                        target->object);
+      g_dbus_object_manager_server_export_uniquely (udisks_daemon_get_object_manager (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))),
+                                                    target->object);
     }
 
   g_list_foreach (parsed_targets, (GFunc) iscsi_target_unref, NULL);

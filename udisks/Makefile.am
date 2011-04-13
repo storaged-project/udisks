@@ -24,6 +24,7 @@ $(dbus_built_sources) : Makefile.am $(top_srcdir)/data/org.freedesktop.UDisks2.x
 	gdbus-codegen							                \
 		--interface-prefix org.freedesktop.UDisks2.                          	\
 		--c-namespace UDisks							\
+		--c-generate-object-manager						\
 		--generate-c-code udisks-generated                             		\
 		--generate-docbook udisks-generated-doc					\
 		$(top_srcdir)/data/org.freedesktop.UDisks2.xml         			\
