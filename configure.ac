@@ -28,6 +28,8 @@ fi
 
 GTK_DOC_CHECK([1.3])
 
+GOBJECT_INTROSPECTION_CHECK([0.6.2])
+
 # Libraries
 #
 
@@ -111,6 +113,7 @@ echo "
         privlibdir:                 ${privlibdir}
         slashlibdir:                ${slashlibdir}
         slashsbindir:               ${slashsbindir}
+	introspection:		    ${found_introspection}
 
         compiler:                   ${CC}
         cflags:                     ${CFLAGS}

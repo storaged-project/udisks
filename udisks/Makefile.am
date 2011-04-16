@@ -100,7 +100,41 @@ pkgconfig_DATA = udisks2.pc
 
 # ----------------------------------------------------------------------------------------------------
 
-CLEANFILES = udisks-generated-doc-*.xml
+if HAVE_INTROSPECTION
+girdir = $(INTROSPECTION_GIRDIR)
+gir_DATA = UDisks-2.0.gir
+
+typelibsdir = $(INTROSPECTION_TYPELIBDIR)
+typelibs_DATA = UDisks-2.0.typelib
+
+UDisks-2.0.gir: libudisks2.la $(INTROSPECTION_SCANNER) Makefile.am
+	$(INTROSPECTION_SCANNER) -v 				\
+		--warn-all					\
+		--namespace UDisks 				\
+		--identifier-prefix UDisks			\
+		--symbol-prefix	udisks				\
+		--nsversion=2.0 				\
+		--include=Gio-2.0 				\
+		--library=udisks2	 			\
+		--output $@ 					\
+		--pkg=glib-2.0 					\
+		--pkg=gobject-2.0 				\
+		--pkg=gio-2.0 					\
+		--libtool=$(top_builddir)/libtool		\
+		--c-include='udisks/udisks.h'			\
+                -I$(top_srcdir)		 			\
+	        -DUDISKS_COMPILATION                   		\
+		$(libudisks2_la_SOURCES)			\
+		$(NULL)
+
+UDisks-2.0.typelib: UDisks-2.0.gir $(INTROSPECTION_COMPILER)
+	$(INTROSPECTION_COMPILER) $< -o $@
+
+endif # HAVE_INTROSPECTION
+
+# ----------------------------------------------------------------------------------------------------
+
+CLEANFILES = udisks-generated-doc-*.xml $(gir_DATA) $(typelibs_DATA)
 
 EXTRA_DIST = 						\
 	udisks2.pc.in					\

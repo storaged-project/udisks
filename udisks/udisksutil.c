@@ -261,11 +261,11 @@ strv_has (const gchar * const *haystack,
 /**
  * udisks_util_get_lun_info:
  * @lun: A #UDisksLun.
- * @out_name: (out allow-none): Return location for name or %NULL.
- * @out_description: (out allow-none): Return location for description or %NULL.
- * @out_drive_icon: (out allow-none): Return location for icon representing the drive or %NULL.
- * @out_media_description: (out allow-none): Return location for description of the media or %NULL.
- * @out_media_icon: (out allow-none): Return location for icon representing the media or %NULL.
+ * @out_name: (out) (allow-none): Return location for name or %NULL.
+ * @out_description: (out) (allow-none): Return location for description or %NULL.
+ * @out_drive_icon: (out) (allow-none): Return location for icon representing the drive or %NULL.
+ * @out_media_description: (out) (allow-none): Return location for description of the media or %NULL.
+ * @out_media_icon: (out) (allow-none): Return location for icon representing the media or %NULL.
  *
  * Gets information about a #UDisksLun object that is suitable to
  * present in an user interface. The returned strings are localized.

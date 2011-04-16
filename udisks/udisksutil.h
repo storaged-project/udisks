@@ -43,14 +43,14 @@ const gchar **udisks_util_get_part_types_for_scheme (const gchar *scheme);
 
 
 gchar *udisks_util_get_id_for_display (const gchar *usage,
-                                       const gchar *id,
+                                       const gchar *type,
                                        const gchar *version,
                                        gboolean     long_string);
 
 void udisks_util_get_lun_info (UDisksLun  *lun,
                                gchar     **out_name,
                                gchar     **out_description,
-                               GIcon     **out_icon,
+                               GIcon     **out_drive_icon,
                                gchar     **out_media_description,
                                GIcon     **out_media_icon);
 

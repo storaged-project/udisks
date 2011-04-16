@@ -471,7 +471,7 @@ export_entry (UDisksFstabProvider *provider,
 
   entry->item = udisks_configuration_item_skeleton_new ();
 
-  udisks_configuration_item_set_type (entry->item, "fsmount");
+  udisks_configuration_item_set_type_ (entry->item, "fsmount");
 
   target = g_strdup_printf ("block:%s", device);
   udisks_configuration_item_set_target (entry->item, target);
