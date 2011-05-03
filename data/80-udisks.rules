@@ -135,6 +135,9 @@ SUBSYSTEMS=="usb", ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INS
 #
 SUBSYSTEMS=="usb", ATTRS{idVendor}=="05ac", ATTRS{idProduct}=="8403", ENV{ID_DRIVE_FLASH_SD}="1"
 
+# Realtek card reader
+SUBSYSTEMS=="pci", ATTRS{vendor}=="0x10ec", ATTRS{device}=="0x5208", ENV{ID_DRIVE_FLASH}="1"
+
 # Common theme
 #
 SUBSYSTEMS=="usb", ENV{ID_MODEL}=="*SD_Reader*", ENV{ID_DRIVE_FLASH_SD}="1"
