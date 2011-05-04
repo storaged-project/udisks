@@ -3849,9 +3849,12 @@ static gboolean
 update_info_is_system_internal (Device *device)
 {
   gboolean is_system_internal;
-
-  /* TODO: make it possible to override this property from a udev property.
-   */
+  
+  if (g_udev_device_has_property (device->priv->d, "UDISKS_SYSTEM_INTERNAL"))
+    {
+      is_system_internal = g_udev_device_get_property_as_boolean (device->priv->d, "UDISKS_SYSTEM_INTERNAL");
+      goto determined;
+    }
 
   /* start out by assuming the device is system internal, then adjust depending on what kind of
    * device we are dealing with

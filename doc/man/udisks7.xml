@@ -74,6 +74,16 @@
         icon theme specification.
         </para></listitem>
       </varlistentry>
+
+      <varlistentry>
+        <term><option>UDISKS_SYSTEM_INTERNAL</option></term>
+        <listitem><para>If set, this will override the usual bus type based
+	    detection of whether a device is considered "system internal". "0"
+	    means "removable" (i. e. eligible for automounting, and normal
+	    users can mount), any other value means "system internal" (i.
+	    e. no automounting, and only administrators can mount).
+        </para></listitem>
+      </varlistentry>
     </variablelist>
     <para>
       The <option>ID_DRIVE_*</option> properties are used to describe what
