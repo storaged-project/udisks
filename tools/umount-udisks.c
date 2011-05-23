@@ -30,11 +30,11 @@
 
 #include <udisks/udisks.h>
 
-static GDBusObject *
+static UDisksObject *
 lookup_object_for_block_device_file (UDisksClient  *client,
                                      const gchar   *block_device_file)
 {
-  GDBusObject *ret;
+  UDisksObject *ret;
   GList *objects;
   GList *l;
 
@@ -43,10 +43,10 @@ lookup_object_for_block_device_file (UDisksClient  *client,
   objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
   for (l = objects; l != NULL; l = l->next)
     {
-      GDBusObject *object = G_DBUS_OBJECT (l->data);
+      UDisksObject *object = UDISKS_OBJECT (l->data);
       UDisksBlockDevice *block;
 
-      block = UDISKS_PEEK_BLOCK_DEVICE (object);
+      block = udisks_object_peek_block_device (object);
       if (block != NULL)
         {
           const gchar * const *symlinks;
@@ -85,7 +85,7 @@ main (int argc, char *argv[])
   UDisksClient *client;
   GError *error;
   struct stat statbuf;
-  GDBusObject *object;
+  UDisksObject *object;
   UDisksFilesystem *filesystem;
   const gchar *unmount_options[1] = {NULL};
 
@@ -134,7 +134,7 @@ main (int argc, char *argv[])
       goto out;
     }
 
-  filesystem = UDISKS_PEEK_FILESYSTEM (object);
+  filesystem = udisks_object_peek_filesystem (object);
   if (filesystem == NULL)
     {
       g_printerr ("Block device file %s is not a mountable filesystem.\n", block_device_file);

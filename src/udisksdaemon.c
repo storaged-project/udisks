@@ -185,7 +185,7 @@ udisks_daemon_constructed (GObject *object)
       g_error_free (error);
     }
 
-  daemon->object_manager = g_dbus_object_manager_server_new (daemon->connection, "/org/freedesktop/UDisks2");
+  daemon->object_manager = g_dbus_object_manager_server_new ("/org/freedesktop/UDisks2");
 
   if (!g_file_test (TMP_STATEDIR, G_FILE_TEST_IS_DIR))
     {
@@ -223,6 +223,9 @@ udisks_daemon_constructed (GObject *object)
   udisks_provider_start (UDISKS_PROVIDER (daemon->iscsi_provider));
   udisks_provider_start (UDISKS_PROVIDER (daemon->linux_provider));
   udisks_provider_start (UDISKS_PROVIDER (daemon->fstab_provider));
+
+  /* Export the ObjectManager */
+  g_dbus_object_manager_server_set_connection (daemon->object_manager, daemon->connection);
 
   if (G_OBJECT_CLASS (udisks_daemon_parent_class)->constructed != NULL)
     G_OBJECT_CLASS (udisks_daemon_parent_class)->constructed (object);
@@ -432,15 +435,14 @@ on_job_completed (UDisksJob    *job,
                   gpointer      user_data)
 {
   UDisksDaemon *daemon = UDISKS_DAEMON (user_data);
-  GDBusObjectSkeleton *object;
+  UDisksObjectSkeleton *object;
 
-  object = G_DBUS_OBJECT_SKELETON (g_dbus_interface_get_object (G_DBUS_INTERFACE (job)));
+  object = UDISKS_OBJECT_SKELETON (g_dbus_interface_get_object (G_DBUS_INTERFACE (job)));
   g_assert (object != NULL);
 
   /* Unexport job */
   g_dbus_object_manager_server_unexport (daemon->object_manager,
                                          g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
-  g_dbus_object_skeleton_remove_interface (object, G_DBUS_INTERFACE_SKELETON (job));
   g_object_unref (object);
 
   /* returns the reference we took when connecting to the
@@ -479,7 +481,7 @@ udisks_daemon_launch_simple_job (UDisksDaemon    *daemon,
                                  GCancellable    *cancellable)
 {
   UDisksSimpleJob *job;
-  GDBusObjectSkeleton *object;
+  UDisksObjectSkeleton *object;
   gchar *object_path;
 
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
@@ -488,11 +490,11 @@ udisks_daemon_launch_simple_job (UDisksDaemon    *daemon,
 
   /* TODO: protect job_id by a mutex */
   object_path = g_strdup_printf ("/org/freedesktop/UDisks2/jobs/%d", job_id++);
-  object = g_dbus_object_skeleton_new (object_path);
-  g_dbus_object_skeleton_add_interface (object, G_DBUS_INTERFACE_SKELETON (job));
+  object = udisks_object_skeleton_new (object_path);
+  udisks_object_skeleton_set_job (object, UDISKS_JOB (job));
   g_free (object_path);
 
-  g_dbus_object_manager_server_export (daemon->object_manager, object);
+  g_dbus_object_manager_server_export (daemon->object_manager, G_DBUS_OBJECT_SKELETON (object));
   g_signal_connect_after (job,
                           "completed",
                           G_CALLBACK (on_job_completed),
@@ -534,7 +536,7 @@ udisks_daemon_launch_threaded_job  (UDisksDaemon    *daemon,
                                     GCancellable    *cancellable)
 {
   UDisksThreadedJob *job;
-  GDBusObjectSkeleton *object;
+  UDisksObjectSkeleton *object;
   gchar *object_path;
 
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
@@ -547,11 +549,11 @@ udisks_daemon_launch_threaded_job  (UDisksDaemon    *daemon,
 
   /* TODO: protect job_id by a mutex */
   object_path = g_strdup_printf ("/org/freedesktop/UDisks2/jobs/%d", job_id++);
-  object = g_dbus_object_skeleton_new (object_path);
-  g_dbus_object_skeleton_add_interface (object, G_DBUS_INTERFACE_SKELETON (job));
+  object = udisks_object_skeleton_new (object_path);
+  udisks_object_skeleton_set_job (object, UDISKS_JOB (job));
   g_free (object_path);
 
-  g_dbus_object_manager_server_export (daemon->object_manager, object);
+  g_dbus_object_manager_server_export (daemon->object_manager, G_DBUS_OBJECT_SKELETON (object));
   g_signal_connect_after (job,
                           "completed",
                           G_CALLBACK (on_job_completed),
@@ -592,7 +594,7 @@ udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
   va_list var_args;
   gchar *command_line;
   UDisksSpawnedJob *job;
-  GDBusObjectSkeleton *object;
+  UDisksObjectSkeleton *object;
   gchar *object_path;
 
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
@@ -607,11 +609,11 @@ udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
 
   /* TODO: protect job_id by a mutex */
   object_path = g_strdup_printf ("/org/freedesktop/UDisks2/jobs/%d", job_id++);
-  object = g_dbus_object_skeleton_new (object_path);
-  g_dbus_object_skeleton_add_interface (object, G_DBUS_INTERFACE_SKELETON (job));
+  object = udisks_object_skeleton_new (object_path);
+  udisks_object_skeleton_set_job (object, UDISKS_JOB (job));
   g_free (object_path);
 
-  g_dbus_object_manager_server_export (daemon->object_manager, object);
+  g_dbus_object_manager_server_export (daemon->object_manager, G_DBUS_OBJECT_SKELETON (object));
   g_signal_connect_after (job,
                           "completed",
                           G_CALLBACK (on_job_completed),

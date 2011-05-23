@@ -311,7 +311,7 @@ udisks_daemon_util_resolve_links (const gchar *path,
  */
 gboolean
 udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
-                                             GDBusObject           *object,
+                                             UDisksObject          *object,
                                              const gchar           *action_id,
                                              gboolean               auth_no_user_interaction,
                                              const gchar           *message,
@@ -340,7 +340,7 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
   polkit_details_insert (details, "polkit.gettext_domain", "udisks2"); /* TODO: set up translation */
 
   /* setup other details that @message can use */
-  block = UDISKS_PEEK_BLOCK_DEVICE (object);
+  block = udisks_object_peek_block_device (object);
   if (block != NULL)
     polkit_details_insert (details, "udisks2.device", udisks_block_device_get_preferred_device (block));
 

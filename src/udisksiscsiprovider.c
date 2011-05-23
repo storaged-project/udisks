@@ -241,7 +241,7 @@ typedef struct
   gchar *dir_name;
 
   gchar *object_path;
-  GDBusObjectSkeleton *object;
+  UDisksObjectSkeleton *object;
   UDisksIScsiTarget *iface;
 
   GList *portals;
@@ -638,7 +638,7 @@ on_iscsi_target_handle_login_logout (UDisksIScsiTarget     *iface,
 
   /* TODO: we want nicer authentication message */
   if (!udisks_daemon_util_check_authorization_sync (provider->daemon,
-                                                    g_dbus_interface_get_object (G_DBUS_INTERFACE (iface)),
+                                                    UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (iface))),
                                                     "org.freedesktop.udisks2.iscsi",
                                                     auth_no_user_interaction,
                                                     is_login ?
@@ -827,10 +827,10 @@ load_and_process_iscsi (UDisksIScsiProvider *provider)
   for (l = added; l != NULL; l = l->next)
     {
       IScsiTarget *target = l->data;
-      target->object = g_dbus_object_skeleton_new (target->object_path);
-      g_dbus_object_skeleton_add_interface (target->object, G_DBUS_INTERFACE_SKELETON (target->iface));
+      target->object = udisks_object_skeleton_new (target->object_path);
+      udisks_object_skeleton_set_iscsi_target (target->object, target->iface);
       g_dbus_object_manager_server_export_uniquely (udisks_daemon_get_object_manager (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))),
-                                                    target->object);
+                                                    G_DBUS_OBJECT_SKELETON (target->object));
     }
 
   g_list_foreach (parsed_targets, (GFunc) iscsi_target_unref, NULL);

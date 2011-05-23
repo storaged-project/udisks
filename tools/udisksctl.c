@@ -340,7 +340,7 @@ print_interface_properties (GDBusProxy *proxy,
 }
 
 static void
-print_object (GDBusObject *object,
+print_object (UDisksObject *object,
               guint        indent)
 {
   GList *interface_proxies;
@@ -348,7 +348,7 @@ print_object (GDBusObject *object,
 
   g_return_if_fail (G_IS_DBUS_OBJECT (object));
 
-  interface_proxies = g_dbus_object_get_interfaces (object);
+  interface_proxies = g_dbus_object_get_interfaces (G_DBUS_OBJECT (object));
 
   /* We want to print the interfaces in order */
   interface_proxies = g_list_sort (interface_proxies, (GCompareFunc) if_proxy_cmp);
@@ -367,7 +367,7 @@ print_object (GDBusObject *object,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static GDBusObject *
+static UDisksObject *
 lookup_object_by_path (const gchar *path)
 {
   GDBusObject *ret;
@@ -377,13 +377,16 @@ lookup_object_by_path (const gchar *path)
   ret = g_dbus_object_manager_get_object (udisks_client_get_object_manager (client), s);
   g_free (s);
 
-  return ret;
+  if (ret == NULL)
+    return NULL;
+  else
+    return UDISKS_OBJECT (ret);
 }
 
-static GDBusObject *
+static UDisksObject *
 lookup_object_by_device (const gchar *device)
 {
-  GDBusObject *ret;
+  UDisksObject *ret;
   GList *objects;
   GList *l;
 
@@ -392,10 +395,10 @@ lookup_object_by_device (const gchar *device)
   objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
   for (l = objects; l != NULL; l = l->next)
     {
-      GDBusObject *object = G_DBUS_OBJECT (l->data);
+      UDisksObject *object = UDISKS_OBJECT (l->data);
       UDisksBlockDevice *block;
 
-      block = UDISKS_PEEK_BLOCK_DEVICE (object);
+      block = udisks_object_peek_block_device (object);
       if (block != NULL)
         {
           const gchar * const *symlinks;
@@ -426,10 +429,10 @@ lookup_object_by_device (const gchar *device)
   return ret;
 }
 
-static GDBusObject *
+static UDisksObject *
 lookup_object_by_lun (const gchar *lun)
 {
-  GDBusObject *ret;
+  UDisksObject *ret;
   GList *objects;
   GList *l;
   gchar *full_lun_object_path;
@@ -441,13 +444,13 @@ lookup_object_by_lun (const gchar *lun)
   objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
   for (l = objects; l != NULL; l = l->next)
     {
-      GDBusObject *object = G_DBUS_OBJECT (l->data);
+      UDisksObject *object = UDISKS_OBJECT (l->data);
       UDisksLun *lun;
 
-      if (g_strcmp0 (g_dbus_object_get_object_path (object), full_lun_object_path) != 0)
+      if (g_strcmp0 (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)), full_lun_object_path) != 0)
         continue;
 
-      lun = UDISKS_PEEK_LUN (object);
+      lun = udisks_object_peek_lun (object);
       if (lun != NULL)
         {
           ret = g_object_ref (object);
@@ -564,7 +567,7 @@ handle_command_mount_unmount (gint        *argc,
   gboolean complete_devices;
   GList *l;
   GList *objects;
-  GDBusObject *object;
+  UDisksObject *object;
   UDisksBlockDevice *block;
   UDisksFilesystem *filesystem;
   guint n;
@@ -636,9 +639,9 @@ handle_command_mount_unmount (gint        *argc,
         {
           gboolean is_mounted;
 
-          object = G_DBUS_OBJECT (l->data);
-          block = UDISKS_PEEK_BLOCK_DEVICE (object);
-          filesystem = UDISKS_PEEK_FILESYSTEM (object);
+          object = UDISKS_OBJECT (l->data);
+          block = udisks_object_peek_block_device (object);
+          filesystem = udisks_object_peek_filesystem (object);
 
           if (filesystem == NULL)
             continue;
@@ -650,7 +653,7 @@ handle_command_mount_unmount (gint        *argc,
 
           if ((is_mount && !is_mounted) || (!is_mount && is_mounted))
             {
-              object_path = g_dbus_object_get_object_path (object);
+              object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
               g_assert (g_str_has_prefix (object_path, "/org/freedesktop/UDisks2/"));
               g_print ("%s \n", object_path + sizeof ("/org/freedesktop/UDisks2/") - 1);
             }
@@ -665,9 +668,9 @@ handle_command_mount_unmount (gint        *argc,
       objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
       for (l = objects; l != NULL; l = l->next)
         {
-          object = G_DBUS_OBJECT (l->data);
-          block = UDISKS_PEEK_BLOCK_DEVICE (object);
-          filesystem = UDISKS_PEEK_FILESYSTEM (object);
+          object = UDISKS_OBJECT (l->data);
+          block = udisks_object_peek_block_device (object);
+          filesystem = udisks_object_peek_filesystem (object);
 
           if (block != NULL)
             {
@@ -726,11 +729,11 @@ handle_command_mount_unmount (gint        *argc,
       goto out;
     }
 
-  block = UDISKS_PEEK_BLOCK_DEVICE (object);
-  filesystem = UDISKS_PEEK_FILESYSTEM (object);
+  block = udisks_object_peek_block_device (object);
+  filesystem = udisks_object_peek_filesystem (object);
   if (filesystem == NULL)
     {
-      g_printerr ("Object %s is not a mountable filesystem.\n", g_dbus_object_get_object_path (object));
+      g_printerr ("Object %s is not a mountable filesystem.\n", g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
       g_object_unref (object);
       goto out;
     }
@@ -843,7 +846,7 @@ handle_command_info (gint        *argc,
   gboolean complete_luns;
   GList *l;
   GList *objects;
-  GDBusObject *object;
+  UDisksObject *object;
   UDisksBlockDevice *block;
   UDisksLun *lun;
   guint n;
@@ -911,9 +914,9 @@ handle_command_info (gint        *argc,
       objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
       for (l = objects; l != NULL; l = l->next)
         {
-          object = G_DBUS_OBJECT (l->data);
+          object = UDISKS_OBJECT (l->data);
 
-          object_path = g_dbus_object_get_object_path (object);
+          object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
           g_assert (g_str_has_prefix (object_path, "/org/freedesktop/UDisks2/"));
           g_print ("%s \n", object_path + sizeof ("/org/freedesktop/UDisks2/") - 1);
         }
@@ -927,8 +930,8 @@ handle_command_info (gint        *argc,
       objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
       for (l = objects; l != NULL; l = l->next)
         {
-          object = G_DBUS_OBJECT (l->data);
-          block = UDISKS_PEEK_BLOCK_DEVICE (object);
+          object = UDISKS_OBJECT (l->data);
+          block = udisks_object_peek_block_device (object);
           if (block != NULL)
             {
               const gchar * const *symlinks;
@@ -948,12 +951,12 @@ handle_command_info (gint        *argc,
       objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
       for (l = objects; l != NULL; l = l->next)
         {
-          object = G_DBUS_OBJECT (l->data);
-          lun = UDISKS_PEEK_LUN (object);
+          object = UDISKS_OBJECT (l->data);
+          lun = udisks_object_peek_lun (object);
           if (lun != NULL)
             {
               const gchar *base;
-              base = g_strrstr (g_dbus_object_get_object_path (object), "/") + 1;
+              base = g_strrstr (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)), "/") + 1;
               g_print ("%s \n", base);
             }
         }
@@ -1003,7 +1006,7 @@ handle_command_info (gint        *argc,
     }
 
   g_print ("%s%s%s:%s\n",
-           _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_BLUE), g_dbus_object_get_object_path (object), _color_get (_COLOR_RESET));
+           _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_BLUE), g_dbus_object_get_object_path (G_DBUS_OBJECT (object)), _color_get (_COLOR_RESET));
   print_object (object, 2);
   g_object_unref (object);
 
@@ -1081,12 +1084,12 @@ handle_command_dump (gint        *argc,
   first = TRUE;
   for (l = objects; l != NULL; l = l->next)
     {
-      GDBusObject *object = G_DBUS_OBJECT (l->data);
+      UDisksObject *object = UDISKS_OBJECT (l->data);
       if (!first)
         g_print ("\n");
       first = FALSE;
       g_print ("%s%s%s:%s\n",
-               _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_BLUE), g_dbus_object_get_object_path (object), _color_get (_COLOR_RESET));
+               _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_BLUE), g_dbus_object_get_object_path (G_DBUS_OBJECT (object)), _color_get (_COLOR_RESET));
       print_object (object, 2);
     }
   g_list_foreach (objects, (GFunc) g_object_unref, NULL);
@@ -1164,7 +1167,7 @@ monitor_on_object_added (GDBusObjectManager  *manager,
            _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_GREEN),
              g_dbus_object_get_object_path (object),
            _color_get (_COLOR_RESET));
-  print_object (object, 2);
+  print_object (UDISKS_OBJECT (object), 2);
  out:
   ;
 }
@@ -1435,10 +1438,10 @@ find_block_devices_for_lun (GList       *objects,
   ret = NULL;
   for (l = objects; l != NULL; l = l->next)
     {
-      GDBusObject *object = G_DBUS_OBJECT (l->data);
+      UDisksObject *object = UDISKS_OBJECT (l->data);
       UDisksBlockDevice *block;
 
-      block = UDISKS_GET_BLOCK_DEVICE (object);
+      block = udisks_object_get_block_device (object);
       if (block == NULL)
         continue;
 
@@ -1543,7 +1546,7 @@ handle_command_status (gint        *argc,
   objects = g_list_sort (objects, (GCompareFunc) obj_proxy_cmp);
   for (l = objects; l != NULL; l = l->next)
     {
-      GDBusObject *object = G_DBUS_OBJECT (l->data);
+      UDisksObject *object = UDISKS_OBJECT (l->data);
       UDisksLun *lun;
       GList *block_devices;
       const gchar *vendor;
@@ -1555,12 +1558,12 @@ handle_command_status (gint        *argc,
       gchar *block_device;
       GList *j;
 
-      lun = UDISKS_PEEK_LUN (object);
+      lun = udisks_object_peek_lun (object);
       if (lun == NULL)
         continue;
 
       str = g_string_new (NULL);
-      block_devices = find_block_devices_for_lun (objects, g_dbus_object_get_object_path (object));
+      block_devices = find_block_devices_for_lun (objects, g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
       for (j = block_devices; j != NULL; j = j->next)
         {
           UDisksBlockDevice *block = UDISKS_BLOCK_DEVICE (j->data);

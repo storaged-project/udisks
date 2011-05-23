@@ -48,7 +48,7 @@ typedef struct _UDisksLinuxLunClass   UDisksLinuxLunClass;
  */
 struct _UDisksLinuxLun
 {
-  GDBusObjectSkeleton parent_instance;
+  UDisksObjectSkeleton parent_instance;
 
   UDisksDaemon *daemon;
 
@@ -61,7 +61,7 @@ struct _UDisksLinuxLun
 
 struct _UDisksLinuxLunClass
 {
-  GDBusObjectSkeletonClass parent_class;
+  UDisksObjectSkeletonClass parent_class;
 };
 
 enum
@@ -71,7 +71,7 @@ enum
   PROP_DEVICE
 };
 
-G_DEFINE_TYPE (UDisksLinuxLun, udisks_linux_lun, G_TYPE_DBUS_OBJECT_SKELETON);
+G_DEFINE_TYPE (UDisksLinuxLun, udisks_linux_lun, UDISKS_TYPE_OBJECT_SKELETON);
 
 static void
 udisks_linux_lun_finalize (GObject *object)
@@ -436,10 +436,10 @@ find_iscsi_target (GDBusObjectManagerServer *object_manager,
   objects = g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (object_manager));
   for (l = objects; l != NULL; l = l->next)
     {
-      GDBusObjectSkeleton *object = G_DBUS_OBJECT_SKELETON (l->data);
+      UDisksObjectSkeleton *object = UDISKS_OBJECT_SKELETON (l->data);
       UDisksIScsiTarget *target;
 
-      target = UDISKS_PEEK_ISCSI_TARGET (object);
+      target = udisks_object_peek_iscsi_target (UDISKS_OBJECT (object));
       if (target == NULL)
         continue;
 

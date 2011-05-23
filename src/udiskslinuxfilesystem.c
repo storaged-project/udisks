@@ -708,7 +708,7 @@ handle_mount (UDisksFilesystem       *filesystem,
               const gchar            *requested_fs_type,
               const gchar* const     *requested_options)
 {
-  GDBusObject *object;
+  UDisksObject *object;
   UDisksBlockDevice *block;
   UDisksDaemon *daemon;
   UDisksPersistentStore *store;
@@ -735,8 +735,8 @@ handle_mount (UDisksFilesystem       *filesystem,
   escaped_mount_options_to_use = NULL;
   escaped_mount_point_to_use = NULL;
 
-  object = g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem));
-  block = UDISKS_PEEK_BLOCK_DEVICE (object);
+  object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem)));
+  block = udisks_object_peek_block_device (object);
   daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
   store = udisks_daemon_get_persistent_store (daemon);
 
@@ -953,7 +953,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
                 GDBusMethodInvocation  *invocation,
                 const gchar* const     *options)
 {
-  GDBusObject *object;
+  UDisksObject *object;
   UDisksBlockDevice *block;
   UDisksDaemon *daemon;
   UDisksPersistentStore *store;
@@ -973,8 +973,8 @@ handle_unmount (UDisksFilesystem       *filesystem,
   error_message = NULL;
   opt_force = FALSE;
 
-  object = g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem));
-  block = UDISKS_PEEK_BLOCK_DEVICE (object);
+  object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem)));
+  block = udisks_object_peek_block_device (object);
   daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
   store = udisks_daemon_get_persistent_store (daemon);
 

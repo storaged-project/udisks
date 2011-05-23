@@ -57,7 +57,7 @@ typedef struct _UDisksLinuxBlockClass   UDisksLinuxBlockClass;
  */
 struct _UDisksLinuxBlock
 {
-  GDBusObjectSkeleton parent_instance;
+  UDisksObjectSkeleton parent_instance;
 
   UDisksDaemon *daemon;
   UDisksMountMonitor *mount_monitor;
@@ -72,7 +72,7 @@ struct _UDisksLinuxBlock
 
 struct _UDisksLinuxBlockClass
 {
-  GDBusObjectSkeletonClass parent_class;
+  UDisksObjectSkeletonClass parent_class;
 };
 
 enum
@@ -82,7 +82,7 @@ enum
   PROP_DEVICE
 };
 
-G_DEFINE_TYPE (UDisksLinuxBlock, udisks_linux_block, G_TYPE_DBUS_OBJECT_SKELETON);
+G_DEFINE_TYPE (UDisksLinuxBlock, udisks_linux_block, UDISKS_TYPE_OBJECT_SKELETON);
 
 static void on_mount_monitor_mount_added   (UDisksMountMonitor  *monitor,
                                             UDisksMount         *mount,
@@ -827,16 +827,16 @@ swapspace_handle_start (UDisksSwapspace        *swapspace,
                         const gchar* const     *options,
                         gpointer                user_data)
 {
-  GDBusObject *object;
+  UDisksObject *object;
   UDisksDaemon *daemon;
   UDisksBlockDevice *block;
   gboolean auth_no_user_interaction;
   guint n;
   UDisksBaseJob *job;
 
-  object = g_dbus_interface_get_object (G_DBUS_INTERFACE (swapspace));
+  object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (swapspace)));
   daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
-  block = UDISKS_PEEK_BLOCK_DEVICE (object);
+  block = udisks_object_peek_block_device (object);
 
   auth_no_user_interaction = FALSE;
   for (n = 0; options != NULL && options[n] != NULL; n++)
@@ -902,16 +902,16 @@ swapspace_handle_stop (UDisksSwapspace        *swapspace,
                        const gchar* const     *options,
                        gpointer                user_data)
 {
-  GDBusObject *object;
+  UDisksObject *object;
   UDisksDaemon *daemon;
   UDisksBlockDevice *block;
   gboolean auth_no_user_interaction;
   guint n;
   UDisksBaseJob *job;
 
-  object = g_dbus_interface_get_object (G_DBUS_INTERFACE (swapspace));
+  object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (swapspace)));
   daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
-  block = UDISKS_PEEK_BLOCK_DEVICE (object);
+  block = udisks_object_peek_block_device (object);
 
   auth_no_user_interaction = FALSE;
   for (n = 0; options != NULL && options[n] != NULL; n++)
@@ -1093,7 +1093,7 @@ handle_set_label (UDisksBlockDevice      *block,
                   gpointer                user_data)
 {
   UDisksFilesystem *filesystem;
-  GDBusObject *object;
+  UDisksObject *object;
   UDisksDaemon *daemon;
   const gchar *probed_fs_usage;
   const gchar *probed_fs_type;
@@ -1109,9 +1109,9 @@ handle_set_label (UDisksBlockDevice      *block,
   supports_online = FALSE;
   escaped_label = NULL;
 
-  object = g_dbus_interface_get_object (G_DBUS_INTERFACE (block));
+  object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (block)));
   daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
-  filesystem = UDISKS_PEEK_FILESYSTEM (object);
+  filesystem = udisks_object_peek_filesystem (object);
 
   probed_fs_usage = udisks_block_device_get_id_usage (block);
   probed_fs_type = udisks_block_device_get_id_type (block);

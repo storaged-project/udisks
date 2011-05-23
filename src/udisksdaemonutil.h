@@ -30,7 +30,7 @@ gchar *udisks_decode_udev_string (const gchar *str);
 void udisks_safe_append_to_object_path (GString      *str,
                                         const gchar  *s);
 
-guint64 udisks_daemon_util_block_get_size (GUdevDevice *block_device);
+guint64 udisks_daemon_util_block_get_size (GUdevDevice *device);
 
 gchar *udisks_daemon_util_resolve_link (const gchar *path,
                                         const gchar *name);
@@ -39,7 +39,7 @@ gchar **udisks_daemon_util_resolve_links (const gchar *path,
                                           const gchar *dir_name);
 
 gboolean udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
-                                                      GDBusObject           *object,
+                                                      UDisksObject          *object,
                                                       const gchar           *action_id,
                                                       gboolean               auth_no_user_interaction,
                                                       const gchar           *message,
