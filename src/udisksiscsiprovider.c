@@ -238,7 +238,6 @@ typedef struct
   volatile gint ref_count;
 
   gchar *target_name;
-  gchar *dir_name;
 
   gchar *object_path;
   UDisksObjectSkeleton *object;
@@ -313,6 +312,7 @@ struct _UDisksIScsiProvider
 
   GHashTable *sysfs_to_connection;
   GHashTable *id_to_connection;
+  GHashTable *id_without_tpgt_to_connection;
 
   GList *targets;
 };
@@ -329,7 +329,8 @@ static const gchar *connections_get_state (UDisksIScsiProvider *provider,
                                            gint                 tpgt,
                                            const gchar         *portal_address,
                                            gint                 portal_port,
-                                           const gchar         *iface_name);
+                                           const gchar         *iface_name,
+                                           gint                *out_tpgt);
 
 static void
 on_file_monitor_changed (GFileMonitor     *monitor,
@@ -467,12 +468,18 @@ portals_and_ifaces_to_gvariant (UDisksIScsiProvider *provider,
   GVariantBuilder portals_builder;
   GList *l, *ll;
 
+  target->portals = g_list_sort (target->portals, (GCompareFunc) iscsi_portal_compare);
+
   g_variant_builder_init (&portals_builder, G_VARIANT_TYPE ("a(ayiia(ays))"));
   for (l = target->portals; l != NULL; l = l->next)
     {
       IScsiPortal *portal = l->data;
       GVariantBuilder iface_builder;
+      gint connection_tpgt;
 
+      portal->ifaces = g_list_sort (portal->ifaces, (GCompareFunc) iscsi_iface_compare);
+
+      connection_tpgt = portal->tpgt;
       g_variant_builder_init (&iface_builder, G_VARIANT_TYPE ("a(ays)"));
       for (ll = portal->ifaces; ll != NULL; ll = ll->next)
         {
@@ -483,7 +490,8 @@ portals_and_ifaces_to_gvariant (UDisksIScsiProvider *provider,
                                          portal->tpgt,
                                          portal->address,
                                          portal->port,
-                                         iface->name);
+                                         iface->name,
+                                         &connection_tpgt);
           g_variant_builder_add (&iface_builder, "(^ays)",
                                  iface->name,
                                  state);
@@ -491,122 +499,10 @@ portals_and_ifaces_to_gvariant (UDisksIScsiProvider *provider,
       g_variant_builder_add (&portals_builder, "(^ayiia(ays))",
                              portal->address,
                              portal->port,
-                             portal->tpgt,
+                             connection_tpgt,
                              &iface_builder);
     }
   return g_variant_builder_end (&portals_builder);
-}
-
-static void
-update_portals_and_ifaces (UDisksIScsiProvider *provider,
-                           IScsiTarget         *target)
-{
-  GDir *portals_dir;
-  const gchar *portal_str;
-  GError *error;
-  GList *portals;
-
-  portals = NULL;
-
-  /* first load all portals and their interfaces, then sort them .. and then build
-   * the variant. We have to do it in this order because g_dir_read_name() might
-   * return items in a random order...
-   */
-  error = NULL;
-  portals_dir = g_dir_open (target->dir_name, 0, &error);
-  if (portals_dir == NULL)
-    {
-      udisks_daemon_log (udisks_provider_get_daemon (UDISKS_PROVIDER (provider)),
-                         UDISKS_LOG_LEVEL_WARNING,
-                         "Error opening portal dir %s: %s",
-                         target->dir_name,
-                         error->message);
-      g_error_free (error);
-      goto out;
-    }
-  else
-    {
-      while ((portal_str = g_dir_read_name (portals_dir)) != NULL)
-        {
-          GDir *ifaces_dir;
-          gchar *ifaces_dir_name;
-          const gchar *iface_str;
-          gchar *s;
-          gchar *comma;
-          gint port;
-          gint tpgt;
-          IScsiPortal *portal;
-
-          ifaces_dir_name = NULL;
-
-          s = g_strdup (portal_str);
-          comma = g_strrstr (s, ",");
-          if (comma == NULL)
-            {
-              udisks_daemon_log (udisks_provider_get_daemon (UDISKS_PROVIDER (provider)),
-                                 UDISKS_LOG_LEVEL_WARNING,
-                                 "Error parsing tpgt from portal string %s",
-                                 portal_str);
-              goto portal_out;
-            }
-          tpgt = strtol (comma + 1, NULL, 0);
-          *comma = '\0';
-          comma = g_strrstr (s, ",");
-          if (comma == NULL)
-            {
-              udisks_daemon_log (udisks_provider_get_daemon (UDISKS_PROVIDER (provider)),
-                                 UDISKS_LOG_LEVEL_WARNING,
-                                 "Error parsing port part of portal string %s",
-                                 portal_str);
-              goto portal_out;
-            }
-          port = strtol (comma + 1, NULL, 0);
-          *comma = '\0';
-
-          portal = g_new0 (IScsiPortal, 1);
-          portal->address = g_strdup (s);
-          portal->port = port;
-          portal->tpgt = tpgt;
-          portals = g_list_prepend (portals, portal);
-
-          ifaces_dir_name = g_strdup_printf ("%s/%s", target->dir_name, portal_str);
-          ifaces_dir = g_dir_open (ifaces_dir_name, 0, &error);
-          if (ifaces_dir == NULL)
-            {
-              udisks_daemon_log (udisks_provider_get_daemon (UDISKS_PROVIDER (provider)),
-                                 UDISKS_LOG_LEVEL_WARNING,
-                                 "Error opening ifaces dir %s: %s",
-                                 ifaces_dir_name,
-                                 error->message);
-              g_error_free (error);
-            }
-          else
-            {
-              while ((iface_str = g_dir_read_name (ifaces_dir)) != NULL)
-                {
-                  IScsiIface *iface;
-                  iface = g_new0 (IScsiIface, 1);
-                  iface->name = g_strdup (iface_str);
-                  portal->ifaces = g_list_prepend (portal->ifaces, iface);
-                } /* for all ifaces */
-              portal->ifaces = g_list_sort (portal->ifaces, (GCompareFunc) iscsi_iface_compare);
-              g_dir_close (ifaces_dir);
-            }
-        portal_out:
-          g_free (ifaces_dir_name);
-        } /* for all portals */
-
-      g_dir_close (portals_dir);
-    }
-  portals = g_list_sort (portals, (GCompareFunc) iscsi_portal_compare);
-
- out:
-  if (target->portals != NULL)
-    {
-      g_list_foreach (target->portals, (GFunc) iscsi_portal_free, NULL);
-      g_list_free (target->portals);
-    }
-  target->portals = portals;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -741,44 +637,135 @@ on_iscsi_target_handle_logout (UDisksIScsiTarget     *iface,
 static void
 load_and_process_iscsi (UDisksIScsiProvider *provider)
 {
-  GDir *nodes_dir;
   GError *error;
+  const gchar *command_line;
+  gchar *ia_out;
+  gchar *ia_err;
+  gint exit_status;
   GList *parsed_targets;
   GList *l;
-  const gchar *nodes_dir_name;
   GList *added;
   GList *removed;
+  const gchar *s;
+  IScsiTarget *target;
+  IScsiPortal *portal;
 
   parsed_targets = NULL;
+  ia_out = NULL;
+  ia_err = NULL;
 
+  /* TODO: might be problematic that we block here */
   error = NULL;
-  nodes_dir_name = "/var/lib/iscsi/nodes";
-  nodes_dir = g_dir_open (nodes_dir_name, 0, &error);
-  if (nodes_dir == NULL)
+  command_line = "iscsiadm --mode node --print 1";
+  if (!g_spawn_command_line_sync (command_line,
+                                  &ia_out,
+                                  &ia_err,
+                                  &exit_status,
+                                  &error))
     {
       udisks_daemon_log (udisks_provider_get_daemon (UDISKS_PROVIDER (provider)),
                          UDISKS_LOG_LEVEL_WARNING,
-                         "Error opening node dir %s: %s",
-                         nodes_dir_name,
+                         "Error spawning `%s': %s",
+                         command_line,
                          error->message);
       g_error_free (error);
+      goto done_parsing;
     }
-  else
-    {
-      const gchar *node_name;
 
-      while ((node_name = g_dir_read_name (nodes_dir)) != NULL)
+  if (!(WIFEXITED (exit_status) && WEXITSTATUS (exit_status) == 0))
+    {
+      udisks_daemon_log (udisks_provider_get_daemon (UDISKS_PROVIDER (provider)),
+                         UDISKS_LOG_LEVEL_WARNING,
+                         "The command-line `%s' didn't exit normally with return code 0: %d",
+                         command_line, exit_status);
+      goto done_parsing;
+    }
+
+  s = ia_out;
+  target = NULL;
+  while (s != NULL)
+    {
+      const gchar *endl;
+      gchar *line;
+
+      endl = strstr (s, "\n");
+      if (endl == NULL)
         {
-          IScsiTarget *target;
+          line = g_strdup (s);
+          s = NULL;
+        }
+      else
+        {
+          line = g_strndup (s, endl - s);
+          s = endl + 1;
+        }
+      if (g_str_has_prefix (line, "Target: "))
+        {
           target = g_new0 (IScsiTarget, 1);
           target->ref_count = 1;
-          target->target_name = g_strdup (node_name);
-          target->dir_name = g_strdup_printf ("%s/%s", nodes_dir_name, node_name);
+          target->target_name = g_strdup (line + sizeof "Target: " - 1);
+          g_strstrip (target->target_name);
           parsed_targets = g_list_prepend (parsed_targets, target);
-        } /* for all nodes */
-      parsed_targets = g_list_sort (parsed_targets, (GCompareFunc) iscsi_target_compare);
-      g_dir_close (nodes_dir);
+        }
+      else if (g_str_has_prefix (line, "\tPortal: "))
+        {
+          if (target == NULL)
+            {
+              g_warning ("Portal without a current target");
+            }
+          else
+            {
+              const gchar *s;
+              gint port, tpgt;
+              s = g_strrstr (line, ":");
+              if (s == NULL || sscanf (s + 1, "%d,%d", &port, &tpgt) != 2)
+                {
+                  g_warning ("Invalid line `%s'", line);
+                }
+              else
+                {
+                  const gchar *s2;
+                  portal = g_new0 (IScsiPortal, 1);
+                  s2 = line + sizeof "\tPortal: " - 1;
+                  g_assert (s - s2 >= 0);
+                  portal->address = g_strndup (s2, s - s2);
+                  g_strstrip (portal->address);
+                  if (portal->address[0] == '[' && portal->address[strlen (portal->address) - 1] == ']')
+                    {
+                      portal->address[0] = ' ';
+                      portal->address[strlen (portal->address) - 1] = '\0';
+                      g_strstrip (portal->address);
+                    }
+                  portal->port = port;
+                  portal->tpgt = tpgt;
+                  target->portals = g_list_append (target->portals, portal);
+                }
+            }
+        }
+      else if (g_str_has_prefix (line, "\t\tIface Name: "))
+        {
+          if (portal == NULL)
+            {
+              g_warning ("Iface Name without a current portal");
+            }
+          else
+            {
+              IScsiIface *iface;
+              iface = g_new0 (IScsiIface, 1);
+              iface->name = g_strdup (line + sizeof "\t\tIface Name: " - 1);
+              portal->ifaces = g_list_append (portal->ifaces, iface);
+            }
+        }
+      else if (strlen (line) > 0)
+        {
+          g_warning ("Unexpected line `%s'", line);
+        }
+
+      g_free (line);
     }
+
+ done_parsing:
+  parsed_targets = g_list_sort (parsed_targets, (GCompareFunc) iscsi_target_compare);
 
   provider->targets = g_list_sort (provider->targets, (GCompareFunc) iscsi_target_compare);
   diff_sorted_lists (provider->targets,
@@ -818,7 +805,6 @@ load_and_process_iscsi (UDisksIScsiProvider *provider)
   for (l = provider->targets; l != NULL; l = l->next)
     {
       IScsiTarget *target = l->data;
-      update_portals_and_ifaces (provider, target);
       udisks_iscsi_target_set_portals_and_interfaces (target->iface,
                                                       portals_and_ifaces_to_gvariant (provider, target));
     }
@@ -837,6 +823,8 @@ load_and_process_iscsi (UDisksIScsiProvider *provider)
   g_list_free (parsed_targets);
   g_list_free (removed);
   g_list_free (added);
+  g_free (ia_out);
+  g_free (ia_err);
 }
 
 static void
@@ -846,7 +834,6 @@ update_state (UDisksIScsiProvider *provider)
   for (l = provider->targets; l != NULL; l = l->next)
     {
       IScsiTarget *target = l->data;
-      update_portals_and_ifaces (provider, target);
       udisks_iscsi_target_set_portals_and_interfaces (target->iface,
                                                       portals_and_ifaces_to_gvariant (provider, target));
     }
@@ -895,6 +882,7 @@ typedef struct
   gint port;
 
   gchar *id;
+  gchar *id_without_tpgt;
 } Connection;
 
 static void
@@ -906,6 +894,7 @@ connection_free (Connection *connection)
   g_free (connection->session_sysfs_path);
   g_free (connection->address);
   g_free (connection->id);
+  g_free (connection->id_without_tpgt);
   g_free (connection);
 }
 
@@ -932,8 +921,9 @@ handle_iscsi_connection_uevent (UDisksIScsiProvider *provider,
     {
       if (connection != NULL)
         {
-          /*g_debug ("removed %s %s", sysfs_path, connection->id);*/
+          /* g_debug ("removed %s %s", sysfs_path, connection->id); */
           g_warn_if_fail (g_hash_table_remove (provider->id_to_connection, connection->id));
+          g_warn_if_fail (g_hash_table_remove (provider->id_without_tpgt_to_connection, connection->id_without_tpgt));
           g_hash_table_remove (provider->sysfs_to_connection, sysfs_path);
         }
       else
@@ -1009,10 +999,15 @@ handle_iscsi_connection_uevent (UDisksIScsiProvider *provider,
                                             connection->port,
                                             connection->iface_name,
                                             connection->target_name);
-
-          /*g_debug ("added %s %s", sysfs_path, connection->id);*/
+          connection->id_without_tpgt = g_strdup_printf ("%s:%d,%s,%s",
+                                                         connection->address,
+                                                         connection->port,
+                                                         connection->iface_name,
+                                                         connection->target_name);
+          /* g_debug ("added %s %s", sysfs_path, connection->id); */
           g_hash_table_insert (provider->sysfs_to_connection, g_strdup (sysfs_path), connection);
           g_hash_table_insert (provider->id_to_connection, connection->id, connection);
+          g_hash_table_insert (provider->id_without_tpgt_to_connection, connection->id_without_tpgt, connection);
 
         skip_connection:
           g_free (session_sysfs_dir);
@@ -1135,6 +1130,7 @@ connections_init (UDisksIScsiProvider *provider)
   provider->sysfs_to_connection = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
                                                          (GDestroyNotify) connection_free);
   provider->id_to_connection = g_hash_table_new (g_str_hash, g_str_equal);
+  provider->id_without_tpgt_to_connection = g_hash_table_new (g_str_hash, g_str_equal);
 
   /* hotplug */
   g_signal_connect (provider->udev_client,
@@ -1160,6 +1156,7 @@ connections_finalize (UDisksIScsiProvider *provider)
                                         G_CALLBACK (connections_on_uevent),
                                         provider);
   g_hash_table_unref (provider->id_to_connection);
+  g_hash_table_unref (provider->id_without_tpgt_to_connection);
   g_hash_table_unref (provider->sysfs_to_connection);
 }
 
@@ -1171,7 +1168,8 @@ connections_get_state (UDisksIScsiProvider *provider,
                        gint                 tpgt,
                        const gchar         *portal_address,
                        gint                 portal_port,
-                       const gchar         *iface_name)
+                       const gchar         *iface_name,
+                       gint                *out_tpgt)
 {
   const gchar *ret;
   gchar *id;
@@ -1179,15 +1177,32 @@ connections_get_state (UDisksIScsiProvider *provider,
 
   ret = "";
 
-  id = g_strdup_printf ("%d,%s:%d,%s,%s",
-                        tpgt,
-                        portal_address,
-                        portal_port,
-                        iface_name,
-                        target_name);
-  connection = g_hash_table_lookup (provider->id_to_connection, id);
+  if (tpgt != -1)
+    {
+      id = g_strdup_printf ("%d,%s:%d,%s,%s",
+                            tpgt,
+                            portal_address,
+                            portal_port,
+                            iface_name,
+                            target_name);
+      connection = g_hash_table_lookup (provider->id_to_connection, id);
+    }
+  else
+    {
+      id = g_strdup_printf ("%s:%d,%s,%s",
+                            portal_address,
+                            portal_port,
+                            iface_name,
+                            target_name);
+      connection = g_hash_table_lookup (provider->id_without_tpgt_to_connection, id);
+    }
+
   if (connection != NULL)
-    ret = connection->state;
+    {
+      ret = connection->state;
+      if (out_tpgt != NULL)
+        *out_tpgt = connection->tpgt;
+    }
 
   g_free (id);
   return ret;
