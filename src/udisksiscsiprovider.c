@@ -243,6 +243,8 @@ typedef struct
   UDisksObjectSkeleton *object;
   UDisksIScsiTarget *iface;
 
+  gchar *collection_object_path;
+
   GList *portals;
 } IScsiTarget;
 
@@ -266,6 +268,8 @@ iscsi_target_unref (IScsiTarget *target)
       if (target->iface != NULL)
         g_object_unref (target->iface);
 
+      g_free (target->collection_object_path);
+
       g_list_foreach (target->portals, (GFunc) iscsi_portal_free, NULL);
       g_list_free (target->portals);
 
@@ -286,6 +290,84 @@ iscsi_target_compare (const IScsiTarget *a,
 
  out:
   return ret;
+}
+
+typedef struct
+{
+  volatile gint ref_count;
+
+  const gchar *mechanism;
+
+  gchar *object_path;
+  UDisksObjectSkeleton *object;
+  UDisksIScsiCollection *iface;
+
+  gchar *discovery_address;
+} IScsiCollection;
+
+static IScsiCollection *
+iscsi_collection_ref (IScsiCollection *collection)
+{
+  g_atomic_int_inc (&collection->ref_count);
+  return collection;
+}
+
+static void
+iscsi_collection_unref (IScsiCollection *collection)
+{
+  if (g_atomic_int_dec_and_test (&collection->ref_count))
+    {
+      g_free (collection->object_path);
+      if (collection->object != NULL)
+        g_object_unref (collection->object);
+      if (collection->iface != NULL)
+        g_object_unref (collection->iface);
+
+      g_free (collection->discovery_address);
+
+      g_free (collection);
+    }
+}
+
+/* on purpose, this does not take targets/portals/ifaces into account */
+static gint
+iscsi_collection_compare (const IScsiCollection *a,
+                          const IScsiCollection *b)
+{
+  gint ret;
+
+  ret = g_strcmp0 (a->mechanism, b->mechanism);
+  if (ret != 0)
+    goto out;
+
+  ret = g_strcmp0 (a->discovery_address, b->discovery_address);
+  if (ret != 0)
+    goto out;
+
+ out:
+  return ret;
+}
+
+static void
+iscsi_collection_compute_object_path (IScsiCollection *collection)
+{
+  g_assert (collection->object_path == NULL);
+  if (g_strcmp0 (collection->mechanism, "sendtargets") == 0)
+    {
+      collection->object_path = util_compute_object_path ("/org/freedesktop/UDisks2/iSCSI/sendtargets/", collection->discovery_address);
+    }
+  else if (g_strcmp0 (collection->mechanism, "static") == 0)
+    {
+      collection->object_path = g_strdup ("/org/freedesktop/UDisks2/iSCSI/static");
+    }
+  else if (g_strcmp0 (collection->mechanism, "firmware") == 0)
+    {
+      collection->object_path = g_strdup ("/org/freedesktop/UDisks2/iSCSI/firmware");
+    }
+  else
+    {
+      g_error ("TODO: support '%s'", collection->mechanism);
+    }
 }
 
 static void load_and_process_iscsi (UDisksIScsiProvider *provider);
@@ -315,6 +397,7 @@ struct _UDisksIScsiProvider
   GHashTable *id_without_tpgt_to_connection;
 
   GList *targets;
+  GList *collections;
 };
 
 struct _UDisksIScsiProviderClass
@@ -367,6 +450,16 @@ udisks_iscsi_provider_finalize (GObject *object)
       iscsi_target_unref (target);
     }
   g_list_free (provider->targets);
+
+  for (l = provider->collections; l != NULL; l = l->next)
+    {
+      IScsiCollection *collection = l->data;
+      g_assert (collection->object_path != NULL);
+      g_dbus_object_manager_server_unexport (udisks_daemon_get_object_manager (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))),
+                                             collection->object_path);
+      iscsi_collection_unref (collection);
+    }
+  g_list_free (provider->collections);
 
   connections_finalize (provider);
 
@@ -635,6 +728,132 @@ on_iscsi_target_handle_logout (UDisksIScsiTarget     *iface,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
+add_remove_targets (UDisksIScsiProvider  *provider,
+                    GList                *parsed_targets)
+{
+  GList *l;
+  GList *added;
+  GList *removed;
+
+  provider->targets = g_list_sort (provider->targets, (GCompareFunc) iscsi_target_compare);
+  diff_sorted_lists (provider->targets,
+                     parsed_targets,
+                     (GCompareFunc) iscsi_target_compare,
+                     &added,
+                     &removed);
+  for (l = removed; l != NULL; l = l->next)
+    {
+      IScsiTarget *target = l->data;
+      g_dbus_object_manager_server_unexport (udisks_daemon_get_object_manager (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))),
+                                             target->object_path);
+      provider->targets = g_list_remove (provider->targets, target);
+      iscsi_target_unref (target);
+    }
+
+  for (l = added; l != NULL; l = l->next)
+    {
+      IScsiTarget *target = l->data;
+      gchar *base;
+      base = g_strconcat (target->collection_object_path, "/", NULL);
+      target->object_path = util_compute_object_path (base, target->target_name);
+      g_free (base);
+      target->iface = udisks_iscsi_target_skeleton_new ();
+      g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (target->iface),
+                                           G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
+      g_signal_connect (target->iface,
+                        "handle-login",
+                        G_CALLBACK (on_iscsi_target_handle_login),
+                        provider);
+      g_signal_connect (target->iface,
+                        "handle-logout",
+                        G_CALLBACK (on_iscsi_target_handle_logout),
+                        provider);
+      udisks_iscsi_target_set_name (target->iface, target->target_name);
+      udisks_iscsi_target_set_collection (target->iface, target->collection_object_path);
+      provider->targets = g_list_prepend (provider->targets, iscsi_target_ref (target));
+    }
+
+  /* update all known targets since portals/interfaces might have changed */
+  for (l = provider->targets; l != NULL; l = l->next)
+    {
+      IScsiTarget *target = l->data;
+      udisks_iscsi_target_set_portals_and_interfaces (target->iface,
+                                                      portals_and_ifaces_to_gvariant (provider, target));
+    }
+
+  /* finally export added targets */
+  for (l = added; l != NULL; l = l->next)
+    {
+      IScsiTarget *target = l->data;
+      target->object = udisks_object_skeleton_new (target->object_path);
+      udisks_object_skeleton_set_iscsi_target (target->object, target->iface);
+      g_dbus_object_manager_server_export_uniquely (udisks_daemon_get_object_manager (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))),
+                                                    G_DBUS_OBJECT_SKELETON (target->object));
+    }
+
+  g_list_free (removed);
+  g_list_free (added);
+}
+
+static void
+add_remove_collections (UDisksIScsiProvider  *provider,
+                        GList                *parsed_collections)
+{
+  GList *l;
+  GList *added;
+  GList *removed;
+
+  provider->collections = g_list_sort (provider->collections, (GCompareFunc) iscsi_collection_compare);
+  diff_sorted_lists (provider->collections,
+                     parsed_collections,
+                     (GCompareFunc) iscsi_collection_compare,
+                     &added,
+                     &removed);
+  for (l = removed; l != NULL; l = l->next)
+    {
+      IScsiCollection *collection = l->data;
+      g_dbus_object_manager_server_unexport (udisks_daemon_get_object_manager (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))),
+                                             collection->object_path);
+      provider->collections = g_list_remove (provider->collections, collection);
+      iscsi_collection_unref (collection);
+    }
+
+  for (l = added; l != NULL; l = l->next)
+    {
+      IScsiCollection *collection = l->data;
+      collection->iface = udisks_iscsi_collection_skeleton_new ();
+      g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (collection->iface),
+                                           G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
+      /* TODO: export methods */
+      udisks_iscsi_collection_set_mechanism (collection->iface, collection->mechanism);
+      udisks_iscsi_collection_set_discovery_address (collection->iface, collection->discovery_address);
+      provider->collections = g_list_prepend (provider->collections, iscsi_collection_ref (collection));
+    }
+
+  /* export added collections */
+  for (l = added; l != NULL; l = l->next)
+    {
+      IScsiCollection *collection = l->data;
+      collection->object = udisks_object_skeleton_new (collection->object_path);
+      udisks_object_skeleton_set_iscsi_collection (collection->object, collection->iface);
+      g_dbus_object_manager_server_export_uniquely (udisks_daemon_get_object_manager (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))),
+                                                    G_DBUS_OBJECT_SKELETON (collection->object));
+    }
+
+  g_list_free (removed);
+  g_list_free (added);
+}
+
+enum
+{
+  MODE_NOWHERE,
+  MODE_IN_SENDTARGETS,
+  MODE_IN_ISNS,
+  MODE_IN_STATIC,
+  MODE_IN_FIRMWARE
+};
+
+static void
 load_and_process_iscsi (UDisksIScsiProvider *provider)
 {
   GError *error;
@@ -643,20 +862,20 @@ load_and_process_iscsi (UDisksIScsiProvider *provider)
   gchar *ia_err;
   gint exit_status;
   GList *parsed_targets;
-  GList *l;
-  GList *added;
-  GList *removed;
+  GList *parsed_collections;
   const gchar *s;
   IScsiTarget *target;
   IScsiPortal *portal;
+  IScsiCollection *collection;
 
   parsed_targets = NULL;
+  parsed_collections = NULL;
   ia_out = NULL;
   ia_err = NULL;
 
   /* TODO: might be problematic that we block here */
   error = NULL;
-  command_line = "iscsiadm --mode node --print 1";
+  command_line = "iscsiadm --mode discoverydb --print 1";
   if (!g_spawn_command_line_sync (command_line,
                                   &ia_out,
                                   &ia_err,
@@ -681,6 +900,11 @@ load_and_process_iscsi (UDisksIScsiProvider *provider)
       goto done_parsing;
     }
 
+
+  gint mode;
+  mode = MODE_NOWHERE;
+  collection = NULL;
+
   s = ia_out;
   target = NULL;
   while (s != NULL)
@@ -699,13 +923,89 @@ load_and_process_iscsi (UDisksIScsiProvider *provider)
           line = g_strndup (s, endl - s);
           s = endl + 1;
         }
-      if (g_str_has_prefix (line, "Target: "))
+
+      if (g_strcmp0 (line, "SENDTARGETS:") == 0)
         {
-          target = g_new0 (IScsiTarget, 1);
-          target->ref_count = 1;
-          target->target_name = g_strdup (line + sizeof "Target: " - 1);
-          g_strstrip (target->target_name);
-          parsed_targets = g_list_prepend (parsed_targets, target);
+          mode = MODE_IN_SENDTARGETS;
+          collection = NULL;
+          target = NULL;
+          portal = NULL;
+        }
+      else if (mode == MODE_IN_SENDTARGETS && g_str_has_prefix (line, "DiscoveryAddress: "))
+        {
+          collection = g_new0 (IScsiCollection, 1);
+          collection->ref_count = 1;
+          collection->mechanism = "sendtargets";
+          collection->discovery_address = g_strdup (line + sizeof "DiscoveryAddress: " - 1);
+          /* TODO: fix up comma */
+          iscsi_collection_compute_object_path (collection);
+          parsed_collections = g_list_prepend (parsed_collections, collection);
+          target = NULL;
+          portal = NULL;
+        }
+      else if (g_strcmp0 (line, "iSNS:") == 0)
+        {
+          mode = MODE_IN_ISNS;
+          collection = NULL;
+          target = NULL;
+          portal = NULL;
+        }
+      else if (mode == MODE_IN_ISNS && g_str_has_prefix (line, "DiscoveryAddress: "))
+        {
+          collection = g_new0 (IScsiCollection, 1);
+          collection->ref_count = 1;
+          collection->mechanism = "isns";
+          collection->discovery_address = g_strdup (line + sizeof "DiscoveryAddress: " - 1);
+          /* TODO: fix up comma */
+          iscsi_collection_compute_object_path (collection);
+          parsed_collections = g_list_prepend (parsed_collections, collection);
+          target = NULL;
+          portal = NULL;
+        }
+      else if (g_strcmp0 (line, "STATIC:") == 0)
+        {
+          mode = MODE_IN_STATIC;
+          collection = g_new0 (IScsiCollection, 1);
+          collection->ref_count = 1;
+          collection->mechanism = "static";
+          iscsi_collection_compute_object_path (collection);
+          parsed_collections = g_list_prepend (parsed_collections, collection);
+          target = NULL;
+          portal = NULL;
+        }
+      else if (g_strcmp0 (line, "FIRMWARE:") == 0)
+        {
+          mode = MODE_IN_FIRMWARE;
+          collection = g_new0 (IScsiCollection, 1);
+          collection->ref_count = 1;
+          collection->mechanism = "firmware";
+          iscsi_collection_compute_object_path (collection);
+          parsed_collections = g_list_prepend (parsed_collections, collection);
+          target = NULL;
+          portal = NULL;
+        }
+      else if (g_strcmp0 (line, "No targets found.") == 0)
+        {
+          mode = MODE_NOWHERE;
+          collection = NULL;
+          target = NULL;
+          portal = NULL;
+        }
+      else if (g_str_has_prefix (line, "Target: "))
+        {
+          if (collection == NULL)
+            {
+              g_warning ("Target without a current Collection");
+            }
+          else
+            {
+              target = g_new0 (IScsiTarget, 1);
+              target->ref_count = 1;
+              target->collection_object_path = g_strdup (collection->object_path);
+              target->target_name = g_strdup (line + sizeof "Target: " - 1);
+              g_strstrip (target->target_name);
+              parsed_targets = g_list_prepend (parsed_targets, target);
+            }
         }
       else if (g_str_has_prefix (line, "\tPortal: "))
         {
@@ -765,64 +1065,17 @@ load_and_process_iscsi (UDisksIScsiProvider *provider)
     }
 
  done_parsing:
+
   parsed_targets = g_list_sort (parsed_targets, (GCompareFunc) iscsi_target_compare);
+  parsed_collections = g_list_sort (parsed_collections, (GCompareFunc) iscsi_collection_compare);
 
-  provider->targets = g_list_sort (provider->targets, (GCompareFunc) iscsi_target_compare);
-  diff_sorted_lists (provider->targets,
-                     parsed_targets,
-                     (GCompareFunc) iscsi_target_compare,
-                     &added,
-                     &removed);
-
-  for (l = removed; l != NULL; l = l->next)
-    {
-      IScsiTarget *target = l->data;
-      g_dbus_object_manager_server_unexport (udisks_daemon_get_object_manager (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))),
-                                             target->object_path);
-      provider->targets = g_list_remove (provider->targets, target);
-      iscsi_target_unref (target);
-    }
-  for (l = added; l != NULL; l = l->next)
-    {
-      IScsiTarget *target = l->data;
-      target->object_path = util_compute_object_path ("/org/freedesktop/UDisks2/iSCSI/", target->target_name);
-      target->iface = udisks_iscsi_target_skeleton_new ();
-      g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (target->iface),
-                                           G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
-      g_signal_connect (target->iface,
-                        "handle-login",
-                        G_CALLBACK (on_iscsi_target_handle_login),
-                        provider);
-      g_signal_connect (target->iface,
-                        "handle-logout",
-                        G_CALLBACK (on_iscsi_target_handle_logout),
-                        provider);
-      udisks_iscsi_target_set_name (target->iface, target->target_name);
-      provider->targets = g_list_prepend (provider->targets, iscsi_target_ref (target));
-    }
-
-  /* update all known targets since portals/interfaces might have changed */
-  for (l = provider->targets; l != NULL; l = l->next)
-    {
-      IScsiTarget *target = l->data;
-      udisks_iscsi_target_set_portals_and_interfaces (target->iface,
-                                                      portals_and_ifaces_to_gvariant (provider, target));
-    }
-
-  /* finally export added targets */
-  for (l = added; l != NULL; l = l->next)
-    {
-      IScsiTarget *target = l->data;
-      target->object = udisks_object_skeleton_new (target->object_path);
-      udisks_object_skeleton_set_iscsi_target (target->object, target->iface);
-      g_dbus_object_manager_server_export_uniquely (udisks_daemon_get_object_manager (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))),
-                                                    G_DBUS_OBJECT_SKELETON (target->object));
-    }
+  add_remove_targets (provider, parsed_targets);
+  add_remove_collections (provider, parsed_collections);
 
   g_list_foreach (parsed_targets, (GFunc) iscsi_target_unref, NULL);
   g_list_free (parsed_targets);
-  g_list_free (removed);
-  g_list_free (added);
+  g_list_foreach (parsed_collections, (GFunc) iscsi_collection_unref, NULL);
+  g_list_free (parsed_collections);
   g_free (ia_out);
   g_free (ia_err);
 }

@@ -129,6 +129,33 @@
        UDisksiSCSITarget and udisks_iscsi_target
   -->
 
+  <!-- org.freedesktop.UDisks2.IScsiCollection:
+       @short_description: A collection of iSCSI targets
+
+       A logical grouping of iSCSI targets - see the
+       #org.freedesktop.UDisks2.IScsiTarget:Collection property on
+       each #org.freedesktop.UDisks2.IScsiTarget object.
+    -->
+  <interface name="org.freedesktop.UDisks2.IScsiCollection">
+    <!--
+        Mechanism:
+        The mechanism used to collect the iSCSI targets in the collection.
+
+        Known values include <literal>sendtargets</literal>,
+        <literal>isns</literal>, <literal>static</literal> and
+        <literal>firmware<literal>.
+    -->
+    <property name="Mechanism" type="s" access="read"/>
+
+    <!--
+        DiscoveryAddress:
+        The address of the Sendtargets or iSNS server or blank if
+        #org.freedesktop.UDisks2.IScsiCollection:Mechanism is not
+        <literal>sendtargets</literal> or <literal>isns</literal>.
+    -->
+    <property name="DiscoveryAddress" type="s" access="read"/>
+  </interface>
+
   <!-- org.freedesktop.UDisks2.IScsiTarget:
        @short_description: Remote iSCSI Targets
 
@@ -136,6 +163,12 @@
        the system knows about.
     -->
   <interface name="org.freedesktop.UDisks2.IScsiTarget">
+
+    <!--
+        Collection:
+        The #org.freedesktop.UDisks2.IScsiTarget.Collection that the target is part of.
+    -->
+    <property name="Collection" type="o" access="read"/>
 
     <!-- Name: The name of the iSCSI target
          Example target names include
