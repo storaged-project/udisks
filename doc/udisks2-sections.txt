@@ -48,7 +48,6 @@ udisks_daemon_get_object_manager
 udisks_daemon_get_mount_monitor
 udisks_daemon_get_linux_provider
 udisks_daemon_get_fstab_provider
-udisks_daemon_get_iscsi_provider
 udisks_daemon_get_persistent_store
 udisks_daemon_get_authority
 udisks_daemon_launch_simple_job
@@ -281,17 +280,4 @@ UDISKS_IS_LINUX_FILESYSTEM
 UDISKS_TYPE_LINUX_FILESYSTEM
 <SUBSECTION Private>
 udisks_linux_filesystem_get_type
-</SECTION>
-
-<SECTION>
-<FILE>udisksiscsiprovider</FILE>
-<TITLE>UDisksIScsiProvider</TITLE>
-UDisksIScsiProvider
-udisks_iscsi_provider_new
-<SUBSECTION Standard>
-UDISKS_TYPE_ISCSI_PROVIDER
-UDISKS_ISCSI_PROVIDER
-UDISKS_IS_ISCSI_PROVIDER
-<SUBSECTION Private>
-udisks_iscsi_provider_get_type
 </SECTION>

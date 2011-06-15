@@ -14,4 +14,3 @@ udisks_fstab_provider_get_type
 udisks_linux_provider_get_type
 udisks_persistent_store_get_type
 udisks_linux_filesystem_get_type
-udisks_iscsi_provider_get_type
