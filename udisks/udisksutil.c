@@ -259,21 +259,21 @@ strv_has (const gchar * const *haystack,
 }
 
 /**
- * udisks_util_get_lun_info:
- * @lun: A #UDisksLun.
+ * udisks_util_get_drive_info:
+ * @drive: A #UDisksDrive.
  * @out_name: (out) (allow-none): Return location for name or %NULL.
  * @out_description: (out) (allow-none): Return location for description or %NULL.
  * @out_drive_icon: (out) (allow-none): Return location for icon representing the drive or %NULL.
  * @out_media_description: (out) (allow-none): Return location for description of the media or %NULL.
  * @out_media_icon: (out) (allow-none): Return location for icon representing the media or %NULL.
  *
- * Gets information about a #UDisksLun object that is suitable to
+ * Gets information about a #UDisksDrive object that is suitable to
  * present in an user interface. The returned strings are localized.
  *
- * If there is no media in @lun, then @out_media_icon is set to the
+ * If there is no media in @drive, then @out_media_icon is set to the
  * same value as @out_drive_icon.
  *
- * If the @lun doesn't support removable media, then %NULL is always
+ * If the @drive doesn't support removable media, then %NULL is always
  * returned for @out_media_description and @out_media_icon.
  *
  * The returned data is best described by example:
@@ -383,12 +383,12 @@ strv_has (const gchar * const *haystack,
  * </informaltable>
  */
 void
-udisks_util_get_lun_info (UDisksLun  *lun,
-                          gchar     **out_name,
-                          gchar     **out_description,
-                          GIcon     **out_icon,
-                          gchar     **out_media_description,
-                          GIcon     **out_media_icon)
+udisks_util_get_drive_info (UDisksDrive  *drive,
+                            gchar       **out_name,
+                            gchar       **out_description,
+                            GIcon       **out_icon,
+                            gchar       **out_media_description,
+                            GIcon       **out_media_icon)
 {
   gchar *name;
   gchar *description;
@@ -411,7 +411,7 @@ udisks_util_get_lun_info (UDisksLun  *lun,
 
   /* TODO: support presentation-name for overrides */
 
-  g_return_if_fail (UDISKS_IS_LUN (lun));
+  g_return_if_fail (UDISKS_IS_DRIVE (drive));
 
   name = NULL;
   description = NULL;
@@ -420,16 +420,16 @@ udisks_util_get_lun_info (UDisksLun  *lun,
   media_icon = NULL;
   size_str = NULL;
 
-  vendor = udisks_lun_get_vendor (lun);
-  model = udisks_lun_get_model (lun);
-  size = udisks_lun_get_size (lun);
-  removable = udisks_lun_get_media_removable (lun);
-  rotation_rate = udisks_lun_get_rotation_rate (lun);
+  vendor = udisks_drive_get_vendor (drive);
+  model = udisks_drive_get_model (drive);
+  size = udisks_drive_get_size (drive);
+  removable = udisks_drive_get_media_removable (drive);
+  rotation_rate = udisks_drive_get_rotation_rate (drive);
   if (size > 0)
     size_str = udisks_util_get_size_for_display (size, FALSE, FALSE);
-  media = udisks_lun_get_media (lun);
-  media_compat = udisks_lun_get_media_compatibility (lun);
-  connection_bus = udisks_lun_get_connection_bus (lun);
+  media = udisks_drive_get_media (drive);
+  media_compat = udisks_drive_get_media_compatibility (drive);
+  connection_bus = udisks_drive_get_connection_bus (drive);
   if (strlen (connection_bus) > 0)
     hyphenated_connection_bus = g_strdup_printf ("-%s", connection_bus);
   else

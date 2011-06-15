@@ -28,25 +28,25 @@
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
 #include "udiskslinuxprovider.h"
-#include "udiskslinuxlun.h"
+#include "udiskslinuxdrive.h"
 
 /**
- * SECTION:udiskslinuxlun
- * @title: UDisksLinuxLun
- * @short_description: Linux LUNs (ATA, SCSI, Software RAID, etc.)
+ * SECTION:udiskslinuxdrive
+ * @title: UDisksLinuxDrive
+ * @short_description: Linux drives (ATA, SCSI, Software RAID, etc.)
  *
- * Object corresponding to a LUN on Linux.
+ * Object corresponding to a Drive on Linux.
  */
 
-typedef struct _UDisksLinuxLunClass   UDisksLinuxLunClass;
+typedef struct _UDisksLinuxDriveClass   UDisksLinuxDriveClass;
 
 /**
- * UDisksLinuxLun:
+ * UDisksLinuxDrive:
  *
- * The #UDisksLinuxLun structure contains only private data and
+ * The #UDisksLinuxDrive structure contains only private data and
  * should only be accessed using the provided API.
  */
-struct _UDisksLinuxLun
+struct _UDisksLinuxDrive
 {
   UDisksObjectSkeleton parent_instance;
 
@@ -56,10 +56,10 @@ struct _UDisksLinuxLun
   GList *devices;
 
   /* interfaces */
-  UDisksLun *iface_lun;
+  UDisksDrive *iface_drive;
 };
 
-struct _UDisksLinuxLunClass
+struct _UDisksLinuxDriveClass
 {
   UDisksObjectSkeletonClass parent_class;
 };
@@ -71,37 +71,37 @@ enum
   PROP_DEVICE
 };
 
-G_DEFINE_TYPE (UDisksLinuxLun, udisks_linux_lun, UDISKS_TYPE_OBJECT_SKELETON);
+G_DEFINE_TYPE (UDisksLinuxDrive, udisks_linux_drive, UDISKS_TYPE_OBJECT_SKELETON);
 
 static void
-udisks_linux_lun_finalize (GObject *object)
+udisks_linux_drive_finalize (GObject *object)
 {
-  UDisksLinuxLun *lun = UDISKS_LINUX_LUN (object);
+  UDisksLinuxDrive *drive = UDISKS_LINUX_DRIVE (object);
 
-  /* note: we don't hold a ref to lun->daemon or lun->mount_monitor */
+  /* note: we don't hold a ref to drive->daemon or drive->mount_monitor */
 
-  g_list_foreach (lun->devices, (GFunc) g_object_unref, NULL);
-  g_list_free (lun->devices);
+  g_list_foreach (drive->devices, (GFunc) g_object_unref, NULL);
+  g_list_free (drive->devices);
 
-  if (lun->iface_lun != NULL)
-    g_object_unref (lun->iface_lun);
+  if (drive->iface_drive != NULL)
+    g_object_unref (drive->iface_drive);
 
-  if (G_OBJECT_CLASS (udisks_linux_lun_parent_class)->finalize != NULL)
-    G_OBJECT_CLASS (udisks_linux_lun_parent_class)->finalize (object);
+  if (G_OBJECT_CLASS (udisks_linux_drive_parent_class)->finalize != NULL)
+    G_OBJECT_CLASS (udisks_linux_drive_parent_class)->finalize (object);
 }
 
 static void
-udisks_linux_lun_get_property (GObject    *object,
-                               guint       prop_id,
-                               GValue     *value,
-                               GParamSpec *pspec)
+udisks_linux_drive_get_property (GObject    *object,
+                                 guint       prop_id,
+                                 GValue     *value,
+                                 GParamSpec *pspec)
 {
-  UDisksLinuxLun *lun = UDISKS_LINUX_LUN (object);
+  UDisksLinuxDrive *drive = UDISKS_LINUX_DRIVE (object);
 
   switch (prop_id)
     {
     case PROP_DAEMON:
-      g_value_set_object (value, udisks_linux_lun_get_daemon (lun));
+      g_value_set_object (value, udisks_linux_drive_get_daemon (drive));
       break;
 
     default:
@@ -111,24 +111,24 @@ udisks_linux_lun_get_property (GObject    *object,
 }
 
 static void
-udisks_linux_lun_set_property (GObject      *object,
+udisks_linux_drive_set_property (GObject      *object,
                                  guint         prop_id,
                                  const GValue *value,
                                  GParamSpec   *pspec)
 {
-  UDisksLinuxLun *lun = UDISKS_LINUX_LUN (object);
+  UDisksLinuxDrive *drive = UDISKS_LINUX_DRIVE (object);
 
   switch (prop_id)
     {
     case PROP_DAEMON:
-      g_assert (lun->daemon == NULL);
+      g_assert (drive->daemon == NULL);
       /* we don't take a reference to the daemon */
-      lun->daemon = g_value_get_object (value);
+      drive->daemon = g_value_get_object (value);
       break;
 
     case PROP_DEVICE:
-      g_assert (lun->devices == NULL);
-      lun->devices = g_list_prepend (NULL, g_value_dup_object (value));
+      g_assert (drive->devices == NULL);
+      drive->devices = g_list_prepend (NULL, g_value_dup_object (value));
       break;
 
     default:
@@ -139,7 +139,7 @@ udisks_linux_lun_set_property (GObject      *object,
 
 
 static void
-udisks_linux_lun_init (UDisksLinuxLun *lun)
+udisks_linux_drive_init (UDisksLinuxDrive *drive)
 {
 }
 
@@ -157,9 +157,9 @@ find_construct_property (guint                  n_construct_properties,
 
 /* unless given, compute object path from sysfs path */
 static GObject *
-udisks_linux_lun_constructor (GType                  type,
-                              guint                  n_construct_properties,
-                              GObjectConstructParam *construct_properties)
+udisks_linux_drive_constructor (GType                  type,
+                                guint                  n_construct_properties,
+                                GObjectConstructParam *construct_properties)
 {
   GObjectConstructParam *device_cp;
   GUdevDevice *device;
@@ -170,15 +170,15 @@ udisks_linux_lun_constructor (GType                  type,
   device = G_UDEV_DEVICE (g_value_get_object (device_cp->value));
   g_assert (device != NULL);
 
-  if (!udisks_linux_lun_should_include_device (device, NULL))
+  if (!udisks_linux_drive_should_include_device (device, NULL))
     {
       return NULL;
     }
   else
     {
-      return G_OBJECT_CLASS (udisks_linux_lun_parent_class)->constructor (type,
-                                                                          n_construct_properties,
-                                                                          construct_properties);
+      return G_OBJECT_CLASS (udisks_linux_drive_parent_class)->constructor (type,
+                                                                            n_construct_properties,
+                                                                            construct_properties);
     }
 }
 
@@ -203,28 +203,28 @@ strip_and_replace_with_uscore (gchar *s)
 }
 
 static void
-udisks_linux_lun_constructed (GObject *object)
+udisks_linux_drive_constructed (GObject *object)
 {
-  UDisksLinuxLun *lun = UDISKS_LINUX_LUN (object);
+  UDisksLinuxDrive *drive = UDISKS_LINUX_DRIVE (object);
   gchar *vendor;
   gchar *model;
   gchar *serial;
   GString *str;
 
   /* initial coldplug */
-  udisks_linux_lun_uevent (lun, "add", lun->devices->data);
+  udisks_linux_drive_uevent (drive, "add", drive->devices->data);
 
   /* compute the object path */
-  vendor = g_strdup (udisks_lun_get_vendor (lun->iface_lun));
-  model = g_strdup (udisks_lun_get_model (lun->iface_lun));
-  serial = g_strdup (udisks_lun_get_serial (lun->iface_lun));
+  vendor = g_strdup (udisks_drive_get_vendor (drive->iface_drive));
+  model = g_strdup (udisks_drive_get_model (drive->iface_drive));
+  serial = g_strdup (udisks_drive_get_serial (drive->iface_drive));
   strip_and_replace_with_uscore (vendor);
   strip_and_replace_with_uscore (model);
   strip_and_replace_with_uscore (serial);
-  str = g_string_new ("/org/freedesktop/UDisks2/LUNs/");
+  str = g_string_new ("/org/freedesktop/UDisks2/drives/");
   if (vendor == NULL && model == NULL && serial == NULL)
     {
-      g_string_append (str, "lun");
+      g_string_append (str, "drive");
     }
   else
     {
@@ -249,27 +249,27 @@ udisks_linux_lun_constructed (GObject *object)
   g_free (vendor);
   g_free (model);
   g_free (serial);
-  g_dbus_object_skeleton_set_object_path (G_DBUS_OBJECT_SKELETON (lun), str->str);
+  g_dbus_object_skeleton_set_object_path (G_DBUS_OBJECT_SKELETON (drive), str->str);
   g_string_free (str, TRUE);
 
-  if (G_OBJECT_CLASS (udisks_linux_lun_parent_class)->constructed != NULL)
-    G_OBJECT_CLASS (udisks_linux_lun_parent_class)->constructed (object);
+  if (G_OBJECT_CLASS (udisks_linux_drive_parent_class)->constructed != NULL)
+    G_OBJECT_CLASS (udisks_linux_drive_parent_class)->constructed (object);
 }
 
 static void
-udisks_linux_lun_class_init (UDisksLinuxLunClass *klass)
+udisks_linux_drive_class_init (UDisksLinuxDriveClass *klass)
 {
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
-  gobject_class->constructor  = udisks_linux_lun_constructor;
-  gobject_class->finalize     = udisks_linux_lun_finalize;
-  gobject_class->constructed  = udisks_linux_lun_constructed;
-  gobject_class->set_property = udisks_linux_lun_set_property;
-  gobject_class->get_property = udisks_linux_lun_get_property;
+  gobject_class->constructor  = udisks_linux_drive_constructor;
+  gobject_class->finalize     = udisks_linux_drive_finalize;
+  gobject_class->constructed  = udisks_linux_drive_constructed;
+  gobject_class->set_property = udisks_linux_drive_set_property;
+  gobject_class->get_property = udisks_linux_drive_get_property;
 
   /**
-   * UDisksLinuxLun:daemon:
+   * UDisksLinuxDrive:daemon:
    *
    * The #UDisksDaemon the object is for.
    */
@@ -285,7 +285,7 @@ udisks_linux_lun_class_init (UDisksLinuxLunClass *klass)
                                                         G_PARAM_STATIC_STRINGS));
 
   /**
-   * UDisksLinuxLun:device:
+   * UDisksLinuxDrive:device:
    *
    * The #GUdevDevice for the object. Connect to the #GObject::notify
    * signal to get notified whenever this is updated.
@@ -303,16 +303,16 @@ udisks_linux_lun_class_init (UDisksLinuxLunClass *klass)
 }
 
 /**
- * udisks_linux_lun_new:
+ * udisks_linux_drive_new:
  * @daemon: A #UDisksDaemon.
  * @device: The #GUdevDevice for the sysfs block device.
  *
- * Create a new lun object.
+ * Create a new drive object.
  *
- * Returns: A #UDisksLinuxLun object or %NULL if @device does not represent a lun. Free with g_object_unref().
+ * Returns: A #UDisksLinuxDrive object or %NULL if @device does not represent a drive. Free with g_object_unref().
  */
-UDisksLinuxLun *
-udisks_linux_lun_new (UDisksDaemon  *daemon,
+UDisksLinuxDrive *
+udisks_linux_drive_new (UDisksDaemon  *daemon,
                         GUdevDevice   *device)
 {
   GObject *object;
@@ -320,60 +320,60 @@ udisks_linux_lun_new (UDisksDaemon  *daemon,
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
   g_return_val_if_fail (G_UDEV_IS_DEVICE (device), NULL);
 
-  object = g_object_new (UDISKS_TYPE_LINUX_LUN,
+  object = g_object_new (UDISKS_TYPE_LINUX_DRIVE,
                          "daemon", daemon,
                          "device", device,
                          NULL);
 
   if (object != NULL)
-    return UDISKS_LINUX_LUN (object);
+    return UDISKS_LINUX_DRIVE (object);
   else
     return NULL;
 }
 
 /**
- * udisks_linux_lun_get_daemon:
- * @lun: A #UDisksLinuxLun.
+ * udisks_linux_drive_get_daemon:
+ * @drive: A #UDisksLinuxDrive.
  *
- * Gets the daemon used by @lun.
+ * Gets the daemon used by @drive.
  *
- * Returns: A #UDisksDaemon. Do not free, the object is owned by @lun.
+ * Returns: A #UDisksDaemon. Do not free, the object is owned by @drive.
  */
 UDisksDaemon *
-udisks_linux_lun_get_daemon (UDisksLinuxLun *lun)
+udisks_linux_drive_get_daemon (UDisksLinuxDrive *drive)
 {
-  g_return_val_if_fail (UDISKS_IS_LINUX_LUN (lun), NULL);
-  return lun->daemon;
+  g_return_val_if_fail (UDISKS_IS_LINUX_DRIVE (drive), NULL);
+  return drive->daemon;
 }
 
 /**
- * udisks_linux_lun_get_devices:
- * @lun: A #UDisksLinuxLun.
+ * udisks_linux_drive_get_devices:
+ * @drive: A #UDisksLinuxDrive.
  *
- * Gets the current #GUdevDevice objects associated with @lun.
+ * Gets the current #GUdevDevice objects associated with @drive.
  *
  * Returns: A list of #GUdevDevice objects. Free each element with
  * g_object_unref(), then free the list with g_list_free().
  */
 GList *
-udisks_linux_lun_get_devices (UDisksLinuxLun *lun)
+udisks_linux_drive_get_devices (UDisksLinuxDrive *drive)
 {
   GList *ret;
-  g_return_val_if_fail (UDISKS_IS_LINUX_LUN (lun), NULL);
-  ret = g_list_copy (lun->devices);
+  g_return_val_if_fail (UDISKS_IS_LINUX_DRIVE (drive), NULL);
+  ret = g_list_copy (drive->devices);
   g_list_foreach (ret, (GFunc) g_object_ref, NULL);
   return ret;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-typedef gboolean (*HasInterfaceFunc)    (UDisksLinuxLun     *lun);
-typedef void     (*UpdateInterfaceFunc) (UDisksLinuxLun     *lun,
-                                         const gchar    *uevent_action,
-                                         GDBusInterface *interface);
+typedef gboolean (*HasInterfaceFunc)    (UDisksLinuxDrive     *drive);
+typedef void     (*UpdateInterfaceFunc) (UDisksLinuxDrive     *drive,
+                                         const gchar          *uevent_action,
+                                         GDBusInterface       *interface);
 
 static void
-update_iface (UDisksLinuxLun           *lun,
+update_iface (UDisksLinuxDrive     *drive,
               const gchar          *uevent_action,
               HasInterfaceFunc      has_func,
               UpdateInterfaceFunc   update_func,
@@ -384,7 +384,7 @@ update_iface (UDisksLinuxLun           *lun,
   gboolean add;
   GDBusInterface **interface_pointer = _interface_pointer;
 
-  g_return_if_fail (lun != NULL);
+  g_return_if_fail (drive != NULL);
   g_return_if_fail (has_func != NULL);
   g_return_if_fail (update_func != NULL);
   g_return_if_fail (g_type_is_a (skeleton_type, G_TYPE_OBJECT));
@@ -393,7 +393,7 @@ update_iface (UDisksLinuxLun           *lun,
   g_return_if_fail (*interface_pointer == NULL || G_IS_DBUS_INTERFACE (*interface_pointer));
 
   add = FALSE;
-  has = has_func (lun);
+  has = has_func (drive);
   if (*interface_pointer == NULL)
     {
       if (has)
@@ -406,7 +406,7 @@ update_iface (UDisksLinuxLun           *lun,
     {
       if (!has)
         {
-          g_dbus_object_skeleton_remove_interface (G_DBUS_OBJECT_SKELETON (lun), G_DBUS_INTERFACE_SKELETON (*interface_pointer));
+          g_dbus_object_skeleton_remove_interface (G_DBUS_OBJECT_SKELETON (drive), G_DBUS_INTERFACE_SKELETON (*interface_pointer));
           g_object_unref (*interface_pointer);
           *interface_pointer = NULL;
         }
@@ -414,14 +414,14 @@ update_iface (UDisksLinuxLun           *lun,
 
   if (*interface_pointer != NULL)
     {
-      update_func (lun, uevent_action, G_DBUS_INTERFACE (*interface_pointer));
+      update_func (drive, uevent_action, G_DBUS_INTERFACE (*interface_pointer));
       if (add)
-        g_dbus_object_skeleton_add_interface (G_DBUS_OBJECT_SKELETON (lun), G_DBUS_INTERFACE_SKELETON (*interface_pointer));
+        g_dbus_object_skeleton_add_interface (G_DBUS_OBJECT_SKELETON (drive), G_DBUS_INTERFACE_SKELETON (*interface_pointer));
     }
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
-/* org.freedesktop.UDisks.Lun */
+/* org.freedesktop.UDisks.Drive */
 
 static const struct
 {
@@ -511,9 +511,9 @@ ptr_str_array_compare (const gchar **a,
 }
 
 static void
-lun_set_media (UDisksLinuxLun *lun,
-               UDisksLun      *iface,
-               GUdevDevice    *device)
+drive_set_media (UDisksLinuxDrive *drive,
+                 UDisksDrive      *iface,
+                 GUdevDevice      *device)
 {
   guint n;
   GPtrArray *media_compat_array;
@@ -530,7 +530,7 @@ lun_set_media (UDisksLinuxLun *lun,
   g_ptr_array_add (media_compat_array, NULL);
 
   media_in_drive = "";
-  if (udisks_lun_get_size (iface) > 0)
+  if (udisks_drive_get_size (iface) > 0)
     {
       for (n = 0; media_mapping[n].udev_property != NULL; n++)
         {
@@ -547,15 +547,15 @@ lun_set_media (UDisksLinuxLun *lun,
         media_in_drive = ((const gchar **) media_compat_array->pdata)[0];
     }
 
-  udisks_lun_set_media_compatibility (iface, (const gchar* const *) media_compat_array->pdata);
-  udisks_lun_set_media (iface, media_in_drive);
+  udisks_drive_set_media_compatibility (iface, (const gchar* const *) media_compat_array->pdata);
+  udisks_drive_set_media (iface, media_in_drive);
   g_ptr_array_free (media_compat_array, TRUE);
 }
 
 static void
-lun_set_rotation_rate (UDisksLinuxLun *lun,
-                       UDisksLun      *iface,
-                       GUdevDevice    *device)
+drive_set_rotation_rate (UDisksLinuxDrive *drive,
+                         UDisksDrive      *iface,
+                         GUdevDevice      *device)
 {
   gint rate;
 
@@ -569,30 +569,30 @@ lun_set_rotation_rate (UDisksLinuxLun *lun,
       if (g_udev_device_has_property (device, "ID_ATA_ROTATION_RATE_RPM"))
         rate = g_udev_device_get_property_as_int (device, "ID_ATA_ROTATION_RATE_RPM");
     }
-  udisks_lun_set_rotation_rate (iface, rate);
+  udisks_drive_set_rotation_rate (iface, rate);
 }
 
 static gboolean
-lun_check (UDisksLinuxLun *lun)
+drive_check (UDisksLinuxDrive *drive)
 {
   return TRUE;
 }
 
 static void
-lun_set_connection_bus (UDisksLinuxLun *lun,
-                        UDisksLun      *iface,
-                        GUdevDevice    *device)
+drive_set_connection_bus (UDisksLinuxDrive *drive,
+                          UDisksDrive      *iface,
+                          GUdevDevice      *device)
 {
   GUdevDevice *parent;
 
-  /* note: @device may vary - it can be any path for lun */
+  /* note: @device may vary - it can be any path for drive */
 
-  udisks_lun_set_connection_bus (iface, "");
+  udisks_drive_set_connection_bus (iface, "");
   parent = g_udev_device_get_parent_with_subsystem (device, "usb", "usb_interface");
   if (parent != NULL)
     {
       /* TODO: should probably check that it's a storage interface */
-      udisks_lun_set_connection_bus (iface, "usb");
+      udisks_drive_set_connection_bus (iface, "usb");
       g_object_unref (parent);
       goto out;
     }
@@ -601,7 +601,7 @@ lun_set_connection_bus (UDisksLinuxLun *lun,
   if (parent != NULL)
     {
       /* TODO: should probably check that it's a storage interface */
-      udisks_lun_set_connection_bus (iface, "ieee1394");
+      udisks_drive_set_connection_bus (iface, "ieee1394");
       g_object_unref (parent);
       goto out;
     }
@@ -612,17 +612,17 @@ lun_set_connection_bus (UDisksLinuxLun *lun,
 
 
 static void
-lun_update (UDisksLinuxLun      *lun,
-            const gchar         *uevent_action,
-            GDBusInterface      *_iface)
+drive_update (UDisksLinuxDrive      *drive,
+              const gchar           *uevent_action,
+              GDBusInterface        *_iface)
 {
-  UDisksLun *iface = UDISKS_LUN (_iface);
+  UDisksDrive *iface = UDISKS_DRIVE (_iface);
   GUdevDevice *device;
 
-  if (lun->devices == NULL)
+  if (drive->devices == NULL)
     goto out;
 
-  device = G_UDEV_DEVICE (lun->devices->data);
+  device = G_UDEV_DEVICE (drive->devices->data);
 
   /* this is the _almost_ the same for both ATA and SCSI devices (cf. udev's ata_id and scsi_id)
    * but we special case since there are subtle differences...
@@ -638,17 +638,17 @@ lun_update (UDisksLinuxLun      *lun,
           gchar *s;
           s = udisks_decode_udev_string (model);
           g_strstrip (s);
-          udisks_lun_set_model (iface, s);
+          udisks_drive_set_model (iface, s);
           g_free (s);
         }
 
-      udisks_lun_set_vendor (iface, g_udev_device_get_property (device, ""));
-      udisks_lun_set_revision (iface, g_udev_device_get_property (device, "ID_REVISION"));
+      udisks_drive_set_vendor (iface, g_udev_device_get_property (device, ""));
+      udisks_drive_set_revision (iface, g_udev_device_get_property (device, "ID_REVISION"));
       serial = g_udev_device_get_property (device, "ID_SERIAL_SHORT");
       if (serial == NULL)
         serial = g_udev_device_get_property (device, "ID_SERIAL");
-      udisks_lun_set_serial (iface, serial);
-      udisks_lun_set_wwn (iface, g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION"));
+      udisks_drive_set_serial (iface, serial);
+      udisks_drive_set_wwn (iface, g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION"));
     }
   else if (g_udev_device_get_property_as_boolean (device, "ID_SCSI"))
     {
@@ -661,7 +661,7 @@ lun_update (UDisksLinuxLun      *lun,
           gchar *s;
           s = udisks_decode_udev_string (vendor);
           g_strstrip (s);
-          udisks_lun_set_vendor (iface, s);
+          udisks_drive_set_vendor (iface, s);
           g_free (s);
         }
 
@@ -671,19 +671,19 @@ lun_update (UDisksLinuxLun      *lun,
           gchar *s;
           s = udisks_decode_udev_string (model);
           g_strstrip (s);
-          udisks_lun_set_model (iface, s);
+          udisks_drive_set_model (iface, s);
           g_free (s);
         }
 
-      udisks_lun_set_revision (iface, g_udev_device_get_property (device, "ID_REVISION"));
-      udisks_lun_set_serial (iface, g_udev_device_get_property (device, "ID_SCSI_SERIAL"));
-      udisks_lun_set_wwn (iface, g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION"));
+      udisks_drive_set_revision (iface, g_udev_device_get_property (device, "ID_REVISION"));
+      udisks_drive_set_serial (iface, g_udev_device_get_property (device, "ID_SCSI_SERIAL"));
+      udisks_drive_set_wwn (iface, g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION"));
     }
   else if (g_str_has_prefix (g_udev_device_get_name (device), "mmcblk"))
     {
       /* sigh, mmc is non-standard and using ID_NAME instead of ID_MODEL.. */
-      udisks_lun_set_model (iface, g_udev_device_get_property (device, "ID_NAME"));
-      udisks_lun_set_serial (iface, g_udev_device_get_property (device, "ID_SERIAL"));
+      udisks_drive_set_model (iface, g_udev_device_get_property (device, "ID_NAME"));
+      udisks_drive_set_serial (iface, g_udev_device_get_property (device, "ID_SERIAL"));
       /* TODO:
        *  - lookup Vendor from manfid and oemid in sysfs
        *  - lookup Revision from fwrev and hwrev in sysfs
@@ -701,12 +701,12 @@ lun_update (UDisksLinuxLun      *lun,
           gchar *s;
           s = udisks_decode_udev_string (vendor);
           g_strstrip (s);
-          udisks_lun_set_vendor (iface, s);
+          udisks_drive_set_vendor (iface, s);
           g_free (s);
         }
       else
         {
-          udisks_lun_set_vendor (iface, g_udev_device_get_property (device, "ID_VENDOR"));
+          udisks_drive_set_vendor (iface, g_udev_device_get_property (device, "ID_VENDOR"));
         }
 
       model = g_udev_device_get_property (device, "ID_MODEL_ENC");
@@ -715,31 +715,31 @@ lun_update (UDisksLinuxLun      *lun,
           gchar *s;
           s = udisks_decode_udev_string (model);
           g_strstrip (s);
-          udisks_lun_set_model (iface, s);
+          udisks_drive_set_model (iface, s);
           g_free (s);
         }
       else
         {
-          udisks_lun_set_model (iface, g_udev_device_get_property (device, "ID_MODEL"));
+          udisks_drive_set_model (iface, g_udev_device_get_property (device, "ID_MODEL"));
         }
 
-      udisks_lun_set_revision (iface, g_udev_device_get_property (device, "ID_REVISION"));
+      udisks_drive_set_revision (iface, g_udev_device_get_property (device, "ID_REVISION"));
       if (g_udev_device_has_property (device, "ID_SERIAL_SHORT"))
-        udisks_lun_set_serial (iface, g_udev_device_get_property (device, "ID_SERIAL_SHORT"));
+        udisks_drive_set_serial (iface, g_udev_device_get_property (device, "ID_SERIAL_SHORT"));
       else
-        udisks_lun_set_serial (iface, g_udev_device_get_property (device, "ID_SERIAL"));
+        udisks_drive_set_serial (iface, g_udev_device_get_property (device, "ID_SERIAL"));
       if (g_udev_device_has_property (device, "ID_WWN_WITH_EXTENSION"))
-        udisks_lun_set_wwn (iface, g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION"));
+        udisks_drive_set_wwn (iface, g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION"));
       else
-        udisks_lun_set_wwn (iface, g_udev_device_get_property (device, "ID_WWN"));
+        udisks_drive_set_wwn (iface, g_udev_device_get_property (device, "ID_WWN"));
     }
 
   /* common bits go here */
-  udisks_lun_set_media_removable (iface, g_udev_device_get_sysfs_attr_as_boolean (device, "removable"));
-  udisks_lun_set_size (iface, udisks_daemon_util_block_get_size (device));
-  lun_set_media (lun, iface, device);
-  lun_set_rotation_rate (lun, iface, device);
-  lun_set_connection_bus (lun, iface, device);
+  udisks_drive_set_media_removable (iface, g_udev_device_get_sysfs_attr_as_boolean (device, "removable"));
+  udisks_drive_set_size (iface, udisks_daemon_util_block_get_size (device));
+  drive_set_media (drive, iface, device);
+  drive_set_rotation_rate (drive, iface, device);
+  drive_set_connection_bus (drive, iface, device);
  out:
   ;
 }
@@ -747,13 +747,13 @@ lun_update (UDisksLinuxLun      *lun,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static GList *
-find_link_for_sysfs_path (UDisksLinuxLun *lun,
-                          const gchar *sysfs_path)
+find_link_for_sysfs_path (UDisksLinuxDrive *drive,
+                          const gchar      *sysfs_path)
 {
   GList *l;
   GList *ret;
   ret = NULL;
-  for (l = lun->devices; l != NULL; l = l->next)
+  for (l = drive->devices; l != NULL; l = l->next)
     {
       GUdevDevice *device = G_UDEV_DEVICE (l->data);
       if (g_strcmp0 (g_udev_device_get_sysfs_path (device), sysfs_path) == 0)
@@ -767,36 +767,36 @@ find_link_for_sysfs_path (UDisksLinuxLun *lun,
 }
 
 /**
- * udisks_linux_lun_uevent:
- * @lun: A #UDisksLinuxLun.
+ * udisks_linux_drive_uevent:
+ * @drive: A #UDisksLinuxDrive.
  * @action: Uevent action or %NULL
  * @device: A new #GUdevDevice device object or %NULL if the device hasn't changed.
  *
- * Updates all information on interfaces on @lun.
+ * Updates all information on interfaces on @drive.
  */
 void
-udisks_linux_lun_uevent (UDisksLinuxLun *lun,
-                         const gchar      *action,
-                         GUdevDevice      *device)
+udisks_linux_drive_uevent (UDisksLinuxDrive *drive,
+                           const gchar      *action,
+                           GUdevDevice      *device)
 {
   GList *link;
 
-  g_return_if_fail (UDISKS_IS_LINUX_LUN (lun));
+  g_return_if_fail (UDISKS_IS_LINUX_DRIVE (drive));
   g_return_if_fail (G_UDEV_IS_DEVICE (device));
 
-  link = find_link_for_sysfs_path (lun, g_udev_device_get_sysfs_path (device));
+  link = find_link_for_sysfs_path (drive, g_udev_device_get_sysfs_path (device));
   if (g_strcmp0 (action, "remove") == 0)
     {
       if (link != NULL)
         {
           g_object_unref (G_UDEV_DEVICE (link->data));
-          lun->devices = g_list_delete_link (lun->devices, link);
+          drive->devices = g_list_delete_link (drive->devices, link);
         }
       else
         {
-          udisks_daemon_log (lun->daemon,
+          udisks_daemon_log (drive->daemon,
                              UDISKS_LOG_LEVEL_WARNING,
-                             "Lun doesn't have device with sysfs path %s on remove event",
+                             "Drive doesn't have device with sysfs path %s on remove event",
                              g_udev_device_get_sysfs_path (device));
         }
     }
@@ -809,28 +809,28 @@ udisks_linux_lun_uevent (UDisksLinuxLun *lun,
         }
       else
         {
-          lun->devices = g_list_append (lun->devices, g_object_ref (device));
+          drive->devices = g_list_append (drive->devices, g_object_ref (device));
         }
     }
 
-  update_iface (lun, action, lun_check, lun_update,
-                UDISKS_TYPE_LUN_SKELETON, &lun->iface_lun);
+  update_iface (drive, action, drive_check, drive_update,
+                UDISKS_TYPE_DRIVE_SKELETON, &drive->iface_drive);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
 
 /* <internal>
- * udisks_linux_lun_should_include_device:
+ * udisks_linux_drive_should_include_device:
  * @device: A #GUdevDevice.
  * @out_vpd: Return location for unique ID or %NULL.
  *
- * Checks if we should even construct a #UDisksLinuxLun for @device.
+ * Checks if we should even construct a #UDisksLinuxDrive for @device.
  *
  * Returns: %TRUE if we should construct an object, %FALSE otherwise.
  */
 gboolean
-udisks_linux_lun_should_include_device (GUdevDevice  *device,
-                                        gchar       **out_vpd)
+udisks_linux_drive_should_include_device (GUdevDevice  *device,
+                                          gchar       **out_vpd)
 {
   gboolean ret;
   const gchar *serial;

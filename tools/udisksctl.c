@@ -430,28 +430,28 @@ lookup_object_by_device (const gchar *device)
 }
 
 static UDisksObject *
-lookup_object_by_lun (const gchar *lun)
+lookup_object_by_drive (const gchar *drive)
 {
   UDisksObject *ret;
   GList *objects;
   GList *l;
-  gchar *full_lun_object_path;
+  gchar *full_drive_object_path;
 
   ret = NULL;
 
-  full_lun_object_path = g_strdup_printf ("/org/freedesktop/UDisks2/LUNs/%s", lun);
+  full_drive_object_path = g_strdup_printf ("/org/freedesktop/UDisks2/drives/%s", drive);
 
   objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
   for (l = objects; l != NULL; l = l->next)
     {
       UDisksObject *object = UDISKS_OBJECT (l->data);
-      UDisksLun *lun;
+      UDisksDrive *drive;
 
-      if (g_strcmp0 (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)), full_lun_object_path) != 0)
+      if (g_strcmp0 (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)), full_drive_object_path) != 0)
         continue;
 
-      lun = udisks_object_peek_lun (object);
-      if (lun != NULL)
+      drive = udisks_object_peek_drive (object);
+      if (drive != NULL)
         {
           ret = g_object_ref (object);
           goto out;
@@ -461,7 +461,7 @@ lookup_object_by_lun (const gchar *lun)
  out:
   g_list_foreach (objects, (GFunc) g_object_unref, NULL);
   g_list_free (objects);
-  g_free (full_lun_object_path);
+  g_free (full_drive_object_path);
 
   return ret;
 }
@@ -821,13 +821,13 @@ handle_command_mount_unmount (gint        *argc,
 
 static gchar *opt_info_object = NULL;
 static gchar *opt_info_device = NULL;
-static gchar *opt_info_lun = NULL;
+static gchar *opt_info_drive = NULL;
 
 static const GOptionEntry command_info_entries[] =
 {
   { "object-path", 'p', 0, G_OPTION_ARG_STRING, &opt_info_object, "Object to get information about", NULL},
   { "block-device", 'b', 0, G_OPTION_ARG_STRING, &opt_info_device, "Block device to get information about", NULL},
-  { "lun", 'l', 0, G_OPTION_ARG_STRING, &opt_info_lun, "LUN to get information about", NULL},
+  { "drive", 'd', 0, G_OPTION_ARG_STRING, &opt_info_drive, "Drive to get information about", NULL},
   { NULL }
 };
 
@@ -843,18 +843,18 @@ handle_command_info (gint        *argc,
   gchar *s;
   gboolean complete_objects;
   gboolean complete_devices;
-  gboolean complete_luns;
+  gboolean complete_drives;
   GList *l;
   GList *objects;
   UDisksObject *object;
   UDisksBlockDevice *block;
-  UDisksLun *lun;
+  UDisksDrive *drive;
   guint n;
 
   ret = 1;
   opt_info_object = NULL;
   opt_info_device = NULL;
-  opt_info_lun = NULL;
+  opt_info_drive = NULL;
 
   modify_argv0_for_command (argc, argv, "info");
 
@@ -879,10 +879,10 @@ handle_command_info (gint        *argc,
       remove_arg ((*argc) - 1, argc, argv);
     }
 
-  complete_luns = FALSE;
-  if (request_completion && (g_strcmp0 (completion_prev, "--lun") == 0 || g_strcmp0 (completion_prev, "-l") == 0))
+  complete_drives = FALSE;
+  if (request_completion && (g_strcmp0 (completion_prev, "--drive") == 0 || g_strcmp0 (completion_prev, "-d") == 0))
     {
-      complete_luns = TRUE;
+      complete_drives = TRUE;
       remove_arg ((*argc) - 1, argc, argv);
     }
 
@@ -900,11 +900,11 @@ handle_command_info (gint        *argc,
   if (request_completion &&
       (opt_info_object == NULL && !complete_objects) &&
       (opt_info_device == NULL && !complete_devices) &&
-      (opt_info_lun == NULL && !complete_luns))
+      (opt_info_drive == NULL && !complete_drives))
     {
       g_print ("--object-path \n"
                "--block-device \n"
-               "--lun \n");
+               "--drive \n");
     }
 
   if (complete_objects)
@@ -946,14 +946,14 @@ handle_command_info (gint        *argc,
       goto out;
     }
 
-  if (complete_luns)
+  if (complete_drives)
     {
       objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
       for (l = objects; l != NULL; l = l->next)
         {
           object = UDISKS_OBJECT (l->data);
-          lun = udisks_object_peek_lun (object);
-          if (lun != NULL)
+          drive = udisks_object_peek_drive (object);
+          if (drive != NULL)
             {
               const gchar *base;
               base = g_strrstr (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)), "/") + 1;
@@ -988,12 +988,12 @@ handle_command_info (gint        *argc,
           goto out;
         }
     }
-  else if (opt_info_lun != NULL)
+  else if (opt_info_drive != NULL)
     {
-      object = lookup_object_by_lun (opt_info_lun);
+      object = lookup_object_by_drive (opt_info_drive);
       if (object == NULL)
         {
-          g_printerr ("Error looking up object for LUN %s\n", opt_info_lun);
+          g_printerr ("Error looking up object for drive %s\n", opt_info_drive);
           goto out;
         }
     }
@@ -1016,7 +1016,7 @@ handle_command_info (gint        *argc,
   g_option_context_free (o);
   g_free (opt_info_object);
   g_free (opt_info_device);
-  g_free (opt_info_lun);
+  g_free (opt_info_drive);
   return ret;
 }
 
@@ -1429,8 +1429,8 @@ handle_command_monitor (gint        *argc,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static GList *
-find_block_devices_for_lun (GList       *objects,
-                            const gchar *lun_object_path)
+find_block_devices_for_drive (GList       *objects,
+                              const gchar *drive_object_path)
 {
   GList *ret;
   GList *l;
@@ -1445,7 +1445,7 @@ find_block_devices_for_lun (GList       *objects,
       if (block == NULL)
         continue;
 
-      if (g_strcmp0 (udisks_block_device_get_lun (block), lun_object_path) == 0)
+      if (g_strcmp0 (udisks_block_device_get_drive (block), drive_object_path) == 0)
         {
           ret = g_list_append (ret, g_object_ref (block));
         }
@@ -1528,7 +1528,7 @@ handle_command_status (gint        *argc,
 
   objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
 
-  /* print all LUNs
+  /* print all drives
    *
    * We are guaranteed that, usually,
    *
@@ -1547,7 +1547,7 @@ handle_command_status (gint        *argc,
   for (l = objects; l != NULL; l = l->next)
     {
       UDisksObject *object = UDISKS_OBJECT (l->data);
-      UDisksLun *lun;
+      UDisksDrive *drive;
       GList *block_devices;
       const gchar *vendor;
       const gchar *model;
@@ -1558,12 +1558,12 @@ handle_command_status (gint        *argc,
       gchar *block_device;
       GList *j;
 
-      lun = udisks_object_peek_lun (object);
-      if (lun == NULL)
+      drive = udisks_object_peek_drive (object);
+      if (drive == NULL)
         continue;
 
       str = g_string_new (NULL);
-      block_devices = find_block_devices_for_lun (objects, g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
+      block_devices = find_block_devices_for_drive (objects, g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
       for (j = block_devices; j != NULL; j = j->next)
         {
           UDisksBlockDevice *block = UDISKS_BLOCK_DEVICE (j->data);
@@ -1585,10 +1585,10 @@ handle_command_status (gint        *argc,
       g_list_foreach (block_devices, (GFunc) g_object_unref, NULL);
       g_list_free (block_devices);
 
-      vendor = udisks_lun_get_vendor (lun);
-      model = udisks_lun_get_model (lun);
-      revision = udisks_lun_get_revision (lun);
-      serial = udisks_lun_get_serial (lun);
+      vendor = udisks_drive_get_vendor (drive);
+      model = udisks_drive_get_model (drive);
+      revision = udisks_drive_get_revision (drive);
+      serial = udisks_drive_get_serial (drive);
 
       if (strlen (vendor) == 0)
         vendor = NULL;

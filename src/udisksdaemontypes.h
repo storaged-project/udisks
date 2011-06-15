@@ -37,8 +37,8 @@ typedef struct _UDisksLinuxProvider UDisksLinuxProvider;
 struct _UDisksLinuxBlock;
 typedef struct _UDisksLinuxBlock UDisksLinuxBlock;
 
-struct _UDisksLinuxLun;
-typedef struct _UDisksLinuxLun UDisksLinuxLun;
+struct _UDisksLinuxDrive;
+typedef struct _UDisksLinuxDrive UDisksLinuxDrive;
 
 struct _UDisksFilesystemImpl;
 typedef struct _UDisksFilesystemImpl UDisksFilesystemImpl;

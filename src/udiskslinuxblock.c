@@ -34,7 +34,7 @@
 #include "udiskslinuxblock.h"
 #include "udisksmount.h"
 #include "udisksmountmonitor.h"
-#include "udiskslinuxlun.h"
+#include "udiskslinuxdrive.h"
 #include "udiskslinuxfilesystem.h"
 #include "udiskspersistentstore.h"
 #include "udiskslinuxprovider.h"
@@ -385,8 +385,8 @@ block_device_connect (UDisksLinuxBlock *block)
 }
 
 static gchar *
-find_lun (GDBusObjectManagerServer *object_manager,
-          GUdevDevice              *block_device)
+find_drive (GDBusObjectManagerServer *object_manager,
+            GUdevDevice              *block_device)
 {
   const gchar *block_device_sysfs_path;
   gchar *ret;
@@ -401,32 +401,32 @@ find_lun (GDBusObjectManagerServer *object_manager,
   for (l = objects; l != NULL; l = l->next)
     {
       GDBusObjectSkeleton *object = G_DBUS_OBJECT_SKELETON (l->data);
-      UDisksLinuxLun *lun;
-      GList *lun_devices;
+      UDisksLinuxDrive *drive;
+      GList *drive_devices;
       GList *j;
 
-      if (!UDISKS_IS_LINUX_LUN (object))
+      if (!UDISKS_IS_LINUX_DRIVE (object))
         continue;
 
-      lun = UDISKS_LINUX_LUN (object);
-      lun_devices = udisks_linux_lun_get_devices (lun);
+      drive = UDISKS_LINUX_DRIVE (object);
+      drive_devices = udisks_linux_drive_get_devices (drive);
 
-      for (j = lun_devices; j != NULL; j = j->next)
+      for (j = drive_devices; j != NULL; j = j->next)
         {
-          GUdevDevice *lun_device = G_UDEV_DEVICE (j->data);
-          const gchar *lun_sysfs_path;
+          GUdevDevice *drive_device = G_UDEV_DEVICE (j->data);
+          const gchar *drive_sysfs_path;
 
-          lun_sysfs_path = g_udev_device_get_sysfs_path (lun_device);
-          if (g_str_has_prefix (block_device_sysfs_path, lun_sysfs_path))
+          drive_sysfs_path = g_udev_device_get_sysfs_path (drive_device);
+          if (g_str_has_prefix (block_device_sysfs_path, drive_sysfs_path))
             {
               ret = g_strdup (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
-              g_list_foreach (lun_devices, (GFunc) g_object_unref, NULL);
-              g_list_free (lun_devices);
+              g_list_foreach (drive_devices, (GFunc) g_object_unref, NULL);
+              g_list_free (drive_devices);
               goto out;
             }
         }
-      g_list_foreach (lun_devices, (GFunc) g_object_unref, NULL);
-      g_list_free (lun_devices);
+      g_list_foreach (drive_devices, (GFunc) g_object_unref, NULL);
+      g_list_free (drive_devices);
     }
 
  out:
@@ -497,7 +497,7 @@ block_device_update (UDisksLinuxBlock *block,
   UDisksBlockDevice *iface = UDISKS_BLOCK_DEVICE (_iface);
   GUdevDeviceNumber dev;
   GDBusObjectManagerServer *object_manager;
-  gchar *lun_object_path;
+  gchar *drive_object_path;
   gchar *s;
   gboolean is_partition_table;
   gboolean is_partition_entry;
@@ -618,21 +618,21 @@ block_device_update (UDisksLinuxBlock *block,
     }
   udisks_block_device_set_preferred_device (iface, preferred_device_file);
 
-  /* Determine the lun this block device belongs to
+  /* Determine the drive this block device belongs to
    *
    * TODO: if this is slow we could have a cache or ensure that we
    * only do this once or something else
    */
   object_manager = udisks_daemon_get_object_manager (block->daemon);
-  lun_object_path = find_lun (object_manager, block->device);
-  if (lun_object_path != NULL)
+  drive_object_path = find_drive (object_manager, block->device);
+  if (drive_object_path != NULL)
     {
-      udisks_block_device_set_lun (iface, lun_object_path);
-      g_free (lun_object_path);
+      udisks_block_device_set_drive (iface, drive_object_path);
+      g_free (drive_object_path);
     }
   else
     {
-      udisks_block_device_set_lun (iface, "/");
+      udisks_block_device_set_drive (iface, "/");
     }
 
   udisks_block_device_set_id_usage (iface, g_udev_device_get_property (block->device, "ID_FS_USAGE"));

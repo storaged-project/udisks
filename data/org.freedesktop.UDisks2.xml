@@ -6,8 +6,8 @@
   <!-- ********************************************************************** -->
 
   <!--
-      org.freedesktop.UDisks2.Lun:
-      @short_description: Storage Device
+      org.freedesktop.UDisks2.Drive:
+      @short_description: Disk Drive
 
       This interface is used to represent disk drives with or without
       removable media.
@@ -17,10 +17,10 @@
       any low-level block devices the OS knows about. For example, if
       <filename>/dev/sda</filename> and <filename>/dev/sdb</filename>
       are block devices for two paths to the same drive, there will be
-      only one #org.freedesktop.UDisks2.Lun object but two
+      only one #org.freedesktop.UDisks2.Drive object but two
       #org.freedesktop.UDisks2.BlockDevice objects.
   -->
-  <interface name="org.freedesktop.UDisks2.Lun">
+  <interface name="org.freedesktop.UDisks2.Drive">
     <!-- Vendor: A name for the vendor of the drive or blank if unknown. -->
     <property name="Vendor" type="ay" access="read"/>
     <!-- Model: A name for the model of the drive or blank if unknown. -->
@@ -84,7 +84,7 @@
     <property name="MediaCompatibility" type="as" access="read"/>
 
     <!-- Media: The kind of media currently in the drive or blank if unknown.
-         See the #org.freedesktop.UDisks2.Lun:MediaCompatibility property for known values.
+         See the #org.freedesktop.UDisks2.Drive:MediaCompatibility property for known values.
     -->
     <property name="Media" type="s" access="read"/>
 
@@ -124,7 +124,7 @@
 
     This interface represents a block device.
 
-    This should not be confused with the #org.freedesktop.UDisks2.Lun
+    This should not be confused with the #org.freedesktop.UDisks2.Drive
     interface that is used to represent disk drives. For example, the
     #org.freedesktop.UDisks2.BlockDevice interface is also used for
     block devices that do not correspond to drives at all (e.g. <ulink
@@ -163,11 +163,11 @@
     -->
     <property name="PreferredDevice" type="ay" access="read"/>
 
-    <!-- Lun:
-         The #org.freedesktop.UDisks2.Lun object that the block device
+    <!-- Drive:
+         The #org.freedesktop.UDisks2.Drive object that the block device
          belongs to, or '/' if no such object exists.
       -->
-    <property name="Lun" type="o" access="read"/>
+    <property name="Drive" type="o" access="read"/>
 
     <!-- IdUsage:
          A result of probing for signatures on the block device. Known values include:
