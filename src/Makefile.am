@@ -44,7 +44,6 @@ noinst_LTLIBRARIES = libudisks-daemon.la
 
 libudisks_daemon_la_SOURCES =						\
 	udisksdaemontypes.h						\
-	gposixsignal.h			gposixsignal.c			\
 	udisksdaemon.h			udisksdaemon.c			\
 	udisksprovider.h		udisksprovider.c		\
 	udiskslinuxprovider.h		udiskslinuxprovider.c		\
