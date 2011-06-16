@@ -690,23 +690,36 @@ udisks_spawned_job_spawned_job_completed_default (UDisksSpawnedJob  *job,
       if (WIFEXITED (status))
         {
           g_string_append_printf (message,
-                                  "Command-line `%s' exited with non-zero exit status %d.\n",
+                                  "Command-line `%s' exited with non-zero exit status %d:",
                                   job->command_line,
                                   WEXITSTATUS (status));
         }
       else if (WIFSIGNALED (status))
         {
           g_string_append_printf (message,
-                                  "Command-line `%s' was signaled with signal %s (%d).\n",
+                                  "Command-line `%s' was signaled with signal %s (%d):",
                                   job->command_line,
                                   get_signal_name (WTERMSIG (status)),
                                   WTERMSIG (status));
         }
-      g_string_append_printf (message,
-                              "stdout: `%s'\n"
-                              "stderr: `%s'",
-                              standard_output->str,
-                              standard_error->str);
+      if (standard_output->len > 0 && standard_error->len)
+        {
+          g_string_append_printf (message,
+                                  "\n"
+                                  "stdout: `%s'\n"
+                                  "stderr: `%s'",
+                                  standard_output->str,
+                                  standard_error->str);
+        }
+      else if (standard_output->len > 0)
+        {
+          g_string_append_printf (message, " %s", standard_output->str);
+        }
+      else
+        {
+          g_string_append_printf (message, " %s", standard_error->str);
+        }
+
       udisks_job_emit_completed (UDISKS_JOB (job),
                                  FALSE,
                                  message->str);

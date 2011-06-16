@@ -83,9 +83,7 @@ test_spawned_job_failure (void)
 
   job = udisks_spawned_job_new ("/bin/false", NULL, NULL);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
-                             "Command-line `/bin/false' exited with non-zero exit status 1.\n"
-                             "stdout: `'\n"
-                             "stderr: `'");
+                             "Command-line `/bin/false' exited with non-zero exit status 1: ");
   g_object_unref (job);
 }
 
@@ -305,20 +303,16 @@ test_spawned_job_abnormal_termination (void)
   s = g_strdup_printf (UDISKS_TEST_DIR "/udisks-test-helper 4");
   job = udisks_spawned_job_new (s, NULL, NULL);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
-                             "Command-line `./udisks-test-helper 4' was signaled with signal SIGSEGV (11).\n"
-                             "stdout: `OK, deliberately causing a segfault\n"
-                             "'\n"
-                             "stderr: `'");
+                             "Command-line `./udisks-test-helper 4' was signaled with signal SIGSEGV (11): "
+                             "OK, deliberately causing a segfault\n");
   g_object_unref (job);
   g_free (s);
 
   s = g_strdup_printf (UDISKS_TEST_DIR "/udisks-test-helper 5");
   job = udisks_spawned_job_new (s, NULL, NULL);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
-                             "Command-line `./udisks-test-helper 5' was signaled with signal SIGABRT (6).\n"
-                             "stdout: `OK, deliberately abort()'ing\n"
-                             "'\n"
-                             "stderr: `'");
+                             "Command-line `./udisks-test-helper 5' was signaled with signal SIGABRT (6): "
+                             "OK, deliberately abort()'ing\n");
   g_object_unref (job);
   g_free (s);
 }
