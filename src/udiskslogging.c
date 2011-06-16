@@ -153,7 +153,7 @@ udisks_log (UDisksLogLevel     level,
 
   if (!have_called_openlog)
     {
-      openlog ("udisks",
+      openlog ("udisksd",
                LOG_CONS|LOG_NDELAY|LOG_PID,
                LOG_DAEMON);
       have_called_openlog = TRUE;
