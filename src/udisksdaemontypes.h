@@ -40,9 +40,6 @@ typedef struct _UDisksLinuxBlock UDisksLinuxBlock;
 struct _UDisksLinuxDrive;
 typedef struct _UDisksLinuxDrive UDisksLinuxDrive;
 
-struct _UDisksFilesystemImpl;
-typedef struct _UDisksFilesystemImpl UDisksFilesystemImpl;
-
 struct _UDisksBaseJob;
 typedef struct _UDisksBaseJob UDisksBaseJob;
 
@@ -69,9 +66,6 @@ typedef struct _UDisksProvider UDisksProvider;
 
 struct _UDisksLinuxFilesystem;
 typedef struct _UDisksLinuxFilesystem UDisksLinuxFilesystem;
-
-struct _UDisksIScsiProvider;
-typedef struct _UDisksIScsiProvider UDisksIScsiProvider;
 
 /**
  * UDisksThreadedJobFunc:

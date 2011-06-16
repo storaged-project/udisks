@@ -108,6 +108,17 @@
       <xi:include href="xml/udisksclient.xml"/>
       <xi:include href="xml/udiskserror.xml"/>
       <xi:include href="xml/udisksutil.xml"/>
+    <chapter id="ref-library-generated">
+      <title>Generated Code</title>
+      <xi:include href="xml/UDisksObject.xml"/>
+      <xi:include href="xml/UDisksObjectManagerClient.xml"/>
+      <xi:include href="xml/UDisksDrive.xml"/>
+      <xi:include href="xml/UDisksJob.xml"/>
+      <xi:include href="xml/UDisksConfigurationItem.xml"/>
+      <xi:include href="xml/UDisksBlockDevice.xml"/>
+      <xi:include href="xml/UDisksFilesystem.xml"/>
+      <xi:include href="xml/UDisksSwapspace.xml"/>
+    </chapter>
   </part>
 
   <part id="ref-daemon">
