@@ -294,11 +294,6 @@
          if unknown or not a loop device.
     -->
     <property name="LoopBackingFile" type="ay" access="read"/>
-
-    <method name="SetLabel">
-      <arg name="label" direction="in" type="ay"/>
-      <arg name="options" direction="in" type="as"/>
-    </method>
   </interface>
 
   <!-- ********************************************************************** -->
@@ -312,6 +307,17 @@
   -->
   <interface name="org.freedesktop.UDisks2.Filesystem">
     <!-- prereq: org.freedesktop.UDisks2.BlockDevice -->
+
+    <!-- SetLabel:
+         @label: The label to set.
+         @options: Options.
+
+         Sets the filesystem label.
+    -->
+    <method name="SetLabel">
+      <arg name="label" direction="in" type="ay"/>
+      <arg name="options" direction="in" type="as"/>
+    </method>
 
     <!-- MountPoints:
          An array of filesystems paths for where the file system on
