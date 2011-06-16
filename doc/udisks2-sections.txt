@@ -10,6 +10,17 @@ udisks_util_get_media_compat_for_display
 </SECTION>
 
 <SECTION>
+<FILE>udiskslogging</FILE>
+UDisksLogLevel
+udisks_log
+udisks_debug
+udisks_info
+udisks_notice
+udisks_warning
+udisks_error
+</SECTION>
+
+<SECTION>
 <FILE>udiskserror</FILE>
 <TITLE>UDisksError</TITLE>
 UDISKS_ERROR
@@ -18,6 +29,7 @@ UDisksError
 UDISKS_TYPE_ERROR
 udisks_error_get_type
 udisks_error_quark
+UDISKS_ERROR_NUM_ENTRIES
 </SECTION>
 
 <SECTION>
@@ -53,14 +65,14 @@ udisks_daemon_launch_simple_job
 udisks_daemon_launch_spawned_job
 udisks_daemon_launch_spawned_job_sync
 udisks_daemon_launch_threaded_job
-UDisksLogLevel
-udisks_daemon_log
 <SUBSECTION Standard>
 UDISKS_TYPE_DAEMON
 UDISKS_DAEMON
 UDISKS_IS_DAEMON
 <SUBSECTION Private>
 udisks_daemon_get_type
+udisks_daemon_marshal_BOOLEAN__BOOLEAN_BOXED
+udisks_daemon_marshal_BOOLEAN__BOXED_INT_BOXED_BOXED
 </SECTION>
 
 <SECTION>

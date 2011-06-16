@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "udiskslogging.h"
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
 #include "udiskslinuxprovider.h"
@@ -794,10 +795,8 @@ udisks_linux_drive_uevent (UDisksLinuxDrive *drive,
         }
       else
         {
-          udisks_daemon_log (drive->daemon,
-                             UDISKS_LOG_LEVEL_WARNING,
-                             "Drive doesn't have device with sysfs path %s on remove event",
-                             g_udev_device_get_sysfs_path (device));
+          udisks_warning ("Drive doesn't have device with sysfs path %s on remove event",
+                          g_udev_device_get_sysfs_path (device));
         }
     }
   else

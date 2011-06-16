@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <glib/gstdio.h>
 
+#include "udiskslogging.h"
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
 #include "udiskslinuxblock.h"
@@ -521,13 +522,11 @@ block_device_update (UDisksLinuxBlock *block,
           /* ENOENT is not unexpected */
           if (!(error->domain == G_FILE_ERROR && error->code == G_FILE_ERROR_NOENT))
             {
-              udisks_daemon_log (block->daemon,
-                                 UDISKS_LOG_LEVEL_WARNING,
-                                 "Error loading %s: %s (%s, %d)",
-                                 filename,
-                                 error->message,
-                                 g_quark_to_string (error->domain),
-                                 error->code);
+              udisks_warning ("Error loading %s: %s (%s, %d)",
+                              filename,
+                              error->message,
+                              g_quark_to_string (error->domain),
+                              error->code);
             }
           g_error_free (error);
           udisks_block_device_set_loop_backing_file (iface, "");

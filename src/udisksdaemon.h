@@ -56,27 +56,6 @@ UDisksBaseJob            *udisks_daemon_launch_threaded_job   (UDisksDaemon    *
                                                                GDestroyNotify   user_data_free_func,
                                                                GCancellable    *cancellable);
 
-/**
- * UDisksLogLevel:
- * @UDISKS_LOG_LEVEL_DEBUG: Debug messages.
- * @UDISKS_LOG_LEVEL_INFO: Informational messages
- * @UDISKS_LOG_LEVEL_WARNING: Warning messages
- * @UDISKS_LOG_LEVEL_ERROR: Error messages.
- *
- * Logging levels.
- */
-typedef enum {
-  UDISKS_LOG_LEVEL_DEBUG,
-  UDISKS_LOG_LEVEL_INFO,
-  UDISKS_LOG_LEVEL_WARNING,
-  UDISKS_LOG_LEVEL_ERROR,
-} UDisksLogLevel;
-
-void                   udisks_daemon_log                   (UDisksDaemon    *daemon,
-                                                            UDisksLogLevel   log_level,
-                                                            const gchar     *format,
-                                                            ...) G_GNUC_PRINTF (3, 4);
-
 G_END_DECLS
 
 #endif /* __UDISKS_DAEMON_H__ */

@@ -29,6 +29,7 @@
 
 #include <glib/gstdio.h>
 
+#include "udiskslogging.h"
 #include "udiskslinuxfilesystem.h"
 #include "udiskslinuxblock.h"
 #include "udisksdaemon.h"
@@ -83,7 +84,6 @@ udisks_linux_filesystem_class_init (UDisksLinuxFilesystemClass *klass)
 
 /**
  * udisks_linux_filesystem_new:
- * @cancellable: A #GCancellable or %NULL.
  *
  * Creates a new #UDisksLinuxFilesystem instance.
  *
@@ -898,21 +898,17 @@ handle_mount (UDisksFilesystem       *filesystem,
                                                       mount_point_to_use,
                                                       &error))
         {
-          udisks_daemon_log (daemon,
-                             UDISKS_LOG_LEVEL_WARNING,
-                             "Error removing mount point %s from filesystems file: %s (%s, %d)",
-                             mount_point_to_use,
-                             error->message,
-                             g_quark_to_string (error->domain),
-                             error->code);
+          udisks_warning ("Error removing mount point %s from filesystems file: %s (%s, %d)",
+                          mount_point_to_use,
+                          error->message,
+                          g_quark_to_string (error->domain),
+                          error->code);
           g_error_free (error);
         }
       if (g_rmdir (mount_point_to_use) != 0)
         {
-          udisks_daemon_log (daemon,
-                             UDISKS_LOG_LEVEL_WARNING,
-                             "Error removing directory %s: %m",
-                             mount_point_to_use);
+          udisks_warning ("Error removing directory %s: %m",
+                          mount_point_to_use);
         }
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
@@ -924,12 +920,10 @@ handle_mount (UDisksFilesystem       *filesystem,
       goto out;
     }
 
-  udisks_daemon_log (daemon,
-                     UDISKS_LOG_LEVEL_INFO,
-                     "Mounted %s at %s on behalf of uid %d",
-                     udisks_block_device_get_device (block),
-                     mount_point_to_use,
-                     caller_uid);
+  udisks_notice ("Mounted %s at %s on behalf of uid %d",
+                 udisks_block_device_get_device (block),
+                 mount_point_to_use,
+                 caller_uid);
 
   udisks_filesystem_complete_mount (filesystem, invocation, mount_point_to_use);
 
@@ -1136,10 +1130,8 @@ handle_unmount (UDisksFilesystem       *filesystem,
   /* OK, removed the entry. Finally: nuke the mount point */
   if (g_rmdir (mount_point) != 0)
     {
-      udisks_daemon_log (daemon,
-                         UDISKS_LOG_LEVEL_ERROR,
-                         "Error removing mount point `%s': %m",
-                         mount_point);
+      udisks_error ("Error removing mount point `%s': %m",
+                    mount_point);
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
@@ -1148,12 +1140,10 @@ handle_unmount (UDisksFilesystem       *filesystem,
       goto out;
     }
 
-  udisks_daemon_log (daemon,
-                     UDISKS_LOG_LEVEL_INFO,
-                     "Unmounted %s from %s on behalf of uid %d",
-                     udisks_block_device_get_device (block),
-                     mount_point,
-                     caller_uid);
+  udisks_notice ("Unmounted %s from %s on behalf of uid %d",
+                 udisks_block_device_get_device (block),
+                 mount_point,
+                 caller_uid);
 
   udisks_filesystem_complete_unmount (filesystem, invocation);
 

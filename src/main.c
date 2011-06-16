@@ -24,6 +24,7 @@
 #include <gio/gio.h>
 #include <glib-unix.h>
 
+#include "udiskslogging.h"
 #include "udisksdaemontypes.h"
 #include "udisksdaemon.h"
 
@@ -47,9 +48,7 @@ on_bus_acquired (GDBusConnection *connection,
                  gpointer         user_data)
 {
   the_daemon = udisks_daemon_new (connection);
-  udisks_daemon_log (the_daemon,
-                     UDISKS_LOG_LEVEL_DEBUG,
-                     "Connected to the system bus");
+  udisks_debug ("Connected to the system bus");
 }
 
 static void
@@ -59,16 +58,11 @@ on_name_lost (GDBusConnection *connection,
 {
   if (the_daemon == NULL)
     {
-      udisks_daemon_log (NULL,
-                         UDISKS_LOG_LEVEL_ERROR,
-                         "Failed to connect to the system message bus");
+      udisks_error ("Failed to connect to the system message bus");
     }
   else
     {
-      udisks_daemon_log (the_daemon,
-                         UDISKS_LOG_LEVEL_INFO,
-                         "Lost (or failed to acquire) the name %s on the system message bus",
-                         name);
+      udisks_info ("Lost (or failed to acquire) the name %s on the system message bus", name);
     }
   g_main_loop_quit (loop);
 }
@@ -78,18 +72,13 @@ on_name_acquired (GDBusConnection *connection,
                   const gchar     *name,
                   gpointer         user_data)
 {
-  udisks_daemon_log (the_daemon,
-                     UDISKS_LOG_LEVEL_DEBUG,
-                     "Acquired the name %s on the system message bus",
-                     name);
+  udisks_notice ("Acquired the name %s on the system message bus", name);
 }
 
 static gboolean
 on_sigint (gpointer user_data)
 {
-  udisks_daemon_log (the_daemon,
-                     UDISKS_LOG_LEVEL_INFO,
-                     "Caught SIGINT. Initiating shutdown");
+  udisks_info ("Caught SIGINT. Initiating shutdown");
   g_main_loop_quit (loop);
   return FALSE;
 }
@@ -129,10 +118,7 @@ main (int    argc,
       goto out;
     }
 
-  udisks_daemon_log (NULL,
-                     UDISKS_LOG_LEVEL_INFO,
-                     "udisks daemon version %s starting",
-                     PACKAGE_VERSION);
+  udisks_notice ("udisks daemon version %s starting", PACKAGE_VERSION);
 
   loop = g_main_loop_new (NULL, FALSE);
 
@@ -157,7 +143,7 @@ main (int    argc,
                                   NULL);
 
 
-  udisks_daemon_log (the_daemon, UDISKS_LOG_LEVEL_DEBUG, "Entering main event loop");
+  udisks_debug ("Entering main event loop");
 
   g_main_loop_run (loop);
 
@@ -175,10 +161,7 @@ main (int    argc,
   if (opt_context != NULL)
     g_option_context_free (opt_context);
 
-  udisks_daemon_log (NULL,
-                     UDISKS_LOG_LEVEL_INFO,
-                     "udisks daemon version %s exiting",
-                     PACKAGE_VERSION);
+  udisks_notice ("udisks daemon version %s exiting", PACKAGE_VERSION);
 
   return ret;
 }

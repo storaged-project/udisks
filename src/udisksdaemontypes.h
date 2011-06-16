@@ -99,4 +99,26 @@ typedef enum
   UDISKS_MOUNT_TYPE_SWAP
 } UDisksMountType;
 
+
+/**
+ * UDisksLogLevel:
+ * @UDISKS_LOG_LEVEL_DEBUG: Debug messages.
+ * @UDISKS_LOG_LEVEL_INFO: Informational messages.
+ * @UDISKS_LOG_LEVEL_NOTICE: Messages that the administrator should take notice of.
+ * @UDISKS_LOG_LEVEL_WARNING: Warning messages.
+ * @UDISKS_LOG_LEVEL_ERROR: Error messages.
+ *
+ * Logging levels. The level @UDISKS_LOG_LEVEL_NOTICE and above goes to syslog.
+ *
+ * Unlike g_warning() and g_error(), none of these logging levels causes the program to ever terminate.
+ */
+typedef enum
+{
+  UDISKS_LOG_LEVEL_DEBUG,
+  UDISKS_LOG_LEVEL_INFO,
+  UDISKS_LOG_LEVEL_NOTICE,
+  UDISKS_LOG_LEVEL_WARNING,
+  UDISKS_LOG_LEVEL_ERROR
+} UDisksLogLevel;
+
 #endif

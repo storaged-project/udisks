@@ -23,6 +23,7 @@
 
 #include <string.h>
 
+#include "udiskslogging.h"
 #include "udisksdaemon.h"
 #include "udisksprovider.h"
 #include "udiskslinuxprovider.h"
@@ -241,10 +242,8 @@ handle_block_uevent_for_drive (UDisksLinuxProvider *provider,
 
       if (vpd == NULL)
         {
-          udisks_daemon_log (daemon,
-                             UDISKS_LOG_LEVEL_DEBUG,
-                             "Ignoring block %s with no serial or WWN",
-                             g_udev_device_get_sysfs_path (device));
+          udisks_debug ("Ignoring block device %s with no serial or WWN",
+                        g_udev_device_get_sysfs_path (device));
           goto out;
         }
       drive = g_hash_table_lookup (provider->vpd_to_drive, vpd);
@@ -339,15 +338,10 @@ udisks_linux_provider_handle_uevent (UDisksLinuxProvider *provider,
                                      GUdevDevice         *device)
 {
   const gchar *subsystem;
-  UDisksDaemon *daemon;
 
-  daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
-
-  udisks_daemon_log (daemon,
-                     UDISKS_LOG_LEVEL_DEBUG,
-                     "uevent %s %s",
-                     action,
-                     g_udev_device_get_sysfs_path (device));
+  udisks_debug ("uevent %s %s",
+                action,
+                g_udev_device_get_sysfs_path (device));
 
   subsystem = g_udev_device_get_subsystem (device);
   if (g_strcmp0 (subsystem, "block") == 0)

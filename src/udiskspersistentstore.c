@@ -34,6 +34,7 @@
 #include <glib-object.h>
 #include <glib/gstdio.h>
 
+#include "udiskslogging.h"
 #include "udiskspersistentstore.h"
 #include "udisksdaemon.h"
 #include "udisksmount.h"
@@ -587,9 +588,8 @@ mounted_fs_entry_is_valid (UDisksPersistentStore   *store,
   if (block_device_file_value == NULL)
     {
       s = g_variant_print (value, TRUE);
-      udisks_daemon_log (store->daemon, UDISKS_LOG_LEVEL_ERROR,
-                         "mounted-fs entry %s is invalid: no block-device-file key/value pair",
-                         s);
+      udisks_error ("mounted-fs entry %s is invalid: no block-device-file key/value pair",
+                    s);
       g_free (s);
       goto out;
     }
@@ -598,20 +598,18 @@ mounted_fs_entry_is_valid (UDisksPersistentStore   *store,
   if (stat (block_device_file, &statbuf) != 0)
     {
       s = g_variant_print (value, TRUE);
-      udisks_daemon_log (store->daemon, UDISKS_LOG_LEVEL_ERROR,
-                         "mounted-fs entry %s is invalid: error statting block-device-file %s: %m",
-                         s,
-                         block_device_file);
+      udisks_error ("mounted-fs entry %s is invalid: error statting block-device-file %s: %m",
+                    s,
+                    block_device_file);
       g_free (s);
       goto out;
     }
   if (!S_ISBLK (statbuf.st_mode))
     {
       s = g_variant_print (value, TRUE);
-      udisks_daemon_log (store->daemon, UDISKS_LOG_LEVEL_ERROR,
-                         "mounted-fs entry %s is invalid: block-device-file %s is not a block device",
-                         s,
-                         block_device_file);
+      udisks_error ("mounted-fs entry %s is invalid: block-device-file %s is not a block device",
+                    s,
+                    block_device_file);
       g_free (s);
       goto out;
     }
@@ -635,11 +633,10 @@ mounted_fs_entry_is_valid (UDisksPersistentStore   *store,
   if (!found_mount)
     {
       s = g_variant_print (value, TRUE);
-      udisks_daemon_log (store->daemon, UDISKS_LOG_LEVEL_ERROR,
-                         "mounted-fs entry %s is invalid: block-device-file %s is not mounted at %s",
-                         s,
-                         block_device_file,
-                         mount_point);
+      udisks_error ("mounted-fs entry %s is invalid: block-device-file %s is not mounted at %s",
+                    s,
+                    block_device_file,
+                    mount_point);
       g_free (s);
       goto out;
     }
@@ -662,15 +659,13 @@ mounted_fs_entry_is_valid (UDisksPersistentStore   *store,
         {
           if (g_rmdir (mount_point) != 0)
             {
-              udisks_daemon_log (store->daemon, UDISKS_LOG_LEVEL_ERROR,
-                                 "Error removing directory %s: %m",
-                                 mount_point);
+              udisks_error ("Error removing directory %s: %m",
+                            mount_point);
             }
           else
             {
-              udisks_daemon_log (store->daemon, UDISKS_LOG_LEVEL_INFO,
-                                 "Cleaned up mount point %s",
-                                 mount_point);
+              udisks_error ("Cleaned up mount point %s",
+                            mount_point);
             }
         }
     }
@@ -692,9 +687,7 @@ udisks_persistent_store_mounted_fs_cleanup (UDisksPersistentStore *store)
   GVariantBuilder builder;
   GError *error;
 
-  udisks_daemon_log (store->daemon,
-                     UDISKS_LOG_LEVEL_DEBUG,
-                     "Cleaning up stale entries and mount points from the mounted-fs file");
+  udisks_debug ("Cleaning up stale entries and mount points from the mounted-fs file");
 
   changed = FALSE;
 

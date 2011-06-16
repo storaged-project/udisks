@@ -122,6 +122,7 @@
     <title>Daemon Implementation Details</title>
     <xi:include href="xml/udisksdaemon.xml"/>
     <xi:include href="xml/udisksdaemonutil.xml"/>
+    <xi:include href="xml/udiskslogging.xml"/>
     <xi:include href="xml/udiskslinuxblock.xml"/>
     <xi:include href="xml/udiskslinuxdrive.xml"/>
     <xi:include href="xml/udiskslinuxfilesystem.xml"/>
