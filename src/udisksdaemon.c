@@ -28,7 +28,6 @@
 #include "udisksdaemon.h"
 #include "udisksprovider.h"
 #include "udiskslinuxprovider.h"
-#include "udisksfstabprovider.h"
 #include "udisksmountmonitor.h"
 #include "udiskspersistentstore.h"
 #include "udisksbasejob.h"
@@ -63,7 +62,6 @@ struct _UDisksDaemon
   UDisksPersistentStore *persistent_store;
 
   UDisksLinuxProvider *linux_provider;
-  UDisksFstabProvider *fstab_provider;
 
   PolkitAuthority *authority;
 };
@@ -90,7 +88,6 @@ udisks_daemon_finalize (GObject *object)
 
   g_object_unref (daemon->authority);
   g_object_unref (daemon->persistent_store);
-  g_object_unref (daemon->fstab_provider);
   g_object_unref (daemon->object_manager);
   g_object_unref (daemon->linux_provider);
   g_object_unref (daemon->mount_monitor);
@@ -213,10 +210,8 @@ udisks_daemon_constructed (GObject *object)
 
   /* now add providers */
   daemon->linux_provider = udisks_linux_provider_new (daemon);
-  daemon->fstab_provider = udisks_fstab_provider_new (daemon);
 
   udisks_provider_start (UDISKS_PROVIDER (daemon->linux_provider));
-  udisks_provider_start (UDISKS_PROVIDER (daemon->fstab_provider));
 
   /* Export the ObjectManager */
   g_dbus_object_manager_server_set_connection (daemon->object_manager, daemon->connection);
@@ -357,21 +352,6 @@ udisks_daemon_get_linux_provider (UDisksDaemon *daemon)
 {
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
   return daemon->linux_provider;
-}
-
-/**
- * udisks_daemon_get_fstab_provider:
- * @daemon: A #UDisksDaemon.
- *
- * Gets the /etc/fstab Provider, if any.
- *
- * Returns: A #UDisksFstabProvider or %NULL. Do not free, the object is owned by @daemon.
- */
-UDisksFstabProvider *
-udisks_daemon_get_fstab_provider (UDisksDaemon *daemon)
-{
-  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
-  return daemon->fstab_provider;
 }
 
 /**

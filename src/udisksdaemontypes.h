@@ -58,9 +58,6 @@ typedef struct _UDisksMountMonitor UDisksMountMonitor;
 struct _UDisksMount;
 typedef struct _UDisksMount UDisksMount;
 
-struct _UDisksFstabProvider;
-typedef struct _UDisksFstabProvider UDisksFstabProvider;
-
 struct _UDisksProvider;
 typedef struct _UDisksProvider UDisksProvider;
 

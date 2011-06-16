@@ -98,8 +98,6 @@
       <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Filesystem.xml"/>
       <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Swapspace.xml"/>
       <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Job.xml"/>
-      <!-- xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.ConfigurationItem.xml"/ -->
-      <!-- xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.LinuxSysfsDevice.xml"/ -->
     </chapter>
   </part>
 
@@ -114,7 +112,6 @@
       <xi:include href="xml/UDisksObjectManagerClient.xml"/>
       <xi:include href="xml/UDisksDrive.xml"/>
       <xi:include href="xml/UDisksJob.xml"/>
-      <xi:include href="xml/UDisksConfigurationItem.xml"/>
       <xi:include href="xml/UDisksBlockDevice.xml"/>
       <xi:include href="xml/UDisksFilesystem.xml"/>
       <xi:include href="xml/UDisksSwapspace.xml"/>
@@ -142,7 +139,6 @@
       <title>Data Providers</title>
       <xi:include href="xml/udisksprovider.xml"/>
       <xi:include href="xml/udiskslinuxprovider.xml"/>
-      <xi:include href="xml/udisksfstabprovider.xml"/>
     </chapter>
   </part>
 
