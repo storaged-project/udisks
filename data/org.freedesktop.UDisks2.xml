@@ -258,7 +258,7 @@
     -->
     <property name="IdUUID" type="ay" access="read"/>
 
-    <!-- PartTable: Set to TRUE if a partition table signature was detected on the device. -->
+    <!-- PartTable: Set to %TRUE if a partition table signature was detected on the device. -->
     <property name="PartTable" type="b" access="read"/>
     <!-- PartTableScheme: The type of partition table detected.
          Known values include <literal>mbr</literal> (for <ulink
@@ -269,12 +269,12 @@
          <ulink
          url="http://en.wikipedia.org/wiki/Apple_Partition_Map">Apple
          Partition Map</ulink>). If blank, and
-         #org.freedesktop.UDisks2.BlockDevice:PartTable is TRUE, a
+         #org.freedesktop.UDisks2.BlockDevice:PartTable is %TRUE, a
          partition table was detected but its scheme is unknown.
     -->
     <property name="PartTableScheme" type="s" access="read"/>
 
-    <!-- PartEntry: Set to TRUE if the block device represents a partition. -->
+    <!-- PartEntry: Set to %TRUE if the block device represents a partition. -->
     <property name="PartEntry" type="b" access="read"/>
     <!-- PartEntryNumber: The number of the partition in the partition table. -->
     <property name="PartEntryNumber" type="u" access="read"/>
@@ -327,15 +327,16 @@
   <interface name="org.freedesktop.UDisks2.Filesystem">
     <!-- prereq: org.freedesktop.UDisks2.BlockDevice -->
 
-    <!-- SetLabel:
-         @label: The label to set.
-         @options: Options.
+    <!--
+        SetLabel:
+        @label: The label to set.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
 
-         Sets the filesystem label.
+        Sets the filesystem label.
     -->
     <method name="SetLabel">
       <arg name="label" direction="in" type="ay"/>
-      <arg name="options" direction="in" type="as"/>
+      <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
     <!-- MountPoints:
@@ -347,26 +348,33 @@
 
     <!--
         Mount:
-        @filesystem_type: Filesystem type to use or blank to use the detected type.
-        @options: Options.
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>fstype</parameter> (of type 's') and <parameter>options</parameter> (of type 's').
         @mount_path: The filesystem path where the device was mounted.
 
         Mount the filesystem.
+
+        The file system type can be overridden with the
+        <parameter>fstype</parameter> option and mount options can be
+        given in <parameter>options</parameter> as a comma-separated
+        string. Note that the mount options are validated - only a
+        small subset per filesystem type is allowed.
     -->
     <method name="Mount">
-      <arg name="filesystem_type" direction="in" type="s"/>
-      <arg name="options" direction="in" type="as"/>
+      <arg name="options" direction="in" type="a{sv}"/>
       <arg name="mount_path" direction="out" type="ay"/>
     </method>
 
     <!--
         Unmount:
-        @options: Options.
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>force</parameter> (of type 'b').
 
         Unmount a mounted device.
+
+        If the filesystem is busy, this operation fails unless the
+        option <parameter>force</parameter> is given.
     -->
     <method name="Unmount">
-      <arg name="options" direction="in" type="as"/>
+      <arg name="options" direction="in" type="a{sv}"/>
     </method>
   </interface>
 
@@ -382,25 +390,27 @@
   <interface name="org.freedesktop.UDisks2.Swapspace">
     <!-- prereq: org.freedesktop.UDisks2.BlockDevice -->
 
-    <!-- Active: Set to TRUE if the device is currently in use by the OS. -->
+    <!-- Active: Set to %TRUE if the device is currently in use by the OS. -->
     <property name="Active" type="b" access="read"/>
 
-    <!-- Start:
-         @options: Options
+    <!--
+        Start:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
 
-         Activates the swap device.
+        Activates the swap device.
     -->
     <method name="Start">
-      <arg name="options" direction="in" type="as"/>
+      <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
-    <!-- Stop:
-         @options: Options
+    <!--
+        Stop:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
 
-         Deactivates the swap device.
+        Deactivates the swap device.
     -->
     <method name="Stop">
-      <arg name="options" direction="in" type="as"/>
+      <arg name="options" direction="in" type="a{sv}"/>
     </method>
   </interface>
 
@@ -433,17 +443,17 @@
 
     <!--
         Cancel:
-        @options: Options.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
 
         Cancels the job.
     -->
     <method name="Cancel">
-      <arg name="options" direction="in" type="as"/>
+      <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
     <!--
         Completed:
-        @success: If TRUE, the job completed successfully.
+        @success: If %TRUE, the job completed successfully.
         @message: A message describing the completion of the job, e.g. an error message.
 
         Emitted when a job completes.

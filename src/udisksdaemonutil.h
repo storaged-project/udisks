@@ -41,7 +41,7 @@ gchar **udisks_daemon_util_resolve_links (const gchar *path,
 gboolean udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
                                                       UDisksObject          *object,
                                                       const gchar           *action_id,
-                                                      gboolean               auth_no_user_interaction,
+                                                      GVariant              *options,
                                                       const gchar           *message,
                                                       GDBusMethodInvocation *invocation);
 

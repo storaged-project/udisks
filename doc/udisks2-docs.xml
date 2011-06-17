@@ -89,6 +89,38 @@
           objects.
         </para>
       </sect1>
+      <sect1 id="udisks-std-options">
+        <title>The <parameter>options</parameter> parameter</title>
+        <para>
+          Many method calls take a parameter of type
+          <link linkend='G-VARIANT-TYPE-VARDICT:CAPS'>'a{sv}'</link>
+          that is normally called <parameter>options</parameter>.
+          The following table lists well-known options:
+        </para>
+        <table frame='all'>
+          <title>Well-known options</title>
+          <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+            <thead>
+              <row>
+                <entry>Option name</entry>
+                <entry>Value type</entry>
+                <entry>Description</entry>
+              </row>
+            </thead>
+            <tbody>
+              <row>
+                <entry>auth.no_user_interaction</entry>
+                <entry><link linkend="G-VARIANT-TYPE-BOOLEAN:CAPS">'b'</link></entry>
+                <entry>
+                  If set to <constant>TRUE</constant>, then no user
+                  interaction will happen when checking if the method
+                  call is authorized.
+                </entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+      </sect1>
     </chapter>
 
     <chapter>

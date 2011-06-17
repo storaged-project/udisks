@@ -468,10 +468,12 @@ lookup_object_by_drive (const gchar *drive)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gchar  *opt_mount_unmount_object_path = NULL;
-static gchar  *opt_mount_unmount_device = NULL;
-static gchar **opt_mount_unmount_options = NULL;
-static gchar  *opt_mount_filesystem_type = NULL;
+static gchar   *opt_mount_unmount_object_path = NULL;
+static gchar   *opt_mount_unmount_device = NULL;
+static gchar   *opt_mount_options = NULL;
+static gchar   *opt_mount_filesystem_type = NULL;
+static gboolean opt_unmount_force = FALSE;
+static gboolean opt_mount_unmount_no_user_interaction = FALSE;
 
 static const GOptionEntry command_mount_entries[] =
 {
@@ -503,12 +505,21 @@ static const GOptionEntry command_mount_entries[] =
     NULL
   },
   {
-    "option",
+    "options",
     'o',
     0,
-    G_OPTION_ARG_STRING_ARRAY,
-    &opt_mount_unmount_options,
-    "Mount option (can be used several times)",
+    G_OPTION_ARG_STRING,
+    &opt_mount_options,
+    "Mount options",
+    NULL
+  },
+  {
+    "no-user-interaction",
+    0, /* no short option */
+    0,
+    G_OPTION_ARG_NONE,
+    &opt_mount_unmount_no_user_interaction,
+    "Do not authenticate the user if needed",
     NULL
   },
   {
@@ -537,12 +548,21 @@ static const GOptionEntry command_unmount_entries[] =
     NULL
   },
   {
-    "option",
-    'o',
+    "force",
+    'f',
     0,
-    G_OPTION_ARG_STRING_ARRAY,
-    &opt_mount_unmount_options,
-    "Unmount option (can be used several times)",
+    G_OPTION_ARG_NONE,
+    &opt_unmount_force,
+    "Force/lazy unmount",
+    NULL
+  },
+  {
+    "no-user-interaction",
+    0, /* no short option */
+    0,
+    G_OPTION_ARG_NONE,
+    &opt_mount_unmount_no_user_interaction,
+    "Do not authenticate the user if needed",
     NULL
   },
   {
@@ -572,13 +592,17 @@ handle_command_mount_unmount (gint        *argc,
   UDisksFilesystem *filesystem;
   guint n;
   const gchar * const *mount_points;
+  GVariant *options;
+  GVariantBuilder builder;
 
   ret = 1;
   opt_mount_unmount_object_path = NULL;
   opt_mount_unmount_device = NULL;
-  opt_mount_unmount_options = NULL;
+  opt_mount_options = NULL;
   opt_mount_filesystem_type = NULL;
+  opt_unmount_force = FALSE;
   object = NULL;
+  options = NULL;
 
   if (is_mount)
     modify_argv0_for_command (argc, argv, "mount");
@@ -740,8 +764,40 @@ handle_command_mount_unmount (gint        *argc,
 
   if (opt_mount_filesystem_type == NULL)
     opt_mount_filesystem_type = g_strdup ("");
-  if (opt_mount_unmount_options == NULL)
-    opt_mount_unmount_options = g_new0 (gchar *, 1);
+
+  g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
+  if (opt_mount_unmount_no_user_interaction)
+    {
+      g_variant_builder_add (&builder,
+                             "{sv}",
+                             "auth.no_user_interaction", g_variant_new_boolean (TRUE));
+    }
+  if (is_mount)
+    {
+      if (opt_mount_options != NULL)
+        {
+          g_variant_builder_add (&builder,
+                                 "{sv}",
+                                 "options", g_variant_new_string (opt_mount_options));
+        }
+      if (opt_mount_filesystem_type != NULL)
+        {
+          g_variant_builder_add (&builder,
+                                 "{sv}",
+                                 "fstype", g_variant_new_string (opt_mount_filesystem_type));
+        }
+    }
+  else
+    {
+      if (opt_unmount_force)
+        {
+          g_variant_builder_add (&builder,
+                                 "{sv}",
+                                 "force", g_variant_new_boolean (TRUE));
+        }
+    }
+  options = g_variant_builder_end (&builder);
+  g_variant_ref_sink (options);
 
  try_again:
   if (is_mount)
@@ -751,8 +807,7 @@ handle_command_mount_unmount (gint        *argc,
 
       error = NULL;
       if (!udisks_filesystem_call_mount_sync (filesystem,
-                                              opt_mount_filesystem_type,
-                                              (const gchar *const *) opt_mount_unmount_options,
+                                              options,
                                               &mount_path,
                                               NULL,                       /* GCancellable */
                                               &error))
@@ -782,7 +837,7 @@ handle_command_mount_unmount (gint        *argc,
 
       error = NULL;
       if (!udisks_filesystem_call_unmount_sync (filesystem,
-                                                (const gchar *const *) opt_mount_unmount_options,
+                                                options,
                                                 NULL,         /* GCancellable */
                                                 &error))
         {
@@ -809,10 +864,12 @@ handle_command_mount_unmount (gint        *argc,
   g_object_unref (object);
 
  out:
+  if (options != NULL)
+    g_variant_unref (options);
   g_option_context_free (o);
   g_free (opt_mount_unmount_object_path);
   g_free (opt_mount_unmount_device);
-  g_strfreev (opt_mount_unmount_options);
+  g_free (opt_mount_options);
   g_free (opt_mount_filesystem_type);
   return ret;
 }

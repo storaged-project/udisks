@@ -289,7 +289,7 @@ udisks_daemon_util_resolve_links (const gchar *path,
  * @daemon: A #UDisksDaemon.
  * @object: The #GDBusObject that the call is on.
  * @action_id: The action id to check for.
- * @auth_no_user_interaction: If %TRUE, user interaction will never happen.
+ * @options: (allow-none): A #GVariant to check for the <literal>auth.no_user_interaction</literal> option or %NULL.
  * @message: The message to convey (use N_).
  * @invocation: The invocation to check for.
  *
@@ -313,7 +313,7 @@ gboolean
 udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
                                              UDisksObject          *object,
                                              const gchar           *action_id,
-                                             gboolean               auth_no_user_interaction,
+                                             GVariant              *options,
                                              const gchar           *message,
                                              GDBusMethodInvocation *invocation)
 {
@@ -324,14 +324,23 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
   GError *error;
   gboolean ret;
   UDisksBlockDevice *block;
+  gboolean auth_no_user_interaction;
 
   ret = FALSE;
   subject = NULL;
   details = NULL;
   result = NULL;
   flags = POLKIT_CHECK_AUTHORIZATION_FLAGS_NONE;
+  auth_no_user_interaction = FALSE;
 
   subject = polkit_system_bus_name_new (g_dbus_method_invocation_get_sender (invocation));
+  if (options != NULL)
+    {
+      g_variant_lookup (options,
+                        "auth.no_user_interaction",
+                        "b",
+                        &auth_no_user_interaction);
+    }
   if (!auth_no_user_interaction)
     flags = POLKIT_CHECK_AUTHORIZATION_FLAGS_ALLOW_USER_INTERACTION;
 

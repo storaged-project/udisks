@@ -181,7 +181,7 @@ udisks_base_job_get_cancellable  (UDisksBaseJob  *job)
 static gboolean
 handle_cancel (UDisksJob              *object,
                GDBusMethodInvocation  *invocation,
-               const gchar* const     *options)
+               GVariant               *options)
 {
   UDisksBaseJob *job = UDISKS_BASE_JOB (object);
 

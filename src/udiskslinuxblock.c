@@ -812,41 +812,22 @@ swapspace_start_on_job_completed (UDisksJob   *job,
 static gboolean
 swapspace_handle_start (UDisksSwapspace        *swapspace,
                         GDBusMethodInvocation  *invocation,
-                        const gchar* const     *options,
+                        GVariant               *options,
                         gpointer                user_data)
 {
   UDisksObject *object;
   UDisksDaemon *daemon;
   UDisksBlockDevice *block;
-  gboolean auth_no_user_interaction;
-  guint n;
   UDisksBaseJob *job;
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (swapspace)));
   daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
   block = udisks_object_peek_block_device (object);
 
-  auth_no_user_interaction = FALSE;
-  for (n = 0; options != NULL && options[n] != NULL; n++)
-    {
-      const gchar *option = options[n];
-      if (g_strcmp0 (option, "auth_no_user_interaction") == 0)
-        {
-          auth_no_user_interaction = TRUE;
-          continue;
-        }
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_OPTION_NOT_PERMITTED,
-                                             "Option `%s' is not allowed",
-                                             option);
-      goto out;
-    }
-
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
                                                     "org.freedesktop.udisks2.swap",
-                                                    auth_no_user_interaction,
+                                                    options,
                                                     N_("Authentication is required to activate swapspace on $(udisks2.device)"),
                                                     invocation))
     goto out;
@@ -887,41 +868,22 @@ swapspace_stop_on_job_completed (UDisksJob   *job,
 static gboolean
 swapspace_handle_stop (UDisksSwapspace        *swapspace,
                        GDBusMethodInvocation  *invocation,
-                       const gchar* const     *options,
+                       GVariant               *options,
                        gpointer                user_data)
 {
   UDisksObject *object;
   UDisksDaemon *daemon;
   UDisksBlockDevice *block;
-  gboolean auth_no_user_interaction;
-  guint n;
   UDisksBaseJob *job;
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (swapspace)));
   daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
   block = udisks_object_peek_block_device (object);
 
-  auth_no_user_interaction = FALSE;
-  for (n = 0; options != NULL && options[n] != NULL; n++)
-    {
-      const gchar *option = options[n];
-      if (g_strcmp0 (option, "auth_no_user_interaction") == 0)
-        {
-          auth_no_user_interaction = TRUE;
-          continue;
-        }
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_OPTION_NOT_PERMITTED,
-                                             "Option `%s' is not allowed",
-                                             option);
-      goto out;
-    }
-
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
                                                     "org.freedesktop.udisks2.swap",
-                                                    auth_no_user_interaction,
+                                                    options,
                                                     N_("Authentication is required to deactivate swapspace on $(udisks2.device)"),
                                                     invocation))
     goto out;

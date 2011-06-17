@@ -400,12 +400,13 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
 static gchar **
 prepend_default_mount_options (const FSMountOptions *fsmo,
                                uid_t caller_uid,
-                               const gchar * const *given_options)
+                               GVariant *given_options)
 {
   GPtrArray *options;
-  int n;
+  gint n;
   gchar *s;
   gid_t gid;
+  const gchar *option_string;
 
   options = g_ptr_array_new ();
   if (fsmo != NULL)
@@ -434,11 +435,17 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
             }
         }
     }
-  for (n = 0; given_options[n] != NULL; n++)
-    {
-      g_ptr_array_add (options, g_strdup (given_options[n]));
-    }
 
+  if (g_variant_lookup (given_options,
+                        "options",
+                        "&s", &option_string))
+    {
+      gchar **split_option_string;
+      split_option_string = g_strsplit (option_string, ",", -1);
+      for (n = 0; split_option_string[n] != NULL; n++)
+        g_ptr_array_add (options, split_option_string[n]); /* steals string */
+      g_free (split_option_string);
+    }
   g_ptr_array_add (options, NULL);
 
   return (char **) g_ptr_array_free (options, FALSE);
@@ -449,7 +456,7 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
 /*
  * calculate_fs_type: <internal>
  * @block: A #UDisksBlockDevice.
- * @requested_fs_type: The requested file system type or %NULL.
+ * @given_options: The a{sv} #GVariant.
  * @error: Return location for error or %NULL.
  *
  * Calculates the file system type to use.
@@ -458,18 +465,22 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
  */
 static gchar *
 calculate_fs_type (UDisksBlockDevice         *block,
-                   const gchar               *requested_fs_type,
+                   GVariant                  *given_options,
                    GError                   **error)
 {
   gchar *fs_type_to_use;
   const gchar *probed_fs_type;
+  const gchar *requested_fs_type;
 
   probed_fs_type = NULL;
   if (block != NULL)
     probed_fs_type = udisks_block_device_get_id_type (block);
 
   fs_type_to_use = NULL;
-  if (requested_fs_type != NULL && strlen (requested_fs_type) > 0)
+  if (g_variant_lookup (given_options,
+                        "fstype",
+                        "&s", &requested_fs_type) &&
+      strlen (requested_fs_type) > 0)
     {
       /* TODO: maybe check that it's compatible with probed_fs_type */
       fs_type_to_use = g_strdup (requested_fs_type);
@@ -492,8 +503,7 @@ calculate_fs_type (UDisksBlockDevice         *block,
  * @block: A #UDisksBlockDevice.
  * @caller_uid: The uid of the caller making the request.
  * @fs_type: The filesystem type to use or %NULL.
- * @requested_options: Options requested by the caller.
- * @out_auth_no_user_interaction: Return location for whether the 'auth_no_user_interaction' option was passed or %NULL.
+ * @options: Options requested by the caller.
  * @error: Return location for error or %NULL.
  *
  * Calculates the mount option string to use. Ensures (by returning an
@@ -505,8 +515,7 @@ static gchar *
 calculate_mount_options (UDisksBlockDevice         *block,
                          uid_t                      caller_uid,
                          const gchar               *fs_type,
-                         const gchar *const        *requested_options,
-                         gboolean                  *out_auth_no_user_interaction,
+                         GVariant                  *options,
                          GError                   **error)
 {
   const FSMountOptions *fsmo;
@@ -514,30 +523,22 @@ calculate_mount_options (UDisksBlockDevice         *block,
   gchar *options_to_use_str;
   GString *str;
   guint n;
-  gboolean auth_no_user_interaction;
 
   options_to_use = NULL;
   options_to_use_str = NULL;
-  auth_no_user_interaction = FALSE;
 
   fsmo = find_mount_options_for_fs (fs_type);
 
   /* always prepend some reasonable default mount options; these are
    * chosen here; the user can override them if he wants to
    */
-  options_to_use = prepend_default_mount_options (fsmo, caller_uid, requested_options);
+  options_to_use = prepend_default_mount_options (fsmo, caller_uid, options);
 
   /* validate mount options */
   str = g_string_new ("uhelper=udisks2,nodev,nosuid");
   for (n = 0; options_to_use[n] != NULL; n++)
     {
       const gchar *option = options_to_use[n];
-
-      if (g_strcmp0 (option, "auth_no_user_interaction") == 0)
-        {
-          auth_no_user_interaction = TRUE;
-          continue;
-        }
 
       /* avoid attacks like passing "shortname=lower,uid=0" as a single mount option */
       if (strstr (option, ",") != NULL)
@@ -572,9 +573,6 @@ calculate_mount_options (UDisksBlockDevice         *block,
   g_strfreev (options_to_use);
 
   g_assert (options_to_use_str == NULL || g_utf8_validate (options_to_use_str, -1, NULL));
-
-  if (out_auth_no_user_interaction != NULL)
-    *out_auth_no_user_interaction = auth_no_user_interaction;
 
   return options_to_use_str;
 }
@@ -705,8 +703,7 @@ calculate_mount_point (UDisksBlockDevice         *block,
 static gboolean
 handle_mount (UDisksFilesystem       *filesystem,
               GDBusMethodInvocation  *invocation,
-              const gchar            *requested_fs_type,
-              const gchar* const     *requested_options)
+              GVariant               *options)
 {
   UDisksObject *object;
   UDisksBlockDevice *block;
@@ -723,7 +720,6 @@ handle_mount (UDisksFilesystem       *filesystem,
   gchar *escaped_mount_point_to_use;
   gchar *error_message;
   GError *error;
-  gboolean auth_no_user_interaction;
 
   object = NULL;
   daemon = NULL;
@@ -804,7 +800,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   /* calculate filesystem type (guaranteed to be valid UTF-8) */
   error = NULL;
   fs_type_to_use = calculate_fs_type (block,
-                                      requested_fs_type,
+                                      options,
                                       &error);
   if (fs_type_to_use == NULL)
     {
@@ -818,8 +814,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   mount_options_to_use = calculate_mount_options (block,
                                                   caller_uid,
                                                   fs_type_to_use,
-                                                  requested_options,
-                                                  &auth_no_user_interaction,
+                                                  options,
                                                   &error);
   if (mount_options_to_use == NULL)
     {
@@ -837,7 +832,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
                                                     "org.freedesktop.udisks2.filesystem-mount",
-                                                    auth_no_user_interaction,
+                                                    options,
                                                     N_("Authentication is required to mount $(udisks2.device)"),
                                                     invocation))
     goto out;
@@ -945,7 +940,7 @@ handle_mount (UDisksFilesystem       *filesystem,
 static gboolean
 handle_unmount (UDisksFilesystem       *filesystem,
                 GDBusMethodInvocation  *invocation,
-                const gchar* const     *options)
+                GVariant               *options)
 {
   UDisksObject *object;
   UDisksBlockDevice *block;
@@ -958,7 +953,6 @@ handle_unmount (UDisksFilesystem       *filesystem,
   uid_t caller_uid;
   gchar *error_message;
   const gchar *const *mount_points;
-  guint n;
   gboolean opt_force;
   gboolean rc;
 
@@ -972,22 +966,12 @@ handle_unmount (UDisksFilesystem       *filesystem,
   daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
   store = udisks_daemon_get_persistent_store (daemon);
 
-  for (n = 0; options != NULL && options[n] != NULL; n++)
+  if (options != NULL)
     {
-      const gchar *option = options[n];
-      if (g_strcmp0 (option, "force") == 0)
-        {
-          opt_force = TRUE;
-        }
-      else
-        {
-          g_dbus_method_invocation_return_error (invocation,
-                                                 UDISKS_ERROR,
-                                                 UDISKS_ERROR_OPTION_NOT_PERMITTED,
-                                                 "Unsupported option `%s'",
-                                                 option);
-          goto out;
-        }
+      g_variant_lookup (options,
+                        "force",
+                        "b",
+                        &opt_force);
     }
 
   mount_points = udisks_filesystem_get_mount_points (filesystem);
@@ -1182,22 +1166,19 @@ static gboolean
 handle_set_label (UDisksFilesystem       *filesystem,
                   GDBusMethodInvocation  *invocation,
                   const gchar            *label,
-                  const gchar* const     *requested_options)
+                  GVariant               *options)
 {
   UDisksBlockDevice *block;
   UDisksObject *object;
   UDisksDaemon *daemon;
   const gchar *probed_fs_usage;
   const gchar *probed_fs_type;
-  gboolean auth_no_user_interaction;
   gboolean supports_online;
-  guint n;
   UDisksBaseJob *job;
   gchar *escaped_label;
 
   object = NULL;
   daemon = NULL;
-  auth_no_user_interaction = FALSE;
   supports_online = FALSE;
   escaped_label = NULL;
 
@@ -1243,23 +1224,6 @@ handle_set_label (UDisksFilesystem       *filesystem,
         }
     }
 
-  for (n = 0; requested_options != NULL && requested_options[n] != NULL; n++)
-    {
-      const gchar *option = requested_options[n];
-      if (g_strcmp0 (option, "auth_no_user_interaction") == 0)
-        {
-          auth_no_user_interaction = TRUE;
-          continue;
-        }
-
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_OPTION_NOT_PERMITTED,
-                                             "Option `%s' is not allowed",
-                                             option);
-      goto out;
-    }
-
   /* Check that the user is actually authorized to change the
    * filesystem label.
    *
@@ -1268,7 +1232,7 @@ handle_set_label (UDisksFilesystem       *filesystem,
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
                                                     "org.freedesktop.udisks2.modify",
-                                                    auth_no_user_interaction,
+                                                    options,
                                                     N_("Authentication is required to change the label on $(udisks2.device)"),
                                                     invocation))
     goto out;
