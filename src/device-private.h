@@ -59,6 +59,9 @@ struct DevicePrivate
   gboolean job_is_cancellable;
   double job_percentage;
 
+  gboolean checked_in_kernel_polling;
+  gboolean using_in_kernel_polling;
+
   guint linux_md_poll_timeout_id;
 
   /* A list of current polling inhibitors (Inhibitor objects) */

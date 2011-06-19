@@ -31,6 +31,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <errno.h>
+#include <gudev/gudev.h>
 
 #include "poller.h"
 #include "device.h"
@@ -304,6 +305,52 @@ poller_setup (int argc,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+check_in_kernel_polling (Device* d)
+{
+  /* only check once */
+  if (!d->priv->checked_in_kernel_polling)
+    {
+      int poll_time;
+      int fd;
+      char c;
+
+      d->priv->checked_in_kernel_polling = TRUE;
+
+      poll_time = g_udev_device_get_sysfs_attr_as_int (d->priv->d, "events_poll_msecs");
+#ifdef POLL_SHOW_DEBUG
+      g_print("**** POLLER (%d): per-device poll time for %s: %i\n", getpid (), d->priv->device_file, poll_time);
+#endif
+
+      if (poll_time >= 0)
+	{
+	  d->priv->using_in_kernel_polling = (poll_time > 0);
+	  goto out;
+	}
+
+      /* -1 means using global polling interval, so check the global default */
+      /* check global default */
+      fd = open("/sys/module/block/parameters/events_dfl_poll_msecs", O_RDONLY);
+      if (fd > 0)
+	{
+	  if (read (fd, &c, 1) > 0)
+	    {
+#ifdef POLL_SHOW_DEBUG
+	      g_print("**** POLLER (%d): global poll time first char: %c\n", getpid (), c);
+#endif
+	      /* if this is positive, we use in-kernel polling */
+	      d->priv->using_in_kernel_polling = (c != '0' && c != '-');
+	    }
+	  close (fd);
+	}
+    }
+
+out:
+  return d->priv->using_in_kernel_polling;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 void
 poller_set_devices (GList *devices)
 {
@@ -319,6 +366,14 @@ poller_set_devices (GList *devices)
   for (l = devices, n = 0; l != NULL; l = l->next)
     {
       Device *device = DEVICE (l->data);
+
+      if (check_in_kernel_polling (device))
+	{
+#ifdef POLL_SHOW_DEBUG
+	  g_print("**** POLLER (%d): Kernel is polling %s already, ignoring\n", getpid (), device->priv->device_file);
+#endif
+	  continue;
+	}
 
       device_array[n++] = device->priv->device_file;
     }
