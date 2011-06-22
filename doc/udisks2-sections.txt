@@ -61,6 +61,8 @@ udisks_daemon_get_mount_monitor
 udisks_daemon_get_linux_provider
 udisks_daemon_get_persistent_store
 udisks_daemon_get_authority
+UDisksDaemonWaitFunc
+udisks_daemon_wait_for_object_sync
 udisks_daemon_launch_simple_job
 udisks_daemon_launch_spawned_job
 udisks_daemon_launch_spawned_job_sync
@@ -282,6 +284,18 @@ udisks_linux_filesystem_get_type
 </SECTION>
 
 <SECTION>
+<FILE>udiskslinuxencrypted</FILE>
+UDisksLinuxEncrypted
+udisks_linux_encrypted_new
+<SUBSECTION Standard>
+UDISKS_LINUX_ENCRYPTED
+UDISKS_IS_LINUX_ENCRYPTED
+UDISKS_TYPE_LINUX_ENCRYPTED
+<SUBSECTION Private>
+udisks_linux_encrypted_get_type
+</SECTION>
+
+<SECTION>
 <FILE>UDisksObject</FILE>
 <TITLE>UDisksObject</TITLE>
 UDisksObject
@@ -291,11 +305,13 @@ udisks_object_get_drive
 udisks_object_get_filesystem
 udisks_object_get_job
 udisks_object_get_swapspace
+udisks_object_get_encrypted
 udisks_object_peek_block_device
 udisks_object_peek_drive
 udisks_object_peek_filesystem
 udisks_object_peek_job
 udisks_object_peek_swapspace
+udisks_object_peek_encrypted
 UDisksObjectProxy
 UDisksObjectProxyClass
 udisks_object_proxy_new
@@ -307,6 +323,7 @@ udisks_object_skeleton_set_drive
 udisks_object_skeleton_set_filesystem
 udisks_object_skeleton_set_job
 udisks_object_skeleton_set_swapspace
+udisks_object_skeleton_set_encrypted
 <SUBSECTION Standard>
 udisks_object_get_type
 udisks_object_proxy_get_type
@@ -572,6 +589,54 @@ UDisksSwapspaceSkeletonPrivate
 udisks_swapspace_get_type
 udisks_swapspace_proxy_get_type
 udisks_swapspace_skeleton_get_type
+</SECTION>
+
+<SECTION>
+<FILE>UDisksEncrypted</FILE>
+UDisksEncrypted
+UDisksEncryptedIface
+udisks_encrypted_interface_info
+udisks_encrypted_call_unlock
+udisks_encrypted_call_unlock_finish
+udisks_encrypted_call_unlock_sync
+udisks_encrypted_complete_unlock
+udisks_encrypted_call_lock
+udisks_encrypted_call_lock_finish
+udisks_encrypted_call_lock_sync
+udisks_encrypted_complete_lock
+UDisksEncryptedProxy
+UDisksEncryptedProxyClass
+udisks_encrypted_proxy_new
+udisks_encrypted_proxy_new_finish
+udisks_encrypted_proxy_new_sync
+udisks_encrypted_proxy_new_for_bus
+udisks_encrypted_proxy_new_for_bus_finish
+udisks_encrypted_proxy_new_for_bus_sync
+UDisksEncryptedSkeleton
+UDisksEncryptedSkeletonClass
+udisks_encrypted_skeleton_new
+<SUBSECTION Standard>
+UDISKS_TYPE_ENCRYPTED
+UDISKS_IS_ENCRYPTED
+UDISKS_ENCRYPTED
+UDISKS_ENCRYPTED_GET_IFACE
+UDISKS_TYPE_ENCRYPTED_PROXY
+UDISKS_IS_ENCRYPTED_PROXY
+UDISKS_IS_ENCRYPTED_PROXY_CLASS
+UDISKS_ENCRYPTED_PROXY
+UDISKS_ENCRYPTED_PROXY_CLASS
+UDISKS_ENCRYPTED_PROXY_GET_CLASS
+UDISKS_TYPE_ENCRYPTED_SKELETON
+UDISKS_IS_ENCRYPTED_SKELETON
+UDISKS_IS_ENCRYPTED_SKELETON_CLASS
+UDISKS_ENCRYPTED_SKELETON
+UDISKS_ENCRYPTED_SKELETON_CLASS
+UDISKS_ENCRYPTED_SKELETON_GET_CLASS
+UDisksEncryptedProxyPrivate
+UDisksEncryptedSkeletonPrivate
+udisks_encrypted_get_type
+udisks_encrypted_proxy_get_type
+udisks_encrypted_skeleton_get_type
 </SECTION>
 
 <SECTION>

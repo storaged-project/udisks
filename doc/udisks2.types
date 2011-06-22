@@ -13,6 +13,7 @@ udisks_provider_get_type
 udisks_linux_provider_get_type
 udisks_persistent_store_get_type
 udisks_linux_filesystem_get_type
+udisks_linux_encrypted_get_type
 
 udisks_drive_get_type
 udisks_drive_proxy_get_type
@@ -26,6 +27,9 @@ udisks_filesystem_skeleton_get_type
 udisks_swapspace_get_type
 udisks_swapspace_proxy_get_type
 udisks_swapspace_skeleton_get_type
+udisks_encrypted_get_type
+udisks_encrypted_proxy_get_type
+udisks_encrypted_skeleton_get_type
 udisks_job_get_type
 udisks_job_proxy_get_type
 udisks_job_skeleton_get_type

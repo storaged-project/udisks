@@ -37,6 +37,7 @@
 #include "udisksmountmonitor.h"
 #include "udiskslinuxdrive.h"
 #include "udiskslinuxfilesystem.h"
+#include "udiskslinuxencrypted.h"
 #include "udiskspersistentstore.h"
 #include "udiskslinuxprovider.h"
 
@@ -69,6 +70,7 @@ struct _UDisksLinuxBlock
   UDisksBlockDevice *iface_block_device;
   UDisksFilesystem *iface_filesystem;
   UDisksSwapspace *iface_swapspace;
+  UDisksEncrypted *iface_encrypted;
 };
 
 struct _UDisksLinuxBlockClass
@@ -109,6 +111,8 @@ udisks_linux_block_finalize (GObject *object)
     g_object_unref (block->iface_filesystem);
   if (block->iface_swapspace != NULL)
     g_object_unref (block->iface_swapspace);
+  if (block->iface_encrypted != NULL)
+    g_object_unref (block->iface_encrypted);
 
   if (G_OBJECT_CLASS (udisks_linux_block_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_block_parent_class)->finalize (object);
@@ -958,6 +962,35 @@ swapspace_update (UDisksLinuxBlock  *block,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+encrypted_check (UDisksLinuxBlock *block)
+{
+  gboolean ret;
+
+  ret = FALSE;
+  if (g_strcmp0 (udisks_block_device_get_id_usage (block->iface_block_device), "crypto") == 0 &&
+      g_strcmp0 (udisks_block_device_get_id_type (block->iface_block_device), "crypto_LUKS") == 0)
+    ret = TRUE;
+
+  return ret;
+}
+
+static void
+encrypted_connect (UDisksLinuxBlock *block)
+{
+  /* do nothing */
+}
+
+static void
+encrypted_update (UDisksLinuxBlock  *block,
+                  const gchar       *uevent_action,
+                  GDBusInterface    *_iface)
+{
+  /* do nothing */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 /**
  * udisks_linux_block_uevent:
  * @block: A #UDisksLinuxBlock.
@@ -987,6 +1020,8 @@ udisks_linux_block_uevent (UDisksLinuxBlock *block,
                 UDISKS_TYPE_LINUX_FILESYSTEM, &block->iface_filesystem);
   update_iface (block, action, swapspace_check, swapspace_connect, swapspace_update,
                 UDISKS_TYPE_SWAPSPACE_SKELETON, &block->iface_swapspace);
+  update_iface (block, action, encrypted_check, encrypted_connect, encrypted_update,
+                UDISKS_TYPE_LINUX_ENCRYPTED, &block->iface_encrypted);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

@@ -19,9 +19,19 @@
     </defaults>
   </action>
 
-  <action id="org.freedesktop.udisks2.modify">
-    <_description>Modify a device</_description>
-    <_message>Authentication is required to modify a device</_message>
+  <action id="org.freedesktop.udisks2.encrypted-unlock">
+    <_description>Unlock an encrypted device</_description>
+    <_message>Authentication is required to unlock the encrypted device</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.udisks2.encrypted-lock-others">
+    <_description>Lock an encrypted device unlocked by another user</_description>
+    <_message>Authentication is required to lock the unlocked encrypted device</_message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -29,9 +39,9 @@
     </defaults>
   </action>
 
-  <action id="org.freedesktop.udisks2.iscsi">
-    <_description>Configure iSCSI devices</_description>
-    <_message>Authentication is required to configure iSCSI devices</_message>
+  <action id="org.freedesktop.udisks2.modify">
+    <_description>Modify a device</_description>
+    <_message>Authentication is required to modify a device</_message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>

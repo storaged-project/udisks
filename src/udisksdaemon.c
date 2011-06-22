@@ -671,3 +671,65 @@ udisks_daemon_launch_spawned_job_sync (UDisksDaemon    *daemon,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_daemon_wait_for_object_sync:
+ * @daemon: A #UDisksDaemon.
+ * @wait_func: Function to check for desired object.
+ * @user_data: User data to pass to @wait_func.
+ * @user_data_free_func: (allow-none): Function to free @user_data or %NULL.
+ * @timeout_seconds: Maximum time to wait for the object (in seconds) or 0 to never wait.
+ * @error: (allow-none): Return location for error or %NULL.
+ *
+ * Blocks the calling thread until an object picked by @wait_func is
+ * available or until @timeout_seconds has passed (in which case the
+ * function fails with %UDISKS_ERROR_TIMED_OUT).
+ *
+ * Note that @wait_func will be called on all objects - possibly more than once.
+ *
+ * Returns: (transfer full): The object picked by @wait_func or %NULL if @error is set.
+ */
+UDisksObject *
+udisks_daemon_wait_for_object_sync (UDisksDaemon         *daemon,
+                                    UDisksDaemonWaitFunc  wait_func,
+                                    gpointer              user_data,
+                                    GDestroyNotify        user_data_free_func,
+                                    guint                 timeout_seconds,
+                                    GError              **error)
+{
+  GDBusObjectManagerServer *manager;
+  UDisksObject *ret;
+  GList *objects;
+  GList *l;
+
+  /* TODO: support GCancellable */
+
+  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
+  g_return_val_if_fail (wait_func != NULL, NULL);
+
+  ret = NULL;
+
+  g_object_ref (daemon);
+  manager = udisks_daemon_get_object_manager (daemon);
+  objects = g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (manager));
+  for (l = objects; l != NULL; l = l->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      if (wait_func (daemon, object, user_data))
+        {
+          ret = g_object_ref (object);
+          break;
+        }
+    }
+  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+  g_list_free (objects);
+
+  /* TODO: actually sit and wait for up to @timeout_seconds if the object isn't there already */
+
+  if (user_data_free_func != NULL)
+    user_data_free_func (user_data);
+
+  g_object_unref (daemon);
+
+  return ret;
+}

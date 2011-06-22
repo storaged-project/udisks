@@ -303,8 +303,9 @@
 
     <!-- CryptoBackingDevice:
          The #org.freedesktop.UDisks2.BlockDevice object that is
-         backing the device or <literal>/</literal> if unknown or not
-         an encrypted device.
+         backing the device or <literal>/</literal> if unknown or if
+         the block device is not the cleartext device for an encrypted
+         device.
     -->
     <property name="CryptoBackingDevice" type="o" access="read"/>
 
@@ -410,6 +411,43 @@
         Deactivates the swap device.
     -->
     <method name="Stop">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+  <!--
+      org.freedesktop.UDisks2.Encrypted:
+      @short_description: Block device containing encrypted data
+
+      This interface is used for #org.freedesktop.UDisks2.BlockDevice
+      devices that contain encrypted data.
+  -->
+  <interface name="org.freedesktop.UDisks2.Encrypted">
+    <!-- prereq: org.freedesktop.UDisks2.BlockDevice -->
+
+    <!--
+        Unlock:
+        @passphrase: The passphrase to use.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @cleartext_device: An object path to the unlocked cleartext #org.freedesktop.UDisks2.BlockDevice.
+
+        Tries to unlock the encrypted device using @passphrase.
+    -->
+    <method name="Unlock">
+      <arg name="passphrase" direction="in" type="ay"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="cleartext_device" direction="out" type="o"/>
+    </method>
+
+    <!--
+        Lock:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Locks the encrypted device.
+    -->
+    <method name="Lock">
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
   </interface>

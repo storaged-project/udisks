@@ -37,6 +37,28 @@ UDisksMountMonitor       *udisks_daemon_get_mount_monitor     (UDisksDaemon    *
 UDisksLinuxProvider      *udisks_daemon_get_linux_provider    (UDisksDaemon    *daemon);
 UDisksPersistentStore    *udisks_daemon_get_persistent_store  (UDisksDaemon    *daemon);
 PolkitAuthority          *udisks_daemon_get_authority         (UDisksDaemon    *daemon);
+
+/**
+ * UDisksDaemonWaitFunc:
+ * @daemon: A #UDisksDaemon.
+ * @object: A #UDisksObject to check.
+ * @user_data: The #gpointer passed to udisks_daemon_wait_for_object_sync().
+ *
+ * Type for callback function used with udisks_daemon_wait_for_object_sync().
+ *
+ * Returns: %TRUE if the object is the one to wait for.
+ */
+typedef gboolean (*UDisksDaemonWaitFunc) (UDisksDaemon *daemon,
+                                          UDisksObject *object,
+                                          gpointer      user_data);
+
+UDisksObject             *udisks_daemon_wait_for_object_sync  (UDisksDaemon         *daemon,
+                                                               UDisksDaemonWaitFunc  wait_func,
+                                                               gpointer              user_data,
+                                                               GDestroyNotify        user_data_free_func,
+                                                               guint                 timeout_seconds,
+                                                               GError              **error);
+
 UDisksBaseJob            *udisks_daemon_launch_simple_job     (UDisksDaemon    *daemon,
                                                                GCancellable    *cancellable);
 UDisksBaseJob            *udisks_daemon_launch_spawned_job    (UDisksDaemon    *daemon,

@@ -18,8 +18,8 @@
  *
  */
 
-#ifndef __TYPES_H__
-#define __TYPES_H__
+#ifndef __UDISKS_DAEMON_TYPES_H__
+#define __UDISKS_DAEMON_TYPES_H__
 
 #include <gio/gio.h>
 #include <polkit/polkit.h>
@@ -63,6 +63,9 @@ typedef struct _UDisksProvider UDisksProvider;
 
 struct _UDisksLinuxFilesystem;
 typedef struct _UDisksLinuxFilesystem UDisksLinuxFilesystem;
+
+struct _UDisksLinuxEncrypted;
+typedef struct _UDisksLinuxEncrypted UDisksLinuxEncrypted;
 
 /**
  * UDisksThreadedJobFunc:
@@ -121,4 +124,4 @@ typedef enum
   UDISKS_LOG_LEVEL_ERROR
 } UDisksLogLevel;
 
-#endif
+#endif /* __UDISKS_DAEMON_TYPES_H__ */

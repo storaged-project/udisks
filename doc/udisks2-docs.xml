@@ -129,6 +129,7 @@
       <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.BlockDevice.xml"/>
       <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Filesystem.xml"/>
       <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Swapspace.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Encrypted.xml"/>
       <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Job.xml"/>
     </chapter>
   </part>
@@ -147,6 +148,7 @@
       <xi:include href="xml/UDisksBlockDevice.xml"/>
       <xi:include href="xml/UDisksFilesystem.xml"/>
       <xi:include href="xml/UDisksSwapspace.xml"/>
+      <xi:include href="xml/UDisksEncrypted.xml"/>
     </chapter>
   </part>
 
@@ -158,6 +160,7 @@
     <xi:include href="xml/udiskslinuxblock.xml"/>
     <xi:include href="xml/udiskslinuxdrive.xml"/>
     <xi:include href="xml/udiskslinuxfilesystem.xml"/>
+    <xi:include href="xml/udiskslinuxencrypted.xml"/>
     <xi:include href="xml/udisksmount.xml"/>
     <xi:include href="xml/udisksmountmonitor.xml"/>
     <xi:include href="xml/udiskspersistentstore.xml"/>
