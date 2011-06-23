@@ -1691,6 +1691,26 @@
       </doc:para></doc:description></doc:doc>
     </property>
 
+    <property name="DeviceAutoMountHint" type="s" access="read">
+      <doc:doc><doc:description><doc:para>
+            A hint to the desktop that indicates if a device should be automounted.
+            Possible values are:
+            <doc:list>
+              <doc:item>
+                <doc:term>always</doc:term>
+                <doc:definition>Device should always be auto-mounted.</doc:definition>
+              </doc:item>
+              <doc:item>
+                <doc:term>never</doc:term>
+                <doc:definition>Device should never be auto-mounted.</doc:definition>
+              </doc:item>
+            </doc:list>
+            An empty string is interpreted to mean that there is no
+            hint - the desktop auto-mounter should make its own
+            decision of whether to auto-mount the device.
+            </doc:para></doc:description></doc:doc>
+    </property>
+
     <property name="JobInProgress" type="b" access="read">
       <doc:doc><doc:description><doc:para>
             The job properties specify if a job initiated via the
