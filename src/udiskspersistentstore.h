@@ -47,10 +47,8 @@ typedef enum
 #define UDISKS_IS_PERSISTENT_STORE(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_PERSISTENT_STORE))
 
 GType                   udisks_persistent_store_get_type       (void) G_GNUC_CONST;
-UDisksPersistentStore  *udisks_persistent_store_new            (UDisksDaemon            *daemon,
-                                                                const gchar             *path,
+UDisksPersistentStore  *udisks_persistent_store_new            (const gchar             *path,
                                                                 const gchar             *temp_path);
-UDisksDaemon           *udisks_persistent_store_get_daemon     (UDisksPersistentStore   *store);
 const gchar            *udisks_persistent_store_get_path       (UDisksPersistentStore   *store);
 const gchar            *udisks_persistent_store_get_temp_path  (UDisksPersistentStore   *store);
 
@@ -65,24 +63,6 @@ gboolean                udisks_persistent_store_set            (UDisksPersistent
                                                                 const GVariantType      *type,
                                                                 GVariant                *value,
                                                                 GError                 **error);
-
-gboolean  udisks_persistent_store_mounted_fs_add     (UDisksPersistentStore   *store,
-                                                      const gchar             *block_device_file,
-                                                      const gchar             *mount_point,
-                                                      uid_t                    uid,
-                                                      GError                 **error);
-gboolean  udisks_persistent_store_mounted_fs_remove  (UDisksPersistentStore   *store,
-                                                      const gchar             *mount_point,
-                                                      GError                 **error);
-gchar    *udisks_persistent_store_mounted_fs_find    (UDisksPersistentStore   *store,
-                                                      const gchar             *block_device_file,
-                                                      uid_t                   *out_uid,
-                                                      GError                 **error);
-void      udisks_persistent_store_mounted_fs_cleanup (UDisksPersistentStore   *store);
-gboolean udisks_persistent_store_mounted_fs_currently_unmounting_add    (UDisksPersistentStore   *store,
-                                                                         const gchar             *mount_point);
-void     udisks_persistent_store_mounted_fs_currently_unmounting_remove (UDisksPersistentStore   *store,
-                                                                         const gchar             *mount_point);
 
 
 G_END_DECLS

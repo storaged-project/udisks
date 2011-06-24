@@ -33,7 +33,6 @@
 #include "udiskslinuxfilesystem.h"
 #include "udiskslinuxblock.h"
 #include "udisksdaemon.h"
-#include "udiskspersistentstore.h"
 #include "udisksdaemonutil.h"
 
 /**
@@ -708,7 +707,6 @@ handle_mount (UDisksFilesystem       *filesystem,
   UDisksObject *object;
   UDisksBlockDevice *block;
   UDisksDaemon *daemon;
-  UDisksPersistentStore *store;
   uid_t caller_uid;
   const gchar * const *existing_mount_points;
   const gchar *probed_fs_usage;
@@ -734,7 +732,6 @@ handle_mount (UDisksFilesystem       *filesystem,
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem)));
   block = udisks_object_peek_block_device (object);
   daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
-  store = udisks_daemon_get_persistent_store (daemon);
 
   /* TODO: check if mount point is managed by e.g. /etc/fstab or
    *       similar - if so, use that instead of managing mount points
@@ -861,11 +858,11 @@ handle_mount (UDisksFilesystem       *filesystem,
     }
 
   /* update the mounted-fs file */
-  if (!udisks_persistent_store_mounted_fs_add (store,
-                                               udisks_block_device_get_device (block),
-                                               mount_point_to_use,
-                                               caller_uid,
-                                               &error))
+  if (!udisks_daemon_mounted_fs_add (daemon,
+                                     udisks_block_device_get_device (block),
+                                     mount_point_to_use,
+                                     caller_uid,
+                                     &error))
     goto out;
 
   escaped_fs_type_to_use       = g_strescape (fs_type_to_use, NULL);
@@ -889,9 +886,9 @@ handle_mount (UDisksFilesystem       *filesystem,
        * Either of these operations shouldn't really fail...
        */
       error = NULL;
-      if (!udisks_persistent_store_mounted_fs_remove (store,
-                                                      mount_point_to_use,
-                                                      &error))
+      if (!udisks_daemon_mounted_fs_remove (daemon,
+                                            mount_point_to_use,
+                                            &error))
         {
           udisks_warning ("Error removing mount point %s from filesystems file: %s (%s, %d)",
                           mount_point_to_use,
@@ -945,7 +942,6 @@ handle_unmount (UDisksFilesystem       *filesystem,
   UDisksObject *object;
   UDisksBlockDevice *block;
   UDisksDaemon *daemon;
-  UDisksPersistentStore *store;
   gchar *mount_point;
   gchar *escaped_mount_point;
   GError *error;
@@ -964,7 +960,6 @@ handle_unmount (UDisksFilesystem       *filesystem,
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem)));
   block = udisks_object_peek_block_device (object);
   daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
-  store = udisks_daemon_get_persistent_store (daemon);
 
   if (options != NULL)
     {
@@ -986,10 +981,10 @@ handle_unmount (UDisksFilesystem       *filesystem,
     }
 
   error = NULL;
-  mount_point = udisks_persistent_store_mounted_fs_find (store,
-                                                         udisks_block_device_get_device (block),
-                                                         &mounted_by_uid,
-                                                         &error);
+  mount_point = udisks_daemon_mounted_fs_find (daemon,
+                                               udisks_block_device_get_device (block),
+                                               &mounted_by_uid,
+                                               &error);
   if (error != NULL)
     {
       g_dbus_method_invocation_return_error (invocation,
@@ -1036,7 +1031,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
     }
 
   /* otherwise go ahead and unmount the filesystem */
-  if (!udisks_persistent_store_mounted_fs_currently_unmounting_add (store, mount_point))
+  if (!udisks_daemon_mounted_fs_currently_unmounting_add (daemon, mount_point))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
@@ -1076,15 +1071,15 @@ handle_unmount (UDisksFilesystem       *filesystem,
                                              udisks_block_device_get_device (block),
                                              mount_point,
                                              error_message);
-      udisks_persistent_store_mounted_fs_currently_unmounting_remove (store, mount_point);
+      udisks_daemon_mounted_fs_currently_unmounting_remove (daemon, mount_point);
       goto out;
     }
 
   /* OK, filesystem unmounted.. now to remove the entry from mounted-fs as well as the mount point */
   error = NULL;
-  if (!udisks_persistent_store_mounted_fs_remove (store,
-                                                  mount_point,
-                                                  &error))
+  if (!udisks_daemon_mounted_fs_remove (daemon,
+                                        mount_point,
+                                        &error))
     {
       if (error == NULL)
         {
@@ -1106,10 +1101,10 @@ handle_unmount (UDisksFilesystem       *filesystem,
                                                  error->code);
           g_error_free (error);
         }
-      udisks_persistent_store_mounted_fs_currently_unmounting_remove (store, mount_point);
+      udisks_daemon_mounted_fs_currently_unmounting_remove (daemon, mount_point);
       goto out;
     }
-  udisks_persistent_store_mounted_fs_currently_unmounting_remove (store, mount_point);
+  udisks_daemon_mounted_fs_currently_unmounting_remove (daemon, mount_point);
 
   /* OK, removed the entry. Finally: nuke the mount point */
   if (g_rmdir (mount_point) != 0)

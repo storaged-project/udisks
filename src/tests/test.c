@@ -618,7 +618,7 @@ test_persistent_store (void)
       g_assert_not_reached ();
     }
 
-  store = udisks_persistent_store_new (NULL, dirname, dirname_temp);
+  store = udisks_persistent_store_new (dirname, dirname_temp);
 
   error = NULL;
   rc = udisks_persistent_store_set (store,
@@ -646,7 +646,7 @@ test_persistent_store (void)
    * the same data (since it's persistent!)
    */
   g_object_unref (store);
-  store = udisks_persistent_store_new (NULL, dirname, dirname_temp);
+  store = udisks_persistent_store_new (dirname, dirname_temp);
   check_store (store);
 
   /* check we can replace one of the entries */
