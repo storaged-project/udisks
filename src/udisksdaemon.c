@@ -161,8 +161,6 @@ mount_monitor_on_mount_removed (UDisksMountMonitor *monitor,
   udisks_persistent_store_mounted_fs_cleanup (daemon->persistent_store);
 }
 
-#define TMP_STATEDIR "/dev/.udisks2"
-
 static void
 udisks_daemon_constructed (GObject *object)
 {
@@ -173,20 +171,26 @@ udisks_daemon_constructed (GObject *object)
   daemon->authority = polkit_authority_get_sync (NULL, &error);
   if (daemon->authority == NULL)
     {
-      g_warning ("Error initializing PolicyKit authority: %s (%s, %d)",
-                 error->message,
-                 g_quark_to_string (error->domain),
-                 error->code);
+      udisks_error ("Error initializing PolicyKit authority: %s (%s, %d)",
+                    error->message, g_quark_to_string (error->domain), error->code);
       g_error_free (error);
     }
 
   daemon->object_manager = g_dbus_object_manager_server_new ("/org/freedesktop/UDisks2");
 
-  if (!g_file_test (TMP_STATEDIR, G_FILE_TEST_IS_DIR))
+  if (!g_file_test ("/run/udisks2", G_FILE_TEST_IS_DIR))
     {
-      if (g_mkdir (TMP_STATEDIR, 0700) != 0)
+      if (g_mkdir_with_parents ("/run/udisks2", 0700) != 0)
         {
-          g_warning ("Error creating directory %s: %m", TMP_STATEDIR);
+          udisks_error ("Error creating directory %s: %m", "/run/udisks2");
+        }
+    }
+
+  if (!g_file_test (PACKAGE_LOCALSTATE_DIR "/lib/udisks2", G_FILE_TEST_IS_DIR))
+    {
+      if (g_mkdir_with_parents (PACKAGE_LOCALSTATE_DIR "/lib/udisks2", 0700) != 0)
+        {
+          udisks_error ("Error creating directory %s: %m", PACKAGE_LOCALSTATE_DIR "/lib/udisks2");
         }
     }
 
@@ -194,7 +198,7 @@ udisks_daemon_constructed (GObject *object)
 
   daemon->persistent_store = udisks_persistent_store_new (daemon,
                                                           PACKAGE_LOCALSTATE_DIR "/lib/udisks2",
-                                                          TMP_STATEDIR);
+                                                          "/run/udisks2");
 
   /* Cleanup stale mount points
    * - Because we might have mounted something at /media/EOS_DIGITAL and then

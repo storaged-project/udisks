@@ -72,9 +72,6 @@ struct _UDisksPersistentStore
 
   UDisksDaemon *daemon;
 
-  gchar *given_path;
-  gchar *given_temp_path;
-
   gchar *path;
   gchar *temp_path;
 
@@ -114,8 +111,6 @@ udisks_persistent_store_finalize (GObject *object)
 {
   UDisksPersistentStore *store = UDISKS_PERSISTENT_STORE (object);
 
-  g_free (store->given_path);
-  g_free (store->given_temp_path);
   g_free (store->path);
   g_free (store->temp_path);
   g_hash_table_unref (store->currently_unmounting);
@@ -129,25 +124,8 @@ udisks_persistent_store_constructed (GObject *object)
 {
   UDisksPersistentStore *store = UDISKS_PERSISTENT_STORE (object);
 
-  g_warn_if_fail (g_file_test (store->given_path, G_FILE_TEST_IS_DIR));
-  store->path = g_strdup_printf ("%s/udisks-persistence-2.0", store->given_path);
-  if (!g_file_test (store->path, G_FILE_TEST_IS_DIR))
-    {
-      if (g_mkdir (store->path, 0700) != 0)
-        {
-          g_warning ("Error creating %s: %m", store->path);
-        }
-    }
-
-  g_warn_if_fail (g_file_test (store->given_temp_path, G_FILE_TEST_IS_DIR));
-  store->temp_path = g_strdup_printf ("%s/udisks-persistence-2.0", store->given_temp_path);
-  if (!g_file_test (store->temp_path, G_FILE_TEST_IS_DIR))
-    {
-      if (g_mkdir (store->temp_path, 0700) != 0)
-        {
-          g_warning ("Error creating %s: %m", store->temp_path);
-        }
-    }
+  g_warn_if_fail (g_file_test (store->path, G_FILE_TEST_IS_DIR));
+  g_warn_if_fail (g_file_test (store->temp_path, G_FILE_TEST_IS_DIR));
 
   if (G_OBJECT_CLASS (udisks_persistent_store_parent_class)->constructed != NULL)
     G_OBJECT_CLASS (udisks_persistent_store_parent_class)->constructed (object);
@@ -198,13 +176,13 @@ udisks_persistent_store_set_property (GObject      *object,
       break;
 
     case PROP_PATH:
-      g_assert (store->given_path == NULL);
-      store->given_path = g_value_dup_string (value);
+      g_assert (store->path == NULL);
+      store->path = g_value_dup_string (value);
       break;
 
     case PROP_TEMP_PATH:
-      g_assert (store->given_temp_path == NULL);
-      store->given_temp_path = g_value_dup_string (value);
+      g_assert (store->temp_path == NULL);
+      store->temp_path = g_value_dup_string (value);
       break;
 
     default:
@@ -330,7 +308,7 @@ const gchar *
 udisks_persistent_store_get_path (UDisksPersistentStore *store)
 {
   g_return_val_if_fail (UDISKS_IS_PERSISTENT_STORE (store), NULL);
-  return store->given_path;
+  return store->path;
 }
 
 /**
@@ -345,7 +323,7 @@ const gchar *
 udisks_persistent_store_get_temp_path (UDisksPersistentStore *store)
 {
   g_return_val_if_fail (UDISKS_IS_PERSISTENT_STORE (store), NULL);
-  return store->given_temp_path;
+  return store->temp_path;
 }
 
 /**
