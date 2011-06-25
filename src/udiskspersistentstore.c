@@ -65,6 +65,11 @@ struct _UDisksPersistentStore
 
   gchar *path;
   gchar *temp_path;
+
+  GMutex *lock;
+
+  /* key-path -> GVariant */
+  GHashTable *cache;
 };
 
 typedef struct _UDisksPersistentStoreClass UDisksPersistentStoreClass;
@@ -99,6 +104,8 @@ udisks_persistent_store_finalize (GObject *object)
 {
   UDisksPersistentStore *store = UDISKS_PERSISTENT_STORE (object);
 
+  g_hash_table_unref (store->cache);
+  g_mutex_free (store->lock);
   g_free (store->path);
   g_free (store->temp_path);
 
@@ -171,6 +178,8 @@ udisks_persistent_store_set_property (GObject      *object,
 static void
 udisks_persistent_store_init (UDisksPersistentStore *store)
 {
+  store->lock = g_mutex_new ();
+  store->cache = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_variant_unref);
 }
 
 static void
@@ -189,9 +198,8 @@ udisks_persistent_store_class_init (UDisksPersistentStoreClass *klass)
    *
    * The path to store data that will persist across reboots.
    *
-   * Data will be stored in a sub-directory of this directory called
-   * <filename>udisks-persistence-2.0</filename>. If this directory
-   * does not exist, it will be created with mode 0700.
+   * Data will be stored in this directory - if it does not exist, it
+   * will be created with mode 0700.
    */
   g_object_class_install_property (gobject_class,
                                    PROP_PATH,
@@ -209,9 +217,8 @@ udisks_persistent_store_class_init (UDisksPersistentStoreClass *klass)
    *
    * The path to store data that will not persist across reboots.
    *
-   * Data will be stored in a sub-directory of this directory called
-   * <filename>udisks-persistence-2.0</filename>. If this directory
-   * does not exist, it will be created with mode 0700.
+   * Data will be stored in this directory - if it does not exist, it
+   * will be created with mode 0700.
    */
   g_object_class_install_property (gobject_class,
                                    PROP_TEMP_PATH,
@@ -228,7 +235,7 @@ udisks_persistent_store_class_init (UDisksPersistentStoreClass *klass)
 /**
  * udisks_persistent_store_new:
  * @path: Path to where to store data that will persist across reboots (e.g. <filename>/var/lib/udisks2</filename>).
- * @temp_path: Path to where to store data that will persist only until next reboot (e.g. <filename>/dev/.udisks2</filename>).
+ * @temp_path: Path to where to store data that will persist only until next reboot (e.g. <filename>/run/udisks2</filename>).
  *
  * Creates a new #UDisksPersistentStore object.
  *
@@ -316,6 +323,8 @@ udisks_persistent_store_get (UDisksPersistentStore   *store,
   path = NULL;
   contents = NULL;
 
+  g_mutex_lock (store->lock);
+
   /* TODO:
    *
    * - could use a cache here to avoid loading files all the time
@@ -328,6 +337,14 @@ udisks_persistent_store_get (UDisksPersistentStore   *store,
     path = g_strdup_printf ("%s/%s", store->temp_path, key);
   else
     g_assert_not_reached ();
+
+  /* see if it's already in the cache */
+  ret = g_hash_table_lookup (store->cache, path);
+  if (ret != NULL)
+    {
+      g_variant_ref (ret);
+      goto out;
+    }
 
   local_error = NULL;
   if (!g_file_get_contents (path,
@@ -356,6 +373,7 @@ udisks_persistent_store_get (UDisksPersistentStore   *store,
   contents = NULL; /* ownership transfered to the returned GVariant */
 
  out:
+  g_mutex_unlock (store->lock);
   g_free (contents);
   g_free (path);
 
@@ -399,6 +417,8 @@ udisks_persistent_store_set (UDisksPersistentStore   *store,
 
   ret = FALSE;
 
+  g_mutex_lock (store->lock);
+
   g_variant_ref_sink (value);
   normalized = g_variant_get_normal_form (value);
   size = g_variant_get_size (normalized);
@@ -412,6 +432,8 @@ udisks_persistent_store_set (UDisksPersistentStore   *store,
   else
     g_assert_not_reached ();
 
+  g_hash_table_insert (store->cache, g_strdup (path), g_variant_ref (value));
+
   if (!g_file_set_contents (path,
                             data,
                             size,
@@ -421,6 +443,8 @@ udisks_persistent_store_set (UDisksPersistentStore   *store,
   ret = TRUE;
 
  out:
+  g_mutex_unlock (store->lock);
+
   g_free (path);
   g_free (data);
   g_variant_unref (normalized);
