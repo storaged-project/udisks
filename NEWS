@@ -1,5 +1,5 @@
 ------------
-udisks 1.0.3 <not released yet>
+udisks 1.0.3
 ------------
 
 udisks provides a daemon, D-Bus API and command line tools
@@ -14,13 +14,46 @@ README file for more discussion of ABI guarantees.
 
 Changes from udisks 1.0.2:
 
- <insert prettified output of 'git shortlog 1.0.2..' here
+Ayan George (2):
+      Mark Realtek PCI flash card reader as such
+      Bug 38535 – A DeviceAutoMountHint attribute should be added to udisks
+
+Bastien Nocera (1):
+      Hide recovery partition on newer Lenovo machines
+
+David Zeuthen (10):
+      Bug 32232 – CVE-2010-4661: Arbitrary kernel module load
+      Fix warning message
+      Fix all warnings caused by -Wunused-but-set-variable
+      Update comment about validating requested filesystem type
+      Nuke generated D-Bus code from distribution tarballs
+      Nuke the PolicyKit extension as that is now deprecated
+      Add missing comma in fs whitelist
+      Add UDISKS_AUTOMOUNT_HINT to the udisks(7) man page
+      Teach udisks(1) about the new automount hint and spell automount as one word
+      Update NEWS for release
+
+Martin Pitt (12):
+      Post-release version bump to 1.0.3
+      testsuite: fix race in LVM
+      testsuite: Port to Python 3
+      testsuite: Update assert statements
+      Ignore broken directory permissions on UDF media
+      Fix udisks --eject-options
+      throw_error(): Print error to stderr when being called internally
+      Support calling device_drive_eject() and device_filesystem_unmount() from daemon
+      Remove blkid probing of device-mapper nodes
+      Add override for system internal property
+      Add "unmount" option to DriveEject
+      Bug 34710 — CD-ROM polling failed due to O_EXCL flag
+
+Sitsofe Wheeler (1):
+      Bug 32917 — EeePC 900 SD card reader icon looks like a usb stick in GNOME
 
 Thanks to all our contributors.
 
-<insert your name>,
-<insert the date>
-
+David Zeuthen,
+June 29, 2011
 
 ------------
 udisks 1.0.2
