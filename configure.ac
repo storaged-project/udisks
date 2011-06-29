@@ -1,8 +1,8 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59c)
-AC_INIT(udisks, 1.0.3, http://bugs.freedesktop.org/enter_bug.cgi?product=udisks)
-AM_INIT_AUTOMAKE(udisks, 1.0.3)
+AC_INIT(udisks, 1.0.4, http://bugs.freedesktop.org/enter_bug.cgi?product=udisks)
+AM_INIT_AUTOMAKE(udisks, 1.0.4)
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 
