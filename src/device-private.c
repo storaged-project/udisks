@@ -109,14 +109,14 @@ ptr_str_array_from_strv (GStrv s)
 }
 
 void
-device_set_device_auto_mount_hint (Device *device,
-                                   const gchar *value)
+device_set_device_automount_hint (Device *device,
+                                  const gchar *value)
 {
-  if (G_UNLIKELY (g_strcmp0 (device->priv->device_auto_mount_hint, value) != 0))
+  if (G_UNLIKELY (g_strcmp0 (device->priv->device_automount_hint, value) != 0))
     {
-      g_free (device->priv->device_auto_mount_hint);
-      device->priv->device_auto_mount_hint = g_strdup (value);
-      emit_changed (device, "device_auto_mount_hint");
+      g_free (device->priv->device_automount_hint);
+      device->priv->device_automount_hint = g_strdup (value);
+      emit_changed (device, "device_automount_hint");
     }
 }
 
