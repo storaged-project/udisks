@@ -23,7 +23,7 @@ AC_ARG_ENABLE(ansi,             [  --enable-ansi           enable -ansi -pedanti
 AC_ARG_ENABLE(verbose-mode,     [  --enable-verbose-mode   support verbose debug mode],enable_verbose_mode=$enableval,enable_verbose_mode=$USE_MAINTAINER_MODE)
 AC_ARG_ENABLE(man-pages,        [  --enable-man-pages      build manual pages],enable_man_pages=$enableval,enable_man_pages=yes)
 AC_ARG_ENABLE(profiling,        [  --enable-profiling      add tracing instrumentation for plot-timeline.py], enable_profiling=$enableval,enable_profiling=$USE_MAINTAINER_MODE)
-+AC_ARG_ENABLE(strict,           [  --enable-strict         Enable strict compilation options], enable_strict=$enableval,enable_strict=$USE_MAINTAINER_MODE)
+AC_ARG_ENABLE(strict,           [  --enable-strict         Enable strict compilation options], enable_strict=$enableval,enable_strict=$USE_MAINTAINER_MODE)
 
 if test "x$enable_profiling" = "xyes"; then
   AC_DEFINE(PROFILING, 1, [Define to 1 if profiling is enabled ])
