@@ -61,18 +61,13 @@ udisks_daemon_get_mount_monitor
 udisks_daemon_get_linux_provider
 udisks_daemon_get_persistent_store
 udisks_daemon_get_authority
+udisks_daemon_get_cleanup
 UDisksDaemonWaitFunc
 udisks_daemon_wait_for_object_sync
 udisks_daemon_launch_simple_job
 udisks_daemon_launch_spawned_job
 udisks_daemon_launch_spawned_job_sync
 udisks_daemon_launch_threaded_job
-udisks_daemon_mounted_fs_add
-udisks_daemon_mounted_fs_remove
-udisks_daemon_mounted_fs_find
-udisks_daemon_mounted_fs_cleanup
-udisks_daemon_mounted_fs_currently_unmounting_add
-udisks_daemon_mounted_fs_currently_unmounting_remove
 <SUBSECTION Standard>
 UDISKS_TYPE_DAEMON
 UDISKS_DAEMON
@@ -258,6 +253,28 @@ UDISKS_PERSISTENT_STORE
 UDISKS_IS_PERSISTENT_STORE
 <SUBSECTION Private>
 udisks_persistent_store_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskscleanup</FILE>
+<TITLE>UDisksCleanup</TITLE>
+UDisksCleanup
+udisks_cleanup_new
+udisks_cleanup_start
+udisks_cleanup_stop
+udisks_cleanup_check
+udisks_cleanup_get_daemon
+udisks_cleanup_add_mounted_fs
+udisks_cleanup_remove_mounted_fs
+udisks_cleanup_find_mounted_fs
+udisks_cleanup_ignore_mounted_fs
+udisks_cleanup_unignore_mounted_fs
+<SUBSECTION Standard>
+UDISKS_TYPE_CLEANUP
+UDISKS_CLEANUP
+UDISKS_IS_CLEANUP
+<SUBSECTION Private>
+udisks_cleanup_get_type
 </SECTION>
 
 <SECTION>

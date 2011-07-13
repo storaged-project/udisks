@@ -37,6 +37,7 @@ UDisksMountMonitor       *udisks_daemon_get_mount_monitor     (UDisksDaemon    *
 UDisksLinuxProvider      *udisks_daemon_get_linux_provider    (UDisksDaemon    *daemon);
 UDisksPersistentStore    *udisks_daemon_get_persistent_store  (UDisksDaemon    *daemon);
 PolkitAuthority          *udisks_daemon_get_authority         (UDisksDaemon    *daemon);
+UDisksCleanup            *udisks_daemon_get_cleanup           (UDisksDaemon    *daemon);
 
 /**
  * UDisksDaemonWaitFunc:
@@ -77,26 +78,6 @@ UDisksBaseJob            *udisks_daemon_launch_threaded_job   (UDisksDaemon    *
                                                                gpointer         user_data,
                                                                GDestroyNotify   user_data_free_func,
                                                                GCancellable    *cancellable);
-
-
-gboolean  udisks_daemon_mounted_fs_add     (UDisksDaemon    *daemon,
-                                            const gchar     *block_device_file,
-                                            const gchar     *mount_point,
-                                            uid_t            uid,
-                                            GError         **error);
-gboolean  udisks_daemon_mounted_fs_remove  (UDisksDaemon    *daemon,
-                                            const gchar     *mount_point,
-                                            GError         **error);
-gchar    *udisks_daemon_mounted_fs_find    (UDisksDaemon    *daemon,
-                                            const gchar     *block_device_file,
-                                            uid_t           *out_uid,
-                                            GError         **error);
-void      udisks_daemon_mounted_fs_cleanup (UDisksDaemon    *daemon);
-
-gboolean udisks_daemon_mounted_fs_currently_unmounting_add    (UDisksDaemon   *daemon,
-                                                               const gchar    *mount_point);
-void     udisks_daemon_mounted_fs_currently_unmounting_remove (UDisksDaemon   *daemon,
-                                                               const gchar    *mount_point);
 
 G_END_DECLS
 

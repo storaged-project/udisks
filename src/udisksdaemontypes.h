@@ -89,6 +89,9 @@ typedef gboolean (*UDisksThreadedJobFunc) (UDisksThreadedJob   *job,
 struct _UDisksPersistentStore;
 typedef struct _UDisksPersistentStore UDisksPersistentStore;
 
+struct _UDisksCleanup;
+typedef struct _UDisksCleanup UDisksCleanup;
+
 /**
  * UDisksMountType:
  * @UDISKS_MOUNT_TYPE_FILESYSTEM: Object correspond to a mounted filesystem.

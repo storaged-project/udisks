@@ -354,10 +354,30 @@
 
         Mount the filesystem.
 
+        The directory the device will be mounted in is determined by
+        looking at data related to the device (such the filesystem
+        UUID and label) and will be created automatically. It is
+        returned in @mount_path and is normally a sub-directory of
+        <filename class='directory'>/media</filename>.
+
+        The filesystem should be unmounted using the
+        org.freedesktop.UDisks2.Filesystem.Unmount() method.
+
+        If the device is removed without being unmounted (e.g. the
+        user yanking the device or pulling the media out) or unmounted
+        in a way that bypasses the
+        org.freedesktop.UDisks2.Filesystem.Unmount() method
+        (e.g. unmounted by the super-user by using the
+        <citerefentry><refentrytitle>umount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+        command directly), the device will be unmounted (if needed)
+        and the mount point will be cleaned up.
+
         The file system type can be overridden with the
         <parameter>fstype</parameter> option and mount options can be
         given in <parameter>options</parameter> as a comma-separated
-        string. Note that the mount options are validated - only a
+        string and is of the same format as would be passed to the
+        <citerefentry><refentrytitle>mount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+        command. Note that the mount options are validated - only a
         small subset per filesystem type is allowed.
     -->
     <method name="Mount">

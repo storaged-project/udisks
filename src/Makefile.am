@@ -60,6 +60,7 @@ libudisks_daemon_la_SOURCES =						\
 	udiskspersistentstore.h		udiskspersistentstore.c		\
 	udisksdaemonutil.h		udisksdaemonutil.c		\
 	udiskslogging.h			udiskslogging.c			\
+	udiskscleanup.h			udiskscleanup.c			\
 	udisksprivate.h							\
 	$(BUILT_SOURCES)						\
 	$(NULL)

@@ -164,6 +164,7 @@
     <xi:include href="xml/udisksmount.xml"/>
     <xi:include href="xml/udisksmountmonitor.xml"/>
     <xi:include href="xml/udiskspersistentstore.xml"/>
+    <xi:include href="xml/udiskscleanup.xml"/>
     <chapter id="ref-daemon-jobs">
       <title>Jobs</title>
       <xi:include href="xml/udisksbasejob.xml"/>

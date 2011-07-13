@@ -29,6 +29,7 @@
 #include "udiskslinuxprovider.h"
 #include "udiskslinuxblock.h"
 #include "udiskslinuxdrive.h"
+#include "udiskscleanup.h"
 
 /**
  * SECTION:udiskslinuxprovider
@@ -324,6 +325,9 @@ handle_block_uevent (UDisksLinuxProvider *provider,
     {
       handle_block_uevent_for_block (provider, action, device);
       handle_block_uevent_for_drive (provider, action, device);
+
+      /* Possibly need to clean up */
+      udisks_cleanup_check (udisks_daemon_get_cleanup (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))));
     }
   else
     {
