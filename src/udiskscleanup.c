@@ -37,19 +37,69 @@
  * @title: UDisksCleanup
  * @short_description: Object used for cleaning up after device removal
  *
- * This type is used for cleaning up when devices are removed while
- * still in use. It is implementing by running a separate thread that
- * maintains a set of items to clean up and tries to shrink the set by
- * doing the cleanup work required for each item.
+ * This type is used for cleaning up when devices set up via the
+ * udisks interfaces are removed while still in use - for example, a
+ * USB stick being yanked. The #UDisksPersistentStore type is used to
+ * record this information to ensure that it exists across daemon
+ * restarts and OS reboots.
  *
- * The thread itself needs to be kicked when state changes or devices
- * are e.g. removed (using the udisks_cleanup_check() method) from
- * e.g. #UDisksProvider providers.
+ * The following files are used:
+ * <table frame='all'>
+ *   <title>Persistent information used for cleanup</title>
+ *   <tgroup cols='2' align='left' colsep='1' rowsep='1'>
+ *     <thead>
+ *       <row>
+ *         <entry>File</entry>
+ *         <entry>Usage</entry>
+ *       </row>
+ *     </thead>
+ *     <tbody>
+ *       <row>
+ *         <entry><filename>/var/lib/udisks2/mounted-fs</filename></entry>
+ *         <entry>
+ *           A serialized 'a{sa{sv}}' #GVariant mapping from the
+ *           mount point (e.g. <filename>/media/EOS_DIGITAL</filename>) into a set of details.
+ *           Known details include
+ *           <literal>block-device</literal>
+ *           (of type <link linkend="G-VARIANT-TYPE-UINT64:CAPS">'t'</link>) that is the #dev_t
+ *           for the mounted device and
+ *           <literal>mounted-by-uid</literal>
+ *           (of type <link linkend="G-VARIANT-TYPE-UINT64:CAPS">'u'</link>) that is the #uid_t
+ *           of the user who mounted the device.
+ *         </entry>
+ *       </row>
+ *       <row>
+ *         <entry><filename>/run/udisks2/unlocked-luks</filename></entry>
+ *         <entry>
+ *           A serialized 'a{ta{sv}}' #GVariant mapping from the
+ *           #dev_t of the clear-text device (e.g. <filename>/dev/dm-0</filename>) into a set of details.
+ *           Known details include
+ *           <literal>crypto-device</literal>
+ *           (of type <link linkend="G-VARIANT-TYPE-UINT64:CAPS">'t'</link>) that is the #dev_t
+ *           for the crypto-text device,
+ *           <literal>dm-uuid</literal>
+ *           (of type <link linkend="G-VARIANT-TYPE-UINT64:CAPS">'ay'</link>) that is the device mapper UUID
+ *           for the clear-text device and
+ *           <literal>unlocked-by-uid</literal>
+ *           (of type <link linkend="G-VARIANT-TYPE-UINT64:CAPS">'u'</link>) that is the #uid_t
+ *           of the user who unlocked the device.
+ *         </entry>
+ *       </row>
+ *     </tbody>
+ *   </tgroup>
+ * </table>
+ * Cleaning up is implemented by running a thread (to ensure that
+ * actions are serialized) that checks all data in the files mentioned
+ * above and cleans up the entry in question by e.g. unmounting a
+ * filesystem, removing a mount point or tearing down a device-mapper
+ * device when needed. The clean-up thread itself needs to be manually
+ * kicked using e.g. udisks_cleanup_check() from suitable places in
+ * the #UDisksDaemon and #UDisksProvider implementations.
  *
- * Right now the type handles mounts made via the
- * <link linkend="gdbus-method-org-freedesktop-UDisks2-Filesystem.Mount">Mount() D-Bus method</link>
- * and LUKS devices set up via the
- * <link linkend="gdbus-method-org-freedesktop-UDisks2-Encrypted.Unlock">Unlock() D-Bus method</link>.
+ * Since cleaning up is only necessary when a device has been removed
+ * without having been properly stopped or shut down, the fact that it
+ * was cleaned up is logged to ensure that the information is brought
+ * to the attention of the system administrator.
  */
 
 /**
@@ -196,7 +246,7 @@ udisks_cleanup_class_init (UDisksCleanupClass *klass)
  * udisks_cleanup_new:
  * @daemon: A #UDisksDaemon.
  *
- * Creates a new #UDisksCleanup.
+ * Creates a new #UDisksCleanup object.
  *
  * Returns: A #UDisksCleanup that should be freed with g_object_unref().
  */
@@ -389,15 +439,6 @@ lookup_asv (GVariant    *asv,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
-
-/*
- * The 'mounted-fs' persistent value has type a{sa{sv}} and is a dict
- * from mount_point (e.g. /media/smallfs) into a set of details. Known
- * details include
- *
- *   block-device:      uint64 with the dev_t that is mounted at the current location
- *   mounted-by-uid:    uint32 with the uid of the user who mounted the device
- */
 
 /* returns TRUE if the entry should be kept */
 static gboolean
@@ -654,9 +695,8 @@ udisks_cleanup_check_mounted_fs (UDisksCleanup *cleanup,
  * @uid: The user id of the process requesting the device to be mounted.
  * @error: Return location for error or %NULL.
  *
- * High-level function to add an entry to the
- * <literal>mounted-fs</literal>. The entry represents a mount-point
- * automatically created and managed by <command>udisksd</command>.
+ * Adds a new entry to the
+ * <filename>/var/lib/udisks2/mounted-fs</filename> file.
  *
  * Returns: %TRUE if the entry was added, %FALSE if @error is set.
  */
@@ -881,7 +921,8 @@ udisks_cleanup_remove_mounted_fs (UDisksCleanup   *cleanup,
  * @out_uid: Return location for the user id who mounted the device or %NULL.
  * @error: Return location for error or %NULL.
  *
- * Returns the mount point for @block_device, if it exists.
+ * Gets the mount point for @block_device, if it exists in the
+ * <filename>/var/lib/udisks2/mounted-fs</filename> file.
  *
  * Returns: The mount point for @block_device or %NULL if not found or
  * if @error is set.
@@ -984,17 +1025,12 @@ udisks_cleanup_find_mounted_fs (UDisksCleanup   *cleanup,
  * @cleanup: A #UDisksCleanup.
  * @mount_point: A mount point.
  *
- * Set @mount_point as currently being ignored.
+ * Set @mount_point as currently being ignored. This ensures that the
+ * entry for @mount_point won't get cleaned up by the cleanup routines
+ * until udisks_cleanup_unignore_mounted_fs() is called.
  *
- * This ensures that @mount_point won't get cleaned up by the cleanup
- * routines (this is typically called whenever a filesystem is
- * unmounted).
- *
- * Once unmounting completes (successfully or otherwise),
- * udisks_cleanup_unignore_mounted_fs() should be called with
- * @mount_point.
- *
- * Returns: %TRUE if @mount_point was successfully ignore, %FALSE if it was already ignored.
+ * Returns: %TRUE if @mount_point was successfully ignored, %FALSE if
+ * it was already ignored.
  */
 gboolean
 udisks_cleanup_ignore_mounted_fs (UDisksCleanup  *cleanup,
@@ -1026,7 +1062,7 @@ udisks_cleanup_ignore_mounted_fs (UDisksCleanup  *cleanup,
  * @cleanup: A #UDisksCleanup.
  * @mount_point: A mount point.
  *
- * Removes a mount point previously added with
+ * Stops ignoring a mount point previously ignored using
  * udisks_cleanup_ignore_mounted_fs().
  */
 void
@@ -1042,16 +1078,6 @@ udisks_cleanup_unignore_mounted_fs (UDisksCleanup  *cleanup,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
-
-/*
- * The 'unlocked-luks' persistent value has type a{ta{sv}} and is a dict from
- * the device number of the cleartext-device (e.g. /dev/dm-0) into a set
- * of details. Known details include
- *
- *   crypto-device:     uint64 with the dev_t for the crypto device
- *   dm-uuid:           the UUID of the unlocked device-mapper device
- *   unlocked-by-uid:   uint32 with the uid of the user who unlocked the device
- */
 
 /* returns TRUE if the entry should be kept */
 static gboolean
@@ -1310,9 +1336,8 @@ udisks_cleanup_check_unlocked_luks (UDisksCleanup *cleanup,
  * @uid: The user id of the process requesting the device to be unlocked.
  * @error: Return location for error or %NULL.
  *
- * High-level function to add an entry to the
- * <literal>luks</literal>. The entry represents an unlocked block
- * device managed by <command>udisksd</command>.
+ * Adds a new entry to the
+ * <filename>/run/udisks2/unlocked-luks</filename> file.
  *
  * Returns: %TRUE if the entry was added, %FALSE if @error is set.
  */
@@ -1540,7 +1565,8 @@ udisks_cleanup_remove_unlocked_luks (UDisksCleanup   *cleanup,
  * @out_uid: Return location for the user id who mounted the device or %NULL.
  * @error: Return location for error or %NULL.
  *
- * Returns the mount point for @crypto_device, if it exists.
+ * Gets the clear-text device for @crypto_device, if it exists in the
+ * <filename>/run/udisks2/unlocked-luks</filename> file.
  *
  * Returns: The cleartext device for @crypto_device or 0 if not
  * found or if @error is set.
@@ -1643,17 +1669,12 @@ udisks_cleanup_find_unlocked_luks (UDisksCleanup   *cleanup,
  * @cleanup: A #UDisksCleanup.
  * @cleartext_device: A cleartext device.
  *
- * Set @cleartext_device as currently being ignored.
+ * Set @cleartext_device as currently being ignored. This ensures that
+ * the entry for @cleartext_device won't get cleaned up by the cleanup
+ * routines until udisks_cleanup_unignore_unlocked_luks() is called.
  *
- * This ensures that @cleartext_device won't get cleaned up by the
- * cleanup routines (this is typically called whenever a crypte device is
- * locked).
- *
- * Once locking completes (successfully or otherwise),
- * udisks_cleanup_unignore_unlocked_luks() should be called with @cleartext_device.
- *
- * Returns: %TRUE if @cleartext_device was successfully ignore, %FALSE
- * if it was already ignored.
+ * Returns: %TRUE if @cleartext_device was successfully ignored,
+ * %FALSE if it was already ignored.
  */
 gboolean
 udisks_cleanup_ignore_unlocked_luks (UDisksCleanup  *cleanup,
@@ -1688,7 +1709,7 @@ udisks_cleanup_ignore_unlocked_luks (UDisksCleanup  *cleanup,
  * @cleanup: A #UDisksCleanup.
  * @cleartext_device: A cleartext device.
  *
- * Removes a cleartext device previously added with
+ * Stops ignoring a cleartext device previously ignored using
  * udisks_cleanup_ignore_unlocked_luks().
  */
 void
