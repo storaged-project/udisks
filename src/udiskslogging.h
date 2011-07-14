@@ -39,7 +39,7 @@ void udisks_log (UDisksLogLevel   level,
  *
  * See #UDisksLogLevel for more details.
  */
-#define udisks_debug(args...)   udisks_log(UDISKS_LOG_LEVEL_DEBUG, G_STRFUNC, G_STRLOC, args);
+#define udisks_debug(args...)   udisks_log(UDISKS_LOG_LEVEL_DEBUG, G_STRFUNC, G_STRLOC, args)
 
 /**
  * udisks_info:
@@ -49,7 +49,7 @@ void udisks_log (UDisksLogLevel   level,
  *
  * See #UDisksLogLevel for more details.
  */
-#define udisks_info(args...)    udisks_log(UDISKS_LOG_LEVEL_INFO, G_STRFUNC, G_STRLOC, args);
+#define udisks_info(args...)    udisks_log(UDISKS_LOG_LEVEL_INFO, G_STRFUNC, G_STRLOC, args)
 
 /**
  * udisks_notice:
@@ -59,7 +59,7 @@ void udisks_log (UDisksLogLevel   level,
  *
  * See #UDisksLogLevel for more details.
  */
-#define udisks_notice(args...)    udisks_log(UDISKS_LOG_LEVEL_NOTICE, G_STRFUNC, G_STRLOC, args);
+#define udisks_notice(args...)    udisks_log(UDISKS_LOG_LEVEL_NOTICE, G_STRFUNC, G_STRLOC, args)
 
 /**
  * udisks_warning:
@@ -69,7 +69,7 @@ void udisks_log (UDisksLogLevel   level,
  *
  * See #UDisksLogLevel for more details.
  */
-#define udisks_warning(args...) udisks_log(UDISKS_LOG_LEVEL_WARNING, G_STRFUNC, G_STRLOC, args);
+#define udisks_warning(args...) udisks_log(UDISKS_LOG_LEVEL_WARNING, G_STRFUNC, G_STRLOC, args)
 
 /**
  * udisks_error:
@@ -79,7 +79,7 @@ void udisks_log (UDisksLogLevel   level,
  *
  * See #UDisksLogLevel for more details.
  */
-#define udisks_error(args...)   udisks_log(UDISKS_LOG_LEVEL_ERROR, G_STRFUNC, G_STRLOC, args);
+#define udisks_error(args...)   udisks_log(UDISKS_LOG_LEVEL_ERROR, G_STRFUNC, G_STRLOC, args)
 
 
 G_END_DECLS
