@@ -64,6 +64,8 @@ udisks_daemon_get_authority
 udisks_daemon_get_cleanup
 UDisksDaemonWaitFunc
 udisks_daemon_wait_for_object_sync
+udisks_daemon_find_object
+udisks_daemon_find_block_device
 udisks_daemon_launch_simple_job
 udisks_daemon_launch_spawned_job
 udisks_daemon_launch_spawned_job_sync
@@ -264,11 +266,18 @@ udisks_cleanup_start
 udisks_cleanup_stop
 udisks_cleanup_check
 udisks_cleanup_get_daemon
+<SUBSECTION>
 udisks_cleanup_add_mounted_fs
 udisks_cleanup_remove_mounted_fs
 udisks_cleanup_find_mounted_fs
 udisks_cleanup_ignore_mounted_fs
 udisks_cleanup_unignore_mounted_fs
+<SUBSECTION>
+udisks_cleanup_add_unlocked_luks
+udisks_cleanup_find_unlocked_luks
+udisks_cleanup_ignore_unlocked_luks
+udisks_cleanup_remove_unlocked_luks
+udisks_cleanup_unignore_unlocked_luks
 <SUBSECTION Standard>
 UDISKS_TYPE_CLEANUP
 UDISKS_CLEANUP

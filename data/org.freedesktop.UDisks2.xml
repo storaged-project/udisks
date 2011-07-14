@@ -454,6 +454,10 @@
         @cleartext_device: An object path to the unlocked cleartext #org.freedesktop.UDisks2.BlockDevice.
 
         Tries to unlock the encrypted device using @passphrase.
+
+        If the device is removed without being locked (e.g. the user
+        yanking the device or pulling the media out) the cleartext
+        device will be cleaned up.
     -->
     <method name="Unlock">
       <arg name="passphrase" direction="in" type="ay"/>

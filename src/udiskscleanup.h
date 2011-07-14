@@ -37,6 +37,8 @@ void             udisks_cleanup_start                (UDisksCleanup *cleanup);
 void             udisks_cleanup_stop                 (UDisksCleanup *cleanup);
 void             udisks_cleanup_check                (UDisksCleanup *cleanup);
 
+/* mounted-fs */
+
 gboolean         udisks_cleanup_add_mounted_fs       (UDisksCleanup   *cleanup,
                                                       const gchar     *mount_point,
                                                       dev_t            block_device,
@@ -53,6 +55,26 @@ gboolean         udisks_cleanup_ignore_mounted_fs    (UDisksCleanup   *cleanup,
                                                       const gchar     *mount_point);
 void             udisks_cleanup_unignore_mounted_fs  (UDisksCleanup   *cleanup,
                                                       const gchar     *mount_point);
+
+/* unlocked-luks */
+
+gboolean         udisks_cleanup_add_unlocked_luks      (UDisksCleanup   *cleanup,
+                                                        dev_t            cleartext_device,
+                                                        dev_t            crypto_device,
+                                                        const gchar     *dm_uuid,
+                                                        uid_t            uid,
+                                                        GError         **error);
+gboolean         udisks_cleanup_remove_unlocked_luks   (UDisksCleanup   *cleanup,
+                                                        dev_t            cleartext_device,
+                                                        GError         **error);
+dev_t            udisks_cleanup_find_unlocked_luks     (UDisksCleanup   *cleanup,
+                                                        dev_t            crypto_device,
+                                                        uid_t           *out_uid,
+                                                        GError         **error);
+gboolean         udisks_cleanup_ignore_unlocked_luks   (UDisksCleanup   *cleanup,
+                                                        dev_t            cleartext_device);
+void             udisks_cleanup_unignore_unlocked_luks (UDisksCleanup   *cleanup,
+                                                        dev_t            cleartext_device);
 
 G_END_DECLS
 

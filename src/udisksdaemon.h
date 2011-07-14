@@ -60,6 +60,12 @@ UDisksObject             *udisks_daemon_wait_for_object_sync  (UDisksDaemon     
                                                                guint                 timeout_seconds,
                                                                GError              **error);
 
+UDisksObject             *udisks_daemon_find_block_device     (UDisksDaemon         *daemon,
+                                                               dev_t                 block_device_number);
+
+UDisksObject             *udisks_daemon_find_object           (UDisksDaemon         *daemon,
+                                                               const gchar          *object_path);
+
 UDisksBaseJob            *udisks_daemon_launch_simple_job     (UDisksDaemon    *daemon,
                                                                GCancellable    *cancellable);
 UDisksBaseJob            *udisks_daemon_launch_spawned_job    (UDisksDaemon    *daemon,

@@ -722,8 +722,6 @@ handle_mount (UDisksFilesystem       *filesystem,
   GError *error;
 
   object = NULL;
-  daemon = NULL;
-  cleanup = NULL;
   error_message = NULL;
   fs_type_to_use = NULL;
   mount_options_to_use = NULL;

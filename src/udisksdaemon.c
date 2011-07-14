@@ -743,6 +743,12 @@ udisks_daemon_wait_for_object_sync (UDisksDaemon         *daemon,
   g_list_free (objects);
 
   /* TODO: actually sit and wait for up to @timeout_seconds if the object isn't there already */
+  if (ret == NULL)
+    {
+      g_set_error (error,
+                   UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "TODO: implement support for @timeout_seconds != 0 in udisks_daemon_wait_for_object_sync()");
+    }
 
   if (user_data_free_func != NULL)
     user_data_free_func (user_data);
@@ -750,6 +756,70 @@ udisks_daemon_wait_for_object_sync (UDisksDaemon         *daemon,
   g_object_unref (daemon);
 
   return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+wait_for_dev_t_cb (UDisksDaemon  *daemon,
+                   UDisksObject  *object,
+                   gpointer       user_data)
+{
+  dev_t *dev = user_data;
+  UDisksBlockDevice *block;
+  gboolean ret;
+
+  ret = FALSE;
+  block = udisks_object_peek_block_device (object);
+  if (block == NULL)
+    goto out;
+
+  if (*dev == makedev (udisks_block_device_get_major (block),
+                       udisks_block_device_get_minor (block)))
+    ret = TRUE;
+
+ out:
+  return ret;
+}
+
+/**
+ * udisks_daemon_find_block_device:
+ * @daemon: A #UDisksDaemon.
+ * @block_device_number: A #dev_t with the device number to find.
+ *
+ * Finds a block device with the number given by @block_device_number.
+ *
+ * Returns: (transfer full): A #UDisksObject or %NULL if not found. Free with g_object_unref().
+ */
+UDisksObject *
+udisks_daemon_find_block_device (UDisksDaemon *daemon,
+                                 dev_t         block_device_number)
+{
+  return udisks_daemon_wait_for_object_sync (daemon,
+                                             wait_for_dev_t_cb,
+                                             &block_device_number,
+                                             NULL, /* user_data_free_func */
+                                             0,
+                                             NULL);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_daemon_find_object:
+ * @daemon: A #UDisksDaemon.
+ * @object_path: A #dev_t with the device number to find.
+ *
+ * Finds an exported object with the object path given by @object_path.
+ *
+ * Returns: (transfer full): A #UDisksObject or %NULL if not found. Free with g_object_unref().
+ */
+UDisksObject *
+udisks_daemon_find_object (UDisksDaemon         *daemon,
+                           const gchar          *object_path)
+{
+  return (UDisksObject *) g_dbus_object_manager_get_object (G_DBUS_OBJECT_MANAGER (daemon->object_manager),
+                                                            object_path);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
