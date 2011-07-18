@@ -24,8 +24,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <udisks/udisks.h>
-
 #include <string.h>
+
+#include <termios.h>
+#include <unistd.h>
 
 #include <locale.h>
 
@@ -570,8 +572,6 @@ static const GOptionEntry command_unmount_entries[] =
   }
 };
 
-/* TODO: make 'mount' and 'unmount' take options? Probably... */
-
 static gint
 handle_command_mount_unmount (gint        *argc,
                               gchar      **argv[],
@@ -871,6 +871,455 @@ handle_command_mount_unmount (gint        *argc,
   g_free (opt_mount_unmount_device);
   g_free (opt_mount_options);
   g_free (opt_mount_filesystem_type);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gchar *
+read_passphrase (void)
+{
+  struct termios ts, ots;
+  GString *str;
+  const gchar *tty_name;
+  FILE *tty;
+  gchar *ret;
+
+  ret = NULL;
+
+  tty_name = ctermid (NULL);
+  if (tty_name == NULL)
+    {
+      g_warning ("Cannot determine pathname for current controlling terminal for the process: %m");
+      goto out;
+    }
+
+  tty = fopen (tty_name, "r+");
+  if (tty == NULL)
+    {
+      g_warning ("Error opening current controlling terminal %s: %m", tty_name);
+      goto out;
+    }
+
+  fprintf (tty, "Passphrase: ");
+  fflush (tty);
+
+  setbuf (tty, NULL);
+
+  tcgetattr (fileno (tty), &ts);
+  ots = ts;
+  ts.c_lflag &= ~(ECHO | ECHOE | ECHOK | ECHONL);
+  tcsetattr (fileno (tty), TCSAFLUSH, &ts);
+
+  str = g_string_new (NULL);
+  while (TRUE)
+    {
+      gint c;
+      c = getc (tty);
+      if (c == '\n')
+        {
+          /* ok, done */
+          break;
+        }
+      else if (c == EOF)
+        {
+          tcsetattr (fileno (tty), TCSAFLUSH, &ots);
+          g_error ("Unexpected EOF while reading from controlling terminal.");
+          abort ();
+          break;
+        }
+      else
+        {
+          g_string_append_c (str, c);
+        }
+    }
+  tcsetattr (fileno (tty), TCSAFLUSH, &ots);
+  putc ('\n', tty);
+
+  ret = g_string_free (str, FALSE);
+  str = NULL;
+
+ out:
+  if (str != NULL)
+    g_string_free (str, TRUE);
+  return ret;
+}
+
+static gboolean
+encrypted_is_unlocked (UDisksObject *encrypted_object)
+{
+  GList *objects;
+  GList *l;
+  const gchar *encrypted_object_path;
+  gboolean ret;
+
+  ret = FALSE;
+
+  encrypted_object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (encrypted_object));
+
+  objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
+  for (l = objects; l != NULL; l = l->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksBlockDevice *block;
+
+      block = udisks_object_peek_block_device (object);
+      if (block != NULL)
+        {
+          if (g_strcmp0 (udisks_block_device_get_crypto_backing_device (block), encrypted_object_path) == 0)
+            {
+              ret = TRUE;
+              goto out;
+            }
+        }
+    }
+
+ out:
+  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+  g_list_free (objects);
+  return ret;
+}
+
+static gchar   *opt_unlock_lock_object_path = NULL;
+static gchar   *opt_unlock_lock_device = NULL;
+static gboolean opt_unlock_lock_no_user_interaction = FALSE;
+
+static const GOptionEntry command_unlock_entries[] =
+{
+  {
+    "object-path",
+    'p',
+    0,
+    G_OPTION_ARG_STRING,
+    &opt_unlock_lock_object_path,
+    "Object to unlock",
+    NULL
+  },
+  {
+    "block-device",
+    'b',
+    0,
+    G_OPTION_ARG_STRING,
+    &opt_unlock_lock_device,
+    "Block device to unlock",
+    NULL
+  },
+  {
+    "no-user-interaction",
+    0, /* no short option */
+    0,
+    G_OPTION_ARG_NONE,
+    &opt_unlock_lock_no_user_interaction,
+    "Do not authenticate the user if needed",
+    NULL
+  },
+  {
+    NULL
+  }
+};
+
+static const GOptionEntry command_lock_entries[] =
+{
+  {
+    "object-path",
+    'p',
+    0,
+    G_OPTION_ARG_STRING,
+    &opt_unlock_lock_object_path,
+    "Object to lock",
+    NULL
+  },
+  {
+    "block-device",
+    'b',
+    0,
+    G_OPTION_ARG_STRING,
+    &opt_unlock_lock_device,
+    "Block device to lock",
+    NULL
+  },
+  {
+    "no-user-interaction",
+    0, /* no short option */
+    0,
+    G_OPTION_ARG_NONE,
+    &opt_unlock_lock_no_user_interaction,
+    "Do not authenticate the user if needed",
+    NULL
+  },
+  {
+    NULL
+  }
+};
+
+static gint
+handle_command_unlock_lock (gint        *argc,
+                            gchar      **argv[],
+                            gboolean     request_completion,
+                            const gchar *completion_cur,
+                            const gchar *completion_prev,
+                            gboolean     is_unlock)
+{
+  gint ret;
+  GOptionContext *o;
+  gchar *s;
+  gboolean complete_objects;
+  gboolean complete_devices;
+  GList *l;
+  GList *objects;
+  UDisksObject *object;
+  UDisksBlockDevice *block;
+  UDisksEncrypted *encrypted;
+  guint n;
+  GVariant *options;
+  GVariantBuilder builder;
+  gchar *passphrase;
+
+  ret = 1;
+  opt_unlock_lock_object_path = NULL;
+  opt_unlock_lock_device = NULL;
+  object = NULL;
+  options = NULL;
+  passphrase = NULL;
+
+  if (is_unlock)
+    modify_argv0_for_command (argc, argv, "unlock");
+  else
+    modify_argv0_for_command (argc, argv, "lock");
+
+  o = g_option_context_new (NULL);
+  if (request_completion)
+    g_option_context_set_ignore_unknown_options (o, TRUE);
+  g_option_context_set_help_enabled (o, FALSE);
+  if (is_unlock)
+    g_option_context_set_summary (o, "Unlock an encrypted device.");
+  else
+    g_option_context_set_summary (o, "Lock an encrypted device.");
+  g_option_context_add_main_entries (o,
+                                     is_unlock ? command_lock_entries : command_unlock_entries,
+                                     NULL /* GETTEXT_PACKAGE*/);
+
+  complete_objects = FALSE;
+  if (request_completion && (g_strcmp0 (completion_prev, "--object-path") == 0 || g_strcmp0 (completion_prev, "-p") == 0))
+    {
+      complete_objects = TRUE;
+      remove_arg ((*argc) - 1, argc, argv);
+    }
+
+  complete_devices = FALSE;
+  if (request_completion && (g_strcmp0 (completion_prev, "--block-device") == 0 || g_strcmp0 (completion_prev, "-b") == 0))
+    {
+      complete_devices = TRUE;
+      remove_arg ((*argc) - 1, argc, argv);
+    }
+
+  if (!g_option_context_parse (o, argc, argv, NULL))
+    {
+      if (!request_completion)
+        {
+          s = g_option_context_get_help (o, FALSE, NULL);
+          g_printerr ("%s", s);
+          g_free (s);
+          goto out;
+        }
+    }
+
+  if (request_completion &&
+      (opt_unlock_lock_object_path == NULL && !complete_objects) &&
+      (opt_unlock_lock_device == NULL && !complete_devices))
+    {
+      g_print ("--object-path \n"
+               "--block-device \n");
+    }
+
+  if (complete_objects)
+    {
+      const gchar *object_path;
+
+      objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
+      for (l = objects; l != NULL; l = l->next)
+        {
+          gboolean is_unlocked;
+
+          object = UDISKS_OBJECT (l->data);
+          block = udisks_object_peek_block_device (object);
+          encrypted = udisks_object_peek_encrypted (object);
+
+          if (encrypted == NULL)
+            continue;
+
+          is_unlocked = encrypted_is_unlocked (object);
+
+          if ((is_unlock && !is_unlocked) || (!is_unlock && is_unlocked))
+            {
+              object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
+              g_assert (g_str_has_prefix (object_path, "/org/freedesktop/UDisks2/"));
+              g_print ("%s \n", object_path + sizeof ("/org/freedesktop/UDisks2/") - 1);
+            }
+        }
+      g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+      g_list_free (objects);
+      goto out;
+    }
+
+  if (complete_devices)
+    {
+      objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
+      for (l = objects; l != NULL; l = l->next)
+        {
+          object = UDISKS_OBJECT (l->data);
+          block = udisks_object_peek_block_device (object);
+
+          if (block != NULL)
+            {
+              gboolean is_unlocked;
+
+              is_unlocked = FALSE;
+              is_unlocked = encrypted_is_unlocked (object);
+
+              if ((is_unlock && !is_unlocked) || (!is_unlock && is_unlocked))
+                {
+                  const gchar * const *symlinks;
+                  g_print ("%s \n", udisks_block_device_get_device (block));
+                  symlinks = udisks_block_device_get_symlinks (block);
+                  for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
+                    g_print ("%s \n", symlinks[n]);
+                }
+            }
+        }
+      g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+      g_list_free (objects);
+      goto out;
+    }
+
+  /* done with completion */
+  if (request_completion)
+    goto out;
+
+  if (opt_unlock_lock_object_path != NULL)
+    {
+      object = lookup_object_by_path (opt_unlock_lock_object_path);
+      if (object == NULL)
+        {
+          g_printerr ("Error looking up object with path %s\n", opt_unlock_lock_object_path);
+          goto out;
+        }
+    }
+  else if (opt_unlock_lock_device != NULL)
+    {
+      object = lookup_object_by_device (opt_unlock_lock_device);
+      if (object == NULL)
+        {
+          g_printerr ("Error looking up object for device %s\n", opt_unlock_lock_device);
+          goto out;
+        }
+    }
+  else
+    {
+      s = g_option_context_get_help (o, FALSE, NULL);
+      g_printerr ("%s", s);
+      g_free (s);
+      goto out;
+    }
+
+  block = udisks_object_peek_block_device (object);
+  encrypted = udisks_object_peek_encrypted (object);
+  if (encrypted == NULL)
+    {
+      g_printerr ("Object %s is not an encrypted device.\n", g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
+      g_object_unref (object);
+      goto out;
+    }
+
+  g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
+  if (opt_unlock_lock_no_user_interaction)
+    {
+      g_variant_builder_add (&builder,
+                             "{sv}",
+                             "auth.no_user_interaction", g_variant_new_boolean (TRUE));
+    }
+  options = g_variant_builder_end (&builder);
+  g_variant_ref_sink (options);
+
+  passphrase = read_passphrase ();
+
+ try_again:
+  if (is_unlock)
+    {
+      GError *error;
+      gchar *cleartext_object_path;
+
+      error = NULL;
+      if (!udisks_encrypted_call_unlock_sync (encrypted,
+                                              passphrase,
+                                              options,
+                                              &cleartext_object_path,
+                                              NULL,                       /* GCancellable */
+                                              &error))
+        {
+          if (error->domain == UDISKS_ERROR &&
+              error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
+              setup_local_polkit_agent ())
+            {
+              g_error_free (error);
+              goto try_again;
+            }
+          g_printerr ("Error unlocking %s: %s\n",
+                      udisks_block_device_get_device (block),
+                      error->message);
+          g_error_free (error);
+          g_object_unref (object);
+          goto out;
+        }
+      g_print ("Unlocked %s as %s.\n",
+               udisks_block_device_get_device (block),
+               cleartext_object_path);
+      /* TODO: lookup cleartext_object_path and print device */
+      g_free (cleartext_object_path);
+    }
+  else
+    {
+      GError *error;
+
+      error = NULL;
+      if (!udisks_encrypted_call_lock_sync (encrypted,
+                                            options,
+                                            NULL,         /* GCancellable */
+                                            &error))
+        {
+          if (error->domain == UDISKS_ERROR &&
+              error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
+              setup_local_polkit_agent ())
+            {
+              g_error_free (error);
+              goto try_again;
+            }
+          g_printerr ("Error locking %s: %s\n",
+                      udisks_block_device_get_device (block),
+                      error->message);
+          g_error_free (error);
+          g_object_unref (object);
+          goto out;
+        }
+      g_print ("Locked %s.\n",
+               udisks_block_device_get_device (block));
+    }
+
+  ret = 0;
+
+  g_object_unref (object);
+
+ out:
+  if (passphrase != NULL)
+    {
+      memset (passphrase, strlen (passphrase), '\0');
+      g_free (passphrase);
+    }
+  if (options != NULL)
+    g_variant_unref (options);
+  g_option_context_free (o);
+  g_free (opt_unlock_lock_object_path);
+  g_free (opt_unlock_lock_device);
   return ret;
 }
 
@@ -1871,6 +2320,16 @@ main (int argc,
                                           g_strcmp0 (command, "mount") == 0);
       goto out;
     }
+  else if (g_strcmp0 (command, "unlock") == 0 || g_strcmp0 (command, "lock") == 0)
+    {
+      ret = handle_command_unlock_lock (&argc,
+                                        &argv,
+                                        request_completion,
+                                        completion_cur,
+                                        completion_prev,
+                                        g_strcmp0 (command, "unlock") == 0);
+      goto out;
+    }
   else if (g_strcmp0 (command, "dump") == 0)
     {
       ret = handle_command_dump (&argc,
@@ -1970,6 +2429,8 @@ main (int argc,
                    "status \n"
                    "mount \n"
                    "unmount \n"
+                   "lock \n"
+                   "unlock \n"
                    );
           ret = 0;
           goto out;
