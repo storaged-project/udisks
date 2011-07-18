@@ -614,9 +614,9 @@ handle_command_mount_unmount (gint        *argc,
     g_option_context_set_ignore_unknown_options (o, TRUE);
   g_option_context_set_help_enabled (o, FALSE);
   if (is_mount)
-    g_option_context_set_summary (o, "Mount a device.");
+    g_option_context_set_summary (o, "Mount a filesystem.");
   else
-    g_option_context_set_summary (o, "Unmount a device.");
+    g_option_context_set_summary (o, "Unmount a filesystem.");
   g_option_context_add_main_entries (o,
                                      is_mount ? command_mount_entries : command_unmount_entries,
                                      NULL /* GETTEXT_PACKAGE*/);
@@ -2150,8 +2150,10 @@ usage (gint *argc, gchar **argv[], gboolean use_stdout)
                        "  dump         Shows information about all objects\n"
                        "  status       Shows high-level status\n"
                        "  monitor      Monitor changes to objects\n"
-                       "  mount        Mount a device\n"
-                       "  unmount      Unmount a device\n"
+                       "  mount        Mount a filesystem\n"
+                       "  unmount      Unmount a filesystem\n"
+                       "  unlock       Unlock an encrypted device\n"
+                       "  lock         Lock an encrypted device\n"
                        "\n"
                        "Use \"%s COMMAND --help\" to get help on each command.\n",
                        program_name);
