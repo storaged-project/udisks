@@ -31,8 +31,8 @@
 #include <udisks/udisks.h>
 
 static UDisksObject *
-lookup_object_for_block_device_file (UDisksClient  *client,
-                                     const gchar   *block_device_file)
+lookup_object_for_block_device (UDisksClient  *client,
+                                dev_t          block_device)
 {
   UDisksObject *ret;
   GList *objects;
@@ -49,23 +49,11 @@ lookup_object_for_block_device_file (UDisksClient  *client,
       block = udisks_object_peek_block_device (object);
       if (block != NULL)
         {
-          const gchar * const *symlinks;
-          guint n;
-
-          if (g_strcmp0 (udisks_block_device_get_device (block), block_device_file) == 0)
+          if (block_device == makedev (udisks_block_device_get_major (block),
+                                       udisks_block_device_get_minor (block)))
             {
               ret = g_object_ref (object);
               goto out;
-            }
-
-          symlinks = udisks_block_device_get_symlinks (block);
-          for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
-            {
-              if (g_strcmp0 (symlinks[n], block_device_file) == 0)
-                {
-                  ret = g_object_ref (object);
-                  goto out;
-                }
             }
         }
     }
@@ -81,17 +69,16 @@ int
 main (int argc, char *argv[])
 {
   gint ret;
-  gchar *block_device_file;
+  dev_t block_device;
   UDisksClient *client;
   GError *error;
   struct stat statbuf;
   UDisksObject *object;
   UDisksFilesystem *filesystem;
-  const gchar *unmount_options[1] = {NULL};
+  GVariantBuilder builder;
 
   ret = 1;
   client = NULL;
-  block_device_file = NULL;
   object = NULL;
 
   g_type_init ();
@@ -109,13 +96,9 @@ main (int argc, char *argv[])
     }
 
   if (S_ISBLK (statbuf.st_mode))
-    {
-      block_device_file = g_strdup (argv[1]);
-    }
+    block_device = statbuf.st_rdev;
   else
-    {
-      block_device_file = g_strdup_printf ("/dev/block/%d:%d", major (statbuf.st_dev), minor (statbuf.st_dev));
-    }
+    block_device = statbuf.st_dev;
 
   error = NULL;
   client = udisks_client_new_sync (NULL, /* GCancellable */
@@ -127,27 +110,28 @@ main (int argc, char *argv[])
       goto out;
     }
 
-  object = lookup_object_for_block_device_file (client, block_device_file);
+  object = lookup_object_for_block_device (client, block_device);
   if (object == NULL)
     {
-      g_printerr ("Error finding object for block device file %s\n", block_device_file);
+      g_printerr ("Error finding object for block device %d:%d\n", major (block_device), minor (block_device));
       goto out;
     }
 
   filesystem = udisks_object_peek_filesystem (object);
   if (filesystem == NULL)
     {
-      g_printerr ("Block device file %s is not a mountable filesystem.\n", block_device_file);
+      g_printerr ("Block device %d:%d is not a mountable filesystem.\n", major (block_device), minor (block_device));
       goto out;
     }
 
   error = NULL;
+  g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
   if (!udisks_filesystem_call_unmount_sync (filesystem,
-                                            unmount_options,
+                                            g_variant_builder_end (&builder), /* options */
                                             NULL, /* GCancellable */
                                             &error))
     {
-      g_printerr ("Error unmounting %s: %s\n", block_device_file, error->message);
+      g_printerr ("Error unmounting block device %d:%d: %s\n", major (block_device), minor (block_device), error->message);
       g_error_free (error);
       goto out;
     }
@@ -157,7 +141,6 @@ main (int argc, char *argv[])
  out:
   if (object != NULL)
     g_object_unref (object);
-  g_free (block_device_file);
   if (client != NULL)
     g_object_unref (client);
   return ret;
