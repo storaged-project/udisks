@@ -546,17 +546,17 @@ udisks_cleanup_check_mounted_fs_entry (UDisksCleanup  *cleanup,
 
       if (!device_exists)
         {
-          udisks_notice ("Cleaning up mount point %s since device %d:%d no longer exist",
+          udisks_notice ("Cleaning up mount point %s (device %d:%d no longer exist)",
                          mount_point, major (block_device), minor (block_device));
         }
       else if (device_to_be_cleaned)
         {
-          udisks_notice ("Cleaning up mount point %s since device %d:%d is scheduled to be cleaned up",
+          udisks_notice ("Cleaning up mount point %s (device %d:%d is about to be cleaned up)",
                          mount_point, major (block_device), minor (block_device));
         }
       else if (!is_mounted)
         {
-          udisks_notice ("Cleaning up mount point %s since device %d:%d is no longer mounted",
+          udisks_notice ("Cleaning up mount point %s (device %d:%d was manually unmounted)",
                          mount_point, major (block_device), minor (block_device));
         }
 
@@ -1164,7 +1164,8 @@ udisks_cleanup_check_unlocked_luks_entry (UDisksCleanup  *cleanup,
         {
           s = g_variant_print (value, TRUE);
           udisks_warning ("Removing unlocked-luks entry %s because %s now has another dm-uuid %s",
-                          s, device_file_cleartext, current_dm_uuid);
+                          s, device_file_cleartext,
+                          current_dm_uuid != NULL ? current_dm_uuid : "(NULL)");
           g_free (s);
           attempt_no_cleanup = TRUE;
         }
@@ -1190,7 +1191,7 @@ udisks_cleanup_check_unlocked_luks_entry (UDisksCleanup  *cleanup,
 
  out:
 
-  if (check_only)
+  if (check_only && !keep)
     {
       dev_t cleartext_device_dev_t = cleartext_device; /* !@#!$# array type */
       g_array_append_val (devs_to_clean, cleartext_device_dev_t);
@@ -1205,7 +1206,7 @@ udisks_cleanup_check_unlocked_luks_entry (UDisksCleanup  *cleanup,
           gchar *escaped_device_file;
           gchar *error_message;
 
-          udisks_notice ("Cleaning up LUKS device %s because backing device %d:%d no longer exist",
+          udisks_notice ("Cleaning up LUKS device %s (backing device %d:%d no longer exist)",
                          device_file_cleartext,
                          major (crypto_device), minor (crypto_device));
 
