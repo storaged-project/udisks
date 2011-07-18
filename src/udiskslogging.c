@@ -209,7 +209,7 @@ udisks_log (UDisksLogLevel     level,
            message,
            _color_get (_COLOR_FG_BLACK), location, function, _color_get (_COLOR_RESET));
   if (level >= UDISKS_LOG_LEVEL_NOTICE)
-    syslog (syslog_priority, "%s [%s, %s()]", message, location, function);
+    syslog (syslog_priority, "%s", message);
   g_free (message);
 
   G_UNLOCK (log_lock);
