@@ -1333,7 +1333,7 @@ udisks_cleanup_check_unlocked_luks (UDisksCleanup *cleanup,
  * @cleanup: A #UDisksCleanup.
  * @cleartext_device: The clear-text device.
  * @crypto_device: The crypto device.
- * @uuid: The UUID of the unlocked dm device.
+ * @dm_uuid: The UUID of the unlocked dm device.
  * @uid: The user id of the process requesting the device to be unlocked.
  * @error: Return location for error or %NULL.
  *
@@ -1638,7 +1638,7 @@ udisks_cleanup_find_unlocked_luks (UDisksCleanup   *cleanup,
                   if (out_uid != NULL)
                     {
                       GVariant *value;
-                      value = lookup_asv (details, "mounted-by-uid");
+                      value = lookup_asv (details, "unlocked-by-uid");
                       *out_uid = 0;
                       if (value != NULL)
                         {

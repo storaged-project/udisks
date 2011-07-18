@@ -830,7 +830,7 @@ swapspace_handle_start (UDisksSwapspace        *swapspace,
 
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
-                                                    "org.freedesktop.udisks2.swap",
+                                                    "org.freedesktop.udisks2.start-device",
                                                     options,
                                                     N_("Authentication is required to activate swapspace on $(udisks2.device)"),
                                                     invocation))
@@ -884,9 +884,14 @@ swapspace_handle_stop (UDisksSwapspace        *swapspace,
   daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
   block = udisks_object_peek_block_device (object);
 
+  /* Now, check that the user is actually authorized to stop the swap space.
+   *
+   * TODO: want nicer authentication message + special treatment if the
+   * uid that locked the device (e.g. w/o -others).
+   */
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
-                                                    "org.freedesktop.udisks2.swap",
+                                                    "org.freedesktop.udisks2.stop-device-others",
                                                     options,
                                                     N_("Authentication is required to deactivate swapspace on $(udisks2.device)"),
                                                     invocation))

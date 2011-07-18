@@ -140,6 +140,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   UDisksBlockDevice *cleartext_block;
   GUdevDevice *udev_cleartext_device;
   GError *error;
+  uid_t caller_uid;
 
   object = NULL;
   error_message = NULL;
@@ -190,6 +191,14 @@ handle_unlock (UDisksEncrypted        *encrypted,
       goto out;
     }
 
+  /* we need the uid of the caller for the unlocked-luks file */
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
 
   /* Now, check that the user is actually authorized to unlock the device.
    *
@@ -197,9 +206,9 @@ handle_unlock (UDisksEncrypted        *encrypted,
    */
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
-                                                    "org.freedesktop.udisks2.encrypted-unlock",
+                                                    "org.freedesktop.udisks2.start-device",
                                                     options,
-                                                    N_("Authentication is required to unlock $(udisks2.device)"),
+                                                    N_("Authentication is required to unlock the encrypted device $(udisks2.device)"),
                                                     invocation))
     goto out;
 
@@ -249,14 +258,14 @@ handle_unlock (UDisksEncrypted        *encrypted,
 
   udev_cleartext_device = udisks_linux_block_get_device (UDISKS_LINUX_BLOCK (cleartext_object));
 
-  /* update the luks file */
+  /* update the unlocked-luks file */
   if (!udisks_cleanup_add_unlocked_luks (cleanup,
                                          makedev (udisks_block_device_get_major (cleartext_block),
                                                   udisks_block_device_get_minor (cleartext_block)),
                                          makedev (udisks_block_device_get_major (block),
                                                   udisks_block_device_get_minor (block)),
                                          g_udev_device_get_sysfs_attr (udev_cleartext_device, "dm/uuid"),
-                                         500, /* TODO caller_uid, */
+                                         caller_uid,
                                          &error))
     goto out;
 
@@ -297,6 +306,7 @@ handle_lock (UDisksEncrypted        *encrypted,
   uid_t unlocked_by_uid;
   dev_t cleartext_device_from_file;
   GError *error;
+  uid_t caller_uid;
 
   object = NULL;
   daemon = NULL;
@@ -376,19 +386,31 @@ handle_lock (UDisksEncrypted        *encrypted,
     }
   /* TODO: allow locking stuff not in the persistent file? */
 
+  /* we need the uid of the caller to check authorization */
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
 
-  /* Now, check that the user is actually authorized to lock the device.
-   *
-   * TODO: want nicer authentication message + special treatment if the
-   * uid that locked the device (e.g. w/o -others).
+  udisks_debug ("cleartext_device_from_file=%d:%d caller_uid=%d unlocked_by_uid=%d",
+                major (cleartext_device_from_file), minor (cleartext_device_from_file), caller_uid, unlocked_by_uid);
+
+  /* Check that the user is authorized to lock the device - if he
+   * already unlocked it, he is implicitly authorized...
    */
-  if (!udisks_daemon_util_check_authorization_sync (daemon,
-                                                    object,
-                                                    "org.freedesktop.udisks2.encrypted-lock-others",
-                                                    options,
-                                                    N_("Authentication is required to lock $(udisks2.device)"),
-                                                    invocation))
-    goto out;
+  if (caller_uid != 0 && (caller_uid != unlocked_by_uid))
+    {
+      if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                        object,
+                                                        "org.freedesktop.udisks2.stop-device-others",
+                                                        options,
+                                                        N_("Authentication is required to lock the encrypted device $(udisks2.device) unlocked by another user"),
+                                                        invocation))
+        goto out;
+    }
 
   device = udisks_linux_block_get_device (UDISKS_LINUX_BLOCK (cleartext_object));
   escaped_name = g_strescape (g_udev_device_get_sysfs_attr (device, "dm/name"), NULL);

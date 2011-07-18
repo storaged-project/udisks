@@ -294,6 +294,7 @@ udisks_daemon_util_block_get_size
 udisks_daemon_util_resolve_link
 udisks_daemon_util_resolve_links
 udisks_daemon_util_check_authorization_sync
+udisks_daemon_util_get_caller_uid_sync
 </SECTION>
 
 <SECTION>

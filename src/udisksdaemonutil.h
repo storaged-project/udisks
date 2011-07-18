@@ -45,6 +45,13 @@ gboolean udisks_daemon_util_check_authorization_sync (UDisksDaemon          *dae
                                                       const gchar           *message,
                                                       GDBusMethodInvocation *invocation);
 
+gboolean udisks_daemon_util_get_caller_uid_sync (UDisksDaemon            *daemon,
+                                                 GDBusMethodInvocation   *invocation,
+                                                 GCancellable            *cancellable,
+                                                 uid_t                   *out_uid,
+                                                 GError                 **error);
+
+
 
 G_END_DECLS
 

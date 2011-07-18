@@ -98,58 +98,6 @@ udisks_linux_filesystem_new (void)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gboolean
-get_uid_sync (GDBusMethodInvocation   *invocation,
-              GCancellable            *cancellable,
-              uid_t                   *out_uid,
-              GError                 **error)
-{
-  gboolean ret;
-  const gchar *caller;
-  GVariant *value;
-  GError *local_error;
-
-  ret = FALSE;
-
-  caller = g_dbus_method_invocation_get_sender (invocation);
-
-  local_error = NULL;
-  value = g_dbus_connection_call_sync (g_dbus_method_invocation_get_connection (invocation),
-                                       "org.freedesktop.DBus",  /* bus name */
-                                       "/org/freedesktop/DBus", /* object path */
-                                       "org.freedesktop.DBus",  /* interface */
-                                       "GetConnectionUnixUser", /* method */
-                                       g_variant_new ("(s)", caller),
-                                       G_VARIANT_TYPE ("(u)"),
-                                       G_DBUS_CALL_FLAGS_NONE,
-                                       -1, /* timeout_msec */
-                                       cancellable,
-                                       &local_error);
-  if (value == NULL)
-    {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "Error determining uid of caller %s: %s (%s, %d)",
-                   caller,
-                   local_error->message,
-                   g_quark_to_string (local_error->domain),
-                   local_error->code);
-      g_error_free (local_error);
-      goto out;
-    }
-
-  G_STATIC_ASSERT (sizeof (uid_t) == sizeof (guint32));
-  g_variant_get (value, "(u)", out_uid);
-
-  ret = TRUE;
-
- out:
-  return ret;
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
-
 typedef struct
 {
   const gchar *fstype;
@@ -789,7 +737,7 @@ handle_mount (UDisksFilesystem       *filesystem,
 
   /* we need the uid of the caller to check mount options */
   error = NULL;
-  if (!get_uid_sync (invocation, NULL /* GCancellable */, &caller_uid, &error))
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
       g_error_free (error);
@@ -830,7 +778,7 @@ handle_mount (UDisksFilesystem       *filesystem,
    */
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
-                                                    "org.freedesktop.udisks2.filesystem-mount",
+                                                    "org.freedesktop.udisks2.start-device",
                                                     options,
                                                     N_("Authentication is required to mount $(udisks2.device)"),
                                                     invocation))
@@ -1015,7 +963,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
   /* TODO: allow unmounting stuff not in the mounted-fs file? */
 
   error = NULL;
-  if (!get_uid_sync (invocation, NULL, &caller_uid, &error))
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
       g_error_free (error);
@@ -1024,14 +972,13 @@ handle_unmount (UDisksFilesystem       *filesystem,
 
   if (caller_uid != 0 && (caller_uid != mounted_by_uid))
     {
-      /* TODO: allow with special authorization (unmount-others) */
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_MOUNTED_BY_OTHER_USER,
-                                             "Cannot unmount filesystem at `%s' mounted by other user with uid %d",
-                                             mount_point,
-                                             mounted_by_uid);
-      goto out;
+      if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                        object,
+                                                        "org.freedesktop.udisks2.stop-device-others",
+                                                        options,
+                                                        N_("Authentication is required to unmount $(udisks2.device) mounted by another user"),
+                                                        invocation))
+        goto out;
     }
 
   /* otherwise go ahead and unmount the filesystem */
@@ -1225,14 +1172,12 @@ handle_set_label (UDisksFilesystem       *filesystem,
 
   /* Check that the user is actually authorized to change the
    * filesystem label.
-   *
-   * TODO: want nicer authentication message + special treatment for system-internal
    */
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
-                                                    "org.freedesktop.udisks2.modify",
+                                                    "org.freedesktop.udisks2.modify-device",
                                                     options,
-                                                    N_("Authentication is required to change the label on $(udisks2.device)"),
+                                                    N_("Authentication is required to change the filesystem label on $(udisks2.device)"),
                                                     invocation))
     goto out;
 

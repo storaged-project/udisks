@@ -9,19 +9,10 @@
   <vendor_url>http://udisks.freedesktop.org/</vendor_url>
   <icon_name>drive-removable-media</icon_name>
 
-  <action id="org.freedesktop.udisks2.filesystem-mount">
-    <_description>Mount a device</_description>
-    <_message>Authentication is required to mount the device</_message>
-    <defaults>
-      <allow_any>auth_admin</allow_any>
-      <allow_inactive>auth_admin</allow_inactive>
-      <allow_active>auth_admin_keep</allow_active>
-    </defaults>
-  </action>
-
-  <action id="org.freedesktop.udisks2.encrypted-unlock">
-    <_description>Unlock an encrypted device</_description>
-    <_message>Authentication is required to unlock the encrypted device</_message>
+  <!-- Mounting filesystems (including starting swap, unlocking LUKS devices etc.) -->
+  <action id="org.freedesktop.udisks2.start-device">
+    <_description>Start a device (mounting filesystems, activating swap, unlocking LUKS etc.)</_description>
+    <_message>Authentication is required to stop the device</_message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -29,9 +20,9 @@
     </defaults>
   </action>
 
-  <action id="org.freedesktop.udisks2.encrypted-lock-others">
-    <_description>Lock an encrypted device unlocked by another user</_description>
-    <_message>Authentication is required to lock the unlocked encrypted device</_message>
+  <action id="org.freedesktop.udisks2.stop-device-others">
+    <_description>Stop a device started by another user</_description>
+    <_message>Authentication is required to stop a device started by another user</_message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -39,7 +30,8 @@
     </defaults>
   </action>
 
-  <action id="org.freedesktop.udisks2.modify">
+  <!-- Modify a device (create new filesystem, partitioning, change FS label, etc.) -->
+  <action id="org.freedesktop.udisks2.modify-device">
     <_description>Modify a device</_description>
     <_message>Authentication is required to modify a device</_message>
     <defaults>
@@ -49,9 +41,10 @@
     </defaults>
   </action>
 
-  <action id="org.freedesktop.udisks2.swap">
-    <_description>Configure swap devices</_description>
-    <_message>Authentication is required to configure swap devices</_message>
+  <!-- Work with devices considered to be at the system-level (for example, SAS devices) -->
+  <action id="org.freedesktop.udisks2.system-devices">
+    <_description>Work with system devices</_description>
+    <_message>Authentication is work with system devices</_message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>

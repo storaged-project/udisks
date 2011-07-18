@@ -326,6 +326,8 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
   UDisksBlockDevice *block;
   gboolean auth_no_user_interaction;
 
+  /* TODO: also check for org.freedesktop.udisks2.system-devices (if applicable) */
+
   ret = FALSE;
   subject = NULL;
   details = NULL;
@@ -402,3 +404,71 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
   return ret;
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_daemon_util_get_caller_uid_sync:
+ * @daemon: A #UDisksDaemon.
+ * @invocation: A #GDBusMethodInvocation.
+ * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @out_uid: (out): Return location for resolved uid or %NULL.
+ * @error: Return location for error.
+ *
+ * Gets the UNIX user id of the peer represented by @invocation.
+ *
+ * Returns: %TRUE if the user id was obtained, %FALSE otherwise
+ */
+gboolean
+udisks_daemon_util_get_caller_uid_sync (UDisksDaemon            *daemon,
+                                        GDBusMethodInvocation   *invocation,
+                                        GCancellable            *cancellable,
+                                        uid_t                   *out_uid,
+                                        GError                 **error)
+{
+  gboolean ret;
+  const gchar *caller;
+  GVariant *value;
+  GError *local_error;
+
+  /* TODO: cache this on @daemon */
+
+  ret = FALSE;
+
+  caller = g_dbus_method_invocation_get_sender (invocation);
+
+  local_error = NULL;
+  value = g_dbus_connection_call_sync (g_dbus_method_invocation_get_connection (invocation),
+                                       "org.freedesktop.DBus",  /* bus name */
+                                       "/org/freedesktop/DBus", /* object path */
+                                       "org.freedesktop.DBus",  /* interface */
+                                       "GetConnectionUnixUser", /* method */
+                                       g_variant_new ("(s)", caller),
+                                       G_VARIANT_TYPE ("(u)"),
+                                       G_DBUS_CALL_FLAGS_NONE,
+                                       -1, /* timeout_msec */
+                                       cancellable,
+                                       &local_error);
+  if (value == NULL)
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "Error determining uid of caller %s: %s (%s, %d)",
+                   caller,
+                   local_error->message,
+                   g_quark_to_string (local_error->domain),
+                   local_error->code);
+      g_error_free (local_error);
+      goto out;
+    }
+
+  G_STATIC_ASSERT (sizeof (uid_t) == sizeof (guint32));
+  g_variant_get (value, "(u)", out_uid);
+
+  ret = TRUE;
+
+ out:
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
