@@ -272,6 +272,26 @@
     -->
     <property name="LoopBackingFile" type="ay" access="read"/>
 
+    <!-- HintSystem: If %TRUE, the device is considered a <emphasis>system device</emphasis>.
+         System devices are devices that require additional permissions to access.
+    -->
+    <property name="HintSystem" type="b" access="read"/>
+
+    <!-- HintIgnore: If %TRUE, the device should be hidden from users. -->
+    <property name="HintIgnore" type="b" access="read"/>
+
+    <!-- HintAuto: If %TRUE, the device should be automatically started (e.g. mounted, unlocked etc.). -->
+    <property name="HintAuto" type="b" access="read"/>
+
+    <!-- HintName: If not blank, the name to use when presenting the device. -->
+    <property name="HintName" type="s" access="read"/>
+
+    <!-- HintIconName: If not blank, the icon name to use when presenting the device.
+         The name must adhere to the
+         <ulink url="http://www.freedesktop.org/wiki/Specifications/icon-theme-spec">freedesktop.org icon theme specification</ulink>.
+    -->
+    <property name="HintIconName" type="s" access="read"/>
+
     <!-- PartTable: Set to %TRUE if a partition table signature was detected on the device. -->
     <property name="PartTable" type="b" access="read"/>
     <!-- PartTableScheme: The type of partition table detected.

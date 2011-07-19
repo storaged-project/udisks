@@ -20,6 +20,16 @@
     </defaults>
   </action>
 
+  <action id="org.freedesktop.udisks2.filesystem-mount-system">
+    <_description>Mount a filesystem on a system device</_description>
+    <_message>Authentication is required to mount the filesystem</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
   <action id="org.freedesktop.udisks2.filesystem-unmount-others">
     <_description>Stop a device started by another user</_description>
     <_message>Authentication is required to unmount a filesystem mounted by another user</_message>
@@ -33,6 +43,16 @@
   <!-- Unlocking encrypted devices -->
   <action id="org.freedesktop.udisks2.encrypted-unlock">
     <_description>Unlock an encrypted device</_description>
+    <_message>Authentication is required to unlock an encrypted device</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.udisks2.encrypted-unlock-system">
+    <_description>Unlock an encrypted system device</_description>
     <_message>Authentication is required to unlock an encrypted device</_message>
     <defaults>
       <allow_any>auth_admin</allow_any>
@@ -69,14 +89,13 @@
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
-      <allow_active>auth_admin_keep</allow_active>
+      <allow_active>yes</allow_active>
     </defaults>
   </action>
 
-  <!-- Work with devices considered to be at the system-level (for example, SAS devices) -->
-  <action id="org.freedesktop.udisks2.system-devices">
-    <_description>Work with system devices</_description>
-    <_message>Authentication is work with system devices</_message>
+  <action id="org.freedesktop.udisks2.modify-device-system">
+    <_description>Modify a system device</_description>
+    <_message>Authentication is required to modify a device</_message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>

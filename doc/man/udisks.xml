@@ -28,100 +28,75 @@
     </para>
   </refsect1>
 
-  <refsect1><title>DEVICE INFORMATION</title>
+  <refsect1>
+    <title>DEVICE INFORMATION</title>
     <para>
       On Linux, udisks relies on recent versions of
       <citerefentry><refentrytitle>udev</refentrytitle><manvolnum>7</manvolnum></citerefentry>
       and the Linux kernel. Influential device properties in the udev
       database include:
     </para>
-    <!-- TODO: need to revisit all of these variables -->
     <variablelist>
       <varlistentry>
-        <term><option>UDISKS_PRESENTATION_HIDE</option></term>
-        <listitem><para>If set to 1 this is a hint to presentation
-            level software that the device should not be shown to the
-            user.
-        </para></listitem>
+        <term><option>UDISKS_SYSTEM</option></term>
+        <listitem>
+          <para>
+            If set, this overrides the value of the
+            <link linkend="gdbus-property-org-freedesktop-UDisks2-BlockDevice.HintSystem">HintSystem</link> property.
+          </para>
+        </listitem>
       </varlistentry>
-
       <varlistentry>
-        <term><option>UDISKS_PRESENTATION_NOPOLICY</option></term>
-        <listitem><para>If set to 1 this is a hint to presentation
-            level software that the device should not be automounted
-            or autoassembled (for e.g. components of a multi-disk device).
-        </para></listitem>
+        <term><option>UDISKS_IGNORE</option></term>
+        <listitem>
+          <para>
+            If set, this overrides the value of the
+            <link linkend="gdbus-property-org-freedesktop-UDisks2-BlockDevice.HintIgnore">HintIgnore</link> property.
+          </para>
+        </listitem>
       </varlistentry>
-
       <varlistentry>
-        <term><option>UDISKS_DISABLE_POLLING</option></term>
-        <listitem><para>If set to 1 this will disable the polling of drives
-	    for media changes, for devices which do not send out media
-	    notifications by themselves (this mostly affects CD drives).
-	    Some CD drives cause bad effects such as very high CPU usage when
-	    being polled.
-        </para></listitem>
+        <term><option>UDISKS_AUTO</option></term>
+        <listitem>
+          <para>
+            If set, this overrides the value of the
+            <link linkend="gdbus-property-org-freedesktop-UDisks2-BlockDevice.HintAuto">HintAuto</link> property.
+          </para>
+        </listitem>
       </varlistentry>
-
       <varlistentry>
-        <term><option>UDISKS_PRESENTATION_NAME</option></term>
-        <listitem><para>The name to user for the device when
-        presenting it to the user.
-        </para></listitem>
+        <term><option>UDISKS_NAME</option></term>
+        <listitem>
+          <para>
+            The name to use for the device when presenting it in an user interface.
+            This corresponds to the
+            <link linkend="gdbus-property-org-freedesktop-UDisks2-BlockDevice.HintName">HintName</link> property.
+          </para>
+        </listitem>
       </varlistentry>
-
       <varlistentry>
-        <term><option>UDISKS_PRESENTATION_ICON_NAME</option></term>
-        <listitem><para>The icon to use when presenting the device to
-        the user. If set, the name must follow the freedesktop.org
-        icon theme specification.
-        </para></listitem>
+        <term><option>UDISKS_ICON_NAME</option></term>
+        <listitem>
+          <para>
+            The icon to use for the device when presenting it in an user interface. If
+            set, the name must adhere to the
+            <ulink url="http://www.freedesktop.org/wiki/Specifications/icon-theme-spec">freedesktop.org icon theme specification</ulink>.
+            This corresponds to the
+            <link linkend="gdbus-property-org-freedesktop-UDisks2-BlockDevice.HintIconName">HintIconName</link> property.
+          </para>
+        </listitem>
       </varlistentry>
     </variablelist>
+
     <para>
-      The <option>ID_DRIVE_*</option> properties are used to describe what
-      kind of physical media can be used in a device. These are typically
-      set on the main block device (e.g. <literal>/dev/sdb</literal>) and
-      more than one these properties can be set if the device supports
-      multiple kinds of media.
+      For media and drive identification, the output of the probers
+      supplied by
+      <citerefentry><refentrytitle>udev</refentrytitle><manvolnum>7</manvolnum></citerefentry>
+      (such as <command>cdrom_id</command>, <command>ata_id</command> and
+      <command>scsi_id</command>) are used in addition to the
+      following properties:
     </para>
     <variablelist>
-      <varlistentry>
-        <term><option>ID_DRIVE_EJECTABLE</option></term>
-        <listitem><para>Whether the media in the drive is physically ejectable. Only
-            set this to 1 (or 0) if the drive truly uses (or doesn't) ejectable media.
-            In particular, it is not necessary to set this for e.g. iPod or Kindle
-            devices where it is necessary to send a command via
-            <citerefentry>
-              <refentrytitle>eject</refentrytitle><manvolnum>1</manvolnum>
-            </citerefentry>
-            since the desktop user session will offer this option for
-            removable devices regardless of whether they are
-            ejectable.  If this property is not set, a heuristic will
-            be used to determine if the media is ejectable (drives
-            using optical, Zip or Jaz media are considered ejectable).
-        </para></listitem>
-      </varlistentry>
-      <varlistentry>
-        <term><option>ID_DRIVE_DETACHABLE</option></term>
-        <listitem><para> Whether the device is detachable. It is only meaningful
-            to set this to 0 (to avoid marking a device as detachable) since the
-            code for detaching the device is part of udisks itself.
-            If this property is not set, a heuristic will be used to determine if the
-            drive is detachable (currently only devices connected through USB are
-            detachable).
-        </para></listitem>
-      </varlistentry>
-      <varlistentry>
-        <term><option>ID_DRIVE_CAN_SPINDOWN</option></term>
-        <listitem><para> Whether the device can spin down. It is only meaningful
-            to set this to 0 (to avoid marking a device as being capable of spinning down)
-            since the code for spinning down the device is part of udisks itself.
-            If this property is not set, a heuristic will be used to determine if the
-            drive can spin down (currently only ATA devices, including those USB
-            devices with a SAT layer) can be spun down).
-        </para></listitem>
-      </varlistentry>
       <varlistentry>
         <term><option>ID_DRIVE_FLASH</option></term>
         <listitem><para>The device is compatible with flash.
@@ -149,7 +124,12 @@
       </varlistentry>
       <varlistentry>
         <term><option>ID_DRIVE_FLASH_SDHC</option></term>
-        <listitem><para>The device is compatible with High-Capicity SecureDigital.
+        <listitem><para>The device is compatible with High-Capacity SecureDigital.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_FLASH_SDXC</option></term>
+        <listitem><para>The device is compatible with Extended-Capacity SecureDigital.
         </para></listitem>
       </varlistentry>
       <varlistentry>
@@ -172,15 +152,17 @@
         <listitem><para>The device is compatible with Jaz.
         </para></listitem>
       </varlistentry>
-
     </variablelist>
     <para>
-      The <option>ID_DRIVE_MEDIA_*</option> properties describe the
-      current media in a device. As with
-      the <option>ID_DRIVE_*</option> properties, these properties are
-      typically set on the main block device
-      (e.g. <literal>/dev/sdb</literal>). Typically only one of these
-      properties are set.
+      While the <literal>ID_DRIVE_*</literal> properties describe what
+      kind of media the drive accepts (more than one property can be
+      set) and correspond to the <link
+      linkend="gdbus-property-org-freedesktop-UDisks2-Drive.MediaCompatibility">MediaCompatibility</link>
+      property, the <option>ID_DRIVE_MEDIA_*</option> properties
+      describe the current media in a device (typically only one of
+      these properties are set) and correspond to the <link
+      linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Media">Media</link>
+      property:
     </para>
     <variablelist>
       <varlistentry>
@@ -210,7 +192,12 @@
       </varlistentry>
       <varlistentry>
         <term><option>ID_DRIVE_MEDIA_FLASH_SDHC</option></term>
-        <listitem><para>The physical media currently inserted into the device is High-Capicity SecureDigital.
+        <listitem><para>The physical media currently inserted into the device is High-Capacity SecureDigital.
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_DRIVE_MEDIA_FLASH_SDXC</option></term>
+        <listitem><para>The physical media currently inserted into the device is Extended-Capacity SecureDigital.
         </para></listitem>
       </varlistentry>
       <varlistentry>

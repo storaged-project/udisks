@@ -379,8 +379,9 @@ block_device_connect (UDisksLinuxBlock *block)
 }
 
 static gchar *
-find_drive (GDBusObjectManagerServer *object_manager,
-            GUdevDevice              *block_device)
+find_drive (GDBusObjectManagerServer  *object_manager,
+            GUdevDevice               *block_device,
+            UDisksDrive              **out_drive)
 {
   const gchar *block_device_sysfs_path;
   gchar *ret;
@@ -413,6 +414,8 @@ find_drive (GDBusObjectManagerServer *object_manager,
           drive_sysfs_path = g_udev_device_get_sysfs_path (drive_device);
           if (g_str_has_prefix (block_device_sysfs_path, drive_sysfs_path))
             {
+              if (out_drive != NULL)
+                *out_drive = udisks_object_get_drive (UDISKS_OBJECT (object));
               ret = g_strdup (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
               g_list_foreach (drive_devices, (GFunc) g_object_unref, NULL);
               g_list_free (drive_devices);
@@ -484,6 +487,71 @@ get_sysfs_attr (GUdevDevice *device,
 }
 
 static void
+block_device_update_hints (UDisksLinuxBlock  *block,
+                           const gchar       *uevent_action,
+                           UDisksBlockDevice *iface,
+                           const gchar       *device_file,
+                           UDisksDrive       *drive)
+{
+  gboolean hint_system;
+  gboolean hint_ignore;
+  gboolean hint_auto;
+  const gchar *hint_name;
+  const gchar *hint_icon_name;
+
+  /* very conservative defaults */
+  hint_system = TRUE;
+  hint_ignore = FALSE;
+  hint_auto = FALSE;
+  hint_name = NULL;
+  hint_icon_name = NULL;
+
+  /* Provide easy access to _only_ the following devices
+   *
+   *  - anything connected via known local buses (e.g. USB or Firewire, MMC or MemoryStick)
+   *  - any device with removable media
+   *
+   * Be careful when extending this list as we don't want to automount
+   * the world when (inadvertently) connecting to a SAN.
+   */
+  if (drive != NULL)
+    {
+      const gchar *connection_bus;
+      gboolean removable;
+      connection_bus = udisks_drive_get_connection_bus (drive);
+      removable = udisks_drive_get_media_removable (drive);
+      if (removable ||
+          (g_strcmp0 (connection_bus, "usb") == 0 || g_strcmp0 (connection_bus, "firewire") == 0) ||
+          (g_str_has_prefix (device_file, "/dev/mmcblk") || g_str_has_prefix (device_file, "/dev/mspblk")))
+        {
+          hint_system = FALSE;
+          hint_auto = TRUE;
+        }
+    }
+
+  /* TODO: set ignore to TRUE for physical paths belonging to a drive with multiple paths */
+
+  /* override from udev properties */
+  if (g_udev_device_has_property (block->device, "UDISKS_SYSTEM"))
+    hint_system = g_udev_device_get_property_as_boolean (block->device, "UDISKS_SYSTEM");
+  if (g_udev_device_has_property (block->device, "UDISKS_IGNORE"))
+    hint_ignore = g_udev_device_get_property_as_boolean (block->device, "UDISKS_IGNORE");
+  if (g_udev_device_has_property (block->device, "UDISKS_AUTO"))
+    hint_auto = g_udev_device_get_property_as_boolean (block->device, "UDISKS_AUTO");
+  if (g_udev_device_has_property (block->device, "UDISKS_NAME"))
+    hint_name = g_udev_device_get_property (block->device, "UDISKS_NAME");
+  if (g_udev_device_has_property (block->device, "UDISKS_ICON_NAME"))
+    hint_icon_name = g_udev_device_get_property (block->device, "UDISKS_ICON_NAME");
+
+  /* ... and scene! */
+  udisks_block_device_set_hint_system (iface, hint_system);
+  udisks_block_device_set_hint_ignore (iface, hint_ignore);
+  udisks_block_device_set_hint_auto (iface, hint_auto);
+  udisks_block_device_set_hint_name (iface, hint_name);
+  udisks_block_device_set_hint_icon_name (iface, hint_icon_name);
+}
+
+static void
 block_device_update (UDisksLinuxBlock *block,
                      const gchar      *uevent_action,
                      GDBusInterface   *_iface)
@@ -492,12 +560,15 @@ block_device_update (UDisksLinuxBlock *block,
   GUdevDeviceNumber dev;
   GDBusObjectManagerServer *object_manager;
   gchar *drive_object_path;
+  UDisksDrive *drive;
   gchar *s;
   gboolean is_partition_table;
   gboolean is_partition_entry;
   const gchar *device_file;
   const gchar *const *symlinks;
   const gchar *preferred_device_file;
+
+  drive = NULL;
 
   dev = g_udev_device_get_device_number (block->device);
   device_file = g_udev_device_get_device_file (block->device);
@@ -616,7 +687,7 @@ block_device_update (UDisksLinuxBlock *block,
    * only do this once or something else
    */
   object_manager = udisks_daemon_get_object_manager (block->daemon);
-  drive_object_path = find_drive (object_manager, block->device);
+  drive_object_path = find_drive (object_manager, block->device, &drive);
   if (drive_object_path != NULL)
     {
       udisks_block_device_set_drive (iface, drive_object_path);
@@ -740,6 +811,11 @@ block_device_update (UDisksLinuxBlock *block,
       udisks_block_device_set_part_entry_offset (iface, 0);
       udisks_block_device_set_part_entry_size (iface, 0);
     }
+
+  block_device_update_hints (block, uevent_action, iface, device_file, drive);
+
+  if (drive != NULL)
+    g_object_unref (drive);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

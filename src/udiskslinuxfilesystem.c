@@ -668,6 +668,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   gchar *escaped_mount_point_to_use;
   gchar *error_message;
   GError *error;
+  const gchar *action_id;
 
   object = NULL;
   error_message = NULL;
@@ -773,12 +774,13 @@ handle_mount (UDisksFilesystem       *filesystem,
   /* Now, check that the user is actually authorized to mount the
    * device. Need to do this before calculating a mount point since we
    * may be racing with other threads...
-   *
-   * TODO: want nicer authentication message + special treatment for system-internal
    */
+  action_id = "org.freedesktop.udisks2.filesystem-mount";
+  if (udisks_block_device_get_hint_system (block))
+    action_id = "org.freedesktop.udisks2.filesystem-mount-system";
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
-                                                    "org.freedesktop.udisks2.filesystem-mount",
+                                                    action_id,
                                                     options,
                                                     N_("Authentication is required to mount $(udisks2.device)"),
                                                     invocation))
@@ -1122,6 +1124,7 @@ handle_set_label (UDisksFilesystem       *filesystem,
   gboolean supports_online;
   UDisksBaseJob *job;
   gchar *escaped_label;
+  const gchar *action_id;
 
   object = NULL;
   daemon = NULL;
@@ -1170,12 +1173,16 @@ handle_set_label (UDisksFilesystem       *filesystem,
         }
     }
 
+  action_id = "org.freedesktop.udisks2.modify-device";
+  if (udisks_block_device_get_hint_system (block))
+    action_id = "org.freedesktop.udisks2.modify-device-system";
+
   /* Check that the user is actually authorized to change the
    * filesystem label.
    */
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
-                                                    "org.freedesktop.udisks2.modify-device",
+                                                    action_id,
                                                     options,
                                                     N_("Authentication is required to change the filesystem label on $(udisks2.device)"),
                                                     invocation))

@@ -326,8 +326,6 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
   UDisksBlockDevice *block;
   gboolean auth_no_user_interaction;
 
-  /* TODO: also check for org.freedesktop.udisks2.system-devices (if applicable) */
-
   ret = FALSE;
   subject = NULL;
   details = NULL;

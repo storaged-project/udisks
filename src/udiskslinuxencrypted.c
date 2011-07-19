@@ -141,6 +141,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   GUdevDevice *udev_cleartext_device;
   GError *error;
   uid_t caller_uid;
+  const gchar *action_id;
 
   object = NULL;
   error_message = NULL;
@@ -201,12 +202,13 @@ handle_unlock (UDisksEncrypted        *encrypted,
     }
 
   /* Now, check that the user is actually authorized to unlock the device.
-   *
-   * TODO: want nicer authentication message + special treatment for system-internal
    */
+  action_id = "org.freedesktop.udisks2.encrypted-unlock";
+  if (udisks_block_device_get_hint_system (block))
+    action_id = "org.freedesktop.udisks2.encrypted-unlock-system";
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
-                                                    "org.freedesktop.udisks2.encrypted-unlock",
+                                                    action_id,
                                                     options,
                                                     N_("Authentication is required to unlock the encrypted device $(udisks2.device)"),
                                                     invocation))
