@@ -258,6 +258,20 @@
     -->
     <property name="IdUUID" type="ay" access="read"/>
 
+    <!-- CryptoBackingDevice:
+         The #org.freedesktop.UDisks2.BlockDevice object that is
+         backing the device or <literal>/</literal> if unknown or if
+         the block device is not the cleartext device for an encrypted
+         device.
+    -->
+    <property name="CryptoBackingDevice" type="o" access="read"/>
+
+    <!-- LoopBackingFile:
+         A path to the file that is backing the block device or blank
+         if unknown or not a loop device.
+    -->
+    <property name="LoopBackingFile" type="ay" access="read"/>
+
     <!-- PartTable: Set to %TRUE if a partition table signature was detected on the device. -->
     <property name="PartTable" type="b" access="read"/>
     <!-- PartTableScheme: The type of partition table detected.
@@ -300,20 +314,6 @@
          <literal>/</literal> if the device is not a partition.
     -->
     <property name="PartEntryTable" type="o" access="read"/>
-
-    <!-- CryptoBackingDevice:
-         The #org.freedesktop.UDisks2.BlockDevice object that is
-         backing the device or <literal>/</literal> if unknown or if
-         the block device is not the cleartext device for an encrypted
-         device.
-    -->
-    <property name="CryptoBackingDevice" type="o" access="read"/>
-
-    <!-- LoopBackingFile:
-         A path to the file that is backing the block device or blank
-         if unknown or not a loop device.
-    -->
-    <property name="LoopBackingFile" type="ay" access="read"/>
   </interface>
 
   <!-- ********************************************************************** -->
