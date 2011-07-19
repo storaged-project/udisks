@@ -13,7 +13,7 @@
 
   <refnamediv>
     <refname>udisksd</refname>
-    <refpurpose>udisks Daemon</refpurpose>
+    <refpurpose>udisks daemon</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
@@ -27,20 +27,17 @@
 
   <refsect1><title>DESCRIPTION</title>
     <para>
-      <emphasis><refentrytitle>udisksd</refentrytitle></emphasis> provides
-      the <emphasis>org.freedesktop.UDisks2</emphasis> name on the
-      system message bus. Users or administrators should never need to
-      start this daemon as it will be automatically started by
+      The <command>udisksd</command> program provides the
+      <emphasis>org.freedesktop.UDisks2</emphasis> name on the system
+      message bus. Users or administrators should never need to start
+      this daemon as it will be automatically started by
       <citerefentry><refentrytitle>dbus-daemon</refentrytitle><manvolnum>1</manvolnum></citerefentry>
-      whenever an application calls into the <emphasis>org.freedesktop.UDisks2</emphasis>
-      name.
+      whenever an application tries to access its D-Bus interfaces.
     </para>
     <para>
       See the
       <citerefentry><refentrytitle>udisks</refentrytitle><manvolnum>7</manvolnum></citerefentry>
-      man page for information on how to customize
-      how <emphasis><refentrytitle>udisksd</refentrytitle></emphasis>
-      works.
+      man page for more information.
     </para>
   </refsect1>
 
@@ -52,6 +49,16 @@
         <listitem>
           <para>
             Show help options.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    <variablelist>
+      <varlistentry>
+        <term><option>--replace</option></term>
+        <listitem>
+          <para>
+            Replace existing daemon.
           </para>
         </listitem>
       </varlistentry>

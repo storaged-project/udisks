@@ -13,16 +13,18 @@
 
   <refnamediv>
     <refname>udisks</refname>
-    <refpurpose>Storage Management</refpurpose>
+    <refpurpose>storage management</refpurpose>
   </refnamediv>
 
   <refsect1><title>DESCRIPTION</title>
     <para>
-      udisks provides an interface to enumerate storage
-      devices and perform operations on them. Any application
-      can access the <emphasis>org.freedesktop.UDisks2</emphasis>
-      service on the system message bus. Some operations (such
-      as formatting disks etc.) is restricted using polkit.
+      udisks provides an interface to enumerate and perform operations
+      on storage devices. Any application can access the
+      <citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+      daemon via the name <emphasis>org.freedesktop.UDisks2</emphasis>
+      on the system message bus. Some operations (such as formatting
+      disks etc.) are restricted using
+      <citerefentry><refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
     </para>
   </refsect1>
 
@@ -30,9 +32,10 @@
     <para>
       On Linux, udisks relies on recent versions of
       <citerefentry><refentrytitle>udev</refentrytitle><manvolnum>7</manvolnum></citerefentry>
-      and the kernel. Influential device properties in the udev
+      and the Linux kernel. Influential device properties in the udev
       database include:
     </para>
+    <!-- TODO: need to revisit all of these variables -->
     <variablelist>
       <varlistentry>
         <term><option>UDISKS_PRESENTATION_HIDE</option></term>

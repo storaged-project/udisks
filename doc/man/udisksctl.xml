@@ -36,7 +36,8 @@
       <group>
         <arg choice="plain">--filesystem-type <replaceable>TYPE</replaceable></arg>
       </group>
-      <arg choice="opt" rep="repeat">--option <replaceable>OPTION</replaceable></arg>
+      <arg choice="opt" rep="repeat">--options <replaceable>OPTIONS</replaceable></arg>
+      <arg choice="opt">--no-user-interaction</arg>
     </cmdsynopsis>
 
     <cmdsynopsis>
@@ -46,7 +47,28 @@
         <arg choice="plain">--object-path <replaceable>OBJECT</replaceable></arg>
         <arg choice="plain">--block-device <replaceable>DEVICE</replaceable></arg>
       </group>
-      <arg choice="opt" rep="repeat">--option <replaceable>OPTION</replaceable></arg>
+      <arg choice="opt">--force</arg>
+      <arg choice="opt">--no-user-interaction</arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>udisksctl</command>
+      <arg choice="plain">unlock </arg>
+      <group choice="req">
+        <arg choice="plain">--object-path <replaceable>OBJECT</replaceable></arg>
+        <arg choice="plain">--block-device <replaceable>DEVICE</replaceable></arg>
+      </group>
+      <arg choice="opt">--no-user-interaction</arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>udisksctl</command>
+      <arg choice="plain">lock </arg>
+      <group choice="req">
+        <arg choice="plain">--object-path <replaceable>OBJECT</replaceable></arg>
+        <arg choice="plain">--block-device <replaceable>DEVICE</replaceable></arg>
+      </group>
+      <arg choice="opt">--no-user-interaction</arg>
     </cmdsynopsis>
 
     <cmdsynopsis>
@@ -68,85 +90,108 @@
   <refsect1><title>Description</title>
     <para>
       <command>udisksctl</command> is a command-line program used
-      to interact with the udisks daemon.
+      to interact with the
+      <citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+      daemon process.
     </para>
+  </refsect1>
 
-    <refsect2>
-      <title>Commands</title>
-      <variablelist>
+  <refsect1>
+    <title>Commands</title>
+    <variablelist>
 
-        <varlistentry>
-          <term><option>mount</option></term>
-          <listitem>
-            <para>
-              Mounts a device. The device will be mounted in a
-              subdirectory in the <filename>/media</filename>
-              hierarchy - upon successful completion, the mount point
-              will be printed to standard output.
-            </para>
-            <para>
-              The device will be mounted with a safe set of default
-              options. You can influence the options passed to the
-              <citerefentry><refentrytitle>mount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
-              command with
-              <literal>--option</literal> - do not use a comma to
-              separate options into one word - instead simply use the
-              option several times. Note that only safe options are
-              allowed - requests with inherently unsafe options such
-              as <parameter>suid</parameter> or
-              <parameter>dev</parameter> that would allow the caller
-              to gain additional privileges, are rejected.
-            </para>
-            <para>
-              The special option
-              <parameter>auth_no_user_interaction</parameter> can
-              be used to request that no interaction (such as the user
-              being presented with an authentication dialog) must
-              occur when checking with
-              <citerefentry><refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum></citerefentry>
-              whether the caller is authorized to perform the
-              requested action.
-            </para>
-          </listitem>
-        </varlistentry>
+      <varlistentry>
+        <term><option>mount</option></term>
+        <listitem>
+          <para>
+            Mounts a device. The device will be mounted in a
+            subdirectory in the <filename>/media</filename> hierarchy
+            - upon successful completion, the mount point will be
+            printed to standard output.
+          </para>
+          <para>
+            The device will be mounted with a safe set of default
+            options. You can influence the options passed to the
+            <citerefentry><refentrytitle>mount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+            command with <option>--options</option>. Note that only
+            safe options are allowed - requests with inherently unsafe
+            options such as <parameter>suid</parameter> or
+            <parameter>dev</parameter> that would allow the caller to
+            gain additional privileges, are rejected.
+          </para>
+        </listitem>
+      </varlistentry>
 
-        <varlistentry>
-          <term><option>unmount</option></term>
-          <listitem>
-            <para>
-              Unmounts a device previously mounted with
-              e.g. <command>udisksctl</command>. The special option
-              <parameter>force</parameter> can be used to request that
-              the device is unmounted even if active references
-              exists.
-            </para>
-          </listitem>
-        </varlistentry>
+      <varlistentry>
+        <term><option>unmount</option></term>
+        <listitem>
+          <para>
+            Unmounts a device previously mounted by
+            <citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+            The option <option>--force</option> can be used to request
+            that the device is unmounted even if active references
+            exists.
+          </para>
+        </listitem>
+      </varlistentry>
 
-        <varlistentry>
-          <term><option>monitor</option></term>
-          <listitem><para>
-            Monitors the daemon for events.
-          </para></listitem>
-        </varlistentry>
+      <varlistentry>
+        <term><option>unlock</option></term>
+        <listitem>
+          <para>
+            Unlocks an encrypted device. The passphrase will be
+            requested from the controlling terminal and upon
+            successful completion, the cleartext device will be
+            printed to standard output.
+          </para>
+        </listitem>
+      </varlistentry>
 
-        <varlistentry>
-          <term><option>dump</option></term>
-          <listitem><para>
-            Prints the current state of the daemon.
-          </para></listitem>
-        </varlistentry>
+      <varlistentry>
+        <term><option>lock</option></term>
+        <listitem>
+          <para>
+            Locks a device previously unlocked by
+            <citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+          </para>
+        </listitem>
+      </varlistentry>
 
-        <varlistentry>
-          <term><option>help</option></term>
-          <listitem><para>
-            Prints help and exit.
-          </para></listitem>
-        </varlistentry>
+      <varlistentry>
+        <term><option>monitor</option></term>
+        <listitem><para>
+          Monitors the daemon for events.
+        </para></listitem>
+      </varlistentry>
 
-      </variablelist>
-    </refsect2>
+      <varlistentry>
+        <term><option>dump</option></term>
+        <listitem><para>
+          Prints the current state of the daemon.
+        </para></listitem>
+      </varlistentry>
 
+      <varlistentry>
+        <term><option>help</option></term>
+        <listitem><para>
+          Prints help and exit.
+        </para></listitem>
+      </varlistentry>
+
+    </variablelist>
+  </refsect1>
+
+  <refsect1>
+    <title>Common Options</title>
+    <para>
+      The option <option >--no-user-interaction</option> can be used
+      to request that no interaction (such as the user being
+      presented with an authentication dialog) must occur when
+      checking with
+      <citerefentry><refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+      whether the caller is authorized to perform the requested
+      action.
+    </para>
   </refsect1>
 
   <refsect1><title>Audience</title>
@@ -159,7 +204,7 @@
       or other programs - options/commands may change in incompatible
       ways in the future even in maintenance releases. Scripts and/or
       other programs should either use the D-Bus APIs of
-      <citerefentry><refentrytitle>udisks2-daemon</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+      <citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry>
       or native low-level commands such as
       <citerefentry><refentrytitle>mount</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
     </para>
@@ -170,89 +215,6 @@
       <command>udisksctl</command> ships with a bash completion script to
       complete commands, objects, block devices and some options.
     </para>
-  </refsect1>
-
-  <refsect1>
-    <title>Examples</title>
-
-    <para>
-      Mounting and unmounting devices:
-    </para>
-    <programlisting>
-$ udisksctl mount --block-device /dev/mmcblk0p2
-Mounted /dev/mmcblk0p2 at /media/stuff
-
-$ udisksctl unmount --block-device /dev/mmcblk0p2
-Unmounted /dev/mmcblk0p2
-    </programlisting>
-
-    <para>
-      Mounting with non-standard options:
-    </para>
-    <programlisting>
-$ udisksctl mount --block-device /dev/mmcblk0p2 --option flush --option utf8=0 --option iocharset=iso8859-15
-Mounted /dev/mmcblk0p2 at /media/stuff
-
-$ udisksctl mount --block-device /dev/mmcblk0p2 --option suid
-Error mounting /dev/mmcblk0p2: GDBus.Error:org.freedesktop.UDisks.Error.Failed: Mount option `suid' is not allowed
-    </programlisting>
-
-    <para>
-      Showing information about a device:
-    </para>
-    <programlisting>
-$ udisksctl info --block-device /dev/mmcblk0p2
-/org/freedesktop/UDisks/devices/mmcblk0p2:
-  org.freedesktop.UDisks.BlockDevice:
-    Device:             /dev/mmcblk0p2
-    Major:              179
-    Minor:              2
-    Size:               15794176
-    Symlinks:           /dev/block/179:2
-                        /dev/disk/by-id/mmc-SD01G_0x50882907-part2
-                        /dev/disk/by-path/pci-0000:05:00.2-part2
-                        /dev/disk/by-uuid/6DA7-F983
-                        /dev/disk/by-label/stuff\x22
-  org.freedesktop.UDisks.BlockDevice.Probed:
-    Label:              stuff"
-    Type:               vfat
-    UUID:               6DA7-F983
-    Usage:              filesystem
-    Version:            FAT16
-  org.freedesktop.UDisks.Filesystem:
-    MountPoints:
-  org.freedesktop.UDisks.LinuxSysfsDevice:
-    Subsystem:          block
-    SysfsPath:          /sys/devices/pci0000:00/0000:00:1e.0/0000:05:00.2/mmc_host/mmc0/mmc0:9ffc/block/mmcblk0/mmcblk0p2    </programlisting>
-
-    <para>
-      Monitoring the daemon:
-    </para>
-    <programlisting>
-$ udisksctl monitor
-Monitoring the udisks daemon. Press Ctrl+C to exit.
-14:33:21.363: The udisks-daemon is running (name-owner :1.1254).
-
-14:33:27.616: Added /org/freedesktop/UDisks/jobs/10
-  org.freedesktop.UDisks.Job:
-    ExpectedEndTime:    0
-    Progress:           0.0
-    StartTime:          0
-14:33:27.663: /org/freedesktop/UDisks/devices/mmcblk0p2: org.freedesktop.UDisks.Filesystem: Properties Changed
-  MountPoints:          /media/stuff"
-14:33:27.663: /org/freedesktop/UDisks/jobs/10: org.freedesktop.UDisks.Job::Completed (true, '')
-14:33:27.664: Removed /org/freedesktop/UDisks/jobs/10
-
-14:33:29.751: Added /org/freedesktop/UDisks/jobs/11
-  org.freedesktop.UDisks.Job:
-    ExpectedEndTime:    0
-    Progress:           0.0
-    StartTime:          0
-14:33:29.752: /org/freedesktop/UDisks/devices/mmcblk0p2: org.freedesktop.UDisks.Filesystem: Properties Changed
-  MountPoints:
-14:33:29.759: /org/freedesktop/UDisks/jobs/11: org.freedesktop.UDisks.Job::Completed (true, '')
-14:33:29.759: Removed /org/freedesktop/UDisks/jobs/11
-    </programlisting>
   </refsect1>
 
   <refsect1><title>Author</title>
@@ -280,6 +242,9 @@ Monitoring the udisks daemon. Press Ctrl+C to exit.
       <citerefentry>
         <refentrytitle>udisks</refentrytitle><manvolnum>7</manvolnum>
       </citerefentry>,
+      <citerefentry>
+        <refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum>
+      </citerefentry>
     </para>
   </refsect1>
 </refentry>
