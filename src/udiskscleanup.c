@@ -556,7 +556,7 @@ udisks_cleanup_check_mounted_fs_entry (UDisksCleanup  *cleanup,
         }
       else if (!is_mounted)
         {
-          udisks_notice ("Cleaning up mount point %s (device %d:%d was manually unmounted)",
+          udisks_notice ("Cleaning up mount point %s (device %d:%d is not mounted)",
                          mount_point, major (block_device), minor (block_device));
         }
 
