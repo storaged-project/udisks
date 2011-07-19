@@ -830,7 +830,7 @@ swapspace_handle_start (UDisksSwapspace        *swapspace,
 
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
-                                                    "org.freedesktop.udisks2.start-device",
+                                                    "org.freedesktop.udisks2.manage-swapspace",
                                                     options,
                                                     N_("Authentication is required to activate swapspace on $(udisks2.device)"),
                                                     invocation))
@@ -891,7 +891,7 @@ swapspace_handle_stop (UDisksSwapspace        *swapspace,
    */
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
-                                                    "org.freedesktop.udisks2.stop-device-others",
+                                                    "org.freedesktop.udisks2.manage-swapspace",
                                                     options,
                                                     N_("Authentication is required to deactivate swapspace on $(udisks2.device)"),
                                                     invocation))

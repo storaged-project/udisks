@@ -206,7 +206,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
    */
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
-                                                    "org.freedesktop.udisks2.start-device",
+                                                    "org.freedesktop.udisks2.encrypted-unlock",
                                                     options,
                                                     N_("Authentication is required to unlock the encrypted device $(udisks2.device)"),
                                                     invocation))
@@ -405,7 +405,7 @@ handle_lock (UDisksEncrypted        *encrypted,
     {
       if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                         object,
-                                                        "org.freedesktop.udisks2.stop-device-others",
+                                                        "org.freedesktop.udisks2.encrypted-lock-others",
                                                         options,
                                                         N_("Authentication is required to lock the encrypted device $(udisks2.device) unlocked by another user"),
                                                         invocation))

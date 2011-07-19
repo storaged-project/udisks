@@ -778,7 +778,7 @@ handle_mount (UDisksFilesystem       *filesystem,
    */
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
-                                                    "org.freedesktop.udisks2.start-device",
+                                                    "org.freedesktop.udisks2.filesystem-mount",
                                                     options,
                                                     N_("Authentication is required to mount $(udisks2.device)"),
                                                     invocation))
@@ -974,7 +974,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
     {
       if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                         object,
-                                                        "org.freedesktop.udisks2.stop-device-others",
+                                                        "org.freedesktop.udisks2.filesystem-unmount-others",
                                                         options,
                                                         N_("Authentication is required to unmount $(udisks2.device) mounted by another user"),
                                                         invocation))

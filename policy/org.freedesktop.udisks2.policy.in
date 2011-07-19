@@ -9,10 +9,10 @@
   <vendor_url>http://udisks.freedesktop.org/</vendor_url>
   <icon_name>drive-removable-media</icon_name>
 
-  <!-- Mounting filesystems (including starting swap, unlocking LUKS devices etc.) -->
-  <action id="org.freedesktop.udisks2.start-device">
-    <_description>Start a device (mounting filesystems, activating swap, unlocking LUKS etc.)</_description>
-    <_message>Authentication is required to stop the device</_message>
+  <!-- Mounting filesystems -->
+  <action id="org.freedesktop.udisks2.filesystem-mount">
+    <_description>Mount a filesystem</_description>
+    <_message>Authentication is required to mount the filesystem</_message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -20,9 +20,41 @@
     </defaults>
   </action>
 
-  <action id="org.freedesktop.udisks2.stop-device-others">
+  <action id="org.freedesktop.udisks2.filesystem-unmount-others">
     <_description>Stop a device started by another user</_description>
-    <_message>Authentication is required to stop a device started by another user</_message>
+    <_message>Authentication is required to unmount a filesystem mounted by another user</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <!-- Unlocking encrypted devices -->
+  <action id="org.freedesktop.udisks2.encrypted-unlock">
+    <_description>Unlock an encrypted device</_description>
+    <_message>Authentication is required to unlock an encrypted device</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.udisks2.encrypted-lock-others">
+    <_description>Lock an encrypted device unlocked by another user</_description>
+    <_message>Authentication is required to lock an encrypted device unlocked by another user</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <!-- Manage swapspace -->
+  <action id="org.freedesktop.udisks2.manage-swapspace">
+    <_description>Manage swapspace</_description>
+    <_message>Authentication is required to manage swapspace</_message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
