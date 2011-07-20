@@ -1241,7 +1241,8 @@ handle_command_unlock_lock (gint        *argc,
   options = g_variant_builder_end (&builder);
   g_variant_ref_sink (options);
 
-  passphrase = read_passphrase ();
+  if (is_unlock)
+    passphrase = read_passphrase ();
 
  try_again:
   if (is_unlock)
