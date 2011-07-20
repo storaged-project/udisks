@@ -51,6 +51,7 @@ libudisks_daemon_la_SOURCES =						\
 	udiskslinuxfilesystem.h		udiskslinuxfilesystem.c		\
 	udiskslinuxencrypted.h		udiskslinuxencrypted.c		\
 	udiskslinuxdrive.h		udiskslinuxdrive.c		\
+	udiskslinuxmanager.h		udiskslinuxmanager.c		\
 	udisksbasejob.h			udisksbasejob.c			\
 	udisksspawnedjob.h		udisksspawnedjob.c		\
 	udisksthreadedjob.h		udisksthreadedjob.c		\

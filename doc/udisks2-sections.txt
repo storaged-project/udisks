@@ -40,6 +40,7 @@ udisks_client_new
 udisks_client_new_finish
 udisks_client_new_sync
 udisks_client_get_object_manager
+udisks_client_get_manager
 <SUBSECTION Standard>
 UDISKS_TYPE_CLIENT
 UDISKS_CLIENT
@@ -47,8 +48,6 @@ UDISKS_IS_CLIENT
 <SUBSECTION Private>
 udisks_client_get_type
 </SECTION>
-
-
 
 <SECTION>
 <FILE>udisksdaemon</FILE>
@@ -192,7 +191,6 @@ udisks_provider_get_type
 UDisksProviderPrivate
 </SECTION>
 
-
 <SECTION>
 <FILE>udiskslinuxprovider</FILE>
 <TITLE>UDisksLinuxProvider</TITLE>
@@ -332,12 +330,14 @@ udisks_object_get_filesystem
 udisks_object_get_job
 udisks_object_get_swapspace
 udisks_object_get_encrypted
+udisks_object_get_manager
 udisks_object_peek_block_device
 udisks_object_peek_drive
 udisks_object_peek_filesystem
 udisks_object_peek_job
 udisks_object_peek_swapspace
 udisks_object_peek_encrypted
+udisks_object_peek_manager
 UDisksObjectProxy
 UDisksObjectProxyClass
 udisks_object_proxy_new
@@ -350,6 +350,7 @@ udisks_object_skeleton_set_filesystem
 udisks_object_skeleton_set_job
 udisks_object_skeleton_set_swapspace
 udisks_object_skeleton_set_encrypted
+udisks_object_skeleton_set_manager
 <SUBSECTION Standard>
 udisks_object_get_type
 udisks_object_proxy_get_type
@@ -766,4 +767,61 @@ UDisksBlockDeviceSkeletonPrivate
 udisks_block_device_get_type
 udisks_block_device_proxy_get_type
 udisks_block_device_skeleton_get_type
+</SECTION>
+
+<SECTION>
+<FILE>UDisksManager</FILE>
+UDisksManager
+UDisksManagerIface
+udisks_manager_interface_info
+udisks_manager_override_properties
+udisks_manager_get_version
+udisks_manager_set_version
+UDisksManagerProxy
+UDisksManagerProxyClass
+udisks_manager_proxy_new
+udisks_manager_proxy_new_finish
+udisks_manager_proxy_new_sync
+udisks_manager_proxy_new_for_bus
+udisks_manager_proxy_new_for_bus_finish
+udisks_manager_proxy_new_for_bus_sync
+UDisksManagerSkeleton
+UDisksManagerSkeletonClass
+udisks_manager_skeleton_new
+<SUBSECTION Standard>
+UDISKS_TYPE_MANAGER
+UDISKS_IS_MANAGER
+UDISKS_MANAGER
+UDISKS_MANAGER_GET_IFACE
+UDISKS_TYPE_MANAGER_PROXY
+UDISKS_IS_MANAGER_PROXY
+UDISKS_IS_MANAGER_PROXY_CLASS
+UDISKS_MANAGER_PROXY
+UDISKS_MANAGER_PROXY_CLASS
+UDISKS_MANAGER_PROXY_GET_CLASS
+UDISKS_TYPE_MANAGER_SKELETON
+UDISKS_IS_MANAGER_SKELETON
+UDISKS_IS_MANAGER_SKELETON_CLASS
+UDISKS_MANAGER_SKELETON
+UDISKS_MANAGER_SKELETON_CLASS
+UDISKS_MANAGER_SKELETON_GET_CLASS
+UDisksManagerProxyPrivate
+UDisksManagerSkeletonPrivate
+udisks_manager_get_type
+udisks_manager_proxy_get_type
+udisks_manager_skeleton_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxmanager</FILE>
+<TITLE>UDisksLinuxManager</TITLE>
+UDisksLinuxManager
+udisks_linux_manager_new
+udisks_linux_manager_get_daemon
+<SUBSECTION Standard>
+UDISKS_TYPE_LINUX_MANAGER
+UDISKS_LINUX_MANAGER
+UDISKS_IS_LINUX_MANAGER
+<SUBSECTION Private>
+udisks_linux_manager_get_type
 </SECTION>

@@ -75,7 +75,7 @@
           the name.
         </para>
       </sect1>
-      <sect1 id="ref-dbus-well-known-object">
+      <sect1 id="ref-dbus-udisks2-well-known-object">
         <title>The /org/freedesktop/UDisks2 object</title>
         <para>
           The process that owns the well-known D-Bus name <link
@@ -87,6 +87,17 @@
           url="http://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-objectmanager">org.freedesktop.DBus.ObjectManager</ulink>
           interface and should be used by clients to discover other
           objects.
+        </para>
+      </sect1>
+      <sect1 id="ref-dbus-manager-well-known-object">
+        <title>The /org/freedesktop/UDisks2/Manager object</title>
+        <para>
+          The object at the path
+          <literal>/org/freedesktop/UDisks2/Manager</literal>
+          implements the <link
+          linkend="gdbus-interface-org-freedesktop-UDisks2-Manager.top_of_page">org.freedesktop.UDisks2.Manager</link>
+          D-Bus interface. This object can be used to inspect and
+          manipulate global state.
         </para>
       </sect1>
       <sect1 id="udisks-std-options">
@@ -125,6 +136,7 @@
 
     <chapter>
       <title>D-Bus Interfaces</title>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Manager.xml"/>
       <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Drive.xml"/>
       <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.BlockDevice.xml"/>
       <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Filesystem.xml"/>
@@ -143,6 +155,7 @@
       <title>Generated Code</title>
       <xi:include href="xml/UDisksObject.xml"/>
       <xi:include href="xml/UDisksObjectManagerClient.xml"/>
+      <xi:include href="xml/UDisksManager.xml"/>
       <xi:include href="xml/UDisksDrive.xml"/>
       <xi:include href="xml/UDisksJob.xml"/>
       <xi:include href="xml/UDisksBlockDevice.xml"/>
@@ -157,6 +170,7 @@
     <xi:include href="xml/udisksdaemon.xml"/>
     <xi:include href="xml/udisksdaemonutil.xml"/>
     <xi:include href="xml/udiskslogging.xml"/>
+    <xi:include href="xml/udiskslinuxmanager.xml"/>
     <xi:include href="xml/udiskslinuxblock.xml"/>
     <xi:include href="xml/udiskslinuxdrive.xml"/>
     <xi:include href="xml/udiskslinuxfilesystem.xml"/>

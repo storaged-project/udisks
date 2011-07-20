@@ -60,7 +60,8 @@ typedef struct
 enum
 {
   PROP_0,
-  PROP_OBJECT_MANAGER
+  PROP_OBJECT_MANAGER,
+  PROP_MANAGER
 };
 
 static void initable_iface_init       (GInitableIface      *initable_iface);
@@ -109,6 +110,10 @@ udisks_client_get_property (GObject    *object,
       g_value_set_object (value, udisks_client_get_object_manager (client));
       break;
 
+    case PROP_MANAGER:
+      g_value_set_object (value, udisks_client_get_manager (client));
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -132,9 +137,24 @@ udisks_client_class_init (UDisksClientClass *klass)
   g_object_class_install_property (gobject_class,
                                    PROP_OBJECT_MANAGER,
                                    g_param_spec_object ("object-manager",
-                                                        "object manager",
+                                                        "Object Manager",
                                                         "The GDBusObjectManager used by the UDisksClient",
                                                         G_TYPE_DBUS_OBJECT_MANAGER,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_STATIC_STRINGS));
+
+  /**
+   * UDisksClient:manager:
+   *
+   * The #UDisksManager interface on the well-known
+   * <literal>/org/freedesktop/UDisks2/Manager</literal> object
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_MANAGER,
+                                   g_param_spec_object ("manager",
+                                                        "Manager",
+                                                        "The UDisksManager",
+                                                        UDISKS_TYPE_MANAGER,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_STATIC_STRINGS));
 }
@@ -288,4 +308,34 @@ udisks_client_get_object_manager (UDisksClient        *client)
 {
   g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
   return client->object_manager;
+}
+
+/**
+ * udisks_client_get_manager:
+ * @client: A #UDisksClient.
+ *
+ * Gets the #UDisksManager interface on the well-known
+ * <literal>/org/freedesktop/UDisks2/Manager</literal> object.
+ *
+ * Returns: (transfer none): A #UDisksManager or %NULL if the udisksd
+ * daemon is not currently running. Do not free, the instance is owned
+ * by @client.
+ */
+UDisksManager *
+udisks_client_get_manager (UDisksClient *client)
+{
+  UDisksManager *ret;
+  GDBusObject *obj;
+
+  g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
+
+  obj = g_dbus_object_manager_get_object (client->object_manager, "/org/freedesktop/UDisks2/Manager");
+  if (obj == NULL)
+    goto out;
+
+  ret = udisks_object_peek_manager (UDISKS_OBJECT (obj));
+  g_object_unref (obj);
+
+ out:
+  return ret;
 }

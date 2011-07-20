@@ -29,6 +29,7 @@
 #include "udiskslinuxprovider.h"
 #include "udiskslinuxblock.h"
 #include "udiskslinuxdrive.h"
+#include "udiskslinuxmanager.h"
 #include "udiskscleanup.h"
 
 /**
@@ -53,6 +54,8 @@ struct _UDisksLinuxProvider
   UDisksProvider parent_instance;
 
   GUdevClient *gudev_client;
+
+  UDisksObjectSkeleton *manager_object;
 
   /* maps from sysfs path to UDisksLinuxBlock objects */
   GHashTable *sysfs_to_block;
@@ -88,6 +91,9 @@ udisks_linux_provider_finalize (GObject *object)
   g_hash_table_unref (provider->sysfs_to_controller);
   g_object_unref (provider->gudev_client);
 
+  udisks_object_skeleton_set_manager (provider->manager_object, NULL);
+  g_object_unref (provider->manager_object);
+
   if (G_OBJECT_CLASS (udisks_linux_provider_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_provider_parent_class)->finalize (object);
 }
@@ -120,11 +126,23 @@ static void
 udisks_linux_provider_start (UDisksProvider *_provider)
 {
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (_provider);
+  UDisksDaemon *daemon;
+  UDisksManager *manager;
   GList *devices;
   GList *l;
 
   if (UDISKS_PROVIDER_CLASS (udisks_linux_provider_parent_class)->start != NULL)
     UDISKS_PROVIDER_CLASS (udisks_linux_provider_parent_class)->start (_provider);
+
+  daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
+
+  provider->manager_object = udisks_object_skeleton_new ("/org/freedesktop/UDisks2/Manager");
+  manager = udisks_linux_manager_new (daemon);
+  udisks_object_skeleton_set_manager (provider->manager_object, manager);
+  g_object_unref (manager);
+
+  g_dbus_object_manager_server_export (udisks_daemon_get_object_manager (daemon),
+                                       G_DBUS_OBJECT_SKELETON (provider->manager_object));
 
   provider->sysfs_to_block = g_hash_table_new_full (g_str_hash,
                                                     g_str_equal,

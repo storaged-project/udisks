@@ -43,6 +43,7 @@ UDisksClient       *udisks_client_new_finish         (GAsyncResult        *res,
 UDisksClient       *udisks_client_new_sync           (GCancellable        *cancellable,
                                                       GError             **error);
 GDBusObjectManager *udisks_client_get_object_manager (UDisksClient        *client);
+UDisksManager      *udisks_client_get_manager        (UDisksClient        *client);
 
 G_END_DECLS
 

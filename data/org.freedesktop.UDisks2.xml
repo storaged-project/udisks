@@ -25,6 +25,18 @@
   <!-- ********************************************************************** -->
 
   <!--
+      org.freedesktop.UDisks2.Manager:
+      @short_description: Manager singleton
+
+      Interface for top-level manager singleton object located at the
+      object path <literal>/org/freedesktop/UDisks2/Manager</literal>.
+  -->
+  <interface name="org.freedesktop.UDisks2.Manager">
+    <!-- Version: The version of the daemon currently running  -->
+    <property name="Version" type="s" access="read"/>
+  </interface>
+
+  <!--
       org.freedesktop.UDisks2.Drive:
       @short_description: Disk Drive
 

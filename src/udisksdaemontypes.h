@@ -67,6 +67,9 @@ typedef struct _UDisksLinuxFilesystem UDisksLinuxFilesystem;
 struct _UDisksLinuxEncrypted;
 typedef struct _UDisksLinuxEncrypted UDisksLinuxEncrypted;
 
+struct _UDisksLinuxManager;
+typedef struct _UDisksLinuxManager UDisksLinuxManager;
+
 /**
  * UDisksThreadedJobFunc:
  * @job: A #UDisksThreadedJob.
