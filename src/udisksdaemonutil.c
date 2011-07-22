@@ -30,6 +30,7 @@
 
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
+#include "udiskscleanup.h"
 
 /**
  * SECTION:udisksdaemonutil
@@ -283,6 +284,57 @@ udisks_daemon_util_resolve_links (const gchar *path,
   return (gchar **) g_ptr_array_free (p, FALSE);
 }
 
+
+/**
+ * udisks_daemon_util_setup_by_user:
+ * @daemon: A #UDisksDaemon.
+ * @object: The #GDBusObject that the call is on or %NULL.
+ * @user: The user in question.
+ *
+ * Checks whether the device represented by @object (if any) has been
+ * setup by @user.
+ *
+ * Returns: %TRUE if @object has been set-up by @user, %FALSE if not.
+ */
+gboolean
+udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
+                                  UDisksObject *object,
+                                  uid_t         user)
+{
+  gboolean ret;
+  UDisksBlockDevice *block;
+  UDisksCleanup *cleanup;
+  uid_t setup_by_user;
+
+  ret = FALSE;
+
+  cleanup = udisks_daemon_get_cleanup (daemon);
+  block = udisks_object_peek_block_device (object);
+  if (block != NULL)
+    {
+      UDisksObject *crypto_object;
+      crypto_object = udisks_daemon_find_object (daemon, udisks_block_device_get_crypto_backing_device (block));
+      if (crypto_object != NULL)
+        {
+          UDisksBlockDevice *crypto_block;
+          crypto_block = udisks_object_peek_block_device (crypto_object);
+
+          if (udisks_cleanup_find_unlocked_luks (cleanup,
+                                                 makedev (udisks_block_device_get_major (crypto_block),
+                                                          udisks_block_device_get_minor (crypto_block)),
+                                                 &setup_by_user, NULL))
+            {
+              if (setup_by_user == user)
+                {
+                  ret = TRUE;
+                }
+            }
+          g_object_unref (crypto_object);
+        }
+    }
+
+  return ret;
+}
 
 /**
  * udisks_daemon_util_check_authorization_sync:

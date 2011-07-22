@@ -38,6 +38,10 @@ gchar *udisks_daemon_util_resolve_link (const gchar *path,
 gchar **udisks_daemon_util_resolve_links (const gchar *path,
                                           const gchar *dir_name);
 
+gboolean udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
+                                           UDisksObject *object,
+                                           uid_t         user);
+
 gboolean udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
                                                       UDisksObject          *object,
                                                       const gchar           *action_id,

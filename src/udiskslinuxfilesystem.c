@@ -776,7 +776,7 @@ handle_mount (UDisksFilesystem       *filesystem,
    * may be racing with other threads...
    */
   action_id = "org.freedesktop.udisks2.filesystem-mount";
-  if (udisks_block_device_get_hint_system (block))
+  if (udisks_block_device_get_hint_system (block) && !(udisks_daemon_util_setup_by_user (daemon, object, caller_uid)))
     action_id = "org.freedesktop.udisks2.filesystem-mount-system";
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
