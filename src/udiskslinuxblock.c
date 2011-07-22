@@ -38,6 +38,7 @@
 #include "udiskslinuxdrive.h"
 #include "udiskslinuxfilesystem.h"
 #include "udiskslinuxencrypted.h"
+#include "udiskslinuxloop.h"
 #include "udiskspersistentstore.h"
 #include "udiskslinuxprovider.h"
 
@@ -71,6 +72,7 @@ struct _UDisksLinuxBlock
   UDisksFilesystem *iface_filesystem;
   UDisksSwapspace *iface_swapspace;
   UDisksEncrypted *iface_encrypted;
+  UDisksLoop *iface_loop;
 };
 
 struct _UDisksLinuxBlockClass
@@ -113,6 +115,8 @@ udisks_linux_block_finalize (GObject *object)
     g_object_unref (block->iface_swapspace);
   if (block->iface_encrypted != NULL)
     g_object_unref (block->iface_encrypted);
+  if (block->iface_loop != NULL)
+    g_object_unref (block->iface_loop);
 
   if (G_OBJECT_CLASS (udisks_linux_block_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_block_parent_class)->finalize (object);
@@ -580,46 +584,6 @@ block_device_update (UDisksLinuxBlock *block,
   udisks_block_device_set_minor (iface, minor (dev));
   udisks_block_device_set_size (iface, udisks_daemon_util_block_get_size (block->device));
 
-  if (g_str_has_prefix (g_udev_device_get_name (block->device), "loop"))
-    {
-      gchar *filename;
-      gchar *backing_file;
-      GError *error;
-      filename = g_strconcat (g_udev_device_get_sysfs_path (block->device),
-                              "/loop/backing_file",
-                              NULL);
-      error = NULL;
-      if (!g_file_get_contents (filename,
-                               &backing_file,
-                               NULL,
-                               &error))
-        {
-          /* ENOENT is not unexpected */
-          if (!(error->domain == G_FILE_ERROR && error->code == G_FILE_ERROR_NOENT))
-            {
-              udisks_warning ("Error loading %s: %s (%s, %d)",
-                              filename,
-                              error->message,
-                              g_quark_to_string (error->domain),
-                              error->code);
-            }
-          g_error_free (error);
-          udisks_block_device_set_loop_backing_file (iface, "");
-        }
-      else
-        {
-          g_strstrip (backing_file);
-          udisks_block_device_set_loop_backing_file (iface, backing_file);
-          g_free (backing_file);
-        }
-      g_free (filename);
-    }
-  else
-    {
-      udisks_block_device_set_loop_backing_file (iface, "");
-    }
-
-
   /* dm-crypt
    *
    * TODO: this might not be the best way to determine if the device-mapper device
@@ -1072,6 +1036,74 @@ encrypted_update (UDisksLinuxBlock  *block,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+loop_check (UDisksLinuxBlock *block)
+{
+  gboolean ret;
+
+  ret = FALSE;
+  if (g_str_has_prefix (g_udev_device_get_name (block->device), "loop"))
+    ret = TRUE;
+
+  return ret;
+}
+
+static void
+loop_connect (UDisksLinuxBlock *block)
+{
+  /* do nothing */
+}
+
+static void
+loop_update (UDisksLinuxBlock  *block,
+             const gchar       *uevent_action,
+             GDBusInterface    *_iface)
+{
+  UDisksLoop *iface = UDISKS_LOOP (_iface);
+
+  if (g_str_has_prefix (g_udev_device_get_name (block->device), "loop"))
+    {
+      gchar *filename;
+      gchar *backing_file;
+      GError *error;
+      filename = g_strconcat (g_udev_device_get_sysfs_path (block->device),
+                              "/loop/backing_file",
+                              NULL);
+      error = NULL;
+      if (!g_file_get_contents (filename,
+                               &backing_file,
+                               NULL,
+                               &error))
+        {
+          /* ENOENT is not unexpected */
+          if (!(error->domain == G_FILE_ERROR && error->code == G_FILE_ERROR_NOENT))
+            {
+              udisks_warning ("Error loading %s: %s (%s, %d)",
+                              filename,
+                              error->message,
+                              g_quark_to_string (error->domain),
+                              error->code);
+            }
+          g_error_free (error);
+          udisks_loop_set_backing_file (iface, "");
+        }
+      else
+        {
+          /* TODO: validate UTF-8 */
+          g_strstrip (backing_file);
+          udisks_loop_set_backing_file (iface, backing_file);
+          g_free (backing_file);
+        }
+      g_free (filename);
+    }
+  else
+    {
+      udisks_loop_set_backing_file (iface, "");
+    }
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 /**
  * udisks_linux_block_uevent:
  * @block: A #UDisksLinuxBlock.
@@ -1103,6 +1135,8 @@ udisks_linux_block_uevent (UDisksLinuxBlock *block,
                 UDISKS_TYPE_SWAPSPACE_SKELETON, &block->iface_swapspace);
   update_iface (block, action, encrypted_check, encrypted_connect, encrypted_update,
                 UDISKS_TYPE_LINUX_ENCRYPTED, &block->iface_encrypted);
+  update_iface (block, action, loop_check, loop_connect, loop_update,
+                UDISKS_TYPE_LINUX_LOOP, &block->iface_loop);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

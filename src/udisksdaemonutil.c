@@ -287,7 +287,7 @@ udisks_daemon_util_resolve_links (const gchar *path,
 /**
  * udisks_daemon_util_check_authorization_sync:
  * @daemon: A #UDisksDaemon.
- * @object: The #GDBusObject that the call is on.
+ * @object: (allow-none): The #GDBusObject that the call is on or %NULL.
  * @action_id: The action id to check for.
  * @options: (allow-none): A #GVariant to check for the <literal>auth.no_user_interaction</literal> option or %NULL.
  * @message: The message to convey (use N_).
@@ -349,9 +349,12 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
   polkit_details_insert (details, "polkit.gettext_domain", "udisks2"); /* TODO: set up translation */
 
   /* setup other details that @message can use */
-  block = udisks_object_peek_block_device (object);
-  if (block != NULL)
-    polkit_details_insert (details, "udisks2.device", udisks_block_device_get_preferred_device (block));
+  if (object != NULL)
+    {
+      block = udisks_object_peek_block_device (object);
+      if (block != NULL)
+        polkit_details_insert (details, "udisks2.device", udisks_block_device_get_preferred_device (block));
+    }
 
   error = NULL;
   result = polkit_authority_check_authorization_sync (udisks_daemon_get_authority (daemon),

@@ -20,12 +20,16 @@
 
 #include "config.h"
 #include <glib/gi18n.h>
+#include <gio/gunixfdlist.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <udisks/udisks.h>
 #include <string.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -1326,6 +1330,394 @@ handle_command_unlock_lock (gint        *argc,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gchar   *opt_loop_file = NULL;
+static gchar   *opt_loop_object_path = NULL;
+static gchar   *opt_loop_device = NULL;
+static gboolean opt_loop_no_user_interaction = FALSE;
+static gboolean opt_loop_read_only = FALSE;
+static gint64   opt_loop_offset = 0;
+static gint64   opt_loop_size = 0;
+
+static const GOptionEntry command_loop_setup_entries[] =
+{
+  {
+    "file",
+    'f',
+    0,
+    G_OPTION_ARG_FILENAME,
+    &opt_loop_file,
+    "File to set-up a loop device for",
+    NULL
+  },
+  {
+    "read-only",
+    'r',
+    0,
+    G_OPTION_ARG_NONE,
+    &opt_loop_read_only,
+    "Setup read-only device",
+    NULL
+  },
+  {
+    "offset",
+    'o',
+    0,
+    G_OPTION_ARG_INT64,
+    &opt_loop_offset,
+    "Start at <num> bytes into file",
+    NULL
+  },
+  {
+    "size",
+    's',
+    0,
+    G_OPTION_ARG_INT64,
+    &opt_loop_size,
+    "Limit size to <num> bytes",
+    NULL
+  },
+  {
+    "no-user-interaction",
+    0, /* no short option */
+    0,
+    G_OPTION_ARG_NONE,
+    &opt_loop_no_user_interaction,
+    "Do not authenticate the user if needed",
+    NULL
+  },
+  {
+    NULL
+  }
+};
+
+static const GOptionEntry command_loop_delete_entries[] =
+{
+  {
+    "object-path",
+    'p',
+    0,
+    G_OPTION_ARG_STRING,
+    &opt_loop_object_path,
+    "Object for loop device to delete",
+    NULL
+  },
+  {
+    "block-device",
+    'b',
+    0,
+    G_OPTION_ARG_STRING,
+    &opt_loop_device,
+    "Loop device to delete",
+    NULL
+  },
+  {
+    "no-user-interaction",
+    0, /* no short option */
+    0,
+    G_OPTION_ARG_NONE,
+    &opt_loop_no_user_interaction,
+    "Do not authenticate the user if needed",
+    NULL
+  },
+  {
+    NULL
+  }
+};
+
+static gint
+handle_command_loop (gint        *argc,
+                     gchar      **argv[],
+                     gboolean     request_completion,
+                     const gchar *completion_cur,
+                     const gchar *completion_prev,
+                     gboolean     is_setup)
+{
+  gint ret;
+  GOptionContext *o;
+  gchar *s;
+  gboolean complete_objects;
+  gboolean complete_devices;
+  gboolean complete_files;
+  GList *l;
+  GList *objects;
+  UDisksObject *object;
+  UDisksBlockDevice *block;
+  guint n;
+  GVariant *options;
+  GVariantBuilder builder;
+  GError *error;
+
+  ret = 1;
+  opt_loop_object_path = NULL;
+  opt_loop_device = NULL;
+  object = NULL;
+  options = NULL;
+
+  if (is_setup)
+    modify_argv0_for_command (argc, argv, "loop-setup");
+  else
+    modify_argv0_for_command (argc, argv, "loop-delete");
+
+  o = g_option_context_new (NULL);
+  if (request_completion)
+    g_option_context_set_ignore_unknown_options (o, TRUE);
+  g_option_context_set_help_enabled (o, FALSE);
+  if (is_setup)
+    g_option_context_set_summary (o, "Set up a loop device.");
+  else
+    g_option_context_set_summary (o, "Delete a loop device.");
+  g_option_context_add_main_entries (o,
+                                     is_setup ? command_loop_setup_entries : command_loop_delete_entries,
+                                     NULL /* GETTEXT_PACKAGE*/);
+
+  complete_objects = FALSE;
+  if (request_completion && (g_strcmp0 (completion_prev, "--object-path") == 0 || g_strcmp0 (completion_prev, "-p") == 0))
+    {
+      complete_objects = TRUE;
+      remove_arg ((*argc) - 1, argc, argv);
+    }
+
+  complete_devices = FALSE;
+  if (request_completion && (g_strcmp0 (completion_prev, "--block-device") == 0 || g_strcmp0 (completion_prev, "-b") == 0))
+    {
+      complete_devices = TRUE;
+      remove_arg ((*argc) - 1, argc, argv);
+    }
+
+  complete_files = FALSE;
+  if (request_completion && (g_strcmp0 (completion_prev, "--file") == 0 || g_strcmp0 (completion_prev, "-f") == 0))
+    {
+      complete_files = TRUE;
+      remove_arg ((*argc) - 1, argc, argv);
+    }
+
+  if (!g_option_context_parse (o, argc, argv, NULL))
+    {
+      if (!request_completion)
+        {
+          s = g_option_context_get_help (o, FALSE, NULL);
+          g_printerr ("%s", s);
+          g_free (s);
+          goto out;
+        }
+    }
+
+  if (request_completion)
+    {
+      if (is_setup)
+        {
+          if (opt_loop_file == NULL && !complete_files)
+            {
+              g_print ("--file \n");
+            }
+          if (complete_files)
+            {
+              g_print ("@FILES@");
+            }
+        }
+      else
+        {
+          if ((opt_loop_object_path == NULL && !complete_objects) &&
+              (opt_loop_device == NULL && !complete_devices))
+            {
+              g_print ("--object-path \n"
+                       "--block-device \n");
+            }
+
+          if (complete_objects)
+            {
+              const gchar *object_path;
+              objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
+              for (l = objects; l != NULL; l = l->next)
+                {
+                  object = UDISKS_OBJECT (l->data);
+                  block = udisks_object_peek_block_device (object);
+                  if (udisks_object_peek_loop (object) != NULL)
+                    {
+                      object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
+                      g_assert (g_str_has_prefix (object_path, "/org/freedesktop/UDisks2/"));
+                      g_print ("%s \n", object_path + sizeof ("/org/freedesktop/UDisks2/") - 1);
+                    }
+                }
+              g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+              g_list_free (objects);
+              goto out;
+            }
+          if (complete_devices)
+            {
+              objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
+              for (l = objects; l != NULL; l = l->next)
+                {
+                  object = UDISKS_OBJECT (l->data);
+                  block = udisks_object_peek_block_device (object);
+                  if (udisks_object_peek_loop (object) != NULL)
+                    {
+                      const gchar * const *symlinks;
+                      g_print ("%s \n", udisks_block_device_get_device (block));
+                      symlinks = udisks_block_device_get_symlinks (block);
+                      for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
+                        g_print ("%s \n", symlinks[n]);
+                    }
+                }
+            }
+          g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+          g_list_free (objects);
+          goto out;
+        }
+
+      /* done with completion */
+      if (request_completion)
+        goto out;
+    }
+
+  g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
+  if (opt_loop_no_user_interaction)
+    {
+      g_variant_builder_add (&builder,
+                             "{sv}",
+                             "auth.no_user_interaction", g_variant_new_boolean (TRUE));
+    }
+  if (is_setup)
+    {
+      if (opt_loop_read_only)
+        g_variant_builder_add (&builder,
+                               "{sv}",
+                               "read-only", g_variant_new_boolean (TRUE));
+      if (opt_loop_offset > 0)
+        g_variant_builder_add (&builder,
+                               "{sv}",
+                               "offset", g_variant_new_uint64 (opt_loop_offset));
+      if (opt_loop_size > 0)
+        g_variant_builder_add (&builder,
+                               "{sv}",
+                               "size", g_variant_new_uint64 (opt_loop_size));
+    }
+  options = g_variant_builder_end (&builder);
+  g_variant_ref_sink (options);
+
+  if (is_setup)
+    {
+      gchar *resulting_device_object_path;
+      GUnixFDList *fd_list;
+      gint fd;
+      gboolean rc;
+
+      if (opt_loop_file == NULL)
+        {
+          s = g_option_context_get_help (o, FALSE, NULL);
+          g_printerr ("%s", s);
+          g_free (s);
+          goto out;
+        }
+
+      fd = open (opt_loop_file, opt_loop_read_only ? O_RDONLY : O_RDWR);
+      if (fd == -1)
+        {
+          g_printerr ("Error opening (%s) file %s: %m\n",
+                      opt_loop_read_only ? "ro" : "rw",
+                      opt_loop_file);
+          goto out;
+        }
+      fd_list = g_unix_fd_list_new_from_array (&fd, 1); /* adopts the fd */
+
+    setup_try_again:
+      error = NULL;
+      rc = udisks_manager_call_loop_setup_sync (udisks_client_get_manager (client),
+                                                g_variant_new_handle (0),
+                                                options,
+                                                fd_list,
+                                                &resulting_device_object_path,
+                                                NULL,                       /* out_fd_list */
+                                                NULL,                       /* GCancellable */
+                                                &error);
+      g_object_unref (fd_list);
+      if (!rc)
+        {
+          if (error->domain == UDISKS_ERROR &&
+              error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
+              setup_local_polkit_agent ())
+            {
+              g_error_free (error);
+              goto setup_try_again;
+            }
+          g_printerr ("Error setting up loop device for %s: %s\n",
+                      opt_loop_file,
+                      error->message);
+          g_error_free (error);
+          goto out;
+        }
+
+      g_print ("Mapped file %s as %s.\n",
+               opt_loop_file,
+               resulting_device_object_path);
+      /* TODO: lookup cleartext_object_path and print device */
+      g_free (resulting_device_object_path);
+    }
+  else
+    {
+      if (opt_loop_object_path != NULL)
+        {
+          object = lookup_object_by_path (opt_loop_object_path);
+          if (object == NULL)
+            {
+              g_printerr ("Error looking up object with path %s\n", opt_loop_object_path);
+              goto out;
+            }
+        }
+      else if (opt_loop_device != NULL)
+        {
+          object = lookup_object_by_device (opt_loop_device);
+          if (object == NULL)
+            {
+              g_printerr ("Error looking up object for device %s\n", opt_loop_device);
+              goto out;
+            }
+        }
+      else
+        {
+          s = g_option_context_get_help (o, FALSE, NULL);
+          g_printerr ("%s", s);
+          g_free (s);
+          goto out;
+        }
+
+    delete_try_again:
+      error = NULL;
+      if (!udisks_loop_call_delete_sync (udisks_object_peek_loop (object),
+                                         options,
+                                         NULL,                       /* GCancellable */
+                                         &error))
+        {
+          if (error->domain == UDISKS_ERROR &&
+              error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
+              setup_local_polkit_agent ())
+            {
+              g_error_free (error);
+              goto delete_try_again;
+            }
+          g_printerr ("Error deleting loop device %s: %s\n",
+                      udisks_block_device_get_device (udisks_object_peek_block_device (object)),
+                      error->message);
+          g_error_free (error);
+          goto out;
+        }
+      g_object_unref (object);
+    }
+
+  ret = 0;
+
+ out:
+  if (options != NULL)
+    g_variant_unref (options);
+  g_option_context_free (o);
+  g_free (opt_loop_file);
+  g_free (opt_loop_object_path);
+  g_free (opt_loop_device);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static gchar *opt_info_object = NULL;
 static gchar *opt_info_device = NULL;
 static gchar *opt_info_drive = NULL;
@@ -2155,6 +2547,8 @@ usage (gint *argc, gchar **argv[], gboolean use_stdout)
                        "  unmount      Unmount a filesystem\n"
                        "  unlock       Unlock an encrypted device\n"
                        "  lock         Lock an encrypted device\n"
+                       "  loop-setup   Set-up a loop device\n"
+                       "  loop-delete  Delete a loop device\n"
                        "\n"
                        "Use \"%s COMMAND --help\" to get help on each command.\n",
                        program_name);
@@ -2333,6 +2727,16 @@ main (int argc,
                                         g_strcmp0 (command, "unlock") == 0);
       goto out;
     }
+  else if (g_strcmp0 (command, "loop-setup") == 0 || g_strcmp0 (command, "loop-delete") == 0)
+    {
+      ret = handle_command_loop (&argc,
+                                 &argv,
+                                 request_completion,
+                                 completion_cur,
+                                 completion_prev,
+                                 g_strcmp0 (command, "loop-setup") == 0);
+      goto out;
+    }
   else if (g_strcmp0 (command, "dump") == 0)
     {
       ret = handle_command_dump (&argc,
@@ -2434,6 +2838,8 @@ main (int argc,
                    "unmount \n"
                    "lock \n"
                    "unlock \n"
+                   "loop-setup \n"
+                   "loop-delete \n"
                    );
           ret = 0;
           goto out;

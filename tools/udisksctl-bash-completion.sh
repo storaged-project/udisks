@@ -10,7 +10,11 @@ __udisksctl() {
     local cur=`_get_cword :`
 
     local suggestions=$(udisksctl complete "${COMP_LINE}" ${COMP_POINT})
-    COMPREPLY=($(compgen -W "$suggestions" -- "$cur"))
+    if [ "$suggestions" = "@FILES@" ] ; then
+        _filedir
+    else
+        COMPREPLY=($(compgen -W "$suggestions" -- "$cur"))
+    fi
 
     # Remove colon-word prefix from COMPREPLY items
     case "$cur" in

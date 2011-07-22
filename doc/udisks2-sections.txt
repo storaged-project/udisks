@@ -330,6 +330,7 @@ udisks_object_get_filesystem
 udisks_object_get_job
 udisks_object_get_swapspace
 udisks_object_get_encrypted
+udisks_object_get_loop
 udisks_object_get_manager
 udisks_object_peek_block_device
 udisks_object_peek_drive
@@ -337,6 +338,7 @@ udisks_object_peek_filesystem
 udisks_object_peek_job
 udisks_object_peek_swapspace
 udisks_object_peek_encrypted
+udisks_object_peek_loop
 udisks_object_peek_manager
 UDisksObjectProxy
 UDisksObjectProxyClass
@@ -350,6 +352,7 @@ udisks_object_skeleton_set_filesystem
 udisks_object_skeleton_set_job
 udisks_object_skeleton_set_swapspace
 udisks_object_skeleton_set_encrypted
+udisks_object_skeleton_set_loop
 udisks_object_skeleton_set_manager
 <SUBSECTION Standard>
 udisks_object_get_type
@@ -680,7 +683,6 @@ udisks_block_device_get_id_type
 udisks_block_device_get_id_usage
 udisks_block_device_get_id_uuid
 udisks_block_device_get_id_version
-udisks_block_device_get_loop_backing_file
 udisks_block_device_get_major
 udisks_block_device_get_minor
 udisks_block_device_get_part_entry
@@ -711,7 +713,6 @@ udisks_block_device_set_id_type
 udisks_block_device_set_id_usage
 udisks_block_device_set_id_uuid
 udisks_block_device_set_id_version
-udisks_block_device_set_loop_backing_file
 udisks_block_device_set_major
 udisks_block_device_set_minor
 udisks_block_device_set_part_entry
@@ -777,6 +778,10 @@ udisks_manager_interface_info
 udisks_manager_override_properties
 udisks_manager_get_version
 udisks_manager_set_version
+udisks_manager_call_loop_setup
+udisks_manager_call_loop_setup_finish
+udisks_manager_call_loop_setup_sync
+udisks_manager_complete_loop_setup
 UDisksManagerProxy
 UDisksManagerProxyClass
 udisks_manager_proxy_new
@@ -824,4 +829,63 @@ UDISKS_LINUX_MANAGER
 UDISKS_IS_LINUX_MANAGER
 <SUBSECTION Private>
 udisks_linux_manager_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxloop</FILE>
+UDisksLinuxLoop
+udisks_linux_loop_new
+<SUBSECTION Standard>
+UDISKS_LINUX_LOOP
+UDISKS_IS_LINUX_LOOP
+UDISKS_TYPE_LINUX_LOOP
+<SUBSECTION Private>
+udisks_linux_loop_get_type
+</SECTION>
+
+<SECTION>
+<FILE>UDisksLoop</FILE>
+UDisksLoop
+UDisksLoopIface
+udisks_loop_interface_info
+udisks_loop_override_properties
+udisks_loop_get_backing_file
+udisks_loop_set_backing_file
+udisks_loop_call_delete
+udisks_loop_call_delete_finish
+udisks_loop_call_delete_sync
+udisks_loop_complete_delete
+UDisksLoopProxy
+UDisksLoopProxyClass
+udisks_loop_proxy_new
+udisks_loop_proxy_new_finish
+udisks_loop_proxy_new_sync
+udisks_loop_proxy_new_for_bus
+udisks_loop_proxy_new_for_bus_finish
+udisks_loop_proxy_new_for_bus_sync
+UDisksLoopSkeleton
+UDisksLoopSkeletonClass
+udisks_loop_skeleton_new
+<SUBSECTION Standard>
+UDISKS_TYPE_LOOP
+UDISKS_IS_LOOP
+UDISKS_LOOP
+UDISKS_LOOP_GET_IFACE
+UDISKS_TYPE_LOOP_PROXY
+UDISKS_IS_LOOP_PROXY
+UDISKS_IS_LOOP_PROXY_CLASS
+UDISKS_LOOP_PROXY
+UDISKS_LOOP_PROXY_CLASS
+UDISKS_LOOP_PROXY_GET_CLASS
+UDISKS_TYPE_LOOP_SKELETON
+UDISKS_IS_LOOP_SKELETON
+UDISKS_IS_LOOP_SKELETON_CLASS
+UDISKS_LOOP_SKELETON
+UDISKS_LOOP_SKELETON_CLASS
+UDISKS_LOOP_SKELETON_GET_CLASS
+UDisksLoopProxyPrivate
+UDisksLoopSkeletonPrivate
+udisks_loop_get_type
+udisks_loop_proxy_get_type
+udisks_loop_skeleton_get_type
 </SECTION>

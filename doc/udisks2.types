@@ -14,6 +14,7 @@ udisks_linux_provider_get_type
 udisks_persistent_store_get_type
 udisks_linux_filesystem_get_type
 udisks_linux_encrypted_get_type
+udisks_linux_loop_get_type
 udisks_linux_manager_get_type
 udisks_cleanup_get_type
 
@@ -32,6 +33,9 @@ udisks_swapspace_skeleton_get_type
 udisks_encrypted_get_type
 udisks_encrypted_proxy_get_type
 udisks_encrypted_skeleton_get_type
+udisks_loop_get_type
+udisks_loop_proxy_get_type
+udisks_loop_skeleton_get_type
 udisks_manager_get_type
 udisks_manager_proxy_get_type
 udisks_manager_skeleton_get_type
