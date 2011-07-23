@@ -707,6 +707,30 @@ udisks_daemon_launch_spawned_job_sync (UDisksDaemon    *daemon,
  *
  * Returns: (transfer full): The object picked by @wait_func or %NULL if @error is set.
  */
+
+typedef struct {
+  GMainContext *context;
+  GMainLoop *loop;
+  gboolean timed_out;
+} WaitData;
+
+static gboolean
+wait_on_timed_out (gpointer user_data)
+{
+  WaitData *data = user_data;
+  data->timed_out = TRUE;
+  g_main_loop_quit (data->loop);
+  return FALSE; /* remove the source */
+}
+
+static gboolean
+wait_on_recheck (gpointer user_data)
+{
+  WaitData *data = user_data;
+  g_main_loop_quit (data->loop);
+  return FALSE; /* remove the source */
+}
+
 UDisksObject *
 udisks_daemon_wait_for_object_sync (UDisksDaemon         *daemon,
                                     UDisksDaemonWaitFunc  wait_func,
@@ -719,6 +743,7 @@ udisks_daemon_wait_for_object_sync (UDisksDaemon         *daemon,
   UDisksObject *ret;
   GList *objects;
   GList *l;
+  WaitData data;
 
   /* TODO: support GCancellable */
 
@@ -727,8 +752,14 @@ udisks_daemon_wait_for_object_sync (UDisksDaemon         *daemon,
 
   ret = NULL;
 
+  memset (&data, '\0', sizeof (data));
+  data.context = NULL;
+  data.loop = NULL;
+
   g_object_ref (daemon);
   manager = udisks_daemon_get_object_manager (daemon);
+
+ again:
   objects = g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (manager));
   for (l = objects; l != NULL; l = l->next)
     {
@@ -742,18 +773,57 @@ udisks_daemon_wait_for_object_sync (UDisksDaemon         *daemon,
   g_list_foreach (objects, (GFunc) g_object_unref, NULL);
   g_list_free (objects);
 
-  /* TODO: actually sit and wait for up to @timeout_seconds if the object isn't there already */
   if (ret == NULL)
     {
-      g_set_error (error,
-                   UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                   "TODO: implement support for @timeout_seconds != 0 in udisks_daemon_wait_for_object_sync()");
+      GSource *source;
+
+      /* sit and wait for up to @timeout_seconds if the object isn't there already */
+      if (data.context == NULL)
+        {
+          /* TODO: this will deadlock if we are calling from the main thread... */
+          data.context = g_main_context_new ();
+          data.loop = g_main_loop_new (data.context, FALSE);
+
+          source = g_timeout_source_new_seconds (timeout_seconds);
+          g_source_set_priority (source, G_PRIORITY_DEFAULT);
+          g_source_set_callback (source, wait_on_timed_out, &data, NULL);
+          g_source_attach (source, data.context);
+          g_source_unref (source);
+        }
+
+      /* TODO: do something a bit more elegant than checking every 250ms ... it's
+       *       probably going to involve having each UDisksProvider emit a "changed"
+       *       signal when it's time to recheck... for now this works.
+       */
+      source = g_timeout_source_new (250);
+      g_source_set_priority (source, G_PRIORITY_DEFAULT);
+      g_source_set_callback (source, wait_on_recheck, &data, NULL);
+      g_source_attach (source, data.context);
+      g_source_unref (source);
+
+      g_main_loop_run (data.loop);
+
+      if (data.timed_out)
+        {
+          g_set_error (error,
+                       UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                       "Timed out waiting for object");
+        }
+      else
+        {
+          goto again;
+        }
     }
 
   if (user_data_free_func != NULL)
     user_data_free_func (user_data);
 
   g_object_unref (daemon);
+
+  if (data.loop != NULL)
+    g_main_loop_unref (data.loop);
+  if (data.context != NULL)
+    g_main_context_unref (data.context);
 
   return ret;
 }
