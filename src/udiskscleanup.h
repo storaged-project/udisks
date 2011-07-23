@@ -76,6 +76,26 @@ gboolean         udisks_cleanup_ignore_unlocked_luks   (UDisksCleanup   *cleanup
 void             udisks_cleanup_unignore_unlocked_luks (UDisksCleanup   *cleanup,
                                                         dev_t            cleartext_device);
 
+/* loop */
+
+gboolean         udisks_cleanup_add_loop      (UDisksCleanup   *cleanup,
+                                               const gchar     *device_file,
+                                               const gchar     *backing_file,
+                                               dev_t            backing_file_device,
+                                               uid_t            uid,
+                                               GError         **error);
+gboolean         udisks_cleanup_remove_loop   (UDisksCleanup   *cleanup,
+                                               const gchar     *device_file,
+                                               GError         **error);
+gboolean         udisks_cleanup_has_loop      (UDisksCleanup   *cleanup,
+                                               const gchar     *device_file,
+                                               uid_t           *out_uid,
+                                               GError         **error);
+gboolean         udisks_cleanup_ignore_loop   (UDisksCleanup   *cleanup,
+                                               const gchar     *device);
+void             udisks_cleanup_unignore_loop (UDisksCleanup   *cleanup,
+                                               const gchar     *device);
+
 G_END_DECLS
 
 #endif /* __UDISKS_CLEANUP_H__ */

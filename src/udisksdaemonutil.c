@@ -305,34 +305,47 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
   UDisksBlockDevice *block;
   UDisksCleanup *cleanup;
   uid_t setup_by_user;
+  UDisksObject *crypto_object;
 
   ret = FALSE;
 
   cleanup = udisks_daemon_get_cleanup (daemon);
   block = udisks_object_peek_block_device (object);
-  if (block != NULL)
-    {
-      UDisksObject *crypto_object;
-      crypto_object = udisks_daemon_find_object (daemon, udisks_block_device_get_crypto_backing_device (block));
-      if (crypto_object != NULL)
-        {
-          UDisksBlockDevice *crypto_block;
-          crypto_block = udisks_object_peek_block_device (crypto_object);
+  if (block == NULL)
+    goto out;
 
-          if (udisks_cleanup_find_unlocked_luks (cleanup,
-                                                 makedev (udisks_block_device_get_major (crypto_block),
-                                                          udisks_block_device_get_minor (crypto_block)),
-                                                 &setup_by_user, NULL))
-            {
-              if (setup_by_user == user)
-                {
-                  ret = TRUE;
-                }
-            }
-          g_object_unref (crypto_object);
+  /* loop devices */
+  if (udisks_cleanup_has_loop (cleanup, udisks_block_device_get_device (block), &setup_by_user, NULL))
+    {
+      if (setup_by_user == user)
+        {
+          ret = TRUE;
+          goto out;
         }
     }
 
+  /* LUKS devices */
+  crypto_object = udisks_daemon_find_object (daemon, udisks_block_device_get_crypto_backing_device (block));
+  if (crypto_object != NULL)
+    {
+      UDisksBlockDevice *crypto_block;
+      crypto_block = udisks_object_peek_block_device (crypto_object);
+      if (udisks_cleanup_find_unlocked_luks (cleanup,
+                                             makedev (udisks_block_device_get_major (crypto_block),
+                                                      udisks_block_device_get_minor (crypto_block)),
+                                             &setup_by_user, NULL))
+        {
+          if (setup_by_user == user)
+            {
+              ret = TRUE;
+              g_object_unref (crypto_object);
+              goto out;
+            }
+        }
+      g_object_unref (crypto_object);
+    }
+
+ out:
   return ret;
 }
 

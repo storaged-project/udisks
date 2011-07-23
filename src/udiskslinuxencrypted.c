@@ -204,7 +204,8 @@ handle_unlock (UDisksEncrypted        *encrypted,
   /* Now, check that the user is actually authorized to unlock the device.
    */
   action_id = "org.freedesktop.udisks2.encrypted-unlock";
-  if (udisks_block_device_get_hint_system (block))
+  if (udisks_block_device_get_hint_system (block) &&
+      !(udisks_daemon_util_setup_by_user (daemon, object, caller_uid)))
     action_id = "org.freedesktop.udisks2.encrypted-unlock-system";
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
@@ -396,9 +397,6 @@ handle_lock (UDisksEncrypted        *encrypted,
       g_error_free (error);
       goto out;
     }
-
-  udisks_debug ("cleartext_device_from_file=%d:%d caller_uid=%d unlocked_by_uid=%d",
-                major (cleartext_device_from_file), minor (cleartext_device_from_file), caller_uid, unlocked_by_uid);
 
   /* Check that the user is authorized to lock the device - if he
    * already unlocked it, he is implicitly authorized...

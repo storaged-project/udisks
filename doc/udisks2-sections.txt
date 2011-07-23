@@ -276,6 +276,11 @@ udisks_cleanup_find_unlocked_luks
 udisks_cleanup_ignore_unlocked_luks
 udisks_cleanup_remove_unlocked_luks
 udisks_cleanup_unignore_unlocked_luks
+<SUBSECTION>
+udisks_cleanup_add_loop
+udisks_cleanup_ignore_loop
+udisks_cleanup_remove_loop
+udisks_cleanup_unignore_loop
 <SUBSECTION Standard>
 UDISKS_TYPE_CLEANUP
 UDISKS_CLEANUP

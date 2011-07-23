@@ -40,6 +40,7 @@
 #include "udiskslinuxmanager.h"
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
+#include "udiskscleanup.h"
 
 /**
  * SECTION:udiskslinuxmanager
@@ -202,22 +203,35 @@ udisks_linux_manager_get_daemon (UDisksLinuxManager *manager)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+typedef struct
+{
+  const gchar *loop_device;
+  const gchar *path;
+} WaitForLoopData;
+
 static gboolean
 wait_for_loop_object (UDisksDaemon *daemon,
                       UDisksObject *object,
                       gpointer      user_data)
 {
-  const gchar *loop_device = user_data;
+  WaitForLoopData *data = user_data;
   UDisksBlockDevice *block;
+  UDisksLoop *loop;
   gboolean ret;
 
   ret = FALSE;
   block = udisks_object_peek_block_device (object);
-  if (block == NULL)
+  loop = udisks_object_peek_loop (object);
+  if (block == NULL || loop == NULL)
     goto out;
 
-  if (g_strcmp0 (udisks_block_device_get_device (block), loop_device) == 0)
-    ret = TRUE;
+  if (g_strcmp0 (udisks_block_device_get_device (block), data->loop_device) != 0)
+    goto out;
+
+  if (g_strcmp0 (udisks_loop_get_backing_file (loop), data->path) != 0)
+    goto out;
+
+  ret = TRUE;
 
  out:
   return ret;
@@ -251,6 +265,10 @@ handle_loop_setup (UDisksManager          *object,
   gboolean option_read_only;
   guint64 option_offset;
   guint64 option_size;
+  uid_t caller_uid;
+  struct stat fd_statbuf;
+  struct stat path_statbuf;
+  WaitForLoopData wait_data;
 
   fd = -1;
   loop_fd = -1;
@@ -259,6 +277,15 @@ handle_loop_setup (UDisksManager          *object,
   option_read_only = FALSE;
   option_offset = 0;
   option_size = 0;
+
+  /* we need the uid of the caller for the loop file */
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (manager->daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
 
   /* Check if the user is authorized to manage loop devices */
   if (!udisks_daemon_util_check_authorization_sync (manager->daemon,
@@ -305,9 +332,31 @@ handle_loop_setup (UDisksManager          *object,
   g_variant_lookup (options, "offset", "t", &option_offset);
   g_variant_lookup (options, "size", "t", &option_size);
 
-  /* TODO: maybe validate that st_ino and st_dev from fstat(fd) are
-   * the same as for stat(path)
+  /* Validate that st_ino and st_dev from fstat(fd) are the same as
+   * for stat(path)
    */
+  if (fstat (fd, &fd_statbuf) != 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Error statting fd: %m");
+      goto out;
+    }
+  if (stat (path, &path_statbuf) != 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Error statting path: %m");
+      goto out;
+    }
+  if ((fd_statbuf.st_ino != path_statbuf.st_ino) ||
+      (fd_statbuf.st_dev != path_statbuf.st_dev))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "stat(2) info for path and fd does not agree");
+      goto out;
+    }
 
   /* TODO: we will soon have API to create loop devices on
    * demand... once that is in place we can nuke this silly
@@ -351,9 +400,11 @@ handle_loop_setup (UDisksManager          *object,
 
   /* Determine the resulting object */
   error = NULL;
+  wait_data.loop_device = loop_device;
+  wait_data.path = path;
   loop_object = udisks_daemon_wait_for_object_sync (manager->daemon,
                                                     wait_for_loop_object,
-                                                    loop_device,
+                                                    &wait_data,
                                                     NULL,
                                                     10, /* timeout_seconds */
                                                     &error);
@@ -365,6 +416,15 @@ handle_loop_setup (UDisksManager          *object,
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
+
+  /* update the loop file */
+  if (!udisks_cleanup_add_loop (udisks_daemon_get_cleanup (manager->daemon),
+                                loop_device,
+                                path,
+                                fd_statbuf.st_dev,
+                                caller_uid,
+                                &error))
+    goto out;
 
   udisks_notice ("Set up loop device %s (backed by %s)",
                  loop_device,

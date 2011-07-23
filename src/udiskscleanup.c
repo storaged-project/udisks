@@ -64,7 +64,7 @@
  *           (of type <link linkend="G-VARIANT-TYPE-UINT64:CAPS">'t'</link>) that is the #dev_t
  *           for the mounted device and
  *           <literal>mounted-by-uid</literal>
- *           (of type <link linkend="G-VARIANT-TYPE-UINT64:CAPS">'u'</link>) that is the #uid_t
+ *           (of type <link linkend="G-VARIANT-TYPE-UINT32:CAPS">'u'</link>) that is the #uid_t
  *           of the user who mounted the device.
  *         </entry>
  *       </row>
@@ -78,11 +78,27 @@
  *           (of type <link linkend="G-VARIANT-TYPE-UINT64:CAPS">'t'</link>) that is the #dev_t
  *           for the crypto-text device,
  *           <literal>dm-uuid</literal>
- *           (of type <link linkend="G-VARIANT-TYPE-UINT64:CAPS">'ay'</link>) that is the device mapper UUID
+ *           (of type <link linkend="G-VARIANT-TYPE-ARRAY:CAPS">'ay'</link>) that is the device mapper UUID
  *           for the clear-text device and
  *           <literal>unlocked-by-uid</literal>
- *           (of type <link linkend="G-VARIANT-TYPE-UINT64:CAPS">'u'</link>) that is the #uid_t
+ *           (of type <link linkend="G-VARIANT-TYPE-UINT32:CAPS">'u'</link>) that is the #uid_t
  *           of the user who unlocked the device.
+ *         </entry>
+ *       </row>
+ *       <row>
+ *         <entry><filename>/run/udisks2/loop</filename></entry>
+ *         <entry>
+ *           A serialized 'a{sa{sv}}' #GVariant mapping from the
+ *           loop device name (e.g. <filename>/dev/loop0</filename>) into a set of details.
+ *           Known details include
+ *           <literal>backing-file</literal>
+ *           (of type <link linkend="G-VARIANT-TYPE-ARRAY:CAPS">'ay'</link>) for the name of the backing file and
+ *           <literal>backing-file-device</literal>
+ *           (of type <link linkend="G-VARIANT-TYPE-UINT64:CAPS">'t'</link>) for the #dev_t
+ *           for of the device holding the backing file and
+ *           <literal>setup-by-uid</literal>
+ *           (of type <link linkend="G-VARIANT-TYPE-UINT32:CAPS">'u'</link>) that is the #uid_t
+ *           of the user who set up the loop device.
  *         </entry>
  *       </row>
  *     </tbody>
@@ -119,6 +135,7 @@ struct _UDisksCleanup
 
   GHashTable *currently_unmounting;
   GHashTable *currently_locking;
+  GHashTable *currently_deleting;
 
   GThread *thread;
   GMainContext *context;
@@ -147,6 +164,10 @@ static void udisks_cleanup_check_unlocked_luks (UDisksCleanup *cleanup,
                                                 gboolean       check_only,
                                                 GArray        *devs_to_clean);
 
+static void udisks_cleanup_check_loop (UDisksCleanup *cleanup,
+                                       gboolean       check_only,
+                                       GArray        *devs_to_clean);
+
 G_DEFINE_TYPE (UDisksCleanup, udisks_cleanup, G_TYPE_OBJECT);
 
 
@@ -156,6 +177,7 @@ udisks_cleanup_init (UDisksCleanup *cleanup)
   cleanup->lock = g_mutex_new ();
   cleanup->currently_unmounting = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
   cleanup->currently_locking = g_hash_table_new_full (g_int64_hash, g_int64_equal, g_free, NULL);
+  cleanup->currently_deleting = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 }
 
 static void
@@ -165,6 +187,7 @@ udisks_cleanup_finalize (GObject *object)
 
   g_hash_table_unref (cleanup->currently_unmounting);
   g_hash_table_unref (cleanup->currently_locking);
+  g_hash_table_unref (cleanup->currently_deleting);
   g_mutex_free (cleanup->lock);
 
   G_OBJECT_CLASS (udisks_cleanup_parent_class)->finalize (object);
@@ -386,6 +409,9 @@ udisks_cleanup_check_in_thread (UDisksCleanup *cleanup)
   udisks_cleanup_check_unlocked_luks (cleanup,
                                       TRUE, /* check_only */
                                       devs_to_clean);
+  udisks_cleanup_check_loop (cleanup,
+                             TRUE, /* check_only */
+                             devs_to_clean);
 
   /* Then go through all mounted filesystems and pass the
    * devices that we intend to clean...
@@ -398,6 +424,9 @@ udisks_cleanup_check_in_thread (UDisksCleanup *cleanup)
   udisks_cleanup_check_unlocked_luks (cleanup,
                                       FALSE, /* check_only */
                                       NULL);
+  udisks_cleanup_check_loop (cleanup,
+                             FALSE, /* check_only */
+                             NULL);
 
   g_array_unref (devs_to_clean);
 
@@ -1728,3 +1757,397 @@ udisks_cleanup_unignore_unlocked_luks (UDisksCleanup  *cleanup,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
+
+static void
+udisks_cleanup_check_loop (UDisksCleanup *cleanup,
+                           gboolean       check_only,
+                           GArray        *devs_to_clean)
+{
+  /* TODO */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_cleanup_add_loop:
+ * @cleanup: A #UDisksCleanup.
+ * @device_file: The loop device file.
+ * @backing_file: The backing file.
+ * @backing_file_device: The #dev_t of the backing file.
+ * @uid: The user id of the process requesting the loop device.
+ * @error: Return location for error or %NULL.
+ *
+ * Adds a new entry to the <filename>/run/udisks2/loop</filename>
+ * file.
+ *
+ * Returns: %TRUE if the entry was added, %FALSE if @error is set.
+ */
+gboolean
+udisks_cleanup_add_loop (UDisksCleanup   *cleanup,
+                         const gchar     *device_file,
+                         const gchar     *backing_file,
+                         dev_t            backing_file_device,
+                         uid_t            uid,
+                         GError         **error)
+{
+  gboolean ret;
+  GVariant *value;
+  GVariant *new_value;
+  GVariant *details_value;
+  GVariantBuilder builder;
+  GVariantBuilder details_builder;
+  GError *local_error;
+
+  g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
+  g_return_val_if_fail (device_file != NULL, FALSE);
+  g_return_val_if_fail (backing_file != NULL, FALSE);
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+  g_mutex_lock (cleanup->lock);
+
+  ret = FALSE;
+
+  /* load existing entries */
+  local_error = NULL;
+  value = udisks_persistent_store_get (cleanup->persistent_store,
+                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
+                                       "loop",
+                                       G_VARIANT_TYPE ("a{sa{sv}}"),
+                                       &local_error);
+  if (local_error != NULL)
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "Error getting loop: %s (%s, %d)",
+                   local_error->message,
+                   g_quark_to_string (local_error->domain),
+                   local_error->code);
+      g_error_free (local_error);
+      goto out;
+    }
+
+  /* start by including existing entries */
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a{sa{sv}}"));
+  if (value != NULL)
+    {
+      GVariantIter iter;
+      GVariant *child;
+      g_variant_iter_init (&iter, value);
+      while ((child = g_variant_iter_next_value (&iter)) != NULL)
+        {
+          g_variant_builder_add_value (&builder, child);
+          g_variant_unref (child);
+        }
+      g_variant_unref (value);
+    }
+
+  /* build the details */
+  g_variant_builder_init (&details_builder, G_VARIANT_TYPE ("a{sv}"));
+  g_variant_builder_add (&details_builder,
+                         "{sv}",
+                         "backing-file",
+                         g_variant_new_bytestring (backing_file));
+  g_variant_builder_add (&details_builder,
+                         "{sv}",
+                         "backing-file-device",
+                         g_variant_new_uint64 (backing_file_device));
+  g_variant_builder_add (&details_builder,
+                         "{sv}",
+                         "setup-by-uid",
+                         g_variant_new_uint32 (uid));
+  details_value = g_variant_builder_end (&details_builder);
+
+  /* finally add the new entry */
+  g_variant_builder_add (&builder,
+                         "{s@a{sv}}",
+                         device_file,
+                         details_value); /* consumes details_value */
+  new_value = g_variant_builder_end (&builder);
+
+  /* save new entries */
+  local_error = NULL;
+  if (!udisks_persistent_store_set (cleanup->persistent_store,
+                                    UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
+                                    "loop",
+                                    G_VARIANT_TYPE ("a{sa{sv}}"),
+                                    new_value, /* consumes new_value */
+                                    &local_error))
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "Error setting loop: %s (%s, %d)",
+                   local_error->message,
+                   g_quark_to_string (local_error->domain),
+                   local_error->code);
+      g_error_free (local_error);
+      goto out;
+    }
+
+  ret = TRUE;
+
+ out:
+  g_mutex_unlock (cleanup->lock);
+  return ret;
+}
+
+/**
+ * udisks_cleanup_remove_loop:
+ * @cleanup: A #UDisksCleanup.
+ * @device_file: The loop device file.
+ * @error: Return location for error or %NULL.
+ *
+ * Removes an entry previously added with udisks_cleanup_add_loop().
+ *
+ * Returns: %TRUE if the entry was removed, %FALSE if @error is set.
+ */
+gboolean
+udisks_cleanup_remove_loop (UDisksCleanup   *cleanup,
+                            const gchar     *device_file,
+                            GError         **error)
+{
+  gboolean ret;
+  GVariant *value;
+  GVariant *new_value;
+  GVariantBuilder builder;
+  GError *local_error;
+  gboolean removed;
+
+  g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+  g_mutex_lock (cleanup->lock);
+
+  ret = FALSE;
+  removed = FALSE;
+
+  /* load existing entries */
+  local_error = NULL;
+  value = udisks_persistent_store_get (cleanup->persistent_store,
+                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
+                                       "loop",
+                                       G_VARIANT_TYPE ("a{sa{sv}}"),
+                                       &local_error);
+  if (local_error != NULL)
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "Error getting loop: %s (%s, %d)",
+                   local_error->message,
+                   g_quark_to_string (local_error->domain),
+                   local_error->code);
+      g_error_free (local_error);
+      goto out;
+    }
+
+  /* start by including existing entries except for the one we want to remove */
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a{sa{sv}}"));
+  if (value != NULL)
+    {
+      GVariantIter iter;
+      GVariant *child;
+
+      g_variant_iter_init (&iter, value);
+      while ((child = g_variant_iter_next_value (&iter)) != NULL)
+        {
+          const gchar *iter_device_file;
+          g_variant_get (child, "{&s@a{sv}}", &iter_device_file, NULL);
+          if (g_strcmp0 (iter_device_file, device_file) == 0)
+            {
+              removed = TRUE;
+            }
+          else
+            {
+              g_variant_builder_add_value (&builder, child);
+            }
+          g_variant_unref (child);
+        }
+      g_variant_unref (value);
+    }
+  new_value = g_variant_builder_end (&builder);
+  if (removed)
+    {
+      /* save new entries */
+      local_error = NULL;
+      if (!udisks_persistent_store_set (cleanup->persistent_store,
+                                        UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
+                                        "loop",
+                                        G_VARIANT_TYPE ("a{sa{sv}}"),
+                                        new_value, /* consumes new_value */
+                                        &local_error))
+        {
+          g_set_error (error,
+                       UDISKS_ERROR,
+                       UDISKS_ERROR_FAILED,
+                       "Error setting loop: %s (%s, %d)",
+                       local_error->message,
+                       g_quark_to_string (local_error->domain),
+                       local_error->code);
+          g_error_free (local_error);
+          goto out;
+        }
+      ret = TRUE;
+    }
+  else
+    {
+      g_variant_unref (new_value);
+    }
+
+ out:
+  g_mutex_unlock (cleanup->lock);
+  return ret;
+}
+
+/**
+ * udisks_cleanup_has_loop:
+ * @cleanup: A #UDisksCleanup
+ * @device_file: A loop device file.
+ * @out_uid: Return location for the user id who setup the loop device or %NULL.
+ * @error: Return location for error or %NULL.
+ *
+ * Checks if @device_file is set up via udisks.
+ *
+ * Returns: %TRUE if set up via udisks, otherwise %FALSE or if @error is set.
+ */
+gboolean
+udisks_cleanup_has_loop (UDisksCleanup   *cleanup,
+                         const gchar     *device_file,
+                         uid_t           *out_uid,
+                         GError         **error)
+{
+  gboolean ret;
+  GVariant *value;
+  GError *local_error;
+
+  g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+  g_mutex_lock (cleanup->lock);
+
+  ret = 0;
+  value = NULL;
+
+  /* load existing entries */
+  local_error = NULL;
+  value = udisks_persistent_store_get (cleanup->persistent_store,
+                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
+                                       "loop",
+                                       G_VARIANT_TYPE ("a{sa{sv}}"),
+                                       &local_error);
+  if (local_error != NULL)
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "Error getting loop: %s (%s, %d)",
+                   local_error->message,
+                   g_quark_to_string (local_error->domain),
+                   local_error->code);
+      g_error_free (local_error);
+      goto out;
+    }
+
+  /* look through list */
+  if (value != NULL)
+    {
+      GVariantIter iter;
+      GVariant *child;
+      g_variant_iter_init (&iter, value);
+      while ((child = g_variant_iter_next_value (&iter)) != NULL)
+        {
+          const gchar *iter_device_file;
+          GVariant *details;
+
+          g_variant_get (child,
+                         "{&s@a{sv}}",
+                         &iter_device_file,
+                         &details);
+
+          if (g_strcmp0 (iter_device_file, device_file) == 0)
+            {
+              ret = TRUE;
+              if (out_uid != NULL)
+                {
+                  GVariant *value;
+                  value = lookup_asv (details, "setup-by-uid");
+                  *out_uid = 0;
+                  if (value != NULL)
+                    {
+                      *out_uid = g_variant_get_uint32 (value);
+                      g_variant_unref (value);
+                    }
+                }
+              g_variant_unref (details);
+              g_variant_unref (child);
+              goto out;
+            }
+          g_variant_unref (details);
+          g_variant_unref (child);
+        }
+    }
+
+ out:
+  if (value != NULL)
+    g_variant_unref (value);
+  g_mutex_unlock (cleanup->lock);
+  return ret;
+}
+
+/**
+ * udisks_cleanup_ignore_loop:
+ * @cleanup: A #UDisksCleanup.
+ * @device_file: A loop device file.
+ *
+ * Set @device_file as currently being ignored. This ensures that the
+ * entry for @device_file won't get cleaned up by the cleanup routines
+ * until udisks_cleanup_unignore_loop() is called.
+ *
+ * Returns: %TRUE if @device_file was successfully ignored, %FALSE if
+ * it was already ignored.
+ */
+gboolean
+udisks_cleanup_ignore_loop (UDisksCleanup  *cleanup,
+                            const gchar    *device_file)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
+  g_return_val_if_fail (device_file != NULL, FALSE);
+
+  g_mutex_lock (cleanup->lock);
+
+  ret = FALSE;
+
+  if (g_hash_table_lookup (cleanup->currently_deleting, device_file) != NULL)
+    goto out;
+
+  g_hash_table_insert (cleanup->currently_deleting, g_strdup (device_file), (gpointer) device_file);
+
+  ret = TRUE;
+
+ out:
+  g_mutex_unlock (cleanup->lock);
+  return ret;
+}
+
+/**
+ * udisks_cleanup_unignore_loop:
+ * @cleanup: A #UDisksCleanup.
+ * @device_file: A loop device file.
+ *
+ * Stops ignoring a loop device file previously ignored using
+ * udisks_cleanup_ignore_loop().
+ */
+void
+udisks_cleanup_unignore_loop (UDisksCleanup  *cleanup,
+                              const gchar    *device_file)
+{
+  g_return_if_fail (UDISKS_IS_CLEANUP (cleanup));
+  g_return_if_fail (device_file != NULL);
+
+  g_mutex_lock (cleanup->lock);
+  g_warn_if_fail (g_hash_table_remove (cleanup->currently_deleting, device_file));
+  g_mutex_unlock (cleanup->lock);
+}
