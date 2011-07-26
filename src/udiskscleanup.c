@@ -24,6 +24,11 @@
 
 #include <glib/gstdio.h>
 
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <linux/loop.h>
+
 #include "udisksdaemon.h"
 #include "udiskscleanup.h"
 #include "udiskspersistentstore.h"
@@ -1241,7 +1246,6 @@ udisks_cleanup_check_unlocked_luks_entry (UDisksCleanup  *cleanup,
 
           error_message = NULL;
           escaped_device_file = g_strescape (device_file_cleartext, NULL);
-          /* right now -l is the only way to "force unmount" file systems... */
           if (!udisks_daemon_launch_spawned_job_sync (cleanup->daemon,
                                                       NULL,  /* GCancellable */
                                                       &error_message,
@@ -1758,12 +1762,266 @@ udisks_cleanup_unignore_unlocked_luks (UDisksCleanup  *cleanup,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* returns TRUE if the entry should be kept */
+static gboolean
+udisks_cleanup_check_loop_entry (UDisksCleanup  *cleanup,
+                                 GVariant       *value,
+                                 gboolean        check_only,
+                                 GArray         *devs_to_clean)
+{
+  const gchar *loop_device;
+  GVariant *details;
+  gchar *s;
+  gboolean keep;
+  gboolean is_setup;
+  gboolean has_backing_device;
+  gboolean backing_device_mounted;
+  gboolean attempt_no_cleanup;
+  GVariant *backing_file_value;
+  GVariant *backing_file_device_value;
+  const gchar *backing_file;
+  dev_t backing_file_device;
+  GUdevClient *udev_client;
+  GUdevDevice *udev_backing_file_device;
+  struct stat loop_device_statbuf;
+  gint loop_device_fd;
+  struct loop_info64 li64;
+  UDisksMountMonitor *monitor;
+
+  keep = FALSE;
+  attempt_no_cleanup = FALSE;
+  is_setup = FALSE;
+  has_backing_device = FALSE;
+  backing_device_mounted = FALSE;
+  backing_file_value = NULL;
+  backing_file_device_value = NULL;
+  details = NULL;
+
+  monitor = udisks_daemon_get_mount_monitor (cleanup->daemon);
+  udev_client = udisks_linux_provider_get_udev_client (udisks_daemon_get_linux_provider (cleanup->daemon));
+
+  g_variant_get (value,
+                 "{&s@a{sv}}",
+                 &loop_device,
+                 &details);
+
+  /* Don't consider entries being ignored (e.g. in the process of being locked) */
+  if (g_hash_table_lookup (cleanup->currently_deleting, &loop_device) != NULL)
+    {
+      keep = TRUE;
+      goto out;
+    }
+
+  backing_file_value = lookup_asv (details, "backing-file");
+  if (backing_file_value == NULL)
+    {
+      s = g_variant_print (value, TRUE);
+      udisks_error ("loop entry %s is invalid: no backing-file key/value pair", s);
+      g_free (s);
+      attempt_no_cleanup = TRUE;
+      goto out;
+    }
+  backing_file = g_variant_get_bytestring (backing_file_value);
+
+  backing_file_device_value = lookup_asv (details, "backing-file-device");
+  if (backing_file_device_value == NULL)
+    {
+      s = g_variant_print (value, TRUE);
+      udisks_error ("loop entry %s is invalid: no backing-file-device key/value pair", s);
+      g_free (s);
+      attempt_no_cleanup = TRUE;
+      goto out;
+    }
+  backing_file_device = g_variant_get_uint64 (backing_file_device_value);
+
+  if (stat (loop_device, &loop_device_statbuf) != 0)
+    {
+      udisks_error ("error statting %s: %m", loop_device);
+      attempt_no_cleanup = TRUE;
+      goto out;
+    }
+
+  loop_device_fd = open (loop_device, O_RDONLY);
+  if (loop_device_fd == -1 )
+    {
+      udisks_error ("error opening %s: %m", loop_device);
+      attempt_no_cleanup = TRUE;
+      goto out;
+    }
+  if (ioctl (loop_device_fd, LOOP_GET_STATUS64, &li64) == -1)
+    {
+      udisks_error ("error issuing LOOP_GET_STATUS64 ioctl on %s: %m", loop_device);
+      attempt_no_cleanup = TRUE;
+      close (loop_device_fd);
+      goto out;
+    }
+  close (loop_device_fd);
+  if (strncmp ((const char *) li64.lo_file_name, backing_file, LO_NAME_SIZE - 1) != 0)
+    {
+      udisks_error ("unexpected name for device %s - expected `%s' but got `%s'",
+                    loop_device, backing_file, li64.lo_file_name);
+      attempt_no_cleanup = TRUE;
+      goto out;
+    }
+  is_setup = TRUE;
+
+  udev_backing_file_device = g_udev_client_query_by_device_number (udev_client,
+                                                                   G_UDEV_DEVICE_TYPE_BLOCK,
+                                                                   backing_file_device);
+  if (udev_backing_file_device != NULL)
+    {
+      GList *mounts;
+      /* Figure out if still mounted */
+      mounts = udisks_mount_monitor_get_mounts_for_dev (monitor, backing_file_device);
+      if (mounts != NULL)
+        {
+          backing_device_mounted = TRUE;
+        }
+      g_list_foreach (mounts, (GFunc) g_object_unref, NULL);
+      g_list_free (mounts);
+      has_backing_device = TRUE;
+      g_object_unref (udev_backing_file_device);
+    }
+
+  /* OK, entry is valid - keep it around */
+  if (is_setup && has_backing_device && backing_device_mounted)
+    keep = TRUE;
+
+ out:
+
+  if (check_only && !keep)
+    {
+      g_array_append_val (devs_to_clean, loop_device_statbuf.st_rdev);
+      keep = TRUE;
+      goto out2;
+    }
+
+  if (!keep && !attempt_no_cleanup)
+    {
+      if (is_setup)
+        {
+          gchar *escaped_loop_device_file;
+          gchar *error_message;
+
+          if (!has_backing_device)
+            udisks_notice ("Cleaning up loop device %s (backing device %d:%d no longer exist)",
+                           loop_device,
+                           major (backing_file_device), minor (backing_file_device));
+          else
+            udisks_notice ("Cleaning up loop device %s (backing device %d:%d no longer mounted)",
+                           loop_device,
+                           major (backing_file_device), minor (backing_file_device));
+
+          error_message = NULL;
+          escaped_loop_device_file = g_strescape (loop_device, NULL);
+          if (!udisks_daemon_launch_spawned_job_sync (cleanup->daemon,
+                                                      NULL,  /* GCancellable */
+                                                      &error_message,
+                                                      NULL,  /* input_string */
+                                                      "losetup -d \"%s\"",
+                                                      escaped_loop_device_file))
+            {
+              udisks_error ("Error cleaning up loop device %s: %s",
+                            loop_device, error_message);
+              g_free (escaped_loop_device_file);
+              g_free (error_message);
+              /* keep the entry so we can clean it up later */
+              keep = TRUE;
+              goto out2;
+            }
+          g_free (escaped_loop_device_file);
+          g_free (error_message);
+        }
+      else
+        {
+          udisks_notice ("loop device %s was manually deleted", loop_device);
+        }
+    }
+
+ out2:
+  if (backing_file_value != NULL)
+    g_variant_unref (backing_file_value);
+  if (backing_file_device_value != NULL)
+    g_variant_unref (backing_file_device_value);
+  if (details != NULL)
+    g_variant_unref (details);
+  return keep;
+}
+
 static void
 udisks_cleanup_check_loop (UDisksCleanup *cleanup,
                            gboolean       check_only,
                            GArray        *devs_to_clean)
 {
-  /* TODO */
+  gboolean changed;
+  GVariant *value;
+  GVariant *new_value;
+  GVariantBuilder builder;
+  GError *error;
+
+  changed = FALSE;
+
+  /* load existing entries */
+  error = NULL;
+  value = udisks_persistent_store_get (cleanup->persistent_store,
+                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
+                                       "loop",
+                                       G_VARIANT_TYPE ("a{sa{sv}}"),
+                                       &error);
+  if (error != NULL)
+    {
+      udisks_warning ("Error getting loop: %s (%s, %d)",
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_error_free (error);
+      goto out;
+    }
+
+  /* check valid entries */
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a{sa{sv}}"));
+  if (value != NULL)
+    {
+      GVariantIter iter;
+      GVariant *child;
+      g_variant_iter_init (&iter, value);
+      while ((child = g_variant_iter_next_value (&iter)) != NULL)
+        {
+          if (udisks_cleanup_check_loop_entry (cleanup, child, check_only, devs_to_clean))
+            g_variant_builder_add_value (&builder, child);
+          else
+            changed = TRUE;
+          g_variant_unref (child);
+        }
+      g_variant_unref (value);
+    }
+
+  new_value = g_variant_builder_end (&builder);
+
+  /* save new entries */
+  if (changed)
+    {
+      error = NULL;
+      if (!udisks_persistent_store_set (cleanup->persistent_store,
+                                        UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
+                                        "loop",
+                                        G_VARIANT_TYPE ("a{sa{sv}}"),
+                                        new_value, /* consumes new_value */
+                                        &error))
+        {
+          udisks_warning ("Error setting loop: %s (%s, %d)",
+                          error->message,
+                          g_quark_to_string (error->domain),
+                          error->code);
+          g_error_free (error);
+          goto out;
+        }
+    }
+  else
+    {
+      g_variant_unref (new_value);
+    }
+
+ out:
+  ;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

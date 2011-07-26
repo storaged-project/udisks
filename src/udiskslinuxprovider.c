@@ -343,14 +343,17 @@ handle_block_uevent (UDisksLinuxProvider *provider,
     {
       handle_block_uevent_for_block (provider, action, device);
       handle_block_uevent_for_drive (provider, action, device);
-
-      /* Possibly need to clean up */
-      udisks_cleanup_check (udisks_daemon_get_cleanup (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))));
     }
   else
     {
       handle_block_uevent_for_drive (provider, action, device);
       handle_block_uevent_for_block (provider, action, device);
+    }
+
+  if (g_strcmp0 (action, "add") != 0)
+    {
+      /* Possibly need to clean up */
+      udisks_cleanup_check (udisks_daemon_get_cleanup (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))));
     }
 }
 
