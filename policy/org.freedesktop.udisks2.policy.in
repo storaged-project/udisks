@@ -71,10 +71,28 @@
     </defaults>
   </action>
 
-  <!-- Manage swapspace -->
-  <action id="org.freedesktop.udisks2.manage-swapspace">
-    <_description>Manage swapspace</_description>
-    <_message>Authentication is required to manage swapspace</_message>
+  <!-- Setting up loop devices -->
+  <action id="org.freedesktop.udisks2.loop-setup">
+    <_description>Manage loop devices</_description>
+    <_message>Authentication is required to set up a loop device</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <!-- ideally want 'yes' but right now it's a DoS because of kernel
+           suckage - when we switch to using /dev/loop-control, see
+
+            http://comments.gmane.org/gmane.linux.kernel/1171555
+
+           and the system can cope with 1000s of loop devices we can
+           switch this to 'yes'
+        -->
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.udisks2.loop-delete-others">
+    <_description>Manage loop devices</_description>
+    <_message>Authentication is required to delete a loop device set up by another user</_message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
@@ -82,10 +100,10 @@
     </defaults>
   </action>
 
-  <!-- Manage loop devices -->
-  <action id="org.freedesktop.udisks2.manage-loop-devices">
-    <_description>Manage loop devices</_description>
-    <_message>Authentication is required to manage loop devices</_message>
+  <!-- Manage swapspace -->
+  <action id="org.freedesktop.udisks2.manage-swapspace">
+    <_description>Manage swapspace</_description>
+    <_message>Authentication is required to manage swapspace</_message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>

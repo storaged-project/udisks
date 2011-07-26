@@ -287,10 +287,10 @@ handle_loop_setup (UDisksManager          *object,
       goto out;
     }
 
-  /* Check if the user is authorized to manage loop devices */
+  /* Check if the user is authorized to create a loop device */
   if (!udisks_daemon_util_check_authorization_sync (manager->daemon,
                                                     NULL,
-                                                    "org.freedesktop.udisks2.manage-loop-devices",
+                                                    "org.freedesktop.udisks2.loop-setup",
                                                     options,
                                                     N_("Authentication is required to set up a loop device"),
                                                     invocation))

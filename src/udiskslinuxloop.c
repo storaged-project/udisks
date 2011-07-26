@@ -111,6 +111,8 @@ handle_delete (UDisksLoop             *loop,
   gchar *error_message;
   gchar *escaped_device;
   GError *error;
+  uid_t caller_uid;
+  uid_t setup_by_uid;
 
   object = NULL;
   daemon = NULL;
@@ -122,13 +124,46 @@ handle_delete (UDisksLoop             *loop,
   daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
   cleanup = udisks_daemon_get_cleanup (daemon);
 
-  if (!udisks_daemon_util_check_authorization_sync (daemon,
-                                                    object,
-                                                    "org.freedesktop.udisks2.manage-loop-devices",
-                                                    options,
-                                                    N_("Authentication is required to delete the loop device $(udisks2.device)"),
-                                                    invocation))
-    goto out;
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  error = NULL;
+  if (!udisks_cleanup_has_loop (cleanup,
+                                udisks_block_device_get_device (block),
+                                &setup_by_uid,
+                                &error))
+    {
+      if (error != NULL)
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error when looking for entry `%s' in loop: %s (%s, %d)",
+                                                 udisks_block_device_get_device (block),
+                                                 error->message,
+                                                 g_quark_to_string (error->domain),
+                                                 error->code);
+          g_error_free (error);
+          goto out;
+        }
+      setup_by_uid = -1;
+    }
+
+  if (caller_uid != setup_by_uid)
+    {
+      if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                        object,
+                                                        "org.freedesktop.udisks2.loop-delete-others",
+                                                        options,
+                                                        N_("Authentication is required to delete the loop device $(udisks2.device)"),
+                                                        invocation))
+        goto out;
+    }
 
   escaped_device = g_strescape (udisks_block_device_get_device (block), NULL);
 
@@ -159,34 +194,36 @@ handle_delete (UDisksLoop             *loop,
       goto out;
     }
 
-  error = NULL;
-  if (!udisks_cleanup_remove_loop (cleanup, udisks_block_device_get_device (block), &error))
+  if (setup_by_uid != -1)
     {
-      if (error == NULL)
+      error = NULL;
+      if (!udisks_cleanup_remove_loop (cleanup, udisks_block_device_get_device (block), &error))
         {
-          g_dbus_method_invocation_return_error (invocation,
-                                                 UDISKS_ERROR,
-                                                 UDISKS_ERROR_FAILED,
-                                                 "Error removing entry for `%s' from loop file: Entry not found",
-                                                 udisks_block_device_get_device (block));
-
-        }
-      else
-        {
-          g_dbus_method_invocation_return_error (invocation,
-                                                 UDISKS_ERROR,
-                                                 UDISKS_ERROR_FAILED,
-                                                 "Error removing entry for `%s' from loop file: %s (%s, %d)",
-                                                 udisks_block_device_get_device (block),
-                                                 error->message,
-                                                 g_quark_to_string (error->domain),
-                                                 error->code);
-          g_error_free (error);
+          if (error == NULL)
+            {
+              g_dbus_method_invocation_return_error (invocation,
+                                                     UDISKS_ERROR,
+                                                     UDISKS_ERROR_FAILED,
+                                                     "Error removing entry for `%s' from loop file: Entry not found",
+                                                     udisks_block_device_get_device (block));
+            }
+          else
+            {
+              g_dbus_method_invocation_return_error (invocation,
+                                                     UDISKS_ERROR,
+                                                     UDISKS_ERROR_FAILED,
+                                                     "Error removing entry for `%s' from loop file: %s (%s, %d)",
+                                                     udisks_block_device_get_device (block),
+                                                     error->message,
+                                                     g_quark_to_string (error->domain),
+                                                     error->code);
+              g_error_free (error);
+            }
+          udisks_cleanup_unignore_loop (cleanup, udisks_block_device_get_device (block));
+          goto out;
         }
       udisks_cleanup_unignore_loop (cleanup, udisks_block_device_get_device (block));
-      goto out;
     }
-  udisks_cleanup_unignore_loop (cleanup, udisks_block_device_get_device (block));
 
   udisks_notice ("Deleted loop device %s (was backed by %s)",
                  udisks_block_device_get_device (block),
