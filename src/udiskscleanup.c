@@ -1806,7 +1806,7 @@ udisks_cleanup_check_loop_entry (UDisksCleanup  *cleanup,
                  &details);
 
   /* Don't consider entries being ignored (e.g. in the process of being locked) */
-  if (g_hash_table_lookup (cleanup->currently_deleting, &loop_device) != NULL)
+  if (g_hash_table_lookup (cleanup->currently_deleting, loop_device) != NULL)
     {
       keep = TRUE;
       goto out;
