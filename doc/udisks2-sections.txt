@@ -281,6 +281,7 @@ udisks_cleanup_add_loop
 udisks_cleanup_ignore_loop
 udisks_cleanup_remove_loop
 udisks_cleanup_unignore_loop
+udisks_cleanup_has_loop
 <SUBSECTION Standard>
 UDISKS_TYPE_CLEANUP
 UDISKS_CLEANUP
@@ -323,6 +324,18 @@ UDISKS_IS_LINUX_ENCRYPTED
 UDISKS_TYPE_LINUX_ENCRYPTED
 <SUBSECTION Private>
 udisks_linux_encrypted_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxswapspace</FILE>
+UDisksLinuxSwapspace
+udisks_linux_swapspace_new
+<SUBSECTION Standard>
+UDISKS_LINUX_SWAPSPACE
+UDISKS_IS_LINUX_SWAPSPACE
+UDISKS_TYPE_LINUX_SWAPSPACE
+<SUBSECTION Private>
+udisks_linux_swapspace_get_type
 </SECTION>
 
 <SECTION>

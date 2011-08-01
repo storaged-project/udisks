@@ -38,6 +38,7 @@
 #include "udiskslinuxdrive.h"
 #include "udiskslinuxfilesystem.h"
 #include "udiskslinuxencrypted.h"
+#include "udiskslinuxswapspace.h"
 #include "udiskslinuxloop.h"
 #include "udiskspersistentstore.h"
 #include "udiskslinuxprovider.h"
@@ -834,125 +835,6 @@ filesystem_update (UDisksLinuxBlock  *block,
 /* ---------------------------------------------------------------------------------------------------- */
 /* org.freedesktop.UDisks.Swapspace */
 
-static void
-swapspace_start_on_job_completed (UDisksJob   *job,
-                                  gboolean     success,
-                                  const gchar *message,
-                                  gpointer     user_data)
-{
-  GDBusMethodInvocation *invocation = G_DBUS_METHOD_INVOCATION (user_data);
-  UDisksSwapspace *swapspace;
-  swapspace = UDISKS_SWAPSPACE (g_dbus_method_invocation_get_user_data (invocation));
-  if (success)
-    udisks_swapspace_complete_start (swapspace, invocation);
-  else
-    g_dbus_method_invocation_return_error (invocation,
-                                           UDISKS_ERROR,
-                                           UDISKS_ERROR_FAILED,
-                                           "Error activating swap: %s",
-                                           message);
-}
-
-static gboolean
-swapspace_handle_start (UDisksSwapspace        *swapspace,
-                        GDBusMethodInvocation  *invocation,
-                        GVariant               *options,
-                        gpointer                user_data)
-{
-  UDisksObject *object;
-  UDisksDaemon *daemon;
-  UDisksBlockDevice *block;
-  UDisksBaseJob *job;
-
-  object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (swapspace)));
-  daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
-  block = udisks_object_peek_block_device (object);
-
-  if (!udisks_daemon_util_check_authorization_sync (daemon,
-                                                    object,
-                                                    "org.freedesktop.udisks2.manage-swapspace",
-                                                    options,
-                                                    N_("Authentication is required to activate swapspace on $(udisks2.device)"),
-                                                    invocation))
-    goto out;
-
-  job = udisks_daemon_launch_spawned_job (daemon,
-                                          NULL, /* cancellable */
-                                          NULL, /* input_string */
-                                          "swapon %s",
-                                          udisks_block_device_get_device (block));
-  g_signal_connect (job,
-                    "completed",
-                    G_CALLBACK (swapspace_start_on_job_completed),
-                    invocation);
-
- out:
-  return TRUE;
-}
-
-static void
-swapspace_stop_on_job_completed (UDisksJob   *job,
-                                 gboolean     success,
-                                 const gchar *message,
-                                  gpointer     user_data)
-{
-  GDBusMethodInvocation *invocation = G_DBUS_METHOD_INVOCATION (user_data);
-  UDisksSwapspace *swapspace;
-  swapspace = UDISKS_SWAPSPACE (g_dbus_method_invocation_get_user_data (invocation));
-  if (success)
-    udisks_swapspace_complete_start (swapspace, invocation);
-  else
-    g_dbus_method_invocation_return_error (invocation,
-                                           UDISKS_ERROR,
-                                           UDISKS_ERROR_FAILED,
-                                           "Error deactivating swap: %s",
-                                           message);
-}
-
-static gboolean
-swapspace_handle_stop (UDisksSwapspace        *swapspace,
-                       GDBusMethodInvocation  *invocation,
-                       GVariant               *options,
-                       gpointer                user_data)
-{
-  UDisksObject *object;
-  UDisksDaemon *daemon;
-  UDisksBlockDevice *block;
-  UDisksBaseJob *job;
-
-  object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (swapspace)));
-  daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
-  block = udisks_object_peek_block_device (object);
-
-  /* Now, check that the user is actually authorized to stop the swap space.
-   *
-   * TODO: want nicer authentication message + special treatment if the
-   * uid that locked the device (e.g. w/o -others).
-   */
-  if (!udisks_daemon_util_check_authorization_sync (daemon,
-                                                    object,
-                                                    "org.freedesktop.udisks2.manage-swapspace",
-                                                    options,
-                                                    N_("Authentication is required to deactivate swapspace on $(udisks2.device)"),
-                                                    invocation))
-    goto out;
-
-  job = udisks_daemon_launch_spawned_job (daemon,
-                                          NULL, /* cancellable */
-                                          NULL, /* input_string */
-                                          "swapoff %s",
-                                          udisks_block_device_get_device (block));
-  g_signal_connect (job,
-                    "completed",
-                    G_CALLBACK (swapspace_stop_on_job_completed),
-                    invocation);
-
- out:
-  return TRUE;
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
-
 static gboolean
 swapspace_check (UDisksLinuxBlock *block)
 {
@@ -974,17 +856,7 @@ swapspace_check (UDisksLinuxBlock *block)
 static void
 swapspace_connect (UDisksLinuxBlock *block)
 {
-  /* indicate that we want to handle the method invocations in a thread */
-  g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (block->iface_swapspace),
-                                       G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
-  g_signal_connect (block->iface_swapspace,
-                    "handle-start",
-                    G_CALLBACK (swapspace_handle_start),
-                    NULL);
-  g_signal_connect (block->iface_swapspace,
-                    "handle-stop",
-                    G_CALLBACK (swapspace_handle_stop),
-                    NULL);
+  /* do nothing */
 }
 
 static void
@@ -1132,7 +1004,7 @@ udisks_linux_block_uevent (UDisksLinuxBlock *block,
   update_iface (block, action, filesystem_check, NULL, filesystem_update,
                 UDISKS_TYPE_LINUX_FILESYSTEM, &block->iface_filesystem);
   update_iface (block, action, swapspace_check, swapspace_connect, swapspace_update,
-                UDISKS_TYPE_SWAPSPACE_SKELETON, &block->iface_swapspace);
+                UDISKS_TYPE_LINUX_SWAPSPACE, &block->iface_swapspace);
   update_iface (block, action, encrypted_check, encrypted_connect, encrypted_update,
                 UDISKS_TYPE_LINUX_ENCRYPTED, &block->iface_encrypted);
   update_iface (block, action, loop_check, loop_connect, loop_update,

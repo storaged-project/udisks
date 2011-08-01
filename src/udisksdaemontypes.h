@@ -73,6 +73,9 @@ typedef struct _UDisksLinuxLoop UDisksLinuxLoop;
 struct _UDisksLinuxManager;
 typedef struct _UDisksLinuxManager UDisksLinuxManager;
 
+struct _UDisksLinuxSwapspace;
+typedef struct _UDisksLinuxSwapspace UDisksLinuxSwapspace;
+
 /**
  * UDisksThreadedJobFunc:
  * @job: A #UDisksThreadedJob.
