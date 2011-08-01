@@ -32,6 +32,7 @@ G_BEGIN_DECLS
 GType              udisks_spawned_job_get_type         (void) G_GNUC_CONST;
 UDisksSpawnedJob  *udisks_spawned_job_new              (const gchar  *command_line,
                                                         const gchar  *input_string,
+                                                        uid_t         run_as,
                                                         GCancellable *cancellable);
 const gchar       *udisks_spawned_job_get_command_line (UDisksSpawnedJob *job);
 

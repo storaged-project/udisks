@@ -26,6 +26,8 @@
 #include <grp.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <mntent.h>
 
 #include <glib/gstdio.h>
 
@@ -647,6 +649,105 @@ calculate_mount_point (UDisksBlockDevice         *block,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+is_in_fstab (UDisksBlockDevice  *block,
+             const gchar        *fstab_path,
+             gchar             **out_mount_point)
+{
+  gboolean ret;
+  FILE *f;
+  char buf[8192];
+  struct mntent mbuf;
+  struct mntent *m;
+
+  ret = FALSE;
+  f = fopen (fstab_path, "r");
+  if (f == NULL)
+    {
+      udisks_warning ("Error opening fstab file %s: %m", fstab_path);
+      goto out;
+    }
+
+  while ((m = getmntent_r (f, &mbuf, buf, sizeof (buf))) != NULL && !ret)
+    {
+      gchar *device;
+      struct stat sb;
+
+      device = NULL;
+      if (g_str_has_prefix (m->mnt_fsname, "UUID="))
+        {
+          device = g_strdup_printf ("/dev/disk/by-uuid/%s", m->mnt_fsname + 5);
+        }
+      else if (g_str_has_prefix (m->mnt_fsname, "LABEL="))
+        {
+          device = g_strdup_printf ("/dev/disk/by-label/%s", m->mnt_fsname + 6);
+        }
+      else if (g_str_has_prefix (m->mnt_fsname, "/dev"))
+        {
+          device = g_strdup (m->mnt_fsname);
+        }
+      else
+        {
+          /* ignore non-device entries */
+          goto continue_loop;
+        }
+
+      if (stat (device, &sb) != 0)
+        {
+          udisks_debug ("Error statting %s (for entry %s): %m", device, m->mnt_fsname);
+          goto continue_loop;
+        }
+      if (!S_ISBLK (sb.st_mode))
+        {
+          udisks_debug ("Device %s (for entry %s) is not a block device", device, m->mnt_fsname);
+          goto continue_loop;
+        }
+
+      /* udisks_debug ("device %d:%d for entry %s", major (sb.st_rdev), minor (sb.st_rdev), m->mnt_fsname); */
+
+      if (makedev (udisks_block_device_get_major (block),
+                   udisks_block_device_get_minor (block)) == sb.st_rdev)
+        {
+          ret = TRUE;
+          if (out_mount_point != NULL)
+            *out_mount_point = g_strdup (m->mnt_dir);
+        }
+
+    continue_loop:
+      g_free (device);
+    }
+
+ out:
+  if (f != NULL)
+    fclose (f);
+  return ret;
+}
+
+/* returns TRUE if, and only if, device is referenced in e.g. /etc/fstab
+ *
+ * TODO: check all files in /etc/fstab.d (it's a non-standard Linux extension)
+ * TODO: check if systemd has a specific "unit" for the device
+ */
+static gboolean
+is_system_managed (UDisksBlockDevice  *block,
+                   gchar             **out_mount_point)
+{
+  gboolean ret;
+
+  ret = TRUE;
+
+  /* First, check /etc/fstab */
+  if (is_in_fstab (block, "/etc/fstab", out_mount_point))
+    goto out;
+
+  ret = FALSE;
+
+ out:
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 /* runs in thread dedicated to handling @invocation */
 static gboolean
 handle_mount (UDisksFilesystem       *filesystem,
@@ -669,6 +770,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   gchar *error_message;
   GError *error;
   const gchar *action_id;
+  gboolean system_managed;
 
   object = NULL;
   error_message = NULL;
@@ -678,16 +780,18 @@ handle_mount (UDisksFilesystem       *filesystem,
   escaped_fs_type_to_use = NULL;
   escaped_mount_options_to_use = NULL;
   escaped_mount_point_to_use = NULL;
+  system_managed = FALSE;
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem)));
   block = udisks_object_peek_block_device (object);
   daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
   cleanup = udisks_daemon_get_cleanup (daemon);
 
-  /* TODO: check if mount point is managed by e.g. /etc/fstab or
-   *       similar - if so, use that instead of managing mount points
-   *       in /media
-   */
+  /* check if mount point is managed by e.g. /etc/fstab or similar */
+  if (is_system_managed (block, &mount_point_to_use))
+    {
+      system_managed = TRUE;
+    }
 
   /* First, fail if the device is already mounted */
   existing_mount_points = udisks_filesystem_get_mount_points (filesystem);
@@ -712,7 +816,45 @@ handle_mount (UDisksFilesystem       *filesystem,
       goto out;
     }
 
-  /* Them fail if the device is not mountable - we actually allow mounting
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  /* if system-managed (e.g. referenced in /etc/fstab or similar), just
+   * run mount(8) as the calling user
+   */
+  if (system_managed)
+    {
+      escaped_mount_point_to_use   = g_strescape (mount_point_to_use, NULL);
+      if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                                  NULL,  /* GCancellable */
+                                                  caller_uid, /* uid_t run_as */
+                                                  &error_message,
+                                                  NULL,  /* input_string */
+                                                  "mount \"%s\"",
+                                                  escaped_mount_point_to_use))
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error mounting system-managed device %s: %s",
+                                                 udisks_block_device_get_device (block),
+                                                 error_message);
+          goto out;
+        }
+      udisks_notice ("Mounted %s (system) at %s on behalf of uid %d",
+                     udisks_block_device_get_device (block),
+                     mount_point_to_use,
+                     caller_uid);
+      udisks_filesystem_complete_mount (filesystem, invocation, mount_point_to_use);
+      goto out;
+    }
+
+  /* Then fail if the device is not mountable - we actually allow mounting
    * devices that are not probed since since it could be that we just
    * don't have the data in the udev database but the device has a
    * filesystem *anyway*...
@@ -733,15 +875,6 @@ handle_mount (UDisksFilesystem       *filesystem,
                                              "Cannot mount block device %s with probed usage `%s' - expected `filesystem'",
                                              udisks_block_device_get_device (block),
                                              probed_fs_usage);
-      goto out;
-    }
-
-  /* we need the uid of the caller to check mount options */
-  error = NULL;
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
       goto out;
     }
 
@@ -825,6 +958,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   /* run mount(8) */
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               NULL,  /* GCancellable */
+                                              0, /* uid_t run_as */
                                               &error_message,
                                               NULL,  /* input_string */
                                               "mount -t \"%s\" -o \"%s\" \"%s\" \"%s\"",
@@ -905,6 +1039,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
   const gchar *const *mount_points;
   gboolean opt_force;
   gboolean rc;
+  gboolean system_managed;
 
   mount_point = NULL;
   escaped_mount_point = NULL;
@@ -915,6 +1050,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
   block = udisks_object_peek_block_device (object);
   daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
   cleanup = udisks_daemon_get_cleanup (daemon);
+  system_managed = FALSE;
 
   if (options != NULL)
     {
@@ -932,6 +1068,65 @@ handle_unmount (UDisksFilesystem       *filesystem,
                                              UDISKS_ERROR_NOT_MOUNTED,
                                              "Device `%s' is not mounted",
                                              udisks_block_device_get_device (block));
+      goto out;
+    }
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  /* check if mount point is managed by e.g. /etc/fstab or similar */
+  if (is_system_managed (block, &mount_point))
+    {
+      system_managed = TRUE;
+    }
+
+  /* if system-managed (e.g. referenced in /etc/fstab or similar), just
+   * run mount(8) as the calling user
+   */
+  if (system_managed)
+    {
+      escaped_mount_point = g_strescape (mount_point, NULL);
+      /* right now -l is the only way to "force unmount" file systems... */
+      if (opt_force)
+        {
+          rc = udisks_daemon_launch_spawned_job_sync (daemon,
+                                                      NULL,  /* GCancellable */
+                                                      caller_uid, /* uid_t run_as */
+                                                      &error_message,
+                                                      NULL,  /* input_string */
+                                                      "umount -l \"%s\"",
+                                                      escaped_mount_point);
+        }
+      else
+        {
+          rc = udisks_daemon_launch_spawned_job_sync (daemon,
+                                                      NULL,  /* GCancellable */
+                                                      caller_uid, /* uid_t run_as */
+                                                      &error_message,
+                                                      NULL,  /* input_string */
+                                                      "umount \"%s\"",
+                                                      escaped_mount_point);
+        }
+      if (!rc)
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error unmounting system-managed device %s: %s",
+                                                 udisks_block_device_get_device (block),
+                                                 error_message);
+          goto out;
+        }
+      udisks_notice ("Unmounted %s (system) from %s on behalf of uid %d",
+                     udisks_block_device_get_device (block),
+                     mount_point,
+                     caller_uid);
+      udisks_filesystem_complete_unmount (filesystem, invocation);
       goto out;
     }
 
@@ -965,14 +1160,6 @@ handle_unmount (UDisksFilesystem       *filesystem,
 
   /* TODO: allow unmounting stuff not in the mounted-fs file? */
 
-  error = NULL;
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
-      goto out;
-    }
-
   if (caller_uid != 0 && (caller_uid != mounted_by_uid))
     {
       if (!udisks_daemon_util_check_authorization_sync (daemon,
@@ -1002,6 +1189,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
       /* right now -l is the only way to "force unmount" file systems... */
       rc = udisks_daemon_launch_spawned_job_sync (daemon,
                                                   NULL,  /* GCancellable */
+                                                  0, /* uid_t run_as */
                                                   &error_message,
                                                   NULL,  /* input_string */
                                                   "umount -l \"%s\"",
@@ -1011,6 +1199,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
     {
       rc = udisks_daemon_launch_spawned_job_sync (daemon,
                                                   NULL,  /* GCancellable */
+                                                  0, /* uid_t run_as */
                                                   &error_message,
                                                   NULL,  /* input_string */
                                                   "umount \"%s\"",
@@ -1192,6 +1381,7 @@ handle_set_label (UDisksFilesystem       *filesystem,
   escaped_label = g_shell_quote (label);
   job = udisks_daemon_launch_spawned_job (daemon,
                                           NULL, /* cancellable */
+                                          0, /* uid_t run_as */
                                           NULL, /* input_string */
                                           "e2label %s %s",
                                           udisks_block_device_get_device (block),

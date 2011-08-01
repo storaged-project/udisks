@@ -92,9 +92,9 @@ gboolean         udisks_cleanup_has_loop      (UDisksCleanup   *cleanup,
                                                uid_t           *out_uid,
                                                GError         **error);
 gboolean         udisks_cleanup_ignore_loop   (UDisksCleanup   *cleanup,
-                                               const gchar     *device);
+                                               const gchar     *device_file);
 void             udisks_cleanup_unignore_loop (UDisksCleanup   *cleanup,
-                                               const gchar     *device);
+                                               const gchar     *device_file);
 
 G_END_DECLS
 

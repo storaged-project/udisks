@@ -604,6 +604,7 @@ udisks_cleanup_check_mounted_fs_entry (UDisksCleanup  *cleanup,
           /* right now -l is the only way to "force unmount" file systems... */
           if (!udisks_daemon_launch_spawned_job_sync (cleanup->daemon,
                                                       NULL,  /* GCancellable */
+                                                      0, /* uid_t run_as */
                                                       &error_message,
                                                       NULL,  /* input_string */
                                                       "umount -l \"%s\"",
@@ -1248,6 +1249,7 @@ udisks_cleanup_check_unlocked_luks_entry (UDisksCleanup  *cleanup,
           escaped_device_file = g_strescape (device_file_cleartext, NULL);
           if (!udisks_daemon_launch_spawned_job_sync (cleanup->daemon,
                                                       NULL,  /* GCancellable */
+                                                      0, /* uid_t run_as */
                                                       &error_message,
                                                       NULL,  /* input_string */
                                                       "cryptsetup luksClose \"%s\"",
@@ -1916,6 +1918,7 @@ udisks_cleanup_check_loop_entry (UDisksCleanup  *cleanup,
           escaped_loop_device_file = g_strescape (loop_device, NULL);
           if (!udisks_daemon_launch_spawned_job_sync (cleanup->daemon,
                                                       NULL,  /* GCancellable */
+                                                      0, /* uid_t run_as */
                                                       &error_message,
                                                       NULL,  /* input_string */
                                                       "losetup -d \"%s\"",

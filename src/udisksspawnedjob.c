@@ -24,6 +24,10 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <string.h>
+#include <unistd.h>
+#include <pwd.h>
+#include <grp.h>
+#include <stdlib.h>
 
 #include "udisksbasejob.h"
 #include "udisksspawnedjob.h"
@@ -56,6 +60,7 @@ struct _UDisksSpawnedJob
   GMainContext *main_context;
 
   gchar *input_string;
+  uid_t run_as;
   const gchar *input_string_cursor;
 
   GPid child_pid;
@@ -93,7 +98,8 @@ enum
 {
   PROP_0,
   PROP_COMMAND_LINE,
-  PROP_INPUT_STRING
+  PROP_INPUT_STRING,
+  PROP_RUN_AS
 };
 
 enum
@@ -176,6 +182,10 @@ udisks_spawned_job_set_property (GObject      *object,
     case PROP_INPUT_STRING:
       g_assert (job->input_string == NULL);
       job->input_string = g_value_dup_string (value);
+      break;
+
+    case PROP_RUN_AS:
+      job->run_as = g_value_get_uint (value);
       break;
 
     default:
@@ -348,6 +358,57 @@ child_watch_cb (GPid     pid,
   g_object_unref (job);
 }
 
+#include <stdio.h>
+
+/* careful, this is in the fork()'ed child so all utility threads etc are not available */
+static void
+child_setup (gpointer user_data)
+{
+  UDisksSpawnedJob *job = UDISKS_SPAWNED_JOB (user_data);
+  struct passwd *pw;
+
+  if (job->run_as == getuid ())
+    goto out;
+
+  pw = getpwuid (job->run_as);
+  if (pw == NULL)
+   {
+     g_printerr ("No password record for uid %d: %m\n", (gint) job->run_as);
+     abort ();
+   }
+
+  /* become the user...
+   *
+   * TODO: this might need to involve running the whole PAM 'session'
+   * stack as done by e.g. pkexec(1) and various login managers
+   * otherwise things like the SELinux context might not be entirely
+   * right. What we really need is some library function to
+   * impersonate a pid or uid. What a mess.
+   */
+  if (setgroups (0, NULL) != 0)
+    {
+      g_printerr ("Error resetting groups: %m\n");
+      abort ();
+    }
+  if (initgroups (pw->pw_name, pw->pw_gid) != 0)
+    {
+      g_printerr ("Error initializing groups for uid %d: %m\n", (gint) job->run_as);
+      abort ();
+    }
+  if (setregid (pw->pw_gid, pw->pw_gid) != 0)
+    {
+      g_printerr ("Error setting real+effective gid for uid %d: %m\n", (gint) job->run_as);
+      abort ();
+    }
+  if (setreuid (pw->pw_uid, pw->pw_uid) != 0)
+    {
+      g_printerr ("Error setting real+effective uid for uid %d: %m\n", (gint) job->run_as);
+      abort ();
+    }
+
+ out:
+  ;
+}
 
 static void
 udisks_spawned_job_constructed (GObject *object)
@@ -397,8 +458,8 @@ udisks_spawned_job_constructed (GObject *object)
                                  child_argv,
                                  NULL, /* envp */
                                  G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD,
-                                 NULL, /* child_setup */
-                                 NULL, /* child_setup's user_data */
+                                 child_setup, /* child_setup */
+                                 job, /* child_setup's user_data */
                                  &(job->child_pid),
                                  job->input_string != NULL ? &(job->child_stdin_fd) : NULL,
                                  &(job->child_stdout_fd),
@@ -504,6 +565,21 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
                                                         G_PARAM_STATIC_STRINGS));
 
   /**
+   * UDisksSpawnedJob:run-as:
+   *
+   * The #uid_t to run the program as.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_RUN_AS,
+                                   g_param_spec_uint ("run-as",
+                                                      "Run As",
+                                                      "The uid_t to run the program as",
+                                                      0, G_MAXUINT, 0,
+                                                      G_PARAM_WRITABLE |
+                                                      G_PARAM_CONSTRUCT_ONLY |
+                                                      G_PARAM_STATIC_STRINGS));
+
+  /**
    * UDisksSpawnedJob::spawned-job-completed:
    * @job: The #UDisksSpawnedJob emitting the signal.
    * @error: %NULL if running the whole command line succeeded, otherwise a #GError that is set.
@@ -552,6 +628,7 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
  * udisks_spawned_job_new:
  * @command_line: The command line to run.
  * @input_string: A string to write to stdin of the spawned program or %NULL.
+ * @run_as: The #uid_t to run the program as.
  * @cancellable: A #GCancellable or %NULL.
  *
  * Creates a new #UDisksSpawnedJob instance.
@@ -565,6 +642,7 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
 UDisksSpawnedJob *
 udisks_spawned_job_new (const gchar  *command_line,
                         const gchar  *input_string,
+                        uid_t         run_as,
                         GCancellable *cancellable)
 {
   g_return_val_if_fail (command_line != NULL, NULL);
@@ -572,6 +650,7 @@ udisks_spawned_job_new (const gchar  *command_line,
   return UDISKS_SPAWNED_JOB (g_object_new (UDISKS_TYPE_SPAWNED_JOB,
                                            "command-line", command_line,
                                            "input-string", input_string,
+                                           "run-as", run_as,
                                            "cancellable", cancellable,
                                            NULL));
 }

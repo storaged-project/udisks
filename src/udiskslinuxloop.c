@@ -179,6 +179,7 @@ handle_delete (UDisksLoop             *loop,
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               NULL,  /* GCancellable */
+                                              0, /* uid_t run_as */
                                               &error_message,
                                               NULL,  /* input_string */
                                               "losetup -d \"%s\"",

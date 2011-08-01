@@ -142,6 +142,7 @@ handle_start (UDisksSwapspace        *swapspace,
 
   job = udisks_daemon_launch_spawned_job (daemon,
                                           NULL, /* cancellable */
+                                          0, /* uid_t run_as */
                                           NULL, /* input_string */
                                           "swapon %s",
                                           udisks_block_device_get_device (block));
@@ -202,6 +203,7 @@ handle_stop (UDisksSwapspace        *swapspace,
 
   job = udisks_daemon_launch_spawned_job (daemon,
                                           NULL, /* cancellable */
+                                          0, /* uid_t run_as */
                                           NULL, /* input_string */
                                           "swapoff %s",
                                           udisks_block_device_get_device (block));

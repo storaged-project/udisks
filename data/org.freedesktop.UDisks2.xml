@@ -393,7 +393,7 @@
         @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>fstype</parameter> (of type 's') and <parameter>options</parameter> (of type 's').
         @mount_path: The filesystem path where the device was mounted.
 
-        Mount the filesystem.
+        Mount a filesystem on the device.
 
         The directory the device will be mounted in is determined by
         looking at data related to the device (such the filesystem
@@ -420,6 +420,19 @@
         <citerefentry><refentrytitle>mount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
         command. Note that the mount options are validated - only a
         small subset per filesystem type is allowed.
+
+        If the device in question is referenced in a system-wide
+        configuration file (such as the
+        <citerefentry><refentrytitle>/etc/fstab</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+        file)
+        then the
+        <citerefentry><refentrytitle>mount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+        command is called directly as the calling user and no clean-up
+        is performed when the device is removed. Additionally, the
+        given <parameter>options</parameter> and
+        <parameter>fstype</parameter> options are not used as they are
+        instead read from the system-wide configuration file in
+        question.
     -->
     <method name="Mount">
       <arg name="options" direction="in" type="a{sv}"/>
@@ -434,6 +447,14 @@
 
         If the filesystem is busy, this operation fails unless the
         option <parameter>force</parameter> is given.
+
+        If the device in question is referenced in a system-wide
+        configuration file (such as the
+        <citerefentry><refentrytitle>/etc/fstab</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+        file)
+        then the
+        <citerefentry><refentrytitle>umount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+        command is called directly as the calling user.
     -->
     <method name="Unmount">
       <arg name="options" direction="in" type="a{sv}"/>
