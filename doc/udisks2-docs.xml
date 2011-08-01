@@ -172,17 +172,11 @@
     <xi:include href="xml/udisksdaemon.xml"/>
     <xi:include href="xml/udisksdaemonutil.xml"/>
     <xi:include href="xml/udiskslogging.xml"/>
-    <xi:include href="xml/udiskslinuxmanager.xml"/>
-    <xi:include href="xml/udiskslinuxblock.xml"/>
-    <xi:include href="xml/udiskslinuxdrive.xml"/>
-    <xi:include href="xml/udiskslinuxfilesystem.xml"/>
-    <xi:include href="xml/udiskslinuxencrypted.xml"/>
-    <xi:include href="xml/udiskslinuxswapspace.xml"/>
-    <xi:include href="xml/udiskslinuxloop.xml"/>
     <xi:include href="xml/udisksmount.xml"/>
     <xi:include href="xml/udisksmountmonitor.xml"/>
     <xi:include href="xml/udiskspersistentstore.xml"/>
     <xi:include href="xml/udiskscleanup.xml"/>
+    <xi:include href="xml/udisksprovider.xml"/>
     <chapter id="ref-daemon-jobs">
       <title>Jobs</title>
       <xi:include href="xml/udisksbasejob.xml"/>
@@ -190,10 +184,16 @@
       <xi:include href="xml/udisksthreadedjob.xml"/>
       <xi:include href="xml/udisksspawnedjob.xml"/>
     </chapter>
-    <chapter id="ref-daemon-providers">
-      <title>Data Providers</title>
-      <xi:include href="xml/udisksprovider.xml"/>
+    <chapter id="ref-daemon-linux">
+      <title>Linux-specific implementation</title>
       <xi:include href="xml/udiskslinuxprovider.xml"/>
+      <xi:include href="xml/udiskslinuxmanager.xml"/>
+      <xi:include href="xml/udiskslinuxblock.xml"/>
+      <xi:include href="xml/udiskslinuxdrive.xml"/>
+      <xi:include href="xml/udiskslinuxfilesystem.xml"/>
+      <xi:include href="xml/udiskslinuxencrypted.xml"/>
+      <xi:include href="xml/udiskslinuxswapspace.xml"/>
+      <xi:include href="xml/udiskslinuxloop.xml"/>
     </chapter>
   </part>
 
