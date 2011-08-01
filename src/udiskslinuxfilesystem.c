@@ -1137,7 +1137,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
     }
   if (mount_point == NULL)
     {
-      /* allow stuff not mentioned in mounted-fs, but treat it like root mounted it */
+      /* allow unmounting stuff not mentioned in mounted-fs, but treat it like root mounted it */
       mounted_by_uid = 0;
     }
 

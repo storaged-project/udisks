@@ -381,14 +381,9 @@ handle_lock (UDisksEncrypted        *encrypted,
     }
   if (cleartext_device_from_file == 0)
     {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Entry for `%s' not found in luks",
-                                             udisks_block_device_get_device (block));
-      goto out;
+      /* allow locking stuff not mentioned in unlocked-luks, but treat it like root unlocked it */
+      unlocked_by_uid = 0;
     }
-  /* TODO: allow locking stuff not in the persistent file? */
 
   /* we need the uid of the caller to check authorization */
   error = NULL;
@@ -416,16 +411,19 @@ handle_lock (UDisksEncrypted        *encrypted,
   device = udisks_linux_block_get_device (UDISKS_LINUX_BLOCK (cleartext_object));
   escaped_name = g_strescape (g_udev_device_get_sysfs_attr (device, "dm/name"), NULL);
 
-  if (!udisks_cleanup_ignore_unlocked_luks (cleanup,
-                                            makedev (udisks_block_device_get_major (cleartext_block),
-                                                     udisks_block_device_get_minor (cleartext_block))))
+  if (cleartext_device_from_file != 0)
     {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_ALREADY_UNMOUNTING,
-                                             "Cannot lock %s as it's already being locked",
-                                             udisks_block_device_get_device (block));
-      goto out;
+      if (!udisks_cleanup_ignore_unlocked_luks (cleanup,
+                                                makedev (udisks_block_device_get_major (cleartext_block),
+                                                         udisks_block_device_get_minor (cleartext_block))))
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_ALREADY_UNMOUNTING,
+                                                 "Cannot lock %s as it's already being locked",
+                                                 udisks_block_device_get_device (block));
+          goto out;
+        }
     }
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
@@ -436,9 +434,12 @@ handle_lock (UDisksEncrypted        *encrypted,
                                               "cryptsetup luksClose \"%s\"",
                                               escaped_name))
     {
-      udisks_cleanup_unignore_unlocked_luks (cleanup,
-                                             makedev (udisks_block_device_get_major (cleartext_block),
-                                                      udisks_block_device_get_minor (cleartext_block)));
+      if (cleartext_device_from_file != 0)
+        {
+          udisks_cleanup_unignore_unlocked_luks (cleanup,
+                                                 makedev (udisks_block_device_get_major (cleartext_block),
+                                                          udisks_block_device_get_minor (cleartext_block)));
+        }
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
@@ -450,41 +451,43 @@ handle_lock (UDisksEncrypted        *encrypted,
     }
 
   /* OK, device locked.. now to remove the entry from persistent file */
-  error = NULL;
-  if (!udisks_cleanup_remove_unlocked_luks (cleanup,
-                                            makedev (udisks_block_device_get_major (cleartext_block),
-                                                     udisks_block_device_get_minor (cleartext_block)),
-                                            &error))
+  if (cleartext_device_from_file != 0)
     {
-      if (error == NULL)
+      error = NULL;
+      if (!udisks_cleanup_remove_unlocked_luks (cleanup,
+                                                makedev (udisks_block_device_get_major (cleartext_block),
+                                                         udisks_block_device_get_minor (cleartext_block)),
+                                                &error))
         {
-          g_dbus_method_invocation_return_error (invocation,
-                                                 UDISKS_ERROR,
-                                                 UDISKS_ERROR_FAILED,
-                                                 "Error removing entry for `%s' from unlocked-luks: Entry not found",
-                                                 udisks_block_device_get_device (cleartext_block));
-
-        }
-      else
-        {
-          g_dbus_method_invocation_return_error (invocation,
-                                                 UDISKS_ERROR,
-                                                 UDISKS_ERROR_FAILED,
-                                                 "Error removing entry for `%s' from unlocked-luks: %s (%s, %d)",
-                                                 udisks_block_device_get_device (cleartext_block),
-                                                 error->message,
-                                                 g_quark_to_string (error->domain),
-                                                 error->code);
-          g_error_free (error);
+          if (error == NULL)
+            {
+              g_dbus_method_invocation_return_error (invocation,
+                                                     UDISKS_ERROR,
+                                                     UDISKS_ERROR_FAILED,
+                                                     "Error removing entry for `%s' from unlocked-luks: Entry not found",
+                                                     udisks_block_device_get_device (cleartext_block));
+            }
+          else
+            {
+              g_dbus_method_invocation_return_error (invocation,
+                                                     UDISKS_ERROR,
+                                                     UDISKS_ERROR_FAILED,
+                                                     "Error removing entry for `%s' from unlocked-luks: %s (%s, %d)",
+                                                     udisks_block_device_get_device (cleartext_block),
+                                                     error->message,
+                                                     g_quark_to_string (error->domain),
+                                                     error->code);
+              g_error_free (error);
+            }
+          udisks_cleanup_unignore_unlocked_luks (cleanup,
+                                                 makedev (udisks_block_device_get_major (cleartext_block),
+                                                          udisks_block_device_get_minor (cleartext_block)));
+          goto out;
         }
       udisks_cleanup_unignore_unlocked_luks (cleanup,
                                              makedev (udisks_block_device_get_major (cleartext_block),
                                                       udisks_block_device_get_minor (cleartext_block)));
-      goto out;
     }
-  udisks_cleanup_unignore_unlocked_luks (cleanup,
-                                         makedev (udisks_block_device_get_major (cleartext_block),
-                                                  udisks_block_device_get_minor (cleartext_block)));
 
   udisks_notice ("Locked LUKS device %s (was unlocked as %s)",
                  udisks_block_device_get_device (block),
