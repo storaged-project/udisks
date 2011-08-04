@@ -50,6 +50,8 @@ struct _UDisksClient
   GError *initialization_error;
 
   GDBusObjectManager *object_manager;
+
+  GMainContext *context;
 };
 
 typedef struct
@@ -81,6 +83,9 @@ udisks_client_finalize (GObject *object)
     g_error_free (client->initialization_error);
 
   g_object_unref (client->object_manager);
+
+  if (client->context != NULL)
+    g_main_context_unref (client->context);
 
   G_OBJECT_CLASS (udisks_client_parent_class)->finalize (object);
 }
@@ -260,6 +265,10 @@ initable_init (GInitable     *initable,
     }
   g_assert (client->initialization_error == NULL);
 
+  client->context = g_main_context_get_thread_default ();
+  if (client->context != NULL)
+    g_main_context_ref (client->context);
+
   client->object_manager = udisks_object_manager_client_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
                                                                           G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_NONE,
                                                                           "org.freedesktop.UDisks2",
@@ -338,4 +347,21 @@ udisks_client_get_manager (UDisksClient *client)
 
  out:
   return ret;
+}
+
+/**
+ * udisks_client_settle:
+ * @client: A #UDisksClient.
+ *
+ * Blocks until all pending D-Bus messages have been delivered.
+ *
+ * This is useful when using synchronous method calls since e.g. D-Bus
+ * signals received while waiting for the reply are queued up and
+ * dispatched after the synchronous call ends.
+ */
+void
+udisks_client_settle (UDisksClient *client)
+{
+  while (g_main_context_iteration (client->context, FALSE /* may_block */))
+    ;
 }

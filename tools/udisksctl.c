@@ -1253,6 +1253,7 @@ handle_command_unlock_lock (gint        *argc,
     {
       GError *error;
       gchar *cleartext_object_path;
+      UDisksObject *cleartext_object;
 
       error = NULL;
       if (!udisks_encrypted_call_unlock_sync (encrypted,
@@ -1276,10 +1277,14 @@ handle_command_unlock_lock (gint        *argc,
           g_object_unref (object);
           goto out;
         }
+      udisks_client_settle (client);
+
+      cleartext_object = UDISKS_OBJECT (g_dbus_object_manager_get_object (udisks_client_get_object_manager (client),
+                                                                          (cleartext_object_path)));
       g_print ("Unlocked %s as %s.\n",
                udisks_block_device_get_device (block),
-               cleartext_object_path);
-      /* TODO: lookup cleartext_object_path and print device */
+               udisks_block_device_get_device (udisks_object_get_block_device (cleartext_object)));
+      g_object_unref (cleartext_object);
       g_free (cleartext_object_path);
     }
   else
@@ -1597,7 +1602,8 @@ handle_command_loop (gint        *argc,
 
   if (is_setup)
     {
-      gchar *resulting_device_object_path;
+      gchar *resulting_object_path;
+      UDisksObject *resulting_object;
       GUnixFDList *fd_list;
       gint fd;
       gboolean rc;
@@ -1626,7 +1632,7 @@ handle_command_loop (gint        *argc,
                                                 g_variant_new_handle (0),
                                                 options,
                                                 fd_list,
-                                                &resulting_device_object_path,
+                                                &resulting_object_path,
                                                 NULL,                       /* out_fd_list */
                                                 NULL,                       /* GCancellable */
                                                 &error);
@@ -1646,12 +1652,15 @@ handle_command_loop (gint        *argc,
           g_error_free (error);
           goto out;
         }
+      udisks_client_settle (client);
 
+      resulting_object = UDISKS_OBJECT (g_dbus_object_manager_get_object (udisks_client_get_object_manager (client),
+                                                                          (resulting_object_path)));
       g_print ("Mapped file %s as %s.\n",
                opt_loop_file,
-               resulting_device_object_path);
-      /* TODO: lookup cleartext_object_path and print device */
-      g_free (resulting_device_object_path);
+               udisks_block_device_get_device (udisks_object_get_block_device (resulting_object)));
+      g_object_unref (resulting_object);
+      g_free (resulting_object_path);
     }
   else
     {

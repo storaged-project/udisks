@@ -44,6 +44,7 @@ UDisksClient       *udisks_client_new_sync           (GCancellable        *cance
                                                       GError             **error);
 GDBusObjectManager *udisks_client_get_object_manager (UDisksClient        *client);
 UDisksManager      *udisks_client_get_manager        (UDisksClient        *client);
+void                udisks_client_settle             (UDisksClient        *client);
 
 G_END_DECLS
 
