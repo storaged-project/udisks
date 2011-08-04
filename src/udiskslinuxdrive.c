@@ -30,6 +30,7 @@
 #include "udisksdaemonutil.h"
 #include "udiskslinuxprovider.h"
 #include "udiskslinuxdrive.h"
+#include "udiskslinuxblock.h"
 
 /**
  * SECTION:udiskslinuxdrive
@@ -369,14 +370,16 @@ udisks_linux_drive_get_devices (UDisksLinuxDrive *drive)
 /* ---------------------------------------------------------------------------------------------------- */
 
 typedef gboolean (*HasInterfaceFunc)    (UDisksLinuxDrive     *drive);
+typedef void     (*ConnectInterfaceFunc) (UDisksLinuxDrive     *drive);
 typedef void     (*UpdateInterfaceFunc) (UDisksLinuxDrive     *drive,
-                                         const gchar          *uevent_action,
-                                         GDBusInterface       *interface);
+                                         const gchar    *uevent_action,
+                                         GDBusInterface *interface);
 
 static void
-update_iface (UDisksLinuxDrive     *drive,
+update_iface (UDisksLinuxDrive           *drive,
               const gchar          *uevent_action,
               HasInterfaceFunc      has_func,
+              ConnectInterfaceFunc   connect_func,
               UpdateInterfaceFunc   update_func,
               GType                 skeleton_type,
               gpointer              _interface_pointer)
@@ -400,6 +403,8 @@ update_iface (UDisksLinuxDrive     *drive,
       if (has)
         {
           *interface_pointer = g_object_new (skeleton_type, NULL);
+          if (connect_func != NULL)
+            connect_func (drive);
           add = TRUE;
         }
     }
@@ -577,6 +582,133 @@ static gboolean
 drive_check (UDisksLinuxDrive *drive)
 {
   return TRUE;
+}
+
+static UDisksObject *
+find_block_object (GDBusObjectManagerServer *object_manager,
+                   UDisksLinuxDrive         *drive)
+{
+  UDisksObject *ret;
+  GList *objects;
+  GList *l;
+
+  ret = NULL;
+
+  objects = g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (object_manager));
+  for (l = objects; l != NULL; l = l->next)
+    {
+      GDBusObjectSkeleton *object = G_DBUS_OBJECT_SKELETON (l->data);
+      UDisksBlockDevice *block;
+      GUdevDevice *device;
+      gboolean is_disk;
+
+      if (!UDISKS_IS_LINUX_BLOCK (object))
+        continue;
+
+      device = udisks_linux_block_get_device (UDISKS_LINUX_BLOCK (object));
+      is_disk = (g_strcmp0 (g_udev_device_get_devtype (device), "disk") == 0);
+      g_object_unref (device);
+
+      if (!is_disk)
+        continue;
+
+      block = udisks_object_peek_block_device (UDISKS_OBJECT (object));
+
+      if (g_strcmp0 (udisks_block_device_get_drive (block),
+                     g_dbus_object_get_object_path (G_DBUS_OBJECT (drive))) == 0)
+        {
+          ret = g_object_ref (object);
+          goto out;
+        }
+    }
+
+ out:
+  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+  g_list_free (objects);
+  return ret;
+}
+
+static gboolean
+on_eject (UDisksDrive           *drive_iface,
+          GDBusMethodInvocation *invocation,
+          GVariant              *options,
+          gpointer               user_data)
+{
+  UDisksLinuxDrive *drive = UDISKS_LINUX_DRIVE (user_data);
+  UDisksObject *block_object;
+  UDisksBlockDevice *block;
+  UDisksDaemon *daemon;
+  const gchar *action_id;
+  gchar *error_message;
+
+  daemon = NULL;
+  block = NULL;
+  error_message = NULL;
+
+  daemon = udisks_linux_drive_get_daemon (drive);
+  block_object = find_block_object (udisks_daemon_get_object_manager (daemon),
+                                    drive);
+  if (block_object == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Unable to find physical block device for drive");
+      goto out;
+    }
+  block = udisks_object_peek_block_device (block_object);
+
+  /* TODO: ensure it's a physical device e.g. not mpath */
+
+  /* TODO: is it a good idea to overload modify-device? */
+  action_id = "org.freedesktop.udisks2.modify-device";
+  if (udisks_block_device_get_hint_system (block))
+    action_id = "org.freedesktop.udisks2.modify-device-system";
+
+  /* Check that the user is actually authorized */
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    block_object,
+                                                    action_id,
+                                                    options,
+                                                    N_("Authentication is required to eject $(udisks2.device)"),
+                                                    invocation))
+    goto out;
+
+  if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              NULL,  /* GCancellable */
+                                              0, /* uid_t run_as */
+                                              &error_message,
+                                              NULL,  /* input_string */
+                                              "eject \"%s\"",
+                                              udisks_block_device_get_device (block)))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error eject %s: %s",
+                                             udisks_block_device_get_device (block),
+                                             error_message);
+      goto out;
+    }
+
+  udisks_drive_complete_eject (drive_iface, invocation);
+
+ out:
+  if (block_object != NULL)
+    g_object_unref (block_object);
+  g_free (error_message);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+static void
+drive_connect (UDisksLinuxDrive *drive)
+{
+  g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (drive->iface_drive),
+                                       G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
+  g_signal_connect (drive->iface_drive,
+                    "handle-eject",
+                    G_CALLBACK (on_eject),
+                    drive);
 }
 
 static void
@@ -834,7 +966,7 @@ udisks_linux_drive_uevent (UDisksLinuxDrive *drive,
         }
     }
 
-  update_iface (drive, action, drive_check, drive_update,
+  update_iface (drive, action, drive_check, drive_connect, drive_update,
                 UDISKS_TYPE_DRIVE_SKELETON, &drive->iface_drive);
 }
 

@@ -160,6 +160,26 @@
       </variablelist>
     -->
     <property name="ConnectionBus" type="s" access="read"/>
+
+    <!--
+        Eject:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Ejects media from the drive. This is only meaningful to do on
+        drives with removable media.
+
+        There are not a lot of guarantees associated with this method
+        so it should only be called in response to an user action.
+
+        On some hardware the media may be physically ejected while on
+        other hardware may simply eject the disc. On some hardware it
+        may not do anything physical but it may cause e.g. a display
+        on the hardware to show e.g. <quote>It is now safe to remove
+        the device</quote>.
+    -->
+    <method name="Eject">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
   </interface>
 
   <!-- ********************************************************************** -->

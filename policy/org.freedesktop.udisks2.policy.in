@@ -111,7 +111,7 @@
     </defaults>
   </action>
 
-  <!-- Modify a device (create new filesystem, partitioning, change FS label, etc.) -->
+  <!-- Modify a device (create new filesystem, partitioning, change FS label, ejecting media, etc.) -->
   <action id="org.freedesktop.udisks2.modify-device">
     <_description>Modify a device</_description>
     <_message>Authentication is required to modify a device</_message>

@@ -426,6 +426,10 @@ UDisksDrive
 UDisksDriveIface
 udisks_drive_interface_info
 udisks_drive_override_properties
+udisks_drive_call_eject
+udisks_drive_call_eject_finish
+udisks_drive_call_eject_sync
+udisks_drive_complete_eject
 udisks_drive_get_connection_bus
 udisks_drive_get_media
 udisks_drive_get_media_compatibility
