@@ -649,71 +649,71 @@ const static struct
   /* see http://en.wikipedia.org/wiki/GUID_Partition_Table */
 
   /* Linux */
-  {"gpt", "EBD0A0A2-B9E5-4433-87C0-68B6B72699C7", N_("Linux Basic Data Partition")}, /* Same as MS BDP */
-  {"gpt", "A19D880F-05FC-4D3B-A006-743F0F84911E", N_("Linux RAID Partition")},
-  {"gpt", "0657FD6D-A4AB-43C4-84E5-0933C84B4F4F", N_("Linux Swap Partition")},
-  {"gpt", "E6D6D379-F507-44C2-A23C-238F2A3DF928", N_("Linux LVM Partition")},
-  {"gpt", "8DA63339-0007-60C0-C436-083AC8230908", N_("Linux Reserved Partition")},
+  {"gpt", "EBD0A0A2-B9E5-4433-87C0-68B6B72699C7", N_("Basic Data")}, /* Same as MS BDP */
+  {"gpt", "A19D880F-05FC-4D3B-A006-743F0F84911E", N_("Linux RAID")},
+  {"gpt", "0657FD6D-A4AB-43C4-84E5-0933C84B4F4F", N_("Linux Swap")},
+  {"gpt", "E6D6D379-F507-44C2-A23C-238F2A3DF928", N_("Linux LVM")},
+  {"gpt", "8DA63339-0007-60C0-C436-083AC8230908", N_("Linux Reserved")},
   /* Not associated with any OS */
   {"gpt", "024DEE41-33E7-11D3-9D69-0008C781F39F", N_("MBR Partition Scheme")},
-  {"gpt", "C12A7328-F81F-11D2-BA4B-00A0C93EC93B", N_("EFI System Partition")},
-  {"gpt", "21686148-6449-6E6F-744E-656564454649", N_("BIOS Boot Partition")},
+  {"gpt", "C12A7328-F81F-11D2-BA4B-00A0C93EC93B", N_("EFI System")},
+  {"gpt", "21686148-6449-6E6F-744E-656564454649", N_("BIOS Boot")},
   /* Microsoft */
-  {"gpt", "E3C9E316-0B5C-4DB8-817D-F92DF00215AE", N_("Microsoft Reserved Partition")},
-  {"gpt", "EBD0A0A2-B9E5-4433-87C0-68B6B72699C7", N_("Microsoft Basic Data Partition")}, /* Same as Linux BDP */
-  {"gpt", "5808C8AA-7E8F-42E0-85D2-E1E90434CFB3", N_("Microsoft LDM Metadata Partition")},
-  {"gpt", "AF9B60A0-1431-4F62-BC68-3311714A69AD", N_("Microsoft LDM Data Partition")},
+  {"gpt", "E3C9E316-0B5C-4DB8-817D-F92DF00215AE", N_("Microsoft Reserved")},
+  {"gpt", "EBD0A0A2-B9E5-4433-87C0-68B6B72699C7", N_("Microsoft Basic Data")}, /* Same as Linux BDP */
+  {"gpt", "5808C8AA-7E8F-42E0-85D2-E1E90434CFB3", N_("Microsoft LDM Metadata")},
+  {"gpt", "AF9B60A0-1431-4F62-BC68-3311714A69AD", N_("Microsoft LDM Data")},
   {"gpt", "DE94BBA4-06D1-4D40-A16A-BFD50179D6AC", N_("Microsoft Windows Recovery Environment")},
   /* HP-UX */
-  {"gpt", "75894C1E-3AEB-11D3-B7C1-7B03A0000000", N_("HP-UX Data Partition")},
-  {"gpt", "E2A1E728-32E3-11D6-A682-7B03A0000000", N_("HP-UX Service Partition")},
+  {"gpt", "75894C1E-3AEB-11D3-B7C1-7B03A0000000", N_("HP-UX Data")},
+  {"gpt", "E2A1E728-32E3-11D6-A682-7B03A0000000", N_("HP-UX Service")},
   /* FreeBSD */
-  {"gpt", "83BD6B9D-7F41-11DC-BE0B-001560B84F0F", N_("FreeBSD Boot Partition")},
-  {"gpt", "516E7CB4-6ECF-11D6-8FF8-00022D09712B", N_("FreeBSD Data Partition")},
-  {"gpt", "516E7CB5-6ECF-11D6-8FF8-00022D09712B", N_("FreeBSD Swap Partition")},
-  {"gpt", "516E7CB6-6ECF-11D6-8FF8-00022D09712B", N_("FreeBSD UFS Partition")},
-  {"gpt", "516E7CB8-6ECF-11D6-8FF8-00022D09712B", N_("FreeBSD Vinum Partition")},
-  {"gpt", "516E7CBA-6ECF-11D6-8FF8-00022D09712B", N_("FreeBSD ZFS Partition")},
+  {"gpt", "83BD6B9D-7F41-11DC-BE0B-001560B84F0F", N_("FreeBSD Boot")},
+  {"gpt", "516E7CB4-6ECF-11D6-8FF8-00022D09712B", N_("FreeBSD Data")},
+  {"gpt", "516E7CB5-6ECF-11D6-8FF8-00022D09712B", N_("FreeBSD Swap")},
+  {"gpt", "516E7CB6-6ECF-11D6-8FF8-00022D09712B", N_("FreeBSD UFS")},
+  {"gpt", "516E7CB8-6ECF-11D6-8FF8-00022D09712B", N_("FreeBSD Vinum")},
+  {"gpt", "516E7CBA-6ECF-11D6-8FF8-00022D09712B", N_("FreeBSD ZFS")},
   /* Solaris */
-  {"gpt", "6A82CB45-1DD2-11B2-99A6-080020736631", N_("Solaris Boot Partition")},
-  {"gpt", "6A85CF4D-1DD2-11B2-99A6-080020736631", N_("Solaris Root Partition")},
-  {"gpt", "6A87C46F-1DD2-11B2-99A6-080020736631", N_("Solaris Swap Partition")},
-  {"gpt", "6A8B642B-1DD2-11B2-99A6-080020736631", N_("Solaris Backup Partition")},
-  {"gpt", "6A898CC3-1DD2-11B2-99A6-080020736631", N_("Solaris /usr Partition")}, /* Same as Apple ZFS */
-  {"gpt", "6A8EF2E9-1DD2-11B2-99A6-080020736631", N_("Solaris /var Partition")},
-  {"gpt", "6A90BA39-1DD2-11B2-99A6-080020736631", N_("Solaris /home Partition")},
-  {"gpt", "6A9283A5-1DD2-11B2-99A6-080020736631", N_("Solaris Alternate Sector Partition")},
-  {"gpt", "6A945A3B-1DD2-11B2-99A6-080020736631", N_("Solaris Reserved Partition")},
-  {"gpt", "6A9630D1-1DD2-11B2-99A6-080020736631", N_("Solaris Reserved Partition (2)")},
-  {"gpt", "6A980767-1DD2-11B2-99A6-080020736631", N_("Solaris Reserved Partition (3)")},
-  {"gpt", "6A96237F-1DD2-11B2-99A6-080020736631", N_("Solaris Reserved Partition (4)")},
-  {"gpt", "6A8D2AC7-1DD2-11B2-99A6-080020736631", N_("Solaris Reserved Partition (5)")},
+  {"gpt", "6A82CB45-1DD2-11B2-99A6-080020736631", N_("Solaris Boot")},
+  {"gpt", "6A85CF4D-1DD2-11B2-99A6-080020736631", N_("Solaris Root")},
+  {"gpt", "6A87C46F-1DD2-11B2-99A6-080020736631", N_("Solaris Swap")},
+  {"gpt", "6A8B642B-1DD2-11B2-99A6-080020736631", N_("Solaris Backup")},
+  {"gpt", "6A898CC3-1DD2-11B2-99A6-080020736631", N_("Solaris /usr")}, /* Same as Apple ZFS */
+  {"gpt", "6A8EF2E9-1DD2-11B2-99A6-080020736631", N_("Solaris /var")},
+  {"gpt", "6A90BA39-1DD2-11B2-99A6-080020736631", N_("Solaris /home")},
+  {"gpt", "6A9283A5-1DD2-11B2-99A6-080020736631", N_("Solaris Alternate Sector")},
+  {"gpt", "6A945A3B-1DD2-11B2-99A6-080020736631", N_("Solaris Reserved")},
+  {"gpt", "6A9630D1-1DD2-11B2-99A6-080020736631", N_("Solaris Reserved (2)")},
+  {"gpt", "6A980767-1DD2-11B2-99A6-080020736631", N_("Solaris Reserved (3)")},
+  {"gpt", "6A96237F-1DD2-11B2-99A6-080020736631", N_("Solaris Reserved (4)")},
+  {"gpt", "6A8D2AC7-1DD2-11B2-99A6-080020736631", N_("Solaris Reserved (5)")},
   /* Mac OS X */
-  {"gpt", "48465300-0000-11AA-AA11-00306543ECAC", N_("Apple HFS/HFS+ Partition")},
-  {"gpt", "55465300-0000-11AA-AA11-00306543ECAC", N_("Apple UFS Partition")},
-  {"gpt", "6A898CC3-1DD2-11B2-99A6-080020736631", N_("Apple ZFS Partition")}, /* Same as Solaris /usr */
-  {"gpt", "52414944-0000-11AA-AA11-00306543ECAC", N_("Apple RAID Partition")},
-  {"gpt", "52414944-5F4F-11AA-AA11-00306543ECAC", N_("Apple RAID Partition (Offline)")},
-  {"gpt", "426F6F74-0000-11AA-AA11-00306543ECAC", N_("Apple Boot Partition")},
-  {"gpt", "4C616265-6C00-11AA-AA11-00306543ECAC", N_("Apple Label Partition")},
-  {"gpt", "5265636F-7665-11AA-AA11-00306543ECAC", N_("Apple TV Recovery Partition")},
+  {"gpt", "48465300-0000-11AA-AA11-00306543ECAC", N_("Apple HFS/HFS+")},
+  {"gpt", "55465300-0000-11AA-AA11-00306543ECAC", N_("Apple UFS")},
+  {"gpt", "6A898CC3-1DD2-11B2-99A6-080020736631", N_("Apple ZFS")}, /* Same as Solaris /usr */
+  {"gpt", "52414944-0000-11AA-AA11-00306543ECAC", N_("Apple RAID")},
+  {"gpt", "52414944-5F4F-11AA-AA11-00306543ECAC", N_("Apple RAID (Offline)")},
+  {"gpt", "426F6F74-0000-11AA-AA11-00306543ECAC", N_("Apple Boot")},
+  {"gpt", "4C616265-6C00-11AA-AA11-00306543ECAC", N_("Apple Label")},
+  {"gpt", "5265636F-7665-11AA-AA11-00306543ECAC", N_("Apple TV Recovery")},
   /* NetBSD */
-  {"gpt", "49F48D32-B10E-11DC-B99B-0019D1879648", N_("NetBSD Swap Partition")},
-  {"gpt", "49F48D5A-B10E-11DC-B99B-0019D1879648", N_("NetBSD FFS Partition")},
-  {"gpt", "49F48D82-B10E-11DC-B99B-0019D1879648", N_("NetBSD LFS Partition")},
-  {"gpt", "49F48DAA-B10E-11DC-B99B-0019D1879648", N_("NetBSD RAID Partition")},
-  {"gpt", "2DB519C4-B10F-11DC-B99B-0019D1879648", N_("NetBSD Concatenated Partition")},
-  {"gpt", "2DB519EC-B10F-11DC-B99B-0019D1879648", N_("NetBSD Encrypted Partition")},
+  {"gpt", "49F48D32-B10E-11DC-B99B-0019D1879648", N_("NetBSD Swap")},
+  {"gpt", "49F48D5A-B10E-11DC-B99B-0019D1879648", N_("NetBSD FFS")},
+  {"gpt", "49F48D82-B10E-11DC-B99B-0019D1879648", N_("NetBSD LFS")},
+  {"gpt", "49F48DAA-B10E-11DC-B99B-0019D1879648", N_("NetBSD RAID")},
+  {"gpt", "2DB519C4-B10F-11DC-B99B-0019D1879648", N_("NetBSD Concatenated")},
+  {"gpt", "2DB519EC-B10F-11DC-B99B-0019D1879648", N_("NetBSD Encrypted")},
 
   /* see http://developer.apple.com/documentation/mac/Devices/Devices-126.html
    *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html */
-  {"apm", "Apple_Unix_SVR2", N_("Apple UFS Partition")},
-  {"apm", "Apple_HFS", N_("Apple HFS/HFS+ Partition")},
+  {"apm", "Apple_Unix_SVR2", N_("Apple UFS")},
+  {"apm", "Apple_HFS", N_("Apple HFS/HFS")},
   {"apm", "Apple_partition_map", N_("Apple Partition Map")},
-  {"apm", "Apple_Free", N_("Unused Partition")},
-  {"apm", "Apple_Scratch", N_("Empty Partition")},
-  {"apm", "Apple_Driver", N_("Driver Partition")},
-  {"apm", "Apple_Driver43", N_("Driver 4.3 Partition")},
+  {"apm", "Apple_Free", N_("Unused")},
+  {"apm", "Apple_Scratch", N_("Empty")},
+  {"apm", "Apple_Driver", N_("Driver")},
+  {"apm", "Apple_Driver43", N_("Driver 4.3")},
   {"apm", "Apple_PRODOS", N_("ProDOS file system")},
   {"apm", "DOS_FAT_12", N_("FAT 12")},
   {"apm", "DOS_FAT_16", N_("FAT 16")},
@@ -722,44 +722,44 @@ const static struct
   {"apm", "Windows_FAT_32", N_("FAT 32 (Windows)")},
 
   /* see http://www.win.tue.nl/~aeb/partitions/partition_types-1.html */
-  {"mbr", "0x00",  N_("Empty (0x00)")},
-  {"mbr", "0x01",  N_("FAT12 (0x01)")},
-  {"mbr", "0x04",  N_("FAT16 <32M (0x04)")},
-  {"mbr", "0x05",  N_("Extended (0x05)")},
-  {"mbr", "0x06",  N_("FAT16 (0x06)")},
-  {"mbr", "0x07",  N_("HPFS/NTFS (0x07)")},
-  {"mbr", "0x0b",  N_("W95 FAT32 (0x0b)")},
-  {"mbr", "0x0c",  N_("W95 FAT32 (LBA) (0x0c)")},
-  {"mbr", "0x0e",  N_("W95 FAT16 (LBA) (0x0e)")},
-  {"mbr", "0x0f",  N_("W95 Ext d (LBA) (0x0f)")},
-  {"mbr", "0x10",  N_("OPUS (0x10)")},
-  {"mbr", "0x11",  N_("Hidden FAT12 (0x11)")},
-  {"mbr", "0x12",  N_("Compaq diagnostics (0x12)")},
-  {"mbr", "0x14",  N_("Hidden FAT16 <32M (0x14)")},
-  {"mbr", "0x16",  N_("Hidden FAT16 (0x16)")},
-  {"mbr", "0x17",  N_("Hidden HPFS/NTFS (0x17)")},
-  {"mbr", "0x1b",  N_("Hidden W95 FAT32 (0x1b)")},
-  {"mbr", "0x1c",  N_("Hidden W95 FAT32 (LBA) (0x1c)")},
-  {"mbr", "0x1e",  N_("Hidden W95 FAT16 (LBA) (0x1e)")},
-  {"mbr", "0x3c",  N_("PartitionMagic (0x3c)")},
-  {"mbr", "0x81",  N_("Minix (0x81)")}, /* cf. http://en.wikipedia.org/wiki/MINIX_file_system */
-  {"mbr", "0x82",  N_("Linux swap (0x82)")},
-  {"mbr", "0x83",  N_("Linux (0x83)")},
-  {"mbr", "0x84",  N_("Hibernation (0x84)")},
-  {"mbr", "0x85",  N_("Linux Extended (0x85)")},
-  {"mbr", "0x8e",  N_("Linux LVM (0x8e)")},
-  {"mbr", "0xa0",  N_("Hibernation (0xa0)")},
-  {"mbr", "0xa5",  N_("FreeBSD (0xa5)")},
-  {"mbr", "0xa6",  N_("OpenBSD (0xa6)")},
-  {"mbr", "0xa8",  N_("Mac OS X (0xa8)")},
-  {"mbr", "0xaf",  N_("Mac OS X (0xaf)")},
-  {"mbr", "0xbe",  N_("Solaris boot (0xbe)")},
-  {"mbr", "0xbf",  N_("Solaris (0xbf)")},
-  {"mbr", "0xeb",  N_("BeOS BFS (0xeb)")},
-  {"mbr", "0xec",  N_("SkyOS SkyFS (0xec)")},
-  {"mbr", "0xee",  N_("EFI GPT (0xee)")},
-  {"mbr", "0xef",  N_("EFI (FAT-12/16/32 (0xef)")},
-  {"mbr", "0xfd",  N_("Linux RAID autodetect (0xfd)")},
+  {"mbr", "0x00",  N_("Empty")},
+  {"mbr", "0x01",  N_("FAT12")},
+  {"mbr", "0x04",  N_("FAT16 <32M")},
+  {"mbr", "0x05",  N_("Extended")},
+  {"mbr", "0x06",  N_("FAT16")},
+  {"mbr", "0x07",  N_("HPFS/NTFS")},
+  {"mbr", "0x0b",  N_("W95 FAT32")},
+  {"mbr", "0x0c",  N_("W95 FAT32 (LBA)")},
+  {"mbr", "0x0e",  N_("W95 FAT16 (LBA)")},
+  {"mbr", "0x0f",  N_("W95 Ext d (LBA)")},
+  {"mbr", "0x10",  N_("OPUS")},
+  {"mbr", "0x11",  N_("Hidden FAT12")},
+  {"mbr", "0x12",  N_("Compaq diagnostics")},
+  {"mbr", "0x14",  N_("Hidden FAT16 <32M")},
+  {"mbr", "0x16",  N_("Hidden FAT16")},
+  {"mbr", "0x17",  N_("Hidden HPFS/NTFS")},
+  {"mbr", "0x1b",  N_("Hidden W95 FAT32")},
+  {"mbr", "0x1c",  N_("Hidden W95 FAT32 (LBA)")},
+  {"mbr", "0x1e",  N_("Hidden W95 FAT16 (LBA)")},
+  {"mbr", "0x3c",  N_("PartitionMagic")},
+  {"mbr", "0x81",  N_("Minix")}, /* cf. http://en.wikipedia.org/wiki/MINIX_file_system */
+  {"mbr", "0x82",  N_("Linux swap")},
+  {"mbr", "0x83",  N_("Linux")},
+  {"mbr", "0x84",  N_("Hibernation")},
+  {"mbr", "0x85",  N_("Linux Extended")},
+  {"mbr", "0x8e",  N_("Linux LVM")},
+  {"mbr", "0xa0",  N_("Hibernation")},
+  {"mbr", "0xa5",  N_("FreeBSD")},
+  {"mbr", "0xa6",  N_("OpenBSD")},
+  {"mbr", "0xa8",  N_("Mac OS X")},
+  {"mbr", "0xaf",  N_("Mac OS X")},
+  {"mbr", "0xbe",  N_("Solaris boot")},
+  {"mbr", "0xbf",  N_("Solaris")},
+  {"mbr", "0xeb",  N_("BeOS BFS")},
+  {"mbr", "0xec",  N_("SkyOS SkyFS")},
+  {"mbr", "0xee",  N_("EFI GPT")},
+  {"mbr", "0xef",  N_("EFI (FAT-12/16/32)")},
+  {"mbr", "0xfd",  N_("Linux RAID auto")},
   {NULL,  NULL, NULL}
 };
 
@@ -795,6 +795,7 @@ udisks_util_get_part_types_for_scheme (const gchar *scheme)
  * udisks_util_get_part_type_for_display:
  * @scheme: A partitioning scheme id.
  * @type: A partition type.
+ * @long_string: Whether to produce a long string.
  *
  * Gets a human readable localized string for @scheme and @type.
  *
@@ -802,7 +803,8 @@ udisks_util_get_part_types_for_scheme (const gchar *scheme)
  */
 gchar *
 udisks_util_get_part_type_for_display (const gchar *scheme,
-                                       const gchar *type)
+                                       const gchar *type,
+                                       gboolean     long_string)
 {
   guint n;
   gchar *ret;
@@ -812,15 +814,32 @@ udisks_util_get_part_type_for_display (const gchar *scheme,
       if (g_strcmp0 (part_type[n].scheme, scheme) == 0 &&
           g_strcmp0 (part_type[n].type, type) == 0)
         {
-          ret = g_strdup (_(part_type[n].name));
+          if (long_string)
+            {
+              /* Translators: First %s is the detailed partition type (e.g. "FAT16 (0x16)") and
+               * second %s is the partition type (e.g. 0x16)
+               */
+              ret = g_strdup_printf ("%s (%s)", _(part_type[n].name), type);
+            }
+          else
+            {
+              ret = g_strdup (_(part_type[n].name));
+            }
           goto out;
         }
     }
 
-  /* Translators: Shown for unknown partition types.
-   * First %s is the partition type.
-   */
-  ret = g_strdup_printf (_("Unknown Type (%s)"), type);
+  if (long_string)
+    {
+      /* Translators: Shown for unknown partition types.
+       * First %s is the partition type.
+       */
+      ret = g_strdup_printf (_("Unknown (%s)"), type);
+    }
+  else
+    {
+      ret = g_strdup (_("Unknown"));
+    }
 
  out:
   return ret;

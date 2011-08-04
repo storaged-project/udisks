@@ -37,7 +37,8 @@ gchar *udisks_util_get_size_for_display (guint64 size,
 gchar *udisks_util_get_part_scheme_for_display (const gchar *scheme);
 
 gchar *udisks_util_get_part_type_for_display (const gchar *scheme,
-                                              const gchar *type);
+                                              const gchar *type,
+                                              gboolean     long_string);
 
 const gchar **udisks_util_get_part_types_for_scheme (const gchar *scheme);
 
