@@ -694,6 +694,9 @@ drive_update (UDisksLinuxDrive      *drive,
     {
       const gchar *vendor;
       const gchar *model;
+      const gchar *name;
+
+      name = g_udev_device_get_name (device);
 
       /* generic fallback... */
       vendor = g_udev_device_get_property (device, "ID_VENDOR_ENC");
@@ -707,7 +710,17 @@ drive_update (UDisksLinuxDrive      *drive,
         }
       else
         {
-          udisks_drive_set_vendor (iface, g_udev_device_get_property (device, "ID_VENDOR"));
+          vendor = g_udev_device_get_property (device, "ID_VENDOR");
+          if (vendor != NULL)
+            {
+              udisks_drive_set_vendor (iface, vendor);
+            }
+          /* workaround for missing ID_VENDOR on virtio-blk */
+          else if (g_str_has_prefix (name, "vd"))
+            {
+              /* TODO: could lookup the vendor sysfs attr on the virtio object */
+              udisks_drive_set_vendor (iface, "");
+            }
         }
 
       model = g_udev_device_get_property (device, "ID_MODEL_ENC");
@@ -721,7 +734,16 @@ drive_update (UDisksLinuxDrive      *drive,
         }
       else
         {
-          udisks_drive_set_model (iface, g_udev_device_get_property (device, "ID_MODEL"));
+          model = g_udev_device_get_property (device, "ID_MODEL");
+          if (model != NULL)
+            {
+              udisks_drive_set_model (iface, model);
+            }
+          /* workaround for missing ID_MODEL on virtio-blk */
+          else if (g_str_has_prefix (name, "vd"))
+            {
+              udisks_drive_set_model (iface, "VirtIO Disk");
+            }
         }
 
       udisks_drive_set_revision (iface, g_udev_device_get_property (device, "ID_REVISION"));
@@ -834,9 +856,10 @@ udisks_linux_drive_should_include_device (GUdevDevice  *device,
   gboolean ret;
   const gchar *serial;
   const gchar *wwn;
-  const gchar *vpd;
+  gchar *vpd;
 
   ret = FALSE;
+  vpd = NULL;
 
   /* The 'block' subsystem encompasses several objects with varying
    * DEVTYPE including
@@ -854,21 +877,31 @@ udisks_linux_drive_should_include_device (GUdevDevice  *device,
   wwn = g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION");
   if (wwn != NULL && strlen (wwn) > 0)
     {
-      vpd = wwn;
+      vpd = g_strdup (wwn);
     }
   else if (serial != NULL && strlen (serial) > 0)
     {
-      vpd = serial;
+      vpd = g_strdup (serial);
     }
   else
     {
-      vpd = NULL;
+      const gchar *name = g_udev_device_get_name (device);
+      /* workaround for missing serial/wwn on virtio-blk */
+      if (g_str_has_prefix (name, "vd"))
+        vpd = g_strdup (name);
     }
 
-  if (out_vpd != NULL)
-    *out_vpd = g_strdup (vpd);
-  ret = TRUE;
+  if (vpd != NULL)
+    {
+      if (out_vpd != NULL)
+        {
+          *out_vpd = vpd;
+          vpd = NULL;
+        }
+      ret = TRUE;
+    }
 
  out:
+  g_free (vpd);
   return ret;
 }
