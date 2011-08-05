@@ -2,7 +2,6 @@
 # List of source files containing translatable strings.
 # Please keep this file sorted alphabetically.
 policy/org.freedesktop.udisks2.policy.in
-src/udisksiscsiprovider.c
 src/udiskslinuxblock.c
 src/udiskslinuxfilesystem.c
 udisks/udisksutil.c
