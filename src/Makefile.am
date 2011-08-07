@@ -97,7 +97,6 @@ udisksd_SOURCES = 					\
 
 udisksd_CFLAGS = 					\
 	-DG_LOG_DOMAIN=\"udisks2-daemon\"		\
-	$(LIBATASMART_CFLAGS)				\
 	$(NULL)
 
 udisksd_LDADD = 					\

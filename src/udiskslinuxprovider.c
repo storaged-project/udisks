@@ -64,19 +64,26 @@ struct _UDisksLinuxProvider
   GHashTable *vpd_to_drive;
   GHashTable *sysfs_path_to_drive;
 
-  /* maps from sysfs path to UDisksLinuxController objects */
-  GHashTable *sysfs_to_controller;
+  /* set to TRUE only in the coldplug phase */
+  gboolean coldplug;
+
+  guint housekeeping_timeout;
+  guint64 housekeeping_last;
+  gboolean housekeeping_running;
 };
+
+G_LOCK_DEFINE_STATIC (provider_lock);
 
 struct _UDisksLinuxProviderClass
 {
   UDisksProviderClass parent_class;
 };
 
-static void
-udisks_linux_provider_handle_uevent (UDisksLinuxProvider *provider,
-                                     const gchar         *action,
-                                     GUdevDevice         *device);
+static void udisks_linux_provider_handle_uevent (UDisksLinuxProvider *provider,
+                                                 const gchar         *action,
+                                                 GUdevDevice         *device);
+
+static gboolean on_housekeeping_timeout (gpointer user_data);
 
 G_DEFINE_TYPE (UDisksLinuxProvider, udisks_linux_provider, UDISKS_TYPE_PROVIDER);
 
@@ -88,11 +95,13 @@ udisks_linux_provider_finalize (GObject *object)
   g_hash_table_unref (provider->sysfs_to_block);
   g_hash_table_unref (provider->vpd_to_drive);
   g_hash_table_unref (provider->sysfs_path_to_drive);
-  g_hash_table_unref (provider->sysfs_to_controller);
   g_object_unref (provider->gudev_client);
 
   udisks_object_skeleton_set_manager (provider->manager_object, NULL);
   g_object_unref (provider->manager_object);
+
+  if (provider->housekeeping_timeout > 0)
+    g_source_remove (provider->housekeeping_timeout);
 
   if (G_OBJECT_CLASS (udisks_linux_provider_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_provider_parent_class)->finalize (object);
@@ -131,6 +140,8 @@ udisks_linux_provider_start (UDisksProvider *_provider)
   GList *devices;
   GList *l;
 
+  provider->coldplug = TRUE;
+
   if (UDISKS_PROVIDER_CLASS (udisks_linux_provider_parent_class)->start != NULL)
     UDISKS_PROVIDER_CLASS (udisks_linux_provider_parent_class)->start (_provider);
 
@@ -156,16 +167,21 @@ udisks_linux_provider_start (UDisksProvider *_provider)
                                                          g_str_equal,
                                                          g_free,
                                                          NULL);
-  provider->sysfs_to_controller = g_hash_table_new_full (g_str_hash,
-                                                         g_str_equal,
-                                                         g_free,
-                                                         (GDestroyNotify) g_object_unref);
 
   devices = g_udev_client_query_by_subsystem (provider->gudev_client, "block");
   for (l = devices; l != NULL; l = l->next)
     udisks_linux_provider_handle_uevent (provider, "add", G_UDEV_DEVICE (l->data));
   g_list_foreach (devices, (GFunc) g_object_unref, NULL);
   g_list_free (devices);
+
+  /* schedule housekeeping for every 10 minutes */
+  provider->housekeeping_timeout = g_timeout_add_seconds (10*60,
+                                                          on_housekeeping_timeout,
+                                                          provider);
+  /* ... and also do an initial run */
+  on_housekeeping_timeout (provider);
+
+  provider->coldplug = FALSE;
 }
 
 
@@ -216,6 +232,28 @@ udisks_linux_provider_get_udev_client (UDisksLinuxProvider *provider)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+perform_initial_housekeeping_for_drive (GIOSchedulerJob *job,
+                                        GCancellable    *cancellable,
+                                        gpointer         user_data)
+{
+  UDisksLinuxDrive *drive = UDISKS_LINUX_DRIVE (user_data);
+  GError *error;
+
+  error = NULL;
+  if (!udisks_linux_drive_housekeeping (drive, 0,
+                                        NULL, /* TODO: cancellable */
+                                        &error))
+    {
+      udisks_warning ("Error performing initial housekeeping for drive %s: %s (%s, %d)",
+                      g_dbus_object_get_object_path (G_DBUS_OBJECT (drive)),
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_error_free (error);
+    }
+  return FALSE; /* job is complete */
+}
+
+/* called with lock held */
 static void
 handle_block_uevent_for_drive (UDisksLinuxProvider *provider,
                                const gchar         *action,
@@ -282,6 +320,16 @@ handle_block_uevent_for_drive (UDisksLinuxProvider *provider,
                                                             G_DBUS_OBJECT_SKELETON (drive));
               g_hash_table_insert (provider->vpd_to_drive, g_strdup (vpd), drive);
               g_hash_table_insert (provider->sysfs_path_to_drive, g_strdup (sysfs_path), drive);
+
+              /* schedule initial housekeeping for the drive unless coldplugging */
+              if (!provider->coldplug)
+                {
+                  g_io_scheduler_push_job (perform_initial_housekeeping_for_drive,
+                                           g_object_ref (drive),
+                                           (GDestroyNotify) g_object_unref,
+                                           G_PRIORITY_DEFAULT,
+                                           NULL);
+                }
             }
         }
     }
@@ -290,6 +338,7 @@ handle_block_uevent_for_drive (UDisksLinuxProvider *provider,
   g_free (vpd);
 }
 
+/* called with lock held */
 static void
 handle_block_uevent_for_block (UDisksLinuxProvider *provider,
                                const gchar         *action,
@@ -329,7 +378,7 @@ handle_block_uevent_for_block (UDisksLinuxProvider *provider,
     }
 }
 
-
+/* called with lock held */
 static void
 handle_block_uevent (UDisksLinuxProvider *provider,
                      const gchar         *action,
@@ -357,12 +406,15 @@ handle_block_uevent (UDisksLinuxProvider *provider,
     }
 }
 
+/* called without lock held */
 static void
 udisks_linux_provider_handle_uevent (UDisksLinuxProvider *provider,
                                      const gchar         *action,
                                      GUdevDevice         *device)
 {
   const gchar *subsystem;
+
+  G_LOCK (provider_lock);
 
   udisks_debug ("uevent %s %s",
                 action,
@@ -373,4 +425,95 @@ udisks_linux_provider_handle_uevent (UDisksLinuxProvider *provider,
     {
       handle_block_uevent (provider, action, device);
     }
+
+  G_UNLOCK (provider_lock);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/* Runs in housekeeping thread - called without lock held */
+static void
+housekeeping_all_drives (UDisksLinuxProvider *provider,
+                         guint                secs_since_last)
+{
+  GList *drives;
+  GList *l;
+
+  G_LOCK (provider_lock);
+  drives = g_hash_table_get_values (provider->vpd_to_drive);
+  g_list_foreach (drives, (GFunc) g_object_ref, NULL);
+  G_UNLOCK (provider_lock);
+
+  for (l = drives; l != NULL; l = l->next)
+    {
+      UDisksLinuxDrive *drive = UDISKS_LINUX_DRIVE (l->data);
+      GError *error;
+
+      error = NULL;
+      if (!udisks_linux_drive_housekeeping (drive,
+                                            secs_since_last,
+                                            NULL, /* TODO: cancellable */
+                                            &error))
+        {
+          udisks_warning ("Error performing housekeeping for drive %s: %s (%s, %d)",
+                          g_dbus_object_get_object_path (G_DBUS_OBJECT (drive)),
+                          error->message, g_quark_to_string (error->domain), error->code);
+          g_error_free (error);
+        }
+    }
+
+  g_list_foreach (drives, (GFunc) g_object_unref, NULL);
+  g_list_free (drives);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+housekeeping_thread_func (GIOSchedulerJob *job,
+                          GCancellable    *cancellable,
+                          gpointer         user_data)
+{
+  UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
+  guint secs_since_last;
+  guint64 now;
+
+  /* TODO: probably want some kind of timeout here to avoid faulty devices/drives blocking forever */
+
+  secs_since_last = 0;
+  now = time (NULL);
+  if (provider->housekeeping_last > 0)
+    secs_since_last = now - provider->housekeeping_last;
+  provider->housekeeping_last = now;
+
+  udisks_info ("Housekeeping initiated (%d seconds since last housekeeping)", secs_since_last);
+
+  housekeeping_all_drives (provider, secs_since_last);
+
+  udisks_info ("Housekeeping complete");
+  G_LOCK (provider_lock);
+  provider->housekeeping_running = FALSE;
+  G_UNLOCK (provider_lock);
+
+  return FALSE; /* job is complete */
+}
+
+/* called from the main thread on start-up and every 10 minutes or so */
+static gboolean
+on_housekeeping_timeout (gpointer user_data)
+{
+  UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
+
+  G_LOCK (provider_lock);
+  if (provider->housekeeping_running)
+    goto out;
+  provider->housekeeping_running = TRUE;
+  g_io_scheduler_push_job (housekeeping_thread_func,
+                           g_object_ref (provider),
+                           (GDestroyNotify) g_object_unref,
+                           G_PRIORITY_DEFAULT,
+                           NULL);
+ out:
+  G_UNLOCK (provider_lock);
+
+  return TRUE; /* keep timeout around */
 }

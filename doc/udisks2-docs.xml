@@ -138,6 +138,7 @@
       <title>D-Bus Interfaces</title>
       <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Manager.xml"/>
       <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Drive.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Drive.Ata.xml"/>
       <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.BlockDevice.xml"/>
       <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Filesystem.xml"/>
       <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Swapspace.xml"/>
@@ -158,6 +159,7 @@
       <xi:include href="xml/UDisksObjectManagerClient.xml"/>
       <xi:include href="xml/UDisksManager.xml"/>
       <xi:include href="xml/UDisksDrive.xml"/>
+      <xi:include href="xml/UDisksDriveAta.xml"/>
       <xi:include href="xml/UDisksJob.xml"/>
       <xi:include href="xml/UDisksBlockDevice.xml"/>
       <xi:include href="xml/UDisksFilesystem.xml"/>

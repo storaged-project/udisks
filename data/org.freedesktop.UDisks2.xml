@@ -182,6 +182,72 @@
     </method>
   </interface>
 
+  <!--
+    org.freedesktop.UDisks2.Drive.Ata:
+    @short_description: Disk drive using the ATA command-set
+
+    Objects implementing this interface also implement the
+    #org.freedesktop.UDisks2.Drive interface.
+  -->
+  <interface name="org.freedesktop.UDisks2.Drive.Ata">
+    <!-- SmartSupported: Whether the drive supports SMART. -->
+    <property name="SmartSupported" type="b" access="read"/>
+
+    <!-- SmartEnabled: Whether SMART is enabled. -->
+    <property name="SmartEnabled" type="b" access="read"/>
+
+    <!-- SmartUpdated:
+         The point in time (seconds since the
+         <ulink url="http://en.wikipedia.org/wiki/Unix_epoch">Unix Epoch</ulink>)
+         that the SMART status was updated or 0 if never updated.
+    -->
+    <property name="SmartUpdated" type="t" access="read"/>
+
+    <!-- SmartFailing:
+         Set to %TRUE if disk is about to fail.
+
+         This value is read from the disk itself and does not include
+         any interpretation.
+
+         This property is only meaningful if the property
+         #org.freedesktop.UDisks2.Drive.Ata:SmartUpdated is non-zero.
+    -->
+    <property name="SmartFailing" type="b" access="read"/>
+
+    <!-- SmartPowerOnSeconds:
+         The amount of time the disk has been powered on (according to SMART data) or 0 if unknown.
+
+         This property is only meaningful if the property
+         #org.freedesktop.UDisks2.Drive.Ata:SmartUpdated is non-zero.
+    -->
+    <property name="SmartPowerOnSeconds" type="t" access="read"/>
+
+    <!-- SmartTemperature:
+         The temperature (in Kelvin) of the disk according to SMART data or 0 if unknown.
+
+         This property is only meaningful if the property
+         #org.freedesktop.UDisks2.Drive.Ata:SmartUpdated is non-zero.
+    -->
+    <property name="SmartTemperature" type="d" access="read"/>
+
+    <!--
+        SmartUpdate:
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>nowakeup</parameter> (of type 'b').
+
+        Reads SMART data from the drive and update relevant properties.
+
+        If the option @nowakeup is given and the disk is in a sleeping
+        state, the error
+        <literal>org.freedesktop.UDisks.Error.WouldWakeup</literal> is
+        returned.
+    -->
+    <method name="SmartUpdate">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!-- TODO: self-tests, attributes etc. -->
+  </interface>
+
   <!-- ********************************************************************** -->
 
   <!--

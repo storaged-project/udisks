@@ -25,6 +25,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <atasmart.h>
+
 #include "udiskslogging.h"
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
@@ -59,7 +61,16 @@ struct _UDisksLinuxDrive
 
   /* interfaces */
   UDisksDrive *iface_drive;
+  UDisksDriveAta *iface_drive_ata;
+
+  /* ATA Smart */
+  guint64 ata_smart_updated;
+  gboolean ata_smart_failing;
+  gdouble ata_smart_temperature;
+  guint64 ata_smart_power_on_seconds;
 };
+
+G_LOCK_DEFINE_STATIC (drive_lock);
 
 struct _UDisksLinuxDriveClass
 {
@@ -81,12 +92,13 @@ udisks_linux_drive_finalize (GObject *object)
   UDisksLinuxDrive *drive = UDISKS_LINUX_DRIVE (object);
 
   /* note: we don't hold a ref to drive->daemon or drive->mount_monitor */
-
   g_list_foreach (drive->devices, (GFunc) g_object_unref, NULL);
   g_list_free (drive->devices);
 
   if (drive->iface_drive != NULL)
     g_object_unref (drive->iface_drive);
+  if (drive->iface_drive_ata != NULL)
+    g_object_unref (drive->iface_drive_ata);
 
   if (G_OBJECT_CLASS (udisks_linux_drive_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_drive_parent_class)->finalize (object);
@@ -584,16 +596,18 @@ drive_check (UDisksLinuxDrive *drive)
   return TRUE;
 }
 
+/* TODO: ensure that returned object is for a physical device e.g. not multipath */
 static UDisksObject *
-find_block_object (GDBusObjectManagerServer *object_manager,
-                   UDisksLinuxDrive         *drive)
+find_block_object (UDisksLinuxDrive *drive)
 {
+  GDBusObjectManagerServer *object_manager;
   UDisksObject *ret;
   GList *objects;
   GList *l;
 
   ret = NULL;
 
+  object_manager = udisks_daemon_get_object_manager (udisks_linux_drive_get_daemon (drive));
   objects = g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (object_manager));
   for (l = objects; l != NULL; l = l->next)
     {
@@ -646,8 +660,7 @@ on_eject (UDisksDrive           *drive_iface,
   error_message = NULL;
 
   daemon = udisks_linux_drive_get_daemon (drive);
-  block_object = find_block_object (udisks_daemon_get_object_manager (daemon),
-                                    drive);
+  block_object = find_block_object (drive);
   if (block_object == NULL)
     {
       g_dbus_method_invocation_return_error (invocation,
@@ -657,8 +670,6 @@ on_eject (UDisksDrive           *drive_iface,
       goto out;
     }
   block = udisks_object_peek_block_device (block_object);
-
-  /* TODO: ensure it's a physical device e.g. not mpath */
 
   /* TODO: is it a good idea to overload modify-device? */
   action_id = "org.freedesktop.udisks2.modify-device";
@@ -901,6 +912,261 @@ drive_update (UDisksLinuxDrive      *drive,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static void drive_ata_smart_update (UDisksLinuxDrive *drive);
+
+static gboolean
+update_smart (UDisksLinuxDrive  *drive,
+              gboolean           nowakeup,
+              GError           **error)
+{
+  gboolean ret;
+  SkDisk *d;
+  SkBool awake;
+  SkBool good;
+  uint64_t temp_mkelvin;
+  uint64_t power_on_msec;
+  GUdevDevice *device;
+
+  d = NULL;
+  ret = FALSE;
+
+  device = G_UDEV_DEVICE (drive->devices->data);
+
+  if (sk_disk_open (g_udev_device_get_device_file (device), &d) != 0)
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "sk_disk_open: %m");
+      goto out;
+    }
+
+  if (sk_disk_check_sleep_mode (d, &awake) != 0)
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "sk_disk_check_sleep_mode: %m");
+      goto out;
+    }
+
+  /* don't wake up disk unless specically asked to */
+  if (nowakeup && !awake)
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_WOULD_WAKEUP,
+                   "Disk is in sleep mode and the nowakeup option was passed");
+      goto out;
+    }
+
+  if (sk_disk_smart_read_data (d) != 0)
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "sk_disk_smart_read_data: %m");
+      goto out;
+    }
+
+  if (sk_disk_smart_status (d, &good) != 0)
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "sk_disk_smart_status: %m");
+      goto out;
+    }
+
+  /* don't care if these are failing or not */
+  temp_mkelvin = 0;
+  sk_disk_smart_get_temperature (d, &temp_mkelvin);
+  power_on_msec = 0;
+  sk_disk_smart_get_power_on (d, &power_on_msec);
+
+  G_LOCK (drive_lock);
+  drive->ata_smart_updated = time (NULL);
+  drive->ata_smart_failing = !good;
+  drive->ata_smart_temperature = temp_mkelvin / 1000.0;
+  drive->ata_smart_power_on_seconds = power_on_msec / 1000.0;
+  G_UNLOCK (drive_lock);
+
+  drive_ata_smart_update (drive);
+
+  ret = TRUE;
+
+ out:
+  if (d != NULL)
+    sk_disk_free (d);
+  return ret;
+}
+
+static gboolean
+on_smart_update (UDisksDriveAta        *drive_ata_iface,
+                 GDBusMethodInvocation *invocation,
+                 GVariant              *options,
+                 gpointer               user_data)
+{
+  UDisksLinuxDrive *drive = UDISKS_LINUX_DRIVE (user_data);
+  UDisksObject *block_object;
+  UDisksBlockDevice *block;
+  UDisksDaemon *daemon;
+  const gchar *action_id;
+  gboolean nowakeup;
+  GError *error;
+
+  daemon = NULL;
+  block = NULL;
+
+  daemon = udisks_linux_drive_get_daemon (drive);
+  block_object = find_block_object (drive);
+  if (block_object == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Unable to find physical block device for drive");
+      goto out;
+    }
+  block = udisks_object_peek_block_device (block_object);
+
+  g_variant_lookup (options,
+                    "nowakeup",
+                    "b",
+                    &nowakeup);
+
+  /* TODO: is it a good idea to overload modify-device? */
+  action_id = "org.freedesktop.udisks2.modify-device";
+  if (udisks_block_device_get_hint_system (block))
+    action_id = "org.freedesktop.udisks2.modify-device-system";
+
+  /* Check that the user is actually authorized */
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    block_object,
+                                                    action_id,
+                                                    options,
+                                                    N_("Authentication is required to update SMART from $(udisks2.device)"),
+                                                    invocation))
+    goto out;
+
+  if (!udisks_drive_ata_get_smart_supported (drive_ata_iface))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "SMART is not supported");
+      goto out;
+    }
+
+  if (!udisks_drive_ata_get_smart_enabled (drive_ata_iface))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "SMART is not enabled");
+      goto out;
+    }
+
+  error = NULL;
+  if (!update_smart (drive, nowakeup, &error))
+    {
+      udisks_warning ("Error updating ATA smart for %s: %s (%s, %d)",
+                      g_dbus_object_get_object_path (G_DBUS_OBJECT (drive)),
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  udisks_drive_ata_complete_smart_update (drive_ata_iface, invocation);
+
+ out:
+  if (block_object != NULL)
+    g_object_unref (block_object);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+static gboolean
+drive_ata_check (UDisksLinuxDrive *drive)
+{
+  gboolean ret;
+  GUdevDevice *device;
+
+  ret = FALSE;
+  if (drive->devices == NULL)
+    goto out;
+
+  device = G_UDEV_DEVICE (drive->devices->data);
+  if (!g_udev_device_get_property_as_boolean (device, "ID_ATA"))
+    goto out;
+
+  ret = TRUE;
+
+ out:
+  return ret;
+}
+
+static void
+drive_ata_connect (UDisksLinuxDrive *drive)
+{
+  g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (drive->iface_drive_ata),
+                                       G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
+  g_signal_connect (drive->iface_drive_ata,
+                    "handle-smart-update",
+                    G_CALLBACK (on_smart_update),
+                    drive);
+}
+
+/* also called from *any* thread when the SMART data has been updated */
+static void
+drive_ata_smart_update (UDisksLinuxDrive *drive)
+{
+  GUdevDevice *device;
+  gboolean supported;
+  gboolean enabled;
+  guint64 updated;
+  gboolean failing;
+  gdouble temperature;
+  guint64 power_on_seconds;
+
+  device = G_UDEV_DEVICE (drive->devices->data);
+
+  supported = g_udev_device_get_property_as_boolean (device, "ID_ATA_FEATURE_SET_SMART");
+  enabled = g_udev_device_get_property_as_boolean (device, "ID_ATA_FEATURE_SET_SMART_ENABLED");
+  updated = 0;
+  failing = FALSE;
+  temperature = 0.0;
+  power_on_seconds = 0;
+
+  G_LOCK (drive_lock);
+  if (drive->ata_smart_updated > 0)
+    {
+      updated = drive->ata_smart_updated;
+      failing = drive->ata_smart_failing;
+      temperature = drive->ata_smart_temperature;
+      power_on_seconds = drive->ata_smart_power_on_seconds;
+    }
+  G_UNLOCK (drive_lock);
+
+  g_object_freeze_notify (G_OBJECT (drive->iface_drive_ata));
+  udisks_drive_ata_set_smart_supported (drive->iface_drive_ata, supported);
+  udisks_drive_ata_set_smart_enabled (drive->iface_drive_ata, enabled);
+  udisks_drive_ata_set_smart_updated (drive->iface_drive_ata, updated);
+  udisks_drive_ata_set_smart_failing (drive->iface_drive_ata, failing);
+  udisks_drive_ata_set_smart_temperature (drive->iface_drive_ata, temperature);
+  udisks_drive_ata_set_smart_power_on_seconds (drive->iface_drive_ata, power_on_seconds);
+  g_object_thaw_notify (G_OBJECT (drive->iface_drive_ata));
+}
+
+static void
+drive_ata_update (UDisksLinuxDrive      *drive,
+                  const gchar           *uevent_action,
+                  GDBusInterface        *_iface)
+{
+  drive_ata_smart_update (drive);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static GList *
 find_link_for_sysfs_path (UDisksLinuxDrive *drive,
                           const gchar      *sysfs_path)
@@ -968,6 +1234,8 @@ udisks_linux_drive_uevent (UDisksLinuxDrive *drive,
 
   update_iface (drive, action, drive_check, drive_connect, drive_update,
                 UDISKS_TYPE_DRIVE_SKELETON, &drive->iface_drive);
+  update_iface (drive, action, drive_ata_check, drive_ata_connect, drive_ata_update,
+                UDISKS_TYPE_DRIVE_ATA_SKELETON, &drive->iface_drive_ata);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1035,5 +1303,75 @@ udisks_linux_drive_should_include_device (GUdevDevice  *device,
 
  out:
   g_free (vpd);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_linux_drive_housekeeping:
+ * @drive: A #UDisksLinuxDrive.
+ * @secs_since_last: Number of seconds sincex the last housekeeping or 0 if the first housekeeping ever.
+ * @cancellable: A %GCancellable or %NULL.
+ * @error: Return location for error or %NULL.
+ *
+ * Called periodically (every ten minutes or so) to perform
+ * housekeeping tasks such as refreshing ATA SMART data.
+ *
+ * The function runs in a dedicated thread and is allowed to perform
+ * blocking I/O.
+ *
+ * Long-running tasks should periodically check @cancellable to see if
+ * they have been cancelled.
+ *
+ * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
+ */
+gboolean
+udisks_linux_drive_housekeeping (UDisksLinuxDrive  *drive,
+                                 guint              secs_since_last,
+                                 GCancellable      *cancellable,
+                                 GError           **error)
+{
+  gboolean ret;
+
+  ret = FALSE;
+
+  if (drive->iface_drive_ata != NULL &&
+      udisks_drive_ata_get_smart_supported (drive->iface_drive_ata) &&
+      udisks_drive_ata_get_smart_enabled (drive->iface_drive_ata))
+    {
+      GError *local_error;
+      gboolean nowakeup;
+
+      /* Wake-up only on start-up */
+      nowakeup = TRUE;
+      if (secs_since_last == 0)
+        nowakeup = FALSE;
+
+      udisks_info ("Refreshing SMART data on %s (nowakeup=%d)",
+                   g_dbus_object_get_object_path (G_DBUS_OBJECT (drive)),
+                   nowakeup);
+
+      local_error = NULL;
+      if (!update_smart (drive, nowakeup, &local_error))
+        {
+          if (nowakeup && (local_error->domain == UDISKS_ERROR &&
+                           local_error->code == UDISKS_ERROR_WOULD_WAKEUP))
+            {
+              udisks_info ("Drive %s is in a sleep state",
+                           g_dbus_object_get_object_path (G_DBUS_OBJECT (drive)));
+              g_error_free (local_error);
+            }
+          else
+            {
+              g_propagate_prefixed_error (error, local_error, "Error updating SMART data: ");
+              goto out;
+            }
+        }
+    }
+
+  ret = TRUE;
+
+ out:
   return ret;
 }

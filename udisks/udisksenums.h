@@ -44,6 +44,7 @@ G_BEGIN_DECLS
  * @UDISKS_ERROR_ALREADY_UNMOUNTING: The device is already unmounting.
  * @UDISKS_ERROR_NOT_SUPPORTED: The operation is not supported due to missing driver/tool support.
  * @UDISKS_ERROR_TIMED_OUT: The operation timed out.
+ * @UDISKS_ERROR_WOULD_WAKEUP: The operation would wake up a disk that is in a deep-sleep state.
  *
  * Error codes for the #UDISKS_ERROR error domain and the
  * corresponding D-Bus error names.
@@ -62,10 +63,11 @@ typedef enum
   UDISKS_ERROR_MOUNTED_BY_OTHER_USER,      /* org.freedesktop.UDisks.Error.MountedByOtherUser */
   UDISKS_ERROR_ALREADY_UNMOUNTING,         /* org.freedesktop.UDisks.Error.AlreadyUnmounting */
   UDISKS_ERROR_NOT_SUPPORTED,              /* org.freedesktop.UDisks.Error.NotSupported */
-  UDISKS_ERROR_TIMED_OUT                   /* org.freedesktop.UDisks.Error.Timedout */
+  UDISKS_ERROR_TIMED_OUT,                  /* org.freedesktop.UDisks.Error.Timedout */
+  UDISKS_ERROR_WOULD_WAKEUP,               /* org.freedesktop.UDisks.Error.WouldWakeup */
 } UDisksError;
 
-#define UDISKS_ERROR_NUM_ENTRIES  (UDISKS_ERROR_TIMED_OUT + 1)
+#define UDISKS_ERROR_NUM_ENTRIES  (UDISKS_ERROR_WOULD_WAKEUP + 1)
 
 G_END_DECLS
 
