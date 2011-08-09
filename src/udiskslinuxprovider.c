@@ -85,12 +85,23 @@ static void udisks_linux_provider_handle_uevent (UDisksLinuxProvider *provider,
 
 static gboolean on_housekeeping_timeout (gpointer user_data);
 
+static void fstab_monitor_on_entry_added (UDisksFstabMonitor *monitor,
+                                          UDisksFstabEntry   *entry,
+                                          gpointer            user_data);
+
+static void fstab_monitor_on_entry_removed (UDisksFstabMonitor *monitor,
+                                            UDisksFstabEntry   *entry,
+                                            gpointer            user_data);
+
 G_DEFINE_TYPE (UDisksLinuxProvider, udisks_linux_provider, UDISKS_TYPE_PROVIDER);
 
 static void
 udisks_linux_provider_finalize (GObject *object)
 {
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (object);
+  UDisksDaemon *daemon;
+
+  daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
 
   g_hash_table_unref (provider->sysfs_to_block);
   g_hash_table_unref (provider->vpd_to_drive);
@@ -102,6 +113,13 @@ udisks_linux_provider_finalize (GObject *object)
 
   if (provider->housekeeping_timeout > 0)
     g_source_remove (provider->housekeeping_timeout);
+
+  g_signal_handlers_disconnect_by_func (udisks_daemon_get_fstab_monitor (daemon),
+                                        G_CALLBACK (fstab_monitor_on_entry_added),
+                                        provider);
+  g_signal_handlers_disconnect_by_func (udisks_daemon_get_fstab_monitor (daemon),
+                                        G_CALLBACK (fstab_monitor_on_entry_removed),
+                                        provider);
 
   if (G_OBJECT_CLASS (udisks_linux_provider_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_provider_parent_class)->finalize (object);
@@ -182,6 +200,16 @@ udisks_linux_provider_start (UDisksProvider *_provider)
   on_housekeeping_timeout (provider);
 
   provider->coldplug = FALSE;
+
+  /* update BlockDevice:FstabEntries whenever fstab entries are added or removed */
+  g_signal_connect (udisks_daemon_get_fstab_monitor (daemon),
+                    "entry-added",
+                    G_CALLBACK (fstab_monitor_on_entry_added),
+                    provider);
+  g_signal_connect (udisks_daemon_get_fstab_monitor (daemon),
+                    "entry-removed",
+                    G_CALLBACK (fstab_monitor_on_entry_removed),
+                    provider);
 }
 
 
@@ -516,4 +544,45 @@ on_housekeeping_timeout (gpointer user_data)
   G_UNLOCK (provider_lock);
 
   return TRUE; /* keep timeout around */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static void
+update_all_block_devices (UDisksLinuxProvider *provider)
+{
+  GList *block_devices;
+  GList *l;
+
+  G_LOCK (provider_lock);
+  block_devices = g_hash_table_get_values (provider->sysfs_to_block);
+  g_list_foreach (block_devices, (GFunc) g_object_ref, NULL);
+  G_UNLOCK (provider_lock);
+
+  for (l = block_devices; l != NULL; l = l->next)
+    {
+      UDisksLinuxBlock *block = UDISKS_LINUX_BLOCK (l->data);
+      udisks_linux_block_uevent (block, "change", NULL);
+    }
+
+  g_list_foreach (block_devices, (GFunc) g_object_unref, NULL);
+  g_list_free (block_devices);
+}
+
+static void
+fstab_monitor_on_entry_added (UDisksFstabMonitor *monitor,
+                              UDisksFstabEntry   *entry,
+                              gpointer            user_data)
+{
+  UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
+  update_all_block_devices (provider);
+}
+
+static void
+fstab_monitor_on_entry_removed (UDisksFstabMonitor *monitor,
+                                UDisksFstabEntry   *entry,
+                                gpointer            user_data)
+{
+  UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
+  update_all_block_devices (provider);
 }

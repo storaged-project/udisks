@@ -29,6 +29,8 @@ UDisksMount *_udisks_mount_new (dev_t dev,
                                 const gchar *mount_path,
                                 UDisksMountType type);
 
+UDisksFstabEntry *_udisks_fstab_entry_new (const struct mntent *mntent);
+
 G_END_DECLS
 
 #endif /* __UDISKS_PRIVATE_H__ */

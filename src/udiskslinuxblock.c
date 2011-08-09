@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <pwd.h>
 #include <grp.h>
+#include <mntent.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -42,6 +43,8 @@
 #include "udiskslinuxloop.h"
 #include "udiskspersistentstore.h"
 #include "udiskslinuxprovider.h"
+#include "udisksfstabmonitor.h"
+#include "udisksfstabentry.h"
 
 /**
  * SECTION:udiskslinuxblock
@@ -368,6 +371,322 @@ update_iface (UDisksLinuxBlock           *block,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gchar *
+escape_fstab (const gchar *source)
+{
+  GString *s;
+  guint n;
+  s = g_string_new (NULL);
+  for (n = 0; source[n] != '\0'; n++)
+    {
+      switch (source[n])
+        {
+        case ' ':
+        case '\t':
+        case '\n':
+        case '\\':
+          g_string_append_printf (s, "\\%03o", source[n]);
+          break;
+
+        default:
+          g_string_append_c (s, source[n]);
+          break;
+        }
+    }
+  return g_string_free (s, FALSE);
+}
+
+/* based on g_strcompress() */
+static gchar *
+unescape_fstab (const gchar *source)
+{
+  const gchar *p = source, *octal;
+  gchar *dest = g_malloc (strlen (source) + 1);
+  gchar *q = dest;
+
+  while (*p)
+    {
+      if (*p == '\\')
+        {
+          p++;
+          switch (*p)
+            {
+            case '\0':
+              g_warning ("unescape_fstab: trailing \\");
+              goto out;
+            case '0':  case '1':  case '2':  case '3':  case '4':
+            case '5':  case '6':  case '7':
+              *q = 0;
+              octal = p;
+              while ((p < octal + 3) && (*p >= '0') && (*p <= '7'))
+                {
+                  *q = (*q * 8) + (*p - '0');
+                  p++;
+                }
+              q++;
+              p--;
+              break;
+            default:            /* Also handles \" and \\ */
+              *q++ = *p;
+              break;
+            }
+        }
+      else
+        *q++ = *p;
+      p++;
+    }
+out:
+  *q = 0;
+
+  return dest;
+}
+
+static gboolean
+add_remove_fstab_entry (GVariant  *add,
+                        GVariant  *remove,
+                        GError   **error)
+{
+  struct mntent mntent_remove;
+  struct mntent mntent_add;
+  gboolean ret;
+  gchar *contents;
+  gchar **lines;
+  GString *str;
+  gboolean removed;
+  guint n;
+
+  contents = NULL;
+  lines = NULL;
+  str = NULL;
+  ret = FALSE;
+
+  if (remove != NULL)
+    {
+      if (!g_variant_lookup (remove, "fsname", "^&ay", &mntent_remove.mnt_fsname) ||
+          !g_variant_lookup (remove, "dir", "^&ay", &mntent_remove.mnt_dir) ||
+          !g_variant_lookup (remove, "type", "^&ay", &mntent_remove.mnt_type) ||
+          !g_variant_lookup (remove, "opts", "^&ay", &mntent_remove.mnt_opts) ||
+          !g_variant_lookup (remove, "freq", "i", &mntent_remove.mnt_freq) ||
+          !g_variant_lookup (remove, "passno", "i", &mntent_remove.mnt_passno))
+        {
+          g_set_error (error,
+                       UDISKS_ERROR,
+                       UDISKS_ERROR_FAILED,
+                       "Missing fsname, dir, type, opts, freq or passno parameter in entry to remove");
+          goto out;
+        }
+    }
+
+  if (add != NULL)
+    {
+      if (!g_variant_lookup (add, "fsname", "^&ay", &mntent_add.mnt_fsname) ||
+          !g_variant_lookup (add, "dir", "^&ay", &mntent_add.mnt_dir) ||
+          !g_variant_lookup (add, "type", "^&ay", &mntent_add.mnt_type) ||
+          !g_variant_lookup (add, "opts", "^&ay", &mntent_add.mnt_opts) ||
+          !g_variant_lookup (add, "freq", "i", &mntent_add.mnt_freq) ||
+          !g_variant_lookup (add, "passno", "i", &mntent_add.mnt_passno))
+        {
+          g_set_error (error,
+                       UDISKS_ERROR,
+                       UDISKS_ERROR_FAILED,
+                       "Missing fsname, dir, type, opts, freq or passno parameter in entry to add");
+          goto out;
+        }
+    }
+
+  if (!g_file_get_contents ("/etc/fstab",
+                            &contents,
+                            NULL,
+                            error))
+    goto out;
+
+  lines = g_strsplit (contents, "\n", 0);
+
+  str = g_string_new (NULL);
+  removed = FALSE;
+  for (n = 0; lines != NULL && lines[n] != NULL; n++)
+    {
+      const gchar *line = lines[n];
+      if (strlen (line) == 0 && lines[n+1] == NULL)
+        break;
+      if (remove != NULL && !removed)
+        {
+          gchar parsed_fsname[512];
+          gchar parsed_dir[512];
+          gchar parsed_type[512];
+          gchar parsed_opts[512];
+          gint parsed_freq;
+          gint parsed_passno;
+          if (sscanf (line, "%511s %511s %511s %511s %d %d",
+                      parsed_fsname,
+                      parsed_dir,
+                      parsed_type,
+                      parsed_opts,
+                      &parsed_freq,
+                      &parsed_passno) == 6)
+            {
+              gchar *unescaped_fsname = unescape_fstab (parsed_fsname);
+              gchar *unescaped_dir = unescape_fstab (parsed_dir);
+              gchar *unescaped_type = unescape_fstab (parsed_type);
+              gchar *unescaped_opts = unescape_fstab (parsed_opts);
+              gboolean matches = FALSE;
+              if (g_strcmp0 (unescaped_fsname,   mntent_remove.mnt_fsname) == 0 &&
+                  g_strcmp0 (unescaped_dir,      mntent_remove.mnt_dir) == 0 &&
+                  g_strcmp0 (unescaped_type,     mntent_remove.mnt_type) == 0 &&
+                  g_strcmp0 (unescaped_opts,     mntent_remove.mnt_opts) == 0 &&
+                  parsed_freq ==      mntent_remove.mnt_freq &&
+                  parsed_passno ==    mntent_remove.mnt_passno)
+                {
+                  matches = TRUE;
+                }
+              g_free (unescaped_fsname);
+              g_free (unescaped_dir);
+              g_free (unescaped_type);
+              g_free (unescaped_opts);
+              if (matches)
+                {
+                  removed = TRUE;
+                  continue;
+                }
+            }
+        }
+      g_string_append (str, line);
+      g_string_append_c (str, '\n');
+    }
+
+  if (remove != NULL && !removed)
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "Didn't find entry to remove");
+      goto out;
+    }
+
+  if (add != NULL)
+    {
+      gchar *escaped_fsname = escape_fstab (mntent_add.mnt_fsname);
+      gchar *escaped_dir = escape_fstab (mntent_add.mnt_dir);
+      gchar *escaped_type = escape_fstab (mntent_add.mnt_type);
+      gchar *escaped_opts = escape_fstab (mntent_add.mnt_opts);
+      g_string_append_printf (str, "%s %s %s %s %d %d\n",
+                              escaped_fsname,
+                              escaped_dir,
+                              escaped_type,
+                              escaped_opts,
+                              mntent_add.mnt_freq,
+                              mntent_add.mnt_passno);
+      g_free (escaped_fsname);
+      g_free (escaped_dir);
+      g_free (escaped_type);
+      g_free (escaped_opts);
+    }
+
+  if (!g_file_set_contents ("/etc/fstab",
+                            str->str,
+                            -1,
+                            error) != 0)
+    goto out;
+
+  ret = TRUE;
+
+ out:
+  g_strfreev (lines);
+  g_free (contents);
+  if (str != NULL)
+    g_string_free (str, TRUE);
+  return ret;
+}
+
+static gboolean
+on_add_configuration_item (UDisksBlockDevice     *block,
+                           GDBusMethodInvocation *invocation,
+                           GVariant              *item,
+                           GVariant              *options,
+                           gpointer               user_data)
+{
+  UDisksLinuxBlock *object = UDISKS_LINUX_BLOCK (user_data);
+  const gchar *type;
+  GVariant *details;
+  GError *error;
+
+  g_variant_get (item, "(&s@a{sv})", &type, &details);
+
+  if (g_strcmp0 (type, "fstab") != 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Only fstab items can be added");
+      goto out;
+    }
+
+  if (!udisks_daemon_util_check_authorization_sync (object->daemon,
+                                                    NULL,
+                                                    "org.freedesktop.udisks2.modify-system-configuration",
+                                                    options,
+                                                    N_("Authentication is required to modify the /etc/fstab file"),
+                                                    invocation))
+    goto out;
+
+  error = NULL;
+  if (!add_remove_fstab_entry (details, NULL, &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  udisks_block_device_complete_add_configuration_item (block, invocation);
+
+ out:
+  g_variant_unref (details);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+static gboolean
+on_remove_configuration_item (UDisksBlockDevice     *block,
+                              GDBusMethodInvocation *invocation,
+                              GVariant              *item,
+                              GVariant              *options,
+                              gpointer               user_data)
+{
+  UDisksLinuxBlock *object = UDISKS_LINUX_BLOCK (user_data);
+  const gchar *type;
+  GVariant *details;
+  GError *error;
+
+  g_variant_get (item, "(&s@a{sv})", &type, &details);
+
+  if (g_strcmp0 (type, "fstab") != 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Only fstab items can be removed");
+      goto out;
+    }
+
+  if (!udisks_daemon_util_check_authorization_sync (object->daemon,
+                                                    NULL,
+                                                    "org.freedesktop.udisks2.modify-system-configuration",
+                                                    options,
+                                                    N_("Authentication is required to modify the /etc/fstab file"),
+                                                    invocation))
+    goto out;
+
+  error = NULL;
+  if (!add_remove_fstab_entry (NULL, details, &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  udisks_block_device_complete_add_configuration_item (block, invocation);
+
+ out:
+  g_variant_unref (details);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
 
 /* ---------------------------------------------------------------------------------------------------- */
 /* org.freedesktop.UDisks.BlockDevice */
@@ -381,6 +700,14 @@ block_device_check (UDisksLinuxBlock *block)
 static void
 block_device_connect (UDisksLinuxBlock *block)
 {
+  g_signal_connect (block->iface_block_device,
+                    "handle-add-configuration-item",
+                    G_CALLBACK (on_add_configuration_item),
+                    block);
+  g_signal_connect (block->iface_block_device,
+                    "handle-remove-configuration-item",
+                    G_CALLBACK (on_remove_configuration_item),
+                    block);
 }
 
 static gchar *
@@ -554,6 +881,109 @@ block_device_update_hints (UDisksLinuxBlock  *block,
   udisks_block_device_set_hint_auto (iface, hint_auto);
   udisks_block_device_set_hint_name (iface, hint_name);
   udisks_block_device_set_hint_icon_name (iface, hint_icon_name);
+}
+
+static GList *
+find_fstab_entries_for_device (UDisksLinuxBlock *block)
+{
+  GList *entries;
+  GList *l;
+  GList *ret;
+
+  ret = NULL;
+
+  /* if this is too slow, we could add lookup methods to UDisksFstabMonitor... */
+  entries = udisks_fstab_monitor_get_entries (udisks_daemon_get_fstab_monitor (block->daemon));
+  for (l = entries; l != NULL; l = l->next)
+    {
+      UDisksFstabEntry *entry = UDISKS_FSTAB_ENTRY (l->data);
+      const gchar *const *symlinks;
+      const gchar *fsname;
+      gchar *device;
+      guint n;
+
+      fsname = udisks_fstab_entry_get_fsname (entry);
+      device = NULL;
+      if (g_str_has_prefix (fsname, "UUID="))
+        {
+          device = g_strdup_printf ("/dev/disk/by-uuid/%s", fsname + 5);
+        }
+      else if (g_str_has_prefix (fsname, "LABEL="))
+        {
+          device = g_strdup_printf ("/dev/disk/by-label/%s", fsname + 6);
+        }
+      else if (g_str_has_prefix (fsname, "/dev"))
+        {
+          device = g_strdup (fsname);
+        }
+      else
+        {
+          /* ignore non-device entries */
+          goto continue_loop;
+        }
+
+      symlinks = udisks_block_device_get_symlinks (block->iface_block_device);
+      if (symlinks != NULL)
+        {
+          for (n = 0; symlinks[n] != NULL; n++)
+            {
+              if (g_strcmp0 (device, symlinks[n]) == 0)
+                {
+                  ret = g_list_prepend (ret, g_object_ref (entry));
+                }
+            }
+        }
+
+    continue_loop:
+      g_free (device);
+    }
+
+  g_list_foreach (entries, (GFunc) g_object_unref, NULL);
+  g_list_free (entries);
+  return ret;
+}
+
+static void
+block_device_update_configuration (UDisksLinuxBlock  *block,
+                                   const gchar       *uevent_action,
+                                   UDisksBlockDevice *iface,
+                                   const gchar       *device_file,
+                                   UDisksDrive       *drive)
+{
+  GList *entries;
+  GList *l;
+  GVariantBuilder builder;
+
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a(sa{sv})"));
+  entries = find_fstab_entries_for_device (block);
+  for (l = entries; l != NULL; l = l->next)
+    {
+      UDisksFstabEntry *entry = UDISKS_FSTAB_ENTRY (l->data);
+      GVariantBuilder dict_builder;
+
+      g_variant_builder_init (&dict_builder, G_VARIANT_TYPE_VARDICT);
+      g_variant_builder_add (&dict_builder, "{sv}", "fsname",
+                             g_variant_new_bytestring (udisks_fstab_entry_get_fsname (entry)));
+      g_variant_builder_add (&dict_builder, "{sv}", "dir",
+                             g_variant_new_bytestring (udisks_fstab_entry_get_dir (entry)));
+      g_variant_builder_add (&dict_builder, "{sv}", "type",
+                             g_variant_new_bytestring (udisks_fstab_entry_get_fstype (entry)));
+      g_variant_builder_add (&dict_builder, "{sv}", "opts",
+                             g_variant_new_bytestring (udisks_fstab_entry_get_opts (entry)));
+      g_variant_builder_add (&dict_builder, "{sv}", "freq",
+                             g_variant_new_int32 (udisks_fstab_entry_get_freq (entry)));
+      g_variant_builder_add (&dict_builder, "{sv}", "passno",
+                             g_variant_new_int32 (udisks_fstab_entry_get_passno (entry)));
+      g_variant_builder_add (&builder,
+                             "(sa{sv})",
+                             "fstab", &dict_builder);
+    }
+
+  udisks_block_device_set_configuration (block->iface_block_device,
+                                         g_variant_builder_end (&builder));
+
+  g_list_foreach (entries, (GFunc) g_object_unref, NULL);
+  g_list_free (entries);
 }
 
 static void
@@ -778,6 +1208,7 @@ block_device_update (UDisksLinuxBlock *block,
     }
 
   block_device_update_hints (block, uevent_action, iface, device_file, drive);
+  block_device_update_configuration (block, uevent_action, iface, device_file, drive);
 
   if (drive != NULL)
     g_object_unref (drive);

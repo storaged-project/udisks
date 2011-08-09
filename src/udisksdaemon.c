@@ -33,6 +33,8 @@
 #include "udisksthreadedjob.h"
 #include "udiskssimplejob.h"
 #include "udiskscleanup.h"
+#include "udisksfstabmonitor.h"
+#include "udisksfstabentry.h"
 
 /**
  * SECTION:udisksdaemon
@@ -65,6 +67,8 @@ struct _UDisksDaemon
   PolkitAuthority *authority;
 
   UDisksCleanup *cleanup;
+
+  UDisksFstabMonitor *fstab_monitor;
 };
 
 struct _UDisksDaemonClass
@@ -77,7 +81,8 @@ enum
   PROP_0,
   PROP_CONNECTION,
   PROP_OBJECT_MANAGER,
-  PROP_MOUNT_MONITOR
+  PROP_MOUNT_MONITOR,
+  PROP_FSTAB_MONITOR,
 };
 
 G_DEFINE_TYPE (UDisksDaemon, udisks_daemon, G_TYPE_OBJECT);
@@ -96,6 +101,7 @@ udisks_daemon_finalize (GObject *object)
   g_object_unref (daemon->linux_provider);
   g_object_unref (daemon->mount_monitor);
   g_object_unref (daemon->connection);
+  g_object_unref (daemon->fstab_monitor);
 
   if (G_OBJECT_CLASS (udisks_daemon_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_daemon_parent_class)->finalize (object);
@@ -121,6 +127,10 @@ udisks_daemon_get_property (GObject    *object,
 
     case PROP_MOUNT_MONITOR:
       g_value_set_object (value, udisks_daemon_get_mount_monitor (daemon));
+      break;
+
+    case PROP_FSTAB_MONITOR:
+      g_value_set_object (value, udisks_daemon_get_fstab_monitor (daemon));
       break;
 
     default:
@@ -206,6 +216,8 @@ udisks_daemon_constructed (GObject *object)
                     "mount-removed",
                     G_CALLBACK (mount_monitor_on_mount_removed),
                     daemon);
+
+  daemon->fstab_monitor = udisks_fstab_monitor_new ();
 
   /* now add providers */
   daemon->linux_provider = udisks_linux_provider_new (daemon);
@@ -341,6 +353,21 @@ udisks_daemon_get_mount_monitor (UDisksDaemon *daemon)
 {
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
   return daemon->mount_monitor;
+}
+
+/**
+ * udisks_daemon_get_fstab_monitor:
+ * @daemon: A #UDisksDaemon
+ *
+ * Gets the fstab monitor used by @daemon.
+ *
+ * Returns: A #UDisksFstabMonitor. Do not free, the object is owned by @daemon.
+ */
+UDisksFstabMonitor *
+udisks_daemon_get_fstab_monitor (UDisksDaemon *daemon)
+{
+  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
+  return daemon->fstab_monitor;
 }
 
 /**

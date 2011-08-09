@@ -132,4 +132,15 @@
     </defaults>
   </action>
 
+  <!-- Manage system-wide configuration files such as /etc/fstab -->
+  <action id="org.freedesktop.udisks2.modify-system-configuration">
+    <_description>Modify system-wide configuration</_description>
+    <_message>Authentication is required to modify system-wide configuration</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
 </policyconfig>

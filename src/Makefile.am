@@ -65,6 +65,8 @@ libudisks_daemon_la_SOURCES =						\
 	udiskslogging.h			udiskslogging.c			\
 	udiskscleanup.h			udiskscleanup.c			\
 	udisksprivate.h							\
+	udisksfstabentry.h		udisksfstabentry.c		\
+	udisksfstabmonitor.h		udisksfstabmonitor.c		\
 	$(BUILT_SOURCES)						\
 	$(NULL)
 

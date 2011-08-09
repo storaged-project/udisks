@@ -371,6 +371,53 @@
     -->
     <property name="IdUUID" type="ay" access="read"/>
 
+    <!-- Configuration:
+         The configuration sources for the device.
+
+         This is an array of pairs of (@type, @details) where @type is
+         a string identifying the configuration source
+         (e.g. <literal>fstab</literal>) and @details contains the
+         actual configuration data.
+
+         For entries of type <literal>fstab</literal>, it means that
+         the block device is referenced in the system-wide
+         <filename>/etc/fstab</filename> file. Known configuration
+         items for type <literal>fstab</literal> are
+         <variablelist>
+         <varlistentry>
+           <term>fsname (type <literal>'ay'</literal>)</term>
+           <listitem><para>The special device</para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>dir (type <literal>'ay'</literal>)</term>
+           <listitem><para>The mount point</para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>type (type <literal>'ay'</literal>)</term>
+           <listitem><para>The filesystem type</para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>opts (type <literal>'ay'</literal>)</term>
+           <listitem><para>Options</para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>freq (type <literal>'i'</literal>)</term>
+           <listitem><para>Dump frequency in days</para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>passno (type <literal>'i'</literal>)</term>
+           <listitem><para>Pass number of parallel fsck</para></listitem>
+         </varlistentry>
+         </variablelist>
+
+         Use the
+         org.freedesktop.UDisks2.BlockDevice.AddConfigurationItem()
+         and
+         org.freedesktop.UDisks2.BlockDevice.RemoveConfigurationItem()
+         methods to add/remove configuration items.
+    -->
+    <property name="Configuration" type="a(sa{sv})" access="read"/>
+
     <!-- CryptoBackingDevice:
          The #org.freedesktop.UDisks2.BlockDevice object that is
          backing the device or <literal>/</literal> if unknown or if
@@ -441,6 +488,35 @@
          <literal>/</literal> if the device is not a partition.
     -->
     <property name="PartEntryTable" type="o" access="read"/>
+
+    <!--
+        AddConfigurationItem:
+        @item: The configuration item to add.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Adds a new configuration item. See the
+        #org.freedesktop.UDisks2.BlockDevice:Configuration property
+        for details about valid configuration items.
+    -->
+    <method name="AddConfigurationItem">
+      <arg name="item" direction="in" type="(sa{sv})"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        RemoveConfigurationItem:
+        @item: The configuration item to remove.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Removes a new configuration item. See the
+        #org.freedesktop.UDisks2.BlockDevice:Configuration property
+        for details about valid configuration items.
+    -->
+    <method name="RemoveConfigurationItem">
+      <arg name="item" direction="in" type="(sa{sv})"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
   </interface>
 
   <!-- ********************************************************************** -->

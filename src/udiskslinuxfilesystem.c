@@ -829,6 +829,19 @@ handle_mount (UDisksFilesystem       *filesystem,
    */
   if (system_managed)
     {
+      if (!g_file_test (mount_point_to_use, G_FILE_TEST_IS_DIR))
+        {
+          if (g_mkdir_with_parents (mount_point_to_use, 0755) != 0)
+            {
+              g_dbus_method_invocation_return_error (invocation,
+                                                     UDISKS_ERROR,
+                                                     UDISKS_ERROR_FAILED,
+                                                     "Error creating directory `%s' to be used for mounting %s: %m",
+                                                     mount_point_to_use,
+                                                     udisks_block_device_get_device (block));
+              goto out;
+            }
+        }
       escaped_mount_point_to_use   = g_strescape (mount_point_to_use, NULL);
       if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                                   NULL,  /* GCancellable */
