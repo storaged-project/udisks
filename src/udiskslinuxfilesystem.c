@@ -842,6 +842,7 @@ handle_mount (UDisksFilesystem       *filesystem,
               goto out;
             }
         }
+
       escaped_mount_point_to_use   = g_strescape (mount_point_to_use, NULL);
       if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                                   NULL,  /* GCancellable */
@@ -863,6 +864,19 @@ handle_mount (UDisksFilesystem       *filesystem,
                      udisks_block_device_get_device (block),
                      mount_point_to_use,
                      caller_uid);
+
+      /* update the mounted-fs file */
+      if (!udisks_cleanup_add_mounted_fs (cleanup,
+                                          mount_point_to_use,
+                                          makedev (udisks_block_device_get_major (block), udisks_block_device_get_minor (block)),
+                                          caller_uid,
+                                          TRUE, /* fstab_mounted */
+                                          &error))
+        {
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
+
       udisks_filesystem_complete_mount (filesystem, invocation, mount_point_to_use);
       goto out;
     }
@@ -961,8 +975,12 @@ handle_mount (UDisksFilesystem       *filesystem,
                                       mount_point_to_use,
                                       makedev (udisks_block_device_get_major (block), udisks_block_device_get_minor (block)),
                                       caller_uid,
+                                      FALSE, /* fstab_mounted */
                                       &error))
-    goto out;
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
 
   escaped_fs_type_to_use       = g_strescape (fs_type_to_use, NULL);
   escaped_mount_options_to_use = g_strescape (mount_options_to_use, NULL);
@@ -1053,6 +1071,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
   gboolean opt_force;
   gboolean rc;
   gboolean system_managed;
+  gboolean fstab_mounted;
 
   mount_point = NULL;
   escaped_mount_point = NULL;
@@ -1099,7 +1118,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
     }
 
   /* if system-managed (e.g. referenced in /etc/fstab or similar), just
-   * run mount(8) as the calling user
+   * run umount(8) as the calling user
    */
   if (system_managed)
     {
@@ -1134,6 +1153,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
   mount_point = udisks_cleanup_find_mounted_fs (cleanup,
                                                 makedev (udisks_block_device_get_major (block), udisks_block_device_get_minor (block)),
                                                 &mounted_by_uid,
+                                                &fstab_mounted,
                                                 &error);
   if (error != NULL)
     {

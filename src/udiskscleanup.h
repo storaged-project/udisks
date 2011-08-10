@@ -43,6 +43,7 @@ gboolean         udisks_cleanup_add_mounted_fs       (UDisksCleanup   *cleanup,
                                                       const gchar     *mount_point,
                                                       dev_t            block_device,
                                                       uid_t            uid,
+                                                      gboolean         fstab_mount,
                                                       GError         **error);
 gboolean         udisks_cleanup_remove_mounted_fs    (UDisksCleanup   *cleanup,
                                                       const gchar     *mount_point,
@@ -50,6 +51,7 @@ gboolean         udisks_cleanup_remove_mounted_fs    (UDisksCleanup   *cleanup,
 gchar           *udisks_cleanup_find_mounted_fs      (UDisksCleanup   *cleanup,
                                                       dev_t            block_device,
                                                       uid_t           *out_uid,
+                                                      gboolean        *out_fstab_mount,
                                                       GError         **error);
 gboolean         udisks_cleanup_ignore_mounted_fs    (UDisksCleanup   *cleanup,
                                                       const gchar     *mount_point);

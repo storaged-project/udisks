@@ -67,10 +67,13 @@
  *           Known details include
  *           <literal>block-device</literal>
  *           (of type <link linkend="G-VARIANT-TYPE-UINT64:CAPS">'t'</link>) that is the #dev_t
- *           for the mounted device and
+ *           for the mounted device,
  *           <literal>mounted-by-uid</literal>
  *           (of type <link linkend="G-VARIANT-TYPE-UINT32:CAPS">'u'</link>) that is the #uid_t
- *           of the user who mounted the device.
+ *           of the user who mounted the device, and
+ *           <literal>fstab-mount</literal>
+ *           (of type <link linkend="G-VARIANT-TYPE-BOOLEAN:CAPS">'b'</link>) that is %TRUE
+ *           if the device was mounted via an entry in /etc/fstab.
  *         </entry>
  *       </row>
  *       <row>
@@ -484,6 +487,8 @@ udisks_cleanup_check_mounted_fs_entry (UDisksCleanup  *cleanup,
   GVariant *details;
   GVariant *block_device_value;
   dev_t block_device;
+  GVariant *fstab_mount_value;
+  gboolean fstab_mount;
   gboolean keep;
   gchar *s;
   GList *mounts;
@@ -503,6 +508,8 @@ udisks_cleanup_check_mounted_fs_entry (UDisksCleanup  *cleanup,
   device_to_be_cleaned = FALSE;
   attempt_no_cleanup = FALSE;
   block_device_value = NULL;
+  fstab_mount_value = NULL;
+  fstab_mount = FALSE;
   details = NULL;
 
   monitor = udisks_daemon_get_mount_monitor (cleanup->daemon);
@@ -530,6 +537,17 @@ udisks_cleanup_check_mounted_fs_entry (UDisksCleanup  *cleanup,
       goto out;
     }
   block_device = g_variant_get_uint64 (block_device_value);
+
+  fstab_mount_value = lookup_asv (details, "fstab-mount");
+  if (fstab_mount_value == NULL)
+    {
+      s = g_variant_print (value, TRUE);
+      udisks_error ("mounted-fs entry %s is invalid: no fstab-mount key/value pair", s);
+      g_free (s);
+      attempt_no_cleanup = FALSE;
+      goto out;
+    }
+  fstab_mount = g_variant_get_boolean (fstab_mount_value);
 
   /* udisks_debug ("Validating mounted-fs entry for mount point %s", mount_point); */
 
@@ -623,20 +641,25 @@ udisks_cleanup_check_mounted_fs_entry (UDisksCleanup  *cleanup,
         }
 
       /* remove directory */
-      if (g_file_test (mount_point, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR))
+      if (!fstab_mount)
         {
-          if (g_rmdir (mount_point) != 0)
+          if (g_file_test (mount_point, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR))
             {
-              udisks_error ("Error cleaning up mount point %s: Error removing directory: %m",
-                            mount_point);
-              /* keep the entry so we can clean it up later */
-              keep = TRUE;
-              goto out2;
+              if (g_rmdir (mount_point) != 0)
+                {
+                  udisks_error ("Error cleaning up mount point %s: Error removing directory: %m",
+                                mount_point);
+                  /* keep the entry so we can clean it up later */
+                  keep = TRUE;
+                  goto out2;
+                }
             }
         }
     }
 
  out2:
+  if (fstab_mount_value != NULL)
+    g_variant_unref (fstab_mount_value);
   if (block_device_value != NULL)
     g_variant_unref (block_device_value);
   if (details != NULL)
@@ -728,6 +751,7 @@ udisks_cleanup_check_mounted_fs (UDisksCleanup *cleanup,
  * @block_device: The block device.
  * @mount_point: The mount point.
  * @uid: The user id of the process requesting the device to be mounted.
+ * @fstab_mount: %TRUE if the device was mounted via /etc/fstab.
  * @error: Return location for error or %NULL.
  *
  * Adds a new entry to the
@@ -740,6 +764,7 @@ udisks_cleanup_add_mounted_fs (UDisksCleanup  *cleanup,
                                const gchar    *mount_point,
                                dev_t           block_device,
                                uid_t           uid,
+                               gboolean        fstab_mount,
                                GError        **error)
 {
   gboolean ret;
@@ -804,6 +829,10 @@ udisks_cleanup_add_mounted_fs (UDisksCleanup  *cleanup,
                          "{sv}",
                          "mounted-by-uid",
                          g_variant_new_uint32 (uid));
+  g_variant_builder_add (&details_builder,
+                         "{sv}",
+                         "fstab-mount",
+                         g_variant_new_boolean (fstab_mount));
   details_value = g_variant_builder_end (&details_builder);
 
   /* finally add the new entry */
@@ -954,6 +983,7 @@ udisks_cleanup_remove_mounted_fs (UDisksCleanup   *cleanup,
  * @cleanup: A #UDisksCleanup.
  * @block_device: The block device.
  * @out_uid: Return location for the user id who mounted the device or %NULL.
+ * @out_fstab_mount: Return location for whether the device was a fstab mount or %NULL.
  * @error: Return location for error or %NULL.
  *
  * Gets the mount point for @block_device, if it exists in the
@@ -966,6 +996,7 @@ gchar *
 udisks_cleanup_find_mounted_fs (UDisksCleanup   *cleanup,
                                 dev_t            block_device,
                                 uid_t           *out_uid,
+                                gboolean        *out_fstab_mount,
                                 GError         **error)
 {
   gchar *ret;
@@ -1033,6 +1064,17 @@ udisks_cleanup_find_mounted_fs (UDisksCleanup   *cleanup,
                       if (value != NULL)
                         {
                           *out_uid = g_variant_get_uint32 (value);
+                          g_variant_unref (value);
+                        }
+                    }
+                  if (out_fstab_mount != NULL)
+                    {
+                      GVariant *value;
+                      value = lookup_asv (details, "fstab-mount");
+                      *out_fstab_mount = FALSE;
+                      if (value != NULL)
+                        {
+                          *out_fstab_mount = g_variant_get_boolean (value);
                           g_variant_unref (value);
                         }
                     }
