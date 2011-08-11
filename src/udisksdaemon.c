@@ -35,6 +35,8 @@
 #include "udiskscleanup.h"
 #include "udisksfstabmonitor.h"
 #include "udisksfstabentry.h"
+#include "udiskscrypttabmonitor.h"
+#include "udiskscrypttabentry.h"
 
 /**
  * SECTION:udisksdaemon
@@ -69,6 +71,8 @@ struct _UDisksDaemon
   UDisksCleanup *cleanup;
 
   UDisksFstabMonitor *fstab_monitor;
+
+  UDisksCrypttabMonitor *crypttab_monitor;
 };
 
 struct _UDisksDaemonClass
@@ -83,6 +87,7 @@ enum
   PROP_OBJECT_MANAGER,
   PROP_MOUNT_MONITOR,
   PROP_FSTAB_MONITOR,
+  PROP_CRYPTTAB_MONITOR,
 };
 
 G_DEFINE_TYPE (UDisksDaemon, udisks_daemon, G_TYPE_OBJECT);
@@ -102,6 +107,7 @@ udisks_daemon_finalize (GObject *object)
   g_object_unref (daemon->mount_monitor);
   g_object_unref (daemon->connection);
   g_object_unref (daemon->fstab_monitor);
+  g_object_unref (daemon->crypttab_monitor);
 
   if (G_OBJECT_CLASS (udisks_daemon_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_daemon_parent_class)->finalize (object);
@@ -131,6 +137,10 @@ udisks_daemon_get_property (GObject    *object,
 
     case PROP_FSTAB_MONITOR:
       g_value_set_object (value, udisks_daemon_get_fstab_monitor (daemon));
+      break;
+
+    case PROP_CRYPTTAB_MONITOR:
+      g_value_set_object (value, udisks_daemon_get_crypttab_monitor (daemon));
       break;
 
     default:
@@ -218,6 +228,7 @@ udisks_daemon_constructed (GObject *object)
                     daemon);
 
   daemon->fstab_monitor = udisks_fstab_monitor_new ();
+  daemon->crypttab_monitor = udisks_crypttab_monitor_new ();
 
   /* now add providers */
   daemon->linux_provider = udisks_linux_provider_new (daemon);
@@ -368,6 +379,21 @@ udisks_daemon_get_fstab_monitor (UDisksDaemon *daemon)
 {
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
   return daemon->fstab_monitor;
+}
+
+/**
+ * udisks_daemon_get_crypttab_monitor:
+ * @daemon: A #UDisksDaemon
+ *
+ * Gets the crypttab monitor used by @daemon.
+ *
+ * Returns: A #UDisksCrypttabMonitor. Do not free, the object is owned by @daemon.
+ */
+UDisksCrypttabMonitor *
+udisks_daemon_get_crypttab_monitor (UDisksDaemon *daemon)
+{
+  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
+  return daemon->crypttab_monitor;
 }
 
 /**

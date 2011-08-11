@@ -45,6 +45,8 @@
 #include "udiskslinuxprovider.h"
 #include "udisksfstabmonitor.h"
 #include "udisksfstabentry.h"
+#include "udiskscrypttabmonitor.h"
+#include "udiskscrypttabentry.h"
 
 /**
  * SECTION:udiskslinuxblock
@@ -371,6 +373,48 @@ update_iface (UDisksLinuxBlock           *block,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static GVariant *calculate_configuration (UDisksLinuxBlock  *block,
+                                          gboolean           include_secrets,
+                                          GError           **error);
+
+static gboolean
+on_get_secret_configuration (UDisksBlockDevice     *block,
+                             GDBusMethodInvocation *invocation,
+                             GVariant              *options,
+                             gpointer               user_data)
+{
+  UDisksLinuxBlock *object = UDISKS_LINUX_BLOCK (user_data);
+  GVariant *configuration;
+  GError *error;
+
+  error = NULL;
+  configuration = calculate_configuration (object, TRUE, &error);
+  if (configuration == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  if (!udisks_daemon_util_check_authorization_sync (object->daemon,
+                                                    NULL,
+                                                    "org.freedesktop.udisks2.read-system-configuration-secrets",
+                                                    options,
+                                                    N_("Authentication is required to read system-level secrets"),
+                                                    invocation))
+    {
+      g_variant_unref (configuration);
+      goto out;
+    }
+
+  udisks_block_device_complete_get_secret_configuration (object->iface_block_device, invocation,
+                                                         configuration); /* consumes floating ref */
+
+ out:
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static gchar *
 escape_fstab (const gchar *source)
 {
@@ -442,8 +486,8 @@ out:
 }
 
 static gboolean
-add_remove_fstab_entry (GVariant  *add,
-                        GVariant  *remove,
+add_remove_fstab_entry (GVariant  *remove,
+                        GVariant  *add,
                         GError   **error)
 {
   struct mntent mntent_remove;
@@ -598,6 +642,252 @@ add_remove_fstab_entry (GVariant  *add,
   return ret;
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+has_whitespace (const gchar *s)
+{
+  guint n;
+  g_return_val_if_fail (s != NULL, TRUE);
+  for (n = 0; s[n] != '\0'; n++)
+    if (g_ascii_isspace (s[n]))
+      return TRUE;
+  return FALSE;
+}
+
+static gboolean
+add_remove_crypttab_entry (GVariant  *remove,
+                           GVariant  *add,
+                           GError   **error)
+{
+  const gchar *remove_name = NULL;
+  const gchar *remove_device = NULL;
+  const gchar *remove_passphrase_path = NULL;
+  const gchar *remove_options = NULL;
+  const gchar *add_name = NULL;
+  const gchar *add_device = NULL;
+  const gchar *add_passphrase_path = NULL;
+  const gchar *add_options = NULL;
+  const gchar *add_passphrase_contents = NULL;
+  gboolean ret;
+  gchar *contents;
+  gchar **lines;
+  GString *str;
+  gboolean removed;
+  guint n;
+
+  contents = NULL;
+  lines = NULL;
+  str = NULL;
+  ret = FALSE;
+
+  if (remove != NULL)
+    {
+      if (!g_variant_lookup (remove, "name", "^&ay", &remove_name) ||
+          !g_variant_lookup (remove, "device", "^&ay", &remove_device) ||
+          !g_variant_lookup (remove, "passphrase-path", "^&ay", &remove_passphrase_path) ||
+          !g_variant_lookup (remove, "options", "^&ay", &remove_options))
+        {
+          g_set_error (error,
+                       UDISKS_ERROR,
+                       UDISKS_ERROR_FAILED,
+                       "Missing name, device, passphrase-path, options or parameter in entry to remove");
+          goto out;
+        }
+    }
+
+  if (add != NULL)
+    {
+      if (!g_variant_lookup (add, "name", "^&ay", &add_name) ||
+          !g_variant_lookup (add, "device", "^&ay", &add_device) ||
+          !g_variant_lookup (add, "passphrase-path", "^&ay", &add_passphrase_path) ||
+          !g_variant_lookup (add, "options", "^&ay", &add_options) ||
+          !g_variant_lookup (add, "passphrase-contents", "^&ay", &add_passphrase_contents))
+        {
+          g_set_error (error,
+                       UDISKS_ERROR,
+                       UDISKS_ERROR_FAILED,
+                       "Missing name, device, passphrase-path, options or passphrase-contents parameter in entry to add");
+          goto out;
+        }
+
+      /* reject strings with whitespace in them */
+      if (has_whitespace (add_name) ||
+          has_whitespace (add_device) ||
+          has_whitespace (add_passphrase_path) ||
+          has_whitespace (add_options))
+        {
+          g_set_error (error,
+                       UDISKS_ERROR,
+                       UDISKS_ERROR_FAILED,
+                       "One of name, device, passphrase-path or options parameter are invalid (whitespace)");
+          goto out;
+        }
+    }
+
+  if (!g_file_get_contents ("/etc/crypttab",
+                            &contents,
+                            NULL,
+                            error))
+    goto out;
+
+  lines = g_strsplit (contents, "\n", 0);
+
+  str = g_string_new (NULL);
+  removed = FALSE;
+  for (n = 0; lines != NULL && lines[n] != NULL; n++)
+    {
+      const gchar *line = lines[n];
+      if (strlen (line) == 0 && lines[n+1] == NULL)
+        break;
+      if (remove != NULL && !removed)
+        {
+          gchar parsed_name[512];
+          gchar parsed_device[512];
+          gchar parsed_passphrase_path[512];
+          gchar parsed_options[512];
+          guint num_parsed;
+
+          num_parsed = sscanf (line, "%511s %511s %511s %511s",
+                               parsed_name, parsed_device, parsed_passphrase_path, parsed_options);
+          if (num_parsed >= 2)
+            {
+              if (num_parsed < 3 || g_strcmp0 (parsed_passphrase_path, "none") == 0)
+                strcpy (parsed_passphrase_path, "");
+              if (num_parsed < 4)
+                strcpy (parsed_options, "");
+              if (g_strcmp0 (parsed_name,            remove_name) == 0 &&
+                  g_strcmp0 (parsed_device,          remove_device) == 0 &&
+                  g_strcmp0 (parsed_passphrase_path, remove_passphrase_path) == 0 &&
+                  g_strcmp0 (parsed_options,         remove_options) == 0)
+                {
+                  /* Nuke passphrase file */
+                  if (strlen (remove_passphrase_path) > 0 && !g_str_has_prefix (remove_passphrase_path, "/dev"))
+                    {
+                      /* Is this exploitable? No, 1. the user would have to control
+                       * the /etc/crypttab file for us to delete it; and 2. editing the
+                       * /etc/crypttab file requires a polkit authorization that can't
+                       * be retained (e.g. the user is always asked for the password)..
+                       */
+                      if (unlink (remove_passphrase_path) != 0)
+                        {
+                          g_set_error (error,
+                                       UDISKS_ERROR,
+                                       UDISKS_ERROR_FAILED,
+                                       "Error deleting file `%s' with passphrase",
+                                       remove_passphrase_path);
+                          goto out;
+                        }
+                    }
+                  removed = TRUE;
+                  continue;
+                }
+            }
+        }
+      g_string_append (str, line);
+      g_string_append_c (str, '\n');
+    }
+
+  if (remove != NULL && !removed)
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "Didn't find entry to remove");
+      goto out;
+    }
+
+  if (add != NULL)
+    {
+      /* First write add_passphrase_content to add_passphrase_path,
+       * if applicable..
+       *
+       * Is this exploitable? No, because editing the /etc/crypttab
+       * file requires a polkit authorization that can't be retained
+       * (e.g. the user is always asked for the password)...
+       *
+       * Just to be on the safe side we only allow writing into the
+       * directory /etc/luks-keys if create a _new_ entry.
+       */
+      if (strlen (add_passphrase_path) > 0)
+        {
+          gchar *filename;
+          if (g_strcmp0 (add_passphrase_path, remove_passphrase_path) == 0)
+            {
+              filename = g_strdup (add_passphrase_path);
+            }
+          else
+            {
+              if (!g_str_has_prefix (add_passphrase_path, "/etc/luks-keys/"))
+                {
+                  g_set_error (error,
+                               UDISKS_ERROR,
+                               UDISKS_ERROR_FAILED,
+                               "Crypttab passphrase file can only be created in the /etc/luks-keys directory");
+                  goto out;
+                }
+              /* ensure the directory exists */
+              if (g_mkdir_with_parents ("/etc/luks-keys", 0700) != 0)
+                {
+                  g_set_error (error,
+                               UDISKS_ERROR,
+                               UDISKS_ERROR_FAILED,
+                               "Error creating /etc/luks-keys directory: %m");
+                  goto out;
+                }
+              /* avoid symlink attacks */
+              filename = g_strdup_printf ("/etc/luks-keys/%s", strrchr (add_passphrase_path, '/') + 1);
+            }
+
+          /* Bail if the requested file already exists */
+          if (g_file_test (filename, G_FILE_TEST_EXISTS))
+            {
+                  g_set_error (error,
+                               UDISKS_ERROR,
+                               UDISKS_ERROR_FAILED,
+                               "Refusing to overwrite existing file %s",
+                               filename);
+                  g_free (filename);
+                  goto out;
+            }
+
+          /* TODO: XXX: would like to use mode 0600 here - umask(3) at start-up? */
+          if (!g_file_set_contents (filename,
+                                    add_passphrase_contents,
+                                    -1,
+                                    error))
+            {
+              g_free (filename);
+              goto out;
+            }
+          g_free (filename);
+        }
+      g_string_append_printf (str, "%s %s %s %s\n",
+                              add_name,
+                              add_device,
+                              strlen (add_passphrase_path) > 0 ? add_passphrase_path : "none",
+                              add_options);
+    }
+
+  /* TODO: XXX: ugh, the mode is wrong.. umask(3) at start-up? */
+  if (!g_file_set_contents ("/etc/crypttab",
+                            str->str,
+                            -1,
+                            error) != 0)
+    goto out;
+
+  ret = TRUE;
+
+ out:
+  g_strfreev (lines);
+  g_free (contents);
+  if (str != NULL)
+    g_string_free (str, TRUE);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static gboolean
 on_add_configuration_item (UDisksBlockDevice     *block,
                            GDBusMethodInvocation *invocation,
@@ -612,31 +902,48 @@ on_add_configuration_item (UDisksBlockDevice     *block,
 
   g_variant_get (item, "(&s@a{sv})", &type, &details);
 
-  if (g_strcmp0 (type, "fstab") != 0)
+  if (g_strcmp0 (type, "fstab") == 0)
+    {
+      if (!udisks_daemon_util_check_authorization_sync (object->daemon,
+                                                        NULL,
+                                                        "org.freedesktop.udisks2.modify-system-configuration",
+                                                        options,
+                                                        N_("Authentication is required to add an entry to the /etc/fstab file"),
+                                                        invocation))
+        goto out;
+      error = NULL;
+      if (!add_remove_fstab_entry (NULL, details, &error))
+        {
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
+      udisks_block_device_complete_add_configuration_item (block, invocation);
+    }
+  else if (g_strcmp0 (type, "crypttab") == 0)
+    {
+      if (!udisks_daemon_util_check_authorization_sync (object->daemon,
+                                                        NULL,
+                                                        "org.freedesktop.udisks2.modify-system-configuration",
+                                                        options,
+                                                        N_("Authentication is required to add an entry to the /etc/crypttab file"),
+                                                        invocation))
+        goto out;
+      error = NULL;
+      if (!add_remove_crypttab_entry (NULL, details, &error))
+        {
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
+      udisks_block_device_complete_add_configuration_item (block, invocation);
+    }
+  else
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             "Only fstab items can be added");
+                                             "Only /etc/fstab or /etc/crypttab items can be added");
       goto out;
     }
-
-  if (!udisks_daemon_util_check_authorization_sync (object->daemon,
-                                                    NULL,
-                                                    "org.freedesktop.udisks2.modify-system-configuration",
-                                                    options,
-                                                    N_("Authentication is required to modify the /etc/fstab file"),
-                                                    invocation))
-    goto out;
-
-  error = NULL;
-  if (!add_remove_fstab_entry (details, NULL, &error))
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-
-  udisks_block_device_complete_add_configuration_item (block, invocation);
 
  out:
   g_variant_unref (details);
@@ -657,34 +964,126 @@ on_remove_configuration_item (UDisksBlockDevice     *block,
 
   g_variant_get (item, "(&s@a{sv})", &type, &details);
 
-  if (g_strcmp0 (type, "fstab") != 0)
+  if (g_strcmp0 (type, "fstab") == 0)
+    {
+      if (!udisks_daemon_util_check_authorization_sync (object->daemon,
+                                                        NULL,
+                                                        "org.freedesktop.udisks2.modify-system-configuration",
+                                                        options,
+                                                        N_("Authentication is required to remove an entry from /etc/fstab file"),
+                                                        invocation))
+        goto out;
+      error = NULL;
+      if (!add_remove_fstab_entry (details, NULL, &error))
+        {
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
+      udisks_block_device_complete_add_configuration_item (block, invocation);
+    }
+  else if (g_strcmp0 (type, "crypttab") == 0)
+    {
+      if (!udisks_daemon_util_check_authorization_sync (object->daemon,
+                                                        NULL,
+                                                        "org.freedesktop.udisks2.modify-system-configuration",
+                                                        options,
+                                                        N_("Authentication is required to remove an entry from the /etc/crypttab file"),
+                                                        invocation))
+        goto out;
+      error = NULL;
+      if (!add_remove_crypttab_entry (details, NULL, &error))
+        {
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
+      udisks_block_device_complete_add_configuration_item (block, invocation);
+    }
+  else
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             "Only fstab items can be removed");
+                                             "Only fstab or crypttab items can be removed");
       goto out;
     }
-
-  if (!udisks_daemon_util_check_authorization_sync (object->daemon,
-                                                    NULL,
-                                                    "org.freedesktop.udisks2.modify-system-configuration",
-                                                    options,
-                                                    N_("Authentication is required to modify the /etc/fstab file"),
-                                                    invocation))
-    goto out;
-
-  error = NULL;
-  if (!add_remove_fstab_entry (NULL, details, &error))
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-
-  udisks_block_device_complete_add_configuration_item (block, invocation);
 
  out:
   g_variant_unref (details);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+static gboolean
+on_update_configuration_item (UDisksBlockDevice     *block,
+                              GDBusMethodInvocation *invocation,
+                              GVariant              *old_item,
+                              GVariant              *new_item,
+                              GVariant              *options,
+                              gpointer               user_data)
+{
+  UDisksLinuxBlock *object = UDISKS_LINUX_BLOCK (user_data);
+  const gchar *old_type;
+  const gchar *new_type;
+  GVariant *old_details;
+  GVariant *new_details;
+  GError *error;
+
+  g_variant_get (old_item, "(&s@a{sv})", &old_type, &old_details);
+  g_variant_get (new_item, "(&s@a{sv})", &new_type, &new_details);
+  if (g_strcmp0 (old_type, new_type) != 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "old and new item are not of the same type");
+      goto out;
+    }
+
+  if (g_strcmp0 (old_type, "fstab") == 0)
+    {
+      if (!udisks_daemon_util_check_authorization_sync (object->daemon,
+                                                        NULL,
+                                                        "org.freedesktop.udisks2.modify-system-configuration",
+                                                        options,
+                                                        N_("Authentication is required to modify the /etc/fstab file"),
+                                                        invocation))
+        goto out;
+      error = NULL;
+      if (!add_remove_fstab_entry (old_details, new_details, &error))
+        {
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
+      udisks_block_device_complete_add_configuration_item (block, invocation);
+    }
+  else if (g_strcmp0 (old_type, "crypttab") == 0)
+    {
+      if (!udisks_daemon_util_check_authorization_sync (object->daemon,
+                                                        NULL,
+                                                        "org.freedesktop.udisks2.modify-system-configuration",
+                                                        options,
+                                                        N_("Authentication is required to modify the /etc/crypttab file"),
+                                                        invocation))
+        goto out;
+      error = NULL;
+      if (!add_remove_crypttab_entry (old_details, new_details, &error))
+        {
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
+      udisks_block_device_complete_add_configuration_item (block, invocation);
+    }
+  else
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Only fstab or crypttab items can be updated");
+      goto out;
+    }
+
+ out:
+  g_variant_unref (new_details);
+  g_variant_unref (old_details);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
@@ -701,12 +1100,20 @@ static void
 block_device_connect (UDisksLinuxBlock *block)
 {
   g_signal_connect (block->iface_block_device,
+                    "handle-get-secret-configuration",
+                    G_CALLBACK (on_get_secret_configuration),
+                    block);
+  g_signal_connect (block->iface_block_device,
                     "handle-add-configuration-item",
                     G_CALLBACK (on_add_configuration_item),
                     block);
   g_signal_connect (block->iface_block_device,
                     "handle-remove-configuration-item",
                     G_CALLBACK (on_remove_configuration_item),
+                    block);
+  g_signal_connect (block->iface_block_device,
+                    "handle-update-configuration-item",
+                    G_CALLBACK (on_update_configuration_item),
                     block);
 }
 
@@ -943,24 +1350,88 @@ find_fstab_entries_for_device (UDisksLinuxBlock *block)
   return ret;
 }
 
-static void
-block_device_update_configuration (UDisksLinuxBlock  *block,
-                                   const gchar       *uevent_action,
-                                   UDisksBlockDevice *iface,
-                                   const gchar       *device_file,
-                                   UDisksDrive       *drive)
+static GList *
+find_crypttab_entries_for_device (UDisksLinuxBlock *block)
+{
+  GList *entries;
+  GList *l;
+  GList *ret;
+
+  ret = NULL;
+
+  /* if this is too slow, we could add lookup methods to UDisksCrypttabMonitor... */
+  entries = udisks_crypttab_monitor_get_entries (udisks_daemon_get_crypttab_monitor (block->daemon));
+  for (l = entries; l != NULL; l = l->next)
+    {
+      UDisksCrypttabEntry *entry = UDISKS_CRYPTTAB_ENTRY (l->data);
+      const gchar *const *symlinks;
+      const gchar *device_in_entry;
+      gchar *device;
+      guint n;
+
+      device_in_entry = udisks_crypttab_entry_get_device (entry);
+      device = NULL;
+      if (g_str_has_prefix (device_in_entry, "UUID="))
+        {
+          device = g_strdup_printf ("/dev/disk/by-uuid/%s", device_in_entry + 5);
+        }
+      else if (g_str_has_prefix (device_in_entry, "LABEL="))
+        {
+          device = g_strdup_printf ("/dev/disk/by-label/%s", device_in_entry + 6);
+        }
+      else if (g_str_has_prefix (device_in_entry, "/dev"))
+        {
+          device = g_strdup (device_in_entry);
+        }
+      else
+        {
+          /* ignore non-device entries */
+          goto continue_loop;
+        }
+
+      symlinks = udisks_block_device_get_symlinks (block->iface_block_device);
+      if (symlinks != NULL)
+        {
+          for (n = 0; symlinks[n] != NULL; n++)
+            {
+              if (g_strcmp0 (device, symlinks[n]) == 0)
+                {
+                  ret = g_list_prepend (ret, g_object_ref (entry));
+                }
+            }
+        }
+
+    continue_loop:
+      g_free (device);
+    }
+
+  g_list_foreach (entries, (GFunc) g_object_unref, NULL);
+  g_list_free (entries);
+  return ret;
+}
+
+/* returns a floating GVariant */
+static GVariant *
+calculate_configuration (UDisksLinuxBlock  *block,
+                         gboolean           include_secrets,
+                         GError           **error)
 {
   GList *entries;
   GList *l;
   GVariantBuilder builder;
+  GVariant *ret;
+
+  g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+  ret = NULL;
 
   g_variant_builder_init (&builder, G_VARIANT_TYPE ("a(sa{sv})"));
+  /* First the /etc/fstab entries */
   entries = find_fstab_entries_for_device (block);
   for (l = entries; l != NULL; l = l->next)
     {
       UDisksFstabEntry *entry = UDISKS_FSTAB_ENTRY (l->data);
       GVariantBuilder dict_builder;
-
       g_variant_builder_init (&dict_builder, G_VARIANT_TYPE_VARDICT);
       g_variant_builder_add (&dict_builder, "{sv}", "fsname",
                              g_variant_new_bytestring (udisks_fstab_entry_get_fsname (entry)));
@@ -978,12 +1449,100 @@ block_device_update_configuration (UDisksLinuxBlock  *block,
                              "(sa{sv})",
                              "fstab", &dict_builder);
     }
-
-  udisks_block_device_set_configuration (block->iface_block_device,
-                                         g_variant_builder_end (&builder));
-
   g_list_foreach (entries, (GFunc) g_object_unref, NULL);
   g_list_free (entries);
+
+  /* Then the /etc/crypttab entries */
+  entries = find_crypttab_entries_for_device (block);
+  for (l = entries; l != NULL; l = l->next)
+    {
+      UDisksCrypttabEntry *entry = UDISKS_CRYPTTAB_ENTRY (l->data);
+      GVariantBuilder dict_builder;
+      const gchar *passphrase_path;
+      const gchar *options;
+      gchar *passphrase_contents;
+      gsize passphrase_contents_length;
+
+      passphrase_path = udisks_crypttab_entry_get_passphrase_path (entry);
+      if (passphrase_path == NULL || g_strcmp0 (passphrase_path, "none") == 0)
+        passphrase_path = "";
+      passphrase_contents = NULL;
+      if (!(g_strcmp0 (passphrase_path, "") == 0 || g_str_has_prefix (passphrase_path, "/dev")))
+        {
+          if (include_secrets)
+            {
+              if (!g_file_get_contents (passphrase_path,
+                                        &passphrase_contents,
+                                        &passphrase_contents_length,
+                                        error))
+                {
+                  g_prefix_error (error,
+                                  "Error loading secrets from file `%s' referenced in /etc/crypttab entry: ",
+                                  passphrase_path);
+                  g_variant_builder_clear (&builder);
+                  g_list_foreach (entries, (GFunc) g_object_unref, NULL);
+                  g_list_free (entries);
+                  goto out;
+                }
+            }
+        }
+
+      options = udisks_crypttab_entry_get_options (entry);
+      if (options == NULL)
+        options = "";
+
+      g_variant_builder_init (&dict_builder, G_VARIANT_TYPE_VARDICT);
+      g_variant_builder_add (&dict_builder, "{sv}", "name",
+                             g_variant_new_bytestring (udisks_crypttab_entry_get_name (entry)));
+      g_variant_builder_add (&dict_builder, "{sv}", "device",
+                             g_variant_new_bytestring (udisks_crypttab_entry_get_device (entry)));
+      g_variant_builder_add (&dict_builder, "{sv}", "passphrase-path",
+                             g_variant_new_bytestring (passphrase_path));
+      if (passphrase_contents != NULL)
+        {
+          g_variant_builder_add (&dict_builder, "{sv}", "passphrase-contents",
+                                 g_variant_new_bytestring (passphrase_contents));
+        }
+      g_variant_builder_add (&dict_builder, "{sv}", "options",
+                             g_variant_new_bytestring (options));
+      g_variant_builder_add (&builder,
+                             "(sa{sv})",
+                             "crypttab", &dict_builder);
+      if (passphrase_contents != NULL)
+        {
+          memset (passphrase_contents, '\0', passphrase_contents_length);
+          g_free (passphrase_contents);
+        }
+    }
+  g_list_foreach (entries, (GFunc) g_object_unref, NULL);
+  g_list_free (entries);
+
+  ret = g_variant_builder_end (&builder);
+
+ out:
+  return ret;
+}
+
+static void
+block_device_update_configuration (UDisksLinuxBlock  *block,
+                                   const gchar       *uevent_action,
+                                   UDisksBlockDevice *iface,
+                                   const gchar       *device_file,
+                                   UDisksDrive       *drive)
+{
+  GVariant *configuration;
+  GError *error;
+
+  error = NULL;
+  configuration = calculate_configuration (block, FALSE, &error);
+  if (configuration == NULL)
+    {
+      udisks_warning ("Error loading configuration: %s (%s, %d)",
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_error_free (error);
+      configuration = g_variant_new ("a(sa{sv})", NULL);
+    }
+  udisks_block_device_set_configuration (block->iface_block_device, configuration);
 }
 
 static void

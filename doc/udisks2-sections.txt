@@ -59,6 +59,7 @@ udisks_daemon_get_connection
 udisks_daemon_get_object_manager
 udisks_daemon_get_mount_monitor
 udisks_daemon_get_fstab_monitor
+udisks_daemon_get_crypttab_monitor
 udisks_daemon_get_linux_provider
 udisks_daemon_get_persistent_store
 udisks_daemon_get_authority
@@ -1017,4 +1018,35 @@ UDISKS_FSTAB_MONITOR
 UDISKS_IS_FSTAB_MONITOR
 <SUBSECTION Private>
 udisks_fstab_monitor_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskscrypttabentry</FILE>
+<TITLE>UDisksCrypttabEntry</TITLE>
+UDisksCrypttabEntry
+udisks_crypttab_entry_get_name
+udisks_crypttab_entry_get_device
+udisks_crypttab_entry_get_passphrase_path
+udisks_crypttab_entry_get_options
+udisks_crypttab_entry_compare
+<SUBSECTION Standard>
+UDISKS_TYPE_CRYPTTAB_ENTRY
+UDISKS_CRYPTTAB_ENTRY
+UDISKS_IS_CRYPTTAB_ENTRY
+<SUBSECTION Private>
+udisks_crypttab_entry_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskscrypttabmonitor</FILE>
+<TITLE>UDisksCrypttabMonitor</TITLE>
+UDisksCrypttabMonitor
+udisks_crypttab_monitor_new
+udisks_crypttab_monitor_get_entries
+<SUBSECTION Standard>
+UDISKS_TYPE_CRYPTTAB_MONITOR
+UDISKS_CRYPTTAB_MONITOR
+UDISKS_IS_CRYPTTAB_MONITOR
+<SUBSECTION Private>
+udisks_crypttab_monitor_get_type
 </SECTION>

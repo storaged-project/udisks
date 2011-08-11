@@ -132,14 +132,30 @@
     </defaults>
   </action>
 
-  <!-- Manage system-wide configuration files such as /etc/fstab -->
+  <!-- Manage system-wide configuration files such as /etc/fstab or
+       /etc/crypttab ... including files referenced by these files.
+
+       It is insecure to automatically grant this to groups of users or
+       to allow a process to retain the authorization.
+  -->
   <action id="org.freedesktop.udisks2.modify-system-configuration">
     <_description>Modify system-wide configuration</_description>
     <_message>Authentication is required to modify system-wide configuration</_message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
-      <allow_active>auth_admin_keep</allow_active>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+  </action>
+
+  <!-- Get secrets from system-wide configuration files -->
+  <action id="org.freedesktop.udisks2.read-system-configuration-secrets">
+    <_description>Modify system-wide configuration</_description>
+    <_message>Authentication is required to retrieve secrets from system-wide configuration</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
     </defaults>
   </action>
 

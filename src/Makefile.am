@@ -67,6 +67,8 @@ libudisks_daemon_la_SOURCES =						\
 	udisksprivate.h							\
 	udisksfstabentry.h		udisksfstabentry.c		\
 	udisksfstabmonitor.h		udisksfstabmonitor.c		\
+	udiskscrypttabentry.h		udiskscrypttabentry.c		\
+	udiskscrypttabmonitor.h		udiskscrypttabmonitor.c		\
 	$(BUILT_SOURCES)						\
 	$(NULL)
 

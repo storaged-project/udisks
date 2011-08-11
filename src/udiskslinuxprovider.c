@@ -93,6 +93,14 @@ static void fstab_monitor_on_entry_removed (UDisksFstabMonitor *monitor,
                                             UDisksFstabEntry   *entry,
                                             gpointer            user_data);
 
+static void crypttab_monitor_on_entry_added (UDisksCrypttabMonitor *monitor,
+                                             UDisksCrypttabEntry   *entry,
+                                             gpointer               user_data);
+
+static void crypttab_monitor_on_entry_removed (UDisksCrypttabMonitor *monitor,
+                                               UDisksCrypttabEntry   *entry,
+                                               gpointer               user_data);
+
 G_DEFINE_TYPE (UDisksLinuxProvider, udisks_linux_provider, UDISKS_TYPE_PROVIDER);
 
 static void
@@ -119,6 +127,12 @@ udisks_linux_provider_finalize (GObject *object)
                                         provider);
   g_signal_handlers_disconnect_by_func (udisks_daemon_get_fstab_monitor (daemon),
                                         G_CALLBACK (fstab_monitor_on_entry_removed),
+                                        provider);
+  g_signal_handlers_disconnect_by_func (udisks_daemon_get_crypttab_monitor (daemon),
+                                        G_CALLBACK (crypttab_monitor_on_entry_added),
+                                        provider);
+  g_signal_handlers_disconnect_by_func (udisks_daemon_get_crypttab_monitor (daemon),
+                                        G_CALLBACK (crypttab_monitor_on_entry_removed),
                                         provider);
 
   if (G_OBJECT_CLASS (udisks_linux_provider_parent_class)->finalize != NULL)
@@ -201,7 +215,7 @@ udisks_linux_provider_start (UDisksProvider *_provider)
 
   provider->coldplug = FALSE;
 
-  /* update BlockDevice:FstabEntries whenever fstab entries are added or removed */
+  /* update BlockDevice:Configuration whenever fstab or crypttab entries are added or removed */
   g_signal_connect (udisks_daemon_get_fstab_monitor (daemon),
                     "entry-added",
                     G_CALLBACK (fstab_monitor_on_entry_added),
@@ -209,6 +223,14 @@ udisks_linux_provider_start (UDisksProvider *_provider)
   g_signal_connect (udisks_daemon_get_fstab_monitor (daemon),
                     "entry-removed",
                     G_CALLBACK (fstab_monitor_on_entry_removed),
+                    provider);
+  g_signal_connect (udisks_daemon_get_crypttab_monitor (daemon),
+                    "entry-added",
+                    G_CALLBACK (crypttab_monitor_on_entry_added),
+                    provider);
+  g_signal_connect (udisks_daemon_get_crypttab_monitor (daemon),
+                    "entry-removed",
+                    G_CALLBACK (crypttab_monitor_on_entry_removed),
                     provider);
 }
 
@@ -582,6 +604,24 @@ static void
 fstab_monitor_on_entry_removed (UDisksFstabMonitor *monitor,
                                 UDisksFstabEntry   *entry,
                                 gpointer            user_data)
+{
+  UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
+  update_all_block_devices (provider);
+}
+
+static void
+crypttab_monitor_on_entry_added (UDisksCrypttabMonitor *monitor,
+                                 UDisksCrypttabEntry   *entry,
+                                 gpointer               user_data)
+{
+  UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
+  update_all_block_devices (provider);
+}
+
+static void
+crypttab_monitor_on_entry_removed (UDisksCrypttabMonitor *monitor,
+                                   UDisksCrypttabEntry   *entry,
+                                   gpointer               user_data)
 {
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
   update_all_block_devices (provider);

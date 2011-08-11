@@ -372,12 +372,25 @@
     <property name="IdUUID" type="ay" access="read"/>
 
     <!-- Configuration:
-         The configuration sources for the device.
+         The configuration for the device.
 
          This is an array of pairs of (@type, @details) where @type is
          a string identifying the configuration source
          (e.g. <literal>fstab</literal>) and @details contains the
          actual configuration data.
+
+         Use the
+         org.freedesktop.UDisks2.BlockDevice.AddConfigurationItem(),
+         org.freedesktop.UDisks2.BlockDevice.RemoveConfigurationItem()
+         and
+         org.freedesktop.UDisks2.BlockDevice.UpdateConfigurationItem()
+         methods to add, remove and update configuration items.
+
+         Use
+         org.freedesktop.UDisks2.BlockDevice.GetSecretConfiguration()
+         to get the secrets (e.g. passphrases) that may be part of the
+         configuration but isn't exported in this property for
+         security reasons.
 
          For entries of type <literal>fstab</literal>, it means that
          the block device is referenced in the system-wide
@@ -410,11 +423,44 @@
          </varlistentry>
          </variablelist>
 
-         Use the
+         For entries of type <literal>crypttab</literal>, it means that
+         the block device is referenced in the system-wide
+         <filename>/etc/crypttab</filename> file. Known configuration
+         items for type <literal>crypttab</literal> are
+         <variablelist>
+         <varlistentry>
+           <term>name (type <literal>'ay'</literal>)</term>
+           <listitem><para>The name to set the device up as</para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>device (type <literal>'ay'</literal>)</term>
+           <listitem><para>The special device</para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>passphrase-path (type <literal>'ay'</literal>)</term>
+           <listitem><para>Either empty to specify that no password is set,
+           otherwise a path to a file containing the encryption password.
+           This may also point to a special device file in <filename>/dev</filename>
+           such as <literal>/dev/random</literal>.
+           </para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>passphrase-contents (type <literal>'ay'</literal>)</term>
+           <listitem><para>The contents of the file containing the encryption password, if applicable.
+           This is only available via the org.freedesktop.UDisks2.BlockDevice.GetSecretConfiguration()
+           method.</para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>opts (type <literal>'ay'</literal>)</term>
+           <listitem><para>Options</para></listitem>
+         </varlistentry>
+         </variablelist>
+         For security reasons, when creating a new
+         <literal>crypttab</literal> entry (via the
          org.freedesktop.UDisks2.BlockDevice.AddConfigurationItem()
-         and
-         org.freedesktop.UDisks2.BlockDevice.RemoveConfigurationItem()
-         methods to add/remove configuration items.
+         method), then the <option>passphrase-path</option> must
+         reference an unexisting file in the
+         <filename>/etc/luks-keys</filename> directory.
     -->
     <property name="Configuration" type="a(sa{sv})" access="read"/>
 
@@ -494,9 +540,10 @@
         @item: The configuration item to add.
         @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
 
-        Adds a new configuration item. See the
-        #org.freedesktop.UDisks2.BlockDevice:Configuration property
-        for details about valid configuration items.
+        Adds a new configuration item.
+
+        See the #org.freedesktop.UDisks2.BlockDevice:Configuration
+        property for details about valid configuration items.
     -->
     <method name="AddConfigurationItem">
       <arg name="item" direction="in" type="(sa{sv})"/>
@@ -508,13 +555,51 @@
         @item: The configuration item to remove.
         @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
 
-        Removes a new configuration item. See the
-        #org.freedesktop.UDisks2.BlockDevice:Configuration property
-        for details about valid configuration items.
+        Removes an existing configuration item.
+
+        See the #org.freedesktop.UDisks2.BlockDevice:Configuration
+        property for details about valid configuration items.
     -->
     <method name="RemoveConfigurationItem">
       <arg name="item" direction="in" type="(sa{sv})"/>
       <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        UpdateConfigurationItem:
+        @old_item: The configuration item to remove.
+        @new_item: The configuration item to add. Must be of the same type as @old_item.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Removes a configuration item and adds a new one. This is
+        equivalent to calling
+        org.freedesktop.UDisks2.BlockDevice.RemoveConfigurationItem()
+        followed by
+        org.freedesktop.UDisks2.BlockDevice.AddConfigurationItem()
+        with the change that only one PolicyKit check is made
+        and that @new_item can be validated against @old_item.
+
+        See the #org.freedesktop.UDisks2.BlockDevice:Configuration
+        property for details about valid configuration items.
+    -->
+    <method name="UpdateConfigurationItem">
+      <arg name="old_item" direction="in" type="(sa{sv})"/>
+      <arg name="new_item" direction="in" type="(sa{sv})"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        GetSecretConfiguration:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @configuration: The resulting configuration.
+
+        Returns the same value as in the
+        #org.freedesktop.UDisks2.BlockDevice:Configuration property
+        but without secret information filtered out.
+    -->
+    <method name="GetSecretConfiguration">
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="configuration" direction="out" type="a(sa{sv})"/>
     </method>
 
   </interface>

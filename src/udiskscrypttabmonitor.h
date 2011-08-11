@@ -18,25 +18,21 @@
  *
  */
 
-#ifndef __UDISKS_PRIVATE_H__
-#define __UDISKS_PRIVATE_H__
+#ifndef __UDISKS_CRYPTTAB_MONITOR_H__
+#define __UDISKS_CRYPTTAB_MONITOR_H__
 
 #include "udisksdaemontypes.h"
-#include <mntent.h>
 
 G_BEGIN_DECLS
 
-UDisksMount *_udisks_mount_new (dev_t dev,
-                                const gchar *mount_path,
-                                UDisksMountType type);
+#define UDISKS_TYPE_CRYPTTAB_MONITOR  (udisks_crypttab_monitor_get_type ())
+#define UDISKS_CRYPTTAB_MONITOR(o)    (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_CRYPTTAB_MONITOR, UDisksCrypttabMonitor))
+#define UDISKS_IS_CRYPTTAB_MONITOR(o) (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_CRYPTTAB_MONITOR))
 
-UDisksFstabEntry *_udisks_fstab_entry_new (const struct mntent *mntent);
-
-UDisksCrypttabEntry *_udisks_crypttab_entry_new (const gchar *name,
-                                                 const gchar *device,
-                                                 const gchar *passphrase,
-                                                 const gchar *options);
+GType                   udisks_crypttab_monitor_get_type    (void) G_GNUC_CONST;
+UDisksCrypttabMonitor  *udisks_crypttab_monitor_new         (void);
+GList                  *udisks_crypttab_monitor_get_entries (UDisksCrypttabMonitor  *monitor);
 
 G_END_DECLS
 
-#endif /* __UDISKS_PRIVATE_H__ */
+#endif /* __UDISKS_CRYPTTAB_MONITOR_H__ */

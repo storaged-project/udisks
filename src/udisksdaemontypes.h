@@ -82,6 +82,12 @@ typedef struct _UDisksFstabMonitor UDisksFstabMonitor;
 struct _UDisksFstabEntry;
 typedef struct _UDisksFstabEntry UDisksFstabEntry;
 
+struct _UDisksCrypttabMonitor;
+typedef struct _UDisksCrypttabMonitor UDisksCrypttabMonitor;
+
+struct _UDisksCrypttabEntry;
+typedef struct _UDisksCrypttabEntry UDisksCrypttabEntry;
+
 /**
  * UDisksThreadedJobFunc:
  * @job: A #UDisksThreadedJob.
