@@ -1329,14 +1329,21 @@ find_fstab_entries_for_device (UDisksLinuxBlock *block)
           goto continue_loop;
         }
 
-      symlinks = udisks_block_device_get_symlinks (block->iface_block_device);
-      if (symlinks != NULL)
+      if (g_strcmp0 (device, udisks_block_device_get_device (block->iface_block_device)) == 0)
         {
-          for (n = 0; symlinks[n] != NULL; n++)
+          ret = g_list_prepend (ret, g_object_ref (entry));
+        }
+      else
+        {
+          symlinks = udisks_block_device_get_symlinks (block->iface_block_device);
+          if (symlinks != NULL)
             {
-              if (g_strcmp0 (device, symlinks[n]) == 0)
+              for (n = 0; symlinks[n] != NULL; n++)
                 {
-                  ret = g_list_prepend (ret, g_object_ref (entry));
+                  if (g_strcmp0 (device, symlinks[n]) == 0)
+                    {
+                      ret = g_list_prepend (ret, g_object_ref (entry));
+                    }
                 }
             }
         }
@@ -1389,14 +1396,21 @@ find_crypttab_entries_for_device (UDisksLinuxBlock *block)
           goto continue_loop;
         }
 
-      symlinks = udisks_block_device_get_symlinks (block->iface_block_device);
-      if (symlinks != NULL)
+      if (g_strcmp0 (device, udisks_block_device_get_device (block->iface_block_device)) == 0)
         {
-          for (n = 0; symlinks[n] != NULL; n++)
+          ret = g_list_prepend (ret, g_object_ref (entry));
+        }
+      else
+        {
+          symlinks = udisks_block_device_get_symlinks (block->iface_block_device);
+          if (symlinks != NULL)
             {
-              if (g_strcmp0 (device, symlinks[n]) == 0)
+              for (n = 0; symlinks[n] != NULL; n++)
                 {
-                  ret = g_list_prepend (ret, g_object_ref (entry));
+                  if (g_strcmp0 (device, symlinks[n]) == 0)
+                    {
+                      ret = g_list_prepend (ret, g_object_ref (entry));
+                    }
                 }
             }
         }
