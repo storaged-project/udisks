@@ -654,10 +654,14 @@ on_eject (UDisksDrive           *drive_iface,
   UDisksDaemon *daemon;
   const gchar *action_id;
   gchar *error_message;
+  gboolean is_cdrom;
+  const gchar *const *media_compat;
+  guint n;
 
   daemon = NULL;
   block = NULL;
   error_message = NULL;
+  is_cdrom = FALSE;
 
   daemon = udisks_linux_drive_get_daemon (drive);
   block_object = find_block_object (drive);
@@ -685,12 +689,33 @@ on_eject (UDisksDrive           *drive_iface,
                                                     invocation))
     goto out;
 
+  /* Check if CD drive and, if so, use -T to support opening/closing
+   * the tray
+   *
+   * From the eject(1) man page
+   *
+   *   With this option the drive is given a CD-ROM tray close command
+   *   if it's opened, and a CD-ROM tray eject command if it's
+   *   closed. Not all devices support this command, because it uses
+   *   the above CD-ROM tray close command.
+   */
+  media_compat = udisks_drive_get_media_compatibility (drive_iface);
+  for (n = 0; media_compat != NULL && media_compat[n] != NULL; n++)
+    {
+      if (g_str_has_prefix (media_compat[n], "optical"))
+        {
+          is_cdrom = TRUE;
+          break;
+        }
+    }
+
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               NULL,  /* GCancellable */
                                               0, /* uid_t run_as */
                                               &error_message,
                                               NULL,  /* input_string */
-                                              "eject \"%s\"",
+                                              "eject %s\"%s\"",
+                                              is_cdrom ? "-T " : "",
                                               udisks_block_device_get_device (block)))
     {
       g_dbus_method_invocation_return_error (invocation,

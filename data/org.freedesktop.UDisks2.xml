@@ -175,7 +175,9 @@
         other hardware may simply eject the disc. On some hardware it
         may not do anything physical but it may cause e.g. a display
         on the hardware to show e.g. <quote>It is now safe to remove
-        the device</quote>.
+        the device</quote>. If called on a drive with an open tray,
+        the "tray close" command may be sent if the hardware supports
+        it.
     -->
     <method name="Eject">
       <arg name="options" direction="in" type="a{sv}"/>
