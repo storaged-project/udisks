@@ -598,7 +598,8 @@ udisks_daemon_launch_threaded_job  (UDisksDaemon    *daemon,
  * udisks_daemon_launch_spawned_job:
  * @daemon: A #UDisksDaemon.
  * @cancellable: A #GCancellable or %NULL.
- * @run_as: The #uid_t to run the command as.
+ * @run_as_uid: The #uid_t to run the command as.
+ * @run_as_euid: The effective #uid_t to run the command as.
  * @input_string: A string to write to stdin of the spawned program or %NULL.
  * @command_line_format: printf()-style format for the command line to spawn.
  * @...: Arguments for @command_line_format.
@@ -618,7 +619,8 @@ udisks_daemon_launch_threaded_job  (UDisksDaemon    *daemon,
 UDisksBaseJob *
 udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
                                   GCancellable    *cancellable,
-                                  uid_t            run_as,
+                                  uid_t            run_as_uid,
+                                  uid_t            run_as_euid,
                                   const gchar     *input_string,
                                   const gchar     *command_line_format,
                                   ...)
@@ -636,7 +638,7 @@ udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
   va_start (var_args, command_line_format);
   command_line = g_strdup_vprintf (command_line_format, var_args);
   va_end (var_args);
-  job = udisks_spawned_job_new (command_line, input_string, run_as, cancellable);
+  job = udisks_spawned_job_new (command_line, input_string, run_as_uid, run_as_euid, cancellable);
   g_free (command_line);
 
   /* TODO: protect job_id by a mutex */
@@ -661,14 +663,28 @@ typedef struct
   GMainContext *context;
   GMainLoop *loop;
   gboolean success;
+  gint status;
   gchar *message;
 } SpawnedJobSyncData;
 
+static gboolean
+spawned_job_sync_on_spawned_job_completed (UDisksSpawnedJob *job,
+                                           GError           *error,
+                                           gint              status,
+                                           GString          *standard_output,
+                                           GString          *standard_error,
+                                           gpointer          user_data)
+{
+  SpawnedJobSyncData *data = user_data;
+  data->status = status;
+  return FALSE; /* let other handlers run */
+}
+
 static void
-spawned_job_sync_on_job_completed (UDisksJob    *job,
-                                   gboolean      success,
-                                   const gchar  *message,
-                                   gpointer      user_data)
+spawned_job_sync_on_completed (UDisksJob    *job,
+                               gboolean      success,
+                               const gchar  *message,
+                               gpointer      user_data)
 {
   SpawnedJobSyncData *data = user_data;
   data->success = success;
@@ -680,8 +696,10 @@ spawned_job_sync_on_job_completed (UDisksJob    *job,
  * udisks_daemon_launch_spawned_job_sync:
  * @daemon: A #UDisksDaemon.
  * @cancellable: A #GCancellable or %NULL.
- * @run_as: The #uid_t to run the command as.
+ * @run_as_uid: The #uid_t to run the command as.
+ * @run_as_euid: The effective #uid_t to run the command as.
  * @input_string: A string to write to stdin of the spawned program or %NULL.
+ * @out_status: Return location for the @status parameter of the #UDisksSpawnedJob::spawned-job-completed signal.
  * @out_message: Return location for the @message parameter of the #UDisksJob::completed signal.
  * @command_line_format: printf()-style format for the command line to spawn.
  * @...: Arguments for @command_line_format.
@@ -689,12 +707,14 @@ spawned_job_sync_on_job_completed (UDisksJob    *job,
  * Like udisks_daemon_launch_spawned_job() but blocks the calling
  * thread until the job completes.
  *
- * Returns: The @success parameter of the #UDisksJob::completed.
+ * Returns: The @success parameter of the #UDisksJob::completed signal.
  */
 gboolean
 udisks_daemon_launch_spawned_job_sync (UDisksDaemon    *daemon,
                                        GCancellable    *cancellable,
-                                       uid_t            run_as,
+                                       uid_t            run_as_uid,
+                                       uid_t            run_as_euid,
+                                       gint            *out_status,
                                        gchar          **out_message,
                                        const gchar     *input_string,
                                        const gchar     *command_line_format,
@@ -713,6 +733,7 @@ udisks_daemon_launch_spawned_job_sync (UDisksDaemon    *daemon,
   g_main_context_push_thread_default (data.context);
   data.loop = g_main_loop_new (data.context, FALSE);
   data.success = FALSE;
+  data.status = 0;
   data.message = NULL;
 
   va_start (var_args, command_line_format);
@@ -720,16 +741,24 @@ udisks_daemon_launch_spawned_job_sync (UDisksDaemon    *daemon,
   va_end (var_args);
   job = udisks_daemon_launch_spawned_job (daemon,
                                           cancellable,
-                                          run_as,
+                                          run_as_uid,
+                                          run_as_euid,
                                           input_string,
                                           "%s",
                                           command_line);
+  g_signal_connect (job,
+                    "spawned-job-completed",
+                    G_CALLBACK (spawned_job_sync_on_spawned_job_completed),
+                    &data);
   g_signal_connect_after (job,
                           "completed",
-                          G_CALLBACK (spawned_job_sync_on_job_completed),
+                          G_CALLBACK (spawned_job_sync_on_completed),
                           &data);
 
   g_main_loop_run (data.loop);
+
+  if (out_status != NULL)
+    *out_status = data.status;
 
   if (out_message != NULL)
     *out_message = data.message;

@@ -21,6 +21,7 @@
 #include "config.h"
 #include <glib/gi18n-lib.h>
 
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <string.h>
@@ -60,7 +61,8 @@ struct _UDisksSpawnedJob
   GMainContext *main_context;
 
   gchar *input_string;
-  uid_t run_as;
+  uid_t run_as_uid;
+  uid_t run_as_euid;
   const gchar *input_string_cursor;
 
   GPid child_pid;
@@ -99,7 +101,8 @@ enum
   PROP_0,
   PROP_COMMAND_LINE,
   PROP_INPUT_STRING,
-  PROP_RUN_AS
+  PROP_RUN_AS_UID,
+  PROP_RUN_AS_EUID
 };
 
 enum
@@ -184,8 +187,12 @@ udisks_spawned_job_set_property (GObject      *object,
       job->input_string = g_value_dup_string (value);
       break;
 
-    case PROP_RUN_AS:
-      job->run_as = g_value_get_uint (value);
+    case PROP_RUN_AS_UID:
+      job->run_as_uid = g_value_get_uint (value);
+      break;
+
+    case PROP_RUN_AS_EUID:
+      job->run_as_euid = g_value_get_uint (value);
       break;
 
     default:
@@ -358,22 +365,29 @@ child_watch_cb (GPid     pid,
   g_object_unref (job);
 }
 
-#include <stdio.h>
-
 /* careful, this is in the fork()'ed child so all utility threads etc are not available */
 static void
 child_setup (gpointer user_data)
 {
   UDisksSpawnedJob *job = UDISKS_SPAWNED_JOB (user_data);
   struct passwd *pw;
+  gid_t egid;
 
-  if (job->run_as == getuid ())
+  if (job->run_as_uid == getuid () && job->run_as_euid == geteuid ())
     goto out;
 
-  pw = getpwuid (job->run_as);
+  pw = getpwuid (job->run_as_euid);
   if (pw == NULL)
    {
-     g_printerr ("No password record for uid %d: %m\n", (gint) job->run_as);
+     g_printerr ("No password record for uid %d: %m\n", (gint) job->run_as_euid);
+     abort ();
+   }
+  egid = pw->pw_gid;
+
+  pw = getpwuid (job->run_as_uid);
+  if (pw == NULL)
+   {
+     g_printerr ("No password record for uid %d: %m\n", (gint) job->run_as_uid);
      abort ();
    }
 
@@ -392,17 +406,20 @@ child_setup (gpointer user_data)
     }
   if (initgroups (pw->pw_name, pw->pw_gid) != 0)
     {
-      g_printerr ("Error initializing groups for uid %d: %m\n", (gint) job->run_as);
+      g_printerr ("Error initializing groups for user %s and group %d: %m\n",
+                  pw->pw_name, (gint) pw->pw_gid);
       abort ();
     }
-  if (setregid (pw->pw_gid, pw->pw_gid) != 0)
+  if (setregid (pw->pw_gid, egid) != 0)
     {
-      g_printerr ("Error setting real+effective gid for uid %d: %m\n", (gint) job->run_as);
+      g_printerr ("Error setting real+effective gid %d and %d: %m\n",
+                  (gint) pw->pw_gid, (gint) egid);
       abort ();
     }
-  if (setreuid (pw->pw_uid, pw->pw_uid) != 0)
+  if (setreuid (pw->pw_uid, job->run_as_euid) != 0)
     {
-      g_printerr ("Error setting real+effective uid for uid %d: %m\n", (gint) job->run_as);
+      g_printerr ("Error setting real+effective uid %d and %d: %m\n",
+                  (gint) pw->pw_uid, (gint) job->run_as_euid);
       abort ();
     }
 
@@ -565,15 +582,30 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
                                                         G_PARAM_STATIC_STRINGS));
 
   /**
-   * UDisksSpawnedJob:run-as:
+   * UDisksSpawnedJob:run-as-uid:
    *
    * The #uid_t to run the program as.
    */
   g_object_class_install_property (gobject_class,
-                                   PROP_RUN_AS,
-                                   g_param_spec_uint ("run-as",
+                                   PROP_RUN_AS_UID,
+                                   g_param_spec_uint ("run-as-uid",
                                                       "Run As",
                                                       "The uid_t to run the program as",
+                                                      0, G_MAXUINT, 0,
+                                                      G_PARAM_WRITABLE |
+                                                      G_PARAM_CONSTRUCT_ONLY |
+                                                      G_PARAM_STATIC_STRINGS));
+
+  /**
+   * UDisksSpawnedJob:run-as-euid:
+   *
+   * The effective #uid_t to run the program as.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_RUN_AS_EUID,
+                                   g_param_spec_uint ("run-as-euid",
+                                                      "Run As (effective)",
+                                                      "The effective uid_t to run the program as",
                                                       0, G_MAXUINT, 0,
                                                       G_PARAM_WRITABLE |
                                                       G_PARAM_CONSTRUCT_ONLY |
@@ -628,7 +660,8 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
  * udisks_spawned_job_new:
  * @command_line: The command line to run.
  * @input_string: A string to write to stdin of the spawned program or %NULL.
- * @run_as: The #uid_t to run the program as.
+ * @run_as_uid: The #uid_t to run the program as.
+ * @run_as_euid: The effective #uid_t to run the program as.
  * @cancellable: A #GCancellable or %NULL.
  *
  * Creates a new #UDisksSpawnedJob instance.
@@ -642,7 +675,8 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
 UDisksSpawnedJob *
 udisks_spawned_job_new (const gchar  *command_line,
                         const gchar  *input_string,
-                        uid_t         run_as,
+                        uid_t         run_as_uid,
+                        uid_t         run_as_euid,
                         GCancellable *cancellable)
 {
   g_return_val_if_fail (command_line != NULL, NULL);
@@ -650,7 +684,8 @@ udisks_spawned_job_new (const gchar  *command_line,
   return UDISKS_SPAWNED_JOB (g_object_new (UDISKS_TYPE_SPAWNED_JOB,
                                            "command-line", command_line,
                                            "input-string", input_string,
-                                           "run-as", run_as,
+                                           "run-as-uid", run_as_uid,
+                                           "run-as-euid", run_as_euid,
                                            "cancellable", cancellable,
                                            NULL));
 }

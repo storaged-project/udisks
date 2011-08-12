@@ -674,8 +674,14 @@
         file)
         then the
         <citerefentry><refentrytitle>mount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
-        command is called directly as the calling user and no clean-up
-        is performed when the device is removed. Additionally, the
+        command is called directly as the calling user.
+        If the calling user does not have sufficient permissions to
+        mount the device (it could be the <literal>user</literal> or
+        <literal>users</literal> option isn't specificed), then
+        additional authorization is requested and, if obtained, the
+        <citerefentry><refentrytitle>mount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+        command is invoked as root.
+        Additionally, the
         given <parameter>options</parameter> and
         <parameter>fstype</parameter> options are not used as they are
         instead read from the system-wide configuration file in
@@ -702,6 +708,12 @@
         then the
         <citerefentry><refentrytitle>umount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
         command is called directly as the calling user.
+        If the calling user does not have sufficient permissions to
+        unmount the device (it could be the <literal>user</literal> or
+        <literal>users</literal> option isn't specificed), then
+        additional authorization is requested and, if obtained, the
+        <citerefentry><refentrytitle>umount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+        command is invoked as root.
     -->
     <method name="Unmount">
       <arg name="options" direction="in" type="a{sv}"/>

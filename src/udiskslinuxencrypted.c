@@ -221,8 +221,10 @@ handle_unlock (UDisksEncrypted        *encrypted,
 
   /* TODO: support a 'readonly' option */
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              NULL,  /* GCancellable */
-                                              0, /* uid_t run_as */
+                                              NULL, /* GCancellable */
+                                              0,    /* uid_t run_as_uid */
+                                              0,    /* uid_t run_as_euid */
+                                              NULL, /* gint *out_status */
                                               &error_message,
                                               passphrase,  /* input_string */
                                               "cryptsetup luksOpen \"%s\" \"%s\"",
@@ -427,8 +429,10 @@ handle_lock (UDisksEncrypted        *encrypted,
     }
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              NULL,  /* GCancellable */
-                                              0, /* uid_t run_as */
+                                              NULL, /* GCancellable */
+                                              0,    /* uid_t run_as_uid */
+                                              0,    /* uid_t run_as_euid */
+                                              NULL, /* gint *out_status */
                                               &error_message,
                                               NULL,  /* input_string */
                                               "cryptsetup luksClose \"%s\"",

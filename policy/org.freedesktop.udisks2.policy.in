@@ -30,6 +30,16 @@
     </defaults>
   </action>
 
+  <action id="org.freedesktop.udisks2.filesystem-nonuser-fstab">
+    <_description>Mount/unmount non-user filesystems defined in the fstab file</_description>
+    <_message>Authentication is required to mount/unmount the filesystem</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
   <action id="org.freedesktop.udisks2.filesystem-unmount-others">
     <_description>Unmount a device mounted by another user</_description>
     <_message>Authentication is required to unmount a filesystem mounted by another user</_message>

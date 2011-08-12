@@ -829,6 +829,9 @@ handle_mount (UDisksFilesystem       *filesystem,
    */
   if (system_managed)
     {
+      gint status;
+      gboolean mount_fstab_as_root;
+
       if (!g_file_test (mount_point_to_use, G_FILE_TEST_IS_DIR))
         {
           if (g_mkdir_with_parents (mount_point_to_use, 0755) != 0)
@@ -844,14 +847,33 @@ handle_mount (UDisksFilesystem       *filesystem,
         }
 
       escaped_mount_point_to_use   = g_strescape (mount_point_to_use, NULL);
+      mount_fstab_as_root = FALSE;
+    mount_fstab_again:
       if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                                   NULL,  /* GCancellable */
-                                                  caller_uid, /* uid_t run_as */
+                                                  mount_fstab_as_root ? 0 : caller_uid, /* uid_t run_as_uid */
+                                                  mount_fstab_as_root ? 0 : caller_uid, /* uid_t run_as_euid */
+                                                  &status,
                                                   &error_message,
                                                   NULL,  /* input_string */
                                                   "mount \"%s\"",
                                                   escaped_mount_point_to_use))
         {
+          /* mount(8) exits with status 1 on "incorrect invocation or permissions" - if this is
+           * is so, try as as root */
+          if (!mount_fstab_as_root && WIFEXITED (status) && WEXITSTATUS (status) == 1)
+            {
+              if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                                object,
+                                                                "org.freedesktop.udisks2.filesystem-nonuser-fstab",
+                                                                options,
+                                                                N_("Authentication is required to mount the non-user fstab device $(udisks2.device)"),
+                                                                invocation))
+                goto out;
+              mount_fstab_as_root = TRUE;
+              goto mount_fstab_again;
+            }
+
           g_dbus_method_invocation_return_error (invocation,
                                                  UDISKS_ERROR,
                                                  UDISKS_ERROR_FAILED,
@@ -988,8 +1010,10 @@ handle_mount (UDisksFilesystem       *filesystem,
 
   /* run mount(8) */
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              NULL,  /* GCancellable */
-                                              0, /* uid_t run_as */
+                                              NULL, /* GCancellable */
+                                              0,    /* uid_t run_as_uid */
+                                              0,    /* uid_t run_as_euid */
+                                              NULL, /* gint *out_status */
                                               &error_message,
                                               NULL,  /* input_string */
                                               "mount -t \"%s\" -o \"%s\" \"%s\" \"%s\"",
@@ -1122,17 +1146,42 @@ handle_unmount (UDisksFilesystem       *filesystem,
    */
   if (system_managed)
     {
+      gint status;
+      gboolean unmount_fstab_as_root;
+
+      unmount_fstab_as_root = FALSE;
+    unmount_fstab_again:
       escaped_mount_point = g_strescape (mount_point, NULL);
       /* right now -l is the only way to "force unmount" file systems... */
       if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                                  NULL,  /* GCancellable */
-                                                  caller_uid, /* uid_t run_as */
+                                                  NULL, /* GCancellable */
+                                                  unmount_fstab_as_root ? 0 : caller_uid, /* uid_t run_as_uid */
+                                                  unmount_fstab_as_root ? 0 : caller_uid, /* uid_t run_as_euid */
+                                                  &status,
                                                   &error_message,
                                                   NULL,  /* input_string */
                                                   "umount %s \"%s\"",
                                                   opt_force ? "-l" : "",
                                                   escaped_mount_point))
         {
+          /* umount(8) does not (yet) have a specific exits status for
+           * "insufficient permissions" so just try again as root
+           *
+           * TODO: file bug asking for such an exit status
+           */
+          if (!unmount_fstab_as_root && WIFEXITED (status) && WEXITSTATUS (status) != 0)
+            {
+              if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                                object,
+                                                                "org.freedesktop.udisks2.filesystem-nonuser-fstab",
+                                                                options,
+                                                                N_("Authentication is required to unmount the non-user fstab device $(udisks2.device)"),
+                                                                invocation))
+                goto out;
+              unmount_fstab_as_root = TRUE;
+              goto unmount_fstab_again;
+            }
+
           g_dbus_method_invocation_return_error (invocation,
                                                  UDISKS_ERROR,
                                                  UDISKS_ERROR_FAILED,
@@ -1202,8 +1251,10 @@ handle_unmount (UDisksFilesystem       *filesystem,
         }
       escaped_mount_point = g_strescape (mount_point, NULL);
       rc = udisks_daemon_launch_spawned_job_sync (daemon,
-                                                  NULL,  /* GCancellable */
-                                                  0, /* uid_t run_as */
+                                                  NULL, /* GCancellable */
+                                                  0,    /* uid_t run_as_uid */
+                                                  0,    /* uid_t run_as_euid */
+                                                  NULL, /* gint *out_status */
                                                   &error_message,
                                                   NULL,  /* input_string */
                                                   "umount %s \"%s\"",
@@ -1214,8 +1265,10 @@ handle_unmount (UDisksFilesystem       *filesystem,
     {
       /* mount_point == NULL */
       rc = udisks_daemon_launch_spawned_job_sync (daemon,
-                                                  NULL,  /* GCancellable */
-                                                  0, /* uid_t run_as */
+                                                  NULL, /* GCancellable */
+                                                  0,    /* uid_t run_as_uid */
+                                                  0,    /* uid_t run_as_euid */
+                                                  NULL, /* gint *out_status */
                                                   &error_message,
                                                   NULL,  /* input_string */
                                                   "umount %s \"%s\"",
@@ -1400,7 +1453,8 @@ handle_set_label (UDisksFilesystem       *filesystem,
   escaped_label = g_shell_quote (label);
   job = udisks_daemon_launch_spawned_job (daemon,
                                           NULL, /* cancellable */
-                                          0, /* uid_t run_as */
+                                          0,    /* uid_t run_as_uid */
+                                          0,    /* uid_t run_as_euid */
                                           NULL, /* input_string */
                                           "e2label %s %s",
                                           udisks_block_device_get_device (block),

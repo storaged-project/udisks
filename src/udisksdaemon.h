@@ -72,17 +72,20 @@ UDisksBaseJob            *udisks_daemon_launch_simple_job     (UDisksDaemon    *
                                                                GCancellable    *cancellable);
 UDisksBaseJob            *udisks_daemon_launch_spawned_job    (UDisksDaemon    *daemon,
                                                                GCancellable    *cancellable,
-                                                               uid_t            run_as,
+                                                               uid_t            run_as_uid,
+                                                               uid_t            run_as_euid,
                                                                const gchar     *input_string,
                                                                const gchar     *command_line_format,
-                                                               ...) G_GNUC_PRINTF (5, 6);
+                                                               ...) G_GNUC_PRINTF (6, 7);
 gboolean                  udisks_daemon_launch_spawned_job_sync (UDisksDaemon    *daemon,
                                                                  GCancellable    *cancellable,
-                                                                 uid_t            run_as,
+                                                                 uid_t            run_as_uid,
+                                                                 uid_t            run_as_euid,
+                                                                 gint            *out_status,
                                                                  gchar          **out_message,
                                                                  const gchar     *input_string,
                                                                  const gchar     *command_line_format,
-                                                                 ...) G_GNUC_PRINTF (6, 7);
+                                                                 ...) G_GNUC_PRINTF (8, 9);
 UDisksBaseJob            *udisks_daemon_launch_threaded_job   (UDisksDaemon    *daemon,
                                                                UDisksThreadedJobFunc job_func,
                                                                gpointer         user_data,
