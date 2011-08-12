@@ -1739,26 +1739,38 @@ block_device_update (UDisksLinuxBlock *block,
    * a name of the form dm-%d and a symlink name conveys more
    * information.
    */
-  preferred_device_file = g_udev_device_get_device_file (block->device);
+  preferred_device_file = NULL;
   if (g_str_has_prefix (device_file, "/dev/dm-"))
     {
       guint n;
+      const gchar *dm_name;
+      gchar *dm_name_dev_file = NULL;
+      const gchar *dm_name_dev_file_as_symlink = NULL;
+
+      dm_name = g_udev_device_get_property (block->device, "DM_NAME");
+      if (dm_name != NULL)
+        dm_name_dev_file = g_strdup_printf ("/dev/mapper/%s", dm_name);
       for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
         {
-          if (g_str_has_prefix (symlinks[n], "/dev/mapper/mpath"))
-            {
-              /* multipath */
-              preferred_device_file = symlinks[n];
-              break;
-            }
-          else if (g_str_has_prefix (symlinks[n], "/dev/mapper/vg_"))
+          if (g_str_has_prefix (symlinks[n], "/dev/vg_"))
             {
               /* LVM2 */
               preferred_device_file = symlinks[n];
               break;
             }
+          else if (g_strcmp0 (symlinks[n], dm_name_dev_file) == 0)
+            {
+              dm_name_dev_file_as_symlink = symlinks[n];
+            }
         }
+      /* fall back to /dev/mapper/$DM_NAME, if available as a symlink */
+      if (preferred_device_file == NULL && dm_name_dev_file_as_symlink != NULL)
+        preferred_device_file = dm_name_dev_file_as_symlink;
+      g_free (dm_name_dev_file);
     }
+  /* fallback to the device name */
+  if (preferred_device_file == NULL)
+    preferred_device_file = g_udev_device_get_device_file (block->device);
   udisks_block_device_set_preferred_device (iface, preferred_device_file);
 
   /* Determine the drive this block device belongs to
