@@ -1287,12 +1287,29 @@ udisks_linux_drive_should_include_device (GUdevDevice  *device,
     }
   else
     {
-      const gchar *name = g_udev_device_get_name (device);
+      const gchar *name;
+      GUdevDevice *parent;
+
+      name = g_udev_device_get_name (device);
+
       /* workaround for missing serial/wwn on virtio-blk */
       if (g_str_has_prefix (name, "vd"))
-        vpd = g_strdup (name);
+        {
+          vpd = g_strdup (name);
+          goto found;
+        }
+
+      /* workaround for missing serial/wwn on firewire devices */
+      parent = g_udev_device_get_parent_with_subsystem (device, "firewire", NULL);
+      if (parent != NULL)
+        {
+          vpd = g_strdup (name);
+          g_object_unref (parent);
+          goto found;
+        }
     }
 
+ found:
   if (vpd != NULL)
     {
       if (out_vpd != NULL)
