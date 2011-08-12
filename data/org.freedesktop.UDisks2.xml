@@ -669,9 +669,7 @@
         small subset per filesystem type is allowed.
 
         If the device in question is referenced in a system-wide
-        configuration file (such as the
-        <citerefentry><refentrytitle>/etc/fstab</refentrytitle><manvolnum>5</manvolnum></citerefentry>
-        file)
+        configuration file (such as the <filename>/etc/fstab</filename> file)
         then the
         <citerefentry><refentrytitle>mount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
         command is called directly as the calling user.
@@ -702,9 +700,7 @@
         option <parameter>force</parameter> is given.
 
         If the device in question is referenced in a system-wide
-        configuration file (such as the
-        <citerefentry><refentrytitle>/etc/fstab</refentrytitle><manvolnum>5</manvolnum></citerefentry>
-        file)
+        configuration file (such as the <filename>/etc/fstab</filename> file)
         then the
         <citerefentry><refentrytitle>umount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
         command is called directly as the calling user.
@@ -775,6 +771,11 @@
         @cleartext_device: An object path to the unlocked object implementing the #org.freedesktop.UDisks2.BlockDevice interface.
 
         Tries to unlock the encrypted device using @passphrase.
+
+        If the device in question is referenced in a system-wide
+        configuration file (such as the <filename>/etc/crypttab</filename> file),
+        then name, options and passphrase (if available) is used from that
+        file after requesting additional authorization.
 
         If the device is removed without being locked (e.g. the user
         yanking the device or pulling the media out) the cleartext

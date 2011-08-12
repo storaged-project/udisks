@@ -122,6 +122,61 @@ wait_for_cleartext_object (UDisksDaemon *daemon,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+check_crypttab (UDisksBlockDevice   *block,
+                gboolean             load_passphrase,
+                gboolean            *out_found,
+                gchar              **out_name,
+                gchar              **out_passphrase,
+                gchar              **out_options,
+                GError             **error)
+{
+  gboolean ret = FALSE;
+  GVariantIter iter;
+  const gchar *type;
+  GVariant *details;
+
+  g_variant_iter_init (&iter, udisks_block_device_get_configuration (block));
+  while (g_variant_iter_next (&iter, "(&s@a{sv})", &type, &details))
+    {
+      if (g_strcmp0 (type, "crypttab") == 0)
+        {
+          const gchar *passphrase_path;
+          if (out_found != NULL)
+            *out_found = TRUE;
+          g_variant_lookup (details, "name", "^ay", out_name);
+          g_variant_lookup (details, "options", "^ay", out_options);
+          if (g_variant_lookup (details, "passphrase-path", "^&ay", &passphrase_path) &&
+              strlen (passphrase_path) > 0 &&
+              !g_str_has_prefix (passphrase_path, "/dev"))
+            {
+              if (load_passphrase)
+                {
+                  if (!g_file_get_contents (passphrase_path,
+                                            out_passphrase,
+                                            NULL,
+                                            error))
+                    {
+                      g_variant_unref (details);
+                      goto out;
+                    }
+                }
+            }
+          ret = TRUE;
+          g_variant_unref (details);
+          goto out;
+        }
+      g_variant_unref (details);
+    }
+
+  ret = TRUE;
+
+ out:
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 /* runs in thread dedicated to handling @invocation */
 static gboolean
 handle_unlock (UDisksEncrypted        *encrypted,
@@ -142,6 +197,10 @@ handle_unlock (UDisksEncrypted        *encrypted,
   GError *error;
   uid_t caller_uid;
   const gchar *action_id;
+  gboolean is_in_crypttab = FALSE;
+  gchar *crypttab_name = NULL;
+  gchar *crypttab_passphrase = NULL;
+  gchar *crypttab_options = NULL;
 
   object = NULL;
   error_message = NULL;
@@ -201,12 +260,28 @@ handle_unlock (UDisksEncrypted        *encrypted,
       goto out;
     }
 
+  /* check if in crypttab file */
+  error = NULL;
+  if (!check_crypttab (block,
+                       TRUE,
+                       &is_in_crypttab,
+                       &crypttab_name,
+                       &crypttab_passphrase,
+                       &crypttab_options,
+                       &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   /* Now, check that the user is actually authorized to unlock the device.
    */
   action_id = "org.freedesktop.udisks2.encrypted-unlock";
   if (udisks_block_device_get_hint_system (block) &&
       !(udisks_daemon_util_setup_by_user (daemon, object, caller_uid)))
     action_id = "org.freedesktop.udisks2.encrypted-unlock-system";
+  if (is_in_crypttab)
+    action_id = "org.freedesktop.udisks2.encrypted-unlock-crypttab";
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
                                                     action_id,
@@ -216,8 +291,17 @@ handle_unlock (UDisksEncrypted        *encrypted,
     goto out;
 
   /* calculate the name to use */
-  name = g_strdup_printf ("LUKS-udisks2-%s", udisks_block_device_get_id_uuid (block));
+  if (is_in_crypttab && crypttab_name != NULL)
+    name = g_strdup (crypttab_name);
+  else
+    name = g_strdup_printf ("LUKS-udisks2-%s", udisks_block_device_get_id_uuid (block));
   escaped_name = g_strescape (name, NULL);
+
+  /* if available, use and prefer the /etc/crypttab passphrase */
+  if (is_in_crypttab && crypttab_passphrase != NULL && strlen (crypttab_passphrase) > 0)
+    {
+      passphrase = crypttab_passphrase;
+    }
 
   /* TODO: support a 'readonly' option */
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
@@ -280,6 +364,9 @@ handle_unlock (UDisksEncrypted        *encrypted,
                                     g_dbus_object_get_object_path (G_DBUS_OBJECT (cleartext_object)));
 
  out:
+  g_free (crypttab_name);
+  g_free (crypttab_passphrase);
+  g_free (crypttab_options);
   g_free (escaped_name);
   g_free (name);
   g_free (error_message);
