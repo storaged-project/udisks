@@ -175,16 +175,24 @@ udisks_linux_drive_constructor (GType                  type,
                                 guint                  n_construct_properties,
                                 GObjectConstructParam *construct_properties)
 {
-  GObjectConstructParam *device_cp;
+  GObjectConstructParam *cp;
+  UDisksDaemon *daemon;
+  GUdevClient *client;
   GUdevDevice *device;
 
-  device_cp = find_construct_property (n_construct_properties, construct_properties, "device");
-  g_assert (device_cp != NULL);
+  cp = find_construct_property (n_construct_properties, construct_properties, "daemon");
+  g_assert (cp != NULL);
+  daemon = UDISKS_DAEMON (g_value_get_object (cp->value));
+  g_assert (daemon != NULL);
 
-  device = G_UDEV_DEVICE (g_value_get_object (device_cp->value));
+  client = udisks_linux_provider_get_udev_client (udisks_daemon_get_linux_provider (daemon));
+
+  cp = find_construct_property (n_construct_properties, construct_properties, "device");
+  g_assert (cp != NULL);
+  device = G_UDEV_DEVICE (g_value_get_object (cp->value));
   g_assert (device != NULL);
 
-  if (!udisks_linux_drive_should_include_device (device, NULL))
+  if (!udisks_linux_drive_should_include_device (client, device, NULL))
     {
       return NULL;
     }
@@ -1242,8 +1250,34 @@ udisks_linux_drive_uevent (UDisksLinuxDrive *drive,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gchar *
+check_for_vpd (GUdevDevice *device)
+{
+  gchar *ret;
+  const gchar *serial;
+  const gchar *wwn;
+
+  g_return_val_if_fail (G_UDEV_IS_DEVICE (device), FALSE);
+
+  ret = NULL;
+
+  /* prefer WWN to serial */
+  serial = g_udev_device_get_property (device, "ID_SERIAL");
+  wwn = g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION");
+  if (wwn != NULL && strlen (wwn) > 0)
+    {
+      ret = g_strdup (wwn);
+    }
+  else if (serial != NULL && strlen (serial) > 0)
+    {
+      ret = g_strdup (serial);
+    }
+  return ret;
+}
+
 /* <internal>
  * udisks_linux_drive_should_include_device:
+ * @client: A #GUdevClient.
  * @device: A #GUdevDevice.
  * @out_vpd: Return location for unique ID or %NULL.
  *
@@ -1252,12 +1286,11 @@ udisks_linux_drive_uevent (UDisksLinuxDrive *drive,
  * Returns: %TRUE if we should construct an object, %FALSE otherwise.
  */
 gboolean
-udisks_linux_drive_should_include_device (GUdevDevice  *device,
+udisks_linux_drive_should_include_device (GUdevClient  *client,
+                                          GUdevDevice  *device,
                                           gchar       **out_vpd)
 {
   gboolean ret;
-  const gchar *serial;
-  const gchar *wwn;
   gchar *vpd;
 
   ret = FALSE;
@@ -1274,18 +1307,9 @@ udisks_linux_drive_should_include_device (GUdevDevice  *device,
   if (g_strcmp0 (g_udev_device_get_devtype (device), "disk") != 0)
     goto out;
 
-  /* prefer WWN to serial */
-  serial = g_udev_device_get_property (device, "ID_SERIAL");
-  wwn = g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION");
-  if (wwn != NULL && strlen (wwn) > 0)
-    {
-      vpd = g_strdup (wwn);
-    }
-  else if (serial != NULL && strlen (serial) > 0)
-    {
-      vpd = g_strdup (serial);
-    }
-  else
+  vpd = check_for_vpd (device);
+
+  if (vpd == NULL)
     {
       const gchar *name;
       GUdevDevice *parent;
@@ -1306,6 +1330,33 @@ udisks_linux_drive_should_include_device (GUdevDevice  *device,
           vpd = g_strdup (name);
           g_object_unref (parent);
           goto found;
+        }
+
+      /* dm-multipath */
+      const gchar *dm_name;
+      dm_name = g_udev_device_get_sysfs_attr (device, "dm/name");
+      if (dm_name != NULL && g_str_has_prefix (dm_name, "mpath"))
+        {
+          gchar **slaves;
+          guint n;
+          slaves = udisks_daemon_util_resolve_links (g_udev_device_get_sysfs_path (device), "slaves");
+          for (n = 0; slaves[n] != NULL; n++)
+            {
+              GUdevDevice *slave;
+              slave = g_udev_client_query_by_sysfs_path (client, slaves[n]);
+              if (slave != NULL)
+                {
+                  vpd = check_for_vpd (slave);
+                  if (vpd != NULL)
+                    {
+                      g_object_unref (slave);
+                      g_strfreev (slaves);
+                      goto found;
+                    }
+                  g_object_unref (slave);
+                }
+            }
+          g_strfreev (slaves);
         }
     }
 

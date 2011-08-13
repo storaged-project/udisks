@@ -344,7 +344,7 @@ handle_block_uevent_for_drive (UDisksLinuxProvider *provider,
     }
   else
     {
-      if (!udisks_linux_drive_should_include_device (device, &vpd))
+      if (!udisks_linux_drive_should_include_device (provider->gudev_client, device, &vpd))
         goto out;
 
       if (vpd == NULL)

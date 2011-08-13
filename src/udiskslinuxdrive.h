@@ -44,7 +44,8 @@ gboolean          udisks_linux_drive_housekeeping  (UDisksLinuxDrive  *drive,
                                                     GCancellable      *cancellable,
                                                     GError           **error);
 
-gboolean          udisks_linux_drive_should_include_device (GUdevDevice  *device,
+gboolean          udisks_linux_drive_should_include_device (GUdevClient  *client,
+                                                            GUdevDevice  *device,
                                                             gchar       **out_vpd);
 
 G_END_DECLS
