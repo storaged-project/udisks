@@ -1263,7 +1263,7 @@ find_drive (GDBusObjectManagerServer  *object_manager,
           const gchar *drive_sysfs_path;
 
           drive_sysfs_path = g_udev_device_get_sysfs_path (drive_device);
-          if (g_str_has_prefix (block_device_sysfs_path, drive_sysfs_path))
+          if (g_strcmp0 (block_device_sysfs_path, drive_sysfs_path) == 0)
             {
               if (out_drive != NULL)
                 *out_drive = udisks_object_get_drive (UDISKS_OBJECT (object));
