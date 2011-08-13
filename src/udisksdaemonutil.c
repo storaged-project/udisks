@@ -279,6 +279,8 @@ udisks_daemon_util_resolve_links (const gchar *path,
   g_ptr_array_add (p, NULL);
 
  out:
+  if (dir != NULL)
+    g_dir_close (dir);
   g_free (s);
 
   return (gchar **) g_ptr_array_free (p, FALSE);
