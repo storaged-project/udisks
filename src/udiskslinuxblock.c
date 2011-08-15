@@ -1234,14 +1234,19 @@ find_drive (GDBusObjectManagerServer  *object_manager,
             GUdevDevice               *block_device,
             UDisksDrive              **out_drive)
 {
-  const gchar *block_device_sysfs_path;
+  GUdevDevice *whole_disk_block_device;
+  const gchar *whole_disk_block_device_sysfs_path;
   gchar *ret;
   GList *objects;
   GList *l;
 
   ret = NULL;
 
-  block_device_sysfs_path = g_udev_device_get_sysfs_path (block_device);
+  if (g_strcmp0 (g_udev_device_get_devtype (block_device), "disk") == 0)
+    whole_disk_block_device = g_object_ref (block_device);
+  else
+    whole_disk_block_device = g_udev_device_get_parent_with_subsystem (block_device, "block", "disk");
+  whole_disk_block_device_sysfs_path = g_udev_device_get_sysfs_path (whole_disk_block_device);
 
   objects = g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (object_manager));
   for (l = objects; l != NULL; l = l->next)
@@ -1263,7 +1268,7 @@ find_drive (GDBusObjectManagerServer  *object_manager,
           const gchar *drive_sysfs_path;
 
           drive_sysfs_path = g_udev_device_get_sysfs_path (drive_device);
-          if (g_strcmp0 (block_device_sysfs_path, drive_sysfs_path) == 0)
+          if (g_strcmp0 (whole_disk_block_device_sysfs_path, drive_sysfs_path) == 0)
             {
               if (out_drive != NULL)
                 *out_drive = udisks_object_get_drive (UDISKS_OBJECT (object));
@@ -1280,6 +1285,7 @@ find_drive (GDBusObjectManagerServer  *object_manager,
  out:
   g_list_foreach (objects, (GFunc) g_object_unref, NULL);
   g_list_free (objects);
+  g_object_unref (whole_disk_block_device);
   return ret;
 }
 
