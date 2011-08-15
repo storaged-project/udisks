@@ -447,6 +447,7 @@ udisks_drive_get_serial
 udisks_drive_get_size
 udisks_drive_get_vendor
 udisks_drive_get_wwn
+udisks_drive_get_sort_key
 udisks_drive_set_connection_bus
 udisks_drive_set_media
 udisks_drive_set_media_compatibility
@@ -458,6 +459,7 @@ udisks_drive_set_serial
 udisks_drive_set_size
 udisks_drive_set_vendor
 udisks_drive_set_wwn
+udisks_drive_set_sort_key
 UDisksDriveProxy
 UDisksDriveProxyClass
 udisks_drive_proxy_new

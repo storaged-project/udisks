@@ -161,6 +161,11 @@
     -->
     <property name="ConnectionBus" type="s" access="read"/>
 
+    <!-- SortKey:
+         A string that can be used for sorting drive objects.
+    -->
+    <property name="SortKey" type="s" access="read"/>
+
     <!--
         Eject:
         @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
