@@ -925,16 +925,17 @@ drive_update (UDisksLinuxDrive      *drive,
   sort_key = g_strdup_printf ("%" G_GUINT64_FORMAT,
                               time (NULL) * G_USEC_PER_SEC - g_udev_device_get_usec_since_initialized (device));
 #else
-  /* need to use this lame hack until libudev's get_usec_since_initialized() works */
+  /* need to use this lame hack until libudev's get_usec_since_initialized() works
+   * for devices received via the netlink socket
+   */
   {
-    const gchar *name;
-    name = g_udev_device_get_name (device);
-    if (g_str_has_prefix (name, "sr"))
-      sort_key = g_strdup_printf ("z0_%s", name);
-    else if (g_str_has_prefix (name, "sd"))
-      sort_key = g_strdup_printf ("z1_%s", name);
-    else
-      sort_key = g_strdup (name);
+    GUdevClient *client;
+    GUdevDevice *ns_device;
+    client = udisks_linux_provider_get_udev_client (udisks_daemon_get_linux_provider (drive->daemon));
+    ns_device =  g_udev_client_query_by_sysfs_path (client, g_udev_device_get_sysfs_path (device));
+    sort_key = g_strdup_printf ("%" G_GUINT64_FORMAT,
+                                time (NULL) * G_USEC_PER_SEC - g_udev_device_get_usec_since_initialized (ns_device));
+    g_object_unref (ns_device);
   }
 #endif
   udisks_drive_set_sort_key (iface, sort_key);
