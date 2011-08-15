@@ -775,7 +775,6 @@ drive_update (UDisksLinuxDrive      *drive,
   UDisksDrive *iface = UDISKS_DRIVE (_iface);
   GUdevDevice *device;
   gchar *sort_key;
-  const gchar *name;
 
   if (drive->devices == NULL)
     goto out;
@@ -921,16 +920,9 @@ drive_update (UDisksLinuxDrive      *drive,
   drive_set_rotation_rate (drive, iface, device);
   drive_set_connection_bus (drive, iface, device);
 
-  /* This is pretty lame but works for now
-   *
-   * TODO: we probably want to make it so devices inserted last sorts
-   * last in the list etc.
-   */
-  name = g_udev_device_get_name (device);
-  if (g_str_has_prefix (name, "sd"))
-    sort_key = g_strdup_printf ("z_%s", name);
-  else
-    sort_key = g_strdup (name);
+  /* This ensures that devices are shown in the order they are detected */
+  sort_key = g_strdup_printf ("%" G_GUINT64_FORMAT,
+                              time (NULL) * G_USEC_PER_SEC - g_udev_device_get_usec_since_initialized (device));
   udisks_drive_set_sort_key (iface, sort_key);
   g_free (sort_key);
  out:
