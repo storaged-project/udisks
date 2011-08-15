@@ -920,9 +920,23 @@ drive_update (UDisksLinuxDrive      *drive,
   drive_set_rotation_rate (drive, iface, device);
   drive_set_connection_bus (drive, iface, device);
 
+#if 0
   /* This ensures that devices are shown in the order they are detected */
   sort_key = g_strdup_printf ("%" G_GUINT64_FORMAT,
                               time (NULL) * G_USEC_PER_SEC - g_udev_device_get_usec_since_initialized (device));
+#else
+  /* need to use this lame hack until libudev's get_usec_since_initialized() works */
+  {
+    const gchar *name;
+    name = g_udev_device_get_name (device);
+    if (g_str_has_prefix (name, "sr"))
+      sort_key = g_strdup_printf ("z0_%s", name);
+    else if (g_str_has_prefix (name, "sd"))
+      sort_key = g_strdup_printf ("z1_%s", name);
+    else
+      sort_key = g_strdup (name);
+  }
+#endif
   udisks_drive_set_sort_key (iface, sort_key);
   g_free (sort_key);
  out:
