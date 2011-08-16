@@ -28,7 +28,7 @@
 #include "udisksprovider.h"
 #include "udiskslinuxprovider.h"
 #include "udiskslinuxblock.h"
-#include "udiskslinuxdrive.h"
+#include "udiskslinuxdriveobject.h"
 #include "udiskslinuxmanager.h"
 #include "udiskscleanup.h"
 
@@ -38,7 +38,7 @@
  * @short_description: Provider of Linux-specific objects
  *
  * This object is used to add/remove Linux specific objects. Right now
- * it handles #UDisksLinuxBlock and #UDisksLinuxDrive objects.
+ * it handles #UDisksLinuxBlock and #UDisksLinuxDriveObject instances.
  */
 
 typedef struct _UDisksLinuxProviderClass   UDisksLinuxProviderClass;
@@ -60,7 +60,7 @@ struct _UDisksLinuxProvider
   /* maps from sysfs path to UDisksLinuxBlock objects */
   GHashTable *sysfs_to_block;
 
-  /* maps from VPD (serial, wwn) and sysfs_path to UDisksLinuxDrive objects */
+  /* maps from VPD (serial, wwn) and sysfs_path to UDisksLinuxDriveObject instances */
   GHashTable *vpd_to_drive;
   GHashTable *sysfs_path_to_drive;
 
@@ -287,16 +287,16 @@ perform_initial_housekeeping_for_drive (GIOSchedulerJob *job,
                                         GCancellable    *cancellable,
                                         gpointer         user_data)
 {
-  UDisksLinuxDrive *drive = UDISKS_LINUX_DRIVE (user_data);
+  UDisksLinuxDriveObject *object = UDISKS_LINUX_DRIVE_OBJECT (user_data);
   GError *error;
 
   error = NULL;
-  if (!udisks_linux_drive_housekeeping (drive, 0,
-                                        NULL, /* TODO: cancellable */
-                                        &error))
+  if (!udisks_linux_drive_object_housekeeping (object, 0,
+                                               NULL, /* TODO: cancellable */
+                                               &error))
     {
       udisks_warning ("Error performing initial housekeeping for drive %s: %s (%s, %d)",
-                      g_dbus_object_get_object_path (G_DBUS_OBJECT (drive)),
+                      g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
                       error->message, g_quark_to_string (error->domain), error->code);
       g_error_free (error);
     }
@@ -309,7 +309,7 @@ handle_block_uevent_for_drive (UDisksLinuxProvider *provider,
                                const gchar         *action,
                                GUdevDevice         *device)
 {
-  UDisksLinuxDrive *drive;
+  UDisksLinuxDriveObject *object;
   UDisksDaemon *daemon;
   const gchar *sysfs_path;
   gchar *vpd;
@@ -320,22 +320,22 @@ handle_block_uevent_for_drive (UDisksLinuxProvider *provider,
 
   if (g_strcmp0 (action, "remove") == 0)
     {
-      drive = g_hash_table_lookup (provider->sysfs_path_to_drive, sysfs_path);
-      if (drive != NULL)
+      object = g_hash_table_lookup (provider->sysfs_path_to_drive, sysfs_path);
+      if (object != NULL)
         {
           GList *devices;
 
-          udisks_linux_drive_uevent (drive, action, device);
+          udisks_linux_drive_object_uevent (object, action, device);
 
           g_warn_if_fail (g_hash_table_remove (provider->sysfs_path_to_drive, sysfs_path));
 
-          devices = udisks_linux_drive_get_devices (drive);
+          devices = udisks_linux_drive_object_get_devices (object);
           if (devices == NULL)
             {
               const gchar *vpd;
-              vpd = g_object_get_data (G_OBJECT (drive), "x-vpd");
+              vpd = g_object_get_data (G_OBJECT (object), "x-vpd");
               g_dbus_object_manager_server_unexport (udisks_daemon_get_object_manager (daemon),
-                                                     g_dbus_object_get_object_path (G_DBUS_OBJECT (drive)));
+                                                     g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
               g_warn_if_fail (g_hash_table_remove (provider->vpd_to_drive, vpd));
             }
           g_list_foreach (devices, (GFunc) g_object_unref, NULL);
@@ -344,7 +344,7 @@ handle_block_uevent_for_drive (UDisksLinuxProvider *provider,
     }
   else
     {
-      if (!udisks_linux_drive_should_include_device (provider->gudev_client, device, &vpd))
+      if (!udisks_linux_drive_object_should_include_device (provider->gudev_client, device, &vpd))
         goto out;
 
       if (vpd == NULL)
@@ -353,29 +353,29 @@ handle_block_uevent_for_drive (UDisksLinuxProvider *provider,
                         g_udev_device_get_sysfs_path (device));
           goto out;
         }
-      drive = g_hash_table_lookup (provider->vpd_to_drive, vpd);
-      if (drive != NULL)
+      object = g_hash_table_lookup (provider->vpd_to_drive, vpd);
+      if (object != NULL)
         {
           if (g_hash_table_lookup (provider->sysfs_path_to_drive, sysfs_path) == NULL)
-            g_hash_table_insert (provider->sysfs_path_to_drive, g_strdup (sysfs_path), drive);
-          udisks_linux_drive_uevent (drive, action, device);
+            g_hash_table_insert (provider->sysfs_path_to_drive, g_strdup (sysfs_path), object);
+          udisks_linux_drive_object_uevent (object, action, device);
         }
       else
         {
-          drive = udisks_linux_drive_new (daemon, device);
-          if (drive != NULL)
+          object = udisks_linux_drive_object_new (daemon, device);
+          if (object != NULL)
             {
-              g_object_set_data_full (G_OBJECT (drive), "x-vpd", g_strdup (vpd), g_free);
+              g_object_set_data_full (G_OBJECT (object), "x-vpd", g_strdup (vpd), g_free);
               g_dbus_object_manager_server_export_uniquely (udisks_daemon_get_object_manager (daemon),
-                                                            G_DBUS_OBJECT_SKELETON (drive));
-              g_hash_table_insert (provider->vpd_to_drive, g_strdup (vpd), drive);
-              g_hash_table_insert (provider->sysfs_path_to_drive, g_strdup (sysfs_path), drive);
+                                                            G_DBUS_OBJECT_SKELETON (object));
+              g_hash_table_insert (provider->vpd_to_drive, g_strdup (vpd), object);
+              g_hash_table_insert (provider->sysfs_path_to_drive, g_strdup (sysfs_path), object);
 
               /* schedule initial housekeeping for the drive unless coldplugging */
               if (!provider->coldplug)
                 {
                   g_io_scheduler_push_job (perform_initial_housekeeping_for_drive,
-                                           g_object_ref (drive),
+                                           g_object_ref (object),
                                            (GDestroyNotify) g_object_unref,
                                            G_PRIORITY_DEFAULT,
                                            NULL);
@@ -434,7 +434,7 @@ handle_block_uevent (UDisksLinuxProvider *provider,
                      const gchar         *action,
                      GUdevDevice         *device)
 {
-  /* We use the sysfs block device for both Drive and BlockDevice
+  /* We use the sysfs block device for both UDisksLinuxDriveObject and BlockDevice
    * objects. Ensure that drive are added before and removed after
    * BlockDevice
    */
@@ -486,34 +486,34 @@ static void
 housekeeping_all_drives (UDisksLinuxProvider *provider,
                          guint                secs_since_last)
 {
-  GList *drives;
+  GList *objects;
   GList *l;
 
   G_LOCK (provider_lock);
-  drives = g_hash_table_get_values (provider->vpd_to_drive);
-  g_list_foreach (drives, (GFunc) g_object_ref, NULL);
+  objects = g_hash_table_get_values (provider->vpd_to_drive);
+  g_list_foreach (objects, (GFunc) g_object_ref, NULL);
   G_UNLOCK (provider_lock);
 
-  for (l = drives; l != NULL; l = l->next)
+  for (l = objects; l != NULL; l = l->next)
     {
-      UDisksLinuxDrive *drive = UDISKS_LINUX_DRIVE (l->data);
+      UDisksLinuxDriveObject *object = UDISKS_LINUX_DRIVE_OBJECT (l->data);
       GError *error;
 
       error = NULL;
-      if (!udisks_linux_drive_housekeeping (drive,
-                                            secs_since_last,
-                                            NULL, /* TODO: cancellable */
-                                            &error))
+      if (!udisks_linux_drive_object_housekeeping (object,
+                                                   secs_since_last,
+                                                   NULL, /* TODO: cancellable */
+                                                   &error))
         {
           udisks_warning ("Error performing housekeeping for drive %s: %s (%s, %d)",
-                          g_dbus_object_get_object_path (G_DBUS_OBJECT (drive)),
+                          g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
                           error->message, g_quark_to_string (error->domain), error->code);
           g_error_free (error);
         }
     }
 
-  g_list_foreach (drives, (GFunc) g_object_unref, NULL);
-  g_list_free (drives);
+  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+  g_list_free (objects);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

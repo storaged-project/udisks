@@ -40,6 +40,7 @@
 #include "udiskslinuxblock.h"
 #include "udisksmount.h"
 #include "udisksmountmonitor.h"
+#include "udiskslinuxdriveobject.h"
 #include "udiskslinuxdrive.h"
 #include "udiskslinuxfilesystem.h"
 #include "udiskslinuxencrypted.h"
@@ -1252,16 +1253,13 @@ find_drive (GDBusObjectManagerServer  *object_manager,
   for (l = objects; l != NULL; l = l->next)
     {
       GDBusObjectSkeleton *object = G_DBUS_OBJECT_SKELETON (l->data);
-      UDisksLinuxDrive *drive;
       GList *drive_devices;
       GList *j;
 
-      if (!UDISKS_IS_LINUX_DRIVE (object))
+      if (!UDISKS_IS_LINUX_DRIVE_OBJECT (object))
         continue;
 
-      drive = UDISKS_LINUX_DRIVE (object);
-      drive_devices = udisks_linux_drive_get_devices (drive);
-
+      drive_devices = udisks_linux_drive_object_get_devices (UDISKS_LINUX_DRIVE_OBJECT (object));
       for (j = drive_devices; j != NULL; j = j->next)
         {
           GUdevDevice *drive_device = G_UDEV_DEVICE (j->data);

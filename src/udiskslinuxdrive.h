@@ -22,7 +22,6 @@
 #define __UDISKS_LINUX_DRIVE_H__
 
 #include "udisksdaemontypes.h"
-#include <gudev/gudev.h>
 
 G_BEGIN_DECLS
 
@@ -30,23 +29,10 @@ G_BEGIN_DECLS
 #define UDISKS_LINUX_DRIVE(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_LINUX_DRIVE, UDisksLinuxDrive))
 #define UDISKS_IS_LINUX_DRIVE(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_LINUX_DRIVE))
 
-GType             udisks_linux_drive_get_type      (void) G_GNUC_CONST;
-UDisksLinuxDrive *udisks_linux_drive_new           (UDisksDaemon      *daemon,
-                                                    GUdevDevice       *device);
-void              udisks_linux_drive_uevent        (UDisksLinuxDrive  *drive,
-                                                    const gchar       *action,
-                                                    GUdevDevice       *device);
-UDisksDaemon     *udisks_linux_drive_get_daemon    (UDisksLinuxDrive  *drive);
-GList            *udisks_linux_drive_get_devices   (UDisksLinuxDrive  *drive);
-
-gboolean          udisks_linux_drive_housekeeping  (UDisksLinuxDrive  *drive,
-                                                    guint              secs_since_last,
-                                                    GCancellable      *cancellable,
-                                                    GError           **error);
-
-gboolean          udisks_linux_drive_should_include_device (GUdevClient  *client,
-                                                            GUdevDevice  *device,
-                                                            gchar       **out_vpd);
+GType        udisks_linux_drive_get_type (void) G_GNUC_CONST;
+UDisksDrive *udisks_linux_drive_new      (void);
+void         udisks_linux_drive_update   (UDisksLinuxDrive       *drive,
+                                          UDisksLinuxDriveObject *object);
 
 G_END_DECLS
 
