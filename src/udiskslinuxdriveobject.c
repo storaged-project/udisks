@@ -401,9 +401,12 @@ udisks_linux_drive_object_get_device (UDisksLinuxDriveObject   *object,
 {
   GUdevDevice *ret;
   /* TODO: actually look at @get_hw */
-  ret = object->devices->data;
-  if (ret != NULL)
-    g_object_ref (ret);
+  if (object->devices != NULL)
+    {
+      ret = object->devices->data;
+      if (ret != NULL)
+        g_object_ref (ret);
+    }
   return ret;
 }
 
