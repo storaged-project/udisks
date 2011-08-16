@@ -33,10 +33,12 @@
 
 #include "udiskslogging.h"
 #include "udiskslinuxfilesystem.h"
-#include "udiskslinuxblock.h"
+#include "udiskslinuxblockobject.h"
 #include "udisksdaemon.h"
 #include "udiskscleanup.h"
 #include "udisksdaemonutil.h"
+#include "udisksmountmonitor.h"
+#include "udisksmount.h"
 
 /**
  * SECTION:udiskslinuxfilesystem
@@ -96,6 +98,48 @@ udisks_linux_filesystem_new (void)
 {
   return UDISKS_FILESYSTEM (g_object_new (UDISKS_TYPE_LINUX_FILESYSTEM,
                                           NULL));
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_linux_filesystem_update:
+ * @filesystem: A #UDisksLinuxFilesystem.
+ * @object: The enclosing #UDisksLinuxBlockObject instance.
+ *
+ * Updates the interface.
+ */
+void
+udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
+                                UDisksLinuxBlockObject *object)
+{
+  UDisksMountMonitor *mount_monitor;
+  GUdevDevice *device;
+  GPtrArray *p;
+  GList *mounts;
+  GList *l;
+
+  mount_monitor = udisks_daemon_get_mount_monitor (udisks_linux_block_object_get_daemon (object));
+  device = udisks_linux_block_object_get_device (object);
+
+  p = g_ptr_array_new ();
+  mounts = udisks_mount_monitor_get_mounts_for_dev (mount_monitor, g_udev_device_get_device_number (device));
+  /* we are guaranteed that the list is sorted so if there are
+   * multiple mounts we'll always get the same order
+   */
+  for (l = mounts; l != NULL; l = l->next)
+    {
+      UDisksMount *mount = UDISKS_MOUNT (l->data);
+      if (udisks_mount_get_mount_type (mount) == UDISKS_MOUNT_TYPE_FILESYSTEM)
+        g_ptr_array_add (p, (gpointer) udisks_mount_get_mount_path (mount));
+    }
+  g_ptr_array_add (p, NULL);
+  udisks_filesystem_set_mount_points (UDISKS_FILESYSTEM (filesystem),
+                                      (const gchar *const *) p->pdata);
+  g_ptr_array_free (p, TRUE);
+  g_list_foreach (mounts, (GFunc) g_object_unref, NULL);
+  g_list_free (mounts);
+  g_object_unref (device);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -784,7 +828,7 @@ handle_mount (UDisksFilesystem       *filesystem,
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem)));
   block = udisks_object_peek_block_device (object);
-  daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   cleanup = udisks_daemon_get_cleanup (daemon);
 
   /* check if mount point is managed by e.g. /etc/fstab or similar */
@@ -1104,7 +1148,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem)));
   block = udisks_object_peek_block_device (object);
-  daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   cleanup = udisks_daemon_get_cleanup (daemon);
   system_managed = FALSE;
 
@@ -1394,7 +1438,7 @@ handle_set_label (UDisksFilesystem       *filesystem,
   escaped_label = NULL;
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem)));
-  daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   block = udisks_object_peek_block_device (object);
 
   probed_fs_usage = udisks_block_device_get_id_usage (block);

@@ -27,7 +27,7 @@
 #include "udisksdaemon.h"
 #include "udisksprovider.h"
 #include "udiskslinuxprovider.h"
-#include "udiskslinuxblock.h"
+#include "udiskslinuxblockobject.h"
 #include "udiskslinuxdriveobject.h"
 #include "udiskslinuxmanager.h"
 #include "udiskscleanup.h"
@@ -57,7 +57,7 @@ struct _UDisksLinuxProvider
 
   UDisksObjectSkeleton *manager_object;
 
-  /* maps from sysfs path to UDisksLinuxBlock objects */
+  /* maps from sysfs path to UDisksLinuxBlockObject objects */
   GHashTable *sysfs_to_block;
 
   /* maps from VPD (serial, wwn) and sysfs_path to UDisksLinuxDriveObject instances */
@@ -395,7 +395,7 @@ handle_block_uevent_for_block (UDisksLinuxProvider *provider,
                                GUdevDevice         *device)
 {
   const gchar *sysfs_path;
-  UDisksLinuxBlock *block;
+  UDisksLinuxBlockObject *object;
   UDisksDaemon *daemon;
 
   daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
@@ -403,27 +403,27 @@ handle_block_uevent_for_block (UDisksLinuxProvider *provider,
 
   if (g_strcmp0 (action, "remove") == 0)
     {
-      block = g_hash_table_lookup (provider->sysfs_to_block, sysfs_path);
-      if (block != NULL)
+      object = g_hash_table_lookup (provider->sysfs_to_block, sysfs_path);
+      if (object != NULL)
         {
           g_dbus_object_manager_server_unexport (udisks_daemon_get_object_manager (daemon),
-                                                 g_dbus_object_get_object_path (G_DBUS_OBJECT (block)));
+                                                 g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
           g_warn_if_fail (g_hash_table_remove (provider->sysfs_to_block, sysfs_path));
         }
     }
   else
     {
-      block = g_hash_table_lookup (provider->sysfs_to_block, sysfs_path);
-      if (block != NULL)
+      object = g_hash_table_lookup (provider->sysfs_to_block, sysfs_path);
+      if (object != NULL)
         {
-          udisks_linux_block_uevent (block, action, device);
+          udisks_linux_block_object_uevent (object, action, device);
         }
       else
         {
-          block = udisks_linux_block_new (daemon, device);
+          object = udisks_linux_block_object_new (daemon, device);
           g_dbus_object_manager_server_export_uniquely (udisks_daemon_get_object_manager (daemon),
-                                                        G_DBUS_OBJECT_SKELETON (block));
-          g_hash_table_insert (provider->sysfs_to_block, g_strdup (sysfs_path), block);
+                                                        G_DBUS_OBJECT_SKELETON (object));
+          g_hash_table_insert (provider->sysfs_to_block, g_strdup (sysfs_path), object);
         }
     }
 }
@@ -434,9 +434,9 @@ handle_block_uevent (UDisksLinuxProvider *provider,
                      const gchar         *action,
                      GUdevDevice         *device)
 {
-  /* We use the sysfs block device for both UDisksLinuxDriveObject and BlockDevice
-   * objects. Ensure that drive are added before and removed after
-   * BlockDevice
+  /* We use the sysfs block device for both UDisksLinuxDriveObject and
+   * UDisksLinuxBlockObject objects. Ensure that drive objects are
+   * added before and removed after block objects.
    */
   if (g_strcmp0 (action, "remove") == 0)
     {
@@ -571,24 +571,24 @@ on_housekeeping_timeout (gpointer user_data)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
-update_all_block_devices (UDisksLinuxProvider *provider)
+update_all_block_objects (UDisksLinuxProvider *provider)
 {
-  GList *block_devices;
+  GList *objects;
   GList *l;
 
   G_LOCK (provider_lock);
-  block_devices = g_hash_table_get_values (provider->sysfs_to_block);
-  g_list_foreach (block_devices, (GFunc) g_object_ref, NULL);
+  objects = g_hash_table_get_values (provider->sysfs_to_block);
+  g_list_foreach (objects, (GFunc) g_object_ref, NULL);
   G_UNLOCK (provider_lock);
 
-  for (l = block_devices; l != NULL; l = l->next)
+  for (l = objects; l != NULL; l = l->next)
     {
-      UDisksLinuxBlock *block = UDISKS_LINUX_BLOCK (l->data);
-      udisks_linux_block_uevent (block, "change", NULL);
+      UDisksLinuxBlockObject *object = UDISKS_LINUX_BLOCK_OBJECT (l->data);
+      udisks_linux_block_object_uevent (object, "change", NULL);
     }
 
-  g_list_foreach (block_devices, (GFunc) g_object_unref, NULL);
-  g_list_free (block_devices);
+  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+  g_list_free (objects);
 }
 
 static void
@@ -597,7 +597,7 @@ fstab_monitor_on_entry_added (UDisksFstabMonitor *monitor,
                               gpointer            user_data)
 {
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
-  update_all_block_devices (provider);
+  update_all_block_objects (provider);
 }
 
 static void
@@ -606,7 +606,7 @@ fstab_monitor_on_entry_removed (UDisksFstabMonitor *monitor,
                                 gpointer            user_data)
 {
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
-  update_all_block_devices (provider);
+  update_all_block_objects (provider);
 }
 
 static void
@@ -615,7 +615,7 @@ crypttab_monitor_on_entry_added (UDisksCrypttabMonitor *monitor,
                                  gpointer               user_data)
 {
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
-  update_all_block_devices (provider);
+  update_all_block_objects (provider);
 }
 
 static void
@@ -624,5 +624,5 @@ crypttab_monitor_on_entry_removed (UDisksCrypttabMonitor *monitor,
                                    gpointer               user_data)
 {
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
-  update_all_block_devices (provider);
+  update_all_block_objects (provider);
 }

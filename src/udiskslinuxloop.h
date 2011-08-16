@@ -31,6 +31,8 @@ G_BEGIN_DECLS
 
 GType       udisks_linux_loop_get_type (void) G_GNUC_CONST;
 UDisksLoop *udisks_linux_loop_new      (void);
+void        udisks_linux_loop_update   (UDisksLinuxLoop        *loop,
+                                        UDisksLinuxBlockObject *object);
 
 G_END_DECLS
 

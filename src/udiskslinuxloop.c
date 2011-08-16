@@ -31,7 +31,7 @@
 
 #include "udiskslogging.h"
 #include "udiskslinuxloop.h"
-#include "udiskslinuxblock.h"
+#include "udiskslinuxblockobject.h"
 #include "udisksdaemon.h"
 #include "udiskscleanup.h"
 #include "udisksdaemonutil.h"
@@ -98,6 +98,61 @@ udisks_linux_loop_new (void)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/**
+ * udisks_linux_loop_update:
+ * @loop: A #UDisksLinuxLoop.
+ * @object: The enclosing #UDisksLinuxBlockObject instance.
+ *
+ * Updates the interface.
+ */
+void
+udisks_linux_loop_update (UDisksLinuxLoop        *loop,
+                          UDisksLinuxBlockObject *object)
+{
+  GUdevDevice *device;
+  device = udisks_linux_block_object_get_device (object);
+  if (g_str_has_prefix (g_udev_device_get_name (device), "loop"))
+    {
+      gchar *filename;
+      gchar *backing_file;
+      GError *error;
+      filename = g_strconcat (g_udev_device_get_sysfs_path (device), "/loop/backing_file", NULL);
+      error = NULL;
+      if (!g_file_get_contents (filename,
+                                &backing_file,
+                                NULL,
+                                &error))
+        {
+          /* ENOENT is not unexpected */
+          if (!(error->domain == G_FILE_ERROR && error->code == G_FILE_ERROR_NOENT))
+            {
+              udisks_warning ("Error loading %s: %s (%s, %d)",
+                              filename,
+                              error->message,
+                              g_quark_to_string (error->domain),
+                              error->code);
+            }
+          g_error_free (error);
+          udisks_loop_set_backing_file (UDISKS_LOOP (loop), "");
+        }
+      else
+        {
+          /* TODO: validate UTF-8 */
+          g_strstrip (backing_file);
+          udisks_loop_set_backing_file (UDISKS_LOOP (loop), backing_file);
+          g_free (backing_file);
+        }
+      g_free (filename);
+    }
+  else
+    {
+      udisks_loop_set_backing_file (UDISKS_LOOP (loop), "");
+    }
+  g_object_unref (device);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 /* runs in thread dedicated to handling @invocation */
 static gboolean
 handle_delete (UDisksLoop             *loop,
@@ -121,7 +176,7 @@ handle_delete (UDisksLoop             *loop,
 
   object = g_object_ref (UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (loop))));
   block = udisks_object_peek_block_device (object);
-  daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   cleanup = udisks_daemon_get_cleanup (daemon);
 
   error = NULL;

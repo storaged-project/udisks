@@ -37,7 +37,7 @@
 #include "udiskslinuxprovider.h"
 #include "udiskslinuxdriveobject.h"
 #include "udiskslinuxdriveata.h"
-#include "udiskslinuxblock.h"
+#include "udiskslinuxblockobject.h"
 #include "udisksdaemon.h"
 #include "udiskscleanup.h"
 #include "udisksdaemonutil.h"
@@ -297,7 +297,7 @@ handle_smart_update (UDisksDriveAta        *_drive,
 {
   UDisksLinuxDriveAta *drive = UDISKS_LINUX_DRIVE_ATA (_drive);
   UDisksLinuxDriveObject *object;
-  UDisksLinuxBlock *block_object;
+  UDisksLinuxBlockObject *block_object;
   UDisksBlockDevice *block;
   UDisksDaemon *daemon;
   const gchar *action_id;

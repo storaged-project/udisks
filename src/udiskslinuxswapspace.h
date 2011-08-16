@@ -31,6 +31,8 @@ G_BEGIN_DECLS
 
 GType            udisks_linux_swapspace_get_type (void) G_GNUC_CONST;
 UDisksSwapspace *udisks_linux_swapspace_new      (void);
+void             udisks_linux_swapspace_update   (UDisksLinuxSwapspace   *swapspace,
+                                                  UDisksLinuxBlockObject *object);
 
 G_END_DECLS
 

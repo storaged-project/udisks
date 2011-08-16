@@ -34,6 +34,9 @@ typedef struct _UDisksDaemon UDisksDaemon;
 struct _UDisksLinuxProvider;
 typedef struct _UDisksLinuxProvider UDisksLinuxProvider;
 
+struct _UDisksLinuxBlockObject;
+typedef struct _UDisksLinuxBlockObject UDisksLinuxBlockObject;
+
 struct _UDisksLinuxBlock;
 typedef struct _UDisksLinuxBlock UDisksLinuxBlock;
 

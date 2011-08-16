@@ -32,7 +32,7 @@
 #include "udiskslinuxdriveobject.h"
 #include "udiskslinuxdrive.h"
 #include "udiskslinuxdriveata.h"
-#include "udiskslinuxblock.h"
+#include "udiskslinuxblockobject.h"
 
 /**
  * SECTION:udiskslinuxdriveobject
@@ -417,12 +417,12 @@ udisks_linux_drive_object_get_device (UDisksLinuxDriveObject   *object,
  * Returns: A #UDisksLinuxBlockObject or %NULL. The returned object
  * must be freed with g_object_unref().
  */
-UDisksLinuxBlock *
+UDisksLinuxBlockObject *
 udisks_linux_drive_object_get_block (UDisksLinuxDriveObject   *object,
                                      gboolean                  get_hw)
 {
   GDBusObjectManagerServer *object_manager;
-  UDisksLinuxBlock *ret;
+  UDisksLinuxBlockObject *ret;
   GList *objects;
   GList *l;
 
@@ -439,10 +439,10 @@ udisks_linux_drive_object_get_block (UDisksLinuxDriveObject   *object,
       GUdevDevice *device;
       gboolean is_disk;
 
-      if (!UDISKS_IS_LINUX_BLOCK (iter_object))
+      if (!UDISKS_IS_LINUX_BLOCK_OBJECT (iter_object))
         continue;
 
-      device = udisks_linux_block_get_device (UDISKS_LINUX_BLOCK (iter_object));
+      device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (iter_object));
       is_disk = (g_strcmp0 (g_udev_device_get_devtype (device), "disk") == 0);
       g_object_unref (device);
 
@@ -462,7 +462,6 @@ udisks_linux_drive_object_get_block (UDisksLinuxDriveObject   *object,
   g_list_foreach (objects, (GFunc) g_object_unref, NULL);
   g_list_free (objects);
   return ret;
-
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

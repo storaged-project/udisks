@@ -22,22 +22,17 @@
 #define __UDISKS_LINUX_BLOCK_H__
 
 #include "udisksdaemontypes.h"
-#include <gudev/gudev.h>
 
 G_BEGIN_DECLS
 
-#define UDISKS_TYPE_LINUX_BLOCK         (udisks_linux_block_get_type ())
-#define UDISKS_LINUX_BLOCK(o)           (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_LINUX_BLOCK, UDisksLinuxBlock))
-#define UDISKS_IS_LINUX_BLOCK(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_LINUX_BLOCK))
+#define UDISKS_TYPE_LINUX_BLOCK  (udisks_linux_block_get_type ())
+#define UDISKS_LINUX_BLOCK(o)    (G_TYPE_CHECK_INSTANCE_CAST ((o), UDISKS_TYPE_LINUX_BLOCK, UDisksLinuxBlock))
+#define UDISKS_IS_LINUX_BLOCK(o) (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_LINUX_BLOCK))
 
-GType               udisks_linux_block_get_type   (void) G_GNUC_CONST;
-UDisksLinuxBlock   *udisks_linux_block_new        (UDisksDaemon     *daemon,
-                                                   GUdevDevice      *device);
-void                udisks_linux_block_uevent     (UDisksLinuxBlock *block,
-                                                   const gchar      *action,
-                                                   GUdevDevice      *device);
-UDisksDaemon       *udisks_linux_block_get_daemon (UDisksLinuxBlock *block);
-GUdevDevice        *udisks_linux_block_get_device (UDisksLinuxBlock *block);
+GType        udisks_linux_block_get_type (void) G_GNUC_CONST;
+UDisksBlockDevice *udisks_linux_block_new      (void);
+void         udisks_linux_block_update   (UDisksLinuxBlock       *block,
+                                          UDisksLinuxBlockObject *object);
 
 G_END_DECLS
 

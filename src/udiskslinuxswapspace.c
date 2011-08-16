@@ -31,10 +31,11 @@
 
 #include "udiskslogging.h"
 #include "udiskslinuxswapspace.h"
-#include "udiskslinuxblock.h"
+#include "udiskslinuxblockobject.h"
 #include "udisksdaemon.h"
 #include "udiskscleanup.h"
 #include "udisksdaemonutil.h"
+#include "udisksmountmonitor.h"
 
 /**
  * SECTION:udiskslinuxswapspace
@@ -98,6 +99,36 @@ udisks_linux_swapspace_new (void)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/**
+ * udisks_linux_swapspace_update:
+ * @swapspace: A #UDisksLinuxSwapspace.
+ * @object: The enclosing #UDisksLinuxBlockObject instance.
+ *
+ * Updates the interface.
+ */
+void
+udisks_linux_swapspace_update (UDisksLinuxSwapspace   *swapspace,
+                               UDisksLinuxBlockObject *object)
+{
+  UDisksMountMonitor *mount_monitor;
+  GUdevDevice *device;
+  UDisksMountType mount_type;
+  gboolean active;
+
+  mount_monitor = udisks_daemon_get_mount_monitor (udisks_linux_block_object_get_daemon (object));
+  device = udisks_linux_block_object_get_device (object);
+
+  active = FALSE;
+  if (udisks_mount_monitor_is_dev_in_use (mount_monitor, g_udev_device_get_device_number (device), &mount_type) &&
+      mount_type == UDISKS_MOUNT_TYPE_SWAP)
+    active = TRUE;
+  udisks_swapspace_set_active (UDISKS_SWAPSPACE (swapspace), active);
+
+  g_object_unref (device);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 
 static void
 swapspace_start_on_job_completed (UDisksJob   *job,
@@ -129,7 +160,7 @@ handle_start (UDisksSwapspace        *swapspace,
   UDisksBaseJob *job;
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (swapspace)));
-  daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   block = udisks_object_peek_block_device (object);
 
   if (!udisks_daemon_util_check_authorization_sync (daemon,
@@ -186,7 +217,7 @@ handle_stop (UDisksSwapspace        *swapspace,
   UDisksBaseJob *job;
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (swapspace)));
-  daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   block = udisks_object_peek_block_device (object);
 
   /* Now, check that the user is actually authorized to stop the swap space.

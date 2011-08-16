@@ -31,7 +31,7 @@
 
 #include "udiskslogging.h"
 #include "udiskslinuxencrypted.h"
-#include "udiskslinuxblock.h"
+#include "udiskslinuxblockobject.h"
 #include "udisksdaemon.h"
 #include "udiskspersistentstore.h"
 #include "udisksdaemonutil.h"
@@ -95,6 +95,21 @@ udisks_linux_encrypted_new (void)
 {
   return UDISKS_ENCRYPTED (g_object_new (UDISKS_TYPE_LINUX_ENCRYPTED,
                                          NULL));
+}
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_linux_encrypted_update:
+ * @encrypted: A #UDisksLinuxEncrypted.
+ * @object: The enclosing #UDisksLinuxBlockObject instance.
+ *
+ * Updates the interface.
+ */
+void
+udisks_linux_encrypted_update (UDisksLinuxEncrypted   *encrypted,
+                               UDisksLinuxBlockObject *object)
+{
+  /* do nothing */
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -211,7 +226,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (encrypted)));
   block = udisks_object_peek_block_device (object);
-  daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   cleanup = udisks_daemon_get_cleanup (daemon);
 
   /* TODO: check if the device is mentioned in /etc/crypttab (see crypttab(5)) - if so use that
@@ -346,7 +361,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
                  udisks_block_device_get_device (block),
                  udisks_block_device_get_device (cleartext_block));
 
-  udev_cleartext_device = udisks_linux_block_get_device (UDISKS_LINUX_BLOCK (cleartext_object));
+  udev_cleartext_device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (cleartext_object));
 
   /* update the unlocked-luks file */
   if (!udisks_cleanup_add_unlocked_luks (cleanup,
@@ -411,7 +426,7 @@ handle_lock (UDisksEncrypted        *encrypted,
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (encrypted)));
   block = udisks_object_peek_block_device (object);
-  daemon = udisks_linux_block_get_daemon (UDISKS_LINUX_BLOCK (object));
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   cleanup = udisks_daemon_get_cleanup (daemon);
 
   /* TODO: check if the device is mentioned in /etc/crypttab (see crypttab(5)) - if so use that
@@ -497,7 +512,7 @@ handle_lock (UDisksEncrypted        *encrypted,
         goto out;
     }
 
-  device = udisks_linux_block_get_device (UDISKS_LINUX_BLOCK (cleartext_object));
+  device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (cleartext_object));
   escaped_name = g_strescape (g_udev_device_get_sysfs_attr (device, "dm/name"), NULL);
 
   if (cleartext_device_from_file != 0)

@@ -40,7 +40,7 @@ UDisksDaemon           *udisks_linux_drive_object_get_daemon    (UDisksLinuxDriv
 GList                  *udisks_linux_drive_object_get_devices   (UDisksLinuxDriveObject   *object);
 GUdevDevice            *udisks_linux_drive_object_get_device    (UDisksLinuxDriveObject   *object,
                                                                  gboolean                  get_hw);
-UDisksLinuxBlock       *udisks_linux_drive_object_get_block     (UDisksLinuxDriveObject   *object,
+UDisksLinuxBlockObject *udisks_linux_drive_object_get_block     (UDisksLinuxDriveObject   *object,
                                                                  gboolean                  get_hw);
 
 gboolean                udisks_linux_drive_object_housekeeping  (UDisksLinuxDriveObject   *object,

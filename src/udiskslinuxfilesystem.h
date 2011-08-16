@@ -31,6 +31,8 @@ G_BEGIN_DECLS
 
 GType             udisks_linux_filesystem_get_type (void) G_GNUC_CONST;
 UDisksFilesystem *udisks_linux_filesystem_new      (void);
+void              udisks_linux_filesystem_update   (UDisksLinuxFilesystem  *filesystem,
+                                                    UDisksLinuxBlockObject *object);
 
 G_END_DECLS
 

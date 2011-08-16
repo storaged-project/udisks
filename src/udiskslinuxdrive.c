@@ -35,7 +35,7 @@
 #include "udiskslinuxprovider.h"
 #include "udiskslinuxdriveobject.h"
 #include "udiskslinuxdrive.h"
-#include "udiskslinuxblock.h"
+#include "udiskslinuxblockobject.h"
 #include "udisksdaemon.h"
 #include "udiskscleanup.h"
 #include "udisksdaemonutil.h"
@@ -474,7 +474,7 @@ handle_eject (UDisksDrive           *_drive,
 {
   UDisksLinuxDrive *drive = UDISKS_LINUX_DRIVE (_drive);
   UDisksLinuxDriveObject *object;
-  UDisksLinuxBlock *block_object;
+  UDisksLinuxBlockObject *block_object;
   UDisksBlockDevice *block;
   UDisksDaemon *daemon;
   const gchar *action_id;

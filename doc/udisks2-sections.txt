@@ -144,22 +144,6 @@ udisks_simple_job_get_type
 </SECTION>
 
 <SECTION>
-<FILE>udiskslinuxblock</FILE>
-<TITLE>UDisksLinuxBlock</TITLE>
-UDisksLinuxBlock
-udisks_linux_block_new
-udisks_linux_block_uevent
-udisks_linux_block_get_daemon
-udisks_linux_block_get_device
-<SUBSECTION Standard>
-UDISKS_TYPE_LINUX_BLOCK
-UDISKS_LINUX_BLOCK
-UDISKS_IS_LINUX_BLOCK
-<SUBSECTION Private>
-udisks_linux_block_get_type
-</SECTION>
-
-<SECTION>
 <FILE>udiskslinuxdriveobject</FILE>
 <TITLE>UDisksLinuxDriveObject</TITLE>
 UDisksLinuxDriveObject
@@ -336,9 +320,39 @@ udisks_daemon_util_setup_by_user
 </SECTION>
 
 <SECTION>
+<FILE>udiskslinuxblockobject</FILE>
+<TITLE>UDisksLinuxBlockObject</TITLE>
+UDisksLinuxBlockObject
+udisks_linux_block_object_new
+udisks_linux_block_object_uevent
+udisks_linux_block_object_get_daemon
+udisks_linux_block_object_get_device
+<SUBSECTION Standard>
+UDISKS_TYPE_LINUX_BLOCK_OBJECT
+UDISKS_LINUX_BLOCK_OBJECT
+UDISKS_IS_LINUX_BLOCK_OBJECT
+<SUBSECTION Private>
+udisks_linux_block_object_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxblock</FILE>
+UDisksLinuxBlock
+udisks_linux_block_new
+udisks_linux_block_update
+<SUBSECTION Standard>
+UDISKS_LINUX_BLOCK
+UDISKS_IS_LINUX_BLOCK
+UDISKS_TYPE_LINUX_BLOCK
+<SUBSECTION Private>
+udisks_linux_block_get_type
+</SECTION>
+
+<SECTION>
 <FILE>udiskslinuxfilesystem</FILE>
 UDisksLinuxFilesystem
 udisks_linux_filesystem_new
+udisks_linux_filesystem_update
 <SUBSECTION Standard>
 UDISKS_LINUX_FILESYSTEM
 UDISKS_IS_LINUX_FILESYSTEM
@@ -351,6 +365,7 @@ udisks_linux_filesystem_get_type
 <FILE>udiskslinuxencrypted</FILE>
 UDisksLinuxEncrypted
 udisks_linux_encrypted_new
+udisks_linux_encrypted_update
 <SUBSECTION Standard>
 UDISKS_LINUX_ENCRYPTED
 UDISKS_IS_LINUX_ENCRYPTED
@@ -363,12 +378,26 @@ udisks_linux_encrypted_get_type
 <FILE>udiskslinuxswapspace</FILE>
 UDisksLinuxSwapspace
 udisks_linux_swapspace_new
+udisks_linux_swapspace_update
 <SUBSECTION Standard>
 UDISKS_LINUX_SWAPSPACE
 UDISKS_IS_LINUX_SWAPSPACE
 UDISKS_TYPE_LINUX_SWAPSPACE
 <SUBSECTION Private>
 udisks_linux_swapspace_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udiskslinuxloop</FILE>
+UDisksLinuxLoop
+udisks_linux_loop_new
+udisks_linux_loop_update
+<SUBSECTION Standard>
+UDISKS_LINUX_LOOP
+UDISKS_IS_LINUX_LOOP
+UDISKS_TYPE_LINUX_LOOP
+<SUBSECTION Private>
+udisks_linux_loop_get_type
 </SECTION>
 
 <SECTION>
@@ -965,18 +994,6 @@ UDISKS_LINUX_MANAGER
 UDISKS_IS_LINUX_MANAGER
 <SUBSECTION Private>
 udisks_linux_manager_get_type
-</SECTION>
-
-<SECTION>
-<FILE>udiskslinuxloop</FILE>
-UDisksLinuxLoop
-udisks_linux_loop_new
-<SUBSECTION Standard>
-UDISKS_LINUX_LOOP
-UDISKS_IS_LINUX_LOOP
-UDISKS_TYPE_LINUX_LOOP
-<SUBSECTION Private>
-udisks_linux_loop_get_type
 </SECTION>
 
 <SECTION>
