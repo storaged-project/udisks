@@ -1564,10 +1564,10 @@ handle_command_loop (gint        *argc,
                         g_print ("%s \n", symlinks[n]);
                     }
                 }
+              g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+              g_list_free (objects);
+              goto out;
             }
-          g_list_foreach (objects, (GFunc) g_object_unref, NULL);
-          g_list_free (objects);
-          goto out;
         }
 
       /* done with completion */

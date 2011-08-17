@@ -399,7 +399,7 @@ GUdevDevice *
 udisks_linux_drive_object_get_device (UDisksLinuxDriveObject   *object,
                                       gboolean                  get_hw)
 {
-  GUdevDevice *ret;
+  GUdevDevice *ret = NULL;
   /* TODO: actually look at @get_hw */
   if (object->devices != NULL)
     {

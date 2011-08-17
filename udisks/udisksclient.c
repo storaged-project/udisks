@@ -333,7 +333,7 @@ udisks_client_get_object_manager (UDisksClient        *client)
 UDisksManager *
 udisks_client_get_manager (UDisksClient *client)
 {
-  UDisksManager *ret;
+  UDisksManager *ret = NULL;
   GDBusObject *obj;
 
   g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
