@@ -40,7 +40,7 @@
 /**
  * SECTION:udiskslinuxencrypted
  * @title: UDisksLinuxEncrypted
- * @short_description: Locking and unlocking encrypted devices Linux
+ * @short_description: Linux implementation of #UDisksEncrypted
  *
  * This type provides an implementation of the #UDisksEncrypted
  * interface on Linux.

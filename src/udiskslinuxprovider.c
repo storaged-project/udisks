@@ -35,10 +35,10 @@
 /**
  * SECTION:udiskslinuxprovider
  * @title: UDisksLinuxProvider
- * @short_description: Provider of Linux-specific objects
+ * @short_description: Provides Linux-specific objects
  *
- * This object is used to add/remove Linux specific objects. Right now
- * it handles #UDisksLinuxBlock and #UDisksLinuxDriveObject instances.
+ * This object is used to add/remove Linux specific objects of type
+ * #UDisksLinuxBlockObject and #UDisksLinuxDriveObject.
  */
 
 typedef struct _UDisksLinuxProviderClass   UDisksLinuxProviderClass;

@@ -45,7 +45,7 @@
 /**
  * SECTION:udiskslinuxmanager
  * @title: UDisksLinuxManager
- * @short_description: Manager implementation on Linux
+ * @short_description: Linux implementation of #UDisksManager
  *
  * This type provides an implementation of the #UDisksManager
  * interface on Linux.

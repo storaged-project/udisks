@@ -49,9 +49,9 @@
 /**
  * SECTION:udiskslinuxblock
  * @title: UDisksLinuxBlock
- * @short_description: Block devices on Linux
+ * @short_description: Linux implementation of #UDisksBlockDevice
  *
- * This type provides an implementation of the #UDisksBlock
+ * This type provides an implementation of the #UDisksBlockDevice
  * interface on Linux.
  */
 

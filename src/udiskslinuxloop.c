@@ -39,7 +39,7 @@
 /**
  * SECTION:udiskslinuxloop
  * @title: UDisksLinuxLoop
- * @short_description: Loop devices on Linux
+ * @short_description: Linux implementation of #UDisksLoop
  *
  * This type provides an implementation of the #UDisksLoop
  * interface on Linux.

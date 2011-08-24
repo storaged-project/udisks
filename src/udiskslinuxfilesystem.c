@@ -43,7 +43,7 @@
 /**
  * SECTION:udiskslinuxfilesystem
  * @title: UDisksLinuxFilesystem
- * @short_description: Filesystem manipulation on Linux
+ * @short_description: Linux implementation of #UDisksFilesystem
  *
  * This type provides an implementation of the #UDisksFilesystem
  * interface on Linux.

@@ -40,7 +40,7 @@
 /**
  * SECTION:udiskslinuxswapspace
  * @title: UDisksLinuxSwapspace
- * @short_description: Swapspace manipulation on Linux
+ * @short_description: Linux implementation of #UDisksSwapspace
  *
  * This type provides an implementation of the #UDisksSwapspace interface
  * on Linux.
