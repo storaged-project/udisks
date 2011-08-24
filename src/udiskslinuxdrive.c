@@ -475,7 +475,7 @@ handle_eject (UDisksDrive           *_drive,
   UDisksLinuxDrive *drive = UDISKS_LINUX_DRIVE (_drive);
   UDisksLinuxDriveObject *object;
   UDisksLinuxBlockObject *block_object;
-  UDisksBlockDevice *block;
+  UDisksBlock *block;
   UDisksDaemon *daemon;
   const gchar *action_id;
   gchar *error_message;
@@ -495,11 +495,11 @@ handle_eject (UDisksDrive           *_drive,
                                              "Unable to find physical block device for drive");
       goto out;
     }
-  block = udisks_object_peek_block_device (UDISKS_OBJECT (block_object));
+  block = udisks_object_peek_block (UDISKS_OBJECT (block_object));
 
   /* TODO: is it a good idea to overload modify-device? */
   action_id = "org.freedesktop.udisks2.modify-device";
-  if (udisks_block_device_get_hint_system (block))
+  if (udisks_block_get_hint_system (block))
     action_id = "org.freedesktop.udisks2.modify-device-system";
 
   /* Check that the user is actually authorized */
@@ -519,13 +519,13 @@ handle_eject (UDisksDrive           *_drive,
                                               &error_message,
                                               NULL,  /* input_string */
                                               "eject \"%s\"",
-                                              udisks_block_device_get_device (block)))
+                                              udisks_block_get_device (block)))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error eject %s: %s",
-                                             udisks_block_device_get_device (block),
+                                             udisks_block_get_device (block),
                                              error_message);
       goto out;
     }

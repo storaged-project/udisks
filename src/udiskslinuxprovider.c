@@ -215,7 +215,7 @@ udisks_linux_provider_start (UDisksProvider *_provider)
 
   provider->coldplug = FALSE;
 
-  /* update BlockDevice:Configuration whenever fstab or crypttab entries are added or removed */
+  /* update Block:Configuration whenever fstab or crypttab entries are added or removed */
   g_signal_connect (udisks_daemon_get_fstab_monitor (daemon),
                     "entry-added",
                     G_CALLBACK (fstab_monitor_on_entry_added),

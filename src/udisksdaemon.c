@@ -923,16 +923,16 @@ wait_for_dev_t_cb (UDisksDaemon  *daemon,
                    gpointer       user_data)
 {
   dev_t *dev = user_data;
-  UDisksBlockDevice *block;
+  UDisksBlock *block;
   gboolean ret;
 
   ret = FALSE;
-  block = udisks_object_peek_block_device (object);
+  block = udisks_object_peek_block (object);
   if (block == NULL)
     goto out;
 
-  if (*dev == makedev (udisks_block_device_get_major (block),
-                       udisks_block_device_get_minor (block)))
+  if (*dev == makedev (udisks_block_get_major (block),
+                       udisks_block_get_minor (block)))
     ret = TRUE;
 
  out:
@@ -940,7 +940,7 @@ wait_for_dev_t_cb (UDisksDaemon  *daemon,
 }
 
 /**
- * udisks_daemon_find_block_device:
+ * udisks_daemon_find_block:
  * @daemon: A #UDisksDaemon.
  * @block_device_number: A #dev_t with the device number to find.
  *
@@ -949,8 +949,8 @@ wait_for_dev_t_cb (UDisksDaemon  *daemon,
  * Returns: (transfer full): A #UDisksObject or %NULL if not found. Free with g_object_unref().
  */
 UDisksObject *
-udisks_daemon_find_block_device (UDisksDaemon *daemon,
-                                 dev_t         block_device_number)
+udisks_daemon_find_block (UDisksDaemon *daemon,
+                          dev_t         block_device_number)
 {
   return udisks_daemon_wait_for_object_sync (daemon,
                                              wait_for_dev_t_cb,

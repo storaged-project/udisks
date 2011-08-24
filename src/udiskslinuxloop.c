@@ -160,7 +160,7 @@ handle_delete (UDisksLoop             *loop,
                GVariant               *options)
 {
   UDisksObject *object;
-  UDisksBlockDevice *block;
+  UDisksBlock *block;
   UDisksDaemon *daemon;
   UDisksCleanup *cleanup;
   gchar *error_message;
@@ -175,7 +175,7 @@ handle_delete (UDisksLoop             *loop,
   escaped_device = NULL;
 
   object = g_object_ref (UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (loop))));
-  block = udisks_object_peek_block_device (object);
+  block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   cleanup = udisks_daemon_get_cleanup (daemon);
 
@@ -189,7 +189,7 @@ handle_delete (UDisksLoop             *loop,
 
   error = NULL;
   if (!udisks_cleanup_has_loop (cleanup,
-                                udisks_block_device_get_device (block),
+                                udisks_block_get_device (block),
                                 &setup_by_uid,
                                 &error))
     {
@@ -199,7 +199,7 @@ handle_delete (UDisksLoop             *loop,
                                                  UDISKS_ERROR,
                                                  UDISKS_ERROR_FAILED,
                                                  "Error when looking for entry `%s' in loop: %s (%s, %d)",
-                                                 udisks_block_device_get_device (block),
+                                                 udisks_block_get_device (block),
                                                  error->message,
                                                  g_quark_to_string (error->domain),
                                                  error->code);
@@ -220,15 +220,15 @@ handle_delete (UDisksLoop             *loop,
         goto out;
     }
 
-  escaped_device = g_strescape (udisks_block_device_get_device (block), NULL);
+  escaped_device = g_strescape (udisks_block_get_device (block), NULL);
 
-  if (!udisks_cleanup_ignore_loop (cleanup, udisks_block_device_get_device (block)))
+  if (!udisks_cleanup_ignore_loop (cleanup, udisks_block_get_device (block)))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_ALREADY_UNMOUNTING,
                                              "Cannot delete %s as it's currently being deleted",
-                                             udisks_block_device_get_device (block));
+                                             udisks_block_get_device (block));
       goto out;
     }
 
@@ -242,12 +242,12 @@ handle_delete (UDisksLoop             *loop,
                                               "losetup -d \"%s\"",
                                               escaped_device))
     {
-      udisks_cleanup_unignore_loop (cleanup, udisks_block_device_get_device (block));
+      udisks_cleanup_unignore_loop (cleanup, udisks_block_get_device (block));
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error deleting %s: %s",
-                                             udisks_block_device_get_device (block),
+                                             udisks_block_get_device (block),
                                              error_message);
       goto out;
     }
@@ -255,7 +255,7 @@ handle_delete (UDisksLoop             *loop,
   if (setup_by_uid != -1)
     {
       error = NULL;
-      if (!udisks_cleanup_remove_loop (cleanup, udisks_block_device_get_device (block), &error))
+      if (!udisks_cleanup_remove_loop (cleanup, udisks_block_get_device (block), &error))
         {
           if (error == NULL)
             {
@@ -263,7 +263,7 @@ handle_delete (UDisksLoop             *loop,
                                                      UDISKS_ERROR,
                                                      UDISKS_ERROR_FAILED,
                                                      "Error removing entry for `%s' from loop file: Entry not found",
-                                                     udisks_block_device_get_device (block));
+                                                     udisks_block_get_device (block));
             }
           else
             {
@@ -271,20 +271,20 @@ handle_delete (UDisksLoop             *loop,
                                                      UDISKS_ERROR,
                                                      UDISKS_ERROR_FAILED,
                                                      "Error removing entry for `%s' from loop file: %s (%s, %d)",
-                                                     udisks_block_device_get_device (block),
+                                                     udisks_block_get_device (block),
                                                      error->message,
                                                      g_quark_to_string (error->domain),
                                                      error->code);
               g_error_free (error);
             }
-          udisks_cleanup_unignore_loop (cleanup, udisks_block_device_get_device (block));
+          udisks_cleanup_unignore_loop (cleanup, udisks_block_get_device (block));
           goto out;
         }
-      udisks_cleanup_unignore_loop (cleanup, udisks_block_device_get_device (block));
+      udisks_cleanup_unignore_loop (cleanup, udisks_block_get_device (block));
     }
 
   udisks_notice ("Deleted loop device %s (was backed by %s)",
-                 udisks_block_device_get_device (block),
+                 udisks_block_get_device (block),
                  udisks_loop_get_backing_file (loop));
 
   udisks_loop_complete_delete (loop, invocation);

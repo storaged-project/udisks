@@ -120,15 +120,15 @@ wait_for_cleartext_object (UDisksDaemon *daemon,
                            gpointer      user_data)
 {
   const gchar *crypto_object_path = user_data;
-  UDisksBlockDevice *block;
+  UDisksBlock *block;
   gboolean ret;
 
   ret = FALSE;
-  block = udisks_object_peek_block_device (object);
+  block = udisks_object_peek_block (object);
   if (block == NULL)
     goto out;
 
-  if (g_strcmp0 (udisks_block_device_get_crypto_backing_device (block), crypto_object_path) == 0)
+  if (g_strcmp0 (udisks_block_get_crypto_backing_device (block), crypto_object_path) == 0)
     ret = TRUE;
 
  out:
@@ -138,7 +138,7 @@ wait_for_cleartext_object (UDisksDaemon *daemon,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-check_crypttab (UDisksBlockDevice   *block,
+check_crypttab (UDisksBlock   *block,
                 gboolean             load_passphrase,
                 gboolean            *out_found,
                 gchar              **out_name,
@@ -151,7 +151,7 @@ check_crypttab (UDisksBlockDevice   *block,
   const gchar *type;
   GVariant *details;
 
-  g_variant_iter_init (&iter, udisks_block_device_get_configuration (block));
+  g_variant_iter_init (&iter, udisks_block_get_configuration (block));
   while (g_variant_iter_next (&iter, "(&s@a{sv})", &type, &details))
     {
       if (g_strcmp0 (type, "crypttab") == 0)
@@ -200,14 +200,14 @@ handle_unlock (UDisksEncrypted        *encrypted,
                GVariant               *options)
 {
   UDisksObject *object;
-  UDisksBlockDevice *block;
+  UDisksBlock *block;
   UDisksDaemon *daemon;
   UDisksCleanup *cleanup;
   gchar *error_message;
   gchar *name;
   gchar *escaped_name;
   UDisksObject *cleartext_object;
-  UDisksBlockDevice *cleartext_block;
+  UDisksBlock *cleartext_block;
   GUdevDevice *udev_cleartext_device;
   GError *error;
   uid_t caller_uid;
@@ -225,7 +225,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   cleartext_object = NULL;
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (encrypted)));
-  block = udisks_object_peek_block_device (object);
+  block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   cleanup = udisks_daemon_get_cleanup (daemon);
 
@@ -235,14 +235,14 @@ handle_unlock (UDisksEncrypted        *encrypted,
    */
 
   /* Fail if the device is not a LUKS device */
-  if (!(g_strcmp0 (udisks_block_device_get_id_usage (block), "crypto") == 0 &&
-        g_strcmp0 (udisks_block_device_get_id_type (block), "crypto_LUKS") == 0))
+  if (!(g_strcmp0 (udisks_block_get_id_usage (block), "crypto") == 0 &&
+        g_strcmp0 (udisks_block_get_id_type (block), "crypto_LUKS") == 0))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Device %s does not appear to be a LUKS device",
-                                             udisks_block_device_get_device (block));
+                                             udisks_block_get_device (block));
       goto out;
     }
 
@@ -255,14 +255,14 @@ handle_unlock (UDisksEncrypted        *encrypted,
                                                          NULL); /* error */
   if (cleartext_object != NULL)
     {
-      UDisksBlockDevice *unlocked_block;
-      unlocked_block = udisks_object_peek_block_device (cleartext_object);
+      UDisksBlock *unlocked_block;
+      unlocked_block = udisks_object_peek_block (cleartext_object);
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Device %s is already unlocked as %s",
-                                             udisks_block_device_get_device (block),
-                                             udisks_block_device_get_device (unlocked_block));
+                                             udisks_block_get_device (block),
+                                             udisks_block_get_device (unlocked_block));
       goto out;
     }
 
@@ -292,7 +292,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   /* Now, check that the user is actually authorized to unlock the device.
    */
   action_id = "org.freedesktop.udisks2.encrypted-unlock";
-  if (udisks_block_device_get_hint_system (block) &&
+  if (udisks_block_get_hint_system (block) &&
       !(udisks_daemon_util_setup_by_user (daemon, object, caller_uid)))
     action_id = "org.freedesktop.udisks2.encrypted-unlock-system";
   if (is_in_crypttab)
@@ -309,7 +309,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   if (is_in_crypttab && crypttab_name != NULL)
     name = g_strdup (crypttab_name);
   else
-    name = g_strdup_printf ("LUKS-udisks2-%s", udisks_block_device_get_id_uuid (block));
+    name = g_strdup_printf ("LUKS-udisks2-%s", udisks_block_get_id_uuid (block));
   escaped_name = g_strescape (name, NULL);
 
   /* if available, use and prefer the /etc/crypttab passphrase */
@@ -327,14 +327,14 @@ handle_unlock (UDisksEncrypted        *encrypted,
                                               &error_message,
                                               passphrase,  /* input_string */
                                               "cryptsetup luksOpen \"%s\" \"%s\"",
-                                              udisks_block_device_get_device (block),
+                                              udisks_block_get_device (block),
                                               escaped_name))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error unlocking %s: %s",
-                                             udisks_block_device_get_device (block),
+                                             udisks_block_get_device (block),
                                              error_message);
       goto out;
     }
@@ -351,24 +351,24 @@ handle_unlock (UDisksEncrypted        *encrypted,
     {
       g_prefix_error (&error,
                       "Error waiting for cleartext object after unlocking %s",
-                      udisks_block_device_get_device (block));
+                      udisks_block_get_device (block));
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
-  cleartext_block = udisks_object_peek_block_device (cleartext_object);
+  cleartext_block = udisks_object_peek_block (cleartext_object);
 
   udisks_notice ("Unlocked LUKS device %s as %s",
-                 udisks_block_device_get_device (block),
-                 udisks_block_device_get_device (cleartext_block));
+                 udisks_block_get_device (block),
+                 udisks_block_get_device (cleartext_block));
 
   udev_cleartext_device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (cleartext_object));
 
   /* update the unlocked-luks file */
   if (!udisks_cleanup_add_unlocked_luks (cleanup,
-                                         makedev (udisks_block_device_get_major (cleartext_block),
-                                                  udisks_block_device_get_minor (cleartext_block)),
-                                         makedev (udisks_block_device_get_major (block),
-                                                  udisks_block_device_get_minor (block)),
+                                         makedev (udisks_block_get_major (cleartext_block),
+                                                  udisks_block_get_minor (cleartext_block)),
+                                         makedev (udisks_block_get_major (block),
+                                                  udisks_block_get_minor (block)),
                                          g_udev_device_get_sysfs_attr (udev_cleartext_device, "dm/uuid"),
                                          caller_uid,
                                          &error))
@@ -402,14 +402,14 @@ handle_lock (UDisksEncrypted        *encrypted,
              GVariant               *options)
 {
   UDisksObject *object;
-  UDisksBlockDevice *block;
+  UDisksBlock *block;
   UDisksDaemon *daemon;
   UDisksCleanup *cleanup;
   gchar *error_message;
   gchar *name;
   gchar *escaped_name;
   UDisksObject *cleartext_object;
-  UDisksBlockDevice *cleartext_block;
+  UDisksBlock *cleartext_block;
   GUdevDevice *device;
   uid_t unlocked_by_uid;
   dev_t cleartext_device_from_file;
@@ -425,7 +425,7 @@ handle_lock (UDisksEncrypted        *encrypted,
   device = NULL;
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (encrypted)));
-  block = udisks_object_peek_block_device (object);
+  block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   cleanup = udisks_daemon_get_cleanup (daemon);
 
@@ -435,14 +435,14 @@ handle_lock (UDisksEncrypted        *encrypted,
    */
 
   /* Fail if the device is not a LUKS device */
-  if (!(g_strcmp0 (udisks_block_device_get_id_usage (block), "crypto") == 0 &&
-        g_strcmp0 (udisks_block_device_get_id_type (block), "crypto_LUKS") == 0))
+  if (!(g_strcmp0 (udisks_block_get_id_usage (block), "crypto") == 0 &&
+        g_strcmp0 (udisks_block_get_id_type (block), "crypto_LUKS") == 0))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Device %s does not appear to be a LUKS device",
-                                             udisks_block_device_get_device (block));
+                                             udisks_block_get_device (block));
       goto out;
     }
 
@@ -459,15 +459,15 @@ handle_lock (UDisksEncrypted        *encrypted,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Device %s is not unlocked",
-                                             udisks_block_device_get_device (block));
+                                             udisks_block_get_device (block));
       goto out;
     }
-  cleartext_block = udisks_object_peek_block_device (cleartext_object);
+  cleartext_block = udisks_object_peek_block (cleartext_object);
 
   error = NULL;
   cleartext_device_from_file = udisks_cleanup_find_unlocked_luks (cleanup,
-                                                                  makedev (udisks_block_device_get_major (block),
-                                                                           udisks_block_device_get_minor (block)),
+                                                                  makedev (udisks_block_get_major (block),
+                                                                           udisks_block_get_minor (block)),
                                                                   &unlocked_by_uid,
                                                                   &error);
   if (error != NULL)
@@ -476,7 +476,7 @@ handle_lock (UDisksEncrypted        *encrypted,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error when looking for entry `%s' in unlocked-luks: %s (%s, %d)",
-                                             udisks_block_device_get_device (block),
+                                             udisks_block_get_device (block),
                                              error->message,
                                              g_quark_to_string (error->domain),
                                              error->code);
@@ -518,14 +518,14 @@ handle_lock (UDisksEncrypted        *encrypted,
   if (cleartext_device_from_file != 0)
     {
       if (!udisks_cleanup_ignore_unlocked_luks (cleanup,
-                                                makedev (udisks_block_device_get_major (cleartext_block),
-                                                         udisks_block_device_get_minor (cleartext_block))))
+                                                makedev (udisks_block_get_major (cleartext_block),
+                                                         udisks_block_get_minor (cleartext_block))))
         {
           g_dbus_method_invocation_return_error (invocation,
                                                  UDISKS_ERROR,
                                                  UDISKS_ERROR_ALREADY_UNMOUNTING,
                                                  "Cannot lock %s as it's already being locked",
-                                                 udisks_block_device_get_device (block));
+                                                 udisks_block_get_device (block));
           goto out;
         }
     }
@@ -543,15 +543,15 @@ handle_lock (UDisksEncrypted        *encrypted,
       if (cleartext_device_from_file != 0)
         {
           udisks_cleanup_unignore_unlocked_luks (cleanup,
-                                                 makedev (udisks_block_device_get_major (cleartext_block),
-                                                          udisks_block_device_get_minor (cleartext_block)));
+                                                 makedev (udisks_block_get_major (cleartext_block),
+                                                          udisks_block_get_minor (cleartext_block)));
         }
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error locking %s (%s): %s",
-                                             udisks_block_device_get_device (cleartext_block),
-                                             udisks_block_device_get_device (block),
+                                             udisks_block_get_device (cleartext_block),
+                                             udisks_block_get_device (block),
                                              error_message);
       goto out;
     }
@@ -561,8 +561,8 @@ handle_lock (UDisksEncrypted        *encrypted,
     {
       error = NULL;
       if (!udisks_cleanup_remove_unlocked_luks (cleanup,
-                                                makedev (udisks_block_device_get_major (cleartext_block),
-                                                         udisks_block_device_get_minor (cleartext_block)),
+                                                makedev (udisks_block_get_major (cleartext_block),
+                                                         udisks_block_get_minor (cleartext_block)),
                                                 &error))
         {
           if (error == NULL)
@@ -571,7 +571,7 @@ handle_lock (UDisksEncrypted        *encrypted,
                                                      UDISKS_ERROR,
                                                      UDISKS_ERROR_FAILED,
                                                      "Error removing entry for `%s' from unlocked-luks: Entry not found",
-                                                     udisks_block_device_get_device (cleartext_block));
+                                                     udisks_block_get_device (cleartext_block));
             }
           else
             {
@@ -579,25 +579,25 @@ handle_lock (UDisksEncrypted        *encrypted,
                                                      UDISKS_ERROR,
                                                      UDISKS_ERROR_FAILED,
                                                      "Error removing entry for `%s' from unlocked-luks: %s (%s, %d)",
-                                                     udisks_block_device_get_device (cleartext_block),
+                                                     udisks_block_get_device (cleartext_block),
                                                      error->message,
                                                      g_quark_to_string (error->domain),
                                                      error->code);
               g_error_free (error);
             }
           udisks_cleanup_unignore_unlocked_luks (cleanup,
-                                                 makedev (udisks_block_device_get_major (cleartext_block),
-                                                          udisks_block_device_get_minor (cleartext_block)));
+                                                 makedev (udisks_block_get_major (cleartext_block),
+                                                          udisks_block_get_minor (cleartext_block)));
           goto out;
         }
       udisks_cleanup_unignore_unlocked_luks (cleanup,
-                                             makedev (udisks_block_device_get_major (cleartext_block),
-                                                      udisks_block_device_get_minor (cleartext_block)));
+                                             makedev (udisks_block_get_major (cleartext_block),
+                                                      udisks_block_get_minor (cleartext_block)));
     }
 
   udisks_notice ("Locked LUKS device %s (was unlocked as %s)",
-                 udisks_block_device_get_device (block),
-                 udisks_block_device_get_device (cleartext_block));
+                 udisks_block_get_device (block),
+                 udisks_block_get_device (cleartext_block));
 
   udisks_encrypted_complete_lock (encrypted, invocation);
 

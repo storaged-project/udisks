@@ -62,7 +62,7 @@ UDisksObject             *udisks_daemon_wait_for_object_sync  (UDisksDaemon     
                                                                guint                 timeout_seconds,
                                                                GError              **error);
 
-UDisksObject             *udisks_daemon_find_block_device     (UDisksDaemon         *daemon,
+UDisksObject             *udisks_daemon_find_block            (UDisksDaemon         *daemon,
                                                                dev_t                 block_device_number);
 
 UDisksObject             *udisks_daemon_find_object           (UDisksDaemon         *daemon,

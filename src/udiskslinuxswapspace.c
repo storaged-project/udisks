@@ -156,12 +156,12 @@ handle_start (UDisksSwapspace        *swapspace,
 {
   UDisksObject *object;
   UDisksDaemon *daemon;
-  UDisksBlockDevice *block;
+  UDisksBlock *block;
   UDisksBaseJob *job;
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (swapspace)));
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
-  block = udisks_object_peek_block_device (object);
+  block = udisks_object_peek_block (object);
 
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
@@ -177,7 +177,7 @@ handle_start (UDisksSwapspace        *swapspace,
                                           0,    /* uid_t run_as_euid */
                                           NULL, /* input_string */
                                           "swapon %s",
-                                          udisks_block_device_get_device (block));
+                                          udisks_block_get_device (block));
   g_signal_connect (job,
                     "completed",
                     G_CALLBACK (swapspace_start_on_job_completed),
@@ -213,12 +213,12 @@ handle_stop (UDisksSwapspace        *swapspace,
 {
   UDisksObject *object;
   UDisksDaemon *daemon;
-  UDisksBlockDevice *block;
+  UDisksBlock *block;
   UDisksBaseJob *job;
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (swapspace)));
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
-  block = udisks_object_peek_block_device (object);
+  block = udisks_object_peek_block (object);
 
   /* Now, check that the user is actually authorized to stop the swap space.
    *
@@ -239,7 +239,7 @@ handle_stop (UDisksSwapspace        *swapspace,
                                           0,    /* uid_t run_as_euid */
                                           NULL, /* input_string */
                                           "swapoff %s",
-                                          udisks_block_device_get_device (block));
+                                          udisks_block_get_device (block));
   g_signal_connect (job,
                     "completed",
                     G_CALLBACK (swapspace_stop_on_job_completed),

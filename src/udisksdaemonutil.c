@@ -304,7 +304,7 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
                                   uid_t         user)
 {
   gboolean ret;
-  UDisksBlockDevice *block;
+  UDisksBlock *block;
   UDisksCleanup *cleanup;
   uid_t setup_by_user;
   UDisksObject *crypto_object;
@@ -312,12 +312,12 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
   ret = FALSE;
 
   cleanup = udisks_daemon_get_cleanup (daemon);
-  block = udisks_object_peek_block_device (object);
+  block = udisks_object_peek_block (object);
   if (block == NULL)
     goto out;
 
   /* loop devices */
-  if (udisks_cleanup_has_loop (cleanup, udisks_block_device_get_device (block), &setup_by_user, NULL))
+  if (udisks_cleanup_has_loop (cleanup, udisks_block_get_device (block), &setup_by_user, NULL))
     {
       if (setup_by_user == user)
         {
@@ -327,14 +327,14 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
     }
 
   /* LUKS devices */
-  crypto_object = udisks_daemon_find_object (daemon, udisks_block_device_get_crypto_backing_device (block));
+  crypto_object = udisks_daemon_find_object (daemon, udisks_block_get_crypto_backing_device (block));
   if (crypto_object != NULL)
     {
-      UDisksBlockDevice *crypto_block;
-      crypto_block = udisks_object_peek_block_device (crypto_object);
+      UDisksBlock *crypto_block;
+      crypto_block = udisks_object_peek_block (crypto_object);
       if (udisks_cleanup_find_unlocked_luks (cleanup,
-                                             makedev (udisks_block_device_get_major (crypto_block),
-                                                      udisks_block_device_get_minor (crypto_block)),
+                                             makedev (udisks_block_get_major (crypto_block),
+                                                      udisks_block_get_minor (crypto_block)),
                                              &setup_by_user, NULL))
         {
           if (setup_by_user == user)
@@ -372,7 +372,7 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
  *
  * The follow variables can be used in @message
  *
- * - udisks2.device - If @object has a #UDisksBlockDevice interface, this property is set to the value of the #UDisksBlockDevice::preferred-device property.
+ * - udisks2.device - If @object has a #UDisksBlock interface, this property is set to the value of the #UDisksBlock::preferred-device property.
  *
  * Returns: %TRUE if caller is authorized, %FALSE if not.
  */
@@ -390,7 +390,7 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
   PolkitAuthorizationResult *result;
   GError *error;
   gboolean ret;
-  UDisksBlockDevice *block;
+  UDisksBlock *block;
   gboolean auth_no_user_interaction;
 
   ret = FALSE;
@@ -418,9 +418,9 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
   /* setup other details that @message can use */
   if (object != NULL)
     {
-      block = udisks_object_peek_block_device (object);
+      block = udisks_object_peek_block (object);
       if (block != NULL)
-        polkit_details_insert (details, "udisks2.device", udisks_block_device_get_preferred_device (block));
+        polkit_details_insert (details, "udisks2.device", udisks_block_get_preferred_device (block));
     }
 
   error = NULL;

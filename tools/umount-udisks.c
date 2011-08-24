@@ -31,8 +31,8 @@
 #include <udisks/udisks.h>
 
 static UDisksObject *
-lookup_object_for_block_device (UDisksClient  *client,
-                                dev_t          block_device)
+lookup_object_for_block (UDisksClient  *client,
+                         dev_t          block_device)
 {
   UDisksObject *ret;
   GList *objects;
@@ -44,13 +44,13 @@ lookup_object_for_block_device (UDisksClient  *client,
   for (l = objects; l != NULL; l = l->next)
     {
       UDisksObject *object = UDISKS_OBJECT (l->data);
-      UDisksBlockDevice *block;
+      UDisksBlock *block;
 
-      block = udisks_object_peek_block_device (object);
+      block = udisks_object_peek_block (object);
       if (block != NULL)
         {
-          if (block_device == makedev (udisks_block_device_get_major (block),
-                                       udisks_block_device_get_minor (block)))
+          if (block_device == makedev (udisks_block_get_major (block),
+                                       udisks_block_get_minor (block)))
             {
               ret = g_object_ref (object);
               goto out;
@@ -110,7 +110,7 @@ main (int argc, char *argv[])
       goto out;
     }
 
-  object = lookup_object_for_block_device (client, block_device);
+  object = lookup_object_for_block (client, block_device);
   if (object == NULL)
     {
       g_printerr ("Error finding object for block device %d:%d\n", major (block_device), minor (block_device));

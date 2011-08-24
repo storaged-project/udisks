@@ -449,7 +449,7 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
 
 /*
  * calculate_fs_type: <internal>
- * @block: A #UDisksBlockDevice.
+ * @block: A #UDisksBlock.
  * @given_options: The a{sv} #GVariant.
  * @error: Return location for error or %NULL.
  *
@@ -458,7 +458,7 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
  * Returns: A valid UTF-8 string with the filesystem type (may be "auto") or %NULL if @error is set. Free with g_free().
  */
 static gchar *
-calculate_fs_type (UDisksBlockDevice         *block,
+calculate_fs_type (UDisksBlock               *block,
                    GVariant                  *given_options,
                    GError                   **error)
 {
@@ -468,7 +468,7 @@ calculate_fs_type (UDisksBlockDevice         *block,
 
   probed_fs_type = NULL;
   if (block != NULL)
-    probed_fs_type = udisks_block_device_get_id_type (block);
+    probed_fs_type = udisks_block_get_id_type (block);
 
   fs_type_to_use = NULL;
   if (g_variant_lookup (given_options,
@@ -494,7 +494,7 @@ calculate_fs_type (UDisksBlockDevice         *block,
 
 /*
  * calculate_mount_options: <internal>
- * @block: A #UDisksBlockDevice.
+ * @block: A #UDisksBlock.
  * @caller_uid: The uid of the caller making the request.
  * @fs_type: The filesystem type to use or %NULL.
  * @options: Options requested by the caller.
@@ -506,7 +506,7 @@ calculate_fs_type (UDisksBlockDevice         *block,
  * Returns: A string with mount options or %NULL if @error is set. Free with g_free().
  */
 static gchar *
-calculate_mount_options (UDisksBlockDevice         *block,
+calculate_mount_options (UDisksBlock               *block,
                          uid_t                      caller_uid,
                          const gchar               *fs_type,
                          GVariant                  *options,
@@ -601,7 +601,7 @@ ensure_utf8 (const gchar *s)
 
 /*
  * calculate_mount_point: <internal>
- * @block: A #UDisksBlockDevice.
+ * @block: A #UDisksBlock.
  * @fs_type: The file system type to mount with
  * @error: Return location for error or %NULL.
  *
@@ -610,7 +610,7 @@ ensure_utf8 (const gchar *s)
  * Returns: A UTF-8 string with the mount point to use or %NULL if @error is set. Free with g_free().
  */
 static gchar *
-calculate_mount_point (UDisksBlockDevice         *block,
+calculate_mount_point (UDisksBlock               *block,
                        const gchar               *fs_type,
                        GError                   **error)
 {
@@ -626,8 +626,8 @@ calculate_mount_point (UDisksBlockDevice         *block,
   uuid = NULL;
   if (block != NULL)
     {
-      label = udisks_block_device_get_id_label (block);
-      uuid = udisks_block_device_get_id_uuid (block);
+      label = udisks_block_get_id_label (block);
+      uuid = udisks_block_get_id_uuid (block);
     }
 
   /* NOTE: UTF-8 has the nice property that valid UTF-8 strings only contains
@@ -694,7 +694,7 @@ calculate_mount_point (UDisksBlockDevice         *block,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-is_in_fstab (UDisksBlockDevice  *block,
+is_in_fstab (UDisksBlock        *block,
              const gchar        *fstab_path,
              gchar             **out_mount_point)
 {
@@ -749,8 +749,8 @@ is_in_fstab (UDisksBlockDevice  *block,
 
       /* udisks_debug ("device %d:%d for entry %s", major (sb.st_rdev), minor (sb.st_rdev), m->mnt_fsname); */
 
-      if (makedev (udisks_block_device_get_major (block),
-                   udisks_block_device_get_minor (block)) == sb.st_rdev)
+      if (makedev (udisks_block_get_major (block),
+                   udisks_block_get_minor (block)) == sb.st_rdev)
         {
           ret = TRUE;
           if (out_mount_point != NULL)
@@ -773,7 +773,7 @@ is_in_fstab (UDisksBlockDevice  *block,
  * TODO: check if systemd has a specific "unit" for the device
  */
 static gboolean
-is_system_managed (UDisksBlockDevice  *block,
+is_system_managed (UDisksBlock        *block,
                    gchar             **out_mount_point)
 {
   gboolean ret;
@@ -799,7 +799,7 @@ handle_mount (UDisksFilesystem       *filesystem,
               GVariant               *options)
 {
   UDisksObject *object;
-  UDisksBlockDevice *block;
+  UDisksBlock *block;
   UDisksDaemon *daemon;
   UDisksCleanup *cleanup;
   uid_t caller_uid;
@@ -827,7 +827,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   system_managed = FALSE;
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem)));
-  block = udisks_object_peek_block_device (object);
+  block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   cleanup = udisks_daemon_get_cleanup (daemon);
 
@@ -854,7 +854,7 @@ handle_mount (UDisksFilesystem       *filesystem,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_ALREADY_MOUNTED,
                                              "Device %s is already mounted at %s.\n",
-                                             udisks_block_device_get_device (block),
+                                             udisks_block_get_device (block),
                                              str->str);
       g_string_free (str, TRUE);
       goto out;
@@ -885,7 +885,7 @@ handle_mount (UDisksFilesystem       *filesystem,
                                                      UDISKS_ERROR_FAILED,
                                                      "Error creating directory `%s' to be used for mounting %s: %m",
                                                      mount_point_to_use,
-                                                     udisks_block_device_get_device (block));
+                                                     udisks_block_get_device (block));
               goto out;
             }
         }
@@ -922,19 +922,19 @@ handle_mount (UDisksFilesystem       *filesystem,
                                                  UDISKS_ERROR,
                                                  UDISKS_ERROR_FAILED,
                                                  "Error mounting system-managed device %s: %s",
-                                                 udisks_block_device_get_device (block),
+                                                 udisks_block_get_device (block),
                                                  error_message);
           goto out;
         }
       udisks_notice ("Mounted %s (system) at %s on behalf of uid %d",
-                     udisks_block_device_get_device (block),
+                     udisks_block_get_device (block),
                      mount_point_to_use,
                      caller_uid);
 
       /* update the mounted-fs file */
       if (!udisks_cleanup_add_mounted_fs (cleanup,
                                           mount_point_to_use,
-                                          makedev (udisks_block_device_get_major (block), udisks_block_device_get_minor (block)),
+                                          makedev (udisks_block_get_major (block), udisks_block_get_minor (block)),
                                           caller_uid,
                                           TRUE, /* fstab_mounted */
                                           &error))
@@ -958,7 +958,7 @@ handle_mount (UDisksFilesystem       *filesystem,
    */
   probed_fs_usage = NULL;
   if (block != NULL)
-    probed_fs_usage = udisks_block_device_get_id_usage (block);
+    probed_fs_usage = udisks_block_get_id_usage (block);
   if (probed_fs_usage != NULL && strlen (probed_fs_usage) > 0 &&
       g_strcmp0 (probed_fs_usage, "filesystem") != 0)
     {
@@ -966,7 +966,7 @@ handle_mount (UDisksFilesystem       *filesystem,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Cannot mount block device %s with probed usage `%s' - expected `filesystem'",
-                                             udisks_block_device_get_device (block),
+                                             udisks_block_get_device (block),
                                              probed_fs_usage);
       goto out;
     }
@@ -1002,7 +1002,7 @@ handle_mount (UDisksFilesystem       *filesystem,
    * may be racing with other threads...
    */
   action_id = "org.freedesktop.udisks2.filesystem-mount";
-  if (udisks_block_device_get_hint_system (block) &&
+  if (udisks_block_get_hint_system (block) &&
       !(udisks_daemon_util_setup_by_user (daemon, object, caller_uid)))
     action_id = "org.freedesktop.udisks2.filesystem-mount-system";
   if (!udisks_daemon_util_check_authorization_sync (daemon,
@@ -1039,7 +1039,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   /* update the mounted-fs file */
   if (!udisks_cleanup_add_mounted_fs (cleanup,
                                       mount_point_to_use,
-                                      makedev (udisks_block_device_get_major (block), udisks_block_device_get_minor (block)),
+                                      makedev (udisks_block_get_major (block), udisks_block_get_minor (block)),
                                       caller_uid,
                                       FALSE, /* fstab_mounted */
                                       &error))
@@ -1063,7 +1063,7 @@ handle_mount (UDisksFilesystem       *filesystem,
                                               "mount -t \"%s\" -o \"%s\" \"%s\" \"%s\"",
                                               escaped_fs_type_to_use,
                                               escaped_mount_options_to_use,
-                                              udisks_block_device_get_device (block),
+                                              udisks_block_get_device (block),
                                               escaped_mount_point_to_use))
     {
       /* ugh, something went wrong.. we need to clean up the created mount point
@@ -1092,14 +1092,14 @@ handle_mount (UDisksFilesystem       *filesystem,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error mounting %s at %s: %s",
-                                             udisks_block_device_get_device (block),
+                                             udisks_block_get_device (block),
                                              mount_point_to_use,
                                              error_message);
       goto out;
     }
 
   udisks_notice ("Mounted %s at %s on behalf of uid %d",
-                 udisks_block_device_get_device (block),
+                 udisks_block_get_device (block),
                  mount_point_to_use,
                  caller_uid);
 
@@ -1126,7 +1126,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
                 GVariant               *options)
 {
   UDisksObject *object;
-  UDisksBlockDevice *block;
+  UDisksBlock *block;
   UDisksDaemon *daemon;
   UDisksCleanup *cleanup;
   gchar *mount_point;
@@ -1147,7 +1147,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
   opt_force = FALSE;
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem)));
-  block = udisks_object_peek_block_device (object);
+  block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   cleanup = udisks_daemon_get_cleanup (daemon);
   system_managed = FALSE;
@@ -1167,7 +1167,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_NOT_MOUNTED,
                                              "Device `%s' is not mounted",
-                                             udisks_block_device_get_device (block));
+                                             udisks_block_get_device (block));
       goto out;
     }
 
@@ -1230,12 +1230,12 @@ handle_unmount (UDisksFilesystem       *filesystem,
                                                  UDISKS_ERROR,
                                                  UDISKS_ERROR_FAILED,
                                                  "Error unmounting system-managed device %s: %s",
-                                                 udisks_block_device_get_device (block),
+                                                 udisks_block_get_device (block),
                                                  error_message);
           goto out;
         }
       udisks_notice ("Unmounted %s (system) from %s on behalf of uid %d",
-                     udisks_block_device_get_device (block),
+                     udisks_block_get_device (block),
                      mount_point,
                      caller_uid);
       udisks_filesystem_complete_unmount (filesystem, invocation);
@@ -1244,7 +1244,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
 
   error = NULL;
   mount_point = udisks_cleanup_find_mounted_fs (cleanup,
-                                                makedev (udisks_block_device_get_major (block), udisks_block_device_get_minor (block)),
+                                                makedev (udisks_block_get_major (block), udisks_block_get_minor (block)),
                                                 &mounted_by_uid,
                                                 &fstab_mounted,
                                                 &error);
@@ -1254,7 +1254,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error when looking for entry `%s' in mounted-fs: %s (%s, %d)",
-                                             udisks_block_device_get_device (block),
+                                             udisks_block_get_device (block),
                                              error->message,
                                              g_quark_to_string (error->domain),
                                              error->code);
@@ -1289,7 +1289,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
                                                  UDISKS_ERROR,
                                                  UDISKS_ERROR_ALREADY_UNMOUNTING,
                                                  "Cannot unmount %s: Mount point `%s' is currently being unmounted",
-                                                 udisks_block_device_get_device (block),
+                                                 udisks_block_get_device (block),
                                                  mount_point);
           goto out;
         }
@@ -1317,7 +1317,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
                                                   NULL,  /* input_string */
                                                   "umount %s \"%s\"",
                                                   opt_force ? "-l" : "",
-                                                  udisks_block_device_get_device (block));
+                                                  udisks_block_get_device (block));
     }
 
   if (!rc)
@@ -1326,7 +1326,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error unmounting %s: %s",
-                                             udisks_block_device_get_device (block),
+                                             udisks_block_get_device (block),
                                              error_message);
       udisks_cleanup_unignore_mounted_fs (cleanup, mount_point);
       goto out;
@@ -1380,7 +1380,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
     }
 
   udisks_notice ("Unmounted %s on behalf of uid %d",
-                 udisks_block_device_get_device (block),
+                 udisks_block_get_device (block),
                  caller_uid);
 
   udisks_filesystem_complete_unmount (filesystem, invocation);
@@ -1422,7 +1422,7 @@ handle_set_label (UDisksFilesystem       *filesystem,
                   const gchar            *label,
                   GVariant               *options)
 {
-  UDisksBlockDevice *block;
+  UDisksBlock *block;
   UDisksObject *object;
   UDisksDaemon *daemon;
   const gchar *probed_fs_usage;
@@ -1439,10 +1439,10 @@ handle_set_label (UDisksFilesystem       *filesystem,
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem)));
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
-  block = udisks_object_peek_block_device (object);
+  block = udisks_object_peek_block (object);
 
-  probed_fs_usage = udisks_block_device_get_id_usage (block);
-  probed_fs_type = udisks_block_device_get_id_type (block);
+  probed_fs_usage = udisks_block_get_id_usage (block);
+  probed_fs_type = udisks_block_get_id_type (block);
 
   /* TODO: add support for other fstypes */
   if (!(g_strcmp0 (probed_fs_usage, "filesystem") == 0 &&
@@ -1480,7 +1480,7 @@ handle_set_label (UDisksFilesystem       *filesystem,
     }
 
   action_id = "org.freedesktop.udisks2.modify-device";
-  if (udisks_block_device_get_hint_system (block))
+  if (udisks_block_get_hint_system (block))
     action_id = "org.freedesktop.udisks2.modify-device-system";
 
   /* Check that the user is actually authorized to change the
@@ -1501,7 +1501,7 @@ handle_set_label (UDisksFilesystem       *filesystem,
                                           0,    /* uid_t run_as_euid */
                                           NULL, /* input_string */
                                           "e2label %s %s",
-                                          udisks_block_device_get_device (block),
+                                          udisks_block_get_device (block),
                                           escaped_label);
   g_signal_connect (job,
                     "completed",

@@ -215,17 +215,17 @@ wait_for_loop_object (UDisksDaemon *daemon,
                       gpointer      user_data)
 {
   WaitForLoopData *data = user_data;
-  UDisksBlockDevice *block;
+  UDisksBlock *block;
   UDisksLoop *loop;
   gboolean ret;
 
   ret = FALSE;
-  block = udisks_object_peek_block_device (object);
+  block = udisks_object_peek_block (object);
   loop = udisks_object_peek_loop (object);
   if (block == NULL || loop == NULL)
     goto out;
 
-  if (g_strcmp0 (udisks_block_device_get_device (block), data->loop_device) != 0)
+  if (g_strcmp0 (udisks_block_get_device (block), data->loop_device) != 0)
     goto out;
 
   if (g_strcmp0 (udisks_loop_get_backing_file (loop), data->path) != 0)

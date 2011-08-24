@@ -298,7 +298,7 @@ handle_smart_update (UDisksDriveAta        *_drive,
   UDisksLinuxDriveAta *drive = UDISKS_LINUX_DRIVE_ATA (_drive);
   UDisksLinuxDriveObject *object;
   UDisksLinuxBlockObject *block_object;
-  UDisksBlockDevice *block;
+  UDisksBlock *block;
   UDisksDaemon *daemon;
   const gchar *action_id;
   gboolean nowakeup;
@@ -318,7 +318,7 @@ handle_smart_update (UDisksDriveAta        *_drive,
                                              "Unable to find physical block device for drive");
       goto out;
     }
-  block = udisks_object_peek_block_device (UDISKS_OBJECT (block_object));
+  block = udisks_object_peek_block (UDISKS_OBJECT (block_object));
 
   g_variant_lookup (options,
                     "nowakeup",
@@ -327,7 +327,7 @@ handle_smart_update (UDisksDriveAta        *_drive,
 
   /* TODO: is it a good idea to overload modify-device? */
   action_id = "org.freedesktop.udisks2.modify-device";
-  if (udisks_block_device_get_hint_system (block))
+  if (udisks_block_get_hint_system (block))
     action_id = "org.freedesktop.udisks2.modify-device-system";
 
   /* Check that the user is actually authorized */

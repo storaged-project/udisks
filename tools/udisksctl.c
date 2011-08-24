@@ -402,21 +402,21 @@ lookup_object_by_device (const gchar *device)
   for (l = objects; l != NULL; l = l->next)
     {
       UDisksObject *object = UDISKS_OBJECT (l->data);
-      UDisksBlockDevice *block;
+      UDisksBlock *block;
 
-      block = udisks_object_peek_block_device (object);
+      block = udisks_object_peek_block (object);
       if (block != NULL)
         {
           const gchar * const *symlinks;
           guint n;
 
-          if (g_strcmp0 (udisks_block_device_get_device (block), device) == 0)
+          if (g_strcmp0 (udisks_block_get_device (block), device) == 0)
             {
               ret = g_object_ref (object);
               goto out;
             }
 
-          symlinks = udisks_block_device_get_symlinks (block);
+          symlinks = udisks_block_get_symlinks (block);
           for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
             {
               if (g_strcmp0 (symlinks[n], device) == 0)
@@ -592,7 +592,7 @@ handle_command_mount_unmount (gint        *argc,
   GList *l;
   GList *objects;
   UDisksObject *object;
-  UDisksBlockDevice *block;
+  UDisksBlock *block;
   UDisksFilesystem *filesystem;
   guint n;
   const gchar * const *mount_points;
@@ -668,7 +668,7 @@ handle_command_mount_unmount (gint        *argc,
           gboolean is_mounted;
 
           object = UDISKS_OBJECT (l->data);
-          block = udisks_object_peek_block_device (object);
+          block = udisks_object_peek_block (object);
           filesystem = udisks_object_peek_filesystem (object);
 
           if (filesystem == NULL)
@@ -697,7 +697,7 @@ handle_command_mount_unmount (gint        *argc,
       for (l = objects; l != NULL; l = l->next)
         {
           object = UDISKS_OBJECT (l->data);
-          block = udisks_object_peek_block_device (object);
+          block = udisks_object_peek_block (object);
           filesystem = udisks_object_peek_filesystem (object);
 
           if (block != NULL)
@@ -715,8 +715,8 @@ handle_command_mount_unmount (gint        *argc,
               if ((is_mount && !is_mounted) || (!is_mount && is_mounted))
                 {
                   const gchar * const *symlinks;
-                  g_print ("%s \n", udisks_block_device_get_device (block));
-                  symlinks = udisks_block_device_get_symlinks (block);
+                  g_print ("%s \n", udisks_block_get_device (block));
+                  symlinks = udisks_block_get_symlinks (block);
                   for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
                     g_print ("%s \n", symlinks[n]);
                 }
@@ -757,7 +757,7 @@ handle_command_mount_unmount (gint        *argc,
       goto out;
     }
 
-  block = udisks_object_peek_block_device (object);
+  block = udisks_object_peek_block (object);
   filesystem = udisks_object_peek_filesystem (object);
   if (filesystem == NULL)
     {
@@ -824,14 +824,14 @@ handle_command_mount_unmount (gint        *argc,
               goto try_again;
             }
           g_printerr ("Error mounting %s: %s\n",
-                      udisks_block_device_get_device (block),
+                      udisks_block_get_device (block),
                       error->message);
           g_error_free (error);
           g_object_unref (object);
           goto out;
         }
       g_print ("Mounted %s at %s.\n",
-               udisks_block_device_get_device (block),
+               udisks_block_get_device (block),
                mount_path);
       g_free (mount_path);
     }
@@ -853,14 +853,14 @@ handle_command_mount_unmount (gint        *argc,
               goto try_again;
             }
           g_printerr ("Error unmounting %s: %s\n",
-                      udisks_block_device_get_device (block),
+                      udisks_block_get_device (block),
                       error->message);
           g_error_free (error);
           g_object_unref (object);
           goto out;
         }
       g_print ("Unmounted %s.\n",
-               udisks_block_device_get_device (block));
+               udisks_block_get_device (block));
     }
 
   ret = 0;
@@ -965,12 +965,12 @@ encrypted_is_unlocked (UDisksObject *encrypted_object)
   for (l = objects; l != NULL; l = l->next)
     {
       UDisksObject *object = UDISKS_OBJECT (l->data);
-      UDisksBlockDevice *block;
+      UDisksBlock *block;
 
-      block = udisks_object_peek_block_device (object);
+      block = udisks_object_peek_block (object);
       if (block != NULL)
         {
-          if (g_strcmp0 (udisks_block_device_get_crypto_backing_device (block), encrypted_object_path) == 0)
+          if (g_strcmp0 (udisks_block_get_crypto_backing_device (block), encrypted_object_path) == 0)
             {
               ret = TRUE;
               goto out;
@@ -1072,7 +1072,7 @@ handle_command_unlock_lock (gint        *argc,
   GList *l;
   GList *objects;
   UDisksObject *object;
-  UDisksBlockDevice *block;
+  UDisksBlock *block;
   UDisksEncrypted *encrypted;
   guint n;
   GVariant *options;
@@ -1146,7 +1146,7 @@ handle_command_unlock_lock (gint        *argc,
           gboolean is_unlocked;
 
           object = UDISKS_OBJECT (l->data);
-          block = udisks_object_peek_block_device (object);
+          block = udisks_object_peek_block (object);
           encrypted = udisks_object_peek_encrypted (object);
 
           if (encrypted == NULL)
@@ -1172,7 +1172,7 @@ handle_command_unlock_lock (gint        *argc,
       for (l = objects; l != NULL; l = l->next)
         {
           object = UDISKS_OBJECT (l->data);
-          block = udisks_object_peek_block_device (object);
+          block = udisks_object_peek_block (object);
 
           if (block != NULL)
             {
@@ -1184,8 +1184,8 @@ handle_command_unlock_lock (gint        *argc,
               if ((is_unlock && !is_unlocked) || (!is_unlock && is_unlocked))
                 {
                   const gchar * const *symlinks;
-                  g_print ("%s \n", udisks_block_device_get_device (block));
-                  symlinks = udisks_block_device_get_symlinks (block);
+                  g_print ("%s \n", udisks_block_get_device (block));
+                  symlinks = udisks_block_get_symlinks (block);
                   for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
                     g_print ("%s \n", symlinks[n]);
                 }
@@ -1226,7 +1226,7 @@ handle_command_unlock_lock (gint        *argc,
       goto out;
     }
 
-  block = udisks_object_peek_block_device (object);
+  block = udisks_object_peek_block (object);
   encrypted = udisks_object_peek_encrypted (object);
   if (encrypted == NULL)
     {
@@ -1271,7 +1271,7 @@ handle_command_unlock_lock (gint        *argc,
               goto try_again;
             }
           g_printerr ("Error unlocking %s: %s\n",
-                      udisks_block_device_get_device (block),
+                      udisks_block_get_device (block),
                       error->message);
           g_error_free (error);
           g_object_unref (object);
@@ -1282,8 +1282,8 @@ handle_command_unlock_lock (gint        *argc,
       cleartext_object = UDISKS_OBJECT (g_dbus_object_manager_get_object (udisks_client_get_object_manager (client),
                                                                           (cleartext_object_path)));
       g_print ("Unlocked %s as %s.\n",
-               udisks_block_device_get_device (block),
-               udisks_block_device_get_device (udisks_object_get_block_device (cleartext_object)));
+               udisks_block_get_device (block),
+               udisks_block_get_device (udisks_object_get_block (cleartext_object)));
       g_object_unref (cleartext_object);
       g_free (cleartext_object_path);
     }
@@ -1305,14 +1305,14 @@ handle_command_unlock_lock (gint        *argc,
               goto try_again;
             }
           g_printerr ("Error locking %s: %s\n",
-                      udisks_block_device_get_device (block),
+                      udisks_block_get_device (block),
                       error->message);
           g_error_free (error);
           g_object_unref (object);
           goto out;
         }
       g_print ("Locked %s.\n",
-               udisks_block_device_get_device (block));
+               udisks_block_get_device (block));
     }
 
   ret = 0;
@@ -1446,7 +1446,7 @@ handle_command_loop (gint        *argc,
   GList *l;
   GList *objects;
   UDisksObject *object;
-  UDisksBlockDevice *block;
+  UDisksBlock *block;
   guint n;
   GVariant *options;
   GVariantBuilder builder;
@@ -1536,7 +1536,7 @@ handle_command_loop (gint        *argc,
               for (l = objects; l != NULL; l = l->next)
                 {
                   object = UDISKS_OBJECT (l->data);
-                  block = udisks_object_peek_block_device (object);
+                  block = udisks_object_peek_block (object);
                   if (udisks_object_peek_loop (object) != NULL)
                     {
                       object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
@@ -1554,12 +1554,12 @@ handle_command_loop (gint        *argc,
               for (l = objects; l != NULL; l = l->next)
                 {
                   object = UDISKS_OBJECT (l->data);
-                  block = udisks_object_peek_block_device (object);
+                  block = udisks_object_peek_block (object);
                   if (udisks_object_peek_loop (object) != NULL)
                     {
                       const gchar * const *symlinks;
-                      g_print ("%s \n", udisks_block_device_get_device (block));
-                      symlinks = udisks_block_device_get_symlinks (block);
+                      g_print ("%s \n", udisks_block_get_device (block));
+                      symlinks = udisks_block_get_symlinks (block);
                       for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
                         g_print ("%s \n", symlinks[n]);
                     }
@@ -1658,7 +1658,7 @@ handle_command_loop (gint        *argc,
                                                                           (resulting_object_path)));
       g_print ("Mapped file %s as %s.\n",
                opt_loop_file,
-               udisks_block_device_get_device (udisks_object_get_block_device (resulting_object)));
+               udisks_block_get_device (udisks_object_get_block (resulting_object)));
       g_object_unref (resulting_object);
       g_free (resulting_object_path);
     }
@@ -1705,7 +1705,7 @@ handle_command_loop (gint        *argc,
               goto delete_try_again;
             }
           g_printerr ("Error deleting loop device %s: %s\n",
-                      udisks_block_device_get_device (udisks_object_peek_block_device (object)),
+                      udisks_block_get_device (udisks_object_peek_block (object)),
                       error->message);
           g_error_free (error);
           goto out;
@@ -1755,7 +1755,7 @@ handle_command_info (gint        *argc,
   GList *l;
   GList *objects;
   UDisksObject *object;
-  UDisksBlockDevice *block;
+  UDisksBlock *block;
   UDisksDrive *drive;
   guint n;
 
@@ -1839,12 +1839,12 @@ handle_command_info (gint        *argc,
       for (l = objects; l != NULL; l = l->next)
         {
           object = UDISKS_OBJECT (l->data);
-          block = udisks_object_peek_block_device (object);
+          block = udisks_object_peek_block (object);
           if (block != NULL)
             {
               const gchar * const *symlinks;
-              g_print ("%s \n", udisks_block_device_get_device (block));
-              symlinks = udisks_block_device_get_symlinks (block);
+              g_print ("%s \n", udisks_block_get_device (block));
+              symlinks = udisks_block_get_symlinks (block);
               for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
                 g_print ("%s \n", symlinks[n]);
             }
@@ -2337,8 +2337,8 @@ handle_command_monitor (gint        *argc,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static GList *
-find_block_devices_for_drive (GList       *objects,
-                              const gchar *drive_object_path)
+find_blocks_for_drive (GList       *objects,
+                       const gchar *drive_object_path)
 {
   GList *ret;
   GList *l;
@@ -2347,13 +2347,13 @@ find_block_devices_for_drive (GList       *objects,
   for (l = objects; l != NULL; l = l->next)
     {
       UDisksObject *object = UDISKS_OBJECT (l->data);
-      UDisksBlockDevice *block;
+      UDisksBlock *block;
 
-      block = udisks_object_get_block_device (object);
+      block = udisks_object_get_block (object);
       if (block == NULL)
         continue;
 
-      if (g_strcmp0 (udisks_block_device_get_drive (block), drive_object_path) == 0)
+      if (g_strcmp0 (udisks_block_get_drive (block), drive_object_path) == 0)
         {
           ret = g_list_append (ret, g_object_ref (block));
         }
@@ -2456,14 +2456,14 @@ handle_command_status (gint        *argc,
     {
       UDisksObject *object = UDISKS_OBJECT (l->data);
       UDisksDrive *drive;
-      GList *block_devices;
+      GList *blocks;
       const gchar *vendor;
       const gchar *model;
       const gchar *revision;
       const gchar *serial;
       gchar *vendor_model;
       GString *str;
-      gchar *block_device;
+      gchar *block;
       GList *j;
 
       drive = udisks_object_peek_drive (object);
@@ -2471,16 +2471,16 @@ handle_command_status (gint        *argc,
         continue;
 
       str = g_string_new (NULL);
-      block_devices = find_block_devices_for_drive (objects, g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
-      for (j = block_devices; j != NULL; j = j->next)
+      blocks = find_blocks_for_drive (objects, g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
+      for (j = blocks; j != NULL; j = j->next)
         {
-          UDisksBlockDevice *block = UDISKS_BLOCK_DEVICE (j->data);
-          if (!udisks_block_device_get_part_entry (block))
+          UDisksBlock *block = UDISKS_BLOCK (j->data);
+          if (!udisks_block_get_part_entry (block))
             {
               const gchar *device_file;
               if (str->len > 0)
                 g_string_append (str, " ");
-              device_file = udisks_block_device_get_device (block);
+              device_file = udisks_block_get_device (block);
               if (g_str_has_prefix (device_file, "/dev/"))
                 g_string_append (str, device_file + 5);
               else
@@ -2489,9 +2489,9 @@ handle_command_status (gint        *argc,
         }
       if (str->len == 0)
         g_string_append (str, "-");
-      block_device = g_string_free (str, FALSE);
-      g_list_foreach (block_devices, (GFunc) g_object_unref, NULL);
-      g_list_free (block_devices);
+      block = g_string_free (str, FALSE);
+      g_list_foreach (blocks, (GFunc) g_object_unref, NULL);
+      g_list_free (blocks);
 
       vendor = udisks_drive_get_vendor (drive);
       model = udisks_drive_get_model (drive);
@@ -2517,8 +2517,8 @@ handle_command_status (gint        *argc,
                vendor_model,
                revision,
                serial,
-               block_device);
-      g_free (block_device);
+               block);
+      g_free (block);
     }
 
 

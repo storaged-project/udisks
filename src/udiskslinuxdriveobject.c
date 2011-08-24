@@ -438,7 +438,7 @@ udisks_linux_drive_object_get_block (UDisksLinuxDriveObject   *object,
   for (l = objects; l != NULL; l = l->next)
     {
       GDBusObjectSkeleton *iter_object = G_DBUS_OBJECT_SKELETON (l->data);
-      UDisksBlockDevice *block;
+      UDisksBlock *block;
       GUdevDevice *device;
       gboolean is_disk;
 
@@ -452,8 +452,8 @@ udisks_linux_drive_object_get_block (UDisksLinuxDriveObject   *object,
       if (!is_disk)
         continue;
 
-      block = udisks_object_peek_block_device (UDISKS_OBJECT (iter_object));
-      if (g_strcmp0 (udisks_block_device_get_drive (block),
+      block = udisks_object_peek_block (UDISKS_OBJECT (iter_object));
+      if (g_strcmp0 (udisks_block_get_drive (block),
                      g_dbus_object_get_object_path (G_DBUS_OBJECT (object))) == 0)
         {
           ret = g_object_ref (iter_object);

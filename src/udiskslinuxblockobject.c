@@ -80,7 +80,7 @@ struct _UDisksLinuxBlockObject
   GUdevDevice *device;
 
   /* interface */
-  UDisksBlockDevice *iface_block_device;
+  UDisksBlock *iface_block_device;
   UDisksFilesystem *iface_filesystem;
   UDisksSwapspace *iface_swapspace;
   UDisksEncrypted *iface_encrypted;
@@ -380,7 +380,7 @@ update_iface (UDisksLinuxBlockObject   *object,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
-/* org.freedesktop.UDisks.BlockDevice */
+/* org.freedesktop.UDisks.Block */
 
 static gboolean
 block_device_check (UDisksLinuxBlockObject *object)
@@ -411,7 +411,7 @@ filesystem_check (UDisksLinuxBlockObject *object)
   UDisksMountType mount_type;
 
   ret = FALSE;
-  if (g_strcmp0 (udisks_block_device_get_id_usage (object->iface_block_device), "filesystem") == 0 ||
+  if (g_strcmp0 (udisks_block_get_id_usage (object->iface_block_device), "filesystem") == 0 ||
       (udisks_mount_monitor_is_dev_in_use (object->mount_monitor,
                                            g_udev_device_get_device_number (object->device),
                                            &mount_type) &&
@@ -445,8 +445,8 @@ swapspace_check (UDisksLinuxBlockObject *object)
   UDisksMountType mount_type;
 
   ret = FALSE;
-  if ((g_strcmp0 (udisks_block_device_get_id_usage (object->iface_block_device), "other") == 0 &&
-       g_strcmp0 (udisks_block_device_get_id_type (object->iface_block_device), "swap") == 0)
+  if ((g_strcmp0 (udisks_block_get_id_usage (object->iface_block_device), "other") == 0 &&
+       g_strcmp0 (udisks_block_get_id_type (object->iface_block_device), "swap") == 0)
       || (udisks_mount_monitor_is_dev_in_use (object->mount_monitor,
                                               g_udev_device_get_device_number (object->device),
                                               &mount_type)
@@ -477,8 +477,8 @@ encrypted_check (UDisksLinuxBlockObject *object)
   gboolean ret;
 
   ret = FALSE;
-  if (g_strcmp0 (udisks_block_device_get_id_usage (object->iface_block_device), "crypto") == 0 &&
-      g_strcmp0 (udisks_block_device_get_id_type (object->iface_block_device), "crypto_LUKS") == 0)
+  if (g_strcmp0 (udisks_block_get_id_usage (object->iface_block_device), "crypto") == 0 &&
+      g_strcmp0 (udisks_block_get_id_type (object->iface_block_device), "crypto_LUKS") == 0)
     ret = TRUE;
 
   return ret;

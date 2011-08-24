@@ -49,9 +49,9 @@
 /**
  * SECTION:udiskslinuxblock
  * @title: UDisksLinuxBlock
- * @short_description: Linux implementation of #UDisksBlockDevice
+ * @short_description: Linux implementation of #UDisksBlock
  *
- * This type provides an implementation of the #UDisksBlockDevice
+ * This type provides an implementation of the #UDisksBlock
  * interface on Linux.
  */
 
@@ -65,18 +65,18 @@ typedef struct _UDisksLinuxBlockClass   UDisksLinuxBlockClass;
  */
 struct _UDisksLinuxBlock
 {
-  UDisksBlockDeviceSkeleton parent_instance;
+  UDisksBlockSkeleton parent_instance;
 };
 
 struct _UDisksLinuxBlockClass
 {
-  UDisksBlockDeviceSkeletonClass parent_class;
+  UDisksBlockSkeletonClass parent_class;
 };
 
-static void block_iface_init (UDisksBlockDeviceIface *iface);
+static void block_iface_init (UDisksBlockIface *iface);
 
-G_DEFINE_TYPE_WITH_CODE (UDisksLinuxBlock, udisks_linux_block, UDISKS_TYPE_BLOCK_DEVICE_SKELETON,
-                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_BLOCK_DEVICE, block_iface_init));
+G_DEFINE_TYPE_WITH_CODE (UDisksLinuxBlock, udisks_linux_block, UDISKS_TYPE_BLOCK_SKELETON,
+                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_BLOCK, block_iface_init));
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -99,11 +99,11 @@ udisks_linux_block_class_init (UDisksLinuxBlockClass *klass)
  *
  * Returns: A new #UDisksLinuxBlock. Free with g_object_unref().
  */
-UDisksBlockDevice *
+UDisksBlock *
 udisks_linux_block_new (void)
 {
-  return UDISKS_BLOCK_DEVICE (g_object_new (UDISKS_TYPE_LINUX_BLOCK,
-                                            NULL));
+  return UDISKS_BLOCK (g_object_new (UDISKS_TYPE_LINUX_BLOCK,
+                                     NULL));
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -231,7 +231,7 @@ update_hints (UDisksLinuxBlock  *block,
               GUdevDevice       *device,
               UDisksDrive       *drive)
 {
-  UDisksBlockDevice *iface = UDISKS_BLOCK_DEVICE (block);
+  UDisksBlock *iface = UDISKS_BLOCK (block);
   gboolean hint_system;
   gboolean hint_ignore;
   gboolean hint_auto;
@@ -286,11 +286,11 @@ update_hints (UDisksLinuxBlock  *block,
     hint_icon_name = g_udev_device_get_property (device, "UDISKS_ICON_NAME");
 
   /* ... and scene! */
-  udisks_block_device_set_hint_system (iface, hint_system);
-  udisks_block_device_set_hint_ignore (iface, hint_ignore);
-  udisks_block_device_set_hint_auto (iface, hint_auto);
-  udisks_block_device_set_hint_name (iface, hint_name);
-  udisks_block_device_set_hint_icon_name (iface, hint_icon_name);
+  udisks_block_set_hint_system (iface, hint_system);
+  udisks_block_set_hint_ignore (iface, hint_ignore);
+  udisks_block_set_hint_auto (iface, hint_auto);
+  udisks_block_set_hint_name (iface, hint_name);
+  udisks_block_set_hint_icon_name (iface, hint_icon_name);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -335,13 +335,13 @@ find_fstab_entries_for_device (UDisksLinuxBlock *block,
           goto continue_loop;
         }
 
-      if (g_strcmp0 (device, udisks_block_device_get_device (UDISKS_BLOCK_DEVICE (block))) == 0)
+      if (g_strcmp0 (device, udisks_block_get_device (UDISKS_BLOCK (block))) == 0)
         {
           ret = g_list_prepend (ret, g_object_ref (entry));
         }
       else
         {
-          symlinks = udisks_block_device_get_symlinks (UDISKS_BLOCK_DEVICE (block));
+          symlinks = udisks_block_get_symlinks (UDISKS_BLOCK (block));
           if (symlinks != NULL)
             {
               for (n = 0; symlinks[n] != NULL; n++)
@@ -403,13 +403,13 @@ find_crypttab_entries_for_device (UDisksLinuxBlock *block,
           goto continue_loop;
         }
 
-      if (g_strcmp0 (device, udisks_block_device_get_device (UDISKS_BLOCK_DEVICE (block))) == 0)
+      if (g_strcmp0 (device, udisks_block_get_device (UDISKS_BLOCK (block))) == 0)
         {
           ret = g_list_prepend (ret, g_object_ref (entry));
         }
       else
         {
-          symlinks = udisks_block_device_get_symlinks (UDISKS_BLOCK_DEVICE (block));
+          symlinks = udisks_block_get_symlinks (UDISKS_BLOCK (block));
           if (symlinks != NULL)
             {
               for (n = 0; symlinks[n] != NULL; n++)
@@ -561,7 +561,7 @@ update_configuration (UDisksLinuxBlock  *block,
       g_error_free (error);
       configuration = g_variant_new ("a(sa{sv})", NULL);
     }
-  udisks_block_device_set_configuration (UDISKS_BLOCK_DEVICE (block), configuration);
+  udisks_block_set_configuration (UDISKS_BLOCK (block), configuration);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -577,7 +577,7 @@ void
 udisks_linux_block_update (UDisksLinuxBlock        *block,
                            UDisksLinuxBlockObject *object)
 {
-  UDisksBlockDevice *iface = UDISKS_BLOCK_DEVICE (block);
+  UDisksBlock *iface = UDISKS_BLOCK (block);
   UDisksDaemon *daemon;
   GDBusObjectManagerServer *object_manager;
   GUdevDevice *device;
@@ -604,11 +604,11 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
   device_file = g_udev_device_get_device_file (device);
   symlinks = g_udev_device_get_device_file_symlinks (device);
 
-  udisks_block_device_set_device (iface, device_file);
-  udisks_block_device_set_symlinks (iface, symlinks);
-  udisks_block_device_set_major (iface, major (dev));
-  udisks_block_device_set_minor (iface, minor (dev));
-  udisks_block_device_set_size (iface, udisks_daemon_util_block_get_size (device));
+  udisks_block_set_device (iface, device_file);
+  udisks_block_set_symlinks (iface, symlinks);
+  udisks_block_set_major (iface, major (dev));
+  udisks_block_set_minor (iface, minor (dev));
+  udisks_block_set_size (iface, udisks_daemon_util_block_get_size (device));
 
   /* dm-crypt
    *
@@ -616,7 +616,7 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
    *       is a dm-crypt device.. but unfortunately device-mapper keeps all this stuff
    *       in user-space and wants you to use libdevmapper to obtain it...
    */
-  udisks_block_device_set_crypto_backing_device (iface, "/");
+  udisks_block_set_crypto_backing_device (iface, "/");
   if (g_str_has_prefix (g_udev_device_get_name (device), "dm-"))
     {
       gchar *dm_uuid;
@@ -632,7 +632,7 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
               slave_object_path = find_block_device_by_sysfs_path (object_manager, slaves[0]);
               if (slave_object_path != NULL)
                 {
-                  udisks_block_device_set_crypto_backing_device (iface, slave_object_path);
+                  udisks_block_set_crypto_backing_device (iface, slave_object_path);
                 }
               g_free (slave_object_path);
             }
@@ -680,7 +680,7 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
   /* fallback to the device name */
   if (preferred_device_file == NULL)
     preferred_device_file = g_udev_device_get_device_file (device);
-  udisks_block_device_set_preferred_device (iface, preferred_device_file);
+  udisks_block_set_preferred_device (iface, preferred_device_file);
 
   /* Determine the drive this block device belongs to
    *
@@ -690,24 +690,24 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
   drive_object_path = find_drive (object_manager, device, &drive);
   if (drive_object_path != NULL)
     {
-      udisks_block_device_set_drive (iface, drive_object_path);
+      udisks_block_set_drive (iface, drive_object_path);
       g_free (drive_object_path);
     }
   else
     {
-      udisks_block_device_set_drive (iface, "/");
+      udisks_block_set_drive (iface, "/");
     }
 
-  udisks_block_device_set_id_usage (iface, g_udev_device_get_property (device, "ID_FS_USAGE"));
-  udisks_block_device_set_id_type (iface, g_udev_device_get_property (device, "ID_FS_TYPE"));
+  udisks_block_set_id_usage (iface, g_udev_device_get_property (device, "ID_FS_USAGE"));
+  udisks_block_set_id_type (iface, g_udev_device_get_property (device, "ID_FS_TYPE"));
   s = udisks_decode_udev_string (g_udev_device_get_property (device, "ID_FS_VERSION"));
-  udisks_block_device_set_id_version (iface, s);
+  udisks_block_set_id_version (iface, s);
   g_free (s);
   s = udisks_decode_udev_string (g_udev_device_get_property (device, "ID_FS_LABEL_ENC"));
-  udisks_block_device_set_id_label (iface, s);
+  udisks_block_set_id_label (iface, s);
   g_free (s);
   s = udisks_decode_udev_string (g_udev_device_get_property (device, "ID_FS_UUID_ENC"));
-  udisks_block_device_set_id_uuid (iface, s);
+  udisks_block_set_id_uuid (iface, s);
   g_free (s);
 
   /* TODO: port this to blkid properties */
@@ -728,40 +728,40 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
   /* partition table */
   if (is_partition_table)
     {
-      udisks_block_device_set_part_table (iface, TRUE);
-      udisks_block_device_set_part_table_scheme (iface,
-                                                 g_udev_device_get_property (device,
-                                                                             "UDISKS_PARTITION_TABLE_SCHEME"));
+      udisks_block_set_part_table (iface, TRUE);
+      udisks_block_set_part_table_scheme (iface,
+                                          g_udev_device_get_property (device,
+                                                                      "UDISKS_PARTITION_TABLE_SCHEME"));
     }
   else
     {
-      udisks_block_device_set_part_table (iface, FALSE);
-      udisks_block_device_set_part_table_scheme (iface, "");
+      udisks_block_set_part_table (iface, FALSE);
+      udisks_block_set_part_table_scheme (iface, "");
     }
 
   /* partition entry */
   if (is_partition_entry)
     {
       gchar *slave_sysfs_path;
-      udisks_block_device_set_part_entry (iface, TRUE);
-      udisks_block_device_set_part_entry_scheme (iface,
-                                                 g_udev_device_get_property (device,
-                                                                             "UDISKS_PARTITION_SCHEME"));
-      udisks_block_device_set_part_entry_number (iface,
-                                                 g_udev_device_get_property_as_int (device,
-                                                                                    "UDISKS_PARTITION_NUMBER"));
-      udisks_block_device_set_part_entry_type (iface,
-                                               g_udev_device_get_property (device,
-                                                                           "UDISKS_PARTITION_TYPE"));
-      udisks_block_device_set_part_entry_flags (iface,
-                                                g_udev_device_get_property (device,
-                                                                            "UDISKS_PARTITION_FLAGS"));
-      udisks_block_device_set_part_entry_label (iface,
-                                                g_udev_device_get_property (device,
-                                                                            "UDISKS_PARTITION_LABEL"));
-      udisks_block_device_set_part_entry_uuid (iface,
-                                               g_udev_device_get_property (device,
-                                                                           "UDISKS_PARTITION_UUID"));
+      udisks_block_set_part_entry (iface, TRUE);
+      udisks_block_set_part_entry_scheme (iface,
+                                          g_udev_device_get_property (device,
+                                                                      "UDISKS_PARTITION_SCHEME"));
+      udisks_block_set_part_entry_number (iface,
+                                          g_udev_device_get_property_as_int (device,
+                                                                             "UDISKS_PARTITION_NUMBER"));
+      udisks_block_set_part_entry_type (iface,
+                                        g_udev_device_get_property (device,
+                                                                    "UDISKS_PARTITION_TYPE"));
+      udisks_block_set_part_entry_flags (iface,
+                                         g_udev_device_get_property (device,
+                                                                     "UDISKS_PARTITION_FLAGS"));
+      udisks_block_set_part_entry_label (iface,
+                                         g_udev_device_get_property (device,
+                                                                     "UDISKS_PARTITION_LABEL"));
+      udisks_block_set_part_entry_uuid (iface,
+                                        g_udev_device_get_property (device,
+                                                                    "UDISKS_PARTITION_UUID"));
       slave_sysfs_path = g_strdup (g_udev_device_get_property (device, "UDISKS_PARTITION_SLAVE"));
       if (slave_sysfs_path == NULL)
         {
@@ -783,32 +783,32 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
           gchar *slave_object_path;
           slave_object_path = find_block_device_by_sysfs_path (object_manager, slave_sysfs_path);
           if (slave_object_path != NULL)
-            udisks_block_device_set_part_entry_table (iface, slave_object_path);
+            udisks_block_set_part_entry_table (iface, slave_object_path);
           else
-            udisks_block_device_set_part_entry_table (iface, "/");
+            udisks_block_set_part_entry_table (iface, "/");
           g_free (slave_object_path);
           g_free (slave_sysfs_path);
         }
       else
         {
-          udisks_block_device_set_part_entry_table (iface, "/");
+          udisks_block_set_part_entry_table (iface, "/");
         }
-      udisks_block_device_set_part_entry_offset (iface,
-                                                 g_udev_device_get_property_as_uint64 (device,
-                                                                                       "UDISKS_PARTITION_OFFSET"));
-      udisks_block_device_set_part_entry_size (iface,
-                                               g_udev_device_get_property_as_uint64 (device,
-                                                                                     "UDISKS_PARTITION_SIZE"));
+      udisks_block_set_part_entry_offset (iface,
+                                          g_udev_device_get_property_as_uint64 (device,
+                                                                                "UDISKS_PARTITION_OFFSET"));
+      udisks_block_set_part_entry_size (iface,
+                                        g_udev_device_get_property_as_uint64 (device,
+                                                                              "UDISKS_PARTITION_SIZE"));
     }
   else
     {
-      udisks_block_device_set_part_entry (iface, FALSE);
-      udisks_block_device_set_part_entry_scheme (iface, "");
-      udisks_block_device_set_part_entry_type (iface, "");
-      udisks_block_device_set_part_entry_flags (iface, "");
-      udisks_block_device_set_part_entry_table (iface, "/");
-      udisks_block_device_set_part_entry_offset (iface, 0);
-      udisks_block_device_set_part_entry_size (iface, 0);
+      udisks_block_set_part_entry (iface, FALSE);
+      udisks_block_set_part_entry_scheme (iface, "");
+      udisks_block_set_part_entry_type (iface, "");
+      udisks_block_set_part_entry_flags (iface, "");
+      udisks_block_set_part_entry_table (iface, "/");
+      udisks_block_set_part_entry_offset (iface, 0);
+      udisks_block_set_part_entry_size (iface, 0);
     }
 
   update_hints (block, device, drive);
@@ -824,7 +824,7 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-handle_get_secret_configuration (UDisksBlockDevice     *_block,
+handle_get_secret_configuration (UDisksBlock           *_block,
                                  GDBusMethodInvocation *invocation,
                                  GVariant              *options)
 {
@@ -856,9 +856,9 @@ handle_get_secret_configuration (UDisksBlockDevice     *_block,
       goto out;
     }
 
-  udisks_block_device_complete_get_secret_configuration (UDISKS_BLOCK_DEVICE (block),
-                                                         invocation,
-                                                         configuration); /* consumes floating ref */
+  udisks_block_complete_get_secret_configuration (UDISKS_BLOCK (block),
+                                                  invocation,
+                                                  configuration); /* consumes floating ref */
 
  out:
   return TRUE; /* returning TRUE means that we handled the method invocation */
@@ -1448,7 +1448,7 @@ add_remove_crypttab_entry (GVariant  *remove,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-handle_add_configuration_item (UDisksBlockDevice     *_block,
+handle_add_configuration_item (UDisksBlock           *_block,
                                GDBusMethodInvocation *invocation,
                                GVariant              *item,
                                GVariant              *options)
@@ -1479,7 +1479,7 @@ handle_add_configuration_item (UDisksBlockDevice     *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
-      udisks_block_device_complete_add_configuration_item (UDISKS_BLOCK_DEVICE (block), invocation);
+      udisks_block_complete_add_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else if (g_strcmp0 (type, "crypttab") == 0)
     {
@@ -1496,7 +1496,7 @@ handle_add_configuration_item (UDisksBlockDevice     *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
-      udisks_block_device_complete_add_configuration_item (UDISKS_BLOCK_DEVICE (block), invocation);
+      udisks_block_complete_add_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else
     {
@@ -1515,7 +1515,7 @@ handle_add_configuration_item (UDisksBlockDevice     *_block,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-handle_remove_configuration_item (UDisksBlockDevice     *_block,
+handle_remove_configuration_item (UDisksBlock           *_block,
                                   GDBusMethodInvocation *invocation,
                                   GVariant              *item,
                                   GVariant              *options)
@@ -1546,7 +1546,7 @@ handle_remove_configuration_item (UDisksBlockDevice     *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
-      udisks_block_device_complete_add_configuration_item (UDISKS_BLOCK_DEVICE (block), invocation);
+      udisks_block_complete_add_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else if (g_strcmp0 (type, "crypttab") == 0)
     {
@@ -1563,7 +1563,7 @@ handle_remove_configuration_item (UDisksBlockDevice     *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
-      udisks_block_device_complete_add_configuration_item (UDISKS_BLOCK_DEVICE (block), invocation);
+      udisks_block_complete_add_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else
     {
@@ -1582,7 +1582,7 @@ handle_remove_configuration_item (UDisksBlockDevice     *_block,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-handle_update_configuration_item (UDisksBlockDevice     *_block,
+handle_update_configuration_item (UDisksBlock           *_block,
                                   GDBusMethodInvocation *invocation,
                                   GVariant              *old_item,
                                   GVariant              *new_item,
@@ -1626,7 +1626,7 @@ handle_update_configuration_item (UDisksBlockDevice     *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
-      udisks_block_device_complete_add_configuration_item (UDISKS_BLOCK_DEVICE (block), invocation);
+      udisks_block_complete_add_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else if (g_strcmp0 (old_type, "crypttab") == 0)
     {
@@ -1643,7 +1643,7 @@ handle_update_configuration_item (UDisksBlockDevice     *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
-      udisks_block_device_complete_add_configuration_item (UDISKS_BLOCK_DEVICE (block), invocation);
+      udisks_block_complete_add_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else
     {
@@ -1663,7 +1663,7 @@ handle_update_configuration_item (UDisksBlockDevice     *_block,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
-block_iface_init (UDisksBlockDeviceIface *iface)
+block_iface_init (UDisksBlockIface *iface)
 {
   iface->handle_get_secret_configuration  = handle_get_secret_configuration;
   iface->handle_add_configuration_item    = handle_add_configuration_item;
