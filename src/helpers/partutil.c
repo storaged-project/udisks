@@ -1410,7 +1410,7 @@ part_add_change_partition (char *device_file,
       DEBUG ("In part_add_partition: device_file=%s, start=%lld, size=%lld, type=%s", device_file, start, size, type);
     }
 
-  scheme = PART_TYPE_UNKNOWN;
+  scheme = -1;
   if (is_change)
     {
       PartitionTable *p;
@@ -1456,7 +1456,7 @@ part_add_change_partition (char *device_file,
   /* now that we know the partitoning scheme, sanity check type and flags */
   switch (scheme)
     {
-    case PART_TYPE_UNKNOWN:
+    case -1:
       /* unknown partition table format; error out if any type, label or flags are given */
       if ((flags != NULL && flags[0] != NULL))
         {

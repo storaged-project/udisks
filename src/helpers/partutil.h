@@ -32,7 +32,6 @@
 /* Partition schemes understood by this library */
 typedef enum
   {
-    PART_TYPE_UNKNOWN = -1,
     PART_TYPE_MSDOS = 0,
     PART_TYPE_MSDOS_EXTENDED = 1,
     PART_TYPE_APPLE = 2,
