@@ -136,9 +136,9 @@ main (int argc,
 
       s = g_string_new ("mkfs.");
       g_string_append (s, fstype);
-      g_string_append (s, " -F ");
       for (n = 0; options[n] != NULL; n++)
         {
+          g_string_append (s, " -F ");
           if (g_str_has_prefix (options[n], "label="))
             {
               label = strdup (options[n] + sizeof("label=") - 1);
