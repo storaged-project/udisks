@@ -373,22 +373,6 @@ static const Filesystem known_file_systems[] =
       FALSE, /* supports_online_resize_shrink */
     },
     {
-      "nilfs2", /* id */
-      "NILFS2", /* name */
-      TRUE, /* supports_unix_owners */
-      TRUE, /* can_mount */
-      TRUE, /* can_create */
-      80, /* max_label_len */
-      FALSE, /* supports_label_rename */
-      FALSE, /* supports_online_label_rename*/
-      FALSE, /* supports_fsck */
-      FALSE, /* supports_online_fsck */
-      FALSE, /* supports_resize_enlarge */
-      FALSE, /* supports_online_resize_enlarge */
-      FALSE, /* supports_resize_shrink */
-      FALSE, /* supports_online_resize_shrink */
-    },
-    {
       "swap", /* id */
       "Swap Space", /* name */
       FALSE, /* supports_unix_owners */

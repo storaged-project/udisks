@@ -46,7 +46,7 @@ import optparse
 import re
 
 NUM_VDEV = 3 # number of virtual test devices that we need
-VDEV_SIZE = 160000000 # size of virtual test devices
+VDEV_SIZE = 60000000 # size of virtual test devices
 test_md_dev = '/dev/md125'
 
 # Those file systems are known to have a broken handling of permissions, in
@@ -465,10 +465,6 @@ class FS(UDisksTestCase):
         '''fs: swap'''
         self._do_fs_check('swap')
 
-    def test_nilfs2(self):
-        '''fs: nilfs2'''
-        self._do_fs_check('nilfs2')
-
     def _do_fs_check(self, type):
         '''Run checks for a particular file system.'''
 
@@ -571,8 +567,8 @@ class FS(UDisksTestCase):
                 self.assertEqual(fs[3], type != 'swap') # can_mount
                 self.assert_(fs[4]) # can_create
                 supports_label_rename = fs[6]
-                # minix does not support labels; EXFAIL: swap and nilfs2 don't have a program for it
-                self.assertEqual(supports_label_rename, type not in ('nilfs2', 'minix', 'swap'))
+                # minix does not support labels; EXFAIL: swap doesn't have a program for it
+                self.assertEqual(supports_label_rename, type not in ('minix', 'swap'))
                 break
         else:
             self.fail('KnownFilesystems does not contain ' + type)
@@ -625,28 +621,19 @@ class FS(UDisksTestCase):
             self.assertEqual((st.st_uid, st.st_gid), (0, 0))
 
             # open files when mounted
-            num_open_file = 0
-            if type == 'nilfs2':
-                # garbage collector opens /.nilfs file
-                num_open_file = 1
-
-            result = iface.FilesystemListOpenFiles()
-            self.assertEqual(len(result), num_open_file)
+            self.assertEqual(iface.FilesystemListOpenFiles(), [])
 
             f = open(os.path.join(mount_path, 'test.txt'), 'w')
-            num_open_file += 1
             result = iface.FilesystemListOpenFiles()
-            self.assertEqual(len(result), num_open_file)
+            self.assertEqual(len(result), 1)
             self.assertEqual(result[0][0], os.getpid())
             self.assertEqual(result[0][1], os.geteuid())
             self.assert_(sys.argv[0] in result[0][2])
             f.close()
-            num_open_file -= 1
-
-            result = iface.FilesystemListOpenFiles()
-            self.assertEqual(len(result), num_open_file)
+            self.assertEqual(iface.FilesystemListOpenFiles(), [])
 
             self._do_file_perms_checks(type, mount_path)
+
             # unmount
             self.retry_busy(self.partition_iface().FilesystemUnmount, [])
             self.failIf(os.path.exists(mount_path), 'mount point was not removed')
