@@ -103,10 +103,6 @@ main (int argc,
     {
       command_line = g_strdup_printf ("ntfslabel %s \"%s\"", device, new_label);
     }
-  else if (strcmp (fstype, "nilfs2") == 0)
-    {
-      command_line = g_strdup_printf ("nilfs-tune -L %s \"%s\"", new_label, device);
-    }
   else
     {
       g_printerr ("fstype %s not supported\n", fstype);

@@ -395,7 +395,7 @@ static const Filesystem known_file_systems[] =
       TRUE, /* can_mount */
       TRUE, /* can_create */
       80, /* max_label_len */
-      TRUE, /* supports_label_rename */
+      FALSE, /* supports_label_rename */
       FALSE, /* supports_online_label_rename*/
       FALSE, /* supports_fsck */
       FALSE, /* supports_online_fsck */

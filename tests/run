@@ -590,8 +590,8 @@ class FS(UDisksTestCase):
                 self.assertEqual(fs[3], type != 'swap') # can_mount
                 self.assert_(fs[4]) # can_create
                 supports_label_rename = fs[6]
-                # minix does not support labels; EXFAIL: swap, btrfs don't have a program for it
-                self.assertEqual(supports_label_rename, type not in ('btrfs', 'minix', 'swap'))
+                # minix does not support labels; EXFAIL: swap, btrfs, nilfs2 don't have a program for it
+                self.assertEqual(supports_label_rename, type not in ('nilfs2', 'btrfs', 'minix', 'swap'))
                 break
         else:
             self.fail('KnownFilesystems does not contain ' + type)
