@@ -1112,13 +1112,13 @@
     <method name="DriveEject">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg name="options" direction="in" type="as">
-        <doc:doc><doc:summary>Eject options. Valid options currently include only 'unmount'.</doc:summary></doc:doc>
+        <doc:doc><doc:summary>Eject options. Currently no options are recognized.</doc:summary></doc:doc>
       </arg>
 
       <doc:doc>
         <doc:description>
           <doc:para>
-            Ejects media from the device. If the <doc:term>unmount</doc:term> option is given, the device might have mounted file systems, which will be unmounted before ejection.
+            Ejects media from the device.
           </doc:para>
         </doc:description>
         <doc:permission>

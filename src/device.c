@@ -87,7 +87,6 @@ static void drain_pending_changes (Device *device,
 
 static gboolean device_local_is_busy (Device *device,
                                       gboolean check_partitions,
-                                      gboolean check_mounted,
                                       GError **error);
 
 static gboolean device_local_partitions_are_busy (Device *device);
@@ -4841,7 +4840,6 @@ update_info (Device *device)
  * device_local_is_busy:
  * @device: A #Device.
  * @check_partitions: Whether to check if partitions is busy if @device is a partition table
- * @check_mounted: Whether to check if device has mounted file systems
  * @error: Either %NULL or a #GError to set to #ERROR_BUSY and an appropriate
  * message, e.g. "Device is busy" or "A partition on the device is busy" if the device is busy.
  *
@@ -4852,7 +4850,6 @@ update_info (Device *device)
 static gboolean
 device_local_is_busy (Device *device,
                       gboolean check_partitions,
-                      gboolean check_mounted,
                       GError **error)
 {
   gboolean ret;
@@ -4867,7 +4864,7 @@ device_local_is_busy (Device *device,
     }
 
   /* or if we're mounted */
-  if (check_mounted && device->priv->device_is_mounted)
+  if (device->priv->device_is_mounted)
     {
       g_set_error (error, ERROR, ERROR_BUSY, "%s is mounted", device->priv->device_file);
       goto out;
@@ -4950,7 +4947,7 @@ device_local_partitions_are_busy (Device *device)
           == 0)
         {
 
-          if (device_local_is_busy (d, FALSE, TRUE, NULL))
+          if (device_local_is_busy (d, FALSE, NULL))
             {
               ret = TRUE;
               break;
@@ -4982,7 +4979,7 @@ device_local_logical_partitions_are_busy (Device *device)
           == 0 && g_strcmp0 (d->priv->partition_scheme, "mbr") == 0 && d->priv->partition_number >= 5)
         {
 
-          if (device_local_is_busy (d, FALSE, TRUE, NULL))
+          if (device_local_is_busy (d, FALSE, NULL))
             {
               ret = TRUE;
               break;
@@ -6407,7 +6404,7 @@ device_filesystem_mount_authorized_cb (Daemon *daemon,
         }
     }
 
-  if (device_local_is_busy (device, FALSE, TRUE, &error))
+  if (device_local_is_busy (device, FALSE, &error))
     {
       dbus_g_method_return_error (context, error);
       g_error_free (error);
@@ -7053,7 +7050,6 @@ device_drive_eject_authorized_cb (Daemon *daemon,
   int n;
   char *argv[16];
   GError *error;
-  gboolean unmount = FALSE;
 
   error = NULL;
 
@@ -7069,30 +7065,20 @@ device_drive_eject_authorized_cb (Daemon *daemon,
       goto out;
     }
 
-  for (n = 0; options[n] != NULL; n++)
-    {
-      const char *option = options[n];
-      if (strcmp ("unmount", option) == 0)
-        {
-          unmount = TRUE;
-        }
-      else
-        {
-          throw_error (context, ERROR_INVALID_OPTION, "Unknown option %s", option);
-          goto out;
-	}
-    }
-
-  /* If we specify the unmount option, don't check if the device is mounted */
-  if (device_local_is_busy (device, TRUE, !unmount, &error))
+  if (device_local_is_busy (device, TRUE, &error))
     {
       throw_error (context, ERROR_BUSY, error->message);
       g_error_free (error);
       goto out;
     }
 
-  /* eject already unmounts the file systems on the ejected drive, so we do not
-   * need any particular handling of the unmount flag here */
+  for (n = 0; options[n] != NULL; n++)
+    {
+      const char *option = options[n];
+      throw_error (context, ERROR_INVALID_OPTION, "Unknown option %s", option);
+      goto out;
+    }
+
   n = 0;
   argv[n++] = "eject";
   argv[n++] = device->priv->device_file;
@@ -7199,7 +7185,7 @@ device_drive_detach_authorized_cb (Daemon *daemon,
       goto out;
     }
 
-  if (device_local_is_busy (device, TRUE, TRUE, &error))
+  if (device_local_is_busy (device, TRUE, &error))
     {
       dbus_g_method_return_error (context, error);
       g_error_free (error);
@@ -7419,7 +7405,7 @@ device_partition_delete_authorized_cb (Daemon *daemon,
   part_number_as_string = NULL;
   error = NULL;
 
-  if (device_local_is_busy (device, FALSE, TRUE, &error))
+  if (device_local_is_busy (device, FALSE, &error))
     {
       dbus_g_method_return_error (context, error);
       g_error_free (error);
@@ -7439,7 +7425,7 @@ device_partition_delete_authorized_cb (Daemon *daemon,
       goto out;
     }
 
-  if (device_local_is_busy (enclosing_device, FALSE, TRUE, &error))
+  if (device_local_is_busy (enclosing_device, FALSE, &error))
     {
       dbus_g_method_return_error (context, error);
       g_error_free (error);
@@ -7777,7 +7763,7 @@ device_filesystem_create_internal (Device *device,
   passphrase_stdin = NULL;
   error = NULL;
 
-  if (device_local_is_busy (device, TRUE, TRUE, &error))
+  if (device_local_is_busy (device, TRUE, &error))
     {
       dbus_g_method_return_error (context, error);
       g_error_free (error);
@@ -8291,7 +8277,7 @@ device_partition_create_authorized_cb (Daemon *daemon,
       goto out;
     }
 
-  if (device_local_is_busy (device, FALSE, TRUE, &error))
+  if (device_local_is_busy (device, FALSE, &error))
     {
       dbus_g_method_return_error (context, error);
       g_error_free (error);
@@ -8524,7 +8510,7 @@ device_partition_modify_authorized_cb (Daemon *daemon,
       goto out;
     }
 
-  if (device_local_is_busy (enclosing_device, FALSE, TRUE, &error))
+  if (device_local_is_busy (enclosing_device, FALSE, &error))
     {
       dbus_g_method_return_error (context, error);
       g_error_free (error);
@@ -8768,7 +8754,7 @@ device_partition_table_create_authorized_cb (Daemon *daemon,
 
   error = NULL;
 
-  if (device_local_is_busy (device, TRUE, TRUE, &error))
+  if (device_local_is_busy (device, TRUE, &error))
     {
       dbus_g_method_return_error (context, error);
       g_error_free (error);
@@ -9084,7 +9070,7 @@ device_luks_unlock_internal (Device *device,
 
   daemon_local_get_uid (device->priv->daemon, &uid, context);
 
-  if (device_local_is_busy (device, FALSE, TRUE, &error))
+  if (device_local_is_busy (device, FALSE, &error))
     {
       dbus_g_method_return_error (context, error);
       g_error_free (error);
@@ -9714,7 +9700,7 @@ device_filesystem_set_label_authorized_cb (Daemon *daemon,
 
   if (!fs_details->supports_online_label_rename)
     {
-      if (device_local_is_busy (device, FALSE, TRUE, &error))
+      if (device_local_is_busy (device, FALSE, &error))
         {
           dbus_g_method_return_error (context, error);
           g_error_free (error);
@@ -9772,7 +9758,7 @@ device_filesystem_set_label (Device *device,
 
   if (!fs_details->supports_online_label_rename)
     {
-      if (device_local_is_busy (device, FALSE, TRUE, &error))
+      if (device_local_is_busy (device, FALSE, &error))
         {
           dbus_g_method_return_error (context, error);
           g_error_free (error);
@@ -10450,7 +10436,7 @@ device_linux_md_add_spare_authorized_cb (Daemon *daemon,
    * hot adding a new disk if an old one failed
    */
 
-  if (device_local_is_busy (slave, TRUE, TRUE, &error))
+  if (device_local_is_busy (slave, TRUE, &error))
     {
       dbus_g_method_return_error (context, error);
       g_error_free (error);
@@ -10601,7 +10587,7 @@ device_linux_md_expand_authorized_cb (Daemon *daemon,
           goto out;
         }
 
-      if (device_local_is_busy (slave, TRUE, TRUE, &error))
+      if (device_local_is_busy (slave, TRUE, &error))
         {
           dbus_g_method_return_error (context, error);
           g_error_free (error);
@@ -10731,7 +10717,7 @@ linux_md_remove_component_device_changed_cb (Daemon *daemon,
   if (device == data->slave)
     {
 
-      if (device_local_is_busy (data->slave, FALSE, TRUE, &error))
+      if (device_local_is_busy (data->slave, FALSE, &error))
         {
           dbus_g_method_return_error (data->context, error);
           g_error_free (error);
@@ -11151,7 +11137,7 @@ daemon_linux_md_start_authorized_cb (Daemon *daemon,
             }
         }
 
-      if (device_local_is_busy (slave, FALSE, TRUE, &error))
+      if (device_local_is_busy (slave, FALSE, &error))
         {
           dbus_g_method_return_error (context, error);
           g_error_free (error);
@@ -11507,7 +11493,7 @@ daemon_linux_md_create_authorized_cb (Daemon *daemon,
           goto out;
         }
 
-      if (device_local_is_busy (slave, FALSE, TRUE, &error))
+      if (device_local_is_busy (slave, FALSE, &error))
         {
           dbus_g_method_return_error (context, error);
           g_error_free (error);
@@ -13747,7 +13733,7 @@ daemon_linux_lvm2_vg_add_pv_authorized_cb (Daemon *daemon,
     }
 
   error = NULL;
-  if (device_local_is_busy (pv, TRUE, TRUE, &error))
+  if (device_local_is_busy (pv, TRUE, &error))
     {
       dbus_g_method_return_error (context, error);
       g_error_free (error);
@@ -13877,7 +13863,7 @@ daemon_linux_lvm2_vg_remove_pv_authorized_cb (Daemon *daemon,
     }
 
   error = NULL;
-  if (device_local_is_busy (pv, TRUE, TRUE, &error))
+  if (device_local_is_busy (pv, TRUE, &error))
     {
       dbus_g_method_return_error (context, error);
       g_error_free (error);
