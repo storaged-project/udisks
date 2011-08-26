@@ -105,9 +105,7 @@ main (int argc,
     }
   else if (strcmp (fstype, "nilfs2") == 0)
     {
-      if (!validate_and_escape_label (&new_label, 80))
-        goto out;
-      command_line = g_strdup_printf ("nilfs-tune -L \"%s\" %s", new_label, device);
+      command_line = g_strdup_printf ("nilfs-tune -L %s \"%s\"", new_label, device);
     }
   else
     {
