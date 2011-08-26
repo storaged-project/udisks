@@ -1,27 +1,4 @@
 ------------
-udisks 1.0.5 <not released yet>
-------------
-
-udisks provides a daemon, D-Bus API and command line tools
-for managing disks and storage devices.
-
-All releases in the udisks 1.0 series will retain ABI compatibility at
-the D-Bus interface level. This means that any application built
-against udisks 1.0.x will work with udisks 1.0.y provided that y >=
-x. At this point we do not provide any ABI guarantees for the
-udisks(1) command-line tool (neither options nor the name). See the
-README file for more discussion of ABI guarantees.
-
-Changes from udisks 1.0.4:
-
- <insert prettified output of 'git shortlog 1.0.4..' here
-
-Thanks to all our contributors.
-
-<insert your name>,
-<insert the date>
-
-------------
 udisks 1.0.4
 ------------
 
