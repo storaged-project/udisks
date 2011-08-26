@@ -5905,7 +5905,7 @@ static const gchar *well_known_filesystems[] =
   "msdos",
   "umsdos",
   "vfat",
-  "exfat",
+  "exfat"
   "ntfs",
   NULL,
 };
