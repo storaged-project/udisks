@@ -217,11 +217,6 @@ validate_and_escape_label (char **label,
           g_string_insert_c (s, n, '\\');
           n++;
         }
-      else if (s->str[n] == '\\')
-        {
-          g_string_insert_c (s, n, '\\');
-          n++;
-        }
     }
   g_free (*label);
   *label = g_string_free (s, FALSE);
