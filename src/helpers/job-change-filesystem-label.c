@@ -101,8 +101,6 @@ main (int argc,
     }
   else if (strcmp (fstype, "ntfs") == 0)
     {
-      if (!validate_and_escape_label (&new_label, 128))
-        goto out;
       command_line = g_strdup_printf ("ntfslabel %s \"%s\"", device, new_label);
     }
   else if (strcmp (fstype, "nilfs2") == 0)
