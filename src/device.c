@@ -6666,8 +6666,7 @@ filesystem_unmount_completed_cb (DBusGMethodInvocation *context,
     {
       /* update_info_mount_state() will update the mounts file and clean up the directory if needed */
       update_info (device);
-      if (context != NULL)
-	  dbus_g_method_return (context);
+      dbus_g_method_return (context);
     }
   else
     {
@@ -6806,7 +6805,7 @@ device_filesystem_unmount (Device *device,
   action_id = NULL;
   if (!mount_file_has_device (device->priv->device_file, &uid_of_mount, NULL))
     {
-      if (context != NULL && !is_device_in_fstab (device, NULL))
+      if (!is_device_in_fstab (device, NULL))
         {
           action_id = "org.freedesktop.udisks.filesystem-unmount-others";
         }
@@ -6815,7 +6814,7 @@ device_filesystem_unmount (Device *device,
     {
       uid_t uid;
       daemon_local_get_uid (device->priv->daemon, &uid, context);
-      if (context != NULL && uid_of_mount != uid)
+      if (uid_of_mount != uid)
         {
           action_id = "org.freedesktop.udisks.filesystem-unmount-others";
         }
@@ -7015,8 +7014,7 @@ drive_eject_completed_cb (DBusGMethodInvocation *context,
   if (WEXITSTATUS (status) == 0 && !job_was_cancelled)
     {
       /* TODO: probably wait for has_media to change to FALSE */
-      if (context != NULL)
-	  dbus_g_method_return (context);
+      dbus_g_method_return (context);
     }
   else
     {
@@ -7064,7 +7062,7 @@ device_drive_eject_authorized_cb (Daemon *daemon,
 
   if (device_local_is_busy (device, TRUE, &error))
     {
-      throw_error (context, ERROR_BUSY, error->message);
+      dbus_g_method_return_error (context, error);
       g_error_free (error);
       goto out;
     }
@@ -7109,7 +7107,7 @@ device_drive_eject (Device *device,
 
   daemon_local_check_auth (device->priv->daemon,
                            device,
-                           context ? "org.freedesktop.udisks.drive-eject" : NULL,
+                           "org.freedesktop.udisks.drive-eject",
                            "DriveEject",
                            TRUE,
                            device_drive_eject_authorized_cb,
