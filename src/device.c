@@ -6213,12 +6213,7 @@ filesystem_mount_completed_cb (DBusGMethodInvocation *context,
 
       update_info (device);
       drain_pending_changes (device, FALSE);
-      /* If the kernel and device support sending EJECT_REQUEST change uevents
-       * and we use in-kernel polling, keep the door locked, as udev calls
-       * eject on pressing the button.  Otherwise unlock it, to keep the
-       * hardware button working without userspace support */
-      if (!device->priv->using_in_kernel_polling)
-        unlock_cd_tray (device);
+      unlock_cd_tray (device);
 
       dbus_g_method_return (context, data->mount_point);
     }
