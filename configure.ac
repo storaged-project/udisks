@@ -164,8 +164,8 @@ AC_SUBST(DEVMAPPER_CFLAGS)
 AC_SUBST(DEVMAPPER_LIBS)
 
 have_lvm2=no
-AC_ARG_ENABLE(lvm2, AS_HELP_STRING([--disable-lvm2], [disable LVM2 support]))
-if test "x$enable_lvm2" != "xno"; then
+AC_ARG_ENABLE(lvm2, AS_HELP_STRING([--enable-lvm2], [enable LVM2 support]))
+if test "x$enable_lvm2" = "xyes"; then
   PKG_CHECK_MODULES(LVM2, lvm2app >= 2.2,
                     [AC_DEFINE(HAVE_LVM2, 1, [Define if LVM2 is available]) have_lvm2=yes],
                     have_lvm2=no)
@@ -178,8 +178,8 @@ fi
 AM_CONDITIONAL(HAVE_LVM2, [test "$have_lvm2" = "yes"])
 
 have_dmmp=no
-AC_ARG_ENABLE(dmmp, AS_HELP_STRING([--disable-dmmp], [disable dm-multipath support]))
-if test "x$enable_dmmp" != "xno"; then
+AC_ARG_ENABLE(dmmp, AS_HELP_STRING([--enable-dmmp], [enable dm-multipath support]))
+if test "x$enable_dmmp" = "xyes"; then
   have_dmmp=yes
   AC_DEFINE(HAVE_DMMP, 1, [Define to 1 if dmmp is available])
 fi
