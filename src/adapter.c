@@ -258,6 +258,7 @@ compute_object_path (const char *native_path)
 static gboolean
 register_disks_adapter (Adapter *adapter)
 {
+  DBusConnection *connection;
   GError *error = NULL;
 
   adapter->priv->system_bus_connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
@@ -270,6 +271,7 @@ register_disks_adapter (Adapter *adapter)
         }
       goto error;
     }
+  connection = dbus_g_connection_get_connection (adapter->priv->system_bus_connection);
 
   adapter->priv->object_path = compute_object_path (adapter->priv->native_path);
 
@@ -428,7 +430,9 @@ update_info_fabric_and_num_ports (Adapter *adapter)
   guint num_ports;
   guint64 device_class;
   const gchar *driver;
+  guint class;
   guint subclass;
+  guint interface;
   gchar *scsi_host_name;
   gchar *s;
   gchar *s2;
@@ -441,7 +445,9 @@ update_info_fabric_and_num_ports (Adapter *adapter)
   device_class = g_udev_device_get_sysfs_attr_as_uint64 (adapter->priv->d, "class");
   driver = g_udev_device_get_driver (adapter->priv->d);
 
+  class = (device_class & 0xff0000) >> 16;
   subclass = (device_class & 0x00ff00) >> 8;
+  interface = (device_class & 0x0000ff);
 
   /* count number of scsi_host objects - this is to detect whether we are dealing with
    * ATA - see comment in port.c:update_info_ata() for details about

@@ -290,6 +290,7 @@ compute_object_path (const char *native_path)
 static gboolean
 register_disks_expander (Expander *expander)
 {
+  DBusConnection *connection;
   GError *error = NULL;
 
   expander->priv->system_bus_connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
@@ -302,6 +303,7 @@ register_disks_expander (Expander *expander)
         }
       goto error;
     }
+  connection = dbus_g_connection_get_connection (expander->priv->system_bus_connection);
 
   expander->priv->object_path = compute_object_path (expander->priv->native_path);
 

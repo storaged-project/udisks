@@ -213,6 +213,9 @@ daemon_constructor (GType type,
                     GObjectConstructParam *construct_properties)
 {
   Daemon *daemon;
+  DaemonClass *klass;
+
+  klass = DAEMON_CLASS (g_type_class_peek (TYPE_DAEMON));
 
   daemon = DAEMON (G_OBJECT_CLASS (daemon_parent_class)->constructor (type,
                                                                       n_construct_properties,
@@ -766,6 +769,9 @@ _filter (DBusConnection *connection,
          void *user_data)
 {
   //Daemon *daemon = DAEMON (user_data);
+  const char *interface;
+
+  interface = dbus_message_get_interface (message);
 
   if (dbus_message_is_signal (message, DBUS_INTERFACE_DBUS, "NameOwnerChanged"))
     {

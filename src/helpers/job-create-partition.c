@@ -49,6 +49,7 @@ main (int argc,
   int n;
   int ret;
   const char *device;
+  char **options;
   char *label;
   char *type;
   char *flags_as_string;
@@ -84,6 +85,7 @@ main (int argc,
   type = argv[4];
   label = argv[5];
   flags_as_string = argv[6];
+  options = argv + 7;
 
   flags = g_strsplit (flags_as_string, ",", 0);
 

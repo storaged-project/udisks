@@ -931,7 +931,11 @@ device_properties_get (DBusGConnection *bus,
 static gboolean
 do_monitor (void)
 {
+  GError *error;
+
   g_print ("Monitoring activity from the disks daemon. Press Ctrl+C to cancel.\n");
+
+  error = NULL;
 
   dbus_g_proxy_connect_signal (disks_proxy, "DeviceAdded", G_CALLBACK (device_added_signal_handler), NULL, NULL);
   dbus_g_proxy_connect_signal (disks_proxy, "DeviceRemoved", G_CALLBACK (device_removed_signal_handler), NULL, NULL);
