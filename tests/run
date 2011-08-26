@@ -508,34 +508,6 @@ class FS(UDisksTestCase):
         '''fs: nilfs2'''
         self._do_fs_check('nilfs2')
 
-    def test_force_removal(self):
-        '''fs: forced removal'''
-
-        # create a fs and mount it
-        self.fs_create(None, 'ext4', ['label=udiskstest'])
-        mount_path = self.partition_iface().FilesystemMount('', [])
-        self.assertEqual(mount_path, '/media/udiskstest')
-
-        # removal should clean up mounts
-        self.remove_device(self.device)
-        self.failIf(os.path.exists(mount_path))
-        self.failIf(self.device in self.manager_iface.EnumerateDeviceFiles())
-        props = self.partition_props()
-        self.assertRaises(dbus.DBusException, props.Get, I_D, 'DeviceIsPartition')
-
-        # after putting it back, it should be mountable again
-        self.readd_devices()
-        self.assert_(self.device in self.manager_iface.EnumerateDeviceFiles())
-        props = self.partition_props()
-        self.assertEqual(props.Get(I_D, 'DeviceIsPartition'), False)
-        self.assertEqual(props.Get(I_D, 'DeviceIsMounted'), False)
-
-        mount_path = self.partition_iface().FilesystemMount('', [])
-        self.assertEqual(mount_path, '/media/udiskstest')
-        self.assertEqual(props.Get(I_D, 'DeviceIsMounted'), True)
-
-        self.retry_busy(self.partition_iface().FilesystemUnmount, [])
-
     def _do_fs_check(self, type):
         '''Run checks for a particular file system.'''
 
