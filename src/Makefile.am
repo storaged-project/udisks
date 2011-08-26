@@ -102,5 +102,3 @@ EXTRA_DIST = 						\
 install-data-local:
 	-$(mkdir_p) $(DESTDIR)$(localstatedir)/lib/udisks
 	-chmod 0700 $(DESTDIR)$(localstatedir)/lib/udisks
-	-$(mkdir_p) $(DESTDIR)$(localstatedir)/run/udisks
-	-chmod 0700 $(DESTDIR)$(localstatedir)/run/udisks

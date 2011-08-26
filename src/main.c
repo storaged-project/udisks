@@ -162,6 +162,13 @@ main (int argc,
       goto out;
     }
 
+  /* Create /var/run/udisks dir for private run-time info (also, /var/run may be a tmpfs) */
+  if (g_mkdir_with_parents (PACKAGE_LOCALSTATE_DIR "/run/udisks", 0700) != 0)
+    {
+      g_warning ("Error creating %s: %m", PACKAGE_LOCALSTATE_DIR "/run/udisks");
+      goto out;
+    }
+
   /* avoid gvfs (http://bugzilla.gnome.org/show_bug.cgi?id=526454) */
   if (!g_setenv ("GIO_USE_VFS", "local", TRUE))
     {
