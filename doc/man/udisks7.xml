@@ -76,17 +76,6 @@
       </varlistentry>
 
       <varlistentry>
-        <term><option>UDISKS_AUTOMOUNT_HINT</option></term>
-        <listitem><para>
-          A variable to influence whether a device should be automounted.
-          Possible values include "always" (to hint that a device should
-          always be automounted) and "never" (to hint that a device should
-          never be automounted). Note that this is only a hint - the
-          auto-mounter might not honor it.
-        </para></listitem>
-      </varlistentry>
-
-      <varlistentry>
         <term><option>UDISKS_SYSTEM_INTERNAL</option></term>
         <listitem><para>If set, this will override the usual bus type based
 	    detection of whether a device is considered "system internal". "0"
