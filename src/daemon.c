@@ -314,15 +314,15 @@ static const Filesystem known_file_systems[] =
       TRUE, /* supports_unix_owners */
       TRUE, /* can_mount */
       TRUE, /* can_create */
-      256, /* max_label_len */
+      16, /* max_label_len */
       FALSE, /* supports_label_rename; TODO: this still needs a tool */
       FALSE, /* supports_online_label_rename*/
       TRUE, /* supports_fsck */
       FALSE, /* supports_online_fsck */
       TRUE, /* supports_resize_enlarge */
-      TRUE, /* supports_online_resize_enlarge */
+      FALSE, /* supports_online_resize_enlarge */
       TRUE, /* supports_resize_shrink */
-      TRUE, /* supports_online_resize_shrink */
+      FALSE, /* supports_online_resize_shrink */
     },
     {
       "xfs", /* id */
