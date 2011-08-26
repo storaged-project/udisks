@@ -23,7 +23,6 @@
 
 #include "config.h"
 
-#include <unistd.h>
 #include <glib.h>
 
 /* Define a macro PROFILE(format, ...) which adds a trace point for profiling
