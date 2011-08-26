@@ -6353,13 +6353,12 @@ device_filesystem_mount_authorized_cb (Daemon *daemon,
    * filesystem type is
    *
    * - well-known [1]; or
-   * - in the /proc/filesystems file; or
-   * - in the /etc/filesystems file
+   * - in the /etc/filesystems file; or
+   * - in the /proc/filesystems file
    *
-   * in that order. We do this because mount(8) on Linux allows
-   * loading any arbitrary kernel module (when invoked as root) by
-   * passing something appropriate to the -t option. So we have to
-   * validate whatever we pass...
+   * We do this because mount(8) on Linux allows loading any arbitrary
+   * kernel module (when invoked as root) by passing something appropriate
+   * to the -t option. So we have to validate whatever we pass.
    *
    * See https://bugs.freedesktop.org/show_bug.cgi?id=32232 for more
    * details.
