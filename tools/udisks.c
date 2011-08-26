@@ -348,7 +348,6 @@ typedef struct
   gboolean device_presentation_nopolicy;
   char *device_presentation_name;
   char *device_presentation_icon_name;
-  char *device_automount_hint;
   guint64 device_size;
   guint64 device_block_size;
 
@@ -546,8 +545,6 @@ collect_props (const char *key,
     props->device_presentation_name = g_strdup (g_value_get_string (value));
   else if (strcmp (key, "DevicePresentationIconName") == 0)
     props->device_presentation_icon_name = g_strdup (g_value_get_string (value));
-  else if (strcmp (key, "DeviceAutomountHint") == 0)
-    props->device_automount_hint = g_strdup (g_value_get_string (value));
   else if (strcmp (key, "DeviceSize") == 0)
     props->device_size = g_value_get_uint64 (value);
   else if (strcmp (key, "DeviceBlockSize") == 0)
@@ -818,7 +815,6 @@ device_properties_free (DeviceProperties *props)
   g_strfreev (props->device_mount_paths);
   g_free (props->device_presentation_name);
   g_free (props->device_presentation_icon_name);
-  g_free (props->device_automount_hint);
   g_free (props->job_id);
   g_free (props->id_usage);
   g_free (props->id_type);
@@ -1225,7 +1221,6 @@ do_show_info (const char *object_path)
   g_print ("  presentation nopolicy:       %d\n", props->device_presentation_nopolicy);
   g_print ("  presentation name:           %s\n", props->device_presentation_name);
   g_print ("  presentation icon:           %s\n", props->device_presentation_icon_name);
-  g_print ("  automount hint:              %s\n", props->device_automount_hint);
   g_print ("  size:                        %" G_GUINT64_FORMAT "\n", props->device_size);
   g_print ("  block size:                  %" G_GUINT64_FORMAT "\n", props->device_block_size);
 

@@ -383,7 +383,7 @@ get_property (GObject *object,
       g_value_set_string (value, device->priv->device_file);
       break;
     case PROP_DEVICE_AUTOMOUNT_HINT:
-      g_value_set_string (value, device->priv->device_automount_hint);
+      g_value_set_string (value, device->priv->device_auto_mount_hint);
       break;
     case PROP_DEVICE_FILE_PRESENTATION:
       if (device->priv->device_file_presentation != NULL)
@@ -871,7 +871,7 @@ device_class_init (DeviceClass *klass)
 
   g_object_class_install_property (object_class,
                                    PROP_DEVICE_AUTOMOUNT_HINT,
-                                   g_param_spec_string ("device-automount-hint",
+                                   g_param_spec_string ("device-auto-mount-hint",
                                                         NULL,
                                                         NULL,
                                                         NULL,
@@ -2291,7 +2291,7 @@ update_info_presentation (Device *device)
 {
   gboolean hide;
   gboolean nopolicy;
-  const gchar *automount_hint;
+  const gchar *auto_mount_hint;
 
   hide = FALSE;
   if (g_udev_device_has_property (device->priv->d, "UDISKS_PRESENTATION_HIDE"))
@@ -2308,11 +2308,11 @@ update_info_presentation (Device *device)
   device_set_device_presentation_icon_name (device, g_udev_device_get_property (device->priv->d,
                                                                                 "UDISKS_PRESENTATION_ICON_NAME"));
 
-  automount_hint = "";
+  auto_mount_hint = "";
   if (g_udev_device_has_property (device->priv->d, "UDISKS_AUTOMOUNT_HINT"))
-    automount_hint = g_udev_device_get_property (device->priv->d, "UDISKS_AUTOMOUNT_HINT");
+    auto_mount_hint = g_udev_device_get_property (device->priv->d, "UDISKS_AUTOMOUNT_HINT");
 
-  device_set_device_automount_hint (device, automount_hint);
+  device_set_device_auto_mount_hint (device, auto_mount_hint);
 
   return TRUE;
 }

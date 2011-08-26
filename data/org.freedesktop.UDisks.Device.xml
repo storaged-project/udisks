@@ -1691,7 +1691,7 @@
       </doc:para></doc:description></doc:doc>
     </property>
 
-    <property name="DeviceAutomountHint" type="s" access="read">
+    <property name="DeviceAutoMountHint" type="s" access="read">
       <doc:doc><doc:description><doc:para>
             A hint to the desktop that indicates if a device should be automounted.
             Possible values are:
