@@ -179,52 +179,6 @@ main (int argc,
       command_line = g_string_free (s, FALSE);
 
     }
-  else if (strcmp (fstype, "btrfs") == 0)
-    {
-
-      s = g_string_new ("mkfs.btrfs");
-      for (n = 0; options[n] != NULL; n++)
-        {
-          if (g_str_has_prefix (options[n], "label="))
-            {
-              label = strdup (options[n] + sizeof("label=") - 1);
-              if (!validate_and_escape_label (&label, 12))
-                {
-                  g_string_free (s, TRUE);
-                  goto out;
-                }
-              g_string_append_printf (s, " -L \"%s\"", label);
-              g_free (label);
-              label = NULL;
-            }
-          else if (g_str_has_prefix (options[n], "take_ownership_uid="))
-            {
-              take_ownership_uid = strtol (options[n] + sizeof("take_ownership_uid=") - 1, &endp, 10);
-              if (endp == NULL || *endp != '\0')
-                {
-                  g_printerr ("option %s is malformed\n", options[n]);
-                  goto out;
-                }
-            }
-          else if (g_str_has_prefix (options[n], "take_ownership_gid="))
-            {
-              take_ownership_gid = strtol (options[n] + sizeof("take_ownership_gid=") - 1, &endp, 10);
-              if (endp == NULL || *endp != '\0')
-                {
-                  g_printerr ("option %s is malformed\n", options[n]);
-                  goto out;
-                }
-            }
-          else
-            {
-              g_printerr ("option %s not supported\n", options[n]);
-              goto out;
-            }
-        }
-      g_string_append_printf (s, " %s", device);
-      command_line = g_string_free (s, FALSE);
-
-    }
   else if (strcmp (fstype, "xfs") == 0)
     {
 

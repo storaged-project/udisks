@@ -46,7 +46,7 @@ import optparse
 import re
 
 NUM_VDEV = 3 # number of virtual test devices that we need
-VDEV_SIZE = 300000000 # size of virtual test devices
+VDEV_SIZE = 160000000 # size of virtual test devices
 test_md_dev = '/dev/md125'
 
 # Those file systems are known to have a broken handling of permissions, in
@@ -441,10 +441,6 @@ class FS(UDisksTestCase):
         '''fs: ext4'''
         self._do_fs_check('ext4')
 
-    def test_btrfs(self):
-        '''fs: btrfs'''
-        self._do_fs_check('btrfs')
-
     def test_minix(self):
         '''fs: minix'''
         self._do_fs_check('minix')
@@ -575,8 +571,8 @@ class FS(UDisksTestCase):
                 self.assertEqual(fs[3], type != 'swap') # can_mount
                 self.assert_(fs[4]) # can_create
                 supports_label_rename = fs[6]
-                # minix does not support labels; EXFAIL: swap, btrfs, nilfs2 don't have a program for it
-                self.assertEqual(supports_label_rename, type not in ('nilfs2', 'btrfs', 'minix', 'swap'))
+                # minix does not support labels; EXFAIL: swap and nilfs2 don't have a program for it
+                self.assertEqual(supports_label_rename, type not in ('nilfs2', 'minix', 'swap'))
                 break
         else:
             self.fail('KnownFilesystems does not contain ' + type)
