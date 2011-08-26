@@ -91,6 +91,23 @@ LABEL="probe_parttable_end"
 
 ##############################################################################################################
 
+# pick up device-mapper data; this REALLY should be done by rules installed
+# by the device-mapper package
+#
+KERNEL!="dm-*", GOTO="device_mapper_end"
+ACTION!="change", GOTO="device_mapper_end"
+
+ENV{UDISKS_DM_TARGET_TYPES}=="|*error*", GOTO="device_mapper_end"
+
+# avoid probing if it has already been done earlier
+#
+ENV{ID_FS_USAGE}!="", GOTO="device_mapper_end"
+IMPORT{program}="/sbin/blkid -o udev -p $tempnode"
+
+LABEL="device_mapper_end"
+
+##############################################################################################################
+
 # pick up data from MD components; this REALLY should be done by rules installed
 # by mdadm or the kernel package
 #
