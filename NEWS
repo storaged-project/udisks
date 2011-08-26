@@ -1,5 +1,5 @@
 ------------
-udisks 1.0.2
+udisks 1.0.2 <not yet released>
 ------------
 
 udisks provides a daemon, D-Bus API and command line tools
@@ -14,58 +14,12 @@ README file for more discussion of ABI guarantees.
 
 Changes from udisks 1.0.1:
 
-David Zeuthen (5):
-      Post-release version bump to 1.0.2
-      Update to latest LVM2 API
-      Don't probe non-data discs for partition tables
-      Avoid using entities in introspection XML
-      Also export UDISKS_DM_TARGET_PARAMS for 'multipath' target
-
-Jiro SEKIBA (4):
-      Add nilfs2 file system support
-      Add nilfs2 label rename
-      udisks: fix a bug of unquoted/unescaped label string
-      udisks: escape backslash for label string
-
-Marti Raudsepp (1):
-      udisks: Avoid deprecated polkit_authority_get() function
-
-Martin Pitt (24):
-      testsuite: Check file permissions
-      Bug 28075 — Do not have all files executable on vfat
-      testsuite: mkfs() code cleanup
-      Fix long hangs on probing nonexistant floppy drives
-      Bug 28075 — Do not have files executable on NTFS
-      Bug 26258 — initial btrfs support
-      Fix btrfs properties
-      profile.h: Add missing include
-      testsuite: fix race with SMART data
-      testsuite: Fix SMART test for SSDs
-      testsuite: LVM: fix naming assumptions
-      Fix mkfs.ext* arguments
-      Fix creating NTFS on raw devices
-      testsuite: Move to scsi_debug
-      partutil: Explicitly use PART_TYPE_UNKNOWN
-      Fix uninitialized variable in part-id
-      testsuite: Check forced removal of LUKS encrypted device
-      testsuite: Test forced removal of standard devices
-      Fix building with Linux 2.6.37
-      testsuite: Check correct handling of labels with funny characters
-      testsuite: use shorter label for renaming
-      Escape NTFS labels properly
-      simplify validate_and_escape_label()
-      Fix hang on setting invalid VFAT labels
-
-Mathieu Trudel-Lapierre (1):
-      Bug 30332 — udisks does not tear down LUKS devices when the slave is forci
-
-Matt Zimmerman (1):
-      Add udisks --eject option
+ <insert prettified output of 'git log 1.0.1.. |git shortlog' here>
 
 Thanks to all our contributors.
 
-Martin Pitt,
-December 2, 2010
+<insert your name>,
+<insert the date>
 
 ------------
 udisks 1.0.1
