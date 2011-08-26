@@ -1,5 +1,5 @@
 ------------
-udisks 1.0.4 <not released yet>
+udisks 1.0.4
 ------------
 
 udisks provides a daemon, D-Bus API and command line tools
@@ -12,14 +12,24 @@ x. At this point we do not provide any ABI guarantees for the
 udisks(1) command-line tool (neither options nor the name). See the
 README file for more discussion of ABI guarantees.
 
-Changes from udisks 1.0.3:
+Changes from udisks 1.0.4:
 
- <insert prettified output of 'git shortlog 1.0.3..' here
+ Ayan George (1):
+       Mark all rts_pstor devices as card readers
+
+ David Zeuthen (4):
+       Post-release version bump to 1.0.4
+       Change the default for LVM2 and dm-multipath support to off
+       Bug 24265 – Needs to create /var/run/udisks/ on demand
+       Update NEWS for release
+
+ Nicolas Lécureuil (1):
+       Fix typo in configure
 
 Thanks to all our contributors.
 
-<insert your name>,
-<insert the date>
+David Zeuthen,
+Aug 26, 2011
 
 ------------
 udisks 1.0.3
