@@ -518,14 +518,14 @@ class FS(UDisksTestCase):
 
         # removal should clean up mounts
         self.remove_device(self.device)
-        self.assertFalse(os.path.exists(mount_path))
-        self.assertFalse(self.device in self.manager_iface.EnumerateDeviceFiles())
+        self.failIf(os.path.exists(mount_path))
+        self.failIf(self.device in self.manager_iface.EnumerateDeviceFiles())
         props = self.partition_props()
         self.assertRaises(dbus.DBusException, props.Get, I_D, 'DeviceIsPartition')
 
         # after putting it back, it should be mountable again
         self.readd_devices()
-        self.assertTrue(self.device in self.manager_iface.EnumerateDeviceFiles())
+        self.assert_(self.device in self.manager_iface.EnumerateDeviceFiles())
         props = self.partition_props()
         self.assertEqual(props.Get(I_D, 'DeviceIsPartition'), False)
         self.assertEqual(props.Get(I_D, 'DeviceIsMounted'), False)
@@ -587,7 +587,7 @@ class FS(UDisksTestCase):
 
         self.assertEqual(i['type'], type)
         self.assertEqual(i['label'], label or '')
-        self.assertFalse ('partition_scheme' in i)
+        self.failIf ('partition_scheme' in i)
         if type != 'swap':
             self.assertEqual(i['is mounted'], '0')
             self.assertEqual(i['mount paths'], '')
@@ -634,9 +634,9 @@ class FS(UDisksTestCase):
                 'KnownFilesystems'):
             if fs[0] == type:
                 supports_unix_owners = fs[2]
-                self.assertTrue(supports_unix_owners in (True, False))
+                self.assert_(supports_unix_owners in (True, False))
                 self.assertEqual(fs[3], type != 'swap') # can_mount
-                self.assertTrue(fs[4]) # can_create
+                self.assert_(fs[4]) # can_create
                 supports_label_rename = fs[6]
                 # minix does not support labels; EXFAIL: swap, btrfs don't have a program for it
                 self.assertEqual(supports_label_rename, type not in ('btrfs', 'minix', 'swap'))
@@ -659,7 +659,7 @@ class FS(UDisksTestCase):
             self.assertEqual(i['is mounted'], '0')
             self.assertEqual(i['mount paths'], '')
         self.assertEqual(i['presentation name'], '')
-        self.assertFalse ('partition_scheme' in i)
+        self.failIf ('partition_scheme' in i)
         if type != 'minix':
             self.assertEqual(i['uuid'], self.get_uuid())
 
@@ -682,7 +682,7 @@ class FS(UDisksTestCase):
             if label:
                 self.assertEqual(mount_path, '/media/' + label)
             else:
-                self.assertTrue(mount_path.startswith('/media/'))
+                self.assert_(mount_path.startswith('/media/'))
             i = self.get_info()
             self.assertEqual(i['is mounted'], '1')
             self.assertEqual(i['mount paths'], mount_path)
@@ -706,7 +706,7 @@ class FS(UDisksTestCase):
             self.assertEqual(len(result), num_open_file)
             self.assertEqual(result[0][0], os.getpid())
             self.assertEqual(result[0][1], os.geteuid())
-            self.assertTrue(sys.argv[0] in result[0][2])
+            self.assert_(sys.argv[0] in result[0][2])
             f.close()
             num_open_file -= 1
 
@@ -716,7 +716,7 @@ class FS(UDisksTestCase):
             self._do_file_perms_checks(type, mount_path)
             # unmount
             self.retry_busy(self.partition_iface().FilesystemUnmount, [])
-            self.assertFalse(os.path.exists(mount_path), 'mount point was not removed')
+            self.failIf(os.path.exists(mount_path), 'mount point was not removed')
 
             i = self.get_info()
             self.assertEqual(i['is mounted'], '0')
@@ -731,7 +731,7 @@ class FS(UDisksTestCase):
                 st = os.stat(mount_path)
                 self.assertEqual((st.st_uid, st.st_gid), (1, 8))
                 self.retry_busy(self.partition_iface().FilesystemUnmount, [])
-                self.assertFalse(os.path.exists(mount_path), 'mount point was not removed')
+                self.failIf(os.path.exists(mount_path), 'mount point was not removed')
 
         # change label
         if supports_label_rename:
@@ -765,28 +765,28 @@ class FS(UDisksTestCase):
 
         f = os.path.join(mount_point, 'simpledata.txt')
         open(f, 'w').close()
-        self.assertTrue(os.access(f, os.R_OK))
-        self.assertTrue(os.access(f, os.W_OK))
-        self.assertFalse(os.access(f, os.X_OK))
+        self.assert_(os.access(f, os.R_OK))
+        self.assert_(os.access(f, os.W_OK))
+        self.failIf(os.access(f, os.X_OK))
 
         f = os.path.join(mount_point, 'simple.exe')
         shutil.copy('/bin/bash', f)
-        self.assertTrue(os.access(f, os.R_OK))
-        self.assertTrue(os.access(f, os.W_OK))
-        self.assertTrue(os.access(f, os.X_OK))
+        self.assert_(os.access(f, os.R_OK))
+        self.assert_(os.access(f, os.W_OK))
+        self.assert_(os.access(f, os.X_OK))
 
         os.mkdir(os.path.join(mount_point, 'subdir'))
         f = os.path.join(mount_point, 'subdir', 'subdirdata.txt')
         open(f, 'w').close()
-        self.assertTrue(os.access(f, os.R_OK))
-        self.assertTrue(os.access(f, os.W_OK))
-        self.assertFalse(os.access(f, os.X_OK))
+        self.assert_(os.access(f, os.R_OK))
+        self.assert_(os.access(f, os.W_OK))
+        self.failIf(os.access(f, os.X_OK))
 
         f = os.path.join(mount_point, 'subdir', 'subdir.exe')
         shutil.copy('/bin/bash', f)
-        self.assertTrue(os.access(f, os.R_OK))
-        self.assertTrue(os.access(f, os.W_OK))
-        self.assertTrue(os.access(f, os.X_OK))
+        self.assert_(os.access(f, os.R_OK))
+        self.assert_(os.access(f, os.W_OK))
+        self.assert_(os.access(f, os.X_OK))
 
 
 # ----------------------------------------------------------------------------
@@ -808,7 +808,7 @@ class Luks(UDisksTestCase):
             self.assertEqual(i['is mounted'], '0')
             self.assertEqual(i['mount paths'], '')
             self.assertEqual(i['presentation name'], '')
-            self.assertTrue(i['holder'].startswith('/org/freedesktop/UDisks/devices/'))
+            self.assert_(i['holder'].startswith('/org/freedesktop/UDisks/devices/'))
             self.assertEqual(i['uuid'], self.get_uuid())
 
             # check crypted device properties
@@ -823,14 +823,14 @@ class Luks(UDisksTestCase):
             self.assertEqual(clear_props.Get(I_D, 'DeviceIsLuks'), False)
             self.assertEqual(clear_props.Get(I_D, 'DeviceIsLuksCleartext'), True)
             self.assertEqual(clear_props.Get(I_D, 'LuksCleartextUnlockedByUid'), 0)
-            self.assertTrue(clear_props.Get(I_D, 'LuksCleartextSlave').endswith('/' +
+            self.assert_(clear_props.Get(I_D, 'LuksCleartextSlave').endswith('/' +
                 os.path.basename(self.device)))
 
             # check cleartext device info
-            self.assertTrue(i['holder'] in self.manager_iface.EnumerateDevices())
+            self.assert_(i['holder'] in self.manager_iface.EnumerateDevices())
             clear_devname = clear_props.Get(I_D, 'DeviceFile')
             ci = self.get_info(devname=clear_devname)
-            self.assertTrue(os.path.exists(clear_devname))
+            self.assert_(os.path.exists(clear_devname))
             self.assertEqual(ci['usage'], 'filesystem')
             self.assertEqual(ci['type'], 'ext3')
             self.assertEqual(ci['label'], 'treasure')
@@ -842,13 +842,13 @@ class Luks(UDisksTestCase):
             udev_dump = subprocess.Popen(['udevadm', 'info', '--export-db'],
                     stdout=subprocess.PIPE)
             out = udev_dump.communicate()[0]
-            self.assertFalse('essiv:sha' in out, 'key information in udev properties')
+            self.failIf('essiv:sha' in out, 'key information in udev properties')
 
         finally:
             # tear down cleartext device
             self.partition_iface().LuksLock([])
-            self.assertFalse(i['holder'] in self.manager_iface.EnumerateDevices())
-            self.assertFalse(os.path.exists(clear_devname))
+            self.failIf(i['holder'] in self.manager_iface.EnumerateDevices())
+            self.failIf(os.path.exists(clear_devname))
             self.assertRaises(dbus.DBusException, clear_props.Get, I_D, 'DeviceFile')
 
     def test_luks_mount(self):
@@ -860,7 +860,7 @@ class Luks(UDisksTestCase):
 
         # correct password
         clear_objpath = self.retry_busy(self.partition_iface().LuksUnlock, 's3kr1t', [])
-        self.assertTrue(clear_objpath in self.manager_iface.EnumerateDevices())
+        self.assert_(clear_objpath in self.manager_iface.EnumerateDevices())
 
         clear_obj = dbus.SystemBus().get_object('org.freedesktop.UDisks',
                 clear_objpath)
@@ -881,21 +881,21 @@ class Luks(UDisksTestCase):
 
         # umount
         self.retry_busy(clear_iface.FilesystemUnmount, [])
-        self.assertFalse(os.path.exists(mount_path), 'mount point was not removed')
+        self.failIf(os.path.exists(mount_path), 'mount point was not removed')
         i = self.get_info()
         self.assertEqual(i['is mounted'], '0')
         self.assertEqual(i['mount paths'], '')
 
         # lock
         self.partition_iface().LuksLock([])
-        self.assertFalse(clear_objpath in self.manager_iface.EnumerateDevices())
+        self.failIf(clear_objpath in self.manager_iface.EnumerateDevices())
 
     def test_luks_forced_removal(self):
         '''LUKS forced removal'''
 
         # unlock and mount it
         clear_objpath = self.retry_busy(self.partition_iface().LuksUnlock, 's3kr1t', [])
-        self.assertTrue(clear_objpath in self.manager_iface.EnumerateDevices())
+        self.assert_(clear_objpath in self.manager_iface.EnumerateDevices())
 
         clear_obj = dbus.SystemBus().get_object('org.freedesktop.UDisks',
                 clear_objpath)
@@ -904,14 +904,14 @@ class Luks(UDisksTestCase):
 
         # removal should clean up mounts
         self.remove_device(self.device)
-        self.assertFalse(os.path.exists(mount_path))
-        self.assertFalse(clear_objpath in self.manager_iface.EnumerateDevices())
+        self.failIf(os.path.exists(mount_path))
+        self.failIf(clear_objpath in self.manager_iface.EnumerateDevices())
 
         # after putting it back, it should be mountable again
         self.readd_devices()
 
         clear_objpath = self.retry_busy(self.partition_iface().LuksUnlock, 's3kr1t', [])
-        self.assertTrue(clear_objpath in self.manager_iface.EnumerateDevices())
+        self.assert_(clear_objpath in self.manager_iface.EnumerateDevices())
 
         clear_obj = dbus.SystemBus().get_object('org.freedesktop.UDisks',
                 clear_objpath)
@@ -921,14 +921,14 @@ class Luks(UDisksTestCase):
 
         # umount
         self.retry_busy(clear_iface.FilesystemUnmount, [])
-        self.assertFalse(os.path.exists(mount_path), 'mount point was not removed')
+        self.failIf(os.path.exists(mount_path), 'mount point was not removed')
         i = self.get_info()
         self.assertEqual(i['is mounted'], '0')
         self.assertEqual(i['mount paths'], '')
 
         # lock
         self.partition_iface().LuksLock([])
-        self.assertFalse(clear_objpath in self.manager_iface.EnumerateDevices())
+        self.failIf(clear_objpath in self.manager_iface.EnumerateDevices())
 
     def test_luks_change_passphrase(self):
         '''LUKS change passphrase'''
@@ -1010,7 +1010,7 @@ class Partitions(UDisksTestCase):
                     exp_default_partitions=2) # Apple creates bootstrap stuff by default
             self.fail('creating apple partition at offset 0 should fail due to default bootstrap partitions')
         except dbus.DBusException as e:
-            self.assertTrue("Can't have overlapping partitions." in str(e))
+            self.assert_("Can't have overlapping partitions." in str(e))
 
         self._do_schema('apm', 'Apple_Unix_SVR2', 'Foo', 'allow_write',
                 exp_default_partitions=2, # Apple creates bootstrap stuff by default
@@ -1046,7 +1046,7 @@ class Partitions(UDisksTestCase):
         else:
             p1 = self.partition_iface().PartitionCreate(first_offset, 10000000,
                     type1, '', [], [], '', [])
-        self.assertTrue(p1 in self.manager_iface.EnumerateDevices())
+        self.assert_(p1 in self.manager_iface.EnumerateDevices())
  
         # udisks internally sets the new partition flags from the
         # PartitionCreate() call; trigger udev to ensure that we actually read
@@ -1058,7 +1058,7 @@ class Partitions(UDisksTestCase):
             fdisk = self.fdisk_list()
             self.assertEqual(len(fdisk), 1)
             fdisk = fdisk[0]
-            self.assertTrue(os.path.exists(fdisk[0]), 'p1: device file does not exist')
+            self.assert_(os.path.exists(fdisk[0]), 'p1: device file does not exist')
             self.assertEqual(fdisk[1], False, 'p1 is bootable')
             self.assertEqual(fdisk[5], type1.lstrip('0x'))
 
@@ -1099,9 +1099,9 @@ class Partitions(UDisksTestCase):
             self.assertEqual(p1_props.Get(I_D, 'IdType'), '')
             self.assertEqual(p1_props.Get(I_D, 'IdLabel'), '')
         off = p1_props.Get(I_D, 'PartitionOffset')
-        self.assertTrue(off >= first_offset and off <= first_offset+20000)
+        self.assert_(off >= first_offset and off <= first_offset+20000)
         size = p1_props.Get(I_D, 'PartitionSize')
-        self.assertTrue(size >= 9500000 and off <= 10500000)
+        self.assert_(size >= 9500000 and off <= 10500000)
         self.assertEqual(props.Get(I_D, 'PartitionTableCount'), exp_default_partitions + 1)
 
         # modify
@@ -1120,18 +1120,18 @@ class Partitions(UDisksTestCase):
         self.assertRaises(dbus.DBusException, p1_iface.PartitionModify, type2, '', [flag])
         self.assertRaises(dbus.DBusException, p1_props.Get, I_D, 'PartitionType')
 
-        self.assertFalse(p1 in self.manager_iface.EnumerateDevices())
+        self.failIf(p1 in self.manager_iface.EnumerateDevices())
         self.assertEqual(props.Get(I_D, 'PartitionTableCount'), 0)
 
         if schema == 'mbr':
-            self.assertFalse(os.path.exists(fdisk[0]), 'p1: device file still exists')
+            self.failIf(os.path.exists(fdisk[0]), 'p1: device file still exists')
             self.assertEqual(self.fdisk_list(), [])
 
         # recreate p1: flagged, with fs
         p1 = self.partition_iface().PartitionCreate(0, 10000000, type1, 
                 '', [flag], [], 'ext3', ['label=e3part'])
         self.sync_workaround()
-        self.assertTrue(p1 in self.manager_iface.EnumerateDevices())
+        self.assert_(p1 in self.manager_iface.EnumerateDevices())
 
         p1_obj = dbus.SystemBus().get_object('org.freedesktop.UDisks',
             p1)
@@ -1208,7 +1208,7 @@ class Smart(UDisksTestCase):
                 time.sleep(0.5)
 
             info = self.get_info(devname=hd)
-            self.assertTrue(info['ATA SMART'].startswith('Updated at '))
+            self.assert_(info['ATA SMART'].startswith('Updated at '))
             global hd_smart_blob
             hd_smart_blob = ''.join(map(chr, props.Get(I_D, 'DriveAtaSmartBlob')))
             # this is of course not truly correct for a test suite, but let's
@@ -1226,13 +1226,13 @@ class Smart(UDisksTestCase):
             self.assertEqual(info['ATA SMART'], 'not available')
             self.assertEqual(props.Get(I_D, 'DriveAtaSmartTimeCollected'), 0)
             self.assertEqual(props.Get(I_D, 'DriveAtaSmartBlob'), [])
-            self.assertFalse('overall assessment' in info)
+            self.failIf('overall assessment' in info)
 
             try:
                 self.partition_iface().DriveAtaSmartInitiateSelftest('short', [])
                 self.fail('device did not report to have SMART capabilities')
             except dbus.DBusException as e:
-                self.assertTrue('does not support ATA SMART' in str(e))
+                self.assert_('does not support ATA SMART' in str(e))
 
     def test_simulate(self):
         '''SMART status of simulated data on test device
@@ -1247,7 +1247,7 @@ class Smart(UDisksTestCase):
             return
     
         props = self.partition_props()
-        self.assertFalse(props.Get(I_D, 'DriveAtaSmartIsAvailable'))
+        self.failIf(props.Get(I_D, 'DriveAtaSmartIsAvailable'))
         self.assertEqual(props.Get(I_D, 'DriveAtaSmartTimeCollected'), 0)
         self.assertEqual(props.Get(I_D, 'DriveAtaSmartBlob'), [])
     
@@ -1256,12 +1256,12 @@ class Smart(UDisksTestCase):
             self.partition_iface().DriveAtaSmartRefreshData([])
             self.fail('expected "Device does not support ATA SMART"')
         except dbus.DBusException as e:
-            self.assertTrue('does not support ATA SMART' in str(e))
+            self.assert_('does not support ATA SMART' in str(e))
         try:
             self.partition_iface().DriveAtaSmartInitiateSelftest('short', [])
             self.fail('fake device is not expected to have SMART capabilities')
         except dbus.DBusException as e:
-            self.assertTrue('does not support ATA SMART' in str(e))
+            self.assert_('does not support ATA SMART' in str(e))
     
         # load the blob
         blob_f = tempfile.NamedTemporaryFile()
@@ -1273,7 +1273,7 @@ class Smart(UDisksTestCase):
     
         self.assertEqual(props.Get(I_D, 'DriveAtaSmartIsAvailable'), True)
     
-        self.assertTrue(info['ATA SMART'].startswith('Updated at '))
+        self.assert_(info['ATA SMART'].startswith('Updated at '))
         self.assertNotEqual(props.Get(I_D, 'DriveAtaSmartTimeCollected'), 0)
     
         self.assertEqual(hd_smart_blob, ''.join(map(chr, props.Get(I_D, 'DriveAtaSmartBlob'))))
@@ -1284,8 +1284,8 @@ class Smart(UDisksTestCase):
         tool_info = subprocess.Popen([self.tool_path, '--show-info',
             self.device], stdout=subprocess.PIPE)
         out = tool_info.communicate()[0]
-        self.assertTrue('power-on-hours' in out)
-        self.assertTrue('Pre-fail' in out)
+        self.assert_('power-on-hours' in out)
+        self.assert_('Pre-fail' in out)
     
 
 # ----------------------------------------------------------------------------
@@ -1342,7 +1342,7 @@ class LVM(UDisksTestCase):
             'org.freedesktop.UDisks', lvname), dbus.PROPERTIES_IFACE)
 
         # the LV is a real volume which should be shown, but not automounted
-        self.assertTrue(lv_props.Get(I_D, 'DeviceFile').startswith('/dev/dm-'))
+        self.assert_(lv_props.Get(I_D, 'DeviceFile').startswith('/dev/dm-'))
         self.assertEqual(lv_props.Get(I_D, 'DevicePresentationHide'), False)
         self.assertEqual(lv_props.Get(I_D, 'DevicePresentationNopolicy'), True)
 
@@ -1354,8 +1354,8 @@ class LVM(UDisksTestCase):
                 found_uuid = True
             if 'udtestlv1' in i:
                 found_name = True
-        self.assertTrue(found_uuid, 'no by-uuid found in ' + str(i))
-        self.assertTrue(found_uuid, 'no by-name found in ' + str(i))
+        self.assert_(found_uuid, 'no by-uuid found in ' + str(i))
+        self.assert_(found_uuid, 'no by-name found in ' + str(i))
 
     def test_single_lv_raid(self):
         '''LVM: Single LV, RAID-1'''
@@ -1379,7 +1379,7 @@ class LVM(UDisksTestCase):
         # find the real one; TODO: is this nameing scheme right on all distros?
         devname = '/dev/mapper/%s-udtestlvr1' % self.vgname
         real_lv_obj = self.manager_iface.FindDeviceByDeviceFile(devname)
-        self.assertTrue(real_lv_obj in lv_objs)
+        self.assert_(real_lv_obj in lv_objs)
 
         # put a file system onto it, for testing properties
         iface = dbus.Interface(dbus.SystemBus().get_object(
@@ -1403,7 +1403,7 @@ class LVM(UDisksTestCase):
                 for i in props.Get(I_D, 'DeviceFileById'):
                     if 'uuid-LVM' in i:
                         found_uuid = True
-                self.assertTrue(found_uuid, 'no by-uuid found in ' + str(i))
+                self.assert_(found_uuid, 'no by-uuid found in ' + str(i))
             else:
                 # mirror images should not have any real FS usage at all
                 self.assertEqual(props.Get(I_D, 'IdUsage'), '')
@@ -1465,8 +1465,8 @@ class LVM(UDisksTestCase):
             self.assertEqual(p1_p.Get(I_D, 'PartitionType'), '0x0e')
             self.assertEqual(p1_p.Get(I_D, 'PartitionSlave'), dev_objpath)
             self.assertEqual(p1_p.Get(I_D, 'PartitionNumber'), 1)
-            self.assertTrue(p1_p.Get(I_D, 'PartitionOffset') > 10000)
-            self.assertTrue(p1_p.Get(I_D, 'PartitionSize') > 8000000)
+            self.assert_(p1_p.Get(I_D, 'PartitionOffset') > 10000)
+            self.assert_(p1_p.Get(I_D, 'PartitionSize') > 8000000)
 
             # partition 2 properties
             p1_obj = dbus.SystemBus().get_object('org.freedesktop.UDisks', 
@@ -1480,8 +1480,8 @@ class LVM(UDisksTestCase):
             self.assertEqual(p1_p.Get(I_D, 'PartitionType'), '0x0c')
             self.assertEqual(p1_p.Get(I_D, 'PartitionSlave'), dev_objpath)
             self.assertEqual(p1_p.Get(I_D, 'PartitionNumber'), 2)
-            self.assertTrue(p1_p.Get(I_D, 'PartitionOffset') > 9000000)
-            self.assertTrue(p1_p.Get(I_D, 'PartitionSize') > 8000000)
+            self.assert_(p1_p.Get(I_D, 'PartitionOffset') > 9000000)
+            self.assert_(p1_p.Get(I_D, 'PartitionSize') > 8000000)
 
         finally:
             subprocess.call(['kpartx', '-d', devname])
@@ -1498,22 +1498,22 @@ class GlobalOps(UDisksTestCase):
         ver = self.manager_props.Get('org.freedesktop.UDisks',
                 'DaemonVersion')
         self.assertEqual(type(ver), dbus.String)
-        self.assertTrue(len(ver) > 0)
+        self.assert_(len(ver) > 0)
 
     def test_enumerate_devices(self):
         '''EnumerateDevices()'''
 
         devs = self.manager_iface.EnumerateDevices()
-        self.assertTrue(len(devs) > 1) # at least our test device and root fs
-        self.assertTrue('/org/freedesktop/UDisks/devices/' +
+        self.assert_(len(devs) > 1) # at least our test device and root fs
+        self.assert_('/org/freedesktop/UDisks/devices/' +
                     os.path.basename(self.device) in devs)
 
     def test_enumerate_device_files(self):
         '''EnumerateDeviceFiles()'''
 
         devs = self.manager_iface.EnumerateDeviceFiles()
-        self.assertTrue(len(devs) > 1) # at least our test device and root fs
-        self.assertTrue(self.device in devs)
+        self.assert_(len(devs) > 1) # at least our test device and root fs
+        self.assert_(self.device in devs)
 
     def test_find_by_devpath(self):
         '''FindDeviceByDeviceFile()'''
@@ -1542,10 +1542,10 @@ class GlobalOps(UDisksTestCase):
         '''inhibition'''
 
         # Inhibit()
-        self.assertFalse(self.manager_props.Get('org.freedesktop.UDisks',
+        self.failIf(self.manager_props.Get('org.freedesktop.UDisks',
             'DaemonIsInhibited'))
         cookie1 = self.manager_iface.Inhibit()
-        self.assertTrue(self.manager_props.Get('org.freedesktop.UDisks',
+        self.assert_(self.manager_props.Get('org.freedesktop.UDisks',
             'DaemonIsInhibited'))
 
         # try mounting, should fail due to inhibition
@@ -1553,23 +1553,23 @@ class GlobalOps(UDisksTestCase):
             self.partition_iface().FilesystemMount('', [])
             self.fail('.FilesystemMount() succeeded while inhibited')
         except dbus.DBusException as e:
-            self.assertTrue(e._dbus_error_name.endswith('Error.Inhibited'))
+            self.assert_(e._dbus_error_name.endswith('Error.Inhibited'))
 
         # Inhibit() another time
         cookie2 = self.manager_iface.Inhibit()
-        self.assertTrue(self.manager_props.Get('org.freedesktop.UDisks',
+        self.assert_(self.manager_props.Get('org.freedesktop.UDisks',
             'DaemonIsInhibited'))
 
         # Uninhibit()
         self.manager_iface.Uninhibit(cookie1)
-        self.assertTrue(self.manager_props.Get('org.freedesktop.UDisks',
+        self.assert_(self.manager_props.Get('org.freedesktop.UDisks',
             'DaemonIsInhibited'))
 
         self.assertRaises(dbus.DBusException, self.manager_iface.Uninhibit,
             '0xDEADBEEF')
 
         self.manager_iface.Uninhibit(cookie2)
-        self.assertFalse(self.manager_props.Get('org.freedesktop.UDisks',
+        self.failIf(self.manager_props.Get('org.freedesktop.UDisks',
             'DaemonIsInhibited'))
 
         self.assertRaises(dbus.DBusException, self.manager_iface.Uninhibit,
