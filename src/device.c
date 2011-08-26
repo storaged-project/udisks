@@ -5891,27 +5891,6 @@ static const FSMountOptions fs_mount_options[] =
     { "udf", udf_defaults, udf_allow, udf_allow_uid_self, udf_allow_gid_self },
   };
 
-static const gchar *well_known_filesystems[] =
-{
-  "btrfs",
-  "ext2",
-  "ext3",
-  "ext4",
-  "udf",
-  "iso9660",
-  "xfs",
-  "jfs",
-  "nilfs",
-  "reiserfs",
-  "reiser4",
-  "msdos",
-  "umsdos",
-  "vfat",
-  "exfat"
-  "ntfs",
-  NULL,
-};
-
 /* ------------------------------------------------ */
 
 static int num_fs_mount_options = sizeof(fs_mount_options) / sizeof(FSMountOptions);
@@ -6246,86 +6225,6 @@ filesystem_mount_completed_cb (DBusGMethodInvocation *context,
     }
 }
 
-static gboolean
-is_in_filesystem_file (const gchar *filesystems_file,
-                       const gchar *fstype)
-{
-  gchar *filesystems;
-  GError *error;
-  gboolean ret;
-  gchar **lines;
-  guint n;
-
-  ret = FALSE;
-  filesystems = NULL;
-  lines = NULL;
-
-  error = NULL;
-  if (!g_file_get_contents (filesystems_file,
-                            &filesystems,
-                            NULL, /* gsize *out_length */
-                            &error))
-    {
-      g_warning ("Error reading /etc/filesystems: %s (%s %d)",
-                 error->message,
-                 g_quark_to_string (error->domain),
-                 error->code);
-      g_error_free (error);
-      goto out;
-    }
-
-  lines = g_strsplit (filesystems, "\n", -1);
-  for (n = 0; lines != NULL && lines[n] != NULL && !ret; n++)
-    {
-      gchar **tokens;
-      gint num_tokens;
-      g_strdelimit (lines[n], " \t", ' ');
-      g_strstrip (lines[n]);
-      tokens = g_strsplit (lines[n], " ", -1);
-      num_tokens = g_strv_length (tokens);
-      if (num_tokens == 1 && g_strcmp0 (tokens[0], fstype) == 0)
-        {
-          ret = TRUE;
-        }
-      g_strfreev (tokens);
-    }
-
- out:
-  g_strfreev (lines);
-  g_free (filesystems);
-  return ret;
-}
-
-static gboolean
-is_well_known_filesystem (const gchar *fstype)
-{
-  gboolean ret;
-  guint n;
-
-  ret = FALSE;
-  for (n = 0; well_known_filesystems[n] != NULL; n++)
-    {
-      if (g_strcmp0 (well_known_filesystems[n], fstype) == 0)
-        {
-          ret = TRUE;
-          goto out;
-        }
-    }
- out:
-  return ret;
-}
-
-/* this is not a very efficient implementation but it's very rarely
- * called so no real point in optimizing it...
- */
-static gboolean
-is_allowed_filesystem (const gchar *fstype)
-{
-  return is_well_known_filesystem (fstype) ||
-    is_in_filesystem_file ("/proc/filesystems", fstype) ||
-    is_in_filesystem_file ("/etc/filesystems", fstype);
-}
-
 static void
 device_filesystem_mount_authorized_cb (Daemon *daemon,
                                        Device *device,
@@ -6355,35 +6254,6 @@ device_filesystem_mount_authorized_cb (Daemon *daemon,
   mount_point = NULL;
   remove_dir_on_unmount = FALSE;
   error = NULL;
-
-  /* If the user requests the filesystem type, error out unless the
-   * filesystem type is
-   *
-   * - well-known [1]; or
-   * - in the /etc/filesystems file; or
-   * - in the /proc/filesystems file
-   *
-   * We do this because mount(8) on Linux allows loading any arbitrary
-   * kernel module (when invoked as root) by passing something appropriate
-   * to the -t option. So we have to validate whatever we pass.
-   *
-   * See https://bugs.freedesktop.org/show_bug.cgi?id=32232 for more
-   * details.
-   *
-   * [1] : since /etc/filesystems may be horribly out of date and not
-   *       contain e.g. ext4
-   */
-  if (filesystem_type != NULL && strlen (filesystem_type) > 0 &&
-      g_strcmp0 (filesystem_type, "auto") != 0)
-    {
-      if (!is_allowed_filesystem (filesystem_type))
-        {
-          throw_error (context, ERROR_FAILED,
-                       "Requested filesystem type is neither well-known nor "
-                       "in /proc/filesystems nor in /etc/filesystems");
-          goto out;
-        }
-    }
 
   daemon_local_get_uid (device->priv->daemon, &caller_uid, context);
 
