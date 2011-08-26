@@ -1088,20 +1088,15 @@ class Smart(UDisksTestCase):
                 self.manager_iface.FindDeviceByDeviceFile(hd))
         iface = dbus.Interface(obj, I_D)
         props = dbus.Interface(obj, dbus.PROPERTIES_IFACE)
+        info = self.get_info(devname=hd)
 
         self.assertEqual(props.Get(I_D, 'DriveAtaSmartIsAvailable'),
                 has_smart)
 
         if has_smart:
             print >> sys.stderr, '[avail] ',
-
-            # wait for SMART data to be read
-            while props.Get(I_D, 'DriveAtaSmartTimeCollected') == 0:
-                print >> sys.stderr, '[wait for data] ',
-                time.sleep(0.5)
-
-            info = self.get_info(devname=hd)
             self.assert_(info['ATA SMART'].startswith('Updated at '))
+            self.assertNotEqual(props.Get(I_D, 'DriveAtaSmartTimeCollected'), 0)
             global hd_smart_blob
             hd_smart_blob = ''.join(map(chr, props.Get(I_D, 'DriveAtaSmartBlob')))
             # this is of course not truly correct for a test suite, but let's
