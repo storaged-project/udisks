@@ -290,9 +290,7 @@ dm_export (int major, int minor)
           /* Set target_params for known-safe and known-needed target types only. In particular,
            * we must not export it for "crypto", since that would expose
            * information about the key. */
-          if ((g_strcmp0 (target_type, "linear") == 0 ||
-               g_strcmp0 (target_type, "multipath") == 0)
-              && params != NULL && strlen (params) > 0)
+          if (g_strcmp0 (target_type, "linear") == 0 && params != NULL && strlen (params) > 0)
             {
               _udev_util_encode_string (params, buf, sizeof (buf));
               g_string_append (params_str, buf);
