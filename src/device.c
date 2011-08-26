@@ -11772,25 +11772,32 @@ force_removal (Device *device,
         }
     }
 
-  if (device->priv->id_usage != NULL && device->priv->luks_holder != NULL && strcmp (device->priv->id_usage, "crypto") == 0)
+  if (device->priv->id_usage != NULL && strcmp (device->priv->id_usage, "crypto") == 0)
     {
-      Device *d;
+      GList *devices;
+      GList *l;
 
       /* look for cleartext device  */
-      d = daemon_local_find_by_object_path (device->priv->daemon, device->priv->luks_holder);
-      if (strcmp (d->priv->object_path, device->priv->luks_holder) == 0)
+      devices = daemon_local_get_all_devices (device->priv->daemon);
+      for (l = devices; l != NULL; l = l->next)
         {
-          /* Check whether it is set up by us */
-          if (d->priv->dm_name != NULL && g_str_has_prefix (d->priv->dm_name, "udisks-luks-uuid-"))
+          Device *d = DEVICE (l->data);
+          if (d->priv->device_is_luks_cleartext && d->priv->luks_cleartext_slave != NULL
+              && strcmp (d->priv->luks_cleartext_slave, device->priv->object_path) == 0)
             {
 
-              g_print ("**** NOTE: Force luks teardown device %s (cleartext %s)\n",
-                       device->priv->device_file,
-                       d->priv->device_file);
+              /* Check whether it is set up by us */
+              if (d->priv->dm_name != NULL && g_str_has_prefix (d->priv->dm_name, "udisks-luks-uuid-"))
+                {
 
-              /* Gotcha */
-              force_luks_teardown (device, d, callback, user_data);
-              goto pending;
+                  g_print ("**** NOTE: Force luks teardown device %s (cleartext %s)\n",
+                           device->priv->device_file,
+                           d->priv->device_file);
+
+                  /* Gotcha */
+                  force_luks_teardown (device, d, callback, user_data);
+                  goto pending;
+                }
             }
         }
     }
