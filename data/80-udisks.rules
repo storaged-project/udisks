@@ -215,7 +215,7 @@ ENV{UDISKS_PARTITION_SCHEME}=="apm", \
 
 # recovery partitions (taken from old hal rules)
 ENV{ID_FS_TYPE}=="ntfs|vfat", \
-  ENV{ID_FS_LABEL}=="RECOVERY|HP_RECOVERY|Recovery Partition|DellUtility|DellRestore|IBM_SERVICE|SERVICEV001|SERVICEV002|SYSTEM RESERVED", \
+  ENV{ID_FS_LABEL}=="RECOVERY|HP_RECOVERY|Recovery Partition|DellUtility|DellRestore|IBM_SERVICE|SERVICEV001|SERVICEV002", \
   ENV{UDISKS_PRESENTATION_HIDE}="1"
 
 # read-only non-Linux software installer partitions
