@@ -5874,7 +5874,7 @@ static const char *iso9660_allow_gid_self[] = { "gid=", NULL };
 /* ---------------------- udf -------------------- */
 
 static const char *udf_defaults[] = { "uid=", "gid=", "iocharset=utf8", "umask=0077", NULL };
-static const char *udf_allow[] = { "iocharset=", "umask=", "mode=", "dmode=", NULL };
+static const char *udf_allow[] = { "iocharset=", "umask=", NULL };
 static const char *udf_allow_uid_self[] = { "uid=", NULL };
 static const char *udf_allow_gid_self[] = { "gid=", NULL };
 
@@ -6088,8 +6088,7 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
 }
 
 static char **
-prepend_default_mount_options (Device *device,
-                               const FSMountOptions *fsmo,
+prepend_default_mount_options (const FSMountOptions *fsmo,
                                uid_t caller_uid,
                                char **given_options)
 {
@@ -6098,7 +6097,6 @@ prepend_default_mount_options (Device *device,
   char *s;
   gid_t gid;
 
-  /* static default options from FSMountOptions */
   options = g_ptr_array_new ();
   if (fsmo != NULL)
     {
@@ -6126,19 +6124,6 @@ prepend_default_mount_options (Device *device,
             }
         }
     }
-
-  /* dynamic default options */
-
-  /* some broken DVDs come with 0400 directory permissions, making them
-   * unreadable; overwrite readonly UDF media with a 0500 dmode. */
-  if (g_strcmp0 (device->priv->id_type, "udf") == 0 && device->priv->device_is_optical_disc &&
-      device->priv->drive_media != NULL && 
-      strstr(device->priv->drive_media, "_rw") == NULL && strstr(device->priv->drive_media, "_ram") == NULL)
-    {
-      g_ptr_array_add (options, g_strdup("dmode=0500"));
-    }
-
-  /* user supplied options */
   for (n = 0; given_options[n] != NULL; n++)
     {
       g_ptr_array_add (options, g_strdup (given_options[n]));
@@ -6319,7 +6304,7 @@ device_filesystem_mount_authorized_cb (Daemon *daemon,
   /* always prepend some reasonable default mount options; these are
    * chosen here; the user can override them if he wants to
    */
-  options = prepend_default_mount_options (device, fsmo, caller_uid, given_options);
+  options = prepend_default_mount_options (fsmo, caller_uid, given_options);
 
   /* validate mount options and check for authorizations */
   s = g_string_new ("uhelper=udisks,nodev,nosuid");
