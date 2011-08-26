@@ -1,6 +1,6 @@
 /* -*- mode: C; c-file-style: "gnu"; indent-tabs-mode: nil; -*-
  *
- * Copyright (C) 2007 David Zeuthen <david@fubar.dk>
+ * Copyright (C) 2007-2010 David Zeuthen <zeuthen@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,218 +18,150 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+#include "config.h"
+#include <glib/gi18n.h>
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <signal.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <pwd.h>
-#include <grp.h>
+#include <gio/gio.h>
+#include <glib-unix.h>
 
-#include <glib.h>
-#include <glib/gi18n-lib.h>
-#include <glib-object.h>
+#include "udiskslogging.h"
+#include "udisksdaemontypes.h"
+#include "udisksdaemon.h"
 
-#include <dbus/dbus-glib.h>
-#include <dbus/dbus-glib-lowlevel.h>
+/* ---------------------------------------------------------------------------------------------------- */
 
-#include "poller.h"
-#include "daemon.h"
+static GMainLoop *loop = NULL;
+static gboolean opt_replace = FALSE;
+static gboolean opt_no_sigint = FALSE;
+static GOptionEntry opt_entries[] =
+{
+  {"replace", 0, 0, G_OPTION_ARG_NONE, &opt_replace, "Replace existing daemon", NULL},
+  {"no-sigint", 0, 0, G_OPTION_ARG_NONE, &opt_no_sigint, "Do not handle SIGINT for controlled shutdown", NULL},
+  {NULL }
+};
 
-#include "profile.h"
-
-#define NAME_TO_CLAIM "org.freedesktop.UDisks"
-
-static GMainLoop *loop;
+static UDisksDaemon *the_daemon = NULL;
 
 static void
-name_lost (DBusGProxy *system_bus_proxy,
-           const char *name_which_was_lost,
-           gpointer user_data)
+on_bus_acquired (GDBusConnection *connection,
+                 const gchar     *name,
+                 gpointer         user_data)
 {
-  g_warning ("got NameLost, exiting");
+  the_daemon = udisks_daemon_new (connection);
+  udisks_debug ("Connected to the system bus");
+}
+
+static void
+on_name_lost (GDBusConnection *connection,
+              const gchar     *name,
+              gpointer         user_data)
+{
+  if (the_daemon == NULL)
+    {
+      udisks_error ("Failed to connect to the system message bus");
+    }
+  else
+    {
+      udisks_info ("Lost (or failed to acquire) the name %s on the system message bus", name);
+    }
   g_main_loop_quit (loop);
 }
 
-static gboolean
-acquire_name_on_proxy (DBusGProxy *system_bus_proxy,
-                       gboolean replace)
+static void
+on_name_acquired (GDBusConnection *connection,
+                  const gchar     *name,
+                  gpointer         user_data)
 {
-  GError *error;
-  guint result;
-  gboolean res;
-  gboolean ret;
-  guint flags;
+  udisks_notice ("Acquired the name %s on the system message bus", name);
+}
 
-  ret = FALSE;
-
-  flags = DBUS_NAME_FLAG_ALLOW_REPLACEMENT;
-  if (replace)
-    flags |= DBUS_NAME_FLAG_REPLACE_EXISTING;
-
-  if (system_bus_proxy == NULL)
-    {
-      goto out;
-    }
-
-  error = NULL;
-  res = dbus_g_proxy_call (system_bus_proxy,
-                           "RequestName",
-                           &error,
-                           G_TYPE_STRING,
-                           NAME_TO_CLAIM,
-                           G_TYPE_UINT,
-                           flags,
-                           G_TYPE_INVALID,
-                           G_TYPE_UINT,
-                           &result,
-                           G_TYPE_INVALID);
-  if (!res)
-    {
-      if (error != NULL)
-        {
-          g_warning ("Failed to acquire %s: %s", NAME_TO_CLAIM, error->message);
-          g_error_free (error);
-        }
-      else
-        {
-          g_warning ("Failed to acquire %s", NAME_TO_CLAIM);
-        }
-      goto out;
-    }
-
-  if (result != DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER)
-    {
-      if (error != NULL)
-        {
-          g_warning ("Failed to acquire %s: %s", NAME_TO_CLAIM, error->message);
-          g_error_free (error);
-        }
-      else
-        {
-          g_warning ("Failed to acquire %s", NAME_TO_CLAIM);
-        }
-      goto out;
-    }
-
-  dbus_g_proxy_add_signal (system_bus_proxy, "NameLost", G_TYPE_STRING, G_TYPE_INVALID);
-  dbus_g_proxy_connect_signal (system_bus_proxy, "NameLost", G_CALLBACK (name_lost), NULL, NULL);
-
-  ret = TRUE;
-
- out:
-  return ret;
+static gboolean
+on_sigint (gpointer user_data)
+{
+  udisks_info ("Caught SIGINT. Initiating shutdown");
+  g_main_loop_quit (loop);
+  return FALSE;
 }
 
 int
-main (int argc,
+main (int    argc,
       char **argv)
 {
   GError *error;
-  Daemon *daemon;
-  GOptionContext *context;
-  DBusGProxy *system_bus_proxy;
-  DBusGConnection *bus;
-  static char *helper_dir = NULL;
-  char *path;
-  int ret;
-  static gboolean replace;
-  static GOptionEntry entries[] =
-    {
-      { "replace", 0, 0, G_OPTION_ARG_NONE, &replace, "Replace existing daemon", NULL },
-      { "helper-dir", 0, G_OPTION_FLAG_FILENAME, G_OPTION_ARG_STRING,
-	  &helper_dir, "Directory for helper tools",  NULL },
-      { NULL } };
-
-  PROFILE ("main(): start");
+  GOptionContext *opt_context;
+  gint ret;
+  guint name_owner_id;
+  guint sigint_id;
 
   ret = 1;
-  error = NULL;
+  loop = NULL;
+  opt_context = NULL;
+  name_owner_id = 0;
+  sigint_id = 0;
 
   g_type_init ();
-
-  /* fork the polling process early */
-  if (!poller_setup (argc, argv))
-    {
-      goto out;
-    }
 
   /* avoid gvfs (http://bugzilla.gnome.org/show_bug.cgi?id=526454) */
   if (!g_setenv ("GIO_USE_VFS", "local", TRUE))
     {
-      g_warning ("Couldn't set GIO_USE_GVFS");
+      g_printerr ("Error setting GIO_USE_GVFS\n");
       goto out;
     }
 
-  context = g_option_context_new ("udisks storage daemon");
-  g_option_context_add_main_entries (context, entries, NULL);
-  g_option_context_parse (context, &argc, &argv, NULL);
-  g_option_context_free (context);
-
-  /* run with a controlled path */
-  if (helper_dir != NULL)
-      path = g_strdup_printf ("%s:" PACKAGE_LIBEXEC_DIR ":/sbin:/bin:/usr/sbin:/usr/bin", helper_dir);
-  else
-      path = g_strdup (PACKAGE_LIBEXEC_DIR ":/sbin:/bin:/usr/sbin:/usr/bin");
-
-  if (!g_setenv ("PATH", path, TRUE))
+  opt_context = g_option_context_new ("udisks storage daemon");
+  g_option_context_add_main_entries (opt_context, opt_entries, NULL);
+  error = NULL;
+  if (!g_option_context_parse (opt_context, &argc, &argv, &error))
     {
-      g_warning ("Couldn't set PATH");
-      goto out;
-    }
-  g_free (path);
-
-  PROFILE ("main(): basic initialization done");
-
-  bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
-  if (bus == NULL)
-    {
-      g_warning ("Couldn't connect to system bus: %s", error->message);
+      g_printerr ("Error parsing options: %s\n", error->message);
       g_error_free (error);
       goto out;
     }
 
-  system_bus_proxy = dbus_g_proxy_new_for_name (bus, DBUS_SERVICE_DBUS, DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS);
-  if (system_bus_proxy == NULL)
-    {
-      g_warning ("Could not construct system_bus_proxy object; bailing out");
-      goto out;
-    }
+  udisks_notice ("udisks daemon version %s starting", PACKAGE_VERSION);
 
-  if (!acquire_name_on_proxy (system_bus_proxy, replace))
-    {
-      g_warning ("Could not acquire name; bailing out");
-      goto out;
-    }
-
-  PROFILE ("main(): D-Bus initialization done");
-
-  g_debug ("Starting daemon version %s", VERSION);
-
-  daemon = daemon_new ();
-
-  if (daemon == NULL)
-    {
-      goto out;
-    }
-
-  PROFILE ("main(): starting main loop");
   loop = g_main_loop_new (NULL, FALSE);
+
+  sigint_id = 0;
+  if (!opt_no_sigint)
+    {
+      sigint_id = g_unix_signal_add_watch_full (SIGINT,
+                                                G_PRIORITY_DEFAULT,
+                                                on_sigint,
+                                                NULL,  /* user_data */
+                                                NULL); /* GDestroyNotify */
+    }
+
+  name_owner_id = g_bus_own_name (G_BUS_TYPE_SYSTEM,
+                                  "org.freedesktop.UDisks2",
+                                  G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT |
+                                    (opt_replace ? G_BUS_NAME_OWNER_FLAGS_REPLACE : 0),
+                                  on_bus_acquired,
+                                  on_name_acquired,
+                                  on_name_lost,
+                                  NULL,
+                                  NULL);
+
+
+  udisks_debug ("Entering main event loop");
 
   g_main_loop_run (loop);
 
-  g_object_unref (daemon);
-  g_main_loop_unref (loop);
   ret = 0;
 
  out:
+  if (sigint_id > 0)
+    g_source_remove (sigint_id);
+  if (the_daemon != NULL)
+    g_object_unref (the_daemon);
+  if (name_owner_id != 0)
+    g_bus_unown_name (name_owner_id);
+  if (loop != NULL)
+    g_main_loop_unref (loop);
+  if (opt_context != NULL)
+    g_option_context_free (opt_context);
+
+  udisks_notice ("udisks daemon version %s exiting", PACKAGE_VERSION);
+
   return ret;
 }

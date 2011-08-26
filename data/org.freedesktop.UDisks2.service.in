@@ -1,0 +1,5 @@
+[D-BUS Service]
+Name=org.freedesktop.UDisks2
+Exec=@privlibdir@/udisksd
+User=root
+

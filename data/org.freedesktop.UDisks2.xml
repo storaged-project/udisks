@@ -1,0 +1,888 @@
+<!DOCTYPE node PUBLIC
+"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
+
+<!--
+ Copyright (C) 2011 David Zeuthen <zeuthen@gmail.com>
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+
+ You should have received a copy of the GNU Lesser General
+ Public License along with this library; if not, write to the
+ Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ Boston, MA 02111-1307, USA.
+-->
+
+  <!-- ********************************************************************** -->
+
+  <!--
+      org.freedesktop.UDisks2.Manager:
+      @short_description: Manager singleton
+
+      Interface for top-level manager singleton object located at the
+      object path <literal>/org/freedesktop/UDisks2/Manager</literal>.
+  -->
+  <interface name="org.freedesktop.UDisks2.Manager">
+    <!-- Version: The version of the daemon currently running  -->
+    <property name="Version" type="s" access="read"/>
+
+    <!--
+        LoopSetup:
+        @fd: An index for the file descriptor to use.
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>offset</parameter> (of type 't'), <parameter>size</parameter> (of type 't') and <parameter>read-only</parameter> (of type 'b').
+        @resulting_device: An object path to the object implementing the #org.freedesktop.UDisks2.Block interface.
+
+        Creates a block device for the file represented by @fd.
+    -->
+    <method name="LoopSetup">
+      <annotation name="org.gtk.GDBus.C.UnixFD" value="1"/>
+      <arg name="fd" direction="in" type="h"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="resulting_device" direction="out" type="o"/>
+    </method>
+  </interface>
+
+  <!--
+      org.freedesktop.UDisks2.Drive:
+      @short_description: Disk Drive
+
+      This interface is used to represent disk drives with or without
+      removable media.
+
+      This interface should not to be confused with the
+      #org.freedesktop.UDisks2.Block interface that is used for
+      low-level block devices the OS knows about. For example, if
+      <filename>/dev/sda</filename> and <filename>/dev/sdb</filename>
+      are block devices for two paths to the same drive, there will be
+      only one #org.freedesktop.UDisks2.Drive object but two
+      #org.freedesktop.UDisks2.Block objects.
+  -->
+  <interface name="org.freedesktop.UDisks2.Drive">
+    <!-- Vendor: A name for the vendor of the drive or blank if unknown. -->
+    <property name="Vendor" type="ay" access="read"/>
+    <!-- Model: A name for the model of the drive or blank if unknown. -->
+    <property name="Model" type="ay" access="read"/>
+    <!-- Revision: Firmware Revision or blank if unknown. -->
+    <property name="Revision" type="ay" access="read"/>
+    <!-- Serial: Serial number of the drive or blank if unknown. -->
+    <property name="Serial" type="ay" access="read"/>
+    <!-- WWN:
+
+         The <ulink
+         url="http://en.wikipedia.org/wiki/World_Wide_Name">World Wide
+         Name</ulink> of the drive or blank if unknown.
+    -->
+    <property name="WWN" type="s" access="read"/>
+
+    <!-- MediaRemovable: Whether the media can be removed from the drive. -->
+    <property name="MediaRemovable" type="b" access="read"/>
+
+    <!-- Size: The size of the drive. Is set to 0 if, and only if, no media is inserted. -->
+    <property name="Size" type="t" access="read"/>
+
+    <!-- MediaCompatibility:
+      The physical kind of media the drive uses or blank if unknown.
+      Known values include
+      <variablelist>
+      <varlistentry><term>flash</term><listitem><para>Flash Card</para></listitem></varlistentry>
+      <varlistentry><term>flash_cf</term><listitem><para>CompactFlash</para></listitem></varlistentry>
+      <varlistentry><term>flash_ms</term><listitem><para>MemoryStick</para></listitem></varlistentry>
+      <varlistentry><term>flash_sm</term><listitem><para>SmartMedia</para></listitem></varlistentry>
+      <varlistentry><term>flash_sd</term><listitem><para>Secure Digital</para></listitem></varlistentry>
+      <varlistentry><term>flash_sdhc</term><listitem><para>Secure Digital High Capacity</para></listitem></varlistentry>
+      <varlistentry><term>flash_sdxc</term><listitem><para>Secure Digital eXtended Capacity</para></listitem></varlistentry>
+      <varlistentry><term>flash_mmc</term><listitem><para>MultiMediaCard</para></listitem></varlistentry>
+      <varlistentry><term>floppy</term><listitem><para>Floppy Disk</para></listitem></varlistentry>
+      <varlistentry><term>floppy_zip</term><listitem><para>Zip Disk</para></listitem></varlistentry>
+      <varlistentry><term>floppy_jaz</term><listitem><para>Jaz Disk</para></listitem></varlistentry>
+      <varlistentry><term>optical</term><listitem><para>Optical Disc</para></listitem></varlistentry>
+      <varlistentry><term>optical_cd</term><listitem><para>Compact Disc</para></listitem></varlistentry>
+      <varlistentry><term>optical_cd_r</term><listitem><para>Compact Disc Recordable</para></listitem></varlistentry>
+      <varlistentry><term>optical_cd_rw</term><listitem><para>Compact Disc Rewritable</para></listitem></varlistentry>
+      <varlistentry><term>optical_dvd</term><listitem><para>Digital Versatile Disc</para></listitem></varlistentry>
+      <varlistentry><term>optical_dvd_r</term><listitem><para>DVD-R</para></listitem></varlistentry>
+      <varlistentry><term>optical_dvd_rw</term><listitem><para>DVD-RW</para></listitem></varlistentry>
+      <varlistentry><term>optical_dvd_ram</term><listitem><para>DVD-RAM</para></listitem></varlistentry>
+      <varlistentry><term>optical_dvd_plus_r</term><listitem><para>DVD+R</para></listitem></varlistentry>
+      <varlistentry><term>optical_dvd_plus_rw</term><listitem><para>DVD+RW</para></listitem></varlistentry>
+      <varlistentry><term>optical_dvd_plus_r_dl</term><listitem><para>DVD+R Dual Layer</para></listitem></varlistentry>
+      <varlistentry><term>optical_dvd_plus_rw_dl</term><listitem><para>DVD+RW Dual Layer</para></listitem></varlistentry>
+      <varlistentry><term>optical_bd</term><listitem><para>Blu-ray Disc</para></listitem></varlistentry>
+      <varlistentry><term>optical_bd_r</term><listitem><para>Blu-ray Recordable</para></listitem></varlistentry>
+      <varlistentry><term>optical_bd_re</term><listitem><para>Blu-ray Rewritable</para></listitem></varlistentry>
+      <varlistentry><term>optical_hddvd</term><listitem><para>HD-DVD</para></listitem></varlistentry>
+      <varlistentry><term>optical_hddvd_r</term><listitem><para>HD-DVD Recordable</para></listitem></varlistentry>
+      <varlistentry><term>optical_hddvd_rw</term><listitem><para>HD-DVD Rewritable</para></listitem></varlistentry>
+      <varlistentry><term>optical_mo</term><listitem><para>Magneto Optical</para></listitem></varlistentry>
+      <varlistentry><term>optical_mrw</term><listitem><para>Can read Mount Rainer media</para></listitem></varlistentry>
+      <varlistentry><term>optical_mrw_w</term><listitem><para>Can write Mount Rainer media</para></listitem></varlistentry>
+      </variablelist>
+    -->
+    <property name="MediaCompatibility" type="as" access="read"/>
+
+    <!-- Media: The kind of media currently in the drive or blank if unknown.
+         See the #org.freedesktop.UDisks2.Drive:MediaCompatibility property for known values.
+    -->
+    <property name="Media" type="s" access="read"/>
+
+    <!-- RotationRate: The rotational rate of the drive.
+      <itemizedlist>
+        <listitem><para>-1 if known to be rotating media but rotation rate isn't known</para></listitem>
+        <listitem><para>0 if known to be non-rotating media</para></listitem>
+        <listitem><para>the rotation rate in rounds per minute otherwise</para></listitem>
+      </itemizedlist>
+    -->
+    <property name="RotationRate" type="i" access="read"/>
+
+    <!-- ConnectionBus:
+      The physical connection bus used for the drive as seen by the
+      user. This is typically used to draw a USB or Firewire emblem
+      on top of an icon in an user interface.
+
+      Note that this property has <emphasis>nothing</emphasis> to do
+      with the low-level command-set used (such as ATA-8) or what
+      low-level connection bus (such as SATA, eSATA, PATA, SAS2 etc)
+      is used.
+
+      Known values include:
+      <variablelist>
+      <varlistentry><term>usb</term><listitem><para>Connected via USB</para></listitem></varlistentry>
+      <varlistentry><term>ieee1394</term><listitem><para>Connected via Firewire</para></listitem></varlistentry>
+      </variablelist>
+    -->
+    <property name="ConnectionBus" type="s" access="read"/>
+
+    <!-- SortKey:
+         A string that can be used for sorting drive objects.
+    -->
+    <property name="SortKey" type="s" access="read"/>
+
+    <!--
+        Eject:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Ejects media from the drive. This is only meaningful to do on
+        drives with removable media.
+
+        There are not a lot of guarantees associated with this method
+        so it should only be called in response to an user action.
+
+        On some hardware the media may be physically ejected while on
+        other hardware may simply eject the disc. On some hardware it
+        may not do anything physical but it may cause e.g. a display
+        on the hardware to show e.g. <quote>It is now safe to remove
+        the device</quote>.
+    -->
+    <method name="Eject">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+  </interface>
+
+  <!--
+    org.freedesktop.UDisks2.Drive.Ata:
+    @short_description: Disk drive using the ATA command-set
+
+    Objects implementing this interface also implement the
+    #org.freedesktop.UDisks2.Drive interface.
+  -->
+  <interface name="org.freedesktop.UDisks2.Drive.Ata">
+    <!-- SmartSupported: Whether the drive supports SMART. -->
+    <property name="SmartSupported" type="b" access="read"/>
+
+    <!-- SmartEnabled: Whether SMART is enabled. -->
+    <property name="SmartEnabled" type="b" access="read"/>
+
+    <!-- SmartUpdated:
+         The point in time (seconds since the
+         <ulink url="http://en.wikipedia.org/wiki/Unix_epoch">Unix Epoch</ulink>)
+         that the SMART status was updated or 0 if never updated.
+    -->
+    <property name="SmartUpdated" type="t" access="read"/>
+
+    <!-- SmartFailing:
+         Set to %TRUE if disk is about to fail.
+
+         This value is read from the disk itself and does not include
+         any interpretation.
+
+         This property is only meaningful if the property
+         #org.freedesktop.UDisks2.Drive.Ata:SmartUpdated is non-zero.
+    -->
+    <property name="SmartFailing" type="b" access="read"/>
+
+    <!-- SmartPowerOnSeconds:
+         The amount of time the disk has been powered on (according to SMART data) or 0 if unknown.
+
+         This property is only meaningful if the property
+         #org.freedesktop.UDisks2.Drive.Ata:SmartUpdated is non-zero.
+    -->
+    <property name="SmartPowerOnSeconds" type="t" access="read"/>
+
+    <!-- SmartTemperature:
+         The temperature (in Kelvin) of the disk according to SMART data or 0 if unknown.
+
+         This property is only meaningful if the property
+         #org.freedesktop.UDisks2.Drive.Ata:SmartUpdated is non-zero.
+    -->
+    <property name="SmartTemperature" type="d" access="read"/>
+
+    <!--
+        SmartUpdate:
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>nowakeup</parameter> (of type 'b').
+
+        Reads SMART data from the drive and update relevant properties.
+
+        If the option @nowakeup is given and the disk is in a sleeping
+        state, the error
+        <literal>org.freedesktop.UDisks.Error.WouldWakeup</literal> is
+        returned.
+    -->
+    <method name="SmartUpdate">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!-- TODO: self-tests, attributes etc. -->
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+  <!--
+    org.freedesktop.UDisks2.Block:
+    @short_description: Low-level Block Device
+
+    This interface represents a block device.
+
+    This should not be confused with the
+    #org.freedesktop.UDisks2.Drive interface that is used to represent
+    disk drives. For example, the #org.freedesktop.UDisks2.Block
+    interface is also used for block devices that do not correspond to
+    drives at all (e.g. <ulink
+    url="http://en.wikipedia.org/wiki/Loop_device">Loop
+    Devices</ulink>).
+  -->
+  <interface name="org.freedesktop.UDisks2.Block">
+    <!-- Device: The special device file for the block device e.g. <filename>/dev/sda2</filename>. -->
+    <property name="Device" type="ay" access="read"/>
+    <!-- Symlinks:
+
+         Known symlinks in <filename>/dev</filename> that points to
+         the device file in the
+         #org.freedesktop.UDisks2.Block:Device property.
+
+         For example, this array could include symlinks such as
+         <filename>/dev/disk/by-id/ata-INTEL_SSDSA2MH080G1GC_CVEM842101HD080DGN</filename>
+         and
+         <filename>/dev/disk/by-id/wwn-0x5001517387d61905</filename>.
+    -->
+    <property name="Symlinks" type="aay" access="read"/>
+    <!-- Major: The major number of the device. -->
+    <property name="Major" type="x" access="read"/>
+    <!-- Minor: The minor number of the device. -->
+    <property name="Minor" type="x" access="read"/>
+    <!-- Size: The size of the block device. -->
+    <property name="Size" type="t" access="read"/>
+
+    <!-- PreferredDevice:
+         The special device file to present in the UI instead of the value
+         of the #org.freedesktop.UDisks2.Block:Device property.
+
+         For example this could be
+         e.g. <filename>/dev/mapper/mpathk</filename> for a multipath
+         device with special device file <filename>/dev/dm-9</filename>.
+    -->
+    <property name="PreferredDevice" type="ay" access="read"/>
+
+    <!-- Drive:
+         The #org.freedesktop.UDisks2.Drive object that the block device
+         belongs to, or '/' if no such object exists.
+      -->
+    <property name="Drive" type="o" access="read"/>
+
+    <!-- IdUsage:
+         A result of probing for signatures on the block device. Known values include:
+         <variablelist>
+         <varlistentry>
+           <term>filesystem</term>
+           <listitem><para>Used for mountable filesystems</para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>crypto</term>
+           <listitem><para>Used for e.g. LUKS devices</para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>raid</term>
+           <listitem><para>Used for e.g. RAID members and LVM PVs</para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>other</term>
+           <listitem><para>Something else was detected.</para></listitem>
+         </varlistentry>
+         </variablelist>
+         If blank, no known signature was detected. This doesn't
+         necessarily mean the device contains no structured data; it
+         only means that no signature known to the probing code was
+         detected.
+    -->
+    <property name="IdUsage" type="s" access="read"/>
+    <!--
+        IdType:
+        This property contains more information about the result of
+        probing the block device. Its value depends of the value the
+        #org.freedesktop.UDisks2.Block:IdUsage property:
+        <variablelist>
+        <varlistentry><term>filesystem</term>
+          <listitem><para>The mountable file system that was detected (e.g. <literal>vfat</literal>).</para></listitem>
+        </varlistentry>
+        <varlistentry><term>crypto</term>
+          <listitem><para>Encrypted data. Known values include <literal>crypto_LUKS</literal>.</para></listitem>
+        </varlistentry>
+        <varlistentry><term>raid</term>
+          <listitem><para><ulink url="http://en.wikipedia.org/wiki/RAID">RAID</ulink> or similar. Known values include <literal>LVM2_member</literal> (for LVM2 components), <literal>linux_raid_member</literal> (for MD-RAID components.)</para></listitem>
+        </varlistentry>
+        <varlistentry><term>other</term>
+          <listitem><para>Something else. Known values include <literal>swap</literal> (for swap space), <literal>suspend</literal> (data used when resuming from suspend-to-disk.</para></listitem>
+        </varlistentry>
+        </variablelist>
+    -->
+    <property name="IdType" type="s" access="read"/>
+    <!-- IdVersion:
+         The version of the filesystem or other structured data on the block device.
+         Do not make any assumptions about the format.
+
+         This property is blank if there is no version or the version is unknown.
+    -->
+    <property name="IdVersion" type="s" access="read"/>
+    <!-- IdLabel:
+         The label of the filesystem or other structured data on the block device.
+
+         This property is blank if there is no label or the label is unknown.
+    -->
+    <property name="IdLabel" type="ay" access="read"/>
+    <!-- IdUUID:
+         The <ulink url="http://en.wikipedia.org/wiki/UUID">UUID</ulink> of the
+         filesystem or other structured data on the block device. Do not make
+         any assumptions about the UUID as its format depends on what kind of
+         data is on the device.
+
+         This property is blank if there is no UUID or the UUID is unknown.
+    -->
+    <property name="IdUUID" type="ay" access="read"/>
+
+    <!-- Configuration:
+         The configuration for the device.
+
+         This is an array of pairs of (@type, @details) where @type is
+         a string identifying the configuration source
+         (e.g. <literal>fstab</literal>) and @details contains the
+         actual configuration data.
+
+         Use the
+         org.freedesktop.UDisks2.Block.AddConfigurationItem(),
+         org.freedesktop.UDisks2.Block.RemoveConfigurationItem()
+         and
+         org.freedesktop.UDisks2.Block.UpdateConfigurationItem()
+         methods to add, remove and update configuration items.
+
+         Use
+         org.freedesktop.UDisks2.Block.GetSecretConfiguration()
+         to get the secrets (e.g. passphrases) that may be part of the
+         configuration but isn't exported in this property for
+         security reasons.
+
+         For entries of type <literal>fstab</literal>, it means that
+         the block device is referenced in the system-wide
+         <filename>/etc/fstab</filename> file. Known configuration
+         items for type <literal>fstab</literal> are
+         <variablelist>
+         <varlistentry>
+           <term>fsname (type <literal>'ay'</literal>)</term>
+           <listitem><para>The special device</para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>dir (type <literal>'ay'</literal>)</term>
+           <listitem><para>The mount point</para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>type (type <literal>'ay'</literal>)</term>
+           <listitem><para>The filesystem type</para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>opts (type <literal>'ay'</literal>)</term>
+           <listitem><para>Options</para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>freq (type <literal>'i'</literal>)</term>
+           <listitem><para>Dump frequency in days</para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>passno (type <literal>'i'</literal>)</term>
+           <listitem><para>Pass number of parallel fsck</para></listitem>
+         </varlistentry>
+         </variablelist>
+
+         For entries of type <literal>crypttab</literal>, it means that
+         the block device is referenced in the system-wide
+         <filename>/etc/crypttab</filename> file. Known configuration
+         items for type <literal>crypttab</literal> are
+         <variablelist>
+         <varlistentry>
+           <term>name (type <literal>'ay'</literal>)</term>
+           <listitem><para>The name to set the device up as</para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>device (type <literal>'ay'</literal>)</term>
+           <listitem><para>The special device</para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>passphrase-path (type <literal>'ay'</literal>)</term>
+           <listitem><para>Either empty to specify that no password is set,
+           otherwise a path to a file containing the encryption password.
+           This may also point to a special device file in <filename>/dev</filename>
+           such as <literal>/dev/random</literal>.
+           </para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>passphrase-contents (type <literal>'ay'</literal>)</term>
+           <listitem><para>The contents of the file containing the encryption password, if applicable.
+           This is only available via the org.freedesktop.UDisks2.Block.GetSecretConfiguration()
+           method.</para></listitem>
+         </varlistentry>
+         <varlistentry>
+           <term>opts (type <literal>'ay'</literal>)</term>
+           <listitem><para>Options</para></listitem>
+         </varlistentry>
+         </variablelist>
+         For security reasons, when creating a new
+         <literal>crypttab</literal> entry (via the
+         org.freedesktop.UDisks2.Block.AddConfigurationItem()
+         method), then the <option>passphrase-path</option> must
+         reference an unexisting file in the
+         <filename>/etc/luks-keys</filename> directory.
+    -->
+    <property name="Configuration" type="a(sa{sv})" access="read"/>
+
+    <!-- CryptoBackingDevice:
+         The #org.freedesktop.UDisks2.Block object that is
+         backing the device or <literal>/</literal> if unknown or if
+         the block device is not the cleartext device for an encrypted
+         device.
+    -->
+    <property name="CryptoBackingDevice" type="o" access="read"/>
+
+    <!-- HintSystem: If %TRUE, the device is considered a <emphasis>system device</emphasis>.
+         System devices are devices that require additional permissions to access.
+    -->
+    <property name="HintSystem" type="b" access="read"/>
+
+    <!-- HintIgnore: If %TRUE, the device should be hidden from users. -->
+    <property name="HintIgnore" type="b" access="read"/>
+
+    <!-- HintAuto: If %TRUE, the device should be automatically started (e.g. mounted, unlocked etc.). -->
+    <property name="HintAuto" type="b" access="read"/>
+
+    <!-- HintName: If not blank, the name to use when presenting the device. -->
+    <property name="HintName" type="s" access="read"/>
+
+    <!-- HintIconName: If not blank, the icon name to use when presenting the device.
+         The name must adhere to the
+         <ulink url="http://www.freedesktop.org/wiki/Specifications/icon-theme-spec">freedesktop.org icon theme specification</ulink>.
+    -->
+    <property name="HintIconName" type="s" access="read"/>
+
+    <!-- PartTable: Set to %TRUE if a partition table signature was detected on the device. -->
+    <property name="PartTable" type="b" access="read"/>
+    <!-- PartTableScheme: The type of partition table detected.
+         Known values include <literal>mbr</literal> (for <ulink
+         url="http://en.wikipedia.org/wiki/Master_Boot_Record">Master
+         Boot Record</ulink>), <literal>gpt</literal> (for <ulink
+         url="http://en.wikipedia.org/wiki/GUID_Partition_Table">GUID
+         Partition Table</ulink>) and <literal>apm</literal> (for
+         <ulink
+         url="http://en.wikipedia.org/wiki/Apple_Partition_Map">Apple
+         Partition Map</ulink>). If blank, and
+         #org.freedesktop.UDisks2.Block:PartTable is %TRUE, a
+         partition table was detected but its scheme is unknown.
+    -->
+    <property name="PartTableScheme" type="s" access="read"/>
+
+    <!-- PartEntry: Set to %TRUE if the block device represents a partition. -->
+    <property name="PartEntry" type="b" access="read"/>
+    <!-- PartEntryNumber: The number of the partition in the partition table. -->
+    <property name="PartEntryNumber" type="u" access="read"/>
+    <!-- PartEntryScheme: The partition table scheme or blank if unknown.
+         See the #org.freedesktop.UDisks2.Block:PartTable property for known schemes.
+    -->
+    <property name="PartEntryScheme" type="s" access="read"/>
+    <!-- PartEntryType: The type of the partition. -->
+    <property name="PartEntryType" type="s" access="read"/>
+    <!-- PartEntryFlags: Partition flags, e.g. <literal>boot</literal>. -->
+    <property name="PartEntryFlags" type="s" access="read"/>
+    <!-- PartEntryOffset: Offset of partition. -->
+    <property name="PartEntryOffset" type="t" access="read"/>
+    <!-- PartEntrySize: Size of partition. -->
+    <property name="PartEntrySize" type="t" access="read"/>
+    <!-- PartEntryLabel: Label of partition or blank if not supported or unknown. -->
+    <property name="PartEntryLabel" type="ay" access="read"/>
+    <!-- PartEntryUUID: The UUID of the partition or blank if not supported or unknown. -->
+    <property name="PartEntryUUID" type="ay" access="read"/>
+    <!-- PartEntryTable:
+         The object path of the #org.freedesktop.UDisks2.Block
+         partition table that the partition entry belongs to or
+         <literal>/</literal> if the device is not a partition.
+    -->
+    <property name="PartEntryTable" type="o" access="read"/>
+
+    <!--
+        AddConfigurationItem:
+        @item: The configuration item to add.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Adds a new configuration item.
+
+        See the #org.freedesktop.UDisks2.Block:Configuration
+        property for details about valid configuration items.
+    -->
+    <method name="AddConfigurationItem">
+      <arg name="item" direction="in" type="(sa{sv})"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        RemoveConfigurationItem:
+        @item: The configuration item to remove.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Removes an existing configuration item.
+
+        See the #org.freedesktop.UDisks2.Block:Configuration
+        property for details about valid configuration items.
+    -->
+    <method name="RemoveConfigurationItem">
+      <arg name="item" direction="in" type="(sa{sv})"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        UpdateConfigurationItem:
+        @old_item: The configuration item to remove.
+        @new_item: The configuration item to add. Must be of the same type as @old_item.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Removes a configuration item and adds a new one. This is
+        equivalent to calling
+        org.freedesktop.UDisks2.Block.RemoveConfigurationItem()
+        followed by
+        org.freedesktop.UDisks2.Block.AddConfigurationItem()
+        with the change that only one PolicyKit check is made
+        and that @new_item can be validated against @old_item.
+
+        See the #org.freedesktop.UDisks2.Block:Configuration
+        property for details about valid configuration items.
+    -->
+    <method name="UpdateConfigurationItem">
+      <arg name="old_item" direction="in" type="(sa{sv})"/>
+      <arg name="new_item" direction="in" type="(sa{sv})"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        GetSecretConfiguration:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @configuration: The resulting configuration.
+
+        Returns the same value as in the
+        #org.freedesktop.UDisks2.Block:Configuration property
+        but without secret information filtered out.
+    -->
+    <method name="GetSecretConfiguration">
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="configuration" direction="out" type="a(sa{sv})"/>
+    </method>
+
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+  <!--
+      org.freedesktop.UDisks2.Filesystem:
+      @short_description: Block device containing a mountable filesystem
+
+      This interface is used for #org.freedesktop.UDisks2.Block
+      devices that contain a mountable filesystem.
+  -->
+  <interface name="org.freedesktop.UDisks2.Filesystem">
+    <!-- prereq: org.freedesktop.UDisks2.Block -->
+
+    <!--
+        SetLabel:
+        @label: The label to set.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Sets the filesystem label.
+    -->
+    <method name="SetLabel">
+      <arg name="label" direction="in" type="ay"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!-- MountPoints:
+         An array of filesystems paths for where the file system on
+         the device is mounted. If the device is not mounted, this
+         array is empty.
+    -->
+    <property name="MountPoints" type="aay" access="read"/>
+
+    <!--
+        Mount:
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>fstype</parameter> (of type 's') and <parameter>options</parameter> (of type 's').
+        @mount_path: The filesystem path where the device was mounted.
+
+        Mount a filesystem on the device.
+
+        The directory the device will be mounted in is determined by
+        looking at data related to the device (such the filesystem
+        UUID and label) and will be created automatically. It is
+        returned in @mount_path and is normally a sub-directory of
+        <filename class='directory'>/media</filename>.
+
+        The filesystem should be unmounted using the
+        org.freedesktop.UDisks2.Filesystem.Unmount() method.
+
+        If the device is removed without being unmounted (e.g. the
+        user yanking the device or pulling the media out) or unmounted
+        in a way that bypasses the
+        org.freedesktop.UDisks2.Filesystem.Unmount() method
+        (e.g. unmounted by the super-user by using the
+        <citerefentry><refentrytitle>umount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+        command directly), the device will be unmounted (if needed)
+        and the mount point will be cleaned up.
+
+        The file system type can be overridden with the
+        <parameter>fstype</parameter> option and mount options can be
+        given in <parameter>options</parameter> as a comma-separated
+        string and is of the same format as would be passed to the
+        <citerefentry><refentrytitle>mount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+        command. Note that the mount options are validated - only a
+        small subset per filesystem type is allowed.
+
+        If the device in question is referenced in a system-wide
+        configuration file (such as the <filename>/etc/fstab</filename> file)
+        then the
+        <citerefentry><refentrytitle>mount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+        command is called directly as the calling user.
+        If the calling user does not have sufficient permissions to
+        mount the device (it could be the <literal>user</literal> or
+        <literal>users</literal> option isn't specificed), then
+        additional authorization is requested and, if obtained, the
+        <citerefentry><refentrytitle>mount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+        command is invoked as root.
+        Additionally, the
+        given <parameter>options</parameter> and
+        <parameter>fstype</parameter> options are not used as they are
+        instead read from the system-wide configuration file in
+        question.
+    -->
+    <method name="Mount">
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="mount_path" direction="out" type="ay"/>
+    </method>
+
+    <!--
+        Unmount:
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>force</parameter> (of type 'b').
+
+        Unmount a mounted device.
+
+        If the filesystem is busy, this operation fails unless the
+        option <parameter>force</parameter> is given.
+
+        If the device in question is referenced in a system-wide
+        configuration file (such as the <filename>/etc/fstab</filename> file)
+        then the
+        <citerefentry><refentrytitle>umount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+        command is called directly as the calling user.
+        If the calling user does not have sufficient permissions to
+        unmount the device (it could be the <literal>user</literal> or
+        <literal>users</literal> option isn't specificed), then
+        additional authorization is requested and, if obtained, the
+        <citerefentry><refentrytitle>umount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+        command is invoked as root.
+    -->
+    <method name="Unmount">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+  <!--
+      org.freedesktop.UDisks2.Swapspace:
+      @short_description: Block device containing swap data
+
+      This interface is used for #org.freedesktop.UDisks2.Block
+      devices that contain swap space.
+  -->
+  <interface name="org.freedesktop.UDisks2.Swapspace">
+    <!-- prereq: org.freedesktop.UDisks2.Block -->
+
+    <!-- Active: Set to %TRUE if the device is currently in use by the OS. -->
+    <property name="Active" type="b" access="read"/>
+
+    <!--
+        Start:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Activates the swap device.
+    -->
+    <method name="Start">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        Stop:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Deactivates the swap device.
+    -->
+    <method name="Stop">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+  <!--
+      org.freedesktop.UDisks2.Encrypted:
+      @short_description: Block device containing encrypted data
+
+      This interface is used for #org.freedesktop.UDisks2.Block
+      devices that contain encrypted data.
+  -->
+  <interface name="org.freedesktop.UDisks2.Encrypted">
+    <!-- prereq: org.freedesktop.UDisks2.Block -->
+
+    <!--
+        Unlock:
+        @passphrase: The passphrase to use.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @cleartext_device: An object path to the unlocked object implementing the #org.freedesktop.UDisks2.Block interface.
+
+        Tries to unlock the encrypted device using @passphrase.
+
+        If the device in question is referenced in a system-wide
+        configuration file (such as the <filename>/etc/crypttab</filename> file),
+        then name, options and passphrase (if available) is used from that
+        file after requesting additional authorization.
+
+        If the device is removed without being locked (e.g. the user
+        yanking the device or pulling the media out) the cleartext
+        device will be cleaned up.
+    -->
+    <method name="Unlock">
+      <arg name="passphrase" direction="in" type="ay"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="cleartext_device" direction="out" type="o"/>
+    </method>
+
+    <!--
+        Lock:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Locks the encrypted device.
+    -->
+    <method name="Lock">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+  <!--
+      org.freedesktop.UDisks2.Loop:
+      @short_description: Block device backed by a file
+
+      This interface is used for #org.freedesktop.UDisks2.Block
+      devices that are loop devices.
+  -->
+  <interface name="org.freedesktop.UDisks2.Loop">
+    <!-- prereq: org.freedesktop.UDisks2.Block -->
+
+    <!--
+        Delete:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Deletes the loop device.
+    -->
+    <method name="Delete">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!-- BackingFile:
+         A path to the file that is backing the block device or blank
+         if unknown.
+    -->
+    <property name="BackingFile" type="ay" access="read"/>
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+  <!--
+      org.freedesktop.UDisks2.Job:
+      @short_description: Long-running tasks
+
+      This interface is used for long-running tasks.
+  -->
+  <interface name="org.freedesktop.UDisks2.Job">
+
+    <!-- Progress: How much progress has been made. Values are in the range 0 to 1. -->
+    <property name="Progress" type="d" access="read"/>
+    <!-- StartTime:
+
+         The point in time (seconds since the <ulink
+         url="http://en.wikipedia.org/wiki/Unix_epoch">Unix
+         Epoch</ulink>) that the job was started.
+    -->
+    <property name="StartTime" type="t" access="read"/>
+    <!-- ExpectedEndTime:
+
+         The expected point in time (seconds since the <ulink
+         url="http://en.wikipedia.org/wiki/Unix_epoch">Unix
+         Epoch</ulink>) that the job will complete.
+    -->
+    <property name="ExpectedEndTime" type="t" access="read"/>
+
+    <!--
+        Cancel:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Cancels the job.
+    -->
+    <method name="Cancel">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        Completed:
+        @success: If %TRUE, the job completed successfully.
+        @message: A message describing the completion of the job, e.g. an error message.
+
+        Emitted when a job completes.
+    -->
+    <signal name="Completed">
+      <arg name="success" type="b"/>
+      <arg name="message" type="s"/>
+    </signal>
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+</node>

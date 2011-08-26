@@ -1,130 +1,119 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = helpers probers
+SUBDIRS = . tests
 
 NULL =
 
+EXTRA_DIST =
+
 INCLUDES = \
-	-I$(top_builddir)/src -I$(top_srcdir)/src \
-	-DPACKAGE_LIBEXEC_DIR=\""$(libexecdir)"\" \
-	-DPACKAGE_SYSCONF_DIR=\""$(sysconfdir)"\" \
-	-DPACKAGE_DATA_DIR=\""$(datadir)"\" \
-	-DPACKAGE_BIN_DIR=\""$(bindir)"\" \
-	-DPACKAGE_LOCALSTATE_DIR=\""$(localstatedir)"\" \
-	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\" \
-	-DPACKAGE_LIB_DIR=\""$(libdir)"\" \
-	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT	\
-	$(DBUS_GLIB_CFLAGS) \
-	$(POLKIT_GOBJECT_1_CFLAGS) \
-	$(GUDEV_CFLAGS) \
-	$(GLIB_CFLAGS) \
-	$(GIO_CFLAGS)
-
-BUILT_SOURCES =						\
-	daemon-glue.h					\
-	device-glue.h					\
-	adapter-glue.h					\
-	port-glue.h					\
-	expander-glue.h					\
-	marshal.h		marshal.c
-
-marshal.h: marshal.list
-	glib-genmarshal $< --prefix=marshal --header > $@
-
-marshal.c: marshal.list
-	echo "#include \"marshal.h\"" > $@ && glib-genmarshal $< --prefix=marshal --body >> $@
-
-daemon-glue.h: $(top_srcdir)/data/org.freedesktop.UDisks.xml Makefile.am
-	dbus-binding-tool --prefix=daemon --mode=glib-server --output=daemon-glue.h $(top_srcdir)/data/org.freedesktop.UDisks.xml
-
-device-glue.h: $(top_srcdir)/data/org.freedesktop.UDisks.Device.xml Makefile.am
-	dbus-binding-tool --prefix=device --mode=glib-server --output=device-glue.h $(top_srcdir)/data/org.freedesktop.UDisks.Device.xml
-
-adapter-glue.h: $(top_srcdir)/data/org.freedesktop.UDisks.Adapter.xml Makefile.am
-	dbus-binding-tool --prefix=adapter --mode=glib-server --output=adapter-glue.h $(top_srcdir)/data/org.freedesktop.UDisks.Adapter.xml
-
-expander-glue.h: $(top_srcdir)/data/org.freedesktop.UDisks.Expander.xml Makefile.am
-	dbus-binding-tool --prefix=expander --mode=glib-server --output=expander-glue.h $(top_srcdir)/data/org.freedesktop.UDisks.Expander.xml
-
-port-glue.h: $(top_srcdir)/data/org.freedesktop.UDisks.Port.xml Makefile.am
-	dbus-binding-tool --prefix=port --mode=glib-server --output=port-glue.h $(top_srcdir)/data/org.freedesktop.UDisks.Port.xml
-
-libexec_PROGRAMS = udisks-daemon
-
-udisks_daemon_SOURCES = 						\
-	types.h								\
-	private.h							\
-	profile.h							\
-	daemon.h			daemon.c			\
-	device.h			device.c			\
-	device-private.h		device-private.c		\
-	adapter.h			adapter.c			\
-	adapter-private.h		adapter-private.c		\
-	expander.h			expander.c			\
-	expander-private.h		expander-private.c		\
-	port.h				port.c				\
-	port-private.h			port-private.c			\
-	mount-file.h			mount-file.c			\
-	mount.h				mount.c				\
-	mount-monitor.h			mount-monitor.c			\
-	inhibitor.h			inhibitor.c			\
-	poller.h			poller.c			\
-	main.c								\
-	$(BUILT_SOURCES)
-
-udisks_daemon_CPPFLAGS = 				\
-	-I$(top_srcdir)/src				\
-	-DG_LOG_DOMAIN=\"udisks-daemon\"		\
-	$(DISABLE_DEPRECATED)				\
-	$(AM_CPPFLAGS)					\
+	-I$(top_builddir) -I$(top_srcdir)	 		\
+	-DPACKAGE_LIBEXEC_DIR=\""$(libexecdir)"\" 		\
+	-DPACKAGE_SYSCONF_DIR=\""$(sysconfdir)"\" 		\
+	-DPACKAGE_DATA_DIR=\""$(datadir)"\" 			\
+	-DPACKAGE_BIN_DIR=\""$(bindir)"\" 			\
+	-DPACKAGE_LOCALSTATE_DIR=\""$(localstatedir)"\" 	\
+	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\" 		\
+	-DPACKAGE_LIB_DIR=\""$(libdir)"\" 			\
+	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT			\
+	-DUDISKS_COMPILATION					\
+	$(POLKIT_GOBJECT_1_CFLAGS) 				\
+	$(GUDEV_CFLAGS) 					\
+	$(GLIB_CFLAGS) 						\
+	$(GIO_CFLAGS)						\
+	$(WARN_CFLAGS)						\
 	$(NULL)
 
-udisks_daemon_CFLAGS = 					\
+# ----------------------------------------------------------------------------------------------------
+
+BUILT_SOURCES = 							\
+	udisks-daemon-marshal.h		udisks-daemon-marshal.c		\
+	$(NULL)
+
+udisks-daemon-marshal.h: udisks-daemon-marshal.list
+	glib-genmarshal $< --prefix=udisks_daemon_marshal --header > $@
+
+udisks-daemon-marshal.c: udisks-daemon-marshal.list
+	echo "#include \"udisks-daemon-marshal.h\"" > $@ && glib-genmarshal $< --prefix=udisks_daemon_marshal --body >> $@
+
+EXTRA_DIST += udisks-daemon-marshal.list
+
+# ----------------------------------------------------------------------------------------------------
+
+noinst_LTLIBRARIES = libudisks-daemon.la
+
+libudisks_daemon_la_SOURCES =						\
+	udisksdaemontypes.h						\
+	udisksdaemon.h			udisksdaemon.c			\
+	udisksprovider.h		udisksprovider.c		\
+	udiskslinuxprovider.h		udiskslinuxprovider.c		\
+	udiskslinuxblockobject.h	udiskslinuxblockobject.c	\
+	udiskslinuxblock.h		udiskslinuxblock.c		\
+	udiskslinuxfilesystem.h		udiskslinuxfilesystem.c		\
+	udiskslinuxencrypted.h		udiskslinuxencrypted.c		\
+	udiskslinuxswapspace.h		udiskslinuxswapspace.c		\
+	udiskslinuxloop.h		udiskslinuxloop.c		\
+	udiskslinuxdriveobject.h	udiskslinuxdriveobject.c	\
+	udiskslinuxdrive.h		udiskslinuxdrive.c		\
+	udiskslinuxdriveata.h		udiskslinuxdriveata.c		\
+	udiskslinuxmanager.h		udiskslinuxmanager.c		\
+	udisksbasejob.h			udisksbasejob.c			\
+	udisksspawnedjob.h		udisksspawnedjob.c		\
+	udisksthreadedjob.h		udisksthreadedjob.c		\
+	udiskssimplejob.h		udiskssimplejob.c		\
+	udisksmount.h			udisksmount.c			\
+	udisksmountmonitor.h		udisksmountmonitor.c		\
+	udiskspersistentstore.h		udiskspersistentstore.c		\
+	udisksdaemonutil.h		udisksdaemonutil.c		\
+	udiskslogging.h			udiskslogging.c			\
+	udiskscleanup.h			udiskscleanup.c			\
+	udisksprivate.h							\
+	udisksfstabentry.h		udisksfstabentry.c		\
+	udisksfstabmonitor.h		udisksfstabmonitor.c		\
+	udiskscrypttabentry.h		udiskscrypttabentry.c		\
+	udiskscrypttabmonitor.h		udiskscrypttabmonitor.c		\
+	$(BUILT_SOURCES)						\
+	$(NULL)
+
+libudisks_daemon_la_CFLAGS =				\
+	-I$(top_srcdir)					\
+	-DG_LOG_DOMAIN=\"udisksd\"			\
+	$(GLIB_CFLAGS)					\
+	$(GIO_CFLAGS)					\
+	$(GUDEV_CFLAGS)					\
 	$(LIBATASMART_CFLAGS)				\
+	$(POLKIT_GOBJECT_1_CFLAGS) 			\
 	$(NULL)
 
-udisks_daemon_LDADD = 					\
+libudisks_daemon_la_LIBADD =				\
+	$(GLIB_LIBS)					\
 	$(GIO_LIBS)					\
-	$(DBUS_GLIB_LIBS)				\
-	$(POLKIT_GOBJECT_1_LIBS) 			\
 	$(GUDEV_LIBS)					\
 	$(LIBATASMART_LIBS)				\
+	$(POLKIT_GOBJECT_1_LIBS) 			\
+	$(top_builddir)/udisks/libudisks2.la		\
 	$(NULL)
 
 # ----------------------------------------------------------------------------------------------------
 
-polkitmodulesdir = $(libdir)/polkit-1/extensions
-polkitmodules_LTLIBRARIES = libudisks-action-lookup.la
+privlib_PROGRAMS = udisksd
 
-libudisks_action_lookup_la_SOURCES =                    		\
-	polkit-action-lookup.c                             		\
-        $(NULL)
+udisksd_SOURCES = 					\
+				main.c			\
+	$(NULL)
 
-libudisks_action_lookup_la_CFLAGS =                        		\
-        -DPOLKIT_BACKEND_I_KNOW_API_IS_SUBJECT_TO_CHANGE                \
-        -DG_LOG_DOMAIN=\"UDisks-Action-Lookup\"            		\
-	$(POLKIT_BACKEND_1_CFLAGS) 					\
-        $(NULL)
+udisksd_CFLAGS = 					\
+	-DG_LOG_DOMAIN=\"udisks2-daemon\"		\
+	$(NULL)
 
-libudisks_action_lookup_la_LDFLAGS =                       		\
-	-export_dynamic -avoid-version -module -no-undefined 		\
-	-export-symbols-regex '^g_io_module_(load|unload)' 		\
-	$(POLKIT_BACKEND_1_LIBS) 					\
-        $(NULL)
-
-libudisks_action_lookup_la_LIBADD =                 			\
-        $(NULL)
+udisksd_LDADD = 					\
+	$(GLIB_LIBS)					\
+	$(GIO_LIBS)					\
+	libudisks-daemon.la				\
+	$(NULL)
 
 # ----------------------------------------------------------------------------------------------------
-
-CLEANFILES = $(BUILT_SOURCES)
-
-EXTRA_DIST = 						\
-	marshal.list					\
-	$(NULL)
 
 install-data-local:
-	-$(mkdir_p) $(DESTDIR)$(localstatedir)/lib/udisks
-	-chmod 0700 $(DESTDIR)$(localstatedir)/lib/udisks
-	-$(mkdir_p) $(DESTDIR)$(localstatedir)/run/udisks
-	-chmod 0700 $(DESTDIR)$(localstatedir)/run/udisks
+	-$(mkdir_p) $(DESTDIR)$(localstatedir)/lib/udisks2
+	-chmod 0700 $(DESTDIR)$(localstatedir)/lib/udisks2

@@ -1,0 +1,236 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY version SYSTEM "version.xml">
+]>
+<book id="udisks" xmlns:xi="http://www.w3.org/2003/XInclude">
+  <bookinfo>
+    <title>UDisks Reference Manual</title>
+    <releaseinfo>Version &version;</releaseinfo>
+    <authorgroup>
+      <author>
+	<firstname>David</firstname>
+	<surname>Zeuthen</surname>
+	<affiliation>
+	  <address>
+	    <email>zeuthen@gmail.com</email>
+	  </address>
+	</affiliation>
+      </author>
+    </authorgroup>
+
+    <copyright>
+      <year>2007</year>
+      <year>2008</year>
+      <year>2009</year>
+      <year>2010</year>
+      <year>2011</year>
+      <holder>The UDisks Authors</holder>
+    </copyright>
+
+    <legalnotice>
+      <para>
+	Permission is granted to copy, distribute and/or modify this
+	document under the terms of the <citetitle>GNU Free
+	Documentation License</citetitle>, Version 1.1 or any later
+	version published by the Free Software Foundation with no
+	Invariant Sections, no Front-Cover Texts, and no Back-Cover
+	Texts. You may obtain a copy of the <citetitle>GNU Free
+	Documentation License</citetitle> from the Free Software
+	Foundation by visiting <ulink type="http"
+	url="http://www.fsf.org">their Web site</ulink> or by writing
+	to:
+	<address>
+          <street>51 Franklin Street</street>, Suite 500
+          <city>Boston</city>, <state>MA</state> <postcode>02110-1335</postcode>
+          <country>USA</country>
+	</address>
+      </para>
+      <para>
+	Many of the names used by companies to distinguish their
+	products and services are claimed as trademarks. Where those
+	names appear in any freedesktop.org documentation, and those
+	trademarks are made aware to the members of the
+	freedesktop.org project, the names have been printed in caps
+	or initial caps.
+      </para>
+    </legalnotice>
+  </bookinfo>
+
+  <part id="overview">
+    <title>UDisks Overview</title>
+  </part>
+
+  <part id="ref-dbus">
+    <title>D-Bus API Reference</title>
+    <chapter id="ref-dbus-overview">
+      <title>Overview</title>
+      <sect1 id="ref-dbus-well-known-name">
+        <title>The org.freedesktop.UDisks2 bus name</title>
+        <para>
+          The D-Bus name <literal>org.freedesktop.UDisks2</literal> on
+          the system bus is used by the UDisks Daemon, <link
+          linkend="udisksd.8">udisksd</link>. If this daemon isn't
+          running, it will be started if D-Bus messages are sent to
+          the name.
+        </para>
+      </sect1>
+      <sect1 id="ref-dbus-udisks2-well-known-object">
+        <title>The /org/freedesktop/UDisks2 object</title>
+        <para>
+          The process that owns the well-known D-Bus name <link
+          linkend="ref-dbus-well-known-name">org.freedesktop.UDisks2</link>
+          on the system bus (typically <link
+          linkend="udisksd.8">udisksd</link>) exports an object at the
+          well-known path <literal>/org/freedesktop/UDisks2</literal>.
+          This object implements the <ulink
+          url="http://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-objectmanager">org.freedesktop.DBus.ObjectManager</ulink>
+          interface and should be used by clients to discover other
+          objects.
+        </para>
+      </sect1>
+      <sect1 id="ref-dbus-manager-well-known-object">
+        <title>The /org/freedesktop/UDisks2/Manager object</title>
+        <para>
+          The object at the path
+          <literal>/org/freedesktop/UDisks2/Manager</literal>
+          implements the <link
+          linkend="gdbus-interface-org-freedesktop-UDisks2-Manager.top_of_page">org.freedesktop.UDisks2.Manager</link>
+          D-Bus interface. This object can be used to inspect and
+          manipulate global state.
+        </para>
+      </sect1>
+      <sect1 id="udisks-std-options">
+        <title>The <parameter>options</parameter> parameter</title>
+        <para>
+          Many method calls take a parameter of type
+          <link linkend='G-VARIANT-TYPE-VARDICT:CAPS'>'a{sv}'</link>
+          that is normally called <parameter>options</parameter>.
+          The following table lists well-known options:
+        </para>
+        <table frame='all'>
+          <title>Well-known options</title>
+          <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+            <thead>
+              <row>
+                <entry>Option name</entry>
+                <entry>Value type</entry>
+                <entry>Description</entry>
+              </row>
+            </thead>
+            <tbody>
+              <row>
+                <entry>auth.no_user_interaction</entry>
+                <entry><link linkend="G-VARIANT-TYPE-BOOLEAN:CAPS">'b'</link></entry>
+                <entry>
+                  If set to <constant>TRUE</constant>, then no user
+                  interaction will happen when checking if the method
+                  call is authorized.
+                </entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+      </sect1>
+    </chapter>
+
+    <chapter>
+      <title>D-Bus Interfaces</title>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Manager.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Drive.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Drive.Ata.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Block.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Filesystem.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Swapspace.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Encrypted.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Loop.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Job.xml"/>
+    </chapter>
+  </part>
+
+  <part id="ref-library">
+    <title>Library API Reference</title>
+      <xi:include href="xml/udisksclient.xml"/>
+      <xi:include href="xml/udiskserror.xml"/>
+      <xi:include href="xml/udisksutil.xml"/>
+    <chapter id="ref-library-generated">
+      <title>Generated Code</title>
+      <xi:include href="xml/UDisksObject.xml"/>
+      <xi:include href="xml/UDisksObjectManagerClient.xml"/>
+      <xi:include href="xml/UDisksManager.xml"/>
+      <xi:include href="xml/UDisksDrive.xml"/>
+      <xi:include href="xml/UDisksDriveAta.xml"/>
+      <xi:include href="xml/UDisksJob.xml"/>
+      <xi:include href="xml/UDisksBlock.xml"/>
+      <xi:include href="xml/UDisksFilesystem.xml"/>
+      <xi:include href="xml/UDisksSwapspace.xml"/>
+      <xi:include href="xml/UDisksEncrypted.xml"/>
+      <xi:include href="xml/UDisksLoop.xml"/>
+    </chapter>
+  </part>
+
+  <part id="ref-daemon">
+    <title>Daemon Implementation Details</title>
+    <chapter id="ref-daemon-core">
+      <title>Core</title>
+      <xi:include href="xml/udisksdaemonutil.xml"/>
+      <xi:include href="xml/udiskslogging.xml"/>
+      <xi:include href="xml/udisksdaemon.xml"/>
+      <xi:include href="xml/udisksprovider.xml"/>
+      <xi:include href="xml/udiskscleanup.xml"/>
+      <xi:include href="xml/udiskspersistentstore.xml"/>
+    </chapter>
+    <chapter id="ref-daemon-monitoring">
+      <title>State and Configuration</title>
+      <xi:include href="xml/udisksmountmonitor.xml"/>
+      <xi:include href="xml/udisksmount.xml"/>
+      <xi:include href="xml/udisksfstabmonitor.xml"/>
+      <xi:include href="xml/udisksfstabentry.xml"/>
+      <xi:include href="xml/udiskscrypttabmonitor.xml"/>
+      <xi:include href="xml/udiskscrypttabentry.xml"/>
+    </chapter>
+    <chapter id="ref-daemon-jobs">
+      <title>Jobs</title>
+      <xi:include href="xml/udisksbasejob.xml"/>
+      <xi:include href="xml/udiskssimplejob.xml"/>
+      <xi:include href="xml/udisksthreadedjob.xml"/>
+      <xi:include href="xml/udisksspawnedjob.xml"/>
+    </chapter>
+    <chapter id="ref-daemon-linux-types">
+      <title>Linux-specific types</title>
+      <xi:include href="xml/udiskslinuxmanager.xml"/>
+      <xi:include href="xml/udiskslinuxprovider.xml"/>
+    </chapter>
+    <chapter id="ref-daemon-drives">
+      <title>Drives on Linux</title>
+      <xi:include href="xml/udiskslinuxdrive.xml"/>
+      <xi:include href="xml/udiskslinuxdriveata.xml"/>
+      <xi:include href="xml/udiskslinuxdriveobject.xml"/>
+    </chapter>
+    <chapter id="ref-daemon-block-devices">
+      <title>Block devices on Linux</title>
+      <xi:include href="xml/udiskslinuxblock.xml"/>
+      <xi:include href="xml/udiskslinuxfilesystem.xml"/>
+      <xi:include href="xml/udiskslinuxencrypted.xml"/>
+      <xi:include href="xml/udiskslinuxswapspace.xml"/>
+      <xi:include href="xml/udiskslinuxloop.xml"/>
+      <xi:include href="xml/udiskslinuxblockobject.xml"/>
+    </chapter>
+  </part>
+
+  <part id="tools-fileformats">
+    <title>Tools, File Formats and Manual Pages</title>
+    <xi:include href="man/udisks.xml"/>
+    <xi:include href="man/udisksd.xml"/>
+    <xi:include href="man/udisksctl.xml"/>
+  </part>
+
+  <index>
+    <title>Index</title>
+  </index>
+
+  <chapter id="gio-hierarchy">
+    <title>Object Hierarchy</title>
+      <xi:include href="xml/tree_index.sgml"/>
+  </chapter>
+</book>

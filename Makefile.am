@@ -1,33 +1,14 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = data src doc tools policy po tests
+NULL =
 
-# Creating ChangeLog from git log (taken from cairo/Makefile.am):
-ChangeLog: $(srcdir)/ChangeLog
-
-$(srcdir)/ChangeLog:
-	@if test -d "$(srcdir)/.git"; then \
-	  (cd "$(srcdir)" && \
-	  ./missing --run git-log --stat) | fmt --split-only > $@.tmp \
-	  && mv -f $@.tmp $@ \
-	  || ($(RM) $@.tmp; \
-	      echo Failed to generate ChangeLog, your ChangeLog may be outdated >&2; \
-	      (test -f $@ || echo git-log is required to generate this file >> $@)); \
-	else \
-	  test -f $@ || \
-	  (echo A git checkout and git-log is required to generate ChangeLog >&2 && \
-	  echo A git checkout and git-log is required to generate this file >> $@); \
-	fi
+SUBDIRS = data udisks src tools policy po doc
 
 EXTRA_DIST = 			\
 	HACKING 		\
-	ChangeLog
+	$(NULL)
 
-# xsltproc barfs on 'make distcheck'; disable for now
-DISTCHECK_CONFIGURE_FLAGS=--disable-man-pages --disable-gtk-doc
+DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
 clean-local :
 	rm -f *~
-
-TESTS_ENVIRONMENT = sudo
-TESTS = tests/run

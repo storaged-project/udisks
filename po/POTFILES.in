@@ -1,5 +1,7 @@
+[encoding: UTF-8]
 # List of source files containing translatable strings.
 # Please keep this file sorted alphabetically.
-[encoding: UTF-8]
-policy/org.freedesktop.udisks.policy.in
-src/polkit-action-lookup.c
+policy/org.freedesktop.udisks2.policy.in
+src/udiskslinuxblock.c
+src/udiskslinuxfilesystem.c
+udisks/udisksutil.c
