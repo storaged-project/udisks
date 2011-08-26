@@ -29,8 +29,5 @@ DISTCHECK_CONFIGURE_FLAGS=--disable-man-pages --disable-gtk-doc
 clean-local :
 	rm -f *~
 
-dist-hook:
-	-rm $(distdir)/src/*-glue.h $(distdir)/tools/*-glue.h
-
 TESTS_ENVIRONMENT = sudo
 TESTS = tests/run
