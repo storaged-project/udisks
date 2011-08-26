@@ -210,7 +210,7 @@ do_eject (const char *object_path,
   proxy = dbus_g_proxy_new_for_name (bus, "org.freedesktop.UDisks", object_path, "org.freedesktop.UDisks.Device");
 
   error = NULL;
-  if (!org_freedesktop_UDisks_Device_drive_eject (proxy, (const char **) eject_options, &error))
+  if (!org_freedesktop_UDisks_Device_drive_eject (proxy, (const char **) options, &error))
     {
       g_print ("Eject failed: %s\n", error->message);
       g_error_free (error);
