@@ -133,7 +133,6 @@ struct DevicePrivate
   gboolean device_presentation_nopolicy;
   char *device_presentation_name;
   char *device_presentation_icon_name;
-  char *device_auto_mount_hint;
 
   char *id_usage;
   char *id_type;
@@ -254,7 +253,6 @@ void device_set_job_initiated_by_uid (Device *device, guint value);
 void device_set_job_is_cancellable (Device *device, gboolean value);
 void device_set_job_percentage (Device *device, gdouble value);
 
-void device_set_device_auto_mount_hint (Device *device, const gchar *value);
 void device_set_device_detection_time (Device *device, guint64 value);
 void device_set_device_media_detection_time (Device *device, guint64 value);
 void device_set_device_file (Device *device, const gchar *value);
