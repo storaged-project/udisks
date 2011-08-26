@@ -404,36 +404,16 @@ class UDisksTestCase(unittest.TestCase):
     def teardown_vdev(klass, device):
         '''release and remove virtual test device'''
 
-        klass.remove_device(device)
+        # delete block devices
+        device = device.split('/')[-1]
+        f = open('/sys/block/%s/device/delete' % device, 'w')
+        f.write('1')
+        f.close()
+
+        klass.sync()
+        
         assert subprocess.call(['rmmod', 'scsi_debug']) == 0, \
                 'Failure to rmmod scsi_debug'
-
-    @classmethod
-    def remove_device(klass, device):
-        '''remove virtual test device'''
-
-        device = device.split('/')[-1]
-        if os.path.exists('/sys/block/' + device):
-            f = open('/sys/block/%s/device/delete' % device, 'w')
-            f.write('1')
-            f.close()
-        while os.path.exists(device):
-            time.sleep(0.1)
-        klass.sync()
-        time.sleep(0.5) # TODO
-
-    @classmethod
-    def readd_devices(klass):
-        '''re-add virtual test devices after removal'''
-
-        scan_files = glob('/sys/bus/pseudo/devices/adapter*/host*/scsi_host/host*/scan')
-        assert len(scan_files) > 0
-        for f in scan_files:
-            open(f, 'w').write('- - -\n')
-        while not os.path.exists(klass.device):
-            time.sleep(0.1)
-        time.sleep(0.5)
-        klass.sync()
 
 # ----------------------------------------------------------------------------
 
@@ -846,46 +826,6 @@ class Luks(UDisksTestCase):
 
         # can't lock, busy
         self.assertRaises(dbus.DBusException, self.partition_iface().LuksLock, [])
-
-        # umount
-        self.retry_busy(clear_iface.FilesystemUnmount, [])
-        self.failIf(os.path.exists(mount_path), 'mount point was not removed')
-        i = self.get_info()
-        self.assertEqual(i['is mounted'], '0')
-        self.assertEqual(i['mount paths'], '')
-
-        # lock
-        self.partition_iface().LuksLock([])
-        self.failIf(clear_objpath in self.manager_iface.EnumerateDevices())
-
-    def test_luks_forced_removal(self):
-        '''LUKS forced removal'''
-
-        # unlock and mount it
-        clear_objpath = self.retry_busy(self.partition_iface().LuksUnlock, 's3kr1t', [])
-        self.assert_(clear_objpath in self.manager_iface.EnumerateDevices())
-
-        clear_obj = dbus.SystemBus().get_object('org.freedesktop.UDisks',
-                clear_objpath)
-        mount_path = dbus.Interface(clear_obj, I_D).FilesystemMount('', [])
-        self.assertEqual(mount_path, '/media/treasure')
-
-        # removal should clean up mounts
-        self.remove_device(self.device)
-        self.failIf(os.path.exists(mount_path))
-        self.failIf(clear_objpath in self.manager_iface.EnumerateDevices())
-
-        # after putting it back, it should be mountable again
-        self.readd_devices()
-
-        clear_objpath = self.retry_busy(self.partition_iface().LuksUnlock, 's3kr1t', [])
-        self.assert_(clear_objpath in self.manager_iface.EnumerateDevices())
-
-        clear_obj = dbus.SystemBus().get_object('org.freedesktop.UDisks',
-                clear_objpath)
-        clear_iface = dbus.Interface(clear_obj, I_D)
-        mount_path = clear_iface.FilesystemMount('', [])
-        self.assertEqual(mount_path, '/media/treasure')
 
         # umount
         self.retry_busy(clear_iface.FilesystemUnmount, [])
