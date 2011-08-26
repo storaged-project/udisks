@@ -36,7 +36,6 @@
 #include <fcntl.h>
 #include <pwd.h>
 #include <grp.h>
-#include <stdint.h>
 #include <linux/fs.h>
 #include <sys/ioctl.h>
 #include <linux/cdrom.h>
