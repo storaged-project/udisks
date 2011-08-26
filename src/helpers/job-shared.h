@@ -208,11 +208,16 @@ validate_and_escape_label (char **label,
       goto out;
     }
 
-  /* escape '"' and '\' */
+  /* escape '"' */
   s = g_string_new (*label);
   for (n = 0; n < (int) s->len; n++)
     {
-      if (s->str[n] == '"' || s->str[n] == '\\')
+      if (s->str[n] == '"')
+        {
+          g_string_insert_c (s, n, '\\');
+          n++;
+        }
+      else if (s->str[n] == '\\')
         {
           g_string_insert_c (s, n, '\\');
           n++;
