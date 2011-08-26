@@ -51,7 +51,6 @@ main (int argc,
   char *command_line;
   char *standard_error;
   char *new_label;
-  char *c;
 
   ret = 1;
   command_line = NULL;
@@ -93,16 +92,6 @@ main (int argc,
     {
       if (!validate_and_escape_label (&new_label, 254))
         goto out;
-      /* VFAT does not allow some characters */
-      for (c = "\"*/:<>?\\|"; *c; ++c)
-	{
-	  if (strchr (new_label, *c) != NULL)
-	    {
-	      g_printerr ("character '%c' not supported in VFAT labels\n", *c);
-	      goto out;
-	    }
-          }
-
       g_setenv ("MTOOLS_SKIP_CHECK", "1", TRUE);
       if (strlen (new_label) == 0)
         command_line = g_strdup_printf ("mlabel -c -i %s ::", device);

@@ -736,10 +736,6 @@ class FS(UDisksTestCase):
         # change label
         if supports_label_rename:
             l = 'n"a\m\\"e' + type
-            if type == 'vfat':
-                # VFAT does not support some characters
-                self.assertRaises(dbus.DBusException, iface.FilesystemSetLabel, l)
-                l = "n@a$me"
             iface.FilesystemSetLabel(l)
             self.sync_workaround()
             i = self.get_info()
