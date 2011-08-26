@@ -1177,7 +1177,7 @@ class Smart(UDisksTestCase):
         tool_info = subprocess.Popen([self.tool_path, '--show-info',
             self.device], stdout=subprocess.PIPE)
         out = tool_info.communicate()[0]
-        self.assert_('power-on-hours' in out)
+        self.assert_('start-stop-count' in out)
         self.assert_('Pre-fail' in out)
     
 
