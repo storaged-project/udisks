@@ -277,7 +277,7 @@ main (int argc,
       /* skip zeroing (we do that ourselves) and bad sector checking (will 
        * eventually be handled on a higher level)
        */
-      s = g_string_new ("mkntfs -f -F");
+      s = g_string_new ("mkntfs -f");
       for (n = 0; options[n] != NULL; n++)
         {
           if (g_str_has_prefix (options[n], "label="))
