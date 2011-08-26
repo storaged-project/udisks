@@ -735,7 +735,7 @@ class FS(UDisksTestCase):
 
         # change label
         if supports_label_rename:
-            l = 'ren"a\m\\"e' + type
+            l = 'rename' + type
             iface.FilesystemSetLabel(l)
             self.sync_workaround()
             i = self.get_info()
