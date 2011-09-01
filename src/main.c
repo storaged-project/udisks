@@ -125,11 +125,11 @@ main (int    argc,
   sigint_id = 0;
   if (!opt_no_sigint)
     {
-      sigint_id = g_unix_signal_add_watch_full (SIGINT,
-                                                G_PRIORITY_DEFAULT,
-                                                on_sigint,
-                                                NULL,  /* user_data */
-                                                NULL); /* GDestroyNotify */
+      sigint_id = g_unix_signal_add_full (SIGINT,
+                                          G_PRIORITY_DEFAULT,
+                                          on_sigint,
+                                          NULL,  /* user_data */
+                                          NULL); /* GDestroyNotify */
     }
 
   name_owner_id = g_bus_own_name (G_BUS_TYPE_SYSTEM,
