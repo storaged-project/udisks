@@ -125,8 +125,8 @@ main (int    argc,
   sigint_id = 0;
   if (!opt_no_sigint)
     {
-      sigint_id = g_unix_signal_add_full (SIGINT,
-                                          G_PRIORITY_DEFAULT,
+      sigint_id = g_unix_signal_add_full (G_PRIORITY_DEFAULT,
+                                          SIGINT,
                                           on_sigint,
                                           NULL,  /* user_data */
                                           NULL); /* GDestroyNotify */

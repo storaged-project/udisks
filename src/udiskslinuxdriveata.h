@@ -35,8 +35,13 @@ void            udisks_linux_drive_ata_update             (UDisksLinuxDriveAta  
                                                            UDisksLinuxDriveObject  *object);
 gboolean        udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta     *drive,
                                                            gboolean                 nowakeup,
+                                                           const gchar             *simulate_path,
                                                            GCancellable            *cancellable,
                                                            GError                 **error);
+gboolean        udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta     *drive,
+                                                            const gchar             *type,
+                                                            GCancellable            *cancellable,
+                                                            GError                 **error);
 
 G_END_DECLS
 

@@ -837,6 +837,7 @@ udisks_linux_drive_object_housekeeping (UDisksLinuxDriveObject  *object,
       local_error = NULL;
       if (!udisks_linux_drive_ata_refresh_smart_sync (UDISKS_LINUX_DRIVE_ATA (object->iface_drive_ata),
                                                       nowakeup,
+                                                      NULL, /* simulate_path */
                                                       cancellable,
                                                       &local_error))
         {

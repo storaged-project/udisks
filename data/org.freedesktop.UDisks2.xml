@@ -205,6 +205,9 @@
          The point in time (seconds since the
          <ulink url="http://en.wikipedia.org/wiki/Unix_epoch">Unix Epoch</ulink>)
          that the SMART status was updated or 0 if never updated.
+
+         The value of the other properties related to SMART are not
+         meaningful if this proeprty is 0.
     -->
     <property name="SmartUpdated" type="t" access="read"/>
 
@@ -213,27 +216,71 @@
 
          This value is read from the disk itself and does not include
          any interpretation.
-
-         This property is only meaningful if the property
-         #org.freedesktop.UDisks2.Drive.Ata:SmartUpdated is non-zero.
     -->
     <property name="SmartFailing" type="b" access="read"/>
 
     <!-- SmartPowerOnSeconds:
          The amount of time the disk has been powered on (according to SMART data) or 0 if unknown.
-
-         This property is only meaningful if the property
-         #org.freedesktop.UDisks2.Drive.Ata:SmartUpdated is non-zero.
     -->
     <property name="SmartPowerOnSeconds" type="t" access="read"/>
 
     <!-- SmartTemperature:
          The temperature (in Kelvin) of the disk according to SMART data or 0 if unknown.
+    -->
+    <property name="SmartTemperature" type="d" access="read"/>
 
+    <!--
+        SmartNumAttributesFailing:
+        The number of attributes failing right now or -1 if unknown.
+    -->
+    <property name="SmartNumAttributesFailing" type="i" access="read"/>
+
+    <!--
+        SmartNumAttributesFailedInThePast:
+        The number of attributes that have failed in the past or -1 if unknown.
+    -->
+    <property name="SmartNumAttributesFailedInThePast" type="i" access="read"/>
+
+    <!--
+        SmartNumBadSectors:
+        The number of bad sectors (ie. pending and reallocated) or -1 if unknown.
+    -->
+    <property name="SmartNumBadSectors" type="x" access="read"/>
+
+    <!-- SmartSelftestStatus:
+         The status of the last self-test. Known values include
+        <variablelist>
+        <varlistentry><term>success</term>
+          <listitem><para>Last self-test was a success (or never ran).</para></listitem></varlistentry>
+        <varlistentry><term>aborted</term>
+          <listitem><para>Last self-test was aborted.</para></listitem></varlistentry>
+        <varlistentry><term>interrupted</term>
+          <listitem><para>Last self-test was interrupted.</para></listitem></varlistentry>
+        <varlistentry><term>fatal</term>
+          <listitem><para>Last self-test did not complete.</para></listitem></varlistentry>
+        <varlistentry><term>error_unknown</term>
+          <listitem><para>Last self-test failed (Unknown).</para></listitem></varlistentry>
+        <varlistentry><term>error_electrical</term>
+          <listitem><para>Last self-test failed (Electrical).</para></listitem></varlistentry>
+        <varlistentry><term>error_servo</term>
+          <listitem><para>Last self-test failed (Servo).</para></listitem></varlistentry>
+        <varlistentry><term>error_read</term>
+          <listitem><para>Last self-test failed (Read).</para></listitem></varlistentry>
+        <varlistentry><term>error_handling</term>
+          <listitem><para>Last self-test failed (Damage)).</para></listitem></varlistentry>
+        <varlistentry><term>inprogress</term>
+          <listitem><para>Self-test is currently in progress.</para></listitem></varlistentry>
+        </variablelist>
          This property is only meaningful if the property
          #org.freedesktop.UDisks2.Drive.Ata:SmartUpdated is non-zero.
     -->
-    <property name="SmartTemperature" type="d" access="read"/>
+    <property name="SmartSelftestStatus" type="s" access="read"/>
+
+    <!--
+        SmartSelftestPercentRemaining:
+        The percent remaining or -1 if unknown.
+    -->
+    <property name="SmartSelftestPercentRemaining" type="i" access="read"/>
 
     <!--
         SmartUpdate:
@@ -250,7 +297,67 @@
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
-    <!-- TODO: self-tests, attributes etc. -->
+    <!--
+        SmartGetAttributes:
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>nowakeup</parameter> (of type 'b').
+        @attributes: The SMART attributes.
+
+        Get the SMART attributes.
+        Each attribute is a struct with the following members:
+        <variablelist>
+        <varlistentry><term>id (type 'y')</term>
+          <listitem><para>Attribute Identifier</para></listitem></varlistentry>
+        <varlistentry><term>name (type 's')</term>
+          <listitem><para>The identifier as a string.</para></listitem></varlistentry>
+        <varlistentry><term>flags (type 'q')</term>
+          <listitem><para>16-bit attribute flags (bit 0 is prefail/oldage, bit 1 is online/offline).</para></listitem></varlistentry>
+        <varlistentry><term>value (type 'i')</term>
+          <listitem><para>The current value or -1 if unknown.</para></listitem></varlistentry>
+        <varlistentry><term>worst (type 'i')</term>
+          <listitem><para>The worst value of -1 if unknown.</para></listitem></varlistentry>
+        <varlistentry><term>threshold (type 'i')</term>
+          <listitem><para>The threshold or -1 if unknown.</para></listitem></varlistentry>
+        <varlistentry><term>pretty (type 'x')</term>
+          <listitem><para>An interpretation of the value - must be ignored if @pretty_unit is 0.</para></listitem></varlistentry>
+        <varlistentry><term>pretty_unit (type 'i')</term>
+          <listitem><para>The unit of the @pretty value - the following units are known: 0 (unknown), 1 (dimensionless), 2 (milliseconds), 3 (sectors), 4 (millikelvin).</para></listitem></varlistentry>
+        <varlistentry><term>expansion (type 'a{sv}')</term>
+          <listitem><para>Currently unused. Intended for future expansion.</para></listitem></varlistentry>
+        </variablelist>
+        The @name parameter should be used as the authoritative identifier for the attribute since it is derived from the numerical @id and the disk's <literal>IDENTIFY</literal> data and thus handles ID collisions between drives of different make and model.
+    -->
+    <method name="SmartGetAttributes">
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="attributes" direction="out" type="a(ysqiiixia{sv})"/>
+    </method>
+
+    <!--
+        SmartSelftestStart:
+        @type: The type test to run.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Starts a SMART selftest. The @type parameter is for the type
+        of test to start - valid values are <literal>short</literal>,
+        <literal>extended</literal> and <literal>conveyance</literal>.
+
+        Note that the method returns immediately after the test has
+        been started successfully.
+    -->
+    <method name="SmartSelftestStart">
+      <arg name="type" direction="in" type="s"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        SmartSelftestAbort:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Aborts a running SMART selftest.
+    -->
+    <method name="SmartSelftestAbort">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
   </interface>
 
   <!-- ********************************************************************** -->
