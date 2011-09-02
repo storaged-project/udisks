@@ -292,6 +292,12 @@
         state, the error
         <literal>org.freedesktop.UDisks.Error.WouldWakeup</literal> is
         returned.
+
+        The option @atasmart_blob can be used to inject libatasmart
+        compatible blobs for testing how clients react to different
+        kinds of SMART data. Only uid 0 may use this. This option may
+        be removed in the future with it being considered an ABI break
+        - it only exists for testing purposes.
     -->
     <method name="SmartUpdate">
       <arg name="options" direction="in" type="a{sv}"/>

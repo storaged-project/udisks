@@ -572,7 +572,7 @@ handle_smart_update (UDisksDriveAta        *_drive,
     }
 
   g_variant_lookup (options, "nowakeup", "b", &nowakeup);
-  g_variant_lookup (options, "atasmart-blob", "s", &atasmart_blob);
+  g_variant_lookup (options, "atasmart_blob", "s", &atasmart_blob);
 
   if (atasmart_blob != NULL)
     {
