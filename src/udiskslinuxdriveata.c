@@ -65,6 +65,7 @@ struct _UDisksLinuxDriveAta
 {
   UDisksDriveAtaSkeleton parent_instance;
 
+  gboolean     smart_is_from_blob;
   guint64      smart_updated;
   gboolean     smart_failing;
   gdouble      smart_temperature;
@@ -163,6 +164,8 @@ update_smart (UDisksLinuxDriveAta *drive,
   G_LOCK (object_lock);
   if (drive->smart_updated > 0)
     {
+      if (drive->smart_is_from_blob)
+        supported = enabled = TRUE;
       updated = drive->smart_updated;
       failing = drive->smart_failing;
       temperature = drive->smart_temperature;
@@ -455,6 +458,7 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
   sk_disk_smart_parse_attributes (d, parse_attr_cb, &parse_data);
 
   G_LOCK (object_lock);
+  drive->smart_is_from_blob = (simulate_path != NULL);
   drive->smart_updated = time (NULL);
   drive->smart_failing = !good;
   drive->smart_temperature = temp_mkelvin / 1000.0;
