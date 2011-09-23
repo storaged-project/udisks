@@ -486,6 +486,22 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/**
+ * udisks_linux_drive_ata_smart_selftest_sync:
+ * @drive: A #UDisksLinuxDriveAta.
+ * @type: The type of selftest to run.
+ * @cancellable: (allow-none): A #GCancellable that can be used to cancel the operation or %NULL.
+ * @error: Return location for error or %NULL.
+ *
+ * Starts (or aborts) a SMART self-test on @drive. Valid values for
+ * @type includes 'short', 'extended', 'conveyance' and 'abort'.
+ *
+ * The calling thread is blocked while sending the command to the
+ * drive but will return immediately after the drive acknowledges the
+ * command.
+ *
+ * Returns: %TRUE if the operation succeed, %FALSE if @error is set.
+ */
 gboolean
 udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta     *drive,
                                             const gchar             *type,

@@ -267,12 +267,10 @@
         <varlistentry><term>error_read</term>
           <listitem><para>Last self-test failed (Read).</para></listitem></varlistentry>
         <varlistentry><term>error_handling</term>
-          <listitem><para>Last self-test failed (Damage)).</para></listitem></varlistentry>
+          <listitem><para>Last self-test failed (Damage).</para></listitem></varlistentry>
         <varlistentry><term>inprogress</term>
           <listitem><para>Self-test is currently in progress.</para></listitem></varlistentry>
         </variablelist>
-         This property is only meaningful if the property
-         #org.freedesktop.UDisks2.Drive.Ata:SmartUpdated is non-zero.
     -->
     <property name="SmartSelftestStatus" type="s" access="read"/>
 
