@@ -365,3 +365,84 @@ udisks_client_settle (UDisksClient *client)
   while (g_main_context_iteration (client->context, FALSE /* may_block */))
     ;
 }
+
+
+static GList *
+get_top_level_blocks_for_drive (UDisksClient *client,
+                                const gchar  *drive_object_path)
+{
+  GList *ret;
+  GList *l;
+  GList *object_proxies;
+  GDBusObjectManager *object_manager;
+
+  object_manager = udisks_client_get_object_manager (client);
+  object_proxies = g_dbus_object_manager_get_objects (object_manager);
+
+  ret = NULL;
+  for (l = object_proxies; l != NULL; l = l->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksBlock *block;
+
+      block = udisks_object_get_block (object);
+      if (block == NULL)
+        continue;
+
+      if (g_strcmp0 (udisks_block_get_drive (block), drive_object_path) == 0 &&
+          !udisks_block_get_part_entry (block))
+        {
+          ret = g_list_append (ret, g_object_ref (object));
+        }
+      g_object_unref (block);
+    }
+  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
+  g_list_free (object_proxies);
+  return ret;
+}
+
+/**
+ * udisks_client_get_block_for_drive:
+ * @client: A #UDisksClient.
+ * @drive: A #UDisksDrive.
+ * @get_physical: %TRUE to get a physical device, %FALSE to get the logical device.
+ *
+ * Gets a block device corresponding to @drive.
+ *
+ * If your application does not care about multipath setups, the
+ * @get_physical parameter does not matter. Otherwise, use %TRUE for
+ * to get one of the physical paths for @drive (if any) and %FALSE to
+ * get the mapped device (if any).
+ *
+ * Returns: (transfer full): A #UDisksBlock or %NULL if the requested
+ * kind of block device is not available - use g_object_unref() to
+ * free the returned object.
+ */
+UDisksBlock *
+udisks_client_get_block_for_drive (UDisksClient        *client,
+                                   UDisksDrive         *drive,
+                                   gboolean             get_physical)
+{
+  UDisksBlock *ret = NULL;
+  GList *blocks;
+  GList *l;
+
+  blocks = get_top_level_blocks_for_drive (client, g_dbus_object_get_object_path (g_dbus_interface_get_object (G_DBUS_INTERFACE (drive))));
+  for (l = blocks; l != NULL; l = l->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksBlock *block;
+      block = udisks_object_peek_block (object);
+      if (block != NULL)
+        {
+          /* TODO: actually look at @get_physical */
+          ret = g_object_ref (block);
+          goto out;
+        }
+    }
+
+ out:
+  g_list_foreach (blocks, (GFunc) g_object_unref, NULL);
+  g_list_free (blocks);
+  return ret;
+}

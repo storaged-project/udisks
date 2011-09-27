@@ -46,6 +46,10 @@ GDBusObjectManager *udisks_client_get_object_manager (UDisksClient        *clien
 UDisksManager      *udisks_client_get_manager        (UDisksClient        *client);
 void                udisks_client_settle             (UDisksClient        *client);
 
+UDisksBlock        *udisks_client_get_block_for_drive (UDisksClient        *client,
+                                                       UDisksDrive         *drive,
+                                                       gboolean             get_physical);
+
 G_END_DECLS
 
 #endif /* __UDISKS_CLIENT_H__ */

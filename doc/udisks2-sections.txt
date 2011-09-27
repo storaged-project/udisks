@@ -42,6 +42,7 @@ udisks_client_new_sync
 udisks_client_get_object_manager
 udisks_client_get_manager
 udisks_client_settle
+udisks_client_get_block_for_drive
 <SUBSECTION Standard>
 UDISKS_TYPE_CLIENT
 UDISKS_CLIENT
