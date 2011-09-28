@@ -813,8 +813,9 @@
 
         Unmount a mounted device.
 
-        If the filesystem is busy, this operation fails unless the
-        option <parameter>force</parameter> is given.
+        If the filesystem is busy, this operation fails with the error
+        <link linkend="UDISKS-ERROR-DEVICE-BUSY:CAPS"><constant>org.freedesktop.UDisks.Error.DeviceBusy</constant></link>
+        unless the option <parameter>force</parameter> is used.
 
         If the device in question is referenced in a system-wide
         configuration file (such as the <filename>/etc/fstab</filename> file)
@@ -828,7 +829,7 @@
         <citerefentry><refentrytitle>umount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
         command is invoked as root.
     -->
-    <method name="Unmount">
+<method name="Unmount">
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
   </interface>

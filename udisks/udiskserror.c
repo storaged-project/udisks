@@ -47,6 +47,7 @@ static const GDBusErrorEntry dbus_error_entries[] =
   {UDISKS_ERROR_NOT_SUPPORTED,                "org.freedesktop.UDisks.Error.NotSupported"},
   {UDISKS_ERROR_TIMED_OUT,                    "org.freedesktop.UDisks.Error.Timedout"},
   {UDISKS_ERROR_WOULD_WAKEUP,                 "org.freedesktop.UDisks.Error.WouldWakeup"},
+  {UDISKS_ERROR_DEVICE_BUSY,                  "org.freedesktop.UDisks.Error.DeviceBusy"},
 };
 
 GQuark

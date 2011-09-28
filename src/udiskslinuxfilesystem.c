@@ -1119,6 +1119,16 @@ handle_mount (UDisksFilesystem       *filesystem,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static guint
+get_error_code_for_umount (gint         exit_status,
+                           const gchar *error_message)
+{
+  if (strstr (error_message, "device is busy") != NULL)
+    return UDISKS_ERROR_DEVICE_BUSY;
+  else
+    return UDISKS_ERROR_FAILED;
+}
+
 /* runs in thread dedicated to handling @invocation */
 static gboolean
 handle_unmount (UDisksFilesystem       *filesystem,
@@ -1134,6 +1144,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
   GError *error;
   uid_t mounted_by_uid;
   uid_t caller_uid;
+  gint status;
   gchar *error_message;
   const gchar *const *mount_points;
   gboolean opt_force;
@@ -1190,7 +1201,6 @@ handle_unmount (UDisksFilesystem       *filesystem,
    */
   if (system_managed)
     {
-      gint status;
       gboolean unmount_fstab_as_root;
 
       unmount_fstab_as_root = FALSE;
@@ -1228,7 +1238,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
 
           g_dbus_method_invocation_return_error (invocation,
                                                  UDISKS_ERROR,
-                                                 UDISKS_ERROR_FAILED,
+                                                 get_error_code_for_umount (status, error_message),
                                                  "Error unmounting system-managed device %s: %s",
                                                  udisks_block_get_device (block),
                                                  error_message);
@@ -1312,7 +1322,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
                                                   NULL, /* GCancellable */
                                                   0,    /* uid_t run_as_uid */
                                                   0,    /* uid_t run_as_euid */
-                                                  NULL, /* gint *out_status */
+                                                  &status,
                                                   &error_message,
                                                   NULL,  /* input_string */
                                                   "umount %s \"%s\"",
@@ -1324,7 +1334,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
+                                             get_error_code_for_umount (status, error_message),
                                              "Error unmounting %s: %s",
                                              udisks_block_get_device (block),
                                              error_message);
