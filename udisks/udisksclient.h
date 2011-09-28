@@ -50,6 +50,9 @@ UDisksBlock        *udisks_client_get_block_for_drive (UDisksClient        *clie
                                                        UDisksDrive         *drive,
                                                        gboolean             get_physical);
 
+UDisksDrive        *udisks_client_get_drive_for_block (UDisksClient        *client,
+                                                       UDisksBlock         *block);
+
 G_END_DECLS
 
 #endif /* __UDISKS_CLIENT_H__ */

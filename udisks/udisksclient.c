@@ -427,6 +427,9 @@ udisks_client_get_block_for_drive (UDisksClient        *client,
   GList *blocks;
   GList *l;
 
+  g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
+  g_return_val_if_fail (UDISKS_IS_DRIVE (drive), NULL);
+
   blocks = get_top_level_blocks_for_drive (client, g_dbus_object_get_object_path (g_dbus_interface_get_object (G_DBUS_INTERFACE (drive))));
   for (l = blocks; l != NULL; l = l->next)
     {
@@ -446,3 +449,31 @@ udisks_client_get_block_for_drive (UDisksClient        *client,
   g_list_free (blocks);
   return ret;
 }
+
+/**
+ * udisks_client_get_drive_for_block:
+ * @client: A #UDisksClient.
+ * @block: A #UDisksBlock.
+ *
+ * Gets the #UDisksDrive that @block belongs to, if any.
+ *
+ * Returns: (transfer full): A #UDisksDrive or %NULL if there is no
+ * #UDisksDrive for @block - free the returned object with
+ * g_object_unref().
+ */
+UDisksDrive *
+udisks_client_get_drive_for_block (UDisksClient  *client,
+                                   UDisksBlock   *block)
+{
+  UDisksDrive *ret = NULL;
+  GDBusObject *object;
+
+  g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
+  g_return_val_if_fail (UDISKS_IS_BLOCK (block), NULL);
+
+  object = g_dbus_object_manager_get_object (client->object_manager, udisks_block_get_drive (block));
+  if (object != NULL)
+    ret = udisks_object_get_drive (UDISKS_OBJECT (object));
+  return ret;
+}
+
