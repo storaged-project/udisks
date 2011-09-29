@@ -83,11 +83,13 @@
     -->
     <property name="WWN" type="s" access="read"/>
 
-    <!-- MediaRemovable: Whether the media can be removed from the drive. -->
-    <property name="MediaRemovable" type="b" access="read"/>
-
     <!-- Size: The size of the drive. Is set to 0 if, and only if, no media is inserted. -->
     <property name="Size" type="t" access="read"/>
+
+    <!-- Media: The kind of media currently in the drive or blank if unknown.
+         See the #org.freedesktop.UDisks2.Drive:MediaCompatibility property for known values.
+    -->
+    <property name="Media" type="s" access="read"/>
 
     <!-- MediaCompatibility:
       The physical kind of media the drive uses or blank if unknown.
@@ -129,10 +131,8 @@
     -->
     <property name="MediaCompatibility" type="as" access="read"/>
 
-    <!-- Media: The kind of media currently in the drive or blank if unknown.
-         See the #org.freedesktop.UDisks2.Drive:MediaCompatibility property for known values.
-    -->
-    <property name="Media" type="s" access="read"/>
+    <!-- MediaRemovable: Whether the media can be removed from the drive. -->
+    <property name="MediaRemovable" type="b" access="read"/>
 
     <!-- RotationRate: The rotational rate of the drive.
       <itemizedlist>
