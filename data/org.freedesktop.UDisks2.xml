@@ -134,6 +134,34 @@
     <!-- MediaRemovable: Whether the media can be removed from the drive. -->
     <property name="MediaRemovable" type="b" access="read"/>
 
+    <!-- Optical: %TRUE if the drive contains an optical disc. -->
+    <property name="Optical" type="b" access="read"/>
+
+    <!-- OpticalBlank: %TRUE if the disc is blank.
+         This is only valid if the property #org.freedesktop.UDisks2.Drive:Optical is %TRUE.
+      -->
+    <property name="OpticalBlank" type="b" access="read"/>
+
+    <!-- OpticalNumTracks: The number of tracks.
+         This is only valid if the property #org.freedesktop.UDisks2.Drive:Optical is %TRUE.
+      -->
+    <property name="OpticalNumTracks" type="u" access="read"/>
+
+    <!-- OpticalNumAudioTracks: The number of audio tracks.
+         This is only valid if the property #org.freedesktop.UDisks2.Drive:Optical is %TRUE.
+      -->
+    <property name="OpticalNumAudioTracks" type="u" access="read"/>
+
+    <!-- OpticalNumDataTracks: The number of data tracks.
+         This is only valid if the property #org.freedesktop.UDisks2.Drive:Optical is %TRUE.
+      -->
+    <property name="OpticalNumDataTracks" type="u" access="read"/>
+
+    <!-- OpticalNumSessions: The number of sessions.
+         This is only valid if the property #org.freedesktop.UDisks2.Drive:Optical is %TRUE.
+     -->
+    <property name="OpticalNumSessions" type="u" access="read"/>
+
     <!-- RotationRate: The rotational rate of the drive.
       <itemizedlist>
         <listitem><para>-1 if known to be rotating media but rotation rate isn't known</para></listitem>

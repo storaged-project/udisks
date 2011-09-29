@@ -563,7 +563,33 @@ udisks_util_get_drive_info (UDisksDrive  *drive,
       g_free (s);
     }
 
-  /* TODO: prepend "Blank ", "Mixed " or "Audio " for optical discs */
+  /* prepend a qualifier to the media description, based on the disc state */
+  if (udisks_drive_get_optical_blank (drive))
+    {
+      gchar *s;
+      /* Translators: String used for a blank disc. The %s is the disc type e.g. "CD-RW Disc" */
+      s = g_strdup_printf (_("Blank %s"), media_description);
+      g_free (media_description);
+      media_description = s;
+    }
+  else if (udisks_drive_get_optical_num_audio_tracks (drive) > 0 &&
+           udisks_drive_get_optical_num_data_tracks (drive) > 0)
+    {
+      gchar *s;
+      /* Translators: String used for a mixed disc. The %s is the disc type e.g. "CD-ROM Disc" */
+      s = g_strdup_printf (_("Mixed %s"), media_description);
+      g_free (media_description);
+      media_description = s;
+    }
+  else if (udisks_drive_get_optical_num_audio_tracks (drive) > 0 &&
+           udisks_drive_get_optical_num_data_tracks (drive) == 0)
+    {
+      gchar *s;
+      /* Translators: String used for an audio disc. The %s is the disc type e.g. "CD-ROM Disc" */
+      s = g_strdup_printf (_("Audio %s"), media_description);
+      g_free (media_description);
+      media_description = s;
+    }
 
   /* return values to caller */
   if (out_name != NULL)

@@ -196,6 +196,12 @@ set_media (UDisksDrive      *iface,
   guint n;
   GPtrArray *media_compat_array;
   const gchar *media_in_drive;
+  gboolean is_disc = FALSE;
+  gboolean disc_is_blank = FALSE;
+  guint disc_session_count = 0;
+  guint disc_track_count = 0;
+  guint disc_track_count_audio = 0;
+  guint disc_track_count_data = 0;
 
   media_compat_array = g_ptr_array_new ();
   for (n = 0; drive_media_mapping[n].udev_property != NULL; n++)
@@ -228,6 +234,25 @@ set_media (UDisksDrive      *iface,
   udisks_drive_set_media_compatibility (iface, (const gchar* const *) media_compat_array->pdata);
   udisks_drive_set_media (iface, media_in_drive);
   g_ptr_array_free (media_compat_array, TRUE);
+
+  if (g_udev_device_get_property_as_boolean (device, "ID_CDROM_MEDIA"))
+    {
+      const gchar *state;
+      is_disc = TRUE;
+      state = g_udev_device_get_property (device, "ID_CDROM_MEDIA_STATE");
+      if (g_strcmp0 (state, "blank") == 0)
+        disc_is_blank = TRUE;
+      disc_session_count = g_udev_device_get_property_as_int (device, "ID_CDROM_MEDIA_SESSION_COUNT");
+      disc_track_count = g_udev_device_get_property_as_int (device, "ID_CDROM_MEDIA_TRACK_COUNT");
+      disc_track_count_audio = g_udev_device_get_property_as_int (device, "ID_CDROM_MEDIA_TRACK_COUNT_AUDIO");
+      disc_track_count_data = g_udev_device_get_property_as_int (device, "ID_CDROM_MEDIA_TRACK_COUNT_DATA");
+    }
+  udisks_drive_set_optical (iface, is_disc);
+  udisks_drive_set_optical_blank (iface, disc_is_blank);
+  udisks_drive_set_optical_num_sessions (iface, disc_session_count);
+  udisks_drive_set_optical_num_tracks (iface, disc_track_count);
+  udisks_drive_set_optical_num_audio_tracks (iface, disc_track_count_audio);
+  udisks_drive_set_optical_num_data_tracks (iface, disc_track_count_data);
 }
 
 static void
