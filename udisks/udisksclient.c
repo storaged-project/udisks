@@ -53,6 +53,8 @@ struct _UDisksClient
   GDBusObjectManager *object_manager;
 
   GMainContext *context;
+
+  GSource *changed_timeout_source;
 };
 
 typedef struct
@@ -67,8 +69,41 @@ enum
   PROP_MANAGER
 };
 
+enum
+{
+  CHANGED_SIGNAL,
+  LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL] = { 0 };
+
 static void initable_iface_init       (GInitableIface      *initable_iface);
 static void async_initable_iface_init (GAsyncInitableIface *async_initable_iface);
+
+static void on_object_added (GDBusObjectManager  *manager,
+                             GDBusObject         *object,
+                             gpointer             user_data);
+
+static void on_object_removed (GDBusObjectManager  *manager,
+                               GDBusObject         *object,
+                               gpointer             user_data);
+
+static void on_interface_added (GDBusObjectManager  *manager,
+                                GDBusObject         *object,
+                                GDBusInterface      *interface,
+                                gpointer             user_data);
+
+static void on_interface_removed (GDBusObjectManager  *manager,
+                                  GDBusObject         *object,
+                                  GDBusInterface      *interface,
+                                  gpointer             user_data);
+
+static void on_interface_proxy_properties_changed (GDBusObjectManagerClient   *manager,
+                                                   GDBusObjectProxy           *object_proxy,
+                                                   GDBusProxy                 *interface_proxy,
+                                                   GVariant                   *changed_properties,
+                                                   const gchar *const         *invalidated_properties,
+                                                   gpointer                    user_data);
 
 G_DEFINE_TYPE_WITH_CODE (UDisksClient, udisks_client, G_TYPE_OBJECT,
                          G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, initable_iface_init)
@@ -80,9 +115,27 @@ udisks_client_finalize (GObject *object)
 {
   UDisksClient *client = UDISKS_CLIENT (object);
 
+  if (client->changed_timeout_source != NULL)
+    g_source_destroy (client->changed_timeout_source);
+
   if (client->initialization_error != NULL)
     g_error_free (client->initialization_error);
 
+  g_signal_handlers_disconnect_by_func (client->object_manager,
+                                        G_CALLBACK (on_object_added),
+                                        client);
+  g_signal_handlers_disconnect_by_func (client->object_manager,
+                                        G_CALLBACK (on_object_removed),
+                                        client);
+  g_signal_handlers_disconnect_by_func (client->object_manager,
+                                        G_CALLBACK (on_interface_added),
+                                        client);
+  g_signal_handlers_disconnect_by_func (client->object_manager,
+                                        G_CALLBACK (on_interface_removed),
+                                        client);
+  g_signal_handlers_disconnect_by_func (client->object_manager,
+                                        G_CALLBACK (on_interface_proxy_properties_changed),
+                                        client);
   g_object_unref (client->object_manager);
 
   if (client->context != NULL)
@@ -163,6 +216,34 @@ udisks_client_class_init (UDisksClientClass *klass)
                                                         UDISKS_TYPE_MANAGER,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_STATIC_STRINGS));
+
+  /**
+   * UDisksClient::changed:
+   * @client: A #UDisksClient.
+   *
+   * This signal is emitted either when an object or interface is
+   * added or removed a when property has changed. Additionally,
+   * multiple received signals are coalesced into a single signal that
+   * is rate-limited to fire at most every 100ms.
+   *
+   * For greater detail, connect to the
+   * #GDBusObjectManager::object-added,
+   * #GDBusObjectManager::object-removed,
+   * #GDBusObjectManager::interface-added,
+   * #GDBusObjectManager::interface-removed,
+   * #GDBusObjectManagerClient::interface-proxy-properties-changed and
+   * signals on the #UDisksClient:object-manager object.
+   */
+  signals[CHANGED_SIGNAL] = g_signal_new ("changed",
+                                          G_OBJECT_CLASS_TYPE (klass),
+                                          G_SIGNAL_RUN_LAST,
+                                          0, /* G_STRUCT_OFFSET */
+                                          NULL, /* accu */
+                                          NULL, /* accu data */
+                                          g_cclosure_marshal_generic,
+                                          G_TYPE_NONE,
+                                          0);
+
 }
 
 /**
@@ -278,6 +359,27 @@ initable_init (GInitable     *initable,
                                                                           &client->initialization_error);
   if (client->object_manager == NULL)
     goto out;
+
+  g_signal_connect (client->object_manager,
+                    "object-added",
+                    G_CALLBACK (on_object_added),
+                    client);
+  g_signal_connect (client->object_manager,
+                    "object-removed",
+                    G_CALLBACK (on_object_removed),
+                    client);
+  g_signal_connect (client->object_manager,
+                    "interface-added",
+                    G_CALLBACK (on_interface_added),
+                    client);
+  g_signal_connect (client->object_manager,
+                    "interface-removed",
+                    G_CALLBACK (on_interface_removed),
+                    client);
+  g_signal_connect (client->object_manager,
+                    "interface-proxy-properties-changed",
+                    G_CALLBACK (on_interface_proxy_properties_changed),
+                    client);
 
   ret = TRUE;
 
@@ -997,4 +1099,83 @@ udisks_client_get_cleartext_block (UDisksClient  *client,
   g_list_foreach (objects, (GFunc) g_object_unref, NULL);
   g_list_free (objects);
   return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+on_changed_timeout (gpointer user_data)
+{
+  UDisksClient *client = UDISKS_CLIENT (user_data);
+  client->changed_timeout_source = NULL;
+  g_signal_emit (client, signals[CHANGED_SIGNAL], 0);
+  return FALSE; /* remove source */
+}
+
+static void
+queue_changed (UDisksClient *client)
+{
+  if (client->changed_timeout_source != NULL)
+    goto out;
+
+  client->changed_timeout_source = g_timeout_source_new (100);
+  g_source_set_callback (client->changed_timeout_source,
+                         (GSourceFunc) on_changed_timeout,
+                         client,
+                         NULL); /* destroy notify */
+  g_source_attach (client->changed_timeout_source, client->context);
+  g_source_unref (client->changed_timeout_source);
+
+ out:
+  ;
+}
+
+static void
+on_object_added (GDBusObjectManager  *manager,
+                 GDBusObject         *object,
+                 gpointer             user_data)
+{
+  UDisksClient *client = UDISKS_CLIENT (user_data);
+  queue_changed (client);
+}
+
+static void
+on_object_removed (GDBusObjectManager  *manager,
+                   GDBusObject         *object,
+                   gpointer             user_data)
+{
+  UDisksClient *client = UDISKS_CLIENT (user_data);
+  queue_changed (client);
+}
+
+static void
+on_interface_added (GDBusObjectManager  *manager,
+                    GDBusObject         *object,
+                    GDBusInterface      *interface,
+                    gpointer             user_data)
+{
+  UDisksClient *client = UDISKS_CLIENT (user_data);
+  queue_changed (client);
+}
+
+static void
+on_interface_removed (GDBusObjectManager  *manager,
+                      GDBusObject         *object,
+                      GDBusInterface      *interface,
+                      gpointer             user_data)
+{
+  UDisksClient *client = UDISKS_CLIENT (user_data);
+  queue_changed (client);
+}
+
+static void
+on_interface_proxy_properties_changed (GDBusObjectManagerClient   *manager,
+                                       GDBusObjectProxy           *object_proxy,
+                                       GDBusProxy                 *interface_proxy,
+                                       GVariant                   *changed_properties,
+                                       const gchar *const         *invalidated_properties,
+                                       gpointer                    user_data)
+{
+  UDisksClient *client = UDISKS_CLIENT (user_data);
+  queue_changed (client);
 }
