@@ -953,3 +953,48 @@ udisks_client_get_drive_info (UDisksClient  *client,
 
   g_clear_object (&block);
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_client_get_cleartext_block:
+ * @client: A #UDisksClient.
+ * @block: A #UDisksBlock.
+ *
+ * If @block is an unlocked encrypted device, gets the cleartext device.
+ *
+ * Returns: (transfer full): A #UDisksBlock or %NULL. Free with
+ * g_object_unref() when done with it.
+ */
+UDisksBlock *
+udisks_client_get_cleartext_block (UDisksClient  *client,
+                                   UDisksBlock   *block)
+{
+  UDisksBlock *ret = NULL;
+  const gchar *object_path;
+  GList *objects;
+  GList *l;
+
+  object_path = g_dbus_object_get_object_path (g_dbus_interface_get_object (G_DBUS_INTERFACE (block)));
+  objects = g_dbus_object_manager_get_objects (client->object_manager);
+  for (l = objects; l != NULL; l = l->next)
+    {
+      UDisksObject *iter_object = UDISKS_OBJECT (l->data);
+      UDisksBlock *iter_block;
+
+      iter_block = udisks_object_peek_block (iter_object);
+      if (iter_block == NULL)
+        continue;
+
+      if (g_strcmp0 (udisks_block_get_crypto_backing_device (iter_block), object_path) == 0)
+        {
+          ret = g_object_ref (iter_block);
+          goto out;
+        }
+    }
+
+ out:
+  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+  g_list_free (objects);
+  return ret;
+}

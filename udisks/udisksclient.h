@@ -53,6 +53,9 @@ UDisksBlock        *udisks_client_get_block_for_drive (UDisksClient        *clie
 UDisksDrive        *udisks_client_get_drive_for_block (UDisksClient        *client,
                                                        UDisksBlock         *block);
 
+UDisksBlock        *udisks_client_get_cleartext_block (UDisksClient        *client,
+                                                       UDisksBlock         *block);
+
 void                udisks_client_get_drive_info      (UDisksClient        *client,
                                                        UDisksDrive         *drive,
                                                        gchar              **out_name,
