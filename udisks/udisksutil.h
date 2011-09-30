@@ -48,13 +48,6 @@ gchar *udisks_util_get_id_for_display (const gchar *usage,
                                        const gchar *version,
                                        gboolean     long_string);
 
-void udisks_util_get_drive_info (UDisksDrive  *drive,
-                                 gchar     **out_name,
-                                 gchar     **out_description,
-                                 GIcon     **out_drive_icon,
-                                 gchar     **out_media_description,
-                                 GIcon     **out_media_icon);
-
 gchar *udisks_util_get_media_compat_for_display (const gchar* const *media_compat);
 
 G_END_DECLS

@@ -1,7 +1,6 @@
 <SECTION>
 <FILE>udisksutil</FILE>
 udisks_util_get_size_for_display
-udisks_util_get_drive_info
 udisks_util_get_part_scheme_for_display
 udisks_util_get_part_type_for_display
 udisks_util_get_part_types_for_scheme
@@ -44,6 +43,7 @@ udisks_client_get_manager
 udisks_client_settle
 udisks_client_get_block_for_drive
 udisks_client_get_drive_for_block
+udisks_client_get_drive_info
 <SUBSECTION Standard>
 UDISKS_TYPE_CLIENT
 UDISKS_CLIENT
