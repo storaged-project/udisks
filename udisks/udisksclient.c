@@ -407,12 +407,15 @@ get_top_level_blocks_for_drive (UDisksClient *client,
  * @drive: A #UDisksDrive.
  * @get_physical: %TRUE to get a physical device, %FALSE to get the logical device.
  *
- * Gets a block device corresponding to @drive.
+ * Gets a block device corresponding to @drive. The returned block
+ * device, if any, is for the whole disk drive, e.g. a partition block
+ * device is never returned.
  *
- * If your application does not care about multipath setups, the
- * @get_physical parameter does not matter. Otherwise, use %TRUE for
- * to get one of the physical paths for @drive (if any) and %FALSE to
- * get the mapped device (if any).
+ * Set @get_physical to %TRUE if you need a block device that you can
+ * send low-level SCSI commands with (for multipath, this returns one
+ * of the physical paths). Set it to %FALSE if you need a block device
+ * that you can read/write data with (for multipath, this returns the
+ * mapped device).
  *
  * Returns: (transfer full): A #UDisksBlock or %NULL if the requested
  * kind of block device is not available - use g_object_unref() to
