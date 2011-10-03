@@ -469,6 +469,52 @@ udisks_client_settle (UDisksClient *client)
     ;
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_client_get_object:
+ * @client: A #UDisksClient.
+ * @object_path: Object path.
+ *
+ * Convenience function for looking up an #UDisksObject for @object_path.
+ *
+ * Returns: (transfer full): A #UDisksObject corresponding to
+ * @object_path or %NULL if not found. The returned object must be
+ * freed with g_object_unref().
+ */
+UDisksObject *
+udisks_client_get_object (UDisksClient  *client,
+                          const gchar   *object_path)
+{
+  g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
+  return (UDisksObject *) g_dbus_object_manager_get_object (client->object_manager, object_path);
+}
+
+/**
+ * udisks_client_peek_object:
+ * @client: A #UDisksClient.
+ * @object_path: Object path.
+ *
+ * Like udisks_client_get_object() but doesn't increase the reference
+ * count on the returned #UDisksObject.
+ *
+ * <warning>The returned object is only valid until removed so it is only safe to use this function on the thread where @client was constructed. Use udisks_client_get_object() if on another thread.</warning>
+ *
+ * Returns: (transfer none): A #UDisksObject corresponding to
+ * @object_path or %NULL if not found.
+ */
+UDisksObject *
+udisks_client_peek_object (UDisksClient  *client,
+                           const gchar   *object_path)
+{
+  UDisksObject *ret;
+  ret = udisks_client_get_object (client, object_path);
+  if (ret != NULL)
+    g_object_unref (ret);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
 
 static GList *
 get_top_level_blocks_for_drive (UDisksClient *client,
