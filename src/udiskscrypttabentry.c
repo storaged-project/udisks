@@ -37,16 +37,6 @@
 #include "udisksprivate.h"
 
 /**
- * SECTION:udiskscrypttabentry
- * @title: UDisksCrypttabEntry
- * @short_description: Object corresponding to an entry in the crypttab file
- *
- * Object corresponding to an entry in the
- * <filename>/etc/crypttab</filename> file. You cannot instantiate this
- * type yourself – use #UDisksCrypttabMonitor.
- */
-
-/**
  * UDisksCrypttabEntry:
  *
  * The #UDisksCrypttabEntry structure contains only private data and should

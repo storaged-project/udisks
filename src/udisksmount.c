@@ -37,15 +37,6 @@
 #include "udisksprivate.h"
 
 /**
- * SECTION:udisksmount
- * @title: UDisksMount
- * @short_description: Object corresponding to a filesystem mount or in-use swap device
- *
- * Object corresponding to mount or in-use swap device. You cannot
- * instantiate this type yourself – use #UDisksMountMonitor.
- */
-
-/**
  * UDisksMount:
  *
  * The #UDisksMount structure contains only private data and should

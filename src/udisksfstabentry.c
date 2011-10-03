@@ -37,16 +37,6 @@
 #include "udisksprivate.h"
 
 /**
- * SECTION:udisksfstabentry
- * @title: UDisksFstabEntry
- * @short_description: Object corresponding to an entry in the fstab file
- *
- * Object corresponding to an entry in the
- * <filename>/etc/fstab</filename> file. You cannot instantiate this
- * type yourself – use #UDisksFstabMonitor.
- */
-
-/**
  * UDisksFstabEntry:
  *
  * The #UDisksFstabEntry structure contains only private data and should

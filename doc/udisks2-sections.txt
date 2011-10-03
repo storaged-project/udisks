@@ -227,34 +227,27 @@ udisks_linux_provider_get_type
 </SECTION>
 
 <SECTION>
-<FILE>udisksmount</FILE>
-<TITLE>UDisksMount</TITLE>
+<FILE>udisksmountmonitor</FILE>
+<TITLE>UDisksMountMonitor</TITLE>
 UDisksMount
 UDisksMountType
 udisks_mount_get_dev
 udisks_mount_get_mount_type
 udisks_mount_get_mount_path
 udisks_mount_compare
-<SUBSECTION Standard>
-UDISKS_TYPE_MOUNT
-UDISKS_MOUNT
-UDISKS_IS_MOUNT
-<SUBSECTION Private>
-udisks_mount_get_type
-</SECTION>
-
-<SECTION>
-<FILE>udisksmountmonitor</FILE>
-<TITLE>UDisksMountMonitor</TITLE>
 UDisksMountMonitor
 udisks_mount_monitor_new
 udisks_mount_monitor_get_mounts_for_dev
 udisks_mount_monitor_is_dev_in_use
 <SUBSECTION Standard>
+UDISKS_TYPE_MOUNT
+UDISKS_MOUNT
+UDISKS_IS_MOUNT
 UDISKS_TYPE_MOUNT_MONITOR
 UDISKS_MOUNT_MONITOR
 UDISKS_IS_MOUNT_MONITOR
 <SUBSECTION Private>
+udisks_mount_get_type
 udisks_mount_monitor_get_type
 </SECTION>
 
@@ -1116,8 +1109,8 @@ udisks_loop_skeleton_get_type
 </SECTION>
 
 <SECTION>
-<FILE>udisksfstabentry</FILE>
-<TITLE>UDisksFstabEntry</TITLE>
+<FILE>udisksfstabmonitor</FILE>
+<TITLE>UDisksFstabMonitor</TITLE>
 UDisksFstabEntry
 udisks_fstab_entry_get_fsname
 udisks_fstab_entry_get_dir
@@ -1126,55 +1119,41 @@ udisks_fstab_entry_get_opts
 udisks_fstab_entry_get_freq
 udisks_fstab_entry_get_passno
 udisks_fstab_entry_compare
-<SUBSECTION Standard>
-UDISKS_TYPE_FSTAB_ENTRY
-UDISKS_FSTAB_ENTRY
-UDISKS_IS_FSTAB_ENTRY
-<SUBSECTION Private>
-udisks_fstab_entry_get_type
-</SECTION>
-
-<SECTION>
-<FILE>udisksfstabmonitor</FILE>
-<TITLE>UDisksFstabMonitor</TITLE>
 UDisksFstabMonitor
 udisks_fstab_monitor_new
 udisks_fstab_monitor_get_entries
 <SUBSECTION Standard>
+UDISKS_TYPE_FSTAB_ENTRY
+UDISKS_FSTAB_ENTRY
+UDISKS_IS_FSTAB_ENTRY
 UDISKS_TYPE_FSTAB_MONITOR
 UDISKS_FSTAB_MONITOR
 UDISKS_IS_FSTAB_MONITOR
 <SUBSECTION Private>
+udisks_fstab_entry_get_type
 udisks_fstab_monitor_get_type
 </SECTION>
 
 <SECTION>
-<FILE>udiskscrypttabentry</FILE>
-<TITLE>UDisksCrypttabEntry</TITLE>
+<FILE>udiskscrypttabmonitor</FILE>
+<TITLE>UDisksCrypttabMonitor</TITLE>
 UDisksCrypttabEntry
 udisks_crypttab_entry_get_name
 udisks_crypttab_entry_get_device
 udisks_crypttab_entry_get_passphrase_path
 udisks_crypttab_entry_get_options
 udisks_crypttab_entry_compare
-<SUBSECTION Standard>
-UDISKS_TYPE_CRYPTTAB_ENTRY
-UDISKS_CRYPTTAB_ENTRY
-UDISKS_IS_CRYPTTAB_ENTRY
-<SUBSECTION Private>
-udisks_crypttab_entry_get_type
-</SECTION>
-
-<SECTION>
-<FILE>udiskscrypttabmonitor</FILE>
-<TITLE>UDisksCrypttabMonitor</TITLE>
 UDisksCrypttabMonitor
 udisks_crypttab_monitor_new
 udisks_crypttab_monitor_get_entries
 <SUBSECTION Standard>
+UDISKS_TYPE_CRYPTTAB_ENTRY
+UDISKS_CRYPTTAB_ENTRY
+UDISKS_IS_CRYPTTAB_ENTRY
 UDISKS_TYPE_CRYPTTAB_MONITOR
 UDISKS_CRYPTTAB_MONITOR
 UDISKS_IS_CRYPTTAB_MONITOR
 <SUBSECTION Private>
+udisks_crypttab_entry_get_type
 udisks_crypttab_monitor_get_type
 </SECTION>
