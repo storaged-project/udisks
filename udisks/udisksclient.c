@@ -576,18 +576,21 @@ udisks_client_get_block_for_drive (UDisksClient        *client,
                                    gboolean             get_physical)
 {
   UDisksBlock *ret = NULL;
-  GList *blocks;
+  GDBusObject *object;
+  GList *blocks = NULL;
   GList *l;
 
   g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
   g_return_val_if_fail (UDISKS_IS_DRIVE (drive), NULL);
 
-  blocks = get_top_level_blocks_for_drive (client, g_dbus_object_get_object_path (g_dbus_interface_get_object (G_DBUS_INTERFACE (drive))));
+  object = g_dbus_interface_get_object (G_DBUS_INTERFACE (drive));
+  if (object == NULL)
+    goto out;
+
+  blocks = get_top_level_blocks_for_drive (client, g_dbus_object_get_object_path (object));
   for (l = blocks; l != NULL; l = l->next)
     {
-      UDisksObject *object = UDISKS_OBJECT (l->data);
-      UDisksBlock *block;
-      block = udisks_object_peek_block (object);
+      UDisksBlock *block = udisks_object_peek_block (UDISKS_OBJECT (l->data));
       if (block != NULL)
         {
           /* TODO: actually look at @get_physical */
@@ -1119,11 +1122,16 @@ udisks_client_get_cleartext_block (UDisksClient  *client,
                                    UDisksBlock   *block)
 {
   UDisksBlock *ret = NULL;
+  GDBusObject *object;
   const gchar *object_path;
-  GList *objects;
+  GList *objects = NULL;
   GList *l;
 
-  object_path = g_dbus_object_get_object_path (g_dbus_interface_get_object (G_DBUS_INTERFACE (block)));
+  object = g_dbus_interface_get_object (G_DBUS_INTERFACE (block));
+  if (object == NULL)
+    goto out;
+
+  object_path = g_dbus_object_get_object_path (object);
   objects = g_dbus_object_manager_get_objects (client->object_manager);
   for (l = objects; l != NULL; l = l->next)
     {
