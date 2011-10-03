@@ -445,8 +445,22 @@ handle_block_uevent (UDisksLinuxProvider *provider,
     }
   else
     {
-      handle_block_uevent_for_drive (provider, action, device);
-      handle_block_uevent_for_block (provider, action, device);
+      if (g_udev_device_get_property_as_boolean (device, "DM_UDEV_DISABLE_OTHER_RULES_FLAG"))
+        {
+          /* Ignore the uevent if the device-mapper layer requests
+           * that other rules ignore this uevent
+           *
+           * It's somewhat nasty to do this but it avoids all kinds of
+           * race-conditions caused by the design of device-mapper
+           * (such as temporary-cryptsetup nodes and cleartext devices
+           * without ID_FS properties properly set).
+           */
+        }
+      else
+        {
+          handle_block_uevent_for_drive (provider, action, device);
+          handle_block_uevent_for_block (provider, action, device);
+        }
     }
 
   if (g_strcmp0 (action, "add") != 0)
