@@ -51,6 +51,8 @@ UDisksObject       *udisks_client_get_object          (UDisksClient        *clie
 UDisksObject       *udisks_client_peek_object         (UDisksClient        *client,
                                                        const gchar         *object_path);
 
+UDisksBlock        *udisks_client_get_block_for_dev   (UDisksClient        *client,
+                                                       dev_t                block_device_number);
 UDisksBlock        *udisks_client_get_block_for_drive (UDisksClient        *client,
                                                        UDisksDrive         *drive,
                                                        gboolean             get_physical);

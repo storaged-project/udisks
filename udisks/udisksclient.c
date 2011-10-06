@@ -516,6 +516,50 @@ udisks_client_peek_object (UDisksClient  *client,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/**
+ * udisks_client_get_block_for_dev:
+ * @client: A #UDisksClient.
+ * @block_device_number: A #dev_t to get a #UDisksBlock for.
+ *
+ * Gets the #UDisksBlock corresponding to @block_device_number, if any.
+ *
+ * Returns: (transfer full): A #UDisksBlock or %NULL if not found.
+ */
+UDisksBlock *
+udisks_client_get_block_for_dev (UDisksClient *client,
+                                 dev_t         block_device_number)
+{
+  UDisksBlock *ret = NULL;
+  GList *l, *object_proxies = NULL;
+
+  g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
+
+  object_proxies = g_dbus_object_manager_get_objects (client->object_manager);
+  for (l = object_proxies; l != NULL; l = l->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksBlock *block;
+
+      block = udisks_object_get_block (object);
+      if (block == NULL)
+        continue;
+
+      if (makedev (udisks_block_get_major (block), udisks_block_get_minor (block)) == block_device_number)
+        {
+          ret = block;
+          goto out;
+        }
+      g_object_unref (block);
+    }
+
+ out:
+  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
+  g_list_free (object_proxies);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static GList *
 get_top_level_blocks_for_drive (UDisksClient *client,
                                 const gchar  *drive_object_path)
