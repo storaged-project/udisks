@@ -214,7 +214,7 @@ set_media (UDisksDrive      *iface,
   g_ptr_array_add (media_compat_array, NULL);
 
   media_in_drive = "";
-  if (udisks_drive_get_size (iface) > 0)
+  if (udisks_drive_get_media_available (iface))
     {
       for (n = 0; media_mapping[n].udev_property != NULL; n++)
         {
@@ -320,6 +320,9 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
   UDisksDrive *iface = UDISKS_DRIVE (drive);
   GUdevDevice *device;
   gchar *sort_key;
+  guint64 size;
+  gboolean media_available;
+  gboolean media_change_detected;
 
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
   if (device == NULL)
@@ -415,6 +418,11 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
             {
               udisks_drive_set_vendor (iface, vendor);
             }
+          /* workaround for missing ID_VENDOR for floppy drives */
+          else if (g_str_has_prefix (name, "fd"))
+            {
+              udisks_drive_set_vendor (iface, "");
+            }
           /* workaround for missing ID_VENDOR on virtio-blk */
           else if (g_str_has_prefix (name, "vd"))
             {
@@ -439,6 +447,11 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
             {
               udisks_drive_set_model (iface, model);
             }
+          /* workaround for missing ID_MODEL for floppy drives */
+          else if (g_str_has_prefix (name, "fd"))
+            {
+              udisks_drive_set_model (iface, "Floppy Drive");
+            }
           /* workaround for missing ID_MODEL on virtio-blk */
           else if (g_str_has_prefix (name, "vd"))
             {
@@ -459,7 +472,12 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
 
   /* common bits go here */
   udisks_drive_set_media_removable (iface, g_udev_device_get_sysfs_attr_as_boolean (device, "removable"));
-  udisks_drive_set_size (iface, udisks_daemon_util_block_get_size (device));
+  size = udisks_daemon_util_block_get_size (device,
+                                            &media_available,
+                                            &media_change_detected);
+  udisks_drive_set_size (iface, size);
+  udisks_drive_set_media_available (iface, media_available);
+  udisks_drive_set_media_change_detected (iface, media_change_detected);
   set_media (iface, device);
   set_rotation_rate (iface, device);
   set_connection_bus (iface, device);

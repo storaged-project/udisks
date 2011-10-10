@@ -728,6 +728,13 @@ udisks_linux_drive_object_should_include_device (GUdevClient  *client,
 
       name = g_udev_device_get_name (device);
 
+      /* workaround for floppy devices */
+      if (g_str_has_prefix (name, "fd"))
+        {
+          vpd = g_strdup_printf ("pcfloppy_%s", name);
+          goto found;
+        }
+
       /* workaround for missing serial/wwn on virtio-blk */
       if (g_str_has_prefix (name, "vd"))
         {

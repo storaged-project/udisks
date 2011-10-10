@@ -270,6 +270,11 @@ update_hints (UDisksLinuxBlock  *block,
           hint_auto = TRUE;
         }
     }
+  else
+    {
+      if (g_str_has_prefix (device_file, "/dev/fd"))
+        hint_system = FALSE;
+    }
 
   /* TODO: set ignore to TRUE for physical paths belonging to a drive with multiple paths */
 
@@ -590,6 +595,9 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
   const gchar *device_file;
   const gchar *const *symlinks;
   const gchar *preferred_device_file;
+  guint64 size;
+  gboolean media_available;
+  gboolean media_change_detected;
 
   drive = NULL;
 
@@ -608,7 +616,10 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
   udisks_block_set_symlinks (iface, symlinks);
   udisks_block_set_major (iface, major (dev));
   udisks_block_set_minor (iface, minor (dev));
-  udisks_block_set_size (iface, udisks_daemon_util_block_get_size (device));
+  size = udisks_daemon_util_block_get_size (device,
+                                            &media_available,
+                                            &media_change_detected);
+  udisks_block_set_size (iface, size);
 
   /* dm-crypt
    *

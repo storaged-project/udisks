@@ -83,9 +83,6 @@
     -->
     <property name="WWN" type="s" access="read"/>
 
-    <!-- Size: The size of the drive. Is set to 0 if, and only if, no media is inserted. -->
-    <property name="Size" type="t" access="read"/>
-
     <!-- Media: The kind of media currently in the drive or blank if unknown.
          See the #org.freedesktop.UDisks2.Drive:MediaCompatibility property for known values.
     -->
@@ -133,6 +130,24 @@
 
     <!-- MediaRemovable: Whether the media can be removed from the drive. -->
     <property name="MediaRemovable" type="b" access="read"/>
+
+    <!-- MediaAvailable: Set to %FALSE if no medium is available.
+         This is always %TRUE if #org.freedesktop.UDisks2.Block.MediaChangeDetected is %FALSE.
+    -->
+    <property name="MediaAvailable" type="b" access="read"/>
+
+    <!-- MediaChangeDetected: Set to %TRUE only if media changes are detected.
+         Media changes are detected on all modern disk drives through
+         either polling or an asynchronous notification mechanism. The
+         only known disk drives that cannot report media changes are
+         PC floppy drives.
+    -->
+    <property name="MediaChangeDetected" type="b" access="read"/>
+
+    <!-- Size: The size of the drive (or the media currently in the drive).
+         This is always 0 if #org.freedesktop.UDisks2.Block.MediaChangeDetected is %FALSE.
+    -->
+    <property name="Size" type="t" access="read"/>
 
     <!-- Optical: %TRUE if the drive contains an optical disc. -->
     <property name="Optical" type="b" access="read"/>

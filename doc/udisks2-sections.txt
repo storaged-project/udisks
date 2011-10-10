@@ -498,6 +498,9 @@ udisks_drive_get_connection_bus
 udisks_drive_get_media
 udisks_drive_get_media_compatibility
 udisks_drive_get_media_removable
+udisks_drive_get_media_available
+udisks_drive_get_media_change_detected
+udisks_drive_get_size
 udisks_drive_get_optical
 udisks_drive_get_optical_blank
 udisks_drive_get_optical_num_tracks
@@ -508,7 +511,6 @@ udisks_drive_get_model
 udisks_drive_get_revision
 udisks_drive_get_rotation_rate
 udisks_drive_get_serial
-udisks_drive_get_size
 udisks_drive_get_vendor
 udisks_drive_get_wwn
 udisks_drive_get_sort_key
@@ -525,6 +527,9 @@ udisks_drive_set_connection_bus
 udisks_drive_set_media
 udisks_drive_set_media_compatibility
 udisks_drive_set_media_removable
+udisks_drive_set_media_available
+udisks_drive_set_media_change_detected
+udisks_drive_set_size
 udisks_drive_set_optical
 udisks_drive_set_optical_blank
 udisks_drive_set_optical_num_tracks
@@ -535,7 +540,6 @@ udisks_drive_set_model
 udisks_drive_set_revision
 udisks_drive_set_rotation_rate
 udisks_drive_set_serial
-udisks_drive_set_size
 udisks_drive_set_vendor
 udisks_drive_set_wwn
 udisks_drive_set_sort_key

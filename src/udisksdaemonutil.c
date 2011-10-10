@@ -149,28 +149,46 @@ udisks_safe_append_to_object_path (GString      *str,
 /**
  * udisks_daemon_util_block_get_size:
  * @device: A #GUdevDevice for a top-level block device.
+ * @out_media_available: (out): Return location for whether media is available or %NULL.
+ * @out_media_change_detected: (out): Return location for whether media change is detected or %NULL.
  *
  * Gets the size of the @device top-level block device, checking for media in the process
  *
- * Returns: The size of @device or 0 if no media is available.
+ * Returns: The size of @device or 0 if no media is available or if unknown.
  */
 guint64
-udisks_daemon_util_block_get_size (GUdevDevice *device)
+udisks_daemon_util_block_get_size (GUdevDevice *device,
+                                   gboolean    *out_media_available,
+                                   gboolean    *out_media_change_detected)
 {
-  gboolean media_available;
+  gboolean media_available = FALSE;
+  gboolean media_change_detected = TRUE;
+  guint64 size = 0;
 
   /* figuring out if media is available is a bit tricky */
-  media_available = FALSE;
   if (g_udev_device_get_sysfs_attr_as_boolean (device, "removable"))
     {
       /* never try to open optical drives (might cause the door to close) or
        * floppy drives (makes noise)
        */
-      media_available = FALSE;
-      if (!(g_udev_device_get_property_as_boolean (device, "ID_CDROM") ||
-            g_udev_device_get_property_as_boolean (device, "ID_DRIVE_FLOPPY")))
+      if (g_udev_device_get_property_as_boolean (device, "ID_DRIVE_FLOPPY"))
+        {
+          /* assume media available */
+          media_available = TRUE;
+          media_change_detected = FALSE;
+        }
+      else if (g_udev_device_get_property_as_boolean (device, "ID_CDROM"))
+        {
+          /* Rely on (careful) work already done by udev's cdrom_id prober */
+          if (g_udev_device_get_property_as_boolean (device, "ID_CDROM_MEDIA"))
+            media_available = TRUE;
+        }
+      else
         {
           gint fd;
+          /* For the general case, just rely on open(2) failing with
+           * ENOMEDIUM if no medium is inserted
+           */
           fd = open (g_udev_device_get_device_file (device), O_RDONLY);
           if (fd >= 0)
             {
@@ -178,23 +196,23 @@ udisks_daemon_util_block_get_size (GUdevDevice *device)
               close (fd);
             }
         }
-      else
-        {
-          if (g_udev_device_get_property_as_boolean (device, "ID_CDROM_MEDIA"))
-            media_available = TRUE;
-          else
-            media_available = FALSE;
-        }
     }
   else
     {
+      /* not removable, so media is implicitly available */
       media_available = TRUE;
     }
 
-  if (media_available)
-    return g_udev_device_get_sysfs_attr_as_uint64 (device, "size") * 512;
-  else
-    return 0;
+  if (media_available && size == 0 && media_change_detected)
+    size = g_udev_device_get_sysfs_attr_as_uint64 (device, "size") * 512;
+
+  if (out_media_available != NULL)
+    *out_media_available = media_available;
+
+  if (out_media_change_detected != NULL)
+    *out_media_change_detected = media_change_detected;
+
+  return size;
 }
 
 

@@ -405,13 +405,34 @@ block_device_update (UDisksLinuxBlockObject *object,
 /* org.freedesktop.UDisks.Filesystem */
 
 static gboolean
+drive_does_not_detect_media_change (UDisksLinuxBlockObject *object)
+{
+  gboolean ret = FALSE;
+  UDisksObject *drive_object;
+
+  drive_object = udisks_daemon_find_object (object->daemon, udisks_block_get_drive (object->iface_block_device));
+  if (drive_object != NULL)
+    {
+      UDisksDrive *drive = udisks_object_get_drive (drive_object);
+      if (drive != NULL)
+        {
+          ret = ! udisks_drive_get_media_change_detected (drive);
+          g_object_unref (drive);
+        }
+      g_object_unref (drive_object);
+    }
+  return ret;
+}
+
+static gboolean
 filesystem_check (UDisksLinuxBlockObject *object)
 {
   gboolean ret;
   UDisksMountType mount_type;
 
   ret = FALSE;
-  if (g_strcmp0 (udisks_block_get_id_usage (object->iface_block_device), "filesystem") == 0 ||
+  if (drive_does_not_detect_media_change (object) ||
+      g_strcmp0 (udisks_block_get_id_usage (object->iface_block_device), "filesystem") == 0 ||
       (udisks_mount_monitor_is_dev_in_use (object->mount_monitor,
                                            g_udev_device_get_device_number (object->device),
                                            &mount_type) &&
