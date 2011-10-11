@@ -105,6 +105,9 @@ static void on_interface_proxy_properties_changed (GDBusObjectManagerClient   *m
                                                    const gchar *const         *invalidated_properties,
                                                    gpointer                    user_data);
 
+static void init_interface_proxy (UDisksClient *client,
+                                  GDBusProxy   *proxy);
+
 G_DEFINE_TYPE_WITH_CODE (UDisksClient, udisks_client, G_TYPE_OBJECT,
                          G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, initable_iface_init)
                          G_IMPLEMENT_INTERFACE (G_TYPE_ASYNC_INITABLE, async_initable_iface_init)
@@ -329,6 +332,8 @@ initable_init (GInitable     *initable,
 {
   UDisksClient *client = UDISKS_CLIENT (initable);
   gboolean ret;
+  GList *objects, *l;
+  GList *interfaces, *ll;
 
   ret = FALSE;
 
@@ -359,6 +364,21 @@ initable_init (GInitable     *initable,
                                                                           &client->initialization_error);
   if (client->object_manager == NULL)
     goto out;
+
+  /* init all proxies */
+  objects = g_dbus_object_manager_get_objects (client->object_manager);
+  for (l = objects; l != NULL; l = l->next)
+    {
+      interfaces = g_dbus_object_get_interfaces (G_DBUS_OBJECT (l->data));
+      for (ll = interfaces; ll != NULL; ll = ll->next)
+        {
+          init_interface_proxy (client, G_DBUS_PROXY (ll->data));
+        }
+      g_list_foreach (interfaces, (GFunc) g_object_unref, NULL);
+      g_list_free (interfaces);
+    }
+  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+  g_list_free (objects);
 
   g_signal_connect (client->object_manager,
                     "object-added",
@@ -1247,12 +1267,23 @@ on_object_removed (GDBusObjectManager  *manager,
 }
 
 static void
+init_interface_proxy (UDisksClient *client,
+                      GDBusProxy   *proxy)
+{
+  /* disable method timeouts */
+  g_dbus_proxy_set_default_timeout (proxy, G_MAXINT);
+}
+
+static void
 on_interface_added (GDBusObjectManager  *manager,
                     GDBusObject         *object,
                     GDBusInterface      *interface,
                     gpointer             user_data)
 {
   UDisksClient *client = UDISKS_CLIENT (user_data);
+
+  init_interface_proxy (client, G_DBUS_PROXY (interface));
+
   queue_changed (client);
 }
 
