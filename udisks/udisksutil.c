@@ -473,6 +473,8 @@ const static struct
   {"raid",       "LVM2_member",       NULL,    N_("LVM2 Phyiscal Volume"),              N_("LVM2 PV")},
   {"raid",       "linux_raid_member", "*",     N_("Software RAID Component (version %s)"), N_("MD Raid")},
   {"raid",       "linux_raid_member", NULL,    N_("Software RAID Component"),           N_("MD Raid")},
+  {"raid",       "zfs_member",        "*",     N_("ZFS Device (ZPool version %s)"),     N_("ZFS (v%s)")},
+  {"raid",       "zfs_member",        NULL,    N_("ZFS Device"),                        N_("ZFS")},
   {"crypto",     "crypto_LUKS",       "*",     N_("LUKS Encryption (version %s)"),      N_("LUKS")},
   {"crypto",     "crypto_LUKS",       NULL,    N_("LUKS Encryption"),                   N_("LUKS")},
   {NULL, NULL, NULL, NULL}
