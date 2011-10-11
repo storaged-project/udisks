@@ -132,7 +132,7 @@
     <property name="MediaRemovable" type="b" access="read"/>
 
     <!-- MediaAvailable: Set to %FALSE if no medium is available.
-         This is always %TRUE if #org.freedesktop.UDisks2.Block.MediaChangeDetected is %FALSE.
+         This is always %TRUE if #org.freedesktop.UDisks2.Drive:MediaChangeDetected is %FALSE.
     -->
     <property name="MediaAvailable" type="b" access="read"/>
 
@@ -145,7 +145,7 @@
     <property name="MediaChangeDetected" type="b" access="read"/>
 
     <!-- Size: The size of the drive (or the media currently in the drive).
-         This is always 0 if #org.freedesktop.UDisks2.Block.MediaChangeDetected is %FALSE.
+         This is always 0 if #org.freedesktop.UDisks2.Drive:MediaChangeDetected is %FALSE.
     -->
     <property name="Size" type="t" access="read"/>
 
