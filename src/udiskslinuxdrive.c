@@ -60,6 +60,9 @@ typedef struct _UDisksLinuxDriveClass   UDisksLinuxDriveClass;
 struct _UDisksLinuxDrive
 {
   UDisksDriveSkeleton parent_instance;
+
+  gint64 time_detected;
+  gint64 time_media_detected;
 };
 
 struct _UDisksLinuxDriveClass
@@ -323,10 +326,15 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
   guint64 size;
   gboolean media_available;
   gboolean media_change_detected;
+  gboolean is_pc_floppy_drive = FALSE;
 
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
   if (device == NULL)
     goto out;
+
+  if (g_udev_device_get_property_as_boolean (device, "ID_DRIVE_FLOPPY") ||
+      g_str_has_prefix (g_udev_device_get_name (device), "fd"))
+    is_pc_floppy_drive = TRUE;
 
   /* this is the _almost_ the same for both ATA and SCSI devices (cf. udev's ata_id and scsi_id)
    * but we special case since there are subtle differences...
@@ -419,7 +427,7 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
               udisks_drive_set_vendor (iface, vendor);
             }
           /* workaround for missing ID_VENDOR for floppy drives */
-          else if (g_str_has_prefix (name, "fd"))
+          else if (is_pc_floppy_drive)
             {
               udisks_drive_set_vendor (iface, "");
             }
@@ -482,27 +490,37 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
   set_rotation_rate (iface, device);
   set_connection_bus (iface, device);
 
-#if 0
-  /* This ensures that devices are shown in the order they are detected */
-  sort_key = g_strdup_printf ("%" G_GUINT64_FORMAT,
-                              time (NULL) * G_USEC_PER_SEC - g_udev_device_get_usec_since_initialized (device));
-#else
   /* need to use this lame hack until libudev's get_usec_since_initialized() works
    * for devices received via the netlink socket
    */
-  {
-    GUdevClient *client;
-    GUdevDevice *ns_device;
-    client = g_udev_client_new (NULL);
-    ns_device =  g_udev_client_query_by_sysfs_path (client, g_udev_device_get_sysfs_path (device));
-    sort_key = g_strdup_printf ("%" G_GUINT64_FORMAT,
-                                time (NULL) * G_USEC_PER_SEC - g_udev_device_get_usec_since_initialized (ns_device));
-    g_object_unref (ns_device);
-    g_object_unref (client);
-  }
-#endif
+  GUdevClient *client;
+  GUdevDevice *ns_device;
+  client = g_udev_client_new (NULL);
+  ns_device =  g_udev_client_query_by_sysfs_path (client, g_udev_device_get_sysfs_path (device));
+
+  if (drive->time_detected == 0)
+    drive->time_detected = g_get_real_time () - g_udev_device_get_usec_since_initialized (ns_device);
+  if (!g_udev_device_get_sysfs_attr_as_boolean (device, "removable") || is_pc_floppy_drive)
+    {
+      drive->time_media_detected = drive->time_detected;
+    }
+  else
+    {
+      if (!media_available)
+        drive->time_media_detected = 0;
+      else if (drive->time_media_detected == 0)
+        drive->time_media_detected = g_get_real_time ();
+    }
+  g_object_unref (ns_device);
+  g_object_unref (client);
+
+  udisks_drive_set_time_detected (iface, drive->time_detected);
+  udisks_drive_set_time_media_detected (iface, drive->time_media_detected);
+
+  sort_key = g_strdup_printf ("%" G_GINT64_FORMAT, drive->time_detected);
   udisks_drive_set_sort_key (iface, sort_key);
   g_free (sort_key);
+
  out:
   if (device != NULL)
     g_object_unref (device);

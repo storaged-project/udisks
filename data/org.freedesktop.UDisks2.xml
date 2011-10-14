@@ -149,6 +149,16 @@
     -->
     <property name="Size" type="t" access="read"/>
 
+    <!-- TimeDetected: The time the drive was first detected.
+         This is expressed in micro-seconds since the Epoch Jan 1, 1970 0:00 UTC.
+    -->
+    <property name="TimeDetected" type="t" access="read"/>
+
+    <!-- TimeMediaDetected: The earliest time media was last detected or 0 if media is not available.
+         This is expressed in micro-seconds since the Epoch Jan 1, 1970 0:00 UTC.
+    -->
+    <property name="TimeMediaDetected" type="t" access="read"/>
+
     <!-- Optical: %TRUE if the drive contains an optical disc. -->
     <property name="Optical" type="b" access="read"/>
 
@@ -426,6 +436,17 @@
   <interface name="org.freedesktop.UDisks2.Block">
     <!-- Device: The special device file for the block device e.g. <filename>/dev/sda2</filename>. -->
     <property name="Device" type="ay" access="read"/>
+
+    <!-- PreferredDevice:
+         The special device file to present in the UI instead of the value
+         of the #org.freedesktop.UDisks2.Block:Device property.
+
+         For example this could be
+         e.g. <filename>/dev/mapper/mpathk</filename> for a multipath
+         device with special device file <filename>/dev/dm-9</filename>.
+    -->
+    <property name="PreferredDevice" type="ay" access="read"/>
+
     <!-- Symlinks:
 
          Known symlinks in <filename>/dev</filename> that points to
@@ -438,22 +459,16 @@
          <filename>/dev/disk/by-id/wwn-0x5001517387d61905</filename>.
     -->
     <property name="Symlinks" type="aay" access="read"/>
-    <!-- Major: The major number of the device. -->
-    <property name="Major" type="x" access="read"/>
-    <!-- Minor: The minor number of the device. -->
-    <property name="Minor" type="x" access="read"/>
+
     <!-- Size: The size of the block device. -->
     <property name="Size" type="t" access="read"/>
 
-    <!-- PreferredDevice:
-         The special device file to present in the UI instead of the value
-         of the #org.freedesktop.UDisks2.Block:Device property.
+    <!-- Major: The major number of the device. -->
+    <property name="Major" type="x" access="read"/>
 
-         For example this could be
-         e.g. <filename>/dev/mapper/mpathk</filename> for a multipath
-         device with special device file <filename>/dev/dm-9</filename>.
-    -->
-    <property name="PreferredDevice" type="ay" access="read"/>
+    <!-- Minor: The minor number of the device. -->
+    <property name="Minor" type="x" access="read"/>
+
 
     <!-- Drive:
          The #org.freedesktop.UDisks2.Drive object that the block device
