@@ -201,6 +201,7 @@ udisks_linux_drive_ata_get_type
 <FILE>udisksprovider</FILE>
 <TITLE>UDisksProvider</TITLE>
 UDisksProvider
+UDisksProviderClass
 udisks_provider_start
 udisks_provider_get_daemon
 <SUBSECTION Standard>
@@ -500,6 +501,8 @@ udisks_drive_get_media_compatibility
 udisks_drive_get_media_removable
 udisks_drive_get_media_available
 udisks_drive_get_media_change_detected
+udisks_drive_get_time_detected
+udisks_drive_get_time_media_detected
 udisks_drive_get_size
 udisks_drive_get_optical
 udisks_drive_get_optical_blank
@@ -529,6 +532,8 @@ udisks_drive_set_media_compatibility
 udisks_drive_set_media_removable
 udisks_drive_set_media_available
 udisks_drive_set_media_change_detected
+udisks_drive_set_time_detected
+udisks_drive_set_time_media_detected
 udisks_drive_set_size
 udisks_drive_set_optical
 udisks_drive_set_optical_blank
