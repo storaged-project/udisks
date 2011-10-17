@@ -18,11 +18,11 @@ SOURCE CONTROL
 
 Anonymous checkouts:
 
-  $ git clone git://git.freedesktop.org/git/DeviceKit/DeviceKit-disks.git
+  $ git clone git://git.freedesktop.org/git/udisks
 
 Checkouts for ssh account holders
 
-  $ git clone ssh://[username@]git.freedesktop.org/git/DeviceKit/DeviceKit-disks.git
+  $ git clone ssh://[username@]git.freedesktop.org/git/udisks
 
 COMMITTING CODE
 ===============
