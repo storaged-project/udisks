@@ -34,6 +34,7 @@
 #include "udiskslogging.h"
 #include "udiskslinuxfilesystem.h"
 #include "udiskslinuxblockobject.h"
+#include "udiskslinuxfsinfo.h"
 #include "udisksdaemon.h"
 #include "udiskscleanup.h"
 #include "udisksdaemonutil.h"
@@ -443,6 +444,20 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
   g_ptr_array_add (options, NULL);
 
   return (char **) g_ptr_array_free (options, FALSE);
+}
+
+static gchar *
+subst_str (const gchar *str,
+           const gchar *from,
+           const gchar *to)
+{
+    gchar **parts;
+    gchar *result;
+
+    parts = g_strsplit (str, from, 0);
+    result = g_strjoinv (to, parts);
+    g_strfreev (parts);
+    return result;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1437,15 +1452,17 @@ handle_set_label (UDisksFilesystem       *filesystem,
   UDisksDaemon *daemon;
   const gchar *probed_fs_usage;
   const gchar *probed_fs_type;
-  gboolean supports_online;
+  const FSInfo *fs_info;
   UDisksBaseJob *job;
   gchar *escaped_label;
   const gchar *action_id;
+  gchar *command;
+  gchar *tmp;
 
   object = NULL;
   daemon = NULL;
-  supports_online = FALSE;
   escaped_label = NULL;
+  command = NULL;
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem)));
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
@@ -1454,11 +1471,19 @@ handle_set_label (UDisksFilesystem       *filesystem,
   probed_fs_usage = udisks_block_get_id_usage (block);
   probed_fs_type = udisks_block_get_id_type (block);
 
-  /* TODO: add support for other fstypes */
-  if (!(g_strcmp0 (probed_fs_usage, "filesystem") == 0 &&
-        (g_strcmp0 (probed_fs_type, "ext2") == 0 ||
-         g_strcmp0 (probed_fs_type, "ext3") == 0 ||
-         g_strcmp0 (probed_fs_type, "ext4") == 0)))
+  if (g_strcmp0 (probed_fs_usage, "filesystem") != 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_NOT_SUPPORTED,
+                                             "Cannot change label on device of type %s",
+                                             probed_fs_usage);
+      goto out;
+    }
+
+  fs_info = get_fs_info (probed_fs_type);
+
+  if (fs_info == NULL || fs_info->command_change_label == NULL)
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
@@ -1468,12 +1493,29 @@ handle_set_label (UDisksFilesystem       *filesystem,
                                              probed_fs_type);
       goto out;
     }
-  supports_online = TRUE;
+
+  /* VFAT does not allow some characters; as mlabel hangs with interactive
+   * question in this case, check in advance */
+  if (g_strcmp0 (probed_fs_type, "vfat") == 0)
+    {
+      for (tmp = "\"*/:<>?\\|"; *tmp; ++tmp)
+        {
+          if (strchr (label, *tmp) != NULL)
+            {
+              g_dbus_method_invocation_return_error (invocation,
+                                                     UDISKS_ERROR,
+                                                     UDISKS_ERROR_NOT_SUPPORTED,
+                                                     "character '%c' not supported in VFAT labels",
+                                                     *tmp);
+               goto out;
+            }
+        }
+    }
 
   /* Fail if the device is already mounted and the tools/drivers doesn't
    * support changing the label in that case
    */
-  if (filesystem != NULL && !supports_online)
+  if (filesystem != NULL && !fs_info->supports_online_label_rename)
     {
       const gchar * const *existing_mount_points;
       existing_mount_points = udisks_filesystem_get_mount_points (filesystem);
@@ -1505,14 +1547,24 @@ handle_set_label (UDisksFilesystem       *filesystem,
     goto out;
 
   escaped_label = g_shell_quote (label);
+
+  if (fs_info->command_clear_label != NULL && strlen (label) == 0)
+    {
+      command = subst_str (fs_info->command_clear_label, "$DEVICE", udisks_block_get_device (block));
+    }
+  else
+    {
+      tmp = subst_str (fs_info->command_change_label, "$DEVICE", udisks_block_get_device (block));
+      command = subst_str (tmp, "$LABEL", escaped_label);
+      g_free (tmp);
+    }
+
   job = udisks_daemon_launch_spawned_job (daemon,
                                           NULL, /* cancellable */
                                           0,    /* uid_t run_as_uid */
                                           0,    /* uid_t run_as_euid */
                                           NULL, /* input_string */
-                                          "e2label %s %s",
-                                          udisks_block_get_device (block),
-                                          escaped_label);
+                                          "%s", command);
   g_signal_connect (job,
                     "completed",
                     G_CALLBACK (on_set_label_job_completed),
@@ -1520,6 +1572,7 @@ handle_set_label (UDisksFilesystem       *filesystem,
 
  out:
   g_free (escaped_label);
+  g_free (command);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
