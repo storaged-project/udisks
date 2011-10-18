@@ -32,11 +32,13 @@
 
 static GMainLoop *loop = NULL;
 static gboolean opt_replace = FALSE;
+static gboolean opt_no_debug = FALSE;
 static gboolean opt_no_sigint = FALSE;
 static GOptionEntry opt_entries[] =
 {
-  {"replace", 0, 0, G_OPTION_ARG_NONE, &opt_replace, "Replace existing daemon", NULL},
-  {"no-sigint", 0, 0, G_OPTION_ARG_NONE, &opt_no_sigint, "Do not handle SIGINT for controlled shutdown", NULL},
+  {"replace", 'r', 0, G_OPTION_ARG_NONE, &opt_replace, "Replace existing daemon", NULL},
+  {"no-debug", 'n', 0, G_OPTION_ARG_NONE, &opt_no_debug, "Don't print debug information on stdout/stderr", NULL},
+  {"no-sigint", 's', 0, G_OPTION_ARG_NONE, &opt_no_sigint, "Do not handle SIGINT for controlled shutdown", NULL},
   {NULL }
 };
 
@@ -116,6 +118,26 @@ main (int    argc,
       g_printerr ("Error parsing options: %s\n", error->message);
       g_error_free (error);
       goto out;
+    }
+
+  /* TODO: this hammer is too big - it would be a lot better to configure the
+   *       logging routines and avoid printf(3) overhead and so on
+   */
+  if (opt_no_debug)
+    {
+      gint dev_null_fd;
+      dev_null_fd = open ("/dev/null", O_RDWR);
+      if (dev_null_fd >= 0)
+        {
+          dup2 (dev_null_fd, STDIN_FILENO);
+          dup2 (dev_null_fd, STDOUT_FILENO);
+          dup2 (dev_null_fd, STDERR_FILENO);
+          close (dev_null_fd);
+        }
+      else
+        {
+          g_warning ("Error opening /dev/null: %m");
+        }
     }
 
   udisks_notice ("udisks daemon version %s starting", PACKAGE_VERSION);

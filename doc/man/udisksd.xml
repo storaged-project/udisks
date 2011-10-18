@@ -21,6 +21,8 @@
       <command>udisksd</command>
       <arg><option>--help</option></arg>
       <arg><option>--replace</option></arg>
+      <arg><option>--no-debug</option></arg>
+      <arg><option>--no-sigint</option></arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -59,6 +61,22 @@
         <listitem>
           <para>
             Replace existing daemon.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--no-debug</option></term>
+        <listitem>
+          <para>
+            Do not print debug or informational messages on stdout/stderr.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--no-sigint</option></term>
+        <listitem>
+          <para>
+            Do not handle SIGINT for controlled shutdown.
           </para>
         </listitem>
       </varlistentry>
