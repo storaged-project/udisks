@@ -2475,7 +2475,11 @@ handle_command_status (gint        *argc,
       for (j = blocks; j != NULL; j = j->next)
         {
           UDisksBlock *block = UDISKS_BLOCK (j->data);
-          if (!udisks_block_get_part_entry (block))
+          GDBusObject *block_object;
+          UDisksPartition *partition;
+          block_object = g_dbus_interface_get_object (G_DBUS_INTERFACE (block));
+          partition = block_object == NULL ? NULL : udisks_object_peek_partition (UDISKS_OBJECT (block_object));
+          if (partition == NULL)
             {
               const gchar *device_file;
               if (str->len > 0)

@@ -43,6 +43,8 @@
 #include "udisksmountmonitor.h"
 #include "udiskslinuxdriveobject.h"
 #include "udiskslinuxdrive.h"
+#include "udiskslinuxpartitiontable.h"
+#include "udiskslinuxpartition.h"
 #include "udiskslinuxfilesystem.h"
 #include "udiskslinuxencrypted.h"
 #include "udiskslinuxswapspace.h"
@@ -81,6 +83,8 @@ struct _UDisksLinuxBlockObject
 
   /* interface */
   UDisksBlock *iface_block_device;
+  UDisksPartition *iface_partition;
+  UDisksPartitionTable *iface_partition_table;
   UDisksFilesystem *iface_filesystem;
   UDisksSwapspace *iface_swapspace;
   UDisksEncrypted *iface_encrypted;
@@ -121,6 +125,10 @@ udisks_linux_block_object_finalize (GObject *_object)
 
   if (object->iface_block_device != NULL)
     g_object_unref (object->iface_block_device);
+  if (object->iface_partition != NULL)
+    g_object_unref (object->iface_partition);
+  if (object->iface_partition_table != NULL)
+    g_object_unref (object->iface_partition_table);
   if (object->iface_filesystem != NULL)
     g_object_unref (object->iface_filesystem);
   if (object->iface_swapspace != NULL)
@@ -402,6 +410,114 @@ block_device_update (UDisksLinuxBlockObject *object,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
+/* org.freedesktop.UDisks.PartitionTable */
+
+static gboolean
+partition_table_check (UDisksLinuxBlockObject *object)
+{
+  gboolean ret = FALSE;
+  GDir *dir = NULL;
+  const gchar *name;
+  const gchar *device_name;
+
+  /* only consider whole disks, never partitions */
+  if (g_strcmp0 (g_udev_device_get_devtype (object->device), "disk") != 0)
+    goto out;
+
+  /* if blkid(8) already identified the device as a partition table, it's all good */
+  if (g_udev_device_has_property (object->device, "ID_PART_TABLE_TYPE"))
+    {
+      ret = TRUE;
+      goto out;
+    }
+
+  /* Note that blkid(8) might not detect all partition table
+   * formats that the kernel knows about.... so we need to
+   * double check...
+   *
+   * Fortunately, note that the kernel guarantees that all children
+   * block devices that are partitions are created before the uevent
+   * for the parent block device.... so if the parent block device has
+   * children... then it must be partitioned by the kernel, hence it
+   * must contain a partition table.
+   */
+  dir = g_dir_open (g_udev_device_get_sysfs_path (object->device), 0 /* flags */, NULL /* GError */);
+  if (dir == NULL)
+    goto out;
+
+  device_name = g_udev_device_get_name (object->device);
+  while ((name = g_dir_read_name (dir)) != NULL)
+    {
+      /* TODO: could check that it's a block device - for now, just
+       * checking the name suffices
+       */
+      if (g_str_has_prefix (name, device_name))
+        {
+          ret = TRUE;
+          goto out;
+        }
+    }
+
+ out:
+  if (dir != NULL)
+    g_dir_close (dir);
+
+  return ret;
+}
+
+static void
+partition_table_connect (UDisksLinuxBlockObject *object)
+{
+}
+
+static void
+partition_table_update (UDisksLinuxBlockObject *object,
+                        const gchar            *uevent_action,
+                        GDBusInterface         *_iface)
+{
+  udisks_linux_partition_table_update (UDISKS_LINUX_PARTITION_TABLE (_iface), object);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+/* org.freedesktop.UDisks.Partition */
+
+static gboolean
+partition_check (UDisksLinuxBlockObject *object)
+{
+  gboolean ret = FALSE;
+
+  /* could be partitioned by the kernel */
+  if (g_strcmp0 (g_udev_device_get_devtype (object->device), "partition") == 0)
+    {
+      ret = TRUE;
+      goto out;
+    }
+
+  /* if blkid(8) already identified the device as a partition, it's all good */
+  if (g_udev_device_has_property (object->device, "ID_PART_ENTRY_SCHEME"))
+    {
+      ret = TRUE;
+      goto out;
+    }
+
+ out:
+  return ret;
+}
+
+static void
+partition_connect (UDisksLinuxBlockObject *object)
+{
+}
+
+static void
+partition_update (UDisksLinuxBlockObject *object,
+                  const gchar            *uevent_action,
+                  GDBusInterface         *_iface)
+{
+  udisks_linux_partition_update (UDISKS_LINUX_PARTITION (_iface), object);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
 /* org.freedesktop.UDisks.Filesystem */
 
 static gboolean
@@ -580,6 +696,10 @@ udisks_linux_block_object_uevent (UDisksLinuxBlockObject *object,
                 UDISKS_TYPE_LINUX_ENCRYPTED, &object->iface_encrypted);
   update_iface (object, action, loop_check, loop_connect, loop_update,
                 UDISKS_TYPE_LINUX_LOOP, &object->iface_loop);
+  update_iface (object, action, partition_table_check, partition_table_connect, partition_table_update,
+                UDISKS_TYPE_LINUX_PARTITION_TABLE, &object->iface_partition_table);
+  update_iface (object, action, partition_check, partition_connect, partition_update,
+                UDISKS_TYPE_LINUX_PARTITION, &object->iface_partition);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

@@ -597,13 +597,15 @@ get_top_level_blocks_for_drive (UDisksClient *client,
     {
       UDisksObject *object = UDISKS_OBJECT (l->data);
       UDisksBlock *block;
+      UDisksPartition *partition;
 
       block = udisks_object_get_block (object);
+      partition = udisks_object_peek_partition (object);
       if (block == NULL)
         continue;
 
       if (g_strcmp0 (udisks_block_get_drive (block), drive_object_path) == 0 &&
-          !udisks_block_get_part_entry (block))
+          partition == NULL)
         {
           ret = g_list_append (ret, g_object_ref (object));
         }
@@ -1216,6 +1218,38 @@ udisks_client_get_cleartext_block (UDisksClient  *client,
  out:
   g_list_foreach (objects, (GFunc) g_object_unref, NULL);
   g_list_free (objects);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_client_get_partition_table:
+ * @client: A #UDisksClient.
+ * @partition: A #UDisksPartition.
+ *
+ * Gets the #UDisksPartitionTable corresponding to @partition.
+ *
+ * Returns: (transfer full): A #UDisksPartitionTable. Free with g_object_unref().
+ */
+UDisksPartitionTable *
+udisks_client_get_partition_table (UDisksClient     *client,
+                                   UDisksPartition  *partition)
+{
+  UDisksPartitionTable *ret = NULL;
+  UDisksObject *object;
+
+  g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
+  g_return_val_if_fail (UDISKS_IS_PARTITION (partition), NULL);
+
+  object = udisks_client_get_object (client, udisks_partition_get_table (partition));
+  if (object == NULL)
+    goto out;
+
+  ret = udisks_object_get_partition_table (object);
+  g_object_unref (object);
+
+ out:
   return ret;
 }
 

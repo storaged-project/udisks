@@ -667,49 +667,6 @@
     -->
     <property name="HintIconName" type="s" access="read"/>
 
-    <!-- PartTable: Set to %TRUE if a partition table signature was detected on the device. -->
-    <property name="PartTable" type="b" access="read"/>
-    <!-- PartTableScheme: The type of partition table detected.
-         Known values include <literal>mbr</literal> (for <ulink
-         url="http://en.wikipedia.org/wiki/Master_Boot_Record">Master
-         Boot Record</ulink>), <literal>gpt</literal> (for <ulink
-         url="http://en.wikipedia.org/wiki/GUID_Partition_Table">GUID
-         Partition Table</ulink>) and <literal>apm</literal> (for
-         <ulink
-         url="http://en.wikipedia.org/wiki/Apple_Partition_Map">Apple
-         Partition Map</ulink>). If blank, and
-         #org.freedesktop.UDisks2.Block:PartTable is %TRUE, a
-         partition table was detected but its scheme is unknown.
-    -->
-    <property name="PartTableScheme" type="s" access="read"/>
-
-    <!-- PartEntry: Set to %TRUE if the block device represents a partition. -->
-    <property name="PartEntry" type="b" access="read"/>
-    <!-- PartEntryNumber: The number of the partition in the partition table. -->
-    <property name="PartEntryNumber" type="u" access="read"/>
-    <!-- PartEntryScheme: The partition table scheme or blank if unknown.
-         See the #org.freedesktop.UDisks2.Block:PartTable property for known schemes.
-    -->
-    <property name="PartEntryScheme" type="s" access="read"/>
-    <!-- PartEntryType: The type of the partition. -->
-    <property name="PartEntryType" type="s" access="read"/>
-    <!-- PartEntryFlags: Partition flags, e.g. <literal>boot</literal>. -->
-    <property name="PartEntryFlags" type="s" access="read"/>
-    <!-- PartEntryOffset: Offset of partition. -->
-    <property name="PartEntryOffset" type="t" access="read"/>
-    <!-- PartEntrySize: Size of partition. -->
-    <property name="PartEntrySize" type="t" access="read"/>
-    <!-- PartEntryLabel: Label of partition or blank if not supported or unknown. -->
-    <property name="PartEntryLabel" type="ay" access="read"/>
-    <!-- PartEntryUUID: The UUID of the partition or blank if not supported or unknown. -->
-    <property name="PartEntryUUID" type="ay" access="read"/>
-    <!-- PartEntryTable:
-         The object path of the #org.freedesktop.UDisks2.Block
-         partition table that the partition entry belongs to or
-         <literal>/</literal> if the device is not a partition.
-    -->
-    <property name="PartEntryTable" type="o" access="read"/>
-
     <!--
         AddConfigurationItem:
         @item: The configuration item to add.
@@ -777,6 +734,70 @@
       <arg name="configuration" direction="out" type="a(sa{sv})"/>
     </method>
 
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+  <!--
+      org.freedesktop.UDisks2.PartitionTable:
+      @short_description: Block device containing a partition table
+
+      This interface is used for #org.freedesktop.UDisks2.Block
+      devices that contain a partition table.
+  -->
+  <interface name="org.freedesktop.UDisks2.PartitionTable">
+    <!-- prereq: org.freedesktop.UDisks2.Block -->
+
+    <!-- Type: The type of partition table detected.
+         Known values include:
+         <variablelist>
+           <varlistentry><term>dos</term><listitem><para><ulink url="http://en.wikipedia.org/wiki/Master_Boot_Record">Master Boot Record</ulink></para></listitem></varlistentry>
+           <varlistentry><term>gpt</term><listitem><para><ulink url="http://en.wikipedia.org/wiki/GUID_Partition_Table">GUID Partition Table</ulink></para></listitem></varlistentry>
+         </variablelist>
+         If blank it means that a partition table was detected but its
+         scheme is unknown.
+    -->
+    <property name="Type" type="s" access="read"/>
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+  <!--
+      org.freedesktop.UDisks2.Partition:
+      @short_description: Block device representing a partition
+
+      This interface is used for #org.freedesktop.UDisks2.Block
+      devices that represent entries in a partition table.
+  -->
+  <interface name="org.freedesktop.UDisks2.Partition">
+    <!-- prereq: org.freedesktop.UDisks2.Block -->
+
+    <!-- Number: The number of the partition in the partition table. -->
+    <property name="Number" type="u" access="read"/>
+
+    <!-- Type: The type of the partition. -->
+    <property name="Type" type="s" access="read"/>
+
+    <!-- Flags: Partition flags, e.g. <literal>boot</literal>. -->
+    <property name="Flags" type="s" access="read"/>
+
+    <!-- Offset: Offset of partition. -->
+    <property name="Offset" type="t" access="read"/>
+
+    <!-- Size: Size of partition. -->
+    <property name="Size" type="t" access="read"/>
+
+    <!-- Name: Label of partition or blank if not supported or unknown. -->
+    <property name="Name" type="ay" access="read"/>
+
+    <!-- UUID: The UUID of the partition or blank if not supported or unknown. -->
+    <property name="UUID" type="ay" access="read"/>
+
+    <!-- Table:
+         The object path of the #org.freedesktop.UDisks2.PartitionTable
+         object that the partition entry belongs to.
+    -->
+    <property name="Table" type="o" access="read"/>
   </interface>
 
   <!-- ********************************************************************** -->

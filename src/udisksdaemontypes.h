@@ -97,6 +97,12 @@ typedef struct _UDisksCrypttabMonitor UDisksCrypttabMonitor;
 struct _UDisksCrypttabEntry;
 typedef struct _UDisksCrypttabEntry UDisksCrypttabEntry;
 
+struct _UDisksLinuxPartition;
+typedef struct _UDisksLinuxPartition UDisksLinuxPartition;
+
+struct _UDisksLinuxPartitionTable;
+typedef struct _UDisksLinuxPartitionTable UDisksLinuxPartitionTable;
+
 /**
  * UDisksThreadedJobFunc:
  * @job: A #UDisksThreadedJob.

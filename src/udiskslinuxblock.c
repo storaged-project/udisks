@@ -590,8 +590,6 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
   gchar *drive_object_path;
   UDisksDrive *drive;
   gchar *s;
-  gboolean is_partition_table;
-  gboolean is_partition_entry;
   const gchar *device_file;
   const gchar *const *symlinks;
   const gchar *preferred_device_file;
@@ -720,107 +718,6 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
   s = udisks_decode_udev_string (g_udev_device_get_property (device, "ID_FS_UUID_ENC"));
   udisks_block_set_id_uuid (iface, s);
   g_free (s);
-
-  /* TODO: port this to blkid properties */
-
-  /* Update the partition table and partition entry properties */
-  is_partition_table = FALSE;
-  is_partition_entry = FALSE;
-  if (g_strcmp0 (g_udev_device_get_devtype (device), "partition") == 0 ||
-      g_udev_device_get_property_as_boolean (device, "UDISKS_PARTITION"))
-    {
-      is_partition_entry = TRUE;
-    }
-  else if (g_udev_device_get_property_as_boolean (device, "UDISKS_PARTITION_TABLE"))
-    {
-      is_partition_table = TRUE;
-    }
-
-  /* partition table */
-  if (is_partition_table)
-    {
-      udisks_block_set_part_table (iface, TRUE);
-      udisks_block_set_part_table_scheme (iface,
-                                          g_udev_device_get_property (device,
-                                                                      "UDISKS_PARTITION_TABLE_SCHEME"));
-    }
-  else
-    {
-      udisks_block_set_part_table (iface, FALSE);
-      udisks_block_set_part_table_scheme (iface, "");
-    }
-
-  /* partition entry */
-  if (is_partition_entry)
-    {
-      gchar *slave_sysfs_path;
-      udisks_block_set_part_entry (iface, TRUE);
-      udisks_block_set_part_entry_scheme (iface,
-                                          g_udev_device_get_property (device,
-                                                                      "UDISKS_PARTITION_SCHEME"));
-      udisks_block_set_part_entry_number (iface,
-                                          g_udev_device_get_property_as_int (device,
-                                                                             "UDISKS_PARTITION_NUMBER"));
-      udisks_block_set_part_entry_type (iface,
-                                        g_udev_device_get_property (device,
-                                                                    "UDISKS_PARTITION_TYPE"));
-      udisks_block_set_part_entry_flags (iface,
-                                         g_udev_device_get_property (device,
-                                                                     "UDISKS_PARTITION_FLAGS"));
-      udisks_block_set_part_entry_label (iface,
-                                         g_udev_device_get_property (device,
-                                                                     "UDISKS_PARTITION_LABEL"));
-      udisks_block_set_part_entry_uuid (iface,
-                                        g_udev_device_get_property (device,
-                                                                    "UDISKS_PARTITION_UUID"));
-      slave_sysfs_path = g_strdup (g_udev_device_get_property (device, "UDISKS_PARTITION_SLAVE"));
-      if (slave_sysfs_path == NULL)
-        {
-          if (g_strcmp0 (g_udev_device_get_devtype (device), "partition") == 0)
-            {
-              GUdevDevice *parent;
-              parent = g_udev_device_get_parent (device);
-              slave_sysfs_path = g_strdup (g_udev_device_get_sysfs_path (parent));
-              g_object_unref (parent);
-            }
-          else
-            {
-              g_warning ("No UDISKS_PARTITION_SLAVE property and DEVTYPE is not partition for block device %s",
-                         g_udev_device_get_sysfs_path (device));
-            }
-        }
-      if (slave_sysfs_path != NULL)
-        {
-          gchar *slave_object_path;
-          slave_object_path = find_block_device_by_sysfs_path (object_manager, slave_sysfs_path);
-          if (slave_object_path != NULL)
-            udisks_block_set_part_entry_table (iface, slave_object_path);
-          else
-            udisks_block_set_part_entry_table (iface, "/");
-          g_free (slave_object_path);
-          g_free (slave_sysfs_path);
-        }
-      else
-        {
-          udisks_block_set_part_entry_table (iface, "/");
-        }
-      udisks_block_set_part_entry_offset (iface,
-                                          g_udev_device_get_property_as_uint64 (device,
-                                                                                "UDISKS_PARTITION_OFFSET"));
-      udisks_block_set_part_entry_size (iface,
-                                        g_udev_device_get_property_as_uint64 (device,
-                                                                              "UDISKS_PARTITION_SIZE"));
-    }
-  else
-    {
-      udisks_block_set_part_entry (iface, FALSE);
-      udisks_block_set_part_entry_scheme (iface, "");
-      udisks_block_set_part_entry_type (iface, "");
-      udisks_block_set_part_entry_flags (iface, "");
-      udisks_block_set_part_entry_table (iface, "/");
-      udisks_block_set_part_entry_offset (iface, 0);
-      udisks_block_set_part_entry_size (iface, 0);
-    }
 
   update_hints (block, device, drive);
   update_configuration (block, daemon);
