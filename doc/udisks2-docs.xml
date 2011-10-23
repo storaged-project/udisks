@@ -154,7 +154,6 @@
     <title>Library API Reference</title>
       <xi:include href="xml/udisksclient.xml"/>
       <xi:include href="xml/udiskserror.xml"/>
-      <xi:include href="xml/udisksutil.xml"/>
     <chapter id="ref-library-generated">
       <title>Generated Code</title>
       <xi:include href="xml/UDisksObject.xml"/>

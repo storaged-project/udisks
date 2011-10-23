@@ -1,14 +1,4 @@
 <SECTION>
-<FILE>udisksutil</FILE>
-udisks_util_get_size_for_display
-udisks_util_get_part_scheme_for_display
-udisks_util_get_part_type_for_display
-udisks_util_get_part_types_for_scheme
-udisks_util_get_id_for_display
-udisks_util_get_media_compat_for_display
-</SECTION>
-
-<SECTION>
 <FILE>udiskslogging</FILE>
 UDisksLogLevel
 udisks_log
@@ -49,6 +39,14 @@ udisks_client_get_block_for_drive
 udisks_client_get_drive_for_block
 udisks_client_get_cleartext_block
 udisks_client_get_partition_table
+
+<SUBSECTION>
+udisks_client_get_size_for_display
+udisks_client_get_part_scheme_for_display
+udisks_client_get_part_type_for_display
+udisks_client_get_part_types_for_scheme
+udisks_client_get_id_for_display
+udisks_client_get_media_compat_for_display
 <SUBSECTION Standard>
 UDISKS_TYPE_CLIENT
 UDISKS_CLIENT

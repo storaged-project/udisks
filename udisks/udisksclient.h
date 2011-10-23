@@ -74,6 +74,37 @@ void                udisks_client_get_drive_info      (UDisksClient        *clie
                                                        gchar              **out_media_description,
                                                        GIcon              **out_media_icon);
 
+gchar              *udisks_client_get_size_for_display (UDisksClient *client,
+                                                        guint64       size,
+                                                        gboolean      use_pow2,
+                                                        gboolean      long_string);
+
+gchar              *udisks_client_get_media_compat_for_display (UDisksClient       *client,
+                                                                const gchar* const *media_compat);
+
+
+gchar              *udisks_client_get_id_for_display (UDisksClient *client,
+                                                      const gchar  *usage,
+                                                      const gchar  *type,
+                                                      const gchar  *version,
+                                                      gboolean      long_string);
+
+
+gchar *udisks_client_get_part_scheme_for_display (UDisksClient  *client,
+                                                  const gchar   *scheme);
+
+gchar *udisks_client_get_part_type_for_display (UDisksClient  *client,
+                                                const gchar   *scheme,
+                                                const gchar   *type,
+                                                gboolean       long_string);
+
+const gchar **udisks_client_get_part_types_for_scheme (UDisksClient  *client,
+                                                       const gchar   *scheme);
+
+
+
+
+
 G_END_DECLS
 
 #endif /* __UDISKS_CLIENT_H__ */
