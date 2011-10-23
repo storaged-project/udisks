@@ -42,7 +42,7 @@
         <listitem>
           <para>
             If set, this overrides the value of the
-            <link linkend="gdbus-property-org-freedesktop-UDisks2-BlockDevice.HintSystem">HintSystem</link> property.
+            <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.HintSystem">HintSystem</link> property.
           </para>
         </listitem>
       </varlistentry>
@@ -51,7 +51,7 @@
         <listitem>
           <para>
             If set, this overrides the value of the
-            <link linkend="gdbus-property-org-freedesktop-UDisks2-BlockDevice.HintIgnore">HintIgnore</link> property.
+            <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.HintIgnore">HintIgnore</link> property.
           </para>
         </listitem>
       </varlistentry>
@@ -60,7 +60,7 @@
         <listitem>
           <para>
             If set, this overrides the value of the
-            <link linkend="gdbus-property-org-freedesktop-UDisks2-BlockDevice.HintAuto">HintAuto</link> property.
+            <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.HintAuto">HintAuto</link> property.
           </para>
         </listitem>
       </varlistentry>
@@ -70,7 +70,7 @@
           <para>
             The name to use for the device when presenting it in an user interface.
             This corresponds to the
-            <link linkend="gdbus-property-org-freedesktop-UDisks2-BlockDevice.HintName">HintName</link> property.
+            <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.HintName">HintName</link> property.
           </para>
         </listitem>
       </varlistentry>
@@ -82,7 +82,7 @@
             set, the name must adhere to the
             <ulink url="http://www.freedesktop.org/wiki/Specifications/icon-theme-spec">freedesktop.org icon theme specification</ulink>.
             This corresponds to the
-            <link linkend="gdbus-property-org-freedesktop-UDisks2-BlockDevice.HintIconName">HintIconName</link> property.
+            <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.HintIconName">HintIconName</link> property.
           </para>
         </listitem>
       </varlistentry>
@@ -249,12 +249,8 @@
       <citerefentry>
         <refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum>
       </citerefentry>,
-      <citerefentry>
-        <refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum>
-      </citerefentry>,
-      <citerefentry>
-        <refentrytitle>udisksctl</refentrytitle><manvolnum>1</manvolnum>
-      </citerefentry>
+      <link linkend="udisksd.8"><citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
+      <link linkend="udisksctl.1"><citerefentry><refentrytitle>udisksctl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>
     </para>
   </refsect1>
 </refentry>

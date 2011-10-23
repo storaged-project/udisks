@@ -102,11 +102,10 @@
   <refsect1>
     <title>SEE ALSO</title>
     <para>
+      <link linkend="udisks.7"><citerefentry><refentrytitle>udisks</refentrytitle><manvolnum>7</manvolnum></citerefentry></link>,
+      <link linkend="udisksctl.1"><citerefentry><refentrytitle>udisksctl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>,
       <citerefentry>
-        <refentrytitle>udisks</refentrytitle><manvolnum>7</manvolnum>
-      </citerefentry>,
-      <citerefentry>
-        <refentrytitle>udisksctl</refentrytitle><manvolnum>1</manvolnum>
+        <refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum>
       </citerefentry>,
       <citerefentry>
         <refentrytitle>dbus-daemon</refentrytitle><manvolnum>1</manvolnum>

@@ -236,12 +236,8 @@
   <refsect1>
     <title>See also</title>
     <para>
-      <citerefentry>
-        <refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum>
-      </citerefentry>,
-      <citerefentry>
-        <refentrytitle>udisks</refentrytitle><manvolnum>7</manvolnum>
-      </citerefentry>,
+      <link linkend="udisks.7"><citerefentry><refentrytitle>udisks</refentrytitle><manvolnum>7</manvolnum></citerefentry></link>,
+      <link linkend="udisksd.8"><citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
       <citerefentry>
         <refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum>
       </citerefentry>
