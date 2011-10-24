@@ -26,68 +26,68 @@
 
 const FSInfo _fs_info[] =
   {
-    { 
-      "ext2", 
-      "e2label $DEVICE $LABEL", 
-      NULL,
-      TRUE,
-    },
-    { 
-      "ext3", 
-      "e2label $DEVICE $LABEL", 
-      NULL,
-      TRUE,
-    },
-    { 
-      "ext4", 
-      "e2label $DEVICE $LABEL", 
+    {
+      "ext2",
+      "e2label $DEVICE $LABEL",
       NULL,
       TRUE,
     },
     {
-      "vfat", 
-      "mlabel -i $DEVICE ::$LABEL", 
+      "ext3",
+      "e2label $DEVICE $LABEL",
+      NULL,
+      TRUE,
+    },
+    {
+      "ext4",
+      "e2label $DEVICE $LABEL",
+      NULL,
+      TRUE,
+    },
+    {
+      "vfat",
+      "mlabel -i $DEVICE ::$LABEL",
       "mlabel -i $DEVICE -c ::",
       FALSE,
     },
-    { 
+    {
       "ntfs",
       "ntfslabel $DEVICE $LABEL",
       NULL,
       FALSE,
     },
-    { 
+    {
       "xfs",
-      "xfs_admin -L $LABEL $DEVICE", 
-      "xfs_admin -L -- $DEVICE", 
+      "xfs_admin -L $LABEL $DEVICE",
+      "xfs_admin -L -- $DEVICE",
       FALSE,
     },
-    { 
+    {
       "reiserfs",
-      "reiserfstune -l $LABEL $DEVICE", 
+      "reiserfstune -l $LABEL $DEVICE",
       NULL,
       FALSE,
     },
-    { 
+    {
       "nilfs2",
       "nilfs-tune -L $LABEL $DEVICE",
       NULL,
       FALSE,
     },
     {
-      "btrfs", 
-      NULL, 
-      NULL,
-      FALSE,
-    },
-    {
-      "minix", 
+      "btrfs",
       NULL,
       NULL,
       FALSE,
     },
     {
-      "swap", 
+      "minix",
+      NULL,
+      NULL,
+      FALSE,
+    },
+    {
+      "swap",
       NULL,
       NULL,
       FALSE,
