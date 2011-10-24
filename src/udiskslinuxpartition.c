@@ -119,6 +119,8 @@ udisks_linux_partition_update (UDisksLinuxPartition  *partition,
   const gchar *uuid = NULL;
   const gchar *flags = NULL;
   const gchar *table_object_path = "/";
+  gboolean is_container = FALSE;
+  gboolean is_contained = FALSE;
 
   device = udisks_linux_block_object_get_device (object);
   if (g_udev_device_has_property (device, "ID_PART_ENTRY_TYPE"))
@@ -140,6 +142,22 @@ udisks_linux_partition_update (UDisksLinuxPartition  *partition,
             {
               disk_block_object = udisks_daemon_find_block (udisks_linux_block_object_get_daemon (object),
                                                             makedev (disk_major, disk_minor));
+            }
+        }
+
+      if (g_strcmp0 (g_udev_device_get_property (device, "ID_PART_ENTRY_SCHEME"), "dos") == 0)
+        {
+          if (number <= 4)
+            {
+              gint type_as_int = strtol (type, NULL, 0);
+              if (type_as_int == 0x05 || type_as_int == 0x0f || type_as_int == 0x85)
+                {
+                  is_container = TRUE;
+                }
+            }
+          else if (number >= 5)
+            {
+              is_contained = TRUE;
             }
         }
     }
@@ -169,6 +187,8 @@ udisks_linux_partition_update (UDisksLinuxPartition  *partition,
   udisks_partition_set_name (UDISKS_PARTITION (partition), name);
   udisks_partition_set_uuid (UDISKS_PARTITION (partition), uuid);
   udisks_partition_set_table (UDISKS_PARTITION (partition), table_object_path);
+  udisks_partition_set_is_container (UDISKS_PARTITION (partition), is_container);
+  udisks_partition_set_is_contained (UDISKS_PARTITION (partition), is_contained);
 
   g_free (name);
   g_clear_object (&device);

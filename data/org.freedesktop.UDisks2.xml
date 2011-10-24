@@ -811,6 +811,23 @@
          object that the partition entry belongs to.
     -->
     <property name="Table" type="o" access="read"/>
+
+    <!-- IsContainer:
+         Set to %TRUE if the partition itself is a container for other
+         partitions.
+
+         For example, for <literal>dos</literal> partition tables,
+         this applies to socalled <emphasis>extended partition</emphasis> (partitions of type
+         <constant>0x05</constant>, <constant>0x0f</constant> or <constant>0x85</constant>)
+         containing socalled <emphasis>logical partitions</emphasis>.
+    -->
+    <property name="IsContainer" type="b" access="read"/>
+
+    <!-- IsContained:
+         Set to %TRUE of the partition is contained in another partition.
+         See the #org.freedesktop.UDisks2.Partition:IsContainer property for more information.
+    -->
+    <property name="IsContained" type="b" access="read"/>
   </interface>
 
   <!-- ********************************************************************** -->
