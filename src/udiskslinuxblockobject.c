@@ -410,42 +410,22 @@ block_device_update (UDisksLinuxBlockObject *object,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
-/* org.freedesktop.UDisks.PartitionTable */
 
 static gboolean
-partition_table_check (UDisksLinuxBlockObject *object)
+disk_is_partitioned_by_kernel (GUdevDevice *device)
 {
   gboolean ret = FALSE;
   GDir *dir = NULL;
   const gchar *name;
   const gchar *device_name;
 
-  /* only consider whole disks, never partitions */
-  if (g_strcmp0 (g_udev_device_get_devtype (object->device), "disk") != 0)
-    goto out;
+  g_return_val_if_fail (g_strcmp0 (g_udev_device_get_devtype (device), "disk") == 0, FALSE);
 
-  /* if blkid(8) already identified the device as a partition table, it's all good */
-  if (g_udev_device_has_property (object->device, "ID_PART_TABLE_TYPE"))
-    {
-      ret = TRUE;
-      goto out;
-    }
-
-  /* Note that blkid(8) might not detect all partition table
-   * formats that the kernel knows about.... so we need to
-   * double check...
-   *
-   * Fortunately, note that the kernel guarantees that all children
-   * block devices that are partitions are created before the uevent
-   * for the parent block device.... so if the parent block device has
-   * children... then it must be partitioned by the kernel, hence it
-   * must contain a partition table.
-   */
-  dir = g_dir_open (g_udev_device_get_sysfs_path (object->device), 0 /* flags */, NULL /* GError */);
+  dir = g_dir_open (g_udev_device_get_sysfs_path (device), 0 /* flags */, NULL /* GError */);
   if (dir == NULL)
     goto out;
 
-  device_name = g_udev_device_get_name (object->device);
+  device_name = g_udev_device_get_name (device);
   while ((name = g_dir_read_name (dir)) != NULL)
     {
       /* TODO: could check that it's a block device - for now, just
@@ -461,7 +441,60 @@ partition_table_check (UDisksLinuxBlockObject *object)
  out:
   if (dir != NULL)
     g_dir_close (dir);
+  g_debug ("dipbk %s -> %d", g_udev_device_get_name (device), ret);
+  return ret;
+}
 
+/* ---------------------------------------------------------------------------------------------------- */
+/* org.freedesktop.UDisks.PartitionTable */
+
+static gboolean
+partition_table_check (UDisksLinuxBlockObject *object)
+{
+  gboolean ret = FALSE;
+
+  /* only consider whole disks, never partitions */
+  if (g_strcmp0 (g_udev_device_get_devtype (object->device), "disk") != 0)
+    goto out;
+
+  /* if blkid(8) already identified the device as a partition table, it's all good */
+  if (g_udev_device_has_property (object->device, "ID_PART_TABLE_TYPE"))
+    {
+      /* however, if blkid(8) also think that we're a filesystem... then don't
+       * mark us as a partition table ... except if we are partitioned by the
+       * kernel
+       *
+       * (see filesystem_check() for the similar case where we don't pretend
+       * to be a filesystem)
+       */
+      if (g_strcmp0 (g_udev_device_get_property (object->device, "ID_FS_USAGE"), "filesystem") == 0)
+        {
+          if (!disk_is_partitioned_by_kernel (object->device))
+            {
+              goto out;
+            }
+        }
+      ret = TRUE;
+      goto out;
+    }
+
+  /* Note that blkid(8) might not detect all partition table
+   * formats that the kernel knows about.... so we need to
+   * double check...
+   *
+   * Fortunately, note that the kernel guarantees that all children
+   * block devices that are partitions are created before the uevent
+   * for the parent block device.... so if the parent block device has
+   * children... then it must be partitioned by the kernel, hence it
+   * must contain a partition table.
+   */
+  if (disk_is_partitioned_by_kernel (object->device))
+    {
+      ret = TRUE;
+      goto out;
+    }
+
+ out:
   return ret;
 }
 
@@ -543,12 +576,29 @@ drive_does_not_detect_media_change (UDisksLinuxBlockObject *object)
 static gboolean
 filesystem_check (UDisksLinuxBlockObject *object)
 {
-  gboolean ret;
+  gboolean ret = FALSE;
+  gboolean detected_as_filesystem = FALSE;
   UDisksMountType mount_type;
 
-  ret = FALSE;
+  /* if blkid(8) has detected the device as a filesystem, trust that */
+  if (g_strcmp0 (udisks_block_get_id_usage (object->iface_block_device), "filesystem") == 0)
+    {
+      detected_as_filesystem = TRUE;
+      /* except, if we are a whole-disk device and the kernel has already partitioned us...
+       * in that case, don't pretend we're a filesystem
+       *
+       * (see partition_table_check() above for the similar case where we don't pretend
+       * to be a partition table)
+       */
+      if (g_strcmp0 (g_udev_device_get_devtype (object->device), "disk") == 0 &&
+          disk_is_partitioned_by_kernel (object->device))
+        {
+          detected_as_filesystem = FALSE;
+        }
+    }
+
   if (drive_does_not_detect_media_change (object) ||
-      g_strcmp0 (udisks_block_get_id_usage (object->iface_block_device), "filesystem") == 0 ||
+      detected_as_filesystem ||
       (udisks_mount_monitor_is_dev_in_use (object->mount_monitor,
                                            g_udev_device_get_device_number (object->device),
                                            &mount_type) &&

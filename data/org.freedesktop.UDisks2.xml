@@ -500,8 +500,17 @@
          necessarily mean the device contains no structured data; it
          only means that no signature known to the probing code was
          detected.
+
+         Applications should not rely on the value in this or the
+         #org.freedesktop.UDisks2.Block:IdType property - instead,
+         applications should check for whether the object in question
+         implements interfaces such as
+         e.g. #org.freedesktop.UDisks2.Filesystem,
+         #org.freedesktop.UDisks2.Swapspace or
+         #org.freedesktop.UDisks2.Encrypted.
     -->
     <property name="IdUsage" type="s" access="read"/>
+
     <!--
         IdType:
         This property contains more information about the result of
@@ -521,8 +530,10 @@
           <listitem><para>Something else. Known values include <literal>swap</literal> (for swap space), <literal>suspend</literal> (data used when resuming from suspend-to-disk.</para></listitem>
         </varlistentry>
         </variablelist>
+        See the note for the #org.freedesktop.UDisks2.Block:IdUsage property about usage.
     -->
     <property name="IdType" type="s" access="read"/>
+
     <!-- IdVersion:
          The version of the filesystem or other structured data on the block device.
          Do not make any assumptions about the format.
