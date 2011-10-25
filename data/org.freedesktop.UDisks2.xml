@@ -754,6 +754,21 @@
       <arg name="configuration" direction="out" type="a(sa{sv})"/>
     </method>
 
+    <!--
+        CreateFilesystem:
+        @fstype: The type of file system to create. Pass <literal>empty</literal> to not create a file system and just clear the areas of the device known to host file system signatures.
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's').
+
+        Create a file system on a device. You can specify a label with the
+        <parameter>label</parameter> option; however, this is not supported
+        with all file systems (in particular, not for <literal>minix</literal>
+        and <literal>empty</literal>).
+    -->
+    <method name="CreateFilesystem">
+      <arg name="fstype" direction="in" type="s"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
   </interface>
 
   <!-- ********************************************************************** -->

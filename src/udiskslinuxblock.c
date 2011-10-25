@@ -37,6 +37,7 @@
 #include "udiskslinuxblock.h"
 #include "udiskslinuxblockobject.h"
 #include "udiskslinuxdriveobject.h"
+#include "udiskslinuxfsinfo.h"
 #include "udisksdaemon.h"
 #include "udiskscleanup.h"
 #include "udisksdaemonutil.h"
@@ -1569,6 +1570,187 @@ handle_update_configuration_item (UDisksBlock           *_block,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gchar *
+subst_str (const gchar *str,
+           const gchar *from,
+           const gchar *to)
+{
+    gchar **parts;
+    gchar *result;
+
+    parts = g_strsplit (str, from, 0);
+    result = g_strjoinv (to, parts);
+    g_strfreev (parts);
+    return result;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+wait_for_filesystem (UDisksDaemon *daemon,
+                     UDisksObject *object,
+                     gpointer      user_data)
+{
+  const gchar *fstype = user_data;
+  UDisksBlock *block;
+  UDisksFilesystem *fs;
+  gboolean ret;
+
+  ret = FALSE;
+  block = udisks_object_peek_block (object);
+  fs = udisks_object_peek_filesystem (object);
+  if (block == NULL)
+    goto out;
+
+  if (g_strcmp0 (fstype, "empty") == 0)
+    {
+      if (fs != NULL || udisks_block_get_id_type (block) != NULL)
+        goto out;
+    }
+  else
+    {
+      if (g_strcmp0 (fstype, "swap") != 0 && fs == NULL)
+        goto out;
+
+      if (g_strcmp0 (udisks_block_get_id_type (block), fstype) != 0)
+        goto out;
+    }
+
+  ret = TRUE;
+
+ out:
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+handle_create_filesystem (UDisksBlock           *_block,
+                          GDBusMethodInvocation *invocation,
+                          const gchar           *fstype,
+                          GVariant              *options)
+{
+  UDisksLinuxBlock *block = UDISKS_LINUX_BLOCK (_block);
+  UDisksLinuxBlockObject *object;
+  UDisksDaemon *daemon;
+  const gchar *action_id;
+  const FSInfo *fs_info;
+  const gchar *label;
+  gchar *escaped_label;
+  gchar *command;
+  gchar *tmp;
+  gchar *error_message;
+  GError *error;
+  int status;
+
+  object = UDISKS_LINUX_BLOCK_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (block)));
+  daemon = udisks_linux_block_object_get_daemon (object);
+  escaped_label = g_shell_quote("");
+  command = NULL;
+  error_message = NULL;
+  error = NULL;
+
+  action_id = "org.freedesktop.udisks2.modify-device";
+  if (udisks_block_get_hint_system (_block))
+    action_id = "org.freedesktop.udisks2.modify-device-system";
+
+  fs_info = get_fs_info (fstype);
+  if (fs_info == NULL || fs_info->command_create_fs == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_NOT_SUPPORTED,
+                   "Creation of file system type %s is not supported",
+                   fstype);
+      goto out;
+    }
+
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    NULL,
+                                                    action_id,
+                                                    options,
+                                                    N_("Authentication is required to create a file system"),
+                                                    invocation))
+    goto out;
+
+  /* evaluate options */
+  if (g_variant_lookup (options, "label", "&s", &label))
+    {
+      /* does the fs support labels? */
+      if (strstr (fs_info->command_create_fs, "$LABEL") == NULL)
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                       UDISKS_ERROR,
+                       UDISKS_ERROR_NOT_SUPPORTED,
+                       "File system type %s does not support labels",
+                       fstype);
+          goto out;
+        }
+
+        g_free (escaped_label);
+        escaped_label = g_shell_quote (label);
+    }
+
+  /* build and run mkfs shell command */
+  tmp = subst_str (fs_info->command_create_fs, "$DEVICE", udisks_block_get_device (_block));
+  command = subst_str (tmp, "$LABEL", escaped_label);
+  g_free (tmp);
+
+  if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              NULL, /* cancellable */
+                                              0,    /* uid_t run_as_uid */
+                                              0,    /* uid_t run_as_euid */
+                                              &status,
+                                              &error_message,
+                                              NULL, /* input_string */
+                                              "%s", command))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error creating file system, exit with %i: %s",
+                                             status,
+                                             error_message);
+      goto out;
+    }
+
+  /* FIXME: For some reason mkfs.ext4 does not trigger a change uevent when
+   * it's done, so udev and we miss the new file system. This _only_ happens
+   * when being called from here, it does work fine when being called from a
+   * terminal. Force an update to work around this. */
+  if (strcmp (fstype, "ext4") == 0)
+    {
+      GUdevDevice *device; 
+      device = udisks_linux_block_object_get_device (object);
+      if (device != NULL)
+        udev_trigger_uevent (device, "change");
+      g_object_unref (device);
+    }
+
+  if (udisks_daemon_wait_for_object_sync (daemon,
+                                          wait_for_filesystem,
+                                          (gpointer) fstype,
+                                          NULL,
+                                          30,
+                                          &error) == NULL)
+    {
+      g_prefix_error (&error,
+                      "Error waiting for FileSystem interface after creating %s file system: ",
+                      fstype);
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  udisks_block_complete_create_filesystem (UDISKS_BLOCK (block), invocation);
+
+ out:
+  g_free (escaped_label);
+  g_free (command);
+  return TRUE; /* returning true means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 block_iface_init (UDisksBlockIface *iface)
 {
@@ -1576,4 +1758,5 @@ block_iface_init (UDisksBlockIface *iface)
   iface->handle_add_configuration_item    = handle_add_configuration_item;
   iface->handle_remove_configuration_item = handle_remove_configuration_item;
   iface->handle_update_configuration_item = handle_update_configuration_item;
+  iface->handle_create_filesystem         = handle_create_filesystem;
 }

@@ -31,6 +31,7 @@ typedef struct
   const gchar *command_change_label; /* should have $DEVICE and $LABEL */
   const gchar *command_clear_label; /* should have $DEVICE; if NULL, call command_change_label with $LABEL == '' */
   gboolean     supports_online_label_rename;
+  const gchar *command_create_fs;  /* should have $DEVICE and $LABEL */
 } FSInfo;
 
 const FSInfo *get_fs_info (const gchar *fstype);

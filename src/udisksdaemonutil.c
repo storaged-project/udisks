@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #include <limits.h>
 #include <stdlib.h>
@@ -557,3 +558,45 @@ udisks_daemon_util_get_caller_uid_sync (UDisksDaemon            *daemon,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udev_trigger_uevent
+ * @device: GUDevDevice to trigger the uevent on.
+ * @event: Event name; usually "change", but can also be "add" or "remove".
+ *
+ * Trigger an uevent on the given device. This only works on Linux with udev.
+ */
+void
+udev_trigger_uevent (GUdevDevice *device,
+                     const gchar *event)
+{
+  int fd;
+  int len;
+  gchar* path;
+
+  g_return_if_fail (device != NULL);
+  g_return_if_fail (event != NULL);
+
+  path = g_strconcat (g_udev_device_get_sysfs_path (device), "/uevent", NULL);
+  fd = open(path, O_WRONLY);
+  if (fd >= 0)
+    {
+      g_debug ("triggering %s uevent on %s", event, path);
+      len = strlen (event);
+      if (write (fd, event, len) != len)
+        g_warning ("short write for triggering a change uevent: %s", path);
+      close (fd);
+    }
+  else
+    {
+      g_warning ("cannot open %s for triggering a %s uevent: %s",
+                 path,
+                 event,
+                 strerror (errno));
+    }
+
+  g_free (path);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
