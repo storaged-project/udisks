@@ -1636,7 +1636,6 @@ handle_command_loop (gint        *argc,
                                                 NULL,                       /* out_fd_list */
                                                 NULL,                       /* GCancellable */
                                                 &error);
-      g_object_unref (fd_list);
       if (!rc)
         {
           if (error->domain == UDISKS_ERROR &&
@@ -1646,12 +1645,14 @@ handle_command_loop (gint        *argc,
               g_error_free (error);
               goto setup_try_again;
             }
+          g_object_unref (fd_list);
           g_printerr ("Error setting up loop device for %s: %s\n",
                       opt_loop_file,
                       error->message);
           g_error_free (error);
           goto out;
         }
+      g_object_unref (fd_list);
       udisks_client_settle (client);
 
       resulting_object = UDISKS_OBJECT (g_dbus_object_manager_get_object (udisks_client_get_object_manager (client),
