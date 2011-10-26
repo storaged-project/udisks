@@ -98,15 +98,8 @@
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
-      <!-- ideally want 'yes' but right now it's a DoS because of kernel
-           suckage - when we switch to using /dev/loop-control, see
-
-            http://comments.gmane.org/gmane.linux.kernel/1171555
-
-           and the system can cope with 1000s of loop devices we can
-           switch this to 'yes'
-        -->
-      <allow_active>auth_admin_keep</allow_active>
+      <!-- not a DoS because we are using /dev/loop-control -->
+      <allow_active>yes</allow_active>
     </defaults>
   </action>
 

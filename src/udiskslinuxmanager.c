@@ -252,31 +252,23 @@ handle_loop_setup (UDisksManager          *object,
   UDisksLinuxManager *manager = UDISKS_LINUX_MANAGER (object);
   GError *error;
   gint fd_num;
-  gint fd;
+  gint fd = -1;
   gchar proc_path[64];
   gchar path[8192];
   ssize_t path_len;
-  gint loop_fd;
-  gchar *loop_device;
-  struct loop_info li;
-  gint loop_count;
+  gint loop_fd = -1;
+  gint loop_control_fd = -1;
+  gint allocated_loop_number = -1;
+  gchar *loop_device = NULL;
   struct loop_info64 li64;
   UDisksObject *loop_object;
-  gboolean option_read_only;
-  guint64 option_offset;
-  guint64 option_size;
+  gboolean option_read_only = FALSE;
+  guint64 option_offset = 0;
+  guint64 option_size = 0;
   uid_t caller_uid;
   struct stat fd_statbuf;
   struct stat path_statbuf;
   WaitForLoopData wait_data;
-
-  fd = -1;
-  loop_fd = -1;
-  loop_device = NULL;
-  loop_object = NULL;
-  option_read_only = FALSE;
-  option_offset = 0;
-  option_size = 0;
 
   /* we need the uid of the caller for the loop file */
   error = NULL;
@@ -358,28 +350,35 @@ handle_loop_setup (UDisksManager          *object,
       goto out;
     }
 
-  /* TODO: we will soon have API to create loop devices on
-   * demand... once that is in place we can nuke this silly
-   * code looping over all devices
-   */
-  loop_count = 0;
- again:
-  loop_device = g_strdup_printf ("/dev/loop%d", loop_count);
+  loop_control_fd = open ("/dev/loop-control", O_RDWR);
+  if (loop_control_fd == -1)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error opening /dev/loop-control: %m");
+      goto out;
+    }
+
+  allocated_loop_number = ioctl (loop_control_fd, LOOP_CTL_GET_FREE);
+  if (allocated_loop_number < 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error allocating free loop device: %m");
+      goto out;
+    }
+
+  loop_device = g_strdup_printf ("/dev/loop%d", allocated_loop_number);
   loop_fd = open (loop_device, option_read_only ? O_RDONLY : O_RDWR);
   if (loop_fd == -1)
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             "Cannot find usable loop device");
+                                             "Cannot open %s: %m", loop_device);
       goto out;
-    }
-  if (!(ioctl (loop_fd, LOOP_GET_STATUS, &li) < 0 && errno == ENXIO))
-    {
-      g_free (loop_device); loop_device = NULL;
-      close (loop_fd); loop_fd = -1;
-      loop_count++;
-      goto again;
     }
 
   memset (&li64, '\0', sizeof (li64));
@@ -439,6 +438,8 @@ handle_loop_setup (UDisksManager          *object,
   if (loop_object != NULL)
     g_object_unref (loop_object);
   g_free (loop_device);
+  if (loop_control_fd != -1)
+    close (loop_control_fd);
   if (loop_fd != -1)
     close (loop_fd);
   if (fd != -1)
