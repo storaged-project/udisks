@@ -441,7 +441,6 @@ disk_is_partitioned_by_kernel (GUdevDevice *device)
  out:
   if (dir != NULL)
     g_dir_close (dir);
-  g_debug ("dipbk %s -> %d", g_udev_device_get_name (device), ret);
   return ret;
 }
 
