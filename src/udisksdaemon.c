@@ -475,6 +475,9 @@ on_job_completed (UDisksJob    *job,
                                          g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
   g_object_unref (object);
 
+  /* free the allocated job object */
+  g_object_unref (job);
+
   /* returns the reference we took when connecting to the
    * UDisksJob::completed signal in udisks_daemon_launch_{spawned,threaded}_job()
    * below
@@ -501,7 +504,8 @@ static guint job_id = 0;
  * been cancelled.
  *
  * The returned object will be exported on the bus until the
- * #UDisksJob::completed signal is emitted on the object.
+ * #UDisksJob::completed signal is emitted on the object. It is not
+ * valid to use the returned object after this signal fires.
  *
  * Returns: A #UDisksSimpleJob object. Do not free, the object
  * belongs to @manager.
@@ -553,7 +557,8 @@ udisks_daemon_launch_simple_job (UDisksDaemon    *daemon,
  * they have been cancelled.
  *
  * The returned object will be exported on the bus until the
- * #UDisksJob::completed signal is emitted on the object.
+ * #UDisksJob::completed signal is emitted on the object. It is not
+ * valid to use the returned object after this signal fires.
  *
  * Returns: A #UDisksThreadedJob object. Do not free, the object
  * belongs to @manager.
@@ -611,7 +616,8 @@ udisks_daemon_launch_threaded_job  (UDisksDaemon    *daemon,
  * signals to get notified when the job is done.
  *
  * The returned object will be exported on the bus until the
- * #UDisksJob::completed signal is emitted on the object.
+ * #UDisksJob::completed signal is emitted on the object. It is not
+ * valid to use the returned object after this signal fires.
  *
  * Returns: A #UDisksSpawnedJob object. Do not free, the object
  * belongs to @manager.
