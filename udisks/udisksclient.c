@@ -104,6 +104,8 @@ static void on_interface_proxy_properties_changed (GDBusObjectManagerClient   *m
                                                    const gchar *const         *invalidated_properties,
                                                    gpointer                    user_data);
 
+static void maybe_emit_changed_now (UDisksClient *client);
+
 static void init_interface_proxy (UDisksClient *client,
                                   GDBusProxy   *proxy);
 
@@ -227,6 +229,9 @@ udisks_client_class_init (UDisksClientClass *klass)
    * added or removed a when property has changed. Additionally,
    * multiple received signals are coalesced into a single signal that
    * is rate-limited to fire at most every 100ms.
+   *
+   * Note that calling udisks_client_settle() will cause this signal
+   * to fire if any changes are outstanding.
    *
    * For greater detail, connect to the
    * #GDBusObjectManager::object-added,
@@ -475,17 +480,24 @@ udisks_client_get_manager (UDisksClient *client)
  * udisks_client_settle:
  * @client: A #UDisksClient.
  *
- * Blocks until all pending D-Bus messages have been delivered.
+ * Blocks until all pending D-Bus messages have been delivered. Also
+ * emits the (rate-limited) #UDisksClient::changed signal if changes
+ * are currently pending.
  *
- * This is useful when using synchronous method calls since e.g. D-Bus
- * signals received while waiting for the reply are queued up and
- * dispatched after the synchronous call ends.
+ * This is useful in two situations: 1. when using synchronous method
+ * calls since e.g. D-Bus signals received while waiting for the reply
+ * are queued up and dispatched after the synchronous call ends; and
+ * 2. when using asynchronous calls where the return value references
+ * a newly created object (such as the <link
+ * linkend="gdbus-method-org-freedesktop-UDisks2-Manager.LoopSetup">Manager.LoopSetup()</link> method).
  */
 void
 udisks_client_settle (UDisksClient *client)
 {
   while (g_main_context_iteration (client->context, FALSE /* may_block */))
     ;
+  /* TODO: careful if on different thread... */
+  maybe_emit_changed_now (client);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1253,6 +1265,22 @@ udisks_client_get_partition_table (UDisksClient     *client,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
+
+static void
+maybe_emit_changed_now (UDisksClient *client)
+{
+  if (client->changed_timeout_source == NULL)
+    goto out;
+
+  g_source_destroy (client->changed_timeout_source);
+  client->changed_timeout_source = NULL;
+
+  g_signal_emit (client, signals[CHANGED_SIGNAL], 0);
+
+ out:
+  ;
+}
+
 
 static gboolean
 on_changed_timeout (gpointer user_data)
