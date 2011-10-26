@@ -261,7 +261,7 @@ handle_loop_setup (UDisksManager          *object,
   gint allocated_loop_number = -1;
   gchar *loop_device = NULL;
   struct loop_info64 li64;
-  UDisksObject *loop_object;
+  UDisksObject *loop_object = NULL;
   gboolean option_read_only = FALSE;
   guint64 option_offset = 0;
   guint64 option_size = 0;
