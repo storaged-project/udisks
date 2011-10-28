@@ -74,6 +74,10 @@ void                udisks_client_get_drive_info      (UDisksClient        *clie
                                                        gchar              **out_media_description,
                                                        GIcon              **out_media_icon);
 
+gchar              *udisks_client_get_partition_info  (UDisksClient        *client,
+                                                       UDisksPartition     *partition);
+
+
 gchar              *udisks_client_get_size_for_display (UDisksClient *client,
                                                         guint64       size,
                                                         gboolean      use_pow2,

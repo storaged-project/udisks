@@ -1185,6 +1185,44 @@ udisks_client_get_drive_info (UDisksClient  *client,
 /* ---------------------------------------------------------------------------------------------------- */
 
 /**
+ * udisks_client_get_partition_info:
+ * @client: A #UDisksClient.
+ * @partition: # #UDisksPartition.
+ *
+ * Gets information about @partition that is suitable to present in an
+ * user interface in a single line of text.
+ *
+ * The returned string is localized and includes things like the type,
+ * label (if any) and flags (if any).
+ *
+ * Returns: (transfer full): A string that should be freed with g_free().
+ */
+gchar *
+udisks_client_get_partition_info (UDisksClient    *client,
+                                  UDisksPartition *partition)
+{
+  gchar *ret = NULL;
+  UDisksPartitionTable *table = NULL;
+
+  g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
+  g_return_val_if_fail (UDISKS_IS_PARTITION (partition), NULL);
+
+  table = udisks_client_get_partition_table (client, partition);
+
+  /* TODO: also include label and flags */
+  ret = udisks_client_get_part_type_for_display (client,
+                                                 udisks_partition_table_get_type_ (table),
+                                                 udisks_partition_get_type_ (partition),
+                                                 FALSE /* long_string */);
+
+  g_object_unref (table);
+
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
  * udisks_client_get_cleartext_block:
  * @client: A #UDisksClient.
  * @block: A #UDisksBlock.
