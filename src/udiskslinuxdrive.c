@@ -342,7 +342,6 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
   if (g_udev_device_get_property_as_boolean (device, "ID_ATA"))
     {
       const gchar *model;
-      const gchar *serial;
 
       model = g_udev_device_get_property (device, "ID_MODEL_ENC");
       if (model != NULL)
@@ -356,10 +355,7 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
 
       udisks_drive_set_vendor (iface, g_udev_device_get_property (device, ""));
       udisks_drive_set_revision (iface, g_udev_device_get_property (device, "ID_REVISION"));
-      serial = g_udev_device_get_property (device, "ID_SERIAL_SHORT");
-      if (serial == NULL)
-        serial = g_udev_device_get_property (device, "ID_SERIAL");
-      udisks_drive_set_serial (iface, serial);
+      udisks_drive_set_serial (iface, g_udev_device_get_property (device, "ID_SERIAL_SHORT"));
       udisks_drive_set_wwn (iface, g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION"));
     }
   else if (g_udev_device_get_property_as_boolean (device, "ID_SCSI"))
@@ -468,10 +464,7 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
         }
 
       udisks_drive_set_revision (iface, g_udev_device_get_property (device, "ID_REVISION"));
-      if (g_udev_device_has_property (device, "ID_SERIAL_SHORT"))
-        udisks_drive_set_serial (iface, g_udev_device_get_property (device, "ID_SERIAL_SHORT"));
-      else
-        udisks_drive_set_serial (iface, g_udev_device_get_property (device, "ID_SERIAL"));
+      udisks_drive_set_serial (iface, g_udev_device_get_property (device, "ID_SERIAL_SHORT"));
       if (g_udev_device_has_property (device, "ID_WWN_WITH_EXTENSION"))
         udisks_drive_set_wwn (iface, g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION"));
       else
