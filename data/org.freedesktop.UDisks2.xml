@@ -799,16 +799,37 @@
     <!-- Number: The number of the partition in the partition table. -->
     <property name="Number" type="u" access="read"/>
 
-    <!-- Type: The type of the partition. -->
+    <!-- Type: The type of the partition.
+
+         For <literal>dos</literal> partition tables, this string is a
+         hexadecimal number e.g. <literal>0x83</literal> or
+         <literal>0xfd</literal>. For <literal>gpt</literal> partition
+         tables this is the UUID
+         e.g. <literal>ebd0a0a2-b9e5-4433-87c0-68b6b72699c7</literal>.
+    -->
     <property name="Type" type="s" access="read"/>
 
-    <!-- Flags: Partition flags, e.g. <literal>boot</literal>. -->
-    <property name="Flags" type="s" access="read"/>
+    <!-- Flags: Flags describing the partition.
 
-    <!-- Offset: Offset of partition. -->
+         Known flags for <literal>dos</literal> partitions include:
+         <variablelist>
+           <varlistentry><term>Bit 7</term><listitem><para>The partition is marked as bootable</para></listitem></varlistentry>
+         </variablelist>
+         Known flags for <literal>gpt</literal> partitions include:
+         <variablelist>
+           <varlistentry><term>Bit 0</term><listitem><para>System partition</para></listitem></varlistentry>
+           <varlistentry><term>Bit 2</term><listitem><para>Legacy BIOS Bootable</para></listitem></varlistentry>
+           <varlistentry><term>Bit 60</term><listitem><para>Read-only</para></listitem></varlistentry>
+           <varlistentry><term>Bit 62</term><listitem><para>Hidden</para></listitem></varlistentry>
+           <varlistentry><term>Bit 63</term><listitem><para>Do not automount</para></listitem></varlistentry>
+         </variablelist>
+    -->
+    <property name="Flags" type="t" access="read"/>
+
+    <!-- Offset: Offset of partition, in bytes. -->
     <property name="Offset" type="t" access="read"/>
 
-    <!-- Size: Size of partition. -->
+    <!-- Size: Size of partition, in bytes. -->
     <property name="Size" type="t" access="read"/>
 
     <!-- Name: Label of partition or blank if not supported or unknown. -->

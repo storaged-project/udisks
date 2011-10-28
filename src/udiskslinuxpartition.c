@@ -117,7 +117,7 @@ udisks_linux_partition_update (UDisksLinuxPartition  *partition,
   guint64 size = 0;
   gchar *name = NULL;
   const gchar *uuid = NULL;
-  const gchar *flags = NULL;
+  guint64 flags = 0;
   const gchar *table_object_path = "/";
   gboolean is_container = FALSE;
   gboolean is_contained = FALSE;
@@ -132,7 +132,7 @@ udisks_linux_partition_update (UDisksLinuxPartition  *partition,
       size = g_udev_device_get_property_as_uint64 (device, "ID_PART_ENTRY_SIZE") * G_GUINT64_CONSTANT (512);
       name = udisks_decode_udev_string (g_udev_device_get_property (device, "ID_PART_ENTRY_NAME"));
       uuid = g_udev_device_get_property (device, "ID_PART_ENTRY_UUID");
-      flags = g_udev_device_get_property (device, "ID_PART_ENTRY_FLAGS");
+      flags = g_udev_device_get_property_as_uint64 (device, "ID_PART_ENTRY_FLAGS");
 
       disk_string = g_udev_device_get_property (device, "ID_PART_ENTRY_DISK");
       if (disk_string != NULL)
