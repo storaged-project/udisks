@@ -113,6 +113,7 @@ udisks_linux_partition_update (UDisksLinuxPartition  *partition,
   GUdevDevice *device = NULL;
   guint number = 0;
   const gchar *type = NULL;
+  gchar type_buf[16];
   guint64 offset = 0;
   guint64 size = 0;
   gchar *name = NULL;
@@ -147,17 +148,24 @@ udisks_linux_partition_update (UDisksLinuxPartition  *partition,
 
       if (g_strcmp0 (g_udev_device_get_property (device, "ID_PART_ENTRY_SCHEME"), "dos") == 0)
         {
-          if (number <= 4)
+          char *endp;
+          gint type_as_int = strtol (type, &endp, 0);
+          if (type_as_int > 0 && *endp == '\0')
             {
-              gint type_as_int = strtol (type, NULL, 0);
-              if (type_as_int == 0x05 || type_as_int == 0x0f || type_as_int == 0x85)
+              /* ensure 'dos' partition types are always of the form 0x0c (e.g. with two digits) */
+              snprintf (type_buf, sizeof type_buf, "0x%02x", type_as_int);
+              type = type_buf;
+              if (number <= 4)
                 {
-                  is_container = TRUE;
+                  if (type_as_int == 0x05 || type_as_int == 0x0f || type_as_int == 0x85)
+                    {
+                      is_container = TRUE;
+                    }
                 }
-            }
-          else if (number >= 5)
-            {
-              is_contained = TRUE;
+              else if (number >= 5)
+                {
+                  is_contained = TRUE;
+                }
             }
         }
     }
