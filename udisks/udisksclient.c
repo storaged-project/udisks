@@ -1184,6 +1184,23 @@ udisks_client_get_drive_info (UDisksClient  *client,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static void
+add_item (gchar **items_str,
+          const gchar *item)
+{
+  gchar *orig = *items_str;
+  if (*items_str == NULL)
+    {
+      *items_str = g_strdup (item);
+      g_free (orig);
+    }
+  else
+    {
+      *items_str = g_strdup_printf ("%s, %s", orig, item);
+      g_free (orig);
+    }
+}
+
 /**
  * udisks_client_get_partition_info:
  * @client: A #UDisksClient.
@@ -1192,8 +1209,8 @@ udisks_client_get_drive_info (UDisksClient  *client,
  * Gets information about @partition that is suitable to present in an
  * user interface in a single line of text.
  *
- * The returned string is localized and includes things like the type,
- * label (if any) and flags (if any).
+ * The returned string is localized and includes things like the
+ * partition type and its flags (if any).
  *
  * Returns: (transfer full): A string that should be freed with g_free().
  */
@@ -1202,19 +1219,54 @@ udisks_client_get_partition_info (UDisksClient    *client,
                                   UDisksPartition *partition)
 {
   gchar *ret = NULL;
+  gchar *type_str = NULL;
+  gchar *flags_str = NULL;
   UDisksPartitionTable *table = NULL;
+  guint64 flags;
 
   g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
   g_return_val_if_fail (UDISKS_IS_PARTITION (partition), NULL);
 
   table = udisks_client_get_partition_table (client, partition);
 
-  /* TODO: also include label and flags */
-  ret = udisks_client_get_part_type_for_display (client,
-                                                 udisks_partition_table_get_type_ (table),
-                                                 udisks_partition_get_type_ (partition),
-                                                 FALSE /* long_string */);
+  flags = udisks_partition_get_flags (partition);
+  if (g_strcmp0 (udisks_partition_table_get_type_ (table), "dos") == 0)
+    {
+      if (flags & 0x80)
+        add_item (&flags_str, _("Bootable"));
+    }
+  else if (g_strcmp0 (udisks_partition_table_get_type_ (table), "gpt") == 0)
+    {
+      if (flags & (1L<<0))
+        add_item (&flags_str, _("System"));
+      if (flags & (1L<<2))
+        add_item (&flags_str, _("Legacy BIOS Bootable"));
+      if (flags & (1L<<60))
+        add_item (&flags_str, _("Read-only"));
+      if (flags & (1L<<62))
+        add_item (&flags_str, _("Hidden"));
+      if (flags & (1L<<63))
+        add_item (&flags_str, _("No Automount"));
+    }
 
+  type_str = udisks_client_get_part_type_for_display (client,
+                                                      udisks_partition_table_get_type_ (table),
+                                                      udisks_partition_get_type_ (partition),
+                                                      FALSE /* long_string */);
+
+  /* TODO: also include label? */
+  if (flags_str != NULL)
+    {
+      ret = g_strdup_printf ("%s (%s)", type_str, flags_str);
+    }
+  else
+    {
+      ret = type_str; type_str = NULL;
+    }
+
+
+  g_free (flags_str);
+  g_free (type_str);
   g_object_unref (table);
 
   return ret;

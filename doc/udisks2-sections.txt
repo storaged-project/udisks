@@ -1162,7 +1162,6 @@ udisks_partition_get_table
 udisks_partition_get_is_container
 udisks_partition_get_is_contained
 udisks_partition_dup_type_
-udisks_partition_dup_flags
 udisks_partition_dup_name
 udisks_partition_dup_uuid
 udisks_partition_dup_table
