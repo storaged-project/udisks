@@ -575,7 +575,7 @@ udisks_client_get_block_for_dev (UDisksClient *client,
       if (block == NULL)
         continue;
 
-      if (makedev (udisks_block_get_major (block), udisks_block_get_minor (block)) == block_device_number)
+      if (udisks_block_get_device_number (block) == block_device_number)
         {
           ret = block;
           goto out;

@@ -365,10 +365,8 @@ handle_unlock (UDisksEncrypted        *encrypted,
 
   /* update the unlocked-luks file */
   if (!udisks_cleanup_add_unlocked_luks (cleanup,
-                                         makedev (udisks_block_get_major (cleartext_block),
-                                                  udisks_block_get_minor (cleartext_block)),
-                                         makedev (udisks_block_get_major (block),
-                                                  udisks_block_get_minor (block)),
+                                         udisks_block_get_device_number (cleartext_block),
+                                         udisks_block_get_device_number (block),
                                          g_udev_device_get_sysfs_attr (udev_cleartext_device, "dm/uuid"),
                                          caller_uid,
                                          &error))
@@ -466,8 +464,7 @@ handle_lock (UDisksEncrypted        *encrypted,
 
   error = NULL;
   cleartext_device_from_file = udisks_cleanup_find_unlocked_luks (cleanup,
-                                                                  makedev (udisks_block_get_major (block),
-                                                                           udisks_block_get_minor (block)),
+                                                                  udisks_block_get_device_number (block),
                                                                   &unlocked_by_uid,
                                                                   &error);
   if (error != NULL)
@@ -517,9 +514,7 @@ handle_lock (UDisksEncrypted        *encrypted,
 
   if (cleartext_device_from_file != 0)
     {
-      if (!udisks_cleanup_ignore_unlocked_luks (cleanup,
-                                                makedev (udisks_block_get_major (cleartext_block),
-                                                         udisks_block_get_minor (cleartext_block))))
+      if (!udisks_cleanup_ignore_unlocked_luks (cleanup, udisks_block_get_device_number (cleartext_block)))
         {
           g_dbus_method_invocation_return_error (invocation,
                                                  UDISKS_ERROR,
@@ -542,9 +537,7 @@ handle_lock (UDisksEncrypted        *encrypted,
     {
       if (cleartext_device_from_file != 0)
         {
-          udisks_cleanup_unignore_unlocked_luks (cleanup,
-                                                 makedev (udisks_block_get_major (cleartext_block),
-                                                          udisks_block_get_minor (cleartext_block)));
+          udisks_cleanup_unignore_unlocked_luks (cleanup, udisks_block_get_device_number (cleartext_block));
         }
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
@@ -560,10 +553,7 @@ handle_lock (UDisksEncrypted        *encrypted,
   if (cleartext_device_from_file != 0)
     {
       error = NULL;
-      if (!udisks_cleanup_remove_unlocked_luks (cleanup,
-                                                makedev (udisks_block_get_major (cleartext_block),
-                                                         udisks_block_get_minor (cleartext_block)),
-                                                &error))
+      if (!udisks_cleanup_remove_unlocked_luks (cleanup, udisks_block_get_device_number (cleartext_block), &error))
         {
           if (error == NULL)
             {
@@ -585,14 +575,10 @@ handle_lock (UDisksEncrypted        *encrypted,
                                                      error->code);
               g_error_free (error);
             }
-          udisks_cleanup_unignore_unlocked_luks (cleanup,
-                                                 makedev (udisks_block_get_major (cleartext_block),
-                                                          udisks_block_get_minor (cleartext_block)));
+          udisks_cleanup_unignore_unlocked_luks (cleanup, udisks_block_get_device_number (cleartext_block));
           goto out;
         }
-      udisks_cleanup_unignore_unlocked_luks (cleanup,
-                                             makedev (udisks_block_get_major (cleartext_block),
-                                                      udisks_block_get_minor (cleartext_block)));
+      udisks_cleanup_unignore_unlocked_luks (cleanup, udisks_block_get_device_number (cleartext_block));
     }
 
   udisks_notice ("Locked LUKS device %s (was unlocked as %s)",

@@ -49,8 +49,7 @@ lookup_object_for_block (UDisksClient  *client,
       block = udisks_object_peek_block (object);
       if (block != NULL)
         {
-          if (block_device == makedev (udisks_block_get_major (block),
-                                       udisks_block_get_minor (block)))
+          if (block_device == udisks_block_get_device_number (block))
             {
               ret = g_object_ref (object);
               goto out;

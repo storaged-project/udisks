@@ -764,8 +764,7 @@ is_in_fstab (UDisksBlock        *block,
 
       /* udisks_debug ("device %d:%d for entry %s", major (sb.st_rdev), minor (sb.st_rdev), m->mnt_fsname); */
 
-      if (makedev (udisks_block_get_major (block),
-                   udisks_block_get_minor (block)) == sb.st_rdev)
+      if (udisks_block_get_device_number (block) == sb.st_rdev)
         {
           ret = TRUE;
           if (out_mount_point != NULL)
@@ -949,7 +948,7 @@ handle_mount (UDisksFilesystem       *filesystem,
       /* update the mounted-fs file */
       if (!udisks_cleanup_add_mounted_fs (cleanup,
                                           mount_point_to_use,
-                                          makedev (udisks_block_get_major (block), udisks_block_get_minor (block)),
+                                          udisks_block_get_device_number (block),
                                           caller_uid,
                                           TRUE, /* fstab_mounted */
                                           &error))
@@ -1054,7 +1053,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   /* update the mounted-fs file */
   if (!udisks_cleanup_add_mounted_fs (cleanup,
                                       mount_point_to_use,
-                                      makedev (udisks_block_get_major (block), udisks_block_get_minor (block)),
+                                      udisks_block_get_device_number (block),
                                       caller_uid,
                                       FALSE, /* fstab_mounted */
                                       &error))
@@ -1269,7 +1268,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
 
   error = NULL;
   mount_point = udisks_cleanup_find_mounted_fs (cleanup,
-                                                makedev (udisks_block_get_major (block), udisks_block_get_minor (block)),
+                                                udisks_block_get_device_number (block),
                                                 &mounted_by_uid,
                                                 &fstab_mounted,
                                                 &error);

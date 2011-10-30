@@ -460,15 +460,11 @@
     -->
     <property name="Symlinks" type="aay" access="read"/>
 
+    <!-- DeviceNumber: The dev_t of the block device. -->
+    <property name="DeviceNumber" type="t" access="read"/>
+
     <!-- Size: The size of the block device. -->
     <property name="Size" type="t" access="read"/>
-
-    <!-- Major: The major number of the device. -->
-    <property name="Major" type="x" access="read"/>
-
-    <!-- Minor: The minor number of the device. -->
-    <property name="Minor" type="x" access="read"/>
-
 
     <!-- Drive:
          The #org.freedesktop.UDisks2.Drive object that the block device

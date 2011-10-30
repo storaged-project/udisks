@@ -937,8 +937,7 @@ wait_for_dev_t_cb (UDisksDaemon  *daemon,
   if (block == NULL)
     goto out;
 
-  if (*dev == makedev (udisks_block_get_major (block),
-                       udisks_block_get_minor (block)))
+  if (*dev == udisks_block_get_device_number (block))
     ret = TRUE;
 
  out:

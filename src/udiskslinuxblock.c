@@ -612,8 +612,7 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
 
   udisks_block_set_device (iface, device_file);
   udisks_block_set_symlinks (iface, symlinks);
-  udisks_block_set_major (iface, major (dev));
-  udisks_block_set_minor (iface, minor (dev));
+  udisks_block_set_device_number (iface, dev);
   size = udisks_daemon_util_block_get_size (device,
                                             &media_available,
                                             &media_change_detected);
