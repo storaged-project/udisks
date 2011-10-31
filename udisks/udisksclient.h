@@ -94,16 +94,15 @@ gchar              *udisks_client_get_id_for_display (UDisksClient *client,
                                                       gboolean      long_string);
 
 
-gchar *udisks_client_get_part_scheme_for_display (UDisksClient  *client,
-                                                  const gchar   *scheme);
+const gchar       **udisks_client_get_partition_types                  (UDisksClient  *client,
+                                                                        const gchar   *partition_table_type);
 
-gchar *udisks_client_get_part_type_for_display (UDisksClient  *client,
-                                                const gchar   *scheme,
-                                                const gchar   *type,
-                                                gboolean       long_string);
+const gchar        *udisks_client_get_partition_table_type_for_display (UDisksClient  *client,
+                                                                        const gchar   *partition_table_type);
 
-const gchar **udisks_client_get_part_types_for_scheme (UDisksClient  *client,
-                                                       const gchar   *scheme);
+const gchar        *udisks_client_get_partition_type_for_display       (UDisksClient  *client,
+                                                                        const gchar   *partition_table_type,
+                                                                        const gchar   *partition_type);
 
 
 

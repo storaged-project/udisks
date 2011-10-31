@@ -1219,7 +1219,7 @@ udisks_client_get_partition_info (UDisksClient    *client,
                                   UDisksPartition *partition)
 {
   gchar *ret = NULL;
-  gchar *type_str = NULL;
+  const gchar *type_str = NULL;
   gchar *flags_str = NULL;
   UDisksPartitionTable *table = NULL;
   guint64 flags;
@@ -1249,10 +1249,9 @@ udisks_client_get_partition_info (UDisksClient    *client,
         add_item (&flags_str, _("No Automount"));
     }
 
-  type_str = udisks_client_get_part_type_for_display (client,
-                                                      udisks_partition_table_get_type_ (table),
-                                                      udisks_partition_get_type_ (partition),
-                                                      FALSE /* long_string */);
+  type_str = udisks_client_get_partition_type_for_display (client,
+                                                           udisks_partition_table_get_type_ (table),
+                                                           udisks_partition_get_type_ (partition));
 
   /* TODO: also include label? */
   if (flags_str != NULL)
@@ -1261,12 +1260,11 @@ udisks_client_get_partition_info (UDisksClient    *client,
     }
   else
     {
-      ret = type_str; type_str = NULL;
+      ret = g_strdup (type_str);
     }
 
 
   g_free (flags_str);
-  g_free (type_str);
   g_object_unref (table);
 
   return ret;
@@ -1900,9 +1898,9 @@ udisks_client_get_id_for_display (UDisksClient *client,
 
 const static struct
 {
-  const gchar *scheme;
+  const gchar *type;
   const gchar *name;
-} part_scheme[] =
+} known_partition_table_types[] =
 {
   {"dos", N_("Master Boot Record")},
   {"gpt", N_("GUID Partition Table")},
@@ -1911,34 +1909,29 @@ const static struct
 };
 
 /**
- * udisks_client_get_part_scheme_for_display:
+ * udisks_client_get_partition_table_type_for_display:
  * @client: A #UDisksClient.
- * @scheme: A partitioning scheme id.
+ * @partition_table_type: A partition table type e.g. 'dos' or 'gpt'.
  *
- * Gets a human readable localized string for @scheme.
+ * Gets a human readable localized string for @partition_table_type.
  *
- * Returns: A string that should be freed with g_free().
+ * Returns: A description of @partition_table_type or %NULL.
  */
-gchar *
-udisks_client_get_part_scheme_for_display (UDisksClient  *client,
-                                           const gchar   *scheme)
+const gchar *
+udisks_client_get_partition_table_type_for_display (UDisksClient  *client,
+                                                    const gchar   *partition_table_type)
 {
+  const gchar *ret = NULL;
   guint n;
-  gchar *ret;
 
-  for (n = 0; part_scheme[n].scheme != NULL; n++)
+  for (n = 0; known_partition_table_types[n].type != NULL; n++)
     {
-      if (g_strcmp0 (part_scheme[n].scheme, scheme) == 0)
+      if (g_strcmp0 (known_partition_table_types[n].type, partition_table_type) == 0)
         {
-          ret = g_strdup (_(part_scheme[n].name));
+          ret = g_strdup (_(known_partition_table_types[n].name));
           goto out;
         }
     }
-
-  /* Translators: Shown for unknown partitioning scheme.
-   * First %s is the partition type scheme.
-   */
-  ret = g_strdup_printf (_("Unknown Scheme (%s)"), scheme);
 
  out:
   return ret;
@@ -1948,10 +1941,10 @@ udisks_client_get_part_scheme_for_display (UDisksClient  *client,
 
 const static struct
 {
-  const gchar *scheme;
+  const gchar *table_type;
   const gchar *type;
   const gchar *name;
-} part_type[] =
+} known_partition_types[] =
 {
   /* see http://en.wikipedia.org/wiki/GUID_Partition_Table */
 
@@ -2071,28 +2064,28 @@ const static struct
 };
 
 /**
- * udisks_client_get_part_types_for_scheme:
+ * udisks_client_get_partition_types:
  * @client: A #UDisksClient.
- * @scheme: A partitioning scheme id.
+ * @partition_table_type: A partition table type e.g. 'dos' or 'gpt'.
  *
- * Gets all known types for @scheme.
+ * Gets all known types for @partition_table_type.
  *
  * Returns: (transfer container): A %NULL-terminated array of
  * strings. Only the container should be freed with g_free().
  */
 const gchar **
-udisks_client_get_part_types_for_scheme (UDisksClient   *client,
-                                         const gchar    *scheme)
+udisks_client_get_partition_types (UDisksClient   *client,
+                                   const gchar    *partition_table_type)
 {
   guint n;
   GPtrArray *p;
 
   p = g_ptr_array_new();
-  for (n = 0; part_type[n].name != NULL; n++)
+  for (n = 0; known_partition_types[n].name != NULL; n++)
     {
-      if (g_strcmp0 (part_type[n].scheme, scheme) == 0)
+      if (g_strcmp0 (known_partition_types[n].table_type, partition_table_type) == 0)
         {
-          g_ptr_array_add (p, (gpointer) part_type[n].type);
+          g_ptr_array_add (p, (gpointer) known_partition_types[n].type);
         }
     }
   g_ptr_array_add (p, NULL);
@@ -2101,55 +2094,31 @@ udisks_client_get_part_types_for_scheme (UDisksClient   *client,
 }
 
 /**
- * udisks_client_get_part_type_for_display:
+ * udisks_client_get_partition_type_for_display:
  * @client: A #UDisksClient.
- * @scheme: A partitioning scheme id.
- * @type: A partition type.
- * @long_string: Whether to produce a long string.
+ * @partition_table_type: A partitioning type e.g. 'dos' or 'gpt'.
+ * @partition_type: A partition type.
  *
- * Gets a human readable localized string for @scheme and @type.
+ * Gets a human readable localized string for @partiton_table_type and @partition_type.
  *
- * Returns: A string that should be freed with g_free().
+ * Returns: A description of @partition_type or %NULL if unknown.
  */
-gchar *
-udisks_client_get_part_type_for_display (UDisksClient  *client,
-                                         const gchar   *scheme,
-                                         const gchar   *type,
-                                         gboolean       long_string)
+const gchar *
+udisks_client_get_partition_type_for_display (UDisksClient  *client,
+                                              const gchar   *partition_table_type,
+                                              const gchar   *partition_type)
 {
+  const gchar *ret = NULL;
   guint n;
-  gchar *ret;
 
-  for (n = 0; part_type[n].name != NULL; n++)
+  for (n = 0; known_partition_types[n].name != NULL; n++)
     {
-      if (g_strcmp0 (part_type[n].scheme, scheme) == 0 &&
-          g_strcmp0 (part_type[n].type, type) == 0)
+      if (g_strcmp0 (known_partition_types[n].table_type, partition_table_type) == 0 &&
+          g_strcmp0 (known_partition_types[n].type, partition_type) == 0)
         {
-          if (long_string)
-            {
-              /* Translators: First %s is the detailed partition type (e.g. "FAT16 (0x16)") and
-               * second %s is the partition type (e.g. 0x16)
-               */
-              ret = g_strdup_printf ("%s (%s)", _(part_type[n].name), type);
-            }
-          else
-            {
-              ret = g_strdup (_(part_type[n].name));
-            }
+          ret = _(known_partition_types[n].name);
           goto out;
         }
-    }
-
-  if (long_string)
-    {
-      /* Translators: Shown for unknown partition types.
-       * First %s is the partition type.
-       */
-      ret = g_strdup_printf (_("Unknown (%s)"), type);
-    }
-  else
-    {
-      ret = g_strdup (_("Unknown"));
     }
 
  out:
