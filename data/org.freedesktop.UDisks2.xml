@@ -856,6 +856,43 @@
          See the #org.freedesktop.UDisks2.Partition:IsContainer property for more information.
     -->
     <property name="IsContained" type="b" access="read"/>
+
+    <!-- SetType:
+         @type: New type to set.
+         @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+         Sets the partition type. See the
+         #org.freedesktop.UDisks2.Partition:Type property for a
+         description of known partition types.
+    -->
+    <method name="SetType">
+      <arg name="type" direction="in" type="s"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!-- SetName:
+         @name: New name to set.
+         @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+         Sets the partition name.
+    -->
+    <method name="SetName">
+      <arg name="name" direction="in" type="s"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!-- SetFlags:
+         @flags: New flags to set.
+         @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+         Sets the partition flags. See the
+         #org.freedesktop.UDisks2.Partition:Flags property for a
+         description of known flags.
+    -->
+    <method name="SetFlags">
+      <arg name="flags" direction="in" type="t"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
   </interface>
 
   <!-- ********************************************************************** -->

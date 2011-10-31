@@ -774,3 +774,48 @@ on_mount_monitor_mount_removed (UDisksMountMonitor  *monitor,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
+
+
+/**
+ * udisks_linux_block_object_trigger_uevent:
+ * @object: A #UDisksLinuxBlockObject.
+ *
+ * Triggers a 'change' uevent in the kernel.
+ *
+ * The triggered event will bubble up from the kernel through the udev
+ * stack and will eventually be received by the udisks daemon process
+ * itself.
+ *
+ * This method does not wait for the event to be received.
+ */
+void
+udisks_linux_block_object_trigger_uevent (UDisksLinuxBlockObject *object)
+{
+  gchar* path = NULL;
+  gint fd = -1;
+
+  g_return_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (object));
+
+  /* TODO: would be nice with a variant to wait until the request uevent has been received by ourselves */
+
+  path = g_strconcat (g_udev_device_get_sysfs_path (object->device), "/uevent", NULL);
+  fd = open (path, O_WRONLY);
+  if (fd < 0)
+    {
+      udisks_warning ("Error opening %s: %m", path);
+      goto out;
+    }
+
+  if (write (fd, "change", sizeof "change" - 1) != sizeof "change" - 1)
+    {
+      udisks_warning ("Error writing 'change' to file %s: %m", path);
+      goto out;
+    }
+
+ out:
+  if (fd >= 0)
+    close (fd);
+  g_free (path);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */

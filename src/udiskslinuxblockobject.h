@@ -39,6 +39,8 @@ void                      udisks_linux_block_object_uevent     (UDisksLinuxBlock
 UDisksDaemon             *udisks_linux_block_object_get_daemon (UDisksLinuxBlockObject  *object);
 GUdevDevice              *udisks_linux_block_object_get_device (UDisksLinuxBlockObject  *object);
 
+void                      udisks_linux_block_object_trigger_uevent (UDisksLinuxBlockObject  *object);
+
 G_END_DECLS
 
 #endif /* __UDISKS_LINUX_BLOCK_OBJECT_H__ */
