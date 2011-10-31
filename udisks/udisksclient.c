@@ -1210,7 +1210,7 @@ add_item (gchar **items_str,
  * user interface in a single line of text.
  *
  * The returned string is localized and includes things like the
- * partition type and its flags (if any).
+ * partition type, flags (if any) and name (if any).
  *
  * Returns: (transfer full): A string that should be freed with g_free().
  */
@@ -1252,21 +1252,27 @@ udisks_client_get_partition_info (UDisksClient    *client,
   type_str = udisks_client_get_partition_type_for_display (client,
                                                            udisks_partition_table_get_type_ (table),
                                                            udisks_partition_get_type_ (partition));
+  if (type_str == NULL)
+    type_str = udisks_partition_get_type_ (partition);
 
-  /* TODO: also include label? */
   if (flags_str != NULL)
     {
-      ret = g_strdup_printf ("%s (%s)", type_str, flags_str);
+      /* Translators: Partition info. First %s is the type, second %s is a list of flags */
+      ret = g_strdup_printf (C_("partition-info", "%s (%s)"), type_str, flags_str);
     }
   else
     {
       ret = g_strdup (type_str);
     }
 
+  if (ret == NULL || strlen (ret) == 0)
+    {
+      g_free (ret);
+      ret = g_strdup (C_("partition-info", "Unknown"));
+    }
 
   g_free (flags_str);
   g_object_unref (table);
-
   return ret;
 }
 
