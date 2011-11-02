@@ -1228,6 +1228,8 @@ udisks_client_get_partition_info (UDisksClient    *client,
   g_return_val_if_fail (UDISKS_IS_PARTITION (partition), NULL);
 
   table = udisks_client_get_partition_table (client, partition);
+  if (table == NULL)
+    goto out;
 
   flags = udisks_partition_get_flags (partition);
   if (g_strcmp0 (udisks_partition_table_get_type_ (table), "dos") == 0)
@@ -1273,6 +1275,7 @@ udisks_client_get_partition_info (UDisksClient    *client,
 
   g_free (flags_str);
   g_object_unref (table);
+ out:
   return ret;
 }
 
