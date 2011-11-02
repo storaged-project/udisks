@@ -55,6 +55,7 @@ gboolean udisks_daemon_util_get_caller_uid_sync (UDisksDaemon            *daemon
                                                  GDBusMethodInvocation   *invocation,
                                                  GCancellable            *cancellable,
                                                  uid_t                   *out_uid,
+                                                 gid_t                   *out_gid,
                                                  GError                 **error);
 
 G_END_DECLS

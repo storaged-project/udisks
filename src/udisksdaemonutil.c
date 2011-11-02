@@ -25,6 +25,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <pwd.h>
 
 #include <limits.h>
 #include <stdlib.h>
@@ -498,23 +499,27 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
  * @invocation: A #GDBusMethodInvocation.
  * @cancellable: (allow-none): A #GCancellable or %NULL.
  * @out_uid: (out): Return location for resolved uid or %NULL.
+ * @out_gid: (out) (allow-none): Return location for resolved gid or %NULL.
  * @error: Return location for error.
  *
- * Gets the UNIX user id of the peer represented by @invocation.
+ * Gets the UNIX user id (and possibly group id) of the peer
+ * represented by @invocation.
  *
- * Returns: %TRUE if the user id was obtained, %FALSE otherwise
+ * Returns: %TRUE if the user id (and possibly group id) was obtained, %FALSE otherwise
  */
 gboolean
 udisks_daemon_util_get_caller_uid_sync (UDisksDaemon            *daemon,
                                         GDBusMethodInvocation   *invocation,
                                         GCancellable            *cancellable,
                                         uid_t                   *out_uid,
+                                        gid_t                   *out_gid,
                                         GError                 **error)
 {
   gboolean ret;
   const gchar *caller;
   GVariant *value;
   GError *local_error;
+  uid_t uid;
 
   /* TODO: cache this on @daemon */
 
@@ -549,7 +554,35 @@ udisks_daemon_util_get_caller_uid_sync (UDisksDaemon            *daemon,
     }
 
   G_STATIC_ASSERT (sizeof (uid_t) == sizeof (guint32));
-  g_variant_get (value, "(u)", out_uid);
+  g_variant_get (value, "(u)", &uid);
+  if (out_uid != NULL)
+    *out_uid = uid;
+
+  if (out_gid != NULL)
+    {
+      struct passwd pwstruct;
+      gchar pwbuf[8192];
+      static struct passwd *pw;
+      int rc;
+
+      rc = getpwuid_r (uid, &pwstruct, pwbuf, sizeof pwbuf, &pw);
+      if (rc == 0 && pw == NULL)
+        {
+          g_set_error (error,
+                       UDISKS_ERROR,
+                       UDISKS_ERROR_FAILED,
+                       "User with uid %d does not exist", (gint) uid);
+        }
+      else if (pw == NULL)
+        {
+          g_set_error (error,
+                       UDISKS_ERROR,
+                       UDISKS_ERROR_FAILED,
+                       "Error looking up passwd struct for uid %d: %m", (gint) uid);
+          goto out;
+        }
+      *out_gid = pw->pw_gid;
+    }
 
   ret = TRUE;
 

@@ -598,7 +598,7 @@ handle_smart_update (UDisksDriveAta        *_drive,
     {
       uid_t caller_uid;
       error = NULL;
-      if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &error))
+      if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, NULL, &error))
         {
           g_dbus_method_invocation_return_gerror (invocation, error);
           g_error_free (error);

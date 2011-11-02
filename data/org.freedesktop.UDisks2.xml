@@ -757,7 +757,7 @@
     <!--
         Format:
         @type: The type of file system or other content to format the device with.
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's') and <parameter>take-ownership</parameter> (of type 'b').
 
         Formats the device with a file system or other well-known content.
 
@@ -772,6 +772,11 @@
         however, note that this may not be supported on all file
         systems and, if supported, the maximum allowed length may
         vary.
+
+        If the file system in question supports owners and the option
+        <parameter>take-ownership</parameter> is set to %TRUE then the
+        root directory of the created file system will be owned by the
+        caller of this method.
     -->
     <method name="Format">
       <arg name="type" direction="in" type="s"/>

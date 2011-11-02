@@ -22,6 +22,7 @@
 #include <glib/gi18n-lib.h>
 
 #include <sys/types.h>
+#include <sys/mount.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <pwd.h>
@@ -1642,6 +1643,9 @@ handle_format (UDisksBlock           *_block,
   gchar *error_message;
   GError *error;
   int status;
+  uid_t caller_uid;
+  gid_t caller_gid;
+  gboolean take_ownership;
 
   object = UDISKS_LINUX_BLOCK_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (block)));
   daemon = udisks_linux_block_object_get_daemon (object);
@@ -1653,6 +1657,14 @@ handle_format (UDisksBlock           *_block,
   action_id = "org.freedesktop.udisks2.modify-device";
   if (udisks_block_get_hint_system (_block))
     action_id = "org.freedesktop.udisks2.modify-device-system";
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &caller_gid, &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
 
   /* TODO: Consider just accepting any @type and just running "mkfs -t <type>".
    *       There are some obvious security implications by doing this, though
@@ -1734,6 +1746,79 @@ handle_format (UDisksBlock           *_block,
                       type);
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
+    }
+
+  /* Change overship, if requested */
+  if (g_variant_lookup (options, "take-ownership", "b", &take_ownership) && take_ownership)
+    {
+      gchar tos_dir[256] = PACKAGE_LOCALSTATE_DIR "/run/udisks2/block-format-tos-XXXXXX";
+
+      if (mkdtemp (tos_dir) == NULL)
+        {
+          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                 "Cannot create directory %s: %m", tos_dir);
+          goto out;
+        }
+      if (mount (udisks_block_get_device (_block), tos_dir, type, 0, NULL) != 0)
+        {
+          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                 "Cannot mount %s at %s: %m",
+                                                 udisks_block_get_device (_block),
+                                                 tos_dir);
+          if (rmdir (tos_dir) != 0)
+            {
+              udisks_warning ("Error removing directory %s: %m", tos_dir);
+            }
+          goto out;
+        }
+      if (chown (tos_dir, caller_uid, caller_gid) != 0)
+        {
+          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                 "Cannot chown %s to uid=%d and gid=%d: %m", tos_dir, caller_uid, caller_gid);
+          if (umount (tos_dir) != 0)
+            {
+              udisks_warning ("Error unmounting directory %s: %m", tos_dir);
+              goto out;
+            }
+          if (rmdir (tos_dir) != 0)
+            {
+              udisks_warning ("Error removing directory %s: %m", tos_dir);
+            }
+          goto out;
+        }
+      if (chmod (tos_dir, 0700) != 0)
+        {
+          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                 "Cannot chmod %s to mode 0700: %m", tos_dir);
+          if (umount (tos_dir) != 0)
+            {
+              udisks_warning ("Error unmounting directory %s: %m", tos_dir);
+              goto out;
+            }
+          if (rmdir (tos_dir) != 0)
+            {
+              udisks_warning ("Error removing directory %s: %m", tos_dir);
+            }
+          goto out;
+        }
+
+      if (umount (tos_dir) != 0)
+        {
+          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                 "Cannot unmount %s: %m", tos_dir);
+          if (rmdir (tos_dir) != 0)
+            {
+              udisks_warning ("Error removing directory %s: %m", tos_dir);
+            }
+          goto out;
+        }
+
+      if (rmdir (tos_dir) != 0)
+        {
+          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                 "Cannot remove directory %s: %m", tos_dir);
+          goto out;
+        }
     }
 
   udisks_block_complete_format (UDISKS_BLOCK (block), invocation);
