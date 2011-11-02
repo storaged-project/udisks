@@ -1799,6 +1799,8 @@ const static struct
   {"filesystem", "jdb",               "*",     N_("Journal for Ext"),                   N_("JDB")},
   {"filesystem", "xfs",               "*",     N_("XFS (version %s)"),                  N_("XFS")},
   {"filesystem", "xfs",               NULL,    N_("XFS"),                               N_("XFS")},
+  /* TODO: No ID_FS_VERSION yet for btrfs... */
+  {"filesystem", "btrfs",             NULL,    N_("Btrfs"),                             N_("Btrfs")},
   {"filesystem", "iso9660",           "*",     N_("ISO 9660 (version %s)"),             N_("ISO9660")},
   {"filesystem", "iso9660",           NULL,    N_("ISO 9660"),                          N_("ISO9660")},
   {"filesystem", "udf",               "*",     N_("UDF (version %s)"),                  N_("UDF")},
