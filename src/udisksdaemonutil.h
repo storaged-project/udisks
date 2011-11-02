@@ -57,9 +57,6 @@ gboolean udisks_daemon_util_get_caller_uid_sync (UDisksDaemon            *daemon
                                                  uid_t                   *out_uid,
                                                  GError                 **error);
 
-void udev_trigger_uevent (GUdevDevice *device,
-                          const gchar *event);
-
 G_END_DECLS
 
 #endif /* __UDISKS_DAEMON_UTIL_H__ */

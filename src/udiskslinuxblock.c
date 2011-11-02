@@ -1625,10 +1625,10 @@ wait_for_filesystem (UDisksDaemon *daemon,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-handle_create_filesystem (UDisksBlock           *_block,
-                          GDBusMethodInvocation *invocation,
-                          const gchar           *fstype,
-                          GVariant              *options)
+handle_format (UDisksBlock           *_block,
+               GDBusMethodInvocation *invocation,
+               const gchar           *type,
+               GVariant              *options)
 {
   UDisksLinuxBlock *block = UDISKS_LINUX_BLOCK (_block);
   UDisksLinuxBlockObject *object;
@@ -1654,14 +1654,17 @@ handle_create_filesystem (UDisksBlock           *_block,
   if (udisks_block_get_hint_system (_block))
     action_id = "org.freedesktop.udisks2.modify-device-system";
 
-  fs_info = get_fs_info (fstype);
+  /* TODO: Consider just accepting any @type and just running "mkfs -t <type>".
+   *       There are some obvious security implications by doing this, though
+   */
+  fs_info = get_fs_info (type);
   if (fs_info == NULL || fs_info->command_create_fs == NULL)
     {
       g_dbus_method_invocation_return_error (invocation,
                    UDISKS_ERROR,
                    UDISKS_ERROR_NOT_SUPPORTED,
                    "Creation of file system type %s is not supported",
-                   fstype);
+                   type);
       goto out;
     }
 
@@ -1676,14 +1679,14 @@ handle_create_filesystem (UDisksBlock           *_block,
   /* evaluate options */
   if (g_variant_lookup (options, "label", "&s", &label))
     {
-      /* does the fs support labels? */
+      /* TODO: return an error if label is too long */
       if (strstr (fs_info->command_create_fs, "$LABEL") == NULL)
         {
           g_dbus_method_invocation_return_error (invocation,
                        UDISKS_ERROR,
                        UDISKS_ERROR_NOT_SUPPORTED,
                        "File system type %s does not support labels",
-                       fstype);
+                       type);
           goto out;
         }
 
@@ -1714,34 +1717,26 @@ handle_create_filesystem (UDisksBlock           *_block,
       goto out;
     }
 
-  /* FIXME: For some reason mkfs.ext4 does not trigger a change uevent when
-   * it's done, so udev and we miss the new file system. This _only_ happens
-   * when being called from here, it does work fine when being called from a
-   * terminal. Force an update to work around this. */
-  if (strcmp (fstype, "ext4") == 0)
-    {
-      GUdevDevice *device; 
-      device = udisks_linux_block_object_get_device (object);
-      if (device != NULL)
-        udev_trigger_uevent (device, "change");
-      g_object_unref (device);
-    }
+  /* The mkfs program may not generate all the uevents we need - so explicitly
+   * trigger an event here
+   */
+  udisks_linux_block_object_trigger_uevent (object);
 
   if (udisks_daemon_wait_for_object_sync (daemon,
                                           wait_for_filesystem,
-                                          (gpointer) fstype,
+                                          (gpointer) type,
                                           NULL,
                                           30,
                                           &error) == NULL)
     {
       g_prefix_error (&error,
                       "Error waiting for FileSystem interface after creating %s file system: ",
-                      fstype);
+                      type);
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
-  udisks_block_complete_create_filesystem (UDISKS_BLOCK (block), invocation);
+  udisks_block_complete_format (UDISKS_BLOCK (block), invocation);
 
  out:
   g_free (escaped_label);
@@ -1758,5 +1753,5 @@ block_iface_init (UDisksBlockIface *iface)
   iface->handle_add_configuration_item    = handle_add_configuration_item;
   iface->handle_remove_configuration_item = handle_remove_configuration_item;
   iface->handle_update_configuration_item = handle_update_configuration_item;
-  iface->handle_create_filesystem         = handle_create_filesystem;
+  iface->handle_format                    = handle_format;
 }

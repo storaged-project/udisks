@@ -755,17 +755,26 @@
     </method>
 
     <!--
-        CreateFilesystem:
-        @fstype: The type of file system to create. Pass <literal>empty</literal> to not create a file system and just clear the areas of the device known to host file system signatures.
+        Format:
+        @type: The type of file system or other content to format the device with.
         @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's').
 
-        Create a file system on a device. You can specify a label with the
-        <parameter>label</parameter> option; however, this is not supported
-        with all file systems (in particular, not for <literal>minix</literal>
-        and <literal>empty</literal>).
+        Formats the device with a file system or other well-known content.
+
+        Known values for @type includes <constant>empty</constant> (to
+        just zero out areas of the device known to host file system
+        signatures) and <constant>swap</constant> (Linux swap space)
+        and most file systems supported by the <citerefentry><refentrytitle>mkfs</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+        program through its <option>-t</option> option.
+
+        If @type supports it, you can specify a label with the
+        <parameter>label</parameter> option in the @options parameter;
+        however, note that this may not be supported on all file
+        systems and, if supported, the maximum allowed length may
+        vary.
     -->
-    <method name="CreateFilesystem">
-      <arg name="fstype" direction="in" type="s"/>
+    <method name="Format">
+      <arg name="type" direction="in" type="s"/>
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
