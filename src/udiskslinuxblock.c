@@ -1626,14 +1626,70 @@ wait_for_filesystem (UDisksDaemon *daemon,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-handle_format (UDisksBlock           *_block,
+wait_for_luks_uuid (UDisksDaemon *daemon,
+                    UDisksObject *object,
+                    gpointer      user_data)
+{
+  UDisksBlock *block = NULL;
+  gboolean ret = FALSE;
+
+  ret = FALSE;
+  block = udisks_object_get_block (object);
+  if (block == NULL)
+    goto out;
+
+  if (g_strcmp0 (udisks_block_get_id_type (block), "crypto_LUKS") != 0)
+    goto out;
+
+  ret = TRUE;
+
+ out:
+  g_clear_object (&block);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+wait_for_luks_cleartext (UDisksDaemon *daemon,
+                         UDisksObject *object,
+                         gpointer      user_data)
+{
+  const gchar *crypto_object_path = user_data;
+  UDisksBlock *block = NULL;
+  gboolean ret = FALSE;
+
+  ret = FALSE;
+  block = udisks_object_get_block (object);
+  if (block == NULL)
+    goto out;
+
+  if (g_strcmp0 (udisks_block_get_crypto_backing_device (block), crypto_object_path) != 0)
+    goto out;
+
+  ret = TRUE;
+
+ out:
+  g_clear_object (&block);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+handle_format (UDisksBlock           *block,
                GDBusMethodInvocation *invocation,
                const gchar           *type,
                GVariant              *options)
 {
-  UDisksLinuxBlock *block = UDISKS_LINUX_BLOCK (_block);
-  UDisksLinuxBlockObject *object;
+  UDisksObject *object;
+  UDisksObject *cleartext_object = NULL;
+  UDisksBlock *cleartext_block = NULL;
+  GUdevDevice *udev_cleartext_device = NULL;
+  UDisksBlock *block_to_mkfs = NULL;
+  UDisksObject *object_to_mkfs = NULL;
   UDisksDaemon *daemon;
+  UDisksCleanup *cleanup;
   const gchar *action_id;
   const FSInfo *fs_info;
   const gchar *label;
@@ -1645,17 +1701,20 @@ handle_format (UDisksBlock           *_block,
   int status;
   uid_t caller_uid;
   gid_t caller_gid;
-  gboolean take_ownership;
+  gboolean take_ownership = FALSE;
+  gchar *encrypt_passphrase = NULL;
+  gchar *mapped_name = NULL;
 
-  object = UDISKS_LINUX_BLOCK_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (block)));
-  daemon = udisks_linux_block_object_get_daemon (object);
+  object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (block)));
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  cleanup = udisks_daemon_get_cleanup (daemon);
   escaped_label = g_shell_quote("");
   command = NULL;
   error_message = NULL;
   error = NULL;
 
   action_id = "org.freedesktop.udisks2.modify-device";
-  if (udisks_block_get_hint_system (_block))
+  if (udisks_block_get_hint_system (block))
     action_id = "org.freedesktop.udisks2.modify-device-system";
 
   error = NULL;
@@ -1688,7 +1747,107 @@ handle_format (UDisksBlock           *_block,
                                                     invocation))
     goto out;
 
-  /* evaluate options */
+  g_variant_lookup (options, "take-ownership", "b", &take_ownership);
+  g_variant_lookup (options, "encrypt.passphrase", "s", &encrypt_passphrase);
+
+  if (encrypt_passphrase != NULL)
+    {
+      /* Create it */
+      if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                                  NULL, /* cancellable */
+                                                  0,    /* uid_t run_as_uid */
+                                                  0,    /* uid_t run_as_euid */
+                                                  &status,
+                                                  &error_message,
+                                                  encrypt_passphrase, /* input_string */
+                                                  "cryptsetup luksFormat %s",
+                                                  udisks_block_get_device (block)))
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error creating LUKS device: %s",
+                                                 error_message);
+          g_free (error_message);
+          goto out;
+        }
+
+      /* Wait for the UUID to be set */
+      if (udisks_daemon_wait_for_object_sync (daemon,
+                                              wait_for_luks_uuid,
+                                              NULL, /* user_data */
+                                              NULL,
+                                              30,
+                                              &error) == NULL)
+        {
+          g_prefix_error (&error, "Error waiting for LUKS UUID: ");
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
+
+      /* Open it */
+      mapped_name = g_strdup_printf ("luks-%s", udisks_block_get_id_uuid (block));
+      if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                                  NULL, /* cancellable */
+                                                  0,    /* uid_t run_as_uid */
+                                                  0,    /* uid_t run_as_euid */
+                                                  &status,
+                                                  &error_message,
+                                                  encrypt_passphrase, /* input_string */
+                                                  "cryptsetup luksOpen %s %s",
+                                                  udisks_block_get_device (block),
+                                                  mapped_name))
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error opening LUKS device: %s",
+                                                 error_message);
+          g_free (error_message);
+          goto out;
+        }
+
+      /* Wait for it */
+      cleartext_object = udisks_daemon_wait_for_object_sync (daemon,
+                                                             wait_for_luks_cleartext,
+                                                             (gpointer) g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
+                                                             NULL,
+                                                             30,
+                                                             &error);
+      if (cleartext_object == NULL)
+        {
+          g_prefix_error (&error, "Error waiting for LUKS cleartext device: ");
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
+      cleartext_block = udisks_object_get_block (cleartext_object);
+      if (cleartext_block == NULL)
+        {
+          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                 "LUKS cleartext device does not have block interface");
+          goto out;
+        }
+
+      /* update the unlocked-luks file */
+      udev_cleartext_device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (cleartext_object));
+      if (!udisks_cleanup_add_unlocked_luks (cleanup,
+                                             udisks_block_get_device_number (cleartext_block),
+                                             udisks_block_get_device_number (block),
+                                             g_udev_device_get_sysfs_attr (udev_cleartext_device, "dm/uuid"),
+                                             caller_uid,
+                                             &error))
+        goto out;
+
+      object_to_mkfs = cleartext_object;
+      block_to_mkfs = cleartext_block;
+    }
+  else
+    {
+      object_to_mkfs = object;
+      block_to_mkfs = block;
+    }
+
+  /* Set label, if needed */
   if (g_variant_lookup (options, "label", "&s", &label))
     {
       /* TODO: return an error if label is too long */
@@ -1706,11 +1865,10 @@ handle_format (UDisksBlock           *_block,
         escaped_label = g_shell_quote (label);
     }
 
-  /* build and run mkfs shell command */
-  tmp = subst_str (fs_info->command_create_fs, "$DEVICE", udisks_block_get_device (_block));
+  /* Build and run mkfs shell command */
+  tmp = subst_str (fs_info->command_create_fs, "$DEVICE", udisks_block_get_device (block_to_mkfs));
   command = subst_str (tmp, "$LABEL", escaped_label);
   g_free (tmp);
-
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               NULL, /* cancellable */
                                               0,    /* uid_t run_as_uid */
@@ -1723,16 +1881,16 @@ handle_format (UDisksBlock           *_block,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             "Error creating file system, exit with %i: %s",
-                                             status,
+                                             "Error creating file system: %s",
                                              error_message);
+      g_free (error_message);
       goto out;
     }
 
   /* The mkfs program may not generate all the uevents we need - so explicitly
    * trigger an event here
    */
-  udisks_linux_block_object_trigger_uevent (object);
+  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object_to_mkfs));
 
   if (udisks_daemon_wait_for_object_sync (daemon,
                                           wait_for_filesystem,
@@ -1749,7 +1907,7 @@ handle_format (UDisksBlock           *_block,
     }
 
   /* Change overship, if requested */
-  if (g_variant_lookup (options, "take-ownership", "b", &take_ownership) && take_ownership)
+  if (take_ownership)
     {
       gchar tos_dir[256] = PACKAGE_LOCALSTATE_DIR "/run/udisks2/block-format-tos-XXXXXX";
 
@@ -1759,11 +1917,11 @@ handle_format (UDisksBlock           *_block,
                                                  "Cannot create directory %s: %m", tos_dir);
           goto out;
         }
-      if (mount (udisks_block_get_device (_block), tos_dir, type, 0, NULL) != 0)
+      if (mount (udisks_block_get_device (block_to_mkfs), tos_dir, type, 0, NULL) != 0)
         {
           g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                                  "Cannot mount %s at %s: %m",
-                                                 udisks_block_get_device (_block),
+                                                 udisks_block_get_device (block_to_mkfs),
                                                  tos_dir);
           if (rmdir (tos_dir) != 0)
             {
@@ -1821,11 +1979,16 @@ handle_format (UDisksBlock           *_block,
         }
     }
 
-  udisks_block_complete_format (UDISKS_BLOCK (block), invocation);
+  udisks_block_complete_format (block, invocation);
 
  out:
+  g_free (mapped_name);
   g_free (escaped_label);
   g_free (command);
+  g_free (encrypt_passphrase);
+  g_clear_object (&cleartext_object);
+  g_clear_object (&cleartext_block);
+  g_clear_object (&udev_cleartext_device);
   return TRUE; /* returning true means that we handled the method invocation */
 }
 

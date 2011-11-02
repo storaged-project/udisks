@@ -757,7 +757,7 @@
     <!--
         Format:
         @type: The type of file system or other content to format the device with.
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's') and <parameter>take-ownership</parameter> (of type 'b').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's'), <parameter>take-ownership</parameter> (of type 'b') and <parameter>encrypt.passphrase</parameter> (of type 's').
 
         Formats the device with a file system or other well-known content.
 
@@ -777,6 +777,11 @@
         <parameter>take-ownership</parameter> is set to %TRUE then the
         root directory of the created file system will be owned by the
         caller of this method.
+
+        If the option <parameter>encrypt.passphrase</parameter> is
+        given then a LUKS device is created with the given passphrase
+        and the file system is created on the unlocked device. The
+        unlocked device will be left open.
     -->
     <method name="Format">
       <arg name="type" direction="in" type="s"/>
