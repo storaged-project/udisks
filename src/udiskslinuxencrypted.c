@@ -309,7 +309,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   if (is_in_crypttab && crypttab_name != NULL)
     name = g_strdup (crypttab_name);
   else
-    name = g_strdup_printf ("LUKS-udisks2-%s", udisks_block_get_id_uuid (block));
+    name = g_strdup_printf ("luks-%s", udisks_block_get_id_uuid (block));
   escaped_name = g_strescape (name, NULL);
 
   /* if available, use and prefer the /etc/crypttab passphrase */
