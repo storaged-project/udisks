@@ -208,11 +208,27 @@
 
       Known values include:
       <variablelist>
-      <varlistentry><term>usb</term><listitem><para>Connected via USB</para></listitem></varlistentry>
-      <varlistentry><term>ieee1394</term><listitem><para>Connected via Firewire</para></listitem></varlistentry>
+      <varlistentry><term>usb</term><listitem><para>Connected via <ulink url="http://en.wikipedia.org/wiki/USB">USB</ulink></para></listitem></varlistentry>
+      <varlistentry><term>sdio</term><listitem><para>Connected via <ulink url="http://en.wikipedia.org/wiki/Secure_Digital#SDIO">SDIO</ulink></para></listitem></varlistentry>
+      <varlistentry><term>ieee1394</term><listitem><para>Connected via <ulink url="http://en.wikipedia.org/wiki/Firewire">Firewire</ulink></para></listitem></varlistentry>
       </variablelist>
     -->
     <property name="ConnectionBus" type="s" access="read"/>
+
+    <!--
+        Removable:
+        A hint whether the drive and/or its media is considered
+        <emphasis>removable</emphasis> by the user.
+
+        This includes drives with removable media (cf. the
+        #org.freedesktop.UDisks2.Drive:MediaRemovable property), Flash
+        media such as SD cards and drives on hotpluggable buses such
+        as USB or Firewire (cf. the
+        #org.freedesktop.UDisks2.Drive:ConnectionBus property).
+
+        Note that this is only a <emphasis>guess</emphasis>.
+    -->
+    <property name="Removable" type="b" access="read"/>
 
     <!-- SortKey:
          A string that can be used for sorting drive objects.

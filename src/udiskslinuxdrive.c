@@ -304,6 +304,13 @@ set_connection_bus (UDisksDrive      *iface,
       goto out;
     }
 
+  if (g_str_has_prefix (g_udev_device_get_name (device), "mmcblk"))
+    {
+      udisks_drive_set_connection_bus (iface, "sdio");
+      g_object_unref (parent);
+      goto out;
+    }
+
  out:
   ;
 }
@@ -327,6 +334,7 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
   gboolean media_available;
   gboolean media_change_detected;
   gboolean is_pc_floppy_drive = FALSE;
+  gboolean removable_hint = FALSE;
 
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
   if (device == NULL)
@@ -482,6 +490,13 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
   set_media (iface, device);
   set_rotation_rate (iface, device);
   set_connection_bus (iface, device);
+
+  if (udisks_drive_get_media_removable (iface) ||
+      g_strcmp0 (udisks_drive_get_connection_bus (iface), "usb") == 0 ||
+      g_strcmp0 (udisks_drive_get_connection_bus (iface), "sdio") == 0 ||
+      g_strcmp0 (udisks_drive_get_connection_bus (iface), "ieee1394") == 0)
+    removable_hint = TRUE;
+  udisks_drive_set_removable (iface, removable_hint);
 
   /* need to use this lame hack until libudev's get_usec_since_initialized() works
    * for devices received via the netlink socket
