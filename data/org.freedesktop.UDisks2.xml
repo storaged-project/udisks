@@ -943,6 +943,15 @@
       <arg name="flags" direction="in" type="t"/>
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
+
+    <!-- Delete:
+         @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+         Deletes the partition.
+    -->
+    <method name="Delete">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
   </interface>
 
   <!-- ********************************************************************** -->

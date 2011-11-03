@@ -585,10 +585,88 @@ handle_set_type (UDisksPartition        *partition,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* runs in thread dedicated to handling @invocation */
+static gboolean
+handle_delete (UDisksPartition        *partition,
+               GDBusMethodInvocation  *invocation,
+               GVariant               *options)
+{
+  const gchar *action_id = NULL;
+  UDisksBlock *block = NULL;
+  UDisksObject *object = NULL;
+  UDisksDaemon *daemon = NULL;
+  gchar *error_message = NULL;
+  gchar *escaped_device = NULL;
+  gchar *escaped_type = NULL;
+  UDisksObject *partition_table_object = NULL;
+  UDisksPartitionTable *partition_table = NULL;
+  UDisksBlock *partition_table_block = NULL;
+  gchar *command_line = NULL;
+
+  object = g_object_ref (UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (partition))));
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  block = udisks_object_get_block (object);
+
+  partition_table_object = udisks_daemon_find_object (daemon, udisks_partition_get_table (partition));
+  partition_table = udisks_object_get_partition_table (partition_table_object);
+  partition_table_block = udisks_object_get_block (partition_table_object);
+
+  action_id = "org.freedesktop.udisks2.modify-device";
+  if (udisks_block_get_hint_system (block))
+    action_id = "org.freedesktop.udisks2.modify-device-system";
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    object,
+                                                    action_id,
+                                                    options,
+                                                    N_("Authentication is required to delete the partition $(udisks2.device)"),
+                                                    invocation))
+    goto out;
+
+  escaped_device = g_strescape (udisks_block_get_device (partition_table_block), NULL);
+
+  if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              NULL, /* GCancellable */
+                                              0,    /* uid_t run_as_uid */
+                                              0,    /* uid_t run_as_euid */
+                                              NULL, /* gint *out_status */
+                                              &error_message,
+                                              NULL,  /* input_string */
+                                              "parted --script \"%s\" \"rm %d\"",
+                                              escaped_device,
+                                              udisks_partition_get_number (partition)))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error deleting partition %s: %s",
+                                             udisks_block_get_device (block),
+                                             error_message);
+      goto out;
+    }
+
+  udisks_partition_complete_set_type (partition, invocation);
+
+ out:
+  g_free (command_line);
+  g_free (escaped_type);
+  g_free (escaped_device);
+  g_free (error_message);
+  g_clear_object (&object);
+  g_clear_object (&block);
+  g_clear_object (&partition_table_object);
+  g_clear_object (&partition_table);
+  g_clear_object (&partition_table_block);
+
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 partition_iface_init (UDisksPartitionIface *iface)
 {
   iface->handle_set_flags = handle_set_flags;
   iface->handle_set_name  = handle_set_name;
   iface->handle_set_type  = handle_set_type;
+  iface->handle_delete    = handle_delete;
 }
