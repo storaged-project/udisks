@@ -597,7 +597,6 @@ handle_delete (UDisksPartition        *partition,
   UDisksDaemon *daemon = NULL;
   gchar *error_message = NULL;
   gchar *escaped_device = NULL;
-  gchar *escaped_type = NULL;
   UDisksObject *partition_table_object = NULL;
   UDisksPartitionTable *partition_table = NULL;
   UDisksBlock *partition_table_block = NULL;
@@ -644,11 +643,10 @@ handle_delete (UDisksPartition        *partition,
       goto out;
     }
 
-  udisks_partition_complete_set_type (partition, invocation);
+  udisks_partition_complete_delete (partition, invocation);
 
  out:
   g_free (command_line);
-  g_free (escaped_type);
   g_free (escaped_device);
   g_free (error_message);
   g_clear_object (&object);
