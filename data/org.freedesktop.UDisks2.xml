@@ -828,6 +828,37 @@
          scheme is unknown.
     -->
     <property name="Type" type="s" access="read"/>
+
+    <!--
+        CreatePartition:
+        @offset: The desired offset where the partition should be created, in bytes.
+        @size: The desired size of the partition, in bytes.
+        @type: The type of partition to create (cf. the #org.freedesktop.UDisks2.Partition:Type property) or blank to use the default for the partition table type and OS.
+        @name: The name for the new partition or blank if the partition table do not support names.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @created_partition: An object path to the created block device object implementing the #org.freedesktop.UDisks2.Partition interface.
+
+        Creates a new partition.
+
+        Note that the created partition won't necessarily be created
+        at the exact @offset due to disk geometry and other alignment
+        constraints. The new partition may also end up being slightly
+        larger or smaller than the requested @size bytes for the same
+        reasons.
+
+        The newly created partition will be wiped of known filesystem
+        signatures using the
+        <citerefentry><refentrytitle>wipefs</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+        command.
+    -->
+    <method name="CreatePartition">
+      <arg name="offset" direction="in" type="t"/>
+      <arg name="size" direction="in" type="t"/>
+      <arg name="type" direction="in" type="s"/>
+      <arg name="name" direction="in" type="s"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="created_partition" direction="out" type="o"/>
+    </method>
   </interface>
 
   <!-- ********************************************************************** -->
