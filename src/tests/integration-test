@@ -57,7 +57,7 @@ import signal
 import argparse
 import re
 from glob import glob
-from gi.repository import GLib, UDisks
+from gi.repository import GLib, Gio, UDisks
 
 #GI_TYPELIB_PATH=udisks LD_LIBRARY_PATH=udisks/.libs
 VDEV_SIZE = 300000000 # size of virtual test device
@@ -421,6 +421,76 @@ class Manager(UDisksTestCase):
         '''daemon version'''
 
         self.assertTrue(self.manager.get_property('version')[0].isdigit())
+
+    def test_loop_rw(self):
+        '''loop device R/W'''
+
+        with tempfile.NamedTemporaryFile() as f:
+            f.truncate(100000000)
+            fd_list = Gio.UnixFDList.new_from_array([f.fileno()])
+
+            (path, out_fd_list) = self.manager.call_loop_setup_sync(
+                GLib.Variant('h', 0), # fd index
+                GLib.Variant('a{sv}', {}),
+                fd_list,
+                None)
+            self.client.settle()
+
+            obj = self.client.get_object(path)
+            loop = obj.get_property('loop')
+            block = obj.get_property('block')
+            self.assertNotEqual(block, None)
+            self.assertNotEqual(loop, None)
+            self.assertEqual(obj.get_property('filesystem'), None)
+
+            try:
+                self.assertEqual(loop.get_property('backing-file'), f.name)
+
+                options = GLib.Variant('a{sv}', {'label': GLib.Variant('s', 'foo')})
+                block.call_format_sync('ext2', options, None)
+                self.client.settle()
+                self.assertNotEqual(obj.get_property('filesystem'), None)
+
+                self.assertEqual(block.get_property('id-label'), 'foo')
+                self.assertEqual(block.get_property('id-usage'), 'filesystem')
+                self.assertEqual(block.get_property('id-type'), 'ext2')
+            finally:
+                loop.call_delete_sync(GLib.Variant('a{sv}', {}), None)
+
+    def test_loop_ro(self):
+        '''loop device R/O'''
+
+        with tempfile.NamedTemporaryFile() as f:
+            f.truncate(100000000)
+            fd_list = Gio.UnixFDList.new_from_array([f.fileno()])
+
+            (path, out_fd_list) = self.manager.call_loop_setup_sync(
+                GLib.Variant('h', 0), # fd index
+                GLib.Variant('a{sv}', {'read-only': GLib.Variant('b', True)}),
+                fd_list,
+                None)
+            self.client.settle()
+
+            obj = self.client.get_object(path)
+            loop = obj.get_property('loop')
+            block = obj.get_property('block')
+            self.assertNotEqual(block, None)
+            self.assertNotEqual(loop, None)
+            self.assertEqual(obj.get_property('filesystem'), None)
+
+            try:
+                self.assertEqual(loop.get_property('backing-file'), f.name)
+
+                # can't format due to permission error
+                self.assertRaises(GLib.GError, block.call_format_sync, 'ext2',
+                        GLib.Variant('a{sv}', {}), None)
+
+                self.assertEqual(block.get_property('id-label'), '')
+                self.assertEqual(block.get_property('id-usage'), '')
+                self.assertEqual(block.get_property('id-type'), '')
+            finally:
+                self.client.settle()
+                loop.call_delete_sync(GLib.Variant('a{sv}', {}), None)
 
 # ----------------------------------------------------------------------------
 
