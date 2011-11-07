@@ -642,6 +642,8 @@ handle_delete (UDisksPartition        *partition,
                                              error_message);
       goto out;
     }
+  /* this is sometimes needed because parted(8) does not generate the uevent itself */
+  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (partition_table_object));
 
   udisks_partition_complete_delete (partition, invocation);
 
