@@ -74,6 +74,7 @@ BROKEN_PERMISSIONS_FS = ['ntfs']
 # race conditions can be fixed.
 workaround_syncs = False
 
+no_options = GLib.Variant('a{sv}', {})
 
 # ----------------------------------------------------------------------------
 
@@ -431,7 +432,7 @@ class Manager(UDisksTestCase):
 
             (path, out_fd_list) = self.manager.call_loop_setup_sync(
                 GLib.Variant('h', 0), # fd index
-                GLib.Variant('a{sv}', {}),
+                no_options,
                 fd_list,
                 None)
             self.client.settle()
@@ -455,7 +456,7 @@ class Manager(UDisksTestCase):
                 self.assertEqual(block.get_property('id-usage'), 'filesystem')
                 self.assertEqual(block.get_property('id-type'), 'ext2')
             finally:
-                loop.call_delete_sync(GLib.Variant('a{sv}', {}), None)
+                loop.call_delete_sync(no_options, None)
 
     def test_loop_ro(self):
         '''loop device R/O'''
@@ -483,14 +484,14 @@ class Manager(UDisksTestCase):
 
                 # can't format due to permission error
                 self.assertRaises(GLib.GError, block.call_format_sync, 'ext2',
-                        GLib.Variant('a{sv}', {}), None)
+                        no_options, None)
 
                 self.assertEqual(block.get_property('id-label'), '')
                 self.assertEqual(block.get_property('id-usage'), '')
                 self.assertEqual(block.get_property('id-type'), '')
             finally:
                 self.client.settle()
-                loop.call_delete_sync(GLib.Variant('a{sv}', {}), None)
+                loop.call_delete_sync(no_options, None)
 
 # ----------------------------------------------------------------------------
 
@@ -599,7 +600,7 @@ class FS(UDisksTestCase):
         self.assertEqual(block.get_property('id-label'), 'foo')
         self.assertNotEqual(self.udisks_filesystem(), None)
 
-        self.fs_create(None, 'empty', GLib.Variant('a{sv}', {}))
+        self.fs_create(None, 'empty', no_options)
 
         self.assertEqual(block.get_property('id-usage'), '')
         self.assertEqual(block.get_property('id-type'), '')
@@ -610,7 +611,7 @@ class FS(UDisksTestCase):
         '''Format() with unknown type'''
 
         try:
-            self.fs_create(None, 'bogus', GLib.Variant('a{sv}', {}))
+            self.fs_create(None, 'bogus', no_options)
             self.fail('Expected failure for bogus file system')
         except GLib.GError as e:
             self.assertTrue('UDisks.Error.NotSupported' in e.message)
@@ -632,7 +633,7 @@ class FS(UDisksTestCase):
         # create a fs and mount it
         self.mkfs('ext4', 'udiskstest')
         fs = self.udisks_filesystem()
-        mount_path = fs.call_mount_sync(GLib.Variant('a{sv}', {}), None)
+        mount_path = fs.call_mount_sync(no_options, None)
         self.assertEqual(mount_path, '/media/udiskstest')
         self.assertTrue(self.is_mountpoint('/media/udiskstest'))
 
@@ -648,13 +649,13 @@ class FS(UDisksTestCase):
         fs = self.udisks_filesystem()
         self.assertEqual(fs.get_property('mount-points'), [])
 
-        mount_path = fs.call_mount_sync(GLib.Variant('a{sv}', {}), None)
+        mount_path = fs.call_mount_sync(no_options, None)
         self.assertTrue(self.is_mountpoint('/media/udiskstest'))
         self.assertEqual(mount_path, '/media/udiskstest')
         self.client.settle()
         self.assertEqual(fs.get_property('mount-points'), ['/media/udiskstest'])
 
-        self.retry_busy(fs.call_unmount_sync, GLib.Variant('a{sv}', {}), None)
+        self.retry_busy(fs.call_unmount_sync, no_options, None)
         self.client.settle()
         self.assertEqual(fs.get_property('mount-points'), [])
 
@@ -667,7 +668,7 @@ class FS(UDisksTestCase):
 
             # check correct D-Bus exception
             try:
-                self.fs_create(None, type, GLib.Variant('a{sv}', {}))
+                self.fs_create(None, type, no_options)
                 self.fail('Expected failure for missing mkfs.' + type)
             except GLib.GError as e:
                 self.assertTrue('UDisks.Error.Failed' in e.message)
@@ -755,7 +756,7 @@ class FS(UDisksTestCase):
         if label is not None:
             options = GLib.Variant('a{sv}', {'label': GLib.Variant('s', label)})
         else:
-            options = GLib.Variant('a{sv}', {})
+            options = no_options
         self.fs_create(None, type, options)
 
         # properties
@@ -781,7 +782,7 @@ class FS(UDisksTestCase):
         self.assertEqual(fs.get_property('mount-points'), [])
 
         # mount
-        mount_path = fs.call_mount_sync(GLib.Variant('a{sv}', {}), None)
+        mount_path = fs.call_mount_sync(no_options, None)
 
         if label:
             self.assertEqual(mount_path, '/media/' + label)
@@ -799,7 +800,7 @@ class FS(UDisksTestCase):
         self._do_file_perms_checks(type, mount_path)
 
         # unmount
-        self.retry_busy(fs.call_unmount_sync, GLib.Variant('a{sv}', {}), None)
+        self.retry_busy(fs.call_unmount_sync, no_options, None)
         self.assertFalse(os.path.exists(mount_path), 'mount point was not removed')
         self.assertEqual(fs.get_property('mount-points'), [mount_path])
 
@@ -820,10 +821,10 @@ class FS(UDisksTestCase):
         if type == 'vfat':
             # VFAT does not support some characters
             self.assertRaises(GLib.GError, fs.call_set_label_sync, l, 
-                    GLib.Variant('a{sv}', {}), None)
+                    no_options, None)
             l = "n@a$me"
         try:
-            fs.call_set_label_sync(l, GLib.Variant('a{sv}', {}), None)
+            fs.call_set_label_sync(l, no_options, None)
         except GLib.GError as e:
             if 'UDisks.Error.NotSupported' in e.message:
                 # these fses are known to not support relabeling
@@ -846,7 +847,7 @@ class FS(UDisksTestCase):
                 self.assertEqual(block.get_property('id-label'), l)
 
             # test setting empty label
-            fs.call_set_label_sync('', GLib.Variant('a{sv}', {}), None)
+            fs.call_set_label_sync('', no_options, None)
             self.sync_workaround()
             self.assertEqual(self.blkid().get('ID_FS_LABEL_ENC', ''), '')
             self.assertEqual(block.get_property('id-label'), '')
@@ -944,7 +945,7 @@ class Luks(UDisksTestCase):
             encrypted = crypt_obj.get_property('encrypted')
             if encrypted:
                 try:
-                    encrypted.call_lock_sync(GLib.Variant('a{sv}', {}), None)
+                    encrypted.call_lock_sync(no_options, None)
                     sys.stderr.write('[cleanup lock] ')
                 except GLib.GError:
                     pass
@@ -974,16 +975,16 @@ class Luks(UDisksTestCase):
 
             # check whether we can lock/unlock; we also need this to get the
             # cleartext device
-            encrypted.call_lock_sync(GLib.Variant('a{sv}', {}), None)
+            encrypted.call_lock_sync(no_options, None)
             self.assertRaises(GLib.GError, encrypted.call_lock_sync, 
-                    GLib.Variant('a{sv}', {}), None)
+                    no_options, None)
             
             # wrong password
             self.assertRaises(GLib.GError, encrypted.call_unlock_sync, 
-                    'h4ckpassword', GLib.Variant('a{sv}', {}), None)
+                    'h4ckpassword', no_options, None)
             # right password
             clear_path = encrypted.call_unlock_sync('s3kr1t', 
-                    GLib.Variant('a{sv}', {}), None)
+                    no_options, None)
 
             # check cleartext device info
             clear_obj = self.client.get_object(clear_path)
@@ -1010,7 +1011,7 @@ class Luks(UDisksTestCase):
 
         finally:
             # tear down cleartext device
-            encrypted.call_lock_sync(GLib.Variant('a{sv}', {}), None)
+            encrypted.call_lock_sync(no_options, None)
             self.assertFalse(os.path.exists(clear_dev))
 
     def test_luks_mount(self):
@@ -1020,14 +1021,14 @@ class Luks(UDisksTestCase):
         encrypted = crypt_obj.get_property('encrypted')
 
         path = encrypted.call_unlock_sync('s3kr1t', 
-                GLib.Variant('a{sv}', {}), None)
+                no_options, None)
         self.client.settle()
         obj = self.client.get_object(path)
         fs = obj.get_property('filesystem')
         self.assertNotEqual(fs, None)
 
         # mount
-        mount_path = fs.call_mount_sync(GLib.Variant('a{sv}', {}), None)
+        mount_path = fs.call_mount_sync(no_options, None)
 
         try:
             self.assertEqual(mount_path, '/media/treasure')
@@ -1037,19 +1038,19 @@ class Luks(UDisksTestCase):
 
             # can't lock, busy
             try:
-                encrypted.call_lock_sync(GLib.Variant('a{sv}', {}), None)
+                encrypted.call_lock_sync(no_options, None)
                 self.fail('Lock() unexpectedly succeeded on mounted file system')
             except GLib.GError as e:
                 self.assertTrue('UDisks.Error.Failed' in e.message)
         finally:
             # umount
-            self.retry_busy(fs.call_unmount_sync, GLib.Variant('a{sv}', {}), None)
+            self.retry_busy(fs.call_unmount_sync, no_options, None)
             self.client.settle()
             self.assertFalse(os.path.exists(mount_path), 'mount point was not removed')
             self.assertEqual(fs.get_property('mount-points'), [])
 
             # lock
-            encrypted.call_lock_sync(GLib.Variant('a{sv}', {}), None)
+            encrypted.call_lock_sync(no_options, None)
             self.client.settle()
             self.assertEqual(self.client.get_object(path), None)
 
@@ -1059,10 +1060,10 @@ class Luks(UDisksTestCase):
         # unlock and mount it
         crypt_obj = self.client.get_object(self.udisks_block().get_object_path())
         path = crypt_obj.get_property('encrypted').call_unlock_sync('s3kr1t', 
-                GLib.Variant('a{sv}', {}), None)
+                no_options, None)
         try:
             fs = self.client.get_object(path).get_property('filesystem')
-            mount_path = fs.call_mount_sync(GLib.Variant('a{sv}', {}), None)
+            mount_path = fs.call_mount_sync(no_options, None)
             self.assertEqual(mount_path, '/media/treasure')
 
             # removal should clean up mounts
@@ -1074,21 +1075,21 @@ class Luks(UDisksTestCase):
             self.readd_devices()
             crypt_obj = self.client.get_object(self.udisks_block().get_object_path())
             path = crypt_obj.get_property('encrypted').call_unlock_sync('s3kr1t', 
-                    GLib.Variant('a{sv}', {}), None)
+                    no_options, None)
             self.client.settle()
             fs = self.client.get_object(path).get_property('filesystem')
-            mount_path = fs.call_mount_sync(GLib.Variant('a{sv}', {}), None)
+            mount_path = fs.call_mount_sync(no_options, None)
             self.assertEqual(mount_path, '/media/treasure')
 
             # umount
-            self.retry_busy(fs.call_unmount_sync, GLib.Variant('a{sv}', {}), None)
+            self.retry_busy(fs.call_unmount_sync, no_options, None)
             self.client.settle()
             self.assertFalse(os.path.exists(mount_path), 'mount point was not removed')
             self.assertEqual(fs.get_property('mount-points'), [])
         finally:
             # lock
             crypt_obj.get_property('encrypted').call_lock_sync(
-                    GLib.Variant('a{sv}', {}), None)
+                    no_options, None)
             self.client.settle()
             self.assertEqual(self.client.get_object(path), None)
 
