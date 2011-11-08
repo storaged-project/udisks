@@ -94,19 +94,48 @@ gchar              *udisks_client_get_id_for_display (UDisksClient *client,
                                                       gboolean      long_string);
 
 
-const gchar       **udisks_client_get_partition_types                  (UDisksClient  *client,
+const gchar       **udisks_client_get_partition_table_subtypes         (UDisksClient  *client,
                                                                         const gchar   *partition_table_type);
 
-const gchar        *udisks_client_get_partition_table_type_for_display (UDisksClient  *client,
-                                                                        const gchar   *partition_table_type);
+GList              *udisks_client_get_partition_type_infos             (UDisksClient  *client,
+                                                                        const gchar   *partition_table_type,
+                                                                        const gchar   *partition_table_subtype);
 
 const gchar        *udisks_client_get_partition_type_for_display       (UDisksClient  *client,
                                                                         const gchar   *partition_table_type,
                                                                         const gchar   *partition_type);
 
+const gchar        *udisks_client_get_partition_table_type_for_display (UDisksClient  *client,
+                                                                        const gchar   *partition_table_type);
 
+const gchar        *udisks_client_get_partition_table_subtype_for_display (UDisksClient  *client,
+                                                                           const gchar   *partition_table_type,
+                                                                           const gchar   *partition_table_subtype);
 
+/**
+ * UDisksPartitionTypeInfo:
+ * @table_type: A partition table type e.g. 'dos' or 'gpt'
+ * @table_subtype: A partition table sub-type.
+ * @type: A partition type.
+ *
+ * Detailed information about a partition type.
+ *
+ * @table_subtype is used to break the set of partition types for
+ * @table_type into a logical subsets. It is typically only used in
+ * user interfaces where the partition type is selected.
+ *
+ * This struct may grow in the future.
+ */
+struct _UDisksPartitionTypeInfo
+{
+  /*< public >*/
+  const gchar *table_type;
+  const gchar *table_subtype;
+  const gchar *type;
+};
 
+GType                udisks_partition_type_info_get_type   (void) G_GNUC_CONST;
+void                 udisks_partition_type_info_free       (UDisksPartitionTypeInfo  *info);
 
 G_END_DECLS
 

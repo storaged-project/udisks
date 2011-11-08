@@ -109,6 +109,8 @@ static void maybe_emit_changed_now (UDisksClient *client);
 static void init_interface_proxy (UDisksClient *client,
                                   GDBusProxy   *proxy);
 
+static UDisksPartitionTypeInfo *udisks_partition_type_info_new (void);
+
 G_DEFINE_TYPE_WITH_CODE (UDisksClient, udisks_client, G_TYPE_OBJECT,
                          G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, initable_iface_init)
                          G_IMPLEMENT_INTERFACE (G_TYPE_ASYNC_INITABLE, async_initable_iface_init)
@@ -1939,7 +1941,7 @@ udisks_client_get_partition_table_type_for_display (UDisksClient  *client,
     {
       if (g_strcmp0 (known_partition_table_types[n].type, partition_table_type) == 0)
         {
-          ret = g_strdup (_(known_partition_table_types[n].name));
+          ret = _(known_partition_table_types[n].name);
           goto out;
         }
     }
@@ -1952,156 +1954,251 @@ udisks_client_get_partition_table_type_for_display (UDisksClient  *client,
 
 const static struct
 {
+  const gchar *type;
+  const gchar *subtype;
+  const gchar *name;
+} known_partition_table_subtypes[] =
+{
+  {"dos", "generic",   N_("Generic")},
+  {"dos", "linux",     N_("Linux")},
+  {"dos", "microsoft", N_("Windows")},
+  {"dos", "other",     N_("Other")},
+
+  {"gpt", "generic",   N_("Generic")},
+  {"gpt", "linux",     N_("Linux")},
+  {"gpt", "microsoft", N_("Windows")},
+  {"gpt", "apple",     N_("Mac OS X")},
+  {"gpt", "other",     N_("Other")},
+
+  {"apm", "apple",     N_("Mac OS X")},
+  {"apm", "microsoft", N_("Windows")},
+  {NULL, NULL}
+};
+
+/**
+ * udisks_client_get_partition_table_subtype_for_display:
+ * @client: A #UDisksClient.
+ * @partition_table_type: A partition table type e.g. 'dos' or 'gpt'.
+ * @partition_table_subtype: A partition table type e.g. 'dos' or 'gpt'.
+ *
+ * Gets a human readable localized string for @partition_table_type and @partition_table_subtype.
+ *
+ * Returns: A description of @partition_table_type and @partition_table_subtype or %NULL.
+ */
+const gchar *
+udisks_client_get_partition_table_subtype_for_display (UDisksClient  *client,
+                                                       const gchar   *partition_table_type,
+                                                       const gchar   *partition_table_subtype)
+{
+  const gchar *ret = NULL;
+  guint n;
+
+  for (n = 0; known_partition_table_subtypes[n].type != NULL; n++)
+    {
+      if (g_strcmp0 (known_partition_table_subtypes[n].type,    partition_table_type) == 0 &&
+          g_strcmp0 (known_partition_table_subtypes[n].subtype, partition_table_subtype) == 0)
+        {
+          ret = _(known_partition_table_subtypes[n].name);
+          goto out;
+        }
+    }
+
+ out:
+  return ret;
+}
+
+/**
+ * udisks_client_get_partition_table_subtypes:
+ * @client: A #UDisksClient.
+ * @partition_table_type: A partition table type e.g. 'dos' or 'gpt'.
+ *
+ * Gets all known subtypes for @partition_table_type.
+ *
+ * Returns: (transfer container): A %NULL-terminated array of
+ * strings. Only the container should be freed with g_free().
+ */
+const gchar **
+udisks_client_get_partition_table_subtypes (UDisksClient   *client,
+                                            const gchar    *partition_table_type)
+{
+  guint n;
+  GPtrArray *p;
+
+  p = g_ptr_array_new();
+  for (n = 0; known_partition_table_subtypes[n].type != NULL; n++)
+    {
+      if (g_strcmp0 (known_partition_table_subtypes[n].type, partition_table_type) == 0)
+        {
+          g_ptr_array_add (p, (gpointer) known_partition_table_subtypes[n].subtype);
+        }
+    }
+  g_ptr_array_add (p, NULL);
+
+  return (const gchar **) g_ptr_array_free (p, FALSE);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+const static struct
+{
   const gchar *table_type;
+  const gchar *table_subtype;
   const gchar *type;
   const gchar *name;
 } known_partition_types[] =
 {
   /* see http://en.wikipedia.org/wiki/GUID_Partition_Table */
 
-  /* Linux */
-  {"gpt", "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7", N_("Basic Data")}, /* same as ms bdp */
-  {"gpt", "a19d880f-05fc-4d3b-a006-743f0f84911e", N_("Linux RAID")},
-  {"gpt", "0657fd6d-a4ab-43c4-84e5-0933c84b4f4f", N_("Linux Swap")},
-  {"gpt", "e6d6d379-f507-44c2-a23c-238f2a3df928", N_("Linux LVM")},
-  {"gpt", "8da63339-0007-60c0-c436-083ac8230908", N_("Linux Reserved")},
   /* Not associated with any OS */
-  {"gpt", "024dee41-33e7-11d3-9d69-0008c781f39f", N_("MBR Partition Scheme")},
-  {"gpt", "c12a7328-f81f-11d2-ba4b-00a0c93ec93b", N_("EFI System")},
-  {"gpt", "21686148-6449-6e6f-744e-656564454649", N_("BIOS Boot")},
+  {"gpt", "generic",   "024dee41-33e7-11d3-9d69-0008c781f39f", N_("MBR Partition Scheme")},
+  {"gpt", "generic",   "c12a7328-f81f-11d2-ba4b-00a0c93ec93b", N_("EFI System")},
+  {"gpt", "generic",   "21686148-6449-6e6f-744e-656564454649", N_("BIOS Boot")},
+  /* Linux */
+  {"gpt", "linux",     "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7", N_("Basic Data")}, /* same as ms bdp */
+  {"gpt", "linux",     "a19d880f-05fc-4d3b-a006-743f0f84911e", N_("Linux RAID")},
+  {"gpt", "linux",     "0657fd6d-a4ab-43c4-84e5-0933c84b4f4f", N_("Linux Swap")},
+  {"gpt", "linux",     "e6d6d379-f507-44c2-a23c-238f2a3df928", N_("Linux LVM")},
+  {"gpt", "linux",     "8da63339-0007-60c0-c436-083ac8230908", N_("Linux Reserved")},
   /* Microsoft */
-  {"gpt", "e3c9e316-0b5c-4db8-817d-f92df00215ae", N_("Microsoft Reserved")},
-  {"gpt", "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7", N_("Microsoft Basic Data")}, /* same as Linux Basic Data */
-  {"gpt", "5808c8aa-7e8f-42e0-85d2-e1e90434cfb3", N_("Microsoft LDM metadata")},
-  {"gpt", "af9b60a0-1431-4f62-bc68-3311714a69ad", N_("Microsoft LDM data")},
-  {"gpt", "de94bba4-06d1-4d40-a16a-bfd50179d6ac", N_("Microsoft Windows Recovery Environment")},
-  /* HP-UX */
-  {"gpt", "75894c1e-3aeb-11d3-b7c1-7b03a0000000", N_("HP-UX Data")},
-  {"gpt", "e2a1e728-32e3-11d6-a682-7b03a0000000", N_("HP-UX Service")},
-  /* FreeBSD */
-  {"gpt", "83bd6b9d-7f41-11dc-be0b-001560b84f0f", N_("FreeBSD Boot")},
-  {"gpt", "516e7cb4-6ecf-11d6-8ff8-00022d09712b", N_("FreeBSD Data")},
-  {"gpt", "516e7cb5-6ecf-11d6-8ff8-00022d09712b", N_("FreeBSD Swap")},
-  {"gpt", "516e7cb6-6ecf-11d6-8ff8-00022d09712b", N_("FreeBSD UFS")},
-  {"gpt", "516e7cb8-6ecf-11d6-8ff8-00022d09712b", N_("FreeBSD Vinum")},
-  {"gpt", "516e7cba-6ecf-11d6-8ff8-00022d09712b", N_("FreeBSD ZFS")},
-  /* Solaris */
-  {"gpt", "6a82cb45-1dd2-11b2-99a6-080020736631", N_("Solaris Boot")},
-  {"gpt", "6a85cf4d-1dd2-11b2-99a6-080020736631", N_("Solaris Root")},
-  {"gpt", "6a87c46f-1dd2-11b2-99a6-080020736631", N_("Solaris Swap")},
-  {"gpt", "6a8b642b-1dd2-11b2-99a6-080020736631", N_("Solaris Backup")},
-  {"gpt", "6a898cc3-1dd2-11b2-99a6-080020736631", N_("Solaris /usr")}, /* same as Apple ZFS */
-  {"gpt", "6a8ef2e9-1dd2-11b2-99a6-080020736631", N_("Solaris /var")},
-  {"gpt", "6a90ba39-1dd2-11b2-99a6-080020736631", N_("Solaris /home")},
-  {"gpt", "6a9283a5-1dd2-11b2-99a6-080020736631", N_("Solaris Alternate Sector")},
-  {"gpt", "6a945a3b-1dd2-11b2-99a6-080020736631", N_("Solaris Reserved")},
-  {"gpt", "6a9630d1-1dd2-11b2-99a6-080020736631", N_("Solaris Reserved (2)")},
-  {"gpt", "6a980767-1dd2-11b2-99a6-080020736631", N_("Solaris Reserved (3)")},
-  {"gpt", "6a96237f-1dd2-11b2-99a6-080020736631", N_("Solaris Reserved (4)")},
-  {"gpt", "6a8d2ac7-1dd2-11b2-99a6-080020736631", N_("Solaris Reserved (5)")},
+  {"gpt", "microsoft", "e3c9e316-0b5c-4db8-817d-f92df00215ae", N_("Microsoft Reserved")},
+  {"gpt", "microsoft", "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7", N_("Microsoft Basic Data")}, /* same as Linux Basic Data */
+  {"gpt", "microsoft", "5808c8aa-7e8f-42e0-85d2-e1e90434cfb3", N_("Microsoft LDM metadata")},
+  {"gpt", "microsoft", "af9b60a0-1431-4f62-bc68-3311714a69ad", N_("Microsoft LDM data")},
+  {"gpt", "microsoft", "de94bba4-06d1-4d40-a16a-bfd50179d6ac", N_("Microsoft Windows Recovery Environment")},
   /* Apple OS X */
-  {"gpt", "48465300-0000-11aa-aa11-00306543ecac", N_("Apple HFS/HFS+")},
-  {"gpt", "55465300-0000-11aa-aa11-00306543ecac", N_("Apple UFS")},
-  {"gpt", "6a898cc3-1dd2-11b2-99a6-080020736631", N_("Apple ZFS")}, /* same as Solaris /usr */
-  {"gpt", "52414944-0000-11aa-aa11-00306543ecac", N_("Apple RAID")},
-  {"gpt", "52414944-5f4f-11aa-aa11-00306543ecac", N_("Apple RAID (offline)")},
-  {"gpt", "426f6f74-0000-11aa-aa11-00306543ecac", N_("Apple Boot")},
-  {"gpt", "4c616265-6c00-11aa-aa11-00306543ecac", N_("Apple Label")},
-  {"gpt", "5265636f-7665-11aa-aa11-00306543ecac", N_("Apple TV Recovery")},
+  {"gpt", "apple",     "48465300-0000-11aa-aa11-00306543ecac", N_("Apple HFS/HFS+")},
+  {"gpt", "apple",     "55465300-0000-11aa-aa11-00306543ecac", N_("Apple UFS")},
+  {"gpt", "apple",     "6a898cc3-1dd2-11b2-99a6-080020736631", N_("Apple ZFS")}, /* same as Solaris /usr */
+  {"gpt", "apple",     "52414944-0000-11aa-aa11-00306543ecac", N_("Apple RAID")},
+  {"gpt", "apple",     "52414944-5f4f-11aa-aa11-00306543ecac", N_("Apple RAID (offline)")},
+  {"gpt", "apple",     "426f6f74-0000-11aa-aa11-00306543ecac", N_("Apple Boot")},
+  {"gpt", "apple",     "4c616265-6c00-11aa-aa11-00306543ecac", N_("Apple Label")},
+  {"gpt", "apple",     "5265636f-7665-11aa-aa11-00306543ecac", N_("Apple TV Recovery")},
+  /* HP-UX */
+  {"gpt", "other",     "75894c1e-3aeb-11d3-b7c1-7b03a0000000", N_("HP-UX Data")},
+  {"gpt", "other",     "e2a1e728-32e3-11d6-a682-7b03a0000000", N_("HP-UX Service")},
+  /* FreeBSD */
+  {"gpt", "other",     "83bd6b9d-7f41-11dc-be0b-001560b84f0f", N_("FreeBSD Boot")},
+  {"gpt", "other",     "516e7cb4-6ecf-11d6-8ff8-00022d09712b", N_("FreeBSD Data")},
+  {"gpt", "other",     "516e7cb5-6ecf-11d6-8ff8-00022d09712b", N_("FreeBSD Swap")},
+  {"gpt", "other",     "516e7cb6-6ecf-11d6-8ff8-00022d09712b", N_("FreeBSD UFS")},
+  {"gpt", "other",     "516e7cb8-6ecf-11d6-8ff8-00022d09712b", N_("FreeBSD Vinum")},
+  {"gpt", "other",     "516e7cba-6ecf-11d6-8ff8-00022d09712b", N_("FreeBSD ZFS")},
+  /* Solaris */
+  {"gpt", "other",     "6a82cb45-1dd2-11b2-99a6-080020736631", N_("Solaris Boot")},
+  {"gpt", "other",     "6a85cf4d-1dd2-11b2-99a6-080020736631", N_("Solaris Root")},
+  {"gpt", "other",     "6a87c46f-1dd2-11b2-99a6-080020736631", N_("Solaris Swap")},
+  {"gpt", "other",     "6a8b642b-1dd2-11b2-99a6-080020736631", N_("Solaris Backup")},
+  {"gpt", "other",     "6a898cc3-1dd2-11b2-99a6-080020736631", N_("Solaris /usr")}, /* same as Apple ZFS */
+  {"gpt", "other",     "6a8ef2e9-1dd2-11b2-99a6-080020736631", N_("Solaris /var")},
+  {"gpt", "other",     "6a90ba39-1dd2-11b2-99a6-080020736631", N_("Solaris /home")},
+  {"gpt", "other",     "6a9283a5-1dd2-11b2-99a6-080020736631", N_("Solaris Alternate Sector")},
+  {"gpt", "other",     "6a945a3b-1dd2-11b2-99a6-080020736631", N_("Solaris Reserved")},
+  {"gpt", "other",     "6a9630d1-1dd2-11b2-99a6-080020736631", N_("Solaris Reserved (2)")},
+  {"gpt", "other",     "6a980767-1dd2-11b2-99a6-080020736631", N_("Solaris Reserved (3)")},
+  {"gpt", "other",     "6a96237f-1dd2-11b2-99a6-080020736631", N_("Solaris Reserved (4)")},
+  {"gpt", "other",     "6a8d2ac7-1dd2-11b2-99a6-080020736631", N_("Solaris Reserved (5)")},
   /* NetBSD */
-  {"gpt", "49f48d32-b10e-11dc-b99b-0019d1879648", N_("NetBSD Swap")},
-  {"gpt", "49f48d5a-b10e-11dc-b99b-0019d1879648", N_("NetBSD FFS")},
-  {"gpt", "49f48d82-b10e-11dc-b99b-0019d1879648", N_("NetBSD LFS")},
-  {"gpt", "49f48daa-b10e-11dc-b99b-0019d1879648", N_("NetBSD RAID")},
-  {"gpt", "2db519c4-b10f-11dc-b99b-0019d1879648", N_("NetBSD Concatenated")},
-  {"gpt", "2db519ec-b10f-11dc-b99b-0019d1879648", N_("NetBSD Encrypted")},
+  {"gpt", "other",     "49f48d32-b10e-11dc-b99b-0019d1879648", N_("NetBSD Swap")},
+  {"gpt", "other",     "49f48d5a-b10e-11dc-b99b-0019d1879648", N_("NetBSD FFS")},
+  {"gpt", "other",     "49f48d82-b10e-11dc-b99b-0019d1879648", N_("NetBSD LFS")},
+  {"gpt", "other",     "49f48daa-b10e-11dc-b99b-0019d1879648", N_("NetBSD RAID")},
+  {"gpt", "other",     "2db519c4-b10f-11dc-b99b-0019d1879648", N_("NetBSD Concatenated")},
+  {"gpt", "other",     "2db519ec-b10f-11dc-b99b-0019d1879648", N_("NetBSD Encrypted")},
 
   /* see http://developer.apple.com/documentation/mac/devices/devices-126.html
    *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html */
-  {"apm", "Apple_Unix_SVR2", N_("Apple UFS")},
-  {"apm", "Apple_HFS", N_("Apple HFS/HFS")},
-  {"apm", "Apple_partition_map", N_("Apple Partition Map")},
-  {"apm", "Apple_Free", N_("Unused")},
-  {"apm", "Apple_Scratch", N_("Empty")},
-  {"apm", "Apple_Driver", N_("Driver")},
-  {"apm", "Apple_Driver43", N_("Driver 4.3")},
-  {"apm", "Apple_PRODOS", N_("ProDOS file system")},
-  {"apm", "DOS_FAT_12", N_("FAT 12")},
-  {"apm", "DOS_FAT_16", N_("FAT 16")},
-  {"apm", "DOS_FAT_32", N_("FAT 32")},
-  {"apm", "Windows_FAT_16", N_("FAT 16 (Windows)")},
-  {"apm", "Windows_FAT_32", N_("FAT 32 (Windows)")},
+  {"apm", "apple",     "Apple_Unix_SVR2", N_("Apple UFS")},
+  {"apm", "apple",     "Apple_HFS", N_("Apple HFS/HFS")},
+  {"apm", "apple",     "Apple_partition_map", N_("Apple Partition Map")},
+  {"apm", "apple",     "Apple_Free", N_("Unused")},
+  {"apm", "apple",     "Apple_Scratch", N_("Empty")},
+  {"apm", "apple",     "Apple_Driver", N_("Driver")},
+  {"apm", "apple",     "Apple_Driver43", N_("Driver 4.3")},
+  {"apm", "apple",     "Apple_PRODOS", N_("ProDOS file system")},
+  {"apm", "microsoft", "DOS_FAT_12", N_("FAT 12")},
+  {"apm", "microsoft", "DOS_FAT_16", N_("FAT 16")},
+  {"apm", "microsoft", "DOS_FAT_32", N_("FAT 32")},
+  {"apm", "microsoft", "Windows_FAT_16", N_("FAT 16 (Windows)")},
+  {"apm", "microsoft", "Windows_FAT_32", N_("FAT 32 (Windows)")},
 
   /* see http://www.win.tue.nl/~aeb/partitions/partition_types-1.html */
-  {"dos", "0x00",  N_("Empty")},
-  {"dos", "0x01",  N_("FAT12")},
-  {"dos", "0x04",  N_("FAT16 <32M")},
-  {"dos", "0x05",  N_("Extended")},
-  {"dos", "0x06",  N_("FAT16")},
-  {"dos", "0x07",  N_("HPFS/NTFS")},
-  {"dos", "0x0b",  N_("W95 FAT32")},
-  {"dos", "0x0c",  N_("W95 FAT32 (LBA)")},
-  {"dos", "0x0e",  N_("W95 FAT16 (LBA)")},
-  {"dos", "0x0f",  N_("W95 Ext d (LBA)")},
-  {"dos", "0x10",  N_("OPUS")},
-  {"dos", "0x11",  N_("Hidden FAT12")},
-  {"dos", "0x12",  N_("Compaq diagnostics")},
-  {"dos", "0x14",  N_("Hidden FAT16 <32M")},
-  {"dos", "0x16",  N_("Hidden FAT16")},
-  {"dos", "0x17",  N_("Hidden HPFS/NTFS")},
-  {"dos", "0x1b",  N_("Hidden W95 FAT32")},
-  {"dos", "0x1c",  N_("Hidden W95 FAT32 (LBA)")},
-  {"dos", "0x1e",  N_("Hidden W95 FAT16 (LBA)")},
-  {"dos", "0x3c",  N_("PartitionMagic")},
-  {"dos", "0x81",  N_("Minix")}, /* cf. http://en.wikipedia.org/wiki/MINIX_file_system */
-  {"dos", "0x82",  N_("Linux swap")},
-  {"dos", "0x83",  N_("Linux")},
-  {"dos", "0x84",  N_("Hibernation")},
-  {"dos", "0x85",  N_("Linux Extended")},
-  {"dos", "0x8e",  N_("Linux LVM")},
-  {"dos", "0xa0",  N_("Hibernation")},
-  {"dos", "0xa5",  N_("FreeBSD")},
-  {"dos", "0xa6",  N_("OpenBSD")},
-  {"dos", "0xa8",  N_("Mac OS X")},
-  {"dos", "0xaf",  N_("Mac OS X")},
-  {"dos", "0xbe",  N_("Solaris boot")},
-  {"dos", "0xbf",  N_("Solaris")},
-  {"dos", "0xeb",  N_("BeOS BFS")},
-  {"dos", "0xec",  N_("SkyOS SkyFS")},
-  {"dos", "0xee",  N_("EFI GPT")},
-  {"dos", "0xef",  N_("EFI (FAT-12/16/32)")},
-  {"dos", "0xfd",  N_("Linux RAID auto")},
+  {"dos", "generic",   "0x00",  N_("Empty")},
+  {"dos", "generic",   "0x05",  N_("Extended")},
+  {"dos", "generic",   "0xee",  N_("EFI GPT")},
+  {"dos", "generic",   "0xef",  N_("EFI (FAT-12/16/32)")},
+  {"dos", "linux",     "0x82",  N_("Linux swap")},
+  {"dos", "linux",     "0x83",  N_("Linux")},
+  {"dos", "linux",     "0x85",  N_("Linux Extended")},
+  {"dos", "linux",     "0x8e",  N_("Linux LVM")},
+  {"dos", "linux",     "0xfd",  N_("Linux RAID auto")},
+  {"dos", "microsoft", "0x01",  N_("FAT12")},
+  {"dos", "microsoft", "0x04",  N_("FAT16 <32M")},
+  {"dos", "microsoft", "0x06",  N_("FAT16")},
+  {"dos", "microsoft", "0x07",  N_("HPFS/NTFS")},
+  {"dos", "microsoft", "0x0b",  N_("W95 FAT32")},
+  {"dos", "microsoft", "0x0c",  N_("W95 FAT32 (LBA)")},
+  {"dos", "microsoft", "0x0e",  N_("W95 FAT16 (LBA)")},
+  {"dos", "microsoft", "0x0f",  N_("W95 Ext d (LBA)")},
+  {"dos", "microsoft", "0x11",  N_("Hidden FAT12")},
+  {"dos", "microsoft", "0x14",  N_("Hidden FAT16 <32M")},
+  {"dos", "microsoft", "0x16",  N_("Hidden FAT16")},
+  {"dos", "microsoft", "0x17",  N_("Hidden HPFS/NTFS")},
+  {"dos", "microsoft", "0x1b",  N_("Hidden W95 FAT32")},
+  {"dos", "microsoft", "0x1c",  N_("Hidden W95 FAT32 (LBA)")},
+  {"dos", "microsoft", "0x1e",  N_("Hidden W95 FAT16 (LBA)")},
+  {"dos", "other",     "0x10",  N_("OPUS")},
+  {"dos", "other",     "0x12",  N_("Compaq diagnostics")},
+  {"dos", "other",     "0x3c",  N_("PartitionMagic")},
+  {"dos", "other",     "0x81",  N_("Minix")}, /* cf. http://en.wikipedia.org/wiki/MINIX_file_system */
+  {"dos", "other",     "0x84",  N_("Hibernation")},
+  {"dos", "other",     "0xa0",  N_("Hibernation")},
+  {"dos", "other",     "0xa5",  N_("FreeBSD")},
+  {"dos", "other",     "0xa6",  N_("OpenBSD")},
+  {"dos", "other",     "0xa8",  N_("Mac OS X")},
+  {"dos", "other",     "0xaf",  N_("Mac OS X")},
+  {"dos", "other",     "0xbe",  N_("Solaris boot")},
+  {"dos", "other",     "0xbf",  N_("Solaris")},
+  {"dos", "other",     "0xeb",  N_("BeOS BFS")},
+  {"dos", "other",     "0xec",  N_("SkyOS SkyFS")},
   {NULL,  NULL, NULL}
 };
 
 /**
- * udisks_client_get_partition_types:
+ * udisks_client_get_partition_type_infos:
  * @client: A #UDisksClient.
  * @partition_table_type: A partition table type e.g. 'dos' or 'gpt'.
+ * @partition_table_subtype: (allow-none): A partition table subtype or %NULL to get all known types.
  *
- * Gets all known types for @partition_table_type.
+ * Gets information about all known partition types for @partition_table_type and @partition_table_subtype.
  *
- * Returns: (transfer container): A %NULL-terminated array of
- * strings. Only the container should be freed with g_free().
+ * Returns: (transfer full) (element-type UDisksPartitionTypeInfo): A list of
+ *   #UDisksPartitionTypeInfo instances. The returned list should be freed
+ *   with g_list_free() after freeing each element with udisks_partition_type_info_free().
  */
-const gchar **
-udisks_client_get_partition_types (UDisksClient   *client,
-                                   const gchar    *partition_table_type)
+GList *
+udisks_client_get_partition_type_infos (UDisksClient   *client,
+                                        const gchar    *partition_table_type,
+                                        const gchar    *partition_table_subtype)
 {
+  GList *ret = NULL;
   guint n;
-  GPtrArray *p;
 
-  p = g_ptr_array_new();
   for (n = 0; known_partition_types[n].name != NULL; n++)
     {
-      if (g_strcmp0 (known_partition_types[n].table_type, partition_table_type) == 0)
+      if (g_strcmp0 (known_partition_types[n].table_type, partition_table_type) == 0 &&
+          (partition_table_subtype == NULL ||
+           g_strcmp0 (known_partition_types[n].table_subtype, partition_table_subtype) == 0))
         {
-          g_ptr_array_add (p, (gpointer) known_partition_types[n].type);
+          UDisksPartitionTypeInfo *info = udisks_partition_type_info_new ();
+          info->table_type    = known_partition_types[n].table_type;
+          info->table_subtype = known_partition_types[n].table_subtype;
+          info->type          = known_partition_types[n].type;
+          ret = g_list_prepend (ret, info);
         }
     }
-  g_ptr_array_add (p, NULL);
-
-  return (const gchar **) g_ptr_array_free (p, FALSE);
+  ret = g_list_reverse (ret);
+  return ret;
 }
 
 /**
@@ -2138,3 +2235,33 @@ udisks_client_get_partition_type_for_display (UDisksClient  *client,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static UDisksPartitionTypeInfo *
+udisks_partition_type_info_new (void)
+{
+  UDisksPartitionTypeInfo *ret;
+  ret = g_slice_new0 (UDisksPartitionTypeInfo);
+  return ret;
+}
+
+static UDisksPartitionTypeInfo *
+udisks_partition_type_info_copy (UDisksPartitionTypeInfo  *info)
+{
+  UDisksPartitionTypeInfo *ret;
+  ret = udisks_partition_type_info_new ();
+  memcpy (ret, info, sizeof (UDisksPartitionTypeInfo));
+  return ret;
+}
+
+/**
+ * udisks_partition_type_info_free:
+ * @info: A #UDisksPartitionTypeInfo.
+ *
+ * Frees @info.
+ */
+void
+udisks_partition_type_info_free (UDisksPartitionTypeInfo  *info)
+{
+  g_slice_free (UDisksPartitionTypeInfo, info);
+}
+
+G_DEFINE_BOXED_TYPE (UDisksPartitionTypeInfo, udisks_partition_type_info, udisks_partition_type_info_copy, udisks_partition_type_info_free);
