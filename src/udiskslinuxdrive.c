@@ -307,7 +307,6 @@ set_connection_bus (UDisksDrive      *iface,
   if (g_str_has_prefix (g_udev_device_get_name (device), "mmcblk"))
     {
       udisks_drive_set_connection_bus (iface, "sdio");
-      g_object_unref (parent);
       goto out;
     }
 
