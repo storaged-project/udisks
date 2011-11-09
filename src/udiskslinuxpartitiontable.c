@@ -338,12 +338,14 @@ handle_create_partition (UDisksPartitionTable   *table,
       escaped_name = g_strescape (name, NULL);
       escaped_escaped_name = g_strescape (escaped_name, NULL);
 
-      /* round to MiB for alignment purposes and round up so we _start_ at MiB granularity
-       * since that ensures optimal IO
+      /* Ensure we _start_ at MiB granularity since that ensures optimal IO...
+       * Also round up size to nearest multiple of 512
        */
       start_mib = offset / MIB_SIZE + 1L;
-      end_bytes = start_mib * MIB_SIZE + size;
-      /* reduce size until we are not overlapping
+      end_bytes = start_mib * MIB_SIZE + ((size + 511L) & (~511L));
+
+      /* Now reduce size until we are not overlapping
+       *
        *  - neighboring partitions; or
        *  - the end of the disk (note: the 33 LBAs is the Secondary GPT)
        */
@@ -357,14 +359,13 @@ handle_create_partition (UDisksPartitionTable   *table,
            */
           end_bytes -= 512L;
         }
-
       wait_data->pos_to_wait_for = (start_mib*MIB_SIZE + end_bytes) / 2L;
       command_line = g_strdup_printf ("parted --align optimal --script \"%s\" "
                                       "\"mkpart \\\"%s\\\" ext2 %" G_GUINT64_FORMAT "MiB %" G_GUINT64_FORMAT "b\"",
                                       escaped_device,
                                       escaped_escaped_name,
                                       start_mib,
-                                      end_bytes);
+                                      end_bytes - 1); /* end_bytes is *INCLUSIVE* (!) */
       g_free (escaped_escaped_name);
       g_free (escaped_name);
     }

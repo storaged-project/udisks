@@ -842,7 +842,9 @@
 
         Note that the created partition won't necessarily be created
         at the exact @offset due to disk geometry and other alignment
-        constraints. The new partition may also end up being slightly
+        constraints (e.g. 1MiB alignment).
+
+        The newly created partition may also end up being slightly
         larger or smaller than the requested @size bytes for the same
         reasons.
 
