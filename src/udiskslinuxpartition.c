@@ -151,7 +151,7 @@ udisks_linux_partition_update (UDisksLinuxPartition  *partition,
         {
           char *endp;
           gint type_as_int = strtol (type, &endp, 0);
-          if (type_as_int > 0 && *endp == '\0')
+          if (type[0] != '\0' && *endp == '\0')
             {
               /* ensure 'dos' partition types are always of the form 0x0c (e.g. with two digits) */
               snprintf (type_buf, sizeof type_buf, "0x%02x", type_as_int);
