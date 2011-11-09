@@ -2131,7 +2131,6 @@ const static struct
   {"apm", "microsoft", "Windows_FAT_32", N_("FAT 32 (Windows)"), 0},
 
   /* see http://www.win.tue.nl/~aeb/partitions/partition_types-1.html */
-  {"dos", "generic",   "0x00",  N_("Empty"), 0},
   {"dos", "generic",   "0x05",  N_("Extended"), F_CONLY},
   {"dos", "generic",   "0xee",  N_("EFI GPT"), F_SYSTEM},
   {"dos", "generic",   "0xef",  N_("EFI (FAT-12/16/32)"), F_SYSTEM},
