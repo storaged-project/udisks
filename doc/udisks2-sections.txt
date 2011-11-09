@@ -47,6 +47,7 @@ udisks_client_get_id_for_display
 udisks_client_get_media_compat_for_display
 <SUBSECTION>
 UDisksPartitionTypeInfo
+UDisksPartitionTypeInfoFlags
 udisks_partition_type_info_free
 <SUBSECTION>
 udisks_client_get_partition_type_infos

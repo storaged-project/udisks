@@ -1,5 +1,6 @@
 udisks_client_get_type
 udisks_partition_type_info_get_type
+udisks_partition_type_info_flags_get_type
 
 udisks_daemon_get_type
 udisks_linux_block_object_get_type

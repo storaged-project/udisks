@@ -117,6 +117,7 @@ const gchar        *udisks_client_get_partition_table_subtype_for_display (UDisk
  * @table_type: A partition table type e.g. 'dos' or 'gpt'
  * @table_subtype: A partition table sub-type.
  * @type: A partition type.
+ * @flags: Flags from the #UDisksPartitionTypeInfoFlags enumeration.
  *
  * Detailed information about a partition type.
  *
@@ -129,9 +130,10 @@ const gchar        *udisks_client_get_partition_table_subtype_for_display (UDisk
 struct _UDisksPartitionTypeInfo
 {
   /*< public >*/
-  const gchar *table_type;
-  const gchar *table_subtype;
-  const gchar *type;
+  const gchar                  *table_type;
+  const gchar                  *table_subtype;
+  const gchar                  *type;
+  UDisksPartitionTypeInfoFlags  flags;
 };
 
 GType                udisks_partition_type_info_get_type   (void) G_GNUC_CONST;

@@ -71,6 +71,27 @@ typedef enum
 
 #define UDISKS_ERROR_NUM_ENTRIES  (UDISKS_ERROR_DEVICE_BUSY + 1)
 
+/**
+ * UDisksPartitionTypeInfoFlags:
+ * @UDISKS_PARTITION_TYPE_INFO_FLAGS_NONE: No flags set.
+ * @UDISKS_PARTITION_TYPE_INFO_FLAGS_SWAP: Partition type is used for swap.
+ * @UDISKS_PARTITION_TYPE_INFO_FLAGS_RAID: Partition type is used for RAID/LVM or similar.
+ * @UDISKS_PARTITION_TYPE_INFO_FLAGS_HIDDEN: Partition type indicates the partition is hidden (e.g. 'dos' type 0x1b "Hidden W95 FAT32"). Note that this is not the same as user-toggleable attributs/flags for a partition.
+ * @UDISKS_PARTITION_TYPE_INFO_FLAGS_CREATE_ONLY: Partition type can only be used when creating a partition and e.g. should not be selectable in a "change partition type" user interface (e.g. 'dos' type 0x05, 0x0f and 0x85 for extended partitions).
+ * @UDISKS_PARTITION_TYPE_INFO_FLAGS_SYSTEM: Partition type indicates the partition is part of the system / bootloader (e.g. 'dos' types 0xee, 0xff, 'gpt' types for 'EFI System partition' and 'BIOS Boot partition').
+ *
+ * Flags describing a partition type.
+ */
+typedef enum
+{
+  UDISKS_PARTITION_TYPE_INFO_FLAGS_NONE        = 0,
+  UDISKS_PARTITION_TYPE_INFO_FLAGS_SWAP        = (1<<0),
+  UDISKS_PARTITION_TYPE_INFO_FLAGS_RAID        = (1<<1),
+  UDISKS_PARTITION_TYPE_INFO_FLAGS_HIDDEN      = (1<<2),
+  UDISKS_PARTITION_TYPE_INFO_FLAGS_CREATE_ONLY = (1<<3),
+  UDISKS_PARTITION_TYPE_INFO_FLAGS_SYSTEM      = (1<<4)
+} UDisksPartitionTypeInfoFlags;
+
 G_END_DECLS
 
 #endif /* __UDISKS_ENUMS_H__ */
