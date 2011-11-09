@@ -327,7 +327,7 @@ handle_create_partition (UDisksPartitionTable   *table,
   if (g_strcmp0 (table_type, "gpt") == 0)
     {
       guint64 start_mib;
-      guint64 end_mib;
+      guint64 end_bytes;
       gchar *escaped_name;
       gchar *escaped_escaped_name;
 
@@ -338,28 +338,33 @@ handle_create_partition (UDisksPartitionTable   *table,
       escaped_name = g_strescape (name, NULL);
       escaped_escaped_name = g_strescape (escaped_name, NULL);
 
-      /* round to MiB for alignment purposes and round up so we _start_ and _end_ at MiB spots */
-      start_mib = offset / MIB_SIZE + 1L;
-      end_mib = start_mib + (size / MIB_SIZE + 1L);
-      /* reduce size until we are not overlapping
-       *  - neighboring partitions (leave 1MiB wiggle room at the end); or
-       *  - the end of the disk
+      /* round to MiB for alignment purposes and round up so we _start_ at MiB granularity
+       * since that ensures optimal IO
        */
-      while (end_mib > start_mib && (have_partition_in_range (table,
-                                                              start_mib * MIB_SIZE,
-                                                              (end_mib + 1) * MIB_SIZE) ||
-                                     (end_mib * MIB_SIZE > udisks_block_get_size (block))))
+      start_mib = offset / MIB_SIZE + 1L;
+      end_bytes = start_mib * MIB_SIZE + size;
+      /* reduce size until we are not overlapping
+       *  - neighboring partitions; or
+       *  - the end of the disk (note: the 33 LBAs is the Secondary GPT)
+       */
+      while (end_bytes > start_mib * MIB_SIZE && (have_partition_in_range (table,
+                                                                           start_mib * MIB_SIZE,
+                                                                           end_bytes) ||
+                                                  (end_bytes > udisks_block_get_size (block) - 33*512)))
         {
-          end_mib -= 1L;
+          /* TODO: if end_bytes is sufficiently big this could be *a lot* of loop iterations
+           *       and thus a potential DoS attack...
+           */
+          end_bytes -= 512L;
         }
 
-      wait_data->pos_to_wait_for = (start_mib + end_mib) * MIB_SIZE / 2L;
+      wait_data->pos_to_wait_for = (start_mib*MIB_SIZE + end_bytes) / 2L;
       command_line = g_strdup_printf ("parted --align optimal --script \"%s\" "
-                                      "\"mkpart \\\"%s\\\" ext2 %" G_GUINT64_FORMAT "MiB %" G_GUINT64_FORMAT "MiB\"",
+                                      "\"mkpart \\\"%s\\\" ext2 %" G_GUINT64_FORMAT "MiB %" G_GUINT64_FORMAT "b\"",
                                       escaped_device,
                                       escaped_escaped_name,
                                       start_mib,
-                                      end_mib);
+                                      end_bytes);
       g_free (escaped_escaped_name);
       g_free (escaped_name);
     }
