@@ -527,6 +527,15 @@ handle_set_type (UDisksPartition        *partition,
                                                  type);
           goto out;
         }
+      if (type_as_int == 0x05 || type_as_int == 0x0f || type_as_int == 0x85)
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Refusing to change partition type to that of an extended partition. "
+                                                 "Delete the partition and create a new extended partition instead.");
+          goto out;
+        }
       command_line = g_strdup_printf ("sfdisk --change-id \"%s\" %d 0x%02x",
                                       escaped_device,
                                       udisks_partition_get_number (partition),
