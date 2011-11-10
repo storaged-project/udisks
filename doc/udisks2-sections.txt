@@ -38,6 +38,7 @@ udisks_client_get_block_for_drive
 udisks_client_get_drive_for_block
 udisks_client_get_cleartext_block
 udisks_client_get_partition_table
+udisks_client_get_partitions
 <SUBSECTION>
 udisks_client_get_drive_info
 udisks_client_get_partition_info

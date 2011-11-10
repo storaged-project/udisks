@@ -66,6 +66,9 @@ UDisksBlock        *udisks_client_get_cleartext_block (UDisksClient        *clie
 UDisksPartitionTable *udisks_client_get_partition_table (UDisksClient        *client,
                                                          UDisksPartition     *partition);
 
+GList              *udisks_client_get_partitions      (UDisksClient        *client,
+                                                       UDisksPartitionTable *table);
+
 void                udisks_client_get_drive_info      (UDisksClient        *client,
                                                        UDisksDrive         *drive,
                                                        gchar              **out_name,

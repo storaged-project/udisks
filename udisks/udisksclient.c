@@ -1334,6 +1334,56 @@ udisks_client_get_cleartext_block (UDisksClient  *client,
 /* ---------------------------------------------------------------------------------------------------- */
 
 /**
+ * udisks_client_get_partitions:
+ * @client: A #UDisksClient.
+ * @table: A #UDisksPartitionTable.
+ *
+ * Gets all partitions of @table.
+ *
+ * Returns: (transfer full) (element-type UDisksPartition): A list of #UDisksPartition instances. The
+ *   returned list should be freed with g_list_free() after each
+ *   element has been freed with g_object_unref().
+ */
+GList *
+udisks_client_get_partitions (UDisksClient         *client,
+                              UDisksPartitionTable *table)
+{
+  GList *ret = NULL;
+  GDBusObject *table_object;
+  const gchar *table_object_path;
+  GList *l, *object_proxies = NULL;
+
+  g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
+  g_return_val_if_fail (UDISKS_IS_PARTITION_TABLE (table), NULL);
+
+  table_object = g_dbus_interface_get_object (G_DBUS_INTERFACE (table));
+  if (table_object == NULL)
+    goto out;
+  table_object_path = g_dbus_object_get_object_path (table_object);
+
+  object_proxies = g_dbus_object_manager_get_objects (client->object_manager);
+  for (l = object_proxies; l != NULL; l = l->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksPartition *partition;
+
+      partition = udisks_object_get_partition (object);
+      if (partition == NULL)
+        continue;
+
+      if (g_strcmp0 (udisks_partition_get_table (partition), table_object_path) == 0)
+        ret = g_list_prepend (ret, g_object_ref (partition));
+
+      g_object_unref (partition);
+    }
+  ret = g_list_reverse (ret);
+ out:
+  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
+  g_list_free (object_proxies);
+  return ret;
+}
+
+/**
  * udisks_client_get_partition_table:
  * @client: A #UDisksClient.
  * @partition: A #UDisksPartition.
