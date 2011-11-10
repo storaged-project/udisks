@@ -166,7 +166,8 @@ ranges_overlap (guint64 a_offset, guint64 a_size,
 static gboolean
 have_partition_in_range (UDisksPartitionTable     *table,
                          guint64                   start,
-                         guint64                   end)
+                         guint64                   end,
+                         gboolean                  ignore_container)
 {
   gboolean ret = FALSE;
   UDisksObject *object = NULL;
@@ -195,6 +196,9 @@ have_partition_in_range (UDisksPartitionTable     *table,
       if (g_strcmp0 (udisks_partition_get_table (i_partition), table_object_path) != 0)
         goto cont;
 
+      if (ignore_container && udisks_partition_get_is_container (i_partition))
+        goto cont;
+
       if (!ranges_overlap (start, end - start,
                            udisks_partition_get_offset (i_partition), udisks_partition_get_size (i_partition)))
         goto cont;
@@ -220,6 +224,7 @@ typedef struct
 {
   UDisksObject *partition_table_object;
   guint64       pos_to_wait_for;
+  gboolean      ignore_container;
 } WaitForPartitionData;
 
 static gboolean
@@ -247,6 +252,8 @@ wait_for_partition (UDisksDaemon *daemon,
   if (data->pos_to_wait_for >= offset &&
       data->pos_to_wait_for < offset + size)
     {
+      if (udisks_partition_get_is_container (partition) && data->ignore_container)
+        goto out;
       ret = TRUE;
     }
 
@@ -291,13 +298,6 @@ handle_create_partition (UDisksPartitionTable   *table,
       goto out;
     }
 
-  if (have_partition_in_range (table, offset, offset + size))
-    {
-      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "Requested range is already occupied by a partition");
-      goto out;
-    }
-
   action_id = "org.freedesktop.udisks2.modify-device";
   if (udisks_block_get_hint_system (block))
     action_id = "org.freedesktop.udisks2.modify-device-system";
@@ -313,27 +313,110 @@ handle_create_partition (UDisksPartitionTable   *table,
 
   table_type = udisks_partition_table_get_type_ (table);
   wait_data = g_new0 (WaitForPartitionData, 1);
-#if 0
   if (g_strcmp0 (table_type, "dos") == 0)
     {
-      /* TODO: handle logical */
+      guint64 start_mib;
+      guint64 end_bytes;
+      const gchar *part_type;
+      char *endp;
+      gint type_as_int;
+      gboolean is_logical = FALSE;
+
+      if (strlen (name) > 0)
+        {
+          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                 "MBR partition table does not support names");
+          goto out;
+        }
+
+      /* Determine whether we are creating a primary, extended or logical partition */
+      type_as_int = strtol (type, &endp, 0);
+      if (type[0] != '\0' && *endp == '\0' &&
+          (type_as_int == 0x05 || type_as_int == 0x0f || type_as_int == 0x85))
+        {
+          part_type = "extended";
+          if (have_partition_in_range (table, offset, offset + size, FALSE))
+            {
+              g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                     "Requested range is already occupied by a partition");
+              goto out;
+            }
+        }
+      else
+        {
+          if (have_partition_in_range (table, offset, offset + size, FALSE))
+            {
+              if (have_partition_in_range (table, offset, offset + size, TRUE))
+                {
+                  g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                         "Requested range is already occupied by a partition");
+                  goto out;
+                }
+              else
+                {
+                  is_logical = TRUE;
+                  part_type = "logical ext2";
+                }
+            }
+          else
+            {
+              part_type = "primary ext2";
+            }
+        }
+
+      /* Ensure we _start_ at MiB granularity since that ensures optimal IO...
+       * Also round up size to nearest multiple of 512
+       */
+      start_mib = offset / MIB_SIZE + 1L;
+      end_bytes = start_mib * MIB_SIZE + ((size + 511L) & (~511L));
+
+      /* Now reduce size until we are not
+       *
+       *  - overlapping neighboring partitions; or
+       *  - exceeding the end of the disk
+       */
+      while (end_bytes > start_mib * MIB_SIZE && (have_partition_in_range (table,
+                                                                           start_mib * MIB_SIZE,
+                                                                           end_bytes, is_logical) ||
+                                                  end_bytes > udisks_block_get_size (block)))
+        {
+          /* TODO: if end_bytes is sufficiently big this could be *a lot* of loop iterations
+           *       and thus a potential DoS attack...
+           */
+          end_bytes -= 512L;
+        }
+      wait_data->pos_to_wait_for = (start_mib*MIB_SIZE + end_bytes) / 2L;
+      wait_data->ignore_container = is_logical;
+
       command_line = g_strdup_printf ("parted --align optimal --script \"%s\" "
-                                      "\"mkpart primary ext2 %" G_GUINT64_FORMAT "M %" G_GUINT64_FORMAT "M\"",
+                                      "\"mkpart %s %" G_GUINT64_FORMAT "MiB %" G_GUINT64_FORMAT "b\"",
                                       escaped_device,
-                                      offset / (1000L*1000L),
-                                      (offset + size) / (1000L*1000L));
+                                      part_type,
+                                      start_mib,
+                                      end_bytes - 1); /* end_bytes is *INCLUSIVE* (!) */
     }
-#endif
-  if (g_strcmp0 (table_type, "gpt") == 0)
+  else if (g_strcmp0 (table_type, "gpt") == 0)
     {
       guint64 start_mib;
       guint64 end_bytes;
       gchar *escaped_name;
       gchar *escaped_escaped_name;
 
-      /* bah, parted(8) is broken with empty names (it sets the name to 'ext2' in that case) */
+      /* GPT is easy, no extended/logical crap */
+      if (have_partition_in_range (table, offset, offset + size, FALSE))
+        {
+          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                 "Requested range is already occupied by a partition");
+          goto out;
+        }
+
+      /* bah, parted(8) is broken with empty names (it sets the name to 'ext2' in that case)
+       * TODO: file bug
+       */
       if (strlen (name) == 0)
-        name = " ";
+        {
+          name = " ";
+        }
 
       escaped_name = g_strescape (name, NULL);
       escaped_escaped_name = g_strescape (escaped_name, NULL);
@@ -344,14 +427,14 @@ handle_create_partition (UDisksPartitionTable   *table,
       start_mib = offset / MIB_SIZE + 1L;
       end_bytes = start_mib * MIB_SIZE + ((size + 511L) & (~511L));
 
-      /* Now reduce size until we are not overlapping
+      /* Now reduce size until we are not
        *
-       *  - neighboring partitions; or
-       *  - the end of the disk (note: the 33 LBAs is the Secondary GPT)
+       *  - overlapping neighboring partitions; or
+       *  - exceeding the end of the disk (note: the 33 LBAs is the Secondary GPT)
        */
       while (end_bytes > start_mib * MIB_SIZE && (have_partition_in_range (table,
                                                                            start_mib * MIB_SIZE,
-                                                                           end_bytes) ||
+                                                                           end_bytes, FALSE) ||
                                                   (end_bytes > udisks_block_get_size (block) - 33*512)))
         {
           /* TODO: if end_bytes is sufficiently big this could be *a lot* of loop iterations
