@@ -26,6 +26,7 @@
 
 const FSInfo _fs_info[] =
   {
+    /* filesystems */
     {
       "ext2",
       "e2label $DEVICE $LABEL",
@@ -96,6 +97,7 @@ const FSInfo _fs_info[] =
       FALSE,
       "mkfs.minix $DEVICE",
     },
+    /* swap space */
     {
       "swap",
       NULL,
@@ -103,6 +105,22 @@ const FSInfo _fs_info[] =
       FALSE,
       "mkswap -L $LABEL $DEVICE",
     },
+    /* partition tables */
+    {
+      "dos",
+      NULL,
+      NULL,
+      FALSE,
+      "parted --script $DEVICE mktable msdos",
+    },
+    {
+      "gpt",
+      NULL,
+      NULL,
+      FALSE,
+      "parted --script $DEVICE mktable gpt",
+    },
+    /* empty */
     {
       "empty",
       NULL,

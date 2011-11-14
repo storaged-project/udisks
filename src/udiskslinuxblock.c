@@ -1743,7 +1743,7 @@ handle_format (UDisksBlock           *block,
                                                     NULL,
                                                     action_id,
                                                     options,
-                                                    N_("Authentication is required to create a file system"),
+                                                    N_("Authentication is required to format $(udisks2.device)"),
                                                     invocation))
     goto out;
 

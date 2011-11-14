@@ -772,16 +772,20 @@
 
     <!--
         Format:
-        @type: The type of file system or other content to format the device with.
+        @type: The type of file system, partition table or other content to format the device with.
         @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's'), <parameter>take-ownership</parameter> (of type 'b') and <parameter>encrypt.passphrase</parameter> (of type 's').
 
-        Formats the device with a file system or other well-known content.
+        Formats the device with a file system, partition table or
+        other well-known content.
 
         Known values for @type includes <constant>empty</constant> (to
         just zero out areas of the device known to host file system
         signatures) and <constant>swap</constant> (Linux swap space)
         and most file systems supported by the <citerefentry><refentrytitle>mkfs</refentrytitle><manvolnum>8</manvolnum></citerefentry>
         program through its <option>-t</option> option.
+
+        Known partition table formats includes
+        <constant>dos</constant> and <constant>gpt</constant>.
 
         If @type supports it, you can specify a label with the
         <parameter>label</parameter> option in the @options parameter;
