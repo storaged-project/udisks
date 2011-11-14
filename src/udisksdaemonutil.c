@@ -324,7 +324,8 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
                                   uid_t         user)
 {
   gboolean ret;
-  UDisksBlock *block;
+  UDisksBlock *block = NULL;
+  UDisksPartition *partition = NULL;
   UDisksCleanup *cleanup;
   uid_t setup_by_user;
   UDisksObject *crypto_object;
@@ -332,9 +333,10 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
   ret = FALSE;
 
   cleanup = udisks_daemon_get_cleanup (daemon);
-  block = udisks_object_peek_block (object);
+  block = udisks_object_get_block (object);
   if (block == NULL)
     goto out;
+  partition = udisks_object_get_partition (object);
 
   /* loop devices */
   if (udisks_cleanup_has_loop (cleanup, udisks_block_get_device (block), &setup_by_user, NULL))
@@ -343,6 +345,23 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
         {
           ret = TRUE;
           goto out;
+        }
+    }
+
+  /* partition of a loop device */
+  if (partition != NULL)
+    {
+      UDisksObject *partition_object = NULL;
+      partition_object = udisks_daemon_find_object (daemon, udisks_partition_get_table (partition));
+      if (partition_object != NULL)
+        {
+          if (udisks_daemon_util_setup_by_user (daemon, partition_object, user))
+            {
+              ret = TRUE;
+              g_object_unref (partition_object);
+              goto out;
+            }
+          g_object_unref (partition_object);
         }
     }
 
@@ -367,6 +386,8 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
     }
 
  out:
+  g_clear_object (&partition);
+  g_clear_object (&block);
   return ret;
 }
 
