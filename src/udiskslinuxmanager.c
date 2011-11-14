@@ -239,8 +239,6 @@ wait_for_loop_object (UDisksDaemon *daemon,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-/* TODO: support @offset, @size and @read_only options */
-
 /* runs in thread dedicated to handling @invocation */
 static gboolean
 handle_loop_setup (UDisksManager          *object,
@@ -385,6 +383,8 @@ handle_loop_setup (UDisksManager          *object,
   strncpy ((char *) li64.lo_file_name, path, LO_NAME_SIZE);
   if (option_read_only)
     li64.lo_flags |= LO_FLAGS_READ_ONLY;
+  /* TODO: we could have an option 'no-part-scan' but I don't think that's right */
+  li64.lo_flags |= 8; /* Use LO_FLAGS_PARTSCAN when 3.2 has been out for a while */
   li64.lo_offset = option_offset;
   li64.lo_sizelimit = option_size;
   if (ioctl (loop_fd, LOOP_SET_FD, fd) < 0 || ioctl (loop_fd, LOOP_SET_STATUS64, &li64) < 0)
