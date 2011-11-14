@@ -1740,7 +1740,7 @@ handle_format (UDisksBlock           *block,
     }
 
   if (!udisks_daemon_util_check_authorization_sync (daemon,
-                                                    NULL,
+                                                    object,
                                                     action_id,
                                                     options,
                                                     N_("Authentication is required to format $(udisks2.device)"),
