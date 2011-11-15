@@ -1585,6 +1585,15 @@ subst_str (const gchar *str,
     return result;
 }
 
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+typedef struct
+{
+  UDisksObject *object;
+  const gchar  *type;
+} FormatWaitData;
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
@@ -1592,34 +1601,51 @@ wait_for_filesystem (UDisksDaemon *daemon,
                      UDisksObject *object,
                      gpointer      user_data)
 {
-  const gchar *fstype = user_data;
-  UDisksBlock *block;
-  UDisksFilesystem *fs;
-  gboolean ret;
+  FormatWaitData *data = user_data;
+  UDisksBlock *block = NULL;
+  UDisksPartitionTable *partition_table = NULL;
+  gchar *id_type = NULL;
+  gchar *partition_table_type = NULL;
+  gboolean ret = FALSE;
 
-  ret = FALSE;
-  block = udisks_object_peek_block (object);
-  fs = udisks_object_peek_filesystem (object);
+  block = udisks_object_get_block (object);
   if (block == NULL)
     goto out;
 
-  if (g_strcmp0 (fstype, "empty") == 0)
-    {
-      if (fs != NULL || udisks_block_get_id_type (block) != NULL)
-        goto out;
-    }
-  else
-    {
-      if (g_strcmp0 (fstype, "swap") != 0 && fs == NULL)
-        goto out;
+  id_type = udisks_block_dup_id_type (block);
 
-      if (g_strcmp0 (udisks_block_get_id_type (block), fstype) != 0)
-        goto out;
+  if (g_strcmp0 (data->type, "empty") == 0)
+    {
+      g_debug ("id_type=`%s'", id_type);
+      if (g_strcmp0 (id_type, "") == 0)
+        {
+          ret = TRUE;
+          goto out;
+        }
     }
 
-  ret = TRUE;
+  if (g_strcmp0 (id_type, data->type) == 0)
+    {
+      ret = TRUE;
+      goto out;
+    }
+
+  partition_table = udisks_object_get_partition_table (object);
+  if (partition_table != NULL)
+    {
+      partition_table_type = udisks_partition_table_dup_type_ (partition_table);
+      if (g_strcmp0 (partition_table_type, data->type) == 0)
+        {
+          ret = TRUE;
+          goto out;
+        }
+    }
 
  out:
+  g_free (partition_table_type);
+  g_free (id_type);
+  g_clear_object (&partition_table);
+  g_clear_object (&block);
   return ret;
 }
 
@@ -1630,10 +1656,13 @@ wait_for_luks_uuid (UDisksDaemon *daemon,
                     UDisksObject *object,
                     gpointer      user_data)
 {
+  FormatWaitData *data = user_data;
   UDisksBlock *block = NULL;
   gboolean ret = FALSE;
 
-  ret = FALSE;
+  if (object != data->object)
+    goto out;
+
   block = udisks_object_get_block (object);
   if (block == NULL)
     goto out;
@@ -1655,7 +1684,7 @@ wait_for_luks_cleartext (UDisksDaemon *daemon,
                          UDisksObject *object,
                          gpointer      user_data)
 {
-  const gchar *crypto_object_path = user_data;
+  FormatWaitData *data = user_data;
   UDisksBlock *block = NULL;
   gboolean ret = FALSE;
 
@@ -1664,7 +1693,8 @@ wait_for_luks_cleartext (UDisksDaemon *daemon,
   if (block == NULL)
     goto out;
 
-  if (g_strcmp0 (udisks_block_get_crypto_backing_device (block), crypto_object_path) != 0)
+  if (g_strcmp0 (udisks_block_get_crypto_backing_device (block),
+                 g_dbus_object_get_object_path (G_DBUS_OBJECT (data->object))) != 0)
     goto out;
 
   ret = TRUE;
@@ -1682,6 +1712,7 @@ handle_format (UDisksBlock           *block,
                const gchar           *type,
                GVariant              *options)
 {
+  FormatWaitData *wait_data = NULL;
   UDisksObject *object;
   UDisksObject *cleartext_object = NULL;
   UDisksBlock *cleartext_block = NULL;
@@ -1724,6 +1755,10 @@ handle_format (UDisksBlock           *block,
       g_error_free (error);
       goto out;
     }
+
+  wait_data = g_new0 (FormatWaitData, 1);
+  wait_data->object = object;
+  wait_data->type = type;
 
   /* TODO: Consider just accepting any @type and just running "mkfs -t <type>".
    *       There are some obvious security implications by doing this, though
@@ -1775,7 +1810,7 @@ handle_format (UDisksBlock           *block,
       /* Wait for the UUID to be set */
       if (udisks_daemon_wait_for_object_sync (daemon,
                                               wait_for_luks_uuid,
-                                              NULL, /* user_data */
+                                              wait_data,
                                               NULL,
                                               30,
                                               &error) == NULL)
@@ -1810,7 +1845,7 @@ handle_format (UDisksBlock           *block,
       /* Wait for it */
       cleartext_object = udisks_daemon_wait_for_object_sync (daemon,
                                                              wait_for_luks_cleartext,
-                                                             (gpointer) g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
+                                                             wait_data,
                                                              NULL,
                                                              30,
                                                              &error);
@@ -1894,13 +1929,13 @@ handle_format (UDisksBlock           *block,
 
   if (udisks_daemon_wait_for_object_sync (daemon,
                                           wait_for_filesystem,
-                                          (gpointer) type,
+                                          wait_data,
                                           NULL,
                                           30,
                                           &error) == NULL)
     {
       g_prefix_error (&error,
-                      "Error waiting for FileSystem interface after creating %s file system: ",
+                      "Error waiting for FileSystem interface after creating `%s' fs/content: ",
                       type);
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
@@ -1989,6 +2024,7 @@ handle_format (UDisksBlock           *block,
   g_clear_object (&cleartext_object);
   g_clear_object (&cleartext_block);
   g_clear_object (&udev_cleartext_device);
+  g_free (wait_data);
   return TRUE; /* returning true means that we handled the method invocation */
 }
 
