@@ -1756,10 +1756,6 @@ handle_format (UDisksBlock           *block,
       goto out;
     }
 
-  wait_data = g_new0 (FormatWaitData, 1);
-  wait_data->object = object;
-  wait_data->type = type;
-
   /* TODO: Consider just accepting any @type and just running "mkfs -t <type>".
    *       There are some obvious security implications by doing this, though
    */
@@ -1784,6 +1780,42 @@ handle_format (UDisksBlock           *block,
 
   g_variant_lookup (options, "take-ownership", "b", &take_ownership);
   g_variant_lookup (options, "encrypt.passphrase", "s", &encrypt_passphrase);
+
+  /* First wipe the device */
+  wait_data = g_new0 (FormatWaitData, 1);
+  wait_data->object = object;
+  if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              NULL, /* cancellable */
+                                              0,    /* uid_t run_as_uid */
+                                              0,    /* uid_t run_as_euid */
+                                              &status,
+                                              &error_message,
+                                              NULL, /* input_string */
+                                              "wipefs -a %s",
+                                              udisks_block_get_device (block)))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error wiping device: %s",
+                                             error_message);
+      g_free (error_message);
+      goto out;
+    }
+  if (udisks_daemon_wait_for_object_sync (daemon,
+                                          wait_for_filesystem,
+                                          wait_data,
+                                          NULL,
+                                          30,
+                                          &error) == NULL)
+    {
+      g_prefix_error (&error, "Error synchronizing after initial wipe: ");
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* And now create the desired filesystem */
+  wait_data->type = type;
 
   if (encrypt_passphrase != NULL)
     {
@@ -1921,12 +1953,10 @@ handle_format (UDisksBlock           *block,
       g_free (error_message);
       goto out;
     }
-
   /* The mkfs program may not generate all the uevents we need - so explicitly
    * trigger an event here
    */
   udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object_to_mkfs));
-
   if (udisks_daemon_wait_for_object_sync (daemon,
                                           wait_for_filesystem,
                                           wait_data,
@@ -1935,7 +1965,7 @@ handle_format (UDisksBlock           *block,
                                           &error) == NULL)
     {
       g_prefix_error (&error,
-                      "Error waiting for FileSystem interface after creating `%s' fs/content: ",
+                      "Error synchronizing after formatting with type `%s': ",
                       type);
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
