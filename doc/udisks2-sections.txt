@@ -60,9 +60,11 @@ udisks_client_get_partition_table_subtype_for_display
 UDISKS_TYPE_CLIENT
 UDISKS_CLIENT
 UDISKS_IS_CLIENT
+UDISKS_TYPE_PARTITION_TYPE_INFO_FLAGS
 <SUBSECTION Private>
 udisks_client_get_type
 udisks_partition_type_info_get_type
+udisks_partition_type_info_flags_get_type
 </SECTION>
 
 <SECTION>
@@ -927,6 +929,7 @@ udisks_block_get_id_version
 udisks_block_get_device_number
 udisks_block_get_preferred_device
 udisks_block_get_size
+udisks_block_get_read_only
 udisks_block_get_symlinks
 udisks_block_get_hint_system
 udisks_block_get_hint_ignore
@@ -958,6 +961,7 @@ udisks_block_set_id_version
 udisks_block_set_device_number
 udisks_block_set_preferred_device
 udisks_block_set_size
+udisks_block_set_read_only
 udisks_block_set_symlinks
 udisks_block_set_hint_system
 udisks_block_set_hint_ignore

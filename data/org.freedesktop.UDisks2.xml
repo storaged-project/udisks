@@ -482,6 +482,9 @@
     <!-- Size: The size of the block device. -->
     <property name="Size" type="t" access="read"/>
 
+    <!-- ReadOnly: If %TRUE, the device can not be written to, only read from. -->
+    <property name="ReadOnly" type="b" access="read"/>
+
     <!-- Drive:
          The #org.freedesktop.UDisks2.Drive object that the block device
          belongs to, or '/' if no such object exists.

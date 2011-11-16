@@ -598,6 +598,7 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
   guint64 size;
   gboolean media_available;
   gboolean media_change_detected;
+  gboolean read_only;
 
   drive = NULL;
 
@@ -615,10 +616,14 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
   udisks_block_set_device (iface, device_file);
   udisks_block_set_symlinks (iface, symlinks);
   udisks_block_set_device_number (iface, dev);
+
   size = udisks_daemon_util_block_get_size (device,
                                             &media_available,
                                             &media_change_detected);
   udisks_block_set_size (iface, size);
+
+  read_only = g_udev_device_get_sysfs_attr_as_boolean (device, "ro");
+  udisks_block_set_read_only (iface, read_only);
 
   /* dm-crypt
    *
