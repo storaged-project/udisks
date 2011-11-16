@@ -234,6 +234,7 @@ update_hints (UDisksLinuxBlock  *block,
               UDisksDrive       *drive)
 {
   UDisksBlock *iface = UDISKS_BLOCK (block);
+  gboolean hint_partitionable;
   gboolean hint_system;
   gboolean hint_ignore;
   gboolean hint_auto;
@@ -242,6 +243,7 @@ update_hints (UDisksLinuxBlock  *block,
   const gchar *device_file;
 
   /* very conservative defaults */
+  hint_partitionable = TRUE;
   hint_system = TRUE;
   hint_ignore = FALSE;
   hint_auto = FALSE;
@@ -275,8 +277,19 @@ update_hints (UDisksLinuxBlock  *block,
   else
     {
       if (g_str_has_prefix (device_file, "/dev/fd"))
-        hint_system = FALSE;
+        {
+          hint_system = FALSE;
+          hint_partitionable = FALSE;
+        }
     }
+
+  /* CD-ROM media / drives are not partitionable, at least not here on Linux */
+  if (g_udev_device_get_property_as_boolean (device, "ID_CDROM"))
+    hint_partitionable = FALSE;
+
+  /* device-mapper devices are not partitionable (TODO: for multipath, they are via kpartx(8) hacks) */
+  if (g_str_has_prefix (g_udev_device_get_name (device), "dm-"))
+    hint_partitionable = FALSE;
 
   /* TODO: set ignore to TRUE for physical paths belonging to a drive with multiple paths */
 
@@ -293,6 +306,7 @@ update_hints (UDisksLinuxBlock  *block,
     hint_icon_name = g_udev_device_get_property (device, "UDISKS_ICON_NAME");
 
   /* ... and scene! */
+  udisks_block_set_hint_partitionable (iface, hint_partitionable);
   udisks_block_set_hint_system (iface, hint_system);
   udisks_block_set_hint_ignore (iface, hint_ignore);
   udisks_block_set_hint_auto (iface, hint_auto);

@@ -931,6 +931,7 @@ udisks_block_get_preferred_device
 udisks_block_get_size
 udisks_block_get_read_only
 udisks_block_get_symlinks
+udisks_block_get_hint_partitionable
 udisks_block_get_hint_system
 udisks_block_get_hint_ignore
 udisks_block_get_hint_auto
@@ -963,6 +964,7 @@ udisks_block_set_preferred_device
 udisks_block_set_size
 udisks_block_set_read_only
 udisks_block_set_symlinks
+udisks_block_set_hint_partitionable
 udisks_block_set_hint_system
 udisks_block_set_hint_ignore
 udisks_block_set_hint_auto

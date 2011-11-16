@@ -673,6 +673,13 @@
     -->
     <property name="CryptoBackingDevice" type="o" access="read"/>
 
+    <!-- HintPartitionable:
+         If %TRUE, the device is normally expected to be
+         partitionable. Devices for which this is not the case include
+         floppy drives, optical drives and LVM logical volumes.
+    -->
+    <property name="HintPartitionable" type="b" access="read"/>
+
     <!-- HintSystem: If %TRUE, the device is considered a <emphasis>system device</emphasis>.
          System devices are devices that require additional permissions to access.
 
