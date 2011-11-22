@@ -38,7 +38,7 @@
     </para>
     <para>
       See the
-      <citerefentry><refentrytitle>udisks</refentrytitle><manvolnum>7</manvolnum></citerefentry>
+      <citerefentry><refentrytitle>udisks</refentrytitle><manvolnum>8</manvolnum></citerefentry>
       man page for more information.
     </para>
   </refsect1>
@@ -102,7 +102,7 @@
   <refsect1>
     <title>SEE ALSO</title>
     <para>
-      <link linkend="udisks.7"><citerefentry><refentrytitle>udisks</refentrytitle><manvolnum>7</manvolnum></citerefentry></link>,
+      <link linkend="udisks.8"><citerefentry><refentrytitle>udisks</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
       <link linkend="udisksctl.1"><citerefentry><refentrytitle>udisksctl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>,
       <citerefentry>
         <refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum>

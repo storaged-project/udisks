@@ -812,7 +812,7 @@ strv_has (const gchar * const *haystack,
  * If the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.HintName">HintName</link>
  * and/or
  * <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.HintName">HintIconName</link>
- * properties on the block device for @drive are set (see <xref linkend="udisks.7"/>),
+ * properties on the block device for @drive are set (see <xref linkend="udisks.8"/>),
  * their values are returned in the drive and media
  * description and icon (e.g. @out_description, @out_drive_icon, @out_media_description and @out_media_icon).
  *

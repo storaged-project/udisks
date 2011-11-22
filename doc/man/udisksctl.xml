@@ -236,7 +236,7 @@
   <refsect1>
     <title>See also</title>
     <para>
-      <link linkend="udisks.7"><citerefentry><refentrytitle>udisks</refentrytitle><manvolnum>7</manvolnum></citerefentry></link>,
+      <link linkend="udisks.8"><citerefentry><refentrytitle>udisks</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
       <link linkend="udisksd.8"><citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
       <citerefentry>
         <refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum>

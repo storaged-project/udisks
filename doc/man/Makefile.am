@@ -4,7 +4,7 @@ NULL =
 man_MANS = 				\
 	udisksctl.1			\
 	udisksd.8			\
-	udisks.7			\
+	udisks.8			\
 	$(NULL)
 
 udisksctl.1 : udisksctl.xml
@@ -13,7 +13,7 @@ udisksctl.1 : udisksctl.xml
 udisksd.8 : udisksd.xml
 	$(XSLTPROC) -nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
 
-udisks.7 : udisks.xml
+udisks.8 : udisks.xml
 	$(XSLTPROC) -nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
 
 EXTRA_DIST= 				\
@@ -23,4 +23,4 @@ EXTRA_DIST= 				\
 	$(NULL)
 
 clean-local:
-	rm -f *~ *.[178]
+	rm -f *~ *.[18]

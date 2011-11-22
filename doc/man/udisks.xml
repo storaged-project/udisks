@@ -1,4 +1,4 @@
-<refentry id="udisks.7">
+<refentry id="udisks.8">
   <refentryinfo>
     <title>udisks</title>
     <date>March 2008</date>
@@ -7,7 +7,7 @@
 
   <refmeta>
     <refentrytitle>udisks</refentrytitle>
-    <manvolnum>7</manvolnum>
+    <manvolnum>8</manvolnum>
     <refmiscinfo class="version"></refmiscinfo>
   </refmeta>
 

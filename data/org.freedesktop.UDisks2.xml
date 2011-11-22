@@ -690,25 +690,25 @@
     <!-- HintSystem: If %TRUE, the device is considered a <emphasis>system device</emphasis>.
          System devices are devices that require additional permissions to access.
 
-         See <xref linkend="udisks.7"/> for how to influence the value of this property.
+         See <xref linkend="udisks.8"/> for how to influence the value of this property.
     -->
     <property name="HintSystem" type="b" access="read"/>
 
     <!-- HintIgnore: If %TRUE, the device should be hidden from users.
 
-         See <xref linkend="udisks.7"/> for how to influence the value of this property.
+         See <xref linkend="udisks.8"/> for how to influence the value of this property.
     -->
     <property name="HintIgnore" type="b" access="read"/>
 
     <!-- HintAuto: If %TRUE, the device should be automatically started (e.g. mounted, unlocked etc.).
 
-         See <xref linkend="udisks.7"/> for how to influence the value of this property.
+         See <xref linkend="udisks.8"/> for how to influence the value of this property.
     -->
     <property name="HintAuto" type="b" access="read"/>
 
     <!-- HintName: If not blank, the name to use when presenting the device.
 
-         See <xref linkend="udisks.7"/> for how to influence the value of this property.
+         See <xref linkend="udisks.8"/> for how to influence the value of this property.
     -->
     <property name="HintName" type="s" access="read"/>
 
@@ -716,7 +716,7 @@
          The name must adhere to the
          <ulink url="http://www.freedesktop.org/wiki/Specifications/icon-theme-spec">freedesktop.org icon theme specification</ulink>.
 
-         See <xref linkend="udisks.7"/> for how to influence the value of this property.
+         See <xref linkend="udisks.8"/> for how to influence the value of this property.
     -->
     <property name="HintIconName" type="s" access="read"/>
 
