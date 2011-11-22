@@ -461,6 +461,7 @@ handle_create_partition (UDisksPartitionTable   *table,
     }
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              object,
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */
@@ -510,6 +511,7 @@ handle_create_partition (UDisksPartitionTable   *table,
 
   /* wipe the newly created partition */
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              partition_object,
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */

@@ -320,6 +320,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
 
   /* TODO: support a 'readonly' option */
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              object,
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */
@@ -526,6 +527,7 @@ handle_lock (UDisksEncrypted        *encrypted,
     }
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              object,
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */

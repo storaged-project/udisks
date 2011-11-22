@@ -1415,6 +1415,61 @@ udisks_client_get_partition_table (UDisksClient     *client,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/**
+ * udisks_client_get_jobs_for_object:
+ * @client: A #UDisksClient.
+ * @object: A #UDisksObject.
+ *
+ * Gets all the #UDisksJob instances that reference @object, if any.
+ *
+ * Returns: (transfer full) (element-type UDisksJob): A list of #UDisksJob instances. The
+ *   returned list should be freed with g_list_free() after each
+ *   element has been freed with g_object_unref().
+ */
+GList *
+udisks_client_get_jobs_for_object (UDisksClient  *client,
+                                   UDisksObject  *object)
+{
+  GList *ret = NULL;
+  const gchar *object_path;
+  GList *l, *object_proxies = NULL;
+
+  /* TODO: this is probably slow. Can optimize by maintaining a hash-table from object path to UDisksJob* */
+
+  g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
+  g_return_val_if_fail (UDISKS_IS_OBJECT (object), NULL);
+
+  object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
+
+  object_proxies = g_dbus_object_manager_get_objects (client->object_manager);
+  for (l = object_proxies; l != NULL; l = l->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksJob *job;
+
+      job = udisks_object_get_job (object);
+      if (job != NULL)
+        {
+          const gchar *const *object_paths;
+          guint n;
+          object_paths = udisks_job_get_objects (job);
+          for (n = 0; object_paths != NULL && object_paths[n] != NULL; n++)
+            {
+              if (g_strcmp0 (object_paths[n], object_path) == 0)
+                ret = g_list_prepend (ret, g_object_ref (job));
+            }
+          g_object_unref (job);
+        }
+    }
+  ret = g_list_reverse (ret);
+
+  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
+  g_list_free (object_proxies);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 maybe_emit_changed_now (UDisksClient *client)
 {

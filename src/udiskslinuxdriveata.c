@@ -933,6 +933,7 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
     {
       drive->selftest_cancellable = g_cancellable_new ();
       drive->selftest_job = UDISKS_THREADED_JOB (udisks_daemon_launch_threaded_job (daemon,
+                                                                                    UDISKS_OBJECT (object),
                                                                                     selftest_job_func,
                                                                                     g_object_ref (drive),
                                                                                     g_object_unref,

@@ -580,6 +580,7 @@ handle_eject (UDisksDrive           *_drive,
     goto out;
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              UDISKS_OBJECT (object),
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */

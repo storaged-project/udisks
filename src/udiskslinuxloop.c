@@ -233,6 +233,7 @@ handle_delete (UDisksLoop             *loop,
     }
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              NULL, /* UDisksObject */
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */

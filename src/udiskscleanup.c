@@ -621,6 +621,7 @@ udisks_cleanup_check_mounted_fs_entry (UDisksCleanup  *cleanup,
           escaped_mount_point = g_strescape (mount_point, NULL);
           /* right now -l is the only way to "force unmount" file systems... */
           if (!udisks_daemon_launch_spawned_job_sync (cleanup->daemon,
+                                                      NULL, /* UDisksObject */
                                                       NULL, /* GCancellable */
                                                       0,    /* uid_t run_as_uid */
                                                       0,    /* uid_t run_as_euid */
@@ -1292,6 +1293,7 @@ udisks_cleanup_check_unlocked_luks_entry (UDisksCleanup  *cleanup,
           error_message = NULL;
           escaped_device_file = g_strescape (device_file_cleartext, NULL);
           if (!udisks_daemon_launch_spawned_job_sync (cleanup->daemon,
+                                                      NULL, /* UDisksObject */
                                                       NULL, /* GCancellable */
                                                       0,    /* uid_t run_as_uid */
                                                       0,    /* uid_t run_as_euid */
@@ -1963,6 +1965,7 @@ udisks_cleanup_check_loop_entry (UDisksCleanup  *cleanup,
           error_message = NULL;
           escaped_loop_device_file = g_strescape (loop_device, NULL);
           if (!udisks_daemon_launch_spawned_job_sync (cleanup->daemon,
+                                                      NULL, /* UDisksObject */
                                                       NULL, /* GCancellable */
                                                       0,    /* uid_t run_as_uid */
                                                       0,    /* uid_t run_as_euid */

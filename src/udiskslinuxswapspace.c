@@ -172,6 +172,7 @@ handle_start (UDisksSwapspace        *swapspace,
     goto out;
 
   job = udisks_daemon_launch_spawned_job (daemon,
+                                          object,
                                           NULL, /* cancellable */
                                           0,    /* uid_t run_as_uid */
                                           0,    /* uid_t run_as_euid */
@@ -234,6 +235,7 @@ handle_stop (UDisksSwapspace        *swapspace,
     goto out;
 
   job = udisks_daemon_launch_spawned_job (daemon,
+                                          object,
                                           NULL, /* cancellable */
                                           0,    /* uid_t run_as_uid */
                                           0,    /* uid_t run_as_euid */

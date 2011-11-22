@@ -178,6 +178,91 @@ udisks_base_job_get_cancellable  (UDisksBaseJob  *job)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/**
+ * udisks_base_job_add_object:
+ * @job: A #UDisksBaseJob.
+ * @object: A #UDisksObject.
+ *
+ * Adds the object path for @object to the <link
+ * linkend="gdbus-property-org-freedesktop-UDisks2-Job.Objects">Objects</link>
+ * array. If the object path is already in the array, does nothing.
+ */
+void
+udisks_base_job_add_object (UDisksBaseJob  *job,
+                            UDisksObject   *object)
+{
+  const gchar *object_path;
+  const gchar *const *paths;
+  const gchar **p;
+  guint n;
+
+  g_return_if_fail (UDISKS_IS_BASE_JOB (job));
+  g_return_if_fail (UDISKS_IS_OBJECT (object));
+
+  object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
+  paths = udisks_job_get_objects (UDISKS_JOB (job));
+  for (n = 0; paths != NULL && paths[n] != NULL; n++)
+    {
+      if (g_strcmp0 (paths[n], object_path) == 0)
+        goto out;
+    }
+
+  p = g_new0 (const gchar *, n + 2);
+  p[n] = object_path;
+  udisks_job_set_objects (UDISKS_JOB (job), p);
+  g_free (p);
+
+ out:
+  ;
+}
+
+/**
+ * udisks_base_job_remove_object:
+ * @job: A #UDisksBaseJob.
+ * @object: A #UDisksObject.
+ *
+ * Removes the object path for @object to the <link
+ * linkend="gdbus-property-org-freedesktop-UDisks2-Job.Objects">Objects</link>
+ * array. If the object path is not in the array, does nothing.
+ */
+void
+udisks_base_job_remove_object (UDisksBaseJob  *job,
+                               UDisksObject   *object)
+{
+  const gchar *object_path;
+  const gchar *const *paths;
+  GPtrArray *p = NULL;
+  guint n;
+
+  g_return_if_fail (UDISKS_IS_BASE_JOB (job));
+  g_return_if_fail (UDISKS_IS_OBJECT (object));
+
+  object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
+  paths = udisks_job_get_objects (UDISKS_JOB (job));
+  for (n = 0; paths != NULL && paths[n] != NULL; n++)
+    {
+      if (g_strcmp0 (paths[n], object_path) != 0)
+        {
+          if (p == NULL)
+            p = g_ptr_array_new ();
+          g_ptr_array_add (p, (gpointer) paths[n]);
+        }
+    }
+
+  if (p != NULL)
+    {
+      g_ptr_array_add (p, NULL);
+      udisks_job_set_objects (UDISKS_JOB (job), (const gchar *const *) p->pdata);
+      g_ptr_array_free (p, TRUE);
+    }
+  else
+    {
+      udisks_job_set_objects (UDISKS_JOB (job), NULL);
+    }
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static gboolean
 handle_cancel (UDisksJob              *object,
                GDBusMethodInvocation  *invocation,

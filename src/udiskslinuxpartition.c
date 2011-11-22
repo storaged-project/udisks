@@ -274,6 +274,7 @@ handle_set_flags (UDisksPartition        *partition,
   fd = open (udisks_block_get_device (block), O_RDONLY);
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              object,
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */
@@ -386,6 +387,7 @@ handle_set_name (UDisksPartition        *partition,
   fd = open (udisks_block_get_device (block), O_RDONLY);
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              object,
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */
@@ -555,6 +557,7 @@ handle_set_type (UDisksPartition        *partition,
   fd = open (udisks_block_get_device (block), O_RDONLY);
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              object,
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */
@@ -633,6 +636,7 @@ handle_delete (UDisksPartition        *partition,
   escaped_device = g_strescape (udisks_block_get_device (partition_table_block), NULL);
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              partition_table_object,
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */

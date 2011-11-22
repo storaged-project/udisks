@@ -39,6 +39,7 @@ udisks_client_get_drive_for_block
 udisks_client_get_cleartext_block
 udisks_client_get_partition_table
 udisks_client_get_partitions
+udisks_client_get_jobs_for_object
 <SUBSECTION>
 udisks_client_get_drive_info
 udisks_client_get_partition_info
@@ -104,6 +105,8 @@ udisks_daemon_marshal_BOOLEAN__BOXED_INT_BOXED_BOXED
 <TITLE>UDisksBaseJob</TITLE>
 UDisksBaseJob
 UDisksBaseJobClass
+udisks_base_job_add_object
+udisks_base_job_remove_object
 udisks_base_job_get_cancellable
 <SUBSECTION Standard>
 UDISKS_TYPE_BASE_JOB
@@ -697,9 +700,12 @@ udisks_job_emit_completed
 udisks_job_get_expected_end_time
 udisks_job_get_progress
 udisks_job_get_start_time
+udisks_job_get_objects
+udisks_job_dup_objects
 udisks_job_set_expected_end_time
 udisks_job_set_progress
 udisks_job_set_start_time
+udisks_job_set_objects
 UDisksJobProxy
 UDisksJobProxyClass
 udisks_job_proxy_new

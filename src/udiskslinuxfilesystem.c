@@ -908,6 +908,7 @@ handle_mount (UDisksFilesystem       *filesystem,
       mount_fstab_as_root = FALSE;
     mount_fstab_again:
       if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                                  object,
                                                   NULL,  /* GCancellable */
                                                   mount_fstab_as_root ? 0 : caller_uid, /* uid_t run_as_uid */
                                                   mount_fstab_as_root ? 0 : caller_uid, /* uid_t run_as_euid */
@@ -1068,6 +1069,7 @@ handle_mount (UDisksFilesystem       *filesystem,
 
   /* run mount(8) */
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              object,
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */
@@ -1222,6 +1224,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
       escaped_mount_point = g_strescape (mount_point, NULL);
       /* right now -l is the only way to "force unmount" file systems... */
       if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                                  object,
                                                   NULL, /* GCancellable */
                                                   unmount_fstab_as_root ? 0 : caller_uid, /* uid_t run_as_uid */
                                                   unmount_fstab_as_root ? 0 : caller_uid, /* uid_t run_as_euid */
@@ -1319,6 +1322,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
         }
       escaped_mount_point = g_strescape (mount_point, NULL);
       rc = udisks_daemon_launch_spawned_job_sync (daemon,
+                                                  object,
                                                   NULL, /* GCancellable */
                                                   0,    /* uid_t run_as_uid */
                                                   0,    /* uid_t run_as_euid */
@@ -1333,6 +1337,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
     {
       /* mount_point == NULL */
       rc = udisks_daemon_launch_spawned_job_sync (daemon,
+                                                  object,
                                                   NULL, /* GCancellable */
                                                   0,    /* uid_t run_as_uid */
                                                   0,    /* uid_t run_as_euid */
@@ -1559,6 +1564,7 @@ handle_set_label (UDisksFilesystem       *filesystem,
     }
 
   job = udisks_daemon_launch_spawned_job (daemon,
+                                          object,
                                           NULL, /* cancellable */
                                           0,    /* uid_t run_as_uid */
                                           0,    /* uid_t run_as_euid */

@@ -494,6 +494,7 @@ static guint job_id = 0;
 /**
  * udisks_daemon_launch_simple_job:
  * @daemon: A #UDisksDaemon.
+ * @object: (allow-none): A #UDisksObject to add to the job or %NULL.
  * @cancellable: A #GCancellable or %NULL.
  *
  * Launches a new simple job.
@@ -512,23 +513,26 @@ static guint job_id = 0;
  */
 UDisksBaseJob *
 udisks_daemon_launch_simple_job (UDisksDaemon    *daemon,
+                                 UDisksObject    *object,
                                  GCancellable    *cancellable)
 {
   UDisksSimpleJob *job;
-  UDisksObjectSkeleton *object;
-  gchar *object_path;
+  UDisksObjectSkeleton *job_object;
+  gchar *job_object_path;
 
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
 
   job = udisks_simple_job_new (cancellable);
+  if (object != NULL)
+    udisks_base_job_add_object (UDISKS_BASE_JOB (job), object);
 
   /* TODO: protect job_id by a mutex */
-  object_path = g_strdup_printf ("/org/freedesktop/UDisks2/jobs/%d", job_id++);
-  object = udisks_object_skeleton_new (object_path);
-  udisks_object_skeleton_set_job (object, UDISKS_JOB (job));
-  g_free (object_path);
+  job_object_path = g_strdup_printf ("/org/freedesktop/UDisks2/jobs/%d", job_id++);
+  job_object = udisks_object_skeleton_new (job_object_path);
+  udisks_object_skeleton_set_job (job_object, UDISKS_JOB (job));
+  g_free (job_object_path);
 
-  g_dbus_object_manager_server_export (daemon->object_manager, G_DBUS_OBJECT_SKELETON (object));
+  g_dbus_object_manager_server_export (daemon->object_manager, G_DBUS_OBJECT_SKELETON (job_object));
   g_signal_connect_after (job,
                           "completed",
                           G_CALLBACK (on_job_completed),
@@ -542,6 +546,7 @@ udisks_daemon_launch_simple_job (UDisksDaemon    *daemon,
 /**
  * udisks_daemon_launch_threaded_job:
  * @daemon: A #UDisksDaemon.
+ * @object: (allow-none): A #UDisksObject to add to the job or %NULL.
  * @job_func: The function to run in another thread.
  * @user_data: User data to pass to @job_func.
  * @user_data_free_func: Function to free @user_data with or %NULL.
@@ -565,14 +570,15 @@ udisks_daemon_launch_simple_job (UDisksDaemon    *daemon,
  */
 UDisksBaseJob *
 udisks_daemon_launch_threaded_job  (UDisksDaemon    *daemon,
+                                    UDisksObject    *object,
                                     UDisksThreadedJobFunc job_func,
                                     gpointer         user_data,
                                     GDestroyNotify   user_data_free_func,
                                     GCancellable    *cancellable)
 {
   UDisksThreadedJob *job;
-  UDisksObjectSkeleton *object;
-  gchar *object_path;
+  UDisksObjectSkeleton *job_object;
+  gchar *job_object_path;
 
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
   g_return_val_if_fail (job_func != NULL, NULL);
@@ -581,14 +587,16 @@ udisks_daemon_launch_threaded_job  (UDisksDaemon    *daemon,
                                  user_data,
                                  user_data_free_func,
                                  cancellable);
+  if (object != NULL)
+    udisks_base_job_add_object (UDISKS_BASE_JOB (job), object);
 
   /* TODO: protect job_id by a mutex */
-  object_path = g_strdup_printf ("/org/freedesktop/UDisks2/jobs/%d", job_id++);
-  object = udisks_object_skeleton_new (object_path);
-  udisks_object_skeleton_set_job (object, UDISKS_JOB (job));
-  g_free (object_path);
+  job_object_path = g_strdup_printf ("/org/freedesktop/UDisks2/jobs/%d", job_id++);
+  job_object = udisks_object_skeleton_new (job_object_path);
+  udisks_object_skeleton_set_job (job_object, UDISKS_JOB (job));
+  g_free (job_object_path);
 
-  g_dbus_object_manager_server_export (daemon->object_manager, G_DBUS_OBJECT_SKELETON (object));
+  g_dbus_object_manager_server_export (daemon->object_manager, G_DBUS_OBJECT_SKELETON (job_object));
   g_signal_connect_after (job,
                           "completed",
                           G_CALLBACK (on_job_completed),
@@ -602,6 +610,7 @@ udisks_daemon_launch_threaded_job  (UDisksDaemon    *daemon,
 /**
  * udisks_daemon_launch_spawned_job:
  * @daemon: A #UDisksDaemon.
+ * @object: (allow-none): A #UDisksObject to add to the job or %NULL.
  * @cancellable: A #GCancellable or %NULL.
  * @run_as_uid: The #uid_t to run the command as.
  * @run_as_euid: The effective #uid_t to run the command as.
@@ -624,6 +633,7 @@ udisks_daemon_launch_threaded_job  (UDisksDaemon    *daemon,
  */
 UDisksBaseJob *
 udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
+                                  UDisksObject    *object,
                                   GCancellable    *cancellable,
                                   uid_t            run_as_uid,
                                   uid_t            run_as_euid,
@@ -634,8 +644,8 @@ udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
   va_list var_args;
   gchar *command_line;
   UDisksSpawnedJob *job;
-  UDisksObjectSkeleton *object;
-  gchar *object_path;
+  UDisksObjectSkeleton *job_object;
+  gchar *job_object_path;
 
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
   g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
@@ -647,13 +657,16 @@ udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
   job = udisks_spawned_job_new (command_line, input_string, run_as_uid, run_as_euid, cancellable);
   g_free (command_line);
 
-  /* TODO: protect job_id by a mutex */
-  object_path = g_strdup_printf ("/org/freedesktop/UDisks2/jobs/%d", job_id++);
-  object = udisks_object_skeleton_new (object_path);
-  udisks_object_skeleton_set_job (object, UDISKS_JOB (job));
-  g_free (object_path);
+  if (object != NULL)
+    udisks_base_job_add_object (UDISKS_BASE_JOB (job), object);
 
-  g_dbus_object_manager_server_export (daemon->object_manager, G_DBUS_OBJECT_SKELETON (object));
+  /* TODO: protect job_id by a mutex */
+  job_object_path = g_strdup_printf ("/org/freedesktop/UDisks2/jobs/%d", job_id++);
+  job_object = udisks_object_skeleton_new (job_object_path);
+  udisks_object_skeleton_set_job (job_object, UDISKS_JOB (job));
+  g_free (job_object_path);
+
+  g_dbus_object_manager_server_export (daemon->object_manager, G_DBUS_OBJECT_SKELETON (job_object));
   g_signal_connect_after (job,
                           "completed",
                           G_CALLBACK (on_job_completed),
@@ -701,6 +714,7 @@ spawned_job_sync_on_completed (UDisksJob    *job,
 /**
  * udisks_daemon_launch_spawned_job_sync:
  * @daemon: A #UDisksDaemon.
+ * @object: (allow-none): A #UDisksObject to add to the job or %NULL.
  * @cancellable: A #GCancellable or %NULL.
  * @run_as_uid: The #uid_t to run the command as.
  * @run_as_euid: The effective #uid_t to run the command as.
@@ -717,6 +731,7 @@ spawned_job_sync_on_completed (UDisksJob    *job,
  */
 gboolean
 udisks_daemon_launch_spawned_job_sync (UDisksDaemon    *daemon,
+                                       UDisksObject    *object,
                                        GCancellable    *cancellable,
                                        uid_t            run_as_uid,
                                        uid_t            run_as_euid,
@@ -746,6 +761,7 @@ udisks_daemon_launch_spawned_job_sync (UDisksDaemon    *daemon,
   command_line = g_strdup_vprintf (command_line_format, var_args);
   va_end (var_args);
   job = udisks_daemon_launch_spawned_job (daemon,
+                                          object,
                                           cancellable,
                                           run_as_uid,
                                           run_as_euid,

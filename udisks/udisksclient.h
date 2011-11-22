@@ -69,6 +69,9 @@ UDisksPartitionTable *udisks_client_get_partition_table (UDisksClient        *cl
 GList              *udisks_client_get_partitions      (UDisksClient        *client,
                                                        UDisksPartitionTable *table);
 
+GList              *udisks_client_get_jobs_for_object (UDisksClient        *client,
+                                                       UDisksObject        *object);
+
 void                udisks_client_get_drive_info      (UDisksClient        *client,
                                                        UDisksDrive         *drive,
                                                        gchar              **out_name,

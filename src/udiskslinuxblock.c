@@ -1804,6 +1804,7 @@ handle_format (UDisksBlock           *block,
   wait_data = g_new0 (FormatWaitData, 1);
   wait_data->object = object;
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              object,
                                               NULL, /* cancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */
@@ -1840,6 +1841,7 @@ handle_format (UDisksBlock           *block,
     {
       /* Create it */
       if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                                  object,
                                                   NULL, /* cancellable */
                                                   0,    /* uid_t run_as_uid */
                                                   0,    /* uid_t run_as_euid */
@@ -1874,6 +1876,7 @@ handle_format (UDisksBlock           *block,
       /* Open it */
       mapped_name = g_strdup_printf ("luks-%s", udisks_block_get_id_uuid (block));
       if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                                  object,
                                                   NULL, /* cancellable */
                                                   0,    /* uid_t run_as_uid */
                                                   0,    /* uid_t run_as_euid */
@@ -1956,6 +1959,7 @@ handle_format (UDisksBlock           *block,
   command = subst_str (tmp, "$LABEL", escaped_label);
   g_free (tmp);
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              object_to_mkfs,
                                               NULL, /* cancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */

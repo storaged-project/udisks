@@ -1259,6 +1259,9 @@
     -->
     <property name="ExpectedEndTime" type="t" access="read"/>
 
+    <!-- Objects: The objects that the job is related to, if any. -->
+    <property name="Objects" type="ao" access="read"/>
+
     <!--
         Cancel:
         @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
