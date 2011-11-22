@@ -6,9 +6,9 @@ The source code for the udisks daemon and command-line tools are
 licensed to you under the GNU General Public License. Either version 2
 of the License, or (at your option) any later version.
 
-The source code for the udisks library is is licensed to you under the
-GNU Library General Public License. Either version 2 of the License,
-or (at your option) any later version.
+The source code for the libudisks2 dynamic library is licensed to you
+under the GNU Library General Public License. Either version 2 of the
+License, or (at your option) any later version.
 
 Each file is marked with copyright and licensing headers.
 

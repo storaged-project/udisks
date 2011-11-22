@@ -1,59 +1,22 @@
 OVERVIEW
 ========
 
-The udisks project provides
-
- o  A storage daemon that implements well-defined D-Bus interfaces
-    that can be used to query and manipulate storage devices.
-
- o  a command-line tool, udisks(1), that can be used to query and
-    use the daemon
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks and storage devices.
 
 LICENSE
 =======
 
-See the COPYING file for the license.
+See the COPYING file for the license. In a nutshell, the daemon and
+tools are licensed under the GPLv2 (or later) and libraries are
+licensed under LGPLv2 (or later).
 
 VERSIONING and ABI STABILITY
 ============================
 
-The udisks version number consists of three numbers separated by a .
-
- o  Major number indicating the feature version
-
- o  Minor number indicating the ABI for the current feature version
-
- o  Sub number indicating ABI additions
-
-The ABI is guaranteed to be stable only when the major and minor
-number does not change. For example, an application expecting version
-1.0.12 will work with any 1.0.x release (such as 1.0.99) as long as
-e.g. x >= 12.
-
-The udisks version number can be obtained at compile time using
-pkg-config(1):
-
- $ pkg-config --modversion udisks
- 1.0.0
-
-or any of the autoconf macros.
-
-At run-time, the udisks version number can be obtained by querying the
-DaemonVersion property (of type 's') on the org.freedesktop.UDisks
-interface on the object /org/freedesktop/UDisks owned by the
-well-known name org.freedesktop.UDisks on the D-Bus system message
-bus. This property is guaranteed to always exist and contain the
-version number no matter what the ABI version is:
-
- $ dbus-send --system                             \
-             --print-reply                        \
-             --dest=org.freedesktop.UDisks        \
-             /org/freedesktop/UDisks              \
-             org.freedesktop.DBus.Properties.Get  \
-             string:org.freedesktop.UDisks        \
-             string:DaemonVersion
-  method return sender=:1.172 -> dest=:1.186 reply_serial=2
-     variant       string "1.0.0"
+Unless otherwise stated, the D-Bus and library interfaces are
+considered stable. The interface of the command-line tools are not
+considered stable - they may change at any point in time.
 
 BUGS and DEVELOPMENT
 ====================
@@ -61,10 +24,3 @@ BUGS and DEVELOPMENT
 Please report bugs via the freedesktop.org bugzilla at
 
  http://bugs.freedesktop.org/enter_bug.cgi?product=udisks
-
-For feature development use the devkit-devel mailing list (need to be
-subsribed to post)
-
- http://lists.freedesktop.org/archives/devkit-devel
-
-See the HACKING file for details on code style.
