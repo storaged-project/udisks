@@ -132,13 +132,16 @@ endif # HAVE_INTROSPECTION
 
 # ----------------------------------------------------------------------------------------------------
 
-CLEANFILES = udisks-generated-doc-*.xml $(gir_DATA) $(typelibs_DATA)
+CLEANFILES = udisks-generated-doc-*.xml udisks-generated.[ch] $(gir_DATA) $(typelibs_DATA)
 
 EXTRA_DIST = 						\
 	udisks2.pc.in					\
 	udisksenumtypes.h.template			\
 	udisksenumtypes.c.template			\
 	$(NULL)
+
+dist-hook :
+	(for i in $(BUILT_SOURCES) ; do rm -f $(distdir)/$$i ; done)
 
 clean-local :
 	rm -f *~ $(BUILT_SOURCES)
