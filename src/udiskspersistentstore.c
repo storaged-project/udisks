@@ -66,7 +66,7 @@ struct _UDisksPersistentStore
   gchar *path;
   gchar *temp_path;
 
-  GMutex *lock;
+  GMutex lock;
 
   /* key-path -> GVariant */
   GHashTable *cache;
@@ -105,7 +105,7 @@ udisks_persistent_store_finalize (GObject *object)
   UDisksPersistentStore *store = UDISKS_PERSISTENT_STORE (object);
 
   g_hash_table_unref (store->cache);
-  g_mutex_free (store->lock);
+  g_mutex_clear (&store->lock);
   g_free (store->path);
   g_free (store->temp_path);
 
@@ -178,7 +178,7 @@ udisks_persistent_store_set_property (GObject      *object,
 static void
 udisks_persistent_store_init (UDisksPersistentStore *store)
 {
-  store->lock = g_mutex_new ();
+  g_mutex_init (&store->lock);
   store->cache = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_variant_unref);
 }
 
@@ -323,7 +323,7 @@ udisks_persistent_store_get (UDisksPersistentStore   *store,
   path = NULL;
   contents = NULL;
 
-  g_mutex_lock (store->lock);
+  g_mutex_lock (&store->lock);
 
   /* TODO:
    *
@@ -373,7 +373,7 @@ udisks_persistent_store_get (UDisksPersistentStore   *store,
   contents = NULL; /* ownership transfered to the returned GVariant */
 
  out:
-  g_mutex_unlock (store->lock);
+  g_mutex_unlock (&store->lock);
   g_free (contents);
   g_free (path);
 
@@ -417,7 +417,7 @@ udisks_persistent_store_set (UDisksPersistentStore   *store,
 
   ret = FALSE;
 
-  g_mutex_lock (store->lock);
+  g_mutex_lock (&store->lock);
 
   g_variant_ref_sink (value);
   normalized = g_variant_get_normal_form (value);
@@ -443,7 +443,7 @@ udisks_persistent_store_set (UDisksPersistentStore   *store,
   ret = TRUE;
 
  out:
-  g_mutex_unlock (store->lock);
+  g_mutex_unlock (&store->lock);
 
   g_free (path);
   g_free (data);

@@ -136,7 +136,7 @@ struct _UDisksCleanup
 {
   GObject parent_instance;
 
-  GMutex *lock;
+  GMutex lock;
 
   UDisksDaemon *daemon;
   UDisksPersistentStore *persistent_store;
@@ -182,7 +182,7 @@ G_DEFINE_TYPE (UDisksCleanup, udisks_cleanup, G_TYPE_OBJECT);
 static void
 udisks_cleanup_init (UDisksCleanup *cleanup)
 {
-  cleanup->lock = g_mutex_new ();
+  g_mutex_init (&cleanup->lock);
   cleanup->currently_unmounting = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
   cleanup->currently_locking = g_hash_table_new_full (g_int64_hash, g_int64_equal, g_free, NULL);
   cleanup->currently_deleting = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
@@ -196,7 +196,7 @@ udisks_cleanup_finalize (GObject *object)
   g_hash_table_unref (cleanup->currently_unmounting);
   g_hash_table_unref (cleanup->currently_locking);
   g_hash_table_unref (cleanup->currently_deleting);
-  g_mutex_free (cleanup->lock);
+  g_mutex_clear (&cleanup->lock);
 
   G_OBJECT_CLASS (udisks_cleanup_parent_class)->finalize (object);
 }
@@ -327,10 +327,9 @@ udisks_cleanup_start (UDisksCleanup *cleanup)
 
   cleanup->context = g_main_context_new ();
   cleanup->loop = g_main_loop_new (cleanup->context, FALSE);
-  cleanup->thread = g_thread_create (udisks_cleanup_thread_func,
-                                     g_object_ref (cleanup),
-                                     TRUE, /* joinable */
-                                     NULL);
+  cleanup->thread = g_thread_new ("cleanup",
+                                  udisks_cleanup_thread_func,
+                                  g_object_ref (cleanup));
 }
 
 /**
@@ -402,7 +401,7 @@ udisks_cleanup_check_in_thread (UDisksCleanup *cleanup)
 {
   GArray *devs_to_clean;
 
-  g_mutex_lock (cleanup->lock);
+  g_mutex_lock (&cleanup->lock);
 
   /* We have to do a two-stage clean-up since fake block devices
    * can't be stopped if they are in use
@@ -440,7 +439,7 @@ udisks_cleanup_check_in_thread (UDisksCleanup *cleanup)
 
   udisks_info ("Cleanup check end");
 
-  g_mutex_unlock (cleanup->lock);
+  g_mutex_unlock (&cleanup->lock);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -782,7 +781,7 @@ udisks_cleanup_add_mounted_fs (UDisksCleanup  *cleanup,
   g_return_val_if_fail (mount_point != NULL, FALSE);
   g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-  g_mutex_lock (cleanup->lock);
+  g_mutex_lock (&cleanup->lock);
 
   ret = FALSE;
 
@@ -868,7 +867,7 @@ udisks_cleanup_add_mounted_fs (UDisksCleanup  *cleanup,
   ret = TRUE;
 
  out:
-  g_mutex_unlock (cleanup->lock);
+  g_mutex_unlock (&cleanup->lock);
   return ret;
 }
 
@@ -898,7 +897,7 @@ udisks_cleanup_remove_mounted_fs (UDisksCleanup   *cleanup,
   g_return_val_if_fail (mount_point != NULL, FALSE);
   g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-  g_mutex_lock (cleanup->lock);
+  g_mutex_lock (&cleanup->lock);
 
   ret = FALSE;
   removed = FALSE;
@@ -977,7 +976,7 @@ udisks_cleanup_remove_mounted_fs (UDisksCleanup   *cleanup,
     }
 
  out:
-  g_mutex_unlock (cleanup->lock);
+  g_mutex_unlock (&cleanup->lock);
   return ret;
 }
 
@@ -1009,7 +1008,7 @@ udisks_cleanup_find_mounted_fs (UDisksCleanup   *cleanup,
   g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), NULL);
   g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-  g_mutex_lock (cleanup->lock);
+  g_mutex_lock (&cleanup->lock);
 
   ret = NULL;
   value = NULL;
@@ -1096,7 +1095,7 @@ udisks_cleanup_find_mounted_fs (UDisksCleanup   *cleanup,
  out:
   if (value != NULL)
     g_variant_unref (value);
-  g_mutex_unlock (cleanup->lock);
+  g_mutex_unlock (&cleanup->lock);
   return ret;
 }
 
@@ -1121,7 +1120,7 @@ udisks_cleanup_ignore_mounted_fs (UDisksCleanup  *cleanup,
   g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
   g_return_val_if_fail (mount_point != NULL, FALSE);
 
-  g_mutex_lock (cleanup->lock);
+  g_mutex_lock (&cleanup->lock);
 
   ret = FALSE;
 
@@ -1133,7 +1132,7 @@ udisks_cleanup_ignore_mounted_fs (UDisksCleanup  *cleanup,
   ret = TRUE;
 
  out:
-  g_mutex_unlock (cleanup->lock);
+  g_mutex_unlock (&cleanup->lock);
   return ret;
 }
 
@@ -1152,9 +1151,9 @@ udisks_cleanup_unignore_mounted_fs (UDisksCleanup  *cleanup,
   g_return_if_fail (UDISKS_IS_CLEANUP (cleanup));
   g_return_if_fail (mount_point != NULL);
 
-  g_mutex_lock (cleanup->lock);
+  g_mutex_lock (&cleanup->lock);
   g_warn_if_fail (g_hash_table_remove (cleanup->currently_unmounting, mount_point));
-  g_mutex_unlock (cleanup->lock);
+  g_mutex_unlock (&cleanup->lock);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1445,7 +1444,7 @@ udisks_cleanup_add_unlocked_luks (UDisksCleanup  *cleanup,
   g_return_val_if_fail (dm_uuid != NULL, FALSE);
   g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-  g_mutex_lock (cleanup->lock);
+  g_mutex_lock (&cleanup->lock);
 
   ret = FALSE;
 
@@ -1530,7 +1529,7 @@ udisks_cleanup_add_unlocked_luks (UDisksCleanup  *cleanup,
   ret = TRUE;
 
  out:
-  g_mutex_unlock (cleanup->lock);
+  g_mutex_unlock (&cleanup->lock);
   return ret;
 }
 
@@ -1559,7 +1558,7 @@ udisks_cleanup_remove_unlocked_luks (UDisksCleanup   *cleanup,
   g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
   g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-  g_mutex_lock (cleanup->lock);
+  g_mutex_lock (&cleanup->lock);
 
   ret = FALSE;
   removed = FALSE;
@@ -1638,7 +1637,7 @@ udisks_cleanup_remove_unlocked_luks (UDisksCleanup   *cleanup,
     }
 
  out:
-  g_mutex_unlock (cleanup->lock);
+  g_mutex_unlock (&cleanup->lock);
   return ret;
 }
 
@@ -1668,7 +1667,7 @@ udisks_cleanup_find_unlocked_luks (UDisksCleanup   *cleanup,
   g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), 0);
   g_return_val_if_fail (error == NULL || *error == NULL, 0);
 
-  g_mutex_lock (cleanup->lock);
+  g_mutex_lock (&cleanup->lock);
 
   ret = 0;
   value = NULL;
@@ -1744,7 +1743,7 @@ udisks_cleanup_find_unlocked_luks (UDisksCleanup   *cleanup,
  out:
   if (value != NULL)
     g_variant_unref (value);
-  g_mutex_unlock (cleanup->lock);
+  g_mutex_unlock (&cleanup->lock);
   return ret;
 }
 
@@ -1770,7 +1769,7 @@ udisks_cleanup_ignore_unlocked_luks (UDisksCleanup  *cleanup,
 
   g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
 
-  g_mutex_lock (cleanup->lock);
+  g_mutex_lock (&cleanup->lock);
 
   ret = FALSE;
 
@@ -1784,7 +1783,7 @@ udisks_cleanup_ignore_unlocked_luks (UDisksCleanup  *cleanup,
   ret = TRUE;
 
  out:
-  g_mutex_unlock (cleanup->lock);
+  g_mutex_unlock (&cleanup->lock);
   return ret;
 }
 
@@ -1804,10 +1803,10 @@ udisks_cleanup_unignore_unlocked_luks (UDisksCleanup  *cleanup,
 
   g_return_if_fail (UDISKS_IS_CLEANUP (cleanup));
 
-  g_mutex_lock (cleanup->lock);
+  g_mutex_lock (&cleanup->lock);
   v = cleartext_device;
   g_warn_if_fail (g_hash_table_remove (cleanup->currently_locking, &v));
-  g_mutex_unlock (cleanup->lock);
+  g_mutex_unlock (&cleanup->lock);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -2115,7 +2114,7 @@ udisks_cleanup_add_loop (UDisksCleanup   *cleanup,
   g_return_val_if_fail (backing_file != NULL, FALSE);
   g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-  g_mutex_lock (cleanup->lock);
+  g_mutex_lock (&cleanup->lock);
 
   ret = FALSE;
 
@@ -2200,7 +2199,7 @@ udisks_cleanup_add_loop (UDisksCleanup   *cleanup,
   ret = TRUE;
 
  out:
-  g_mutex_unlock (cleanup->lock);
+  g_mutex_unlock (&cleanup->lock);
   return ret;
 }
 
@@ -2229,7 +2228,7 @@ udisks_cleanup_remove_loop (UDisksCleanup   *cleanup,
   g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
   g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-  g_mutex_lock (cleanup->lock);
+  g_mutex_lock (&cleanup->lock);
 
   ret = FALSE;
   removed = FALSE;
@@ -2308,7 +2307,7 @@ udisks_cleanup_remove_loop (UDisksCleanup   *cleanup,
     }
 
  out:
-  g_mutex_unlock (cleanup->lock);
+  g_mutex_unlock (&cleanup->lock);
   return ret;
 }
 
@@ -2336,7 +2335,7 @@ udisks_cleanup_has_loop (UDisksCleanup   *cleanup,
   g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
   g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-  g_mutex_lock (cleanup->lock);
+  g_mutex_lock (&cleanup->lock);
 
   ret = 0;
   value = NULL;
@@ -2403,7 +2402,7 @@ udisks_cleanup_has_loop (UDisksCleanup   *cleanup,
  out:
   if (value != NULL)
     g_variant_unref (value);
-  g_mutex_unlock (cleanup->lock);
+  g_mutex_unlock (&cleanup->lock);
   return ret;
 }
 
@@ -2428,7 +2427,7 @@ udisks_cleanup_ignore_loop (UDisksCleanup  *cleanup,
   g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
   g_return_val_if_fail (device_file != NULL, FALSE);
 
-  g_mutex_lock (cleanup->lock);
+  g_mutex_lock (&cleanup->lock);
 
   ret = FALSE;
 
@@ -2440,7 +2439,7 @@ udisks_cleanup_ignore_loop (UDisksCleanup  *cleanup,
   ret = TRUE;
 
  out:
-  g_mutex_unlock (cleanup->lock);
+  g_mutex_unlock (&cleanup->lock);
   return ret;
 }
 
@@ -2459,7 +2458,7 @@ udisks_cleanup_unignore_loop (UDisksCleanup  *cleanup,
   g_return_if_fail (UDISKS_IS_CLEANUP (cleanup));
   g_return_if_fail (device_file != NULL);
 
-  g_mutex_lock (cleanup->lock);
+  g_mutex_lock (&cleanup->lock);
   g_warn_if_fail (g_hash_table_remove (cleanup->currently_deleting, device_file));
-  g_mutex_unlock (cleanup->lock);
+  g_mutex_unlock (&cleanup->lock);
 }
