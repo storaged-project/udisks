@@ -58,10 +58,10 @@ umount_udisks2_LDADD = 					\
 
 # ----------------------------------------------------------------------------------------------------
 
-profiledir = $(sysconfdir)/profile.d
-profile_SCRIPTS = udisksctl-bash-completion.sh
+bash_completiondir = $(sysconfdir)/bash_completion.d
+bash_completion_DATA = udisksctl-bash-completion.sh
 
-EXTRA_DIST = $(profile_SCRIPTS)
+EXTRA_DIST = $(bash_completion_DATA)
 
 clean-local :
 	rm -f *~ $(service_DATA) $(dbusconf_DATA)
