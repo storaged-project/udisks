@@ -1411,7 +1411,6 @@ udisks_cleanup_check_loop_entry (UDisksCleanup  *cleanup,
   const gchar *backing_file;
   dev_t backing_file_device;
   GUdevClient *udev_client;
-  GUdevDevice *udev_backing_file_device;
   struct stat loop_device_statbuf;
   gint loop_device_fd;
   struct loop_info64 li64;
@@ -1487,22 +1486,36 @@ udisks_cleanup_check_loop_entry (UDisksCleanup  *cleanup,
     }
   is_setup = TRUE;
 
-  udev_backing_file_device = g_udev_client_query_by_device_number (udev_client,
-                                                                   G_UDEV_DEVICE_TYPE_BLOCK,
-                                                                   backing_file_device);
-  if (udev_backing_file_device != NULL)
+  /* Check if device exists... */
+  if (major (backing_file_device) == 0)
     {
-      GList *mounts;
-      /* Figure out if still mounted */
-      mounts = udisks_mount_monitor_get_mounts_for_dev (monitor, backing_file_device);
-      if (mounts != NULL)
-        {
-          backing_device_mounted = TRUE;
-        }
-      g_list_foreach (mounts, (GFunc) g_object_unref, NULL);
-      g_list_free (mounts);
+      /* major==0 -> not regular block device ... could be e.g. NFS ...
+       * for now, just assume it's still there and mounted
+       */
       has_backing_device = TRUE;
-      g_object_unref (udev_backing_file_device);
+      backing_device_mounted = TRUE;
+    }
+  else
+    {
+      GUdevDevice *udev_backing_file_device;
+      /* check with udev if the backing device exists and is still mounted */
+      udev_backing_file_device = g_udev_client_query_by_device_number (udev_client,
+                                                                       G_UDEV_DEVICE_TYPE_BLOCK,
+                                                                       backing_file_device);
+      if (udev_backing_file_device != NULL)
+        {
+          GList *mounts;
+
+          has_backing_device = TRUE;
+          g_object_unref (udev_backing_file_device);
+
+          /* and if it's still mounted */
+          mounts = udisks_mount_monitor_get_mounts_for_dev (monitor, backing_file_device);
+          if (mounts != NULL)
+            backing_device_mounted = TRUE;
+          g_list_foreach (mounts, (GFunc) g_object_unref, NULL);
+          g_list_free (mounts);
+        }
     }
 
   /* OK, entry is valid - keep it around */
