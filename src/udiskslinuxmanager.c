@@ -417,13 +417,11 @@ handle_loop_setup (UDisksManager          *object,
     }
 
   /* update the loop file */
-  if (!udisks_cleanup_add_loop (udisks_daemon_get_cleanup (manager->daemon),
-                                loop_device,
-                                path,
-                                fd_statbuf.st_dev,
-                                caller_uid,
-                                &error))
-    goto out;
+  udisks_cleanup_add_loop (udisks_daemon_get_cleanup (manager->daemon),
+                           loop_device,
+                           path,
+                           fd_statbuf.st_dev,
+                           caller_uid);
 
   udisks_notice ("Set up loop device %s (backed by %s)",
                  loop_device,

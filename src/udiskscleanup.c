@@ -737,54 +737,41 @@ udisks_cleanup_check_mounted_fs (UDisksCleanup *cleanup,
  * @mount_point: The mount point.
  * @uid: The user id of the process requesting the device to be mounted.
  * @fstab_mount: %TRUE if the device was mounted via /etc/fstab.
- * @error: Return location for error or %NULL.
  *
  * Adds a new entry to the
  * <filename>/var/lib/udisks2/mounted-fs</filename> file.
- *
- * Returns: %TRUE if the entry was added, %FALSE if @error is set.
  */
-gboolean
+void
 udisks_cleanup_add_mounted_fs (UDisksCleanup  *cleanup,
                                const gchar    *mount_point,
                                dev_t           block_device,
                                uid_t           uid,
-                               gboolean        fstab_mount,
-                               GError        **error)
+                               gboolean        fstab_mount)
 {
-  gboolean ret;
   GVariant *value;
   GVariant *new_value;
   GVariant *details_value;
   GVariantBuilder builder;
   GVariantBuilder details_builder;
-  GError *local_error;
+  GError *error;
 
-  g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
-  g_return_val_if_fail (mount_point != NULL, FALSE);
-  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+  g_return_if_fail (UDISKS_IS_CLEANUP (cleanup));
+  g_return_if_fail (mount_point != NULL);
 
   g_mutex_lock (&cleanup->lock);
 
-  ret = FALSE;
-
   /* load existing entries */
-  local_error = NULL;
+  error = NULL;
   value = udisks_persistent_store_get (cleanup->persistent_store,
                                        UDISKS_PERSISTENT_FLAGS_NORMAL_STORE,
                                        "mounted-fs",
                                        G_VARIANT_TYPE ("a{sa{sv}}"),
-                                       &local_error);
-  if (local_error != NULL)
+                                       &error);
+  if (error != NULL)
     {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "Error getting mounted-fs: %s (%s, %d)",
-                   local_error->message,
-                   g_quark_to_string (local_error->domain),
-                   local_error->code);
-      g_error_free (local_error);
+      udisks_warning ("Error getting mounted-fs: %s (%s, %d)",
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_error_free (error);
       goto out;
     }
 
@@ -828,30 +815,22 @@ udisks_cleanup_add_mounted_fs (UDisksCleanup  *cleanup,
   new_value = g_variant_builder_end (&builder);
 
   /* save new entries */
-  local_error = NULL;
+  error = NULL;
   if (!udisks_persistent_store_set (cleanup->persistent_store,
                                     UDISKS_PERSISTENT_FLAGS_NORMAL_STORE,
                                     "mounted-fs",
                                     G_VARIANT_TYPE ("a{sa{sv}}"),
                                     new_value, /* consumes new_value */
-                                    &local_error))
+                                    &error))
     {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "Error setting mounted-fs: %s (%s, %d)",
-                   local_error->message,
-                   g_quark_to_string (local_error->domain),
-                   local_error->code);
-      g_error_free (local_error);
+      udisks_warning ("Error setting mounted-fs: %s (%s, %d)",
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_error_free (error);
       goto out;
     }
 
-  ret = TRUE;
-
  out:
   g_mutex_unlock (&cleanup->lock);
-  return ret;
 }
 
 /**
@@ -860,27 +839,23 @@ udisks_cleanup_add_mounted_fs (UDisksCleanup  *cleanup,
  * @block_device: The block device.
  * @out_uid: Return location for the user id who mounted the device or %NULL.
  * @out_fstab_mount: Return location for whether the device was a fstab mount or %NULL.
- * @error: Return location for error or %NULL.
  *
  * Gets the mount point for @block_device, if it exists in the
  * <filename>/var/lib/udisks2/mounted-fs</filename> file.
  *
- * Returns: The mount point for @block_device or %NULL if not found or
- * if @error is set.
+ * Returns: The mount point for @block_device or %NULL if not found.
  */
 gchar *
 udisks_cleanup_find_mounted_fs (UDisksCleanup   *cleanup,
                                 dev_t            block_device,
                                 uid_t           *out_uid,
-                                gboolean        *out_fstab_mount,
-                                GError         **error)
+                                gboolean        *out_fstab_mount)
 {
   gchar *ret;
   GVariant *value;
-  GError *local_error;
+  GError *error;
 
   g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), NULL);
-  g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
   g_mutex_lock (&cleanup->lock);
 
@@ -888,22 +863,17 @@ udisks_cleanup_find_mounted_fs (UDisksCleanup   *cleanup,
   value = NULL;
 
   /* load existing entries */
-  local_error = NULL;
+  error = NULL;
   value = udisks_persistent_store_get (cleanup->persistent_store,
                                        UDISKS_PERSISTENT_FLAGS_NORMAL_STORE,
                                        "mounted-fs",
                                        G_VARIANT_TYPE ("a{sa{sv}}"),
-                                       &local_error);
-  if (local_error != NULL)
+                                       &error);
+  if (error != NULL)
     {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "Error getting mounted-fs: %s (%s, %d)",
-                   local_error->message,
-                   g_quark_to_string (local_error->domain),
-                   local_error->code);
-      g_error_free (local_error);
+      udisks_warning ("Error getting mounted-fs: %s (%s, %d)",
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_error_free (error);
       goto out;
     }
 
@@ -1227,54 +1197,41 @@ udisks_cleanup_check_unlocked_luks (UDisksCleanup *cleanup,
  * @crypto_device: The crypto device.
  * @dm_uuid: The UUID of the unlocked dm device.
  * @uid: The user id of the process requesting the device to be unlocked.
- * @error: Return location for error or %NULL.
  *
  * Adds a new entry to the
  * <filename>/run/udisks2/unlocked-luks</filename> file.
- *
- * Returns: %TRUE if the entry was added, %FALSE if @error is set.
  */
-gboolean
+void
 udisks_cleanup_add_unlocked_luks (UDisksCleanup  *cleanup,
                                   dev_t           cleartext_device,
                                   dev_t           crypto_device,
                                   const gchar    *dm_uuid,
-                                  uid_t           uid,
-                                  GError        **error)
+                                  uid_t           uid)
 {
-  gboolean ret;
   GVariant *value;
   GVariant *new_value;
   GVariant *details_value;
   GVariantBuilder builder;
   GVariantBuilder details_builder;
-  GError *local_error;
+  GError *error;
 
   g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
   g_return_val_if_fail (dm_uuid != NULL, FALSE);
-  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
   g_mutex_lock (&cleanup->lock);
 
-  ret = FALSE;
-
   /* load existing entries */
-  local_error = NULL;
+  error = NULL;
   value = udisks_persistent_store_get (cleanup->persistent_store,
                                        UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
                                        "unlocked-luks",
                                        G_VARIANT_TYPE ("a{ta{sv}}"),
-                                       &local_error);
-  if (local_error != NULL)
+                                       &error);
+  if (error != NULL)
     {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "Error getting unlocked-luks: %s (%s, %d)",
-                   local_error->message,
-                   g_quark_to_string (local_error->domain),
-                   local_error->code);
-      g_error_free (local_error);
+      udisks_warning ("Error getting unlocked-luks: %s (%s, %d)",
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_error_free (error);
       goto out;
     }
 
@@ -1317,30 +1274,22 @@ udisks_cleanup_add_unlocked_luks (UDisksCleanup  *cleanup,
   new_value = g_variant_builder_end (&builder);
 
   /* save new entries */
-  local_error = NULL;
+  error = NULL;
   if (!udisks_persistent_store_set (cleanup->persistent_store,
                                     UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
                                     "unlocked-luks",
                                     G_VARIANT_TYPE ("a{ta{sv}}"),
                                     new_value, /* consumes new_value */
-                                    &local_error))
+                                    &error))
     {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "Error setting unlocked-luks: %s (%s, %d)",
-                   local_error->message,
-                   g_quark_to_string (local_error->domain),
-                   local_error->code);
-      g_error_free (local_error);
+      udisks_warning ("Error setting unlocked-luks: %s (%s, %d)",
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_error_free (error);
       goto out;
     }
 
-  ret = TRUE;
-
  out:
   g_mutex_unlock (&cleanup->lock);
-  return ret;
 }
 
 /**
@@ -1348,26 +1297,22 @@ udisks_cleanup_add_unlocked_luks (UDisksCleanup  *cleanup,
  * @cleanup: A #UDisksCleanup.
  * @crypto_device: The block device.
  * @out_uid: Return location for the user id who mounted the device or %NULL.
- * @error: Return location for error or %NULL.
  *
  * Gets the clear-text device for @crypto_device, if it exists in the
  * <filename>/run/udisks2/unlocked-luks</filename> file.
  *
- * Returns: The cleartext device for @crypto_device or 0 if not
- * found or if @error is set.
+ * Returns: The cleartext device for @crypto_device or 0 if not found.
  */
 dev_t
 udisks_cleanup_find_unlocked_luks (UDisksCleanup   *cleanup,
                                    dev_t            crypto_device,
-                                   uid_t           *out_uid,
-                                   GError         **error)
+                                   uid_t           *out_uid)
 {
   dev_t ret;
   GVariant *value;
-  GError *local_error;
+  GError *error;
 
   g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), 0);
-  g_return_val_if_fail (error == NULL || *error == NULL, 0);
 
   g_mutex_lock (&cleanup->lock);
 
@@ -1375,22 +1320,17 @@ udisks_cleanup_find_unlocked_luks (UDisksCleanup   *cleanup,
   value = NULL;
 
   /* load existing entries */
-  local_error = NULL;
+  error = NULL;
   value = udisks_persistent_store_get (cleanup->persistent_store,
                                        UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
                                        "unlocked-luks",
                                        G_VARIANT_TYPE ("a{ta{sv}}"),
-                                       &local_error);
-  if (local_error != NULL)
+                                       &error);
+  if (error != NULL)
     {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "Error getting unlocked-luks: %s (%s, %d)",
-                   local_error->message,
-                   g_quark_to_string (local_error->domain),
-                   local_error->code);
-      g_error_free (local_error);
+      udisks_warning ("Error getting unlocked-luks: %s (%s, %d)",
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_error_free (error);
       goto out;
     }
 
@@ -1726,55 +1666,42 @@ udisks_cleanup_check_loop (UDisksCleanup *cleanup,
  * @backing_file: The backing file.
  * @backing_file_device: The #dev_t of the backing file.
  * @uid: The user id of the process requesting the loop device.
- * @error: Return location for error or %NULL.
  *
  * Adds a new entry to the <filename>/run/udisks2/loop</filename>
  * file.
- *
- * Returns: %TRUE if the entry was added, %FALSE if @error is set.
  */
-gboolean
+void
 udisks_cleanup_add_loop (UDisksCleanup   *cleanup,
                          const gchar     *device_file,
                          const gchar     *backing_file,
                          dev_t            backing_file_device,
-                         uid_t            uid,
-                         GError         **error)
+                         uid_t            uid)
 {
-  gboolean ret;
   GVariant *value;
   GVariant *new_value;
   GVariant *details_value;
   GVariantBuilder builder;
   GVariantBuilder details_builder;
-  GError *local_error;
+  GError *error;
 
   g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
   g_return_val_if_fail (device_file != NULL, FALSE);
   g_return_val_if_fail (backing_file != NULL, FALSE);
-  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
   g_mutex_lock (&cleanup->lock);
 
-  ret = FALSE;
-
   /* load existing entries */
-  local_error = NULL;
+  error = NULL;
   value = udisks_persistent_store_get (cleanup->persistent_store,
                                        UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
                                        "loop",
                                        G_VARIANT_TYPE ("a{sa{sv}}"),
-                                       &local_error);
-  if (local_error != NULL)
+                                       &error);
+  if (error != NULL)
     {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "Error getting loop: %s (%s, %d)",
-                   local_error->message,
-                   g_quark_to_string (local_error->domain),
-                   local_error->code);
-      g_error_free (local_error);
+      udisks_warning ("Error getting loop: %s (%s, %d)",
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_error_free (error);
       goto out;
     }
 
@@ -1817,30 +1744,22 @@ udisks_cleanup_add_loop (UDisksCleanup   *cleanup,
   new_value = g_variant_builder_end (&builder);
 
   /* save new entries */
-  local_error = NULL;
+  error = NULL;
   if (!udisks_persistent_store_set (cleanup->persistent_store,
                                     UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
                                     "loop",
                                     G_VARIANT_TYPE ("a{sa{sv}}"),
                                     new_value, /* consumes new_value */
-                                    &local_error))
+                                    &error))
     {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "Error setting loop: %s (%s, %d)",
-                   local_error->message,
-                   g_quark_to_string (local_error->domain),
-                   local_error->code);
-      g_error_free (local_error);
+      udisks_warning ("Error setting loop: %s (%s, %d)",
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_error_free (error);
       goto out;
     }
 
-  ret = TRUE;
-
  out:
   g_mutex_unlock (&cleanup->lock);
-  return ret;
 }
 
 /**
@@ -1857,15 +1776,13 @@ udisks_cleanup_add_loop (UDisksCleanup   *cleanup,
 gboolean
 udisks_cleanup_has_loop (UDisksCleanup   *cleanup,
                          const gchar     *device_file,
-                         uid_t           *out_uid,
-                         GError         **error)
+                         uid_t           *out_uid)
 {
   gboolean ret;
   GVariant *value;
-  GError *local_error;
+  GError *error;
 
   g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
-  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
   g_mutex_lock (&cleanup->lock);
 
@@ -1873,22 +1790,17 @@ udisks_cleanup_has_loop (UDisksCleanup   *cleanup,
   value = NULL;
 
   /* load existing entries */
-  local_error = NULL;
+  error = NULL;
   value = udisks_persistent_store_get (cleanup->persistent_store,
                                        UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
                                        "loop",
                                        G_VARIANT_TYPE ("a{sa{sv}}"),
-                                       &local_error);
-  if (local_error != NULL)
+                                       &error);
+  if (error != NULL)
     {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "Error getting loop: %s (%s, %d)",
-                   local_error->message,
-                   g_quark_to_string (local_error->domain),
-                   local_error->code);
-      g_error_free (local_error);
+      udisks_warning ("Error getting loop: %s (%s, %d)",
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_error_free (error);
       goto out;
     }
 

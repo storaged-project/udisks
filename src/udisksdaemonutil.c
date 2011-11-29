@@ -339,7 +339,7 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
   partition = udisks_object_get_partition (object);
 
   /* loop devices */
-  if (udisks_cleanup_has_loop (cleanup, udisks_block_get_device (block), &setup_by_user, NULL))
+  if (udisks_cleanup_has_loop (cleanup, udisks_block_get_device (block), &setup_by_user))
     {
       if (setup_by_user == user)
         {
@@ -373,7 +373,7 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
       crypto_block = udisks_object_peek_block (crypto_object);
       if (udisks_cleanup_find_unlocked_luks (cleanup,
                                              udisks_block_get_device_number (crypto_block),
-                                             &setup_by_user, NULL))
+                                             &setup_by_user))
         {
           if (setup_by_user == user)
             {

@@ -187,25 +187,10 @@ handle_delete (UDisksLoop             *loop,
       goto out;
     }
 
-  error = NULL;
   if (!udisks_cleanup_has_loop (cleanup,
                                 udisks_block_get_device (block),
-                                &setup_by_uid,
-                                &error))
+                                &setup_by_uid))
     {
-      if (error != NULL)
-        {
-          g_dbus_method_invocation_return_error (invocation,
-                                                 UDISKS_ERROR,
-                                                 UDISKS_ERROR_FAILED,
-                                                 "Error when looking for entry `%s' in loop: %s (%s, %d)",
-                                                 udisks_block_get_device (block),
-                                                 error->message,
-                                                 g_quark_to_string (error->domain),
-                                                 error->code);
-          g_error_free (error);
-          goto out;
-        }
       setup_by_uid = -1;
     }
 

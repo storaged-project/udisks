@@ -365,13 +365,11 @@ handle_unlock (UDisksEncrypted        *encrypted,
   udev_cleartext_device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (cleartext_object));
 
   /* update the unlocked-luks file */
-  if (!udisks_cleanup_add_unlocked_luks (cleanup,
-                                         udisks_block_get_device_number (cleartext_block),
-                                         udisks_block_get_device_number (block),
-                                         g_udev_device_get_sysfs_attr (udev_cleartext_device, "dm/uuid"),
-                                         caller_uid,
-                                         &error))
-    goto out;
+  udisks_cleanup_add_unlocked_luks (cleanup,
+                                    udisks_block_get_device_number (cleartext_block),
+                                    udisks_block_get_device_number (block),
+                                    g_udev_device_get_sysfs_attr (udev_cleartext_device, "dm/uuid"),
+                                    caller_uid);
 
   udisks_encrypted_complete_unlock (encrypted,
                                     invocation,
@@ -466,21 +464,7 @@ handle_lock (UDisksEncrypted        *encrypted,
   error = NULL;
   cleartext_device_from_file = udisks_cleanup_find_unlocked_luks (cleanup,
                                                                   udisks_block_get_device_number (block),
-                                                                  &unlocked_by_uid,
-                                                                  &error);
-  if (error != NULL)
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error when looking for entry `%s' in unlocked-luks: %s (%s, %d)",
-                                             udisks_block_get_device (block),
-                                             error->message,
-                                             g_quark_to_string (error->domain),
-                                             error->code);
-      g_error_free (error);
-      goto out;
-    }
+                                                                  &unlocked_by_uid);
   if (cleartext_device_from_file == 0)
     {
       /* allow locking stuff not mentioned in unlocked-luks, but treat it like root unlocked it */

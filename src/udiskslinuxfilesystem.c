@@ -947,16 +947,11 @@ handle_mount (UDisksFilesystem       *filesystem,
                      caller_uid);
 
       /* update the mounted-fs file */
-      if (!udisks_cleanup_add_mounted_fs (cleanup,
-                                          mount_point_to_use,
-                                          udisks_block_get_device_number (block),
-                                          caller_uid,
-                                          TRUE, /* fstab_mounted */
-                                          &error))
-        {
-          g_dbus_method_invocation_take_error (invocation, error);
-          goto out;
-        }
+      udisks_cleanup_add_mounted_fs (cleanup,
+                                     mount_point_to_use,
+                                     udisks_block_get_device_number (block),
+                                     caller_uid,
+                                     TRUE); /* fstab_mounted */
 
       udisks_filesystem_complete_mount (filesystem, invocation, mount_point_to_use);
       goto out;
@@ -1084,16 +1079,11 @@ handle_mount (UDisksFilesystem       *filesystem,
     }
 
   /* update the mounted-fs file */
-  if (!udisks_cleanup_add_mounted_fs (cleanup,
-                                      mount_point_to_use,
-                                      udisks_block_get_device_number (block),
-                                      caller_uid,
-                                      FALSE, /* fstab_mounted */
-                                      &error))
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
+  udisks_cleanup_add_mounted_fs (cleanup,
+                                 mount_point_to_use,
+                                 udisks_block_get_device_number (block),
+                                 caller_uid,
+                                 FALSE); /* fstab_mounted */
 
   udisks_notice ("Mounted %s at %s on behalf of uid %d",
                  udisks_block_get_device (block),
@@ -1254,21 +1244,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
   mount_point = udisks_cleanup_find_mounted_fs (cleanup,
                                                 udisks_block_get_device_number (block),
                                                 &mounted_by_uid,
-                                                &fstab_mounted,
-                                                &error);
-  if (error != NULL)
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error when looking for entry `%s' in mounted-fs: %s (%s, %d)",
-                                             udisks_block_get_device (block),
-                                             error->message,
-                                             g_quark_to_string (error->domain),
-                                             error->code);
-      g_error_free (error);
-      goto out;
-    }
+                                                &fstab_mounted);
   if (mount_point == NULL)
     {
       /* allow unmounting stuff not mentioned in mounted-fs, but treat it like root mounted it */
