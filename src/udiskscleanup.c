@@ -1215,8 +1215,8 @@ udisks_cleanup_add_unlocked_luks (UDisksCleanup  *cleanup,
   GVariantBuilder details_builder;
   GError *error;
 
-  g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
-  g_return_val_if_fail (dm_uuid != NULL, FALSE);
+  g_return_if_fail (UDISKS_IS_CLEANUP (cleanup));
+  g_return_if_fail (dm_uuid != NULL);
 
   g_mutex_lock (&cleanup->lock);
 
@@ -1684,9 +1684,9 @@ udisks_cleanup_add_loop (UDisksCleanup   *cleanup,
   GVariantBuilder details_builder;
   GError *error;
 
-  g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
-  g_return_val_if_fail (device_file != NULL, FALSE);
-  g_return_val_if_fail (backing_file != NULL, FALSE);
+  g_return_if_fail (UDISKS_IS_CLEANUP (cleanup));
+  g_return_if_fail (device_file != NULL);
+  g_return_if_fail (backing_file != NULL);
 
   g_mutex_lock (&cleanup->lock);
 
