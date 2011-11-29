@@ -222,16 +222,6 @@ handle_delete (UDisksLoop             *loop,
 
   escaped_device = g_strescape (udisks_block_get_device (block), NULL);
 
-  if (!udisks_cleanup_ignore_loop (cleanup, udisks_block_get_device (block)))
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_ALREADY_UNMOUNTING,
-                                             "Cannot delete %s as it's currently being deleted",
-                                             udisks_block_get_device (block));
-      goto out;
-    }
-
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               NULL, /* UDisksObject */
                                               NULL, /* GCancellable */
@@ -243,7 +233,6 @@ handle_delete (UDisksLoop             *loop,
                                               "losetup -d \"%s\"",
                                               escaped_device))
     {
-      udisks_cleanup_unignore_loop (cleanup, udisks_block_get_device (block));
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
@@ -251,37 +240,6 @@ handle_delete (UDisksLoop             *loop,
                                              udisks_block_get_device (block),
                                              error_message);
       goto out;
-    }
-
-  if (setup_by_uid != -1)
-    {
-      error = NULL;
-      if (!udisks_cleanup_remove_loop (cleanup, udisks_block_get_device (block), &error))
-        {
-          if (error == NULL)
-            {
-              g_dbus_method_invocation_return_error (invocation,
-                                                     UDISKS_ERROR,
-                                                     UDISKS_ERROR_FAILED,
-                                                     "Error removing entry for `%s' from loop file: Entry not found",
-                                                     udisks_block_get_device (block));
-            }
-          else
-            {
-              g_dbus_method_invocation_return_error (invocation,
-                                                     UDISKS_ERROR,
-                                                     UDISKS_ERROR_FAILED,
-                                                     "Error removing entry for `%s' from loop file: %s (%s, %d)",
-                                                     udisks_block_get_device (block),
-                                                     error->message,
-                                                     g_quark_to_string (error->domain),
-                                                     error->code);
-              g_error_free (error);
-            }
-          udisks_cleanup_unignore_loop (cleanup, udisks_block_get_device (block));
-          goto out;
-        }
-      udisks_cleanup_unignore_loop (cleanup, udisks_block_get_device (block));
     }
 
   udisks_notice ("Deleted loop device %s (was backed by %s)",

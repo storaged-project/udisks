@@ -1051,18 +1051,6 @@ handle_mount (UDisksFilesystem       *filesystem,
       goto out;
     }
 
-  /* update the mounted-fs file */
-  if (!udisks_cleanup_add_mounted_fs (cleanup,
-                                      mount_point_to_use,
-                                      udisks_block_get_device_number (block),
-                                      caller_uid,
-                                      FALSE, /* fstab_mounted */
-                                      &error))
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
-
   escaped_fs_type_to_use       = g_strescape (fs_type_to_use, NULL);
   escaped_mount_options_to_use = g_strescape (mount_options_to_use, NULL);
   escaped_mount_point_to_use   = g_strescape (mount_point_to_use, NULL);
@@ -1082,28 +1070,9 @@ handle_mount (UDisksFilesystem       *filesystem,
                                               udisks_block_get_device (block),
                                               escaped_mount_point_to_use))
     {
-      /* ugh, something went wrong.. we need to clean up the created mount point
-       * and also remove the entry from our mounted-fs file
-       *
-       * Either of these operations shouldn't really fail...
-       */
-      error = NULL;
-      if (!udisks_cleanup_remove_mounted_fs (cleanup,
-                                             mount_point_to_use,
-                                             &error))
-        {
-          udisks_warning ("Error removing mount point %s from filesystems file: %s (%s, %d)",
-                          mount_point_to_use,
-                          error->message,
-                          g_quark_to_string (error->domain),
-                          error->code);
-          g_error_free (error);
-        }
+      /* ugh, something went wrong.. we need to clean up the created mount point */
       if (g_rmdir (mount_point_to_use) != 0)
-        {
-          udisks_warning ("Error removing directory %s: %m",
-                          mount_point_to_use);
-        }
+        udisks_warning ("Error removing directory %s: %m", mount_point_to_use);
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
@@ -1111,6 +1080,18 @@ handle_mount (UDisksFilesystem       *filesystem,
                                              udisks_block_get_device (block),
                                              mount_point_to_use,
                                              error_message);
+      goto out;
+    }
+
+  /* update the mounted-fs file */
+  if (!udisks_cleanup_add_mounted_fs (cleanup,
+                                      mount_point_to_use,
+                                      udisks_block_get_device_number (block),
+                                      caller_uid,
+                                      FALSE, /* fstab_mounted */
+                                      &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
 
@@ -1310,16 +1291,6 @@ handle_unmount (UDisksFilesystem       *filesystem,
   /* otherwise go ahead and unmount the filesystem */
   if (mount_point != NULL)
     {
-      if (!udisks_cleanup_ignore_mounted_fs (cleanup, mount_point))
-        {
-          g_dbus_method_invocation_return_error (invocation,
-                                                 UDISKS_ERROR,
-                                                 UDISKS_ERROR_ALREADY_UNMOUNTING,
-                                                 "Cannot unmount %s: Mount point `%s' is currently being unmounted",
-                                                 udisks_block_get_device (block),
-                                                 mount_point);
-          goto out;
-        }
       escaped_mount_point = g_strescape (mount_point, NULL);
       rc = udisks_daemon_launch_spawned_job_sync (daemon,
                                                   object,
@@ -1357,56 +1328,10 @@ handle_unmount (UDisksFilesystem       *filesystem,
                                              "Error unmounting %s: %s",
                                              udisks_block_get_device (block),
                                              error_message);
-      udisks_cleanup_unignore_mounted_fs (cleanup, mount_point);
       goto out;
     }
 
-  /* OK, filesystem unmounted.. now to remove the entry from mounted-fs as well as the mount point */
-  if (mount_point != NULL)
-    {
-      error = NULL;
-      if (!udisks_cleanup_remove_mounted_fs (cleanup,
-                                             mount_point,
-                                             &error))
-        {
-          if (error == NULL)
-            {
-              g_dbus_method_invocation_return_error (invocation,
-                                                     UDISKS_ERROR,
-                                                     UDISKS_ERROR_FAILED,
-                                                     "Error removing entry for `%s' from mounted-fs: Entry not found",
-                                                     mount_point);
-            }
-          else
-            {
-              g_dbus_method_invocation_return_error (invocation,
-                                                     UDISKS_ERROR,
-                                                     UDISKS_ERROR_FAILED,
-                                                     "Error removing entry for `%s' from mounted-fs: %s (%s, %d)",
-                                                     mount_point,
-                                                     error->message,
-                                                     g_quark_to_string (error->domain),
-                                                     error->code);
-              g_error_free (error);
-            }
-          udisks_cleanup_unignore_mounted_fs (cleanup, mount_point);
-          goto out;
-        }
-      udisks_cleanup_unignore_mounted_fs (cleanup, mount_point);
-
-      /* OK, removed the entry. Finally: nuke the mount point */
-      if (g_rmdir (mount_point) != 0)
-        {
-          udisks_error ("Error removing mount point `%s': %m",
-                        mount_point);
-          g_dbus_method_invocation_return_error (invocation,
-                                                 UDISKS_ERROR,
-                                                 UDISKS_ERROR_FAILED,
-                                                 "Error removing mount point `%s': %m",
-                                                 mount_point);
-          goto out;
-        }
-    }
+  /* OK, filesystem unmounted.. the cleanup routines will remove the mountpoint for us */
 
   udisks_notice ("Unmounted %s on behalf of uid %d",
                  udisks_block_get_device (block),

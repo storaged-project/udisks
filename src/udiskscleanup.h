@@ -45,18 +45,12 @@ gboolean         udisks_cleanup_add_mounted_fs       (UDisksCleanup   *cleanup,
                                                       uid_t            uid,
                                                       gboolean         fstab_mount,
                                                       GError         **error);
-gboolean         udisks_cleanup_remove_mounted_fs    (UDisksCleanup   *cleanup,
-                                                      const gchar     *mount_point,
-                                                      GError         **error);
+
 gchar           *udisks_cleanup_find_mounted_fs      (UDisksCleanup   *cleanup,
                                                       dev_t            block_device,
                                                       uid_t           *out_uid,
                                                       gboolean        *out_fstab_mount,
                                                       GError         **error);
-gboolean         udisks_cleanup_ignore_mounted_fs    (UDisksCleanup   *cleanup,
-                                                      const gchar     *mount_point);
-void             udisks_cleanup_unignore_mounted_fs  (UDisksCleanup   *cleanup,
-                                                      const gchar     *mount_point);
 
 /* unlocked-luks */
 
@@ -66,17 +60,11 @@ gboolean         udisks_cleanup_add_unlocked_luks      (UDisksCleanup   *cleanup
                                                         const gchar     *dm_uuid,
                                                         uid_t            uid,
                                                         GError         **error);
-gboolean         udisks_cleanup_remove_unlocked_luks   (UDisksCleanup   *cleanup,
-                                                        dev_t            cleartext_device,
-                                                        GError         **error);
+
 dev_t            udisks_cleanup_find_unlocked_luks     (UDisksCleanup   *cleanup,
                                                         dev_t            crypto_device,
                                                         uid_t           *out_uid,
                                                         GError         **error);
-gboolean         udisks_cleanup_ignore_unlocked_luks   (UDisksCleanup   *cleanup,
-                                                        dev_t            cleartext_device);
-void             udisks_cleanup_unignore_unlocked_luks (UDisksCleanup   *cleanup,
-                                                        dev_t            cleartext_device);
 
 /* loop */
 
@@ -86,17 +74,10 @@ gboolean         udisks_cleanup_add_loop      (UDisksCleanup   *cleanup,
                                                dev_t            backing_file_device,
                                                uid_t            uid,
                                                GError         **error);
-gboolean         udisks_cleanup_remove_loop   (UDisksCleanup   *cleanup,
-                                               const gchar     *device_file,
-                                               GError         **error);
 gboolean         udisks_cleanup_has_loop      (UDisksCleanup   *cleanup,
                                                const gchar     *device_file,
                                                uid_t           *out_uid,
                                                GError         **error);
-gboolean         udisks_cleanup_ignore_loop   (UDisksCleanup   *cleanup,
-                                               const gchar     *device_file);
-void             udisks_cleanup_unignore_loop (UDisksCleanup   *cleanup,
-                                               const gchar     *device_file);
 
 G_END_DECLS
 

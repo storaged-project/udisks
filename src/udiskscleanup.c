@@ -141,10 +141,6 @@ struct _UDisksCleanup
   UDisksDaemon *daemon;
   UDisksPersistentStore *persistent_store;
 
-  GHashTable *currently_unmounting;
-  GHashTable *currently_locking;
-  GHashTable *currently_deleting;
-
   GThread *thread;
   GMainContext *context;
   GMainLoop *loop;
@@ -183,9 +179,6 @@ static void
 udisks_cleanup_init (UDisksCleanup *cleanup)
 {
   g_mutex_init (&cleanup->lock);
-  cleanup->currently_unmounting = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
-  cleanup->currently_locking = g_hash_table_new_full (g_int64_hash, g_int64_equal, g_free, NULL);
-  cleanup->currently_deleting = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 }
 
 static void
@@ -193,9 +186,6 @@ udisks_cleanup_finalize (GObject *object)
 {
   UDisksCleanup *cleanup = UDISKS_CLEANUP (object);
 
-  g_hash_table_unref (cleanup->currently_unmounting);
-  g_hash_table_unref (cleanup->currently_locking);
-  g_hash_table_unref (cleanup->currently_deleting);
   g_mutex_clear (&cleanup->lock);
 
   G_OBJECT_CLASS (udisks_cleanup_parent_class)->finalize (object);
@@ -518,13 +508,6 @@ udisks_cleanup_check_mounted_fs_entry (UDisksCleanup  *cleanup,
                  "{&s@a{sv}}",
                  &mount_point,
                  &details);
-
-  /* Don't consider entries being ignored (e.g. in the process of being unmounted) */
-  if (g_hash_table_lookup (cleanup->currently_unmounting, mount_point) != NULL)
-    {
-      keep = TRUE;
-      goto out;
-    }
 
   block_device_value = lookup_asv (details, "block-device");
   if (block_device_value == NULL)
@@ -872,115 +855,6 @@ udisks_cleanup_add_mounted_fs (UDisksCleanup  *cleanup,
 }
 
 /**
- * udisks_cleanup_remove_mounted_fs:
- * @cleanup: A #UDisksCleanup.
- * @mount_point: The mount point.
- * @error: Return location for error or %NULL.
- *
- * Removes an entry previously added with udisks_cleanup_add_mounted_fs().
- *
- * Returns: %TRUE if the entry was removed, %FALSE if @error is set.
- */
-gboolean
-udisks_cleanup_remove_mounted_fs (UDisksCleanup   *cleanup,
-                                  const gchar     *mount_point,
-                                  GError         **error)
-{
-  gboolean ret;
-  GVariant *value;
-  GVariant *new_value;
-  GVariantBuilder builder;
-  GError *local_error;
-  gboolean removed;
-
-  g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
-  g_return_val_if_fail (mount_point != NULL, FALSE);
-  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-  g_mutex_lock (&cleanup->lock);
-
-  ret = FALSE;
-  removed = FALSE;
-
-  /* load existing entries */
-  local_error = NULL;
-  value = udisks_persistent_store_get (cleanup->persistent_store,
-                                       UDISKS_PERSISTENT_FLAGS_NORMAL_STORE,
-                                       "mounted-fs",
-                                       G_VARIANT_TYPE ("a{sa{sv}}"),
-                                       &local_error);
-  if (local_error != NULL)
-    {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "Error getting mounted-fs: %s (%s, %d)",
-                   local_error->message,
-                   g_quark_to_string (local_error->domain),
-                   local_error->code);
-      g_error_free (local_error);
-      goto out;
-    }
-
-  /* start by including existing entries except for the one we want to remove */
-  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a{sa{sv}}"));
-  if (value != NULL)
-    {
-      GVariantIter iter;
-      GVariant *child;
-
-      g_variant_iter_init (&iter, value);
-      while ((child = g_variant_iter_next_value (&iter)) != NULL)
-        {
-          const gchar *iter_mount_point;
-          g_variant_get (child, "{s@a{sv}}", &iter_mount_point, NULL);
-          if (g_strcmp0 (iter_mount_point, mount_point) == 0)
-            {
-              removed = TRUE;
-            }
-          else
-            {
-              g_variant_builder_add_value (&builder, child);
-            }
-          g_variant_unref (child);
-        }
-      g_variant_unref (value);
-    }
-  new_value = g_variant_builder_end (&builder);
-  if (removed)
-    {
-      /* save new entries */
-      local_error = NULL;
-      if (!udisks_persistent_store_set (cleanup->persistent_store,
-                                        UDISKS_PERSISTENT_FLAGS_NORMAL_STORE,
-                                        "mounted-fs",
-                                        G_VARIANT_TYPE ("a{sa{sv}}"),
-                                        new_value, /* consumes new_value */
-                                        &local_error))
-        {
-          g_set_error (error,
-                       UDISKS_ERROR,
-                       UDISKS_ERROR_FAILED,
-                       "Error setting mounted-fs: %s (%s, %d)",
-                       local_error->message,
-                       g_quark_to_string (local_error->domain),
-                       local_error->code);
-          g_error_free (local_error);
-          goto out;
-        }
-      ret = TRUE;
-    }
-  else
-    {
-      g_variant_unref (new_value);
-    }
-
- out:
-  g_mutex_unlock (&cleanup->lock);
-  return ret;
-}
-
-/**
  * udisks_cleanup_find_mounted_fs:
  * @cleanup: A #UDisksCleanup.
  * @block_device: The block device.
@@ -1099,63 +973,6 @@ udisks_cleanup_find_mounted_fs (UDisksCleanup   *cleanup,
   return ret;
 }
 
-/**
- * udisks_cleanup_ignore_mounted_fs:
- * @cleanup: A #UDisksCleanup.
- * @mount_point: A mount point.
- *
- * Set @mount_point as currently being ignored. This ensures that the
- * entry for @mount_point won't get cleaned up by the cleanup routines
- * until udisks_cleanup_unignore_mounted_fs() is called.
- *
- * Returns: %TRUE if @mount_point was successfully ignored, %FALSE if
- * it was already ignored.
- */
-gboolean
-udisks_cleanup_ignore_mounted_fs (UDisksCleanup  *cleanup,
-                                  const gchar    *mount_point)
-{
-  gboolean ret;
-
-  g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
-  g_return_val_if_fail (mount_point != NULL, FALSE);
-
-  g_mutex_lock (&cleanup->lock);
-
-  ret = FALSE;
-
-  if (g_hash_table_lookup (cleanup->currently_unmounting, mount_point) != NULL)
-    goto out;
-
-  g_hash_table_insert (cleanup->currently_unmounting, g_strdup (mount_point), (gpointer) mount_point);
-
-  ret = TRUE;
-
- out:
-  g_mutex_unlock (&cleanup->lock);
-  return ret;
-}
-
-/**
- * udisks_cleanup_unignore_mounted_fs:
- * @cleanup: A #UDisksCleanup.
- * @mount_point: A mount point.
- *
- * Stops ignoring a mount point previously ignored using
- * udisks_cleanup_ignore_mounted_fs().
- */
-void
-udisks_cleanup_unignore_mounted_fs (UDisksCleanup  *cleanup,
-                                    const gchar    *mount_point)
-{
-  g_return_if_fail (UDISKS_IS_CLEANUP (cleanup));
-  g_return_if_fail (mount_point != NULL);
-
-  g_mutex_lock (&cleanup->lock);
-  g_warn_if_fail (g_hash_table_remove (cleanup->currently_unmounting, mount_point));
-  g_mutex_unlock (&cleanup->lock);
-}
-
 /* ---------------------------------------------------------------------------------------------------- */
 
 /* returns TRUE if the entry should be kept */
@@ -1196,13 +1013,6 @@ udisks_cleanup_check_unlocked_luks_entry (UDisksCleanup  *cleanup,
                  "{t@a{sv}}",
                  &cleartext_device,
                  &details);
-
-  /* Don't consider entries being ignored (e.g. in the process of being locked) */
-  if (g_hash_table_lookup (cleanup->currently_locking, &cleartext_device) != NULL)
-    {
-      keep = TRUE;
-      goto out;
-    }
 
   crypto_device_value = lookup_asv (details, "crypto-device");
   if (crypto_device_value == NULL)
@@ -1534,114 +1344,6 @@ udisks_cleanup_add_unlocked_luks (UDisksCleanup  *cleanup,
 }
 
 /**
- * udisks_cleanup_remove_unlocked_luks:
- * @cleanup: A #UDisksCleanup.
- * @cleartext_device: The mount point.
- * @error: Return location for error or %NULL.
- *
- * Removes an entry previously added with udisks_cleanup_add_unlocked_luks().
- *
- * Returns: %TRUE if the entry was removed, %FALSE if @error is set.
- */
-gboolean
-udisks_cleanup_remove_unlocked_luks (UDisksCleanup   *cleanup,
-                                     dev_t            cleartext_device,
-                                     GError         **error)
-{
-  gboolean ret;
-  GVariant *value;
-  GVariant *new_value;
-  GVariantBuilder builder;
-  GError *local_error;
-  gboolean removed;
-
-  g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
-  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-  g_mutex_lock (&cleanup->lock);
-
-  ret = FALSE;
-  removed = FALSE;
-
-  /* load existing entries */
-  local_error = NULL;
-  value = udisks_persistent_store_get (cleanup->persistent_store,
-                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                       "unlocked-luks",
-                                       G_VARIANT_TYPE ("a{ta{sv}}"),
-                                       &local_error);
-  if (local_error != NULL)
-    {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "Error getting unlocked-luks: %s (%s, %d)",
-                   local_error->message,
-                   g_quark_to_string (local_error->domain),
-                   local_error->code);
-      g_error_free (local_error);
-      goto out;
-    }
-
-  /* start by including existing entries except for the one we want to remove */
-  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a{ta{sv}}"));
-  if (value != NULL)
-    {
-      GVariantIter iter;
-      GVariant *child;
-
-      g_variant_iter_init (&iter, value);
-      while ((child = g_variant_iter_next_value (&iter)) != NULL)
-        {
-          dev_t iter_cleartext_device;
-          g_variant_get (child, "{t@a{sv}}", &iter_cleartext_device, NULL);
-          if (iter_cleartext_device == cleartext_device)
-            {
-              removed = TRUE;
-            }
-          else
-            {
-              g_variant_builder_add_value (&builder, child);
-            }
-          g_variant_unref (child);
-        }
-      g_variant_unref (value);
-    }
-  new_value = g_variant_builder_end (&builder);
-  if (removed)
-    {
-      /* save new entries */
-      local_error = NULL;
-      if (!udisks_persistent_store_set (cleanup->persistent_store,
-                                        UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                        "unlocked-luks",
-                                        G_VARIANT_TYPE ("a{ta{sv}}"),
-                                        new_value, /* consumes new_value */
-                                        &local_error))
-        {
-          g_set_error (error,
-                       UDISKS_ERROR,
-                       UDISKS_ERROR_FAILED,
-                       "Error setting unlocked-luks: %s (%s, %d)",
-                       local_error->message,
-                       g_quark_to_string (local_error->domain),
-                       local_error->code);
-          g_error_free (local_error);
-          goto out;
-        }
-      ret = TRUE;
-    }
-  else
-    {
-      g_variant_unref (new_value);
-    }
-
- out:
-  g_mutex_unlock (&cleanup->lock);
-  return ret;
-}
-
-/**
  * udisks_cleanup_find_unlocked_luks:
  * @cleanup: A #UDisksCleanup.
  * @crypto_device: The block device.
@@ -1747,68 +1449,6 @@ udisks_cleanup_find_unlocked_luks (UDisksCleanup   *cleanup,
   return ret;
 }
 
-/**
- * udisks_cleanup_ignore_unlocked_luks:
- * @cleanup: A #UDisksCleanup.
- * @cleartext_device: A cleartext device.
- *
- * Set @cleartext_device as currently being ignored. This ensures that
- * the entry for @cleartext_device won't get cleaned up by the cleanup
- * routines until udisks_cleanup_unignore_unlocked_luks() is called.
- *
- * Returns: %TRUE if @cleartext_device was successfully ignored,
- * %FALSE if it was already ignored.
- */
-gboolean
-udisks_cleanup_ignore_unlocked_luks (UDisksCleanup  *cleanup,
-                                     dev_t           cleartext_device)
-{
-  gboolean ret;
-  guint64 v;
-  guint64 *cv;
-
-  g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
-
-  g_mutex_lock (&cleanup->lock);
-
-  ret = FALSE;
-
-  v = cleartext_device;
-  if (g_hash_table_lookup (cleanup->currently_locking, &v) != NULL)
-    goto out;
-
-  cv = g_memdup (&v, sizeof (guint64));
-  g_hash_table_insert (cleanup->currently_locking, cv, cv);
-
-  ret = TRUE;
-
- out:
-  g_mutex_unlock (&cleanup->lock);
-  return ret;
-}
-
-/**
- * udisks_cleanup_unignore_unlocked_luks:
- * @cleanup: A #UDisksCleanup.
- * @cleartext_device: A cleartext device.
- *
- * Stops ignoring a cleartext device previously ignored using
- * udisks_cleanup_ignore_unlocked_luks().
- */
-void
-udisks_cleanup_unignore_unlocked_luks (UDisksCleanup  *cleanup,
-                                       dev_t           cleartext_device)
-{
-  guint64 v;
-
-  g_return_if_fail (UDISKS_IS_CLEANUP (cleanup));
-
-  g_mutex_lock (&cleanup->lock);
-  v = cleartext_device;
-  g_warn_if_fail (g_hash_table_remove (cleanup->currently_locking, &v));
-  g_mutex_unlock (&cleanup->lock);
-}
-
 /* ---------------------------------------------------------------------------------------------------- */
 
 /* returns TRUE if the entry should be kept */
@@ -1854,13 +1494,6 @@ udisks_cleanup_check_loop_entry (UDisksCleanup  *cleanup,
                  &loop_device,
                  &details);
 
-  /* Don't consider entries being ignored (e.g. in the process of being locked) */
-  if (g_hash_table_lookup (cleanup->currently_deleting, loop_device) != NULL)
-    {
-      keep = TRUE;
-      goto out;
-    }
-
   backing_file_value = lookup_asv (details, "backing-file");
   if (backing_file_value == NULL)
     {
@@ -1893,13 +1526,13 @@ udisks_cleanup_check_loop_entry (UDisksCleanup  *cleanup,
   loop_device_fd = open (loop_device, O_RDONLY);
   if (loop_device_fd == -1 )
     {
-      udisks_error ("error opening %s: %m", loop_device);
+      udisks_info ("error opening %s: %m", loop_device);
       attempt_no_cleanup = TRUE;
       goto out;
     }
   if (ioctl (loop_device_fd, LOOP_GET_STATUS64, &li64) == -1)
     {
-      udisks_error ("error issuing LOOP_GET_STATUS64 ioctl on %s: %m", loop_device);
+      udisks_info ("error issuing LOOP_GET_STATUS64 ioctl on %s: %m", loop_device);
       attempt_no_cleanup = TRUE;
       close (loop_device_fd);
       goto out;
@@ -1945,49 +1578,56 @@ udisks_cleanup_check_loop_entry (UDisksCleanup  *cleanup,
       goto out2;
     }
 
-  if (!keep && !attempt_no_cleanup)
+  if (!keep)
     {
-      if (is_setup)
+      if (!attempt_no_cleanup)
         {
-          gchar *escaped_loop_device_file;
-          gchar *error_message;
-
-          if (!has_backing_device)
-            udisks_notice ("Cleaning up loop device %s (backing device %d:%d no longer exist)",
-                           loop_device,
-                           major (backing_file_device), minor (backing_file_device));
-          else
-            udisks_notice ("Cleaning up loop device %s (backing device %d:%d no longer mounted)",
-                           loop_device,
-                           major (backing_file_device), minor (backing_file_device));
-
-          error_message = NULL;
-          escaped_loop_device_file = g_strescape (loop_device, NULL);
-          if (!udisks_daemon_launch_spawned_job_sync (cleanup->daemon,
-                                                      NULL, /* UDisksObject */
-                                                      NULL, /* GCancellable */
-                                                      0,    /* uid_t run_as_uid */
-                                                      0,    /* uid_t run_as_euid */
-                                                      NULL, /* gint *out_status */
-                                                      &error_message,
-                                                      NULL,  /* input_string */
-                                                      "losetup -d \"%s\"",
-                                                      escaped_loop_device_file))
+          if (is_setup)
             {
-              udisks_error ("Error cleaning up loop device %s: %s",
-                            loop_device, error_message);
+              gchar *escaped_loop_device_file;
+              gchar *error_message;
+
+              if (!has_backing_device)
+                udisks_notice ("Cleaning up loop device %s (backing device %d:%d no longer exist)",
+                               loop_device,
+                               major (backing_file_device), minor (backing_file_device));
+              else
+                udisks_notice ("Cleaning up loop device %s (backing device %d:%d no longer mounted)",
+                               loop_device,
+                               major (backing_file_device), minor (backing_file_device));
+
+              error_message = NULL;
+              escaped_loop_device_file = g_strescape (loop_device, NULL);
+              if (!udisks_daemon_launch_spawned_job_sync (cleanup->daemon,
+                                                          NULL, /* UDisksObject */
+                                                          NULL, /* GCancellable */
+                                                          0,    /* uid_t run_as_uid */
+                                                          0,    /* uid_t run_as_euid */
+                                                          NULL, /* gint *out_status */
+                                                          &error_message,
+                                                          NULL,  /* input_string */
+                                                          "losetup -d \"%s\"",
+                                                          escaped_loop_device_file))
+                {
+                  udisks_error ("Error cleaning up loop device %s: %s",
+                                loop_device, error_message);
+                  g_free (escaped_loop_device_file);
+                  g_free (error_message);
+                  /* keep the entry so we can clean it up later */
+                  keep = TRUE;
+                  goto out2;
+                }
               g_free (escaped_loop_device_file);
               g_free (error_message);
-              /* keep the entry so we can clean it up later */
-              keep = TRUE;
-              goto out2;
             }
-          g_free (escaped_loop_device_file);
-          g_free (error_message);
+          else
+            {
+              udisks_notice ("loop device %s was manually deleted", loop_device);
+            }
         }
       else
         {
-          udisks_notice ("loop device %s was manually deleted", loop_device);
+          udisks_notice ("Loop device %s was deleted", loop_device);
         }
     }
 
@@ -2204,114 +1844,6 @@ udisks_cleanup_add_loop (UDisksCleanup   *cleanup,
 }
 
 /**
- * udisks_cleanup_remove_loop:
- * @cleanup: A #UDisksCleanup.
- * @device_file: The loop device file.
- * @error: Return location for error or %NULL.
- *
- * Removes an entry previously added with udisks_cleanup_add_loop().
- *
- * Returns: %TRUE if the entry was removed, %FALSE if @error is set.
- */
-gboolean
-udisks_cleanup_remove_loop (UDisksCleanup   *cleanup,
-                            const gchar     *device_file,
-                            GError         **error)
-{
-  gboolean ret;
-  GVariant *value;
-  GVariant *new_value;
-  GVariantBuilder builder;
-  GError *local_error;
-  gboolean removed;
-
-  g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
-  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-  g_mutex_lock (&cleanup->lock);
-
-  ret = FALSE;
-  removed = FALSE;
-
-  /* load existing entries */
-  local_error = NULL;
-  value = udisks_persistent_store_get (cleanup->persistent_store,
-                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                       "loop",
-                                       G_VARIANT_TYPE ("a{sa{sv}}"),
-                                       &local_error);
-  if (local_error != NULL)
-    {
-      g_set_error (error,
-                   UDISKS_ERROR,
-                   UDISKS_ERROR_FAILED,
-                   "Error getting loop: %s (%s, %d)",
-                   local_error->message,
-                   g_quark_to_string (local_error->domain),
-                   local_error->code);
-      g_error_free (local_error);
-      goto out;
-    }
-
-  /* start by including existing entries except for the one we want to remove */
-  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a{sa{sv}}"));
-  if (value != NULL)
-    {
-      GVariantIter iter;
-      GVariant *child;
-
-      g_variant_iter_init (&iter, value);
-      while ((child = g_variant_iter_next_value (&iter)) != NULL)
-        {
-          const gchar *iter_device_file;
-          g_variant_get (child, "{&s@a{sv}}", &iter_device_file, NULL);
-          if (g_strcmp0 (iter_device_file, device_file) == 0)
-            {
-              removed = TRUE;
-            }
-          else
-            {
-              g_variant_builder_add_value (&builder, child);
-            }
-          g_variant_unref (child);
-        }
-      g_variant_unref (value);
-    }
-  new_value = g_variant_builder_end (&builder);
-  if (removed)
-    {
-      /* save new entries */
-      local_error = NULL;
-      if (!udisks_persistent_store_set (cleanup->persistent_store,
-                                        UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                        "loop",
-                                        G_VARIANT_TYPE ("a{sa{sv}}"),
-                                        new_value, /* consumes new_value */
-                                        &local_error))
-        {
-          g_set_error (error,
-                       UDISKS_ERROR,
-                       UDISKS_ERROR_FAILED,
-                       "Error setting loop: %s (%s, %d)",
-                       local_error->message,
-                       g_quark_to_string (local_error->domain),
-                       local_error->code);
-          g_error_free (local_error);
-          goto out;
-        }
-      ret = TRUE;
-    }
-  else
-    {
-      g_variant_unref (new_value);
-    }
-
- out:
-  g_mutex_unlock (&cleanup->lock);
-  return ret;
-}
-
-/**
  * udisks_cleanup_has_loop:
  * @cleanup: A #UDisksCleanup
  * @device_file: A loop device file.
@@ -2406,59 +1938,3 @@ udisks_cleanup_has_loop (UDisksCleanup   *cleanup,
   return ret;
 }
 
-/**
- * udisks_cleanup_ignore_loop:
- * @cleanup: A #UDisksCleanup.
- * @device_file: A loop device file.
- *
- * Set @device_file as currently being ignored. This ensures that the
- * entry for @device_file won't get cleaned up by the cleanup routines
- * until udisks_cleanup_unignore_loop() is called.
- *
- * Returns: %TRUE if @device_file was successfully ignored, %FALSE if
- * it was already ignored.
- */
-gboolean
-udisks_cleanup_ignore_loop (UDisksCleanup  *cleanup,
-                            const gchar    *device_file)
-{
-  gboolean ret;
-
-  g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
-  g_return_val_if_fail (device_file != NULL, FALSE);
-
-  g_mutex_lock (&cleanup->lock);
-
-  ret = FALSE;
-
-  if (g_hash_table_lookup (cleanup->currently_deleting, device_file) != NULL)
-    goto out;
-
-  g_hash_table_insert (cleanup->currently_deleting, g_strdup (device_file), (gpointer) device_file);
-
-  ret = TRUE;
-
- out:
-  g_mutex_unlock (&cleanup->lock);
-  return ret;
-}
-
-/**
- * udisks_cleanup_unignore_loop:
- * @cleanup: A #UDisksCleanup.
- * @device_file: A loop device file.
- *
- * Stops ignoring a loop device file previously ignored using
- * udisks_cleanup_ignore_loop().
- */
-void
-udisks_cleanup_unignore_loop (UDisksCleanup  *cleanup,
-                              const gchar    *device_file)
-{
-  g_return_if_fail (UDISKS_IS_CLEANUP (cleanup));
-  g_return_if_fail (device_file != NULL);
-
-  g_mutex_lock (&cleanup->lock);
-  g_warn_if_fail (g_hash_table_remove (cleanup->currently_deleting, device_file));
-  g_mutex_unlock (&cleanup->lock);
-}
