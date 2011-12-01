@@ -33,6 +33,7 @@
 #include <mntent.h>
 
 #include <glib/gstdio.h>
+#include <gio/gunixfdlist.h>
 
 #include "udiskslogging.h"
 #include "udiskslinuxblock.h"
@@ -2081,6 +2082,55 @@ handle_format (UDisksBlock           *block,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+handle_open_for_backup (UDisksBlock           *block,
+                        GDBusMethodInvocation *invocation,
+                        GUnixFDList           *fd_list,
+                        GVariant              *options)
+{
+  UDisksObject *object;
+  UDisksDaemon *daemon;
+  const gchar *action_id;
+  const gchar *device;
+  GUnixFDList *out_fd_list = NULL;
+  gint fd;
+
+  object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (block)));
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+
+  action_id = "org.freedesktop.udisks2.open-device";
+  if (udisks_block_get_hint_system (block))
+    action_id = "org.freedesktop.udisks2.open-device-system";
+
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    object,
+                                                    action_id,
+                                                    options,
+                                                    N_("Authentication is required to open $(udisks2.device) for backup"),
+                                                    invocation))
+    goto out;
+
+
+  device = udisks_block_get_device (UDISKS_BLOCK (block));
+
+  fd = open (device, O_RDONLY | O_CLOEXEC | O_EXCL);
+  if (fd == -1)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Error opening %s: %m", device);
+      goto out;
+    }
+
+  out_fd_list = g_unix_fd_list_new_from_array (&fd, 1);
+  udisks_block_complete_open_for_backup (block, invocation, out_fd_list, g_variant_new_handle (0));
+
+ out:
+  g_clear_object (&out_fd_list);
+  return TRUE; /* returning true means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 block_iface_init (UDisksBlockIface *iface)
 {
@@ -2089,4 +2139,5 @@ block_iface_init (UDisksBlockIface *iface)
   iface->handle_remove_configuration_item = handle_remove_configuration_item;
   iface->handle_update_configuration_item = handle_update_configuration_item;
   iface->handle_format                    = handle_format;
+  iface->handle_open_for_backup           = handle_open_for_backup;
 }

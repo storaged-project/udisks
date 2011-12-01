@@ -825,6 +825,21 @@
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
+    <!--
+        OpenForBackup:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @fd: An index for the returned file descriptor.
+
+        Gets a read-only file descriptor for the device intended for a
+        byte-by-byte imaging of the device. This can only be done if
+        the device is not already in use.
+    -->
+    <method name="OpenForBackup">
+      <annotation name="org.gtk.GDBus.C.UnixFD" value="1"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="fd" direction="out" type="h"/>
+    </method>
+
   </interface>
 
   <!-- ********************************************************************** -->

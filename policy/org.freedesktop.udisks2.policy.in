@@ -145,6 +145,27 @@
     </defaults>
   </action>
 
+  <!-- Open a device for reading (for creating disk images) -->
+  <action id="org.freedesktop.udisks2.open-device">
+    <_description>Open a device</_description>
+    <_message>Authentication is required to open a device</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.udisks2.open-device-system">
+    <_description>Open a system device</_description>
+    <_message>Authentication is required to open a device</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
   <!-- Manage system-wide configuration files such as /etc/fstab or
        /etc/crypttab ... including files referenced by these files.
 
