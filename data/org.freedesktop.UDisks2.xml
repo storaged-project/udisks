@@ -840,6 +840,21 @@
       <arg name="fd" direction="out" type="h"/>
     </method>
 
+    <!--
+        OpenForRestore:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @fd: An index for the returned file descriptor.
+
+        Gets a writable file descriptor for the device intended for a
+        byte-by-byte restore of an onto the device. This can only be
+        done if the device is not already in use.
+    -->
+    <method name="OpenForRestore">
+      <annotation name="org.gtk.GDBus.C.UnixFD" value="1"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="fd" direction="out" type="h"/>
+    </method>
+
   </interface>
 
   <!-- ********************************************************************** -->
