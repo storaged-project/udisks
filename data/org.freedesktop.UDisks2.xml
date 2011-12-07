@@ -846,8 +846,8 @@
         @fd: An index for the returned file descriptor.
 
         Gets a writable file descriptor for the device intended for a
-        byte-by-byte restore of an onto the device. This can only be
-        done if the device is not already in use.
+        byte-by-byte restore of a disk image onto the device. This can
+        only be done if the device is not already in use.
     -->
     <method name="OpenForRestore">
       <annotation name="org.gtk.GDBus.C.UnixFD" value="1"/>
