@@ -538,9 +538,104 @@ handle_lock (UDisksEncrypted        *encrypted,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* runs in thread dedicated to handling @invocation */
+static gboolean
+handle_change_passphrase (UDisksEncrypted        *encrypted,
+                          GDBusMethodInvocation  *invocation,
+                          const gchar            *passphrase,
+                          const gchar            *new_passphrase,
+                          GVariant               *options)
+{
+  UDisksObject *object = NULL;
+  UDisksBlock *block;
+  UDisksDaemon *daemon;
+  gchar *error_message = NULL;
+  uid_t caller_uid;
+  const gchar *action_id;
+  gchar *passphrases = NULL;
+  GError *error;
+
+  object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (encrypted)));
+  block = udisks_object_peek_block (object);
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+
+  /* TODO: check if the device is mentioned in /etc/crypttab (see crypttab(5)) - if so use that
+   *
+   *       Of course cryptsetup(8) don't support that, see https://bugzilla.redhat.com/show_bug.cgi?id=692258
+   */
+
+  /* Fail if the device is not a LUKS device */
+  if (!(g_strcmp0 (udisks_block_get_id_usage (block), "crypto") == 0 &&
+        g_strcmp0 (udisks_block_get_id_type (block), "crypto_LUKS") == 0))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Device %s does not appear to be a LUKS device",
+                                             udisks_block_get_device (block));
+      goto out;
+    }
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, NULL, &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  /* Now, check that the user is actually authorized to unlock the device.
+   */
+  action_id = "org.freedesktop.udisks2.encrypted-change-passphrase";
+  if (udisks_block_get_hint_system (block) &&
+      !(udisks_daemon_util_setup_by_user (daemon, object, caller_uid)))
+    action_id = "org.freedesktop.udisks2.encrypted-change-passphrase-system";
+  //if (is_in_crypttab)
+  //  action_id = "org.freedesktop.udisks2.encrypted-unlock-crypttab";
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    object,
+                                                    action_id,
+                                                    options,
+                                                    N_("Authentication is required to unlock the encrypted device $(udisks2.device)"),
+                                                    invocation))
+    goto out;
+
+  passphrases = g_strdup_printf ("%s\n%s", passphrase, new_passphrase);
+  if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              object,
+                                              NULL, /* GCancellable */
+                                              0,    /* uid_t run_as_uid */
+                                              0,    /* uid_t run_as_euid */
+                                              NULL, /* gint *out_status */
+                                              &error_message,
+                                              passphrases,  /* input_string */
+                                              "cryptsetup luksChangeKey \"%s\"",
+                                              udisks_block_get_device (block)))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error changing passphrase on device %s: %s",
+                                             udisks_block_get_device (block),
+                                             error_message);
+      goto out;
+    }
+
+  udisks_encrypted_complete_change_passphrase (encrypted, invocation);
+
+ out:
+  g_free (passphrases);
+  g_free (error_message);
+
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 encrypted_iface_init (UDisksEncryptedIface *iface)
 {
-  iface->handle_unlock = handle_unlock;
-  iface->handle_lock   = handle_lock;
+  iface->handle_unlock              = handle_unlock;
+  iface->handle_lock                = handle_lock;
+  iface->handle_change_passphrase   = handle_change_passphrase;
 }

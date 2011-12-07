@@ -1231,6 +1231,27 @@
     <method name="Lock">
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
+
+    <!--
+        ChangePassphrase:
+        @passphrase: The existing passphrase.
+        @new_passphrase: The new passphrase to use.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Changes the passphrase to @new_passphrase. An existing passphrase is required.
+
+        If the device in question is referenced in a system-wide
+        configuration file (such as the
+        <filename>/etc/crypttab</filename> file) and this
+        configuration references the passphrase, it is not
+        automatically updated.
+    -->
+    <method name="ChangePassphrase">
+      <arg name="passphrase" direction="in" type="ay"/>
+      <arg name="new_passphrase" direction="in" type="ay"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
   </interface>
 
   <!-- ********************************************************************** -->
