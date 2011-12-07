@@ -103,7 +103,7 @@
  *           (of type <link linkend="G-VARIANT-TYPE-ARRAY:CAPS">'ay'</link>) for the name of the backing file and
  *           <literal>backing-file-device</literal>
  *           (of type <link linkend="G-VARIANT-TYPE-UINT64:CAPS">'t'</link>) for the #dev_t
- *           for of the device holding the backing file and
+ *           for of the device holding the backing file (or 0 if unknown) and
  *           <literal>setup-by-uid</literal>
  *           (of type <link linkend="G-VARIANT-TYPE-UINT32:CAPS">'u'</link>) that is the #uid_t
  *           of the user who set up the loop device.
@@ -1489,7 +1489,7 @@ udisks_cleanup_check_loop_entry (UDisksCleanup  *cleanup,
   /* Check if device exists... */
   if (major (backing_file_device) == 0)
     {
-      /* major==0 -> not regular block device ... could be e.g. NFS ...
+      /* major==0 -> not regular block device or just not known ... could be e.g. NFS ...
        * for now, just assume it's still there and mounted
        */
       has_backing_device = TRUE;
@@ -1677,7 +1677,7 @@ udisks_cleanup_check_loop (UDisksCleanup *cleanup,
  * @cleanup: A #UDisksCleanup.
  * @device_file: The loop device file.
  * @backing_file: The backing file.
- * @backing_file_device: The #dev_t of the backing file.
+ * @backing_file_device: The #dev_t of the backing file or 0 if unknown.
  * @uid: The user id of the process requesting the loop device.
  *
  * Adds a new entry to the <filename>/run/udisks2/loop</filename>

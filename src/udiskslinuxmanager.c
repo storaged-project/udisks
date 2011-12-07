@@ -265,7 +265,7 @@ handle_loop_setup (UDisksManager          *object,
   guint64 option_size = 0;
   uid_t caller_uid;
   struct stat fd_statbuf;
-  struct stat path_statbuf;
+  gboolean fd_statbuf_valid = FALSE;
   WaitForLoopData wait_data;
 
   /* we need the uid of the caller for the loop file */
@@ -322,31 +322,11 @@ handle_loop_setup (UDisksManager          *object,
   g_variant_lookup (options, "offset", "t", &option_offset);
   g_variant_lookup (options, "size", "t", &option_size);
 
-  /* Validate that st_ino and st_dev from fstat(fd) are the same as
-   * for stat(path)
+  /* it's not a problem if fstat fails... for example, this can happen if the user
+   * passes a fd to a file on the GVfs fuse mount
    */
-  if (fstat (fd, &fd_statbuf) != 0)
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "Error statting fd: %m");
-      goto out;
-    }
-  if (stat (path, &path_statbuf) != 0)
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "Error statting path: %m");
-      goto out;
-    }
-  if ((fd_statbuf.st_ino != path_statbuf.st_ino) ||
-      (fd_statbuf.st_dev != path_statbuf.st_dev))
-    {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "stat(2) info for path and fd does not agree");
-      goto out;
-    }
+  if (fstat (fd, &fd_statbuf) == 0)
+    fd_statbuf_valid = TRUE;
 
   loop_control_fd = open ("/dev/loop-control", O_RDWR);
   if (loop_control_fd == -1)
@@ -420,7 +400,7 @@ handle_loop_setup (UDisksManager          *object,
   udisks_cleanup_add_loop (udisks_daemon_get_cleanup (manager->daemon),
                            loop_device,
                            path,
-                           fd_statbuf.st_dev,
+                           fd_statbuf_valid ? fd_statbuf.st_dev : 0,
                            caller_uid);
 
   udisks_notice ("Set up loop device %s (backed by %s)",
