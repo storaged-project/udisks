@@ -1415,6 +1415,7 @@ udisks_cleanup_check_loop_entry (UDisksCleanup  *cleanup,
   gint loop_device_fd;
   struct loop_info64 li64;
   UDisksMountMonitor *monitor;
+  GUdevDevice *udev_backing_file_device;
 
   keep = FALSE;
   attempt_no_cleanup = FALSE;
@@ -1455,13 +1456,21 @@ udisks_cleanup_check_loop_entry (UDisksCleanup  *cleanup,
     }
   backing_file_device = g_variant_get_uint64 (backing_file_device_value);
 
+  if (backing_file_device == 0 || major (backing_file_device) == 0)
+    {
+      /* major==0 -> not regular block device ... could be e.g. NFS ...
+       * for now, just assume it's still there and mounted
+       */
+      keep = TRUE;
+      goto out;
+    }
+
   if (stat (loop_device, &loop_device_statbuf) != 0)
     {
       udisks_error ("error statting %s: %m", loop_device);
       attempt_no_cleanup = TRUE;
       goto out;
     }
-
   loop_device_fd = open (loop_device, O_RDONLY);
   if (loop_device_fd == -1 )
     {
@@ -1486,36 +1495,23 @@ udisks_cleanup_check_loop_entry (UDisksCleanup  *cleanup,
     }
   is_setup = TRUE;
 
-  /* Check if device exists... */
-  if (major (backing_file_device) == 0)
+  /* check with udev if the backing device exists and is still mounted */
+  udev_backing_file_device = g_udev_client_query_by_device_number (udev_client,
+                                                                   G_UDEV_DEVICE_TYPE_BLOCK,
+                                                                   backing_file_device);
+  if (udev_backing_file_device != NULL)
     {
-      /* major==0 -> not regular block device or just not known ... could be e.g. NFS ...
-       * for now, just assume it's still there and mounted
-       */
+      GList *mounts;
+
       has_backing_device = TRUE;
-      backing_device_mounted = TRUE;
-    }
-  else
-    {
-      GUdevDevice *udev_backing_file_device;
-      /* check with udev if the backing device exists and is still mounted */
-      udev_backing_file_device = g_udev_client_query_by_device_number (udev_client,
-                                                                       G_UDEV_DEVICE_TYPE_BLOCK,
-                                                                       backing_file_device);
-      if (udev_backing_file_device != NULL)
-        {
-          GList *mounts;
+      g_object_unref (udev_backing_file_device);
 
-          has_backing_device = TRUE;
-          g_object_unref (udev_backing_file_device);
-
-          /* and if it's still mounted */
-          mounts = udisks_mount_monitor_get_mounts_for_dev (monitor, backing_file_device);
-          if (mounts != NULL)
-            backing_device_mounted = TRUE;
-          g_list_foreach (mounts, (GFunc) g_object_unref, NULL);
-          g_list_free (mounts);
-        }
+      /* and if it's still mounted */
+      mounts = udisks_mount_monitor_get_mounts_for_dev (monitor, backing_file_device);
+      if (mounts != NULL)
+        backing_device_mounted = TRUE;
+      g_list_foreach (mounts, (GFunc) g_object_unref, NULL);
+      g_list_free (mounts);
     }
 
   /* OK, entry is valid - keep it around */
