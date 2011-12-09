@@ -638,6 +638,8 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
   udisks_block_set_size (iface, size);
 
   read_only = g_udev_device_get_sysfs_attr_as_boolean (device, "ro");
+  if (!read_only && g_str_has_prefix (g_udev_device_get_name (device), "sr"))
+    read_only = TRUE;
   udisks_block_set_read_only (iface, read_only);
 
   /* dm-crypt
