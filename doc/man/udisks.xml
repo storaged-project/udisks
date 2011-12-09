@@ -98,6 +98,11 @@
     </para>
     <variablelist>
       <varlistentry>
+        <term><option>ID_DRIVE_THUMB</option></term>
+        <listitem><para>The device is a thumb-drive with non-removable media (e.g. a USB stick).
+        </para></listitem>
+      </varlistentry>
+      <varlistentry>
         <term><option>ID_DRIVE_FLASH</option></term>
         <listitem><para>The device is compatible with flash.
         </para></listitem>

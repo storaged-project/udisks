@@ -716,6 +716,7 @@ udisks_client_get_drive_for_block (UDisksClient  *client,
 typedef enum
 {
   DRIVE_TYPE_UNSET,
+  DRIVE_TYPE_DRIVE,
   DRIVE_TYPE_DISK,
   DRIVE_TYPE_CARD,
   DRIVE_TYPE_DISC
@@ -731,6 +732,8 @@ static const struct
   const gchar *drive_icon;
 } media_data[] =
 {
+  {"thumb",      N_("Thumb"),        N_("Thumb"),        "media-removable",   DRIVE_TYPE_DRIVE, "media-removable"},
+
   {"floppy",     N_("Floppy"),       N_("Floppy"), "media-floppy",      DRIVE_TYPE_DISK, "drive-removable-media-floppy"},
   {"floppy_zip", N_("Zip"),          N_("Zip"),    "media-floppy-jaz",  DRIVE_TYPE_DISK, "drive-removable-media-floppy-jaz"},
   {"floppy_jaz", N_("Jaz"),          N_("Jaz"),    "media-floppy-zip",  DRIVE_TYPE_DISK, "drive-removable-media-floppy-zip"},
@@ -806,8 +809,9 @@ strv_has (const gchar * const *haystack,
  * If there is no media in @drive, then @out_media_icon is set to the
  * same value as @out_drive_icon.
  *
- * If the @drive doesn't support removable media, then %NULL is always
- * returned for @out_media_description and @out_media_icon.
+ * If the @drive doesn't support removable media or if no media is
+ * available, then %NULL is always returned for @out_media_description
+ * and @out_media_icon.
  *
  * If the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.HintName">HintName</link>
  * and/or
@@ -830,6 +834,14 @@ strv_has (const gchar * const *haystack,
  *       </row>
  *     </thead>
  *     <tbody>
+ *       <row>
+ *         <entry>USB Thumb Drive</entry>
+ *         <entry>Kingston DataTraveler 2.0</entry>
+ *         <entry>4.0 GB Thumb Drive</entry>
+ *         <entry>media-removable</entry>
+ *         <entry>NULL</entry>
+ *         <entry>NULL</entry>
+ *       </row>
  *       <row>
  *         <entry>Internal System Disk (Hard Disk)</entry>
  *         <entry>ST3320620AS</entry>
@@ -940,7 +952,8 @@ udisks_client_get_drive_info (UDisksClient  *client,
   const gchar *model;
   const gchar *media;
   const gchar *const *media_compat;
-  gboolean removable;
+  gboolean media_available;
+  gboolean media_removable;
   gboolean rotation_rate;
   guint64 size;
   gchar *size_str;
@@ -963,7 +976,8 @@ udisks_client_get_drive_info (UDisksClient  *client,
   vendor = udisks_drive_get_vendor (drive);
   model = udisks_drive_get_model (drive);
   size = udisks_drive_get_size (drive);
-  removable = udisks_drive_get_media_removable (drive);
+  media_removable = udisks_drive_get_media_removable (drive);
+  media_available = udisks_drive_get_media_available (drive);
   rotation_rate = udisks_drive_get_rotation_rate (drive);
   if (size > 0)
     size_str = udisks_client_get_size_for_display (client, size, FALSE, FALSE);
@@ -1003,36 +1017,42 @@ udisks_client_get_drive_info (UDisksClient  *client,
           desc_type = media_data[n].media_type;
         }
 
-      /* media */
-      if (g_strcmp0 (media, media_data[n].id) == 0)
+      if (media_removable && media_available)
         {
-          if (media_description == NULL)
+          /* media */
+          if (g_strcmp0 (media, media_data[n].id) == 0)
             {
-              switch (media_data[n].media_type)
+              if (media_description == NULL)
                 {
-                case DRIVE_TYPE_UNSET:
-                  g_assert_not_reached ();
-                  break;
-                case DRIVE_TYPE_DISK:
-                  media_description = g_strdup_printf (_("%s Disk"), _(media_data[n].media_name));
-                  break;
-                case DRIVE_TYPE_CARD:
-                  media_description = g_strdup_printf (_("%s Card"), _(media_data[n].media_name));
-                  break;
-                case DRIVE_TYPE_DISC:
-                  media_description = g_strdup_printf (_("%s Disc"), _(media_data[n].media_name));
-                  break;
+                  switch (media_data[n].media_type)
+                    {
+                    case DRIVE_TYPE_UNSET:
+                      g_assert_not_reached ();
+                      break;
+                    case DRIVE_TYPE_DRIVE:
+                      media_description = g_strdup_printf (_("%s Drive"), _(media_data[n].media_name));
+                      break;
+                    case DRIVE_TYPE_DISK:
+                      media_description = g_strdup_printf (_("%s Disk"), _(media_data[n].media_name));
+                      break;
+                    case DRIVE_TYPE_CARD:
+                      media_description = g_strdup_printf (_("%s Card"), _(media_data[n].media_name));
+                      break;
+                    case DRIVE_TYPE_DISC:
+                      media_description = g_strdup_printf (_("%s Disc"), _(media_data[n].media_name));
+                      break;
+                    }
                 }
+              if (media_icon == NULL)
+                media_icon = g_themed_icon_new_with_default_fallbacks (media_data[n].media_icon);
             }
-          if (media_icon == NULL)
-            media_icon = g_themed_icon_new_with_default_fallbacks (media_data[n].media_icon);
         }
     }
 
   switch (desc_type)
     {
     case DRIVE_TYPE_UNSET:
-      if (removable)
+      if (media_removable)
         {
           if (size_str != NULL)
             {
@@ -1074,32 +1094,37 @@ udisks_client_get_drive_info (UDisksClient  *client,
       description = g_strdup_printf (_("%s Card Reader"), desc_str->str);
       break;
 
-    case DRIVE_TYPE_DISK:
-      /* explicit fall-through */
+    case DRIVE_TYPE_DRIVE: /* explicit fall-through */
+    case DRIVE_TYPE_DISK: /* explicit fall-through */
     case DRIVE_TYPE_DISC:
-      description = g_strdup_printf (_("%s Drive"), desc_str->str);
+      if (!media_removable && size_str != NULL)
+        description = g_strdup_printf (_("%s %s Drive"), size_str, desc_str->str);
+      else
+        description = g_strdup_printf (_("%s Drive"), desc_str->str);
       break;
     }
   g_string_free (desc_str, TRUE);
 
-  if (media_icon == NULL)
-    {
-      gchar *s;
-      if (removable)
-        s = g_strdup_printf ("drive-removable-media%s", hyphenated_connection_bus);
-      else
-        s = g_strdup_printf ("drive-harddisk%s", hyphenated_connection_bus);
-      media_icon = g_themed_icon_new_with_default_fallbacks (s);
-      g_free (s);
-    }
+  /* fallback for icon */
   if (icon == NULL)
     {
       gchar *s;
-      if (removable)
+      if (media_removable)
         s = g_strdup_printf ("drive-removable-media%s", hyphenated_connection_bus);
       else
         s = g_strdup_printf ("drive-harddisk%s", hyphenated_connection_bus);
       icon = g_themed_icon_new_with_default_fallbacks (s);
+      g_free (s);
+    }
+  /* fallback for media_icon */
+  if (media_removable && media_available && media_icon == NULL)
+    {
+      gchar *s;
+      if (media_removable)
+        s = g_strdup_printf ("drive-removable-media%s", hyphenated_connection_bus);
+      else
+        s = g_strdup_printf ("drive-harddisk%s", hyphenated_connection_bus);
+      media_icon = g_themed_icon_new_with_default_fallbacks (s);
       g_free (s);
     }
 
@@ -1155,6 +1180,17 @@ udisks_client_get_drive_info (UDisksClient  *client,
           media_icon = g_themed_icon_new_with_default_fallbacks (s);
         }
     }
+
+#if 0
+  /* for debugging */
+  g_print ("mr=%d,ma=%d dd=%s, md=%s and di='%s', mi='%s'\n",
+           media_removable,
+           media_available,
+           description,
+           media_description,
+           icon == NULL ? "" : g_icon_to_string (icon),
+           media_icon == NULL ? "" : g_icon_to_string (media_icon));
+#endif
 
   /* return values to caller */
   if (out_name != NULL)

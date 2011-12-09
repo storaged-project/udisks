@@ -26,3 +26,37 @@ KERNEL=="mspblk[0-9]", SUBSYSTEMS=="memstick", ENV{DEVTYPE}=="disk", ENV{ID_DRIV
 
 # TODO: maybe automatically convert udisks1 properties to udisks2 ones?
 # (e.g. UDISKS_PRESENTATION_HIDE -> UDISKS_IGNORE)
+
+# ------------------------------------------------------------------------
+# ------------------------------------------------------------------------
+# ------------------------------------------------------------------------
+# Whitelist for tagging drives with the property media type.
+# TODO: figure out where to store this database
+
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="050d", ATTRS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:0", ENV{ID_DRIVE_FLASH_CF}="1"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="050d", ATTRS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:1", ENV{ID_DRIVE_FLASH_MS}="1"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="050d", ATTRS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:2", ENV{ID_DRIVE_FLASH_SM}="1"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="050d", ATTRS{idProduct}=="0248", ENV{ID_INSTANCE}=="0:3", ENV{ID_DRIVE_FLASH_SD}="1"
+
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:0", ENV{ID_DRIVE_FLASH_CF}="1"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:1", ENV{ID_DRIVE_FLASH_SM}="1"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:2", ENV{ID_DRIVE_FLASH_SD}="1"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="05e3", ATTRS{idProduct}=="070e", ENV{ID_INSTANCE}=="0:3", ENV{ID_DRIVE_FLASH_MS}="1"
+
+# APPLE SD Card Reader (MacbookPro5,4)
+#
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="05ac", ATTRS{idProduct}=="8403", ENV{ID_DRIVE_FLASH_SD}="1"
+
+# Realtek card readers
+DRIVERS=="rts_pstor", ENV{ID_DRIVE_FLASH_SD}="1"
+
+# Common theme
+#
+SUBSYSTEMS=="usb", ENV{ID_MODEL}=="*Reader*SD*", ENV{ID_DRIVE_FLASH_SD}="1"
+SUBSYSTEMS=="usb", ENV{ID_MODEL}=="*CF_Reader*", ENV{ID_DRIVE_FLASH_CF}="1"
+SUBSYSTEMS=="usb", ENV{ID_MODEL}=="*SM_Reader*", ENV{ID_DRIVE_FLASH_SM}="1"
+SUBSYSTEMS=="usb", ENV{ID_MODEL}=="*MS_Reader*", ENV{ID_DRIVE_FLASH_MS}="1"
+
+# USB sticks
+#
+SUBSYSTEMS=="usb", ENV{ID_VENDOR}=="*Kingston*", ENV{ID_MODEL}=="*DataTraveler*", ENV{ID_DRIVE_THUMB}="1"

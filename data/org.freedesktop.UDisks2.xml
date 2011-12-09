@@ -89,9 +89,10 @@
     <property name="Media" type="s" access="read"/>
 
     <!-- MediaCompatibility:
-      The physical kind of media the drive uses or blank if unknown.
+      The physical kind of media the drive uses or the type of the drive or blank if unknown.
       Known values include
       <variablelist>
+      <varlistentry><term>thumb</term><listitem><para>The device is a thumb-drive with non-removable media (e.g. a USB stick)</para></listitem></varlistentry>
       <varlistentry><term>flash</term><listitem><para>Flash Card</para></listitem></varlistentry>
       <varlistentry><term>flash_cf</term><listitem><para>CompactFlash</para></listitem></varlistentry>
       <varlistentry><term>flash_ms</term><listitem><para>MemoryStick</para></listitem></varlistentry>
@@ -128,7 +129,14 @@
     -->
     <property name="MediaCompatibility" type="as" access="read"/>
 
-    <!-- MediaRemovable: Whether the media can be removed from the drive. -->
+    <!-- MediaRemovable:
+         Whether the media can be removed from the drive.
+
+         Note that this may be overridden from what the hardware
+         reports - for example, USB thumb drives often report that
+         they are using removable media while in fact the media
+         is not removable.
+    -->
     <property name="MediaRemovable" type="b" access="read"/>
 
     <!-- MediaAvailable: Set to %FALSE if no medium is available.
@@ -229,6 +237,15 @@
         Note that this is only a <emphasis>guess</emphasis>.
     -->
     <property name="Removable" type="b" access="read"/>
+
+    <!-- Ejectable:
+         Whether the media can be ejected from the drive or the drive
+         accepts an eject command to switch its state so it displays
+         e.g. a "Safe To Remove" message to the user.
+
+         Note that this is only a <emphasis>guess</emphasis>.
+    -->
+    <property name="Ejectable" type="b" access="read"/>
 
     <!-- SortKey:
          A string that can be used for sorting drive objects.

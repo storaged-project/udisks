@@ -109,40 +109,42 @@ static const struct
 {
   const gchar *udev_property;
   const gchar *media_name;
+  gboolean force_non_removable;
 } drive_media_mapping[] =
 {
-  { "ID_DRIVE_FLASH", "flash" },
-  { "ID_DRIVE_FLASH_CF", "flash_cf" },
-  { "ID_DRIVE_FLASH_MS", "flash_ms" },
-  { "ID_DRIVE_FLASH_SM", "flash_sm" },
-  { "ID_DRIVE_FLASH_SD", "flash_sd" },
-  { "ID_DRIVE_FLASH_SDHC", "flash_sdhc" },
-  { "ID_DRIVE_FLASH_SDXC", "flash_sdxc" },
-  { "ID_DRIVE_FLASH_MMC", "flash_mmc" },
-  { "ID_DRIVE_FLOPPY", "floppy" },
-  { "ID_DRIVE_FLOPPY_ZIP", "floppy_zip" },
-  { "ID_DRIVE_FLOPPY_JAZ", "floppy_jaz" },
-  { "ID_CDROM", "optical_cd" },
-  { "ID_CDROM_CD_R", "optical_cd_r" },
-  { "ID_CDROM_CD_RW", "optical_cd_rw" },
-  { "ID_CDROM_DVD", "optical_dvd" },
-  { "ID_CDROM_DVD_R", "optical_dvd_r" },
-  { "ID_CDROM_DVD_RW", "optical_dvd_rw" },
-  { "ID_CDROM_DVD_RAM", "optical_dvd_ram" },
-  { "ID_CDROM_DVD_PLUS_R", "optical_dvd_plus_r" },
-  { "ID_CDROM_DVD_PLUS_RW", "optical_dvd_plus_rw" },
-  { "ID_CDROM_DVD_PLUS_R_DL", "optical_dvd_plus_r_dl" },
-  { "ID_CDROM_DVD_PLUS_RW_DL", "optical_dvd_plus_rw_dl" },
-  { "ID_CDROM_BD", "optical_bd" },
-  { "ID_CDROM_BD_R", "optical_bd_r" },
-  { "ID_CDROM_BD_RE", "optical_bd_re" },
-  { "ID_CDROM_HDDVD", "optical_hddvd" },
-  { "ID_CDROM_HDDVD_R", "optical_hddvd_r" },
-  { "ID_CDROM_HDDVD_RW", "optical_hddvd_rw" },
-  { "ID_CDROM_MO", "optical_mo" },
-  { "ID_CDROM_MRW", "optical_mrw" },
-  { "ID_CDROM_MRW_W", "optical_mrw_w" },
-  { NULL, NULL }
+  { "ID_DRIVE_THUMB", "thumb", TRUE },
+  { "ID_DRIVE_FLASH", "flash", FALSE },
+  { "ID_DRIVE_FLASH_CF", "flash_cf", FALSE },
+  { "ID_DRIVE_FLASH_MS", "flash_ms", FALSE },
+  { "ID_DRIVE_FLASH_SM", "flash_sm", FALSE },
+  { "ID_DRIVE_FLASH_SD", "flash_sd", FALSE },
+  { "ID_DRIVE_FLASH_SDHC", "flash_sdhc", FALSE },
+  { "ID_DRIVE_FLASH_SDXC", "flash_sdxc", FALSE },
+  { "ID_DRIVE_FLASH_MMC", "flash_mmc", FALSE },
+  { "ID_DRIVE_FLOPPY", "floppy", FALSE },
+  { "ID_DRIVE_FLOPPY_ZIP", "floppy_zip", FALSE },
+  { "ID_DRIVE_FLOPPY_JAZ", "floppy_jaz", FALSE },
+  { "ID_CDROM", "optical_cd", FALSE },
+  { "ID_CDROM_CD_R", "optical_cd_r", FALSE },
+  { "ID_CDROM_CD_RW", "optical_cd_rw", FALSE },
+  { "ID_CDROM_DVD", "optical_dvd", FALSE },
+  { "ID_CDROM_DVD_R", "optical_dvd_r", FALSE },
+  { "ID_CDROM_DVD_RW", "optical_dvd_rw", FALSE },
+  { "ID_CDROM_DVD_RAM", "optical_dvd_ram", FALSE },
+  { "ID_CDROM_DVD_PLUS_R", "optical_dvd_plus_r", FALSE },
+  { "ID_CDROM_DVD_PLUS_RW", "optical_dvd_plus_rw", FALSE },
+  { "ID_CDROM_DVD_PLUS_R_DL", "optical_dvd_plus_r_dl", FALSE },
+  { "ID_CDROM_DVD_PLUS_RW_DL", "optical_dvd_plus_rw_dl", FALSE },
+  { "ID_CDROM_BD", "optical_bd", FALSE },
+  { "ID_CDROM_BD_R", "optical_bd_r", FALSE },
+  { "ID_CDROM_BD_RE", "optical_bd_re", FALSE },
+  { "ID_CDROM_HDDVD", "optical_hddvd", FALSE },
+  { "ID_CDROM_HDDVD_R", "optical_hddvd_r", FALSE },
+  { "ID_CDROM_HDDVD_RW", "optical_hddvd_rw", FALSE },
+  { "ID_CDROM_MO", "optical_mo", FALSE },
+  { "ID_CDROM_MRW", "optical_mrw", FALSE },
+  { "ID_CDROM_MRW_W", "optical_mrw_w", FALSE },
+  { NULL, NULL, FALSE }
 };
 
 static const struct
@@ -205,35 +207,47 @@ set_media (UDisksDrive      *iface,
   guint disc_track_count = 0;
   guint disc_track_count_audio = 0;
   guint disc_track_count_data = 0;
+  gboolean force_non_removable = FALSE;
+  gboolean kernel_removable;
+  gboolean removable;
 
   media_compat_array = g_ptr_array_new ();
   for (n = 0; drive_media_mapping[n].udev_property != NULL; n++)
     {
-      if (!g_udev_device_has_property (device, drive_media_mapping[n].udev_property))
-        continue;
-      g_ptr_array_add (media_compat_array, (gpointer) drive_media_mapping[n].media_name);
+      if (g_udev_device_get_property_as_boolean (device, drive_media_mapping[n].udev_property))
+        {
+          udisks_debug ("adding num %d: %s", n, drive_media_mapping[n].media_name);
+          g_ptr_array_add (media_compat_array, (gpointer) drive_media_mapping[n].media_name);
+          if (drive_media_mapping[n].force_non_removable)
+            force_non_removable = TRUE;
+        }
     }
   g_ptr_array_sort (media_compat_array, (GCompareFunc) ptr_str_array_compare);
   g_ptr_array_add (media_compat_array, NULL);
 
-  media_in_drive = "";
+  removable = kernel_removable = g_udev_device_get_sysfs_attr_as_boolean (device, "removable");
+  if (force_non_removable)
+    removable = FALSE;
+  udisks_drive_set_media_removable (iface, removable);
+  udisks_drive_set_ejectable (iface, kernel_removable);
+
+  media_in_drive = NULL;
   if (udisks_drive_get_media_available (iface))
     {
       for (n = 0; media_mapping[n].udev_property != NULL; n++)
         {
-          if (!g_udev_device_has_property (device, media_mapping[n].udev_property))
-            continue;
-
-          media_in_drive = drive_media_mapping[n].media_name;
-          break;
+          if (g_udev_device_get_property_as_boolean (device, media_mapping[n].udev_property))
+            {
+              media_in_drive = media_mapping[n].media_name;
+              break;
+            }
         }
       /* If the media isn't set (from e.g. udev rules), just pick the first one in media_compat - note
        * that this may be NULL (if we don't know what media is compatible with the drive) which is OK.
        */
-      if (strlen (media_in_drive) == 0)
+      if (media_in_drive == NULL)
         media_in_drive = ((const gchar **) media_compat_array->pdata)[0];
     }
-
   udisks_drive_set_media_compatibility (iface, (const gchar* const *) media_compat_array->pdata);
   udisks_drive_set_media (iface, media_in_drive);
   g_ptr_array_free (media_compat_array, TRUE);
@@ -479,7 +493,6 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
     }
 
   /* common bits go here */
-  udisks_drive_set_media_removable (iface, g_udev_device_get_sysfs_attr_as_boolean (device, "removable"));
   size = udisks_daemon_util_block_get_size (device,
                                             &media_available,
                                             &media_change_detected);
