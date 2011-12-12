@@ -216,7 +216,6 @@ set_media (UDisksDrive      *iface,
     {
       if (g_udev_device_get_property_as_boolean (device, drive_media_mapping[n].udev_property))
         {
-          udisks_debug ("adding num %d: %s", n, drive_media_mapping[n].media_name);
           g_ptr_array_add (media_compat_array, (gpointer) drive_media_mapping[n].media_name);
           if (drive_media_mapping[n].force_non_removable)
             force_non_removable = TRUE;
