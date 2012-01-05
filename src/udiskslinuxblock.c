@@ -2134,7 +2134,7 @@ handle_open_for_backup (UDisksBlock           *block,
                                                     object,
                                                     action_id,
                                                     options,
-                                                    N_("Authentication is required to open $(udisks2.device) for backup"),
+                                                    N_("Authentication is required to open $(udisks2.device) for reading"),
                                                     invocation))
     goto out;
 
@@ -2183,7 +2183,7 @@ handle_open_for_restore (UDisksBlock           *block,
                                                     object,
                                                     action_id,
                                                     options,
-                                                    N_("Authentication is required to open $(udisks2.device) for restore"),
+                                                    N_("Authentication is required to open $(udisks2.device) for writing"),
                                                     invocation))
     goto out;
 
