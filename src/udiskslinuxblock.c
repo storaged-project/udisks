@@ -334,22 +334,24 @@ find_fstab_entries_for_device (UDisksLinuxBlock *block,
       UDisksFstabEntry *entry = UDISKS_FSTAB_ENTRY (l->data);
       const gchar *const *symlinks;
       const gchar *fsname;
-      gchar *device;
+      const gchar *device = NULL;
+      const gchar *label = NULL;
+      const gchar *uuid = NULL;
       guint n;
 
       fsname = udisks_fstab_entry_get_fsname (entry);
       device = NULL;
       if (g_str_has_prefix (fsname, "UUID="))
         {
-          device = g_strdup_printf ("/dev/disk/by-uuid/%s", fsname + 5);
+          uuid = fsname + 5;
         }
       else if (g_str_has_prefix (fsname, "LABEL="))
         {
-          device = g_strdup_printf ("/dev/disk/by-label/%s", fsname + 6);
+          label = fsname + 6;
         }
       else if (g_str_has_prefix (fsname, "/dev"))
         {
-          device = g_strdup (fsname);
+          device = fsname;
         }
       else
         {
@@ -357,27 +359,38 @@ find_fstab_entries_for_device (UDisksLinuxBlock *block,
           goto continue_loop;
         }
 
-      if (g_strcmp0 (device, udisks_block_get_device (UDISKS_BLOCK (block))) == 0)
+      if (device != NULL)
         {
-          ret = g_list_prepend (ret, g_object_ref (entry));
-        }
-      else
-        {
-          symlinks = udisks_block_get_symlinks (UDISKS_BLOCK (block));
-          if (symlinks != NULL)
+          if (g_strcmp0 (device, udisks_block_get_device (UDISKS_BLOCK (block))) == 0)
             {
-              for (n = 0; symlinks[n] != NULL; n++)
+              ret = g_list_prepend (ret, g_object_ref (entry));
+            }
+          else
+            {
+              symlinks = udisks_block_get_symlinks (UDISKS_BLOCK (block));
+              if (symlinks != NULL)
                 {
-                  if (g_strcmp0 (device, symlinks[n]) == 0)
+                  for (n = 0; symlinks[n] != NULL; n++)
                     {
-                      ret = g_list_prepend (ret, g_object_ref (entry));
+                      if (g_strcmp0 (device, symlinks[n]) == 0)
+                        {
+                          ret = g_list_prepend (ret, g_object_ref (entry));
+                        }
                     }
                 }
             }
         }
+      else if (label != NULL && g_strcmp0 (label, udisks_block_get_id_label (UDISKS_BLOCK (block))) == 0)
+        {
+          ret = g_list_prepend (ret, g_object_ref (entry));
+        }
+      else if (uuid != NULL && g_strcmp0 (uuid, udisks_block_get_id_uuid (UDISKS_BLOCK (block))) == 0)
+        {
+          ret = g_list_prepend (ret, g_object_ref (entry));
+        }
 
     continue_loop:
-      g_free (device);
+      ;
     }
 
   g_list_foreach (entries, (GFunc) g_object_unref, NULL);
@@ -402,22 +415,24 @@ find_crypttab_entries_for_device (UDisksLinuxBlock *block,
       UDisksCrypttabEntry *entry = UDISKS_CRYPTTAB_ENTRY (l->data);
       const gchar *const *symlinks;
       const gchar *device_in_entry;
-      gchar *device;
+      const gchar *device;
+      const gchar *label;
+      const gchar *uuid;
       guint n;
 
       device_in_entry = udisks_crypttab_entry_get_device (entry);
       device = NULL;
       if (g_str_has_prefix (device_in_entry, "UUID="))
         {
-          device = g_strdup_printf ("/dev/disk/by-uuid/%s", device_in_entry + 5);
+          uuid = device_in_entry + 5;
         }
       else if (g_str_has_prefix (device_in_entry, "LABEL="))
         {
-          device = g_strdup_printf ("/dev/disk/by-label/%s", device_in_entry + 6);
+          label = device_in_entry + 6;
         }
       else if (g_str_has_prefix (device_in_entry, "/dev"))
         {
-          device = g_strdup (device_in_entry);
+          device = device_in_entry;
         }
       else
         {
@@ -425,27 +440,38 @@ find_crypttab_entries_for_device (UDisksLinuxBlock *block,
           goto continue_loop;
         }
 
-      if (g_strcmp0 (device, udisks_block_get_device (UDISKS_BLOCK (block))) == 0)
+      if (device != NULL)
         {
-          ret = g_list_prepend (ret, g_object_ref (entry));
-        }
-      else
-        {
-          symlinks = udisks_block_get_symlinks (UDISKS_BLOCK (block));
-          if (symlinks != NULL)
+          if (g_strcmp0 (device, udisks_block_get_device (UDISKS_BLOCK (block))) == 0)
             {
-              for (n = 0; symlinks[n] != NULL; n++)
+              ret = g_list_prepend (ret, g_object_ref (entry));
+            }
+          else
+            {
+              symlinks = udisks_block_get_symlinks (UDISKS_BLOCK (block));
+              if (symlinks != NULL)
                 {
-                  if (g_strcmp0 (device, symlinks[n]) == 0)
+                  for (n = 0; symlinks[n] != NULL; n++)
                     {
-                      ret = g_list_prepend (ret, g_object_ref (entry));
+                      if (g_strcmp0 (device, symlinks[n]) == 0)
+                        {
+                          ret = g_list_prepend (ret, g_object_ref (entry));
+                        }
                     }
                 }
             }
         }
+      else if (label != NULL && g_strcmp0 (label, udisks_block_get_id_label (UDISKS_BLOCK (block))) == 0)
+        {
+          ret = g_list_prepend (ret, g_object_ref (entry));
+        }
+      else if (uuid != NULL && g_strcmp0 (uuid, udisks_block_get_id_uuid (UDISKS_BLOCK (block))) == 0)
+        {
+          ret = g_list_prepend (ret, g_object_ref (entry));
+        }
 
     continue_loop:
-      g_free (device);
+      ;
     }
 
   g_list_foreach (entries, (GFunc) g_object_unref, NULL);
