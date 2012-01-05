@@ -550,6 +550,96 @@ udisks_client_peek_object (UDisksClient  *client,
 /* ---------------------------------------------------------------------------------------------------- */
 
 /**
+ * udisks_client_get_block_for_label:
+ * @client: A #UDisksClient.
+ * @label: The label.
+ *
+ * Gets all the #UDisksBlock instances with the given label, if any.
+ *
+ * Returns: (transfer full) (element-type UDisksBlock): A list of #UDisksBlock instances. The
+ *   returned list should be freed with g_list_free() after each
+ *   element has been freed with g_object_unref().
+ */
+GList *
+udisks_client_get_block_for_label (UDisksClient        *client,
+                                   const gchar         *label)
+{
+  GList *ret = NULL;
+  GList *l, *object_proxies = NULL;
+
+  g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
+  g_return_val_if_fail (label != NULL, NULL);
+
+  object_proxies = g_dbus_object_manager_get_objects (client->object_manager);
+  for (l = object_proxies; l != NULL; l = l->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksBlock *block;
+
+      block = udisks_object_get_block (object);
+      if (block == NULL)
+        continue;
+
+      if (g_strcmp0 (udisks_block_get_id_label (block), label) == 0)
+        ret = g_list_prepend (ret, block);
+      else
+        g_object_unref (block);
+    }
+
+  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
+  g_list_free (object_proxies);
+  ret = g_list_reverse (ret);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_client_get_block_for_uuid:
+ * @client: A #UDisksClient.
+ * @uuid: The uuid.
+ *
+ * Gets all the #UDisksBlock instances with the given uuid, if any.
+ *
+ * Returns: (transfer full) (element-type UDisksBlock): A list of #UDisksBlock instances. The
+ *   returned list should be freed with g_list_free() after each
+ *   element has been freed with g_object_unref().
+ */
+GList *
+udisks_client_get_block_for_uuid (UDisksClient        *client,
+                                  const gchar         *uuid)
+{
+  GList *ret = NULL;
+  GList *l, *object_proxies = NULL;
+
+  g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
+  g_return_val_if_fail (uuid != NULL, NULL);
+
+  object_proxies = g_dbus_object_manager_get_objects (client->object_manager);
+  for (l = object_proxies; l != NULL; l = l->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksBlock *block;
+
+      block = udisks_object_get_block (object);
+      if (block == NULL)
+        continue;
+
+      if (g_strcmp0 (udisks_block_get_id_uuid (block), uuid) == 0)
+        ret = g_list_prepend (ret, block);
+      else
+        g_object_unref (block);
+    }
+
+  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
+  g_list_free (object_proxies);
+  ret = g_list_reverse (ret);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
  * udisks_client_get_block_for_dev:
  * @client: A #UDisksClient.
  * @block_device_number: A #dev_t to get a #UDisksBlock for.
