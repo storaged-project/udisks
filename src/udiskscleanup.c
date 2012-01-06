@@ -466,6 +466,34 @@ lookup_asv (GVariant    *asv,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static void
+trigger_change_uevent (const gchar *sysfs_path)
+{
+  gchar* path = NULL;
+  gint fd = -1;
+
+  g_return_if_fail (sysfs_path != NULL);
+
+  path = g_strconcat (sysfs_path, "/uevent", NULL);
+  fd = open (path, O_WRONLY);
+  if (fd < 0)
+    {
+      udisks_warning ("Error opening %s: %m", path);
+      goto out;
+    }
+
+  if (write (fd, "change", sizeof "change" - 1) != sizeof "change" - 1)
+    {
+      udisks_warning ("Error writing 'change' to file %s: %m", path);
+      goto out;
+    }
+
+ out:
+  if (fd >= 0)
+    close (fd);
+  g_free (path);
+}
+
 /* returns TRUE if the entry should be kept */
 static gboolean
 udisks_cleanup_check_mounted_fs_entry (UDisksCleanup  *cleanup,
@@ -490,6 +518,7 @@ udisks_cleanup_check_mounted_fs_entry (UDisksCleanup  *cleanup,
   GUdevClient *udev_client;
   GUdevDevice *udev_device;
   guint n;
+  gchar *change_sysfs_path = NULL;
 
   keep = FALSE;
   is_mounted = FALSE;
@@ -554,7 +583,52 @@ udisks_cleanup_check_mounted_fs_entry (UDisksCleanup  *cleanup,
                                                       block_device);
   if (udev_device != NULL)
     {
-      device_exists = TRUE;
+      /* If media is pulled from a device with removable media (say,
+       * /dev/sdc being a CF reader connected via USB) and a device
+       * (say, /dev/sdc1) on the media is mounted, the kernel won't
+       * necessarily send 'remove' uevent for /dev/sdc1 even though
+       * media removal was detected (we will get a 'change' uevent
+       * though).
+       *
+       * Therefore, we need to sanity-check the device - it appears
+       * that it's good enough to just check the 'size' sysfs
+       * attribute of the device (or its enclosing device if a
+       * partition)
+       *
+       * Additionally, if we conclude that the device is not valid
+       * (e.g. still there but size of device or its enclosing device
+       * is 0), we also need to poke the kernel (via a 'change'
+       * uevent) to make the device go away. We do that after
+       * unmounting the device.
+       */
+
+      /* if umounting, issue 'change' event on the device after unmounting it */
+      change_sysfs_path = g_strdup (g_udev_device_get_sysfs_path (udev_device));
+
+      if (g_udev_device_get_sysfs_attr_as_int (udev_device, "size") > 0)
+        {
+          /* for partition, also check enclosing device */
+          if (g_strcmp0 (g_udev_device_get_devtype (udev_device), "partition") == 0)
+            {
+              GUdevDevice *udev_device_disk;
+              udev_device_disk = g_udev_device_get_parent_with_subsystem (udev_device, "block", "disk");
+              if (udev_device_disk != NULL)
+                {
+                  if (g_udev_device_get_sysfs_attr_as_int (udev_device_disk, "size") > 0)
+                    {
+                      device_exists = TRUE;
+                    }
+                  /* if unmounting, issue 'change' uevent on the enclosing device after unmounting the device */
+                  g_free (change_sysfs_path);
+                  change_sysfs_path = g_strdup (g_udev_device_get_sysfs_path (udev_device_disk));
+                  g_object_unref (udev_device_disk);
+                }
+            }
+          else
+            {
+              device_exists = TRUE;
+            }
+        }
       g_object_unref (udev_device);
     }
 
@@ -623,6 +697,14 @@ udisks_cleanup_check_mounted_fs_entry (UDisksCleanup  *cleanup,
             }
           g_free (escaped_mount_point);
           g_free (error_message);
+
+          /* just unmounting the device does not make the kernel revalidate media
+           * so we issue a 'change' uevent to request that
+           */
+          if (change_sysfs_path != NULL)
+            {
+              trigger_change_uevent (change_sysfs_path);
+            }
         }
 
       /* remove directory */
@@ -649,6 +731,9 @@ udisks_cleanup_check_mounted_fs_entry (UDisksCleanup  *cleanup,
     g_variant_unref (block_device_value);
   if (details != NULL)
     g_variant_unref (details);
+
+  g_free (change_sysfs_path);
+
   return keep;
 }
 
