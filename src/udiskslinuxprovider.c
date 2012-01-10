@@ -280,6 +280,22 @@ udisks_linux_provider_get_udev_client (UDisksLinuxProvider *provider)
   return provider->gudev_client;
 }
 
+
+/**
+ * udisks_linux_provider_get_coldplug:
+ * @provider: A #UDisksLinuxProvider.
+ *
+ * Gets whether @provider is in the coldplug phase.
+ *
+ * Returns: %TRUE if in the coldplug phase, %FALSE otherwise.
+ **/
+gboolean
+udisks_linux_provider_get_coldplug (UDisksLinuxProvider *provider)
+{
+  g_return_val_if_fail (UDISKS_IS_LINUX_PROVIDER (provider), FALSE);
+  return provider->coldplug;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean

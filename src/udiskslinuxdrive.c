@@ -63,6 +63,7 @@ struct _UDisksLinuxDrive
 
   gint64 time_detected;
   gint64 time_media_detected;
+  gchar *sort_key;
 };
 
 struct _UDisksLinuxDriveClass
@@ -78,6 +79,17 @@ G_DEFINE_TYPE_WITH_CODE (UDisksLinuxDrive, udisks_linux_drive, UDISKS_TYPE_DRIVE
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
+udisks_linux_drive_finalize (GObject *object)
+{
+  UDisksLinuxDrive *drive = UDISKS_LINUX_DRIVE (object);
+
+  g_free (drive->sort_key);
+
+  if (G_OBJECT_CLASS (udisks_linux_drive_parent_class)->finalize != NULL)
+    G_OBJECT_CLASS (udisks_linux_drive_parent_class)->finalize (object);
+}
+
+static void
 udisks_linux_drive_init (UDisksLinuxDrive *drive)
 {
   g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (drive),
@@ -87,6 +99,10 @@ udisks_linux_drive_init (UDisksLinuxDrive *drive)
 static void
 udisks_linux_drive_class_init (UDisksLinuxDriveClass *klass)
 {
+  GObjectClass *gobject_class;
+
+  gobject_class = G_OBJECT_CLASS (klass);
+  gobject_class->finalize     = udisks_linux_drive_finalize;
 }
 
 /**
@@ -327,6 +343,61 @@ set_connection_bus (UDisksDrive      *iface,
   ;
 }
 
+static void
+set_media_time_detected (UDisksLinuxDrive *drive,
+                         GUdevDevice      *device,
+                         gboolean          is_pc_floppy_drive,
+                         gboolean          coldplug)
+{
+  UDisksDrive *iface = UDISKS_DRIVE (drive);
+  gint64 now;
+
+  now = g_get_real_time ();
+
+  /* First, initialize time_detected */
+  if (drive->time_detected == 0)
+    {
+      if (coldplug)
+        {
+          drive->time_detected = now - g_udev_device_get_usec_since_initialized (device);
+        }
+      else
+        {
+          drive->time_detected = now;
+        }
+    }
+
+  if (!g_udev_device_get_sysfs_attr_as_boolean (device, "removable") || is_pc_floppy_drive)
+    {
+      drive->time_media_detected = drive->time_detected;
+    }
+  else
+    {
+      if (!udisks_drive_get_media_available (iface))
+        {
+          /* no media currently available */
+          drive->time_media_detected = 0;
+        }
+      else
+        {
+          /* media currently available */
+          if (drive->time_media_detected == 0)
+            {
+              if (coldplug)
+                {
+                  drive->time_media_detected = drive->time_detected;
+                }
+              else
+                {
+                  drive->time_media_detected = now;
+                }
+            }
+        }
+    }
+
+  udisks_drive_set_time_detected (iface, drive->time_detected);
+  udisks_drive_set_time_media_detected (iface, drive->time_media_detected);
+}
 
 /**
  * udisks_linux_drive_update:
@@ -341,16 +412,25 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
 {
   UDisksDrive *iface = UDISKS_DRIVE (drive);
   GUdevDevice *device;
-  gchar *sort_key;
   guint64 size;
   gboolean media_available;
   gboolean media_change_detected;
   gboolean is_pc_floppy_drive = FALSE;
   gboolean removable_hint = FALSE;
+  UDisksDaemon *daemon;
+  UDisksLinuxProvider *provider;
+  gboolean coldplug = FALSE;
 
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
   if (device == NULL)
     goto out;
+
+  if (object != NULL)
+    {
+      daemon = udisks_linux_drive_object_get_daemon (object);
+      provider = udisks_daemon_get_linux_provider (daemon);
+      coldplug = udisks_linux_provider_get_coldplug (provider);
+    }
 
   if (g_udev_device_get_property_as_boolean (device, "ID_DRIVE_FLOPPY") ||
       g_str_has_prefix (g_udev_device_get_name (device), "fd"))
@@ -509,36 +589,35 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
     removable_hint = TRUE;
   udisks_drive_set_removable (iface, removable_hint);
 
-  /* need to use this lame hack until libudev's get_usec_since_initialized() works
-   * for devices received via the netlink socket
-   */
-  GUdevClient *client;
-  GUdevDevice *ns_device;
-  client = g_udev_client_new (NULL);
-  ns_device =  g_udev_client_query_by_sysfs_path (client, g_udev_device_get_sysfs_path (device));
+  set_media_time_detected (drive, device, is_pc_floppy_drive, coldplug);
 
-  if (drive->time_detected == 0)
-    drive->time_detected = g_get_real_time () - g_udev_device_get_usec_since_initialized (ns_device);
-  if (!g_udev_device_get_sysfs_attr_as_boolean (device, "removable") || is_pc_floppy_drive)
+  /* calculate sort-key  */
+  if (drive->sort_key == NULL)
     {
-      drive->time_media_detected = drive->time_detected;
+      if (coldplug)
+        {
+          const gchar *device_name;
+          /* TODO: adjust device_name for better sort order (so e.g. sdaa comes after sdz) */
+          device_name = g_udev_device_get_name (device);
+          if (udisks_drive_get_media_removable (iface))
+            {
+              /* make sure sr* devices comes before sd* devices */
+              if (g_str_has_prefix (device_name, "sr"))
+                drive->sort_key = g_strdup_printf ("00coldplug/10removable/%s", device_name);
+              else
+                drive->sort_key = g_strdup_printf ("00coldplug/11removable/%s", device_name);
+            }
+          else
+            {
+              drive->sort_key = g_strdup_printf ("00coldplug/00fixed/%s", device_name);
+            }
+        }
+      else
+        {
+          drive->sort_key = g_strdup_printf ("01hotplug/%" G_GINT64_FORMAT, drive->time_detected);
+        }
+      udisks_drive_set_sort_key (iface, drive->sort_key);
     }
-  else
-    {
-      if (!media_available)
-        drive->time_media_detected = 0;
-      else if (drive->time_media_detected == 0)
-        drive->time_media_detected = g_get_real_time ();
-    }
-  g_object_unref (ns_device);
-  g_object_unref (client);
-
-  udisks_drive_set_time_detected (iface, drive->time_detected);
-  udisks_drive_set_time_media_detected (iface, drive->time_media_detected);
-
-  sort_key = g_strdup_printf ("%" G_GINT64_FORMAT, drive->time_detected);
-  udisks_drive_set_sort_key (iface, sort_key);
-  g_free (sort_key);
 
  out:
   if (device != NULL)
