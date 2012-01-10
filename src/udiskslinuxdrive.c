@@ -212,7 +212,8 @@ ptr_str_array_compare (const gchar **a,
 
 static void
 set_media (UDisksDrive      *iface,
-           GUdevDevice      *device)
+           GUdevDevice      *device,
+           gboolean          is_pc_floppy_drive)
 {
   guint n;
   GPtrArray *media_compat_array;
@@ -224,7 +225,7 @@ set_media (UDisksDrive      *iface,
   guint disc_track_count_audio = 0;
   guint disc_track_count_data = 0;
   gboolean force_non_removable = FALSE;
-  gboolean kernel_removable;
+  gboolean ejectable;
   gboolean removable;
 
   media_compat_array = g_ptr_array_new ();
@@ -240,11 +241,13 @@ set_media (UDisksDrive      *iface,
   g_ptr_array_sort (media_compat_array, (GCompareFunc) ptr_str_array_compare);
   g_ptr_array_add (media_compat_array, NULL);
 
-  removable = kernel_removable = g_udev_device_get_sysfs_attr_as_boolean (device, "removable");
+  removable = ejectable = g_udev_device_get_sysfs_attr_as_boolean (device, "removable");
   if (force_non_removable)
     removable = FALSE;
   udisks_drive_set_media_removable (iface, removable);
-  udisks_drive_set_ejectable (iface, kernel_removable);
+  if (is_pc_floppy_drive)
+    ejectable = FALSE;
+  udisks_drive_set_ejectable (iface, ejectable);
 
   media_in_drive = NULL;
   if (udisks_drive_get_media_available (iface))
@@ -578,7 +581,7 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
   udisks_drive_set_size (iface, size);
   udisks_drive_set_media_available (iface, media_available);
   udisks_drive_set_media_change_detected (iface, media_change_detected);
-  set_media (iface, device);
+  set_media (iface, device, is_pc_floppy_drive);
   set_rotation_rate (iface, device);
   set_connection_bus (iface, device);
 
