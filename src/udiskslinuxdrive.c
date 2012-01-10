@@ -599,13 +599,15 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
           const gchar *device_name;
           /* TODO: adjust device_name for better sort order (so e.g. sdaa comes after sdz) */
           device_name = g_udev_device_get_name (device);
-          if (udisks_drive_get_media_removable (iface))
+          if (udisks_drive_get_removable (iface))
             {
-              /* make sure sr* devices comes before sd* devices */
-              if (g_str_has_prefix (device_name, "sr"))
+              /* make sure fd* BEFORE sr* BEFORE sd* */
+              if (g_str_has_prefix (device_name, "fd"))
                 drive->sort_key = g_strdup_printf ("00coldplug/10removable/%s", device_name);
-              else
+              else if (g_str_has_prefix (device_name, "sr"))
                 drive->sort_key = g_strdup_printf ("00coldplug/11removable/%s", device_name);
+              else
+                drive->sort_key = g_strdup_printf ("00coldplug/12removable/%s", device_name);
             }
           else
             {
