@@ -650,8 +650,6 @@ udisks_cleanup_check_mounted_fs_entry (UDisksCleanup  *cleanup,
 
   if (!keep && !attempt_no_cleanup)
     {
-      g_assert (g_str_has_prefix (mount_point, "/media"));
-
       if (!device_exists)
         {
           udisks_notice ("Cleaning up mount point %s (device %d:%d no longer exist)",
