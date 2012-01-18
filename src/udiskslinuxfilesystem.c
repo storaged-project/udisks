@@ -924,9 +924,9 @@ handle_mount (UDisksFilesystem       *filesystem,
             {
               if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                                 object,
-                                                                "org.freedesktop.udisks2.filesystem-nonuser-fstab",
+                                                                "org.freedesktop.udisks2.filesystem-fstab",
                                                                 options,
-                                                                N_("Authentication is required to mount the non-user fstab device $(udisks2.device)"),
+                                                                N_("Authentication is required to mount the fstab device $(udisks2.device)"),
                                                                 invocation))
                 goto out;
               mount_fstab_as_root = TRUE;
@@ -1215,9 +1215,9 @@ handle_unmount (UDisksFilesystem       *filesystem,
             {
               if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                                 object,
-                                                                "org.freedesktop.udisks2.filesystem-nonuser-fstab",
+                                                                "org.freedesktop.udisks2.filesystem-fstab",
                                                                 options,
-                                                                N_("Authentication is required to unmount the non-user fstab device $(udisks2.device)"),
+                                                                N_("Authentication is required to unmount the fstab device $(udisks2.device)"),
                                                                 invocation))
                 goto out;
               unmount_fstab_as_root = TRUE;
