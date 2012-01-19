@@ -1,0 +1,7 @@
+[Unit]
+Description=Enumerate, Query and Manipulate Storage Devices
+
+[Service]
+Type=dbus
+BusName=org.freedesktop.UDisks2
+ExecStart=@privlibdir@/udisksd --no-debug

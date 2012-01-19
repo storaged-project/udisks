@@ -1,11 +1,11 @@
 
 NULL =
 
-servicedir       = $(datadir)/dbus-1/system-services
-service_in_files = org.freedesktop.UDisks2.service.in
-service_DATA     = $(service_in_files:.service.in=.service)
+dbusservicedir       = $(datadir)/dbus-1/system-services
+dbusservice_in_files = org.freedesktop.UDisks2.service.in
+dbusservice_DATA     = $(dbusservice_in_files:.service.in=.service)
 
-$(service_DATA): $(service_in_files) Makefile
+$(dbusservice_DATA): $(dbusservice_in_files) Makefile
 	@sed -e "s|\@privlibdir\@|$(privlibdir)|" $< > $@
 
 dbusconfdir = $(sysconfdir)/dbus-1/system.d
@@ -15,15 +15,26 @@ dbusconf_DATA = $(dbusconf_in_files:.conf.in=.conf)
 $(dbusconf_DATA): $(dbusconf_in_files) Makefile
 	cp $< $@
 
+systemdservice_in_files = udisks.service.in
+
+if HAVE_SYSTEMD
+systemdservicedir       = $(systemdsystemunitdir)
+systemdservice_DATA     = $(systemdservice_in_files:.service.in=.service)
+
+$(systemdservice_DATA): $(systemdservice_in_files) Makefile
+       @sed -e "s|\@libexecdir\@|$(libexecdir)|" $< > $@
+endif
+
 udevrulesdir = $(slashlibdir)/udev/rules.d
 udevrules_DATA = 80-udisks2.rules
 
 EXTRA_DIST = 						\
 	80-udisks2.rules				\
 	org.freedesktop.UDisks2.xml			\
-	$(service_in_files)				\
+	$(systemdservice_in_files)			\
+	$(dbusservice_in_files)				\
 	$(dbusconf_in_files)				\
 	$(NULL)
 
 clean-local :
-	rm -f *~ $(service_DATA) $(dbusconf_DATA)
+	rm -f *~ $(dbusservice_DATA) $(dbusconf_DATA) $(systemdservice_DATA)

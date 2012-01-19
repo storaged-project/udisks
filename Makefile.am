@@ -8,7 +8,8 @@ EXTRA_DIST = 			\
 	HACKING 		\
 	$(NULL)
 
-DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
+DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc \
+	--with-systemdsystemunitdir=$$dc_install_base/$(systemdsystemunitdir)
 
 clean-local :
 	rm -f *~

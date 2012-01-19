@@ -2,4 +2,4 @@
 Name=org.freedesktop.UDisks2
 Exec=@privlibdir@/udisksd --no-debug
 User=root
-
+SystemdService=udisks.service
