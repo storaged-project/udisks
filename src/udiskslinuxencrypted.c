@@ -192,6 +192,31 @@ check_crypttab (UDisksBlock   *block,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+has_option (const gchar *options,
+            const gchar *option)
+{
+  gboolean ret = FALSE;
+  gchar **tokens;
+  guint n;
+
+  tokens = g_strsplit (options, ",", -1);
+  for (n = 0; tokens != NULL && tokens[n] != NULL; n++)
+    {
+      if (g_strcmp0 (tokens[n], option) == 0)
+        {
+          ret = TRUE;
+          goto out;
+        }
+    }
+  g_strfreev (tokens);
+
+ out:
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 /* runs in thread dedicated to handling @invocation */
 static gboolean
 handle_unlock (UDisksEncrypted        *encrypted,
@@ -295,7 +320,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   if (udisks_block_get_hint_system (block) &&
       !(udisks_daemon_util_setup_by_user (daemon, object, caller_uid)))
     action_id = "org.freedesktop.udisks2.encrypted-unlock-system";
-  if (is_in_crypttab)
+  if (is_in_crypttab && has_option (crypttab_options, "x-udisks-auth"))
     action_id = "org.freedesktop.udisks2.encrypted-unlock-crypttab";
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,

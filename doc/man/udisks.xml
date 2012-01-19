@@ -28,6 +28,28 @@
     </para>
   </refsect1>
 
+  <refsect1><title>LOCKING DOWN</title>
+    <para>
+      By default, authorized users in active log-in sessions are
+      permitted to mount and unlock devices attached to their local
+      console. To lock this down globally, configure the
+      <citerefentry><refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+      authorizations for the actions
+      <literal>filesystem-mount</literal>,
+      <literal>filesystem-mount-system</literal>,
+      <literal>encrypted-unlock</literal> and
+      <literal>encrypted-unlock-system</literal>, all in the
+      <literal>org.freedesktop.udisks2</literal> namespace.
+    </para>
+    <para>
+      To lock down access on a per-device basis, use the option
+      <literal>comment=udisks-auth</literal> in the
+      <filename>/etc/fstab</filename> file and the option
+      <literal>x-udisks-auth</literal> in the
+      <filename>/etc/crypttab</filename> file.
+    </para>
+  </refsect1>
+
   <refsect1>
     <title>DEVICE INFORMATION</title>
     <para>

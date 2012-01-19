@@ -709,9 +709,33 @@ calculate_mount_point (UDisksBlock               *block,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
+has_option (const gchar *options,
+            const gchar *option)
+{
+  gboolean ret = FALSE;
+  gchar **tokens;
+  guint n;
+
+  tokens = g_strsplit (options, ",", -1);
+  for (n = 0; tokens != NULL && tokens[n] != NULL; n++)
+    {
+      if (g_strcmp0 (tokens[n], option) == 0)
+        {
+          ret = TRUE;
+          goto out;
+        }
+    }
+  g_strfreev (tokens);
+
+ out:
+  return ret;
+}
+
+static gboolean
 is_in_fstab (UDisksBlock        *block,
              const gchar        *fstab_path,
-             gchar             **out_mount_point)
+             gchar             **out_mount_point,
+             gchar             **out_mount_options)
 {
   gboolean ret;
   FILE *f;
@@ -769,6 +793,8 @@ is_in_fstab (UDisksBlock        *block,
           ret = TRUE;
           if (out_mount_point != NULL)
             *out_mount_point = g_strdup (m->mnt_dir);
+          if (out_mount_options != NULL)
+            *out_mount_options = g_strdup (m->mnt_opts);
         }
 
     continue_loop:
@@ -788,14 +814,15 @@ is_in_fstab (UDisksBlock        *block,
  */
 static gboolean
 is_system_managed (UDisksBlock        *block,
-                   gchar             **out_mount_point)
+                   gchar             **out_mount_point,
+                   gchar             **out_mount_options)
 {
   gboolean ret;
 
   ret = TRUE;
 
   /* First, check /etc/fstab */
-  if (is_in_fstab (block, "/etc/fstab", out_mount_point))
+  if (is_in_fstab (block, "/etc/fstab", out_mount_point, out_mount_options))
     goto out;
 
   ret = FALSE;
@@ -822,6 +849,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   gchar *fs_type_to_use;
   gchar *mount_options_to_use;
   gchar *mount_point_to_use;
+  gchar *fstab_mount_options;
   gchar *escaped_fs_type_to_use;
   gchar *escaped_mount_options_to_use;
   gchar *escaped_mount_point_to_use;
@@ -835,6 +863,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   fs_type_to_use = NULL;
   mount_options_to_use = NULL;
   mount_point_to_use = NULL;
+  fstab_mount_options = NULL;
   escaped_fs_type_to_use = NULL;
   escaped_mount_options_to_use = NULL;
   escaped_mount_point_to_use = NULL;
@@ -846,7 +875,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   cleanup = udisks_daemon_get_cleanup (daemon);
 
   /* check if mount point is managed by e.g. /etc/fstab or similar */
-  if (is_system_managed (block, &mount_point_to_use))
+  if (is_system_managed (block, &mount_point_to_use, &fstab_mount_options))
     {
       system_managed = TRUE;
     }
@@ -882,13 +911,35 @@ handle_mount (UDisksFilesystem       *filesystem,
       goto out;
     }
 
-  /* if system-managed (e.g. referenced in /etc/fstab or similar), just
-   * run mount(8) as the calling user
+  /* if system-managed (e.g. referenced in /etc/fstab or similar), then
+   *
+   * - if the option comment=udisks-auth is given, then just run mount(8)
+   *   as the calling user; if that fails because of permission denied try
+   *   running it as root after the user authenticates for the action
+   *   org.freedesktop.udisks2.filesystem-fstab
+   *
+   * - otherwise (default case), use the normal authorization checks
    */
   if (system_managed)
     {
       gint status;
-      gboolean mount_fstab_as_root;
+      gboolean mount_fstab_as_root = FALSE;
+
+      if (!has_option (fstab_mount_options, "comment=udisks-auth"))
+        {
+          action_id = "org.freedesktop.udisks2.filesystem-mount";
+          if (udisks_block_get_hint_system (block) &&
+              !(udisks_daemon_util_setup_by_user (daemon, object, caller_uid)))
+            action_id = "org.freedesktop.udisks2.filesystem-mount-system";
+          if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                            object,
+                                                            action_id,
+                                                            options,
+                                                            N_("Authentication is required to mount $(udisks2.device)"),
+                                                            invocation))
+            goto out;
+          mount_fstab_as_root = TRUE;
+        }
 
       if (!g_file_test (mount_point_to_use, G_FILE_TEST_IS_DIR))
         {
@@ -905,7 +956,6 @@ handle_mount (UDisksFilesystem       *filesystem,
         }
 
       escaped_mount_point_to_use   = g_strescape (mount_point_to_use, NULL);
-      mount_fstab_as_root = FALSE;
     mount_fstab_again:
       if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                                   object,
@@ -1100,6 +1150,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   g_free (fs_type_to_use);
   g_free (mount_options_to_use);
   g_free (mount_point_to_use);
+  g_free (fstab_mount_options);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -1127,6 +1178,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
   UDisksDaemon *daemon;
   UDisksCleanup *cleanup;
   gchar *mount_point;
+  gchar *fstab_mount_options;
   gchar *escaped_mount_point;
   GError *error;
   uid_t mounted_by_uid;
@@ -1140,6 +1192,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
   gboolean fstab_mounted;
 
   mount_point = NULL;
+  fstab_mount_options = NULL;
   escaped_mount_point = NULL;
   error_message = NULL;
   opt_force = FALSE;
@@ -1178,15 +1231,16 @@ handle_unmount (UDisksFilesystem       *filesystem,
     }
 
   /* check if mount point is managed by e.g. /etc/fstab or similar */
-  if (is_system_managed (block, &mount_point))
+  if (is_system_managed (block, &mount_point, &fstab_mount_options))
     {
       system_managed = TRUE;
     }
 
-  /* if system-managed (e.g. referenced in /etc/fstab or similar), just
-   * run umount(8) as the calling user
+  /* if system-managed (e.g. referenced in /etc/fstab or similar) and
+   * with the option comment=udisks-auth, just run umount(8) as the
+   * calling user
    */
-  if (system_managed)
+  if (system_managed && has_option (fstab_mount_options, "comment=udisks-auth"))
     {
       gboolean unmount_fstab_as_root;
 
@@ -1250,8 +1304,6 @@ handle_unmount (UDisksFilesystem       *filesystem,
       /* allow unmounting stuff not mentioned in mounted-fs, but treat it like root mounted it */
       mounted_by_uid = 0;
     }
-
-  /* TODO: allow unmounting stuff not in the mounted-fs file? */
 
   if (caller_uid != 0 && (caller_uid != mounted_by_uid))
     {
@@ -1319,6 +1371,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
   g_free (error_message);
   g_free (escaped_mount_point);
   g_free (mount_point);
+  g_free (fstab_mount_options);
   return TRUE;
 }
 
