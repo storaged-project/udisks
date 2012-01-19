@@ -1051,6 +1051,15 @@ add_remove_fstab_entry (GVariant  *remove,
                        "Missing fsname, dir, type, opts, freq or passno parameter in entry to add");
           goto out;
         }
+
+      if (strlen (mntent_add.mnt_opts) == 0)
+        {
+          g_set_error (error,
+                       UDISKS_ERROR,
+                       UDISKS_ERROR_FAILED,
+                       "opts must not be blank");
+          goto out;
+        }
     }
 
   if (!g_file_get_contents ("/etc/fstab",
