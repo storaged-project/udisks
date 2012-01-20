@@ -33,7 +33,7 @@
       By default, logged-in users in active log-in sessions are
       permitted to mount and unlock devices attached to the local
       console. To lock down globally, configure the
-      <citerefentry><refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+      <citerefentry><refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum></citerefentry>
       authorizations for the actions
       <literal>filesystem-mount</literal>,
       <literal>filesystem-mount-system</literal>,
@@ -44,10 +44,10 @@
     <para>
       Note that the actions ending in <literal>-system</literal>
       typically requires administrator authentication and are used for
-      devices not considered "removable" (this includes USB attached
-      storage, Flash media, optical discs and so on). The udev
-      property <literal>UDISKS_SYSTEM</literal> can be used to
-      override this on a per-device basis, see below.
+      devices not considered "removable" (devices considered
+      "removable" include USB attached storage, Flash media, optical
+      discs etc.). The udev property <literal>UDISKS_SYSTEM</literal>
+      can be used to override this on a per-device basis, see below.
     </para>
     <para>
       To lock down access on a per-device basis, use the option
