@@ -275,13 +275,12 @@ update_hints (UDisksLinuxBlock  *block,
           hint_auto = TRUE;
         }
     }
-  else
+
+  /* Floppy drives are not partitionable */
+  if (g_str_has_prefix (device_file, "/dev/fd"))
     {
-      if (g_str_has_prefix (device_file, "/dev/fd"))
-        {
-          hint_system = FALSE;
-          hint_partitionable = FALSE;
-        }
+      hint_system = FALSE;
+      hint_partitionable = FALSE;
     }
 
   /* CD-ROM media / drives are not partitionable, at least not here on Linux */
