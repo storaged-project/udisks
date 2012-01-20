@@ -28,11 +28,11 @@
     </para>
   </refsect1>
 
-  <refsect1><title>LOCKING DOWN</title>
+  <refsect1><title>ACCESS CONTROL</title>
     <para>
-      By default, authorized users in active log-in sessions are
-      permitted to mount and unlock devices attached to their local
-      console. To lock this down globally, configure the
+      By default, logged-in users in active log-in sessions are
+      permitted to mount and unlock devices attached to the local
+      console. To lock down globally, configure the
       <citerefentry><refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
       authorizations for the actions
       <literal>filesystem-mount</literal>,
@@ -40,6 +40,14 @@
       <literal>encrypted-unlock</literal> and
       <literal>encrypted-unlock-system</literal>, all in the
       <literal>org.freedesktop.udisks2</literal> namespace.
+    </para>
+    <para>
+      Note that the actions ending in <literal>-system</literal>
+      typically requires administrator authentication and are used for
+      devices not considered "removable" (this includes USB attached
+      storage, Flash media, optical discs and so on). The udev
+      property <literal>UDISKS_SYSTEM</literal> can be used to
+      override this on a per-device basis, see below.
     </para>
     <para>
       To lock down access on a per-device basis, use the option
