@@ -140,6 +140,9 @@ main (int    argc,
         }
     }
 
+  if (g_getenv ("PATH") == NULL)
+    g_setenv ("PATH", "/usr/bin:/bin:/usr/sbin:/sbin", TRUE);
+
   udisks_notice ("udisks daemon version %s starting", PACKAGE_VERSION);
 
   loop = g_main_loop_new (NULL, FALSE);
