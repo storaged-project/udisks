@@ -1322,7 +1322,7 @@ handle_command_unlock_lock (gint        *argc,
  out:
   if (passphrase != NULL)
     {
-      memset (passphrase, strlen (passphrase), '\0');
+      memset (passphrase, '\0', strlen (passphrase));
       g_free (passphrase);
     }
   if (options != NULL)
