@@ -15,14 +15,14 @@ dbusconf_DATA = $(dbusconf_in_files:.conf.in=.conf)
 $(dbusconf_DATA): $(dbusconf_in_files) Makefile
 	cp $< $@
 
-systemdservice_in_files = udisks.service.in
+systemdservice_in_files = udisks2.service.in
 
 if HAVE_SYSTEMD
 systemdservicedir       = $(systemdsystemunitdir)
 systemdservice_DATA     = $(systemdservice_in_files:.service.in=.service)
 
 $(systemdservice_DATA): $(systemdservice_in_files) Makefile
-       @sed -e "s|\@libexecdir\@|$(libexecdir)|" $< > $@
+	@sed -e "s|\@privlibdir\@|$(privlibdir)|" $< > $@
 endif
 
 udevrulesdir = $(slashlibdir)/udev/rules.d

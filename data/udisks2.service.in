@@ -1,5 +1,5 @@
 [Unit]
-Description=Enumerate, Query and Manipulate Storage Devices
+Description=Storage Daemon
 
 [Service]
 Type=dbus

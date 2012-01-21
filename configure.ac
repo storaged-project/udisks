@@ -127,7 +127,8 @@ echo "
         privlibdir:                 ${privlibdir}
         slashlibdir:                ${slashlibdir}
         slashsbindir:               ${slashsbindir}
-	introspection:		    ${found_introspection}
+        introspection:              ${found_introspection}
+        systemdsystemunitdir:       ${systemdsystemunitdir}
 
         compiler:                   ${CC}
         cflags:                     ${CFLAGS}
