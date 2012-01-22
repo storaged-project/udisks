@@ -5,8 +5,12 @@
 ]>
 <book id="udisks" xmlns:xi="http://www.w3.org/2003/XInclude">
   <bookinfo>
-    <title>UDisks Reference Manual</title>
-    <releaseinfo>Version &version;</releaseinfo>
+    <title>UDisks &version;</title>
+    <releaseinfo>
+      The latest version of this documentation can be found at <ulink
+      role="online-location"
+      url="http://udisks.freedesktop.org/docs/latest/">http://udisks.freedesktop.org/docs/latest/</ulink>.
+    </releaseinfo>
     <authorgroup>
       <author>
 	<firstname>David</firstname>
@@ -18,44 +22,6 @@
 	</affiliation>
       </author>
     </authorgroup>
-
-    <copyright>
-      <year>2007</year>
-      <year>2008</year>
-      <year>2009</year>
-      <year>2010</year>
-      <year>2011</year>
-      <year>2012</year>
-      <holder>The UDisks Authors</holder>
-    </copyright>
-
-    <legalnotice>
-      <para>
-	Permission is granted to copy, distribute and/or modify this
-	document under the terms of the <citetitle>GNU Free
-	Documentation License</citetitle>, Version 1.1 or any later
-	version published by the Free Software Foundation with no
-	Invariant Sections, no Front-Cover Texts, and no Back-Cover
-	Texts. You may obtain a copy of the <citetitle>GNU Free
-	Documentation License</citetitle> from the Free Software
-	Foundation by visiting <ulink type="http"
-	url="http://www.fsf.org">their Web site</ulink> or by writing
-	to:
-	<address>
-          <street>51 Franklin Street</street>, Suite 500
-          <city>Boston</city>, <state>MA</state> <postcode>02110-1335</postcode>
-          <country>USA</country>
-	</address>
-      </para>
-      <para>
-	Many of the names used by companies to distinguish their
-	products and services are claimed as trademarks. Where those
-	names appear in any freedesktop.org documentation, and those
-	trademarks are made aware to the members of the
-	freedesktop.org project, the names have been printed in caps
-	or initial caps.
-      </para>
-    </legalnotice>
   </bookinfo>
 
   <part id="overview">
