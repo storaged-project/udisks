@@ -5,23 +5,12 @@
 ]>
 <book id="udisks" xmlns:xi="http://www.w3.org/2003/XInclude">
   <bookinfo>
-    <title>UDisks &version;</title>
+    <title>UDisks Reference Manual</title>
     <releaseinfo>
-      The latest version of this documentation can be found at <ulink
-      role="online-location"
+      For version &version; — the latest version of this
+      documentation can be found at <ulink role="online-location"
       url="http://udisks.freedesktop.org/docs/latest/">http://udisks.freedesktop.org/docs/latest/</ulink>.
     </releaseinfo>
-    <authorgroup>
-      <author>
-	<firstname>David</firstname>
-	<surname>Zeuthen</surname>
-	<affiliation>
-	  <address>
-	    <email>zeuthen@gmail.com</email>
-	  </address>
-	</affiliation>
-      </author>
-    </authorgroup>
   </bookinfo>
 
   <part id="overview">
