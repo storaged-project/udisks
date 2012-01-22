@@ -33,21 +33,21 @@
 
 static const GDBusErrorEntry dbus_error_entries[] =
 {
-  {UDISKS_ERROR_FAILED,                       "org.freedesktop.UDisks.Error.Failed"},
-  {UDISKS_ERROR_CANCELLED,                    "org.freedesktop.UDisks.Error.Cancelled"},
-  {UDISKS_ERROR_ALREADY_CANCELLED,            "org.freedesktop.UDisks.Error.AlreadyCancelled"},
-  {UDISKS_ERROR_NOT_AUTHORIZED,               "org.freedesktop.UDisks.Error.NotAuthorized"},
-  {UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN,    "org.freedesktop.UDisks.Error.NotAuthorizedCanObtain"},
-  {UDISKS_ERROR_NOT_AUTHORIZED_DISMISSED,     "org.freedesktop.UDisks.Error.NotAuthorizedDismissed"},
-  {UDISKS_ERROR_ALREADY_MOUNTED,              "org.freedesktop.UDisks.Error.AlreadyMounted"},
-  {UDISKS_ERROR_NOT_MOUNTED,                  "org.freedesktop.UDisks.Error.NotMounted"},
-  {UDISKS_ERROR_OPTION_NOT_PERMITTED,         "org.freedesktop.UDisks.Error.OptionNotPermitted"},
-  {UDISKS_ERROR_MOUNTED_BY_OTHER_USER,        "org.freedesktop.UDisks.Error.MountedByOtherUser"},
-  {UDISKS_ERROR_ALREADY_UNMOUNTING,           "org.freedesktop.UDisks.Error.AlreadyUnmounting"},
-  {UDISKS_ERROR_NOT_SUPPORTED,                "org.freedesktop.UDisks.Error.NotSupported"},
-  {UDISKS_ERROR_TIMED_OUT,                    "org.freedesktop.UDisks.Error.Timedout"},
-  {UDISKS_ERROR_WOULD_WAKEUP,                 "org.freedesktop.UDisks.Error.WouldWakeup"},
-  {UDISKS_ERROR_DEVICE_BUSY,                  "org.freedesktop.UDisks.Error.DeviceBusy"},
+  {UDISKS_ERROR_FAILED,                       "org.freedesktop.UDisks2.Error.Failed"},
+  {UDISKS_ERROR_CANCELLED,                    "org.freedesktop.UDisks2.Error.Cancelled"},
+  {UDISKS_ERROR_ALREADY_CANCELLED,            "org.freedesktop.UDisks2.Error.AlreadyCancelled"},
+  {UDISKS_ERROR_NOT_AUTHORIZED,               "org.freedesktop.UDisks2.Error.NotAuthorized"},
+  {UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN,    "org.freedesktop.UDisks2.Error.NotAuthorizedCanObtain"},
+  {UDISKS_ERROR_NOT_AUTHORIZED_DISMISSED,     "org.freedesktop.UDisks2.Error.NotAuthorizedDismissed"},
+  {UDISKS_ERROR_ALREADY_MOUNTED,              "org.freedesktop.UDisks2.Error.AlreadyMounted"},
+  {UDISKS_ERROR_NOT_MOUNTED,                  "org.freedesktop.UDisks2.Error.NotMounted"},
+  {UDISKS_ERROR_OPTION_NOT_PERMITTED,         "org.freedesktop.UDisks2.Error.OptionNotPermitted"},
+  {UDISKS_ERROR_MOUNTED_BY_OTHER_USER,        "org.freedesktop.UDisks2.Error.MountedByOtherUser"},
+  {UDISKS_ERROR_ALREADY_UNMOUNTING,           "org.freedesktop.UDisks2.Error.AlreadyUnmounting"},
+  {UDISKS_ERROR_NOT_SUPPORTED,                "org.freedesktop.UDisks2.Error.NotSupported"},
+  {UDISKS_ERROR_TIMED_OUT,                    "org.freedesktop.UDisks2.Error.Timedout"},
+  {UDISKS_ERROR_WOULD_WAKEUP,                 "org.freedesktop.UDisks2.Error.WouldWakeup"},
+  {UDISKS_ERROR_DEVICE_BUSY,                  "org.freedesktop.UDisks2.Error.DeviceBusy"},
 };
 
 GQuark

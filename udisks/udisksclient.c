@@ -154,8 +154,9 @@ static void
 udisks_client_init (UDisksClient *client)
 {
   static volatile GQuark udisks_error_domain = 0;
-  /* this will force associating errors in the UDISKS_ERROR error domain
-   * with org.freedesktop.UDisks.Error.* errors via g_dbus_error_register_error_domain().
+  /* this will force associating errors in the UDISKS_ERROR error
+   * domain with org.freedesktop.UDisks2.Error.* errors via
+   * g_dbus_error_register_error_domain().
    */
   udisks_error_domain = UDISKS_ERROR;
   udisks_error_domain; /* shut up -Wunused-but-set-variable */
