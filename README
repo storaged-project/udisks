@@ -11,6 +11,15 @@ See the COPYING file for the license. In a nutshell, the daemon and
 tools are licensed under the GPLv2 (or later) and libraries are
 licensed under LGPLv2 (or later).
 
+I18N and L10N
+=============
+
+We're using Transifex for translations, see
+
+ https://www.transifex.net/projects/p/udisks/
+
+for how to contribute.
+
 VERSIONING and ABI STABILITY
 ============================
 
