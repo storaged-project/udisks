@@ -374,7 +374,7 @@
 
         If the option @nowakeup is given and the disk is in a sleeping
         state, the error
-        <literal>org.freedesktop.UDisks.Error.WouldWakeup</literal> is
+        <literal>org.freedesktop.UDisks2.Error.WouldWakeup</literal> is
         returned.
 
         The option @atasmart_blob can be used to inject libatasmart
@@ -1148,7 +1148,7 @@
         Unmount a mounted device.
 
         If the filesystem is busy, this operation fails with the error
-        <link linkend="UDISKS-ERROR-DEVICE-BUSY:CAPS"><constant>org.freedesktop.UDisks.Error.DeviceBusy</constant></link>
+        <link linkend="UDISKS-ERROR-DEVICE-BUSY:CAPS"><constant>org.freedesktop.UDisks2.Error.DeviceBusy</constant></link>
         unless the option <parameter>force</parameter> is used.
 
         If the device in question is referenced in a system-wide
