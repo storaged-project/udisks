@@ -107,7 +107,6 @@ doc/Makefile
 doc/version.xml
 doc/man/Makefile
 po/Makefile.in
-policy/Makefile
 ])
 
 dnl ==========================================================================

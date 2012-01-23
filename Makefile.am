@@ -2,7 +2,7 @@
 
 NULL =
 
-SUBDIRS = data udisks src tools policy po doc
+SUBDIRS = data udisks src tools po doc
 
 EXTRA_DIST = 			\
 	HACKING 		\

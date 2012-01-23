@@ -28,13 +28,20 @@ endif
 udevrulesdir = $(slashlibdir)/udev/rules.d
 udevrules_DATA = 80-udisks2.rules
 
+polkitdir        = $(datadir)/polkit-1/actions
+polkit_in_files  = org.freedesktop.udisks2.policy.in
+polkit_DATA      = $(polkit_in_files:.policy.in=.policy)
+
+@INTLTOOL_POLICY_RULE@
+
 EXTRA_DIST = 						\
 	80-udisks2.rules				\
 	org.freedesktop.UDisks2.xml			\
 	$(systemdservice_in_files)			\
 	$(dbusservice_in_files)				\
 	$(dbusconf_in_files)				\
+	$(polkit_in_files)				\
 	$(NULL)
 
 clean-local :
-	rm -f *~ $(dbusservice_DATA) $(dbusconf_DATA) $(systemdservice_DATA)
+	rm -f *~ $(dbusservice_DATA) $(dbusconf_DATA) $(systemdservice_DATA) $(polkit_DATA)

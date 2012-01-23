@@ -1,4 +1,5 @@
 org.freedesktop.*.conf
 org.freedesktop.*.service
+org.freedesktop.*.policy
 *.pc
 

@@ -1,7 +1,7 @@
 [encoding: UTF-8]
 # List of source files containing translatable strings.
 # Please keep this file sorted alphabetically.
-policy/org.freedesktop.udisks2.policy.in
+data/org.freedesktop.udisks2.policy.in
 src/udiskslinuxblock.c
 src/udiskslinuxdrive.c
 src/udiskslinuxdriveata.c
