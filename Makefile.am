@@ -11,5 +11,16 @@ EXTRA_DIST = 			\
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc \
 	--with-systemdsystemunitdir=$$dc_install_base/$(systemdsystemunitdir)
 
+sign : dist
+	tar xfj udisks-$(VERSION).tar.bz2 | gpg --armor --detach-sign --output udisks-$(VERSION).tar.sign
+
+publish : sign
+	scp udisks-$(VERSION).tar.bz2 udisks-$(VERSION).tar.sign "david@people.freedesktop.org:/srv/udisks.freedesktop.org/www/releases/"
+
+publish-docs :
+	ssh "david@people.freedesktop.org" "mkdir -p /srv/udisks.freedesktop.org/www/docs/$(VERSION)"
+	scp doc/html/* "david@people.freedesktop.org:/srv/udisks.freedesktop.org/www/docs/$(VERSION)"
+	ssh "david@people.freedesktop.org" "rm -f /srv/udisks.freedesktop.org/www/docs/latest; ln -s $(VERSION) /srv/udisks.freedesktop.org/www/docs/latest"
+
 clean-local :
 	rm -f *~
