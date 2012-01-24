@@ -8,8 +8,11 @@ EXTRA_DIST = 			\
 	HACKING 		\
 	$(NULL)
 
-DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc \
-	--with-systemdsystemunitdir=$$dc_install_base/$(systemdsystemunitdir)
+DISTCHECK_CONFIGURE_FLAGS=							\
+	--enable-gtk-doc 							\
+	--disable-introspection							\
+	--with-systemdsystemunitdir=$$dc_install_base/$(systemdsystemunitdir)	\
+	$(NULL)
 
 sign : dist
 	tar xfj udisks-$(VERSION).tar.bz2 | gpg --armor --detach-sign --output udisks-$(VERSION).tar.sign

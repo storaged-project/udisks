@@ -122,7 +122,8 @@ UDisks_2_0_gir_SCANNERFLAGS = 			\
 UDisks_2_0_gir_CFLAGS = 			\
         $(libudisks2_la_CFLAGS)        		\
         -DUDISKS_COMPILATION                   	\
-        -I.. -I$(top_srcdir)/src		\
+	-I$(top_srcdir)				\
+	-I$(top_builddir)			\
 	$(NULL)
 
 UDisks_2_0_gir_LIBS = libudisks2.la
