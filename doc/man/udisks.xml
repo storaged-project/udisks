@@ -51,7 +51,7 @@
     </para>
     <para>
       To lock down access on a per-device basis, use the option
-      <literal>comment=udisks-auth</literal> in the
+      <literal>x-udisks-auth</literal> in the
       <filename>/etc/fstab</filename> file and the option
       <literal>x-udisks-auth</literal> in the
       <filename>/etc/crypttab</filename> file.

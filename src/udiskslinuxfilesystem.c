@@ -913,10 +913,10 @@ handle_mount (UDisksFilesystem       *filesystem,
 
   /* if system-managed (e.g. referenced in /etc/fstab or similar), then
    *
-   * - if the option comment=udisks-auth is given, then just run mount(8)
-   *   as the calling user; if that fails because of permission denied try
-   *   running it as root after the user authenticates for the action
-   *   org.freedesktop.udisks2.filesystem-fstab
+   * - if the option x-udisks-auth is given, then just run mount(8) as
+   *   the calling user; if that fails because of permission denied
+   *   try running it as root after the user authenticates for the
+   *   action org.freedesktop.udisks2.filesystem-fstab
    *
    * - otherwise (default case), use the normal authorization checks
    */
@@ -925,7 +925,7 @@ handle_mount (UDisksFilesystem       *filesystem,
       gint status;
       gboolean mount_fstab_as_root = FALSE;
 
-      if (!has_option (fstab_mount_options, "comment=udisks-auth"))
+      if (!has_option (fstab_mount_options, "x-udisks-auth"))
         {
           action_id = "org.freedesktop.udisks2.filesystem-mount";
           if (udisks_block_get_hint_system (block) &&
@@ -1237,10 +1237,10 @@ handle_unmount (UDisksFilesystem       *filesystem,
     }
 
   /* if system-managed (e.g. referenced in /etc/fstab or similar) and
-   * with the option comment=udisks-auth, just run umount(8) as the
+   * with the option x-udisks-auth, just run umount(8) as the
    * calling user
    */
-  if (system_managed && has_option (fstab_mount_options, "comment=udisks-auth"))
+  if (system_managed && has_option (fstab_mount_options, "x-udisks-auth"))
     {
       gboolean unmount_fstab_as_root;
 
