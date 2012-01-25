@@ -108,8 +108,6 @@ gir_DATA = UDisks-2.0.gir
 typelibsdir = $(INTROSPECTION_TYPELIBDIR)
 typelibs_DATA = UDisks-2.0.typelib
 
-UDisks_2_0_gir_INCLUDES = Gio-2.0
-
 UDisks_2_0_gir_SCANNERFLAGS = 			\
 	--c-include='udisks/udisks.h' 		\
 	--warn-all                              \
@@ -126,6 +124,8 @@ UDisks_2_0_gir_CFLAGS = 			\
 	-I$(top_builddir)			\
 	$(NULL)
 
+UDisks-2.0.gir: libudisks2.la
+UDisks_2_0_gir_INCLUDES = Gio-2.0
 UDisks_2_0_gir_LIBS = libudisks2.la
 UDisks_2_0_gir_FILES = $(libudisks2_la_SOURCES)
 UDisks_2_0_gir_EXPORT_PACKAGES = udisks2
