@@ -617,6 +617,9 @@ ensure_utf8 (const gchar *s)
 /*
  * calculate_mount_point: <internal>
  * @block: A #UDisksBlock.
+ * @uid: user id of the calling user
+ * @gid: group id of the calling user
+ * @user_name: user name of the calling user
  * @fs_type: The file system type to mount with
  * @error: Return location for error or %NULL.
  *
@@ -626,11 +629,15 @@ ensure_utf8 (const gchar *s)
  */
 static gchar *
 calculate_mount_point (UDisksBlock               *block,
+                       uid_t                      uid,
+                       gid_t                      gid,
+                       const gchar               *user_name,
                        const gchar               *fs_type,
                        GError                   **error)
 {
   const gchar *label;
   const gchar *uuid;
+  gchar *mount_dir = NULL;
   gchar *mount_point;
   gchar *orig_mount_point;
   GString *str;
@@ -645,15 +652,50 @@ calculate_mount_point (UDisksBlock               *block,
       uuid = udisks_block_get_id_uuid (block);
     }
 
+  /* try mounting in user's $XDG_RUNTIME_DIR/media first - have to create it on demand... */
+  if (user_name != NULL)
+    {
+      s = g_strdup_printf ("/run/user/%s", user_name);
+      if (g_file_test (s, G_FILE_TEST_EXISTS))
+        {
+          mount_dir = g_strdup_printf ("%s/media", s);
+          if (!g_file_test (mount_dir, G_FILE_TEST_EXISTS))
+            {
+              if (g_mkdir (mount_dir, 0777) != 0)
+                {
+                  g_set_error (error,
+                               UDISKS_ERROR,
+                               UDISKS_ERROR_FAILED,
+                               "Error creating directory `%s': %m",
+                               mount_dir);
+                  goto out;
+                }
+              if (chown (mount_dir, uid, gid) != 0)
+                {
+                  g_set_error (error,
+                               UDISKS_ERROR,
+                               UDISKS_ERROR_FAILED,
+                               "Error chowning`%s' to uid=%d, gid=%d: %m",
+                               mount_dir, (gint) uid, (gint) gid);
+                  goto out;
+                }
+            }
+        }
+      g_free (s);
+    }
+  /* fall back to mounting in /media */
+  if (mount_dir == NULL)
+    mount_dir = g_strdup ("/media");
+
   /* NOTE: UTF-8 has the nice property that valid UTF-8 strings only contains
    *       the byte 0x2F if it's for the '/' character (U+002F SOLIDUS).
    *
    *       See http://en.wikipedia.org/wiki/UTF-8 for details.
    */
-
   if (label != NULL && strlen (label) > 0)
     {
-      str = g_string_new ("/media/");
+      str = g_string_new (NULL);
+      g_string_append_printf (str, "%s/", mount_dir);
       s = ensure_utf8 (label);
       for (n = 0; s[n] != '\0'; n++)
         {
@@ -668,7 +710,8 @@ calculate_mount_point (UDisksBlock               *block,
     }
   else if (uuid != NULL && strlen (uuid) > 0)
     {
-      str = g_string_new ("/media/");
+      str = g_string_new (NULL);
+      g_string_append_printf (str, "%s/", mount_dir);
       s = ensure_utf8 (uuid);
       for (n = 0; s[n] != '\0'; n++)
         {
@@ -683,7 +726,7 @@ calculate_mount_point (UDisksBlock               *block,
     }
   else
     {
-      mount_point = g_strdup ("/media/disk");
+      mount_point = g_strdup_printf ("%s/disk", mount_dir);
     }
 
   /* ... then uniqify the mount point */
@@ -702,7 +745,9 @@ calculate_mount_point (UDisksBlock               *block,
         }
     }
   g_free (orig_mount_point);
+  g_free (mount_dir);
 
+ out:
   return mount_point;
 }
 
@@ -844,6 +889,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   UDisksDaemon *daemon;
   UDisksCleanup *cleanup;
   uid_t caller_uid;
+  gid_t caller_gid;
   const gchar * const *existing_mount_points;
   const gchar *probed_fs_usage;
   gchar *fs_type_to_use;
@@ -854,6 +900,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   gchar *escaped_mount_options_to_use;
   gchar *escaped_mount_point_to_use;
   gchar *error_message;
+  gchar *caller_user_name;
   GError *error;
   const gchar *action_id;
   gboolean system_managed;
@@ -867,6 +914,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   escaped_fs_type_to_use = NULL;
   escaped_mount_options_to_use = NULL;
   escaped_mount_point_to_use = NULL;
+  caller_user_name = NULL;
   system_managed = FALSE;
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem)));
@@ -904,7 +952,13 @@ handle_mount (UDisksFilesystem       *filesystem,
     }
 
   error = NULL;
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, NULL, &error))
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &caller_gid,
+                                               &caller_user_name,
+                                               &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
       g_error_free (error);
@@ -1076,6 +1130,9 @@ handle_mount (UDisksFilesystem       *filesystem,
   /* calculate mount point (guaranteed to be valid UTF-8) */
   error = NULL;
   mount_point_to_use = calculate_mount_point (block,
+                                              caller_uid,
+                                              caller_gid,
+                                              caller_user_name,
                                               fs_type_to_use,
                                               &error);
   if (mount_point_to_use == NULL)
@@ -1151,6 +1208,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   g_free (mount_options_to_use);
   g_free (mount_point_to_use);
   g_free (fstab_mount_options);
+  g_free (caller_user_name);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -1223,7 +1281,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
     }
 
   error = NULL;
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, NULL, &error))
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, NULL, NULL, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
       g_error_free (error);

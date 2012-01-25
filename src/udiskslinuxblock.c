@@ -1805,7 +1805,7 @@ handle_format (UDisksBlock           *block,
     action_id = "org.freedesktop.udisks2.modify-device-system";
 
   error = NULL;
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &caller_gid, &error))
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &caller_gid, NULL, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
       g_error_free (error);
