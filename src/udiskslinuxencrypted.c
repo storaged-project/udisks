@@ -249,7 +249,14 @@ handle_unlock (UDisksEncrypted        *encrypted,
   udev_cleartext_device = NULL;
   cleartext_object = NULL;
 
-  object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (encrypted)));
+  error = NULL;
+  object = udisks_daemon_util_dup_object (encrypted, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   cleanup = udisks_daemon_get_cleanup (daemon);
@@ -411,6 +418,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
     g_object_unref (udev_cleartext_device);
   if (cleartext_object != NULL)
     g_object_unref (cleartext_object);
+  g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -446,7 +454,14 @@ handle_lock (UDisksEncrypted        *encrypted,
   cleartext_object = NULL;
   device = NULL;
 
-  object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (encrypted)));
+  error = NULL;
+  object = udisks_daemon_util_dup_object (encrypted, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   cleanup = udisks_daemon_get_cleanup (daemon);
@@ -557,6 +572,7 @@ handle_lock (UDisksEncrypted        *encrypted,
   g_free (error_message);
   if (cleartext_object != NULL)
     g_object_unref (cleartext_object);
+  g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -580,7 +596,14 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
   gchar *passphrases = NULL;
   GError *error;
 
-  object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (encrypted)));
+  error = NULL;
+  object = udisks_daemon_util_dup_object (encrypted, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
 
@@ -651,6 +674,7 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
  out:
   g_free (passphrases);
   g_free (error_message);
+  g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }

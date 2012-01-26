@@ -336,10 +336,10 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
                                            GCancellable         *cancellable,
                                            GError              **error)
 {
-  UDisksLinuxDriveObject  *object;
+  UDisksLinuxDriveObject *object;
   GUdevDevice *device;
   gboolean ret;
-  SkDisk *d;
+  SkDisk *d = NULL;
   SkBool awake;
   SkBool good;
   uint64_t temp_mkelvin = 0;
@@ -348,7 +348,10 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
   const SkSmartParsedData *data;
   ParseData parse_data;
 
-  object = UDISKS_LINUX_DRIVE_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (drive)));
+  object = udisks_daemon_util_dup_object (drive, error);
+  if (object == NULL)
+    goto out;
+
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
   g_assert (device != NULL);
 
@@ -481,6 +484,7 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
   g_object_unref (device);
   if (d != NULL)
     sk_disk_free (d);
+  g_clear_object (&object);
   return ret;
 }
 
@@ -514,7 +518,10 @@ udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta     *drive,
   gboolean ret = FALSE;
   SkSmartSelfTest test;
 
-  object = UDISKS_LINUX_DRIVE_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (drive)));
+  object = udisks_daemon_util_dup_object (drive, error);
+  if (object == NULL)
+    goto out;
+
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
   g_assert (device != NULL);
 
@@ -559,6 +566,7 @@ udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta     *drive,
   g_object_unref (device);
   if (d != NULL)
     sk_disk_free (d);
+  g_clear_object (&object);
   return ret;
 }
 
@@ -579,7 +587,14 @@ handle_smart_update (UDisksDriveAta        *_drive,
 
   daemon = NULL;
 
-  object = UDISKS_LINUX_DRIVE_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (drive)));
+  error = NULL;
+  object = udisks_daemon_util_dup_object (drive, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   daemon = udisks_linux_drive_object_get_daemon (object);
   block_object = udisks_linux_drive_object_get_block (object, TRUE);
   if (block_object == NULL)
@@ -662,6 +677,7 @@ handle_smart_update (UDisksDriveAta        *_drive,
  out:
   if (block_object != NULL)
     g_object_unref (block_object);
+  g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
@@ -705,7 +721,14 @@ handle_smart_selftest_abort (UDisksDriveAta        *_drive,
   UDisksLinuxDriveAta *drive = UDISKS_LINUX_DRIVE_ATA (_drive);
   GError *error;
 
-  object = UDISKS_LINUX_DRIVE_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (drive)));
+  error = NULL;
+  object = udisks_daemon_util_dup_object (drive, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   daemon = udisks_linux_drive_object_get_daemon (object);
   block_object = udisks_linux_drive_object_get_block (object, TRUE);
   if (block_object == NULL)
@@ -773,6 +796,7 @@ handle_smart_selftest_abort (UDisksDriveAta        *_drive,
   udisks_drive_ata_complete_smart_selftest_abort (UDISKS_DRIVE_ATA (drive), invocation);
 
  out:
+  g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
@@ -788,7 +812,9 @@ selftest_job_func (UDisksThreadedJob  *job,
   UDisksLinuxDriveObject  *object;
   gboolean ret = FALSE;
 
-  object = UDISKS_LINUX_DRIVE_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (drive)));
+  object = udisks_daemon_util_dup_object (drive, error);
+  if (object == NULL)
+    goto out;
 
   while (TRUE)
     {
@@ -857,6 +883,7 @@ selftest_job_func (UDisksThreadedJob  *job,
   if (drive->selftest_cancellable != NULL)
     g_object_unref (drive->selftest_cancellable);
   G_UNLOCK (object_lock);
+  g_clear_object (&object);
   return ret;
 }
 
@@ -873,7 +900,14 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
   UDisksLinuxDriveAta *drive = UDISKS_LINUX_DRIVE_ATA (_drive);
   GError *error;
 
-  object = UDISKS_LINUX_DRIVE_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (drive)));
+  error = NULL;
+  object = udisks_daemon_util_dup_object (drive, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   daemon = udisks_linux_drive_object_get_daemon (object);
   block_object = udisks_linux_drive_object_get_block (object, TRUE);
   if (block_object == NULL)
@@ -944,6 +978,7 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
   udisks_drive_ata_complete_smart_selftest_start (UDISKS_DRIVE_ATA (drive), invocation);
 
  out:
+  g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 

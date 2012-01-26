@@ -174,7 +174,14 @@ handle_delete (UDisksLoop             *loop,
   error_message = NULL;
   escaped_device = NULL;
 
-  object = g_object_ref (UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (loop))));
+  error = NULL;
+  object = udisks_daemon_util_dup_object (loop, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   cleanup = udisks_daemon_get_cleanup (daemon);
@@ -237,6 +244,7 @@ handle_delete (UDisksLoop             *loop,
   g_free (escaped_device);
   g_free (error_message);
   g_object_unref (object);
+  g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }

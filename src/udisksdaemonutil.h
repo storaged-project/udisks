@@ -59,6 +59,9 @@ gboolean udisks_daemon_util_get_caller_uid_sync (UDisksDaemon            *daemon
                                                  gchar                  **out_user_name,
                                                  GError                 **error);
 
+gpointer  udisks_daemon_util_dup_object (gpointer   interface_,
+                                         GError   **error);
+
 G_END_DECLS
 
 #endif /* __UDISKS_DAEMON_UTIL_H__ */

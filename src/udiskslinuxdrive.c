@@ -680,12 +680,20 @@ handle_eject (UDisksDrive           *_drive,
   UDisksDaemon *daemon;
   const gchar *action_id;
   gchar *error_message;
+  GError *error;
 
   daemon = NULL;
   block = NULL;
   error_message = NULL;
 
-  object = UDISKS_LINUX_DRIVE_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (drive)));
+  error = NULL;
+  object = udisks_daemon_util_dup_object (drive, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   daemon = udisks_linux_drive_object_get_daemon (object);
   block_object = udisks_linux_drive_object_get_block (object, TRUE);
   if (block_object == NULL)
@@ -738,6 +746,7 @@ handle_eject (UDisksDrive           *_drive,
   if (block_object != NULL)
     g_object_unref (block_object);
   g_free (error_message);
+  g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 

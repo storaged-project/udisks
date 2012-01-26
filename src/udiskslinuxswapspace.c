@@ -158,8 +158,16 @@ handle_start (UDisksSwapspace        *swapspace,
   UDisksDaemon *daemon;
   UDisksBlock *block;
   UDisksBaseJob *job;
+  GError *error;
 
-  object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (swapspace)));
+  error = NULL;
+  object = udisks_daemon_util_dup_object (swapspace, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   block = udisks_object_peek_block (object);
 
@@ -185,6 +193,7 @@ handle_start (UDisksSwapspace        *swapspace,
                     invocation);
 
  out:
+  g_clear_object (&object);
   return TRUE;
 }
 

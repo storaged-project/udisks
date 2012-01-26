@@ -917,7 +917,14 @@ handle_mount (UDisksFilesystem       *filesystem,
   caller_user_name = NULL;
   system_managed = FALSE;
 
-  object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem)));
+  error = NULL;
+  object = udisks_daemon_util_dup_object (filesystem, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   cleanup = udisks_daemon_get_cleanup (daemon);
@@ -1209,6 +1216,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   g_free (mount_point_to_use);
   g_free (fstab_mount_options);
   g_free (caller_user_name);
+  g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -1255,7 +1263,14 @@ handle_unmount (UDisksFilesystem       *filesystem,
   error_message = NULL;
   opt_force = FALSE;
 
-  object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem)));
+  error = NULL;
+  object = udisks_daemon_util_dup_object (filesystem, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   cleanup = udisks_daemon_get_cleanup (daemon);
@@ -1430,6 +1445,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
   g_free (escaped_mount_point);
   g_free (mount_point);
   g_free (fstab_mount_options);
+  g_clear_object (&object);
   return TRUE;
 }
 
@@ -1474,13 +1490,21 @@ handle_set_label (UDisksFilesystem       *filesystem,
   const gchar *action_id;
   gchar *command;
   gchar *tmp;
+  GError *error;
 
   object = NULL;
   daemon = NULL;
   escaped_label = NULL;
   command = NULL;
 
-  object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (filesystem)));
+  error = NULL;
+  object = udisks_daemon_util_dup_object (filesystem, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   block = udisks_object_peek_block (object);
 
@@ -1590,6 +1614,7 @@ handle_set_label (UDisksFilesystem       *filesystem,
  out:
   g_free (escaped_label);
   g_free (command);
+  g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 

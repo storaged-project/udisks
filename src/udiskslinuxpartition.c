@@ -224,8 +224,16 @@ handle_set_flags (UDisksPartition        *partition,
   UDisksBlock *partition_table_block = NULL;
   gchar *command_line = NULL;
   gint fd = -1;
+  GError *error;
 
-  object = g_object_ref (UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (partition))));
+  error = NULL;
+  object = udisks_daemon_util_dup_object (partition, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   block = udisks_object_get_block (object);
 
@@ -307,6 +315,7 @@ handle_set_flags (UDisksPartition        *partition,
   g_clear_object (&partition_table_object);
   g_clear_object (&partition_table);
   g_clear_object (&partition_table_block);
+  g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -332,8 +341,16 @@ handle_set_name (UDisksPartition        *partition,
   UDisksBlock *partition_table_block = NULL;
   gchar *command_line = NULL;
   gint fd = -1;
+  GError *error;
 
-  object = g_object_ref (UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (partition))));
+  error = NULL;
+  object = udisks_daemon_util_dup_object (partition, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   block = udisks_object_get_block (object);
 
@@ -421,6 +438,7 @@ handle_set_name (UDisksPartition        *partition,
   g_clear_object (&partition_table_object);
   g_clear_object (&partition_table);
   g_clear_object (&partition_table_block);
+  g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -477,8 +495,16 @@ handle_set_type (UDisksPartition        *partition,
   UDisksBlock *partition_table_block = NULL;
   gchar *command_line = NULL;
   gint fd = -1;
+  GError *error;
 
-  object = g_object_ref (UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (partition))));
+  error = NULL;
+  object = udisks_daemon_util_dup_object (partition, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   block = udisks_object_get_block (object);
 
@@ -591,6 +617,7 @@ handle_set_type (UDisksPartition        *partition,
   g_clear_object (&partition_table_object);
   g_clear_object (&partition_table);
   g_clear_object (&partition_table_block);
+  g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -613,8 +640,16 @@ handle_delete (UDisksPartition        *partition,
   UDisksPartitionTable *partition_table = NULL;
   UDisksBlock *partition_table_block = NULL;
   gchar *command_line = NULL;
+  GError *error;
 
-  object = g_object_ref (UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (partition))));
+  error = NULL;
+  object = udisks_daemon_util_dup_object (partition, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   block = udisks_object_get_block (object);
 
@@ -669,6 +704,7 @@ handle_delete (UDisksPartition        *partition,
   g_clear_object (&partition_table_object);
   g_clear_object (&partition_table);
   g_clear_object (&partition_table_block);
+  g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }

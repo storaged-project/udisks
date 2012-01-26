@@ -165,18 +165,17 @@ ranges_overlap (guint64 a_offset, guint64 a_size,
 
 static gboolean
 have_partition_in_range (UDisksPartitionTable     *table,
+                         UDisksObject             *object,
                          guint64                   start,
                          guint64                   end,
                          gboolean                  ignore_container)
 {
   gboolean ret = FALSE;
-  UDisksObject *object = NULL;
   UDisksDaemon *daemon = NULL;
   GDBusObjectManager *object_manager = NULL;
   const gchar *table_object_path;
   GList *objects = NULL, *l;
 
-  object = g_object_ref (UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (table))));
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   object_manager = G_DBUS_OBJECT_MANAGER (udisks_daemon_get_object_manager (daemon));
 
@@ -214,7 +213,6 @@ have_partition_in_range (UDisksPartitionTable     *table,
  out:
   g_list_foreach (objects, (GFunc) g_object_unref, NULL);
   g_list_free (objects);
-  g_clear_object (&object);
   return ret;
 }
 
@@ -288,7 +286,14 @@ handle_create_partition (UDisksPartitionTable   *table,
   const gchar *table_type;
   GError *error;
 
-  object = g_object_ref (UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (table))));
+  error = NULL;
+  object = udisks_daemon_util_dup_object (table, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   block = udisks_object_get_block (object);
   if (block == NULL)
@@ -335,7 +340,7 @@ handle_create_partition (UDisksPartitionTable   *table,
           (type_as_int == 0x05 || type_as_int == 0x0f || type_as_int == 0x85))
         {
           part_type = "extended";
-          if (have_partition_in_range (table, offset, offset + size, FALSE))
+          if (have_partition_in_range (table, object, offset, offset + size, FALSE))
             {
               g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                                      "Requested range is already occupied by a partition");
@@ -344,9 +349,9 @@ handle_create_partition (UDisksPartitionTable   *table,
         }
       else
         {
-          if (have_partition_in_range (table, offset, offset + size, FALSE))
+          if (have_partition_in_range (table, object, offset, offset + size, FALSE))
             {
-              if (have_partition_in_range (table, offset, offset + size, TRUE))
+              if (have_partition_in_range (table, object, offset, offset + size, TRUE))
                 {
                   g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                                          "Requested range is already occupied by a partition");
@@ -376,6 +381,7 @@ handle_create_partition (UDisksPartitionTable   *table,
        *  - exceeding the end of the disk
        */
       while (end_bytes > start_mib * MIB_SIZE && (have_partition_in_range (table,
+                                                                           object,
                                                                            start_mib * MIB_SIZE,
                                                                            end_bytes, is_logical) ||
                                                   end_bytes > udisks_block_get_size (block)))
@@ -403,7 +409,7 @@ handle_create_partition (UDisksPartitionTable   *table,
       gchar *escaped_escaped_name;
 
       /* GPT is easy, no extended/logical crap */
-      if (have_partition_in_range (table, offset, offset + size, FALSE))
+      if (have_partition_in_range (table, object, offset, offset + size, FALSE))
         {
           g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                                  "Requested range is already occupied by a partition");
@@ -433,6 +439,7 @@ handle_create_partition (UDisksPartitionTable   *table,
        *  - exceeding the end of the disk (note: the 33 LBAs is the Secondary GPT)
        */
       while (end_bytes > start_mib * MIB_SIZE && (have_partition_in_range (table,
+                                                                           object,
                                                                            start_mib * MIB_SIZE,
                                                                            end_bytes, FALSE) ||
                                                   (end_bytes > udisks_block_get_size (block) - 33*512)))

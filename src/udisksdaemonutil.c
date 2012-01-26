@@ -617,3 +617,35 @@ udisks_daemon_util_get_caller_uid_sync (UDisksDaemon            *daemon,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_daemon_util_dup_object:
+ * @interface_: (type GDBusInterface): A #GDBusInterface<!-- -->-derived instance.
+ * @error: %NULL, or an unset #GError to set if the return value is %NULL.
+ *
+ * Gets the enclosing #UDisksObject for @interface, if any.
+ *
+ * Returns: (transfer full) (type UDisksObject): Either %NULL or a
+ * #UDisksObject<!-- -->-derived instance that must be released with
+ * g_object_unref().
+ */
+gpointer
+udisks_daemon_util_dup_object (gpointer   interface_,
+                               GError   **error)
+{
+  gpointer ret;
+
+  g_return_val_if_fail (G_IS_DBUS_INTERFACE (interface_), NULL);
+  g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+  ret = g_dbus_interface_dup_object (interface_);
+  if (ret == NULL)
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "No enclosing object for interface");
+    }
+
+  return ret;
+}
