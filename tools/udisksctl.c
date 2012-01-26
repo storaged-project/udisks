@@ -1939,6 +1939,18 @@ obj_proxy_cmp (GDBusObject *a,
   return g_strcmp0 (g_dbus_object_get_object_path (a), g_dbus_object_get_object_path (b));
 }
 
+static gint
+obj_proxy_drive_sortkey_cmp (GDBusObject *a,
+                             GDBusObject *b)
+{
+  UDisksDrive *da = udisks_object_peek_drive (UDISKS_OBJECT (a));
+  UDisksDrive *db = udisks_object_peek_drive (UDISKS_OBJECT (b));
+  if (da != NULL && db != NULL)
+    return g_strcmp0 (udisks_drive_get_sort_key (da), udisks_drive_get_sort_key (db));
+  else
+    return obj_proxy_cmp (a, b);
+}
+
 
 static const GOptionEntry command_dump_entries[] =
 {
@@ -2451,8 +2463,8 @@ handle_command_status (gint        *argc,
          /* SEAGATE ST3300657SS       0006      3SJ1QNMQ00009052NECM sdaa sdab dm-32   */
          /* 01234567890123456789012345678901234567890123456789012345678901234567890123456789 */
 
-  /* TODO: sort */
-  objects = g_list_sort (objects, (GCompareFunc) obj_proxy_cmp);
+  /* sort on Drive:SortKey */
+  objects = g_list_sort (objects, (GCompareFunc) obj_proxy_drive_sortkey_cmp);
   for (l = objects; l != NULL; l = l->next)
     {
       UDisksObject *object = UDISKS_OBJECT (l->data);
