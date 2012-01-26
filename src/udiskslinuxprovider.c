@@ -241,6 +241,8 @@ udisks_linux_provider_start (UDisksProvider *_provider)
   devices = g_list_sort (devices, (GCompareFunc) udev_device_name_cmp);
   for (l = devices; l != NULL; l = l->next)
     udisks_linux_provider_handle_uevent (provider, "add", G_UDEV_DEVICE (l->data));
+  for (l = devices; l != NULL; l = l->next)
+    udisks_linux_provider_handle_uevent (provider, "add", G_UDEV_DEVICE (l->data));
   g_list_foreach (devices, (GFunc) g_object_unref, NULL);
   g_list_free (devices);
 
