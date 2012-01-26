@@ -163,6 +163,42 @@ udisks_linux_provider_init (UDisksLinuxProvider *provider)
                     provider);
 }
 
+static guint
+count_alphas (const gchar *str)
+{
+  guint n = 0;
+  while (g_ascii_isalpha (str[n]))
+    n++;
+  return n;
+}
+
+static gint
+device_name_cmp (const gchar *a,
+                 const gchar *b)
+{
+  /* Ensures that sda comes before sdz%d and sdz%d comes before sdaa%d */
+  if (g_str_has_prefix (a, "sd") && g_str_has_prefix (b, "sd"))
+    {
+      gint la = count_alphas (a);
+      gint lb = count_alphas (b);
+      if (la != lb)
+        return la - lb;
+      else
+        return g_strcmp0 (a, b);
+    }
+  else
+    {
+      return g_strcmp0 (a, b);
+    }
+}
+
+static gint
+udev_device_name_cmp (GUdevDevice *a,
+                      GUdevDevice *b)
+{
+  return device_name_cmp (g_udev_device_get_name (a), g_udev_device_get_name (b));
+}
+
 static void
 udisks_linux_provider_start (UDisksProvider *_provider)
 {
@@ -201,6 +237,8 @@ udisks_linux_provider_start (UDisksProvider *_provider)
                                                          NULL);
 
   devices = g_udev_client_query_by_subsystem (provider->gudev_client, "block");
+  /* make sure we process sda before sdz and sdz before sdaa */
+  devices = g_list_sort (devices, (GCompareFunc) udev_device_name_cmp);
   for (l = devices; l != NULL; l = l->next)
     udisks_linux_provider_handle_uevent (provider, "add", G_UDEV_DEVICE (l->data));
   g_list_foreach (devices, (GFunc) g_object_unref, NULL);

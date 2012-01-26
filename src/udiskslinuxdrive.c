@@ -402,6 +402,30 @@ set_media_time_detected (UDisksLinuxDrive *drive,
   udisks_drive_set_time_media_detected (iface, drive->time_media_detected);
 }
 
+static gchar *
+append_fixedup_sd (const gchar *prefix,
+                   const gchar *device_name)
+{
+  guint num_alphas, n;
+  GString *str;
+
+  g_return_val_if_fail (g_str_has_prefix (device_name, "sd"), NULL);
+
+  /* make sure sdaa comes after e.g. sdz by inserting up to 5 '_' characters
+   * between sd and a in sda...
+   */
+  for (num_alphas = 0; g_ascii_isalpha (device_name[num_alphas + 2]); num_alphas++)
+    ;
+  str = g_string_new (prefix);
+  g_string_append (str, "sd");
+  for (n = 0; n < 5 - num_alphas; n++)
+    g_string_append_c (str, '_');
+
+  g_string_append (str, device_name + 2);
+
+  return g_string_free (str, FALSE);
+}
+
 /**
  * udisks_linux_drive_update:
  * @drive: A #UDisksLinuxDrive.
@@ -606,15 +630,28 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
             {
               /* make sure fd* BEFORE sr* BEFORE sd* */
               if (g_str_has_prefix (device_name, "fd"))
-                drive->sort_key = g_strdup_printf ("00coldplug/10removable/%s", device_name);
+                {
+                  drive->sort_key = g_strdup_printf ("00coldplug/10removable/%s", device_name);
+                }
               else if (g_str_has_prefix (device_name, "sr"))
-                drive->sort_key = g_strdup_printf ("00coldplug/11removable/%s", device_name);
+                {
+                  drive->sort_key = g_strdup_printf ("00coldplug/11removable/%s", device_name);
+                }
+              else if (g_str_has_prefix (device_name, "sd"))
+                {
+                  drive->sort_key = append_fixedup_sd ("00coldplug/12removable/", device_name);
+                }
               else
-                drive->sort_key = g_strdup_printf ("00coldplug/12removable/%s", device_name);
+                {
+                  drive->sort_key = g_strdup_printf ("00coldplug/12removable/%s", device_name);
+                }
             }
           else
             {
-              drive->sort_key = g_strdup_printf ("00coldplug/00fixed/%s", device_name);
+              if (g_str_has_prefix (device_name, "sd"))
+                drive->sort_key = append_fixedup_sd ("00coldplug/00fixed/", device_name);
+              else
+                drive->sort_key = g_strdup_printf ("00coldplug/00fixed/%s", device_name);
             }
         }
       else
