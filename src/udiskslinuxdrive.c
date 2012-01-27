@@ -675,7 +675,7 @@ handle_eject (UDisksDrive           *_drive,
 {
   UDisksLinuxDrive *drive = UDISKS_LINUX_DRIVE (_drive);
   UDisksLinuxDriveObject *object;
-  UDisksLinuxBlockObject *block_object;
+  UDisksLinuxBlockObject *block_object = NULL;
   UDisksBlock *block;
   UDisksDaemon *daemon;
   const gchar *action_id;
@@ -743,8 +743,7 @@ handle_eject (UDisksDrive           *_drive,
   udisks_drive_complete_eject (UDISKS_DRIVE (drive), invocation);
 
  out:
-  if (block_object != NULL)
-    g_object_unref (block_object);
+  g_clear_object (&block_object);
   g_free (error_message);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */

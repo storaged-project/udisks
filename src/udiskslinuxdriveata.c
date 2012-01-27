@@ -42,6 +42,7 @@
 #include "udisksdaemon.h"
 #include "udiskscleanup.h"
 #include "udisksdaemonutil.h"
+#include "udisksbasejob.h"
 #include "udisksthreadedjob.h"
 
 /**
@@ -79,7 +80,6 @@ struct _UDisksLinuxDriveAta
   GVariant    *smart_attributes;
 
   UDisksThreadedJob *selftest_job;
-  GCancellable *selftest_cancellable;
 };
 
 struct _UDisksLinuxDriveAtaClass
@@ -337,8 +337,8 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
                                            GError              **error)
 {
   UDisksLinuxDriveObject *object;
-  GUdevDevice *device;
-  gboolean ret;
+  GUdevDevice *device = NULL;
+  gboolean ret = FALSE;
   SkDisk *d = NULL;
   SkBool awake;
   SkBool good;
@@ -356,9 +356,6 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
   g_assert (device != NULL);
 
   /* TODO: use cancellable */
-
-  d = NULL;
-  ret = FALSE;
 
   if (simulate_path != NULL)
     {
@@ -481,7 +478,7 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
   ret = TRUE;
 
  out:
-  g_object_unref (device);
+  g_clear_object (&device);
   if (d != NULL)
     sk_disk_free (d);
   g_clear_object (&object);
@@ -563,7 +560,7 @@ udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta     *drive,
   ret = TRUE;
 
  out:
-  g_object_unref (device);
+  g_clear_object (&device);
   if (d != NULL)
     sk_disk_free (d);
   g_clear_object (&object);
@@ -579,7 +576,7 @@ handle_smart_update (UDisksDriveAta        *_drive,
 {
   UDisksLinuxDriveAta *drive = UDISKS_LINUX_DRIVE_ATA (_drive);
   UDisksLinuxDriveObject *object;
-  UDisksLinuxBlockObject *block_object;
+  UDisksLinuxBlockObject *block_object = NULL;
   UDisksDaemon *daemon;
   gboolean nowakeup = FALSE;
   const gchar *atasmart_blob = NULL;
@@ -675,8 +672,7 @@ handle_smart_update (UDisksDriveAta        *_drive,
   udisks_drive_ata_complete_smart_update (UDISKS_DRIVE_ATA (drive), invocation);
 
  out:
-  if (block_object != NULL)
-    g_object_unref (block_object);
+  g_clear_object (&block_object);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
@@ -771,13 +767,14 @@ handle_smart_selftest_abort (UDisksDriveAta        *_drive,
       goto out;
     }
 
-  /* TODO: wakeup selftest thread and wait for it to terminate */
+  /* This wakes up the selftest thread */
   G_LOCK (object_lock);
-  if (drive->selftest_cancellable != NULL)
+  if (drive->selftest_job != NULL)
     {
-      g_cancellable_cancel (drive->selftest_cancellable);
+      g_cancellable_cancel (udisks_base_job_get_cancellable (UDISKS_BASE_JOB (drive->selftest_job)));
     }
   G_UNLOCK (object_lock);
+  /* TODO: wait for the selftest thread to terminate */
 
   error = NULL;
   if (!udisks_linux_drive_ata_refresh_smart_sync (drive,
@@ -878,10 +875,9 @@ selftest_job_func (UDisksThreadedJob  *job,
   ret = TRUE;
 
  out:
+  /* terminate the job */
   G_LOCK (object_lock);
   drive->selftest_job = NULL;
-  if (drive->selftest_cancellable != NULL)
-    g_object_unref (drive->selftest_cancellable);
   G_UNLOCK (object_lock);
   g_clear_object (&object);
   return ret;
@@ -965,13 +961,12 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
   G_LOCK (object_lock);
   if (drive->selftest_job == NULL)
     {
-      drive->selftest_cancellable = g_cancellable_new ();
       drive->selftest_job = UDISKS_THREADED_JOB (udisks_daemon_launch_threaded_job (daemon,
                                                                                     UDISKS_OBJECT (object),
                                                                                     selftest_job_func,
                                                                                     g_object_ref (drive),
                                                                                     g_object_unref,
-                                                                                    drive->selftest_cancellable));
+                                                                                    NULL)); /* GCancellable */
     }
   G_UNLOCK (object_lock);
 

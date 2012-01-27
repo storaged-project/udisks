@@ -414,13 +414,12 @@ find_crypttab_entries_for_device (UDisksLinuxBlock *block,
       UDisksCrypttabEntry *entry = UDISKS_CRYPTTAB_ENTRY (l->data);
       const gchar *const *symlinks;
       const gchar *device_in_entry;
-      const gchar *device;
-      const gchar *label;
-      const gchar *uuid;
+      const gchar *device = NULL;
+      const gchar *label = NULL;
+      const gchar *uuid = NULL;
       guint n;
 
       device_in_entry = udisks_crypttab_entry_get_device (entry);
-      device = NULL;
       if (g_str_has_prefix (device_in_entry, "UUID="))
         {
           uuid = device_in_entry + 5;
@@ -1812,8 +1811,8 @@ handle_format (UDisksBlock           *block,
   const gchar *action_id;
   const FSInfo *fs_info;
   const gchar *label;
-  gchar *escaped_label;
-  gchar *command;
+  gchar *escaped_label = NULL;
+  gchar *command = NULL;
   gchar *tmp;
   gchar *error_message;
   GError *error;
