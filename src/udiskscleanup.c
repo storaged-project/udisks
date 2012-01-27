@@ -1561,6 +1561,7 @@ udisks_cleanup_check_loop_entry (UDisksCleanup  *cleanup,
       attempt_no_cleanup = TRUE;
       goto out;
     }
+  memset (&li64, '\0', sizeof (struct loop_info64));
   if (ioctl (loop_device_fd, LOOP_GET_STATUS64, &li64) == -1)
     {
       udisks_info ("error issuing LOOP_GET_STATUS64 ioctl on %s: %m", loop_device);
