@@ -1,4 +1,56 @@
 ------------
+udisks 1.91.0
+------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks and storage devices. This is the first release of
+the new 2.x series. This release is parallel-installable with udisks
+1.x.
+
+Changes since udisks 1.90.0:
+
+ Benedikt Morbach (1):
+       Install a systemd service file if systemd is used
+
+ David Zeuthen (27):
+       Post-release version bump to version 1.91.0
+       Ensure PATH is set
+       Fix use of memset(3)
+       Rename systemd service to udisks2 and fix a couple of typos
+       Add 2012 to copyright years
+       Remove copyright and license from docs and add link to online docs
+       Fix up doc page
+       Use org.freedesktop.UDisks2.* for errors, not org.freedesktop.UDisks.*
+       Also update the error name in D-Bus docs
+       Move polkit .policy file from policy/ to data/
+       Add Danish translation
+       Add Transifex URL to README file
+       Add targets for release management
+       Use gobject-introspection Makefile
+       Update POTFILES.in
+       Fix 'make distcheck'
+       For mount options, switch from comment=udisks to x-udisks
+       Prefer mounting in /run/user/$USER/media instead of /media
+       With /media and /run on tmfs, switch to temporary store for mounted-fs
+       udisksctl: nuke PORT column in output of 'status' verb
+       udisksctl: sort the drives using Drive:SortKey for 'status' verb
+       Make sure that Drive:SortKey sorts e.g. sdz before sdaa
+       Do coldplug for block devices twice
+       Use g_dbus_interface_dup_object() and check return value
+       Shut up valgrind complaing about LOOP_GET_STATUS64 ioctl
+       Fix a couple of uninitialized warnings and simplify SMART self-test handling
+       Update NEWS for release
+
+ Martin Pitt (1):
+       Fix .gir make dependencies
+
+
+Thanks to all our contributors.
+
+David Zeuthen,
+Feb 6, 2012
+
+------------
 udisks 1.90.0
 ------------
 
