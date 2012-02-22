@@ -28,6 +28,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <mntent.h>
+#include <sys/types.h>
+#include <sys/acl.h>
 
 #include <glib/gstdio.h>
 
@@ -635,10 +637,11 @@ calculate_mount_point (UDisksBlock               *block,
                        const gchar               *fs_type,
                        GError                   **error)
 {
-  const gchar *label;
-  const gchar *uuid;
+  const gchar *label = NULL;
+  const gchar *uuid = NULL;
+  gchar *escaped_user_name = NULL;
   gchar *mount_dir = NULL;
-  gchar *mount_point;
+  gchar *mount_point = NULL;
   gchar *orig_mount_point;
   GString *str;
   gchar *s;
@@ -652,40 +655,71 @@ calculate_mount_point (UDisksBlock               *block,
       uuid = udisks_block_get_id_uuid (block);
     }
 
-#if 0 /* $XDG_RUNTIME_DIR/media turned off for now, may have security issues */
-  /* try mounting in user's $XDG_RUNTIME_DIR/media first - have to create it on demand... */
+  /* If we know the user-name, mount in /run/media/$USER */
   if (user_name != NULL)
     {
-      s = g_strdup_printf ("/run/user/%s", user_name);
-      if (g_file_test (s, G_FILE_TEST_EXISTS))
+      escaped_user_name = g_strescape (user_name, NULL);;
+
+      mount_dir = g_strdup_printf ("/run/media/%s", escaped_user_name);
+      if (!g_file_test (mount_dir, G_FILE_TEST_EXISTS))
         {
-          mount_dir = g_strdup_printf ("%s/media", s);
-          if (!g_file_test (mount_dir, G_FILE_TEST_EXISTS))
+          gchar *stderr_txt;
+          gint exit_status;
+
+          /* First ensure that /run/media exists */
+          if (!g_file_test ("/run/media", G_FILE_TEST_EXISTS))
             {
-              if (g_mkdir (mount_dir, 0777) != 0)
+              if (g_mkdir ("/run/media", 0755) != 0)
                 {
                   g_set_error (error,
                                UDISKS_ERROR,
                                UDISKS_ERROR_FAILED,
-                               "Error creating directory `%s': %m",
-                               mount_dir);
-                  goto out;
-                }
-              if (chown (mount_dir, uid, gid) != 0)
-                {
-                  g_set_error (error,
-                               UDISKS_ERROR,
-                               UDISKS_ERROR_FAILED,
-                               "Error chowning`%s' to uid=%d, gid=%d: %m",
-                               mount_dir, (gint) uid, (gint) gid);
+                               "Error creating directory /run/media: %m");
                   goto out;
                 }
             }
+          /* Then create the per-user /run/media/$USER */
+          if (g_mkdir (mount_dir, 0700) != 0)
+            {
+              g_set_error (error,
+                           UDISKS_ERROR,
+                           UDISKS_ERROR_FAILED,
+                           "Error creating directory `%s': %m",
+                           mount_dir);
+              goto out;
+            }
+          /* Then set the ACL such that only $USER can actually access it */
+          s = g_strdup_printf ("setfacl -m \"u:%s:rx\" \"%s\"",
+                               escaped_user_name,
+                               mount_dir);
+          if (!g_spawn_command_line_sync (s,
+                                          NULL, /* stdout_txt */
+                                          &stderr_txt,
+                                          &exit_status,
+                                          error))
+            {
+              g_free (s);
+              if (rmdir (mount_dir) != 0)
+                udisks_warning ("Error calling rmdir() on %s: %m", mount_dir);
+              goto out;
+            }
+          if (!(WIFEXITED (exit_status) && WEXITSTATUS (exit_status) == 0))
+            {
+              g_set_error (error,
+                           UDISKS_ERROR,
+                           UDISKS_ERROR_FAILED,
+                           "Command-line `%s' didn't exit normally: %s", s, stderr_txt);
+              g_free (stderr_txt);
+              g_free (s);
+              if (rmdir (mount_dir) != 0)
+                udisks_warning ("Error calling rmdir() on %s: %m", mount_dir);
+              goto out;
+            }
+          g_free (stderr_txt);
+          g_free (s);
         }
-      g_free (s);
     }
-#endif
-  /* fall back to mounting in /media */
+  /* otherwise fall back to mounting in /media */
   if (mount_dir == NULL)
     mount_dir = g_strdup ("/media");
 
@@ -750,6 +784,7 @@ calculate_mount_point (UDisksBlock               *block,
   g_free (mount_dir);
 
  out:
+  g_free (escaped_user_name);
   return mount_point;
 }
 

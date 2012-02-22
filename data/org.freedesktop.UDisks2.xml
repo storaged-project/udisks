@@ -1097,7 +1097,8 @@
         looking at data related to the device (such the filesystem
         UUID and label) and will be created automatically. It is
         returned in @mount_path and is normally a sub-directory of
-        <filename class='directory'>/media</filename>.
+        <filename class='directory'>/run/media/$USER</filename> but
+        note that any path may be returned.
 
         The filesystem should be unmounted using the
         org.freedesktop.UDisks2.Filesystem.Unmount() method.
