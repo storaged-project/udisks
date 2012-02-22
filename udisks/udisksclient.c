@@ -1368,15 +1368,15 @@ udisks_client_get_partition_info (UDisksClient    *client,
     }
   else if (g_strcmp0 (udisks_partition_table_get_type_ (table), "gpt") == 0)
     {
-      if (flags & (1L<<0))
+      if (flags & (1ULL<<0))
         add_item (&flags_str, _("System"));
-      if (flags & (1L<<2))
+      if (flags & (1ULL<<2))
         add_item (&flags_str, _("Legacy BIOS Bootable"));
-      if (flags & (1L<<60))
+      if (flags & (1ULL<<60))
         add_item (&flags_str, _("Read-only"));
-      if (flags & (1L<<62))
+      if (flags & (1ULL<<62))
         add_item (&flags_str, _("Hidden"));
-      if (flags & (1L<<63))
+      if (flags & (1ULL<<63))
         add_item (&flags_str, _("No Automount"));
     }
 
