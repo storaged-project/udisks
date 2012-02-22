@@ -652,6 +652,7 @@ calculate_mount_point (UDisksBlock               *block,
       uuid = udisks_block_get_id_uuid (block);
     }
 
+#if 0 /* $XDG_RUNTIME_DIR/media turned off for now, may have security issues */
   /* try mounting in user's $XDG_RUNTIME_DIR/media first - have to create it on demand... */
   if (user_name != NULL)
     {
@@ -683,6 +684,7 @@ calculate_mount_point (UDisksBlock               *block,
         }
       g_free (s);
     }
+#endif
   /* fall back to mounting in /media */
   if (mount_dir == NULL)
     mount_dir = g_strdup ("/media");
