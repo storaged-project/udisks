@@ -6,7 +6,7 @@ dbusservice_in_files = org.freedesktop.UDisks2.service.in
 dbusservice_DATA     = $(dbusservice_in_files:.service.in=.service)
 
 $(dbusservice_DATA): $(dbusservice_in_files) Makefile
-	@sed -e "s|\@privlibdir\@|$(privlibdir)|" $< > $@
+	@sed -e "s|\@udisksdprivdir\@|$(prefix)/lib/udisks2|" $< > $@
 
 dbusconfdir = $(sysconfdir)/dbus-1/system.d
 dbusconf_in_files = org.freedesktop.UDisks2.conf.in
@@ -22,10 +22,10 @@ systemdservicedir       = $(systemdsystemunitdir)
 systemdservice_DATA     = $(systemdservice_in_files:.service.in=.service)
 
 $(systemdservice_DATA): $(systemdservice_in_files) Makefile
-	@sed -e "s|\@privlibdir\@|$(privlibdir)|" $< > $@
+	@sed -e "s|\@udisksdprivdir\@|$(prefix)/lib/udisks2|" $< > $@
 endif
 
-udevrulesdir = $(slashlibdir)/udev/rules.d
+udevrulesdir = $(udevdir)/rules.d
 udevrules_DATA = 80-udisks2.rules
 
 polkitdir        = $(datadir)/polkit-1/actions

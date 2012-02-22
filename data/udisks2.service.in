@@ -4,4 +4,4 @@ Description=Storage Daemon
 [Service]
 Type=dbus
 BusName=org.freedesktop.UDisks2
-ExecStart=@privlibdir@/udisksd --no-debug
+ExecStart=@udisksdprivdir@/udisksd --no-debug

@@ -57,6 +57,10 @@ PKG_CHECK_MODULES(LIBATASMART, [libatasmart >= 0.17])
 AC_SUBST(LIBATASMART_CFLAGS)
 AC_SUBST(LIBATASMART_LIBS)
 
+# udevdir
+udevdir=$($PKG_CONFIG --variable=udevdir udev)
+AC_SUBST(udevdir)
+
 # systemd
 AC_ARG_WITH([systemdsystemunitdir],
             AS_HELP_STRING([--with-systemdsystemunitdir=DIR], [Directory for systemd service files]),
@@ -75,22 +79,6 @@ GETTEXT_PACKAGE=udisks2
 AC_SUBST([GETTEXT_PACKAGE])
 AM_GLIB_GNU_GETTEXT
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE],["$GETTEXT_PACKAGE"],[gettext domain])
-
-# slash dir stuff
-#
-
-if test "$prefix" = "/usr" -o "$prefix" = "/usr/local" -o "$prefix" = "NONE" ; then
-  privlibdir=/lib/udisks2
-  slashlibdir=/lib
-  slashsbindir=/sbin
-else
-  privlibdir=$prefix/udisks2
-  slashlibdir=$prefix/lib
-  slashsbindir=$prefix/sbin
-fi
-AC_SUBST(privlibdir)
-AC_SUBST(slashlibdir)
-AC_SUBST(slashsbindir)
 
 # Generate
 #
@@ -123,10 +111,9 @@ echo "
         sysconfdir:                 ${sysconfdir}
         localstatedir:              ${localstatedir}
         docdir:                     ${docdir}
-        privlibdir:                 ${privlibdir}
-        slashlibdir:                ${slashlibdir}
-        slashsbindir:               ${slashsbindir}
         introspection:              ${found_introspection}
+
+        udevdir:                    ${udevdir}
         systemdsystemunitdir:       ${systemdsystemunitdir}
 
         compiler:                   ${CC}

@@ -39,7 +39,7 @@ udisksctl_LDADD = 					\
 
 # ----------------------------------------------------------------------------------------------------
 
-slashsbin_PROGRAMS = umount.udisks2
+sbin_PROGRAMS = umount.udisks2
 
 umount_udisks2_SOURCES = 				\
 				umount-udisks.c		\

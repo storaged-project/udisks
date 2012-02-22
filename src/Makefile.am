@@ -99,14 +99,15 @@ libudisks_daemon_la_LIBADD =				\
 
 # ----------------------------------------------------------------------------------------------------
 
-privlib_PROGRAMS = udisksd
+udisksdprivdir = $(prefix)/lib/udisks2
+udisksdpriv_PROGRAMS = udisksd
 
 udisksd_SOURCES = 					\
 				main.c			\
 	$(NULL)
 
 udisksd_CFLAGS = 					\
-	-DG_LOG_DOMAIN=\"udisks2-daemon\"		\
+	-DG_LOG_DOMAIN=\"udisksd\"			\
 	$(NULL)
 
 udisksd_LDADD = 					\
