@@ -243,7 +243,6 @@ handle_delete (UDisksLoop             *loop,
  out:
   g_free (escaped_device);
   g_free (error_message);
-  g_object_unref (object);
   g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
