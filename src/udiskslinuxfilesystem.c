@@ -29,7 +29,6 @@
 #include <stdio.h>
 #include <mntent.h>
 #include <sys/types.h>
-#include <sys/acl.h>
 
 #include <glib/gstdio.h>
 
