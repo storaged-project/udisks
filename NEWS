@@ -1,4 +1,32 @@
 ------------
+udisks 1.92.0
+------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks and storage devices. This is the first release of
+the new 2.x series. This release is parallel-installable with udisks
+1.x.
+
+Changes since udisks 1.91.0:
+
+ Colin Walters (1):
+       client: Fix bit shifts of flags on 32 bit
+
+ David Zeuthen (6):
+       Post-release version bump to version 1.92.0
+       Avoid using $XDG_RUNTIME_DIR/media for now
+       Don't free object twice when deleting a loop device
+       Use /run/media/$USER for mounting
+       Move to /usr-only setup and get rid of hardcoded paths to /lib and sbin
+       Update NEWS for release
+
+
+Thanks to all our contributors.
+
+David Zeuthen,
+Feb 23, 2012
+
+------------
 udisks 1.91.0
 ------------
 
