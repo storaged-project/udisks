@@ -56,6 +56,33 @@
           manipulate global state.
         </para>
       </sect1>
+      <sect1 id="ref-dbus-block-devices">
+        <title>The /org/freedesktop/UDisks2/block_devices/* objects</title>
+        <para>
+          Objects with an object path starting with
+          <literal>/org/freedesktop/UDisks2/block_devices/</literal>
+          implement the
+          <link linkend="gdbus-interface-org-freedesktop-UDisks2-Block.top_of_page">org.freedesktop.UDisks2.Block</link>
+          D-Bus interface and may optionally implement other D-Bus interfaces such as
+          <link linkend="gdbus-interface-org-freedesktop-UDisks2-Filesystem.top_of_page">org.freedesktop.UDisks2.Filesystem</link>,
+          <link linkend="gdbus-interface-org-freedesktop-UDisks2-Partition.top_of_page">org.freedesktop.UDisks2.Partition</link> or
+          <link linkend="gdbus-interface-org-freedesktop-UDisks2-Loop.top_of_page">org.freedesktop.UDisks2.Loop</link> depending on the block device in question.
+        </para>
+        <para>
+          Note that interfaces may be added and removed at run-time. For example, if a block device is full of zeroes, it will not intially implement the
+          <link linkend="gdbus-interface-org-freedesktop-UDisks2-Filesystem.top_of_page">org.freedesktop.UDisks2.Filesystem</link>
+          interface; however, if a filesystem is written to disk (using, say, the
+          <citerefentry>
+            <refentrytitle>mkfs</refentrytitle><manvolnum>8</manvolnum>
+          </citerefentry>
+          command) and the filesystem is recognized by the OS (specifically, recognized by
+          <citerefentry>
+            <refentrytitle>udev</refentrytitle><manvolnum>7</manvolnum>
+          </citerefentry> and its device probers), the object will gain the interface. If the device is later zeroed or formatted for use as e.g. swap-space, it will lose the
+          <link linkend="gdbus-interface-org-freedesktop-UDisks2-Filesystem.top_of_page">org.freedesktop.UDisks2.Filesystem</link>
+          interface.
+        </para>
+      </sect1>
       <sect1 id="udisks-std-options">
         <title>The <parameter>options</parameter> parameter</title>
         <para>
