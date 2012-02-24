@@ -56,6 +56,7 @@
           manipulate global state.
         </para>
       </sect1>
+
       <sect1 id="ref-dbus-block-devices">
         <title>The /org/freedesktop/UDisks2/block_devices/* objects</title>
         <para>
@@ -88,6 +89,30 @@
           interface.
         </para>
       </sect1>
+
+      <sect1 id="ref-dbus-drives">
+        <title>The /org/freedesktop/UDisks2/drives/* objects</title>
+        <para>
+          Objects with object paths starting with
+          <literal>/org/freedesktop/UDisks2/drives/</literal>
+          all represent <ulink url="http://en.wikipedia.org/wiki/Disk_drive">disk drives</ulink>,
+          typically physical disk drives.
+          Such objects implement the
+          <link linkend="gdbus-interface-org-freedesktop-UDisks2-Drive.top_of_page">org.freedesktop.UDisks2.Drive</link>
+          D-Bus interface and may optionally implement other D-Bus interfaces such as
+          <link linkend="gdbus-interface-org-freedesktop-UDisks2-Drive-Ata.top_of_page">org.freedesktop.UDisks2.Drive.Ata</link> depending on the drive in question.
+        </para>
+        <para>
+          A drive object should not to be confused with
+          <link linkend="ref-dbus-block-devices">block device</link>
+          objects (which are used for low-level block devices the OS
+          knows about). For example, if <filename>/dev/sda</filename>
+          and <filename>/dev/sdb</filename> are block devices for two
+          paths to the same drive, there will be only drive object but
+          two block device objects.
+        </para>
+      </sect1>
+
       <sect1 id="udisks-std-options">
         <title>The <parameter>options</parameter> parameter</title>
         <para>
