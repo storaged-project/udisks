@@ -113,6 +113,18 @@
         </para>
       </sect1>
 
+      <sect1 id="ref-dbus-jobs">
+        <title>The /org/freedesktop/UDisks2/jobs/* objects</title>
+        <para>
+          Objects with object paths starting with
+          <literal>/org/freedesktop/UDisks2/jobs/</literal> all
+          represent long-running tasks, typically initiated by the
+          user and are guaranteed to implement the
+          <link linkend="gdbus-interface-org-freedesktop-UDisks2-Job.top_of_page">org.freedesktop.UDisks2.Job</link>
+          D-Bus interface.
+        </para>
+      </sect1>
+
       <sect1 id="udisks-std-options">
         <title>The <parameter>options</parameter> parameter</title>
         <para>
