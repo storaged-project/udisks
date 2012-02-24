@@ -59,9 +59,10 @@
       <sect1 id="ref-dbus-block-devices">
         <title>The /org/freedesktop/UDisks2/block_devices/* objects</title>
         <para>
-          Objects with an object path starting with
+          Objects with object paths starting with
           <literal>/org/freedesktop/UDisks2/block_devices/</literal>
-          implement the
+          all represent <ulink url="http://en.wikipedia.org/wiki/Block_device#Block_devices">block devices</ulink>.
+          Such objects implement the
           <link linkend="gdbus-interface-org-freedesktop-UDisks2-Block.top_of_page">org.freedesktop.UDisks2.Block</link>
           D-Bus interface and may optionally implement other D-Bus interfaces such as
           <link linkend="gdbus-interface-org-freedesktop-UDisks2-Filesystem.top_of_page">org.freedesktop.UDisks2.Filesystem</link>,
@@ -69,9 +70,13 @@
           <link linkend="gdbus-interface-org-freedesktop-UDisks2-Loop.top_of_page">org.freedesktop.UDisks2.Loop</link> depending on the block device in question.
         </para>
         <para>
-          Note that interfaces may be added and removed at run-time. For example, if a block device is full of zeroes, it will not intially implement the
-          <link linkend="gdbus-interface-org-freedesktop-UDisks2-Filesystem.top_of_page">org.freedesktop.UDisks2.Filesystem</link>
-          interface; however, if a filesystem is written to disk (using, say, the
+          Note that interfaces may be added and removed at
+          run-time. For example, if a block device is full of zeroes
+          (or, at least, have zeroes in the known metadata areas), it
+          will not intially implement the <link
+          linkend="gdbus-interface-org-freedesktop-UDisks2-Filesystem.top_of_page">org.freedesktop.UDisks2.Filesystem</link>
+          interface; however, if a filesystem is later created on the device
+          (using, say, the
           <citerefentry>
             <refentrytitle>mkfs</refentrytitle><manvolnum>8</manvolnum>
           </citerefentry>
