@@ -21,6 +21,7 @@ publish : sign
 	scp udisks-$(VERSION).tar.bz2 udisks-$(VERSION).tar.sign "david@people.freedesktop.org:/srv/udisks.freedesktop.org/www/releases/"
 
 publish-docs :
+	gtkdoc-rebase --html-dir doc/html --online
 	ssh "david@people.freedesktop.org" "mkdir -p /srv/udisks.freedesktop.org/www/docs/$(VERSION)"
 	scp doc/html/* "david@people.freedesktop.org:/srv/udisks.freedesktop.org/www/docs/$(VERSION)"
 	ssh "david@people.freedesktop.org" "rm -f /srv/udisks.freedesktop.org/www/docs/latest; ln -s $(VERSION) /srv/udisks.freedesktop.org/www/docs/latest"
