@@ -513,6 +513,7 @@ udisks_drive_call_eject_sync
 udisks_drive_complete_eject
 udisks_drive_get_connection_bus
 udisks_drive_get_removable
+udisks_drive_get_ejectable
 udisks_drive_get_media
 udisks_drive_get_media_compatibility
 udisks_drive_get_media_removable
@@ -545,6 +546,7 @@ udisks_drive_dup_wwn
 udisks_drive_dup_sort_key
 udisks_drive_set_connection_bus
 udisks_drive_set_removable
+udisks_drive_set_ejectable
 udisks_drive_set_media
 udisks_drive_set_media_compatibility
 udisks_drive_set_media_removable

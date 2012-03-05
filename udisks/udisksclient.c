@@ -28,7 +28,7 @@
 /**
  * SECTION:udisksclient
  * @title: UDisksClient
- * @short_description: UDisks Client
+ * @short_description: Utility routines for accessing the UDisks service
  *
  * #UDisksClient is used for accessing the UDisks service from a
  * client program.
