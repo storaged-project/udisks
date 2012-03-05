@@ -360,7 +360,7 @@ handle_loop_setup (UDisksManager          *object,
     }
 
   memset (&li64, '\0', sizeof (li64));
-  strncpy ((char *) li64.lo_file_name, path, LO_NAME_SIZE);
+  strncpy ((char *) li64.lo_file_name, path, LO_NAME_SIZE - 1);
   if (option_read_only)
     li64.lo_flags |= LO_FLAGS_READ_ONLY;
   /* TODO: we could have an option 'no-part-scan' but I don't think that's right */
