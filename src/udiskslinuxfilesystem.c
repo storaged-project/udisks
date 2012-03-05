@@ -559,6 +559,22 @@ subst_str (const gchar *str,
     return result;
 }
 
+static gchar *
+subst_str_and_escape (const gchar *str,
+                      const gchar *from,
+                      const gchar *to)
+{
+  gchar *escaped;
+  gchar *quoted_and_escaped;
+  gchar *ret;
+  escaped = g_strescape (to, NULL);
+  quoted_and_escaped = g_strconcat ("\"", escaped, "\"", NULL);
+  ret = subst_str (str, from, quoted_and_escaped);
+  g_free (quoted_and_escaped);
+  g_free (escaped);
+  return ret;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 /*
@@ -1070,6 +1086,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   GError *error;
   const gchar *action_id;
   gboolean system_managed;
+  gchar *escaped_device = NULL;
 
   object = NULL;
   error_message = NULL;
@@ -1329,6 +1346,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   escaped_fs_type_to_use       = g_strescape (fs_type_to_use, NULL);
   escaped_mount_options_to_use = g_strescape (mount_options_to_use, NULL);
   escaped_mount_point_to_use   = g_strescape (mount_point_to_use, NULL);
+  escaped_device               = g_strescape (udisks_block_get_device (block), NULL);
 
   /* run mount(8) */
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
@@ -1342,7 +1360,7 @@ handle_mount (UDisksFilesystem       *filesystem,
                                               "mount -t \"%s\" -o \"%s\" \"%s\" \"%s\"",
                                               escaped_fs_type_to_use,
                                               escaped_mount_options_to_use,
-                                              udisks_block_get_device (block),
+                                              escaped_device,
                                               escaped_mount_point_to_use))
     {
       /* ugh, something went wrong.. we need to clean up the created mount point */
@@ -1373,6 +1391,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   udisks_filesystem_complete_mount (filesystem, invocation, mount_point_to_use);
 
  out:
+  g_free (escaped_device);
   g_free (error_message);
   g_free (escaped_fs_type_to_use);
   g_free (escaped_mount_options_to_use);
@@ -1422,6 +1441,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
   gboolean rc;
   gboolean system_managed;
   gboolean fstab_mounted;
+  gchar *escaped_device = NULL;
 
   mount_point = NULL;
   fstab_mount_options = NULL;
@@ -1555,6 +1575,8 @@ handle_unmount (UDisksFilesystem       *filesystem,
         goto out;
     }
 
+  escaped_device = g_strescape (udisks_block_get_device (block), NULL);
+
   /* otherwise go ahead and unmount the filesystem */
   if (mount_point != NULL)
     {
@@ -1584,7 +1606,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
                                                   NULL,  /* input_string */
                                                   "umount %s \"%s\"",
                                                   opt_force ? "-l" : "",
-                                                  udisks_block_get_device (block));
+                                                  escaped_device);
     }
 
   if (!rc)
@@ -1607,6 +1629,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
   udisks_filesystem_complete_unmount (filesystem, invocation);
 
  out:
+  g_free (escaped_device);
   g_free (error_message);
   g_free (escaped_mount_point);
   g_free (mount_point);
@@ -1652,7 +1675,6 @@ handle_set_label (UDisksFilesystem       *filesystem,
   const gchar *probed_fs_type;
   const FSInfo *fs_info;
   UDisksBaseJob *job;
-  gchar *escaped_label;
   const gchar *action_id;
   gchar *command;
   gchar *tmp;
@@ -1660,7 +1682,6 @@ handle_set_label (UDisksFilesystem       *filesystem,
 
   object = NULL;
   daemon = NULL;
-  escaped_label = NULL;
   command = NULL;
 
   error = NULL;
@@ -1752,16 +1773,14 @@ handle_set_label (UDisksFilesystem       *filesystem,
                                                     invocation))
     goto out;
 
-  escaped_label = g_shell_quote (label);
-
   if (fs_info->command_clear_label != NULL && strlen (label) == 0)
     {
-      command = subst_str (fs_info->command_clear_label, "$DEVICE", udisks_block_get_device (block));
+      command = subst_str_and_escape (fs_info->command_clear_label, "$DEVICE", udisks_block_get_device (block));
     }
   else
     {
-      tmp = subst_str (fs_info->command_change_label, "$DEVICE", udisks_block_get_device (block));
-      command = subst_str (tmp, "$LABEL", escaped_label);
+      tmp = subst_str_and_escape (fs_info->command_change_label, "$DEVICE", udisks_block_get_device (block));
+      command = subst_str_and_escape (tmp, "$LABEL", label);
       g_free (tmp);
     }
 
@@ -1778,7 +1797,6 @@ handle_set_label (UDisksFilesystem       *filesystem,
                     invocation);
 
  out:
-  g_free (escaped_label);
   g_free (command);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */

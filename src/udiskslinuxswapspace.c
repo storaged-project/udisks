@@ -159,6 +159,7 @@ handle_start (UDisksSwapspace        *swapspace,
   UDisksBlock *block;
   UDisksBaseJob *job;
   GError *error;
+  gchar *escaped_device = NULL;
 
   error = NULL;
   object = udisks_daemon_util_dup_object (swapspace, &error);
@@ -179,20 +180,23 @@ handle_start (UDisksSwapspace        *swapspace,
                                                     invocation))
     goto out;
 
+  escaped_device = g_strescape (udisks_block_get_device (block), NULL);
+
   job = udisks_daemon_launch_spawned_job (daemon,
                                           object,
                                           NULL, /* cancellable */
                                           0,    /* uid_t run_as_uid */
                                           0,    /* uid_t run_as_euid */
                                           NULL, /* input_string */
-                                          "swapon %s",
-                                          udisks_block_get_device (block));
+                                          "swapon \"%s\"",
+                                          escaped_device);
   g_signal_connect (job,
                     "completed",
                     G_CALLBACK (swapspace_start_on_job_completed),
                     invocation);
 
  out:
+  g_free (escaped_device);
   g_clear_object (&object);
   return TRUE;
 }
@@ -225,6 +229,7 @@ handle_stop (UDisksSwapspace        *swapspace,
   UDisksDaemon *daemon;
   UDisksBlock *block;
   UDisksBaseJob *job;
+  gchar *escaped_device = NULL;
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (swapspace)));
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
@@ -243,20 +248,23 @@ handle_stop (UDisksSwapspace        *swapspace,
                                                     invocation))
     goto out;
 
+  escaped_device = g_strescape (udisks_block_get_device (block), NULL);
+
   job = udisks_daemon_launch_spawned_job (daemon,
                                           object,
                                           NULL, /* cancellable */
                                           0,    /* uid_t run_as_uid */
                                           0,    /* uid_t run_as_euid */
                                           NULL, /* input_string */
-                                          "swapoff %s",
-                                          udisks_block_get_device (block));
+                                          "swapoff \"%s\"",
+                                          escaped_device);
   g_signal_connect (job,
                     "completed",
                     G_CALLBACK (swapspace_stop_on_job_completed),
                     invocation);
 
  out:
+  g_free (escaped_device);
   return TRUE;
 }
 

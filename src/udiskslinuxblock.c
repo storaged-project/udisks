@@ -1673,6 +1673,22 @@ subst_str (const gchar *str,
 }
 
 
+static gchar *
+subst_str_and_escape (const gchar *str,
+                      const gchar *from,
+                      const gchar *to)
+{
+  gchar *escaped;
+  gchar *quoted_and_escaped;
+  gchar *ret;
+  escaped = g_strescape (to, NULL);
+  quoted_and_escaped = g_strconcat ("\"", escaped, "\"", NULL);
+  ret = subst_str (str, from, quoted_and_escaped);
+  g_free (quoted_and_escaped);
+  g_free (escaped);
+  return ret;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 typedef struct
@@ -1810,8 +1826,6 @@ handle_format (UDisksBlock           *block,
   UDisksCleanup *cleanup;
   const gchar *action_id;
   const FSInfo *fs_info;
-  const gchar *label;
-  gchar *escaped_label = NULL;
   gchar *command = NULL;
   gchar *tmp;
   gchar *error_message;
@@ -1822,6 +1836,8 @@ handle_format (UDisksBlock           *block,
   gboolean take_ownership = FALSE;
   gchar *encrypt_passphrase = NULL;
   gchar *mapped_name = NULL;
+  const gchar *label = NULL;
+  gchar *escaped_device = NULL;
 
   error = NULL;
   object = udisks_daemon_util_dup_object (block, &error);
@@ -1833,7 +1849,6 @@ handle_format (UDisksBlock           *block,
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   cleanup = udisks_daemon_get_cleanup (daemon);
-  escaped_label = g_shell_quote("");
   command = NULL;
   error_message = NULL;
   error = NULL;
@@ -1875,6 +1890,8 @@ handle_format (UDisksBlock           *block,
   g_variant_lookup (options, "take-ownership", "b", &take_ownership);
   g_variant_lookup (options, "encrypt.passphrase", "s", &encrypt_passphrase);
 
+  escaped_device = g_strescape (udisks_block_get_device (block), NULL);
+
   /* First wipe the device */
   wait_data = g_new0 (FormatWaitData, 1);
   wait_data->object = object;
@@ -1886,8 +1903,8 @@ handle_format (UDisksBlock           *block,
                                               &status,
                                               &error_message,
                                               NULL, /* input_string */
-                                              "wipefs -a %s",
-                                              udisks_block_get_device (block)))
+                                              "wipefs -a \"%s\"",
+                                              escaped_device))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
@@ -1923,8 +1940,8 @@ handle_format (UDisksBlock           *block,
                                                   &status,
                                                   &error_message,
                                                   encrypt_passphrase, /* input_string */
-                                                  "cryptsetup luksFormat %s",
-                                                  udisks_block_get_device (block)))
+                                                  "cryptsetup luksFormat \"%s\"",
+                                                  escaped_device))
         {
           g_dbus_method_invocation_return_error (invocation,
                                                  UDISKS_ERROR,
@@ -1958,8 +1975,8 @@ handle_format (UDisksBlock           *block,
                                                   &status,
                                                   &error_message,
                                                   encrypt_passphrase, /* input_string */
-                                                  "cryptsetup luksOpen %s %s",
-                                                  udisks_block_get_device (block),
+                                                  "cryptsetup luksOpen \"%s\" %s",
+                                                  escaped_device,
                                                   mapped_name))
         {
           g_dbus_method_invocation_return_error (invocation,
@@ -2022,14 +2039,11 @@ handle_format (UDisksBlock           *block,
                        type);
           goto out;
         }
-
-        g_free (escaped_label);
-        escaped_label = g_shell_quote (label);
     }
 
   /* Build and run mkfs shell command */
-  tmp = subst_str (fs_info->command_create_fs, "$DEVICE", udisks_block_get_device (block_to_mkfs));
-  command = subst_str (tmp, "$LABEL", escaped_label);
+  tmp = subst_str_and_escape (fs_info->command_create_fs, "$DEVICE", udisks_block_get_device (block_to_mkfs));
+  command = subst_str_and_escape (tmp, "$LABEL", label != NULL ? label : "");
   g_free (tmp);
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               object_to_mkfs,
@@ -2143,8 +2157,8 @@ handle_format (UDisksBlock           *block,
   udisks_block_complete_format (block, invocation);
 
  out:
+  g_free (escaped_device);
   g_free (mapped_name);
-  g_free (escaped_label);
   g_free (command);
   g_free (encrypt_passphrase);
   g_clear_object (&cleartext_object);

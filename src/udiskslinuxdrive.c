@@ -682,17 +682,13 @@ handle_eject (UDisksDrive           *_drive,
   UDisksLinuxDrive *drive = UDISKS_LINUX_DRIVE (_drive);
   UDisksLinuxDriveObject *object;
   UDisksLinuxBlockObject *block_object = NULL;
-  UDisksBlock *block;
-  UDisksDaemon *daemon;
+  UDisksBlock *block = NULL;
+  UDisksDaemon *daemon = NULL;
   const gchar *action_id;
-  gchar *error_message;
-  GError *error;
+  gchar *error_message = NULL;
+  GError *error = NULL;
+  gchar *escaped_device = NULL;
 
-  daemon = NULL;
-  block = NULL;
-  error_message = NULL;
-
-  error = NULL;
   object = udisks_daemon_util_dup_object (drive, &error);
   if (object == NULL)
     {
@@ -726,6 +722,8 @@ handle_eject (UDisksDrive           *_drive,
                                                     invocation))
     goto out;
 
+  escaped_device = g_strescape (udisks_block_get_device (block), NULL);
+
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               UDISKS_OBJECT (object),
                                               NULL, /* GCancellable */
@@ -735,7 +733,7 @@ handle_eject (UDisksDrive           *_drive,
                                               &error_message,
                                               NULL,  /* input_string */
                                               "eject \"%s\"",
-                                              udisks_block_get_device (block)))
+                                              escaped_device))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
@@ -749,6 +747,7 @@ handle_eject (UDisksDrive           *_drive,
   udisks_drive_complete_eject (UDISKS_DRIVE (drive), invocation);
 
  out:
+  g_free (escaped_device);
   g_clear_object (&block_object);
   g_free (error_message);
   g_clear_object (&object);
