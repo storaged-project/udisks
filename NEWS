@@ -1,4 +1,35 @@
 ------------
+udisks 1.93.0
+------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks and storage devices. This is the first release of
+the new 2.x series. This release is parallel-installable with udisks
+1.x.
+
+Changes since udisks 1.92.0:
+
+ David Zeuthen (13):
+       Post-release version bump to 1.93.0
+       Don't include sys/acl.h - it's not needed
+       Add a section about /org/freedesktop/UDisks2/block_devices/* objects
+       Reword the section about block device objects a little bit
+       Add a section about /org/freedesktop/UDisks2/drives/* objects
+       Add a section about /org/freedesktop/UDisks2/jobs/* objects
+       Run gtkdoc-rebase to fix up links for GLib types
+       Force MediaRemovable to TRUE for e.g. SD cards using the mmc layer
+       Ensure that whatever we pass as -t to mount(8) is in a whitelist
+       Ensure that the loop file name we pass to the kernel is always NUL-termina
+       Properly escape all device files
+       Tweak the docs some
+       Update NEWS for release
+
+Thanks to all our contributors.
+
+David Zeuthen,
+Mar 5, 2012
+
+------------
 udisks 1.92.0
 ------------
 
