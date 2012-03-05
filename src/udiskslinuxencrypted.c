@@ -242,6 +242,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   gchar *crypttab_passphrase = NULL;
   gchar *crypttab_options = NULL;
   gchar *escaped_device = NULL;
+  gboolean read_only = FALSE;
 
   object = udisks_daemon_util_dup_object (encrypted, &error);
   if (object == NULL)
@@ -345,7 +346,10 @@ handle_unlock (UDisksEncrypted        *encrypted,
 
   escaped_device = g_strescape (udisks_block_get_device (block), NULL);
 
-  /* TODO: support a 'readonly' option */
+  /* TODO: support reading a 'readonly' option from @options */
+  if (udisks_block_get_read_only (block))
+    read_only = TRUE;
+
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               object,
                                               NULL, /* GCancellable */
@@ -354,9 +358,10 @@ handle_unlock (UDisksEncrypted        *encrypted,
                                               NULL, /* gint *out_status */
                                               &error_message,
                                               passphrase,  /* input_string */
-                                              "cryptsetup luksOpen \"%s\" \"%s\"",
+                                              "cryptsetup luksOpen \"%s\" \"%s\" %s",
                                               escaped_device,
-                                              escaped_name))
+                                              escaped_name,
+                                              read_only ? "--readonly" : ""))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
