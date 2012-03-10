@@ -27,6 +27,20 @@ Unless otherwise stated, the D-Bus and library interfaces are
 considered stable. The interface of the command-line tools are not
 considered stable - they may change at any point in time.
 
+RELEASES
+========
+
+Releases of udisks are available in compressed tarballs from
+
+ http://udisks.freedesktop.org/releases/
+
+To verify the authenticity of the compressed tarball, use this command
+
+ $ gpg --verify udisks-$(VERSION).tar.bz2.sign udisks-$(VERSION).tar.bz2
+ gpg: Signature made Sat 10 Mar 2012 03:00:30 PM EST using RSA key ID 3418A891
+ gpg: Good signature from "David Zeuthen <zeuthen@gmail.com>"
+ gpg:                 aka "[jpeg image of size 5237]"
+
 BUGS and DEVELOPMENT
 ====================
 

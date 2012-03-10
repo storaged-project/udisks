@@ -15,10 +15,10 @@ DISTCHECK_CONFIGURE_FLAGS=							\
 	$(NULL)
 
 sign : dist
-	tar xfj udisks-$(VERSION).tar.bz2 | gpg --armor --detach-sign --output udisks-$(VERSION).tar.sign
+	gpg --armor --detach-sign --output udisks-$(VERSION).tar.bz2.sign udisks-$(VERSION).tar.bz2
 
 publish : sign
-	scp udisks-$(VERSION).tar.bz2 udisks-$(VERSION).tar.sign "david@people.freedesktop.org:/srv/udisks.freedesktop.org/www/releases/"
+	scp udisks-$(VERSION).tar.bz2 udisks-$(VERSION).tar.bz2.sign "david@people.freedesktop.org:/srv/udisks.freedesktop.org/www/releases/"
 
 publish-docs :
 	gtkdoc-rebase --html-dir doc/html --online
