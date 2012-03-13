@@ -53,10 +53,10 @@
 
   <!--
       org.freedesktop.UDisks2.Drive:
-      @short_description: Disk Drive
+      @short_description: Disk drives
 
-      This interface is used to represent disk drives with or without
-      removable media.
+      This interface is used to represent both hard disks and disk
+      drives (with or without removable media).
 
       This interface should not to be confused with the
       #org.freedesktop.UDisks2.Block interface that is used for
@@ -275,7 +275,7 @@
 
   <!--
     org.freedesktop.UDisks2.Drive.Ata:
-    @short_description: Disk drive using the ATA command-set
+    @short_description: Disk drives using the ATA command-set
 
     Objects implementing this interface also implement the
     #org.freedesktop.UDisks2.Drive interface.
@@ -461,7 +461,7 @@
 
   <!--
     org.freedesktop.UDisks2.Block:
-    @short_description: Low-level Block Device
+    @short_description: Block device
 
     This interface represents a block device.
 
@@ -1307,7 +1307,33 @@
       org.freedesktop.UDisks2.Job:
       @short_description: Long-running tasks
 
-      This interface is used for long-running tasks.
+      Some operations may take a long time (hours) to complete, that
+      is, to actually send the D-Bus reply message back. One example
+      of such an operation is the
+      org.freedesktop.UDisks2.Block.Format() method that is used to
+      format a block device.
+
+      When such operations are initated, a job object implementing
+      this interface may be created so the progress can be tracked by
+      the caller (and also other observers).
+
+      The object(s) that a job affects (such as block devices or
+      drives) can be determined by looking at the
+      #org.freedesktop.UDisks2.Job:Objects property. Among other
+      things, this can be used to draw a spinner in the user interface
+      next to e.g. an icon for the drive or device in question.
+
+      A job <emphasis>may</emphasis> convey progress (if the
+      underlying tool used supports it), see the
+      #org.freedesktop.UDisks2.Job:ExpectedEndTime property.
+
+      When a job completes, the #org.freedesktop.UDisks2.Job::Completed signal
+      is emitted.
+
+      To cancel a job use the org.freedesktop.UDisks2.Job.Cancel()
+      method. This will cause the job to complete (with @success set
+      to %FALSE) and the D-Bus method used to initiate the operation
+      to return, usually returning the <literal>org.freedesktop.UDisks2.Error.Cancelled</literal> error.
   -->
   <interface name="org.freedesktop.UDisks2.Job">
 
@@ -1324,7 +1350,7 @@
 
          The expected point in time (seconds since the <ulink
          url="http://en.wikipedia.org/wiki/Unix_epoch">Unix
-         Epoch</ulink>) that the job will complete.
+         Epoch</ulink>) that the job will complete or 0 if unknown.
     -->
     <property name="ExpectedEndTime" type="t" access="read"/>
 
