@@ -1155,15 +1155,6 @@ handle_mount (UDisksFilesystem       *filesystem,
       goto out;
     }
 
-  /* if system-managed (e.g. referenced in /etc/fstab or similar), then
-   *
-   * - if the option x-udisks-auth is given, then just run mount(8) as
-   *   the calling user; if that fails because of permission denied
-   *   try running it as root after the user authenticates for the
-   *   action org.freedesktop.udisks2.filesystem-fstab
-   *
-   * - otherwise (default case), use the normal authorization checks
-   */
   if (system_managed)
     {
       gint status;

@@ -1091,14 +1091,55 @@
         @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>fstype</parameter> (of type 's') and <parameter>options</parameter> (of type 's').
         @mount_path: The filesystem path where the device was mounted.
 
-        Mount a filesystem on the device.
+        Mounts the filesystem.
 
-        The directory the device will be mounted in is determined by
-        looking at data related to the device (such the filesystem
-        UUID and label) and will be created automatically. It is
-        returned in @mount_path and is normally a sub-directory of
-        <filename class='directory'>/run/media/$USER</filename> but
-        note that any path may be returned.
+        The directory the filesystem will be mounted in is determined
+        by looking at data related to the device or filesystem (such
+        the filesystem UUID and label) and will be created
+        automatically except if the device the filesystem resides on
+        is referenced in the <filename>/etc/fstab</filename> file, see
+        below. In either case, the directory the filesystem is mounted
+        in, is returned in @mount_path on success - it is usually a
+        sub-directory of <filename
+        class='directory'>/run/media/$USER</filename> but note that
+        any directory may be returned.
+
+        The filesystem type to use can be overridden with the @fstype
+        option and mount options (a comma-separated string) can be
+        given in @options option. Note that both the mount options and
+        filesystem types are validated against a (small) whitelist to
+        avoid unexpected privilege escalation
+
+        Mounting a file system is a privileged operation and before
+        fulfilling the request, an authorization check for one of the
+        two actions
+        <emphasis>org.freedesktop.udisks2.filesystem-mount</emphasis>
+        or
+        <emphasis>org.freedesktop.udisks2.filesystem-mount-system</emphasis>
+        is performed (the value of the
+        #org.freedesktop.UDisks2.Block:HintSystem property is used to
+        determine which one). The latter check typically results in
+        the user having to authenticate as an administrator while the
+        former typically doesn't require authentication if the caller
+        is on a local console.
+
+        If the device in question is referenced in the
+        <filename>/etc/fstab</filename> file, the
+        <command>mount</command> command is called directly (as root)
+        and the given options or filesystem type given in @options are
+        ignored. The authorization checks mentioned above are still
+        performed.
+
+        If <literal>x-udisks-auth</literal> is specified as an option
+        for the device in the <filename>/etc/fstab</filename> file,
+        then the <command>mount</command> command is run as the
+        calling user, without performing any of the authorization
+        checks mentioned above. If this fails because of insufficient
+        permissions, an authorization check is performed for the
+        <emphasis>org.freedesktop.udisks2.filesystem-fstab</emphasis>
+        action which typically results in the user having to
+        authenticate as an administrator. If authorized, the
+        <command>mount</command> command is then run as root.
 
         The filesystem should be unmounted using the
         org.freedesktop.UDisks2.Filesystem.Unmount() method.
@@ -1110,32 +1151,7 @@
         (e.g. unmounted by the super-user by using the
         <citerefentry><refentrytitle>umount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
         command directly), the device will be unmounted (if needed)
-        and the mount point will be cleaned up.
-
-        The file system type can be overridden with the
-        <parameter>fstype</parameter> option and mount options can be
-        given in <parameter>options</parameter> as a comma-separated
-        string and is of the same format as would be passed to the
-        <citerefentry><refentrytitle>mount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
-        command. Note that the mount options are validated - only a
-        small subset per filesystem type is allowed.
-
-        If the device in question is referenced in a system-wide
-        configuration file (such as the <filename>/etc/fstab</filename> file)
-        then the
-        <citerefentry><refentrytitle>mount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
-        command is called directly as the calling user.
-        If the calling user does not have sufficient permissions to
-        mount the device (it could be the <literal>user</literal> or
-        <literal>users</literal> option isn't specificed), then
-        additional authorization is requested and, if obtained, the
-        <citerefentry><refentrytitle>mount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
-        command is invoked as root.
-        Additionally, the
-        given <parameter>options</parameter> and
-        <parameter>fstype</parameter> options are not used as they are
-        instead read from the system-wide configuration file in
-        question.
+        and/or the mount point will be cleaned up.
     -->
     <method name="Mount">
       <arg name="options" direction="in" type="a{sv}"/>
@@ -1148,23 +1164,20 @@
 
         Unmount a mounted device.
 
+        If the device in question was not mounted by the calling user
+        via the org.freedesktop.UDisks2.Filesystem.Mount() method the
+        filesystem is unmounted without any authorization checks.
+        Otherwise, an authorization check is performed for the
+        <emphasis>org.freedesktop.udisks2.filesystem-unmount-others</emphasis>
+        action which typically results in the user having to
+        authenticate as an administrator. If authorized, the
+        filesystem is unmounted.
+
         If the filesystem is busy, this operation fails with the error
         <link linkend="UDISKS-ERROR-DEVICE-BUSY:CAPS"><constant>org.freedesktop.UDisks2.Error.DeviceBusy</constant></link>
-        unless the option <parameter>force</parameter> is used.
-
-        If the device in question is referenced in a system-wide
-        configuration file (such as the <filename>/etc/fstab</filename> file)
-        then the
-        <citerefentry><refentrytitle>umount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
-        command is called directly as the calling user.
-        If the calling user does not have sufficient permissions to
-        unmount the device (it could be the <literal>user</literal> or
-        <literal>users</literal> option isn't specificed), then
-        additional authorization is requested and, if obtained, the
-        <citerefentry><refentrytitle>umount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
-        command is invoked as root.
+        unless the @force option is used.
     -->
-<method name="Unmount">
+    <method name="Unmount">
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
   </interface>
