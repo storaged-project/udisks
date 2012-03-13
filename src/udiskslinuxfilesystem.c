@@ -182,11 +182,11 @@ is_in_filesystem_file (const gchar *filesystems_file,
                             NULL, /* gsize *out_length */
                             &error))
     {
-      g_warning ("Error reading %s: %s (%s %d)",
-                 filesystems_file,
-                 error->message,
-                 g_quark_to_string (error->domain),
-                 error->code);
+      udisks_warning ("Error reading %s: %s (%s %d)",
+                      filesystems_file,
+                      error->message,
+                      g_quark_to_string (error->domain),
+                      error->code);
       g_error_free (error);
       goto out;
     }
@@ -328,7 +328,7 @@ find_primary_gid (uid_t uid)
   pw = getpwuid (uid);
   if (pw == NULL)
     {
-      g_warning ("Couldn't look up uid %d: %m", uid);
+      udisks_warning ("Error looking up uid %d: %m", uid);
       goto out;
     }
   gid = pw->pw_gid;
@@ -354,7 +354,7 @@ is_uid_in_gid (uid_t uid,
   pw = getpwuid (uid);
   if (pw == NULL)
     {
-      g_warning ("Couldn't look up uid %d: %m", uid);
+      udisks_warning ("Error looking up uid %d: %m", uid);
       goto out;
     }
   if (pw->pw_gid == gid)
@@ -365,7 +365,7 @@ is_uid_in_gid (uid_t uid,
 
   if (getgrouplist (pw->pw_name, pw->pw_gid, supplementary_groups, &num_supplementary_groups) < 0)
     {
-      g_warning ("Couldn't find supplementary groups for uid %d: %m", uid);
+      udisks_warning ("Error getting supplementary groups for uid %d: %m", uid);
       goto out;
     }
 

@@ -33,6 +33,7 @@
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
 #include "udiskscleanup.h"
+#include "udiskslogging.h"
 
 /**
  * SECTION:udisksdaemonutil
@@ -80,7 +81,7 @@ udisks_decode_udev_string (const gchar *str)
 
           if (str[n + 1] != 'x' || str[n + 2] == '\0' || str[n + 3] == '\0')
             {
-              g_warning ("**** NOTE: malformed encoded string `%s'", str);
+              udisks_warning ("**** NOTE: malformed encoded string `%s'", str);
               break;
             }
 
@@ -98,7 +99,7 @@ udisks_decode_udev_string (const gchar *str)
 
   if (!g_utf8_validate (s->str, -1, &end_valid))
     {
-      g_warning ("The string `%s' is not valid UTF-8. Invalid characters begins at `%s'", s->str, end_valid);
+      udisks_warning ("The string `%s' is not valid UTF-8. Invalid characters begins at `%s'", s->str, end_valid);
       ret = g_strndup (s->str, end_valid - s->str);
       g_string_free (s, TRUE);
     }

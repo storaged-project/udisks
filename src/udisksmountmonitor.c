@@ -33,6 +33,7 @@
 #include <glib.h>
 #include <glib-object.h>
 
+#include "udiskslogging.h"
 #include "udisksmountmonitor.h"
 #include "udisksmount.h"
 #include "udisksprivate.h"
@@ -428,7 +429,7 @@ udisks_mount_monitor_get_mountinfo (UDisksMountMonitor  *monitor,
                   encoded_root,
                   encoded_mount_point) != 6)
         {
-          g_warning ("%s: Error parsing line '%s'", G_STRFUNC, lines[n]);
+          udisks_warning ("Error parsing line '%s'", lines[n]);
           continue;
         }
 
@@ -455,7 +456,7 @@ udisks_mount_monitor_get_mountinfo (UDisksMountMonitor  *monitor,
 
               if (sscanf (sep + 3, "%s %s", fstype, mount_source) != 2)
                 {
-                  g_warning ("%s: Error parsing things past - for '%s'", G_STRFUNC, lines[n]);
+                  udisks_warning ("Error parsing things past - for '%s'", lines[n]);
                   continue;
                 }
 
@@ -467,13 +468,13 @@ udisks_mount_monitor_get_mountinfo (UDisksMountMonitor  *monitor,
 
               if (stat (mount_source, &statbuf) != 0)
                 {
-                  g_warning ("%s: Error statting %s: %m", G_STRFUNC, mount_source);
+                  udisks_warning ("Error statting %s: %m", mount_source);
                   continue;
                 }
 
               if (!S_ISBLK (statbuf.st_mode))
                 {
-                  g_warning ("%s: %s is not a block device", G_STRFUNC, mount_source);
+                  udisks_warning ("%s is not a block device", mount_source);
                   continue;
                 }
 
@@ -548,13 +549,13 @@ udisks_mount_monitor_get_swaps (UDisksMountMonitor  *monitor,
 
       if (sscanf (lines[n], "%s", filename) != 1)
         {
-          g_warning ("%s: Error parsing line '%s'", G_STRFUNC, lines[n]);
+          udisks_warning ("Error parsing line '%s'", lines[n]);
           continue;
         }
 
       if (stat (filename, &statbuf) != 0)
         {
-          g_warning ("%s: Error statting %s: %m", G_STRFUNC, filename);
+          udisks_warning ("Error statting %s: %m", filename);
           continue;
         }
 
@@ -590,16 +591,16 @@ udisks_mount_monitor_ensure (UDisksMountMonitor *monitor)
   error = NULL;
   if (!udisks_mount_monitor_get_mountinfo (monitor, &error))
     {
-      g_warning ("Error getting mounts: %s (%s, %d)",
-                 error->message, g_quark_to_string (error->domain), error->code);
+      udisks_warning ("Error getting mounts: %s (%s, %d)",
+                      error->message, g_quark_to_string (error->domain), error->code);
       g_error_free (error);
     }
 
   error = NULL;
   if (!udisks_mount_monitor_get_swaps (monitor, &error))
     {
-      g_warning ("Error getting swaps: %s (%s, %d)",
-                 error->message, g_quark_to_string (error->domain), error->code);
+      udisks_warning ("Error getting swaps: %s (%s, %d)",
+                      error->message, g_quark_to_string (error->domain), error->code);
       g_error_free (error);
     }
 

@@ -1194,11 +1194,10 @@ udisks_daemon_mounted_fs_cleanup (UDisksDaemon *daemon)
                                         new_value, /* consumes new_value */
                                         &error))
         {
-          g_warning ("%s: Error setting mounted-fs: %s (%s, %d)",
-                     G_STRFUNC,
-                     error->message,
-                     g_quark_to_string (error->domain),
-                     error->code);
+          udisks_warning ("Error setting mounted-fs: %s (%s, %d)",
+                          error->message,
+                          g_quark_to_string (error->domain),
+                          error->code);
           g_error_free (error);
           goto out;
         }

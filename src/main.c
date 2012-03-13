@@ -136,7 +136,7 @@ main (int    argc,
         }
       else
         {
-          g_warning ("Error opening /dev/null: %m");
+          udisks_warning ("Error opening /dev/null: %m");
         }
     }
 
