@@ -68,13 +68,13 @@
   -->
   <interface name="org.freedesktop.UDisks2.Drive">
     <!-- Vendor: A name for the vendor of the drive or blank if unknown. -->
-    <property name="Vendor" type="ay" access="read"/>
+    <property name="Vendor" type="s" access="read"/>
     <!-- Model: A name for the model of the drive or blank if unknown. -->
-    <property name="Model" type="ay" access="read"/>
+    <property name="Model" type="s" access="read"/>
     <!-- Revision: Firmware Revision or blank if unknown. -->
-    <property name="Revision" type="ay" access="read"/>
+    <property name="Revision" type="s" access="read"/>
     <!-- Serial: Serial number of the drive or blank if unknown. -->
-    <property name="Serial" type="ay" access="read"/>
+    <property name="Serial" type="s" access="read"/>
     <!-- WWN:
 
          The <ulink
@@ -585,7 +585,7 @@
 
          This property is blank if there is no label or the label is unknown.
     -->
-    <property name="IdLabel" type="ay" access="read"/>
+    <property name="IdLabel" type="s" access="read"/>
     <!-- IdUUID:
          The <ulink url="http://en.wikipedia.org/wiki/UUID">UUID</ulink> of the
          filesystem or other structured data on the block device. Do not make
@@ -594,7 +594,7 @@
 
          This property is blank if there is no UUID or the UUID is unknown.
     -->
-    <property name="IdUUID" type="ay" access="read"/>
+    <property name="IdUUID" type="s" access="read"/>
 
     <!-- Configuration:
          The configuration for the device.
@@ -980,10 +980,10 @@
     <property name="Size" type="t" access="read"/>
 
     <!-- Name: Label of partition or blank if not supported or unknown. -->
-    <property name="Name" type="ay" access="read"/>
+    <property name="Name" type="s" access="read"/>
 
     <!-- UUID: The UUID of the partition or blank if not supported or unknown. -->
-    <property name="UUID" type="ay" access="read"/>
+    <property name="UUID" type="s" access="read"/>
 
     <!-- Table:
          The object path of the #org.freedesktop.UDisks2.PartitionTable
@@ -1075,7 +1075,7 @@
         Sets the filesystem label.
     -->
     <method name="SetLabel">
-      <arg name="label" direction="in" type="ay"/>
+      <arg name="label" direction="in" type="s"/>
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
@@ -1155,7 +1155,7 @@
     -->
     <method name="Mount">
       <arg name="options" direction="in" type="a{sv}"/>
-      <arg name="mount_path" direction="out" type="ay"/>
+      <arg name="mount_path" direction="out" type="s"/>
     </method>
 
     <!--
@@ -1248,7 +1248,7 @@
         device will be cleaned up.
     -->
     <method name="Unlock">
-      <arg name="passphrase" direction="in" type="ay"/>
+      <arg name="passphrase" direction="in" type="s"/>
       <arg name="options" direction="in" type="a{sv}"/>
       <arg name="cleartext_device" direction="out" type="o"/>
     </method>
@@ -1278,8 +1278,8 @@
         automatically updated.
     -->
     <method name="ChangePassphrase">
-      <arg name="passphrase" direction="in" type="ay"/>
-      <arg name="new_passphrase" direction="in" type="ay"/>
+      <arg name="passphrase" direction="in" type="s"/>
+      <arg name="new_passphrase" direction="in" type="s"/>
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
