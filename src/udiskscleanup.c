@@ -605,7 +605,7 @@ udisks_cleanup_check_mounted_fs_entry (UDisksCleanup  *cleanup,
       /* if umounting, issue 'change' event on the device after unmounting it */
       change_sysfs_path = g_strdup (g_udev_device_get_sysfs_path (udev_device));
 
-      if (g_udev_device_get_sysfs_attr_as_int (udev_device, "size") > 0)
+      if (g_udev_device_get_sysfs_attr_as_uint64 (udev_device, "size") > 0)
         {
           /* for partition, also check enclosing device */
           if (g_strcmp0 (g_udev_device_get_devtype (udev_device), "partition") == 0)
@@ -614,7 +614,7 @@ udisks_cleanup_check_mounted_fs_entry (UDisksCleanup  *cleanup,
               udev_device_disk = g_udev_device_get_parent_with_subsystem (udev_device, "block", "disk");
               if (udev_device_disk != NULL)
                 {
-                  if (g_udev_device_get_sysfs_attr_as_int (udev_device_disk, "size") > 0)
+                  if (g_udev_device_get_sysfs_attr_as_uint64 (udev_device_disk, "size") > 0)
                     {
                       device_exists = TRUE;
                     }
