@@ -62,3 +62,37 @@ SUBSYSTEMS=="usb", ENV{ID_MODEL}=="*MS_Reader*", ENV{ID_DRIVE_FLASH_MS}="1"
 SUBSYSTEMS=="usb", ENV{ID_VENDOR}=="*Kingston*", ENV{ID_MODEL}=="*DataTraveler*", ENV{ID_DRIVE_THUMB}="1"
 SUBSYSTEMS=="usb", ENV{ID_VENDOR}=="*SanDisk*", ENV{ID_MODEL}=="*Cruzer*", ENV{ID_CDROM}!="1", ENV{ID_DRIVE_THUMB}="1"
 SUBSYSTEMS=="usb", ENV{ID_VENDOR}=="HP", ENV{ID_MODEL}=="*v125w*", ENV{ID_DRIVE_THUMB}="1"
+
+# ------------------------------------------------------------------------
+# ------------------------------------------------------------------------
+# ------------------------------------------------------------------------
+# Devices which should not be display in the user interface
+#
+
+# Apple Bootstrap partitions
+ENV{ID_PART_ENTRY_SCHEME}=="mac", ENV{ID_PART_ENTRY_TYPE}=="Apple_Bootstrap", ENV{UDISKS_IGNORE}="1"
+
+# special DOS partition types (EFI, hidden, etc.)
+# see http://www.win.tue.nl/~aeb/partitions/partition_types-1.html
+ENV{ID_PART_ENTRY_SCHEME}=="dos", \
+  ENV{ID_PART_ENTRY_TYPE}=="0x0|0x11|0x12|0x14|0x16|0x17|0x1b|0x1c|0x1e|0x27|0x3d|0x84|0x8d|0x90|0x91|0x92|0x93|0x97|0x98|0x9a|0x9b|0xbb|0xc2|0xc3|0xdd|0xef", \
+  ENV{UDISKS_IGNORE}="1"
+
+# special GUID-identified partition types (EFI System Partition, BIOS Boot partition)
+# see http://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_type_GUIDs
+ENV{ID_PART_ENTRY_SCHEME}=="gpt", \
+  ENV{ID_PART_ENTRY_TYPE}=="c12a7328-f81f-11d2-ba4b-00a0c93ec93b|21686148-6449-6e6f-744e-656564454649", \
+  ENV{UDISKS_IGNORE}="1"
+
+# MAC recovery/tool partitions which are useless on Linux
+ENV{ID_PART_ENTRY_SCHEME}=="mac", \
+  ENV{ID_CDROM}=="?*", ENV{ID_FS_TYPE}=="udf", ENV{ID_FS_LABEL}=="WD_SmartWare", \
+  ENV{UDISKS_IGNORE}="1"
+
+# recovery partitions
+ENV{ID_FS_TYPE}=="ntfs|vfat", \
+  ENV{ID_FS_LABEL}=="RECOVERY|HP_RECOVERY|Recovery Partition|DellUtility|DellRestore|IBM_SERVICE|SERVICEV001|SERVICEV002|SYSTEM RESERVED", \
+  ENV{UDISKS_IGNORE}="1"
+
+# read-only non-Linux software installer partitions
+ENV{ID_VENDOR}=="Sony", ENV{ID_MODEL}=="PRS*Launcher", ENV{UDISKS_IGNORE}="1"
