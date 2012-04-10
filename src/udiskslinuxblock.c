@@ -1678,14 +1678,11 @@ subst_str_and_escape (const gchar *str,
                       const gchar *from,
                       const gchar *to)
 {
-  gchar *escaped;
   gchar *quoted_and_escaped;
   gchar *ret;
-  escaped = g_strescape (to, NULL);
-  quoted_and_escaped = g_strconcat ("\"", escaped, "\"", NULL);
+  quoted_and_escaped = udisks_daemon_util_escape_and_quote (to);
   ret = subst_str (str, from, quoted_and_escaped);
   g_free (quoted_and_escaped);
-  g_free (escaped);
   return ret;
 }
 
@@ -1890,7 +1887,7 @@ handle_format (UDisksBlock           *block,
   g_variant_lookup (options, "take-ownership", "b", &take_ownership);
   g_variant_lookup (options, "encrypt.passphrase", "s", &encrypt_passphrase);
 
-  escaped_device = g_strescape (udisks_block_get_device (block), NULL);
+  escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
 
   /* First wipe the device */
   wait_data = g_new0 (FormatWaitData, 1);
@@ -1903,7 +1900,7 @@ handle_format (UDisksBlock           *block,
                                               &status,
                                               &error_message,
                                               NULL, /* input_string */
-                                              "wipefs -a \"%s\"",
+                                              "wipefs -a %s",
                                               escaped_device))
     {
       g_dbus_method_invocation_return_error (invocation,

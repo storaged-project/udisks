@@ -650,3 +650,72 @@ udisks_daemon_util_dup_object (gpointer   interface_,
 
   return ret;
 }
+
+static void
+escaper (GString *s, const gchar *str)
+{
+  const gchar *p;
+  for (p = str; *p != '\0'; p++)
+    {
+      gint c = *p;
+      switch (c)
+        {
+        case '"':
+          g_string_append (s, "\\\"");
+          break;
+
+        case '\\':
+          g_string_append (s, "\\\\");
+          break;
+
+        default:
+          g_string_append_c (s, c);
+          break;
+        }
+    }
+}
+
+/**
+ * udisks_daemon_util_escape_and_quote:
+ * @str: The string to escape.
+ *
+ * Like udisks_daemon_util_escape() but also wraps the result in
+ * double-quotes.
+ *
+ * Returns: The double-quoted and escaped string. Free with g_free().
+ */
+gchar *
+udisks_daemon_util_escape_and_quote (const gchar *str)
+{
+  GString *s;
+
+  g_return_val_if_fail (str != NULL, NULL);
+
+  s = g_string_new ("\"");
+  escaper (s, str);
+  g_string_append_c (s, '"');
+
+  return g_string_free (s, FALSE);
+}
+
+/**
+ * udisks_daemon_util_escape:
+ * @str: The string to escape.
+ *
+ * Escapes double-quotes (&quot;) and back-slashes (\) in a string
+ * using back-slash (\).
+ *
+ * Returns: The escaped string. Free with g_free().
+ */
+gchar *
+udisks_daemon_util_escape (const gchar *str)
+{
+  GString *s;
+
+  g_return_val_if_fail (str != NULL, NULL);
+
+  s = g_string_new (NULL);
+  escaper (s, str);
+
+  return g_string_free (s, FALSE);
+}

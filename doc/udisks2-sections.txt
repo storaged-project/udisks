@@ -327,6 +327,8 @@ udisks_daemon_util_check_authorization_sync
 udisks_daemon_util_get_caller_uid_sync
 udisks_daemon_util_setup_by_user
 udisks_daemon_util_dup_object
+udisks_daemon_util_escape
+udisks_daemon_util_escape_and_quote
 </SECTION>
 
 <SECTION>

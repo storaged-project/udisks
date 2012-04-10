@@ -314,7 +314,7 @@ handle_create_partition (UDisksPartitionTable   *table,
                                                     invocation))
     goto out;
 
-  escaped_device = g_strescape (udisks_block_get_device (block), NULL);
+  escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
 
   table_type = udisks_partition_table_get_type_ (table);
   wait_data = g_new0 (WaitForPartitionData, 1);
@@ -394,7 +394,7 @@ handle_create_partition (UDisksPartitionTable   *table,
       wait_data->pos_to_wait_for = (start_mib*MIB_SIZE + end_bytes) / 2L;
       wait_data->ignore_container = is_logical;
 
-      command_line = g_strdup_printf ("parted --align optimal --script \"%s\" "
+      command_line = g_strdup_printf ("parted --align optimal --script %s "
                                       "\"mkpart %s %" G_GUINT64_FORMAT "MiB %" G_GUINT64_FORMAT "b\"",
                                       escaped_device,
                                       part_type,
@@ -424,8 +424,8 @@ handle_create_partition (UDisksPartitionTable   *table,
           name = " ";
         }
 
-      escaped_name = g_strescape (name, NULL);
-      escaped_escaped_name = g_strescape (escaped_name, NULL);
+      escaped_name = udisks_daemon_util_escape (name);
+      escaped_escaped_name = udisks_daemon_util_escape (escaped_name);
 
       /* Ensure we _start_ at MiB granularity since that ensures optimal IO...
        * Also round up size to nearest multiple of 512
@@ -450,7 +450,7 @@ handle_create_partition (UDisksPartitionTable   *table,
           end_bytes -= 512L;
         }
       wait_data->pos_to_wait_for = (start_mib*MIB_SIZE + end_bytes) / 2L;
-      command_line = g_strdup_printf ("parted --align optimal --script \"%s\" "
+      command_line = g_strdup_printf ("parted --align optimal --script %s "
                                       "\"mkpart \\\"%s\\\" ext2 %" G_GUINT64_FORMAT "MiB %" G_GUINT64_FORMAT "b\"",
                                       escaped_device,
                                       escaped_escaped_name,
@@ -512,7 +512,7 @@ handle_create_partition (UDisksPartitionTable   *table,
                                              "Partition object is not a block device");
       goto out;
     }
-  escaped_partition_device = g_strescape (udisks_block_get_device (partition_block), NULL);
+  escaped_partition_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (partition_block));
 
   /* TODO: set partition type */
 
@@ -525,7 +525,7 @@ handle_create_partition (UDisksPartitionTable   *table,
                                               NULL, /* gint *out_status */
                                               &error_message,
                                               NULL,  /* input_string */
-                                              "wipefs -a \"%s\"",
+                                              "wipefs -a %s",
                                               escaped_partition_device))
     {
       g_dbus_method_invocation_return_error (invocation,

@@ -36,6 +36,7 @@
 #include "udisksmountmonitor.h"
 #include "udiskslogging.h"
 #include "udiskslinuxprovider.h"
+#include "udisksdaemonutil.h"
 
 /**
  * SECTION:udiskscleanup
@@ -672,7 +673,7 @@ udisks_cleanup_check_mounted_fs_entry (UDisksCleanup  *cleanup,
           gchar *error_message;
 
           error_message = NULL;
-          escaped_mount_point = g_strescape (mount_point, NULL);
+          escaped_mount_point = udisks_daemon_util_escape_and_quote (mount_point);
           /* right now -l is the only way to "force unmount" file systems... */
           if (!udisks_daemon_launch_spawned_job_sync (cleanup->daemon,
                                                       NULL, /* UDisksObject */
@@ -682,7 +683,7 @@ udisks_cleanup_check_mounted_fs_entry (UDisksCleanup  *cleanup,
                                                       NULL, /* gint *out_status */
                                                       &error_message,
                                                       NULL,  /* input_string */
-                                                      "umount -l \"%s\"",
+                                                      "umount -l %s",
                                                       escaped_mount_point))
             {
               udisks_error ("Error cleaning up mount point %s: Error unmounting: %s",
@@ -1153,7 +1154,7 @@ udisks_cleanup_check_unlocked_luks_entry (UDisksCleanup  *cleanup,
                          major (crypto_device), minor (crypto_device));
 
           error_message = NULL;
-          escaped_device_file = g_strescape (device_file_cleartext, NULL);
+          escaped_device_file = udisks_daemon_util_escape_and_quote (device_file_cleartext);
           if (!udisks_daemon_launch_spawned_job_sync (cleanup->daemon,
                                                       NULL, /* UDisksObject */
                                                       NULL, /* GCancellable */
@@ -1162,7 +1163,7 @@ udisks_cleanup_check_unlocked_luks_entry (UDisksCleanup  *cleanup,
                                                       NULL, /* gint *out_status */
                                                       &error_message,
                                                       NULL,  /* input_string */
-                                                      "cryptsetup luksClose \"%s\"",
+                                                      "cryptsetup luksClose %s",
                                                       escaped_device_file))
             {
               udisks_error ("Error cleaning up LUKS device %s: %s",
@@ -1630,7 +1631,7 @@ udisks_cleanup_check_loop_entry (UDisksCleanup  *cleanup,
                                major (backing_file_device), minor (backing_file_device));
 
               error_message = NULL;
-              escaped_loop_device_file = g_strescape (loop_device, NULL);
+              escaped_loop_device_file = udisks_daemon_util_escape_and_quote (loop_device);
               if (!udisks_daemon_launch_spawned_job_sync (cleanup->daemon,
                                                           NULL, /* UDisksObject */
                                                           NULL, /* GCancellable */
@@ -1639,7 +1640,7 @@ udisks_cleanup_check_loop_entry (UDisksCleanup  *cleanup,
                                                           NULL, /* gint *out_status */
                                                           &error_message,
                                                           NULL,  /* input_string */
-                                                          "losetup -d \"%s\"",
+                                                          "losetup -d %s",
                                                           escaped_loop_device_file))
                 {
                   udisks_error ("Error cleaning up loop device %s: %s",

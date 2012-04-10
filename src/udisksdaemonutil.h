@@ -62,6 +62,9 @@ gboolean udisks_daemon_util_get_caller_uid_sync (UDisksDaemon            *daemon
 gpointer  udisks_daemon_util_dup_object (gpointer   interface_,
                                          GError   **error);
 
+gchar *udisks_daemon_util_escape (const gchar *str);
+gchar *udisks_daemon_util_escape_and_quote (const gchar *str);
+
 G_END_DECLS
 
 #endif /* __UDISKS_DAEMON_UTIL_H__ */

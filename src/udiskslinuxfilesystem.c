@@ -564,14 +564,11 @@ subst_str_and_escape (const gchar *str,
                       const gchar *from,
                       const gchar *to)
 {
-  gchar *escaped;
   gchar *quoted_and_escaped;
   gchar *ret;
-  escaped = g_strescape (to, NULL);
-  quoted_and_escaped = g_strconcat ("\"", escaped, "\"", NULL);
+  quoted_and_escaped = udisks_daemon_util_escape_and_quote (to);
   ret = subst_str (str, from, quoted_and_escaped);
   g_free (quoted_and_escaped);
-  g_free (escaped);
   return ret;
 }
 
@@ -800,12 +797,10 @@ calculate_mount_point (UDisksBlock               *block,
       uuid = udisks_block_get_id_uuid (block);
     }
 
-  /* If we know the user-name, mount in /run/media/$USER */
-  if (user_name != NULL)
+  /* If we know the user-name and it doesn't have any '/' character in it, mount in /run/media/$USER */
+  if (user_name != NULL && strstr (user_name, "/") == NULL)
     {
-      escaped_user_name = g_strescape (user_name, NULL);;
-
-      mount_dir = g_strdup_printf ("/run/media/%s", escaped_user_name);
+      mount_dir = g_strdup_printf ("/run/media/%s", user_name);
       if (!g_file_test (mount_dir, G_FILE_TEST_EXISTS))
         {
           gchar *stderr_txt;
@@ -834,6 +829,7 @@ calculate_mount_point (UDisksBlock               *block,
               goto out;
             }
           /* Then set the ACL such that only $USER can actually access it */
+          escaped_user_name = udisks_daemon_util_escape (user_name);;
           s = g_strdup_printf ("setfacl -m \"u:%s:rx\" \"%s\"",
                                escaped_user_name,
                                mount_dir);
@@ -1190,7 +1186,7 @@ handle_mount (UDisksFilesystem       *filesystem,
             }
         }
 
-      escaped_mount_point_to_use   = g_strescape (mount_point_to_use, NULL);
+      escaped_mount_point_to_use   = udisks_daemon_util_escape_and_quote (mount_point_to_use);
     mount_fstab_again:
       if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                                   object,
@@ -1200,7 +1196,7 @@ handle_mount (UDisksFilesystem       *filesystem,
                                                   &status,
                                                   &error_message,
                                                   NULL,  /* input_string */
-                                                  "mount \"%s\"",
+                                                  "mount %s",
                                                   escaped_mount_point_to_use))
         {
           /* mount(8) exits with status 1 on "incorrect invocation or permissions" - if this is
@@ -1334,10 +1330,10 @@ handle_mount (UDisksFilesystem       *filesystem,
       goto out;
     }
 
-  escaped_fs_type_to_use       = g_strescape (fs_type_to_use, NULL);
-  escaped_mount_options_to_use = g_strescape (mount_options_to_use, NULL);
-  escaped_mount_point_to_use   = g_strescape (mount_point_to_use, NULL);
-  escaped_device               = g_strescape (udisks_block_get_device (block), NULL);
+  escaped_fs_type_to_use       = udisks_daemon_util_escape_and_quote (fs_type_to_use);
+  escaped_mount_options_to_use = udisks_daemon_util_escape_and_quote (mount_options_to_use);
+  escaped_mount_point_to_use   = udisks_daemon_util_escape_and_quote (mount_point_to_use);
+  escaped_device               = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
 
   /* run mount(8) */
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
@@ -1348,7 +1344,7 @@ handle_mount (UDisksFilesystem       *filesystem,
                                               NULL, /* gint *out_status */
                                               &error_message,
                                               NULL,  /* input_string */
-                                              "mount -t \"%s\" -o \"%s\" \"%s\" \"%s\"",
+                                              "mount -t %s -o %s %s %s",
                                               escaped_fs_type_to_use,
                                               escaped_mount_options_to_use,
                                               escaped_device,
@@ -1496,7 +1492,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
 
       unmount_fstab_as_root = FALSE;
     unmount_fstab_again:
-      escaped_mount_point = g_strescape (mount_point, NULL);
+      escaped_mount_point = udisks_daemon_util_escape_and_quote (mount_point);
       /* right now -l is the only way to "force unmount" file systems... */
       if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                                   object,
@@ -1506,7 +1502,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
                                                   &status,
                                                   &error_message,
                                                   NULL,  /* input_string */
-                                                  "umount %s \"%s\"",
+                                                  "umount %s %s",
                                                   opt_force ? "-l" : "",
                                                   escaped_mount_point))
         {
@@ -1566,12 +1562,12 @@ handle_unmount (UDisksFilesystem       *filesystem,
         goto out;
     }
 
-  escaped_device = g_strescape (udisks_block_get_device (block), NULL);
+  escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
 
   /* otherwise go ahead and unmount the filesystem */
   if (mount_point != NULL)
     {
-      escaped_mount_point = g_strescape (mount_point, NULL);
+      escaped_mount_point = udisks_daemon_util_escape_and_quote (mount_point);
       rc = udisks_daemon_launch_spawned_job_sync (daemon,
                                                   object,
                                                   NULL, /* GCancellable */
@@ -1580,7 +1576,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
                                                   NULL, /* gint *out_status */
                                                   &error_message,
                                                   NULL,  /* input_string */
-                                                  "umount %s \"%s\"",
+                                                  "umount %s %s",
                                                   opt_force ? "-l" : "",
                                                   escaped_mount_point);
     }
@@ -1595,7 +1591,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
                                                   &status,
                                                   &error_message,
                                                   NULL,  /* input_string */
-                                                  "umount %s \"%s\"",
+                                                  "umount %s %s",
                                                   opt_force ? "-l" : "",
                                                   escaped_device);
     }

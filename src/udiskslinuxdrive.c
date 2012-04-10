@@ -722,7 +722,7 @@ handle_eject (UDisksDrive           *_drive,
                                                     invocation))
     goto out;
 
-  escaped_device = g_strescape (udisks_block_get_device (block), NULL);
+  escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               UDISKS_OBJECT (object),
@@ -732,13 +732,13 @@ handle_eject (UDisksDrive           *_drive,
                                               NULL, /* gint *out_status */
                                               &error_message,
                                               NULL,  /* input_string */
-                                              "eject \"%s\"",
+                                              "eject %s",
                                               escaped_device))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             "Error eject %s: %s",
+                                             "Error ejecting %s: %s",
                                              udisks_block_get_device (block),
                                              error_message);
       goto out;

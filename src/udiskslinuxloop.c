@@ -212,7 +212,7 @@ handle_delete (UDisksLoop             *loop,
         goto out;
     }
 
-  escaped_device = g_strescape (udisks_block_get_device (block), NULL);
+  escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               NULL, /* UDisksObject */
@@ -222,7 +222,7 @@ handle_delete (UDisksLoop             *loop,
                                               NULL, /* gint *out_status */
                                               &error_message,
                                               NULL,  /* input_string */
-                                              "losetup -d \"%s\"",
+                                              "losetup -d %s",
                                               escaped_device))
     {
       g_dbus_method_invocation_return_error (invocation,

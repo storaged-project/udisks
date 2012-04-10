@@ -252,10 +252,10 @@ handle_set_flags (UDisksPartition        *partition,
                                                     invocation))
     goto out;
 
-  escaped_device = g_strescape (udisks_block_get_device (partition_table_block), NULL);
+  escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (partition_table_block));
   if (g_strcmp0 (udisks_partition_table_get_type_ (partition_table), "gpt") == 0)
     {
-      command_line = g_strdup_printf ("sgdisk --attributes %d:=:0x%08x%08x \"%s\"",
+      command_line = g_strdup_printf ("sgdisk --attributes %d:=:0x%08x%08x %s",
                                       udisks_partition_get_number (partition),
                                       (guint32) (flags >> 32),
                                       (guint32) (flags & 0xffffffff),
@@ -263,7 +263,7 @@ handle_set_flags (UDisksPartition        *partition,
     }
   else if (g_strcmp0 (udisks_partition_table_get_type_ (partition_table), "dos") == 0)
     {
-      command_line = g_strdup_printf ("parted --script \"%s\" \"set %d boot %s\"",
+      command_line = g_strdup_printf ("parted --script %s \"set %d boot %s\"",
                                       escaped_device,
                                       udisks_partition_get_number (partition),
                                       flags & 0x80 ? "on" : "off");
@@ -369,8 +369,8 @@ handle_set_name (UDisksPartition        *partition,
                                                     invocation))
     goto out;
 
-  escaped_device = g_strescape (udisks_block_get_device (partition_table_block), NULL);
-  escaped_name = g_strescape (name, NULL);
+  escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (partition_table_block));
+  escaped_name = udisks_daemon_util_escape_and_quote (name);
   if (g_strcmp0 (udisks_partition_table_get_type_ (partition_table), "gpt") == 0)
     {
       if (strlen (name) > 36)
@@ -385,7 +385,7 @@ handle_set_name (UDisksPartition        *partition,
        *
        * TODO is this assumption true or do we need to pass UTF-16? How is that going to work?
        */
-      command_line = g_strdup_printf ("sgdisk --change-name %d:\"%s\" \"%s\"",
+      command_line = g_strdup_printf ("sgdisk --change-name %d:%s %s",
                                       udisks_partition_get_number (partition),
                                       escaped_name,
                                       escaped_device);
@@ -523,8 +523,8 @@ handle_set_type (UDisksPartition        *partition,
                                                     invocation))
     goto out;
 
-  escaped_device = g_strescape (udisks_block_get_device (partition_table_block), NULL);
-  escaped_type = g_strescape (type, NULL);
+  escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (partition_table_block));
+  escaped_type = udisks_daemon_util_escape_and_quote (type);
   if (g_strcmp0 (udisks_partition_table_get_type_ (partition_table), "gpt") == 0)
     {
       /* check that it's a valid GUID */
@@ -537,7 +537,7 @@ handle_set_type (UDisksPartition        *partition,
                                                  type);
           goto out;
         }
-      command_line = g_strdup_printf ("sgdisk --typecode %d:\"%s\" \"%s\"",
+      command_line = g_strdup_printf ("sgdisk --typecode %d:%s %s",
                                       udisks_partition_get_number (partition),
                                       escaped_type,
                                       escaped_device);
@@ -564,7 +564,7 @@ handle_set_type (UDisksPartition        *partition,
                                                  "Delete the partition and create a new extended partition instead.");
           goto out;
         }
-      command_line = g_strdup_printf ("sfdisk --change-id \"%s\" %d 0x%02x",
+      command_line = g_strdup_printf ("sfdisk --change-id %s %d 0x%02x",
                                       escaped_device,
                                       udisks_partition_get_number (partition),
                                       type_as_int);
@@ -668,7 +668,7 @@ handle_delete (UDisksPartition        *partition,
                                                     invocation))
     goto out;
 
-  escaped_device = g_strescape (udisks_block_get_device (partition_table_block), NULL);
+  escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (partition_table_block));
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               partition_table_object,
@@ -678,7 +678,7 @@ handle_delete (UDisksPartition        *partition,
                                               NULL, /* gint *out_status */
                                               &error_message,
                                               NULL,  /* input_string */
-                                              "parted --script \"%s\" \"rm %d\"",
+                                              "parted --script %s \"rm %d\"",
                                               escaped_device,
                                               udisks_partition_get_number (partition)))
     {

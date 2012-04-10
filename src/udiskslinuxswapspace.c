@@ -180,7 +180,7 @@ handle_start (UDisksSwapspace        *swapspace,
                                                     invocation))
     goto out;
 
-  escaped_device = g_strescape (udisks_block_get_device (block), NULL);
+  escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
 
   job = udisks_daemon_launch_spawned_job (daemon,
                                           object,
@@ -188,7 +188,7 @@ handle_start (UDisksSwapspace        *swapspace,
                                           0,    /* uid_t run_as_uid */
                                           0,    /* uid_t run_as_euid */
                                           NULL, /* input_string */
-                                          "swapon \"%s\"",
+                                          "swapon %s",
                                           escaped_device);
   g_signal_connect (job,
                     "completed",
@@ -248,7 +248,7 @@ handle_stop (UDisksSwapspace        *swapspace,
                                                     invocation))
     goto out;
 
-  escaped_device = g_strescape (udisks_block_get_device (block), NULL);
+  escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
 
   job = udisks_daemon_launch_spawned_job (daemon,
                                           object,
@@ -256,7 +256,7 @@ handle_stop (UDisksSwapspace        *swapspace,
                                           0,    /* uid_t run_as_uid */
                                           0,    /* uid_t run_as_euid */
                                           NULL, /* input_string */
-                                          "swapoff \"%s\"",
+                                          "swapoff %s",
                                           escaped_device);
   g_signal_connect (job,
                     "completed",
