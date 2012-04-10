@@ -1,4 +1,4 @@
-AC_INIT([udisks],[1.94.0],[http://bugs.freedesktop.org/enter_bug.cgi?product=udisks],[udisks])
+AC_INIT([udisks],[1.95.0],[http://bugs.freedesktop.org/enter_bug.cgi?product=udisks],[udisks])
 
 AM_INIT_AUTOMAKE([1.9 foreign dist-bzip2 no-dist-gzip])
 AC_CONFIG_SRCDIR([src])
