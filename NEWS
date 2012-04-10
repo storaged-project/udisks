@@ -1,4 +1,35 @@
 ------------
+udisks 1.94.0
+------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks and storage devices. This is the first release of
+the new 2.x series. This release is parallel-installable with udisks
+1.x.
+
+Changes since udisks 1.93.0:
+
+ David Zeuthen (10):
+       Post-release version bump to 1.94.0
+       Pass --readonly to cryptsetup(8) if device to unlock is read-only
+       Fix how we sign the tarballs
+       Update docs
+       Clarify docs for Filesystem.Mount() and Filesystem.Unmount()
+       Change some D-Bus types from bytestring ('ay') to UTF8 ('s')
+       Convert some g_warning() uses to udisks_warning()
+       Add udev rules for identifying devices which should not be shown
+       Make escaping work properly with non-ASCII UTF-8 strings
+       Update NEWS for release
+
+ Edward Sheldrake (1):
+       Fix unmounting large disks when not asked to
+
+Thanks to all our contributors.
+
+David Zeuthen,
+April 10, 2012
+
+------------
 udisks 1.93.0
 ------------
 
