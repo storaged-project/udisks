@@ -16,7 +16,7 @@ but instead use either
    libmount, /proc/self/mountinfo, mount(8)/umount(8) commands
 
  - High-level guaranteed-stable APIs such as e.g. GVolumeMonitor,
-   see http://developer.gnome.org/gio/unstable/volume_mon.html
+   see http://developer.gnome.org/gio/stable/volume_mon.html
 
 LICENSE
 =======
