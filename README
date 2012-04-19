@@ -4,6 +4,20 @@ OVERVIEW
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks and storage devices.
 
+The intended audience of udisks include higher-level layers of the
+operating system, for example the desktop shell (e.g. GNOME) and disk
+management applications (e.g. GNOME Disks).
+
+If you are writing an application and do not want to tie yourself to a
+specific version of the operating system, you should not use udisks
+but instead use either
+
+ - Low-level guaranteed-stable APIs such as e.g. sysfs, libudev,
+   libmount, /proc/self/mountinfo, mount(8)/umount(8) commands
+
+ - High-level guaranteed-stable APIs such as e.g. GVolumeMonitor,
+   see http://developer.gnome.org/gio/unstable/volume_mon.html
+
 LICENSE
 =======
 
