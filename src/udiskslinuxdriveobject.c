@@ -724,6 +724,8 @@ udisks_linux_drive_object_should_include_device (GUdevClient  *client,
   if (vpd == NULL)
     {
       const gchar *name;
+      const gchar *vendor;
+      const gchar *model;
       GUdevDevice *parent;
 
       name = g_udev_device_get_name (device);
@@ -737,6 +739,17 @@ udisks_linux_drive_object_should_include_device (GUdevClient  *client,
 
       /* workaround for missing serial/wwn on virtio-blk */
       if (g_str_has_prefix (name, "vd"))
+        {
+          vpd = g_strdup (name);
+          goto found;
+        }
+
+      /* workaround for missing serial/wwn on VMware */
+      vendor = g_udev_device_get_property (device, "ID_VENDOR");
+      model = g_udev_device_get_property (device, "ID_MODEL");
+      if (g_str_has_prefix (name, "sd") &&
+          vendor != NULL && g_strcmp0 (vendor, "VMware") == 0 &&
+          model != NULL && g_str_has_prefix (model, "Virtual"))
         {
           vpd = g_strdup (name);
           goto found;
