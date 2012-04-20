@@ -86,6 +86,7 @@ libudisks_daemon_la_CFLAGS =				\
 	$(GUDEV_CFLAGS)					\
 	$(LIBATASMART_CFLAGS)				\
 	$(POLKIT_GOBJECT_1_CFLAGS) 			\
+	$(ACL_CFLAGS)					\
 	$(NULL)
 
 libudisks_daemon_la_LIBADD =				\
@@ -94,6 +95,7 @@ libudisks_daemon_la_LIBADD =				\
 	$(GUDEV_LIBS)					\
 	$(LIBATASMART_LIBS)				\
 	$(POLKIT_GOBJECT_1_LIBS) 			\
+	$(ACL_LIBS)					\
 	$(top_builddir)/udisks/libudisks2.la		\
 	$(NULL)
 

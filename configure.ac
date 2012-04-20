@@ -71,6 +71,19 @@ if test "x$with_systemdsystemunitdir" != "xno"; then
 fi
 AM_CONDITIONAL(HAVE_SYSTEMD, [test -n "$systemdsystemunitdir"])
 
+# libacl
+AC_CHECK_HEADERS(
+        [sys/acl.h acl/libacl.h],
+        [ACL_CFLAGS=""],
+        AC_MSG_ERROR([*** ACL headers not found.]))
+AC_CHECK_LIB(
+        [acl],
+        [acl_get_file],
+        [ACL_LIBS="-lacl"],
+        AC_MSG_ERROR([*** libacl not found.]))
+AC_SUBST(ACL_CFLAGS)
+AC_SUBST(ACL_LIBS)
+
 # Internationalization
 #
 

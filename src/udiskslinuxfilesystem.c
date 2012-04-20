@@ -29,6 +29,8 @@
 #include <stdio.h>
 #include <mntent.h>
 #include <sys/types.h>
+#include <sys/acl.h>
+#include <errno.h>
 
 #include <glib/gstdio.h>
 
@@ -758,6 +760,42 @@ ensure_utf8 (const gchar *s)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+add_acl (const gchar  *path,
+         uid_t         uid,
+         GError      **error)
+{
+  gboolean ret = FALSE;
+  acl_t acl = NULL;
+  acl_entry_t entry;
+  acl_permset_t permset;
+
+  acl = acl_get_file(path, ACL_TYPE_ACCESS);
+  if (acl == NULL ||
+      acl_create_entry (&acl, &entry) == -1 ||
+      acl_set_tag_type (entry, ACL_USER) == -1 ||
+      acl_set_qualifier (entry, &uid) == -1 ||
+      acl_get_permset (entry, &permset) == -1 ||
+      acl_add_perm (permset, ACL_READ|ACL_EXECUTE) == -1 ||
+      acl_calc_mask (&acl) == -1 ||
+      acl_set_file (path, ACL_TYPE_ACCESS, acl) == -1)
+    {
+      g_set_error (error,
+                   G_IO_ERROR,
+                   g_io_error_from_errno (errno),
+                   "Adding read ACL for uid %d to `%s' failed: %m",
+                   (gint) uid, path);
+      goto out;
+    }
+
+  ret = TRUE;
+
+ out:
+  if (acl != NULL)
+    acl_free (acl);
+  return ret;
+}
+
 /*
  * calculate_mount_point: <internal>
  * @block: A #UDisksBlock.
@@ -803,9 +841,6 @@ calculate_mount_point (UDisksBlock               *block,
       mount_dir = g_strdup_printf ("/run/media/%s", user_name);
       if (!g_file_test (mount_dir, G_FILE_TEST_EXISTS))
         {
-          gchar *stderr_txt;
-          gint exit_status;
-
           /* First ensure that /run/media exists */
           if (!g_file_test ("/run/media", G_FILE_TEST_EXISTS))
             {
@@ -828,36 +863,13 @@ calculate_mount_point (UDisksBlock               *block,
                            mount_dir);
               goto out;
             }
-          /* Then set the ACL such that only $USER can actually access it */
-          escaped_user_name = udisks_daemon_util_escape (user_name);;
-          s = g_strdup_printf ("setfacl -m \"u:%s:rx\" \"%s\"",
-                               escaped_user_name,
-                               mount_dir);
-          if (!g_spawn_command_line_sync (s,
-                                          NULL, /* stdout_txt */
-                                          &stderr_txt,
-                                          &exit_status,
-                                          error))
+          /* Finally, add the read+execute ACL for $USER */
+          if (!add_acl (mount_dir, uid, error))
             {
-              g_free (s);
               if (rmdir (mount_dir) != 0)
                 udisks_warning ("Error calling rmdir() on %s: %m", mount_dir);
               goto out;
             }
-          if (!(WIFEXITED (exit_status) && WEXITSTATUS (exit_status) == 0))
-            {
-              g_set_error (error,
-                           UDISKS_ERROR,
-                           UDISKS_ERROR_FAILED,
-                           "Command-line `%s' didn't exit normally: %s", s, stderr_txt);
-              g_free (stderr_txt);
-              g_free (s);
-              if (rmdir (mount_dir) != 0)
-                udisks_warning ("Error calling rmdir() on %s: %m", mount_dir);
-              goto out;
-            }
-          g_free (stderr_txt);
-          g_free (s);
         }
     }
   /* otherwise fall back to mounting in /media */
