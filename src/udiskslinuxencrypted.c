@@ -236,7 +236,9 @@ handle_unlock (UDisksEncrypted        *encrypted,
   GUdevDevice *udev_cleartext_device = NULL;
   GError *error = NULL;
   uid_t caller_uid;
+  pid_t caller_pid;
   const gchar *action_id;
+  const gchar *message;
   gboolean is_in_crypttab = FALSE;
   gchar *crypttab_name = NULL;
   gchar *crypttab_passphrase = NULL;
@@ -301,6 +303,18 @@ handle_unlock (UDisksEncrypted        *encrypted,
       goto out;
     }
 
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_pid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_pid,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
   /* check if in crypttab file */
   error = NULL;
   if (!check_crypttab (block,
@@ -318,16 +332,28 @@ handle_unlock (UDisksEncrypted        *encrypted,
   /* Now, check that the user is actually authorized to unlock the device.
    */
   action_id = "org.freedesktop.udisks2.encrypted-unlock";
-  if (udisks_block_get_hint_system (block) &&
-      !(udisks_daemon_util_setup_by_user (daemon, object, caller_uid)))
-    action_id = "org.freedesktop.udisks2.encrypted-unlock-system";
-  if (is_in_crypttab && has_option (crypttab_options, "x-udisks-auth"))
-    action_id = "org.freedesktop.udisks2.encrypted-unlock-crypttab";
+  message = N_("Authentication is required to unlock the encrypted device $(udisks2.device)");
+  if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
+    {
+      if (is_in_crypttab && has_option (crypttab_options, "x-udisks-auth"))
+        {
+          action_id = "org.freedesktop.udisks2.encrypted-unlock-crypttab";
+        }
+      else if (udisks_block_get_hint_system (block))
+        {
+          action_id = "org.freedesktop.udisks2.encrypted-unlock-system";
+        }
+      else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
+        {
+          action_id = "org.freedesktop.udisks2.encrypted-unlock-other-seat";
+        }
+    }
+
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
                                                     action_id,
                                                     options,
-                                                    N_("Authentication is required to unlock the encrypted device $(udisks2.device)"),
+                                                    message,
                                                     invocation))
     goto out;
 

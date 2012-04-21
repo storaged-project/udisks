@@ -34,6 +34,11 @@
 #include "udisksdaemonutil.h"
 #include "udiskscleanup.h"
 #include "udiskslogging.h"
+#include "udiskslinuxblockobject.h"
+
+#if defined(HAVE_LIBSYSTEMD_LOGIN)
+#include <systemd/sd-login.h>
+#endif
 
 /**
  * SECTION:udisksdaemonutil
@@ -620,6 +625,76 @@ udisks_daemon_util_get_caller_uid_sync (UDisksDaemon            *daemon,
 /* ---------------------------------------------------------------------------------------------------- */
 
 /**
+ * udisks_daemon_util_get_caller_pid_sync:
+ * @daemon: A #UDisksDaemon.
+ * @invocation: A #GDBusMethodInvocation.
+ * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @out_pid: (out): Return location for resolved pid or %NULL.
+ * @error: Return location for error.
+ *
+ * Gets the UNIX process id of the peer represented by @invocation.
+ *
+ * Returns: %TRUE if the process id was obtained, %FALSE otherwise
+ */
+gboolean
+udisks_daemon_util_get_caller_pid_sync (UDisksDaemon            *daemon,
+                                        GDBusMethodInvocation   *invocation,
+                                        GCancellable            *cancellable,
+                                        pid_t                   *out_pid,
+                                        GError                 **error)
+{
+  gboolean ret;
+  const gchar *caller;
+  GVariant *value;
+  GError *local_error;
+  pid_t pid;
+
+  /* TODO: cache this on @daemon */
+
+  ret = FALSE;
+
+  caller = g_dbus_method_invocation_get_sender (invocation);
+
+  local_error = NULL;
+  value = g_dbus_connection_call_sync (g_dbus_method_invocation_get_connection (invocation),
+                                       "org.freedesktop.DBus",  /* bus name */
+                                       "/org/freedesktop/DBus", /* object path */
+                                       "org.freedesktop.DBus",  /* interface */
+                                       "GetConnectionUnixProcessID", /* method */
+                                       g_variant_new ("(s)", caller),
+                                       G_VARIANT_TYPE ("(u)"),
+                                       G_DBUS_CALL_FLAGS_NONE,
+                                       -1, /* timeout_msec */
+                                       cancellable,
+                                       &local_error);
+  if (value == NULL)
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "Error determining uid of caller %s: %s (%s, %d)",
+                   caller,
+                   local_error->message,
+                   g_quark_to_string (local_error->domain),
+                   local_error->code);
+      g_error_free (local_error);
+      goto out;
+    }
+
+  G_STATIC_ASSERT (sizeof (uid_t) == sizeof (guint32));
+  g_variant_get (value, "(u)", &pid);
+  if (out_pid != NULL)
+    *out_pid = pid;
+
+  ret = TRUE;
+
+ out:
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
  * udisks_daemon_util_dup_object:
  * @interface_: (type GDBusInterface): A #GDBusInterface<!-- -->-derived instance.
  * @error: %NULL, or an unset #GError to set if the return value is %NULL.
@@ -718,4 +793,65 @@ udisks_daemon_util_escape (const gchar *str)
   escaper (s, str);
 
   return g_string_free (s, FALSE);
+}
+
+/**
+ * udisks_daemon_util_on_other_seat:
+ * @daemon: A #UDisksDaemon.
+ * @object: The #GDBusObject that the call is on or %NULL.
+ * @process: The process to check for.
+ *
+ * Checks whether the device represented by @object (if any) is plugged into
+ * a seat where the caller represented by @process is logged in.
+ *
+ * Returns: %TRUE if @object and @process is on the same seat, %FALSE otherwise.
+ */
+gboolean
+udisks_daemon_util_on_same_seat (UDisksDaemon          *daemon,
+                                 UDisksObject          *object,
+                                 pid_t                  process)
+{
+#if !defined(HAVE_LIBSYSTEMD_LOGIN)
+  /* if we don't have systemd, assume it's always the same seat */
+  return TRUE;
+#else
+  gboolean ret = FALSE;
+  GUdevDevice *device = NULL;
+  UDisksLinuxBlockObject *linux_block_object;
+  char *session = NULL;
+  char *seat = NULL;
+  const gchar *device_seat;
+
+  if (!UDISKS_IS_LINUX_BLOCK_OBJECT (object))
+    goto out;
+
+  linux_block_object = UDISKS_LINUX_BLOCK_OBJECT (object);
+  device = udisks_linux_block_object_get_device (linux_block_object);
+  if (device == NULL)
+    goto out;
+
+  /* It's not unexpected to not find a session, nor a seat associated with @process */
+  if (sd_pid_get_session (process, &session) == 0)
+    sd_session_get_seat (session, &seat);
+
+  /* If we don't know the seat of the caller, we assume the device is always on another seat */
+  if (seat == NULL)
+    goto out;
+
+  /* Assume device belongs to "seat0" if not tagged */
+  device_seat = g_udev_device_get_property (device, "ID_SEAT");
+  if (device_seat == NULL)
+    device_seat = "seat0";
+
+  if (g_strcmp0 (seat, device_seat) == 0)
+    {
+      ret = TRUE;
+    }
+
+ out:
+  free (seat);
+  free (session);
+  g_clear_object (&device);
+  return ret;
+#endif /* HAVE_LIBSYSTEMD_LOGIN */
 }

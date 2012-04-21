@@ -57,6 +57,18 @@ PKG_CHECK_MODULES(LIBATASMART, [libatasmart >= 0.17])
 AC_SUBST(LIBATASMART_CFLAGS)
 AC_SUBST(LIBATASMART_LIBS)
 
+PKG_CHECK_MODULES(LIBSYSTEMD_LOGIN,
+                  [libsystemd-login >= 44],
+                  have_libsystemd_login=yes,
+                  have_libsystemd_login=no)
+AM_CONDITIONAL(HAVE_LIBSYSTEMD_LOGIN, test x$have_libsystemd_login = xyes)
+if test "x$have_libsystemd_login" = "xyes"; then
+  AC_DEFINE([HAVE_LIBSYSTEMD_LOGIN], 1, [Define to 1 if libsystemd-login is available])
+fi
+AC_SUBST(HAVE_LIBSYSTEMD_LOGIN)
+AC_SUBST(LIBSYSTEMD_LOGIN_CFLAGS)
+AC_SUBST(LIBSYSTEMD_LOGIN_LIBS)
+
 # udevdir
 udevdir=$($PKG_CONFIG --variable=udevdir udev)
 AC_SUBST(udevdir)
@@ -128,6 +140,7 @@ echo "
 
         udevdir:                    ${udevdir}
         systemdsystemunitdir:       ${systemdsystemunitdir}
+        using libsystemd-login:     ${have_libsystemd_login}
 
         compiler:                   ${CC}
         cflags:                     ${CFLAGS}

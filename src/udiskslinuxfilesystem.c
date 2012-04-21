@@ -1078,6 +1078,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   UDisksBlock *block;
   UDisksDaemon *daemon;
   UDisksCleanup *cleanup;
+  pid_t caller_pid;
   uid_t caller_uid;
   gid_t caller_gid;
   const gchar * const *existing_mount_points;
@@ -1093,6 +1094,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   gchar *caller_user_name;
   GError *error;
   const gchar *action_id;
+  const gchar *message;
   gboolean system_managed;
   gchar *escaped_device = NULL;
 
@@ -1163,6 +1165,18 @@ handle_mount (UDisksFilesystem       *filesystem,
       goto out;
     }
 
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_pid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_pid,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
   if (system_managed)
     {
       gint status;
@@ -1171,14 +1185,24 @@ handle_mount (UDisksFilesystem       *filesystem,
       if (!has_option (fstab_mount_options, "x-udisks-auth"))
         {
           action_id = "org.freedesktop.udisks2.filesystem-mount";
-          if (udisks_block_get_hint_system (block) &&
-              !(udisks_daemon_util_setup_by_user (daemon, object, caller_uid)))
-            action_id = "org.freedesktop.udisks2.filesystem-mount-system";
+          message = N_("Authentication is required to mount $(udisks2.device)");
+          if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
+            {
+              if (udisks_block_get_hint_system (block))
+                {
+                  action_id = "org.freedesktop.udisks2.filesystem-mount-system";
+                }
+              else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
+                {
+                  action_id = "org.freedesktop.udisks2.filesystem-mount-other-seat";
+                }
+            }
+
           if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                             object,
                                                             action_id,
                                                             options,
-                                                            N_("Authentication is required to mount $(udisks2.device)"),
+                                                            message,
                                                             invocation))
             goto out;
           mount_fstab_as_root = TRUE;
@@ -1305,14 +1329,24 @@ handle_mount (UDisksFilesystem       *filesystem,
    * may be racing with other threads...
    */
   action_id = "org.freedesktop.udisks2.filesystem-mount";
-  if (udisks_block_get_hint_system (block) &&
-      !(udisks_daemon_util_setup_by_user (daemon, object, caller_uid)))
-    action_id = "org.freedesktop.udisks2.filesystem-mount-system";
+  message = N_("Authentication is required to mount $(udisks2.device)");
+  if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
+    {
+      if (udisks_block_get_hint_system (block))
+        {
+          action_id = "org.freedesktop.udisks2.filesystem-mount-system";
+        }
+      else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
+        {
+          action_id = "org.freedesktop.udisks2.filesystem-mount-other-seat";
+        }
+    }
+
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
                                                     action_id,
                                                     options,
-                                                    N_("Authentication is required to mount $(udisks2.device)"),
+                                                    message,
                                                     invocation))
     goto out;
 
@@ -1675,6 +1709,8 @@ handle_set_label (UDisksFilesystem       *filesystem,
   const FSInfo *fs_info;
   UDisksBaseJob *job;
   const gchar *action_id;
+  const gchar *message;
+  pid_t caller_pid;
   gchar *command;
   gchar *tmp;
   GError *error;
@@ -1693,6 +1729,18 @@ handle_set_label (UDisksFilesystem       *filesystem,
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   block = udisks_object_peek_block (object);
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_pid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_pid,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
 
   probed_fs_usage = udisks_block_get_id_usage (block);
   probed_fs_type = udisks_block_get_id_type (block);
@@ -1758,8 +1806,15 @@ handle_set_label (UDisksFilesystem       *filesystem,
     }
 
   action_id = "org.freedesktop.udisks2.modify-device";
+  message = N_("Authentication is required to change the filesystem label on $(udisks2.device)");
   if (udisks_block_get_hint_system (block))
-    action_id = "org.freedesktop.udisks2.modify-device-system";
+    {
+      action_id = "org.freedesktop.udisks2.modify-device-system";
+    }
+  else if (!udisks_daemon_util_on_same_seat (daemon, UDISKS_OBJECT (object), caller_pid))
+    {
+      action_id = "org.freedesktop.udisks2.modify-device-other-seat";
+    }
 
   /* Check that the user is actually authorized to change the
    * filesystem label.
@@ -1768,7 +1823,7 @@ handle_set_label (UDisksFilesystem       *filesystem,
                                                     object,
                                                     action_id,
                                                     options,
-                                                    N_("Authentication is required to change the filesystem label on $(udisks2.device)"),
+                                                    message,
                                                     invocation))
     goto out;
 

@@ -273,6 +273,7 @@ handle_create_partition (UDisksPartitionTable   *table,
                          GVariant               *options)
 {
   const gchar *action_id = NULL;
+  const gchar *message = NULL;
   UDisksBlock *block = NULL;
   UDisksObject *object = NULL;
   UDisksDaemon *daemon = NULL;
@@ -284,6 +285,7 @@ handle_create_partition (UDisksPartitionTable   *table,
   UDisksBlock *partition_block = NULL;
   gchar *escaped_partition_device = NULL;
   const gchar *table_type;
+  pid_t caller_pid;
   GError *error;
 
   error = NULL;
@@ -303,14 +305,34 @@ handle_create_partition (UDisksPartitionTable   *table,
       goto out;
     }
 
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_pid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_pid,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
   action_id = "org.freedesktop.udisks2.modify-device";
+  message = N_("Authentication is required to create a partition on $(udisks2.device)");
   if (udisks_block_get_hint_system (block))
-    action_id = "org.freedesktop.udisks2.modify-device-system";
+    {
+      action_id = "org.freedesktop.udisks2.modify-device-system";
+    }
+  else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
+    {
+      action_id = "org.freedesktop.udisks2.modify-device-system-other-seat";
+    }
+
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
                                                     action_id,
                                                     options,
-                                                    N_("Authentication is required to create a partition on $(udisks2.device)"),
+                                                    message,
                                                     invocation))
     goto out;
 

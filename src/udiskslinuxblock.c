@@ -1822,6 +1822,7 @@ handle_format (UDisksBlock           *block,
   UDisksDaemon *daemon;
   UDisksCleanup *cleanup;
   const gchar *action_id;
+  const gchar *message;
   const FSInfo *fs_info;
   gchar *command = NULL;
   gchar *tmp;
@@ -1830,6 +1831,7 @@ handle_format (UDisksBlock           *block,
   int status;
   uid_t caller_uid;
   gid_t caller_gid;
+  pid_t caller_pid;
   gboolean take_ownership = FALSE;
   gchar *encrypt_passphrase = NULL;
   gchar *mapped_name = NULL;
@@ -1848,11 +1850,29 @@ handle_format (UDisksBlock           *block,
   cleanup = udisks_daemon_get_cleanup (daemon);
   command = NULL;
   error_message = NULL;
-  error = NULL;
 
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_pid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_pid,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  message = N_("Authentication is required to format $(udisks2.device)");
   action_id = "org.freedesktop.udisks2.modify-device";
   if (udisks_block_get_hint_system (block))
-    action_id = "org.freedesktop.udisks2.modify-device-system";
+    {
+      action_id = "org.freedesktop.udisks2.modify-device-system";
+    }
+  else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
+    {
+      action_id = "org.freedesktop.udisks2.modify-device-other-seat";
+    }
 
   error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &caller_gid, NULL, &error))
@@ -1880,7 +1900,7 @@ handle_format (UDisksBlock           *block,
                                                     object,
                                                     action_id,
                                                     options,
-                                                    N_("Authentication is required to format $(udisks2.device)"),
+                                                    message,
                                                     invocation))
     goto out;
 

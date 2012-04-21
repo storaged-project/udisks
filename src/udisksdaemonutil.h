@@ -44,6 +44,10 @@ gboolean udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
                                            UDisksObject *object,
                                            uid_t         user);
 
+gboolean udisks_daemon_util_on_same_seat (UDisksDaemon          *daemon,
+                                          UDisksObject          *object,
+                                          pid_t                  process);
+
 gboolean udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
                                                       UDisksObject          *object,
                                                       const gchar           *action_id,
@@ -57,6 +61,12 @@ gboolean udisks_daemon_util_get_caller_uid_sync (UDisksDaemon            *daemon
                                                  uid_t                   *out_uid,
                                                  gid_t                   *out_gid,
                                                  gchar                  **out_user_name,
+                                                 GError                 **error);
+
+gboolean udisks_daemon_util_get_caller_pid_sync (UDisksDaemon            *daemon,
+                                                 GDBusMethodInvocation   *invocation,
+                                                 GCancellable            *cancellable,
+                                                 pid_t                   *out_pid,
                                                  GError                 **error);
 
 gpointer  udisks_daemon_util_dup_object (gpointer   interface_,

@@ -223,6 +223,11 @@
     -->
     <property name="ConnectionBus" type="s" access="read"/>
 
+    <!-- Seat:
+         A string identifying what seat the drive is plugged into, if any.
+    -->
+    <property name="Seat" type="s" access="read"/>
+
     <!--
         Removable:
         A hint whether the drive and/or its media is considered

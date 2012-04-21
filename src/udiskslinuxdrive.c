@@ -622,6 +622,8 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
     removable_hint = TRUE;
   udisks_drive_set_removable (iface, removable_hint);
 
+  udisks_drive_set_seat (iface, g_udev_device_get_property (device, "ID_SEAT"));
+
   set_media_time_detected (drive, device, is_pc_floppy_drive, coldplug);
 
   /* calculate sort-key  */
@@ -685,9 +687,11 @@ handle_eject (UDisksDrive           *_drive,
   UDisksBlock *block = NULL;
   UDisksDaemon *daemon = NULL;
   const gchar *action_id;
+  const gchar *message;
   gchar *error_message = NULL;
   GError *error = NULL;
   gchar *escaped_device = NULL;
+  pid_t caller_pid;
 
   object = udisks_daemon_util_dup_object (drive, &error);
   if (object == NULL)
@@ -708,17 +712,36 @@ handle_eject (UDisksDrive           *_drive,
     }
   block = udisks_object_peek_block (UDISKS_OBJECT (block_object));
 
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_pid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_pid,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
   /* TODO: is it a good idea to overload modify-device? */
+  message = N_("Authentication is required to eject $(udisks2.device)");
   action_id = "org.freedesktop.udisks2.modify-device";
   if (udisks_block_get_hint_system (block))
-    action_id = "org.freedesktop.udisks2.modify-device-system";
+    {
+      action_id = "org.freedesktop.udisks2.modify-device-system";
+    }
+  else if (!udisks_daemon_util_on_same_seat (daemon, UDISKS_OBJECT (object), caller_pid))
+    {
+      action_id = "org.freedesktop.udisks2.modify-device-other-seat";
+    }
 
   /* Check that the user is actually authorized */
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     UDISKS_OBJECT (block_object),
                                                     action_id,
                                                     options,
-                                                    N_("Authentication is required to eject $(udisks2.device)"),
+                                                    message,
                                                     invocation))
     goto out;
 
