@@ -50,9 +50,13 @@ dbus_built_sources =									\
 	udisks-generated.h			udisks-generated.c			\
 	$(NULL)
 
+udisksversion.h: udisksversion.h.in
+	   sed -e 's/@MAJOR_VERSION@/$(UDISKS_MAJOR_VERSION)/' -e 's/@MINOR_VERSION@/$(UDISKS_MINOR_VERSION)/' -e 's/@MICRO_VERSION@/$(UDISKS_MICRO_VERSION)/' udisksversion.h.in > udisksversion.h.tmp && mv udisksversion.h.tmp udisksversion.h
+
 BUILT_SOURCES =										\
 	$(enum_built_sources)								\
 	$(dbus_built_sources)								\
+	udisksversion.h									\
 	$(NULL)
 
 lib_LTLIBRARIES=libudisks2.la
@@ -67,6 +71,7 @@ libudisks2include_HEADERS=								\
 	udiskserror.h									\
 	udiskstypes.h									\
 	udisks-generated.h								\
+	udisksversion.h									\
 	$(NULL)
 
 libudisks2_la_SOURCES =									\
@@ -140,6 +145,7 @@ CLEANFILES = udisks-generated-doc-*.xml udisks-generated.[ch] $(gir_DATA) $(type
 
 EXTRA_DIST = 						\
 	udisks2.pc.in					\
+	udisksversion.h.in				\
 	udisksenumtypes.h.template			\
 	udisksenumtypes.c.template			\
 	$(NULL)

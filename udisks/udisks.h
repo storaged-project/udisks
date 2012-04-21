@@ -32,6 +32,7 @@
 #include <udisks/udiskserror.h>
 #include <udisks/udisks-generated.h>
 #include <udisks/udisksclient.h>
+#include <udisks/udisksversion.h>
 #undef __UDISKS_INSIDE_UDISKS_H__
 
 #endif /* __UDISKS_H__ */

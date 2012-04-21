@@ -1,4 +1,20 @@
-AC_INIT([udisks],[1.95.0],[http://bugs.freedesktop.org/enter_bug.cgi?product=udisks],[udisks])
+
+m4_define([udisks_major_version], [1])
+m4_define([udisks_minor_version], [95])
+m4_define([udisks_micro_version], [0])
+
+m4_define([udisks_version], [udisks_major_version.udisks_minor_version.udisks_micro_version])
+
+AC_INIT([udisks],[udisks_version],[http://bugs.freedesktop.org/enter_bug.cgi?product=udisks],[udisks])
+
+UDISKS_MAJOR_VERSION=udisks_major_version
+UDISKS_MINOR_VERSION=udisks_minor_version
+UDISKS_MICRO_VERSION=udisks_micro_version
+UDISKS_VERSION=udisks_version
+AC_SUBST(UDISKS_MAJOR_VERSION)
+AC_SUBST(UDISKS_MINOR_VERSION)
+AC_SUBST(UDISKS_MICRO_VERSION)
+AC_SUBST(UDISKS_VERSION)
 
 AM_INIT_AUTOMAKE([1.9 foreign dist-bzip2 no-dist-gzip])
 AC_CONFIG_SRCDIR([src])
