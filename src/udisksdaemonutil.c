@@ -859,12 +859,18 @@ udisks_daemon_util_on_same_seat (UDisksDaemon          *daemon,
 
   /* Assume device belongs to "seat0" if not tagged */
   drive_seat = udisks_drive_get_seat (drive);
-  if (drive_seat == NULL || strlen (drive_seat) == 0)
-    drive_seat = "seat0";
+
+  /* the special value "all" means available on all seat, hence available on caller's seat */
+  if (g_strcmp0 (drive_seat, "all") == 0)
+    {
+      ret = TRUE;
+      goto out;
+    }
 
   if (g_strcmp0 (seat, drive_seat) == 0)
     {
       ret = TRUE;
+      goto out;
     }
 
  out:

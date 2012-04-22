@@ -453,6 +453,7 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
   UDisksDaemon *daemon;
   UDisksLinuxProvider *provider;
   gboolean coldplug = FALSE;
+  const gchar *seat;
 
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
   if (device == NULL)
@@ -622,7 +623,11 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
     removable_hint = TRUE;
   udisks_drive_set_removable (iface, removable_hint);
 
-  udisks_drive_set_seat (iface, g_udev_device_get_property (device, "ID_SEAT"));
+  seat = g_udev_device_get_property (device, "ID_SEAT");
+  /* assume seat0 if not set */
+  if (seat == NULL || strlen (seat) == 0)
+    seat = "seat0";
+  udisks_drive_set_seat (iface, seat);
 
   set_media_time_detected (drive, device, is_pc_floppy_drive, coldplug);
 

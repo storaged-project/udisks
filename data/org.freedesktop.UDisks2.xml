@@ -225,6 +225,9 @@
 
     <!-- Seat:
          A string identifying what seat the drive is plugged into, if any.
+
+         The special value <quote>all</quote> means that the drive
+         should is available on all seats.
     -->
     <property name="Seat" type="s" access="read"/>
 
