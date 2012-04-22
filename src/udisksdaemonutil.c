@@ -839,7 +839,7 @@ udisks_daemon_util_on_same_seat (UDisksDaemon          *daemon,
     }
   else if (UDISKS_IS_LINUX_DRIVE_OBJECT (object))
     {
-      drive_object = UDISKS_OBJECT (object);
+      drive_object = g_object_ref (object);
     }
 
   if (drive_object == NULL)
