@@ -35,6 +35,7 @@
 #include "udiskscleanup.h"
 #include "udiskslogging.h"
 #include "udiskslinuxblockobject.h"
+#include "udiskslinuxdriveobject.h"
 
 #if defined(HAVE_LIBSYSTEMD_LOGIN)
 #include <systemd/sd-login.h>
@@ -804,6 +805,8 @@ udisks_daemon_util_escape (const gchar *str)
  * Checks whether the device represented by @object (if any) is plugged into
  * a seat where the caller represented by @process is logged in.
  *
+ * This works if @object is a drive or a block object.
+ *
  * Returns: %TRUE if @object and @process is on the same seat, %FALSE otherwise.
  */
 gboolean
@@ -816,18 +819,34 @@ udisks_daemon_util_on_same_seat (UDisksDaemon          *daemon,
   return TRUE;
 #else
   gboolean ret = FALSE;
-  GUdevDevice *device = NULL;
-  UDisksLinuxBlockObject *linux_block_object;
   char *session = NULL;
   char *seat = NULL;
-  const gchar *device_seat;
+  const gchar *drive_seat;
+  UDisksObject *drive_object = NULL;
+  UDisksDrive *drive = NULL;
 
-  if (!UDISKS_IS_LINUX_BLOCK_OBJECT (object))
+  if (UDISKS_IS_LINUX_BLOCK_OBJECT (object))
+    {
+      UDisksLinuxBlockObject *linux_block_object;
+      UDisksBlock *block;
+      linux_block_object = UDISKS_LINUX_BLOCK_OBJECT (object);
+      block = udisks_object_get_block (UDISKS_OBJECT (linux_block_object));
+      if (block != NULL)
+        {
+          drive_object = udisks_daemon_find_object (daemon, udisks_block_get_drive (block));
+          g_object_unref (block);
+        }
+    }
+  else if (UDISKS_IS_LINUX_DRIVE_OBJECT (object))
+    {
+      drive_object = UDISKS_OBJECT (object);
+    }
+
+  if (drive_object == NULL)
     goto out;
 
-  linux_block_object = UDISKS_LINUX_BLOCK_OBJECT (object);
-  device = udisks_linux_block_object_get_device (linux_block_object);
-  if (device == NULL)
+  drive = udisks_object_get_drive (UDISKS_OBJECT (drive_object));
+  if (drive == NULL)
     goto out;
 
   /* It's not unexpected to not find a session, nor a seat associated with @process */
@@ -839,11 +858,11 @@ udisks_daemon_util_on_same_seat (UDisksDaemon          *daemon,
     goto out;
 
   /* Assume device belongs to "seat0" if not tagged */
-  device_seat = g_udev_device_get_property (device, "ID_SEAT");
-  if (device_seat == NULL)
-    device_seat = "seat0";
+  drive_seat = udisks_drive_get_seat (drive);
+  if (drive_seat == NULL || strlen (drive_seat) == 0)
+    drive_seat = "seat0";
 
-  if (g_strcmp0 (seat, device_seat) == 0)
+  if (g_strcmp0 (seat, drive_seat) == 0)
     {
       ret = TRUE;
     }
@@ -851,7 +870,8 @@ udisks_daemon_util_on_same_seat (UDisksDaemon          *daemon,
  out:
   free (seat);
   free (session);
-  g_clear_object (&device);
+  g_clear_object (&drive_object);
+  g_clear_object (&drive);
   return ret;
 #endif /* HAVE_LIBSYSTEMD_LOGIN */
 }
