@@ -14,7 +14,10 @@
   </bookinfo>
 
   <part id="overview">
-    <title>UDisks Overview</title>
+    <title>Manual pages and Overview</title>
+    <xi:include href="man/udisks.xml"/>
+    <xi:include href="man/udisksd.xml"/>
+    <xi:include href="man/udisksctl.xml"/>
   </part>
 
   <part id="ref-dbus">
@@ -298,13 +301,6 @@
       <xi:include href="xml/udiskslinuxloop.xml"/>
       <xi:include href="xml/udiskslinuxblockobject.xml"/>
     </chapter>
-  </part>
-
-  <part id="tools-fileformats">
-    <title>Tools, File Formats and Manual Pages</title>
-    <xi:include href="man/udisks.xml"/>
-    <xi:include href="man/udisksd.xml"/>
-    <xi:include href="man/udisksctl.xml"/>
   </part>
 
   <index>

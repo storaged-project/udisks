@@ -13,7 +13,7 @@
 
   <refnamediv>
     <refname>udisksd</refname>
-    <refpurpose>udisks daemon</refpurpose>
+    <refpurpose>The udisks system daemon</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>

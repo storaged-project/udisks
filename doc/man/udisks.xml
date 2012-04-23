@@ -13,12 +13,12 @@
 
   <refnamediv>
     <refname>udisks</refname>
-    <refpurpose>storage management</refpurpose>
+    <refpurpose>Introduction to udisks</refpurpose>
   </refnamediv>
 
   <refsect1><title>DESCRIPTION</title>
     <para>
-      udisks provides an interface to enumerate and perform operations
+      udisks provides interfaces to enumerate and perform operations
       on storage devices. Any application can access the
       <citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry>
       daemon via the name <emphasis>org.freedesktop.UDisks2</emphasis>

@@ -13,7 +13,7 @@
 
   <refnamediv>
     <refname>udisksctl</refname>
-    <refpurpose>udisks command line tool</refpurpose>
+    <refpurpose>The udisks command line tool</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
