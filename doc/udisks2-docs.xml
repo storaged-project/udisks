@@ -125,6 +125,60 @@
         </para>
       </sect1>
 
+      <sect1 id="udisks-polkit-actions">
+        <title>Authorization Checks</title>
+        <para>
+          Many methods and operations offered by udisks requires the
+          calling user to be sufficiently authorized. Whether the user
+          is authorized is checked using <ulink
+          url="http://hal.freedesktop.org/docs/polkit/polkit.8.html">polkit</ulink>
+          and the administrator can configure <ulink
+          url="http://hal.freedesktop.org/docs/polkit/pklocalauthority.8.html">polkit's
+          local authority</ulink> (but note that the system may be
+          using another polkit authority implementation).
+        </para>
+        <para>
+          There is not necessarily a one-to-one relationship between
+          D-Bus methods and polkit actions - typically the
+          relationship is more complicated and depends on both the
+          context of the process invoking the method, the object the
+          method is acting on and possibly more factors. For example,
+          the <link
+          linkend="gdbus-method-org-freedesktop-UDisks2-Filesystem.Mount">Filesystem.Mount()</link>
+          method call may check that the caller is authorized for one
+          of the four actions
+          <emphasis>org.freedesktop.udisks2.filesystem-mount</emphasis>,
+          <emphasis>org.freedesktop.udisks2.filesystem-mount-system</emphasis>,
+          <emphasis>org.freedesktop.udisks2.filesystem-mount-other-seat</emphasis>
+          or
+          <emphasis>org.freedesktop.udisks2.filesystem-mount-fstab</emphasis>
+          depending on circumstances.
+        </para>
+        <para>
+          Often there will be two polkit actions for one operation -
+          one for so-called <quote>system devices</quote> and one for
+          non-system devices. In this context <quote>system
+          device</quote> refers to the value of the <link
+          linkend="gdbus-property-org-freedesktop-UDisks2-Block.HintSystem">Block:HintSystem</link>
+          D-Bus property and is normally only
+          <constant>TRUE</constant> for devices not considered
+          <quote>removable</quote> (devices considered removable
+          include USB attached storage, Flash media and optical
+          drives). See <xref linkend="udisks.8"/> for how to control
+          if a device is considered a system device.
+        </para>
+        <para>
+          The polkit actions are not considered stable and may change
+          from release to release so administrators should take notice
+          when upgrading from one version of udisks to another. For
+          example, <filename>.pkla</filename> files may need to be
+          updated to match an updated policy.
+          For reference, the polkit actions defined by udisks &version;
+          are included here:
+          <informalexample id="udisks-polkit-actions-file"><programlisting><xi:include xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" href="../data/org.freedesktop.udisks2.policy.in"><xi:fallback>FIXME: MISSING XINCLUDE CONTENT</xi:fallback></xi:include></programlisting></informalexample>
+        </para>
+      </sect1>
+
       <sect1 id="udisks-std-options">
         <title>The <parameter>options</parameter> parameter</title>
         <para>
@@ -157,6 +211,7 @@
           </tgroup>
         </table>
       </sect1>
+
     </chapter>
 
     <chapter>

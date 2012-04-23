@@ -1118,36 +1118,21 @@
         filesystem types are validated against a (small) whitelist to
         avoid unexpected privilege escalation
 
-        Mounting a file system is a privileged operation and before
-        fulfilling the request, an authorization check for one of the
-        two actions
-        <emphasis>org.freedesktop.udisks2.filesystem-mount</emphasis>
-        or
-        <emphasis>org.freedesktop.udisks2.filesystem-mount-system</emphasis>
-        is performed (the value of the
-        #org.freedesktop.UDisks2.Block:HintSystem property is used to
-        determine which one). The latter check typically results in
-        the user having to authenticate as an administrator while the
-        former typically doesn't require authentication if the caller
-        is on a local console.
-
         If the device in question is referenced in the
         <filename>/etc/fstab</filename> file, the
         <command>mount</command> command is called directly (as root)
         and the given options or filesystem type given in @options are
-        ignored. The authorization checks mentioned above are still
-        performed.
+        ignored.
 
         If <literal>x-udisks-auth</literal> is specified as an option
         for the device in the <filename>/etc/fstab</filename> file,
         then the <command>mount</command> command is run as the
-        calling user, without performing any of the authorization
-        checks mentioned above. If this fails because of insufficient
-        permissions, an authorization check is performed for the
-        <emphasis>org.freedesktop.udisks2.filesystem-fstab</emphasis>
-        action which typically results in the user having to
-        authenticate as an administrator. If authorized, the
-        <command>mount</command> command is then run as root.
+        calling user, without performing any authorization check
+        mentioned above. If this fails because of insufficient
+        permissions, an authorization check is performed (which
+        typically results in the user having to authenticate as an
+        administrator). If authorized, the <command>mount</command>
+        command is then run as root.
 
         The filesystem should be unmounted using the
         org.freedesktop.UDisks2.Filesystem.Unmount() method.
@@ -1175,11 +1160,9 @@
         If the device in question was not mounted by the calling user
         via the org.freedesktop.UDisks2.Filesystem.Mount() method the
         filesystem is unmounted without any authorization checks.
-        Otherwise, an authorization check is performed for the
-        <emphasis>org.freedesktop.udisks2.filesystem-unmount-others</emphasis>
-        action which typically results in the user having to
-        authenticate as an administrator. If authorized, the
-        filesystem is unmounted.
+        Otherwise, an authorization check is performed (which
+        typically results in the user having to authenticate as an
+        administrator). If authorized, the filesystem is unmounted.
 
         If the filesystem is busy, this operation fails with the error
         <link linkend="UDISKS-ERROR-DEVICE-BUSY:CAPS"><constant>org.freedesktop.UDisks2.Error.DeviceBusy</constant></link>

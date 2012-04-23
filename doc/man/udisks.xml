@@ -31,37 +31,51 @@
   <refsect1><title>ACCESS CONTROL</title>
     <para>
       By default, logged-in users in active log-in sessions are
-      permitted to mount and unlock devices attached to the local
-      console. To lock down globally, configure the
-      <citerefentry><refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum></citerefentry>
-      authorizations for the actions
-      <literal>filesystem-mount</literal>,
-      <literal>filesystem-mount-system</literal>,
-      <literal>encrypted-unlock</literal> and
-      <literal>encrypted-unlock-system</literal>, all in the
-      <literal>org.freedesktop.udisks2</literal> namespace.
+      permitted to perform operations (for example, mounting,
+      unlocking or modifying) devices attached to the seat their
+      session is on. Access-control is fine-grained and based on
+      <citerefentry><refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+      see the <quote><link
+      linkend="udisks-polkit-actions">Authorization
+      Checks</link></quote> chapter in the udisks documentation for
+      more information (<ulink
+      url="http://udisks.freedesktop.org/docs/latest/udisks-polkit-actions.html">available
+      online here</ulink>).
     </para>
     <para>
-      Note that the actions ending in <literal>-system</literal>
-      typically requires administrator authentication and are used for
-      devices not considered "removable" (devices considered
-      "removable" include USB attached storage, Flash media, optical
-      discs etc.). The udev property <literal>UDISKS_SYSTEM</literal>
-      can be used to override this on a per-device basis, see below.
+      Note that the polkit actions ending in
+      <literal>-system</literal> typically requires administrator
+      authentication and are used for devices not considered
+      <quote>removable</quote> (devices considered removable include
+      USB attached storage, Flash media, optical discs etc.). The udev
+      property <literal>UDISKS_SYSTEM</literal> can be used to
+      override this on a per-device basis, see below.
     </para>
     <para>
-      To lock down access on a per-device basis, use the option
-      <literal>x-udisks-auth</literal> in the
-      <filename>/etc/fstab</filename> file and the option
-      <literal>x-udisks-auth</literal> in the
-      <filename>/etc/crypttab</filename> file.
+      The <literal>x-udisks-auth</literal> option can be used in the
+      <filename>/etc/fstab</filename> and
+      <filename>/etc/crypttab</filename> files to specify that
+      additional authorization is required to mount resp. unlock the
+      device (typically requiring the user to authenticate as an
+      administrator).
+    </para>
+  </refsect1>
+
+  <refsect1><title>WHAT THE USER SEES</title>
+    <para>
+      udisks is a system-level component and is not per se concerned
+      with what a desktop user interface shows the user. For GNOME see
+      these <ulink
+      url="http://git.gnome.org/browse/gvfs/tree/monitor/udisks2/what-is-shown.txt">GVfs
+      notes</ulink> about what is shown in the desktop user interface
+      and how to influence it.
     </para>
   </refsect1>
 
   <refsect1>
     <title>DEVICE INFORMATION</title>
     <para>
-      On Linux, udisks relies on recent versions of
+      udisks relies on recent versions of
       <citerefentry><refentrytitle>udev</refentrytitle><manvolnum>7</manvolnum></citerefentry>
       and the Linux kernel. Influential device properties in the udev
       database include:
@@ -113,6 +127,23 @@
             <ulink url="http://www.freedesktop.org/wiki/Specifications/icon-theme-spec">freedesktop.org icon theme specification</ulink>.
             This corresponds to the
             <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.HintIconName">HintIconName</link> property.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_SEAT</option></term>
+        <listitem>
+          <para>
+            The physical seat the device is attached to. If not set,
+            <quote>seat0</quote> (the first seat) is assumed. The
+            special value <quote>all</quote> means that the device
+            should be available on all seats, e.g. available from
+            login sessions running on any seat. This also means that
+            special mount options and mount directory will be used so
+            all users can access mounted filesystems from the device -
+            for example, the device will be mounted in
+            <filename>/media</filename> instead of
+            <filename>/run/media/USER</filename>.
           </para>
         </listitem>
       </varlistentry>

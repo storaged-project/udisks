@@ -9,7 +9,9 @@
   <vendor_url>http://udisks.freedesktop.org/</vendor_url>
   <icon_name>drive-removable-media</icon_name>
 
+  <!-- ###################################################################### -->
   <!-- Mounting filesystems -->
+
   <action id="org.freedesktop.udisks2.filesystem-mount">
     <_description>Mount a filesystem</_description>
     <_message>Authentication is required to mount the filesystem</_message>
@@ -20,6 +22,7 @@
     </defaults>
   </action>
 
+  <!-- mount a device considered a "system device" -->
   <action id="org.freedesktop.udisks2.filesystem-mount-system">
     <_description>Mount a filesystem on a system device</_description>
     <_message>Authentication is required to mount the filesystem</_message>
@@ -30,6 +33,7 @@
     </defaults>
   </action>
 
+  <!-- mount a device attached to on another seat -->
   <action id="org.freedesktop.udisks2.filesystem-mount-other-seat">
     <_description>Mount a filesystem from a device plugged into another seat</_description>
     <_message>Authentication is required to mount the filesystem</_message>
@@ -40,6 +44,7 @@
     </defaults>
   </action>
 
+  <!-- mount a device referenced in the /etc/fstab file with the x-udisks-auth option -->
   <action id="org.freedesktop.udisks2.filesystem-fstab">
     <_description>Mount/unmount filesystems defined in the fstab file with the x-udisks-auth option</_description>
     <_message>Authentication is required to mount/unmount the filesystem</_message>
@@ -50,6 +55,10 @@
     </defaults>
   </action>
 
+  <!-- ###################################################################### -->
+  <!-- Unmounting filesystems -->
+
+  <!-- unmount a filesystem mounted by another user -->
   <action id="org.freedesktop.udisks2.filesystem-unmount-others">
     <_description>Unmount a device mounted by another user</_description>
     <_message>Authentication is required to unmount a filesystem mounted by another user</_message>
@@ -60,6 +69,7 @@
     </defaults>
   </action>
 
+  <!-- unmount a filesystem mounted by another user, on a drive shared by all seats -->
   <action id="org.freedesktop.udisks2.filesystem-unmount-others-shared">
     <_description>Unmount a shared device mounted by another user</_description>
     <_message>Authentication is required to unmount a filesystem mounted by another user</_message>
@@ -70,7 +80,9 @@
     </defaults>
   </action>
 
+  <!-- ###################################################################### -->
   <!-- Unlocking encrypted devices -->
+
   <action id="org.freedesktop.udisks2.encrypted-unlock">
     <_description>Unlock an encrypted device</_description>
     <_message>Authentication is required to unlock an encrypted device</_message>
@@ -81,6 +93,7 @@
     </defaults>
   </action>
 
+  <!-- unlock a device considered a "system device" -->
   <action id="org.freedesktop.udisks2.encrypted-unlock-system">
     <_description>Unlock an encrypted system device</_description>
     <_message>Authentication is required to unlock an encrypted device</_message>
@@ -91,6 +104,7 @@
     </defaults>
   </action>
 
+  <!-- mount a device attached to on another seat -->
   <action id="org.freedesktop.udisks2.encrypted-unlock-other-seat">
     <_description>Unlock an encrypted device plugged into another seat</_description>
     <_message>Authentication is required to unlock an encrypted device</_message>
@@ -101,6 +115,7 @@
     </defaults>
   </action>
 
+  <!-- unlock a device referenced in the /etc/crypttab file with the x-udisks-auth option -->
   <action id="org.freedesktop.udisks2.encrypted-unlock-crypttab">
     <_description>Unlock an encrypted device specified in the crypttab file with the x-udisks-auth option</_description>
     <_message>Authentication is required to unlock an encrypted device</_message>
@@ -111,6 +126,10 @@
     </defaults>
   </action>
 
+  <!-- ###################################################################### -->
+  <!-- Locking encrypted devices -->
+
+  <!-- lock a device unlocked by another user -->
   <action id="org.freedesktop.udisks2.encrypted-lock-others">
     <_description>Lock an encrypted device unlocked by another user</_description>
     <_message>Authentication is required to lock an encrypted device unlocked by another user</_message>
@@ -120,6 +139,9 @@
       <allow_active>auth_admin_keep</allow_active>
     </defaults>
   </action>
+
+  <!-- ###################################################################### -->
+  <!-- Changing passphrases on encrypted devices -->
 
   <action id="org.freedesktop.udisks2.encrypted-change-passphrase">
     <_description>Change passphrase for an encrypted device</_description>
@@ -131,6 +153,7 @@
     </defaults>
   </action>
 
+  <!-- change passphrase on a device considered a "system device" -->
   <action id="org.freedesktop.udisks2.encrypted-change-passphrase-system">
     <_description>Change passphrase for an encrypted device</_description>
     <_message>Authentication is required to change the passphrase for an encrypted device</_message>
@@ -141,17 +164,22 @@
     </defaults>
   </action>
 
+  <!-- ###################################################################### -->
   <!-- Setting up loop devices -->
+
   <action id="org.freedesktop.udisks2.loop-setup">
     <_description>Manage loop devices</_description>
     <_message>Authentication is required to set up a loop device</_message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
-      <!-- not a DoS because we are using /dev/loop-control -->
+      <!-- NOTE: this is not a DoS because we are using /dev/loop-control -->
       <allow_active>yes</allow_active>
     </defaults>
   </action>
+
+  <!-- ###################################################################### -->
+  <!-- Deleting loop devices -->
 
   <action id="org.freedesktop.udisks2.loop-delete-others">
     <_description>Manage loop devices</_description>
@@ -163,7 +191,9 @@
     </defaults>
   </action>
 
-  <!-- Manage swapspace -->
+  <!-- ###################################################################### -->
+  <!-- Manage (start/stop) swapspace -->
+
   <action id="org.freedesktop.udisks2.manage-swapspace">
     <_description>Manage swapspace</_description>
     <_message>Authentication is required to manage swapspace</_message>
@@ -174,7 +204,9 @@
     </defaults>
   </action>
 
+  <!-- ###################################################################### -->
   <!-- Modify a device (create new filesystem, partitioning, change FS label, ejecting media, etc.) -->
+
   <action id="org.freedesktop.udisks2.modify-device">
     <_description>Modify a device</_description>
     <_message>Authentication is required to modify a device</_message>
@@ -185,6 +217,7 @@
     </defaults>
   </action>
 
+  <!-- modify a device considered a "system device" -->
   <action id="org.freedesktop.udisks2.modify-device-system">
     <_description>Modify a system device</_description>
     <_message>Authentication is required to modify a device</_message>
@@ -195,6 +228,7 @@
     </defaults>
   </action>
 
+  <!-- modify a device attached to on another seat -->
   <action id="org.freedesktop.udisks2.modify-device-other-seat">
     <_description>Modify a device</_description>
     <_message>Authentication is required to modify a device plugged into another seat</_message>
@@ -205,7 +239,9 @@
     </defaults>
   </action>
 
-  <!-- Open a device for reading (for creating disk images) -->
+  <!-- ###################################################################### -->
+  <!-- Open a device for reading (for creating / restoring disk images) -->
+
   <action id="org.freedesktop.udisks2.open-device">
     <_description>Open a device</_description>
     <_message>Authentication is required to open a device</_message>
@@ -226,12 +262,16 @@
     </defaults>
   </action>
 
+  <!-- ###################################################################### -->
   <!-- Manage system-wide configuration files such as /etc/fstab or
        /etc/crypttab ... including files referenced by these files.
 
-       It is insecure to automatically grant this to groups of users or
-       to allow a process to retain the authorization.
+       IMPORTANT: It is not secure to automatically grant authority
+       for this action to groups of users. Neither is it secure to
+       to allow a process to retain the authorization (e.g. don't
+       use the _keep variants).
   -->
+
   <action id="org.freedesktop.udisks2.modify-system-configuration">
     <_description>Modify system-wide configuration</_description>
     <_message>Authentication is required to modify system-wide configuration</_message>
@@ -253,7 +293,10 @@
     </defaults>
   </action>
 
-  <!-- Update SMART data -->
+  <!-- ###################################################################### -->
+  <!-- ATA SMART -->
+
+  <!-- Update/refresh SMART data -->
   <action id="org.freedesktop.udisks2.ata-smart-update">
     <_description>Update SMART data</_description>
     <_message>Authentication is required to update SMART data</_message>
