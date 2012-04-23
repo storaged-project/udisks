@@ -32,7 +32,7 @@
     <para>
       By default, logged-in users in active log-in sessions are
       permitted to perform operations (for example, mounting,
-      unlocking or modifying) devices attached to the seat their
+      unlocking or modifying) on devices attached to the seat their
       session is on. Access-control is fine-grained and based on
       <citerefentry><refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
       see the <quote><link
