@@ -33,7 +33,7 @@
     </defaults>
   </action>
 
-  <!-- mount a device attached to on another seat -->
+  <!-- mount a device attached to another seat -->
   <action id="org.freedesktop.udisks2.filesystem-mount-other-seat">
     <_description>Mount a filesystem from a device plugged into another seat</_description>
     <_message>Authentication is required to mount the filesystem</_message>
@@ -104,7 +104,7 @@
     </defaults>
   </action>
 
-  <!-- mount a device attached to on another seat -->
+  <!-- mount a device attached to another seat -->
   <action id="org.freedesktop.udisks2.encrypted-unlock-other-seat">
     <_description>Unlock an encrypted device plugged into another seat</_description>
     <_message>Authentication is required to unlock an encrypted device</_message>
@@ -228,7 +228,7 @@
     </defaults>
   </action>
 
-  <!-- modify a device attached to on another seat -->
+  <!-- modify a device attached to another seat -->
   <action id="org.freedesktop.udisks2.modify-device-other-seat">
     <_description>Modify a device</_description>
     <_message>Authentication is required to modify a device plugged into another seat</_message>
