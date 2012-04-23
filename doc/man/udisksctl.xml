@@ -202,11 +202,10 @@
       <citerefentry><refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
       Additionally, this program is not intended to be used by scripts
       or other programs - options/commands may change in incompatible
-      ways in the future even in maintenance releases. Scripts and/or
-      other programs should either use the D-Bus APIs of
-      <citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry>
-      or native low-level commands such as
-      <citerefentry><refentrytitle>mount</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+      ways in the future even in maintenance releases. See the
+      <quote>API STABILITY</quote> section of
+      <link linkend="udisks.8"><citerefentry><refentrytitle>udisks</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>
+      for more information.
     </para>
   </refsect1>
 
