@@ -50,8 +50,8 @@ dbus_built_sources =									\
 	udisks-generated.h			udisks-generated.c			\
 	$(NULL)
 
-udisksversion.h: udisksversion.h.in
-	   sed -e 's/@MAJOR_VERSION@/$(UDISKS_MAJOR_VERSION)/' -e 's/@MINOR_VERSION@/$(UDISKS_MINOR_VERSION)/' -e 's/@MICRO_VERSION@/$(UDISKS_MICRO_VERSION)/' udisksversion.h.in > udisksversion.h.tmp && mv udisksversion.h.tmp udisksversion.h
+udisksversion.h: $(top_srcdir)/udisks/udisksversion.h.in
+	   sed -e 's/@MAJOR_VERSION@/$(UDISKS_MAJOR_VERSION)/' -e 's/@MINOR_VERSION@/$(UDISKS_MINOR_VERSION)/' -e 's/@MICRO_VERSION@/$(UDISKS_MICRO_VERSION)/' $(top_srcdir)/udisks/udisksversion.h.in > udisksversion.h.tmp && mv udisksversion.h.tmp udisksversion.h
 
 BUILT_SOURCES =										\
 	$(enum_built_sources)								\
