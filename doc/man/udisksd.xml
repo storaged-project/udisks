@@ -16,7 +16,7 @@
     <refpurpose>The udisks system daemon</refpurpose>
   </refnamediv>
 
-  <refsynopsisdiv>
+  <refsynopsisdiv><title>SYNOPSIS</title>
     <cmdsynopsis>
       <command>udisksd</command>
       <arg><option>--help</option></arg>
