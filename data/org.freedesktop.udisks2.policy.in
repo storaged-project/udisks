@@ -205,7 +205,42 @@
   </action>
 
   <!-- ###################################################################### -->
-  <!-- Modify a device (create new filesystem, partitioning, change FS label, ejecting media, etc.) -->
+  <!-- Eject media from a drive -->
+
+  <action id="org.freedesktop.udisks2.eject-media">
+    <_description>Eject media</_description>
+    <_message>Authentication is required to eject media</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
+  <!-- eject media from a drive considered a "system device" -->
+  <action id="org.freedesktop.udisks2.eject-media-system">
+    <_description>Eject media from a system drive</_description>
+    <_message>Authentication is required to eject media</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <!-- eject media from a drive attached to another seat -->
+  <action id="org.freedesktop.udisks2.eject-media-other-seat">
+    <_description>Eject media attached to another seat</_description>
+    <_message>Authentication is required to eject media from a drive plugged into another seat</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <!-- ###################################################################### -->
+  <!-- Modify a device (create new filesystem, partitioning, change FS label etc.) -->
 
   <action id="org.freedesktop.udisks2.modify-device">
     <_description>Modify a device</_description>

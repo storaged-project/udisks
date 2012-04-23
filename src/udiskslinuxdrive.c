@@ -729,16 +729,15 @@ handle_eject (UDisksDrive           *_drive,
       goto out;
     }
 
-  /* TODO: is it a good idea to overload modify-device? */
   message = N_("Authentication is required to eject $(udisks2.device)");
-  action_id = "org.freedesktop.udisks2.modify-device";
+  action_id = "org.freedesktop.udisks2.eject-media";
   if (udisks_block_get_hint_system (block))
     {
-      action_id = "org.freedesktop.udisks2.modify-device-system";
+      action_id = "org.freedesktop.udisks2.eject-media-system";
     }
   else if (!udisks_daemon_util_on_same_seat (daemon, UDISKS_OBJECT (object), caller_pid))
     {
-      action_id = "org.freedesktop.udisks2.modify-device-other-seat";
+      action_id = "org.freedesktop.udisks2.eject-media-other-seat";
     }
 
   /* Check that the user is actually authorized */
