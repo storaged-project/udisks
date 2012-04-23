@@ -290,6 +290,47 @@
     </variablelist>
   </refsect1>
 
+  <refsect1><title>AUDIENCE</title>
+    <para>
+      The intended audience of udisks include developers of
+      higher-level layers of the operating system, for example the
+      desktop shell (such as
+      <ulink url="http://www.gnome.org">GNOME</ulink>)
+      and disk management applications (e.g. GNOME's
+      <ulink url="https://live.gnome.org/Design/Apps/Disks">Disks</ulink>
+      application).  Software on this level typically depend on a specific
+      (major) version of udisks and may even have support for previous
+      versions of udisks or alternative interfaces performing the same
+      role as udisks (such as the now deprecated hal daemon).
+    </para>
+    <para>
+      Hence, if you are writing an application and do not want to tie
+      yourself to a specific version of the operating system or
+      desktop environment, you should not use udisks. Other options
+      include
+      <itemizedlist>
+        <listitem>
+          <para>
+            Low-level guaranteed-stable APIs and commands such as e.g.
+            <ulink url="http://en.wikipedia.org/wiki/Sysfs">sysfs</ulink>,
+            <ulink url="http://www.freedesktop.org/software/systemd/libudev/">libudev</ulink>,
+            <ulink url="http://www.kernel.org/doc/Documentation/filesystems/proc.txt">/proc/self/mountinfo</ulink> and
+            <ulink url="http://en.wikipedia.org/wiki/Util-linux">util-linux</ulink>.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            High-level guaranteed-stable APIs such as <ulink url="http://developer.gnome.org/gio/stable/volume_mon.html">GVolumeMonitor</ulink>.
+          </para>
+        </listitem>
+      </itemizedlist>
+      In particular, if you are writing a desktop application, it is a
+      much better idea to use e.g. GVolumeMonitor than udisks since
+      this will make your application show the same devices as the
+      desktop shell (e.g. file manager, file chooser and so on).
+    </para>
+  </refsect1>
+
   <refsect1><title>AUTHOR</title>
     <para>
       Written by David Zeuthen <email>zeuthen@gmail.com</email> with
