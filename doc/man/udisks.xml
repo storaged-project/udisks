@@ -63,7 +63,7 @@
 
   <refsect1><title>WHAT THE USER SEES</title>
     <para>
-      udisks is a system-level component and is not per se concerned
+      udisks operates on the system-level and is not per se concerned
       with what a desktop user interface shows the user. For GNOME see
       these <ulink
       url="http://git.gnome.org/browse/gvfs/tree/monitor/udisks2/what-is-shown.txt">GVfs
@@ -290,6 +290,39 @@
     </variablelist>
   </refsect1>
 
+  <refsect1><title>API STABILITY</title>
+    <para>
+      udisks guarantees a stable D-Bus API within the same major
+      version and this guarantee extends to the client-side
+      library. Additionally several major versions of udisks can be
+      installed and operate at the same time although interoperability
+      may be limited - for example, a device mounted using the udisks
+      1.x API may require additional authorization if attempting to
+      unmount it through the the 2.x API.
+    </para>
+    <para>
+      We do not anticipate breaking API but we do reserve the right to
+      do so and if we do, we promise to bump the major version and
+      ensure the new version of udisks is parallel-installable (except
+      that tools and man pages from the old version may require a
+      suffix to be parallel installable).
+    </para>
+    <para>
+      udisks is not designed to be bundled with applications - it is
+      software that operates on the system-level and requires deep
+      integration with other system-level software.
+    </para>
+    <para>
+      There is no guarantee that the
+      <link linkend="udisksctl.1"><citerefentry><refentrytitle>udisksctl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>
+      options and command-line switches will remain stable. Use the
+      D-Bus API instead - either directly or via
+      <citerefentry>
+        <refentrytitle>dbus-send</refentrytitle><manvolnum>1</manvolnum>
+      </citerefentry>.
+    </para>
+  </refsect1>
+
   <refsect1><title>AUDIENCE</title>
     <para>
       The intended audience of udisks include developers of
@@ -304,10 +337,16 @@
       role as udisks (such as the now deprecated hal daemon).
     </para>
     <para>
-      Hence, if you are writing an application and do not want to tie
-      yourself to a specific version of the operating system or
-      desktop environment, you should not use udisks. Other options
-      include
+      While udisks provides a stable API and a clear upgrade path, it
+      may not be appropriate for 3rd party applications to depend on
+      it.  For example, if the operating system has switched to udisks
+      2.x and your application is still using the udisks 1.x API, your
+      application will not work unless udisks 1.x is installed. While
+      this will still work (the user installing udisks 1.x before
+      installing your application), it may not be desirable. Hence, if
+      you do not want to tie yourself to a specific version of the
+      operating system or desktop shell, you should not use
+      udisks. Other viable options include
       <itemizedlist>
         <listitem>
           <para>

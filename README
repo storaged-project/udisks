@@ -4,9 +4,9 @@ OVERVIEW
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks and storage devices.
 
-For the intended audience of udisks, see AUDIENCE section of the
-udisks(8) man page (doc/man/udisks.xml in the tarball and git
-repository).
+For API stability and intended audience of udisks, see the API
+STABILITY and AUDIENCE section of the udisks(8) man page
+(doc/man/udisks.xml in the tarball and git repository).
 
 LICENSE
 =======
@@ -23,13 +23,6 @@ We're using Transifex for translations, see
  https://www.transifex.net/projects/p/udisks/
 
 for how to contribute.
-
-VERSIONING and ABI STABILITY
-============================
-
-Unless otherwise stated, the D-Bus and library interfaces are
-considered stable. The interface of the command-line tools are not
-considered stable - they may change at any point in time.
 
 RELEASES
 ========
