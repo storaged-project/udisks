@@ -230,7 +230,7 @@
 
   <!-- eject media from a drive attached to another seat -->
   <action id="org.freedesktop.udisks2.eject-media-other-seat">
-    <_description>Eject media attached to another seat</_description>
+    <_description>Eject media from a drive attached to another seat</_description>
     <_message>Authentication is required to eject media from a drive plugged into another seat</_message>
     <defaults>
       <allow_any>auth_admin</allow_any>
