@@ -22,9 +22,21 @@
       on storage devices. Any application can access the
       <citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry>
       daemon via the name <emphasis>org.freedesktop.UDisks2</emphasis>
-      on the system message bus. Some operations (such as formatting
-      disks etc.) are restricted using
-      <citerefentry><refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+      on the system message bus. In addition to the D-Bus API, a library,
+      <filename>libudisks2</filename> is also provided. This library
+      can be used from C/C++ and any high-level language supporting
+      <ulink url="https://live.gnome.org/GObjectIntrospection">GObjectIntrospection</ulink>
+      such as Javascript, Python and so on. In addition to exposing
+      the D-Bus API, the library also contains a couple of useful
+      utility functions.
+    </para>
+    <para>
+      As a system-level component, udisks is not per se concerned with
+      what a desktop user interface shows the user. For GNOME see
+      these <ulink
+      url="http://git.gnome.org/browse/gvfs/tree/monitor/udisks2/what-is-shown.txt">GVfs
+      notes</ulink> about what is shown in the desktop user interface
+      and how to influence it.
     </para>
   </refsect1>
 
@@ -43,32 +55,12 @@
       online here</ulink>).
     </para>
     <para>
-      Note that the polkit actions ending in
-      <literal>-system</literal> typically requires administrator
-      authentication and are used for devices not considered
-      <quote>removable</quote> (devices considered removable include
-      USB attached storage, Flash media, optical discs etc.). The udev
-      property <literal>UDISKS_SYSTEM</literal> can be used to
-      override this on a per-device basis, see below.
-    </para>
-    <para>
-      The <literal>x-udisks-auth</literal> option can be used in the
-      <filename>/etc/fstab</filename> and
+      Note that the <literal>x-udisks-auth</literal> option can be
+      used in the <filename>/etc/fstab</filename> and
       <filename>/etc/crypttab</filename> files to specify that
       additional authorization is required to mount resp. unlock the
       device (typically requiring the user to authenticate as an
       administrator).
-    </para>
-  </refsect1>
-
-  <refsect1><title>WHAT THE USER SEES</title>
-    <para>
-      udisks operates on the system-level and is not per se concerned
-      with what a desktop user interface shows the user. For GNOME see
-      these <ulink
-      url="http://git.gnome.org/browse/gvfs/tree/monitor/udisks2/what-is-shown.txt">GVfs
-      notes</ulink> about what is shown in the desktop user interface
-      and how to influence it.
     </para>
   </refsect1>
 
@@ -153,64 +145,76 @@
   <refsect1><title>API STABILITY</title>
     <para>
       udisks guarantees a stable D-Bus API within the same major
-      version and this guarantee extends to the client-side
-      library. Additionally several major versions of udisks can be
-      installed and operate at the same time although interoperability
-      may be limited - for example, a device mounted using the udisks
-      1.x API may require additional authorization if attempting to
-      unmount it through the the 2.x API.
+      version and this guarantee also extends to the client-side
+      library <filename>libudisks2</filename>. Additionally, several
+      major versions of udisks can be installed and operate at the
+      same time although interoperability may be limited - for
+      example, a device mounted using the udisks N.x API may require
+      additional authorization if attempting to unmount it through the
+      the (N-1).x API.
     </para>
     <para>
-      We do not anticipate breaking API but we do reserve the right to
-      do so and if we do, we promise to bump the major version and
-      ensure the new version of udisks is parallel-installable (except
-      that tools and man pages from the old version may require a
-      suffix to be parallel installable).
-    </para>
-    <para>
-      udisks is not designed to be bundled with applications - it is
-      software that operates on the system-level and requires deep
-      integration with other system-level software.
-    </para>
-    <para>
-      There is no guarantee that the
+      The udisks developers do not anticipate breaking API but does
+      reserve the right to do so and if it happens, promises to bump
+      the major version and ensure the new major version of udisks is
+      parallel-installable with any older major version. However, note
+      that programs, man pages and other artifacts may change name
+      (for example, adopt a <quote>2</quote> suffix) to make room for
+      the next major version. Therefore, applications can not rely on
+      tools like e.g.
       <link linkend="udisksctl.1"><citerefentry><refentrytitle>udisksctl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>
-      options and command-line switches will remain stable. Use the
-      D-Bus API instead - either directly or via
+      to be available. Additionally, there is no guarantee that the
+      options, command-line switches etc. of command-line tools or
+      similar will remain stable.
+    </para>
+    <para>
+      Instead, applications should only use the D-Bus API, the
+      <filename>libudisks2</filename> library or tools such as
       <citerefentry>
         <refentrytitle>dbus-send</refentrytitle><manvolnum>1</manvolnum>
-      </citerefentry>.
+      </citerefentry>
+      or
+      <citerefentry>
+        <refentrytitle>gdbus</refentrytitle><manvolnum>1</manvolnum>
+      </citerefentry>
+      to interact with the D-Bus API.
     </para>
   </refsect1>
 
   <refsect1><title>AUDIENCE</title>
     <para>
-      The intended audience of udisks include developers of
-      higher-level layers of the operating system, for example the
-      desktop shell (such as
-      <ulink url="http://www.gnome.org">GNOME</ulink>)
-      and disk management applications (e.g. GNOME's
-      <ulink url="https://live.gnome.org/Design/Apps/Disks">Disks</ulink>
-      application).  Software on this level typically depend on a specific
-      (major) version of udisks and may even have support for previous
-      versions of udisks or alternative interfaces performing the same
-      role as udisks (such as the now deprecated hal daemon).
+      The intended audience of udisks include operating system
+      developers working on the higher-level parts of the operating
+      system, for example the desktop shell (such as <ulink
+      url="http://www.gnome.org">GNOME</ulink>) and disk management
+      applications (e.g. GNOME's <ulink
+      url="https://live.gnome.org/Design/Apps/Disks">Disks</ulink>
+      application).  Software on this level typically depend on a
+      specific (major) version of udisks and may even have support for
+      previous versions of udisks or alternative interfaces performing
+      the same role as udisks (such as the now deprecated hal daemon).
     </para>
     <para>
-      While udisks provides a stable API and a clear upgrade path, it
-      may not be appropriate for 3rd party applications to depend on
-      it.  For example, if the operating system has switched to udisks
-      2.x and your application is still using the udisks 1.x API, your
-      application will not work unless udisks 1.x is installed. While
-      this will still work (the user installing udisks 1.x before
-      installing your application), it may not be desirable. Hence, if
-      you do not want to tie yourself to a specific version of the
-      operating system or desktop shell, you should not use
-      udisks. Other viable options include
+      While udisks indeed provides a stable API and a clear upgrade
+      path, it may not be an appropriate dependency for third party
+      applications. For example, if the operating system switches to
+      udisks version N.x and an application is still using the udisks
+      (N-1).x API, the application will not work unless udisks (N-1).x
+      is installed. While this situation is still workable (since both
+      udisks N.x and udisks (N-1).x can be installed) it may not be
+      desirable to ask the user to install the old version - in fact,
+      the operating system vendor may not even provide a packaged
+      version of the old version. Hence, if an application does not
+      want to tie itself to a specific version of the operating
+      system, it should not be using udisks.
+    </para>
+    <para>
+      Viable alternatives to udisks include APIs that are guaranteed
+      to be around for longer time-frames, including:
       <itemizedlist>
         <listitem>
           <para>
-            Low-level guaranteed-stable APIs and commands such as e.g.
+            Low-level APIs and commands such as e.g.
             <ulink url="http://en.wikipedia.org/wiki/Sysfs">sysfs</ulink>,
             <ulink url="http://www.freedesktop.org/software/systemd/libudev/">libudev</ulink>,
             <ulink url="http://www.kernel.org/doc/Documentation/filesystems/proc.txt">/proc/self/mountinfo</ulink> and
@@ -219,14 +223,14 @@
         </listitem>
         <listitem>
           <para>
-            High-level guaranteed-stable APIs such as <ulink url="http://developer.gnome.org/gio/stable/volume_mon.html">GVolumeMonitor</ulink>.
+            High-level APIs such as <ulink url="http://developer.gnome.org/gio/stable/volume_mon.html">GVolumeMonitor</ulink>.
           </para>
         </listitem>
       </itemizedlist>
-      In particular, if you are writing a desktop application, it is a
-      much better idea to use e.g. GVolumeMonitor than udisks since
-      this will make your application show the same devices as the
-      desktop shell (e.g. file manager, file chooser and so on).
+      In particular, for desktop applications it is a much better idea
+      to use something like GVolumeMonitor since it will make the
+      application show the same devices as the desktop shell
+      (e.g. file manager, file chooser and so on) is showing.
     </para>
   </refsect1>
 
