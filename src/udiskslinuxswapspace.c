@@ -176,6 +176,12 @@ handle_start (UDisksSwapspace        *swapspace,
                                                     object,
                                                     "org.freedesktop.udisks2.manage-swapspace",
                                                     options,
+                                                    /* Translators: Shown in authentication dialog when the user
+                                                     * requests activating a swap device.
+                                                     *
+                                                     * Do not translate $(udisks2.device), it's a placeholder and
+                                                     * will be replaced by the name of the drive/device in question
+                                                     */
                                                     N_("Authentication is required to activate swapspace on $(udisks2.device)"),
                                                     invocation))
     goto out;
@@ -244,6 +250,12 @@ handle_stop (UDisksSwapspace        *swapspace,
                                                     object,
                                                     "org.freedesktop.udisks2.manage-swapspace",
                                                     options,
+                                                    /* Translators: Shown in authentication dialog when the user
+                                                     * requests deactivating a swap device.
+                                                     *
+                                                     * Do not translate $(udisks2.device), it's a placeholder and
+                                                     * will be replaced by the name of the drive/device in question
+                                                     */
                                                     N_("Authentication is required to deactivate swapspace on $(udisks2.device)"),
                                                     invocation))
     goto out;

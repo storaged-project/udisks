@@ -1257,6 +1257,12 @@ handle_mount (UDisksFilesystem       *filesystem,
       if (!has_option (fstab_mount_options, "x-udisks-auth"))
         {
           action_id = "org.freedesktop.udisks2.filesystem-mount";
+          /* Translators: Shown in authentication dialog when the user
+           * requests mounting a filesystem.
+           *
+           * Do not translate $(udisks2.device), it's a placeholder and
+           * will be replaced by the name of the drive/device in question
+           */
           message = N_("Authentication is required to mount $(udisks2.device)");
           if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
             {
@@ -1315,7 +1321,17 @@ handle_mount (UDisksFilesystem       *filesystem,
                                                                 object,
                                                                 "org.freedesktop.udisks2.filesystem-fstab",
                                                                 options,
-                                                                N_("Authentication is required to mount the fstab device $(udisks2.device)"),
+                                                                /* Translators: Shown in authentication dialog when the
+                                                                 * user requests mounting a filesystem that is in
+                                                                 * /etc/fstab file with the x-udisks-auth option.
+                                                                 *
+                                                                 * Do not translate $(udisks2.device), it's a
+                                                                 * placeholder and will be replaced by the name of
+                                                                 * the drive/device in question
+                                                                 *
+                                                                 * Do not translate /etc/fstab
+                                                                 */
+                                                                N_("Authentication is required to mount $(udisks2.device) referenced in /etc/fstab"),
                                                                 invocation))
                 goto out;
               mount_fstab_as_root = TRUE;
@@ -1402,6 +1418,12 @@ handle_mount (UDisksFilesystem       *filesystem,
    * may be racing with other threads...
    */
   action_id = "org.freedesktop.udisks2.filesystem-mount";
+  /* Translators: Shown in authentication dialog when the user
+   * requests mounting a filesystem.
+   *
+   * Do not translate $(udisks2.device), it's a placeholder and
+   * will be replaced by the name of the drive/device in question
+   */
   message = N_("Authentication is required to mount $(udisks2.device)");
   if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
     {
@@ -1643,7 +1665,17 @@ handle_unmount (UDisksFilesystem       *filesystem,
                                                                 object,
                                                                 "org.freedesktop.udisks2.filesystem-fstab",
                                                                 options,
-                                                                N_("Authentication is required to unmount the fstab device $(udisks2.device)"),
+                                                                /* Translators: Shown in authentication dialog when the
+                                                                 * user requests unmounting a filesystem that is in
+                                                                 * /etc/fstab file with the x-udisks-auth option.
+                                                                 *
+                                                                 * Do not translate $(udisks2.device), it's a
+                                                                 * placeholder and will be replaced by the name of
+                                                                 * the drive/device in question
+                                                                 *
+                                                                 * Do not translate /etc/fstab
+                                                                 */
+                                                                N_("Authentication is required to unmount $(udisks2.device) referenced in /etc/fstab"),
                                                                 invocation))
                 goto out;
               unmount_fstab_as_root = TRUE;
@@ -1683,12 +1715,18 @@ handle_unmount (UDisksFilesystem       *filesystem,
       const gchar *message;
 
       action_id = "org.freedesktop.udisks2.filesystem-unmount-others";
+      /* Translators: Shown in authentication dialog when the user
+       * requests unmounting a filesystem previously mounted by
+       * another user.
+       *
+       * Do not translate $(udisks2.device), it's a placeholder and
+       * will be replaced by the name of the drive/device in question
+       */
       message = N_("Authentication is required to unmount $(udisks2.device) mounted by another user");
       /* if the device is shared, use another action that defaults to 'yes' */
       if (shared_between_seats (daemon, block))
         {
           action_id = "org.freedesktop.udisks2.filesystem-unmount-others-shared";
-          message = N_("Authentication is required to unmount $(udisks2.device) mounted by another user");
         }
 
       if (!udisks_daemon_util_check_authorization_sync (daemon,
@@ -1901,6 +1939,12 @@ handle_set_label (UDisksFilesystem       *filesystem,
     }
 
   action_id = "org.freedesktop.udisks2.modify-device";
+  /* Translators: Shown in authentication dialog when the user
+   * requests changing the filesystem label.
+   *
+   * Do not translate $(udisks2.device), it's a placeholder and
+   * will be replaced by the name of the drive/device in question
+   */
   message = N_("Authentication is required to change the filesystem label on $(udisks2.device)");
   if (udisks_block_get_hint_system (block))
     {

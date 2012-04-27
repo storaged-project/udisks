@@ -207,6 +207,13 @@ handle_delete (UDisksLoop             *loop,
                                                         object,
                                                         "org.freedesktop.udisks2.loop-delete-others",
                                                         options,
+                                                        /* Translators: Shown in authentication dialog when the user
+                                                         * requests deleting a loop device previously set up by
+                                                         * another user.
+                                                         *
+                                                         * Do not translate $(udisks2.device), it's a placeholder and
+                                                         * will be replaced by the name of the drive/device in question
+                                                         */
                                                         N_("Authentication is required to delete the loop device $(udisks2.device)"),
                                                         invocation))
         goto out;

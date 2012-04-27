@@ -282,6 +282,9 @@ handle_loop_setup (UDisksManager          *object,
                                                     NULL,
                                                     "org.freedesktop.udisks2.loop-setup",
                                                     options,
+                                                    /* Translators: Shown in authentication dialog when the user
+                                                     * requests setting up a loop device.
+                                                     */
                                                     N_("Authentication is required to set up a loop device"),
                                                     invocation))
     goto out;

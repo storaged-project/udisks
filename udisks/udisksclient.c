@@ -823,41 +823,41 @@ static const struct
   const gchar *drive_icon;
 } media_data[] =
 {
-  {"thumb",      N_("Thumb"),        N_("Thumb"),        "media-removable",   DRIVE_TYPE_DRIVE, "media-removable"},
+  {"thumb",      NC_("media-type", "Thumb"),        NC_("media-type", "Thumb"),        "media-removable",   DRIVE_TYPE_DRIVE, "media-removable"},
 
-  {"floppy",     N_("Floppy"),       N_("Floppy"), "media-floppy",      DRIVE_TYPE_DISK, "drive-removable-media-floppy"},
-  {"floppy_zip", N_("Zip"),          N_("Zip"),    "media-floppy-jaz",  DRIVE_TYPE_DISK, "drive-removable-media-floppy-jaz"},
-  {"floppy_jaz", N_("Jaz"),          N_("Jaz"),    "media-floppy-zip",  DRIVE_TYPE_DISK, "drive-removable-media-floppy-zip"},
+  {"floppy",     NC_("media-type", "Floppy"),       NC_("media-type", "Floppy"), "media-floppy",      DRIVE_TYPE_DISK, "drive-removable-media-floppy"},
+  {"floppy_zip", NC_("media-type", "Zip"),          NC_("media-type", "Zip"),    "media-floppy-jaz",  DRIVE_TYPE_DISK, "drive-removable-media-floppy-jaz"},
+  {"floppy_jaz", NC_("media-type", "Jaz"),          NC_("media-type", "Jaz"),    "media-floppy-zip",  DRIVE_TYPE_DISK, "drive-removable-media-floppy-zip"},
 
-  {"flash",      N_("Flash"),        N_("Flash"),        "media-flash",       DRIVE_TYPE_CARD, "drive-removable-media-flash"},
-  {"flash_ms",   N_("MemoryStick"),  N_("MemoryStick"),  "media-flash-ms",    DRIVE_TYPE_CARD, "drive-removable-media-flash-ms"},
-  {"flash_sm",   N_("SmartMedia"),   N_("SmartMedia"),   "media-flash-sm",    DRIVE_TYPE_CARD, "drive-removable-media-flash-sm"},
-  {"flash_cf",   N_("CompactFlash"), N_("CompactFlash"), "media-flash-cf",    DRIVE_TYPE_CARD, "drive-removable-media-flash-cf"},
-  {"flash_mmc",  N_("MMC"),          N_("SD"),           "media-flash-mmc",   DRIVE_TYPE_CARD, "drive-removable-media-flash-mmc"},
-  {"flash_sd",   N_("SD"),           N_("SD"),           "media-flash-sd",    DRIVE_TYPE_CARD, "drive-removable-media-flash-sd"},
-  {"flash_sdxc", N_("SDXC"),         N_("SD"),           "media-flash-sd-xc", DRIVE_TYPE_CARD, "drive-removable-media-flash-sd-xc"},
-  {"flash_sdhc", N_("SDHC"),         N_("SD"),           "media-flash-sd-hc", DRIVE_TYPE_CARD, "drive-removable-media-flash-sd-hc"},
+  {"flash",      NC_("media-type", "Flash"),        NC_("media-type", "Flash"),        "media-flash",       DRIVE_TYPE_CARD, "drive-removable-media-flash"},
+  {"flash_ms",   NC_("media-type", "MemoryStick"),  NC_("media-type", "MemoryStick"),  "media-flash-ms",    DRIVE_TYPE_CARD, "drive-removable-media-flash-ms"},
+  {"flash_sm",   NC_("media-type", "SmartMedia"),   NC_("media-type", "SmartMedia"),   "media-flash-sm",    DRIVE_TYPE_CARD, "drive-removable-media-flash-sm"},
+  {"flash_cf",   NC_("media-type", "CompactFlash"), NC_("media-type", "CompactFlash"), "media-flash-cf",    DRIVE_TYPE_CARD, "drive-removable-media-flash-cf"},
+  {"flash_mmc",  NC_("media-type", "MMC"),          NC_("media-type", "SD"),           "media-flash-mmc",   DRIVE_TYPE_CARD, "drive-removable-media-flash-mmc"},
+  {"flash_sd",   NC_("media-type", "SD"),           NC_("media-type", "SD"),           "media-flash-sd",    DRIVE_TYPE_CARD, "drive-removable-media-flash-sd"},
+  {"flash_sdxc", NC_("media-type", "SDXC"),         NC_("media-type", "SD"),           "media-flash-sd-xc", DRIVE_TYPE_CARD, "drive-removable-media-flash-sd-xc"},
+  {"flash_sdhc", NC_("media-type", "SDHC"),         NC_("media-type", "SD"),           "media-flash-sd-hc", DRIVE_TYPE_CARD, "drive-removable-media-flash-sd-hc"},
 
-  {"optical_cd",             N_("CD-ROM"),    N_("CD"),      "media-optical-cd-rom",        DRIVE_TYPE_DISC, "drive-optical"},
-  {"optical_cd_r",           N_("CD-R"),      N_("CD"),      "media-optical-cd-r",          DRIVE_TYPE_DISC, "drive-optical-recorder"},
-  {"optical_cd_rw",          N_("CD-RW"),     N_("CD"),      "media-optical-cd-rw",         DRIVE_TYPE_DISC, "drive-optical-recorder"},
-  {"optical_dvd",            N_("DVD"),       N_("DVD"),     "media-optical-dvd-rom",       DRIVE_TYPE_DISC, "drive-optical"},
-  {"optical_dvd_r",          N_("DVD-R"),     N_("DVD"),     "media-optical-dvd-r",         DRIVE_TYPE_DISC, "drive-optical-recorder"},
-  {"optical_dvd_rw",         N_("DVD-RW"),    N_("DVD"),     "media-optical-dvd-rw",        DRIVE_TYPE_DISC, "drive-optical-recorder"},
-  {"optical_dvd_ram",        N_("DVD-RAM"),   N_("DVD"),     "media-optical-dvd-ram",       DRIVE_TYPE_DISC, "drive-optical-recorder"},
-  {"optical_dvd_plus_r",     N_("DVD+R"),     N_("DVD"),     "media-optical-dvd-r-plus",    DRIVE_TYPE_DISC, "drive-optical-recorder"},
-  {"optical_dvd_plus_rw",    N_("DVD+RW"),    N_("DVD"),     "media-optical-dvd-rw-plus",   DRIVE_TYPE_DISC, "drive-optical-recorder"},
-  {"optical_dvd_plus_r_dl",  N_("DVD+R DL"),  N_("DVD"),     "media-optical-dvd-dl-r-plus", DRIVE_TYPE_DISC, "drive-optical-recorder"},
-  {"optical_dvd_plus_rw_dl", N_("DVD+RW DL"), N_("DVD"),     "media-optical-dvd-dl-r-plus", DRIVE_TYPE_DISC, "drive-optical-recorder"},
-  {"optical_bd",             N_("BD-ROM"),    N_("Blu-Ray"), "media-optical-bd-rom",        DRIVE_TYPE_DISC, "drive-optical"},
-  {"optical_bd_r",           N_("BD-R"),      N_("Blu-Ray"), "media-optical-bd-r",          DRIVE_TYPE_DISC, "drive-optical-recorder"},
-  {"optical_bd_re",          N_("BD-RE"),     N_("Blu-Ray"), "media-optical-bd-re",         DRIVE_TYPE_DISC, "drive-optical-recorder"},
-  {"optical_hddvd",          N_("HDDVD"),     N_("HDDVD"),   "media-optical-hddvd-rom",     DRIVE_TYPE_DISC, "drive-optical"},
-  {"optical_hddvd_r",        N_("HDDVD-R"),   N_("HDDVD"),   "media-optical-hddvd-r",       DRIVE_TYPE_DISC, "drive-optical-recorder"},
-  {"optical_hddvd_rw",       N_("HDDVD-RW"),  N_("HDDVD"),   "media-optical-hddvd-rw",      DRIVE_TYPE_DISC, "drive-optical-recorder"},
-  {"optical_mo",             N_("MO"),        N_("CD"),      "media-optical-mo",            DRIVE_TYPE_DISC, "drive-optical"},
-  {"optical_mrw",            N_("MRW"),       N_("CD"),      "media-optical-mrw",           DRIVE_TYPE_DISC, "drive-optical-recorder"},
-  {"optical_mrw_w",          N_("MRW-W"),     N_("CD"),      "media-optical-mrw-w",         DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_cd",             NC_("media-type", "CD-ROM"),    NC_("media-type", "CD"),      "media-optical-cd-rom",        DRIVE_TYPE_DISC, "drive-optical"},
+  {"optical_cd_r",           NC_("media-type", "CD-R"),      NC_("media-type", "CD"),      "media-optical-cd-r",          DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_cd_rw",          NC_("media-type", "CD-RW"),     NC_("media-type", "CD"),      "media-optical-cd-rw",         DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_dvd",            NC_("media-type", "DVD"),       NC_("media-type", "DVD"),     "media-optical-dvd-rom",       DRIVE_TYPE_DISC, "drive-optical"},
+  {"optical_dvd_r",          NC_("media-type", "DVD-R"),     NC_("media-type", "DVD"),     "media-optical-dvd-r",         DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_dvd_rw",         NC_("media-type", "DVD-RW"),    NC_("media-type", "DVD"),     "media-optical-dvd-rw",        DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_dvd_ram",        NC_("media-type", "DVD-RAM"),   NC_("media-type", "DVD"),     "media-optical-dvd-ram",       DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_dvd_plus_r",     NC_("media-type", "DVD+R"),     NC_("media-type", "DVD"),     "media-optical-dvd-r-plus",    DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_dvd_plus_rw",    NC_("media-type", "DVD+RW"),    NC_("media-type", "DVD"),     "media-optical-dvd-rw-plus",   DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_dvd_plus_r_dl",  NC_("media-type", "DVD+R DL"),  NC_("media-type", "DVD"),     "media-optical-dvd-dl-r-plus", DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_dvd_plus_rw_dl", NC_("media-type", "DVD+RW DL"), NC_("media-type", "DVD"),     "media-optical-dvd-dl-r-plus", DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_bd",             NC_("media-type", "BD-ROM"),    NC_("media-type", "Blu-Ray"), "media-optical-bd-rom",        DRIVE_TYPE_DISC, "drive-optical"},
+  {"optical_bd_r",           NC_("media-type", "BD-R"),      NC_("media-type", "Blu-Ray"), "media-optical-bd-r",          DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_bd_re",          NC_("media-type", "BD-RE"),     NC_("media-type", "Blu-Ray"), "media-optical-bd-re",         DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_hddvd",          NC_("media-type", "HDDVD"),     NC_("media-type", "HDDVD"),   "media-optical-hddvd-rom",     DRIVE_TYPE_DISC, "drive-optical"},
+  {"optical_hddvd_r",        NC_("media-type", "HDDVD-R"),   NC_("media-type", "HDDVD"),   "media-optical-hddvd-r",       DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_hddvd_rw",       NC_("media-type", "HDDVD-RW"),  NC_("media-type", "HDDVD"),   "media-optical-hddvd-rw",      DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_mo",             NC_("media-type", "MO"),        NC_("media-type", "CD"),      "media-optical-mo",            DRIVE_TYPE_DISC, "drive-optical"},
+  {"optical_mrw",            NC_("media-type", "MRW"),       NC_("media-type", "CD"),      "media-optical-mrw",           DRIVE_TYPE_DISC, "drive-optical-recorder"},
+  {"optical_mrw_w",          NC_("media-type", "MRW-W"),     NC_("media-type", "CD"),      "media-optical-mrw-w",         DRIVE_TYPE_DISC, "drive-optical-recorder"},
 };
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1103,7 +1103,7 @@ udisks_client_get_drive_info (UDisksClient  *client,
             {
               if (desc_str->len > 0)
                 g_string_append (desc_str, "/");
-              g_string_append (desc_str, _(media_data[n].media_family));
+              g_string_append (desc_str, g_dpgettext2 (GETTEXT_PACKAGE, "media-type", media_data[n].media_family));
             }
           desc_type = media_data[n].media_type;
         }
@@ -1121,16 +1121,20 @@ udisks_client_get_drive_info (UDisksClient  *client,
                       g_assert_not_reached ();
                       break;
                     case DRIVE_TYPE_DRIVE:
-                      media_description = g_strdup_printf (_("%s Drive"), _(media_data[n].media_name));
+                      /* Translators: Use to describe drive without removable media. The %s is the type, e.g. 'Thumb' */
+                      media_description = g_strdup_printf (_("%s Drive"), g_dpgettext2 (GETTEXT_PACKAGE, "media-type", media_data[n].media_name));
                       break;
                     case DRIVE_TYPE_DISK:
-                      media_description = g_strdup_printf (_("%s Disk"), _(media_data[n].media_name));
+                      /* Translators: Use to describe generic media. The %s is the type, e.g. 'Zip' or 'Floppy' */
+                      media_description = g_strdup_printf (_("%s Disk"), g_dpgettext2 (GETTEXT_PACKAGE, "media-type", media_data[n].media_name));
                       break;
                     case DRIVE_TYPE_CARD:
-                      media_description = g_strdup_printf (_("%s Card"), _(media_data[n].media_name));
+                      /* Translators: Use to describe flash media. The %s is the type, e.g. 'SD' or 'CompactFlash' */
+                      media_description = g_strdup_printf (_("%s Card"), g_dpgettext2 (GETTEXT_PACKAGE, "media-type", media_data[n].media_name));
                       break;
                     case DRIVE_TYPE_DISC:
-                      media_description = g_strdup_printf (_("%s Disc"), _(media_data[n].media_name));
+                      /* Translators: Use to describe optical discs. The %s is the type, e.g. 'CD-R' or 'DVD-ROM' */
+                      media_description = g_strdup_printf (_("%s Disc"), g_dpgettext2 (GETTEXT_PACKAGE, "media-type", media_data[n].media_name));
                       break;
                     }
                 }
@@ -1147,10 +1151,12 @@ udisks_client_get_drive_info (UDisksClient  *client,
         {
           if (size_str != NULL)
             {
+              /* Translators: Use to describe a drive. The %s is the size, e.g. '20 GB' */
               description = g_strdup_printf (_("%s Drive"), size_str);
             }
           else
             {
+              /* Translators: Use to describe a drive (removable media or size not known) */
               description = g_strdup (_("Drive"));
             }
         }
@@ -1160,10 +1166,12 @@ udisks_client_get_drive_info (UDisksClient  *client,
             {
               if (size_str != NULL)
                 {
+                  /* Translators: Use to describe a solid-state drive (SSD). The %s is the size, e.g. '20 GB'.  */
                   description = g_strdup_printf (_("%s Disk"), size_str);
                 }
               else
                 {
+                  /* Translators: Use to describe a solid-state drive (SSD) (removable media or size not known) */
                   description = g_strdup (_("Disk"));
                 }
             }
@@ -1171,10 +1179,12 @@ udisks_client_get_drive_info (UDisksClient  *client,
             {
               if (size_str != NULL)
                 {
+                  /* Translators: Use to describe a hard-disk drive (HDD). The %s is the size, e.g. '20 GB'.  */
                   description = g_strdup_printf (_("%s Hard Disk"), size_str);
                 }
               else
                 {
+                  /* Translators: Use to describe a hard-disk drive (HDD) (removable media or size not known) */
                   description = g_strdup (_("Hard Disk"));
                 }
             }
@@ -1182,6 +1192,7 @@ udisks_client_get_drive_info (UDisksClient  *client,
       break;
 
     case DRIVE_TYPE_CARD:
+      /* Translators: Use to describe a card reader. The %s is the card type e.g. 'CompactFlash'.  */
       description = g_strdup_printf (_("%s Card Reader"), desc_str->str);
       break;
 
@@ -1189,9 +1200,18 @@ udisks_client_get_drive_info (UDisksClient  *client,
     case DRIVE_TYPE_DISK: /* explicit fall-through */
     case DRIVE_TYPE_DISC:
       if (!media_removable && size_str != NULL)
-        description = g_strdup_printf (_("%s %s Drive"), size_str, desc_str->str);
+        {
+          /* Translators: Use to describe drive. The first %s is the size e.g. '20 GB' and the
+           * second %s is the drive type e.g. 'Thumb'.
+           */
+          description = g_strdup_printf (_("%s %s Drive"), size_str, desc_str->str);
+        }
       else
-        description = g_strdup_printf (_("%s Drive"), desc_str->str);
+        {
+          /* Translators: Use to describe drive. The first %s is the drive type e.g. 'Thumb'.
+           */
+          description = g_strdup_printf (_("%s Drive"), desc_str->str);
+        }
       break;
     }
   g_string_free (desc_str, TRUE);
@@ -1364,20 +1384,48 @@ udisks_client_get_partition_info (UDisksClient    *client,
   if (g_strcmp0 (udisks_partition_table_get_type_ (table), "dos") == 0)
     {
       if (flags & 0x80)
-        add_item (&flags_str, _("Bootable"));
+        {
+          /* Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for a partition */
+          add_item (&flags_str, _("Bootable"));
+        }
     }
   else if (g_strcmp0 (udisks_partition_table_get_type_ (table), "gpt") == 0)
     {
       if (flags & (1ULL<<0))
-        add_item (&flags_str, _("System"));
+        {
+          /* Translators: Corresponds to the GPT "system" flag for a partition,
+           * see http://en.wikipedia.org/wiki/GUID_Partition_Table
+           */
+          add_item (&flags_str, _("System"));
+        }
       if (flags & (1ULL<<2))
-        add_item (&flags_str, _("Legacy BIOS Bootable"));
+        {
+          /* Translators: Corresponds to the GPT "legacy bios bootable" flag for a partition,
+           * see http://en.wikipedia.org/wiki/GUID_Partition_Table
+           */
+          add_item (&flags_str, _("Legacy BIOS Bootable"));
+        }
       if (flags & (1ULL<<60))
-        add_item (&flags_str, _("Read-only"));
+        {
+          /* Translators: Corresponds to the GPT "read-only" flag for a partition,
+           * see http://en.wikipedia.org/wiki/GUID_Partition_Table
+           */
+          add_item (&flags_str, _("Read-only"));
+        }
       if (flags & (1ULL<<62))
-        add_item (&flags_str, _("Hidden"));
+        {
+          /* Translators: Corresponds to the GPT "hidden" flag for a partition,
+           * see http://en.wikipedia.org/wiki/GUID_Partition_Table
+           */
+          add_item (&flags_str, _("Hidden"));
+        }
       if (flags & (1ULL<<63))
-        add_item (&flags_str, _("No Automount"));
+        {
+          /* Translators: Corresponds to the GPT "no automount" flag for a partition,
+           * see http://en.wikipedia.org/wiki/GUID_Partition_Table
+           */
+          add_item (&flags_str, _("No Automount"));
+        }
     }
 
   type_str = udisks_client_get_partition_type_for_display (client,
@@ -1399,6 +1447,7 @@ udisks_client_get_partition_info (UDisksClient    *client,
   if (ret == NULL || strlen (ret) == 0)
     {
       g_free (ret);
+      /* Translators: The Partition info when unknown */
       ret = g_strdup (C_("partition-info", "Unknown"));
     }
 
@@ -1892,47 +1941,47 @@ udisks_client_get_media_compat_for_display (UDisksClient       *client,
       if (g_strcmp0 (media, "flash_cf") == 0)
         {
           /* Translators: This word is used to describe the media inserted into a device */
-          media_name = _("CompactFlash");
+          media_name = C_("media", "CompactFlash");
         }
       else if (g_strcmp0 (media, "flash_ms") == 0)
         {
           /* Translators: This word is used to describe the media inserted into a device */
-          media_name = _("MemoryStick");
+          media_name = C_("media", "MemoryStick");
         }
       else if (g_strcmp0 (media, "flash_sm") == 0)
         {
           /* Translators: This word is used to describe the media inserted into a device */
-          media_name = _("SmartMedia");
+          media_name = C_("media", "SmartMedia");
         }
       else if (g_strcmp0 (media, "flash_sd") == 0)
         {
           /* Translators: This word is used to describe the media inserted into a device */
-          media_name = _("SecureDigital");
+          media_name = C_("media", "SecureDigital");
         }
       else if (g_strcmp0 (media, "flash_sdhc") == 0)
         {
           /* Translators: This word is used to describe the media inserted into a device */
-          media_name = _("SD High Capacity");
+          media_name = C_("media", "SD High Capacity");
         }
       else if (g_strcmp0 (media, "floppy") == 0)
         {
           /* Translators: This word is used to describe the media inserted into a device */
-          media_name = _("Floppy");
+          media_name = C_("media", "Floppy");
         }
       else if (g_strcmp0 (media, "floppy_zip") == 0)
         {
           /* Translators: This word is used to describe the media inserted into a device */
-          media_name = _("Zip");
+          media_name = C_("media", "Zip");
         }
       else if (g_strcmp0 (media, "floppy_jaz") == 0)
         {
           /* Translators: This word is used to describe the media inserted into a device */
-          media_name = _("Jaz");
+          media_name = C_("media", "Jaz");
         }
       else if (g_str_has_prefix (media, "flash"))
         {
           /* Translators: This word is used to describe the media inserted into a device */
-          media_name = _("Flash");
+          media_name = C_("media", "Flash");
         }
       else if (g_str_has_prefix (media, "optical_cd"))
         {
@@ -1966,7 +2015,7 @@ udisks_client_get_media_compat_for_display (UDisksClient       *client,
       /* Translators: This word is used to describe the optical disc type, it may appear
        * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
        */
-      g_string_append (result, _("CD"));
+      g_string_append (result, C_("disc-type", "CD"));
     }
   if (optical_dvd)
     {
@@ -1975,7 +2024,7 @@ udisks_client_get_media_compat_for_display (UDisksClient       *client,
       /* Translators: This word is used to describe the optical disc type, it may appear
        * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
        */
-      g_string_append (result, _("DVD"));
+      g_string_append (result, C_("disc-type", "DVD"));
     }
   if (optical_bd)
     {
@@ -1984,7 +2033,7 @@ udisks_client_get_media_compat_for_display (UDisksClient       *client,
       /* Translators: This word is used to describe the optical disc type, it may appear
        * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
        */
-      g_string_append (result, _("Blu-Ray"));
+      g_string_append (result, C_("disc-type", "Blu-Ray"));
     }
   if (optical_hddvd)
     {
@@ -1993,7 +2042,7 @@ udisks_client_get_media_compat_for_display (UDisksClient       *client,
       /* Translators: This word is used to describe the optical disc type, it may appear
        * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
        */
-      g_string_append (result, _("HDDVD"));
+      g_string_append (result, C_("disc-type", "HDDVD"));
     }
 
   if (result->len > 0)
@@ -2014,41 +2063,41 @@ const static struct
   const gchar *short_name;
 } id_type[] =
 {
-  {"filesystem", "vfat",              "FAT12", N_("FAT (12-bit version)"),              N_("FAT")},
-  {"filesystem", "vfat",              "FAT16", N_("FAT (16-bit version)"),              N_("FAT")},
-  {"filesystem", "vfat",              "FAT32", N_("FAT (32-bit version)"),              N_("FAT")},
-  {"filesystem", "ntfs",              "*",     N_("FAT (version %s)"),                  N_("FAT")},
-  {"filesystem", "vfat",              NULL,    N_("FAT"),                               N_("FAT")},
-  {"filesystem", "ntfs",              "*",     N_("NTFS (version %s)"),                 N_("NTFS")},
-  {"filesystem", "ntfs",              NULL,    N_("NTFS"),                              N_("NTFS")},
-  {"filesystem", "hfs",               NULL,    N_("HFS"),                               N_("HFS")},
-  {"filesystem", "hfsplus",           NULL,    N_("HFS+"),                              N_("HFS+")},
-  {"filesystem", "ext2",              "*",     N_("Ext2 (version %s)"),                 N_("Ext2")},
-  {"filesystem", "ext2",              NULL,    N_("Ext2"),                              N_("Ext2")},
-  {"filesystem", "ext3",              "*",     N_("Ext3 (version %s)"),                 N_("Ext3")},
-  {"filesystem", "ext3",              NULL,    N_("Ext3"),                              N_("Ext3")},
-  {"filesystem", "ext4",              "*",     N_("Ext4 (version %s)"),                 N_("Ext4")},
-  {"filesystem", "ext4",              NULL,    N_("Ext4"),                              N_("Ext4")},
-  {"filesystem", "jdb",               "*",     N_("Journal for Ext (version %s)"),      N_("JDB")},
-  {"filesystem", "jdb",               "*",     N_("Journal for Ext"),                   N_("JDB")},
-  {"filesystem", "xfs",               "*",     N_("XFS (version %s)"),                  N_("XFS")},
-  {"filesystem", "xfs",               NULL,    N_("XFS"),                               N_("XFS")},
+  {"filesystem", "vfat",              "FAT12", NC_("fs-type", "FAT (12-bit version)"),              NC_("fs-type", "FAT")},
+  {"filesystem", "vfat",              "FAT16", NC_("fs-type", "FAT (16-bit version)"),              NC_("fs-type", "FAT")},
+  {"filesystem", "vfat",              "FAT32", NC_("fs-type", "FAT (32-bit version)"),              NC_("fs-type", "FAT")},
+  {"filesystem", "ntfs",              "*",     NC_("fs-type", "FAT (version %s)"),                  NC_("fs-type", "FAT")},
+  {"filesystem", "vfat",              NULL,    NC_("fs-type", "FAT"),                               NC_("fs-type", "FAT")},
+  {"filesystem", "ntfs",              "*",     NC_("fs-type", "NTFS (version %s)"),                 NC_("fs-type", "NTFS")},
+  {"filesystem", "ntfs",              NULL,    NC_("fs-type", "NTFS"),                              NC_("fs-type", "NTFS")},
+  {"filesystem", "hfs",               NULL,    NC_("fs-type", "HFS"),                               NC_("fs-type", "HFS")},
+  {"filesystem", "hfsplus",           NULL,    NC_("fs-type", "HFS+"),                              NC_("fs-type", "HFS+")},
+  {"filesystem", "ext2",              "*",     NC_("fs-type", "Ext2 (version %s)"),                 NC_("fs-type", "Ext2")},
+  {"filesystem", "ext2",              NULL,    NC_("fs-type", "Ext2"),                              NC_("fs-type", "Ext2")},
+  {"filesystem", "ext3",              "*",     NC_("fs-type", "Ext3 (version %s)"),                 NC_("fs-type", "Ext3")},
+  {"filesystem", "ext3",              NULL,    NC_("fs-type", "Ext3"),                              NC_("fs-type", "Ext3")},
+  {"filesystem", "ext4",              "*",     NC_("fs-type", "Ext4 (version %s)"),                 NC_("fs-type", "Ext4")},
+  {"filesystem", "ext4",              NULL,    NC_("fs-type", "Ext4"),                              NC_("fs-type", "Ext4")},
+  {"filesystem", "jdb",               "*",     NC_("fs-type", "Journal for Ext (version %s)"),      NC_("fs-type", "JDB")},
+  {"filesystem", "jdb",               "*",     NC_("fs-type", "Journal for Ext"),                   NC_("fs-type", "JDB")},
+  {"filesystem", "xfs",               "*",     NC_("fs-type", "XFS (version %s)"),                  NC_("fs-type", "XFS")},
+  {"filesystem", "xfs",               NULL,    NC_("fs-type", "XFS"),                               NC_("fs-type", "XFS")},
   /* TODO: No ID_FS_VERSION yet for btrfs... */
-  {"filesystem", "btrfs",             NULL,    N_("Btrfs"),                             N_("Btrfs")},
-  {"filesystem", "iso9660",           "*",     N_("ISO 9660 (version %s)"),             N_("ISO9660")},
-  {"filesystem", "iso9660",           NULL,    N_("ISO 9660"),                          N_("ISO9660")},
-  {"filesystem", "udf",               "*",     N_("UDF (version %s)"),                  N_("UDF")},
-  {"filesystem", "udf",               NULL,    N_("UDF"),                               N_("UDF")},
-  {"other",      "swap",              "*",     N_("Swap (version %s)"),                 N_("Swap")},
-  {"other",      "swap",              NULL,    N_("Swap"),                              N_("Swap")},
-  {"raid",       "LVM2_member",       "*",     N_("LVM2 Physical Volume (%s)"),         N_("LVM2 PV")},
-  {"raid",       "LVM2_member",       NULL,    N_("LVM2 Physical Volume"),              N_("LVM2 PV")},
-  {"raid",       "linux_raid_member", "*",     N_("Software RAID Component (version %s)"), N_("MD Raid")},
-  {"raid",       "linux_raid_member", NULL,    N_("Software RAID Component"),           N_("MD Raid")},
-  {"raid",       "zfs_member",        "*",     N_("ZFS Device (ZPool version %s)"),     N_("ZFS (v%s)")},
-  {"raid",       "zfs_member",        NULL,    N_("ZFS Device"),                        N_("ZFS")},
-  {"crypto",     "crypto_LUKS",       "*",     N_("LUKS Encryption (version %s)"),      N_("LUKS")},
-  {"crypto",     "crypto_LUKS",       NULL,    N_("LUKS Encryption"),                   N_("LUKS")},
+  {"filesystem", "btrfs",             NULL,    NC_("fs-type", "Btrfs"),                             NC_("fs-type", "Btrfs")},
+  {"filesystem", "iso9660",           "*",     NC_("fs-type", "ISO 9660 (version %s)"),             NC_("fs-type", "ISO9660")},
+  {"filesystem", "iso9660",           NULL,    NC_("fs-type", "ISO 9660"),                          NC_("fs-type", "ISO9660")},
+  {"filesystem", "udf",               "*",     NC_("fs-type", "UDF (version %s)"),                  NC_("fs-type", "UDF")},
+  {"filesystem", "udf",               NULL,    NC_("fs-type", "UDF"),                               NC_("fs-type", "UDF")},
+  {"other",      "swap",              "*",     NC_("fs-type", "Swap (version %s)"),                 NC_("fs-type", "Swap")},
+  {"other",      "swap",              NULL,    NC_("fs-type", "Swap"),                              NC_("fs-type", "Swap")},
+  {"raid",       "LVM2_member",       "*",     NC_("fs-type", "LVM2 Physical Volume (%s)"),         NC_("fs-type", "LVM2 PV")},
+  {"raid",       "LVM2_member",       NULL,    NC_("fs-type", "LVM2 Physical Volume"),              NC_("fs-type", "LVM2 PV")},
+  {"raid",       "linux_raid_member", "*",     NC_("fs-type", "Software RAID Component (version %s)"), NC_("fs-type", "MD Raid")},
+  {"raid",       "linux_raid_member", NULL,    NC_("fs-type", "Software RAID Component"),           NC_("fs-type", "MD Raid")},
+  {"raid",       "zfs_member",        "*",     NC_("fs-type", "ZFS Device (ZPool version %s)"),     NC_("fs-type", "ZFS (v%s)")},
+  {"raid",       "zfs_member",        NULL,    NC_("fs-type", "ZFS Device"),                        NC_("fs-type", "ZFS")},
+  {"crypto",     "crypto_LUKS",       "*",     NC_("fs-type", "LUKS Encryption (version %s)"),      NC_("fs-type", "LUKS")},
+  {"crypto",     "crypto_LUKS",       NULL,    NC_("fs-type", "LUKS Encryption"),                   NC_("fs-type", "LUKS")},
   {NULL, NULL, NULL, NULL}
 };
 
@@ -2084,18 +2133,18 @@ udisks_client_get_id_for_display (UDisksClient *client,
           if ((id_type[n].version == NULL && strlen (version) == 0))
             {
               if (long_string)
-                ret = g_strdup (_(id_type[n].long_name));
+                ret = g_strdup (g_dpgettext2 (GETTEXT_PACKAGE, "fs-type", id_type[n].long_name));
               else
-                ret = g_strdup (_(id_type[n].short_name));
+                ret = g_strdup (g_dpgettext2 (GETTEXT_PACKAGE, "fs-type", id_type[n].short_name));
               goto out;
             }
           else if ((g_strcmp0 (id_type[n].version, version) == 0 && strlen (version) > 0) ||
                    (g_strcmp0 (id_type[n].version, "*") == 0 && strlen (version) > 0))
             {
               if (long_string)
-                ret = g_strdup_printf (_(id_type[n].long_name), version);
+                ret = g_strdup_printf (g_dpgettext2 (GETTEXT_PACKAGE, "fs-type", id_type[n].long_name), version);
               else
-                ret = g_strdup_printf (_(id_type[n].short_name), version);
+                ret = g_strdup_printf (g_dpgettext2 (GETTEXT_PACKAGE, "fs-type", id_type[n].short_name), version);
               goto out;
             }
         }
@@ -2108,7 +2157,7 @@ udisks_client_get_id_for_display (UDisksClient *client,
           /* Translators: Shown for unknown filesystem types.
            * First %s is the filesystem type, second %s is version.
            */
-          ret = g_strdup_printf (_("Unknown (%s %s)"), type, version);
+          ret = g_strdup_printf (C_("fs-type", "Unknown (%s %s)"), type, version);
         }
       else
         {
@@ -2117,22 +2166,28 @@ udisks_client_get_id_for_display (UDisksClient *client,
               /* Translators: Shown for unknown filesystem types.
                * First %s is the filesystem type.
                */
-              ret = g_strdup_printf (_("Unknown (%s)"), type);
+              ret = g_strdup_printf (C_("fs-type", "Unknown (%s)"), type);
             }
           else
             {
               /* Translators: Shown for unknown filesystem types.
                */
-              ret = g_strdup (_("Unknown"));
+              ret = g_strdup (C_("fs-type", "Unknown"));
             }
         }
     }
   else
     {
       if (strlen (type) > 0)
-        ret = g_strdup (type);
+        {
+          ret = g_strdup (type);
+        }
       else
-        ret = g_strdup (_("Unknown"));
+        {
+          /* Translators: Shown for unknown filesystem types.
+           */
+          ret = g_strdup (C_("fs-type", "Unknown"));
+        }
     }
 
  out:
@@ -2147,8 +2202,11 @@ const static struct
   const gchar *name;
 } known_partition_table_types[] =
 {
+  /* Translators: name of partition table format */
   {"dos", N_("Master Boot Record")},
+  /* Translators: name of partition table format */
   {"gpt", N_("GUID Partition Table")},
+  /* Translators: name of partition table format */
   {"apm", N_("Apple Partition Map")},
   {NULL, NULL}
 };
@@ -2191,19 +2249,20 @@ const static struct
   const gchar *name;
 } known_partition_table_subtypes[] =
 {
-  {"dos", "generic",   N_("Generic")},
-  {"dos", "linux",     N_("Linux")},
-  {"dos", "microsoft", N_("Windows")},
-  {"dos", "other",     N_("Other")},
+  /* Translators: name of partition table format */
+  {"dos", "generic",   NC_("partition-subtype", "Generic")},
+  {"dos", "linux",     NC_("partition-subtype", "Linux")},
+  {"dos", "microsoft", NC_("partition-subtype", "Windows")},
+  {"dos", "other",     NC_("partition-subtype", "Other")},
 
-  {"gpt", "generic",   N_("Generic")},
-  {"gpt", "linux",     N_("Linux")},
-  {"gpt", "microsoft", N_("Windows")},
-  {"gpt", "apple",     N_("Mac OS X")},
-  {"gpt", "other",     N_("Other")},
+  {"gpt", "generic",   NC_("partition-subtype", "Generic")},
+  {"gpt", "linux",     NC_("partition-subtype", "Linux")},
+  {"gpt", "microsoft", NC_("partition-subtype", "Windows")},
+  {"gpt", "apple",     NC_("partition-subtype", "Mac OS X")},
+  {"gpt", "other",     NC_("partition-subtype", "Other")},
 
-  {"apm", "apple",     N_("Mac OS X")},
-  {"apm", "microsoft", N_("Windows")},
+  {"apm", "apple",     NC_("partition-subtype", "Mac OS X")},
+  {"apm", "microsoft", NC_("partition-subtype", "Windows")},
   {NULL, NULL}
 };
 
@@ -2230,7 +2289,7 @@ udisks_client_get_partition_table_subtype_for_display (UDisksClient  *client,
       if (g_strcmp0 (known_partition_table_subtypes[n].type,    partition_table_type) == 0 &&
           g_strcmp0 (known_partition_table_subtypes[n].subtype, partition_table_subtype) == 0)
         {
-          ret = _(known_partition_table_subtypes[n].name);
+          ret = g_dpgettext2 (GETTEXT_PACKAGE, "partition-subtype", known_partition_table_subtypes[n].name);
           goto out;
         }
     }
@@ -2290,116 +2349,116 @@ const static struct
   /* see http://en.wikipedia.org/wiki/GUID_Partition_Table */
 
   /* Not associated with any OS */
-  {"gpt", "generic",   "024dee41-33e7-11d3-9d69-0008c781f39f", N_("MBR Partition Scheme"), F_SYSTEM},
-  {"gpt", "generic",   "c12a7328-f81f-11d2-ba4b-00a0c93ec93b", N_("EFI System"), F_SYSTEM},
-  {"gpt", "generic",   "21686148-6449-6e6f-744e-656564454649", N_("BIOS Boot"), F_SYSTEM},
+  {"gpt", "generic",   "024dee41-33e7-11d3-9d69-0008c781f39f", NC_("part-type", "MBR Partition Scheme"), F_SYSTEM},
+  {"gpt", "generic",   "c12a7328-f81f-11d2-ba4b-00a0c93ec93b", NC_("part-type", "EFI System"), F_SYSTEM},
+  {"gpt", "generic",   "21686148-6449-6e6f-744e-656564454649", NC_("part-type", "BIOS Boot"), F_SYSTEM},
   /* Linux */
-  {"gpt", "linux",     "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7", N_("Basic Data"), 0}, /* same as ms bdp */
-  {"gpt", "linux",     "a19d880f-05fc-4d3b-a006-743f0f84911e", N_("Linux RAID"), F_RAID},
-  {"gpt", "linux",     "0657fd6d-a4ab-43c4-84e5-0933c84b4f4f", N_("Linux Swap"), F_SWAP},
-  {"gpt", "linux",     "e6d6d379-f507-44c2-a23c-238f2a3df928", N_("Linux LVM"), F_RAID},
-  {"gpt", "linux",     "8da63339-0007-60c0-c436-083ac8230908", N_("Linux Reserved"), 0},
+  {"gpt", "linux",     "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7", NC_("part-type", "Basic Data"), 0}, /* same as ms bdp */
+  {"gpt", "linux",     "a19d880f-05fc-4d3b-a006-743f0f84911e", NC_("part-type", "Linux RAID"), F_RAID},
+  {"gpt", "linux",     "0657fd6d-a4ab-43c4-84e5-0933c84b4f4f", NC_("part-type", "Linux Swap"), F_SWAP},
+  {"gpt", "linux",     "e6d6d379-f507-44c2-a23c-238f2a3df928", NC_("part-type", "Linux LVM"), F_RAID},
+  {"gpt", "linux",     "8da63339-0007-60c0-c436-083ac8230908", NC_("part-type", "Linux Reserved"), 0},
   /* Microsoft */
-  {"gpt", "microsoft", "e3c9e316-0b5c-4db8-817d-f92df00215ae", N_("Microsoft Reserved"), 0},
-  {"gpt", "microsoft", "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7", N_("Microsoft Basic Data"), 0}, /* same as Linux Basic Data */
-  {"gpt", "microsoft", "5808c8aa-7e8f-42e0-85d2-e1e90434cfb3", N_("Microsoft LDM metadata"), 0},
-  {"gpt", "microsoft", "af9b60a0-1431-4f62-bc68-3311714a69ad", N_("Microsoft LDM data"), 0},
-  {"gpt", "microsoft", "de94bba4-06d1-4d40-a16a-bfd50179d6ac", N_("Microsoft Windows Recovery Environment"), 0},
+  {"gpt", "microsoft", "e3c9e316-0b5c-4db8-817d-f92df00215ae", NC_("part-type", "Microsoft Reserved"), 0},
+  {"gpt", "microsoft", "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7", NC_("part-type", "Microsoft Basic Data"), 0}, /* same as Linux Basic Data */
+  {"gpt", "microsoft", "5808c8aa-7e8f-42e0-85d2-e1e90434cfb3", NC_("part-type", "Microsoft LDM metadata"), 0},
+  {"gpt", "microsoft", "af9b60a0-1431-4f62-bc68-3311714a69ad", NC_("part-type", "Microsoft LDM data"), 0},
+  {"gpt", "microsoft", "de94bba4-06d1-4d40-a16a-bfd50179d6ac", NC_("part-type", "Microsoft Windows Recovery Environment"), 0},
   /* Apple OS X */
-  {"gpt", "apple",     "48465300-0000-11aa-aa11-00306543ecac", N_("Apple HFS/HFS+"), 0},
-  {"gpt", "apple",     "55465300-0000-11aa-aa11-00306543ecac", N_("Apple UFS"), 0},
-  {"gpt", "apple",     "6a898cc3-1dd2-11b2-99a6-080020736631", N_("Apple ZFS"), 0}, /* same as Solaris /usr */
-  {"gpt", "apple",     "52414944-0000-11aa-aa11-00306543ecac", N_("Apple RAID"), F_RAID},
-  {"gpt", "apple",     "52414944-5f4f-11aa-aa11-00306543ecac", N_("Apple RAID (offline)"), F_RAID},
-  {"gpt", "apple",     "426f6f74-0000-11aa-aa11-00306543ecac", N_("Apple Boot"), F_SYSTEM},
-  {"gpt", "apple",     "4c616265-6c00-11aa-aa11-00306543ecac", N_("Apple Label"), 0},
-  {"gpt", "apple",     "5265636f-7665-11aa-aa11-00306543ecac", N_("Apple TV Recovery"), F_SYSTEM},
+  {"gpt", "apple",     "48465300-0000-11aa-aa11-00306543ecac", NC_("part-type", "Apple HFS/HFS+"), 0},
+  {"gpt", "apple",     "55465300-0000-11aa-aa11-00306543ecac", NC_("part-type", "Apple UFS"), 0},
+  {"gpt", "apple",     "6a898cc3-1dd2-11b2-99a6-080020736631", NC_("part-type", "Apple ZFS"), 0}, /* same as Solaris /usr */
+  {"gpt", "apple",     "52414944-0000-11aa-aa11-00306543ecac", NC_("part-type", "Apple RAID"), F_RAID},
+  {"gpt", "apple",     "52414944-5f4f-11aa-aa11-00306543ecac", NC_("part-type", "Apple RAID (offline)"), F_RAID},
+  {"gpt", "apple",     "426f6f74-0000-11aa-aa11-00306543ecac", NC_("part-type", "Apple Boot"), F_SYSTEM},
+  {"gpt", "apple",     "4c616265-6c00-11aa-aa11-00306543ecac", NC_("part-type", "Apple Label"), 0},
+  {"gpt", "apple",     "5265636f-7665-11aa-aa11-00306543ecac", NC_("part-type", "Apple TV Recovery"), F_SYSTEM},
   /* HP-UX */
-  {"gpt", "other",     "75894c1e-3aeb-11d3-b7c1-7b03a0000000", N_("HP-UX Data"), 0},
-  {"gpt", "other",     "e2a1e728-32e3-11d6-a682-7b03a0000000", N_("HP-UX Service"), 0},
+  {"gpt", "other",     "75894c1e-3aeb-11d3-b7c1-7b03a0000000", NC_("part-type", "HP-UX Data"), 0},
+  {"gpt", "other",     "e2a1e728-32e3-11d6-a682-7b03a0000000", NC_("part-type", "HP-UX Service"), 0},
   /* FreeBSD */
-  {"gpt", "other",     "83bd6b9d-7f41-11dc-be0b-001560b84f0f", N_("FreeBSD Boot"), 0},
-  {"gpt", "other",     "516e7cb4-6ecf-11d6-8ff8-00022d09712b", N_("FreeBSD Data"), 0},
-  {"gpt", "other",     "516e7cb5-6ecf-11d6-8ff8-00022d09712b", N_("FreeBSD Swap"), F_SWAP},
-  {"gpt", "other",     "516e7cb6-6ecf-11d6-8ff8-00022d09712b", N_("FreeBSD UFS"), 0},
-  {"gpt", "other",     "516e7cb8-6ecf-11d6-8ff8-00022d09712b", N_("FreeBSD Vinum"), F_RAID},
-  {"gpt", "other",     "516e7cba-6ecf-11d6-8ff8-00022d09712b", N_("FreeBSD ZFS"), 0},
+  {"gpt", "other",     "83bd6b9d-7f41-11dc-be0b-001560b84f0f", NC_("part-type", "FreeBSD Boot"), 0},
+  {"gpt", "other",     "516e7cb4-6ecf-11d6-8ff8-00022d09712b", NC_("part-type", "FreeBSD Data"), 0},
+  {"gpt", "other",     "516e7cb5-6ecf-11d6-8ff8-00022d09712b", NC_("part-type", "FreeBSD Swap"), F_SWAP},
+  {"gpt", "other",     "516e7cb6-6ecf-11d6-8ff8-00022d09712b", NC_("part-type", "FreeBSD UFS"), 0},
+  {"gpt", "other",     "516e7cb8-6ecf-11d6-8ff8-00022d09712b", NC_("part-type", "FreeBSD Vinum"), F_RAID},
+  {"gpt", "other",     "516e7cba-6ecf-11d6-8ff8-00022d09712b", NC_("part-type", "FreeBSD ZFS"), 0},
   /* Solaris */
-  {"gpt", "other",     "6a82cb45-1dd2-11b2-99a6-080020736631", N_("Solaris Boot"), 0},
-  {"gpt", "other",     "6a85cf4d-1dd2-11b2-99a6-080020736631", N_("Solaris Root"), 0},
-  {"gpt", "other",     "6a87c46f-1dd2-11b2-99a6-080020736631", N_("Solaris Swap"), F_SWAP},
-  {"gpt", "other",     "6a8b642b-1dd2-11b2-99a6-080020736631", N_("Solaris Backup"), 0},
-  {"gpt", "other",     "6a898cc3-1dd2-11b2-99a6-080020736631", N_("Solaris /usr"), 0}, /* same as Apple ZFS */
-  {"gpt", "other",     "6a8ef2e9-1dd2-11b2-99a6-080020736631", N_("Solaris /var"), 0},
-  {"gpt", "other",     "6a90ba39-1dd2-11b2-99a6-080020736631", N_("Solaris /home"), 0},
-  {"gpt", "other",     "6a9283a5-1dd2-11b2-99a6-080020736631", N_("Solaris Alternate Sector"), 0},
-  {"gpt", "other",     "6a945a3b-1dd2-11b2-99a6-080020736631", N_("Solaris Reserved"), 0},
-  {"gpt", "other",     "6a9630d1-1dd2-11b2-99a6-080020736631", N_("Solaris Reserved (2)"), 0},
-  {"gpt", "other",     "6a980767-1dd2-11b2-99a6-080020736631", N_("Solaris Reserved (3)"), 0},
-  {"gpt", "other",     "6a96237f-1dd2-11b2-99a6-080020736631", N_("Solaris Reserved (4)"), 0},
-  {"gpt", "other",     "6a8d2ac7-1dd2-11b2-99a6-080020736631", N_("Solaris Reserved (5)"), 0},
+  {"gpt", "other",     "6a82cb45-1dd2-11b2-99a6-080020736631", NC_("part-type", "Solaris Boot"), 0},
+  {"gpt", "other",     "6a85cf4d-1dd2-11b2-99a6-080020736631", NC_("part-type", "Solaris Root"), 0},
+  {"gpt", "other",     "6a87c46f-1dd2-11b2-99a6-080020736631", NC_("part-type", "Solaris Swap"), F_SWAP},
+  {"gpt", "other",     "6a8b642b-1dd2-11b2-99a6-080020736631", NC_("part-type", "Solaris Backup"), 0},
+  {"gpt", "other",     "6a898cc3-1dd2-11b2-99a6-080020736631", NC_("part-type", "Solaris /usr"), 0}, /* same as Apple ZFS */
+  {"gpt", "other",     "6a8ef2e9-1dd2-11b2-99a6-080020736631", NC_("part-type", "Solaris /var"), 0},
+  {"gpt", "other",     "6a90ba39-1dd2-11b2-99a6-080020736631", NC_("part-type", "Solaris /home"), 0},
+  {"gpt", "other",     "6a9283a5-1dd2-11b2-99a6-080020736631", NC_("part-type", "Solaris Alternate Sector"), 0},
+  {"gpt", "other",     "6a945a3b-1dd2-11b2-99a6-080020736631", NC_("part-type", "Solaris Reserved"), 0},
+  {"gpt", "other",     "6a9630d1-1dd2-11b2-99a6-080020736631", NC_("part-type", "Solaris Reserved (2)"), 0},
+  {"gpt", "other",     "6a980767-1dd2-11b2-99a6-080020736631", NC_("part-type", "Solaris Reserved (3)"), 0},
+  {"gpt", "other",     "6a96237f-1dd2-11b2-99a6-080020736631", NC_("part-type", "Solaris Reserved (4)"), 0},
+  {"gpt", "other",     "6a8d2ac7-1dd2-11b2-99a6-080020736631", NC_("part-type", "Solaris Reserved (5)"), 0},
   /* NetBSD */
-  {"gpt", "other",     "49f48d32-b10e-11dc-b99b-0019d1879648", N_("NetBSD Swap"), F_SWAP},
-  {"gpt", "other",     "49f48d5a-b10e-11dc-b99b-0019d1879648", N_("NetBSD FFS"), 0},
-  {"gpt", "other",     "49f48d82-b10e-11dc-b99b-0019d1879648", N_("NetBSD LFS"), 0},
-  {"gpt", "other",     "49f48daa-b10e-11dc-b99b-0019d1879648", N_("NetBSD RAID"), F_RAID},
-  {"gpt", "other",     "2db519c4-b10f-11dc-b99b-0019d1879648", N_("NetBSD Concatenated"), 0},
-  {"gpt", "other",     "2db519ec-b10f-11dc-b99b-0019d1879648", N_("NetBSD Encrypted"), 0},
+  {"gpt", "other",     "49f48d32-b10e-11dc-b99b-0019d1879648", NC_("part-type", "NetBSD Swap"), F_SWAP},
+  {"gpt", "other",     "49f48d5a-b10e-11dc-b99b-0019d1879648", NC_("part-type", "NetBSD FFS"), 0},
+  {"gpt", "other",     "49f48d82-b10e-11dc-b99b-0019d1879648", NC_("part-type", "NetBSD LFS"), 0},
+  {"gpt", "other",     "49f48daa-b10e-11dc-b99b-0019d1879648", NC_("part-type", "NetBSD RAID"), F_RAID},
+  {"gpt", "other",     "2db519c4-b10f-11dc-b99b-0019d1879648", NC_("part-type", "NetBSD Concatenated"), 0},
+  {"gpt", "other",     "2db519ec-b10f-11dc-b99b-0019d1879648", NC_("part-type", "NetBSD Encrypted"), 0},
 
   /* see http://developer.apple.com/documentation/mac/devices/devices-126.html
    *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html */
-  {"apm", "apple",     "Apple_Unix_SVR2", N_("Apple UFS"), 0},
-  {"apm", "apple",     "Apple_HFS", N_("Apple HFS/HFS"), 0},
-  {"apm", "apple",     "Apple_partition_map", N_("Apple Partition Map"), 0},
-  {"apm", "apple",     "Apple_Free", N_("Unused"), 0},
-  {"apm", "apple",     "Apple_Scratch", N_("Empty"), 0},
-  {"apm", "apple",     "Apple_Driver", N_("Driver"), 0},
-  {"apm", "apple",     "Apple_Driver43", N_("Driver 4.3"), 0},
-  {"apm", "apple",     "Apple_PRODOS", N_("ProDOS file system"), 0},
-  {"apm", "microsoft", "DOS_FAT_12", N_("FAT 12"), 0},
-  {"apm", "microsoft", "DOS_FAT_16", N_("FAT 16"), 0},
-  {"apm", "microsoft", "DOS_FAT_32", N_("FAT 32"), 0},
-  {"apm", "microsoft", "Windows_FAT_16", N_("FAT 16 (Windows)"), 0},
-  {"apm", "microsoft", "Windows_FAT_32", N_("FAT 32 (Windows)"), 0},
+  {"apm", "apple",     "Apple_Unix_SVR2", NC_("part-type", "Apple UFS"), 0},
+  {"apm", "apple",     "Apple_HFS", NC_("part-type", "Apple HFS/HFS"), 0},
+  {"apm", "apple",     "Apple_partition_map", NC_("part-type", "Apple Partition Map"), 0},
+  {"apm", "apple",     "Apple_Free", NC_("part-type", "Unused"), 0},
+  {"apm", "apple",     "Apple_Scratch", NC_("part-type", "Empty"), 0},
+  {"apm", "apple",     "Apple_Driver", NC_("part-type", "Driver"), 0},
+  {"apm", "apple",     "Apple_Driver43", NC_("part-type", "Driver 4.3"), 0},
+  {"apm", "apple",     "Apple_PRODOS", NC_("part-type", "ProDOS file system"), 0},
+  {"apm", "microsoft", "DOS_FAT_12", NC_("part-type", "FAT 12"), 0},
+  {"apm", "microsoft", "DOS_FAT_16", NC_("part-type", "FAT 16"), 0},
+  {"apm", "microsoft", "DOS_FAT_32", NC_("part-type", "FAT 32"), 0},
+  {"apm", "microsoft", "Windows_FAT_16", NC_("part-type", "FAT 16 (Windows)"), 0},
+  {"apm", "microsoft", "Windows_FAT_32", NC_("part-type", "FAT 32 (Windows)"), 0},
 
   /* see http://www.win.tue.nl/~aeb/partitions/partition_types-1.html */
-  {"dos", "generic",   "0x05",  N_("Extended"), F_CONLY},
-  {"dos", "generic",   "0xee",  N_("EFI GPT"), F_SYSTEM},
-  {"dos", "generic",   "0xef",  N_("EFI (FAT-12/16/32)"), F_SYSTEM},
-  {"dos", "linux",     "0x82",  N_("Linux swap"), F_SWAP},
-  {"dos", "linux",     "0x83",  N_("Linux"), 0},
-  {"dos", "linux",     "0x85",  N_("Linux Extended"), F_CONLY},
-  {"dos", "linux",     "0x8e",  N_("Linux LVM"), F_RAID},
-  {"dos", "linux",     "0xfd",  N_("Linux RAID auto"), F_RAID},
-  {"dos", "microsoft", "0x01",  N_("FAT12"), 0},
-  {"dos", "microsoft", "0x04",  N_("FAT16 <32M"), 0},
-  {"dos", "microsoft", "0x06",  N_("FAT16"), 0},
-  {"dos", "microsoft", "0x07",  N_("HPFS/NTFS"), 0},
-  {"dos", "microsoft", "0x0b",  N_("W95 FAT32"), 0},
-  {"dos", "microsoft", "0x0c",  N_("W95 FAT32 (LBA)"), 0},
-  {"dos", "microsoft", "0x0e",  N_("W95 FAT16 (LBA)"), 0},
-  {"dos", "microsoft", "0x0f",  N_("W95 Ext d (LBA)"), F_CONLY},
-  {"dos", "microsoft", "0x11",  N_("Hidden FAT12"), F_HIDDEN},
-  {"dos", "microsoft", "0x14",  N_("Hidden FAT16 <32M"), F_HIDDEN},
-  {"dos", "microsoft", "0x16",  N_("Hidden FAT16"), F_HIDDEN},
-  {"dos", "microsoft", "0x17",  N_("Hidden HPFS/NTFS"), F_HIDDEN},
-  {"dos", "microsoft", "0x1b",  N_("Hidden W95 FAT32"), F_HIDDEN},
-  {"dos", "microsoft", "0x1c",  N_("Hidden W95 FAT32 (LBA)"), F_HIDDEN},
-  {"dos", "microsoft", "0x1e",  N_("Hidden W95 FAT16 (LBA)"), F_HIDDEN},
-  {"dos", "other",     "0x10",  N_("OPUS"), 0},
-  {"dos", "other",     "0x12",  N_("Compaq diagnostics"), 0},
-  {"dos", "other",     "0x3c",  N_("PartitionMagic"), 0},
-  {"dos", "other",     "0x81",  N_("Minix"), 0}, /* cf. http://en.wikipedia.org/wiki/MINIX_file_system */
-  {"dos", "other",     "0x84",  N_("Hibernation"), 0},
-  {"dos", "other",     "0xa0",  N_("Hibernation"), 0},
-  {"dos", "other",     "0xa5",  N_("FreeBSD"), 0},
-  {"dos", "other",     "0xa6",  N_("OpenBSD"), 0},
-  {"dos", "other",     "0xa8",  N_("Mac OS X"), 0},
-  {"dos", "other",     "0xaf",  N_("Mac OS X"), 0},
-  {"dos", "other",     "0xbe",  N_("Solaris boot"), 0},
-  {"dos", "other",     "0xbf",  N_("Solaris"), 0},
-  {"dos", "other",     "0xeb",  N_("BeOS BFS"), 0},
-  {"dos", "other",     "0xec",  N_("SkyOS SkyFS"), 0},
+  {"dos", "generic",   "0x05",  NC_("part-type", "Extended"), F_CONLY},
+  {"dos", "generic",   "0xee",  NC_("part-type", "EFI GPT"), F_SYSTEM},
+  {"dos", "generic",   "0xef",  NC_("part-type", "EFI (FAT-12/16/32)"), F_SYSTEM},
+  {"dos", "linux",     "0x82",  NC_("part-type", "Linux swap"), F_SWAP},
+  {"dos", "linux",     "0x83",  NC_("part-type", "Linux"), 0},
+  {"dos", "linux",     "0x85",  NC_("part-type", "Linux Extended"), F_CONLY},
+  {"dos", "linux",     "0x8e",  NC_("part-type", "Linux LVM"), F_RAID},
+  {"dos", "linux",     "0xfd",  NC_("part-type", "Linux RAID auto"), F_RAID},
+  {"dos", "microsoft", "0x01",  NC_("part-type", "FAT12"), 0},
+  {"dos", "microsoft", "0x04",  NC_("part-type", "FAT16 <32M"), 0},
+  {"dos", "microsoft", "0x06",  NC_("part-type", "FAT16"), 0},
+  {"dos", "microsoft", "0x07",  NC_("part-type", "HPFS/NTFS"), 0},
+  {"dos", "microsoft", "0x0b",  NC_("part-type", "W95 FAT32"), 0},
+  {"dos", "microsoft", "0x0c",  NC_("part-type", "W95 FAT32 (LBA)"), 0},
+  {"dos", "microsoft", "0x0e",  NC_("part-type", "W95 FAT16 (LBA)"), 0},
+  {"dos", "microsoft", "0x0f",  NC_("part-type", "W95 Ext d (LBA)"), F_CONLY},
+  {"dos", "microsoft", "0x11",  NC_("part-type", "Hidden FAT12"), F_HIDDEN},
+  {"dos", "microsoft", "0x14",  NC_("part-type", "Hidden FAT16 <32M"), F_HIDDEN},
+  {"dos", "microsoft", "0x16",  NC_("part-type", "Hidden FAT16"), F_HIDDEN},
+  {"dos", "microsoft", "0x17",  NC_("part-type", "Hidden HPFS/NTFS"), F_HIDDEN},
+  {"dos", "microsoft", "0x1b",  NC_("part-type", "Hidden W95 FAT32"), F_HIDDEN},
+  {"dos", "microsoft", "0x1c",  NC_("part-type", "Hidden W95 FAT32 (LBA)"), F_HIDDEN},
+  {"dos", "microsoft", "0x1e",  NC_("part-type", "Hidden W95 FAT16 (LBA)"), F_HIDDEN},
+  {"dos", "other",     "0x10",  NC_("part-type", "OPUS"), 0},
+  {"dos", "other",     "0x12",  NC_("part-type", "Compaq diagnostics"), 0},
+  {"dos", "other",     "0x3c",  NC_("part-type", "PartitionMagic"), 0},
+  {"dos", "other",     "0x81",  NC_("part-type", "Minix"), 0}, /* cf. http://en.wikipedia.org/wiki/MINIX_file_system */
+  {"dos", "other",     "0x84",  NC_("part-type", "Hibernation"), 0},
+  {"dos", "other",     "0xa0",  NC_("part-type", "Hibernation"), 0},
+  {"dos", "other",     "0xa5",  NC_("part-type", "FreeBSD"), 0},
+  {"dos", "other",     "0xa6",  NC_("part-type", "OpenBSD"), 0},
+  {"dos", "other",     "0xa8",  NC_("part-type", "Mac OS X"), 0},
+  {"dos", "other",     "0xaf",  NC_("part-type", "Mac OS X"), 0},
+  {"dos", "other",     "0xbe",  NC_("part-type", "Solaris boot"), 0},
+  {"dos", "other",     "0xbf",  NC_("part-type", "Solaris"), 0},
+  {"dos", "other",     "0xeb",  NC_("part-type", "BeOS BFS"), 0},
+  {"dos", "other",     "0xec",  NC_("part-type", "SkyOS SkyFS"), 0},
   {NULL,  NULL, NULL}
 };
 
@@ -2464,7 +2523,7 @@ udisks_client_get_partition_type_for_display (UDisksClient  *client,
       if (g_strcmp0 (known_partition_types[n].table_type, partition_table_type) == 0 &&
           g_strcmp0 (known_partition_types[n].type, partition_type) == 0)
         {
-          ret = _(known_partition_types[n].name);
+          ret = g_dpgettext2 (GETTEXT_PACKAGE, "part-type", known_partition_types[n].name);
           goto out;
         }
     }

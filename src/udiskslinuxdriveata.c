@@ -632,6 +632,12 @@ handle_smart_update (UDisksDriveAta        *_drive,
                                                         UDISKS_OBJECT (block_object),
                                                         "org.freedesktop.udisks2.ata-smart-update",
                                                         options,
+                                                        /* Translators: Shown in authentication dialog when the user
+                                                         * refreshes SMART data from a disk.
+                                                         *
+                                                         * Do not translate $(udisks2.device), it's a placeholder and
+                                                         * will be replaced by the name of the drive/device in question
+                                                         */
                                                         N_("Authentication is required to update SMART data from $(udisks2.device)"),
                                                         invocation))
         goto out;
@@ -750,6 +756,12 @@ handle_smart_selftest_abort (UDisksDriveAta        *_drive,
                                                     UDISKS_OBJECT (block_object),
                                                     "org.freedesktop.udisks2.ata-smart-selftest",
                                                     options,
+                                                    /* Translators: Shown in authentication dialog when the user
+                                                     * aborts a running SMART self-test.
+                                                     *
+                                                     * Do not translate $(udisks2.device), it's a placeholder and
+                                                     * will be replaced by the name of the drive/device in question
+                                                     */
                                                     N_("Authentication is required to abort a SMART self-test on $(udisks2.device)"),
                                                     invocation))
     goto out;
@@ -941,6 +953,12 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
                                                     UDISKS_OBJECT (block_object),
                                                     "org.freedesktop.udisks2.ata-smart-selftest",
                                                     options,
+                                                    /* Translators: Shown in authentication dialog when the user
+                                                     * initiates a SMART self-test.
+                                                     *
+                                                     * Do not translate $(udisks2.device), it's a placeholder and
+                                                     * will be replaced by the name of the drive/device in question
+                                                     */
                                                     N_("Authentication is required to start a SMART self-test on $(udisks2.device)"),
                                                     invocation))
     goto out;

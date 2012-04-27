@@ -811,6 +811,10 @@ handle_get_secret_configuration (UDisksBlock           *_block,
                                                     NULL,
                                                     "org.freedesktop.udisks2.read-system-configuration-secrets",
                                                     options,
+                                                    /* Translators: This is shown in an authentcation dialog when
+                                                     * the user is editing settings that involve system-level
+                                                     * passwords and secrets
+                                                     */
                                                     N_("Authentication is required to read system-level secrets"),
                                                     invocation))
     {
@@ -1449,6 +1453,7 @@ handle_add_configuration_item (UDisksBlock           *_block,
                                                         NULL,
                                                         "org.freedesktop.udisks2.modify-system-configuration",
                                                         options,
+                                                        /* Translators: shown in authentication dialog - do not translate /etc/fstab */
                                                         N_("Authentication is required to add an entry to the /etc/fstab file"),
                                                         invocation))
         goto out;
@@ -1466,6 +1471,7 @@ handle_add_configuration_item (UDisksBlock           *_block,
                                                         NULL,
                                                         "org.freedesktop.udisks2.modify-system-configuration",
                                                         options,
+                                                        /* Translators: shown in authentication dialog - do not tranlsate /etc/crypttab */
                                                         N_("Authentication is required to add an entry to the /etc/crypttab file"),
                                                         invocation))
         goto out;
@@ -1524,6 +1530,7 @@ handle_remove_configuration_item (UDisksBlock           *_block,
                                                         NULL,
                                                         "org.freedesktop.udisks2.modify-system-configuration",
                                                         options,
+                                                        /* Translators: shown in authentication dialog - do not translate /etc/fstab */
                                                         N_("Authentication is required to remove an entry from /etc/fstab file"),
                                                         invocation))
         goto out;
@@ -1541,6 +1548,7 @@ handle_remove_configuration_item (UDisksBlock           *_block,
                                                         NULL,
                                                         "org.freedesktop.udisks2.modify-system-configuration",
                                                         options,
+                                                        /* Translators: shown in authentication dialog - do not translate /etc/crypttab */
                                                         N_("Authentication is required to remove an entry from the /etc/crypttab file"),
                                                         invocation))
         goto out;
@@ -1612,6 +1620,7 @@ handle_update_configuration_item (UDisksBlock           *_block,
                                                         NULL,
                                                         "org.freedesktop.udisks2.modify-system-configuration",
                                                         options,
+                                                        /* Translators: shown in authentication dialog - do not translate /etc/fstab */
                                                         N_("Authentication is required to modify the /etc/fstab file"),
                                                         invocation))
         goto out;
@@ -1629,6 +1638,7 @@ handle_update_configuration_item (UDisksBlock           *_block,
                                                         NULL,
                                                         "org.freedesktop.udisks2.modify-system-configuration",
                                                         options,
+                                                        /* Translators: shown in authentication dialog - do not translate /etc/crypttab */
                                                         N_("Authentication is required to modify the /etc/crypttab file"),
                                                         invocation))
         goto out;
@@ -1863,6 +1873,13 @@ handle_format (UDisksBlock           *block,
       goto out;
     }
 
+  /* Translators: Shown in authentication dialog when formatting a
+   * device. This includes both creating a filesystem or partition
+   * table.
+   *
+   * Do not translate $(udisks2.device), it's a placeholder and will
+   * be replaced by the name of the drive/device in question
+   */
   message = N_("Authentication is required to format $(udisks2.device)");
   action_id = "org.freedesktop.udisks2.modify-device";
   if (udisks_block_get_hint_system (block))
@@ -2220,6 +2237,12 @@ handle_open_for_backup (UDisksBlock           *block,
                                                     object,
                                                     action_id,
                                                     options,
+                                                    /* Translators: Shown in authentication dialog when creating a
+                                                     * disk image file.
+                                                     *
+                                                     * Do not translate $(udisks2.device), it's a placeholder and will
+                                                     * be replaced by the name of the drive/device in question
+                                                     */
                                                     N_("Authentication is required to open $(udisks2.device) for reading"),
                                                     invocation))
     goto out;
@@ -2278,6 +2301,12 @@ handle_open_for_restore (UDisksBlock           *block,
                                                     object,
                                                     action_id,
                                                     options,
+                                                    /* Translators: Shown in authentication dialog when restoring
+                                                     * from a disk image file.
+                                                     *
+                                                     * Do not translate $(udisks2.device), it's a placeholder and will
+                                                     * be replaced by the name of the drive/device in question
+                                                     */
                                                     N_("Authentication is required to open $(udisks2.device) for writing"),
                                                     invocation))
     goto out;

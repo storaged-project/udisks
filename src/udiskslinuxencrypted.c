@@ -332,6 +332,12 @@ handle_unlock (UDisksEncrypted        *encrypted,
   /* Now, check that the user is actually authorized to unlock the device.
    */
   action_id = "org.freedesktop.udisks2.encrypted-unlock";
+  /* Translators: Shown in authentication dialog when the user
+   * requests unlocking an encrypted device.
+   *
+   * Do not translate $(udisks2.device), it's a placeholder and
+   * will be replaced by the name of the drive/device in question
+   */
   message = N_("Authentication is required to unlock the encrypted device $(udisks2.device)");
   if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
     {
@@ -556,6 +562,13 @@ handle_lock (UDisksEncrypted        *encrypted,
                                                         object,
                                                         "org.freedesktop.udisks2.encrypted-lock-others",
                                                         options,
+                                                        /* Translators: Shown in authentication dialog when the user
+                                                         * requests locking an encrypted device that was previously.
+                                                         * unlocked by another user.
+                                                         *
+                                                         * Do not translate $(udisks2.device), it's a placeholder and
+                                                         * will be replaced by the name of the drive/device in question
+                                                         */
                                                         N_("Authentication is required to lock the encrypted device $(udisks2.device) unlocked by another user"),
                                                         invocation))
         goto out;
@@ -671,6 +684,12 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
                                                     object,
                                                     action_id,
                                                     options,
+                                                    /* Translators: Shown in authentication dialog when the user
+                                                     * requests unlocking an encrypted device.
+                                                     *
+                                                     * Do not translate $(udisks2.device), it's a placeholder and
+                                                     * will be replaced by the name of the drive/device in question
+                                                     */
                                                     N_("Authentication is required to unlock the encrypted device $(udisks2.device)"),
                                                     invocation))
     goto out;

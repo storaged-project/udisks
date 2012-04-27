@@ -318,6 +318,12 @@ handle_create_partition (UDisksPartitionTable   *table,
     }
 
   action_id = "org.freedesktop.udisks2.modify-device";
+  /* Translators: Shown in authentication dialog when the user
+   * requests creating a new partition.
+   *
+   * Do not translate $(udisks2.device), it's a placeholder and
+   * will be replaced by the name of the drive/device in question
+   */
   message = N_("Authentication is required to create a partition on $(udisks2.device)");
   if (udisks_block_get_hint_system (block))
     {

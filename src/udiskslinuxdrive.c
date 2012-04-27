@@ -729,6 +729,12 @@ handle_eject (UDisksDrive           *_drive,
       goto out;
     }
 
+  /* Translators: Shown in authentication dialog when the user
+   * requests ejecting media from a drive.
+   *
+   * Do not translate $(udisks2.device), it's a placeholder and
+   * will be replaced by the name of the drive/device in question
+   */
   message = N_("Authentication is required to eject $(udisks2.device)");
   action_id = "org.freedesktop.udisks2.eject-media";
   if (udisks_block_get_hint_system (block))
