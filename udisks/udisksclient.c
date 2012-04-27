@@ -823,6 +823,7 @@ static const struct
   const gchar *drive_icon;
 } media_data[] =
 {
+  /* Translators: 'Thumb' here refers to "USB thumb drive", see http://en.wikipedia.org/wiki/Thumb_drive */
   {"thumb",      NC_("media-type", "Thumb"),        NC_("media-type", "Thumb"),        "media-removable",   DRIVE_TYPE_DRIVE, "media-removable"},
 
   {"floppy",     NC_("media-type", "Floppy"),       NC_("media-type", "Floppy"), "media-floppy",      DRIVE_TYPE_DISK, "drive-removable-media-floppy"},
@@ -1121,20 +1122,20 @@ udisks_client_get_drive_info (UDisksClient  *client,
                       g_assert_not_reached ();
                       break;
                     case DRIVE_TYPE_DRIVE:
-                      /* Translators: Use to describe drive without removable media. The %s is the type, e.g. 'Thumb' */
-                      media_description = g_strdup_printf (_("%s Drive"), g_dpgettext2 (GETTEXT_PACKAGE, "media-type", media_data[n].media_name));
+                      /* Translators: Used to describe drive without removable media. The %s is the type, e.g. 'Thumb' */
+                      media_description = g_strdup_printf (C_("drive-with-fixed-media", "%s Drive"), g_dpgettext2 (GETTEXT_PACKAGE, "media-type", media_data[n].media_name));
                       break;
                     case DRIVE_TYPE_DISK:
-                      /* Translators: Use to describe generic media. The %s is the type, e.g. 'Zip' or 'Floppy' */
-                      media_description = g_strdup_printf (_("%s Disk"), g_dpgettext2 (GETTEXT_PACKAGE, "media-type", media_data[n].media_name));
+                      /* Translators: Used to describe generic media. The %s is the type, e.g. 'Zip' or 'Floppy' */
+                      media_description = g_strdup_printf (C_("drive-with-generic-media", "%s Disk"), g_dpgettext2 (GETTEXT_PACKAGE, "media-type", media_data[n].media_name));
                       break;
                     case DRIVE_TYPE_CARD:
-                      /* Translators: Use to describe flash media. The %s is the type, e.g. 'SD' or 'CompactFlash' */
-                      media_description = g_strdup_printf (_("%s Card"), g_dpgettext2 (GETTEXT_PACKAGE, "media-type", media_data[n].media_name));
+                      /* Translators: Used to describe flash media. The %s is the type, e.g. 'SD' or 'CompactFlash' */
+                      media_description = g_strdup_printf (C_("flash-media", "%s Card"), g_dpgettext2 (GETTEXT_PACKAGE, "media-type", media_data[n].media_name));
                       break;
                     case DRIVE_TYPE_DISC:
-                      /* Translators: Use to describe optical discs. The %s is the type, e.g. 'CD-R' or 'DVD-ROM' */
-                      media_description = g_strdup_printf (_("%s Disc"), g_dpgettext2 (GETTEXT_PACKAGE, "media-type", media_data[n].media_name));
+                      /* Translators: Used to describe optical discs. The %s is the type, e.g. 'CD-R' or 'DVD-ROM' */
+                      media_description = g_strdup_printf (C_("optical-media", "%s Disc"), g_dpgettext2 (GETTEXT_PACKAGE, "media-type", media_data[n].media_name));
                       break;
                     }
                 }
@@ -1151,13 +1152,13 @@ udisks_client_get_drive_info (UDisksClient  *client,
         {
           if (size_str != NULL)
             {
-              /* Translators: Use to describe a drive. The %s is the size, e.g. '20 GB' */
-              description = g_strdup_printf (_("%s Drive"), size_str);
+              /* Translators: Used to describe a drive. The %s is the size, e.g. '20 GB' */
+              description = g_strdup_printf (C_("drive-with-size", "%s Drive"), size_str);
             }
           else
             {
-              /* Translators: Use to describe a drive (removable media or size not known) */
-              description = g_strdup (_("Drive"));
+              /* Translators: Used to describe a drive we know very little about (removable media or size not known) */
+              description = g_strdup (C_("generic-drive", "Drive"));
             }
         }
       else
@@ -1166,34 +1167,37 @@ udisks_client_get_drive_info (UDisksClient  *client,
             {
               if (size_str != NULL)
                 {
-                  /* Translators: Use to describe a solid-state drive (SSD). The %s is the size, e.g. '20 GB'.  */
-                  description = g_strdup_printf (_("%s Disk"), size_str);
+                  /* Translators: Used to describe a non-rotating drive (rotation rate either unknown
+                   * or it's a solid-state drive). The %s is the size, e.g. '20 GB'.  */
+                  description = g_strdup_printf (C_("disk-non-rotational", "%s Disk"), size_str);
                 }
               else
                 {
-                  /* Translators: Use to describe a solid-state drive (SSD) (removable media or size not known) */
-                  description = g_strdup (_("Disk"));
+                  /* Translators: Used to describe a non-rotating drive (rotation rate either unknown
+                   * or it's a solid-state drive). The drive is either using removable media or its
+                   * size not known. */
+                  description = g_strdup (C_("disk-non-rotational", "Disk"));
                 }
             }
           else
             {
               if (size_str != NULL)
                 {
-                  /* Translators: Use to describe a hard-disk drive (HDD). The %s is the size, e.g. '20 GB'.  */
-                  description = g_strdup_printf (_("%s Hard Disk"), size_str);
+                  /* Translators: Used to describe a hard-disk drive (HDD). The %s is the size, e.g. '20 GB'.  */
+                  description = g_strdup_printf (C_("disk-hdd", "%s Hard Disk"), size_str);
                 }
               else
                 {
-                  /* Translators: Use to describe a hard-disk drive (HDD) (removable media or size not known) */
-                  description = g_strdup (_("Hard Disk"));
+                  /* Translators: Used to describe a hard-disk drive (HDD) (removable media or size not known) */
+                  description = g_strdup (C_("disk-hdd", "Hard Disk"));
                 }
             }
         }
       break;
 
     case DRIVE_TYPE_CARD:
-      /* Translators: Use to describe a card reader. The %s is the card type e.g. 'CompactFlash'.  */
-      description = g_strdup_printf (_("%s Card Reader"), desc_str->str);
+      /* Translators: Used to describe a card reader. The %s is the card type e.g. 'CompactFlash'.  */
+      description = g_strdup_printf (C_("drive-card-reader", "%s Card Reader"), desc_str->str);
       break;
 
     case DRIVE_TYPE_DRIVE: /* explicit fall-through */
@@ -1201,16 +1205,16 @@ udisks_client_get_drive_info (UDisksClient  *client,
     case DRIVE_TYPE_DISC:
       if (!media_removable && size_str != NULL)
         {
-          /* Translators: Use to describe drive. The first %s is the size e.g. '20 GB' and the
+          /* Translators: Used to describe drive. The first %s is the size e.g. '20 GB' and the
            * second %s is the drive type e.g. 'Thumb'.
            */
-          description = g_strdup_printf (_("%s %s Drive"), size_str, desc_str->str);
+          description = g_strdup_printf (C_("drive-with-size-and-type", "%s %s Drive"), size_str, desc_str->str);
         }
       else
         {
-          /* Translators: Use to describe drive. The first %s is the drive type e.g. 'Thumb'.
+          /* Translators: Used to describe drive. The first %s is the drive type e.g. 'Thumb'.
            */
-          description = g_strdup_printf (_("%s Drive"), desc_str->str);
+          description = g_strdup_printf (C_("drive-with-type", "%s Drive"), desc_str->str);
         }
       break;
     }
@@ -1244,7 +1248,7 @@ udisks_client_get_drive_info (UDisksClient  *client,
     {
       gchar *s;
       /* Translators: String used for a blank disc. The %s is the disc type e.g. "CD-RW Disc" */
-      s = g_strdup_printf (_("Blank %s"), media_description);
+      s = g_strdup_printf (C_("optical-media", "Blank %s"), media_description);
       g_free (media_description);
       media_description = s;
     }
@@ -1253,7 +1257,7 @@ udisks_client_get_drive_info (UDisksClient  *client,
     {
       gchar *s;
       /* Translators: String used for a mixed disc. The %s is the disc type e.g. "CD-ROM Disc" */
-      s = g_strdup_printf (_("Mixed %s"), media_description);
+      s = g_strdup_printf (C_("optical-media", "Mixed %s"), media_description);
       g_free (media_description);
       media_description = s;
     }
@@ -1262,7 +1266,7 @@ udisks_client_get_drive_info (UDisksClient  *client,
     {
       gchar *s;
       /* Translators: String used for an audio disc. The %s is the disc type e.g. "CD-ROM Disc" */
-      s = g_strdup_printf (_("Audio %s"), media_description);
+      s = g_strdup_printf (C_("optical-media", "Audio %s"), media_description);
       g_free (media_description);
       media_description = s;
     }
@@ -1386,7 +1390,7 @@ udisks_client_get_partition_info (UDisksClient    *client,
       if (flags & 0x80)
         {
           /* Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for a partition */
-          add_item (&flags_str, _("Bootable"));
+          add_item (&flags_str, C_("dos-part-flag", "Bootable"));
         }
     }
   else if (g_strcmp0 (udisks_partition_table_get_type_ (table), "gpt") == 0)
@@ -1396,35 +1400,35 @@ udisks_client_get_partition_info (UDisksClient    *client,
           /* Translators: Corresponds to the GPT "system" flag for a partition,
            * see http://en.wikipedia.org/wiki/GUID_Partition_Table
            */
-          add_item (&flags_str, _("System"));
+          add_item (&flags_str, C_("gpt-part-flag", "System"));
         }
       if (flags & (1ULL<<2))
         {
           /* Translators: Corresponds to the GPT "legacy bios bootable" flag for a partition,
            * see http://en.wikipedia.org/wiki/GUID_Partition_Table
            */
-          add_item (&flags_str, _("Legacy BIOS Bootable"));
+          add_item (&flags_str, C_("gpt-part-flag", "Legacy BIOS Bootable"));
         }
       if (flags & (1ULL<<60))
         {
           /* Translators: Corresponds to the GPT "read-only" flag for a partition,
            * see http://en.wikipedia.org/wiki/GUID_Partition_Table
            */
-          add_item (&flags_str, _("Read-only"));
+          add_item (&flags_str, C_("gpt-part-flag", "Read-only"));
         }
       if (flags & (1ULL<<62))
         {
           /* Translators: Corresponds to the GPT "hidden" flag for a partition,
            * see http://en.wikipedia.org/wiki/GUID_Partition_Table
            */
-          add_item (&flags_str, _("Hidden"));
+          add_item (&flags_str, C_("gpt-part-flag", "Hidden"));
         }
       if (flags & (1ULL<<63))
         {
           /* Translators: Corresponds to the GPT "no automount" flag for a partition,
            * see http://en.wikipedia.org/wiki/GUID_Partition_Table
            */
-          add_item (&flags_str, _("No Automount"));
+          add_item (&flags_str, C_("gpt-part-flag", "No Automount"));
         }
     }
 
@@ -1868,19 +1872,19 @@ udisks_client_get_size_for_display (UDisksClient  *client,
           gchar *pow2_str;
           pow2_str = get_pow2_size (size);
           /* Translators: The first %s is the size in power-of-2 units, e.g. '64 KiB'
-           * the second %s is the size as a number e.g. '65,536 bytes'
+           * the second %s is the size as a number e.g. '65,536' (always > 1)
            */
-          str = g_strdup_printf (_("%s (%s bytes)"), pow2_str, size_str);
+          str = g_strdup_printf (C_("byte-size-pow2", "%s (%s bytes)"), pow2_str, size_str);
           g_free (pow2_str);
         }
       else
         {
           gchar *pow10_str;
           pow10_str = get_pow10_size (size);
-          /* Translators: The first %s is the size in power-of-10 units, e.g. '100 KB'
-           * the second %s is the size as a number e.g. '100,000 bytes'
+          /* Translators: The first %s is the size in power-of-10 units, e.g. '100 kB'
+           * the second %s is the size as a number e.g. '100,000' (always > 1)
            */
-          str = g_strdup_printf (_("%s (%s bytes)"), pow10_str, size_str);
+          str = g_strdup_printf (C_("byte-size-pow10", "%s (%s bytes)"), pow10_str, size_str);
           g_free (pow10_str);
         }
 
@@ -2155,7 +2159,7 @@ udisks_client_get_id_for_display (UDisksClient *client,
       if (strlen (version) > 0)
         {
           /* Translators: Shown for unknown filesystem types.
-           * First %s is the filesystem type, second %s is version.
+           * First %s is the raw filesystem type obtained from udev, second %s is version.
            */
           ret = g_strdup_printf (C_("fs-type", "Unknown (%s %s)"), type, version);
         }
@@ -2164,7 +2168,7 @@ udisks_client_get_id_for_display (UDisksClient *client,
           if (strlen (type) > 0)
             {
               /* Translators: Shown for unknown filesystem types.
-               * First %s is the filesystem type.
+               * First %s is the raw filesystem type obtained from udev.
                */
               ret = g_strdup_printf (C_("fs-type", "Unknown (%s)"), type);
             }

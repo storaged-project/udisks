@@ -1331,7 +1331,7 @@ handle_mount (UDisksFilesystem       *filesystem,
                                                                  *
                                                                  * Do not translate /etc/fstab
                                                                  */
-                                                                N_("Authentication is required to mount $(udisks2.device) referenced in /etc/fstab"),
+                                                                N_("Authentication is required to mount $(udisks2.device) referenced in the /etc/fstab file"),
                                                                 invocation))
                 goto out;
               mount_fstab_as_root = TRUE;
@@ -1675,7 +1675,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
                                                                  *
                                                                  * Do not translate /etc/fstab
                                                                  */
-                                                                N_("Authentication is required to unmount $(udisks2.device) referenced in /etc/fstab"),
+                                                                N_("Authentication is required to unmount $(udisks2.device) referenced in the /etc/fstab file"),
                                                                 invocation))
                 goto out;
               unmount_fstab_as_root = TRUE;
