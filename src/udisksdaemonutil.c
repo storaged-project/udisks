@@ -431,21 +431,18 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
                                              const gchar           *message,
                                              GDBusMethodInvocation *invocation)
 {
-  PolkitSubject *subject;
-  PolkitDetails *details;
-  PolkitCheckAuthorizationFlags flags;
-  PolkitAuthorizationResult *result;
-  GError *error;
-  gboolean ret;
-  UDisksBlock *block;
-  gboolean auth_no_user_interaction;
-
-  ret = FALSE;
-  subject = NULL;
-  details = NULL;
-  result = NULL;
-  flags = POLKIT_CHECK_AUTHORIZATION_FLAGS_NONE;
-  auth_no_user_interaction = FALSE;
+  PolkitSubject *subject = NULL;
+  PolkitDetails *details = NULL;
+  PolkitCheckAuthorizationFlags flags = POLKIT_CHECK_AUTHORIZATION_FLAGS_NONE;
+  PolkitAuthorizationResult *result = NULL;
+  GError *error = NULL;
+  gboolean ret = FALSE;
+  UDisksBlock *block = NULL;
+  UDisksDrive *drive = NULL;
+  UDisksObject *block_object = NULL;
+  UDisksObject *drive_object = NULL;
+  gboolean auth_no_user_interaction = FALSE;
+  gchar *details_udisks2_device = NULL;
 
   subject = polkit_system_bus_name_new (g_dbus_method_invocation_get_sender (invocation));
   if (options != NULL)
@@ -460,15 +457,60 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
 
   details = polkit_details_new ();
   polkit_details_insert (details, "polkit.message", message);
-  polkit_details_insert (details, "polkit.gettext_domain", "udisks2"); /* TODO: set up translation */
+  polkit_details_insert (details, "polkit.gettext_domain", "udisks2");
 
-  /* setup other details that @message can use */
+  /* Find drive associated with the block device, if any */
   if (object != NULL)
     {
-      block = udisks_object_peek_block (object);
+      block = udisks_object_get_block (object);
       if (block != NULL)
-        polkit_details_insert (details, "udisks2.device", udisks_block_get_preferred_device (block));
+        {
+          block_object = g_object_ref (object);
+          drive_object = udisks_daemon_find_object (daemon, udisks_block_get_drive (block));
+          if (drive_object != NULL)
+            drive = udisks_object_get_drive (drive_object);
+        }
     }
+
+  /* If we have a drive, use vendor/model in the message (in addition to Block:preferred-device) */
+  if (drive != NULL)
+    {
+      gchar *s;
+      const gchar *vendor;
+      const gchar *model;
+
+      vendor = udisks_drive_get_vendor (drive);
+      model = udisks_drive_get_model (drive);
+      if (vendor == NULL)
+        vendor = "";
+      if (model == NULL)
+        model = "";
+
+      if (strlen (vendor) > 0 && strlen (model) > 0)
+        s = g_strdup_printf ("%s %s", vendor, model);
+      else if (strlen (vendor) > 0)
+        s = g_strdup (vendor);
+      else
+        s = g_strdup (model);
+
+      if (block != NULL)
+        {
+          details_udisks2_device = g_strdup_printf ("%s (%s)", s, udisks_block_get_preferred_device (block));
+        }
+      else
+        {
+          details_udisks2_device = s;
+          s = NULL;
+        }
+      g_free (s);
+    }
+
+  /* Fall back to Block:preferred-device */
+  if (details_udisks2_device == NULL && block != NULL)
+    details_udisks2_device = udisks_block_dup_preferred_device (block);
+
+  if (details_udisks2_device != NULL)
+    polkit_details_insert (details, "udisks2.device", details_udisks2_device);
 
   error = NULL;
   result = polkit_authority_check_authorization_sync (udisks_daemon_get_authority (daemon),
@@ -510,12 +552,14 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
   ret = TRUE;
 
  out:
-  if (subject != NULL)
-    g_object_unref (subject);
-  if (details != NULL)
-    g_object_unref (details);
-  if (result != NULL)
-    g_object_unref (result);
+  g_free (details_udisks2_device);
+  g_clear_object (&block_object);
+  g_clear_object (&drive_object);
+  g_clear_object (&block);
+  g_clear_object (&drive);
+  g_clear_object (&subject);
+  g_clear_object (&details);
+  g_clear_object (&result);
   return ret;
 }
 
