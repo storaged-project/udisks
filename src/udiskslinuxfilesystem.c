@@ -1582,7 +1582,8 @@ static guint
 get_error_code_for_umount (gint         exit_status,
                            const gchar *error_message)
 {
-  if (strstr (error_message, "device is busy") != NULL)
+  if (strstr (error_message, "device is busy") != NULL ||
+      strstr (error_message, "target is busy") != NULL)
     return UDISKS_ERROR_DEVICE_BUSY;
   else
     return UDISKS_ERROR_FAILED;
