@@ -134,9 +134,9 @@
           Many methods and operations offered by udisks requires the
           calling user to be sufficiently authorized. Whether the user
           is authorized is checked using <ulink
-          url="http://hal.freedesktop.org/docs/polkit/polkit.8.html">polkit</ulink>
+          url="http://www.freedesktop.org/software/polkit/docs/latest/polkit.8.html">polkit</ulink>
           and the administrator can configure <ulink
-          url="http://hal.freedesktop.org/docs/polkit/pklocalauthority.8.html">polkit's
+          url="http://www.freedesktop.org/software/polkit/docs/latest/pklocalauthority.8.html">polkit's
           local authority</ulink> (but note that the system may be
           using another polkit authority implementation).
         </para>

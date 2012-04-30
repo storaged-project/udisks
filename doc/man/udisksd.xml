@@ -34,6 +34,8 @@
       message bus. Users or administrators should never need to start
       this daemon as it will be automatically started by
       <citerefentry><refentrytitle>dbus-daemon</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+      or
+      <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>
       whenever an application tries to access its D-Bus interfaces.
     </para>
     <para>
@@ -109,6 +111,9 @@
       </citerefentry>,
       <citerefentry>
         <refentrytitle>dbus-daemon</refentrytitle><manvolnum>1</manvolnum>
+      </citerefentry>,
+      <citerefentry>
+        <refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum>
       </citerefentry>
     </para>
   </refsect1>

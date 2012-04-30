@@ -19,21 +19,22 @@
   <refsect1><title>DESCRIPTION</title>
     <para>
       udisks provides interfaces to enumerate and perform operations
-      on storage devices. Any application can access the
+      on storage devices. Any application (including unprivileged
+      ones) can access the
       <citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry>
       daemon via the name <emphasis>org.freedesktop.UDisks2</emphasis>
-      on the system message bus. In addition to the D-Bus API, a library,
-      <filename>libudisks2</filename> is also provided. This library
-      can be used from C/C++ and any high-level language supporting
+      on the system message bus. In addition to the D-Bus API, a
+      library, <filename>libudisks2</filename> is also provided. This
+      library can be used from C/C++ and any high-level language with
       <ulink url="https://live.gnome.org/GObjectIntrospection">GObjectIntrospection</ulink>
-      such as Javascript, Python and so on. In addition to exposing
-      the D-Bus API, the library also contains a couple of useful
-      utility functions.
+      support such as Javascript and Python.
     </para>
     <para>
-      As a system-level component, udisks is not per se concerned with
-      what a desktop user interface shows the user. For GNOME see
-      these <ulink
+      Except for providing a list of devices, support for udev
+      properties as well as routines used to present the devices to
+      the end user, udisks, as a system-level component, is not
+      involved with what a desktop user interface shows the user. For
+      GNOME see these <ulink
       url="http://git.gnome.org/browse/gvfs/tree/monitor/udisks2/what-is-shown.txt">GVfs
       notes</ulink> about what is shown in the desktop user interface
       and how to influence it.
@@ -170,7 +171,8 @@
       <citerefentry>
         <refentrytitle>gdbus</refentrytitle><manvolnum>1</manvolnum>
       </citerefentry>
-      to interact with the D-Bus API.
+      to interact with
+      <citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
     </para>
   </refsect1>
 
@@ -185,7 +187,7 @@
       application).  Software on this level typically depend on a
       specific (major) version of udisks and may even have support for
       previous versions of udisks or alternative interfaces performing
-      the same role as udisks (such as the now deprecated hal daemon).
+      the same role as udisks.
     </para>
     <para>
       While udisks indeed provides a stable API and a clear upgrade
@@ -199,11 +201,11 @@
       the operating system vendor may not even provide a packaged
       version of the old version. Hence, if an application does not
       want to tie itself to a specific version of the operating
-      system, it should not be using udisks.
+      system, it should not use udisks.
     </para>
     <para>
-      Viable alternatives to udisks include APIs that are guaranteed
-      to be around for longer time-frames, including:
+      Viable alternatives to udisks are APIs that are guaranteed to be
+      around for longer time-frames, including:
       <itemizedlist>
         <listitem>
           <para>
