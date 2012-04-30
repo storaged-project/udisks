@@ -69,17 +69,6 @@
     </defaults>
   </action>
 
-  <!-- unmount a filesystem mounted by another user, on a drive shared by all seats -->
-  <action id="org.freedesktop.udisks2.filesystem-unmount-others-shared">
-    <_description>Unmount a shared device mounted by another user</_description>
-    <_message>Authentication is required to unmount a filesystem mounted by another user</_message>
-    <defaults>
-      <allow_any>auth_admin</allow_any>
-      <allow_inactive>auth_admin</allow_inactive>
-      <allow_active>yes</allow_active>
-    </defaults>
-  </action>
-
   <!-- ###################################################################### -->
   <!-- Unlocking encrypted devices -->
 
