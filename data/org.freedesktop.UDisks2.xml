@@ -1093,7 +1093,7 @@
 
     <!--
         Mount:
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>fstype</parameter> (of type 's') and <parameter>options</parameter> (of type 's').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>fstype</parameter> (of type 's'), <parameter>options</parameter> (of type 's') and <parameter>loop.autoclear</parameter> (of type 'b').
         @mount_path: The filesystem path where the device was mounted.
 
         Mounts the filesystem.
@@ -1114,6 +1114,10 @@
         given in @options option. Note that both the mount options and
         filesystem types are validated against a (small) whitelist to
         avoid unexpected privilege escalation
+
+        The @loop.autoclear option can be used on loop devices to
+        request that the underlying loop device is cleared when the
+        filesystem is unmounted.
 
         If the device in question is referenced in the
         <filename>/etc/fstab</filename> file, the
