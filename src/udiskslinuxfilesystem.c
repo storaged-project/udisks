@@ -266,7 +266,6 @@ is_allowed_filesystem (const gchar *fstype)
 typedef struct
 {
   const gchar *fstype;
-  const gchar * const *defaults_shared;
   const gchar * const *defaults;
   const gchar * const *allow;
   const gchar * const *allow_uid_self;
@@ -275,7 +274,6 @@ typedef struct
 
 /* ---------------------- vfat -------------------- */
 
-static const gchar *vfat_defaults_shared[] = { "shortname=mixed", "dmask=0000", "utf8=1", "showexec", NULL };
 static const gchar *vfat_defaults[] = { "uid=", "gid=", "shortname=mixed", "dmask=0077", "utf8=1", "showexec", NULL };
 static const gchar *vfat_allow[] = { "flush", "utf8=", "shortname=", "umask=", "dmask=", "fmask=", "codepage=", "iocharset=", "usefree", "showexec", NULL };
 static const gchar *vfat_allow_uid_self[] = { "uid=", NULL };
@@ -284,7 +282,6 @@ static const gchar *vfat_allow_gid_self[] = { "gid=", NULL };
 /* ---------------------- ntfs -------------------- */
 /* this is assuming that ntfs-3g is used */
 
-static const gchar *ntfs_defaults_shared[] = { "dmask=0000", "fmask=0111", NULL };
 static const gchar *ntfs_defaults[] = { "uid=", "gid=", "dmask=0077", "fmask=0177", NULL };
 static const gchar *ntfs_allow[] = { "umask=", "dmask=", "fmask=", "locale=", "norecover", "ignore_case", "windows_names", "compression", "nocompression", NULL };
 static const gchar *ntfs_allow_uid_self[] = { "uid=", NULL };
@@ -292,7 +289,6 @@ static const gchar *ntfs_allow_gid_self[] = { "gid=", NULL };
 
 /* ---------------------- iso9660 -------------------- */
 
-static const gchar *iso9660_defaults_shared[] = { "iocharset=utf8", "mode=0444", "dmode=0555", NULL };
 static const gchar *iso9660_defaults[] = { "uid=", "gid=", "iocharset=utf8", "mode=0400", "dmode=0500", NULL };
 static const gchar *iso9660_allow[] = { "norock", "nojoliet", "iocharset=", "mode=", "dmode=", NULL };
 static const gchar *iso9660_allow_uid_self[] = { "uid=", NULL };
@@ -300,7 +296,6 @@ static const gchar *iso9660_allow_gid_self[] = { "gid=", NULL };
 
 /* ---------------------- udf -------------------- */
 
-static const gchar *udf_defaults_shared[] = { "iocharset=utf8", "umask=0000", NULL };
 static const gchar *udf_defaults[] = { "uid=", "gid=", "iocharset=utf8", "umask=0077", NULL };
 static const gchar *udf_allow[] = { "iocharset=", "umask=", NULL };
 static const gchar *udf_allow_uid_self[] = { "uid=", NULL };
@@ -313,10 +308,10 @@ static const gchar *any_allow[] = { "exec", "noexec", "nodev", "nosuid", "atime"
 
 static const FSMountOptions fs_mount_options[] =
   {
-    { "vfat", vfat_defaults_shared, vfat_defaults, vfat_allow, vfat_allow_uid_self, vfat_allow_gid_self },
-    { "ntfs", ntfs_defaults, ntfs_defaults_shared, ntfs_allow, ntfs_allow_uid_self, ntfs_allow_gid_self },
-    { "iso9660", iso9660_defaults_shared, iso9660_defaults, iso9660_allow, iso9660_allow_uid_self, iso9660_allow_gid_self },
-    { "udf", udf_defaults_shared, udf_defaults, udf_allow, udf_allow_uid_self, udf_allow_gid_self },
+    { "vfat", vfat_defaults, vfat_allow, vfat_allow_uid_self, vfat_allow_gid_self },
+    { "ntfs", ntfs_defaults, ntfs_allow, ntfs_allow_uid_self, ntfs_allow_gid_self },
+    { "iso9660", iso9660_defaults, iso9660_allow, iso9660_allow_uid_self, iso9660_allow_gid_self },
+    { "udf", udf_defaults, udf_allow, udf_allow_uid_self, udf_allow_gid_self },
   };
 
 /* ------------------------------------------------ */
@@ -518,7 +513,6 @@ is_mount_option_allowed (const FSMountOptions *fsmo,
 static gchar **
 prepend_default_mount_options (const FSMountOptions *fsmo,
                                uid_t                 caller_uid,
-                               gboolean              shared,
                                GVariant             *given_options)
 {
   GPtrArray *options;
@@ -530,12 +524,7 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
   options = g_ptr_array_new ();
   if (fsmo != NULL)
     {
-      const gchar *const *defaults;
-
-      /* the defaults depend on whether the device is shared */
-      defaults = fsmo->defaults;
-      if (shared)
-        defaults = fsmo->defaults_shared;
+      const gchar *const *defaults = fsmo->defaults;
 
       for (n = 0; defaults != NULL && defaults[n] != NULL; n++)
         {
@@ -601,36 +590,6 @@ subst_str_and_escape (const gchar *str,
   quoted_and_escaped = udisks_daemon_util_escape_and_quote (to);
   ret = subst_str (str, from, quoted_and_escaped);
   g_free (quoted_and_escaped);
-  return ret;
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
-
-static gboolean
-shared_between_seats (UDisksDaemon *daemon,
-                      UDisksBlock  *block)
-{
-  gboolean ret = FALSE;
-  UDisksObject *drive_object = NULL;
-  UDisksDrive *drive = NULL;
-
-  drive_object = udisks_daemon_find_object (daemon, udisks_block_get_drive (block));
-  if (drive_object == NULL)
-    goto out;
-
-  drive = udisks_object_get_drive (UDISKS_OBJECT (drive_object));
-  if (drive == NULL)
-    goto out;
-
-  if (g_strcmp0 (udisks_drive_get_seat (drive), "all") == 0)
-    {
-      ret = TRUE;
-      goto out;
-    }
-
- out:
-  g_clear_object (&drive_object);
-  g_clear_object (&drive);
   return ret;
 }
 
@@ -738,7 +697,6 @@ calculate_mount_options (UDisksDaemon              *daemon,
   const FSMountOptions *fsmo;
   gchar **options_to_use;
   gchar *options_to_use_str;
-  gboolean shared;
   GString *str;
   guint n;
 
@@ -747,12 +705,10 @@ calculate_mount_options (UDisksDaemon              *daemon,
 
   fsmo = find_mount_options_for_fs (fs_type);
 
-  shared = shared_between_seats (daemon, block);
-
   /* always prepend some reasonable default mount options; these are
    * chosen here; the user can override them if he wants to
    */
-  options_to_use = prepend_default_mount_options (fsmo, caller_uid, shared, options);
+  options_to_use = prepend_default_mount_options (fsmo, caller_uid, options);
 
   /* validate mount options */
   str = g_string_new ("uhelper=udisks2,nodev,nosuid");
@@ -902,10 +858,10 @@ calculate_mount_point (UDisksDaemon              *daemon,
       uuid = udisks_block_get_id_uuid (block);
     }
 
-  /* If the device is not shared between seats, we know the user-name and it
-   * doesn't have any '/' character in it, mount in /run/media/$USER
+  /* If we know the user-name and it doesn't have any '/' character in
+   * it, mount in /run/media/$USER
    */
-  if (!shared_between_seats (daemon, block) && user_name != NULL && strstr (user_name, "/") == NULL)
+  if (user_name != NULL && strstr (user_name, "/") == NULL)
     {
       mount_dir = g_strdup_printf ("/run/media/%s", user_name);
       if (!g_file_test (mount_dir, G_FILE_TEST_EXISTS))
@@ -1723,11 +1679,6 @@ handle_unmount (UDisksFilesystem       *filesystem,
        * will be replaced by the name of the drive/device in question
        */
       message = N_("Authentication is required to unmount $(udisks2.device) mounted by another user");
-      /* if the device is shared, use another action that defaults to 'yes' */
-      if (shared_between_seats (daemon, block))
-        {
-          action_id = "org.freedesktop.udisks2.filesystem-unmount-others-shared";
-        }
 
       if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                         object,

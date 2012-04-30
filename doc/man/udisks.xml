@@ -126,16 +126,9 @@
         <term><option>ID_SEAT</option></term>
         <listitem>
           <para>
-            The physical seat the device is attached to. If not set,
-            <quote>seat0</quote> (the first seat) is assumed. The
-            special value <quote>all</quote> means that the device
-            should be available on all seats, e.g. available from
-            login sessions running on any seat. This also means that
-            special mount options and mount directory will be used so
-            all users can access mounted filesystems from the device -
-            for example, the device will be mounted in
-            <filename>/media</filename> instead of
-            <filename>/run/media/USER</filename>.
+            The physical seat the device is attached to. If unset or
+            set to the empty string, <quote>seat0</quote> (the first
+            seat) is assumed.
           </para>
         </listitem>
       </varlistentry>
