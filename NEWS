@@ -1,4 +1,52 @@
 ------------
+udisks 1.95.0
+------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks and storage devices.
+
+Changes since udisks 1.94.0:
+
+ David Zeuthen (32):
+       Post-release version bump to 1.95.0
+       Mention udisks audience (and non-audience) in README
+       Update link to GVolumeMonitor docs
+       Use libacl library instead of setfacl(1)
+       Work around missing serial/wwn on VMware hard disks
+       Add multi-seat support
+       Add versioning macros
+       Make on_same_seat() also work for drive objects
+       Fix reference count mistake in previous commit
+       Interpret ID_SEAT=all to mean that a device is available on all seats
+       Add section about polkit actions to the docs
+       Fix 'make distcheck'
+       Rearrange docs so man pages come first
+       Move audience blurb from README to the udisks(8) man page
+       Move API STABILITY remarks to udisks(8) man page
+       udisksctl: Make man page point to API STABILITY section of udisks(8) man page
+       Use upper-case for all man page sections
+       Remove section about ID_DRIVE* properties
+       Add missing "on" in udisks(8) man page
+       Fix typos in policy file
+       Add separate polkit actions for ejecting media
+       Fix typo
+       Reword parts of the udisks(8) man page
+       Add a bunch of translation comments
+       Add some more translation context and strings
+       Make $(udisks2.device) in authentication messages include the vendor/model
+       Remove danish translation
+       Add Transifex config and pull latest translations
+       Remove support for ID_SEAT=all
+       Remove unused .filesystem-unmount-others-shared polkit action
+       Minor doc fixes
+       Update NEWS for release
+
+Thanks to all our contributors.
+
+David Zeuthen,
+April 30, 2012
+
+------------
 udisks 1.94.0
 ------------
 
