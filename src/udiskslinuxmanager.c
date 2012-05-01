@@ -63,6 +63,8 @@ struct _UDisksLinuxManager
 {
   UDisksManagerSkeleton parent_instance;
 
+  GMutex lock;
+
   UDisksDaemon *daemon;
 };
 
@@ -87,7 +89,9 @@ G_DEFINE_TYPE_WITH_CODE (UDisksLinuxManager, udisks_linux_manager, UDISKS_TYPE_M
 static void
 udisks_linux_manager_finalize (GObject *object)
 {
-  /* UDisksLinuxManager *manager = UDISKS_LINUX_MANAGER (object); */
+  UDisksLinuxManager *manager = UDISKS_LINUX_MANAGER (object);
+
+  g_mutex_clear (&(manager->lock));
 
   G_OBJECT_CLASS (udisks_linux_manager_parent_class)->finalize (object);
 }
@@ -137,6 +141,7 @@ udisks_linux_manager_set_property (GObject      *object,
 static void
 udisks_linux_manager_init (UDisksLinuxManager *manager)
 {
+  g_mutex_init (&(manager->lock));
   g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (manager),
                                        G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
 }
@@ -333,6 +338,9 @@ handle_loop_setup (UDisksManager          *object,
   if (fstat (fd, &fd_statbuf) == 0)
     fd_statbuf_valid = TRUE;
 
+  /* serialize access to /dev/loop-control */
+  g_mutex_lock (&(manager->lock));
+
   loop_control_fd = open ("/dev/loop-control", O_RDWR);
   if (loop_control_fd == -1)
     {
@@ -340,6 +348,7 @@ handle_loop_setup (UDisksManager          *object,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error opening /dev/loop-control: %m");
+      g_mutex_unlock (&(manager->lock));
       goto out;
     }
 
@@ -350,6 +359,7 @@ handle_loop_setup (UDisksManager          *object,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Error allocating free loop device: %m");
+      g_mutex_unlock (&(manager->lock));
       goto out;
     }
 
@@ -361,6 +371,7 @@ handle_loop_setup (UDisksManager          *object,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "Cannot open %s: %m", loop_device);
+      g_mutex_unlock (&(manager->lock));
       goto out;
     }
 
@@ -379,8 +390,10 @@ handle_loop_setup (UDisksManager          *object,
                                              UDISKS_ERROR_FAILED,
                                              "Error setting up loop device %s: %m",
                                              loop_device);
+      g_mutex_unlock (&(manager->lock));
       goto out;
     }
+  g_mutex_unlock (&(manager->lock));
 
   /* Determine the resulting object */
   error = NULL;
