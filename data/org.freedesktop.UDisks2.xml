@@ -1304,6 +1304,28 @@
          if unknown.
     -->
     <property name="BackingFile" type="ay" access="read"/>
+
+    <!-- Autoclear:
+         If %TRUE, the kernel will automatically clear the loop device
+         when the last closer closes the device. This typically
+         happens when the loop device is unmounted.
+    -->
+    <property name="Autoclear" type="b" access="read"/>
+
+    <!--
+        SetAutoclear:
+        @value: The new value of autoclear.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Setter for the #org.freedesktop.UDisks2.Loop:Autoclear
+        property. Since this may require authentication and thus may
+        fail, it is a implemented this way instead of the property
+        being writable.
+    -->
+    <method name="SetAutoclear">
+      <arg name="value" direction="in" type="b"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
   </interface>
 
   <!-- ********************************************************************** -->

@@ -168,11 +168,21 @@
   </action>
 
   <!-- ###################################################################### -->
-  <!-- Deleting loop devices -->
+  <!-- Deleting and modifying loop devices -->
 
   <action id="org.freedesktop.udisks2.loop-delete-others">
-    <_description>Manage loop devices</_description>
+    <_description>Delete loop devices</_description>
     <_message>Authentication is required to delete a loop device set up by another user</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <action id="org.freedesktop.udisks2.loop-modify-others">
+    <_description>Modify loop devices</_description>
+    <_message>Authentication is required to modify a loop device set up by another user</_message>
     <defaults>
       <allow_any>auth_admin</allow_any>
       <allow_inactive>auth_admin</allow_inactive>
