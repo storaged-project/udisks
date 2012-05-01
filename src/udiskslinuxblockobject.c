@@ -691,7 +691,8 @@ loop_check (UDisksLinuxBlockObject *object)
   gboolean ret;
 
   ret = FALSE;
-  if (g_str_has_prefix (g_udev_device_get_name (object->device), "loop"))
+  if (g_str_has_prefix (g_udev_device_get_name (object->device), "loop") &&
+      g_strcmp0 (g_udev_device_get_devtype (object->device), "disk") == 0)
     ret = TRUE;
 
   return ret;
