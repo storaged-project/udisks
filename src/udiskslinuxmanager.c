@@ -261,6 +261,7 @@ handle_loop_setup (UDisksManager          *object,
   struct loop_info64 li64;
   UDisksObject *loop_object = NULL;
   gboolean option_read_only = FALSE;
+  gboolean option_no_part_scan = FALSE;
   guint64 option_offset = 0;
   guint64 option_size = 0;
   uid_t caller_uid;
@@ -324,6 +325,7 @@ handle_loop_setup (UDisksManager          *object,
   g_variant_lookup (options, "read-only", "b", &option_read_only);
   g_variant_lookup (options, "offset", "t", &option_offset);
   g_variant_lookup (options, "size", "t", &option_size);
+  g_variant_lookup (options, "no-part-scan", "b", &option_no_part_scan);
 
   /* it's not a problem if fstat fails... for example, this can happen if the user
    * passes a fd to a file on the GVfs fuse mount
@@ -366,8 +368,8 @@ handle_loop_setup (UDisksManager          *object,
   strncpy ((char *) li64.lo_file_name, path, LO_NAME_SIZE - 1);
   if (option_read_only)
     li64.lo_flags |= LO_FLAGS_READ_ONLY;
-  /* TODO: we could have an option 'no-part-scan' but I don't think that's right */
-  li64.lo_flags |= 8; /* Use LO_FLAGS_PARTSCAN when 3.2 has been out for a while */
+  if (!option_no_part_scan)
+    li64.lo_flags |= 8; /* Use LO_FLAGS_PARTSCAN when 3.2 has been out for a while */
   li64.lo_offset = option_offset;
   li64.lo_sizelimit = option_size;
   if (ioctl (loop_fd, LOOP_SET_FD, fd) < 0 || ioctl (loop_fd, LOOP_SET_STATUS64, &li64) < 0)
