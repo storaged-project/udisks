@@ -336,10 +336,8 @@ handle_set_autoclear (UDisksLoop             *loop,
   UDisksObject *object = NULL;
   UDisksBlock *block = NULL;
   UDisksDaemon *daemon = NULL;
-  UDisksCleanup *cleanup = NULL;
   GError *error = NULL;
   uid_t caller_uid = -1;
-  uid_t setup_by_uid = -1;
 
   error = NULL;
   object = udisks_daemon_util_dup_object (loop, &error);
@@ -351,7 +349,6 @@ handle_set_autoclear (UDisksLoop             *loop,
 
   block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
-  cleanup = udisks_daemon_get_cleanup (daemon);
 
   error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, NULL, NULL, &error))
@@ -361,14 +358,7 @@ handle_set_autoclear (UDisksLoop             *loop,
       goto out;
     }
 
-  if (!udisks_cleanup_has_loop (cleanup,
-                                udisks_block_get_device (block),
-                                &setup_by_uid))
-    {
-      setup_by_uid = -1;
-    }
-
-  if (caller_uid != setup_by_uid)
+  if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
     {
       if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                         object,
