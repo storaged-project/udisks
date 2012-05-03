@@ -273,6 +273,7 @@ handle_loop_setup (UDisksManager          *object,
   struct stat fd_statbuf;
   gboolean fd_statbuf_valid = FALSE;
   WaitForLoopData wait_data;
+  uid_t setup_by_uid;
 
   /* we need the uid of the caller for the loop file */
   error = NULL;
@@ -413,6 +414,16 @@ handle_loop_setup (UDisksManager          *object,
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
+
+  /* warn if there's an old entry there */
+  if (udisks_cleanup_has_loop (udisks_daemon_get_cleanup (manager->daemon),
+                               loop_device,
+                               &setup_by_uid))
+    {
+      udisks_warning ("Detected stale entry for loop device %s (set up by uid %d)",
+                      loop_device, (gint) setup_by_uid);
+    }
+
 
   /* update the loop file */
   udisks_cleanup_add_loop (udisks_daemon_get_cleanup (manager->daemon),
