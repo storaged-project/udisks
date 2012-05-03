@@ -96,3 +96,12 @@ ENV{ID_FS_TYPE}=="ntfs|vfat", \
 
 # read-only non-Linux software installer partitions
 ENV{ID_VENDOR}=="Sony", ENV{ID_MODEL}=="PRS*Launcher", ENV{UDISKS_IGNORE}="1"
+
+# Content created using isohybrid (typically used on CDs and USB
+# sticks for bootable media) is a bit special insofar that the
+# interesting content is on a DOS partition with type 0x00 ... which
+# is hidden above. So undo this.
+#
+# See http://mjg59.dreamwidth.org/11285.html for more details
+#
+ENV{ID_PART_TABLE_TYPE}=="dos", ENV{ID_PART_ENTRY_TYPE}=="0x0", ENV{ID_FS_TYPE}=="iso9660", ENV{UDISKS_IGNORE}="0"
