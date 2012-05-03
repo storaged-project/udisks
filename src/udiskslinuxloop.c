@@ -117,7 +117,14 @@ void
 udisks_linux_loop_update (UDisksLinuxLoop        *loop,
                           UDisksLinuxBlockObject *object)
 {
+  UDisksDaemon *daemon;
+  UDisksCleanup *cleanup;
   GUdevDevice *device;
+  uid_t setup_by_uid;
+
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+  cleanup = udisks_daemon_get_cleanup (daemon);
+
   device = udisks_linux_block_object_get_device (object);
   if (g_str_has_prefix (g_udev_device_get_name (device), "loop"))
     {
@@ -158,6 +165,16 @@ udisks_linux_loop_update (UDisksLinuxLoop        *loop,
     }
   udisks_loop_set_autoclear (UDISKS_LOOP (loop),
                              g_udev_device_get_sysfs_attr_as_boolean (device, "loop/autoclear"));
+
+  setup_by_uid = 0;
+  if (cleanup != NULL)
+    {
+      udisks_cleanup_has_loop (cleanup,
+                               g_udev_device_get_device_file (device),
+                               &setup_by_uid);
+    }
+  udisks_loop_set_setup_by_uid (UDISKS_LOOP (loop), setup_by_uid);
+
   g_object_unref (device);
 }
 

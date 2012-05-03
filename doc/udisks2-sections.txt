@@ -44,6 +44,7 @@ udisks_client_get_block_for_drive
 udisks_client_get_drive_for_block
 udisks_client_get_cleartext_block
 udisks_client_get_partition_table
+udisks_client_get_loop_for_block
 udisks_client_get_partitions
 udisks_client_get_jobs_for_object
 <SUBSECTION>
@@ -1099,8 +1100,12 @@ UDisksLoopIface
 udisks_loop_interface_info
 udisks_loop_override_properties
 udisks_loop_get_backing_file
+udisks_loop_get_autoclear
+udisks_loop_get_setup_by_uid
 udisks_loop_dup_backing_file
 udisks_loop_set_backing_file
+udisks_loop_set_autoclear
+udisks_loop_set_setup_by_uid
 udisks_loop_call_delete
 udisks_loop_call_delete_finish
 udisks_loop_call_delete_sync
@@ -1109,8 +1114,6 @@ udisks_loop_call_set_autoclear
 udisks_loop_call_set_autoclear_finish
 udisks_loop_call_set_autoclear_sync
 udisks_loop_complete_set_autoclear
-udisks_loop_get_autoclear
-udisks_loop_set_autoclear
 UDisksLoopProxy
 UDisksLoopProxyClass
 udisks_loop_proxy_new

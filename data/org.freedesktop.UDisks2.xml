@@ -1312,6 +1312,12 @@
     -->
     <property name="Autoclear" type="b" access="read"/>
 
+    <!-- SetupByUID:
+         The id of the user who set up the loop device or 0 if set up
+         by root or not through udisks.
+    -->
+    <property name="SetupByUID" type="u" access="read"/>
+
     <!--
         SetAutoclear:
         @value: The new value of autoclear.
