@@ -1593,6 +1593,62 @@ udisks_client_get_partition_table (UDisksClient     *client,
   return ret;
 }
 
+/**
+ * udisks_client_get_loop_for_block:
+ * @client: A #UDisksClient.
+ * @block: A #UDisksBlock.
+ *
+ * Gets the corresponding loop interface for @block.
+ *
+ * This only works if @block itself is a loop device or a partition of
+ * a loop device.
+ *
+ * Returns: (transfer full): A #UDisksLoop or %NULL. Free with g_object_unref().
+ */
+UDisksLoop *
+udisks_client_get_loop_for_block (UDisksClient  *client,
+                                  UDisksBlock   *block)
+{
+  UDisksPartition *partition;
+  UDisksObject *object = NULL;
+  UDisksLoop *ret = NULL;
+
+  g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
+  g_return_val_if_fail (UDISKS_IS_BLOCK (block), NULL);
+
+  object = (UDisksObject *) g_dbus_interface_dup_object (G_DBUS_INTERFACE (block));
+  if (object == NULL)
+    goto out;
+
+  ret = udisks_object_get_loop (object);
+  if (ret != NULL)
+    goto out;
+
+  /* Could be we're a partition of a loop device */
+  partition = udisks_object_get_partition (object);
+  if (partition != NULL)
+    {
+      UDisksPartitionTable *partition_table;
+      partition_table = udisks_client_get_partition_table (client, partition);
+      if (partition_table != NULL)
+        {
+          UDisksObject *partition_table_object;
+          partition_table_object = (UDisksObject *) g_dbus_interface_dup_object (G_DBUS_INTERFACE (partition_table));
+          if (partition_table_object != NULL)
+            {
+              ret = udisks_object_get_loop (UDISKS_OBJECT (partition_table_object));
+              g_object_unref (partition_table_object);
+            }
+          g_object_unref (partition_table);
+        }
+      g_object_unref (partition);
+    }
+
+ out:
+  g_clear_object (&object);
+  return ret;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 /**

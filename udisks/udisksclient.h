@@ -70,6 +70,9 @@ UDisksBlock        *udisks_client_get_cleartext_block (UDisksClient        *clie
 UDisksPartitionTable *udisks_client_get_partition_table (UDisksClient        *client,
                                                          UDisksPartition     *partition);
 
+UDisksLoop         *udisks_client_get_loop_for_block  (UDisksClient  *client,
+                                                       UDisksBlock   *block);
+
 GList              *udisks_client_get_partitions      (UDisksClient        *client,
                                                        UDisksPartitionTable *table);
 
