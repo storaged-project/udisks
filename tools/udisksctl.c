@@ -478,7 +478,6 @@ static gchar   *opt_mount_unmount_object_path = NULL;
 static gchar   *opt_mount_unmount_device = NULL;
 static gchar   *opt_mount_options = NULL;
 static gchar   *opt_mount_filesystem_type = NULL;
-static gboolean opt_mount_loop_autoclear = FALSE;
 static gboolean opt_unmount_force = FALSE;
 static gboolean opt_mount_unmount_no_user_interaction = FALSE;
 
@@ -518,15 +517,6 @@ static const GOptionEntry command_mount_entries[] =
     G_OPTION_ARG_STRING,
     &opt_mount_options,
     "Mount options",
-    NULL
-  },
-  {
-    "loop-autoclear",
-    0,
-    0,
-    G_OPTION_ARG_NONE,
-    &opt_mount_loop_autoclear,
-    "Clear the loop device after unmounting",
     NULL
   },
   {
@@ -614,7 +604,6 @@ handle_command_mount_unmount (gint        *argc,
   opt_mount_unmount_device = NULL;
   opt_mount_options = NULL;
   opt_mount_filesystem_type = NULL;
-  opt_mount_loop_autoclear = FALSE;
   opt_unmount_force = FALSE;
   object = NULL;
   options = NULL;
@@ -800,12 +789,6 @@ handle_command_mount_unmount (gint        *argc,
           g_variant_builder_add (&builder,
                                  "{sv}",
                                  "fstype", g_variant_new_string (opt_mount_filesystem_type));
-        }
-      if (opt_mount_loop_autoclear)
-        {
-          g_variant_builder_add (&builder,
-                                 "{sv}",
-                                 "loop.autoclear", g_variant_new_boolean (TRUE));
         }
     }
   else

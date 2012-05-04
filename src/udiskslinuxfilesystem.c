@@ -32,13 +32,6 @@
 #include <sys/acl.h>
 #include <errno.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-
-#include <linux/loop.h>
-
 #include <glib/gstdio.h>
 
 #include "udiskslogging.h"
@@ -1100,62 +1093,6 @@ is_system_managed (UDisksBlock        *block,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gboolean
-loop_set_autoclear (const gchar  *device,
-                    GError      **error)
-{
-  gboolean ret = FALSE;
-  struct loop_info64 li64;
-  gint fd = -1;
-
-  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-  fd = open (device, O_RDWR);
-  if (fd == -1)
-    {
-      g_set_error (error,
-                   G_IO_ERROR,
-                   g_io_error_from_errno (errno),
-                   "Error opening loop device %s: %m",
-                   device);
-      goto out;
-    }
-
-  memset (&li64, '\0', sizeof (li64));
-  if (ioctl (fd, LOOP_GET_STATUS64, &li64) < 0)
-    {
-      g_set_error (error,
-                   G_IO_ERROR,
-                   g_io_error_from_errno (errno),
-                   "Error getting status for loop device %s: %m",
-                   device);
-      goto out;
-    }
-
-  li64.lo_flags |= LO_FLAGS_AUTOCLEAR;
-
-  if (ioctl (fd, LOOP_SET_STATUS64, &li64) < 0)
-    {
-      g_set_error (error,
-                   G_IO_ERROR,
-                   g_io_error_from_errno (errno),
-                   "Error setting status for loop device %s: %m",
-                   device);
-      goto out;
-    }
-
-  ret = TRUE;
-
- out:
-  if (fd != -1 )
-    {
-      if (close (fd) != 0)
-        udisks_warning ("close(2) on loop fd %d for device %s failed: %m", fd, device);
-    }
-  return ret;
-}
-
-
 /* runs in thread dedicated to handling @invocation */
 static gboolean
 handle_mount (UDisksFilesystem       *filesystem,
@@ -1185,7 +1122,6 @@ handle_mount (UDisksFilesystem       *filesystem,
   const gchar *message;
   gboolean system_managed;
   gchar *escaped_device = NULL;
-  gboolean opt_loop_autoclear = FALSE;
 
   object = NULL;
   error_message = NULL;
@@ -1213,14 +1149,6 @@ handle_mount (UDisksFilesystem       *filesystem,
   block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   cleanup = udisks_daemon_get_cleanup (daemon);
-
-  if (options != NULL)
-    {
-      g_variant_lookup (options,
-                        "loop.autoclear",
-                        "b",
-                        &opt_loop_autoclear);
-    }
 
   /* check if mount point is managed by e.g. /etc/fstab or similar */
   if (is_system_managed (block, &mount_point_to_use, &fstab_mount_options))
@@ -1539,16 +1467,6 @@ handle_mount (UDisksFilesystem       *filesystem,
                                  udisks_block_get_device_number (block),
                                  caller_uid,
                                  FALSE); /* fstab_mounted */
-
-  if (opt_loop_autoclear)
-    {
-      error = NULL;
-      if (!loop_set_autoclear (udisks_block_get_device (block), &error))
-        {
-          g_dbus_method_invocation_take_error (invocation, error);
-          goto out;
-        }
-    }
 
   udisks_notice ("Mounted %s at %s on behalf of uid %d",
                  udisks_block_get_device (block),

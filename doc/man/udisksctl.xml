@@ -37,7 +37,6 @@
         <arg choice="plain">--filesystem-type <replaceable>TYPE</replaceable></arg>
       </group>
       <arg choice="opt" rep="repeat">--options <replaceable>OPTIONS</replaceable></arg>
-      <arg choice="opt">--loop-autoclear</arg>
       <arg choice="opt">--no-user-interaction</arg>
     </cmdsynopsis>
 
@@ -119,12 +118,6 @@
             options such as <parameter>suid</parameter> or
             <parameter>dev</parameter> that would allow the caller to
             gain additional privileges, are rejected.
-          </para>
-          <para>
-            The option <option>--loop-autoclear</option> can be used
-            on loop devices to request that the kernel clears the loop
-            device when the last closer closes the device - e.g. right
-            after the filesystem is unmounted.
           </para>
         </listitem>
       </varlistentry>
