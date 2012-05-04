@@ -65,6 +65,12 @@ UDisksObject             *udisks_daemon_wait_for_object_sync  (UDisksDaemon     
 UDisksObject             *udisks_daemon_find_block            (UDisksDaemon         *daemon,
                                                                dev_t                 block_device_number);
 
+UDisksObject             *udisks_daemon_find_block_by_device_file (UDisksDaemon *daemon,
+                                                                   const gchar  *device_file);
+
+UDisksObject             *udisks_daemon_find_block_by_sysfs_path (UDisksDaemon *daemon,
+                                                                  const gchar  *sysfs_path);
+
 UDisksObject             *udisks_daemon_find_object           (UDisksDaemon         *daemon,
                                                                const gchar          *object_path);
 

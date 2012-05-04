@@ -37,6 +37,7 @@
 #include "udisksfstabentry.h"
 #include "udiskscrypttabmonitor.h"
 #include "udiskscrypttabentry.h"
+#include "udiskslinuxblockobject.h"
 
 /**
  * SECTION:udisksdaemon
@@ -976,6 +977,98 @@ udisks_daemon_find_block (UDisksDaemon *daemon,
   return udisks_daemon_wait_for_object_sync (daemon,
                                              wait_for_dev_t_cb,
                                              &block_device_number,
+                                             NULL, /* user_data_free_func */
+                                             0,
+                                             NULL);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+wait_for_device_file_cb (UDisksDaemon  *daemon,
+                         UDisksObject  *object,
+                         gpointer       user_data)
+{
+  const gchar *device_file = user_data;
+  UDisksBlock *block = NULL;
+  gboolean ret = FALSE;
+
+  block = udisks_object_peek_block (object);
+  if (block == NULL)
+    goto out;
+
+  if (g_strcmp0 (udisks_block_get_device (block), device_file) == 0)
+    ret = TRUE;
+
+  /* TODO: check symlinks? */
+
+ out:
+  return ret;
+}
+
+/**
+ * udisks_daemon_find_block_by_device_file:
+ * @daemon: A #UDisksDaemon.
+ * @device_file: A device file.
+ *
+ * Finds a block device with device file given by @device_file.
+ *
+ * Returns: (transfer full): A #UDisksObject or %NULL if not found. Free with g_object_unref().
+ */
+UDisksObject *
+udisks_daemon_find_block_by_device_file (UDisksDaemon *daemon,
+                                         const gchar  *device_file)
+{
+  return udisks_daemon_wait_for_object_sync (daemon,
+                                             wait_for_device_file_cb,
+                                             (gpointer) device_file,
+                                             NULL, /* user_data_free_func */
+                                             0,
+                                             NULL);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+wait_for_sysfs_path_cb (UDisksDaemon  *daemon,
+                        UDisksObject  *object,
+                        gpointer       user_data)
+{
+  const gchar *sysfs_path = user_data;
+  GUdevDevice *device = NULL;
+  gboolean ret = FALSE;
+
+  if (!UDISKS_IS_LINUX_BLOCK_OBJECT (object))
+    goto out;
+
+  device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (device == NULL)
+    goto out;
+
+  if (g_strcmp0 (g_udev_device_get_sysfs_path (device), sysfs_path) == 0)
+    ret = TRUE;
+
+ out:
+  g_clear_object (&device);
+  return ret;
+}
+
+/**
+ * udisks_daemon_find_block_by_sysfs_path:
+ * @daemon: A #UDisksDaemon.
+ * @sysfs_path: A sysfs path.
+ *
+ * Finds a block device with a sysfs path given by @sysfs_path.
+ *
+ * Returns: (transfer full): A #UDisksObject or %NULL if not found. Free with g_object_unref().
+ */
+UDisksObject *
+udisks_daemon_find_block_by_sysfs_path (UDisksDaemon *daemon,
+                                        const gchar  *sysfs_path)
+{
+  return udisks_daemon_wait_for_object_sync (daemon,
+                                             wait_for_sysfs_path_cb,
+                                             (gpointer) sysfs_path,
                                              NULL, /* user_data_free_func */
                                              0,
                                              NULL);
