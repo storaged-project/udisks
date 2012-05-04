@@ -41,6 +41,7 @@
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
 #include "udiskscleanup.h"
+#include "udiskslinuxblockobject.h"
 
 /**
  * SECTION:udiskslinuxmanager
@@ -212,33 +213,78 @@ typedef struct
 {
   const gchar *loop_device;
   const gchar *path;
+  UDisksObject *loop_object;
 } WaitForLoopData;
 
 static gboolean
 wait_for_loop_object (UDisksDaemon *daemon,
-                      UDisksObject *object,
+                      UDisksObject *_object,
                       gpointer      user_data)
 {
   WaitForLoopData *data = user_data;
+  UDisksObject *object;
   UDisksBlock *block;
   UDisksLoop *loop;
   gboolean ret;
+  GUdevDevice *device = NULL;
+  GDir *dir;
 
   ret = FALSE;
+
+  /* First see if we have the right loop object */
+  object = udisks_daemon_find_block_by_device_file (daemon, data->loop_device);
   block = udisks_object_peek_block (object);
   loop = udisks_object_peek_loop (object);
   if (block == NULL || loop == NULL)
     goto out;
-
-  if (g_strcmp0 (udisks_block_get_device (block), data->loop_device) != 0)
-    goto out;
-
   if (g_strcmp0 (udisks_loop_get_backing_file (loop), data->path) != 0)
     goto out;
+
+  /* ok, store this */
+  data->loop_object = object;
+
+  /* We also need to wait for all partitions to be in place in case
+   * the loop device is partitioned... we can do it like this because
+   * we are guaranteed that partitions are in sysfs when receiving the
+   * uevent for the main block device...
+   */
+  device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (device == NULL)
+    goto out;
+
+  dir = g_dir_open (g_udev_device_get_sysfs_path (device), 0 /* flags */, NULL /* GError */);
+  if (dir != NULL)
+    {
+      const gchar *name;
+      const gchar *device_name;
+      device_name = g_udev_device_get_name (device);
+      while ((name = g_dir_read_name (dir)) != NULL)
+        {
+          if (g_str_has_prefix (name, device_name))
+            {
+              gchar *sysfs_path;
+              UDisksObject *partition_object;
+              sysfs_path = g_strconcat (g_udev_device_get_sysfs_path (device), "/", name, NULL);
+              partition_object = udisks_daemon_find_block_by_sysfs_path (daemon, sysfs_path);
+              if (partition_object == NULL)
+                {
+                  /* nope, not there, bail */
+                  g_free (sysfs_path);
+                  g_dir_close (dir);
+                  goto out;
+                }
+              g_object_unref (partition_object);
+              g_free (sysfs_path);
+            }
+        }
+      g_dir_close (dir);
+    }
+
 
   ret = TRUE;
 
  out:
+  g_clear_object (&device);
   return ret;
 }
 
@@ -414,6 +460,9 @@ handle_loop_setup (UDisksManager          *object,
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
+  /* switcheroo */
+  g_object_unref (loop_object);
+  loop_object = wait_data.loop_object;
 
   /* warn if there's an old entry there */
   if (udisks_cleanup_has_loop (udisks_daemon_get_cleanup (manager->daemon),
