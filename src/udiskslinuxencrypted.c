@@ -114,24 +114,35 @@ udisks_linux_encrypted_update (UDisksLinuxEncrypted   *encrypted,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gboolean
+static UDisksObject *
 wait_for_cleartext_object (UDisksDaemon *daemon,
-                           UDisksObject *object,
                            gpointer      user_data)
 {
   const gchar *crypto_object_path = user_data;
-  UDisksBlock *block;
-  gboolean ret;
+  UDisksObject *ret = NULL;
+  GList *objects, *l;
 
-  ret = FALSE;
-  block = udisks_object_peek_block (object);
-  if (block == NULL)
-    goto out;
+  objects = udisks_daemon_get_objects (daemon);
+  for (l = objects; l != NULL; l = l->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksBlock *block;
 
-  if (g_strcmp0 (udisks_block_get_crypto_backing_device (block), crypto_object_path) == 0)
-    ret = TRUE;
+      block = udisks_object_get_block (object);
+      if (block != NULL)
+        {
+          if (g_strcmp0 (udisks_block_get_crypto_backing_device (block), crypto_object_path) == 0)
+            {
+              g_object_unref (block);
+              ret = g_object_ref (object);
+              goto out;
+            }
+          g_object_unref (block);
+        }
+    }
 
  out:
+  g_list_free_full (objects, g_object_unref);
   return ret;
 }
 

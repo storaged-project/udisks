@@ -225,38 +225,43 @@ typedef struct
   gboolean      ignore_container;
 } WaitForPartitionData;
 
-static gboolean
+static UDisksObject *
 wait_for_partition (UDisksDaemon *daemon,
-                    UDisksObject *object,
                     gpointer      user_data)
 {
   WaitForPartitionData *data = user_data;
-  gboolean ret = FALSE;
-  UDisksPartition *partition = NULL;
-  guint64 offset;
-  guint64 size;
+  UDisksObject *ret = NULL;
+  GList *objects, *l;
 
-  partition = udisks_object_get_partition (object);
-  if (partition == NULL)
-    goto out;
-
-  if (g_strcmp0 (udisks_partition_get_table (partition),
-                 g_dbus_object_get_object_path (G_DBUS_OBJECT (data->partition_table_object))) != 0)
-    goto out;
-
-  offset = udisks_partition_get_offset (partition);
-  size = udisks_partition_get_size (partition);
-
-  if (data->pos_to_wait_for >= offset &&
-      data->pos_to_wait_for < offset + size)
+  objects = udisks_daemon_get_objects (daemon);
+  for (l = objects; l != NULL; l = l->next)
     {
-      if (udisks_partition_get_is_container (partition) && data->ignore_container)
-        goto out;
-      ret = TRUE;
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksPartition *partition = udisks_object_get_partition (object);
+      if (partition != NULL)
+        {
+          if (g_strcmp0 (udisks_partition_get_table (partition),
+                         g_dbus_object_get_object_path (G_DBUS_OBJECT (data->partition_table_object))) == 0)
+            {
+              guint64 offset = udisks_partition_get_offset (partition);
+              guint64 size = udisks_partition_get_size (partition);
+
+              if (data->pos_to_wait_for >= offset && data->pos_to_wait_for < offset + size)
+                {
+                  if (!(udisks_partition_get_is_container (partition) && data->ignore_container))
+                    {
+                      g_object_unref (partition);
+                      ret = g_object_ref (object);
+                      goto out;
+                    }
+                }
+            }
+          g_object_unref (partition);
+        }
     }
 
  out:
-  g_clear_object (&partition);
+  g_list_free_full (objects, g_object_unref);
   return ret;
 }
 

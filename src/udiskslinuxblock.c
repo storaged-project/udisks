@@ -1706,47 +1706,46 @@ typedef struct
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gboolean
+static UDisksObject *
 wait_for_filesystem (UDisksDaemon *daemon,
-                     UDisksObject *object,
                      gpointer      user_data)
 {
   FormatWaitData *data = user_data;
+  UDisksObject *ret = NULL;
   UDisksBlock *block = NULL;
   UDisksPartitionTable *partition_table = NULL;
   gchar *id_type = NULL;
   gchar *partition_table_type = NULL;
-  gboolean ret = FALSE;
 
-  block = udisks_object_get_block (object);
+  block = udisks_object_get_block (data->object);
   if (block == NULL)
     goto out;
+
+  partition_table = udisks_object_get_partition_table (data->object);
 
   id_type = udisks_block_dup_id_type (block);
 
   if (g_strcmp0 (data->type, "empty") == 0)
     {
-      g_debug ("id_type=`%s'", id_type);
-      if (g_strcmp0 (id_type, "") == 0)
+      if ((id_type == NULL || g_strcmp0 (id_type, "") == 0) && partition_table == NULL)
         {
-          ret = TRUE;
+          ret = g_object_ref (data->object);
           goto out;
         }
     }
 
   if (g_strcmp0 (id_type, data->type) == 0)
     {
-      ret = TRUE;
+      ret = g_object_ref (data->object);
       goto out;
     }
 
-  partition_table = udisks_object_get_partition_table (object);
   if (partition_table != NULL)
     {
       partition_table_type = udisks_partition_table_dup_type_ (partition_table);
       if (g_strcmp0 (partition_table_type, data->type) == 0)
         {
-          ret = TRUE;
+          ret = g_object_ref (data->object);
           goto out;
         }
     }
@@ -1761,26 +1760,22 @@ wait_for_filesystem (UDisksDaemon *daemon,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gboolean
+static UDisksObject *
 wait_for_luks_uuid (UDisksDaemon *daemon,
-                    UDisksObject *object,
                     gpointer      user_data)
 {
   FormatWaitData *data = user_data;
+  UDisksObject *ret = NULL;
   UDisksBlock *block = NULL;
-  gboolean ret = FALSE;
 
-  if (object != data->object)
-    goto out;
-
-  block = udisks_object_get_block (object);
+  block = udisks_object_get_block (data->object);
   if (block == NULL)
     goto out;
 
   if (g_strcmp0 (udisks_block_get_id_type (block), "crypto_LUKS") != 0)
     goto out;
 
-  ret = TRUE;
+  ret = g_object_ref (data->object);
 
  out:
   g_clear_object (&block);
@@ -1789,28 +1784,36 @@ wait_for_luks_uuid (UDisksDaemon *daemon,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gboolean
+static UDisksObject *
 wait_for_luks_cleartext (UDisksDaemon *daemon,
-                         UDisksObject *object,
                          gpointer      user_data)
 {
   FormatWaitData *data = user_data;
-  UDisksBlock *block = NULL;
-  gboolean ret = FALSE;
+  UDisksObject *ret = NULL;
+  GList *objects, *l;
 
-  ret = FALSE;
-  block = udisks_object_get_block (object);
-  if (block == NULL)
-    goto out;
+  objects = udisks_daemon_get_objects (daemon);
+  for (l = objects; l != NULL; l = l->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksBlock *block = NULL;
 
-  if (g_strcmp0 (udisks_block_get_crypto_backing_device (block),
-                 g_dbus_object_get_object_path (G_DBUS_OBJECT (data->object))) != 0)
-    goto out;
-
-  ret = TRUE;
+      block = udisks_object_get_block (object);
+      if (block != NULL)
+        {
+          if (g_strcmp0 (udisks_block_get_crypto_backing_device (block),
+                         g_dbus_object_get_object_path (G_DBUS_OBJECT (data->object))) == 0)
+            {
+              g_object_unref (block);
+              ret = g_object_ref (object);
+              goto out;
+            }
+          g_object_unref (block);
+        }
+    }
 
  out:
-  g_clear_object (&block);
+  g_list_free_full (objects, g_object_unref);
   return ret;
 }
 

@@ -44,16 +44,14 @@ UDisksCleanup            *udisks_daemon_get_cleanup           (UDisksDaemon    *
 /**
  * UDisksDaemonWaitFunc:
  * @daemon: A #UDisksDaemon.
- * @object: A #UDisksObject to check.
  * @user_data: The #gpointer passed to udisks_daemon_wait_for_object_sync().
  *
  * Type for callback function used with udisks_daemon_wait_for_object_sync().
  *
- * Returns: %TRUE if the object is the one to wait for.
+ * Returns: (transfer full): %NULL if the object to wait for was not found, otherwise a full reference to a #UDisksObject.
  */
-typedef gboolean (*UDisksDaemonWaitFunc) (UDisksDaemon *daemon,
-                                          UDisksObject *object,
-                                          gpointer      user_data);
+typedef UDisksObject *(*UDisksDaemonWaitFunc) (UDisksDaemon *daemon,
+                                               gpointer      user_data);
 
 UDisksObject             *udisks_daemon_wait_for_object_sync  (UDisksDaemon         *daemon,
                                                                UDisksDaemonWaitFunc  wait_func,

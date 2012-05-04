@@ -213,23 +213,19 @@ typedef struct
 {
   const gchar *loop_device;
   const gchar *path;
-  UDisksObject *loop_object;
 } WaitForLoopData;
 
-static gboolean
+static UDisksObject *
 wait_for_loop_object (UDisksDaemon *daemon,
-                      UDisksObject *_object,
                       gpointer      user_data)
 {
   WaitForLoopData *data = user_data;
-  UDisksObject *object;
+  UDisksObject *ret = NULL;
+  UDisksObject *object = NULL;
   UDisksBlock *block;
   UDisksLoop *loop;
-  gboolean ret;
   GUdevDevice *device = NULL;
   GDir *dir;
-
-  ret = FALSE;
 
   /* First see if we have the right loop object */
   object = udisks_daemon_find_block_by_device_file (daemon, data->loop_device);
@@ -239,9 +235,6 @@ wait_for_loop_object (UDisksDaemon *daemon,
     goto out;
   if (g_strcmp0 (udisks_loop_get_backing_file (loop), data->path) != 0)
     goto out;
-
-  /* ok, store this */
-  data->loop_object = object;
 
   /* We also need to wait for all partitions to be in place in case
    * the loop device is partitioned... we can do it like this because
@@ -280,10 +273,11 @@ wait_for_loop_object (UDisksDaemon *daemon,
       g_dir_close (dir);
     }
 
-
-  ret = TRUE;
+  /* all, good return the loop object */
+  ret = g_object_ref (object);
 
  out:
+  g_clear_object (&object);
   g_clear_object (&device);
   return ret;
 }
@@ -460,9 +454,6 @@ handle_loop_setup (UDisksManager          *object,
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
-  /* switcheroo */
-  g_object_unref (loop_object);
-  loop_object = wait_data.loop_object;
 
   /* warn if there's an old entry there */
   if (udisks_cleanup_has_loop (udisks_daemon_get_cleanup (manager->daemon),
