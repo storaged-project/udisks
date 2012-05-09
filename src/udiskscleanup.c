@@ -869,7 +869,18 @@ udisks_cleanup_add_mounted_fs (UDisksCleanup  *cleanup,
       g_variant_iter_init (&iter, value);
       while ((child = g_variant_iter_next_value (&iter)) != NULL)
         {
-          g_variant_builder_add_value (&builder, child);
+          const gchar *entry_mount_point;
+          g_variant_get (child, "{&s@a{sv}}", &entry_mount_point, NULL);
+          /* Skip/remove stale entries */
+          if (g_strcmp0 (entry_mount_point, mount_point) == 0)
+            {
+              udisks_warning ("Removing stale entry for mount point `%s' in /run/udisks2/mounted-fs file",
+                              entry_mount_point);
+            }
+          else
+            {
+              g_variant_builder_add_value (&builder, child);
+            }
           g_variant_unref (child);
         }
       g_variant_unref (value);
@@ -1328,7 +1339,19 @@ udisks_cleanup_add_unlocked_luks (UDisksCleanup  *cleanup,
       g_variant_iter_init (&iter, value);
       while ((child = g_variant_iter_next_value (&iter)) != NULL)
         {
-          g_variant_builder_add_value (&builder, child);
+          guint64 entry_cleartext_device;
+          g_variant_get (child, "{t@a{sv}}", &entry_cleartext_device, NULL);
+          /* Skip/remove stale entries */
+          if ((dev_t) entry_cleartext_device == cleartext_device)
+            {
+              udisks_warning ("Removing stale entry for cleartext device %d:%d in /run/udisks2/unlocked-luks file",
+                              (gint) major (entry_cleartext_device),
+                              (gint) minor (entry_cleartext_device));
+            }
+          else
+            {
+              g_variant_builder_add_value (&builder, child);
+            }
           g_variant_unref (child);
         }
       g_variant_unref (value);
@@ -1808,7 +1831,18 @@ udisks_cleanup_add_loop (UDisksCleanup   *cleanup,
       g_variant_iter_init (&iter, value);
       while ((child = g_variant_iter_next_value (&iter)) != NULL)
         {
-          g_variant_builder_add_value (&builder, child);
+          const gchar *entry_loop_device;
+          g_variant_get (child, "{&s@a{sv}}", &entry_loop_device, NULL);
+          /* Skip/remove stale entries */
+          if (g_strcmp0 (entry_loop_device, device_file) == 0)
+            {
+              udisks_warning ("Removing stale entry for loop device `%s' in /run/udisks2/loop file",
+                              entry_loop_device);
+            }
+          else
+            {
+              g_variant_builder_add_value (&builder, child);
+            }
           g_variant_unref (child);
         }
       g_variant_unref (value);
