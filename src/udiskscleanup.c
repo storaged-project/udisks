@@ -61,7 +61,7 @@
  *     </thead>
  *     <tbody>
  *       <row>
- *         <entry><filename>/var/lib/udisks2/mounted-fs</filename></entry>
+ *         <entry><filename>/run/udisks2/mounted-fs</filename></entry>
  *         <entry>
  *           A serialized 'a{sa{sv}}' #GVariant mapping from the
  *           mount point (e.g. <filename>/media/EOS_DIGITAL</filename>) into a set of details.
@@ -823,7 +823,7 @@ udisks_cleanup_check_mounted_fs (UDisksCleanup *cleanup,
  * @fstab_mount: %TRUE if the device was mounted via /etc/fstab.
  *
  * Adds a new entry to the
- * <filename>/var/lib/udisks2/mounted-fs</filename> file.
+ * <filename>/run/udisks2/mounted-fs</filename> file.
  */
 void
 udisks_cleanup_add_mounted_fs (UDisksCleanup  *cleanup,
@@ -925,7 +925,7 @@ udisks_cleanup_add_mounted_fs (UDisksCleanup  *cleanup,
  * @out_fstab_mount: Return location for whether the device was a fstab mount or %NULL.
  *
  * Gets the mount point for @block_device, if it exists in the
- * <filename>/var/lib/udisks2/mounted-fs</filename> file.
+ * <filename>/run/udisks2/mounted-fs</filename> file.
  *
  * Returns: The mount point for @block_device or %NULL if not found.
  */
