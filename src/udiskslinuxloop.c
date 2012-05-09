@@ -285,24 +285,56 @@ handle_delete (UDisksLoop             *loop,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-loop_set_autoclear (const gchar  *device,
+loop_set_autoclear (GUdevDevice  *device,
                     gboolean      value,
                     GError      **error)
 {
   gboolean ret = FALSE;
   struct loop_info64 li64;
   gint fd = -1;
+  const gchar *device_file = NULL;
+  gint sysfs_autoclear_fd;
+  gchar *sysfs_autoclear_path = NULL;
 
+  g_return_val_if_fail (G_UDEV_IS_DEVICE (device), FALSE);
   g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-  fd = open (device, O_RDWR);
+  /* try writing to the loop/autoclear sysfs file - this may not work
+   * since it currently (May 2012) depends on a patch not yet applied
+   * upstream (it'll fail in open(2))
+   */
+  sysfs_autoclear_path = g_strconcat (g_udev_device_get_sysfs_path (device), "/loop/autoclear", NULL);
+  sysfs_autoclear_fd = open (sysfs_autoclear_path, O_WRONLY);
+  if (sysfs_autoclear_fd > 0)
+    {
+      gchar strval[2] = {'0', 0};
+      if (value)
+        strval[0] = '1';
+      if (write (sysfs_autoclear_fd, strval, 1) != 1)
+        {
+          udisks_warning ("Error writing '1' to file %s: %m", sysfs_autoclear_path);
+        }
+      else
+        {
+          ret = TRUE;
+          close (sysfs_autoclear_fd);
+          g_free (sysfs_autoclear_path);
+          goto out;
+        }
+      close (sysfs_autoclear_fd);
+    }
+  g_free (sysfs_autoclear_path);
+
+  /* if that didn't work, do LO_GET_STATUS, then LO_SET_STATUS */
+  device_file = g_udev_device_get_device_file (device);
+  fd = open (device_file, O_RDWR);
   if (fd == -1)
     {
       g_set_error (error,
                    G_IO_ERROR,
                    g_io_error_from_errno (errno),
                    "Error opening loop device %s: %m",
-                   device);
+                   device_file);
       goto out;
     }
 
@@ -313,7 +345,7 @@ loop_set_autoclear (const gchar  *device,
                    G_IO_ERROR,
                    g_io_error_from_errno (errno),
                    "Error getting status for loop device %s: %m",
-                   device);
+                   device_file);
       goto out;
     }
 
@@ -328,7 +360,7 @@ loop_set_autoclear (const gchar  *device,
                    G_IO_ERROR,
                    g_io_error_from_errno (errno),
                    "Error setting status for loop device %s: %m",
-                   device);
+                   device_file);
       goto out;
     }
 
@@ -338,7 +370,7 @@ loop_set_autoclear (const gchar  *device,
   if (fd != -1 )
     {
       if (close (fd) != 0)
-        udisks_warning ("close(2) on loop fd %d for device %s failed: %m", fd, device);
+        udisks_warning ("close(2) on loop fd %d for device %s failed: %m", fd, device_file);
     }
   return ret;
 }
@@ -351,8 +383,8 @@ handle_set_autoclear (UDisksLoop             *loop,
                       GVariant               *options)
 {
   UDisksObject *object = NULL;
-  UDisksBlock *block = NULL;
   UDisksDaemon *daemon = NULL;
+  GUdevDevice *device = NULL;
   GError *error = NULL;
   uid_t caller_uid = -1;
 
@@ -364,7 +396,6 @@ handle_set_autoclear (UDisksLoop             *loop,
       goto out;
     }
 
-  block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
 
   error = NULL;
@@ -393,8 +424,9 @@ handle_set_autoclear (UDisksLoop             *loop,
         goto out;
     }
 
+  device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (object));
   error = NULL;
-  if (!loop_set_autoclear (udisks_block_get_device (block),
+  if (!loop_set_autoclear (device,
                            arg_value,
                            &error))
     {
@@ -414,6 +446,7 @@ handle_set_autoclear (UDisksLoop             *loop,
   udisks_loop_complete_set_autoclear (loop, invocation);
 
  out:
+  g_clear_object (&device);
   g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
