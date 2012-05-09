@@ -1,4 +1,42 @@
 ------------
+udisks 1.97.0
+------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks and storage devices.
+
+Changes since udisks 1.96.0:
+
+ David Zeuthen (22):
+       Post-release version bump to 1.97.0
+       Add loop.autoclear option to Filesystem.Mount() method
+       Also check for "target is busy" when checking umount(8) output
+       Loop: add :Autoclear property and SetAutoclear() method
+       Don't assign the Loop D-Bus interface to partitions of a loop device
+       Fix up how we check if use is authorized for Loop.SetAutoclear()
+       Manager: Add new 'no-part-scan' option in LoopSetup() method
+       Manager: Add locking around LoopSetup()
+       Warn if /run/udisks2/loop has an existing entry when setting up a new loop device
+       UDisksClient: add get_loop_for_block() convenience method
+       Loop: add SetupByUID property
+       Add work-around to show FS on CDs/USB sticks created using isohybrid
+       Daemon: Add new find_block_*() convenience methods
+       Manager: wait for partitions to appear before returning in LoopSetup()
+       UDisksDaemon: add get_objects() method
+       UDisksDaemon: rework wait_for_object_sync() method
+       Revert "Add loop.autoclear option to Filesystem.Mount() method"
+       Update path to mounted-fs file in documentation
+       UDisksCleanup: Remove stale entries when adding new ones
+       Simplify loop device checking
+       Loop: try writing to loop/autoclear sysfs file before LO_{GET,SET}_STATUS
+       Update NEWS for release
+
+Thanks to all our contributors.
+
+David Zeuthen,
+May 9, 2012
+
+------------
 udisks 1.96.0
 ------------
 
