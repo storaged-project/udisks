@@ -73,6 +73,26 @@
 
     <cmdsynopsis>
       <command>udisksctl</command>
+      <arg choice="plain">loop-setup </arg>
+      <arg choice="plain">--file <replaceable>PATH</replaceable></arg>
+      <arg choice="opt">--read-only</arg>
+      <arg choice="opt">--offset <replaceable>OFFSET</replaceable></arg>
+      <arg choice="opt">--size <replaceable>SIZE</replaceable></arg>
+      <arg choice="opt">--no-user-interaction</arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>udisksctl</command>
+      <arg choice="plain">loop-delete </arg>
+      <group choice="req">
+        <arg choice="plain">--object-path <replaceable>OBJECT</replaceable></arg>
+        <arg choice="plain">--block-device <replaceable>DEVICE</replaceable></arg>
+      </group>
+      <arg choice="opt">--no-user-interaction</arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>udisksctl</command>
       <arg choice="plain">smart-simulate </arg>
       <arg choice="plain">--file <replaceable>PATH</replaceable></arg>
       <group choice="req">
@@ -137,11 +157,10 @@
         <term><option>unmount</option></term>
         <listitem>
           <para>
-            Unmounts a device previously mounted by
-            <citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
-            The option <option>--force</option> can be used to request
-            that the device is unmounted even if active references
-            exists.
+            Unmounts a device. This only works if the device is
+            mounted. The option <option>--force</option> can be used
+            to request that the device is unmounted even if active
+            references exists.
           </para>
         </listitem>
       </varlistentry>
@@ -162,8 +181,26 @@
         <term><option>lock</option></term>
         <listitem>
           <para>
-            Locks a device previously unlocked by
-            <citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+            Locks a device. This only works if the device is a
+            cleartext device backed by a cryptotext device.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>loop-setup</option></term>
+        <listitem>
+          <para>
+            Sets up a loop device backed by <replaceable>FILE</replaceable>.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>loop-delete</option></term>
+        <listitem>
+          <para>
+            Tears down a loop device.
           </para>
         </listitem>
       </varlistentry>
