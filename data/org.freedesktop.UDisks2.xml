@@ -384,16 +384,8 @@
 
         The option @atasmart_blob can be used to inject libatasmart
         compatible blobs for testing how clients react to different
-        kinds of SMART data. Only uid 0 may use this. This option may
-        be removed in the future with it being considered an ABI break
-        - it only exists for testing purposes. Example:
-<programlisting>
-# export ATA_SMART_BLOB=/usr/share/doc/libatasmart-devel-0.17/Maxtor_96147H8-&#45;BAC51KJ0-&#45;2 ; \
-  gdbus call -&#45;system -&#45;dest org.freedesktop.UDisks2 \
-             -&#45;object-path /org/freedesktop/UDisks2/drives/WDC_WD1002FAEX_00Y9A0_WD_WCAW30039835 \
-             -&#45;method org.freedesktop.UDisks2.Drive.Ata.SmartUpdate \
-             "{'atasmart_blob': &#60;'$ATA_SMART_BLOB'&#62;}"
-</programlisting>
+        kinds of SMART data. This option may be removed in the future
+        with it being considered an ABI break.
     -->
     <method name="SmartUpdate">
       <arg name="options" direction="in" type="a{sv}"/>

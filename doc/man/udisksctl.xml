@@ -73,6 +73,17 @@
 
     <cmdsynopsis>
       <command>udisksctl</command>
+      <arg choice="plain">smart-simulate </arg>
+      <arg choice="plain">--file <replaceable>PATH</replaceable></arg>
+      <group choice="req">
+        <arg choice="plain">--object-path <replaceable>OBJECT</replaceable></arg>
+        <arg choice="plain">--block-device <replaceable>DEVICE</replaceable></arg>
+      </group>
+      <arg choice="opt">--no-user-interaction</arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>udisksctl</command>
       <arg choice="plain">monitor</arg>
     </cmdsynopsis>
 
@@ -153,6 +164,20 @@
           <para>
             Locks a device previously unlocked by
             <citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>smart-simulate</option></term>
+        <listitem>
+          <para>
+            Sets SMART data from the libatasmart blob given by
+            <replaceable>FILE</replaceable> - see
+            <filename>/usr/share/doc/libatasmart-devel-VERSION/</filename>
+            for blobs shipped with libatasmart. This is a debugging
+            feature used to check that applications act correctly when
+            a disk is failing.
           </para>
         </listitem>
       </varlistentry>

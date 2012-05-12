@@ -341,6 +341,17 @@
     </defaults>
   </action>
 
+  <!-- Set SMART data from blob -->
+  <action id="org.freedesktop.udisks2.ata-smart-simulate">
+    <_description>Set SMART data from blob</_description>
+    <_message>Authentication is required to set SMART data from blob</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
   <!-- Start and abort SMART self-tests -->
   <action id="org.freedesktop.udisks2.ata-smart-selftest">
     <_description>Run SMART self-test</_description>

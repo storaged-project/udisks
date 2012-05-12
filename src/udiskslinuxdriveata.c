@@ -581,6 +581,8 @@ handle_smart_update (UDisksDriveAta        *_drive,
   gboolean nowakeup = FALSE;
   const gchar *atasmart_blob = NULL;
   GError *error;
+  const gchar *message;
+  const gchar *action_id;
 
   daemon = NULL;
 
@@ -606,42 +608,28 @@ handle_smart_update (UDisksDriveAta        *_drive,
   g_variant_lookup (options, "nowakeup", "b", &nowakeup);
   g_variant_lookup (options, "atasmart_blob", "s", &atasmart_blob);
 
+  /* Translators: Shown in authentication dialog when the user
+   * refreshes SMART data from a disk.
+   *
+   * Do not translate $(udisks2.device), it's a placeholder and
+   * will be replaced by the name of the drive/device in question
+   */
+  message = N_("Authentication is required to update SMART data from $(udisks2.device)");
+  action_id = "org.freedesktop.udisks2.ata-smart-update";
+
   if (atasmart_blob != NULL)
     {
-      uid_t caller_uid;
-      error = NULL;
-      if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, NULL, NULL, &error))
-        {
-          g_dbus_method_invocation_return_gerror (invocation, error);
-          g_error_free (error);
-          goto out;
-        }
-      if (caller_uid != 0)
-        {
-          g_dbus_method_invocation_return_error (invocation,
-                                                 UDISKS_ERROR,
-                                                 UDISKS_ERROR_FAILED,
-                                                 "Only root can update SMART data from a blob");
-          goto out;
-        }
+      /* Translators: Shown in authentication dialog when the user
+       * tries to simulate SMART data from a libatasmart blob.
+       *
+       * Do not translate $(udisks2.device), it's a placeholder and
+       * will be replaced by the name of the drive/device in question
+       */
+      message = N_("Authentication is required to set SMART data from a blob on $(udisks2.device)");
+      action_id = "org.freedesktop.udisks2.ata-smart-simulate";
     }
   else
     {
-      /* Check that the user is actually authorized */
-      if (!udisks_daemon_util_check_authorization_sync (daemon,
-                                                        UDISKS_OBJECT (block_object),
-                                                        "org.freedesktop.udisks2.ata-smart-update",
-                                                        options,
-                                                        /* Translators: Shown in authentication dialog when the user
-                                                         * refreshes SMART data from a disk.
-                                                         *
-                                                         * Do not translate $(udisks2.device), it's a placeholder and
-                                                         * will be replaced by the name of the drive/device in question
-                                                         */
-                                                        N_("Authentication is required to update SMART data from $(udisks2.device)"),
-                                                        invocation))
-        goto out;
-
       if (!udisks_drive_ata_get_smart_supported (UDISKS_DRIVE_ATA (drive)))
         {
           g_dbus_method_invocation_return_error (invocation,
@@ -660,6 +648,15 @@ handle_smart_update (UDisksDriveAta        *_drive,
           goto out;
         }
     }
+
+  /* Check that the user is authorized */
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    UDISKS_OBJECT (block_object),
+                                                    action_id,
+                                                    options,
+                                                    message,
+                                                    invocation))
+    goto out;
 
   error = NULL;
   if (!udisks_linux_drive_ata_refresh_smart_sync (drive,
