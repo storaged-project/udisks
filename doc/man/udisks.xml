@@ -13,31 +13,26 @@
 
   <refnamediv>
     <refname>udisks</refname>
-    <refpurpose>Introduction to udisks</refpurpose>
+    <refpurpose>Disk Manager</refpurpose>
   </refnamediv>
 
   <refsect1><title>DESCRIPTION</title>
     <para>
       udisks provides interfaces to enumerate and perform operations
-      on storage devices. Any application (including unprivileged
-      ones) can access the
+      on disks and storage devices. Any application (including
+      unprivileged ones) can access the
       <citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry>
       daemon via the name <emphasis>org.freedesktop.UDisks2</emphasis>
       on the system message bus. In addition to the D-Bus API, a
       library, <filename>libudisks2</filename> is also provided. This
       library can be used from C/C++ and any high-level language with
-      <ulink url="https://live.gnome.org/GObjectIntrospection">GObjectIntrospection</ulink>
+      <ulink
+      url="https://live.gnome.org/GObjectIntrospection">GObjectIntrospection</ulink>
       support such as Javascript and Python.
-    </para>
-    <para>
-      Except for providing a list of devices, support for udev
-      properties as well as routines used to present the devices to
-      the end user, udisks, as a system-level component, is not
-      involved with what a desktop user interface shows the user. For
-      GNOME see these <ulink
-      url="http://git.gnome.org/browse/gvfs/tree/monitor/udisks2/what-is-shown.txt">GVfs
-      notes</ulink> about what is shown in the desktop user interface
-      and how to influence it.
+      udisks is only indirectly involved in what devices and objects
+      are shown in the user interface. See these
+      <ulink url="http://git.gnome.org/browse/gvfs/tree/monitor/udisks2/what-is-shown.txt">notes</ulink>
+      for what is shown in GNOME 3.
     </para>
   </refsect1>
 
@@ -54,8 +49,6 @@
       more information (<ulink
       url="http://udisks.freedesktop.org/docs/latest/udisks-polkit-actions.html">available
       online here</ulink>).
-    </para>
-    <para>
       Note that the <literal>x-udisks-auth</literal> option can be
       used in the <filename>/etc/fstab</filename> and
       <filename>/etc/crypttab</filename> files to specify that
