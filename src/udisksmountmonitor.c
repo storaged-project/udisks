@@ -433,10 +433,6 @@ udisks_mount_monitor_get_mountinfo (UDisksMountMonitor  *monitor,
           continue;
         }
 
-      /* ignore mounts where only a subtree of a filesystem is mounted */
-      if (g_strcmp0 (encoded_root, "/") != 0)
-        continue;
-
       /* Temporary work-around for btrfs, see
        *
        *  https://bugzilla.redhat.com/show_bug.cgi?id=495152#c31
