@@ -184,6 +184,7 @@ udisks_linux_drive_object_get_block
 udisks_linux_drive_object_get_device
 udisks_linux_drive_object_get_devices
 udisks_linux_drive_object_housekeeping
+udisks_linux_drive_object_is_not_in_use
 <SUBSECTION Standard>
 UDISKS_TYPE_LINUX_DRIVE_OBJECT
 UDISKS_LINUX_DRIVE_OBJECT

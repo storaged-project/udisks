@@ -881,3 +881,106 @@ udisks_linux_drive_object_housekeeping (UDisksLinuxDriveObject  *object,
  out:
   return ret;
 }
+
+static gboolean
+is_block_unlocked (GList *objects, const gchar *crypto_object_path)
+{
+  gboolean ret = FALSE;
+  GList *l;
+  for (l = objects; l != NULL; l = l->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksBlock *block;
+      block = udisks_object_peek_block (object);
+      if (block != NULL)
+        {
+          if (g_strcmp0 (udisks_block_get_crypto_backing_device (block), crypto_object_path) == 0)
+            {
+              ret = TRUE;
+              goto out;
+            }
+        }
+    }
+ out:
+  return ret;
+}
+
+/**
+ * udisks_linux_drive_object_is_not_in_use:
+ * @object: A #UDisksLinuxDriveObject.
+ * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @error: A #GError or %NULL.
+ *
+ * Checks if the drive represented by @object is in use and sets
+ * @error if so.
+ *
+ * Returns: %TRUE if @object is not is use, %FALSE if @error is set.
+ */
+gboolean
+udisks_linux_drive_object_is_not_in_use (UDisksLinuxDriveObject   *object,
+                                         GCancellable             *cancellable,
+                                         GError                  **error)
+{
+  GDBusObjectManagerServer *object_manager;
+  const gchar *drive_object_path;
+  gboolean ret = TRUE;
+  GList *objects = NULL;
+  GList *l;
+
+  g_return_val_if_fail (UDISKS_IS_LINUX_DRIVE_OBJECT (object), FALSE);
+  g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), FALSE);
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+  drive_object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
+
+  object_manager = udisks_daemon_get_object_manager (object->daemon);
+  objects = g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (object_manager));
+
+  /* Visit all block devices related to the drive... */
+  for (l = objects; l != NULL; l = l->next)
+    {
+      GDBusObjectSkeleton *iter_object = G_DBUS_OBJECT_SKELETON (l->data);
+      UDisksBlock *block;
+      UDisksFilesystem *filesystem;
+
+      if (!UDISKS_IS_LINUX_BLOCK_OBJECT (iter_object))
+        continue;
+
+      block = udisks_object_peek_block (UDISKS_OBJECT (iter_object));
+      filesystem = udisks_object_peek_filesystem (UDISKS_OBJECT (iter_object));
+
+      if (g_strcmp0 (udisks_block_get_drive (block), drive_object_path) != 0)
+        continue;
+
+      /* bail if block device is mounted */
+      if (filesystem != NULL)
+        {
+          if (g_strv_length ((gchar **) udisks_filesystem_get_mount_points (filesystem)) > 0)
+            {
+              g_set_error (error,
+                           UDISKS_ERROR,
+                           UDISKS_ERROR_DEVICE_BUSY,
+                           "Device %s is mounted",
+                           udisks_block_get_preferred_device (block));
+              ret = FALSE;
+              goto out;
+            }
+        }
+
+      /* bail if block device is unlocked (LUKS) */
+      if (is_block_unlocked (objects, g_dbus_object_get_object_path (G_DBUS_OBJECT (iter_object))))
+        {
+          g_set_error (error,
+                       UDISKS_ERROR,
+                       UDISKS_ERROR_DEVICE_BUSY,
+                       "Encrypted device %s is unlocked",
+                       udisks_block_get_preferred_device (block));
+          ret = FALSE;
+          goto out;
+        }
+    }
+
+ out:
+  g_list_free_full (objects, g_object_unref);
+  return ret;
+}

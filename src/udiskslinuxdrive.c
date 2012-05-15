@@ -706,16 +706,24 @@ handle_eject (UDisksDrive           *_drive,
     }
 
   daemon = udisks_linux_drive_object_get_daemon (object);
-  block_object = udisks_linux_drive_object_get_block (object, TRUE);
+  block_object = udisks_linux_drive_object_get_block (object, FALSE);
   if (block_object == NULL)
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             "Unable to find physical block device for drive");
+                                             "Unable to find block device for drive");
       goto out;
     }
   block = udisks_object_peek_block (UDISKS_OBJECT (block_object));
+
+  /* refuse to eject if drive appears to be in use */
+  if (!udisks_linux_drive_object_is_not_in_use (object, NULL, &error))
+    {
+      g_prefix_error (&error, "Cannot eject drive in use: ");
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
 
   error = NULL;
   if (!udisks_daemon_util_get_caller_pid_sync (daemon,

@@ -48,6 +48,10 @@ gboolean                udisks_linux_drive_object_housekeeping  (UDisksLinuxDriv
                                                                  GCancellable             *cancellable,
                                                                  GError                  **error);
 
+gboolean                udisks_linux_drive_object_is_not_in_use (UDisksLinuxDriveObject   *object,
+                                                                 GCancellable             *cancellable,
+                                                                 GError                  **error);
+
 gboolean                udisks_linux_drive_object_should_include_device (GUdevClient  *client,
                                                                          GUdevDevice  *device,
                                                                          gchar       **out_vpd);
