@@ -611,10 +611,10 @@ handle_smart_update (UDisksDriveAta        *_drive,
   /* Translators: Shown in authentication dialog when the user
    * refreshes SMART data from a disk.
    *
-   * Do not translate $(udisks2.device), it's a placeholder and
+   * Do not translate $(udisks2.drive), it's a placeholder and
    * will be replaced by the name of the drive/device in question
    */
-  message = N_("Authentication is required to update SMART data from $(udisks2.device)");
+  message = N_("Authentication is required to update SMART data from $(udisks2.drive)");
   action_id = "org.freedesktop.udisks2.ata-smart-update";
 
   if (atasmart_blob != NULL)
@@ -622,10 +622,10 @@ handle_smart_update (UDisksDriveAta        *_drive,
       /* Translators: Shown in authentication dialog when the user
        * tries to simulate SMART data from a libatasmart blob.
        *
-       * Do not translate $(udisks2.device), it's a placeholder and
+       * Do not translate $(udisks2.drive), it's a placeholder and
        * will be replaced by the name of the drive/device in question
        */
-      message = N_("Authentication is required to set SMART data from a blob on $(udisks2.device)");
+      message = N_("Authentication is required to set SMART data from a blob on $(udisks2.drive)");
       action_id = "org.freedesktop.udisks2.ata-smart-simulate";
     }
   else
@@ -756,10 +756,10 @@ handle_smart_selftest_abort (UDisksDriveAta        *_drive,
                                                     /* Translators: Shown in authentication dialog when the user
                                                      * aborts a running SMART self-test.
                                                      *
-                                                     * Do not translate $(udisks2.device), it's a placeholder and
+                                                     * Do not translate $(udisks2.drive), it's a placeholder and
                                                      * will be replaced by the name of the drive/device in question
                                                      */
-                                                    N_("Authentication is required to abort a SMART self-test on $(udisks2.device)"),
+                                                    N_("Authentication is required to abort a SMART self-test on $(udisks2.drive)"),
                                                     invocation))
     goto out;
 
@@ -953,10 +953,10 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
                                                     /* Translators: Shown in authentication dialog when the user
                                                      * initiates a SMART self-test.
                                                      *
-                                                     * Do not translate $(udisks2.device), it's a placeholder and
+                                                     * Do not translate $(udisks2.drive), it's a placeholder and
                                                      * will be replaced by the name of the drive/device in question
                                                      */
-                                                    N_("Authentication is required to start a SMART self-test on $(udisks2.device)"),
+                                                    N_("Authentication is required to start a SMART self-test on $(udisks2.drive)"),
                                                     invocation))
     goto out;
 

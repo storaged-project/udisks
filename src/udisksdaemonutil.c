@@ -417,9 +417,30 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
  * authentication which may be a very long time unless
  * @auth_no_user_interaction is %TRUE.
  *
- * The follow variables can be used in @message
+ * See <xref linkend="udisks-polkit-details"/> for the variables that
+ * can be used in @message.
  *
- * - udisks2.device - If @object has a #UDisksBlock interface, this property is set to the value of the #UDisksBlock::preferred-device property.
+ * <table frame="all" id="udisks-polkit-details">
+ *   <title>Known polkit details variables</title>
+ *   <tgroup cols="2" align="left" colsep="1" rowsep="1">
+ *     <thead>
+ *       <row>
+ *         <entry>key</entry>
+ *         <entry>value</entry>
+ *       </row>
+ *     </thead>
+ *     <tbody>
+ *       <row>
+ *         <entry><parameter>udisks2.device</parameter></entry>
+ *         <entry>If @object has a #UDisksBlock interface or #UDisksDrive interface, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.PreferredDevice">Block:PreferredDevice</link> property. If set, this is guaranteed to be a device file.</entry>
+ *       </row>
+ *       <row>
+ *         <entry><parameter>udisks2.drive</parameter></entry>
+ *         <entry>Like <parameter>udisks2.device</parameter>, but also includes Vital Product Data about the drive e.g. vendor/model (if available), for example "INTEL SSDSA2MH080G1GC (/dev/sda1)". Otherwise is just set to the same value as <parameter>udisks2.device</parameter>.</entry>
+ *       </row>
+ *     </tbody>
+ *   </tgroup>
+ * </table>
  *
  * Returns: %TRUE if caller is authorized, %FALSE if not.
  */
@@ -442,7 +463,8 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
   UDisksObject *block_object = NULL;
   UDisksObject *drive_object = NULL;
   gboolean auth_no_user_interaction = FALSE;
-  gchar *details_udisks2_device = NULL;
+  const gchar *details_udisks2_device = NULL;
+  gchar *details_udisks2_drive = NULL;
 
   subject = polkit_system_bus_name_new (g_dbus_method_invocation_get_sender (invocation));
   if (options != NULL)
@@ -472,6 +494,9 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
         }
     }
 
+  if (block != NULL)
+    details_udisks2_device = udisks_block_get_preferred_device (block);
+
   /* If we have a drive, use vendor/model in the message (in addition to Block:preferred-device) */
   if (drive != NULL)
     {
@@ -495,22 +520,24 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
 
       if (block != NULL)
         {
-          details_udisks2_device = g_strdup_printf ("%s (%s)", s, udisks_block_get_preferred_device (block));
+          details_udisks2_drive = g_strdup_printf ("%s (%s)", s, udisks_block_get_preferred_device (block));
         }
       else
         {
-          details_udisks2_device = s;
+          details_udisks2_drive = s;
           s = NULL;
         }
       g_free (s);
     }
 
   /* Fall back to Block:preferred-device */
-  if (details_udisks2_device == NULL && block != NULL)
-    details_udisks2_device = udisks_block_dup_preferred_device (block);
+  if (details_udisks2_drive == NULL && block != NULL)
+    details_udisks2_drive = udisks_block_dup_preferred_device (block);
 
   if (details_udisks2_device != NULL)
     polkit_details_insert (details, "udisks2.device", details_udisks2_device);
+  if (details_udisks2_drive != NULL)
+    polkit_details_insert (details, "udisks2.drive", details_udisks2_drive);
 
   error = NULL;
   result = polkit_authority_check_authorization_sync (udisks_daemon_get_authority (daemon),
@@ -552,7 +579,7 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
   ret = TRUE;
 
  out:
-  g_free (details_udisks2_device);
+  g_free (details_udisks2_drive);
   g_clear_object (&block_object);
   g_clear_object (&drive_object);
   g_clear_object (&block);

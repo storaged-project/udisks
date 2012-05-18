@@ -176,6 +176,19 @@
           when upgrading from one version of udisks to another. For
           example, <filename>.pkla</filename> files may need to be
           updated to match an updated policy.
+        </para>
+        <para>
+          See <xref linkend="udisks-polkit-details"/> for the
+          variables that can be used to assist in determining if the
+          caller is authorized (note that each variable may not be set
+          for request). For example, a polkit authorization rule for
+          any of the
+          <emphasis>org.freedesktop.udisks2.filesystem-mount*</emphasis>
+          actions can use the <parameter>udisks2.device</parameter>
+          variable to determine if the caller is authorized to mount a
+          specific device.
+        </para>
+        <para>
           For reference, the polkit actions defined by udisks &version;
           are included here:
           <informalexample id="udisks-polkit-actions-file"><programlisting><xi:include xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" href="../data/org.freedesktop.udisks2.policy.in"><xi:fallback>FIXME: MISSING XINCLUDE CONTENT</xi:fallback></xi:include></programlisting></informalexample>
