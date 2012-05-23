@@ -259,10 +259,10 @@ handle_set_flags (UDisksPartition        *partition,
   /* Translators: Shown in authentication dialog when the user
    * requests modifying a partition (changing type, flags, name etc.).
    *
-   * Do not translate $(udisks2.drive), it's a placeholder and
+   * Do not translate $(drive), it's a placeholder and
    * will be replaced by the name of the drive/device in question
    */
-  message = N_("Authentication is required to modify the partition on device $(udisks2.drive)");
+  message = N_("Authentication is required to modify the partition on device $(drive)");
   if (udisks_block_get_hint_system (block))
     {
       action_id = "org.freedesktop.udisks2.modify-device-system";
@@ -404,10 +404,10 @@ handle_set_name (UDisksPartition        *partition,
   /* Translators: Shown in authentication dialog when the user
    * requests modifying a partition (changing type, flags, name etc.).
    *
-   * Do not translate $(udisks2.drive), it's a placeholder and
+   * Do not translate $(drive), it's a placeholder and
    * will be replaced by the name of the drive/device in question
    */
-  message = N_("Authentication is required to modify the partition on device $(udisks2.drive)");
+  message = N_("Authentication is required to modify the partition on device $(drive)");
   if (udisks_block_get_hint_system (block))
     {
       action_id = "org.freedesktop.udisks2.modify-device-system";
@@ -586,10 +586,10 @@ handle_set_type (UDisksPartition        *partition,
   /* Translators: Shown in authentication dialog when the user
    * requests modifying a partition (changing type, flags, name etc.).
    *
-   * Do not translate $(udisks2.drive), it's a placeholder and
+   * Do not translate $(drive), it's a placeholder and
    * will be replaced by the name of the drive/device in question
    */
-  message = N_("Authentication is required to modify the partition on device $(udisks2.drive)");
+  message = N_("Authentication is required to modify the partition on device $(drive)");
   if (udisks_block_get_hint_system (block))
     {
       action_id = "org.freedesktop.udisks2.modify-device-system";
@@ -759,10 +759,10 @@ handle_delete (UDisksPartition        *partition,
   /* Translators: Shown in authentication dialog when the user
    * requests deleting a partition.
    *
-   * Do not translate $(udisks2.drive), it's a placeholder and
+   * Do not translate $(drive), it's a placeholder and
    * will be replaced by the name of the drive/device in question
    */
-  message = N_("Authentication is required to delete the partition $(udisks2.drive)");
+  message = N_("Authentication is required to delete the partition $(drive)");
   if (udisks_block_get_hint_system (block))
     {
       action_id = "org.freedesktop.udisks2.modify-device-system";

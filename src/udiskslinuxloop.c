@@ -238,10 +238,10 @@ handle_delete (UDisksLoop             *loop,
                                                          * requests deleting a loop device previously set up by
                                                          * another user.
                                                          *
-                                                         * Do not translate $(udisks2.drive), it's a placeholder and
+                                                         * Do not translate $(drive), it's a placeholder and
                                                          * will be replaced by the name of the drive/device in question
                                                          */
-                                                        N_("Authentication is required to delete the loop device $(udisks2.drive)"),
+                                                        N_("Authentication is required to delete the loop device $(drive)"),
                                                         invocation))
         goto out;
     }
@@ -416,10 +416,10 @@ handle_set_autoclear (UDisksLoop             *loop,
                                                          * requests changing autoclear on a loop device set up by
                                                          * another user.
                                                          *
-                                                         * Do not translate $(udisks2.drive), it's a placeholder and
+                                                         * Do not translate $(drive), it's a placeholder and
                                                          * will be replaced by the name of the drive/device in question
                                                          */
-                                                        N_("Authentication is required to modify the loop device $(udisks2.drive)"),
+                                                        N_("Authentication is required to modify the loop device $(drive)"),
                                                         invocation))
         goto out;
     }

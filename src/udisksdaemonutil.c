@@ -398,6 +398,17 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
   return ret;
 }
 
+/* Need this until we can depend on a libpolkit with this bugfix
+ *
+ * http://cgit.freedesktop.org/polkit/commit/?h=wip/js-rule-files&id=224f7b892478302dccbe7e567b013d3c73d376fd
+ */
+static void
+_safe_polkit_details_insert (PolkitDetails *details, const gchar *key, const gchar *value)
+{
+  if (value != NULL)
+    polkit_details_insert (details, key, value);
+}
+
 /**
  * udisks_daemon_util_check_authorization_sync:
  * @daemon: A #UDisksDaemon.
@@ -431,12 +442,36 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
  *     </thead>
  *     <tbody>
  *       <row>
- *         <entry><parameter>udisks2.device</parameter></entry>
+ *         <entry><parameter>device_file</parameter></entry>
  *         <entry>If @object has a #UDisksBlock interface or #UDisksDrive interface, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.PreferredDevice">Block:PreferredDevice</link> property. If set, this is guaranteed to be a device file.</entry>
  *       </row>
  *       <row>
- *         <entry><parameter>udisks2.drive</parameter></entry>
- *         <entry>Like <parameter>udisks2.device</parameter>, but also includes Vital Product Data about the drive e.g. vendor/model (if available), for example "INTEL SSDSA2MH080G1GC (/dev/sda1)". Otherwise is just set to the same value as <parameter>udisks2.device</parameter>.</entry>
+ *         <entry><parameter>drive</parameter></entry>
+ *         <entry>Like <parameter>device_file</parameter>, but also includes Vital Product Data about the drive e.g. vendor/model (if available), for example "INTEL SSDSA2MH080G1GC (/dev/sda1)". Otherwise is just set to the same value as <parameter>device_file</parameter>.</entry>
+ *       </row>
+ *       <row>
+ *         <entry><parameter>drive.wwn</parameter></entry>
+ *         <entry>If @object has a #UDisksDrive, this is set to the World Wide Name (<link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.WWN">WWN</link>).</entry>
+ *       </row>
+ *       <row>
+ *         <entry><parameter>drive.serial</parameter></entry>
+ *         <entry>If @object has a #UDisksDrive, this is set to the serial number (<link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Serial">Serial</link>).</entry>
+ *       </row>
+ *       <row>
+ *         <entry><parameter>drive.vendor</parameter></entry>
+ *         <entry>If @object has a #UDisksDrive, this is set to the vendor (<link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Vendor">Vendor</link>).</entry>
+ *       </row>
+ *       <row>
+ *         <entry><parameter>drive.model</parameter></entry>
+ *         <entry>If @object has a #UDisksDrive, this is set to the model (<link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Model">Model</link>).</entry>
+ *       </row>
+ *       <row>
+ *         <entry><parameter>drive.revision</parameter></entry>
+ *         <entry>If @object has a #UDisksDrive, this is set to the firmware revision (<link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Revision">Revision</link>).</entry>
+ *       </row>
+ *       <row>
+ *         <entry><parameter>drive.removable</parameter></entry>
+ *         <entry>If @object has a #UDisksDrive and drive is considered removable, set to <quote>true</quote> (<link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Removable">Removable</link>).</entry>
  *       </row>
  *     </tbody>
  *   </tgroup>
@@ -463,8 +498,8 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
   UDisksObject *block_object = NULL;
   UDisksObject *drive_object = NULL;
   gboolean auth_no_user_interaction = FALSE;
-  const gchar *details_udisks2_device = NULL;
-  gchar *details_udisks2_drive = NULL;
+  const gchar *details_device = NULL;
+  gchar *details_drive = NULL;
 
   subject = polkit_system_bus_name_new (g_dbus_method_invocation_get_sender (invocation));
   if (options != NULL)
@@ -495,7 +530,7 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
     }
 
   if (block != NULL)
-    details_udisks2_device = udisks_block_get_preferred_device (block);
+    details_device = udisks_block_get_preferred_device (block);
 
   /* If we have a drive, use vendor/model in the message (in addition to Block:preferred-device) */
   if (drive != NULL)
@@ -520,24 +555,32 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
 
       if (block != NULL)
         {
-          details_udisks2_drive = g_strdup_printf ("%s (%s)", s, udisks_block_get_preferred_device (block));
+          details_drive = g_strdup_printf ("%s (%s)", s, udisks_block_get_preferred_device (block));
         }
       else
         {
-          details_udisks2_drive = s;
+          details_drive = s;
           s = NULL;
         }
       g_free (s);
+
+      _safe_polkit_details_insert (details, "drive.wwn", udisks_drive_get_wwn (drive));
+      _safe_polkit_details_insert (details, "drive.serial", udisks_drive_get_serial (drive));
+      _safe_polkit_details_insert (details, "drive.vendor", udisks_drive_get_vendor (drive));
+      _safe_polkit_details_insert (details, "drive.model", udisks_drive_get_model (drive));
+      _safe_polkit_details_insert (details, "drive.revision", udisks_drive_get_revision (drive));
+      if (udisks_drive_get_removable (drive))
+        polkit_details_insert (details, "drive.removable", "true");
     }
 
   /* Fall back to Block:preferred-device */
-  if (details_udisks2_drive == NULL && block != NULL)
-    details_udisks2_drive = udisks_block_dup_preferred_device (block);
+  if (details_drive == NULL && block != NULL)
+    details_drive = udisks_block_dup_preferred_device (block);
 
-  if (details_udisks2_device != NULL)
-    polkit_details_insert (details, "udisks2.device", details_udisks2_device);
-  if (details_udisks2_drive != NULL)
-    polkit_details_insert (details, "udisks2.drive", details_udisks2_drive);
+  if (details_device != NULL)
+    polkit_details_insert (details, "device_file", details_device);
+  if (details_drive != NULL)
+    polkit_details_insert (details, "drive", details_drive);
 
   error = NULL;
   result = polkit_authority_check_authorization_sync (udisks_daemon_get_authority (daemon),
@@ -579,7 +622,7 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
   ret = TRUE;
 
  out:
-  g_free (details_udisks2_drive);
+  g_free (details_drive);
   g_clear_object (&block_object);
   g_clear_object (&drive_object);
   g_clear_object (&block);
