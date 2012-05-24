@@ -49,6 +49,7 @@ SUBSYSTEMS=="usb", ATTRS{idVendor}=="05ac", ATTRS{idProduct}=="8403", ENV{ID_DRI
 
 # Realtek card readers
 DRIVERS=="rts_pstor", ENV{ID_DRIVE_FLASH_SD}="1"
+DRIVERS=="rts5229", ENV{ID_DRIVE_FLASH_SD}="1"
 
 # Common theme
 #
