@@ -634,8 +634,9 @@ class FS(UDisksTestCase):
         self.mkfs('ext4', 'udiskstest')
         fs = self.udisks_filesystem()
         mount_path = fs.call_mount_sync(no_options, None)
-        self.assertEqual(mount_path, '/media/udiskstest')
-        self.assertTrue(self.is_mountpoint('/media/udiskstest'))
+        self.assertTrue(mount_path.endswith('udiskstest'))
+        self.assertTrue('/media/' in mount_path)
+        self.assertTrue(self.is_mountpoint(mount_path))
 
         dev_t = os.stat(self.devname()).st_rdev
 
@@ -650,10 +651,11 @@ class FS(UDisksTestCase):
         self.assertEqual(fs.get_property('mount-points'), [])
 
         mount_path = fs.call_mount_sync(no_options, None)
-        self.assertTrue(self.is_mountpoint('/media/udiskstest'))
-        self.assertEqual(mount_path, '/media/udiskstest')
+        self.assertTrue(mount_path.endswith('udiskstest'))
+        self.assertTrue('/media/' in mount_path)
+        self.assertTrue(self.is_mountpoint(mount_path))
         self.client.settle()
-        self.assertEqual(fs.get_property('mount-points'), ['/media/udiskstest'])
+        self.assertEqual(fs.get_property('mount-points'), [mount_path])
 
         self.retry_busy(fs.call_unmount_sync, no_options, None)
         self.client.settle()
@@ -784,10 +786,9 @@ class FS(UDisksTestCase):
         # mount
         mount_path = fs.call_mount_sync(no_options, None)
 
+        self.assertTrue(mount_path.startswith('/run/media/'), mount_path)
         if label:
-            self.assertEqual(mount_path, '/media/' + label)
-        else:
-            self.assertTrue(mount_path.startswith('/media/'))
+            self.assertTrue(mount_path.endswith(label))
 
         self.client.settle()
         self.assertEqual(fs.get_property('mount-points'), [mount_path])
