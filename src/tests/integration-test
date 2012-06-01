@@ -121,7 +121,7 @@ class UDisksTestCase(unittest.TestCase):
         klass.device = klass.setup_vdev()
 
         # inhibit GNOME automounting/nautilus pop ups
-        subprocess.call(['killall', '-STOP', 'gvfs-gdu-volume-monitor'])
+        subprocess.call(['killall', '-STOP', 'gvfs-udisks2-volume-monitor'])
 
         # start daemon
         if logfile:
@@ -160,7 +160,7 @@ class UDisksTestCase(unittest.TestCase):
         klass.device = None
 
         # resume GNOME automounting/nautilus pop ups
-        subprocess.call(['killall', '-CONT', 'gvfs-gdu-volume-monitor'])
+        subprocess.call(['killall', '-CONT', 'gvfs-udisks2-volume-monitor'])
 
     @classmethod
     def sync(klass):
