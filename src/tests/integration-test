@@ -303,7 +303,7 @@ class UDisksTestCase(unittest.TestCase):
             try:
                 return fn(*args)
             except GLib.GError as e:
-                if not 'UDisks.Error.DeviceBusy' in e.message:
+                if not 'UDisks2.Error.DeviceBusy' in e.message:
                     raise
                 sys.stderr.write('[busy] ')
                 time.sleep(0.3)
@@ -614,7 +614,7 @@ class FS(UDisksTestCase):
             self.fs_create(None, 'bogus', no_options)
             self.fail('Expected failure for bogus file system')
         except GLib.GError as e:
-            self.assertTrue('UDisks.Error.NotSupported' in e.message)
+            self.assertTrue('UDisks2.Error.NotSupported' in e.message)
             self.assertTrue('type bogus' in e.message)
 
     def test_create_fs_unsupported_label(self):
@@ -625,7 +625,7 @@ class FS(UDisksTestCase):
             self.fs_create(None, 'minix', options)
             self.fail('Expected failure for unsupported label')
         except GLib.GError as e:
-            self.assertTrue('UDisks.Error.NotSupported' in e.message)
+            self.assertTrue('UDisks2.Error.NotSupported' in e.message)
 
     def test_force_removal(self):
         '''fs: forced removal'''
@@ -673,7 +673,7 @@ class FS(UDisksTestCase):
                 self.fs_create(None, type, no_options)
                 self.fail('Expected failure for missing mkfs.' + type)
             except GLib.GError as e:
-                self.assertTrue('UDisks.Error.Failed' in e.message)
+                self.assertTrue('UDisks2.Error.Failed' in e.message)
             return
 
         # do checks with command line tools (mkfs/mount/umount)
@@ -827,7 +827,7 @@ class FS(UDisksTestCase):
         try:
             fs.call_set_label_sync(l, no_options, None)
         except GLib.GError as e:
-            if 'UDisks.Error.NotSupported' in e.message:
+            if 'UDisks2.Error.NotSupported' in e.message:
                 # these fses are known to not support relabeling
                 self.assertTrue(type in ['minix', 'btrfs'])
                 supported = False
@@ -1042,7 +1042,7 @@ class Luks(UDisksTestCase):
                 encrypted.call_lock_sync(no_options, None)
                 self.fail('Lock() unexpectedly succeeded on mounted file system')
             except GLib.GError as e:
-                self.assertTrue('UDisks.Error.Failed' in e.message)
+                self.assertTrue('UDisks2.Error.Failed' in e.message)
         finally:
             # umount
             self.retry_busy(fs.call_unmount_sync, no_options, None)
