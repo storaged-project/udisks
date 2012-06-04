@@ -414,7 +414,7 @@ _safe_polkit_details_insert (PolkitDetails *details, const gchar *key, const gch
  * @daemon: A #UDisksDaemon.
  * @object: (allow-none): The #GDBusObject that the call is on or %NULL.
  * @action_id: The action id to check for.
- * @options: (allow-none): A #GVariant to check for the <literal>auth.no_user_interaction</literal> option or %NULL.
+ * @options: (allow-none): A #GVariant to check for the <quote>auth.no_user_interaction</quote> option or %NULL.
  * @message: The message to convey (use N_).
  * @invocation: The invocation to check for.
  *
@@ -424,58 +424,24 @@ _safe_polkit_details_insert (PolkitDetails *details, const gchar *key, const gch
  * authorized, the appropriate error is already returned to the caller
  * via @invocation.
  *
- * The calling thread is blocked for the duration of the
- * authentication which may be a very long time unless
- * @auth_no_user_interaction is %TRUE.
+ * The calling thread is blocked for the duration of the authorization
+ * check which could be a very long time since it may involve
+ * presenting an authentication dialog and having a human user use
+ * it. If <quote>auth.no_user_interaction</quote> in @options is %TRUE
+ * no authentication dialog will be presented and the check is not
+ * expected to take a long time.
  *
  * See <xref linkend="udisks-polkit-details"/> for the variables that
- * can be used in @message.
- *
- * <table frame="all" id="udisks-polkit-details">
- *   <title>Known polkit details variables</title>
- *   <tgroup cols="2" align="left" colsep="1" rowsep="1">
- *     <thead>
- *       <row>
- *         <entry>key</entry>
- *         <entry>value</entry>
- *       </row>
- *     </thead>
- *     <tbody>
- *       <row>
- *         <entry><parameter>device_file</parameter></entry>
- *         <entry>If @object has a #UDisksBlock interface or #UDisksDrive interface, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.PreferredDevice">Block:PreferredDevice</link> property. If set, this is guaranteed to be a device file.</entry>
- *       </row>
- *       <row>
- *         <entry><parameter>drive</parameter></entry>
- *         <entry>Like <parameter>device_file</parameter>, but also includes Vital Product Data about the drive e.g. vendor/model (if available), for example "INTEL SSDSA2MH080G1GC (/dev/sda1)". Otherwise is just set to the same value as <parameter>device_file</parameter>.</entry>
- *       </row>
- *       <row>
- *         <entry><parameter>drive.wwn</parameter></entry>
- *         <entry>If @object has a #UDisksDrive, this is set to the World Wide Name (<link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.WWN">WWN</link>).</entry>
- *       </row>
- *       <row>
- *         <entry><parameter>drive.serial</parameter></entry>
- *         <entry>If @object has a #UDisksDrive, this is set to the serial number (<link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Serial">Serial</link>).</entry>
- *       </row>
- *       <row>
- *         <entry><parameter>drive.vendor</parameter></entry>
- *         <entry>If @object has a #UDisksDrive, this is set to the vendor (<link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Vendor">Vendor</link>).</entry>
- *       </row>
- *       <row>
- *         <entry><parameter>drive.model</parameter></entry>
- *         <entry>If @object has a #UDisksDrive, this is set to the model (<link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Model">Model</link>).</entry>
- *       </row>
- *       <row>
- *         <entry><parameter>drive.revision</parameter></entry>
- *         <entry>If @object has a #UDisksDrive, this is set to the firmware revision (<link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Revision">Revision</link>).</entry>
- *       </row>
- *       <row>
- *         <entry><parameter>drive.removable</parameter></entry>
- *         <entry>If @object has a #UDisksDrive and drive is considered removable, set to <quote>true</quote> (<link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Removable">Removable</link>).</entry>
- *       </row>
- *     </tbody>
- *   </tgroup>
- * </table>
+ * can be used in @message but note that not all variables can be used
+ * in all checks. For example, any check involving a #UDisksDrive or a
+ * #UDisksBlock object can safely include the fragment
+ * <quote>$(drive)</quote> since it will always expand to the name of
+ * the drive, e.g. <quote>INTEL SSDSA2MH080G1GC (/dev/sda1)</quote> or
+ * the block device file e.g. <quote>/dev/vg_lucifer/lv_root</quote>
+ * or <quote>/dev/sda1</quote>. However this won't work for operations
+ * that isn't on a drive or block device, for example calls on the
+ * <link linkend="gdbus-interface-org-freedesktop-UDisks2-Manager.top_of_page">Manager</link>
+ * object.
  *
  * Returns: %TRUE if caller is authorized, %FALSE if not.
  */
