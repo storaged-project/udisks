@@ -665,17 +665,17 @@ udisks_linux_drive_object_uevent (UDisksLinuxDriveObject *object,
 static gchar *
 check_for_vpd (GUdevDevice *device)
 {
-  gchar *ret;
+  gchar *ret = NULL;
   const gchar *serial;
   const gchar *wwn;
+  const gchar *path;
 
   g_return_val_if_fail (G_UDEV_IS_DEVICE (device), FALSE);
 
-  ret = NULL;
-
-  /* prefer WWN to serial */
+  /* order of preference: WWN, serial, path */
   serial = g_udev_device_get_property (device, "ID_SERIAL");
   wwn = g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION");
+  path = g_udev_device_get_property (device, "ID_PATH");
   if (wwn != NULL && strlen (wwn) > 0)
     {
       ret = g_strdup (wwn);
@@ -683,6 +683,10 @@ check_for_vpd (GUdevDevice *device)
   else if (serial != NULL && strlen (serial) > 0)
     {
       ret = g_strdup (serial);
+    }
+  else if (path != NULL && strlen (path) > 0)
+    {
+      ret = g_strdup (path);
     }
   return ret;
 }
