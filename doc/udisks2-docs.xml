@@ -188,7 +188,7 @@
         </para>
 
         <table frame="all" id="udisks-polkit-details">
-          <title>Known variables</title>
+          <title>Known polkit variables</title>
           <tgroup cols="2" align="left" colsep="1" rowsep="1">
             <thead>
               <row>
@@ -203,74 +203,74 @@
               </row>
               <row>
                 <entry><parameter>drive</parameter></entry>
-                <entry>Like <parameter>device</parameter>, but if the object is also a drive, this variable includes Vital Product Data about the drive such as the vendor and model identifiers (if available), for example <quote>INTEL SSDSA2MH080G1GC (/dev/sda1)</quote>. Otherwise is just set to the same value as <parameter>device</parameter>. If the object is not a block device, this is not set (it is however set if the object is a block device but not a drive).</entry>
+                <entry>Like the <parameter>device</parameter> variable, but if the object is also a drive, this variable includes Vital Product Data about the drive such as the vendor and model identifiers (if available), for example <quote>INTEL SSDSA2MH080G1GC (/dev/sda1)</quote>. Otherwise is just set to the same value as <parameter>device</parameter>. If the object is not a block device, this is not set (it is however set if the object is a block device but not a drive).</entry>
               </row>
 
               <row>
                 <entry><parameter>drive.wwn</parameter></entry>
-                <entry>If the object is a drive, this is set to the World Wide Name (See <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.WWN">Drive:WWN</link>). If the object is not a drive, this is not set.</entry>
+                <entry>If the object is a drive (or a block device that is part of a drive), this is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.WWN">Drive:WWN</link> property.</entry>
               </row>
               <row>
                 <entry><parameter>drive.serial</parameter></entry>
-                <entry>If the object is a drive, this is set to the serial number (See <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Serial">Drive:Serial</link>). If the object is not a drive, this is not set.</entry>
+                <entry>If the object is a drive (or a block device that is part of a drive), this is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Serial">Drive:Serial</link> property.</entry>
               </row>
               <row>
                 <entry><parameter>drive.vendor</parameter></entry>
-                <entry>If the object is a drive, this is set to the vendor (See <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Vendor">Drive:Vendor</link>). If the object is not a drive, this is not set.</entry>
+                <entry>If the object is a drive (or a block device that is part of a drive), this is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Vendor">Drive:Vendor</link> property.</entry>
               </row>
               <row>
                 <entry><parameter>drive.model</parameter></entry>
-                <entry>If the object is a drive, this is set to the model (See <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Model">Drive:Model</link>). If the object is not a drive, this is not set.</entry>
+                <entry>If the object is a drive (or a block device that is part of a drive), this is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Model">Drive:Model</link> property.</entry>
               </row>
               <row>
                 <entry><parameter>drive.revision</parameter></entry>
-                <entry>If the object is a drive, this is set to the firmware revision (See <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Revision">Drive:Revision</link>). If the object is not a drive, this is not set.</entry>
+                <entry>If the object is a drive (or a block device that is part of a drive), this is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Revision">Drive:Revision</link> property.</entry>
               </row>
               <row>
                 <entry><parameter>drive.removable</parameter></entry>
-                <entry>If the object is a drive that is considered removable, set to <quote>true</quote> (See <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Removable">Drive:Removable</link>). If the object is not a drive, this is not set.</entry>
+                <entry>If the object is a drive (or a block device that is part of a drive), this is set to the string <quote>true</quote> only if the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Removable">Drive:Removable</link> property is <constant>TRUE</constant>.</entry>
               </row>
 
               <row>
                 <entry><parameter>id.type</parameter></entry>
-                <entry>If the object is a block device, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.IdType">Block:IdType</link> property. If the object is not a block device, this is not set.</entry>
+                <entry>If the object is a block device, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.IdType">Block:IdType</link> property.</entry>
               </row>
               <row>
                 <entry><parameter>id.usage</parameter></entry>
-                <entry>If the object is a block device, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.IdUsage">Block:IdUsage</link> property. If the object is not a block device, this is not set.</entry>
+                <entry>If the object is a block device, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.IdUsage">Block:IdUsage</link> property.</entry>
               </row>
               <row>
                 <entry><parameter>id.version</parameter></entry>
-                <entry>If the object is a block device, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.IdVersion">Block:IdVersion</link> property. If the object is not a block device, this is not set.</entry>
+                <entry>If the object is a block device, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.IdVersion">Block:IdVersion</link> property.</entry>
               </row>
               <row>
                 <entry><parameter>id.label</parameter></entry>
-                <entry>If the object is a block device, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.IdLabel">Block:IdLabel</link> property. If the object is not a block device, this is not set.</entry>
+                <entry>If the object is a block device, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.IdLabel">Block:IdLabel</link> property.</entry>
               </row>
               <row>
                 <entry><parameter>id.uuid</parameter></entry>
-                <entry>If the object is a block device, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.IdUUID">Block:IdUUID</link> property. If the object is not a block device, this is not set.</entry>
+                <entry>If the object is a block device, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.IdUUID">Block:IdUUID</link> property.</entry>
               </row>
 
               <row>
                 <entry><parameter>partition.number</parameter></entry>
-                <entry>If the object is a partition, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Partition.Number">Partition:Number</link> property. If the object is not a partition, this is not set.</entry>
+                <entry>If the object is a partition, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Partition.Number">Partition:Number</link> property.</entry>
               </row>
               <row>
                 <entry><parameter>partition.type</parameter></entry>
-                <entry>If the object is a partition, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Partition.Type">Partition:Type</link> property. If the object is not a partition, this is not set.</entry>
+                <entry>If the object is a partition, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Partition.Type">Partition:Type</link> property.</entry>
               </row>
               <row>
                 <entry><parameter>partition.flags</parameter></entry>
-                <entry>If the object is a partition, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Partition.Flags">Partition:Flags</link> property. If the object is not a partition, this is not set.</entry>
+                <entry>If the object is a partition, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Partition.Flags">Partition:Flags</link> property.</entry>
               </row>
               <row>
                 <entry><parameter>partition.name</parameter></entry>
-                <entry>If the object is a partition, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Partition.Name">Partition:Name</link> property. If the object is not a partition, this is not set.</entry>
+                <entry>If the object is a partition, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Partition.Name">Partition:Name</link> property.</entry>
               </row>
               <row>
                 <entry><parameter>partition.uuid</parameter></entry>
-                <entry>If the object is a partition, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Partition.UUID">Partition:UUID</link> property. If the object is not a partition, this is not set.</entry>
+                <entry>If the object is a partition, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Partition.UUID">Partition:UUID</link> property.</entry>
               </row>
 
             </tbody>
