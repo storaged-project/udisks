@@ -544,7 +544,7 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
     details_drive = udisks_block_dup_preferred_device (block);
 
   if (details_device != NULL)
-    polkit_details_insert (details, "device_file", details_device);
+    polkit_details_insert (details, "device", details_device);
   if (details_drive != NULL)
     polkit_details_insert (details, "drive", details_drive);
 

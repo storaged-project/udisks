@@ -182,9 +182,9 @@
           for request). For example, a polkit authorization rule for
           any of the
           <emphasis>org.freedesktop.udisks2.filesystem-mount*</emphasis>
-          actions can use the <parameter>device_file</parameter>
-          variable to determine if the caller is authorized to mount a
-          specific device.
+          actions can use the <parameter>device</parameter> variable
+          to determine if the caller is authorized to mount a specific
+          block device.
         </para>
 
         <table frame="all" id="udisks-polkit-details">
@@ -198,12 +198,12 @@
             </thead>
             <tbody>
               <row>
-                <entry><parameter>device_file</parameter></entry>
+                <entry><parameter>device</parameter></entry>
                 <entry>If the object is a block device, this property is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.PreferredDevice">Block:PreferredDevice</link> property. If set, this is guaranteed to be a device file, for example <quote>/dev/vg_lucifer/lv_root</quote> or <quote>/dev/sda1</quote>. If the object is not a block device, this is not set.</entry>
               </row>
               <row>
                 <entry><parameter>drive</parameter></entry>
-                <entry>Like <parameter>device_file</parameter>, but if the object is also a drive, this variable includes Vital Product Data about the drive such as the vendor and model identifiers (if available), for example <quote>INTEL SSDSA2MH080G1GC (/dev/sda1)</quote>. Otherwise is just set to the same value as <parameter>device_file</parameter>. If the object is not a block device, this is not set (it is however set if the object is a block device but not a drive).</entry>
+                <entry>Like <parameter>device</parameter>, but if the object is also a drive, this variable includes Vital Product Data about the drive such as the vendor and model identifiers (if available), for example <quote>INTEL SSDSA2MH080G1GC (/dev/sda1)</quote>. Otherwise is just set to the same value as <parameter>device</parameter>. If the object is not a block device, this is not set (it is however set if the object is a block device but not a drive).</entry>
               </row>
               <row>
                 <entry><parameter>drive.wwn</parameter></entry>
