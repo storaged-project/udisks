@@ -21,6 +21,8 @@
 #include "config.h"
 #include <glib/gi18n-lib.h>
 
+#include <stdio.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -405,8 +407,24 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
 static void
 _safe_polkit_details_insert (PolkitDetails *details, const gchar *key, const gchar *value)
 {
-  if (value != NULL)
+  if (value != NULL && strlen (value) > 0)
     polkit_details_insert (details, key, value);
+}
+
+static void
+_safe_polkit_details_insert_int (PolkitDetails *details, const gchar *key, gint value)
+{
+  gchar buf[32];
+  snprintf (buf, sizeof buf, "%d", value);
+  polkit_details_insert (details, key, buf);
+}
+
+static void
+_safe_polkit_details_insert_uint64 (PolkitDetails *details, const gchar *key, guint64 value)
+{
+  gchar buf[32];
+  snprintf (buf, sizeof buf, "0x%08llx", (unsigned long long int) value);
+  polkit_details_insert (details, key, buf);
 }
 
 /**
@@ -461,6 +479,7 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
   gboolean ret = FALSE;
   UDisksBlock *block = NULL;
   UDisksDrive *drive = NULL;
+  UDisksPartition *partition = NULL;
   UDisksObject *block_object = NULL;
   UDisksObject *drive_object = NULL;
   gboolean auth_no_user_interaction = FALSE;
@@ -493,6 +512,8 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
           if (drive_object != NULL)
             drive = udisks_object_get_drive (drive_object);
         }
+
+      partition = udisks_object_get_partition (object);
     }
 
   if (block != NULL)
@@ -537,6 +558,24 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
       _safe_polkit_details_insert (details, "drive.revision", udisks_drive_get_revision (drive));
       if (udisks_drive_get_removable (drive))
         polkit_details_insert (details, "drive.removable", "true");
+    }
+
+  if (block != NULL)
+    {
+      _safe_polkit_details_insert (details, "id.type",    udisks_block_get_id_type (block));
+      _safe_polkit_details_insert (details, "id.usage",   udisks_block_get_id_usage (block));
+      _safe_polkit_details_insert (details, "id.version", udisks_block_get_id_version (block));
+      _safe_polkit_details_insert (details, "id.label",   udisks_block_get_id_label (block));
+      _safe_polkit_details_insert (details, "id.uuid",    udisks_block_get_id_uuid (block));
+    }
+
+  if (partition != NULL)
+    {
+      _safe_polkit_details_insert_int    (details, "partition.number", udisks_partition_get_number (partition));
+      _safe_polkit_details_insert        (details, "partition.type",   udisks_partition_get_type_ (partition));
+      _safe_polkit_details_insert_uint64 (details, "partition.flags",  udisks_partition_get_flags (partition));
+      _safe_polkit_details_insert        (details, "partition.name",   udisks_partition_get_name (partition));
+      _safe_polkit_details_insert        (details, "partition.uuid",   udisks_partition_get_uuid (partition));
     }
 
   /* Fall back to Block:preferred-device */
@@ -592,6 +631,7 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
   g_clear_object (&block_object);
   g_clear_object (&drive_object);
   g_clear_object (&block);
+  g_clear_object (&partition);
   g_clear_object (&drive);
   g_clear_object (&subject);
   g_clear_object (&details);
