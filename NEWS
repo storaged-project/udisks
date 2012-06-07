@@ -1,4 +1,45 @@
 ------------
+udisks 1.98.0
+------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks and storage devices.
+
+Changes since udisks 1.97.0:
+
+David Zeuthen (15):
+      Post-release version bump to 1.98.0
+      udisksctl: add 'smart-simulate' verb
+      udisksctl: describe 'loop-setup' and 'loop-delete' verbs
+      Call it "Disk Manager" and reword some sections of udisks(8) man page
+      Bug 49842 – Unhandled rootfs on bind mount
+      Drive: Refuse to eject drives that appear to be in use
+      Add some documentation about polkit variables
+      Rename current polkit variables and also add some new ones
+      Move table with polkit variables to the "Authorization Checks" chapter
+      If a block device has ID_PATH set, consider it to be a drive
+      Use "device" instead of "block_device" in the polkit variables
+      Add id.* and partition.* polkit variables
+      Rework part of the polkit variable documentation
+      udisksd: work if polkitd is not available
+      Update NEWS for release
+
+Martin Pitt (8):
+      integration tests: Update expected mount points
+      integration tests: Suspend gvfs-udisks2-volume-monitor
+      integration-test: Update expected exception names
+      integration-test: Mitigate race after mounting
+      Wait for the correct device after formatting
+      integration-test: Update expected Luks mount points
+      integration-test: Quiesce wipefs output
+      integration-test: Run on temporary local DBus
+
+Thanks to all our contributors.
+
+David Zeuthen,
+June 7, 2012
+
+------------
 udisks 1.97.0
 ------------
 
