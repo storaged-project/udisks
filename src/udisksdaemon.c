@@ -67,6 +67,7 @@ struct _UDisksDaemon
 
   UDisksLinuxProvider *linux_provider;
 
+  /* may be NULL if polkit is masked */
   PolkitAuthority *authority;
 
   UDisksCleanup *cleanup;
@@ -101,7 +102,7 @@ udisks_daemon_finalize (GObject *object)
   udisks_cleanup_stop (daemon->cleanup);
   g_object_unref (daemon->cleanup);
 
-  g_object_unref (daemon->authority);
+  g_clear_object (&daemon->authority);
   g_object_unref (daemon->persistent_store);
   g_object_unref (daemon->object_manager);
   g_object_unref (daemon->linux_provider);
@@ -195,7 +196,7 @@ udisks_daemon_constructed (GObject *object)
   daemon->authority = polkit_authority_get_sync (NULL, &error);
   if (daemon->authority == NULL)
     {
-      udisks_error ("Error initializing PolicyKit authority: %s (%s, %d)",
+      udisks_error ("Error initializing polkit authority: %s (%s, %d)",
                     error->message, g_quark_to_string (error->domain), error->code);
       g_error_free (error);
     }
@@ -433,7 +434,9 @@ udisks_daemon_get_persistent_store (UDisksDaemon *daemon)
  *
  * Gets the PolicyKit authority used by @daemon.
  *
- * Returns: A #PolkitAuthority instance. Do not free, the object is owned by @daemon.
+ * Returns: A #PolkitAuthority instance or %NULL if the polkit
+ * authority is not available. Do not free, the object is owned by
+ * @daemon.
  */
 PolkitAuthority *
 udisks_daemon_get_authority (UDisksDaemon *daemon)

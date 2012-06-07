@@ -427,6 +427,53 @@ _safe_polkit_details_insert_uint64 (PolkitDetails *details, const gchar *key, gu
   polkit_details_insert (details, key, buf);
 }
 
+static gboolean
+check_authorization_no_polkit (UDisksDaemon          *daemon,
+                               UDisksObject          *object,
+                               const gchar           *action_id,
+                               GVariant              *options,
+                               const gchar           *message,
+                               GDBusMethodInvocation *invocation)
+{
+  gboolean ret = FALSE;
+  uid_t caller_uid = -1;
+  GError *error = NULL;
+
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL,         /* GCancellable* */
+                                               &caller_uid,
+                                               NULL,         /* gid_t *out_gid */
+                                               NULL,         /* gchar **out_user_name */
+                                               &error))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error getting uid for caller with bus name %s: %s (%s, %d)",
+                                             g_dbus_method_invocation_get_sender (invocation),
+                                             error->message, g_quark_to_string (error->domain), error->code);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  /* only allow root */
+  if (caller_uid == 0)
+    {
+      ret = TRUE;
+    }
+  else
+    {
+      g_dbus_method_invocation_return_error_literal (invocation,
+                                                     UDISKS_ERROR,
+                                                     UDISKS_ERROR_NOT_AUTHORIZED,
+                                                     "Not authorized to perform operation (polkit authority not available and caller is not uid 0)");
+    }
+
+ out:
+  return ret;
+}
+
 /**
  * udisks_daemon_util_check_authorization_sync:
  * @daemon: A #UDisksDaemon.
@@ -471,6 +518,7 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
                                              const gchar           *message,
                                              GDBusMethodInvocation *invocation)
 {
+  PolkitAuthority *authority = NULL;
   PolkitSubject *subject = NULL;
   PolkitDetails *details = NULL;
   PolkitCheckAuthorizationFlags flags = POLKIT_CHECK_AUTHORIZATION_FLAGS_NONE;
@@ -485,6 +533,13 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
   gboolean auth_no_user_interaction = FALSE;
   const gchar *details_device = NULL;
   gchar *details_drive = NULL;
+
+  authority = udisks_daemon_get_authority (daemon);
+  if (authority == NULL)
+    {
+      ret = check_authorization_no_polkit (daemon, object, action_id, options, message, invocation);
+      goto out;
+    }
 
   subject = polkit_system_bus_name_new (g_dbus_method_invocation_get_sender (invocation));
   if (options != NULL)
@@ -588,7 +643,7 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
     polkit_details_insert (details, "drive", details_drive);
 
   error = NULL;
-  result = polkit_authority_check_authorization_sync (udisks_daemon_get_authority (daemon),
+  result = polkit_authority_check_authorization_sync (authority,
                                                       subject,
                                                       action_id,
                                                       details,
