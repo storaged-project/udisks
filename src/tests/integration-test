@@ -790,7 +790,7 @@ class FS(UDisksTestCase):
         if label:
             self.assertTrue(mount_path.endswith(label))
 
-        self.client.settle()
+        self.sync()
         self.assertEqual(fs.get_property('mount-points'), [mount_path])
         self.assertTrue(self.is_mountpoint(mount_path))
 
