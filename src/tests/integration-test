@@ -115,20 +115,35 @@ class UDisksTestCase(unittest.TestCase):
             assert daemon_path, 'could not determine daemon path from D-BUS .service file'
 
             klass.tool_path = 'udisksctl'
-
         print('daemon path: ' + daemon_path)
+
+        for l in open('/usr/share/dbus-1/system-services/org.freedesktop.PolicyKit1.service'):
+            if l.startswith('Exec='):
+                polkit_path = l.split('=', 1)[1].split()[0].strip()
+                break
+        assert polkit_path, 'could not determine polkit path from D-BUS .service file'
+        print('polkitd path: ' + polkit_path)
 
         klass.device = klass.setup_vdev()
 
-        # inhibit GNOME automounting/nautilus pop ups
-        subprocess.call(['killall', '-STOP', 'gvfs-udisks2-volume-monitor'])
-
-        # start daemon
+        # start polkit and udisks on a private DBus
+        klass.dbus = Gio.TestDBus()
+        klass.dbus.up()
+        os.environ['DBUS_SYSTEM_BUS_ADDRESS'] = klass.dbus.get_bus_address()
+        # do not try to communicate with the current desktop session; this will
+        # confuse it, as it cannot see this D-BUS instance
+        try:
+            del os.environ['DISPLAY']
+        except KeyError:
+            pass
         if logfile:
             klass.daemon_log = open(logfile, 'w')
         else:
             klass.daemon_log = tempfile.TemporaryFile()
-        klass.daemon = subprocess.Popen([daemon_path, '--replace'],
+        klass.polkit = subprocess.Popen([polkit_path],
+                stdout=klass.daemon_log, stderr=subprocess.STDOUT)
+        assert klass.polkit.pid, 'polkitd failed to start'
+        klass.daemon = subprocess.Popen([daemon_path],
             stdout=klass.daemon_log, stderr=subprocess.STDOUT)
         assert klass.daemon.pid, 'daemon failed to start'
 
@@ -152,6 +167,10 @@ class UDisksTestCase(unittest.TestCase):
 
         subprocess.call(['umount', klass.device], stderr=subprocess.PIPE) # if a test failed
 
+        os.kill(klass.polkit.pid, signal.SIGTERM)
+        os.wait()
+        klass.polkit = None
+
         os.kill(klass.daemon.pid, signal.SIGTERM)
         os.wait()
         klass.daemon = None
@@ -159,8 +178,8 @@ class UDisksTestCase(unittest.TestCase):
         klass.teardown_vdev(klass.device)
         klass.device = None
 
-        # resume GNOME automounting/nautilus pop ups
-        subprocess.call(['killall', '-CONT', 'gvfs-udisks2-volume-monitor'])
+        del os.environ['DBUS_SYSTEM_BUS_ADDRESS']
+        klass.dbus.down()
 
     @classmethod
     def sync(klass):
