@@ -1032,10 +1032,11 @@ class Luks(UDisksTestCase):
         mount_path = fs.call_mount_sync(no_options, None)
 
         try:
-            self.assertEqual(mount_path, '/media/treasure')
+            self.assertTrue('/media/' in mount_path)
+            self.assertTrue(mount_path.endswith('treasure'))
             self.assertTrue(self.is_mountpoint(mount_path))
             self.client.settle()
-            self.assertEqual(fs.get_property('mount-points'), ['/media/treasure'])
+            self.assertEqual(fs.get_property('mount-points'), [mount_path])
 
             # can't lock, busy
             try:
@@ -1065,7 +1066,8 @@ class Luks(UDisksTestCase):
         try:
             fs = self.client.get_object(path).get_property('filesystem')
             mount_path = fs.call_mount_sync(no_options, None)
-            self.assertEqual(mount_path, '/media/treasure')
+            self.assertTrue('/media/' in mount_path)
+            self.assertTrue(mount_path.endswith('treasure'))
 
             # removal should clean up mounts
             self.remove_device(self.device)
@@ -1080,7 +1082,8 @@ class Luks(UDisksTestCase):
             self.client.settle()
             fs = self.client.get_object(path).get_property('filesystem')
             mount_path = fs.call_mount_sync(no_options, None)
-            self.assertEqual(mount_path, '/media/treasure')
+            self.assertTrue('/media/' in mount_path)
+            self.assertTrue(mount_path.endswith('treasure'))
 
             # umount
             self.retry_busy(fs.call_unmount_sync, no_options, None)
