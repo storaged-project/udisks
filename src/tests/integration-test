@@ -255,7 +255,8 @@ class UDisksTestCase(unittest.TestCase):
         # work around mkswap not properly cleaning up an existing reiserfs
         # signature (mailed kzak about it)
         if type == 'swap':
-            subprocess.check_call(['wipefs', '-a', klass.devname(partition)])
+            subprocess.check_call(['wipefs', '-a', klass.devname(partition)],
+                    stdout=subprocess.PIPE)
 
         mkcmd =     { 'swap': 'mkswap',
                     }
