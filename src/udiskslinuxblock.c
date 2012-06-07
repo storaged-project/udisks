@@ -2104,6 +2104,7 @@ handle_format (UDisksBlock           *block,
    * trigger an event here
    */
   udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object_to_mkfs));
+  wait_data->object = object_to_mkfs;
   if (udisks_daemon_wait_for_object_sync (daemon,
                                           wait_for_filesystem,
                                           wait_data,
