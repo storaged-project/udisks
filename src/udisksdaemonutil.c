@@ -652,14 +652,25 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
                                                       &error);
   if (result == NULL)
     {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error checking authorization: %s (%s, %d)",
-                                             error->message,
-                                             g_quark_to_string (error->domain),
-                                             error->code);
-      g_error_free (error);
+      if (error->domain != POLKIT_ERROR)
+        {
+          /* assume polkit authority is not available (e.g. could be the service
+           * manager returning org.freedesktop.systemd1.Masked)
+           */
+          g_error_free (error);
+          ret = check_authorization_no_polkit (daemon, object, action_id, options, message, invocation);
+        }
+      else
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error checking authorization: %s (%s, %d)",
+                                                 error->message,
+                                                 g_quark_to_string (error->domain),
+                                                 error->code);
+          g_error_free (error);
+        }
       goto out;
     }
   if (!polkit_authorization_result_get_is_authorized (result))
