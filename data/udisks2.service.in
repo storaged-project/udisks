@@ -1,5 +1,6 @@
 [Unit]
 Description=Disk Manager
+Documentation=man:udisks(8)
 
 [Service]
 Type=dbus
