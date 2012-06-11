@@ -357,8 +357,8 @@ class UDisksTestCase(unittest.TestCase):
                     break
 
         # check localstatedir
-        for d in (os.path.join(make_vars['localstatedir'], 'run', 'udisks'),
-                os.path.join(make_vars['localstatedir'], 'lib', 'udisks')):
+        for d in (os.path.join(make_vars['localstatedir'], 'run', 'udisks2'),
+                os.path.join(make_vars['localstatedir'], 'lib', 'udisks2')):
             if not os.path.exists(d):
                 sys.stderr.write('The directory %s does not exist; please create it before running these tests.\n' % d)
                 sys.exit(0)
