@@ -32,6 +32,7 @@
 
 import sys
 import os
+import pwd
 
 srcdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 libdir = os.path.join(srcdir, 'udisks', '.libs')
@@ -119,10 +120,10 @@ class UDisksTestCase(unittest.TestCase):
 
         for l in open('/usr/share/dbus-1/system-services/org.freedesktop.PolicyKit1.service'):
             if l.startswith('Exec='):
-                polkit_path = l.split('=', 1)[1].split()[0].strip()
+                klass.polkit_path = l.split('=', 1)[1].split()[0].strip()
                 break
-        assert polkit_path, 'could not determine polkit path from D-BUS .service file'
-        print('polkitd path: ' + polkit_path)
+        assert klass.polkit_path, 'could not determine polkit path from D-BUS .service file'
+        print('polkitd path: ' + klass.polkit_path)
 
         klass.device = klass.setup_vdev()
 
@@ -140,9 +141,6 @@ class UDisksTestCase(unittest.TestCase):
             klass.daemon_log = open(logfile, 'w')
         else:
             klass.daemon_log = tempfile.TemporaryFile()
-        klass.polkit = subprocess.Popen([polkit_path],
-                stdout=klass.daemon_log, stderr=subprocess.STDOUT)
-        assert klass.polkit.pid, 'polkitd failed to start'
         klass.daemon = subprocess.Popen([daemon_path],
             stdout=klass.daemon_log, stderr=subprocess.STDOUT)
         assert klass.daemon.pid, 'daemon failed to start'
@@ -166,10 +164,6 @@ class UDisksTestCase(unittest.TestCase):
         '''stop daemon again and clean up test environment'''
 
         subprocess.call(['umount', klass.device], stderr=subprocess.PIPE) # if a test failed
-
-        os.kill(klass.polkit.pid, signal.SIGTERM)
-        os.wait()
-        klass.polkit = None
 
         os.kill(klass.daemon.pid, signal.SIGTERM)
         os.wait()
@@ -1116,6 +1110,32 @@ class Luks(UDisksTestCase):
                     no_options, None)
             self.client.settle()
             self.assertEqual(self.client.get_object(path), None)
+
+# ----------------------------------------------------------------------------
+
+class Polkit(UDisksTestCase):
+    '''Check operation with polkit.'''
+
+    def setUp(self):
+        env = os.environ.copy()
+        env['POLKIT_DEBUG'] = '1'
+        self.polkit = subprocess.Popen([self.polkit_path],
+                stdout=self.daemon_log, stderr=subprocess.STDOUT, env=env)
+        assert self.polkit.pid, 'polkitd failed to start'
+
+    def tearDown(self):
+        os.kill(self.polkit.pid, signal.SIGTERM)
+        os.waitpid(self.polkit.pid, 0)
+
+    def test_internal_fs_root(self):
+        '''Create FS on internal drive as root'''
+
+        options = GLib.Variant('a{sv}', {'label': GLib.Variant('s', 'polkitext4')})
+        self.fs_create(None, 'ext4', options)
+        block = self.udisks_block()
+        self.assertEqual(block.get_property('id-usage'), 'filesystem')
+        self.assertEqual(block.get_property('id-type'), 'ext4')
+        self.assertEqual(block.get_property('id-label'), 'polkitext4')
 
 # ----------------------------------------------------------------------------
 
