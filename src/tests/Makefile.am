@@ -4,7 +4,8 @@ SUBDIRS =
 
 NULL =
 
-EXTRA_DIST =
+EXTRA_DIST = \
+	integration-test
 
 INCLUDES = \
 	-I$(top_builddir) -I$(top_srcdir)	 		\
