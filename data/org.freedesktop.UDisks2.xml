@@ -869,6 +869,27 @@
       <arg name="fd" direction="out" type="h"/>
     </method>
 
+    <!--
+        OpenForBenchmark:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @fd: An index for the returned file descriptor.
+
+        Gets a file descriptor for the device that is suitable to be
+        used for benchmarking the device (transfer rate, access time
+        etc.). Note that the file descriptor may be opened with the
+        <literal>O_DIRECT</literal> and <literal>O_SYNC</literal>
+        flags so care must be taken to only perform page-aligned I/O.
+
+        If the <parameter>writable</parameter> in @options is %TRUE
+        then the returned file descriptor will be writable. This only
+        works if the device is not already in use.
+    -->
+    <method name="OpenForBenchmark">
+      <annotation name="org.gtk.GDBus.C.UnixFD" value="1"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="fd" direction="out" type="h"/>
+    </method>
+
   </interface>
 
   <!-- ********************************************************************** -->

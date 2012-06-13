@@ -18,6 +18,8 @@
  *
  */
 
+#define _GNU_SOURCE /* for O_DIRECT */
+
 #include "config.h"
 #include <glib/gi18n-lib.h>
 
@@ -2337,6 +2339,80 @@ handle_open_for_restore (UDisksBlock           *block,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+handle_open_for_benchmark (UDisksBlock           *block,
+                           GDBusMethodInvocation *invocation,
+                           GUnixFDList           *fd_list,
+                           GVariant              *options)
+{
+  UDisksObject *object;
+  UDisksDaemon *daemon;
+  const gchar *action_id;
+  const gchar *device;
+  GUnixFDList *out_fd_list = NULL;
+  gboolean opt_writable = FALSE;
+  GError *error;
+  gint fd;
+  gint open_flags;
+
+  error = NULL;
+  object = udisks_daemon_util_dup_object (block, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+
+  action_id = "org.freedesktop.udisks2.open-device";
+  if (udisks_block_get_hint_system (block))
+    action_id = "org.freedesktop.udisks2.open-device-system";
+
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    object,
+                                                    action_id,
+                                                    options,
+                                                    /* Translators: Shown in authentication dialog when an application
+                                                     * wants to benchmark a device.
+                                                     *
+                                                     * Do not translate $(drive), it's a placeholder and will
+                                                     * be replaced by the name of the drive/device in question
+                                                     */
+                                                    N_("Authentication is required to open $(drive) for benchmarking"),
+                                                    invocation))
+    goto out;
+
+  g_variant_lookup (options, "writable", "b", &opt_writable);
+
+  if (opt_writable)
+    open_flags = O_RDWR  | O_EXCL;
+  else
+    open_flags = O_RDONLY;
+
+  open_flags |= O_DIRECT | O_SYNC | O_CLOEXEC;
+
+  device = udisks_block_get_device (UDISKS_BLOCK (block));
+
+  fd = open (device, open_flags);
+  if (fd == -1)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Error opening %s: %m", device);
+      goto out;
+    }
+
+  out_fd_list = g_unix_fd_list_new_from_array (&fd, 1);
+  udisks_block_complete_open_for_backup (block, invocation, out_fd_list, g_variant_new_handle (0));
+
+ out:
+  g_clear_object (&out_fd_list);
+  g_clear_object (&object);
+  return TRUE; /* returning true means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 block_iface_init (UDisksBlockIface *iface)
 {
@@ -2347,4 +2423,5 @@ block_iface_init (UDisksBlockIface *iface)
   iface->handle_format                    = handle_format;
   iface->handle_open_for_backup           = handle_open_for_backup;
   iface->handle_open_for_restore          = handle_open_for_restore;
+  iface->handle_open_for_benchmark        = handle_open_for_benchmark;
 }
