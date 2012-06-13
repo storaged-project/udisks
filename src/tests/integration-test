@@ -111,7 +111,7 @@ class UDisksTestCase(unittest.TestCase):
             daemon_path = None
             for l in open('/usr/share/dbus-1/system-services/org.freedesktop.UDisks2.service'):
                 if l.startswith('Exec='):
-                    daemon_path = l.split('=', 1)[1].strip()
+                    daemon_path = l.split('=', 1)[1].split()[0]
                     break
             assert daemon_path, 'could not determine daemon path from D-BUS .service file'
 
