@@ -121,34 +121,10 @@ class UDisksTestCase(unittest.TestCase):
 
         klass.device = klass.setup_vdev()
 
-        # use a D-BUS config which permits root and nobody
-        klass.dbus_conf = tempfile.NamedTemporaryFile()
-        klass.dbus_conf.write(b'''<!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-Bus Bus Configuration 1.0//EN"
- "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
-<busconfig>
-  <type>test</type>
-  <listen>unix:tmpdir=/tmp</listen>
-  <policy context="default">
-    <allow send_destination="*" eavesdrop="true"/>
-    <allow eavesdrop="true"/>
-    <allow own="*"/>
-    <allow user="root"/>
-    <allow user="nobody"/>
-  </policy>
-</busconfig>
-''')
-        klass.dbus_conf.flush()
-
         # start polkit and udisks on a private DBus
-        dbus = subprocess.Popen(['dbus-launch', '--config-file=' + klass.dbus_conf.name], 
-                stdout=subprocess.PIPE, universal_newlines=True)
-        dbus_out = dbus.communicate()[0]
-        for l in dbus_out.splitlines():
-            k, v = l.split('=', 1)
-            if k == 'DBUS_SESSION_BUS_PID':
-                klass.dbus_pid = int(v)
-            if k == 'DBUS_SESSION_BUS_ADDRESS':
-                os.environ['DBUS_SYSTEM_BUS_ADDRESS'] = v
+        klass.dbus = Gio.TestDBus()
+        klass.dbus.up()
+        os.environ['DBUS_SYSTEM_BUS_ADDRESS'] = klass.dbus.get_bus_address()
         # do not try to communicate with the current desktop session; this will
         # confuse it, as it cannot see this D-BUS instance
         try:
@@ -190,9 +166,8 @@ class UDisksTestCase(unittest.TestCase):
         klass.teardown_vdev(klass.device)
         klass.device = None
 
-        klass.dbus_conf.close()
         del os.environ['DBUS_SYSTEM_BUS_ADDRESS']
-        os.kill(klass.dbus_pid, signal.SIGTERM)
+        klass.dbus.down()
 
     @classmethod
     def sync(klass):
