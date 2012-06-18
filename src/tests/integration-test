@@ -60,6 +60,10 @@ import re
 from glob import glob
 from gi.repository import GLib, Gio, UDisks
 
+# find local test_polkit.py
+sys.path.insert(0, os.path.dirname(__file__))
+import test_polkitd
+
 #GI_TYPELIB_PATH=udisks LD_LIBRARY_PATH=udisks/.libs
 VDEV_SIZE = 300000000 # size of virtual test device
 
@@ -84,7 +88,6 @@ class UDisksTestCase(unittest.TestCase):
     
     This provides static functions which are useful for all test cases.
     '''
-    tool_path = None
     daemon = None
     daemon_log = None
     device = None
@@ -103,7 +106,6 @@ class UDisksTestCase(unittest.TestCase):
         # run from local build tree if we are in one, otherwise use system instance
         daemon_path = os.path.join(srcdir, 'src', 'udisksd')
         if (os.access (daemon_path, os.X_OK)):
-            klass.tool_path = 'tools/.libs/udisksctl'
             print('Testing binaries from local build tree')
             klass.check_build_tree_config()
         else:
@@ -115,15 +117,7 @@ class UDisksTestCase(unittest.TestCase):
                     break
             assert daemon_path, 'could not determine daemon path from D-BUS .service file'
 
-            klass.tool_path = 'udisksctl'
         print('daemon path: ' + daemon_path)
-
-        for l in open('/usr/share/dbus-1/system-services/org.freedesktop.PolicyKit1.service'):
-            if l.startswith('Exec='):
-                klass.polkit_path = l.split('=', 1)[1].split()[0].strip()
-                break
-        assert klass.polkit_path, 'could not determine polkit path from D-BUS .service file'
-        print('polkitd path: ' + klass.polkit_path)
 
         klass.device = klass.setup_vdev()
 
@@ -1138,48 +1132,36 @@ class Luks(UDisksTestCase):
 
 # ----------------------------------------------------------------------------
 
-class Polkit(UDisksTestCase):
+class Polkit(UDisksTestCase, test_polkitd.PolkitTestCase):
     '''Check operation with polkit.'''
 
-    def setUp(self):
-        env = os.environ.copy()
-        env['POLKIT_DEBUG'] = '1'
-        self.polkit = subprocess.Popen([self.polkit_path],
-                stdout=self.daemon_log, stderr=subprocess.STDOUT, env=env)
-        assert self.polkit.pid, 'polkitd failed to start'
+    def test_internal_fs_forbidden(self):
+        '''Create FS on internal drive (forbidden)'''
 
-    def tearDown(self):
-        os.kill(self.polkit.pid, signal.SIGTERM)
-        os.waitpid(self.polkit.pid, 0)
+        self.start_polkitd(['org.freedesktop.udisks2.modify-device'])
 
-    def test_internal_fs_root(self):
-        '''Create FS on internal drive as root'''
+        options = GLib.Variant('a{sv}', {'label': GLib.Variant('s', 'polkitno')})
+        with self.assertRaises(GLib.GError) as cm:
+            self.fs_create(None, 'ext4', options)
+        self.assertTrue('UDisks2.Error.NotAuthorized' in cm.exception.message,
+                cm.exception.message)
 
-        options = GLib.Variant('a{sv}', {'label': GLib.Variant('s', 'polkitext4')})
+        # did not actually do anything
+        block = self.udisks_block()
+        self.assertNotEqual(block.get_property('id-label'), 'polkitno')
+
+    def test_internal_fs_allowed(self):
+        '''Create FS on internal drive (allowed)'''
+
+        self.start_polkitd(['org.freedesktop.udisks2.modify-device-system',
+            'org.freedesktop.udisks2.modify-device'])
+
+        options = GLib.Variant('a{sv}', {'label': GLib.Variant('s', 'polkityes')})
         self.fs_create(None, 'ext4', options)
         block = self.udisks_block()
         self.assertEqual(block.get_property('id-usage'), 'filesystem')
         self.assertEqual(block.get_property('id-type'), 'ext4')
-        self.assertEqual(block.get_property('id-label'), 'polkitext4')
-
-    def test_internal_fs_nobody(self):
-        '''Try to create FS on internal drive as nobody'''
-
-        # ensure we have a mountable file system
-        self.fs_create(None, 'ext4', no_options)
-
-        nobody = pwd.getpwnam('nobody')
-        assert nobody.pw_uid > 0
-
-        # we cannot just change euid and do the call, as polkit will remember
-        # our process which started out as root; so call the external tool
-        tool_mount = subprocess.Popen([self.tool_path, 'mount',
-            '--no-user-interaction', '-b', self.device],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            universal_newlines=True,
-            preexec_fn=lambda: (os.setgid(nobody.pw_gid), os.setuid(nobody.pw_uid)))
-        out, err = tool_mount.communicate()
-        self.assertTrue('Error.NotAuthorized' in err, err)
+        self.assertEqual(block.get_property('id-label'), 'polkityes')
 
 # ----------------------------------------------------------------------------
 

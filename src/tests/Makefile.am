@@ -5,7 +5,9 @@ SUBDIRS =
 NULL =
 
 EXTRA_DIST = \
-	integration-test
+	test_polkit.py		\
+	integration-test	\
+	$(NULL)
 
 INCLUDES = \
 	-I$(top_builddir) -I$(top_srcdir)	 		\
