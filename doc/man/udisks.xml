@@ -21,7 +21,7 @@
       udisks provides interfaces to enumerate and perform operations
       on disks and storage devices. Any application (including
       unprivileged ones) can access the
-      <citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+      <link linkend="udisksd.8"><citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>
       daemon via the name <emphasis>org.freedesktop.UDisks2</emphasis>
       on the system message bus. In addition to the D-Bus API, a
       library, <filename>libudisks2</filename> is also provided. This
@@ -56,6 +56,102 @@
       device (typically requiring the user to authenticate as an
       administrator).
     </para>
+  </refsect1>
+
+  <refsect1><title>DRIVE CONFIGURATION</title>
+    <para>
+      At start-up and when a drive is connected,
+      <link linkend="udisksd.8"><citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>
+      will apply configuration stored in the file
+      <filename class='directory'>/etc/udisks2/drive-IDENTIFIER.conf</filename>
+      where <emphasis>IDENTIFIER</emphasis> is the value of the
+      <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Id">Drive:Id</link>
+      property for the drive. If the file changes on disk its new
+      contents will also be applied to the drive.
+      Typically, users or administrators will never need to edit drive
+      configuration files as they are effectively managed through
+      graphical applications such as
+      <citerefentry><refentrytitle>gnome-disks</refentrytitle><manvolnum>1</manvolnum></citerefentry>.
+      Manually editing configuration files is however supported — the file
+      format is a simple <emphasis>.ini-like format</emphasis>
+      (see the
+      <ulink url="http://freedesktop.org/wiki/Specifications/desktop-entry-spec">Desktop Entry Specification</ulink>
+      for the exact syntax). New groups and keys may
+      be added in the future.
+    </para>
+
+    <refsect2>
+      <title>ATA group</title>
+      <para>
+        The <literal>ATA</literal> group is for settings that apply to
+        drives using the ATA command-set. The following keys are
+        supported:
+      </para>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>StandbyTimeout</option></term>
+          <listitem>
+            <para>
+              The standby timeout.  A value of zero means "timeouts
+              are disabled": the device will not automatically enter
+              standby mode.  Values from 1 to 240 specify multiples of
+              5 seconds, yielding timeouts from 5 seconds to 20
+              minutes. Values from 241 to 251 specify from 1 to 11
+              units of 30 minutes, yielding timeouts from 30 minutes
+              to 5.5 hours.  A value of 252 signifies a timeout of 21
+              minutes. A value of 253 sets a vendor-defined timeout
+              period between 8 and 12 hours, and the value 254 is
+              reserved.  255 is interpreted as 21 minutes plus 15
+              seconds. Note that some older drives may have very
+              different interpretations of these values.
+              This is similar to the <option>-S</option> option in
+              <citerefentry><refentrytitle>hdparm</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>APMLevel</option></term>
+          <listitem>
+            <para>
+              The Advanced Power Management level.  A low value means
+              aggressive power management and a high value means
+              better performance. Possible settings range from values
+              1 through 127 (which permit spin-down), and values 128
+              through 254 (which do not permit spin-down).  The
+              highest degree of power management is attained with a
+              setting of 1, and the highest I/O performance with a
+              setting of 254. A value of 255 tells hdparm to disable
+              Advanced Power Management altogether on the drive (not
+              all drives support disabling it, but most do).
+              This is similar to the <option>-B</option> option in
+              <citerefentry><refentrytitle>hdparm</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>AAMLevel</option></term>
+          <listitem>
+            <para>
+              The Automatic Acoustic Management level. Most modern
+              harddisk drives have the ability to speed down the head
+              movements to reduce their noise output. The possible
+              values are between 0 and 254. 128 is the most quiet (and
+              therefore slowest) setting and 254 the fastest (and
+              loudest). Some drives have only two levels (quiet /
+              fast), while others may have different levels between
+              128 and 254. At the moment, most drives only support 3
+              options, off, quiet, and fast. These have been assigned
+              the values 0, 128, and 254 at present, respectively, but
+              integer space has been incorporated for future
+              expansion, should this change.
+              This is similar to the <option>-M</option> option in
+              <citerefentry><refentrytitle>hdparm</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+            </para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </refsect2>
   </refsect1>
 
   <refsect1>
@@ -165,7 +261,7 @@
         <refentrytitle>gdbus</refentrytitle><manvolnum>1</manvolnum>
       </citerefentry>
       to interact with
-      <citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+      <link linkend="udisksd.8"><citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>.
     </para>
   </refsect1>
 
@@ -248,7 +344,8 @@
         <refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum>
       </citerefentry>,
       <link linkend="udisksd.8"><citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
-      <link linkend="udisksctl.1"><citerefentry><refentrytitle>udisksctl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>
+      <link linkend="udisksctl.1"><citerefentry><refentrytitle>udisksctl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>,
+      <citerefentry><refentrytitle>gnome-disks</refentrytitle><manvolnum>1</manvolnum></citerefentry>
     </para>
   </refsect1>
 </refentry>

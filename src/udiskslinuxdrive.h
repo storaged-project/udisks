@@ -31,7 +31,7 @@ G_BEGIN_DECLS
 
 GType        udisks_linux_drive_get_type (void) G_GNUC_CONST;
 UDisksDrive *udisks_linux_drive_new      (void);
-void         udisks_linux_drive_update   (UDisksLinuxDrive       *drive,
+gboolean     udisks_linux_drive_update   (UDisksLinuxDrive       *drive,
                                           UDisksLinuxDriveObject *object);
 
 G_END_DECLS

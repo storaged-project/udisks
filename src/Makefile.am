@@ -123,5 +123,6 @@ udisksd_LDADD = 					\
 # ----------------------------------------------------------------------------------------------------
 
 install-data-local:
+	-$(mkdir_p) $(DESTDIR)$(sysconfdir)/udisks2
 	-$(mkdir_p) $(DESTDIR)$(localstatedir)/lib/udisks2
 	-chmod 0700 $(DESTDIR)$(localstatedir)/lib/udisks2

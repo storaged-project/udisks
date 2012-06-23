@@ -471,11 +471,11 @@ udisks_linux_drive_object_get_block (UDisksLinuxDriveObject   *object,
 
 typedef gboolean (*HasInterfaceFunc)    (UDisksLinuxDriveObject     *object);
 typedef void     (*ConnectInterfaceFunc) (UDisksLinuxDriveObject    *object);
-typedef void     (*UpdateInterfaceFunc) (UDisksLinuxDriveObject     *object,
+typedef gboolean (*UpdateInterfaceFunc) (UDisksLinuxDriveObject     *object,
                                          const gchar    *uevent_action,
                                          GDBusInterface *interface);
 
-static void
+static gboolean
 update_iface (UDisksLinuxDriveObject   *object,
               const gchar              *uevent_action,
               HasInterfaceFunc          has_func,
@@ -484,17 +484,18 @@ update_iface (UDisksLinuxDriveObject   *object,
               GType                     skeleton_type,
               gpointer                  _interface_pointer)
 {
+  gboolean ret = FALSE;
   gboolean has;
   gboolean add;
   GDBusInterface **interface_pointer = _interface_pointer;
 
-  g_return_if_fail (object != NULL);
-  g_return_if_fail (has_func != NULL);
-  g_return_if_fail (update_func != NULL);
-  g_return_if_fail (g_type_is_a (skeleton_type, G_TYPE_OBJECT));
-  g_return_if_fail (g_type_is_a (skeleton_type, G_TYPE_DBUS_INTERFACE));
-  g_return_if_fail (interface_pointer != NULL);
-  g_return_if_fail (*interface_pointer == NULL || G_IS_DBUS_INTERFACE (*interface_pointer));
+  g_return_val_if_fail (object != NULL, FALSE);
+  g_return_val_if_fail (has_func != NULL, FALSE);
+  g_return_val_if_fail (update_func != NULL, FALSE);
+  g_return_val_if_fail (g_type_is_a (skeleton_type, G_TYPE_OBJECT), FALSE);
+  g_return_val_if_fail (g_type_is_a (skeleton_type, G_TYPE_DBUS_INTERFACE), FALSE);
+  g_return_val_if_fail (interface_pointer != NULL, FALSE);
+  g_return_val_if_fail (*interface_pointer == NULL || G_IS_DBUS_INTERFACE (*interface_pointer), FALSE);
 
   add = FALSE;
   has = has_func (object);
@@ -521,11 +522,14 @@ update_iface (UDisksLinuxDriveObject   *object,
 
   if (*interface_pointer != NULL)
     {
-      update_func (object, uevent_action, G_DBUS_INTERFACE (*interface_pointer));
+      if (update_func (object, uevent_action, G_DBUS_INTERFACE (*interface_pointer)))
+        ret = TRUE;
       if (add)
         g_dbus_object_skeleton_add_interface (G_DBUS_OBJECT_SKELETON (object),
                                               G_DBUS_INTERFACE_SKELETON (*interface_pointer));
     }
+
+  return ret;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -541,12 +545,12 @@ drive_connect (UDisksLinuxDriveObject *object)
 {
 }
 
-static void
+static gboolean
 drive_update (UDisksLinuxDriveObject  *object,
               const gchar             *uevent_action,
               GDBusInterface          *_iface)
 {
-  udisks_linux_drive_update (UDISKS_LINUX_DRIVE (object->iface_drive), object);
+  return udisks_linux_drive_update (UDISKS_LINUX_DRIVE (object->iface_drive), object);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -577,15 +581,17 @@ drive_ata_connect (UDisksLinuxDriveObject *object)
 
 }
 
-static void
+static gboolean
 drive_ata_update (UDisksLinuxDriveObject  *object,
                   const gchar             *uevent_action,
                   GDBusInterface          *_iface)
 {
-  udisks_linux_drive_ata_update (UDISKS_LINUX_DRIVE_ATA (object->iface_drive_ata), object);
+  return udisks_linux_drive_ata_update (UDISKS_LINUX_DRIVE_ATA (object->iface_drive_ata), object);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
+
+static void apply_configuration (UDisksLinuxDriveObject *object);
 
 static GList *
 find_link_for_sysfs_path (UDisksLinuxDriveObject *object,
@@ -621,6 +627,7 @@ udisks_linux_drive_object_uevent (UDisksLinuxDriveObject *object,
                                   GUdevDevice            *device)
 {
   GList *link;
+  gboolean conf_changed;
 
   g_return_if_fail (UDISKS_IS_LINUX_DRIVE_OBJECT (object));
   g_return_if_fail (device == NULL || G_UDEV_IS_DEVICE (device));
@@ -650,14 +657,51 @@ udisks_linux_drive_object_uevent (UDisksLinuxDriveObject *object,
         }
       else
         {
-          object->devices = g_list_append (object->devices, g_object_ref (device));
+          if (device != NULL)
+            object->devices = g_list_append (object->devices, g_object_ref (device));
         }
     }
 
-  update_iface (object, action, drive_check, drive_connect, drive_update,
-                UDISKS_TYPE_LINUX_DRIVE, &object->iface_drive);
-  update_iface (object, action, drive_ata_check, drive_ata_connect, drive_ata_update,
-                UDISKS_TYPE_LINUX_DRIVE_ATA, &object->iface_drive_ata);
+  conf_changed = FALSE;
+  conf_changed |= update_iface (object, action, drive_check, drive_connect, drive_update,
+                                UDISKS_TYPE_LINUX_DRIVE, &object->iface_drive);
+  conf_changed |= update_iface (object, action, drive_ata_check, drive_ata_connect, drive_ata_update,
+                                UDISKS_TYPE_LINUX_DRIVE_ATA, &object->iface_drive_ata);
+
+  if (conf_changed)
+    apply_configuration (object);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static void
+apply_configuration (UDisksLinuxDriveObject *object)
+{
+  GVariant *configuration = NULL;
+  GUdevDevice *device = NULL;
+
+  if (object->iface_drive == NULL)
+    goto out;
+
+  configuration = udisks_drive_dup_configuration (object->iface_drive);
+  if (configuration == NULL)
+    goto out;
+
+  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  if (device == NULL)
+    goto out;
+
+  if (object->iface_drive_ata != NULL)
+    {
+      udisks_linux_drive_ata_apply_configuration (UDISKS_LINUX_DRIVE_ATA (object->iface_drive_ata),
+                                                  device,
+                                                  configuration);
+    }
+
+ out:
+  g_clear_object (&device);
+  if (configuration != NULL)
+    g_variant_unref (configuration);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

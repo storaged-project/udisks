@@ -64,6 +64,8 @@ struct _UDisksLinuxProvider
   GHashTable *vpd_to_drive;
   GHashTable *sysfs_path_to_drive;
 
+  GFileMonitor *etc_udisks2_dir_monitor;
+
   /* set to TRUE only in the coldplug phase */
   gboolean coldplug;
 
@@ -101,6 +103,12 @@ static void crypttab_monitor_on_entry_removed (UDisksCrypttabMonitor *monitor,
                                                UDisksCrypttabEntry   *entry,
                                                gpointer               user_data);
 
+static void on_etc_udisks2_dir_monitor_changed (GFileMonitor     *monitor,
+                                                GFile            *file,
+                                                GFile            *other_file,
+                                                GFileMonitorEvent event_type,
+                                                gpointer          user_data);
+
 G_DEFINE_TYPE (UDisksLinuxProvider, udisks_linux_provider, UDISKS_TYPE_PROVIDER);
 
 static void
@@ -110,6 +118,14 @@ udisks_linux_provider_finalize (GObject *object)
   UDisksDaemon *daemon;
 
   daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
+
+  if (provider->etc_udisks2_dir_monitor != NULL)
+    {
+      g_signal_handlers_disconnect_by_func (provider->etc_udisks2_dir_monitor,
+                                            G_CALLBACK (on_etc_udisks2_dir_monitor_changed),
+                                            provider);
+      g_object_unref (provider->etc_udisks2_dir_monitor);
+    }
 
   g_hash_table_unref (provider->sysfs_to_block);
   g_hash_table_unref (provider->vpd_to_drive);
@@ -154,6 +170,8 @@ static void
 udisks_linux_provider_init (UDisksLinuxProvider *provider)
 {
   const gchar *subsystems[] = {"block", "iscsi_connection", "scsi", NULL};
+  GFile *file;
+  GError *error = NULL;
 
   /* get ourselves an udev client */
   provider->gudev_client = g_udev_client_new (subsystems);
@@ -161,6 +179,78 @@ udisks_linux_provider_init (UDisksLinuxProvider *provider)
                     "uevent",
                     G_CALLBACK (on_uevent),
                     provider);
+
+  file = g_file_new_for_path (PACKAGE_SYSCONF_DIR "/udisks2");
+  provider->etc_udisks2_dir_monitor = g_file_monitor_directory (file,
+                                                                G_FILE_MONITOR_NONE,
+                                                                NULL,
+                                                                &error);
+  if (provider->etc_udisks2_dir_monitor != NULL)
+    {
+      g_signal_connect (provider->etc_udisks2_dir_monitor,
+                        "changed",
+                        G_CALLBACK (on_etc_udisks2_dir_monitor_changed),
+                        provider);
+    }
+  else
+    {
+      udisks_warning ("Error monitoring directory %s: %s (%s, %d)",
+                      PACKAGE_SYSCONF_DIR "/udisks2",
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_clear_error (&error);
+    }
+  g_object_unref (file);
+
+}
+
+static void
+update_drive_with_id (UDisksLinuxProvider *provider,
+                      const gchar         *id)
+{
+  GHashTableIter iter;
+  UDisksLinuxDriveObject *drive_object;
+
+  /* TODO: could have a GHashTable from id to UDisksLinuxDriveObject */
+  g_hash_table_iter_init (&iter, provider->sysfs_path_to_drive);
+  while (g_hash_table_iter_next (&iter, NULL, (gpointer*) &drive_object))
+    {
+      UDisksDrive *drive = udisks_object_get_drive (UDISKS_OBJECT (drive_object));
+      if (drive != NULL)
+        {
+          if (g_strcmp0 (udisks_drive_get_id (drive), id) == 0)
+            {
+              //udisks_debug ("synthesizing change event on drive with id %s", id);
+              udisks_linux_drive_object_uevent (drive_object, "change", NULL);
+            }
+          g_object_unref (drive);
+        }
+    }
+}
+
+static void
+on_etc_udisks2_dir_monitor_changed (GFileMonitor     *monitor,
+                                    GFile            *file,
+                                    GFile            *other_file,
+                                    GFileMonitorEvent event_type,
+                                    gpointer          user_data)
+{
+  UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (user_data);
+
+  if (event_type == G_FILE_MONITOR_EVENT_CREATED ||
+      event_type == G_FILE_MONITOR_EVENT_DELETED ||
+      event_type == G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT)
+    {
+      gchar *filename = g_file_get_basename (file);
+      if (g_str_has_prefix (filename, "drive-") && g_str_has_suffix (filename, ".conf"))
+        {
+          gchar *id;
+          id = g_strndup (filename + strlen ("drive-"),
+                          strlen (filename) - strlen ("drive-") - strlen(".conf"));
+          update_drive_with_id (provider, id);
+          g_free (id);
+        }
+      g_free (filename);
+    }
 }
 
 static guint

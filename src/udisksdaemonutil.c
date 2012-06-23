@@ -569,6 +569,9 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
         }
 
       partition = udisks_object_get_partition (object);
+
+      if (drive == NULL)
+        drive = udisks_object_get_drive (object);
     }
 
   if (block != NULL)
@@ -1057,4 +1060,180 @@ udisks_daemon_util_on_same_seat (UDisksDaemon          *daemon,
   g_clear_object (&drive);
   return ret;
 #endif /* HAVE_LIBSYSTEMD_LOGIN */
+}
+
+/**
+ * udisks_daemon_hexdump:
+ * @data: Pointer to data.
+ * @len: Length of data.
+ *
+ * Utility function to generate a hexadecimal representation of @len
+ * bytes of @data.
+ *
+ * Returns: A multi-line string. Free with g_free() when done using it.
+ */
+gchar *
+udisks_daemon_hexdump (gconstpointer data, gsize len)
+{
+  const guchar *bdata = data;
+  guint n, m;
+  GString *ret;
+
+  ret = g_string_new (NULL);
+  for (n = 0; n < len; n += 16)
+    {
+      g_string_append_printf (ret, "%04x: ", n);
+
+      for (m = n; m < n + 16; m++)
+        {
+          if (m > n && (m%4) == 0)
+            g_string_append_c (ret, ' ');
+          if (m < len)
+            g_string_append_printf (ret, "%02x ", bdata[m]);
+          else
+            g_string_append (ret, "   ");
+        }
+
+      g_string_append (ret, "   ");
+
+      for (m = n; m < len && m < n + 16; m++)
+        g_string_append_c (ret, g_ascii_isprint (bdata[m]) ? bdata[m] : '.');
+
+      g_string_append_c (ret, '\n');
+    }
+
+  return g_string_free (ret, FALSE);
+}
+
+/**
+ * udisks_daemon_hexdump_debug:
+ * @data: Pointer to data.
+ * @len: Length of data.
+ *
+ * Utility function to dumps the hexadecimal representation of @len
+ * bytes of @data generated with udisks_daemon_hexdump() using
+ * udisks_debug().
+ */
+void
+udisks_daemon_hexdump_debug (gconstpointer data, gsize len)
+{
+  gchar *s = udisks_daemon_hexdump (data, len);
+  udisks_debug ("Hexdump of %" G_GSIZE_FORMAT " bytes:\n%s", len, s);
+  g_free (s);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * @filename: (type filename): Name of a file to write @contents to, in the GLib file name encoding.
+ * @contents: (array length=length) (element-type guint8): String to write to the file.
+ * @length: Length of @contents, or -1 if @contents is a NUL-terminated string.
+ * @mode_for_new_file: Mode for new file.
+ * @error: Return location for a #GError, or %NULL.
+ *
+ * Like g_file_set_contents() but preserves the mode of the file if it
+ * already exists and sets it to @mode_for_new_file otherwise.
+ *
+ * Return value: %TRUE on success, %FALSE if an error occurred
+ */
+gboolean
+udisks_daemon_util_file_set_contents (const gchar  *filename,
+                                      const gchar  *contents,
+                                      gssize        contents_len,
+                                      gint          mode_for_new_file,
+                                      GError      **error)
+{
+  gboolean ret;
+  struct stat statbuf;
+  gint mode;
+  gchar *tmpl;
+  gint fd;
+  FILE *f;
+
+  ret = FALSE;
+  tmpl = NULL;
+
+  if (stat (filename, &statbuf) != 0)
+    {
+      if (errno == ENOENT)
+        {
+          mode = mode_for_new_file;
+        }
+      else
+        {
+          g_set_error (error,
+                       G_IO_ERROR,
+                       g_io_error_from_errno (errno),
+                       "Error stat(2)'ing %s: %m",
+                       filename);
+          goto out;
+        }
+    }
+  else
+    {
+      mode = statbuf.st_mode;
+    }
+
+  tmpl = g_strdup_printf ("%s.XXXXXX", filename);
+  fd = g_mkstemp_full (tmpl, O_RDWR, mode);
+  if (fd == -1)
+    {
+      g_set_error (error,
+                   G_IO_ERROR,
+                   g_io_error_from_errno (errno),
+                   "Error creating temporary file: %m");
+      goto out;
+    }
+
+  f = fdopen (fd, "w");
+  if (f == NULL)
+    {
+      g_set_error (error,
+                   G_IO_ERROR,
+                   g_io_error_from_errno (errno),
+                   "Error calling fdopen: %m");
+      g_unlink (tmpl);
+      goto out;
+    }
+
+  if (contents_len < 0 )
+    contents_len = strlen (contents);
+  if (fwrite (contents, 1, contents_len, f) != contents_len)
+    {
+      g_set_error (error,
+                   G_IO_ERROR,
+                   g_io_error_from_errno (errno),
+                   "Error calling fwrite on temp file: %m");
+      fclose (f);
+      g_unlink (tmpl);
+      goto out;
+    }
+
+  if (fsync (fileno (f)) != 0)
+    {
+      g_set_error (error,
+                   G_IO_ERROR,
+                   g_io_error_from_errno (errno),
+                   "Error calling fsync on temp file: %m");
+      fclose (f);
+      g_unlink (tmpl);
+      goto out;
+    }
+  fclose (f);
+
+  if (rename (tmpl, filename) != 0)
+    {
+      g_set_error (error,
+                   G_IO_ERROR,
+                   g_io_error_from_errno (errno),
+                   "Error renaming temp file to final file: %m");
+      g_unlink (tmpl);
+      goto out;
+    }
+
+  ret = TRUE;
+
+ out:
+  g_free (tmpl);
+  return ret;
 }

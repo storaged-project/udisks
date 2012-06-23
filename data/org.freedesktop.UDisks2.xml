@@ -83,6 +83,21 @@
     -->
     <property name="WWN" type="s" access="read"/>
 
+    <!-- Id:
+         A unique and persistent identifier for the device or blank if
+         no such identifier is available.
+
+         This identifier is guaranteed to not include the slash
+         character '/' (U+002F SOLIDUS) which means it can be used as
+         a filename.
+
+         Examples:
+         <quote>ST32000542AS-6XW00W51</quote>,
+         <quote>HITACHI-HTS723232A7A364-E3834563KRG2HN</quote>,
+         <quote>INTEL-SSDSA2MH080G1GC-CVEM842101HD080DGN</quote>.
+    -->
+    <property name="Id" type="s" access="read"/>
+
     <!-- Media: The kind of media currently in the drive or blank if unknown.
          See the #org.freedesktop.UDisks2.Drive:MediaCompatibility property for known values.
     -->
@@ -276,6 +291,62 @@
     <method name="Eject">
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
+
+    <!-- Configuration:
+         A set of configuration directives that are applied to the
+         drive when it is connected (e.g. at start-up, hotplug or
+         resume).
+
+         This is an dict of items with the following known keys:
+         <variablelist>
+           <varlistentry>
+             <term>ata-pm-standby (type <literal>'i'</literal>)</term>
+             <listitem><para>
+               The spindown timeout for ATA drives (See ATA command <quote>STANDBY</quote>).
+             </para></listitem>
+           </varlistentry>
+           <varlistentry>
+             <term>ata-apm-level (type <literal>'i'</literal>)</term>
+             <listitem><para>
+               The APM level for ATA drives (See ATA command <quote>SET FEATURES</quote>, sub-commands 0x05 and 0x85).
+             </para></listitem>
+           </varlistentry>
+           <varlistentry>
+             <term>ata-aam-level (type <literal>'i'</literal>)</term>
+             <listitem><para>
+               The AAM level for ATA drives (See ATA command <quote>SET FEATURES</quote>, sub-commands 0x42 and 0xc2).
+             </para></listitem>
+           </varlistentry>
+         </variablelist>
+         The contents of this property is read from the configuration
+         file <filename>/etc/udisks2/drive-IDENTIFIER.conf</filename>
+         where <emphasis>IDENTIFIER</emphasis> is the value of the
+         #org.freedesktop.UDisks2.Drive:Id property. See <xref
+         linkend="udisks.8"/> for the file format of this file.
+
+         Use the org.freedesktop.UDisks2.Drive.SetConfiguration()
+         method to change the value of this property.
+    -->
+    <property name="Configuration" type="a{sv}" access="read"/>
+
+    <!--
+        SetConfiguration:
+        @value: The configuration value to set.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Sets the configuration for the drive. This will store the
+        configuration in the file-system and also apply it to the
+        drive.
+
+        See the #org.freedesktop.UDisks2.Drive:Configuration property
+        for details about valid values and the location of the
+        configuration file that @value will be written to.
+    -->
+    <method name="SetConfiguration">
+      <arg name="value" direction="in" type="a{sv}"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
   </interface>
 
   <!--
@@ -449,6 +520,65 @@
         Aborts a running SMART selftest.
     -->
     <method name="SmartSelftestAbort">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!-- PmSupported: Whether the drive supports power management. -->
+    <property name="PmSupported" type="b" access="read"/>
+
+    <!-- PmEnabled: Whether power management is enabled. -->
+    <property name="PmEnabled" type="b" access="read"/>
+
+    <!-- ApmSupported: Whether the drive supports Advanced Power Management (APM). -->
+    <property name="ApmSupported" type="b" access="read"/>
+
+    <!-- ApmEnabled: Whether Advanced Power Management (APM) is enabled. -->
+    <property name="ApmEnabled" type="b" access="read"/>
+
+    <!-- AamSupported: Whether the drive supports Automatic Acoustic Management (AAM). -->
+    <property name="AamSupported" type="b" access="read"/>
+
+    <!-- AamEnabled: Whether Automatic Acoustic Management (AAM) is enabled. -->
+    <property name="AamEnabled" type="b" access="read"/>
+
+    <!-- AamVendorRecommendedValue: The vendor-recommended AAM value (or 0 if AAM is not supported). -->
+    <property name="AamVendorRecommendedValue" type="i" access="read"/>
+
+    <!--
+        PmGetState:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @state: The current power state.
+
+        Get the current power mode status. This is implemented as a
+        method call as it involves sending a command from the host to
+        the drive and no change notification is available.
+
+        The format of @state is the result obtained from sending the
+        ATA command <quote>CHECK POWER MODE</quote> to the drive.
+        Known values include
+        <variablelist>
+        <varlistentry><term>0x00</term><listitem><para>Standby</para></listitem></varlistentry>
+        <varlistentry><term>0x80</term><listitem><para>Idle</para></listitem></varlistentry>
+        <varlistentry><term>0xff</term><listitem><para>Active/Idle</para></listitem></varlistentry>
+        </variablelist>
+        Typically user interfaces will report "Drive is spun down" if @state is
+        0x00 and "Drive is spun up" otherwise.
+    -->
+    <method name="PmGetState">
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="state" direction="out" type="y"/>
+    </method>
+
+    <!--
+        PmStandby:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Force the drive to immediately enter the low power consumption
+        <emphasis>standby</emphasis> mode, usually causing it to spin
+        down. This is done by sending the ATA command
+        <quote>STANDBY IMMEDIATE</quote> to the drive.
+    -->
+    <method name="PmStandby">
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 

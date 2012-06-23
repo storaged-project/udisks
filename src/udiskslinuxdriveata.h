@@ -31,7 +31,7 @@ G_BEGIN_DECLS
 
 GType           udisks_linux_drive_ata_get_type           (void) G_GNUC_CONST;
 UDisksDriveAta *udisks_linux_drive_ata_new                (void);
-void            udisks_linux_drive_ata_update             (UDisksLinuxDriveAta     *drive,
+gboolean        udisks_linux_drive_ata_update             (UDisksLinuxDriveAta     *drive,
                                                            UDisksLinuxDriveObject  *object);
 gboolean        udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta     *drive,
                                                            gboolean                 nowakeup,
@@ -42,6 +42,10 @@ gboolean        udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta 
                                                             const gchar             *type,
                                                             GCancellable            *cancellable,
                                                             GError                 **error);
+
+void            udisks_linux_drive_ata_apply_configuration (UDisksLinuxDriveAta     *drive,
+                                                            GUdevDevice             *device,
+                                                            GVariant                *configuration);
 
 G_END_DECLS
 

@@ -50,6 +50,7 @@
 #include "udisksfstabentry.h"
 #include "udiskscrypttabmonitor.h"
 #include "udiskscrypttabentry.h"
+#include "udisksdaemonutil.h"
 
 /**
  * SECTION:udiskslinuxblock
@@ -907,111 +908,6 @@ out:
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-/* TODO: maybe move to GLib */
-static gboolean
-_g_file_set_contents_full (const gchar  *filename,
-                           const gchar  *contents,
-                           gssize        contents_len,
-                           gint          mode_for_new_file,
-                           GError      **error)
-{
-  gboolean ret;
-  struct stat statbuf;
-  gint mode;
-  gchar *tmpl;
-  gint fd;
-  FILE *f;
-
-  ret = FALSE;
-  tmpl = NULL;
-
-  if (stat (filename, &statbuf) != 0)
-    {
-      if (errno == ENOENT)
-        {
-          mode = mode_for_new_file;
-        }
-      else
-        {
-          g_set_error (error,
-                       G_IO_ERROR,
-                       g_io_error_from_errno (errno),
-                       "Error stat(2)'ing %s: %m",
-                       filename);
-          goto out;
-        }
-    }
-  else
-    {
-      mode = statbuf.st_mode;
-    }
-
-  tmpl = g_strdup_printf ("%s.XXXXXX", filename);
-  fd = g_mkstemp_full (tmpl, O_RDWR, mode);
-  if (fd == -1)
-    {
-      g_set_error (error,
-                   G_IO_ERROR,
-                   g_io_error_from_errno (errno),
-                   "Error creating temporary file: %m");
-      goto out;
-    }
-
-  f = fdopen (fd, "w");
-  if (f == NULL)
-    {
-      g_set_error (error,
-                   G_IO_ERROR,
-                   g_io_error_from_errno (errno),
-                   "Error calling fdopen: %m");
-      g_unlink (tmpl);
-      goto out;
-    }
-
-  if (contents_len < 0 )
-    contents_len = strlen (contents);
-  if (fwrite (contents, 1, contents_len, f) != contents_len)
-    {
-      g_set_error (error,
-                   G_IO_ERROR,
-                   g_io_error_from_errno (errno),
-                   "Error calling fwrite on temp file: %m");
-      fclose (f);
-      g_unlink (tmpl);
-      goto out;
-    }
-
-  if (fsync (fileno (f)) != 0)
-    {
-      g_set_error (error,
-                   G_IO_ERROR,
-                   g_io_error_from_errno (errno),
-                   "Error calling fsync on temp file: %m");
-      fclose (f);
-      g_unlink (tmpl);
-      goto out;
-    }
-  fclose (f);
-
-  if (rename (tmpl, filename) != 0)
-    {
-      g_set_error (error,
-                   G_IO_ERROR,
-                   g_io_error_from_errno (errno),
-                   "Error renaming temp file to final file: %m");
-      g_unlink (tmpl);
-      goto out;
-    }
-
-  ret = TRUE;
-
- out:
-  g_free (tmpl);
-  return ret;
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
-
 static gboolean
 add_remove_fstab_entry (GVariant  *remove,
                         GVariant  *add,
@@ -1162,11 +1058,11 @@ add_remove_fstab_entry (GVariant  *remove,
       g_free (escaped_opts);
     }
 
-  if (!_g_file_set_contents_full ("/etc/fstab",
-                                  str->str,
-                                  -1,
-                                  0644, /* mode to use if non-existant */
-                                  error) != 0)
+  if (!udisks_daemon_util_file_set_contents ("/etc/fstab",
+                                             str->str,
+                                             -1,
+                                             0644, /* mode to use if non-existant */
+                                             error) != 0)
     goto out;
 
   ret = TRUE;
@@ -1388,11 +1284,11 @@ add_remove_crypttab_entry (GVariant  *remove,
                   goto out;
             }
 
-          if (!_g_file_set_contents_full (filename,
-                                          add_passphrase_contents,
-                                          -1,
-                                          0600, /* mode to use if non-existant */
-                                          error))
+          if (!udisks_daemon_util_file_set_contents (filename,
+                                                     add_passphrase_contents,
+                                                     -1,
+                                                     0600, /* mode to use if non-existant */
+                                                     error))
             {
               g_free (filename);
               goto out;
@@ -1406,11 +1302,11 @@ add_remove_crypttab_entry (GVariant  *remove,
                               add_options);
     }
 
-  if (!_g_file_set_contents_full ("/etc/crypttab",
-                                  str->str,
-                                  -1,
-                                  0600, /* mode to use if non-existant */
-                                  error) != 0)
+  if (!udisks_daemon_util_file_set_contents ("/etc/crypttab",
+                                             str->str,
+                                             -1,
+                                             0600, /* mode to use if non-existant */
+                                             error) != 0)
     goto out;
 
   ret = TRUE;

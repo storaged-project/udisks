@@ -121,6 +121,195 @@ udisks_linux_drive_new (void)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static void
+set_id (UDisksDrive *iface)
+{
+  GString *id;
+  const gchar *vendor;
+  const gchar *model;
+  const gchar *serial;
+  const gchar *wwn;
+  guint n;
+
+  vendor = udisks_drive_get_vendor (iface);
+  model = udisks_drive_get_model (iface);
+  serial = udisks_drive_get_serial (iface);
+  wwn = udisks_drive_get_wwn (iface);
+
+  id = g_string_new (NULL);
+
+  /* VENDOR-MODEL-[SERIAL|WWN] */
+
+  if (vendor != NULL && strlen (vendor) > 0)
+    {
+      g_string_append (id, vendor);
+    }
+  if (model != NULL && strlen (model) > 0)
+    {
+      if (id->len > 0)
+        g_string_append_c (id, '-');
+      g_string_append (id, model);
+    }
+
+  if (serial != NULL && strlen (serial) > 0)
+    {
+      if (id->len > 0)
+        g_string_append_c (id, '-');
+      g_string_append (id, serial);
+    }
+  else if (wwn != NULL && strlen (wwn) > 0)
+    {
+      if (id->len > 0)
+        g_string_append_c (id, '-');
+      g_string_append (id, wwn);
+    }
+  else
+    {
+      g_string_set_size (id, 0);
+    }
+
+  for (n = 0; n < id->len; n++)
+    {
+      if (id->str[n] == '/' || id->str[n] == ' ')
+        id->str[n] = '-';
+    }
+
+  udisks_drive_set_id (iface, id->str);
+
+  g_string_free (id, TRUE);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+_g_variant_equal0 (GVariant *a, GVariant *b)
+{
+  gboolean ret = FALSE;
+  if (a == NULL && b == NULL)
+    {
+      ret = TRUE;
+      goto out;
+    }
+  if (a == NULL || b == NULL)
+    goto out;
+  ret = g_variant_equal (a, b);
+out:
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+typedef struct {
+  const gchar *asv_key;
+  const gchar *group;
+  const gchar *key;
+  const GVariantType *type;
+} VariantKeyfileMapping;
+
+static const VariantKeyfileMapping drive_configuration_mapping[3] = {
+  {"ata-pm-standby",  "ATA", "StandbyTimeout", G_VARIANT_TYPE_INT32},
+  {"ata-apm-level",   "ATA", "APMLevel",       G_VARIANT_TYPE_INT32},
+  {"ata-aam-level",   "ATA", "AAMLevel",       G_VARIANT_TYPE_INT32},
+};
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gchar *
+configuration_get_path (UDisksLinuxDrive *drive)
+{
+  const gchar *id;
+  gchar *path = NULL;
+
+  id = udisks_drive_get_id (UDISKS_DRIVE (drive));
+  if (id == NULL || strlen (id) == 0)
+    goto out;
+
+  path = g_strdup_printf (PACKAGE_SYSCONF_DIR "/udisks2/drive-%s.conf", id);
+
+ out:
+  return path;
+}
+
+/* returns TRUE if configuration changed */
+static gboolean
+update_configuration (UDisksLinuxDrive       *drive,
+                      UDisksLinuxDriveObject *object)
+{
+  GKeyFile *key_file = NULL;
+  gboolean ret = FALSE;
+  gchar *path = NULL;
+  GError *error = NULL;
+  GVariant *value = NULL;
+  GVariantBuilder builder;
+  GVariant *old_value;
+  guint n;
+
+  path = configuration_get_path (drive);
+  if (path == NULL)
+    goto out;
+
+  key_file = g_key_file_new ();
+  if (!g_key_file_load_from_file (key_file,
+                                  path,
+                                  G_KEY_FILE_NONE,
+                                  &error))
+    {
+      if (!g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
+        {
+          udisks_error ("Error loading drive config file: %s (%s, %d)",
+                        error->message, g_quark_to_string (error->domain), error->code);
+        }
+      g_clear_error (&error);
+      goto out;
+    }
+
+  g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
+  for (n = 0; n < G_N_ELEMENTS (drive_configuration_mapping); n++)
+    {
+      const VariantKeyfileMapping *mapping = &drive_configuration_mapping[n];
+
+      if (!g_key_file_has_key (key_file, mapping->group, mapping->key, NULL))
+        continue;
+
+      if (mapping->type == G_VARIANT_TYPE_INT32)
+        {
+          gint32 value = g_key_file_get_integer (key_file, mapping->group, mapping->key, &error);
+          if (error != NULL)
+            {
+              udisks_error ("Error parsing int32 key %s in group %s in drive config file %s: %s (%s, %d)",
+                            mapping->key, mapping->group, path,
+                            error->message, g_quark_to_string (error->domain), error->code);
+              g_clear_error (&error);
+            }
+          else
+            {
+              g_variant_builder_add (&builder, "{sv}", mapping->asv_key, g_variant_new_int32 (value));
+            }
+        }
+      else
+        {
+          g_assert_not_reached ();
+        }
+    }
+
+  value = g_variant_ref_sink (g_variant_builder_end (&builder));
+
+ out:
+  old_value = udisks_drive_get_configuration (UDISKS_DRIVE (drive));
+  if (!_g_variant_equal0 (old_value, value))
+    ret = TRUE;
+  udisks_drive_set_configuration (UDISKS_DRIVE (drive), value);
+
+  if (key_file != NULL)
+    g_key_file_unref (key_file);
+  if (value != NULL)
+    g_variant_unref (value);
+
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static const struct
 {
   const gchar *udev_property;
@@ -438,11 +627,14 @@ append_fixedup_sd (const gchar *prefix,
  * @object: The enclosing #UDisksLinuxDriveObject instance.
  *
  * Updates the interface.
+ *
+ * Returns: %TRUE if configuration has changed, %FALSE otherwise.
  */
-void
+gboolean
 udisks_linux_drive_update (UDisksLinuxDrive       *drive,
                            UDisksLinuxDriveObject *object)
 {
+  gboolean ret = FALSE;
   UDisksDrive *iface = UDISKS_DRIVE (drive);
   GUdevDevice *device;
   guint64 size;
@@ -674,9 +866,15 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
       udisks_drive_set_sort_key (iface, drive->sort_key);
     }
 
+  set_id (iface);
+
+  ret = update_configuration (drive, object);
+
  out:
   if (device != NULL)
     g_object_unref (device);
+
+  return ret;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -797,8 +995,129 @@ handle_eject (UDisksDrive           *_drive,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+handle_set_configuration (UDisksDrive           *_drive,
+                          GDBusMethodInvocation *invocation,
+                          GVariant              *configuration,
+                          GVariant              *options)
+{
+  UDisksLinuxDrive *drive = UDISKS_LINUX_DRIVE (_drive);
+  UDisksDaemon *daemon;
+  UDisksLinuxDriveObject *object;
+  const gchar *action_id;
+  const gchar *message;
+  GKeyFile *key_file = NULL;
+  GError *error = NULL;
+  gchar *path = NULL;
+  gchar *data = NULL;
+  gsize data_len;
+  guint n;
+
+  object = udisks_daemon_util_dup_object (drive, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_drive_object_get_daemon (object);
+
+  /* Translators: Shown in authentication dialog when the user
+   * changes settings for a drive.
+   *
+   * Do not translate $(drive), it's a placeholder and will be
+   * replaced by the name of the drive/device in question
+   */
+  message = N_("Authentication is required to configure settings for $(drive)");
+  action_id = "org.freedesktop.udisks2.modify-drive-settings";
+
+  /* Check that the user is actually authorized */
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    UDISKS_OBJECT (object),
+                                                    action_id,
+                                                    options,
+                                                    message,
+                                                    invocation))
+    goto out;
+
+  path = configuration_get_path (drive);
+  if (path == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Drive has no persistent unique id");
+      goto out;
+    }
+
+  key_file = g_key_file_new ();
+  if (!g_key_file_load_from_file (key_file,
+                                  path,
+                                  G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS,
+                                  &error))
+    {
+      if (!g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
+        {
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
+      /* not a problem, just create a new file */
+      g_key_file_set_comment (key_file,
+                              NULL, /* group_name */
+                              NULL, /* key */
+                              " See udisks(8) for the format of this file.",
+                              NULL);
+      g_clear_error (&error);
+    }
+
+  for (n = 0; n < G_N_ELEMENTS (drive_configuration_mapping); n++)
+    {
+      const VariantKeyfileMapping *mapping = &drive_configuration_mapping[n];
+      GVariant *value = NULL;
+
+      value = g_variant_lookup_value (configuration, mapping->asv_key, mapping->type);
+      if (value == NULL)
+        {
+          g_key_file_remove_key (key_file, mapping->group, mapping->key, NULL);
+        }
+      else
+        {
+          if (mapping->type == G_VARIANT_TYPE_INT32)
+            {
+              g_key_file_set_integer (key_file, mapping->group, mapping->key, g_variant_get_int32 (value));
+            }
+          else
+            {
+              g_assert_not_reached ();
+            }
+        }
+    }
+
+  data = g_key_file_to_data (key_file, &data_len, NULL);
+
+  if (!udisks_daemon_util_file_set_contents (path,
+                                             data,
+                                             data_len,
+                                             0644, /* mode to use if non-existant */
+                                             &error) != 0)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+
+  udisks_drive_complete_set_configuration (UDISKS_DRIVE (drive), invocation);
+
+ out:
+  g_free (data);
+  g_free (path);
+  g_clear_object (&object);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 drive_iface_init (UDisksDriveIface *iface)
 {
   iface->handle_eject = handle_eject;
+  iface->handle_set_configuration = handle_set_configuration;
 }
