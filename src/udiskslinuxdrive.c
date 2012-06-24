@@ -224,7 +224,7 @@ configuration_get_path (UDisksLinuxDrive *drive)
   if (id == NULL || strlen (id) == 0)
     goto out;
 
-  path = g_strdup_printf (PACKAGE_SYSCONF_DIR "/udisks2/drive-%s.conf", id);
+  path = g_strdup_printf (PACKAGE_SYSCONF_DIR "/udisks2/%s.conf", id);
 
  out:
   return path;

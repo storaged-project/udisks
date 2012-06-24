@@ -319,7 +319,7 @@
            </varlistentry>
          </variablelist>
          The contents of this property is read from the configuration
-         file <filename>/etc/udisks2/drive-IDENTIFIER.conf</filename>
+         file <filename>/etc/udisks2/IDENTIFIER.conf</filename>
          where <emphasis>IDENTIFIER</emphasis> is the value of the
          #org.freedesktop.UDisks2.Drive:Id property. See <xref
          linkend="udisks.8"/> for the file format of this file.

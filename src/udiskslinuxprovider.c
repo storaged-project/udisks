@@ -241,11 +241,10 @@ on_etc_udisks2_dir_monitor_changed (GFileMonitor     *monitor,
       event_type == G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT)
     {
       gchar *filename = g_file_get_basename (file);
-      if (g_str_has_prefix (filename, "drive-") && g_str_has_suffix (filename, ".conf"))
+      if (g_str_has_suffix (filename, ".conf"))
         {
           gchar *id;
-          id = g_strndup (filename + strlen ("drive-"),
-                          strlen (filename) - strlen ("drive-") - strlen(".conf"));
+          id = g_strndup (filename, strlen (filename) - strlen(".conf"));
           update_drive_with_id (provider, id);
           g_free (id);
         }

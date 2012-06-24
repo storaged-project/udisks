@@ -1658,7 +1658,7 @@ apply_configuration_thread_func (gpointer user_data)
 
   device_file = g_udev_device_get_device_file (data->device);
 
-  udisks_notice ("Applying configuration from %s/udisks2/drive-%s.conf to %s",
+  udisks_notice ("Applying configuration from %s/udisks2/%s.conf to %s",
                  PACKAGE_SYSCONF_DIR, udisks_drive_get_id (data->drive), device_file);
 
 

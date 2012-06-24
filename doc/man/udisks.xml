@@ -63,7 +63,7 @@
       At start-up and when a drive is connected,
       <link linkend="udisksd.8"><citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>
       will apply configuration stored in the file
-      <filename class='directory'>/etc/udisks2/drive-IDENTIFIER.conf</filename>
+      <filename class='directory'>/etc/udisks2/IDENTIFIER.conf</filename>
       where <emphasis>IDENTIFIER</emphasis> is the value of the
       <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Id">Drive:Id</link>
       property for the drive. If the file changes on disk its new
