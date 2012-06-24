@@ -1096,7 +1096,7 @@ handle_set_configuration (UDisksDrive           *_drive,
   if (!udisks_daemon_util_file_set_contents (path,
                                              data,
                                              data_len,
-                                             0644, /* mode to use if non-existant */
+                                             0600, /* mode to use if non-existant */
                                              &error) != 0)
     {
       g_dbus_method_invocation_take_error (invocation, error);
