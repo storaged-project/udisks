@@ -98,6 +98,43 @@
     -->
     <property name="Id" type="s" access="read"/>
 
+    <!-- Configuration:
+         A set of configuration directives that are applied to the
+         drive when it is connected (e.g. at start-up, hotplug or
+         resume).
+
+         This is an dict of items with the following known keys:
+         <variablelist>
+           <varlistentry>
+             <term>ata-pm-standby (type <literal>'i'</literal>)</term>
+             <listitem><para>
+               The spindown timeout for ATA drives (See ATA command <quote>STANDBY</quote>).
+             </para></listitem>
+           </varlistentry>
+           <varlistentry>
+             <term>ata-apm-level (type <literal>'i'</literal>)</term>
+             <listitem><para>
+               The APM level for ATA drives (See ATA command <quote>SET FEATURES</quote>, sub-commands 0x05 and 0x85).
+             </para></listitem>
+           </varlistentry>
+           <varlistentry>
+             <term>ata-aam-level (type <literal>'i'</literal>)</term>
+             <listitem><para>
+               The AAM level for ATA drives (See ATA command <quote>SET FEATURES</quote>, sub-commands 0x42 and 0xc2).
+             </para></listitem>
+           </varlistentry>
+         </variablelist>
+         The contents of this property is read from the configuration
+         file <filename>/etc/udisks2/IDENTIFIER.conf</filename>
+         where <emphasis>IDENTIFIER</emphasis> is the value of the
+         #org.freedesktop.UDisks2.Drive:Id property. See <xref
+         linkend="udisks.8"/> for the file format of this file.
+
+         Use the org.freedesktop.UDisks2.Drive.SetConfiguration()
+         method to change the value of this property.
+    -->
+    <property name="Configuration" type="a{sv}" access="read"/>
+
     <!-- Media: The kind of media currently in the drive or blank if unknown.
          See the #org.freedesktop.UDisks2.Drive:MediaCompatibility property for known values.
     -->
@@ -291,43 +328,6 @@
     <method name="Eject">
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
-
-    <!-- Configuration:
-         A set of configuration directives that are applied to the
-         drive when it is connected (e.g. at start-up, hotplug or
-         resume).
-
-         This is an dict of items with the following known keys:
-         <variablelist>
-           <varlistentry>
-             <term>ata-pm-standby (type <literal>'i'</literal>)</term>
-             <listitem><para>
-               The spindown timeout for ATA drives (See ATA command <quote>STANDBY</quote>).
-             </para></listitem>
-           </varlistentry>
-           <varlistentry>
-             <term>ata-apm-level (type <literal>'i'</literal>)</term>
-             <listitem><para>
-               The APM level for ATA drives (See ATA command <quote>SET FEATURES</quote>, sub-commands 0x05 and 0x85).
-             </para></listitem>
-           </varlistentry>
-           <varlistentry>
-             <term>ata-aam-level (type <literal>'i'</literal>)</term>
-             <listitem><para>
-               The AAM level for ATA drives (See ATA command <quote>SET FEATURES</quote>, sub-commands 0x42 and 0xc2).
-             </para></listitem>
-           </varlistentry>
-         </variablelist>
-         The contents of this property is read from the configuration
-         file <filename>/etc/udisks2/IDENTIFIER.conf</filename>
-         where <emphasis>IDENTIFIER</emphasis> is the value of the
-         #org.freedesktop.UDisks2.Drive:Id property. See <xref
-         linkend="udisks.8"/> for the file format of this file.
-
-         Use the org.freedesktop.UDisks2.Drive.SetConfiguration()
-         method to change the value of this property.
-    -->
-    <property name="Configuration" type="a{sv}" access="read"/>
 
     <!--
         SetConfiguration:
