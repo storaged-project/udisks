@@ -582,6 +582,19 @@
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
+    <!--
+        PmWakeup:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Force the drive to immediately wake up (exiting the low power
+        consumption <emphasis>standby</emphasis> mode), usually
+        causing it to spin up. This is done by reading data from the
+        disk.
+    -->
+    <method name="PmWakeup">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
   </interface>
 
   <!-- ********************************************************************** -->

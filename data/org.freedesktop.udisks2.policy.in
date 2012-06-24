@@ -390,7 +390,7 @@
     </defaults>
   </action>
 
-  <!-- Send standby command -->
+  <!-- Send standby command / resume from standby -->
   <action id="org.freedesktop.udisks2.ata-standby">
     <_description>Send standby command</_description>
     <_message>Authentication is required to put a drive into standby mode</_message>
@@ -401,7 +401,7 @@
     </defaults>
   </action>
 
-  <!-- Send standby command to a drive considered a "system device" -->
+  <!-- Send standby command / resume from standby to a drive considered a "system device" -->
   <action id="org.freedesktop.udisks2.ata-standby-system">
     <_description>Send standby command to a system drive</_description>
     <_message>Authentication is required to put a drive into standby mode</_message>
@@ -412,7 +412,7 @@
     </defaults>
   </action>
 
-  <!-- Send standby command to a drive on another seat -->
+  <!-- Send standby command  / resume from standby to a drive on another seat -->
   <action id="org.freedesktop.udisks2.ata-standby-other-seat">
     <_description>Send standby command to drive on other seat</_description>
     <_message>Authentication is required to put a drive into standby mode</_message>
