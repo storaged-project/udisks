@@ -76,17 +76,23 @@ UDisksObject             *udisks_daemon_find_object           (UDisksDaemon     
 
 UDisksBaseJob            *udisks_daemon_launch_simple_job     (UDisksDaemon    *daemon,
                                                                UDisksObject    *object,
+                                                               const gchar     *job_operation,
+                                                               uid_t            job_started_by_uid,
                                                                GCancellable    *cancellable);
 UDisksBaseJob            *udisks_daemon_launch_spawned_job    (UDisksDaemon    *daemon,
                                                                UDisksObject    *object,
+                                                               const gchar     *job_operation,
+                                                               uid_t            job_started_by_uid,
                                                                GCancellable    *cancellable,
                                                                uid_t            run_as_uid,
                                                                uid_t            run_as_euid,
                                                                const gchar     *input_string,
                                                                const gchar     *command_line_format,
-                                                               ...) G_GNUC_PRINTF (7, 8);
+                                                               ...) G_GNUC_PRINTF (9, 10);
 gboolean                  udisks_daemon_launch_spawned_job_sync (UDisksDaemon    *daemon,
                                                                  UDisksObject    *object,
+                                                                 const gchar     *job_operation,
+                                                                 uid_t            job_started_by_uid,
                                                                  GCancellable    *cancellable,
                                                                  uid_t            run_as_uid,
                                                                  uid_t            run_as_euid,
@@ -94,9 +100,11 @@ gboolean                  udisks_daemon_launch_spawned_job_sync (UDisksDaemon   
                                                                  gchar          **out_message,
                                                                  const gchar     *input_string,
                                                                  const gchar     *command_line_format,
-                                                                 ...) G_GNUC_PRINTF (9, 10);
+                                                                 ...) G_GNUC_PRINTF (11, 12);
 UDisksBaseJob            *udisks_daemon_launch_threaded_job   (UDisksDaemon    *daemon,
                                                                UDisksObject    *object,
+                                                               const gchar     *job_operation,
+                                                               uid_t            job_started_by_uid,
                                                                UDisksThreadedJobFunc job_func,
                                                                gpointer         user_data,
                                                                GDestroyNotify   user_data_free_func,

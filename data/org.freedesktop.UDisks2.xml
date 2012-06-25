@@ -947,7 +947,7 @@
     <!--
         Format:
         @type: The type of file system, partition table or other content to format the device with.
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's'), <parameter>take-ownership</parameter> (of type 'b') and <parameter>encrypt.passphrase</parameter> (of type 's').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's'), <parameter>take-ownership</parameter> (of type 'b'), <parameter>encrypt.passphrase</parameter> (of type 's') and <parameter>erase</parameter> (of type 's').
 
         Formats the device with a file system, partition table or
         other well-known content.
@@ -976,6 +976,11 @@
         given then a LUKS device is created with the given passphrase
         and the file system is created on the unlocked device. The
         unlocked device will be left open.
+
+        If the option <parameter>erase</parameter> is given then the
+        underlying device will be erased. Valid values include
+        <quote>zero</quote> to write zeroes over the entire device
+        before formatting it.
     -->
     <method name="Format">
       <arg name="type" direction="in" type="s"/>
@@ -1508,9 +1513,15 @@
       things, this can be used to draw a spinner in the user interface
       next to e.g. an icon for the drive or device in question.
 
-      A job <emphasis>may</emphasis> convey progress (if the
-      underlying tool used supports it), see the
-      #org.freedesktop.UDisks2.Job:ExpectedEndTime property.
+      The #org.freedesktop.UDisks2.Job:Operation property is used to
+      convey the type of job currently in progress.
+
+      The user id of the user who started the job is set in the
+      #org.freedesktop.UDisks2.Job:StartedByUID property.
+
+      A job <emphasis>may</emphasis> convey how much progress has been
+      made, see the #org.freedesktop.UDisks2.Job:Progress and
+      #org.freedesktop.UDisks2.Job:ProgressValid properties.
 
       When a job completes, the #org.freedesktop.UDisks2.Job::Completed signal
       is emitted.
@@ -1518,12 +1529,67 @@
       To cancel a job use the org.freedesktop.UDisks2.Job.Cancel()
       method. This will cause the job to complete (with @success set
       to %FALSE) and the D-Bus method used to initiate the operation
-      to return, usually returning the <literal>org.freedesktop.UDisks2.Error.Cancelled</literal> error.
+      to return, usually returning the
+      <literal>org.freedesktop.UDisks2.Error.Cancelled</literal> error.
   -->
   <interface name="org.freedesktop.UDisks2.Job">
 
-    <!-- Progress: How much progress has been made. Values are in the range 0 to 1. -->
+    <!-- Operation:
+         The type of the operation that the job represents.
+
+         Known job operation types include:
+         <variablelist>
+           <varlistentry><term>ata-smart-selftest</term>
+             <listitem><para>SMART self-test operation.</para></listitem></varlistentry>
+           <varlistentry><term>drive-eject</term>
+             <listitem><para>Ejecting the medium from a drive.</para></listitem></varlistentry>
+           <varlistentry><term>encrypted-unlock</term>
+             <listitem><para>Unlocking encrypted device.</para></listitem></varlistentry>
+           <varlistentry><term>encrypted-lock</term>
+             <listitem><para>Locking encrypted device.</para></listitem></varlistentry>
+           <varlistentry><term>encrypted-modify</term>
+             <listitem><para>Modifying encrypted device.</para></listitem></varlistentry>
+           <varlistentry><term>swapspace-start</term>
+             <listitem><para>Starting swapspace.</para></listitem></varlistentry>
+           <varlistentry><term>swapspace-stop</term>
+             <listitem><para>Stopping swapspace.</para></listitem></varlistentry>
+           <varlistentry><term>filesystem-mount</term>
+             <listitem><para>Mounting a filesystem.</para></listitem></varlistentry>
+           <varlistentry><term>filesystem-unmount</term>
+             <listitem><para>Unmounting a filesystem.</para></listitem></varlistentry>
+           <varlistentry><term>filesystem-modify</term>
+             <listitem><para>Modifying a filesystem.</para></listitem></varlistentry>
+           <varlistentry><term>format-erase</term>
+             <listitem><para>Erasing a device.</para></listitem></varlistentry>
+           <varlistentry><term>format-mkfs</term>
+             <listitem><para>Creating a filesystem.</para></listitem></varlistentry>
+           <varlistentry><term>loop-setup</term>
+             <listitem><para>Setting up a loop device.</para></listitem></varlistentry>
+           <varlistentry><term>partition-modify</term>
+             <listitem><para>Modifying a partition.</para></listitem></varlistentry>
+           <varlistentry><term>partition-delete</term>
+             <listitem><para>Deleting a partition.</para></listitem></varlistentry>
+           <varlistentry><term>partition-create</term>
+             <listitem><para>Creating a partition.</para></listitem></varlistentry>
+           <varlistentry><term>cleanup</term>
+             <listitem><para>Cleaning up devices that were removed without being properly unmounted or shut down.</para></listitem></varlistentry>
+         </variablelist>
+         The
+         <link linkend="udisks-client-get-job-description">udisks_client_get_job_description()</link>
+         function can be used to get a localized human readable description.
+    -->
+    <property name="Operation" type="s" access="read"/>
+
+    <!-- Progress:
+         How much progress has been made. Values are in the range 0 to 1.
+
+         Do not use unless #org.freedesktop.UDisks2.Job:ProgressValid is %TRUE.
+    -->
     <property name="Progress" type="d" access="read"/>
+
+    <!-- ProgressValid: Set to %TRUE if the #org.freedesktop.UDisks2.Job:Progress is valid. -->
+    <property name="ProgressValid" type="b" access="read"/>
+
     <!-- StartTime:
 
          The point in time (seconds since the <ulink
@@ -1531,6 +1597,7 @@
          Epoch</ulink>) that the job was started.
     -->
     <property name="StartTime" type="t" access="read"/>
+
     <!-- ExpectedEndTime:
 
          The expected point in time (seconds since the <ulink
@@ -1541,6 +1608,12 @@
 
     <!-- Objects: The objects that the job is related to, if any. -->
     <property name="Objects" type="ao" access="read"/>
+
+    <!-- StartedByUID:
+         The id of the user who started the job or 0 if started
+         by root or not through udisks.
+    -->
+    <property name="StartedByUID" type="u" access="read"/>
 
     <!--
         Cancel:

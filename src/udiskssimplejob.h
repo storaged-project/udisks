@@ -30,7 +30,8 @@ G_BEGIN_DECLS
 #define UDISKS_IS_SIMPLE_JOB(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_SIMPLE_JOB))
 
 GType            udisks_simple_job_get_type         (void) G_GNUC_CONST;
-UDisksSimpleJob *udisks_simple_job_new              (GCancellable        *cancellable);
+UDisksSimpleJob *udisks_simple_job_new              (UDisksDaemon        *daemon,
+                                                     GCancellable        *cancellable);
 void             udisks_simple_job_complete         (UDisksSimpleJob     *job,
                                                      gboolean             succeess,
                                                      const gchar         *message);

@@ -62,7 +62,9 @@ struct _UDisksBaseJobClass
 };
 
 GType              udisks_base_job_get_type         (void) G_GNUC_CONST;
+UDisksDaemon      *udisks_base_job_get_daemon       (UDisksBaseJob  *job);
 GCancellable      *udisks_base_job_get_cancellable  (UDisksBaseJob  *job);
+
 void               udisks_base_job_add_object       (UDisksBaseJob  *job,
                                                      UDisksObject   *object);
 void               udisks_base_job_remove_object    (UDisksBaseJob  *job,

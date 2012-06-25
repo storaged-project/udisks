@@ -395,6 +395,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               object,
+                                              "encrypted-unlock", caller_uid,
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */
@@ -590,6 +591,7 @@ handle_lock (UDisksEncrypted        *encrypted,
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               object,
+                                              "encrypted-lock", caller_uid,
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */
@@ -710,6 +712,7 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
   passphrases = g_strdup_printf ("%s\n%s", passphrase, new_passphrase);
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               object,
+                                              "encrypted-modify", caller_uid,
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */

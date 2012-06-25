@@ -33,6 +33,7 @@ GType              udisks_threaded_job_get_type         (void) G_GNUC_CONST;
 UDisksThreadedJob *udisks_threaded_job_new              (UDisksThreadedJobFunc  job_func,
                                                          gpointer               user_data,
                                                          GDestroyNotify         user_data_free_func,
+                                                         UDisksDaemon          *daemon,
                                                          GCancellable          *cancellable);
 gpointer           udisks_threaded_job_get_user_data    (UDisksThreadedJob     *job);
 

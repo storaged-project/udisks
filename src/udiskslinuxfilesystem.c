@@ -1103,9 +1103,9 @@ handle_mount (UDisksFilesystem       *filesystem,
   UDisksBlock *block;
   UDisksDaemon *daemon;
   UDisksCleanup *cleanup;
-  pid_t caller_pid;
   uid_t caller_uid;
   gid_t caller_gid;
+  pid_t caller_pid;
   const gchar * const *existing_mount_points;
   const gchar *probed_fs_usage;
   gchar *fs_type_to_use;
@@ -1260,6 +1260,7 @@ handle_mount (UDisksFilesystem       *filesystem,
     mount_fstab_again:
       if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                                   object,
+                                                  "filesystem-mount", caller_uid,
                                                   NULL,  /* GCancellable */
                                                   mount_fstab_as_root ? 0 : caller_uid, /* uid_t run_as_uid */
                                                   mount_fstab_as_root ? 0 : caller_uid, /* uid_t run_as_euid */
@@ -1436,6 +1437,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   /* run mount(8) */
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               object,
+                                              "filesystem-mount", caller_uid,
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */
@@ -1601,6 +1603,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
       /* right now -l is the only way to "force unmount" file systems... */
       if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                                   object,
+                                                  "filesystem-unmount", caller_uid,
                                                   NULL, /* GCancellable */
                                                   unmount_fstab_as_root ? 0 : caller_uid, /* uid_t run_as_uid */
                                                   unmount_fstab_as_root ? 0 : caller_uid, /* uid_t run_as_euid */
@@ -1698,6 +1701,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
       escaped_mount_point = udisks_daemon_util_escape_and_quote (mount_point);
       rc = udisks_daemon_launch_spawned_job_sync (daemon,
                                                   object,
+                                                  "filesystem-unmount", caller_uid,
                                                   NULL, /* GCancellable */
                                                   0,    /* uid_t run_as_uid */
                                                   0,    /* uid_t run_as_euid */
@@ -1713,6 +1717,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
       /* mount_point == NULL */
       rc = udisks_daemon_launch_spawned_job_sync (daemon,
                                                   object,
+                                                  "filesystem-unmount", caller_uid,
                                                   NULL, /* GCancellable */
                                                   0,    /* uid_t run_as_uid */
                                                   0,    /* uid_t run_as_euid */
@@ -1795,6 +1800,8 @@ handle_set_label (UDisksFilesystem       *filesystem,
   UDisksBaseJob *job;
   const gchar *action_id;
   const gchar *message;
+  uid_t caller_uid;
+  gid_t caller_gid;
   pid_t caller_pid;
   gchar *command;
   gchar *tmp;
@@ -1820,6 +1827,20 @@ handle_set_label (UDisksFilesystem       *filesystem,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_pid,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &caller_gid,
+                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -1931,6 +1952,7 @@ handle_set_label (UDisksFilesystem       *filesystem,
 
   job = udisks_daemon_launch_spawned_job (daemon,
                                           object,
+                                          "filesystem-modify", caller_uid,
                                           NULL, /* cancellable */
                                           0,    /* uid_t run_as_uid */
                                           0,    /* uid_t run_as_euid */

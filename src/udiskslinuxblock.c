@@ -51,6 +51,8 @@
 #include "udiskscrypttabmonitor.h"
 #include "udiskscrypttabentry.h"
 #include "udisksdaemonutil.h"
+#include "udisksbasejob.h"
+#include "udiskssimplejob.h"
 
 /**
  * SECTION:udiskslinuxblock
@@ -1717,6 +1719,112 @@ wait_for_luks_cleartext (UDisksDaemon *daemon,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+#define ERASE_SIZE (1 * 1024*1024)
+
+static gboolean
+erase_device (UDisksBlock  *block,
+              UDisksObject *object,
+              UDisksDaemon *daemon,
+              uid_t         caller_uid,
+              const gchar  *erase_type,
+              GError      **error)
+{
+  gboolean ret = FALSE;
+  const gchar *device_file = NULL;
+  UDisksBaseJob *job = NULL;
+  gint fd = -1;
+  guint64 size;
+  guint64 pos;
+  guchar *buf = NULL;
+  gint64 time_of_last_signal;
+  GError *local_error = NULL;
+
+  if (g_strcmp0 (erase_type, "zero") != 0)
+    {
+      g_set_error (&local_error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Unknown or unsupported erase type `%s'",
+                   erase_type);
+      goto out;
+    }
+
+  device_file = udisks_block_get_device (block);
+  fd = open (device_file, O_WRONLY | O_SYNC | O_EXCL);
+  if (fd == -1)
+    {
+      g_set_error (&local_error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Error opening device %s: %m", device_file);
+      goto out;
+    }
+
+  job = udisks_daemon_launch_simple_job (daemon, object, "format-erase", caller_uid, NULL);
+  udisks_job_set_progress_valid (UDISKS_JOB (job), TRUE);
+
+  if (ioctl (fd, BLKGETSIZE64, &size) != 0)
+    {
+      g_set_error (&local_error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Error doing BLKGETSIZE64 iotctl on %s: %m", device_file);
+      goto out;
+    }
+
+  buf = g_new0 (guchar, ERASE_SIZE);
+  pos = 0;
+  time_of_last_signal = g_get_monotonic_time ();
+  while (pos < size)
+    {
+      size_t to_write;
+      ssize_t num_written;
+      gint64 now;
+
+      to_write = MIN (size - pos, ERASE_SIZE);
+    again:
+      num_written = write (fd, buf, to_write);
+      if (num_written == -1 || num_written == 0)
+        {
+          if (errno == EINTR)
+            goto again;
+          g_set_error (&local_error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                       "Error writing %d bytes to %s: %m",
+                       (gint) to_write, device_file);
+          goto out;
+        }
+      pos += num_written;
+
+      if (g_cancellable_is_cancelled (udisks_base_job_get_cancellable (job)))
+        {
+          g_set_error (&local_error, UDISKS_ERROR, UDISKS_ERROR_CANCELLED,
+                       "Job was canceled");
+          goto out;
+        }
+
+      /* only emit D-Bus signal at most once a second */
+      now = g_get_monotonic_time ();
+      if (now - time_of_last_signal > G_USEC_PER_SEC)
+        {
+          /* TODO: estimation etc. */
+          udisks_job_set_progress (UDISKS_JOB (job), ((gdouble) pos) / size);
+          time_of_last_signal = now;
+        }
+    }
+
+  ret = TRUE;
+
+ out:
+  if (job != NULL)
+    {
+      if (local_error != NULL)
+        udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, local_error->message);
+      else
+        udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, "");
+    }
+  g_propagate_error (error, local_error);
+  g_free (buf);
+  if (fd != -1)
+    close (fd);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static gboolean
 handle_format (UDisksBlock           *block,
                GDBusMethodInvocation *invocation,
@@ -1745,6 +1853,7 @@ handle_format (UDisksBlock           *block,
   pid_t caller_pid;
   gboolean take_ownership = FALSE;
   gchar *encrypt_passphrase = NULL;
+  gchar *erase_type = NULL;
   gchar *mapped_name = NULL;
   const gchar *label = NULL;
   gchar *escaped_device = NULL;
@@ -1824,6 +1933,7 @@ handle_format (UDisksBlock           *block,
 
   g_variant_lookup (options, "take-ownership", "b", &take_ownership);
   g_variant_lookup (options, "encrypt.passphrase", "s", &encrypt_passphrase);
+  g_variant_lookup (options, "erase", "s", &erase_type);
 
   escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
 
@@ -1832,6 +1942,7 @@ handle_format (UDisksBlock           *block,
   wait_data->object = object;
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               object,
+                                              "format-erase", caller_uid,
                                               NULL, /* cancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */
@@ -1861,6 +1972,17 @@ handle_format (UDisksBlock           *block,
       goto out;
     }
 
+  /* Erase the device, if requested */
+  if (erase_type != NULL)
+    {
+      if (!erase_device (block, object, daemon, caller_uid, erase_type, &error))
+        {
+          g_prefix_error (&error, "Error erasing device: ");
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
+    }
+
   /* And now create the desired filesystem */
   wait_data->type = type;
 
@@ -1869,6 +1991,7 @@ handle_format (UDisksBlock           *block,
       /* Create it */
       if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                                   object,
+                                                  "format-mkfs", caller_uid,
                                                   NULL, /* cancellable */
                                                   0,    /* uid_t run_as_uid */
                                                   0,    /* uid_t run_as_euid */
@@ -1904,6 +2027,7 @@ handle_format (UDisksBlock           *block,
       mapped_name = g_strdup_printf ("luks-%s", udisks_block_get_id_uuid (block));
       if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                                   object,
+                                                  "format-mkfs", caller_uid,
                                                   NULL, /* cancellable */
                                                   0,    /* uid_t run_as_uid */
                                                   0,    /* uid_t run_as_euid */
@@ -1982,6 +2106,7 @@ handle_format (UDisksBlock           *block,
   g_free (tmp);
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               object_to_mkfs,
+                                              "format-mkfs", caller_uid,
                                               NULL, /* cancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */
@@ -2096,6 +2221,7 @@ handle_format (UDisksBlock           *block,
   g_free (escaped_device);
   g_free (mapped_name);
   g_free (command);
+  g_free (erase_type);
   g_free (encrypt_passphrase);
   g_clear_object (&cleartext_object);
   g_clear_object (&cleartext_block);

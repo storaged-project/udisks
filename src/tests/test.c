@@ -69,7 +69,7 @@ test_spawned_job_successful (void)
 {
   UDisksSpawnedJob *job;
 
-  job = udisks_spawned_job_new ("/bin/true", NULL, getuid (), geteuid (), NULL);
+  job = udisks_spawned_job_new ("/bin/true", NULL, getuid (), geteuid (), NULL, NULL);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_success), NULL);
   g_object_unref (job);
 }
@@ -81,7 +81,7 @@ test_spawned_job_failure (void)
 {
   UDisksSpawnedJob *job;
 
-  job = udisks_spawned_job_new ("/bin/false", NULL, getuid (), geteuid (), NULL);
+  job = udisks_spawned_job_new ("/bin/false", NULL, getuid (), geteuid (), NULL, NULL);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
                              "Command-line `/bin/false' exited with non-zero exit status 1: ");
   g_object_unref (job);
@@ -94,7 +94,7 @@ test_spawned_job_missing_program (void)
 {
   UDisksSpawnedJob *job;
 
-  job = udisks_spawned_job_new ("/path/to/unknown/file", NULL, getuid (), geteuid (), NULL);
+  job = udisks_spawned_job_new ("/path/to/unknown/file", NULL, getuid (), geteuid (), NULL, NULL);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
                              "Error spawning command-line `/path/to/unknown/file': Failed to execute child process \"/path/to/unknown/file\" (No such file or directory) (g-exec-error-quark, 8)");
   g_object_unref (job);
@@ -110,7 +110,7 @@ test_spawned_job_cancelled_at_start (void)
 
   cancellable = g_cancellable_new ();
   g_cancellable_cancel (cancellable);
-  job = udisks_spawned_job_new ("/bin/true", NULL, getuid (), geteuid (), cancellable);
+  job = udisks_spawned_job_new ("/bin/true", NULL, getuid (), geteuid (), NULL, cancellable);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
                              "Operation was cancelled (g-io-error-quark, 19)");
   g_object_unref (job);
@@ -135,7 +135,7 @@ test_spawned_job_cancelled_midway (void)
   GCancellable *cancellable;
 
   cancellable = g_cancellable_new ();
-  job = udisks_spawned_job_new ("/bin/sleep 0.5", NULL, getuid (), geteuid (), cancellable);
+  job = udisks_spawned_job_new ("/bin/sleep 0.5", NULL, getuid (), geteuid (), NULL, cancellable);
   g_timeout_add (10, on_timeout, cancellable); /* 10 msec */
   g_main_loop_run (loop);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
@@ -167,7 +167,7 @@ test_spawned_job_override_signal_handler (void)
   UDisksSpawnedJob *job;
   gboolean handler_ran;
 
-  job = udisks_spawned_job_new ("/path/to/unknown/file", NULL, getuid (), geteuid (), NULL /* GCancellable */);
+  job = udisks_spawned_job_new ("/path/to/unknown/file", NULL, getuid (), geteuid (), NULL, NULL /* GCancellable */);
   handler_ran = FALSE;
   g_signal_connect (job, "spawned-job-completed", G_CALLBACK (on_spawned_job_completed), &handler_ran);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
@@ -183,7 +183,7 @@ test_spawned_job_premature_termination (void)
 {
   UDisksSpawnedJob *job;
 
-  job = udisks_spawned_job_new ("/bin/sleep 1000", NULL, getuid (), geteuid (), NULL /* GCancellable */);
+  job = udisks_spawned_job_new ("/bin/sleep 1000", NULL, getuid (), geteuid (), NULL, NULL /* GCancellable */);
   g_object_unref (job);
 }
 
@@ -214,7 +214,7 @@ test_spawned_job_read_stdout (void)
   gchar *s;
 
   s = g_strdup_printf (UDISKS_TEST_DIR "/udisks-test-helper 0");
-  job = udisks_spawned_job_new (s, NULL, getuid (), geteuid (), NULL);
+  job = udisks_spawned_job_new (s, NULL, getuid (), geteuid (), NULL, NULL);
   _g_assert_signal_received (job, "spawned-job-completed", G_CALLBACK (read_stdout_on_spawned_job_completed), NULL);
   g_object_unref (job);
   g_free (s);
@@ -247,7 +247,7 @@ test_spawned_job_read_stderr (void)
   gchar *s;
 
   s = g_strdup_printf (UDISKS_TEST_DIR "/udisks-test-helper 1");
-  job = udisks_spawned_job_new (s, NULL, getuid (), geteuid (), NULL);
+  job = udisks_spawned_job_new (s, NULL, getuid (), geteuid (), NULL, NULL);
   _g_assert_signal_received (job, "spawned-job-completed", G_CALLBACK (read_stderr_on_spawned_job_completed), NULL);
   g_object_unref (job);
   g_free (s);
@@ -278,14 +278,14 @@ test_spawned_job_exit_status (void)
   gchar *s;
 
   s = g_strdup_printf (UDISKS_TEST_DIR "/udisks-test-helper 2");
-  job = udisks_spawned_job_new (s, NULL, getuid (), geteuid (), NULL);
+  job = udisks_spawned_job_new (s, NULL, getuid (), geteuid (), NULL, NULL);
   _g_assert_signal_received (job, "spawned-job-completed", G_CALLBACK (exit_status_on_spawned_job_completed),
                              GINT_TO_POINTER (1));
   g_object_unref (job);
   g_free (s);
 
   s = g_strdup_printf (UDISKS_TEST_DIR "/udisks-test-helper 3");
-  job = udisks_spawned_job_new (s, NULL, getuid (), geteuid (), NULL);
+  job = udisks_spawned_job_new (s, NULL, getuid (), geteuid (), NULL, NULL);
   _g_assert_signal_received (job, "spawned-job-completed", G_CALLBACK (exit_status_on_spawned_job_completed),
                              GINT_TO_POINTER (2));
   g_object_unref (job);
@@ -301,7 +301,7 @@ test_spawned_job_abnormal_termination (void)
   gchar *s;
 
   s = g_strdup_printf (UDISKS_TEST_DIR "/udisks-test-helper 4");
-  job = udisks_spawned_job_new (s, NULL, getuid (), geteuid (), NULL);
+  job = udisks_spawned_job_new (s, NULL, getuid (), geteuid (), NULL, NULL);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
                              "Command-line `./udisks-test-helper 4' was signaled with signal SIGSEGV (11): "
                              "OK, deliberately causing a segfault\n");
@@ -309,7 +309,7 @@ test_spawned_job_abnormal_termination (void)
   g_free (s);
 
   s = g_strdup_printf (UDISKS_TEST_DIR "/udisks-test-helper 5");
-  job = udisks_spawned_job_new (s, NULL, getuid (), geteuid (), NULL);
+  job = udisks_spawned_job_new (s, NULL, getuid (), geteuid (), NULL, NULL);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
                              "Command-line `./udisks-test-helper 5' was signaled with signal SIGABRT (6): "
                              "OK, deliberately abort()'ing\n");
@@ -350,7 +350,7 @@ test_spawned_job_binary_output (void)
   gchar *s;
 
   s = g_strdup_printf (UDISKS_TEST_DIR "/udisks-test-helper 6");
-  job = udisks_spawned_job_new (s, NULL, getuid (), geteuid (), NULL);
+  job = udisks_spawned_job_new (s, NULL, getuid (), geteuid (), NULL, NULL);
   _g_assert_signal_received (job, "spawned-job-completed", G_CALLBACK (binary_output_on_spawned_job_completed), NULL);
   g_object_unref (job);
   g_free (s);
@@ -381,7 +381,7 @@ test_spawned_job_input_string (void)
   gchar *s;
 
   s = g_strdup_printf (UDISKS_TEST_DIR "/udisks-test-helper 7");
-  job = udisks_spawned_job_new (s, "foobar", getuid (), geteuid (), NULL);
+  job = udisks_spawned_job_new (s, "foobar", getuid (), geteuid (), NULL, NULL);
   _g_assert_signal_received (job, "spawned-job-completed", G_CALLBACK (input_string_on_spawned_job_completed), NULL);
   g_object_unref (job);
   g_free (s);
@@ -404,7 +404,7 @@ test_threaded_job_successful (void)
 {
   UDisksThreadedJob *job;
 
-  job = udisks_threaded_job_new (threaded_job_successful_func, NULL, NULL, NULL);
+  job = udisks_threaded_job_new (threaded_job_successful_func, NULL, NULL, NULL, NULL);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_success), NULL);
   g_object_unref (job);
 }
@@ -430,7 +430,7 @@ test_threaded_job_failure (void)
 {
   UDisksThreadedJob *job;
 
-  job = udisks_threaded_job_new (threaded_job_failure_func, NULL, NULL, NULL);
+  job = udisks_threaded_job_new (threaded_job_failure_func, NULL, NULL, NULL, NULL);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
                              "Threaded job failed with error: some error (g-key-file-error-quark, 5)");
   g_object_unref (job);
@@ -446,7 +446,7 @@ test_threaded_job_cancelled_at_start (void)
 
   cancellable = g_cancellable_new ();
   g_cancellable_cancel (cancellable);
-  job = udisks_threaded_job_new (threaded_job_successful_func, NULL, NULL, cancellable);
+  job = udisks_threaded_job_new (threaded_job_successful_func, NULL, NULL, NULL, cancellable);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
                              "Threaded job failed with error: Operation was cancelled (g-io-error-quark, 19)");
   g_object_unref (job);
@@ -485,7 +485,7 @@ test_threaded_job_cancelled_midway (void)
 
   cancellable = g_cancellable_new ();
   count = 0;
-  job = udisks_threaded_job_new (threaded_job_sleep_until_cancelled, &count, NULL, cancellable);
+  job = udisks_threaded_job_new (threaded_job_sleep_until_cancelled, &count, NULL, NULL, cancellable);
   g_timeout_add (10, on_timeout, cancellable); /* 10 msec */
   g_main_loop_run (loop);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
@@ -518,7 +518,7 @@ test_threaded_job_override_signal_handler (void)
   UDisksThreadedJob *job;
   gboolean handler_ran;
 
-  job = udisks_threaded_job_new (threaded_job_failure_func, NULL, NULL, NULL);
+  job = udisks_threaded_job_new (threaded_job_failure_func, NULL, NULL, NULL, NULL);
   handler_ran = FALSE;
   g_signal_connect (job, "threaded-job-completed", G_CALLBACK (on_threaded_job_completed), &handler_ran);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),

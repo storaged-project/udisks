@@ -47,6 +47,7 @@ udisks_client_get_partition_table
 udisks_client_get_loop_for_block
 udisks_client_get_partitions
 udisks_client_get_jobs_for_object
+udisks_client_get_job_description
 <SUBSECTION>
 udisks_client_get_drive_info
 udisks_client_get_partition_info

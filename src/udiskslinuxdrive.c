@@ -894,6 +894,8 @@ handle_eject (UDisksDrive           *_drive,
   gchar *error_message = NULL;
   GError *error = NULL;
   gchar *escaped_device = NULL;
+  uid_t caller_uid;
+  gid_t caller_gid;
   pid_t caller_pid;
 
   object = udisks_daemon_util_dup_object (drive, &error);
@@ -935,6 +937,20 @@ handle_eject (UDisksDrive           *_drive,
       goto out;
     }
 
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &caller_gid,
+                                               NULL,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
   /* Translators: Shown in authentication dialog when the user
    * requests ejecting media from a drive.
    *
@@ -965,6 +981,7 @@ handle_eject (UDisksDrive           *_drive,
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               UDISKS_OBJECT (object),
+                                              "drive-eject", caller_uid,
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */

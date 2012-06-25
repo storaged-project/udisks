@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
+#include <glib/gstdio.h>
 
 #include <stdio.h>
 

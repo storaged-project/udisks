@@ -33,6 +33,7 @@
 #include "udisksbasejob.h"
 #include "udisksspawnedjob.h"
 #include "udisks-daemon-marshal.h"
+#include "udisksdaemon.h"
 
 /**
  * SECTION:udisksspawnedjob
@@ -662,6 +663,7 @@ udisks_spawned_job_class_init (UDisksSpawnedJobClass *klass)
  * @input_string: A string to write to stdin of the spawned program or %NULL.
  * @run_as_uid: The #uid_t to run the program as.
  * @run_as_euid: The effective #uid_t to run the program as.
+ * @daemon: A #UDisksDaemon.
  * @cancellable: A #GCancellable or %NULL.
  *
  * Creates a new #UDisksSpawnedJob instance.
@@ -677,15 +679,18 @@ udisks_spawned_job_new (const gchar  *command_line,
                         const gchar  *input_string,
                         uid_t         run_as_uid,
                         uid_t         run_as_euid,
+                        UDisksDaemon *daemon,
                         GCancellable *cancellable)
 {
   g_return_val_if_fail (command_line != NULL, NULL);
+  /* g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL); */
   g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
   return UDISKS_SPAWNED_JOB (g_object_new (UDISKS_TYPE_SPAWNED_JOB,
                                            "command-line", command_line,
                                            "input-string", input_string,
                                            "run-as-uid", run_as_uid,
                                            "run-as-euid", run_as_euid,
+                                           "daemon", daemon,
                                            "cancellable", cancellable,
                                            NULL));
 }

@@ -27,6 +27,7 @@
 #include "udisksbasejob.h"
 #include "udiskssimplejob.h"
 #include "udisks-daemon-marshal.h"
+#include "udisksdaemon.h"
 
 /**
  * SECTION:udiskssimplejob
@@ -74,6 +75,7 @@ udisks_simple_job_class_init (UDisksSimpleJobClass *klass)
 
 /**
  * udisks_simple_job_new:
+ * @daemon: A #UDisksDaemon.
  * @cancellable: A #GCancellable or %NULL.
  *
  * Creates a new #UDisksSimpleJob instance.
@@ -83,10 +85,13 @@ udisks_simple_job_class_init (UDisksSimpleJobClass *klass)
  * Returns: A new #UDisksSimpleJob. Free with g_object_unref().
  */
 UDisksSimpleJob *
-udisks_simple_job_new (GCancellable  *cancellable)
+udisks_simple_job_new (UDisksDaemon  *daemon,
+                       GCancellable  *cancellable)
 {
+  /* g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL); */
   g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
   return UDISKS_SIMPLE_JOB (g_object_new (UDISKS_TYPE_SIMPLE_JOB,
+                                          "daemon", daemon,
                                           "cancellable", cancellable,
                                           NULL));
 }

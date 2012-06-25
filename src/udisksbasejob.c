@@ -25,6 +25,8 @@
 #include <sys/wait.h>
 
 #include "udisksbasejob.h"
+#include "udisksdaemon.h"
+#include "udisksdaemonutil.h"
 #include "udisks-daemon-marshal.h"
 
 /**
@@ -38,6 +40,7 @@
 struct _UDisksBaseJobPrivate
 {
   GCancellable *cancellable;
+  UDisksDaemon *daemon;
 };
 
 static void job_iface_init (UDisksJobIface *iface);
@@ -45,6 +48,7 @@ static void job_iface_init (UDisksJobIface *iface);
 enum
 {
   PROP_0,
+  PROP_DAEMON,
   PROP_CANCELLABLE,
 };
 
@@ -76,6 +80,10 @@ udisks_base_job_get_property (GObject    *object,
 
   switch (prop_id)
     {
+    case PROP_DAEMON:
+      g_value_set_object (value, udisks_base_job_get_daemon (job));
+      break;
+
     case PROP_CANCELLABLE:
       g_value_set_object (value, job->priv->cancellable);
       break;
@@ -96,6 +104,12 @@ udisks_base_job_set_property (GObject      *object,
 
   switch (prop_id)
     {
+    case PROP_DAEMON:
+      g_assert (job->priv->daemon == NULL);
+      /* we don't take a reference to the daemon */
+      job->priv->daemon = g_value_get_object (value);
+      break;
+
     case PROP_CANCELLABLE:
       g_assert (job->priv->cancellable == NULL);
       job->priv->cancellable = g_value_dup_object (value);
@@ -126,7 +140,12 @@ udisks_base_job_constructed (GObject *object)
 static void
 udisks_base_job_init (UDisksBaseJob *job)
 {
+  gint64 now_usec;
+
   job->priv = G_TYPE_INSTANCE_GET_PRIVATE (job, UDISKS_TYPE_BASE_JOB, UDisksBaseJobPrivate);
+
+  now_usec = g_get_real_time ();
+  udisks_job_set_start_time (UDISKS_JOB (job), now_usec / G_USEC_PER_SEC);
 }
 
 static void
@@ -139,6 +158,22 @@ udisks_base_job_class_init (UDisksBaseJobClass *klass)
   gobject_class->constructed  = udisks_base_job_constructed;
   gobject_class->set_property = udisks_base_job_set_property;
   gobject_class->get_property = udisks_base_job_get_property;
+
+  /**
+   * UDisksBaseJob:daemon:
+   *
+   * The #UDisksDaemon the object is for.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_DAEMON,
+                                   g_param_spec_object ("daemon",
+                                                        "Daemon",
+                                                        "The daemon the object is for",
+                                                        UDISKS_TYPE_DAEMON,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_STRINGS));
 
   /**
    * UDisksBaseJob:cancellable:
@@ -174,6 +209,23 @@ udisks_base_job_get_cancellable  (UDisksBaseJob  *job)
 {
   g_return_val_if_fail (UDISKS_IS_BASE_JOB (job), NULL);
   return job->priv->cancellable;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_base_job_get_daemon:
+ * @job: A #UDisksBaseJob.
+ *
+ * Gets the #UDisksDaemon for @job.
+ *
+ * Returns: A #UDisksDaemon. Do not free, the object belongs to @job.
+ */
+UDisksDaemon *
+udisks_base_job_get_daemon  (UDisksBaseJob  *job)
+{
+  g_return_val_if_fail (UDISKS_IS_BASE_JOB (job), NULL);
+  return job->priv->daemon;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -264,11 +316,51 @@ udisks_base_job_remove_object (UDisksBaseJob  *job,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-handle_cancel (UDisksJob              *object,
+handle_cancel (UDisksJob              *_job,
                GDBusMethodInvocation  *invocation,
                GVariant               *options)
 {
-  UDisksBaseJob *job = UDISKS_BASE_JOB (object);
+  UDisksBaseJob *job = UDISKS_BASE_JOB (_job);
+  UDisksObject *object = NULL;
+  const gchar *action_id;
+  const gchar *message;
+  uid_t caller_uid;
+  gid_t caller_gid;
+  GError *error = NULL;
+
+  object = udisks_daemon_util_dup_object (job, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  if (!udisks_daemon_util_get_caller_uid_sync (job->priv->daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &caller_gid,
+                                               NULL,
+                                               &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* Translators: Shown in authentication dialog when canceling a job.
+   */
+  message = N_("Authentication is required to cancel a job");
+  action_id = "org.freedesktop.udisks2.cancel-job";
+  if (caller_uid != udisks_job_get_started_by_uid (UDISKS_JOB (job)))
+    action_id = "org.freedesktop.udisks2.cancel-job-other-user";
+
+  if (!udisks_daemon_util_check_authorization_sync (job->priv->daemon,
+                                                    object,
+                                                    action_id,
+                                                    options,
+                                                    message,
+                                                    invocation))
+    goto out;
 
   if (g_cancellable_is_cancelled (job->priv->cancellable))
     {
@@ -280,9 +372,11 @@ handle_cancel (UDisksJob              *object,
   else
     {
       g_cancellable_cancel (job->priv->cancellable);
-      udisks_job_complete_cancel (object, invocation);
+      udisks_job_complete_cancel (UDISKS_JOB (job), invocation);
     }
 
+ out:
+  g_clear_object (&object);
   return TRUE;
 }
 

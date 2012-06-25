@@ -225,6 +225,8 @@ handle_set_flags (UDisksPartition        *partition,
   UDisksBlock *partition_table_block = NULL;
   gchar *command_line = NULL;
   gint fd = -1;
+  uid_t caller_uid;
+  gid_t caller_gid;
   pid_t caller_pid;
   GError *error;
 
@@ -244,6 +246,20 @@ handle_set_flags (UDisksPartition        *partition,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_pid,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &caller_gid,
+                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -311,6 +327,7 @@ handle_set_flags (UDisksPartition        *partition,
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               object,
+                                              "partition-modify", caller_uid,
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */
@@ -370,6 +387,8 @@ handle_set_name (UDisksPartition        *partition,
   UDisksBlock *partition_table_block = NULL;
   gchar *command_line = NULL;
   gint fd = -1;
+  uid_t caller_uid;
+  gid_t caller_gid;
   pid_t caller_pid;
   GError *error;
 
@@ -389,6 +408,20 @@ handle_set_name (UDisksPartition        *partition,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_pid,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &caller_gid,
+                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -461,6 +494,7 @@ handle_set_name (UDisksPartition        *partition,
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               object,
+                                              "partition-modify", caller_uid,
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */
@@ -552,6 +586,8 @@ handle_set_type (UDisksPartition        *partition,
   UDisksBlock *partition_table_block = NULL;
   gchar *command_line = NULL;
   gint fd = -1;
+  uid_t caller_uid;
+  gid_t caller_gid;
   pid_t caller_pid;
   GError *error;
 
@@ -571,6 +607,20 @@ handle_set_type (UDisksPartition        *partition,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_pid,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &caller_gid,
+                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -668,6 +718,7 @@ handle_set_type (UDisksPartition        *partition,
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               object,
+                                              "partition-modify", caller_uid,
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */
@@ -725,6 +776,8 @@ handle_delete (UDisksPartition        *partition,
   UDisksPartitionTable *partition_table = NULL;
   UDisksBlock *partition_table_block = NULL;
   gchar *command_line = NULL;
+  uid_t caller_uid;
+  gid_t caller_gid;
   pid_t caller_pid;
   GError *error;
 
@@ -744,6 +797,20 @@ handle_delete (UDisksPartition        *partition,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_pid,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &caller_gid,
+                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -784,6 +851,7 @@ handle_delete (UDisksPartition        *partition,
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               partition_table_object,
+                                              "partition-delete", caller_uid,
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */

@@ -2594,6 +2594,58 @@ udisks_client_get_partition_type_for_display (UDisksClient  *client,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/**
+ * udisks_client_get_job_description:
+ * @client: A #UDisksClient.
+ * @job: A #UDisksJob.
+ *
+ * Gets a human-readable and localized text string describing the
+ * operation of @job.
+ *
+ * Returns: A string that should be freed with g_free().
+ */
+gchar *
+udisks_client_get_job_description (UDisksClient   *client,
+                                   UDisksJob      *job)
+{
+  static gsize once = 0;
+  static GHashTable *hash = NULL;
+  gchar *ret = NULL;
+
+  g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
+
+  if (g_once_init_enter (&once))
+    {
+      hash = g_hash_table_new (g_str_hash, g_str_equal);
+      g_hash_table_insert (hash, "ata-smart-selftest",   (gpointer) C_("job", "SMART self-test"));
+      g_hash_table_insert (hash, "drive-eject",          (gpointer) C_("job", "Ejecting Medium"));
+      g_hash_table_insert (hash, "encrypted-unlock",     (gpointer) C_("job", "Unlocking Device"));
+      g_hash_table_insert (hash, "encrypted-lock",       (gpointer) C_("job", "Locking Device"));
+      g_hash_table_insert (hash, "encrypted-modify",     (gpointer) C_("job", "Modifying Encrypted Device"));
+      g_hash_table_insert (hash, "swapspace-start",      (gpointer) C_("job", "Starting Swap Device"));
+      g_hash_table_insert (hash, "swapspace-stop",       (gpointer) C_("job", "Stopping Swap Device"));
+      g_hash_table_insert (hash, "filesystem-mount",     (gpointer) C_("job", "Mounting Filesystem"));
+      g_hash_table_insert (hash, "filesystem-unmount",   (gpointer) C_("job", "Unmounting Filesystem"));
+      g_hash_table_insert (hash, "filesystem-modify",    (gpointer) C_("job", "Modifying Filesystem"));
+      g_hash_table_insert (hash, "format-erase",         (gpointer) C_("job", "Erasing Device"));
+      g_hash_table_insert (hash, "format-mkfs",          (gpointer) C_("job", "Creating Filesystem"));
+      g_hash_table_insert (hash, "loop-setup",           (gpointer) C_("job", "Setting Up Loop Device"));
+      g_hash_table_insert (hash, "partition-modify",     (gpointer) C_("job", "Modifying Partition"));
+      g_hash_table_insert (hash, "partition-delete",     (gpointer) C_("job", "Deleting Partition"));
+      g_hash_table_insert (hash, "partition-create",     (gpointer) C_("job", "Creating Partition"));
+      g_hash_table_insert (hash, "cleanup",              (gpointer) C_("job", "Cleaning Up"));
+      g_once_init_leave (&once, (gsize) 1);
+    }
+
+  ret = g_strdup (g_hash_table_lookup (hash, udisks_job_get_operation (job)));
+  if (ret == NULL)
+    ret = g_strdup_printf (C_("unknown-job", "Unknown (%s)"), udisks_job_get_operation (job));
+
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static UDisksPartitionTypeInfo *
 udisks_partition_type_info_new (void)
 {

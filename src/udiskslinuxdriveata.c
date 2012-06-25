@@ -872,10 +872,14 @@ selftest_job_func (UDisksThreadedJob  *job,
   if (object == NULL)
     goto out;
 
+  udisks_job_set_progress_valid (UDISKS_JOB (job), TRUE);
+  udisks_job_set_progress (UDISKS_JOB (job), 0.0);
+
   while (TRUE)
     {
       gboolean still_in_progress;
       GPollFD poll_fd;
+      gdouble progress;
 
       if (!udisks_linux_drive_ata_refresh_smart_sync (drive,
                                                       FALSE, /* nowakeup */
@@ -893,12 +897,19 @@ selftest_job_func (UDisksThreadedJob  *job,
 
       G_LOCK (object_lock);
       still_in_progress = (g_strcmp0 (drive->smart_selftest_status, "inprogress") == 0);
+      progress = (100.0 - drive->smart_selftest_percent_remaining) / 100.0;
       G_UNLOCK (object_lock);
       if (!still_in_progress)
         {
           ret = TRUE;
           goto out;
         }
+
+      if (progress < 0.0)
+        progress = 0.0;
+      if (progress > 1.0)
+        progress = 1.0;
+      udisks_job_set_progress (UDISKS_JOB (job), progress);
 
       /* Sleep for 30 seconds or until we're cancelled */
       if (g_cancellable_make_pollfd (cancellable, &poll_fd))
@@ -923,10 +934,36 @@ selftest_job_func (UDisksThreadedJob  *job,
       /* Check if we're cancelled */
       if (g_cancellable_is_cancelled (cancellable))
         {
+          GError *c_error;
+
           g_set_error (error,
                        UDISKS_ERROR,
                        UDISKS_ERROR_CANCELLED,
                        "Self-test was cancelled");
+
+          /* OK, cancelled ... still need to a) abort the test; and b) update the status */
+          c_error = NULL;
+          if (!udisks_linux_drive_ata_smart_selftest_sync (drive,
+                                                           "abort",
+                                                           NULL, /* cancellable */
+                                                           &c_error))
+            {
+              udisks_warning ("Error aborting SMART selftest for %s on cancel path: %s (%s, %d)",
+                              g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
+                              c_error->message, g_quark_to_string (c_error->domain), c_error->code);
+              g_clear_error (&c_error);
+            }
+          if (!udisks_linux_drive_ata_refresh_smart_sync (drive,
+                                                          FALSE, /* nowakeup */
+                                                          NULL,  /* blob */
+                                                          NULL,  /* cancellable */
+                                                          &c_error))
+            {
+              udisks_warning ("Error updating ATA smart for %s on cancel path: %s (%s, %d)",
+                              g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
+                              c_error->message, g_quark_to_string (c_error->domain), c_error->code);
+              g_clear_error (&c_error);
+            }
           goto out;
         }
     }
@@ -953,6 +990,8 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
   UDisksLinuxBlockObject *block_object;
   UDisksDaemon *daemon;
   UDisksLinuxDriveAta *drive = UDISKS_LINUX_DRIVE_ATA (_drive);
+  uid_t caller_uid;
+  gid_t caller_gid;
   GError *error;
 
   error = NULL;
@@ -981,6 +1020,20 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
                                              "SMART is not supported or enabled");
+      goto out;
+    }
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &caller_gid,
+                                               NULL,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
       goto out;
     }
 
@@ -1028,6 +1081,7 @@ handle_smart_selftest_start (UDisksDriveAta        *_drive,
     {
       drive->selftest_job = UDISKS_THREADED_JOB (udisks_daemon_launch_threaded_job (daemon,
                                                                                     UDISKS_OBJECT (object),
+                                                                                    "ata-smart-selftest", caller_uid,
                                                                                     selftest_job_func,
                                                                                     g_object_ref (drive),
                                                                                     g_object_unref,

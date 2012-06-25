@@ -160,6 +160,8 @@ handle_start (UDisksSwapspace        *swapspace,
   UDisksBaseJob *job;
   GError *error;
   gchar *escaped_device = NULL;
+  uid_t caller_uid;
+  gid_t caller_gid;
 
   error = NULL;
   object = udisks_daemon_util_dup_object (swapspace, &error);
@@ -171,6 +173,20 @@ handle_start (UDisksSwapspace        *swapspace,
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   block = udisks_object_peek_block (object);
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &caller_gid,
+                                               NULL,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
 
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
@@ -190,6 +206,7 @@ handle_start (UDisksSwapspace        *swapspace,
 
   job = udisks_daemon_launch_spawned_job (daemon,
                                           object,
+                                          "swapspace-start", caller_uid,
                                           NULL, /* cancellable */
                                           0,    /* uid_t run_as_uid */
                                           0,    /* uid_t run_as_euid */
@@ -235,11 +252,28 @@ handle_stop (UDisksSwapspace        *swapspace,
   UDisksDaemon *daemon;
   UDisksBlock *block;
   UDisksBaseJob *job;
+  uid_t caller_uid;
+  gid_t caller_gid;
   gchar *escaped_device = NULL;
+  GError *error = NULL;
 
   object = UDISKS_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (swapspace)));
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
   block = udisks_object_peek_block (object);
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &caller_gid,
+                                               NULL,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
 
   /* Now, check that the user is actually authorized to stop the swap space.
    *
@@ -264,6 +298,7 @@ handle_stop (UDisksSwapspace        *swapspace,
 
   job = udisks_daemon_launch_spawned_job (daemon,
                                           object,
+                                          "swapspace-stop", caller_uid,
                                           NULL, /* cancellable */
                                           0,    /* uid_t run_as_uid */
                                           0,    /* uid_t run_as_euid */

@@ -27,6 +27,7 @@
 #include "udisksbasejob.h"
 #include "udisksthreadedjob.h"
 #include "udisks-daemon-marshal.h"
+#include "udisksdaemon.h"
 
 /**
  * SECTION:udisksthreadedjob
@@ -334,6 +335,7 @@ udisks_threaded_job_class_init (UDisksThreadedJobClass *klass)
  * @job_func: The function to run in another thread.
  * @user_data: User data to pass to @job_func.
  * @user_data_free_func: Function to free @user_data with or %NULL.
+ * @daemon: A #UDisksDaemon.
  * @cancellable: A #GCancellable or %NULL.
  *
  * Creates a new #UDisksThreadedJob instance.
@@ -348,13 +350,16 @@ UDisksThreadedJob *
 udisks_threaded_job_new (UDisksThreadedJobFunc  job_func,
                          gpointer               user_data,
                          GDestroyNotify         user_data_free_func,
+                         UDisksDaemon          *daemon,
                          GCancellable          *cancellable)
 {
+  /* g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL); */
   g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
   return UDISKS_THREADED_JOB (g_object_new (UDISKS_TYPE_THREADED_JOB,
                                             "job-func", job_func,
                                             "user-data", user_data,
                                             "user-data-free-func", user_data_free_func,
+                                            "daemon", daemon,
                                             "cancellable", cancellable,
                                             NULL));
 }

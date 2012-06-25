@@ -291,6 +291,8 @@ handle_create_partition (UDisksPartitionTable   *table,
   gchar *escaped_partition_device = NULL;
   const gchar *table_type;
   pid_t caller_pid;
+  uid_t caller_uid;
+  gid_t caller_gid;
   GError *error;
 
   error = NULL;
@@ -315,6 +317,20 @@ handle_create_partition (UDisksPartitionTable   *table,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_pid,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &caller_gid,
+                                               NULL,
                                                &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -502,6 +518,7 @@ handle_create_partition (UDisksPartitionTable   *table,
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               object,
+                                              "partition-create", caller_uid,
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */
@@ -552,6 +569,7 @@ handle_create_partition (UDisksPartitionTable   *table,
   /* wipe the newly created partition */
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               partition_object,
+                                              "partition-create", caller_uid,
                                               NULL, /* GCancellable */
                                               0,    /* uid_t run_as_uid */
                                               0,    /* uid_t run_as_euid */

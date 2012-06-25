@@ -677,6 +677,7 @@ udisks_cleanup_check_mounted_fs_entry (UDisksCleanup  *cleanup,
           /* right now -l is the only way to "force unmount" file systems... */
           if (!udisks_daemon_launch_spawned_job_sync (cleanup->daemon,
                                                       NULL, /* UDisksObject */
+                                                      "cleanup", 0, /* StartedByUID */
                                                       NULL, /* GCancellable */
                                                       0,    /* uid_t run_as_uid */
                                                       0,    /* uid_t run_as_euid */
@@ -1168,6 +1169,7 @@ udisks_cleanup_check_unlocked_luks_entry (UDisksCleanup  *cleanup,
           escaped_device_file = udisks_daemon_util_escape_and_quote (device_file_cleartext);
           if (!udisks_daemon_launch_spawned_job_sync (cleanup->daemon,
                                                       NULL, /* UDisksObject */
+                                                      "cleanup", 0, /* StartedByUID */
                                                       NULL, /* GCancellable */
                                                       0,    /* uid_t run_as_uid */
                                                       0,    /* uid_t run_as_euid */

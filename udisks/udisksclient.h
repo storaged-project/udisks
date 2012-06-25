@@ -125,6 +125,9 @@ const gchar        *udisks_client_get_partition_table_subtype_for_display (UDisk
                                                                            const gchar   *partition_table_type,
                                                                            const gchar   *partition_table_subtype);
 
+gchar *udisks_client_get_job_description (UDisksClient   *client,
+                                          UDisksJob      *job);
+
 /**
  * UDisksPartitionTypeInfo:
  * @table_type: A partition table type e.g. 'dos' or 'gpt'
