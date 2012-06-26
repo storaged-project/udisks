@@ -29,6 +29,14 @@
 #include "udisksdaemonutil.h"
 #include "udisks-daemon-marshal.h"
 
+#define MAX_SAMPLES 100
+
+typedef struct
+{
+  gint64 time_usec;
+  gdouble value;
+} Sample;
+
 /**
  * SECTION:udisksbasejob
  * @title: UDisksBaseJob
@@ -41,6 +49,12 @@ struct _UDisksBaseJobPrivate
 {
   GCancellable *cancellable;
   UDisksDaemon *daemon;
+
+  gboolean auto_estimate;
+  gulong notify_progress_signal_handler_id;
+
+  Sample *samples;
+  guint num_samples;
 };
 
 static void job_iface_init (UDisksJobIface *iface);
@@ -50,6 +64,7 @@ enum
   PROP_0,
   PROP_DAEMON,
   PROP_CANCELLABLE,
+  PROP_AUTO_ESTIMATE,
 };
 
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (UDisksBaseJob, udisks_base_job, UDISKS_TYPE_JOB_SKELETON,
@@ -59,6 +74,9 @@ static void
 udisks_base_job_finalize (GObject *object)
 {
   UDisksBaseJob *job = UDISKS_BASE_JOB (object);
+
+
+  g_free (job->priv->samples);
 
   if (job->priv->cancellable != NULL)
     {
@@ -88,6 +106,10 @@ udisks_base_job_get_property (GObject    *object,
       g_value_set_object (value, job->priv->cancellable);
       break;
 
+    case PROP_AUTO_ESTIMATE:
+      g_value_set_boolean (value, job->priv->auto_estimate);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -113,6 +135,10 @@ udisks_base_job_set_property (GObject      *object,
     case PROP_CANCELLABLE:
       g_assert (job->priv->cancellable == NULL);
       job->priv->cancellable = g_value_dup_object (value);
+      break;
+
+    case PROP_AUTO_ESTIMATE:
+      udisks_base_job_set_auto_estimate (job, g_value_get_boolean (value));
       break;
 
     default:
@@ -145,7 +171,7 @@ udisks_base_job_init (UDisksBaseJob *job)
   job->priv = G_TYPE_INSTANCE_GET_PRIVATE (job, UDISKS_TYPE_BASE_JOB, UDisksBaseJobPrivate);
 
   now_usec = g_get_real_time ();
-  udisks_job_set_start_time (UDISKS_JOB (job), now_usec / G_USEC_PER_SEC);
+  udisks_job_set_start_time (UDISKS_JOB (job), now_usec);
 }
 
 static void
@@ -190,6 +216,23 @@ udisks_base_job_class_init (UDisksBaseJobClass *klass)
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
                                                         G_PARAM_STATIC_STRINGS));
+
+  /**
+   * UDisksBaseJob:auto-estimate:
+   *
+   * If %TRUE, the #UDisksJob:expected-end-time property will be
+   * automatically updated every time the #UDisksJob:progress property
+   * is updated.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_AUTO_ESTIMATE,
+                                   g_param_spec_boolean ("auto-estimate",
+                                                         "Auto Estimate",
+                                                         "Whether to automatically estimate end time",
+                                                         FALSE,
+                                                         G_PARAM_READABLE |
+                                                         G_PARAM_WRITABLE |
+                                                         G_PARAM_STATIC_STRINGS));
 
   g_type_class_add_private (klass, sizeof (UDisksBaseJobPrivate));
 }
@@ -389,3 +432,101 @@ job_iface_init (UDisksJobIface *iface)
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
+
+gboolean
+udisks_base_job_get_auto_estimate (UDisksBaseJob  *job)
+{
+  g_return_val_if_fail (UDISKS_IS_BASE_JOB (job), FALSE);
+  return job->priv->auto_estimate;
+}
+
+
+static void
+on_notify_progress (GObject     *object,
+                    GParamSpec  *spec,
+                    gpointer     user_data)
+{
+  UDisksBaseJob *job = UDISKS_BASE_JOB (user_data);
+  Sample *sample;
+  guint n;
+  gdouble sum_of_speeds;
+  guint num_speeds;
+  gdouble avg_speed;
+  gint64 usec_remaining;
+  gint64 now;
+  gdouble current_progress;
+
+  now = g_get_real_time ();
+  current_progress = udisks_job_get_progress (UDISKS_JOB (job));
+
+  /* first add new sample... */
+  if (job->priv->num_samples == MAX_SAMPLES)
+    {
+      memmove (job->priv->samples, job->priv->samples + 1, sizeof (Sample) * (MAX_SAMPLES - 1));
+      job->priv->num_samples -= 1;
+    }
+  sample = &job->priv->samples[job->priv->num_samples++];
+  sample->time_usec = now;
+  sample->value = current_progress;
+
+  /* ... then update expected-end-time from samples - we want at
+   * least five samples before making an estimate...
+   */
+  if (job->priv->num_samples < 5)
+    goto out;
+
+  num_speeds = 0;
+  sum_of_speeds = 0.0;
+  for (n = 1; n < job->priv->num_samples; n++)
+    {
+      Sample *a = &job->priv->samples[n-1];
+      Sample *b = &job->priv->samples[n];
+      gdouble speed;
+      speed = (b->value - a->value) / (b->time_usec - a->time_usec);
+      sum_of_speeds += speed;
+      num_speeds++;
+    }
+  avg_speed = sum_of_speeds / num_speeds;
+
+  usec_remaining = (1.0 - current_progress) / avg_speed;
+
+  udisks_job_set_expected_end_time (UDISKS_JOB (job), now + usec_remaining);
+
+ out:
+  ;
+}
+
+
+void
+udisks_base_job_set_auto_estimate (UDisksBaseJob  *job,
+                                   gboolean        value)
+{
+  g_return_if_fail (UDISKS_IS_BASE_JOB (job));
+
+  if (!!value == !!job->priv->auto_estimate)
+    goto out;
+
+  if (value)
+    {
+      if (job->priv->samples == NULL)
+        job->priv->samples = g_new0 (Sample, MAX_SAMPLES);
+      g_assert_cmpint (job->priv->notify_progress_signal_handler_id, ==, 0);
+      job->priv->notify_progress_signal_handler_id = g_signal_connect (job,
+                                                                       "notify::progress",
+                                                                       G_CALLBACK (on_notify_progress),
+                                                                       job);
+      g_assert_cmpint (job->priv->notify_progress_signal_handler_id, !=, 0);
+    }
+  else
+    {
+      g_assert_cmpint (job->priv->notify_progress_signal_handler_id, !=, 0);
+      g_signal_handler_disconnect (job, job->priv->notify_progress_signal_handler_id);
+      job->priv->notify_progress_signal_handler_id = 0;
+    }
+
+  job->priv->auto_estimate = !!value;
+  g_object_notify (G_OBJECT (job), "auto-estimate");
+
+ out:
+  ;
+}

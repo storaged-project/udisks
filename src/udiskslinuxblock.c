@@ -1757,6 +1757,7 @@ erase_device (UDisksBlock  *block,
     }
 
   job = udisks_daemon_launch_simple_job (daemon, object, "format-erase", caller_uid, NULL);
+  udisks_base_job_set_auto_estimate (UDISKS_BASE_JOB (job), TRUE);
   udisks_job_set_progress_valid (UDISKS_JOB (job), TRUE);
 
   if (ioctl (fd, BLKGETSIZE64, &size) != 0)
@@ -1816,7 +1817,8 @@ erase_device (UDisksBlock  *block,
       else
         udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, "");
     }
-  g_propagate_error (error, local_error);
+  if (local_error != NULL)
+    g_propagate_error (error, local_error);
   g_free (buf);
   if (fd != -1)
     close (fd);

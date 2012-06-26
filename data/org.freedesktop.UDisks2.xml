@@ -1592,7 +1592,7 @@
 
     <!-- StartTime:
 
-         The point in time (seconds since the <ulink
+         The point in time (micro-seconds since the <ulink
          url="http://en.wikipedia.org/wiki/Unix_epoch">Unix
          Epoch</ulink>) that the job was started.
     -->
@@ -1600,7 +1600,7 @@
 
     <!-- ExpectedEndTime:
 
-         The expected point in time (seconds since the <ulink
+         The expected point in time (micro-seconds since the <ulink
          url="http://en.wikipedia.org/wiki/Unix_epoch">Unix
          Epoch</ulink>) that the job will complete or 0 if unknown.
     -->
