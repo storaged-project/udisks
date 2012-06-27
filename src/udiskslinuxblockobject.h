@@ -40,6 +40,7 @@ UDisksDaemon             *udisks_linux_block_object_get_daemon (UDisksLinuxBlock
 GUdevDevice              *udisks_linux_block_object_get_device (UDisksLinuxBlockObject  *object);
 
 void                      udisks_linux_block_object_trigger_uevent (UDisksLinuxBlockObject  *object);
+void                      udisks_linux_block_object_reread_partition_table (UDisksLinuxBlockObject *object);
 
 G_END_DECLS
 

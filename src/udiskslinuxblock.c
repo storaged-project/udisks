@@ -1859,6 +1859,7 @@ handle_format (UDisksBlock           *block,
   gchar *mapped_name = NULL;
   const gchar *label = NULL;
   gchar *escaped_device = NULL;
+  gboolean was_partitioned = FALSE;
 
   error = NULL;
   object = udisks_daemon_util_dup_object (block, &error);
@@ -1939,9 +1940,9 @@ handle_format (UDisksBlock           *block,
 
   escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
 
-  /* First wipe the device */
-  wait_data = g_new0 (FormatWaitData, 1);
-  wait_data->object = object;
+  was_partitioned = (udisks_object_peek_partition_table (object) != NULL);
+
+  /* First wipe the device... */
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               object,
                                               "format-erase", caller_uid,
@@ -1962,11 +1963,18 @@ handle_format (UDisksBlock           *block,
       g_free (error_message);
       goto out;
     }
+  /* ...then wait until this change has taken effect */
+  wait_data = g_new0 (FormatWaitData, 1);
+  wait_data->object = object;
+  wait_data->type = "empty";
+  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (was_partitioned)
+    udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object));
   if (udisks_daemon_wait_for_object_sync (daemon,
                                           wait_for_filesystem,
                                           wait_data,
                                           NULL,
-                                          30,
+                                          15,
                                           &error) == NULL)
     {
       g_prefix_error (&error, "Error synchronizing after initial wipe: ");

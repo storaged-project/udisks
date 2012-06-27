@@ -30,6 +30,9 @@
 #include <grp.h>
 #include <mntent.h>
 
+#include <sys/ioctl.h>
+#include <linux/fs.h>
+
 #include <string.h>
 #include <stdlib.h>
 #include <glib/gstdio.h>
@@ -785,9 +788,7 @@ on_mount_monitor_mount_removed (UDisksMountMonitor  *monitor,
  *
  * The triggered event will bubble up from the kernel through the udev
  * stack and will eventually be received by the udisks daemon process
- * itself.
- *
- * This method does not wait for the event to be received.
+ * itself. This method does not wait for the event to be received.
  */
 void
 udisks_linux_block_object_trigger_uevent (UDisksLinuxBlockObject *object)
@@ -820,3 +821,38 @@ udisks_linux_block_object_trigger_uevent (UDisksLinuxBlockObject *object)
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_linux_block_object_reread_partition_table:
+ * @object: A #UDisksLinuxBlockObject.
+ *
+ * Requests the kernel to re-read the partition table for @object.
+ *
+ * The events from any change this may cause will bubble up from the
+ * kernel through the udev stack and will eventually be received by
+ * the udisks daemon process itself. This method does not wait for the
+ * event to be received.
+ */
+void
+udisks_linux_block_object_reread_partition_table (UDisksLinuxBlockObject *object)
+{
+  const gchar *device_file;
+  gint fd;
+
+  g_return_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (object));
+
+  device_file = g_udev_device_get_device_file (object->device);
+  fd = open (device_file, O_RDONLY);
+  if (fd == -1)
+    {
+      udisks_warning ("Error opening %s: %m", device_file);
+    }
+  else
+    {
+      if (ioctl (fd, BLKRRPART) != 0)
+        {
+          udisks_warning ("Error issuing BLKRRPART to %s: %m", device_file);
+        }
+      close (fd);
+    }
+}
