@@ -1755,6 +1755,16 @@ on_object_added (GDBusObjectManager  *manager,
                  gpointer             user_data)
 {
   UDisksClient *client = UDISKS_CLIENT (user_data);
+  GList *interfaces, *l;
+
+  interfaces = g_dbus_object_get_interfaces (object);
+  for (l = interfaces; l != NULL; l = l->next)
+    {
+      init_interface_proxy (client, G_DBUS_PROXY (l->data));
+    }
+  g_list_foreach (interfaces, (GFunc) g_object_unref, NULL);
+  g_list_free (interfaces);
+
   queue_changed (client);
 }
 
