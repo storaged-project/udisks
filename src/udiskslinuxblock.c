@@ -53,6 +53,7 @@
 #include "udisksdaemonutil.h"
 #include "udisksbasejob.h"
 #include "udiskssimplejob.h"
+#include "udiskslinuxdriveata.h"
 
 /**
  * SECTION:udiskslinuxblock
@@ -1719,6 +1720,49 @@ wait_for_luks_cleartext (UDisksDaemon *daemon,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+erase_ata_device (UDisksBlock  *block,
+                  UDisksObject *object,
+                  UDisksDaemon *daemon,
+                  uid_t         caller_uid,
+                  gboolean      enhanced,
+                  GError      **error)
+{
+  gboolean ret = FALSE;
+  UDisksObject *drive_object = NULL;
+  UDisksDriveAta *ata = NULL;
+
+  drive_object = udisks_daemon_find_object (daemon, udisks_block_get_drive (block));
+  if (drive_object == NULL)
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED, "No drive object");
+      goto out;
+    }
+  ata = udisks_object_get_drive_ata (drive_object);
+  if (ata == NULL)
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED, "Drive is not an ATA drive");
+      goto out;
+    }
+
+  /* sleep a tiny bit here to avoid the secure erase code racing with
+   * programs spawned by udev
+   */
+  g_usleep (500 * 1000);
+
+  ret = udisks_linux_drive_ata_secure_erase_sync (UDISKS_LINUX_DRIVE_ATA (ata),
+                                                  caller_uid,
+                                                  enhanced,
+                                                  error);
+
+ out:
+  g_clear_object (&ata);
+  g_clear_object (&drive_object);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 #define ERASE_SIZE (1 * 1024*1024)
 
 static gboolean
@@ -1739,7 +1783,17 @@ erase_device (UDisksBlock  *block,
   gint64 time_of_last_signal;
   GError *local_error = NULL;
 
-  if (g_strcmp0 (erase_type, "zero") != 0)
+  if (g_strcmp0 (erase_type, "ata-secure-erase") == 0)
+    {
+      ret = erase_ata_device (block, object, daemon, caller_uid, FALSE, error);
+      goto out;
+    }
+  else if (g_strcmp0 (erase_type, "ata-secure-erase-enhanced") == 0)
+    {
+      ret = erase_ata_device (block, object, daemon, caller_uid, TRUE, error);
+      goto out;
+    }
+  else if (g_strcmp0 (erase_type, "zero") != 0)
     {
       g_set_error (&local_error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                    "Unknown or unsupported erase type `%s'",
@@ -1874,6 +1928,10 @@ handle_format (UDisksBlock           *block,
   command = NULL;
   error_message = NULL;
 
+  g_variant_lookup (options, "take-ownership", "b", &take_ownership);
+  g_variant_lookup (options, "encrypt.passphrase", "s", &encrypt_passphrase);
+  g_variant_lookup (options, "erase", "s", &erase_type);
+
   error = NULL;
   if (!udisks_daemon_util_get_caller_pid_sync (daemon,
                                                invocation,
@@ -1886,22 +1944,38 @@ handle_format (UDisksBlock           *block,
       goto out;
     }
 
-  /* Translators: Shown in authentication dialog when formatting a
-   * device. This includes both creating a filesystem or partition
-   * table.
-   *
-   * Do not translate $(drive), it's a placeholder and will
-   * be replaced by the name of the drive/device in question
-   */
-  message = N_("Authentication is required to format $(drive)");
-  action_id = "org.freedesktop.udisks2.modify-device";
-  if (udisks_block_get_hint_system (block))
+  if (g_strcmp0 (erase_type, "ata-secure-erase") == 0 ||
+      g_strcmp0 (erase_type, "ata-secure-erase-enhanced") == 0)
     {
-      action_id = "org.freedesktop.udisks2.modify-device-system";
+      /* Translators: Shown in authentication dialog when the user
+       * requests erasing a hard disk using the SECURE ERASE UNIT
+       * command.
+       *
+       * Do not translate $(drive), it's a placeholder and
+       * will be replaced by the name of the drive/device in question
+       */
+      message = N_("Authentication is required to perform a secure erase of $(drive)");
+      action_id = "org.freedesktop.udisks2.ata-secure-erase";
     }
-  else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
+  else
     {
-      action_id = "org.freedesktop.udisks2.modify-device-other-seat";
+      /* Translators: Shown in authentication dialog when formatting a
+       * device. This includes both creating a filesystem or partition
+       * table.
+       *
+       * Do not translate $(drive), it's a placeholder and will
+       * be replaced by the name of the drive/device in question
+       */
+      message = N_("Authentication is required to format $(drive)");
+      action_id = "org.freedesktop.udisks2.modify-device";
+      if (udisks_block_get_hint_system (block))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-system";
+        }
+      else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-other-seat";
+        }
     }
 
   error = NULL;
@@ -1933,10 +2007,6 @@ handle_format (UDisksBlock           *block,
                                                     message,
                                                     invocation))
     goto out;
-
-  g_variant_lookup (options, "take-ownership", "b", &take_ownership);
-  g_variant_lookup (options, "encrypt.passphrase", "s", &encrypt_passphrase);
-  g_variant_lookup (options, "erase", "s", &erase_type);
 
   escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
 

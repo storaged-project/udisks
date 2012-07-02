@@ -52,6 +52,7 @@
 #include "udiskscleanup.h"
 #include "udisksdaemonutil.h"
 #include "udisksbasejob.h"
+#include "udiskssimplejob.h"
 #include "udisksthreadedjob.h"
 
 /**
@@ -89,6 +90,8 @@ struct _UDisksLinuxDriveAta
   GVariant    *smart_attributes;
 
   UDisksThreadedJob *selftest_job;
+
+  gboolean     secure_erase_in_progress;
 };
 
 struct _UDisksLinuxDriveAtaClass
@@ -240,6 +243,27 @@ update_pm (UDisksLinuxDriveAta *drive,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static void
+update_security (UDisksLinuxDriveAta *drive,
+                 GUdevDevice         *device)
+{
+  gint erase_unit = 0;
+  gint enhanced_erase_unit = 0;
+  gboolean frozen = FALSE;
+
+  erase_unit = g_udev_device_get_property_as_int (device, "ID_ATA_FEATURE_SET_SECURITY_ERASE_UNIT_MIN");
+  enhanced_erase_unit = g_udev_device_get_property_as_int (device, "ID_ATA_FEATURE_SET_SECURITY_ENHANCED_ERASE_UNIT_MIN");
+  frozen = g_udev_device_get_property_as_boolean (device, "ID_ATA_FEATURE_SET_SECURITY_FROZEN");
+
+  g_object_freeze_notify (G_OBJECT (drive));
+  udisks_drive_ata_set_security_erase_unit_minutes (UDISKS_DRIVE_ATA (drive), erase_unit);
+  udisks_drive_ata_set_security_enhanced_erase_unit_minutes (UDISKS_DRIVE_ATA (drive), enhanced_erase_unit);
+  udisks_drive_ata_set_security_frozen (UDISKS_DRIVE_ATA (drive), frozen);
+  g_object_thaw_notify (G_OBJECT (drive));
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 /**
  * udisks_linux_drive_ata_update:
  * @drive: A #UDisksLinuxDriveAta.
@@ -257,8 +281,10 @@ udisks_linux_drive_ata_update (UDisksLinuxDriveAta    *drive,
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
   if (device == NULL)
     goto out;
+
   update_smart (drive, device);
   update_pm (drive, device);
+  update_security (drive, device);
 
  out:
   if (device != NULL)
@@ -401,6 +427,13 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
   object = udisks_daemon_util_dup_object (drive, error);
   if (object == NULL)
     goto out;
+
+  if (drive->secure_erase_in_progress)
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_DEVICE_BUSY,
+                   "Secure erase in progress");
+      goto out;
+    }
 
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
   g_assert (device != NULL);
@@ -1107,7 +1140,8 @@ typedef struct
   guint8  count;
   guint8  device;
   guint32 lba;
-  /* TODO: support buffer, buffer_size */
+  gsize   buffer_size;
+  guchar *buffer;
 } AtaCommandInput;
 
 typedef struct
@@ -1147,6 +1181,7 @@ ata_send_command (gint                 fd,
   g_return_val_if_fail (timeout_msec == -1 || timeout_msec > 0, FALSE);
   g_return_val_if_fail (protocol >= 0 && protocol <= 2, FALSE);
   g_return_val_if_fail (input != NULL, FALSE);
+  g_return_val_if_fail (input->buffer_size == 0 || input->buffer != NULL, FALSE);
   g_return_val_if_fail (output != NULL, FALSE);
   g_return_val_if_fail (output->buffer_size == 0 || output->buffer != NULL, FALSE);
   g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -1210,8 +1245,12 @@ ata_send_command (gint                 fd,
   cdb[7] = (input->lba >> 16) & 0xff;   /* LBA HIGH */
   cdb[8] = input->device;               /* SELECT */
   cdb[9] = input->command;              /* ATA COMMAND */
-  memset (sense, 0, sizeof (sense));
 
+  /* See http://sg.danny.cz/sg/sg_io.html and http://www.tldp.org/HOWTO/SCSI-Generic-HOWTO/index.html
+   * for detailed information about how the SG_IO ioctl work
+   */
+
+  memset (sense, 0, sizeof (sense));
   memset (&io_v4, 0, sizeof (io_v4));
   io_v4.guard = 'Q';
   io_v4.protocol = BSG_PROTOCOL_SCSI;
@@ -1222,7 +1261,12 @@ ata_send_command (gint                 fd,
   io_v4.response = (uintptr_t) sense;
   io_v4.din_xfer_len = output->buffer_size;
   io_v4.din_xferp = (uintptr_t) output->buffer;
-  io_v4.timeout = timeout_msec;
+  io_v4.dout_xfer_len = input->buffer_size;
+  io_v4.dout_xferp = (uintptr_t) input->buffer;
+  if (timeout_msec == G_MAXINT)
+    io_v4.timeout = G_MAXUINT;
+  else
+    io_v4.timeout = timeout_msec;
 
   rc = ioctl (fd, SG_IO, &io_v4);
   if (rc != 0)
@@ -1236,12 +1280,30 @@ ata_send_command (gint                 fd,
           io_hdr.interface_id = 'S';
           io_hdr.cmdp = (unsigned char*) cdb;
           io_hdr.cmd_len = sizeof (cdb);
-          io_hdr.dxferp = output->buffer;
-          io_hdr.dxfer_len = output->buffer_size;
+          switch (protocol)
+            {
+            case ATA_COMMAND_PROTOCOL_NONE:
+              io_hdr.dxfer_direction = SG_DXFER_NONE;
+              break;
+
+            case ATA_COMMAND_PROTOCOL_DRIVE_TO_HOST:
+              io_hdr.dxferp = output->buffer;
+              io_hdr.dxfer_len = output->buffer_size;
+              io_hdr.dxfer_direction = SG_DXFER_FROM_DEV;
+              break;
+
+            case ATA_COMMAND_PROTOCOL_HOST_TO_DRIVE:
+              io_hdr.dxferp = input->buffer;
+              io_hdr.dxfer_len = input->buffer_size;
+              io_hdr.dxfer_direction = SG_DXFER_TO_DEV;
+              break;
+            }
           io_hdr.sbp = sense;
           io_hdr.mx_sb_len = sizeof (sense);
-          io_hdr.dxfer_direction = SG_DXFER_FROM_DEV;
-          io_hdr.timeout = timeout_msec;
+          if (timeout_msec == G_MAXINT)
+            io_hdr.timeout = G_MAXUINT;
+          else
+            io_hdr.timeout = timeout_msec;
 
           rc = ioctl(fd, SG_IO, &io_hdr);
           if (rc != 0)
@@ -1273,6 +1335,15 @@ ata_send_command (gint                 fd,
   output->device = desc[12];
   output->status = desc[13];
   output->lba = (desc[11] << 16) | (desc[9] << 8) | desc[7];
+
+  /* TODO: be more exact with the error code perhaps? */
+  if (output->error != 0 || output->status & 0x01)
+    {
+      g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                   "ATA command failed: error=0x%02x count=0x%02x status=0x%02x",
+                   output->error, output->count, output->status);
+      goto out;
+    }
 
   ret = TRUE;
 
@@ -1310,6 +1381,17 @@ handle_pm_get_state (UDisksDriveAta        *_drive,
     {
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                              "PM is not supported or enabled");
+      goto out;
+    }
+
+  /* If a secure erase is in progress, the CHECK POWER command would be queued
+   * until the erase has been completed (can easily take hours). So just return
+   * 0xff which is active/idle...
+   */
+  if (drive->secure_erase_in_progress)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_DEVICE_BUSY,
+                                             "A secure erase is in progress");
       goto out;
     }
 
@@ -1690,6 +1772,7 @@ typedef struct
   GUdevDevice *device;
   GVariant *configuration;
   UDisksDrive *drive;
+  UDisksLinuxDriveObject *object;
 } ApplyConfData;
 
 static void
@@ -1699,6 +1782,7 @@ apply_conf_data_free (ApplyConfData *data)
   g_clear_object (&data->device);
   g_variant_unref (data->configuration);
   g_clear_object (&data->drive);
+  g_clear_object (&data->object);
   g_free (data);
 }
 
@@ -1823,7 +1907,6 @@ udisks_linux_drive_ata_apply_configuration (UDisksLinuxDriveAta     *ata,
                                             GUdevDevice             *device,
                                             GVariant                *configuration)
 {
-  UDisksLinuxDriveObject *object = NULL;
   gboolean has_conf = FALSE;
   ApplyConfData *data = NULL;
 
@@ -1835,11 +1918,11 @@ udisks_linux_drive_ata_apply_configuration (UDisksLinuxDriveAta     *ata,
   data->device = g_object_ref (device);
   data->configuration = g_variant_ref (configuration);
 
-  object = udisks_daemon_util_dup_object (ata, NULL);
-  if (object == NULL)
+  data->object = udisks_daemon_util_dup_object (ata, NULL);
+  if (data->object == NULL)
     goto out;
 
-  data->drive = udisks_object_get_drive (UDISKS_OBJECT (object));
+  data->drive = udisks_object_get_drive (UDISKS_OBJECT (data->object));
   if (data->drive == NULL)
     goto out;
 
@@ -1862,9 +1945,436 @@ udisks_linux_drive_ata_apply_configuration (UDisksLinuxDriveAta     *ata,
   data = NULL; /* don't free data below */
 
  out:
-  g_clear_object (&object);
   if (data != NULL)
     apply_conf_data_free (data);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+on_secure_erase_update_progress_timeout (gpointer user_data)
+{
+  UDisksJob *job = UDISKS_JOB (user_data);
+  gint64 now;
+  gint64 start;
+  gint64 end;
+  gdouble progress;
+
+  now = g_get_real_time ();
+  start = udisks_job_get_start_time (job);
+  end = udisks_job_get_expected_end_time (job);
+
+  progress = ((gdouble) (now - start)) / (end - start);
+  if (progress < 0)
+    progress = 0;
+  if (progress > 1)
+    progress = 1;
+
+  /* TODO: if we've exceeded the expected end time, we could add
+   * another couple of minutes or so... that'd be kinda cheating
+   * though, wouldn't it?
+   */
+
+  udisks_job_set_progress (job, progress);
+
+  return TRUE; /* keep source around */
+}
+
+gboolean
+udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta     *ata,
+                                          uid_t                    caller_uid,
+                                          gboolean                 enhanced,
+                                          GError                 **_error)
+{
+  gboolean ret = FALSE;
+  UDisksDrive *drive = NULL;
+  UDisksLinuxDriveObject *object = NULL;
+  UDisksLinuxBlockObject *block_object = NULL;
+  UDisksDaemon *daemon;
+  GUdevDevice *device = NULL;
+  const gchar *device_file;
+  gint fd = -1;
+  union
+  {
+    guchar buf[512];
+    guint16 words[256];
+  } identify;
+  guint16 word_82;
+  guint16 word_128;
+  UDisksBaseJob *job = NULL;
+  gint num_minutes = 0;
+  guint timeout_id = 0;
+  gboolean claimed = FALSE;
+  GError *error = NULL;
+  const gchar *pass = "xxxx";
+  gboolean clear_passwd_on_failure = FALSE;
+
+  g_return_val_if_fail (UDISKS_IS_LINUX_DRIVE_ATA (ata), FALSE);
+  g_return_val_if_fail (_error == NULL || *_error == NULL, FALSE);
+
+  object = udisks_daemon_util_dup_object (ata, &error);
+  if (object == NULL)
+    goto out;
+  drive = udisks_object_peek_drive (UDISKS_OBJECT (object));
+
+  block_object = udisks_linux_drive_object_get_block (object, FALSE);
+  if (block_object == NULL)
+    {
+      g_set_error (&error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Unable to find block device for drive");
+      goto out;
+    }
+
+  daemon = udisks_linux_drive_object_get_daemon (object);
+
+  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  if (device == NULL)
+    {
+      g_set_error (&error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "No udev device");
+      goto out;
+    }
+
+  if (ata->secure_erase_in_progress)
+    {
+      g_set_error (&error, UDISKS_ERROR, UDISKS_ERROR_DEVICE_BUSY,
+                   "Secure erase in progress");
+      goto out;
+    }
+
+  /* Use O_EXCL so it fails if mounted or in use */
+  device_file = g_udev_device_get_device_file (device);
+  fd = open (g_udev_device_get_device_file (device), O_RDONLY | O_EXCL);
+  if (fd == -1)
+    {
+      g_set_error (&error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Error opening device file %s: %m",
+                   device_file);
+      goto out;
+    }
+
+  ata->secure_erase_in_progress = TRUE;
+
+  claimed = TRUE;
+
+  /* First get the IDENTIFY data directly from the drive, for sanity checks */
+  {
+    /* ATA8: 7.16 IDENTIFY DEVICE - ECh, PIO Data-In */
+    AtaCommandInput input = {.command = 0xec};
+    AtaCommandOutput output = {.buffer = identify.buf, .buffer_size = sizeof (identify.buf)};
+    if (!ata_send_command (fd,
+                           -1,
+                           ATA_COMMAND_PROTOCOL_DRIVE_TO_HOST,
+                           &input,
+                           &output,
+                           &error))
+      {
+        g_prefix_error (&error, "Error sending ATA command IDENTIFY DEVICE: ");
+        goto out;
+      }
+  }
+
+  /* Support of the Security feature set is indicated in IDENTIFY
+   * DEVICE and IDENTIFY PACKET DEVICE data word 82 and data word 128.
+   * Security information in words 82, 89 and 90 is fixed until the
+   * next power-on reset and shall not change unless DEVICE
+   * CONFIGURATION OVERLAY removes support for the Security feature
+   * set.  Security information in words 85, 92 and 128 are variable
+   * and may change.  If the Security feature set is not supported,
+   * then words 89, 90, 92 and 128 are N/A.
+   *
+   * word 82:  ...
+   *           1     The Security feature set is supported
+   *
+   * word 128: 15:9  Reserved
+   *           8     Master Password Capability: 0 = High, 1 = Maximum
+   *           7:6   Reserved
+   *           5     Enhanced security erase supported
+   *           4     Security count expired
+   *           3     Security frozen
+   *           2     Security locked
+   *           1     Security enabled
+   *           0     Security supported
+   */
+  word_82 = GUINT16_FROM_LE (identify.words[82]);
+  word_128 = GUINT16_FROM_LE (identify.words[128]);
+
+  if (!(
+        (word_82 & (1<<1)) && (word_128 & (1<<0))
+        ))
+    {
+      g_set_error (&error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Drive does not support the ATA security feature");
+      goto out;
+    }
+
+  if (word_128 & (1<<3))
+    {
+      g_set_error (&error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Drive is frozen, cannot perform a secure erase");
+      goto out;
+    }
+
+  if (enhanced && !(word_128 & (1<<5)))
+    {
+      g_set_error (&error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Enhanced erase requested but not supported");
+      goto out;
+    }
+
+  /* OK, all checks done, let's do this thing! */
+
+  /* First, set up a Job object to track progress */
+  num_minutes = enhanced ? 2 * GUINT16_FROM_LE (identify.words[90]) : 2 * GUINT16_FROM_LE (identify.words[89]);
+  job = udisks_daemon_launch_simple_job (daemon,
+                                         UDISKS_OBJECT (object),
+                                         enhanced ? "ata-enhanced-secure-erase" : "ata-secure-erase",
+                                         caller_uid, NULL);
+  udisks_job_set_cancelable (UDISKS_JOB (job), FALSE);
+  udisks_job_set_expected_end_time (UDISKS_JOB (job),
+                                    g_get_real_time () + num_minutes * 60LL * G_USEC_PER_SEC);
+  udisks_job_set_progress_valid (UDISKS_JOB (job), TRUE);
+  timeout_id = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT,
+                                           1,
+                                           on_secure_erase_update_progress_timeout,
+                                           g_object_ref (job),
+                                           g_object_unref);
+
+  /* Second, set the user password to 'xxxx' */
+  {
+    /* ATA8: 7.45 SECURITY SET PASSWORD - F1h, PIO Data-Out */
+    guchar buf[512];
+    AtaCommandInput input = {.command = 0xf1, .buffer = buf, .buffer_size = sizeof (buf)};
+    AtaCommandOutput output = {0};
+    memset (buf, 0, sizeof (buf));
+    memcpy (buf + 2, pass, strlen (pass));
+    if (!ata_send_command (fd,
+                           -1,
+                           ATA_COMMAND_PROTOCOL_HOST_TO_DRIVE,
+                           &input,
+                           &output,
+                           &error))
+      {
+        g_prefix_error (&error, "Error sending ATA command SECURITY SET PASSWORD: ");
+        goto out;
+      }
+  }
+
+  clear_passwd_on_failure = TRUE;
+
+  udisks_notice ("Commencing ATA%s secure erase of %s (%s). This operation is expected to take at least %d minutes to complete",
+                 enhanced ? " enhanced" : "",
+                 device_file,
+                 udisks_drive_get_id (drive),
+                 num_minutes);
+
+  /* Third... do SECURITY ERASE PREPARE */
+  {
+    /* ATA8: 7.42 SECURITY ERASE PREPARE - F3h, Non-Data */
+    AtaCommandInput input = {.command = 0xf3};
+    AtaCommandOutput output = {0};
+    if (!ata_send_command (fd,
+                           -1,
+                           ATA_COMMAND_PROTOCOL_NONE,
+                           &input,
+                           &output,
+                           &error))
+      {
+        g_prefix_error (&error, "Error sending ATA command SECURITY ERASE PREPARE: ");
+        goto out;
+      }
+  }
+
+  /* Fourth... do SECURITY ERASE UNIT */
+  {
+    /* ATA8: 7.43 SECURITY ERASE UNIT - F4h, PIO Data-Out */
+    guchar buf[512];
+    AtaCommandInput input = {.command = 0xf4, .buffer = buf, .buffer_size = sizeof (buf)};
+    AtaCommandOutput output = {0};
+    memset (buf, 0, sizeof (buf));
+    if (enhanced)
+      buf[0] |= 0x02;
+    memcpy (buf + 2, pass, strlen (pass));
+    if (!ata_send_command (fd,
+                           G_MAXINT, /* disable timeout */
+                           ATA_COMMAND_PROTOCOL_HOST_TO_DRIVE,
+                           &input,
+                           &output,
+                           &error))
+      {
+        g_prefix_error (&error, "Error sending ATA command SECURITY ERASE UNIT (enhanced=%d): ",
+                        enhanced ? 1 : 0);
+        goto out;
+      }
+  }
+
+  clear_passwd_on_failure = FALSE;
+
+  udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (block_object));
+
+  ret = TRUE;
+
+ out:
+  /* Clear the password if something went wrong */
+  if (clear_passwd_on_failure)
+    {
+      /* ATA8: 7.41 SECURITY DISABLE PASSWORD - F6h, PIO Data-Out */
+      guchar buf[512];
+      AtaCommandInput input = {.command = 0xf6, .buffer = buf, .buffer_size = sizeof (buf)};
+      AtaCommandOutput output = {0};
+      GError *cleanup_error = NULL;
+      memset (buf, 0, sizeof (buf));
+      memcpy (buf + 2, pass, strlen (pass));
+      if (!ata_send_command (fd,
+                             -1,
+                             ATA_COMMAND_PROTOCOL_HOST_TO_DRIVE,
+                             &input,
+                             &output,
+                             &cleanup_error))
+        {
+          udisks_error ("Failed to clear user password '%s' on %s (%s) while attemping clean-up after a failed secure erase operation. You may need to manually unlock the drive. The error was: %s (%s, %d)",
+                        pass,
+                        device_file,
+                        udisks_drive_get_id (drive),
+                        cleanup_error->message, g_quark_to_string (cleanup_error->domain), cleanup_error->code);
+          g_clear_error (&cleanup_error);
+        }
+      else
+        {
+          udisks_info ("Successfully removed user password '%s' from %s (%s) during clean-up after a failed secure erase operation",
+                       pass,
+                       device_file,
+                       udisks_drive_get_id (drive));
+        }
+    }
+
+  if (ret)
+    {
+      udisks_notice ("Finished securely erasing %s (%s)",
+                     device_file,
+                     udisks_drive_get_id (drive));
+    }
+  else
+    {
+      udisks_notice ("Error securely erasing %s (%s): %s (%s, %d)",
+                     device_file,
+                     udisks_drive_get_id (drive),
+                     error->message, g_quark_to_string (error->domain), error->code);
+    }
+
+  if (claimed)
+    ata->secure_erase_in_progress = FALSE;
+
+  if (timeout_id > 0)
+    g_source_remove (timeout_id);
+  if (job != NULL)
+    {
+      /* propagate error, if any */
+      if (error == NULL)
+        {
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, "");
+        }
+      else
+        {
+          gchar *s = g_strdup_printf ("Secure Erase failed: %s (%s, %d)",
+                                      error->message, g_quark_to_string (error->domain), error->code);
+          udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, s);
+          g_free (s);
+        }
+    }
+  g_propagate_error (_error, error);
+  if (fd != -1)
+    close (fd);
+  g_clear_object (&device);
+  g_clear_object (&block_object);
+  g_clear_object (&object);
+  return ret;
+}
+
+static gboolean
+handle_security_erase_unit (UDisksDriveAta        *_drive,
+                            GDBusMethodInvocation *invocation,
+                            GVariant              *options)
+{
+  UDisksLinuxDriveAta *drive = UDISKS_LINUX_DRIVE_ATA (_drive);
+  UDisksLinuxDriveObject *object = NULL;
+  UDisksLinuxBlockObject *block_object = NULL;
+  UDisksDaemon *daemon;
+  GError *error = NULL;
+  const gchar *message;
+  const gchar *action_id;
+  uid_t caller_uid;
+  gid_t caller_gid;
+  gboolean enhanced = FALSE;
+
+  object = udisks_daemon_util_dup_object (drive, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  block_object = udisks_linux_drive_object_get_block (object, FALSE);
+  if (block_object == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Unable to find block device for drive");
+      goto out;
+    }
+
+  daemon = udisks_linux_drive_object_get_daemon (object);
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &caller_gid,
+                                               NULL,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  g_variant_lookup (options, "enhanced", "b", &enhanced);
+
+  /* Translators: Shown in authentication dialog when the user
+   * requests erasing a hard disk using the SECURE ERASE UNIT command.
+   *
+   * Do not translate $(drive), it's a placeholder and
+   * will be replaced by the name of the drive/device in question
+   */
+  message = N_("Authentication is required to perform a secure erase of $(drive)");
+  action_id = "org.freedesktop.udisks2.ata-secure-erase";
+
+  /* Check that the user is authorized */
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    UDISKS_OBJECT (object),
+                                                    action_id,
+                                                    options,
+                                                    message,
+                                                    invocation))
+    goto out;
+
+  if (!udisks_linux_drive_ata_secure_erase_sync (drive, caller_uid, enhanced, &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (block_object));
+
+  udisks_drive_ata_complete_security_erase_unit (_drive, invocation);
+
+ out:
+  g_clear_object (&block_object);
+  g_clear_object (&object);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1880,4 +2390,6 @@ drive_ata_iface_init (UDisksDriveAtaIface *iface)
   iface->handle_pm_get_state = handle_pm_get_state;
   iface->handle_pm_standby = handle_pm_standby;
   iface->handle_pm_wakeup = handle_pm_wakeup;
+
+  iface->handle_security_erase_unit = handle_security_erase_unit;
 }

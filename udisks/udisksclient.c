@@ -2644,6 +2644,8 @@ udisks_client_get_job_description (UDisksClient   *client,
       g_hash_table_insert (hash, "partition-delete",     (gpointer) C_("job", "Deleting Partition"));
       g_hash_table_insert (hash, "partition-create",     (gpointer) C_("job", "Creating Partition"));
       g_hash_table_insert (hash, "cleanup",              (gpointer) C_("job", "Cleaning Up"));
+      g_hash_table_insert (hash, "ata-secure-erase",     (gpointer) C_("job", "ATA Secure Erase"));
+      g_hash_table_insert (hash, "ata-enhanced-secure-erase", (gpointer) C_("job", "ATA Enhanced Secure Erase"));
       g_once_init_leave (&once, (gsize) 1);
     }
 

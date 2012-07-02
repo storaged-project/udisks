@@ -595,6 +595,53 @@
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
+    <!-- SecurityEraseUnitMinutes:
+         The estimated amount of minutes it takes to complete the
+         <quote>SECURITY ERASE UNIT</quote> command or 0 if this
+         command is not available.
+
+         If set to 510 it means that it takes at least 508 minutes to
+         complete the operation.
+    -->
+    <property name="SecurityEraseUnitMinutes" type="i" access="read"/>
+
+    <!-- SecurityEnhancedEraseUnitMinutes:
+         The estimated amount of minutes it takes to complete the
+         <quote>SECURITY ERASE UNIT</quote> command with enhanced mode
+         specified or 0 if enhanced erase is not available.
+
+         If set to 510 it means that it takes at least 508 minutes to
+         complete the operation.
+    -->
+    <property name="SecurityEnhancedEraseUnitMinutes" type="i" access="read"/>
+
+    <!-- SecurityFrozen:
+         If set to %TRUE the unit is frozen.
+    -->
+    <property name="SecurityFrozen" type="b" access="read"/>
+
+    <!--
+        SecurityEraseUnit:
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>enhanced</parameter> (of type 'b').
+
+        Does all the necessary checks and preparations and then sends
+        the <quote>SECURITY ERASE UNIT</quote> command to the
+        drive. If the option @enhanced is set to %TRUE an
+        <emphasis>enhanced secure erase</emphasis> is requested.
+
+        All data on the drive will be irrevocably erased.
+
+        This operation takes either
+        #org.freedesktop.UDisks2.Drive.Ata:SecurityEraseUnitMinutes or
+        #org.freedesktop.UDisks2.Drive.Ata:SecurityEnhancedEraseUnitMinutes
+        minutes to complete depending on whether the @enhanced option
+        is %TRUE.
+    -->
+    <method name="SecurityEraseUnit">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+
   </interface>
 
   <!-- ********************************************************************** -->
@@ -977,10 +1024,12 @@
         and the file system is created on the unlocked device. The
         unlocked device will be left open.
 
-        If the option <parameter>erase</parameter> is given then the
+        If the option <parameter>erase</parameter> is used then the
         underlying device will be erased. Valid values include
         <quote>zero</quote> to write zeroes over the entire device
-        before formatting it.
+        before formatting, <quote>ata-secure-erase</quote> to perform
+        a secure erase or <quote>ata-secure-erase-enhanced</quote> to
+        perform an enhanced secure erase.
     -->
     <method name="Format">
       <arg name="type" direction="in" type="s"/>
@@ -1526,11 +1575,14 @@
       When a job completes, the #org.freedesktop.UDisks2.Job::Completed signal
       is emitted.
 
-      To cancel a job use the org.freedesktop.UDisks2.Job.Cancel()
-      method. This will cause the job to complete (with @success set
-      to %FALSE) and the D-Bus method used to initiate the operation
-      to return, usually returning the
-      <literal>org.freedesktop.UDisks2.Error.Cancelled</literal> error.
+      A job may or may not be cancelable, see the
+      #org.freedesktop.UDisks2.Job:Cancelable property. To cancel a
+      job use the org.freedesktop.UDisks2.Job.Cancel() method. This
+      will cause the job to complete (with @success set to %FALSE) and
+      the D-Bus method used to initiate the operation to return,
+      usually returning the
+      <literal>org.freedesktop.UDisks2.Error.Cancelled</literal>
+      error.
   -->
   <interface name="org.freedesktop.UDisks2.Job">
 
@@ -1619,11 +1671,16 @@
         Cancel:
         @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
 
-        Cancels the job.
+        Cancels the job. Fails with the
+        <literal>org.freedesktop.UDisks2.Error.Failed</literal> error
+        if #org.freedesktop.UDisks2.Job:Cancelable is %FALSE.
     -->
     <method name="Cancel">
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
+
+    <!-- Cancelable: Whether the job can be canceled. -->
+    <property name="Cancelable" type="b" access="read"/>
 
     <!--
         Completed:

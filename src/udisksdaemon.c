@@ -538,6 +538,7 @@ udisks_daemon_launch_simple_job (UDisksDaemon    *daemon,
   udisks_object_skeleton_set_job (job_object, UDISKS_JOB (job));
   g_free (job_object_path);
 
+  udisks_job_set_cancelable (UDISKS_JOB (job), TRUE);
   udisks_job_set_operation (UDISKS_JOB (job), job_operation);
   udisks_job_set_started_by_uid (UDISKS_JOB (job), job_started_by_uid);
 
@@ -608,6 +609,7 @@ udisks_daemon_launch_threaded_job  (UDisksDaemon    *daemon,
   udisks_object_skeleton_set_job (job_object, UDISKS_JOB (job));
   g_free (job_object_path);
 
+  udisks_job_set_cancelable (UDISKS_JOB (job), TRUE);
   udisks_job_set_operation (UDISKS_JOB (job), job_operation);
   udisks_job_set_started_by_uid (UDISKS_JOB (job), job_started_by_uid);
 
@@ -683,6 +685,7 @@ udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
   udisks_object_skeleton_set_job (job_object, UDISKS_JOB (job));
   g_free (job_object_path);
 
+  udisks_job_set_cancelable (UDISKS_JOB (job), TRUE);
   udisks_job_set_operation (UDISKS_JOB (job), job_operation);
   udisks_job_set_started_by_uid (UDISKS_JOB (job), job_started_by_uid);
 

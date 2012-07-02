@@ -64,8 +64,6 @@ struct _UDisksLinuxDriveObject
   UDisksDriveAta *iface_drive_ata;
 };
 
-// G_LOCK_DEFINE_STATIC (drive_object_lock);
-
 struct _UDisksLinuxDriveObjectClass
 {
   UDisksObjectSkeletonClass parent_class;
@@ -916,6 +914,14 @@ udisks_linux_drive_object_housekeeping (UDisksLinuxDriveObject  *object,
                            g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
               g_error_free (local_error);
             }
+          else if (nowakeup && (local_error->domain == UDISKS_ERROR &&
+                                local_error->code == UDISKS_ERROR_DEVICE_BUSY))
+            {
+              /* typically because a "secure erase" operation is pending */
+              udisks_info ("Drive %s is busy",
+                           g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
+              g_error_free (local_error);
+            }
           else
             {
               g_propagate_prefixed_error (error, local_error, "Error updating SMART data: ");
@@ -1032,3 +1038,5 @@ udisks_linux_drive_object_is_not_in_use (UDisksLinuxDriveObject   *object,
   g_list_free_full (objects, g_object_unref);
   return ret;
 }
+
+/* ---------------------------------------------------------------------------------------------------- */

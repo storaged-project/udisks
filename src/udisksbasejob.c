@@ -390,6 +390,15 @@ handle_cancel (UDisksJob              *_job,
       goto out;
     }
 
+  if (!udisks_job_get_cancelable (_job))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "The job cannot be canceled");
+      goto out;
+    }
+
   /* Translators: Shown in authentication dialog when canceling a job.
    */
   message = N_("Authentication is required to cancel a job");

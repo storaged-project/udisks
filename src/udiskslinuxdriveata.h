@@ -42,6 +42,10 @@ gboolean        udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta 
                                                             const gchar             *type,
                                                             GCancellable            *cancellable,
                                                             GError                 **error);
+gboolean        udisks_linux_drive_ata_secure_erase_sync   (UDisksLinuxDriveAta     *drive,
+                                                            uid_t                    caller_uid,
+                                                            gboolean                 enhanced,
+                                                            GError                 **error);
 
 void            udisks_linux_drive_ata_apply_configuration (UDisksLinuxDriveAta     *drive,
                                                             GUdevDevice             *device,
