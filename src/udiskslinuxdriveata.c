@@ -2282,7 +2282,8 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta     *ata,
           g_free (s);
         }
     }
-  g_propagate_error (_error, error);
+  if (error != NULL)
+    g_propagate_error (_error, error);
   if (fd != -1)
     close (fd);
   g_clear_object (&device);
