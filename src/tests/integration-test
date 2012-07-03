@@ -178,6 +178,16 @@ class UDisksTestCase(unittest.TestCase):
         udev/udisks to catch up on the change events.
         '''
         subprocess.call(['udevadm', 'settle'])
+        context = GLib.main_context_default()
+        timeout = 100
+        # wait until all GDBus events have been processed
+        while context.pending() and timeout > 0:
+            klass.client.settle()
+            time.sleep(0.1)
+            timeout -= 1
+        if timeout <= 0:
+            sys.stderr.write('[wait timeout!] ')
+            sys.stderr.flush()
         klass.client.settle()
 
     @classmethod
@@ -198,6 +208,7 @@ class UDisksTestCase(unittest.TestCase):
     def zero_device(klass):
         subprocess.call(['dd', 'if=/dev/zero', 'of='+klass.device, 'bs=10M'],
                 stderr=subprocess.PIPE)
+        time.sleep(0.5)
         klass.sync()
 
     @classmethod
@@ -751,6 +762,7 @@ class FS(UDisksTestCase):
             return
         self.assertEqual(ret, 0)
 
+        time.sleep(0.5)
         self.sync()
         self.assertEqual(fs.get_property('mount-points'), [self.workdir])
 
