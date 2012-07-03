@@ -2168,6 +2168,10 @@ const static struct
   {"raid",       "zfs_member",        NULL,    NC_("fs-type", "ZFS Device"),                        NC_("fs-type", "ZFS")},
   {"crypto",     "crypto_LUKS",       "*",     NC_("fs-type", "LUKS Encryption (version %s)"),      NC_("fs-type", "LUKS")},
   {"crypto",     "crypto_LUKS",       NULL,    NC_("fs-type", "LUKS Encryption"),                   NC_("fs-type", "LUKS")},
+  {"filesystem", "VMFS",              "*",     NC_("fs-type", "VMFS (version %s)"),                 NC_("fs-type", "VMFS (v%s)")},
+  {"filesystem", "VMFS",              NULL,    NC_("fs-type", "VMFS"),                              NC_("fs-type", "VMFS")},
+  {"raid",       "VMFS_volume_member", "*",    NC_("fs-type", "VMFS Volume Member (version %s)"),   NC_("fs-type", "VMFS Member (v%s)")},
+  {"raid",       "VMFS_volume_member", NULL,   NC_("fs-type", "VMFS Volume Member"),                NC_("fs-type", "VMFS Member")},
   {NULL, NULL, NULL, NULL}
 };
 
@@ -2474,6 +2478,9 @@ const static struct
   {"gpt", "other",     "49f48daa-b10e-11dc-b99b-0019d1879648", NC_("part-type", "NetBSD RAID"), F_RAID},
   {"gpt", "other",     "2db519c4-b10f-11dc-b99b-0019d1879648", NC_("part-type", "NetBSD Concatenated"), 0},
   {"gpt", "other",     "2db519ec-b10f-11dc-b99b-0019d1879648", NC_("part-type", "NetBSD Encrypted"), 0},
+  /* VMWare, see http://blogs.vmware.com/vsphere/2011/08/vsphere-50-storage-features-part-7-gpt.html */
+  {"gpt", "other",     "aa31e02a-400f-11db-9590-000c2911d1b8", NC_("part-type", "VMWare VMFS"), 0},
+  {"gpt", "other",     "9d275380-40ad-11db-bf97-000c2911d1b8", NC_("part-type", "VMWare vmkcore"), 0},
 
   /* see http://developer.apple.com/documentation/mac/devices/devices-126.html
    *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html */
