@@ -2131,14 +2131,22 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta     *ata,
                                          enhanced ? "ata-enhanced-secure-erase" : "ata-secure-erase",
                                          caller_uid, NULL);
   udisks_job_set_cancelable (UDISKS_JOB (job), FALSE);
-  udisks_job_set_expected_end_time (UDISKS_JOB (job),
-                                    g_get_real_time () + num_minutes * 60LL * G_USEC_PER_SEC);
-  udisks_job_set_progress_valid (UDISKS_JOB (job), TRUE);
-  timeout_id = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT,
-                                           1,
-                                           on_secure_erase_update_progress_timeout,
-                                           g_object_ref (job),
-                                           g_object_unref);
+
+  /* A value of 510 (255 in the IDENTIFY DATA register) means "erase
+   * is expected to take _at least_ 508 minutes" ... so don't attempt
+   * to predict when the job is going to end and don't report progress
+   */
+  if (num_minutes != 510)
+    {
+      udisks_job_set_expected_end_time (UDISKS_JOB (job),
+                                        g_get_real_time () + num_minutes * 60LL * G_USEC_PER_SEC);
+      udisks_job_set_progress_valid (UDISKS_JOB (job), TRUE);
+      timeout_id = g_timeout_add_seconds_full (G_PRIORITY_DEFAULT,
+                                               1,
+                                               on_secure_erase_update_progress_timeout,
+                                               g_object_ref (job),
+                                               g_object_unref);
+    }
 
   /* Second, set the user password to 'xxxx' */
   {
