@@ -84,6 +84,9 @@ gboolean udisks_daemon_util_file_set_contents (const gchar  *filename,
                                                gint          mode_for_new_file,
                                                GError      **error);
 
+UDisksInhibitCookie *udisks_daemon_util_inhibit_system_sync   (const gchar          *reason);
+void                 udisks_daemon_util_uninhibit_system_sync (UDisksInhibitCookie  *cookie);
+
 
 G_END_DECLS
 

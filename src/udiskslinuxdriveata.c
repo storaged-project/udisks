@@ -2315,6 +2315,7 @@ handle_security_erase_unit (UDisksDriveAta        *_drive,
   uid_t caller_uid;
   gid_t caller_gid;
   gboolean enhanced = FALSE;
+  UDisksInhibitCookie *inhibit_cookie = NULL;
 
   object = udisks_daemon_util_dup_object (drive, &error);
   if (object == NULL)
@@ -2369,6 +2370,8 @@ handle_security_erase_unit (UDisksDriveAta        *_drive,
                                                     invocation))
     goto out;
 
+  inhibit_cookie = udisks_daemon_util_inhibit_system_sync (N_("Formatting Device"));
+
   if (!udisks_linux_drive_ata_secure_erase_sync (drive, caller_uid, enhanced, &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -2381,6 +2384,7 @@ handle_security_erase_unit (UDisksDriveAta        *_drive,
   udisks_drive_ata_complete_security_erase_unit (_drive, invocation);
 
  out:
+  udisks_daemon_util_uninhibit_system_sync (inhibit_cookie);
   g_clear_object (&block_object);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */

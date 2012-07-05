@@ -21,6 +21,7 @@
 #include "config.h"
 #include <glib/gi18n-lib.h>
 #include <glib/gstdio.h>
+#include <gio/gunixfdlist.h>
 
 #include <stdio.h>
 
@@ -1238,3 +1239,133 @@ udisks_daemon_util_file_set_contents (const gchar  *filename,
   g_free (tmpl);
   return ret;
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * UDisksInhibitCookie:
+ *
+ * Opaque data structure used in udisks_daemon_util_inhibit_system_sync() and
+ * udisks_daemon_util_uninhibit_system_sync().
+ */
+struct UDisksInhibitCookie
+{
+  /*< private >*/
+  gint32 magic;
+#ifdef HAVE_LIBSYSTEMD_LOGIN
+  gint fd;
+#endif
+};
+
+/**
+ * udisks_daemon_util_inhibit_system_sync:
+ * @reason: A human readable explanation of why the system is being inhibited.
+ *
+ * Tries to inhibit the system.
+ *
+ * Right now only
+ * <ulink url="http://www.freedesktop.org/wiki/Software/systemd/inhibit">systemd</ulink>
+ * inhibitors are supported but other inhibitors can be added in the future.
+ *
+ * Returns: A cookie that can be used with udisks_daemon_util_uninhibit_system_sync().
+ */
+UDisksInhibitCookie *
+udisks_daemon_util_inhibit_system_sync (const gchar  *reason)
+{
+  g_return_val_if_fail (reason != NULL, NULL);
+
+#ifdef HAVE_LIBSYSTEMD_LOGIN
+  UDisksInhibitCookie *ret;
+  GDBusConnection *connection = NULL;
+  GVariant *value = NULL;
+  GUnixFDList *fd_list = NULL;
+  gint32 index = -1;
+  GError *error = NULL;
+
+  connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error);
+  if (connection == NULL)
+    {
+      udisks_error ("Error getting system bus: %s (%s, %d)",
+                    error->message, g_quark_to_string (error->domain), error->code);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  value = g_dbus_connection_call_with_unix_fd_list_sync (connection,
+                                                         "org.freedesktop.login1",
+                                                         "/org/freedesktop/login1",
+                                                         "org.freedesktop.login1.Manager",
+                                                         "Inhibit",
+                                                         g_variant_new ("(ssss)",
+                                                                        "sleep:shutdown:idle", /* what */
+                                                                        "Disk Manager",        /* who */
+                                                                        reason,                /* why */
+                                                                        "block"),              /* mode */
+                                                         G_VARIANT_TYPE ("(h)"),
+                                                         G_DBUS_CALL_FLAGS_NONE,
+                                                         -1,       /* default timeout */
+                                                         NULL,     /* fd_list */
+                                                         &fd_list, /* out_fd_list */
+                                                         NULL, /* GCancellable */
+                                                         &error);
+  if (value == NULL)
+    {
+      udisks_error ("Error inhibiting: %s (%s, %d)",
+                    error->message, g_quark_to_string (error->domain), error->code);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  g_variant_get (value, "(h)", &index);
+  g_assert (index >= 0 && index < g_unix_fd_list_get_length (fd_list));
+
+  ret = g_new0 (UDisksInhibitCookie, 1);
+  ret->magic = 0xdeadbeef;
+  ret->fd = g_unix_fd_list_get (fd_list, index, &error);
+  if (ret->fd == -1)
+    {
+      udisks_error ("Error getting fd: %s (%s, %d)",
+                    error->message, g_quark_to_string (error->domain), error->code);
+      g_clear_error (&error);
+      g_free (ret);
+      ret = NULL;
+      goto out;
+    }
+
+ out:
+  if (value != NULL)
+    g_variant_unref (value);
+  g_clear_object (&fd_list);
+  g_clear_object (&connection);
+  return ret;
+#else
+  /* non-systemd: just return a dummy pointer */
+  return (UDisksInhibitCookie* ) &udisks_daemon_util_inhibit_system_sync;
+#endif
+}
+
+/**
+ * udisks_daemon_util_uninhibit_system_sync:
+ * @cookie: %NULL or a cookie obtained from udisks_daemon_util_inhibit_system_sync().
+ *
+ * Does nothing if @cookie is %NULL, otherwise uninhibits.
+ */
+void
+udisks_daemon_util_uninhibit_system_sync (UDisksInhibitCookie *cookie)
+{
+#ifdef HAVE_LIBSYSTEMD_LOGIN
+  if (cookie != NULL)
+    {
+      g_assert (cookie->magic == 0xdeadbeef);
+      if (close (cookie->fd) != 0)
+        {
+          udisks_error ("Error closing inhbit-fd: %m");
+        }
+      g_free (cookie);
+    }
+#else
+  /* non-systemd: check dummy pointer */
+  g_warn_if_fail (cookie == (UDisksInhibitCookie* ) &udisks_daemon_util_inhibit_system_sync);
+#endif
+}
+

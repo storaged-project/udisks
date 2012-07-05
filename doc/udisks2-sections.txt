@@ -341,6 +341,9 @@ udisks_daemon_util_on_other_seat
 udisks_daemon_util_dup_object
 udisks_daemon_util_escape
 udisks_daemon_util_escape_and_quote
+UDisksInhibitCookie
+udisks_daemon_util_inhibit_system_sync
+udisks_daemon_util_uninhibit_system_sync
 </SECTION>
 
 <SECTION>

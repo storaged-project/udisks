@@ -1914,6 +1914,7 @@ handle_format (UDisksBlock           *block,
   const gchar *label = NULL;
   gchar *escaped_device = NULL;
   gboolean was_partitioned = FALSE;
+  UDisksInhibitCookie *inhibit_cookie = NULL;
 
   error = NULL;
   object = udisks_daemon_util_dup_object (block, &error);
@@ -2007,6 +2008,8 @@ handle_format (UDisksBlock           *block,
                                                     message,
                                                     invocation))
     goto out;
+
+  inhibit_cookie = udisks_daemon_util_inhibit_system_sync (N_("Formatting Device"));
 
   escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
 
@@ -2312,6 +2315,7 @@ handle_format (UDisksBlock           *block,
   udisks_block_complete_format (block, invocation);
 
  out:
+  udisks_daemon_util_uninhibit_system_sync (inhibit_cookie);
   g_free (escaped_device);
   g_free (mapped_name);
   g_free (command);
