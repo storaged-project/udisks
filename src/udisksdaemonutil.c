@@ -1275,7 +1275,7 @@ udisks_daemon_util_inhibit_system_sync (const gchar  *reason)
   g_return_val_if_fail (reason != NULL, NULL);
 
 #ifdef HAVE_LIBSYSTEMD_LOGIN
-  UDisksInhibitCookie *ret;
+  UDisksInhibitCookie *ret = NULL;
   GDBusConnection *connection = NULL;
   GVariant *value = NULL;
   GUnixFDList *fd_list = NULL;
