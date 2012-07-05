@@ -1721,7 +1721,7 @@ static gchar *
 ata_pm_standby_to_string (guint value)
 {
   gchar *ret;
-  gint seconds;
+  gint seconds = -1;
 
   if (value == 0)
     {
@@ -1992,7 +1992,7 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta     *ata,
   UDisksLinuxBlockObject *block_object = NULL;
   UDisksDaemon *daemon;
   GUdevDevice *device = NULL;
-  const gchar *device_file;
+  const gchar *device_file = NULL;
   gint fd = -1;
   union
   {
