@@ -2052,8 +2052,11 @@ handle_format (UDisksBlock           *block,
       goto out;
     }
 
-  /* Erase the device, if requested */
-  if (erase_type != NULL)
+  /* Erase the device, if requested
+   *
+   * (but not if using encryption, we want to erase the cleartext device, see below)
+   */
+  if (erase_type != NULL && encrypt_passphrase == NULL)
     {
       if (!erase_device (block, object, daemon, caller_uid, erase_type, &error))
         {
@@ -2163,6 +2166,17 @@ handle_format (UDisksBlock           *block,
     {
       object_to_mkfs = object;
       block_to_mkfs = block;
+    }
+
+  /* If using encryption, now erase the cleartext device (if requested) */
+  if (encrypt_passphrase != NULL && erase_type != NULL)
+    {
+      if (!erase_device (block_to_mkfs, object_to_mkfs, daemon, caller_uid, erase_type, &error))
+        {
+          g_prefix_error (&error, "Error erasing cleartext device: ");
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
     }
 
   /* Set label, if needed */
