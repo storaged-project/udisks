@@ -1179,7 +1179,7 @@ ata_send_command (gint                 fd,
 
   g_return_val_if_fail (fd != -1, FALSE);
   g_return_val_if_fail (timeout_msec == -1 || timeout_msec > 0, FALSE);
-  g_return_val_if_fail (protocol >= 0 && protocol <= 2, FALSE);
+  g_return_val_if_fail (/* protocol >= 0 && */ protocol <= 2, FALSE);
   g_return_val_if_fail (input != NULL, FALSE);
   g_return_val_if_fail (input->buffer_size == 0 || input->buffer != NULL, FALSE);
   g_return_val_if_fail (output != NULL, FALSE);

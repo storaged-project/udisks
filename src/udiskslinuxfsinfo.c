@@ -142,7 +142,8 @@ const FSInfo _fs_info[] =
 const FSInfo *
 get_fs_info (const gchar *fstype)
 {
-  gint n;
+  guint n;
+
   g_return_val_if_fail (fstype != NULL, NULL);
 
   for (n = 0; n < sizeof(_fs_info)/sizeof(FSInfo); n++)

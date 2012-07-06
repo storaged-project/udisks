@@ -37,6 +37,22 @@ GNOME_DEBUG_CHECK
 GNOME_COMPILE_WARNINGS([maximum])
 GNOME_MAINTAINER_MODE_DEFINES
 
+# Compilation
+#
+
+CC_CHECK_CFLAGS_APPEND([                                        \
+  -Wall -Wextra                                                 \
+  -Wformat-nonliteral -Werror=format-security                   \
+  -Wsign-compare -Werror=implicit-function-declaration          \
+  -Wpointer-arith -Wwrite-strings -Wstrict-prototypes           \
+  -Waggregate-return -Wcast-align -Wimplicit -Wuninitialized    \
+  -Wmissing-prototypes -Wmissing-declarations -Wnested-externs  \
+  -Wpacked -Wmissing-format-attribute -Wshadow                  \
+  -Wstrict-aliasing=2 -Winit-self -Wunsafe-loop-optimizations   \
+  -Wdeclaration-after-statement -Wold-style-definition          \
+  -Wno-missing-field-initializers -Wno-unused-parameter         \
+  -fno-common -Wno-switch-enum])
+
 AC_PATH_PROG([XSLTPROC], [xsltproc])
 if test -z "$XSLTPROC"; then
   AC_MSG_ERROR([xsltproc is needed])

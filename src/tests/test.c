@@ -83,7 +83,7 @@ test_spawned_job_failure (void)
 
   job = udisks_spawned_job_new ("/bin/false", NULL, getuid (), geteuid (), NULL, NULL);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
-                             "Command-line `/bin/false' exited with non-zero exit status 1: ");
+                             (gpointer) "Command-line `/bin/false' exited with non-zero exit status 1: ");
   g_object_unref (job);
 }
 
@@ -96,7 +96,7 @@ test_spawned_job_missing_program (void)
 
   job = udisks_spawned_job_new ("/path/to/unknown/file", NULL, getuid (), geteuid (), NULL, NULL);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
-                             "Error spawning command-line `/path/to/unknown/file': Failed to execute child process \"/path/to/unknown/file\" (No such file or directory) (g-exec-error-quark, 8)");
+                             (gpointer) "Error spawning command-line `/path/to/unknown/file': Failed to execute child process \"/path/to/unknown/file\" (No such file or directory) (g-exec-error-quark, 8)");
   g_object_unref (job);
 }
 
@@ -112,7 +112,7 @@ test_spawned_job_cancelled_at_start (void)
   g_cancellable_cancel (cancellable);
   job = udisks_spawned_job_new ("/bin/true", NULL, getuid (), geteuid (), NULL, cancellable);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
-                             "Operation was cancelled (g-io-error-quark, 19)");
+                             (gpointer) "Operation was cancelled (g-io-error-quark, 19)");
   g_object_unref (job);
   g_object_unref (cancellable);
 }
@@ -139,7 +139,7 @@ test_spawned_job_cancelled_midway (void)
   g_timeout_add (10, on_timeout, cancellable); /* 10 msec */
   g_main_loop_run (loop);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
-                             "Operation was cancelled (g-io-error-quark, 19)");
+                             (gpointer) "Operation was cancelled (g-io-error-quark, 19)");
   g_object_unref (job);
   g_object_unref (cancellable);
 }
@@ -171,7 +171,7 @@ test_spawned_job_override_signal_handler (void)
   handler_ran = FALSE;
   g_signal_connect (job, "spawned-job-completed", G_CALLBACK (on_spawned_job_completed), &handler_ran);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
-                             "Error spawning command-line `/path/to/unknown/file': Failed to execute child process \"/path/to/unknown/file\" (No such file or directory) (g-exec-error-quark, 8)");
+                             (gpointer) "Error spawning command-line `/path/to/unknown/file': Failed to execute child process \"/path/to/unknown/file\" (No such file or directory) (g-exec-error-quark, 8)");
   g_assert (handler_ran);
   g_object_unref (job);
 }
@@ -303,7 +303,7 @@ test_spawned_job_abnormal_termination (void)
   s = g_strdup_printf (UDISKS_TEST_DIR "/udisks-test-helper 4");
   job = udisks_spawned_job_new (s, NULL, getuid (), geteuid (), NULL, NULL);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
-                             "Command-line `./udisks-test-helper 4' was signaled with signal SIGSEGV (11): "
+                             (gpointer) "Command-line `./udisks-test-helper 4' was signaled with signal SIGSEGV (11): "
                              "OK, deliberately causing a segfault\n");
   g_object_unref (job);
   g_free (s);
@@ -311,7 +311,7 @@ test_spawned_job_abnormal_termination (void)
   s = g_strdup_printf (UDISKS_TEST_DIR "/udisks-test-helper 5");
   job = udisks_spawned_job_new (s, NULL, getuid (), geteuid (), NULL, NULL);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
-                             "Command-line `./udisks-test-helper 5' was signaled with signal SIGABRT (6): "
+                             (gpointer) "Command-line `./udisks-test-helper 5' was signaled with signal SIGABRT (6): "
                              "OK, deliberately abort()'ing\n");
   g_object_unref (job);
   g_free (s);
@@ -432,7 +432,7 @@ test_threaded_job_failure (void)
 
   job = udisks_threaded_job_new (threaded_job_failure_func, NULL, NULL, NULL, NULL);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
-                             "Threaded job failed with error: some error (g-key-file-error-quark, 5)");
+                             (gpointer) "Threaded job failed with error: some error (g-key-file-error-quark, 5)");
   g_object_unref (job);
 }
 
@@ -448,7 +448,7 @@ test_threaded_job_cancelled_at_start (void)
   g_cancellable_cancel (cancellable);
   job = udisks_threaded_job_new (threaded_job_successful_func, NULL, NULL, NULL, cancellable);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
-                             "Threaded job failed with error: Operation was cancelled (g-io-error-quark, 19)");
+                             (gpointer) "Threaded job failed with error: Operation was cancelled (g-io-error-quark, 19)");
   g_object_unref (job);
   g_object_unref (cancellable);
 }
@@ -489,7 +489,7 @@ test_threaded_job_cancelled_midway (void)
   g_timeout_add (10, on_timeout, cancellable); /* 10 msec */
   g_main_loop_run (loop);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
-                             "Threaded job failed with error: Operation was cancelled (g-io-error-quark, 19)");
+                             (gpointer) "Threaded job failed with error: Operation was cancelled (g-io-error-quark, 19)");
   g_assert_cmpint (count, >, 0);
   g_object_unref (job);
   g_object_unref (cancellable);
@@ -522,7 +522,7 @@ test_threaded_job_override_signal_handler (void)
   handler_ran = FALSE;
   g_signal_connect (job, "threaded-job-completed", G_CALLBACK (on_threaded_job_completed), &handler_ran);
   _g_assert_signal_received (job, "completed", G_CALLBACK (on_completed_expect_failure),
-                             "Threaded job failed with error: some error (g-key-file-error-quark, 5)");
+                             (gpointer) "Threaded job failed with error: some error (g-key-file-error-quark, 5)");
   g_assert (handler_ran);
   g_object_unref (job);
 }

@@ -273,7 +273,7 @@ update_configuration (UDisksLinuxDrive       *drive,
 
       if (mapping->type == G_VARIANT_TYPE_INT32)
         {
-          gint32 value = g_key_file_get_integer (key_file, mapping->group, mapping->key, &error);
+          gint32 int_value = g_key_file_get_integer (key_file, mapping->group, mapping->key, &error);
           if (error != NULL)
             {
               udisks_error ("Error parsing int32 key %s in group %s in drive config file %s: %s (%s, %d)",
@@ -283,7 +283,7 @@ update_configuration (UDisksLinuxDrive       *drive,
             }
           else
             {
-              g_variant_builder_add (&builder, "{sv}", mapping->asv_key, g_variant_new_int32 (value));
+              g_variant_builder_add (&builder, "{sv}", mapping->asv_key, g_variant_new_int32 (int_value));
             }
         }
       else

@@ -451,13 +451,13 @@ lookup_object_by_drive (const gchar *drive)
   for (l = objects; l != NULL; l = l->next)
     {
       UDisksObject *object = UDISKS_OBJECT (l->data);
-      UDisksDrive *drive;
+      UDisksDrive *drive_iface;
 
       if (g_strcmp0 (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)), full_drive_object_path) != 0)
         continue;
 
-      drive = udisks_object_peek_drive (object);
-      if (drive != NULL)
+      drive_iface = udisks_object_peek_drive (object);
+      if (drive_iface != NULL)
         {
           ret = g_object_ref (object);
           goto out;
@@ -2768,17 +2768,17 @@ handle_command_status (gint        *argc,
       blocks = find_blocks_for_drive (objects, g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
       for (j = blocks; j != NULL; j = j->next)
         {
-          UDisksBlock *block = UDISKS_BLOCK (j->data);
+          UDisksBlock *block_iface = UDISKS_BLOCK (j->data);
           GDBusObject *block_object;
           UDisksPartition *partition;
-          block_object = g_dbus_interface_get_object (G_DBUS_INTERFACE (block));
+          block_object = g_dbus_interface_get_object (G_DBUS_INTERFACE (block_iface));
           partition = block_object == NULL ? NULL : udisks_object_peek_partition (UDISKS_OBJECT (block_object));
           if (partition == NULL)
             {
               const gchar *device_file;
               if (str->len > 0)
                 g_string_append (str, " ");
-              device_file = udisks_block_get_device (block);
+              device_file = udisks_block_get_device (block_iface);
               if (g_str_has_prefix (device_file, "/dev/"))
                 g_string_append (str, device_file + 5);
               else

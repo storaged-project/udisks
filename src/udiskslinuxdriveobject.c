@@ -97,12 +97,12 @@ udisks_linux_drive_object_finalize (GObject *_object)
 }
 
 static void
-udisks_linux_drive_object_get_property (GObject    *_object,
+udisks_linux_drive_object_get_property (GObject    *__object,
                                         guint       prop_id,
                                         GValue     *value,
                                         GParamSpec *pspec)
 {
-  UDisksLinuxDriveObject *object = UDISKS_LINUX_DRIVE_OBJECT (_object);
+  UDisksLinuxDriveObject *object = UDISKS_LINUX_DRIVE_OBJECT (__object);
 
   switch (prop_id)
     {
@@ -111,18 +111,18 @@ udisks_linux_drive_object_get_property (GObject    *_object,
       break;
 
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (_object, prop_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
     }
 }
 
 static void
-udisks_linux_drive_object_set_property (GObject      *_object,
+udisks_linux_drive_object_set_property (GObject      *__object,
                                         guint         prop_id,
                                         const GValue *value,
                                         GParamSpec   *pspec)
 {
-  UDisksLinuxDriveObject *object = UDISKS_LINUX_DRIVE_OBJECT (_object);
+  UDisksLinuxDriveObject *object = UDISKS_LINUX_DRIVE_OBJECT (__object);
 
   switch (prop_id)
     {
@@ -138,7 +138,7 @@ udisks_linux_drive_object_set_property (GObject      *_object,
       break;
 
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (_object, prop_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
     }
 }
@@ -772,6 +772,7 @@ udisks_linux_drive_object_should_include_device (GUdevClient  *client,
       const gchar *name;
       const gchar *vendor;
       const gchar *model;
+      const gchar *dm_name;
       GUdevDevice *parent;
 
       name = g_udev_device_get_name (device);
@@ -811,7 +812,6 @@ udisks_linux_drive_object_should_include_device (GUdevClient  *client,
         }
 
       /* dm-multipath */
-      const gchar *dm_name;
       dm_name = g_udev_device_get_sysfs_attr (device, "dm/name");
       if (dm_name != NULL && g_str_has_prefix (dm_name, "mpath"))
         {

@@ -1878,15 +1878,17 @@ handle_set_label (UDisksFilesystem       *filesystem,
    * question in this case, check in advance */
   if (g_strcmp0 (probed_fs_type, "vfat") == 0)
     {
-      for (tmp = "\"*/:<>?\\|"; *tmp; ++tmp)
+      const gchar *forbidden = "\"*/:<>?\\|";
+      guint n;
+      for (n = 0; forbidden[n] != 0; n++)
         {
-          if (strchr (label, *tmp) != NULL)
+          if (strchr (label, forbidden[n]) != NULL)
             {
               g_dbus_method_invocation_return_error (invocation,
                                                      UDISKS_ERROR,
                                                      UDISKS_ERROR_NOT_SUPPORTED,
                                                      "character '%c' not supported in VFAT labels",
-                                                     *tmp);
+                                                     forbidden[n]);
                goto out;
             }
         }

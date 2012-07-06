@@ -146,12 +146,12 @@ udisks_linux_block_object_finalize (GObject *_object)
 }
 
 static void
-udisks_linux_block_object_get_property (GObject    *_object,
+udisks_linux_block_object_get_property (GObject    *__object,
                                         guint       prop_id,
                                         GValue     *value,
                                         GParamSpec *pspec)
 {
-  UDisksLinuxBlockObject *object = UDISKS_LINUX_BLOCK_OBJECT (_object);
+  UDisksLinuxBlockObject *object = UDISKS_LINUX_BLOCK_OBJECT (__object);
 
   switch (prop_id)
     {
@@ -164,18 +164,18 @@ udisks_linux_block_object_get_property (GObject    *_object,
       break;
 
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (_object, prop_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
     }
 }
 
 static void
-udisks_linux_block_object_set_property (GObject      *_object,
+udisks_linux_block_object_set_property (GObject      *__object,
                                         guint         prop_id,
                                         const GValue *value,
                                         GParamSpec   *pspec)
 {
-  UDisksLinuxBlockObject *object = UDISKS_LINUX_BLOCK_OBJECT (_object);
+  UDisksLinuxBlockObject *object = UDISKS_LINUX_BLOCK_OBJECT (__object);
 
   switch (prop_id)
     {
@@ -191,7 +191,7 @@ udisks_linux_block_object_set_property (GObject      *_object,
       break;
 
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (_object, prop_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
     }
 }

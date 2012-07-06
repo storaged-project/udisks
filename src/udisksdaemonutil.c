@@ -774,7 +774,10 @@ udisks_daemon_util_get_caller_uid_sync (UDisksDaemon            *daemon,
       goto out;
     }
 
-  G_STATIC_ASSERT (sizeof (uid_t) == sizeof (guint32));
+  {
+    G_STATIC_ASSERT (sizeof (uid_t) == sizeof (guint32));
+  }
+
   g_variant_get (value, "(u)", &uid);
   if (out_uid != NULL)
     *out_uid = uid;
@@ -873,7 +876,9 @@ udisks_daemon_util_get_caller_pid_sync (UDisksDaemon            *daemon,
       goto out;
     }
 
-  G_STATIC_ASSERT (sizeof (uid_t) == sizeof (guint32));
+  {
+    G_STATIC_ASSERT (sizeof (uid_t) == sizeof (guint32));
+  }
   g_variant_get (value, "(u)", &pid);
   if (out_pid != NULL)
     *out_pid = pid;
@@ -1200,7 +1205,7 @@ udisks_daemon_util_file_set_contents (const gchar  *filename,
 
   if (contents_len < 0 )
     contents_len = strlen (contents);
-  if (fwrite (contents, 1, contents_len, f) != contents_len)
+  if (fwrite (contents, 1, contents_len, f) != (gsize) contents_len)
     {
       g_set_error (error,
                    G_IO_ERROR,
@@ -1251,7 +1256,7 @@ udisks_daemon_util_file_set_contents (const gchar  *filename,
 struct UDisksInhibitCookie
 {
   /*< private >*/
-  gint32 magic;
+  guint32 magic;
 #ifdef HAVE_LIBSYSTEMD_LOGIN
   gint fd;
 #endif
@@ -1272,8 +1277,6 @@ struct UDisksInhibitCookie
 UDisksInhibitCookie *
 udisks_daemon_util_inhibit_system_sync (const gchar  *reason)
 {
-  g_return_val_if_fail (reason != NULL, NULL);
-
 #ifdef HAVE_LIBSYSTEMD_LOGIN
   UDisksInhibitCookie *ret = NULL;
   GDBusConnection *connection = NULL;
@@ -1281,6 +1284,8 @@ udisks_daemon_util_inhibit_system_sync (const gchar  *reason)
   GUnixFDList *fd_list = NULL;
   gint32 index = -1;
   GError *error = NULL;
+
+  g_return_val_if_fail (reason != NULL, NULL);
 
   connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error);
   if (connection == NULL)
@@ -1340,6 +1345,7 @@ udisks_daemon_util_inhibit_system_sync (const gchar  *reason)
   return ret;
 #else
   /* non-systemd: just return a dummy pointer */
+  g_return_val_if_fail (reason != NULL, NULL);
   return (UDisksInhibitCookie* ) &udisks_daemon_util_inhibit_system_sync;
 #endif
 }

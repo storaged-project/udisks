@@ -1680,10 +1680,10 @@ udisks_client_get_jobs_for_object (UDisksClient  *client,
   object_proxies = g_dbus_object_manager_get_objects (client->object_manager);
   for (l = object_proxies; l != NULL; l = l->next)
     {
-      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksObject *job_object = UDISKS_OBJECT (l->data);
       UDisksJob *job;
 
-      job = udisks_object_get_job (object);
+      job = udisks_object_get_job (job_object);
       if (job != NULL)
         {
           const gchar *const *object_paths;
@@ -2124,7 +2124,7 @@ udisks_client_get_media_compat_for_display (UDisksClient       *client,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-const static struct
+static const struct
 {
   const gchar *usage;
   const gchar *type;
@@ -2270,7 +2270,7 @@ udisks_client_get_id_for_display (UDisksClient *client,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-const static struct
+static const struct
 {
   const gchar *type;
   const gchar *name;
@@ -2316,7 +2316,7 @@ udisks_client_get_partition_table_type_for_display (UDisksClient  *client,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-const static struct
+static const struct
 {
   const gchar *type;
   const gchar *subtype;
@@ -2411,7 +2411,7 @@ udisks_client_get_partition_table_subtypes (UDisksClient   *client,
 #define F_CONLY  UDISKS_PARTITION_TYPE_INFO_FLAGS_CREATE_ONLY
 #define F_SYSTEM UDISKS_PARTITION_TYPE_INFO_FLAGS_SYSTEM
 
-const static struct
+static const struct
 {
   const gchar *table_type;
   const gchar *table_subtype;
@@ -2634,25 +2634,25 @@ udisks_client_get_job_description (UDisksClient   *client,
   if (g_once_init_enter (&once))
     {
       hash = g_hash_table_new (g_str_hash, g_str_equal);
-      g_hash_table_insert (hash, "ata-smart-selftest",   (gpointer) C_("job", "SMART self-test"));
-      g_hash_table_insert (hash, "drive-eject",          (gpointer) C_("job", "Ejecting Medium"));
-      g_hash_table_insert (hash, "encrypted-unlock",     (gpointer) C_("job", "Unlocking Device"));
-      g_hash_table_insert (hash, "encrypted-lock",       (gpointer) C_("job", "Locking Device"));
-      g_hash_table_insert (hash, "encrypted-modify",     (gpointer) C_("job", "Modifying Encrypted Device"));
-      g_hash_table_insert (hash, "swapspace-start",      (gpointer) C_("job", "Starting Swap Device"));
-      g_hash_table_insert (hash, "swapspace-stop",       (gpointer) C_("job", "Stopping Swap Device"));
-      g_hash_table_insert (hash, "filesystem-mount",     (gpointer) C_("job", "Mounting Filesystem"));
-      g_hash_table_insert (hash, "filesystem-unmount",   (gpointer) C_("job", "Unmounting Filesystem"));
-      g_hash_table_insert (hash, "filesystem-modify",    (gpointer) C_("job", "Modifying Filesystem"));
-      g_hash_table_insert (hash, "format-erase",         (gpointer) C_("job", "Erasing Device"));
-      g_hash_table_insert (hash, "format-mkfs",          (gpointer) C_("job", "Creating Filesystem"));
-      g_hash_table_insert (hash, "loop-setup",           (gpointer) C_("job", "Setting Up Loop Device"));
-      g_hash_table_insert (hash, "partition-modify",     (gpointer) C_("job", "Modifying Partition"));
-      g_hash_table_insert (hash, "partition-delete",     (gpointer) C_("job", "Deleting Partition"));
-      g_hash_table_insert (hash, "partition-create",     (gpointer) C_("job", "Creating Partition"));
-      g_hash_table_insert (hash, "cleanup",              (gpointer) C_("job", "Cleaning Up"));
-      g_hash_table_insert (hash, "ata-secure-erase",     (gpointer) C_("job", "ATA Secure Erase"));
-      g_hash_table_insert (hash, "ata-enhanced-secure-erase", (gpointer) C_("job", "ATA Enhanced Secure Erase"));
+      g_hash_table_insert (hash, (gpointer) "ata-smart-selftest",   (gpointer) C_("job", "SMART self-test"));
+      g_hash_table_insert (hash, (gpointer) "drive-eject",          (gpointer) C_("job", "Ejecting Medium"));
+      g_hash_table_insert (hash, (gpointer) "encrypted-unlock",     (gpointer) C_("job", "Unlocking Device"));
+      g_hash_table_insert (hash, (gpointer) "encrypted-lock",       (gpointer) C_("job", "Locking Device"));
+      g_hash_table_insert (hash, (gpointer) "encrypted-modify",     (gpointer) C_("job", "Modifying Encrypted Device"));
+      g_hash_table_insert (hash, (gpointer) "swapspace-start",      (gpointer) C_("job", "Starting Swap Device"));
+      g_hash_table_insert (hash, (gpointer) "swapspace-stop",       (gpointer) C_("job", "Stopping Swap Device"));
+      g_hash_table_insert (hash, (gpointer) "filesystem-mount",     (gpointer) C_("job", "Mounting Filesystem"));
+      g_hash_table_insert (hash, (gpointer) "filesystem-unmount",   (gpointer) C_("job", "Unmounting Filesystem"));
+      g_hash_table_insert (hash, (gpointer) "filesystem-modify",    (gpointer) C_("job", "Modifying Filesystem"));
+      g_hash_table_insert (hash, (gpointer) "format-erase",         (gpointer) C_("job", "Erasing Device"));
+      g_hash_table_insert (hash, (gpointer) "format-mkfs",          (gpointer) C_("job", "Creating Filesystem"));
+      g_hash_table_insert (hash, (gpointer) "loop-setup",           (gpointer) C_("job", "Setting Up Loop Device"));
+      g_hash_table_insert (hash, (gpointer) "partition-modify",     (gpointer) C_("job", "Modifying Partition"));
+      g_hash_table_insert (hash, (gpointer) "partition-delete",     (gpointer) C_("job", "Deleting Partition"));
+      g_hash_table_insert (hash, (gpointer) "partition-create",     (gpointer) C_("job", "Creating Partition"));
+      g_hash_table_insert (hash, (gpointer) "cleanup",              (gpointer) C_("job", "Cleaning Up"));
+      g_hash_table_insert (hash, (gpointer) "ata-secure-erase",     (gpointer) C_("job", "ATA Secure Erase"));
+      g_hash_table_insert (hash, (gpointer) "ata-enhanced-secure-erase", (gpointer) C_("job", "ATA Enhanced Secure Erase"));
       g_once_init_leave (&once, (gsize) 1);
     }
 

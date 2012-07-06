@@ -477,11 +477,11 @@ handle_block_uevent_for_drive (UDisksLinuxProvider *provider,
           devices = udisks_linux_drive_object_get_devices (object);
           if (devices == NULL)
             {
-              const gchar *vpd;
-              vpd = g_object_get_data (G_OBJECT (object), "x-vpd");
+              const gchar *existing_vpd;
+              existing_vpd = g_object_get_data (G_OBJECT (object), "x-vpd");
               g_dbus_object_manager_server_unexport (udisks_daemon_get_object_manager (daemon),
                                                      g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
-              g_warn_if_fail (g_hash_table_remove (provider->vpd_to_drive, vpd));
+              g_warn_if_fail (g_hash_table_remove (provider->vpd_to_drive, existing_vpd));
             }
           g_list_foreach (devices, (GFunc) g_object_unref, NULL);
           g_list_free (devices);
