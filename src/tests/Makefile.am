@@ -5,7 +5,7 @@ SUBDIRS =
 NULL =
 
 EXTRA_DIST = \
-	test_polkit.py		\
+	test_polkitd.py		\
 	integration-test	\
 	$(NULL)
 
