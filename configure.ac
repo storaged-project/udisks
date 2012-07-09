@@ -40,18 +40,55 @@ GNOME_MAINTAINER_MODE_DEFINES
 # Compilation
 #
 
-CC_CHECK_CFLAGS_APPEND([                                        \
-  -Wall -Wextra                                                 \
-  -Wformat-nonliteral -Werror=format-security                   \
-  -Wsign-compare -Werror=implicit-function-declaration          \
-  -Wpointer-arith -Wwrite-strings -Wstrict-prototypes           \
-  -Waggregate-return -Wcast-align -Wimplicit -Wuninitialized    \
-  -Wmissing-prototypes -Wmissing-declarations -Wnested-externs  \
-  -Wpacked -Wmissing-format-attribute -Wshadow                  \
-  -Wstrict-aliasing=2 -Winit-self -Wunsafe-loop-optimizations   \
-  -Wdeclaration-after-statement -Wold-style-definition          \
-  -Wno-missing-field-initializers -Wno-unused-parameter         \
-  -fno-common -Wno-switch-enum])
+CC_CHECK_CFLAGS_APPEND([                          \
+        -Waggregate-return                        \
+        -Wall                                     \
+        -W                                        \
+        -Wextra                                   \
+        -Wcast-align                              \
+        -Wdeclaration-after-statement             \
+        -Wendif-labels                            \
+        -Werror=format-security                   \
+        -Werror=implicit-function-declaration     \
+        -Werror=overflow                          \
+        -Wformat-nonliteral                       \
+        -Wformat=2                                \
+        -Wimplicit                                \
+        -Winit-self                               \
+        -Wlogical-op                              \
+        -Wmissing-declarations                    \
+        -Wmissing-format-attribute                \
+        -Wmissing-include-dirs                    \
+        -Wmissing-noreturn                        \
+        -Wmissing-prototypes                      \
+        -Wnested-externs                          \
+        -Wno-inline                               \
+        -Wno-long-long                            \
+        -Wno-missing-field-initializers           \
+        -Wno-overlength-strings                   \
+        -Wno-switch-enum                          \
+        -Wno-unused-parameter                     \
+        -Wno-unused-result                        \
+        -Wold-style-definition                    \
+        -Wpacked                                  \
+        -Wpointer-arith                           \
+        -Wshadow                                  \
+        -Wsign-compare                            \
+        -Wstrict-aliasing=2                       \
+        -Wstrict-prototypes                       \
+        -Wundef                                   \
+        -Wuninitialized                           \
+        -Wmaybe-uninitialized                     \
+        -Wunsafe-loop-optimizations               \
+        -Wvla                                     \
+        -Wwrite-strings                           \
+        -fdata-sections                           \
+        -fdiagnostics-show-option                 \
+        -ffast-math                               \
+        -ffunction-sections                       \
+        -fno-common                               \
+        -fno-strict-aliasing                      \
+])
 
 AC_PATH_PROG([XSLTPROC], [xsltproc])
 if test -z "$XSLTPROC"; then
