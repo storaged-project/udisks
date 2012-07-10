@@ -704,6 +704,28 @@ apply_configuration (UDisksLinuxDriveObject *object)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* utility routine to blacklist WWNs that are not suitable to use
+ * for identification purposes
+ */
+static gboolean
+is_wwn_black_listed (const gchar *wwn)
+{
+  g_return_val_if_fail (wwn != NULL, FALSE);
+
+  if (g_str_has_prefix (wwn, "0x") || g_str_has_prefix (wwn, "0X"))
+    wwn += 2;
+
+  if (g_ascii_strcasecmp (wwn, "50f0000000000000") == 0)
+    {
+      /* SAMSUNG SP1604N (PATA), see https://bugzilla.redhat.com/show_bug.cgi?id=838691#c4 */
+      return TRUE;
+    }
+  else
+    {
+      return FALSE;
+    }
+}
+
 static gchar *
 check_for_vpd (GUdevDevice *device)
 {
@@ -718,7 +740,7 @@ check_for_vpd (GUdevDevice *device)
   serial = g_udev_device_get_property (device, "ID_SERIAL");
   wwn = g_udev_device_get_property (device, "ID_WWN_WITH_EXTENSION");
   path = g_udev_device_get_property (device, "ID_PATH");
-  if (wwn != NULL && strlen (wwn) > 0)
+  if (wwn != NULL && strlen (wwn) > 0 && !is_wwn_black_listed (wwn))
     {
       ret = g_strdup (wwn);
     }
