@@ -2533,6 +2533,60 @@ handle_open_for_benchmark (UDisksBlock           *block,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+handle_rescan (UDisksBlock           *block,
+               GDBusMethodInvocation *invocation,
+               GVariant              *options)
+{
+  UDisksObject *object = NULL;
+  GUdevDevice *udev_device = NULL;
+  UDisksDaemon *daemon;
+  const gchar *action_id;
+  const gchar *message;
+  GError *error = NULL;
+
+  object = udisks_daemon_util_dup_object (block, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
+
+  /* Translators: Shown in authentication dialog when an application
+   * wants to rescan a device.
+   *
+   * Do not translate $(drive), it's a placeholder and will
+   * be replaced by the name of the drive/device in question
+   */
+  message = N_("Authentication is required to rescan $(drive)");
+  action_id = "org.freedesktop.udisks2.rescan";
+
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    object,
+                                                    action_id,
+                                                    options,
+                                                    message,
+                                                    invocation))
+    goto out;
+
+  udev_device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (object));
+
+  udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
+  if (g_strcmp0 (g_udev_device_get_devtype (udev_device), "disk") == 0)
+    udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object));
+
+  udisks_block_complete_rescan (block, invocation);
+
+ out:
+  g_clear_object (&udev_device);
+  g_clear_object (&object);
+  return TRUE; /* returning true means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 block_iface_init (UDisksBlockIface *iface)
 {
@@ -2544,4 +2598,5 @@ block_iface_init (UDisksBlockIface *iface)
   iface->handle_open_for_backup           = handle_open_for_backup;
   iface->handle_open_for_restore          = handle_open_for_restore;
   iface->handle_open_for_benchmark        = handle_open_for_benchmark;
+  iface->handle_rescan                    = handle_rescan;
 }

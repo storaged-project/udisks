@@ -1087,6 +1087,24 @@
       <arg name="fd" direction="out" type="h"/>
     </method>
 
+    <!--
+        Rescan:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Request that the kernel and core OS rescans the contents of
+        the device and update their state to reflect this (including
+        things such as the <filename>/dev/disk/</filename> hierarchy
+        of symlinks). This includes requesting that the kernel
+        re-reads the partition table, if appropriate.
+
+        This is usually not needed since the OS automatically does
+        this when the last process with a writable file descriptor for
+        the device closes it.
+    -->
+    <method name="Rescan">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
   </interface>
 
   <!-- ********************************************************************** -->
