@@ -2451,6 +2451,7 @@ static const struct
   {"gpt", "apple",     "426f6f74-0000-11aa-aa11-00306543ecac", NC_("part-type", "Apple Boot"), F_SYSTEM},
   {"gpt", "apple",     "4c616265-6c00-11aa-aa11-00306543ecac", NC_("part-type", "Apple Label"), 0},
   {"gpt", "apple",     "5265636f-7665-11aa-aa11-00306543ecac", NC_("part-type", "Apple TV Recovery"), F_SYSTEM},
+  {"gpt", "apple",     "53746f72-6167-11aa-aa11-00306543ecac", NC_("part-type", "Apple Core Storage"), F_RAID},
   /* HP-UX */
   {"gpt", "other",     "75894c1e-3aeb-11d3-b7c1-7b03a0000000", NC_("part-type", "HP-UX Data"), 0},
   {"gpt", "other",     "e2a1e728-32e3-11d6-a682-7b03a0000000", NC_("part-type", "HP-UX Service"), 0},
