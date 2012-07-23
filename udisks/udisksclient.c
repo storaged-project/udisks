@@ -2431,14 +2431,14 @@ static const struct
   {"gpt", "generic",   "c12a7328-f81f-11d2-ba4b-00a0c93ec93b", NC_("part-type", "EFI System"), F_SYSTEM},
   {"gpt", "generic",   "21686148-6449-6e6f-744e-656564454649", NC_("part-type", "BIOS Boot"), F_SYSTEM},
   /* Linux */
-  {"gpt", "linux",     "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7", NC_("part-type", "Basic Data"), 0}, /* same as ms bdp */
+  {"gpt", "linux",     "0fc63daf-8483-4772-8e79-3d69d8477de4", NC_("part-type", "Linux Filesystem"), 0},
   {"gpt", "linux",     "a19d880f-05fc-4d3b-a006-743f0f84911e", NC_("part-type", "Linux RAID"), F_RAID},
   {"gpt", "linux",     "0657fd6d-a4ab-43c4-84e5-0933c84b4f4f", NC_("part-type", "Linux Swap"), F_SWAP},
   {"gpt", "linux",     "e6d6d379-f507-44c2-a23c-238f2a3df928", NC_("part-type", "Linux LVM"), F_RAID},
   {"gpt", "linux",     "8da63339-0007-60c0-c436-083ac8230908", NC_("part-type", "Linux Reserved"), 0},
   /* Microsoft */
+  {"gpt", "microsoft", "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7", NC_("part-type", "Basic Data"), 0},
   {"gpt", "microsoft", "e3c9e316-0b5c-4db8-817d-f92df00215ae", NC_("part-type", "Microsoft Reserved"), 0},
-  {"gpt", "microsoft", "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7", NC_("part-type", "Microsoft Basic Data"), 0}, /* same as Linux Basic Data */
   {"gpt", "microsoft", "5808c8aa-7e8f-42e0-85d2-e1e90434cfb3", NC_("part-type", "Microsoft LDM metadata"), 0},
   {"gpt", "microsoft", "af9b60a0-1431-4f62-bc68-3311714a69ad", NC_("part-type", "Microsoft LDM data"), 0},
   {"gpt", "microsoft", "de94bba4-06d1-4d40-a16a-bfd50179d6ac", NC_("part-type", "Microsoft Windows Recovery Environment"), 0},
