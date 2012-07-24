@@ -1171,9 +1171,11 @@ ata_send_command (gint                 fd,
                   GError             **error)
 {
   struct sg_io_v4 io_v4;
-  uint8_t cdb[12];
+  uint8_t cdb[16];
+  gint cdb_len = 16;
   uint8_t sense[32];
   uint8_t *desc = sense+8;
+  gboolean use_ata12 = FALSE;
   gboolean ret = FALSE;
   gint rc;
 
@@ -1198,53 +1200,106 @@ ata_send_command (gint                 fd,
   if (output->buffer != NULL)
     memset (output->buffer, 0, output->buffer_size);
 
-  /* Do not confuse optical drive firmware with ATA commands
-   * some drives are reported to blank CD-RWs because the op-code
-   * for ATA PASS-THROUGH (12) clashes with the MMC blank command.
-   *
-   * http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=556635
-   */
-  if (ioctl (fd, CDROM_GET_CAPABILITY, NULL) >= 0)
-    {
-      g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
-                   "Refusing to send ATA command to optical drive");
-      goto out;
-    }
-
-  /*
-   * ATA Pass-Through 12 byte command, as described in
-   *
-   *  T10 04-262r8 ATA Command Pass-Through
-   *
-   * from http://www.t10.org/ftp/t10/document.04/04-262r8.pdf
-   */
   memset (cdb, 0, sizeof (cdb));
-  cdb[0] = 0xa1;                        /* OPERATION CODE: 12 byte pass through */
-  switch (protocol)
+
+  /* Prefer ATA PASS-THROUGH (16) to ATA PASS-THROUGH (12) since the op-code
+   * for the latter clashes with the MMC blank command.
+   *
+   * TODO: this is hard-coded to FALSE for now - should retry with the 12-byte
+   *       version only if the 16-byte version fails. But we don't do that
+   *       right now
+   */
+  use_ata12 = FALSE;
+
+  if (use_ata12)
     {
-    case ATA_COMMAND_PROTOCOL_NONE:
-      cdb[1] = 3 << 1;                  /* PROTOCOL: Non-data */
-      cdb[2] = 0x20;                    /* OFF_LINE=0, CK_COND=1, T_DIR=0, BYT_BLOK=0, T_LENGTH=0 */
-      break;
-    case ATA_COMMAND_PROTOCOL_DRIVE_TO_HOST:
-      cdb[1] = 4 << 1;                  /* PROTOCOL: PIO Data-In */
-      cdb[2] = 0x2e;                    /* OFF_LINE=0, CK_COND=1, T_DIR=1, BYT_BLOK=1, T_LENGTH=2 */
-      break;
-    case ATA_COMMAND_PROTOCOL_HOST_TO_DRIVE:
-      cdb[1] = 5 << 1;                  /* PROTOCOL: PIO Data-Out */
-      cdb[2] = 0x26;                    /* OFF_LINE=0, CK_COND=1, T_DIR=0, BYT_BLOK=1, T_LENGTH=2 */
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
+      /* Do not confuse optical drive firmware with ATA commands
+       * some drives are reported to blank CD-RWs because the op-code
+       * for ATA PASS-THROUGH (12) clashes with the MMC blank command.
+       *
+       * http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=556635
+       */
+      if (ioctl (fd, CDROM_GET_CAPABILITY, NULL) >= 0)
+        {
+          g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                       "Refusing to send ATA PASS-THROUGH (12) to optical drive");
+          goto out;
+        }
+
+      /*
+       * ATA Pass-Through 12 byte command, as described in
+       *
+       *  T10 04-262r8 ATA Command Pass-Through
+       *
+       * from http://www.t10.org/ftp/t10/document.04/04-262r8.pdf
+       */
+      cdb[0] = 0xa1;                        /* OPERATION CODE: 12 byte pass through */
+      switch (protocol)
+        {
+        case ATA_COMMAND_PROTOCOL_NONE:
+          cdb[1] = 3 << 1;                  /* PROTOCOL: Non-data */
+          cdb[2] = 0x20;                    /* OFF_LINE=0, CK_COND=1, T_DIR=0, BYT_BLOK=0, T_LENGTH=0 */
+          break;
+        case ATA_COMMAND_PROTOCOL_DRIVE_TO_HOST:
+          cdb[1] = 4 << 1;                  /* PROTOCOL: PIO Data-In */
+          cdb[2] = 0x2e;                    /* OFF_LINE=0, CK_COND=1, T_DIR=1, BYT_BLOK=1, T_LENGTH=2 */
+          break;
+        case ATA_COMMAND_PROTOCOL_HOST_TO_DRIVE:
+          cdb[1] = 5 << 1;                  /* PROTOCOL: PIO Data-Out */
+          cdb[2] = 0x26;                    /* OFF_LINE=0, CK_COND=1, T_DIR=0, BYT_BLOK=1, T_LENGTH=2 */
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
+        }
+      cdb[3] = input->feature;              /* FEATURES */
+      cdb[4] = input->count;                /* SECTORS */
+      cdb[5] = (input->lba >>  0) & 0xff;   /* LBA LOW */
+      cdb[6] = (input->lba >>  8) & 0xff;   /* LBA MID */
+      cdb[7] = (input->lba >> 16) & 0xff;   /* LBA HIGH */
+      cdb[8] = input->device;               /* SELECT */
+      cdb[9] = input->command;              /* ATA COMMAND */
+      cdb_len = 12;
     }
-  cdb[3] = input->feature;              /* FEATURES */
-  cdb[4] = input->count;                /* SECTORS */
-  cdb[5] = (input->lba >>  0) & 0xff;   /* LBA LOW */
-  cdb[6] = (input->lba >>  8) & 0xff;   /* LBA MID */
-  cdb[7] = (input->lba >> 16) & 0xff;   /* LBA HIGH */
-  cdb[8] = input->device;               /* SELECT */
-  cdb[9] = input->command;              /* ATA COMMAND */
+  else
+    {
+      /*
+       * ATA Pass-Through 16 byte command, as described in
+       *
+       *  T10 04-262r8 ATA Command Pass-Through
+       *
+       * from http://www.t10.org/ftp/t10/document.04/04-262r8.pdf
+       */
+      cdb[0] = 0x85;                        /* OPERATION CODE: 16 byte pass through */
+      switch (protocol)
+        {
+        case ATA_COMMAND_PROTOCOL_NONE:
+          cdb[1] = 3 << 1;                  /* PROTOCOL: Non-data */
+          cdb[2] = 0x20;                    /* OFF_LINE=0, CK_COND=1, T_DIR=0, BYT_BLOK=0, T_LENGTH=0 */
+          break;
+        case ATA_COMMAND_PROTOCOL_DRIVE_TO_HOST:
+          cdb[1] = 4 << 1;                  /* PROTOCOL: PIO Data-In */
+          cdb[2] = 0x2e;                    /* OFF_LINE=0, CK_COND=1, T_DIR=1, BYT_BLOK=1, T_LENGTH=2 */
+          break;
+        case ATA_COMMAND_PROTOCOL_HOST_TO_DRIVE:
+          cdb[1] = 5 << 1;                  /* PROTOCOL: PIO Data-Out */
+          cdb[2] = 0x26;                    /* OFF_LINE=0, CK_COND=1, T_DIR=0, BYT_BLOK=1, T_LENGTH=2 */
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
+        }
+      cdb[ 3] = (input->feature >>  8) & 0xff;   /* FEATURES */
+      cdb[ 4] = (input->feature >>  0) & 0xff;   /* FEATURES */
+      cdb[ 5] = (input->count >>  8) & 0xff;     /* SECTORS */
+      cdb[ 6] = (input->count >>  0) & 0xff;     /* SECTORS */
+      cdb[ 8] = (input->lba >> 16) & 0xff;       /* LBA HIGH */
+      cdb[10] = (input->lba >>  8) & 0xff;       /* LBA MID */
+      cdb[12] = (input->lba >>  0) & 0xff;       /* LBA LOW */
+      cdb[13] = input->device;                   /* SELECT */
+      cdb[14] = input->command;                  /* ATA COMMAND */
+      cdb_len = 16;
+    }
 
   /* See http://sg.danny.cz/sg/sg_io.html and http://www.tldp.org/HOWTO/SCSI-Generic-HOWTO/index.html
    * for detailed information about how the SG_IO ioctl work
@@ -1255,7 +1310,7 @@ ata_send_command (gint                 fd,
   io_v4.guard = 'Q';
   io_v4.protocol = BSG_PROTOCOL_SCSI;
   io_v4.subprotocol = BSG_SUB_PROTOCOL_SCSI_CMD;
-  io_v4.request_len = sizeof (cdb);
+  io_v4.request_len = cdb_len;
   io_v4.request = (uintptr_t) cdb;
   io_v4.max_response_len = sizeof (sense);
   io_v4.response = (uintptr_t) sense;
@@ -1279,7 +1334,7 @@ ata_send_command (gint                 fd,
           memset(&io_hdr, 0, sizeof (struct sg_io_hdr));
           io_hdr.interface_id = 'S';
           io_hdr.cmdp = (unsigned char*) cdb;
-          io_hdr.cmd_len = sizeof (cdb);
+          io_hdr.cmd_len = cdb_len;
           switch (protocol)
             {
             case ATA_COMMAND_PROTOCOL_NONE:
