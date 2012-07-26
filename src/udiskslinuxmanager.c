@@ -415,6 +415,13 @@ handle_loop_setup (UDisksManager          *object,
       goto out;
     }
 
+  /* update the loop file - need to do this before getting the uevent for the device  */
+  udisks_cleanup_add_loop (udisks_daemon_get_cleanup (manager->daemon),
+                           loop_device,
+                           path,
+                           fd_statbuf_valid ? fd_statbuf.st_dev : 0,
+                           caller_uid);
+
   memset (&li64, '\0', sizeof (li64));
   strncpy ((char *) li64.lo_file_name, path, LO_NAME_SIZE - 1);
   if (option_read_only)
@@ -453,13 +460,6 @@ handle_loop_setup (UDisksManager          *object,
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
-
-  /* update the loop file */
-  udisks_cleanup_add_loop (udisks_daemon_get_cleanup (manager->daemon),
-                           loop_device,
-                           path,
-                           fd_statbuf_valid ? fd_statbuf.st_dev : 0,
-                           caller_uid);
 
   udisks_notice ("Set up loop device %s (backed by %s)",
                  loop_device,
