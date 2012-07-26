@@ -224,6 +224,8 @@ udisks_daemon_constructed (GObject *object)
   daemon->persistent_store = udisks_persistent_store_new (PACKAGE_LOCALSTATE_DIR "/lib/udisks2",
                                                           "/run/udisks2");
 
+  daemon->cleanup = udisks_cleanup_new (daemon);
+
   g_signal_connect (daemon->mount_monitor,
                     "mount-removed",
                     G_CALLBACK (mount_monitor_on_mount_removed),
@@ -241,7 +243,6 @@ udisks_daemon_constructed (GObject *object)
   g_dbus_object_manager_server_set_connection (daemon->object_manager, daemon->connection);
 
   /* Start cleaning up */
-  daemon->cleanup = udisks_cleanup_new (daemon);
   udisks_cleanup_start (daemon->cleanup);
   udisks_cleanup_check (daemon->cleanup);
 
