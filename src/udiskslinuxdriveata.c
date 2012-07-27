@@ -1378,7 +1378,7 @@ ata_send_command (gint                 fd,
 
   if (!(sense[0] == 0x72 && desc[0] == 0x9 && desc[1] == 0x0c))
     {
-      gchar *s = udisks_daemon_hexdump (sense, 32);
+      gchar *s = udisks_daemon_util_hexdump (sense, 32);
       g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
                    "Unexpected sense data returned:\n%s", s);
       g_free (s);

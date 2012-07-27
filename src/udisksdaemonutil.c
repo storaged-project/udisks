@@ -1070,7 +1070,7 @@ udisks_daemon_util_on_same_seat (UDisksDaemon          *daemon,
 }
 
 /**
- * udisks_daemon_hexdump:
+ * udisks_daemon_util_hexdump:
  * @data: Pointer to data.
  * @len: Length of data.
  *
@@ -1080,7 +1080,7 @@ udisks_daemon_util_on_same_seat (UDisksDaemon          *daemon,
  * Returns: A multi-line string. Free with g_free() when done using it.
  */
 gchar *
-udisks_daemon_hexdump (gconstpointer data, gsize len)
+udisks_daemon_util_hexdump (gconstpointer data, gsize len)
 {
   const guchar *bdata = data;
   guint n, m;
@@ -1113,18 +1113,18 @@ udisks_daemon_hexdump (gconstpointer data, gsize len)
 }
 
 /**
- * udisks_daemon_hexdump_debug:
+ * udisks_daemon_util_hexdump_debug:
  * @data: Pointer to data.
  * @len: Length of data.
  *
  * Utility function to dumps the hexadecimal representation of @len
- * bytes of @data generated with udisks_daemon_hexdump() using
+ * bytes of @data generated with udisks_daemon_util_hexdump() using
  * udisks_debug().
  */
 void
-udisks_daemon_hexdump_debug (gconstpointer data, gsize len)
+udisks_daemon_util_hexdump_debug (gconstpointer data, gsize len)
 {
-  gchar *s = udisks_daemon_hexdump (data, len);
+  gchar *s = udisks_daemon_util_hexdump (data, len);
   udisks_debug ("Hexdump of %" G_GSIZE_FORMAT " bytes:\n%s", len, s);
   g_free (s);
 }

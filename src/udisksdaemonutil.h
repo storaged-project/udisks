@@ -75,8 +75,8 @@ gpointer  udisks_daemon_util_dup_object (gpointer   interface_,
 gchar *udisks_daemon_util_escape (const gchar *str);
 gchar *udisks_daemon_util_escape_and_quote (const gchar *str);
 
-gchar *udisks_daemon_hexdump (gconstpointer data, gsize len);
-void udisks_daemon_hexdump_debug (gconstpointer data, gsize len);
+gchar *udisks_daemon_util_hexdump (gconstpointer data, gsize len);
+void udisks_daemon_util_hexdump_debug (gconstpointer data, gsize len);
 
 gboolean udisks_daemon_util_file_set_contents (const gchar  *filename,
                                                const gchar  *contents,
