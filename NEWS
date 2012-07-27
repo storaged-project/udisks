@@ -1,4 +1,73 @@
 ------------
+udisks 1.99.0
+------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks and storage devices.
+
+Changes since udisks 1.98.0:
+
+Ayan George (1):
+      Mark Realtek rts5229 based card readers as flash drives.
+
+David Zeuthen (39):
+      Post-release version bump to 1.99.0
+      Catch up with latest polkit guidance
+      Add Documentation key to systemd unit file
+      Add Block.OpenForBenchmark() method
+      Add drive configuration interfaces and configuration files
+      Don't require auth for Standby'ing non-system drives on own seat
+      Add DriveAta.PmWakeup() method
+      Default to mode 0600 for drive config files
+      Drop the 'drive-' prefix for drive configuration files
+      Move Drive:Configuration property up a bit
+      Add erase parameter to Block.Format() to zero out device before formatting
+      Bug 51439 – udisks should hide lvm PVs
+      Set Job:ExpectedEndTime when erasing a device
+      Issue BLKRRPART if wiping a device with an existing partition table
+      Init interface proxies on hotplug too
+      Add ATA Secure Erase functionality
+      Add support for VMWare filesystem types and GPT partition types
+      Don't use g_propagate_error() with a NULL GError
+      Don't report progress for ATA Secure Erase when expected time is >508 minu
+      When setting up LUKS, erase the cleartext device rather than the cryptotex
+      Inhibit system shutdown, sleep and idle when formatting and erasing device
+      Don't return uninitialized variable on inhibitor error path
+      Fix some uninitialized variable warnings
+      Add more compiler warnings
+      Disable -Wformat-nonliteral for a tiny block of code
+      Fix typo
+      Update compiler warning flags
+      Black-list seemingly invalid WWN for SAMSUNG SP1604N hard disks
+      client: Add Apple Core Storage GPT partition type
+      Ignore "Apple Boot" GPT partitions
+      Add a Block.Rescan() method
+      Add "Linux Filesystem" GPT partition type
+      Use ATA PASS-THROUGH (16) command instead ATA PASS-THROUGH (12) command
+      Create cleanup object before coldplugging
+      Ignore non-Linux software on SanDisk Cruzer
+      Update /run/udisks2/loop file before setting up the loop device
+      Update translations from Transifex
+      Update docs
+      Update NEWS for release
+
+Martin Pitt (9):
+      integration-test: Fix existance test of local state dirs
+      integration-test: Explicit polkit tests
+      integration-test: Check polkit denial
+      integration-test: Fix Polkit.test_internal_fs_nobody test case
+      Ship integration-test in the tarball
+      integration-test: Fix parsing of daemon path in system mode
+      integration-test: Use mock polkitd
+      integration-test: Use Gio.TestDBus() again
+      integration-test: More robust syncing
+
+Thanks to all our contributors.
+
+David Zeuthen,
+July 27, 2012
+
+------------
 udisks 1.98.0
 ------------
 
