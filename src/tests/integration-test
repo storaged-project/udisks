@@ -806,7 +806,7 @@ class FS(UDisksTestCase):
         # mount
         mount_path = fs.call_mount_sync(no_options, None)
 
-        self.assertTrue(mount_path.startswith('/run/media/'), mount_path)
+        self.assertTrue('/media/' in mount_path)
         if label:
             self.assertTrue(mount_path.endswith(label))
 
