@@ -2158,6 +2158,8 @@ static const struct
   {"filesystem", "iso9660",           NULL,    NC_("fs-type", "ISO 9660"),                          NC_("fs-type", "ISO9660")},
   {"filesystem", "udf",               "*",     NC_("fs-type", "UDF (version %s)"),                  NC_("fs-type", "UDF")},
   {"filesystem", "udf",               NULL,    NC_("fs-type", "UDF"),                               NC_("fs-type", "UDF")},
+  {"filesystem", "exfat",             NULL,    NC_("fs-type", "exFAT"),                             NC_("fs-type", "exFAT")},
+  {"filesystem", "exfat",             "*",     NC_("fs-type", "exFAT (version %s)"),                NC_("fs-type", "exFAT")},
   {"other",      "swap",              "*",     NC_("fs-type", "Swap (version %s)"),                 NC_("fs-type", "Swap")},
   {"other",      "swap",              NULL,    NC_("fs-type", "Swap"),                              NC_("fs-type", "Swap")},
   {"raid",       "LVM2_member",       "*",     NC_("fs-type", "LVM2 Physical Volume (%s)"),         NC_("fs-type", "LVM2 PV")},

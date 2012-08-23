@@ -2239,8 +2239,8 @@ handle_format (UDisksBlock           *block,
       goto out;
     }
 
-  /* Change overship, if requested */
-  if (take_ownership)
+  /* Change overship, if requested and supported */
+  if (take_ownership && fs_info->supports_owners)
     {
       gchar tos_dir[256] = PACKAGE_LOCALSTATE_DIR "/run/udisks2/block-format-tos-XXXXXX";
 

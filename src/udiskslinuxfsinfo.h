@@ -30,7 +30,9 @@ typedef struct
   const gchar *fstype;
   const gchar *command_change_label; /* should have $DEVICE and $LABEL */
   const gchar *command_clear_label; /* should have $DEVICE; if NULL, call command_change_label with $LABEL == '' */
+  /* TODO: use flags or bitfields */
   gboolean     supports_online_label_rename;
+  gboolean     supports_owners;
   const gchar *command_create_fs;  /* should have $DEVICE and $LABEL */
 } FSInfo;
 
