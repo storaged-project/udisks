@@ -29,6 +29,7 @@
 #include "udiskslinuxprovider.h"
 #include "udiskslinuxblockobject.h"
 #include "udiskslinuxdriveobject.h"
+#include "udiskslinuxmdraidobject.h"
 #include "udiskslinuxmanager.h"
 #include "udiskscleanup.h"
 
@@ -38,7 +39,7 @@
  * @short_description: Provides Linux-specific objects
  *
  * This object is used to add/remove Linux specific objects of type
- * #UDisksLinuxBlockObject and #UDisksLinuxDriveObject.
+ * #UDisksLinuxBlockObject, #UDisksLinuxDriveObject and #UDisksLinuxMDRaidObject.
  */
 
 typedef struct _UDisksLinuxProviderClass   UDisksLinuxProviderClass;
@@ -63,6 +64,10 @@ struct _UDisksLinuxProvider
   /* maps from VPD (serial, wwn) and sysfs_path to UDisksLinuxDriveObject instances */
   GHashTable *vpd_to_drive;
   GHashTable *sysfs_path_to_drive;
+
+  /* maps from array UUID and sysfs_path to UDisksLinuxMDRaidObject instances */
+  GHashTable *uuid_to_mdraid;
+  GHashTable *sysfs_path_to_mdraid;
 
   GFileMonitor *etc_udisks2_dir_monitor;
 
@@ -130,6 +135,8 @@ udisks_linux_provider_finalize (GObject *object)
   g_hash_table_unref (provider->sysfs_to_block);
   g_hash_table_unref (provider->vpd_to_drive);
   g_hash_table_unref (provider->sysfs_path_to_drive);
+  g_hash_table_unref (provider->uuid_to_mdraid);
+  g_hash_table_unref (provider->sysfs_path_to_mdraid);
   g_object_unref (provider->gudev_client);
 
   udisks_object_skeleton_set_manager (provider->manager_object, NULL);
@@ -324,6 +331,14 @@ udisks_linux_provider_start (UDisksProvider *_provider)
                                                          g_str_equal,
                                                          g_free,
                                                          NULL);
+  provider->uuid_to_mdraid = g_hash_table_new_full (g_str_hash,
+                                                    g_str_equal,
+                                                    g_free,
+                                                    (GDestroyNotify) g_object_unref);
+  provider->sysfs_path_to_mdraid = g_hash_table_new_full (g_str_hash,
+                                                          g_str_equal,
+                                                          g_free,
+                                                          NULL);
 
   devices = g_udev_client_query_by_subsystem (provider->gudev_client, "block");
   /* make sure we process sda before sdz and sdz before sdaa */
@@ -448,6 +463,83 @@ perform_initial_housekeeping_for_drive (GIOSchedulerJob *job,
   return FALSE; /* job is complete */
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
+/* called with lock held */
+static void
+handle_block_uevent_for_mdraid (UDisksLinuxProvider *provider,
+                                const gchar         *action,
+                                GUdevDevice         *device)
+{
+  UDisksLinuxMDRaidObject *object;
+  UDisksDaemon *daemon;
+  const gchar *sysfs_path;
+  const gchar *uuid;
+
+  daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
+  sysfs_path = g_udev_device_get_sysfs_path (device);
+  uuid = g_udev_device_get_property (device, "MD_UUID");
+
+  /* if there's no UUID, treat as remove event */
+  if (uuid == NULL)
+    action = "remove";
+
+  if (g_strcmp0 (action, "remove") == 0)
+    {
+      object = g_hash_table_lookup (provider->sysfs_path_to_mdraid, sysfs_path);
+      if (object != NULL)
+        {
+          GList *devices;
+
+          udisks_linux_mdraid_object_uevent (object, action, device);
+
+          g_warn_if_fail (g_hash_table_remove (provider->sysfs_path_to_mdraid, sysfs_path));
+
+          devices = udisks_linux_mdraid_object_get_devices (object);
+          if (devices == NULL)
+            {
+              const gchar *existing_uuid;
+              existing_uuid = g_object_get_data (G_OBJECT (object), "x-uuid");
+              g_dbus_object_manager_server_unexport (udisks_daemon_get_object_manager (daemon),
+                                                     g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
+              g_warn_if_fail (g_hash_table_remove (provider->uuid_to_mdraid, existing_uuid));
+            }
+          g_list_foreach (devices, (GFunc) g_object_unref, NULL);
+          g_list_free (devices);
+        }
+    }
+  else
+    {
+      if (uuid == NULL)
+        goto out;
+
+      object = g_hash_table_lookup (provider->uuid_to_mdraid, uuid);
+      if (object != NULL)
+        {
+          if (g_hash_table_lookup (provider->sysfs_path_to_mdraid, sysfs_path) == NULL)
+            g_hash_table_insert (provider->sysfs_path_to_mdraid, g_strdup (sysfs_path), object);
+          udisks_linux_mdraid_object_uevent (object, action, device);
+        }
+      else
+        {
+          object = udisks_linux_mdraid_object_new (daemon, device);
+          if (object != NULL)
+            {
+              g_object_set_data_full (G_OBJECT (object), "x-uuid", g_strdup (uuid), g_free);
+              g_dbus_object_manager_server_export_uniquely (udisks_daemon_get_object_manager (daemon),
+                                                            G_DBUS_OBJECT_SKELETON (object));
+              g_hash_table_insert (provider->uuid_to_mdraid, g_strdup (uuid), object);
+              g_hash_table_insert (provider->sysfs_path_to_mdraid, g_strdup (sysfs_path), object);
+            }
+        }
+    }
+
+ out:
+  ;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 /* called with lock held */
 static void
 handle_block_uevent_for_drive (UDisksLinuxProvider *provider,
@@ -533,6 +625,8 @@ handle_block_uevent_for_drive (UDisksLinuxProvider *provider,
   g_free (vpd);
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 /* called with lock held */
 static void
 handle_block_uevent_for_block (UDisksLinuxProvider *provider,
@@ -573,20 +667,28 @@ handle_block_uevent_for_block (UDisksLinuxProvider *provider,
     }
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
 /* called with lock held */
 static void
 handle_block_uevent (UDisksLinuxProvider *provider,
                      const gchar         *action,
                      GUdevDevice         *device)
 {
-  /* We use the sysfs block device for both UDisksLinuxDriveObject and
-   * UDisksLinuxBlockObject objects. Ensure that drive objects are
-   * added before and removed after block objects.
+  /* We use the sysfs block device for all of
+   *
+   *  - UDisksLinuxDriveObject
+   *  - UDisksLinuxMDRaidObject
+   *  - UDisksLinuxBlockObject
+   *
+   * objects. Ensure that drive and mdraid objects are added before
+   * and removed after block objects.
    */
   if (g_strcmp0 (action, "remove") == 0)
     {
       handle_block_uevent_for_block (provider, action, device);
       handle_block_uevent_for_drive (provider, action, device);
+      handle_block_uevent_for_mdraid (provider, action, device);
     }
   else
     {
@@ -603,6 +705,7 @@ handle_block_uevent (UDisksLinuxProvider *provider,
         }
       else
         {
+          handle_block_uevent_for_mdraid (provider, action, device);
           handle_block_uevent_for_drive (provider, action, device);
           handle_block_uevent_for_block (provider, action, device);
         }

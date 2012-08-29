@@ -49,6 +49,12 @@ typedef struct _UDisksLinuxDrive UDisksLinuxDrive;
 struct _UDisksLinuxDriveAta;
 typedef struct _UDisksLinuxDriveAta UDisksLinuxDriveAta;
 
+struct _UDisksLinuxMDRaidObject;
+typedef struct _UDisksLinuxMDRaidObject UDisksLinuxMDRaidObject;
+
+struct _UDisksLinuxMDRaid;
+typedef struct _UDisksLinuxMDRaid UDisksLinuxMDRaid;
+
 struct _UDisksBaseJob;
 typedef struct _UDisksBaseJob UDisksBaseJob;
 

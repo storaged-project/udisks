@@ -116,6 +116,24 @@
         </para>
       </sect1>
 
+      <sect1 id="ref-dbus-md-raid">
+        <title>The /org/freedesktop/UDisks2/mdraid/* objects</title>
+        <para>
+          Objects with object paths starting with
+          <literal>/org/freedesktop/UDisks2/mdraid/</literal>
+          all represent <ulink url="http://en.wikipedia.org/wiki/Disk_drive_TODO">Linux Software RAID arrays</ulink>.
+          Such objects implement the
+          <link linkend="gdbus-interface-org-freedesktop-UDisks2-MDRaid.top_of_page">org.freedesktop.UDisks2.MDRaid</link>
+          D-Bus interface.
+        </para>
+        <para>
+          These objects should not to be confused with
+          <link linkend="ref-dbus-block-devices">block device</link>
+          objects (which are used for low-level block devices the OS
+          knows about).
+        </para>
+      </sect1>
+
       <sect1 id="ref-dbus-jobs">
         <title>The /org/freedesktop/UDisks2/jobs/* objects</title>
         <para>
@@ -324,6 +342,7 @@
       <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Manager.xml"/>
       <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Drive.xml"/>
       <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Drive.Ata.xml"/>
+      <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.MDRaid.xml"/>
       <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Block.xml"/>
       <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.Partition.xml"/>
       <xi:include href="../udisks/udisks-generated-doc-org.freedesktop.UDisks2.PartitionTable.xml"/>

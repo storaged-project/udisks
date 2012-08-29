@@ -58,6 +58,8 @@ libudisks_daemon_la_SOURCES =						\
 	udiskslinuxdriveobject.h	udiskslinuxdriveobject.c	\
 	udiskslinuxdrive.h		udiskslinuxdrive.c		\
 	udiskslinuxdriveata.h		udiskslinuxdriveata.c		\
+	udiskslinuxmdraidobject.h	udiskslinuxmdraidobject.c	\
+	udiskslinuxmdraid.h		udiskslinuxmdraid.c		\
 	udiskslinuxmanager.h		udiskslinuxmanager.c		\
 	udiskslinuxfsinfo.h		udiskslinuxfsinfo.c		\
 	udisksbasejob.h			udisksbasejob.c			\
