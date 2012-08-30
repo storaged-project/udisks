@@ -30,7 +30,7 @@ from gi.repository import GLib, Gio
 # ----------------------------------------------------------------------------
 
 class TestPolicyKitDaemon(dbus.service.Object):
-    def __init__(self, allowed_actions, on_bus=None):
+    def __init__(self, allowed_actions, on_bus=None, replace=False):
         '''Initialize test polkit daemon.
 
         @allowed_actions is a list of PolicyKit action IDs which will be
@@ -40,6 +40,9 @@ class TestPolicyKitDaemon(dbus.service.Object):
 
         When @on_bus string is given, the daemon will run on that D-BUS
         address, otherwise on the system D-BUS.
+
+        If @replace is True, this will replace an already running polkit daemon
+        on the D-BUS.
         '''
         self.allowed_actions = allowed_actions
         if on_bus:
@@ -47,7 +50,9 @@ class TestPolicyKitDaemon(dbus.service.Object):
         else:
             bus = dbus.SystemBus()
         bus_name = dbus.service.BusName('org.freedesktop.PolicyKit1',
-                                        bus, do_not_queue=True)
+                                        bus, do_not_queue=True,
+                                        replace_existing=replace,
+                                        allow_replacement=True)
         bus.add_signal_receiver(self.on_disconnected, signal_name='Disconnected')
 
         dbus.service.Object.__init__(self, bus_name,
@@ -127,12 +132,12 @@ class PolkitTestCase(unittest.TestCase):
 
 # ----------------------------------------------------------------------------
 
-def _run(allowed_actions, bus_address):
+def _run(allowed_actions, bus_address, replace=False):
     # Set up the DBus main loop
     import dbus.mainloop.glib
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
-    polkitd = TestPolicyKitDaemon(allowed_actions, bus_address)
+    polkitd = TestPolicyKitDaemon(allowed_actions, bus_address, replace)
     polkitd.run()
 
 def spawn(allowed_actions, on_bus=None):
@@ -181,9 +186,11 @@ def main():
                       default='', help='Comma separated list of allowed action ids')
     parser.add_argument('-b', '--bus-address',
                       help='D-BUS address to listen on (if not given, listen on system D-BUS)')
+    parser.add_argument('-r', '--replace', action='store_true',
+                      help='Replace existing polkit daemon on the bus')
     args = parser.parse_args()
 
-    _run(args.allowed_actions.split(','), args.bus_address)
+    _run(args.allowed_actions.split(','), args.bus_address, args.replace)
 
 if __name__ == '__main__':
     main()
