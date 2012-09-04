@@ -251,7 +251,7 @@ class UDisksTestCase(unittest.TestCase):
         If cd is True, return the CD device, otherwise the hard disk device.
         '''
         block = klass.udisks_block(partition, cd)
-        return klass.client.get_object(block.get_object_path()).get_property('filesystem')
+        return klass.client.get_object(block.get_object_path()).get_filesystem()
 
     @classmethod
     def blkid(klass, partition=None, device=None):
@@ -1191,6 +1191,26 @@ class Polkit(UDisksTestCase, test_polkitd.PolkitTestCase):
         self.assertEqual(block.get_property('id-usage'), 'filesystem')
         self.assertEqual(block.get_property('id-type'), 'ext4')
         self.assertEqual(block.get_property('id-label'), 'polkityes')
+
+    def test_removable_fs(self):
+        '''Create FS on removable drive (allowed)'''
+
+        self.start_polkitd(['org.freedesktop.udisks2.filesystem-mount'])
+
+        # the scsi_debug CD drive content is the same as for the HD drive, but
+        # udev does not know about this; so give it a nudge to re-probe
+        subprocess.call(['udevadm', 'trigger', '--action=change',
+            '--sysname-match=' + os.path.basename(self.cd_device)])
+        self.sync()
+        self.sync()
+
+        fs = self.udisks_filesystem(cd=True)
+        self.assertNotEqual(fs, None)
+        mount_path = fs.call_mount_sync(no_options, None)
+        self.assertTrue('/media/' in mount_path, mount_path)
+
+        self.retry_busy(fs.call_unmount_sync, no_options, None)
+        self.client.settle()
 
 # ----------------------------------------------------------------------------
 
