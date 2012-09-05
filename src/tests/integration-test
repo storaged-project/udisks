@@ -1132,12 +1132,20 @@ class Luks(UDisksTestCase):
             self.assertTrue(mount_path.endswith('treasure'))
 
             # removal should clean up mounts
-            self.remove_device(self.device)
-            self.assertFalse(os.path.exists(mount_path))
-            self.assertEqual(self.client.get_object(path), None)
+            try:
+                self.remove_device(self.device)
+                self.assertFalse(os.path.exists(mount_path))
+                timeout = 50
+                while timeout > 0:
+                    if self.client.get_object(path) is None:
+                        break
+                    timeout -= 1
+                    time.sleep(0.1)
+                self.assertGreater(timeout, 0, 'timeout waiting for object path %s to disappear' % path)
+            finally:
+                self.readd_devices()
 
             # after putting it back, it should be mountable again
-            self.readd_devices()
             crypt_obj = self.client.get_object(self.udisks_block().get_object_path())
             path = crypt_obj.get_property('encrypted').call_unlock_sync('s3kr1t', 
                     no_options, None)
