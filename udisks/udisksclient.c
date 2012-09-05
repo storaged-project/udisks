@@ -640,10 +640,13 @@ udisks_client_get_block_for_uuid (UDisksClient        *client,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* Note: The (type guint64) is a workaround for g-i mishandling dev_t, see
+ * https://bugzilla.gnome.org/show_bug.cgi?id=584517 */
+
 /**
  * udisks_client_get_block_for_dev:
  * @client: A #UDisksClient.
- * @block_device_number: A #dev_t to get a #UDisksBlock for.
+ * @block_device_number: (type guint64): A #dev_t to get a #UDisksBlock for.
  *
  * Gets the #UDisksBlock corresponding to @block_device_number, if any.
  *
