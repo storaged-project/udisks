@@ -54,6 +54,7 @@
 #include "udisksbasejob.h"
 #include "udiskssimplejob.h"
 #include "udiskslinuxdriveata.h"
+#include "udiskslinuxmdraidobject.h"
 
 /**
  * SECTION:udiskslinuxblock
@@ -231,6 +232,75 @@ find_drive (GDBusObjectManagerServer  *object_manager,
   g_list_free (objects);
   g_object_unref (whole_disk_block_device);
   return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static UDisksLinuxMDRaidObject *
+find_mdraid (GDBusObjectManagerServer  *object_manager,
+             const gchar               *md_uuid)
+{
+  UDisksLinuxMDRaidObject *ret = NULL;
+  GList *objects = NULL, *l;
+
+  objects = g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (object_manager));
+  for (l = objects; l != NULL; l = l->next)
+    {
+      GDBusObjectSkeleton *object = G_DBUS_OBJECT_SKELETON (l->data);
+      if (UDISKS_IS_LINUX_MDRAID_OBJECT (object))
+        {
+          UDisksMDRaid *mdraid = udisks_object_get_mdraid (UDISKS_OBJECT (object));
+          if (mdraid != NULL)
+            {
+              if (g_strcmp0 (udisks_mdraid_get_uuid (mdraid), md_uuid) == 0)
+                {
+                  ret = g_object_ref (object);
+                  g_object_unref (mdraid);
+                  goto out;
+                }
+              g_object_unref (mdraid);
+            }
+        }
+    }
+
+ out:
+  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+  g_list_free (objects);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static void
+update_mdraid (UDisksLinuxBlock         *block,
+               GUdevDevice              *device,
+               UDisksDrive              *drive,
+               GDBusObjectManagerServer *object_manager)
+{
+  UDisksBlock *iface = UDISKS_BLOCK (block);
+  const gchar *md_uuid;
+  const gchar *objpath_mdraid = "/";
+  const gchar *objpath_mdraid_member = "/";
+  UDisksLinuxMDRaidObject *object = NULL;
+
+  md_uuid = g_udev_device_get_property (device, "MD_UUID");
+  if (md_uuid == NULL || strlen (md_uuid) == 0)
+    goto out;
+
+  object = find_mdraid (object_manager, md_uuid);
+  if (object == NULL)
+    goto out;
+
+  /* TODO: find a better way to distinguish member vs array ? */
+  if (g_str_has_prefix (g_udev_device_get_device_file (device), "/dev/md"))
+    objpath_mdraid = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
+  else
+    objpath_mdraid_member = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
+
+ out:
+  udisks_block_set_mdraid (iface, objpath_mdraid);
+  udisks_block_set_mdraid_member (iface, objpath_mdraid_member);
+  g_clear_object (&object);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -774,6 +844,7 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
 
   update_hints (block, device, drive);
   update_configuration (block, daemon);
+  update_mdraid (block, device, drive, object_manager);
 
  out:
   if (device != NULL)

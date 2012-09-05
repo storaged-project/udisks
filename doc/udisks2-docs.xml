@@ -121,7 +121,7 @@
         <para>
           Objects with object paths starting with
           <literal>/org/freedesktop/UDisks2/mdraid/</literal>
-          all represent <ulink url="http://en.wikipedia.org/wiki/Disk_drive_TODO">Linux Software RAID arrays</ulink>.
+          represent <ulink url="https://raid.wiki.kernel.org/index.php/Linux_Raid">Linux Software RAID arrays</ulink>.
           Such objects implement the
           <link linkend="gdbus-interface-org-freedesktop-UDisks2-MDRaid.top_of_page">org.freedesktop.UDisks2.MDRaid</link>
           D-Bus interface.

@@ -702,6 +702,20 @@
       -->
     <property name="Drive" type="o" access="read"/>
 
+    <!-- MDRaid:
+         If the block device is a running MD-RAID array, this is set
+         to the #org.freedesktop.UDisks2.MDRaid object that it
+         correspond to. Is '/' if no such object exists.
+      -->
+    <property name="MDRaid" type="o" access="read"/>
+
+    <!-- MDRaidMember:
+         If the block device is part a member of a MD-RAID array, this
+         is set to the #org.freedesktop.UDisks2.MDRaid object that it
+         correspond to. Is '/' if no such object exists.
+      -->
+    <property name="MDRaidMember" type="o" access="read"/>
+
     <!-- IdUsage:
          A result of probing for signatures on the block device. Known values include:
          <variablelist>
@@ -1564,11 +1578,14 @@
       org.freedesktop.UDisks2.MDRaid:
       @short_description: Linux Software RAID
 
-      This interface is used to represent Linux Software RAID arrays
-      detected on the system (both running an not running).
+      Objects implementing this interface represent
+      <ulink url="https://raid.wiki.kernel.org/index.php/Linux_Raid">Linux Software RAID arrays</ulink>
+      detected on the system. Both running and not-running arrays are represented.
 
-      Note that this interface does not correspond to low-level block
-      devices, see TODO.
+      Block devices point to objects implementing this interface, see
+      the #org.freedesktop.UDisks2.Block:MDRaid and
+      #org.freedesktop.UDisks2.Block:MDRaidMember properties on the
+      #org.freedesktop.UDisks2.Block D-Bus interface.
   -->
   <interface name="org.freedesktop.UDisks2.MDRaid">
     <!-- UUID:
