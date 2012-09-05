@@ -97,6 +97,22 @@ fi
 
 GTK_DOC_CHECK([1.3])
 
+AC_ARG_ENABLE(man,
+              [AS_HELP_STRING([--enable-man],
+                              [generate man pages [default=auto]])],,
+              enable_man=maybe)
+AS_IF([test "$enable_man" != no], [
+  AC_PATH_PROG([XSLTPROC], [xsltproc])
+  AS_IF([test -z "$XSLTPROC"], [
+    AS_IF([test "$enable_man" = yes], [
+      AC_MSG_ERROR([xsltproc is required for --enable-man])
+    ])
+    enable_man=no
+  ])
+  enable_man=yes
+])
+AM_CONDITIONAL(ENABLE_MAN, test "$enable_man" != no)
+
 GOBJECT_INTROSPECTION_CHECK([0.6.2])
 
 # Libraries
@@ -220,4 +236,5 @@ echo "
 
         Maintainer mode:            ${USE_MAINTAINER_MODE}
         Building api docs:          ${enable_gtk_doc}
+        Building man pages:         ${enable_man}
 "
