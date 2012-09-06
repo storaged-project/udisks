@@ -1140,6 +1140,10 @@ class Luks(UDisksTestCase):
                     if self.client.get_object(path) is None:
                         break
                     timeout -= 1
+                    # we do not have a main loop, and cannot currently use
+                    # g_main_context_get_default() from introspection, so
+                    # instead of refreshing self.client, get a new one
+                    self.client = UDisks.Client.new_sync(None)
                     time.sleep(0.1)
                 self.assertGreater(timeout, 0, 'timeout waiting for object path %s to disappear' % path)
             finally:
