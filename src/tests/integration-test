@@ -163,6 +163,7 @@ class UDisksTestCase(unittest.TestCase):
 
         # wait until the daemon has started up
         timeout = 10
+        klass.manager = None
         while klass.manager is None and timeout > 0:
             time.sleep(0.2)
             klass.client = UDisks.Client.new_sync(None)
