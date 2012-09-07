@@ -131,25 +131,44 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
 {
   UDisksMDRaid *iface = UDISKS_MDRAID (mdraid);
   gboolean ret = FALSE;
-  GList *devices;
-  GUdevDevice *device;
+  guint num_devices;
+  const gchar *level;
+  guint64 size = 0;
+  GUdevDevice *raid_device;
+  GList *member_devices;
+  GUdevDevice *member_device;
 
-  devices = udisks_linux_mdraid_object_get_devices (object);
-  if (devices == NULL)
+  member_devices = udisks_linux_mdraid_object_get_members (object);
+  if (member_devices == NULL)
     goto out;
 
-  device = G_UDEV_DEVICE (devices->data);
+  raid_device = udisks_linux_mdraid_object_get_device (object);
+  member_device = G_UDEV_DEVICE (member_devices->data);
 
-  udisks_mdraid_set_uuid (iface, g_udev_device_get_property (device, "MD_UUID"));
-  udisks_mdraid_set_name (iface, g_udev_device_get_property (device, "MD_NAME"));
-  udisks_mdraid_set_level (iface, g_udev_device_get_property (device, "MD_LEVEL"));
-  udisks_mdraid_set_num_devices (iface, g_udev_device_get_property_as_int (device, "MD_DEVICES"));
+  num_devices = g_udev_device_get_property_as_int (member_device, "MD_DEVICES");
+  level = g_udev_device_get_property (member_device, "MD_LEVEL");
 
-  /* TODO: set running */
+  /* figure out size */
+  if (raid_device != NULL)
+    {
+      size = 512 * g_udev_device_get_sysfs_attr_as_uint64 (raid_device, "size");
+    }
+  else
+    {
+      /* TODO: need MD_ARRAY_SIZE, see https://bugs.freedesktop.org/show_bug.cgi?id=53239#c5 */
+    }
+
+  udisks_mdraid_set_uuid (iface, g_udev_device_get_property (member_device, "MD_UUID"));
+  udisks_mdraid_set_name (iface, g_udev_device_get_property (member_device, "MD_NAME"));
+  udisks_mdraid_set_level (iface, level);
+  udisks_mdraid_set_num_devices (iface, num_devices);
+  udisks_mdraid_set_size (iface, size);
+
+  /* TODO: set other stuff */
 
  out:
-  g_list_free_full (devices, g_object_unref);
-
+  g_list_free_full (member_devices, g_object_unref);
+  g_clear_object (&raid_device);
   return ret;
 }
 

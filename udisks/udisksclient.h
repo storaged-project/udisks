@@ -67,6 +67,12 @@ UDisksDrive        *udisks_client_get_drive_for_block (UDisksClient        *clie
 UDisksBlock        *udisks_client_get_cleartext_block (UDisksClient        *client,
                                                        UDisksBlock         *block);
 
+UDisksBlock        *udisks_client_get_block_for_mdraid (UDisksClient       *client,
+                                                        UDisksMDRaid       *raid);
+
+GList              *udisks_client_get_members_for_mdraid (UDisksClient       *client,
+                                                          UDisksMDRaid       *raid);
+
 UDisksPartitionTable *udisks_client_get_partition_table (UDisksClient        *client,
                                                          UDisksPartition     *partition);
 

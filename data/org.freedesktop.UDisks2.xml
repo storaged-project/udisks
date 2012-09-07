@@ -1610,14 +1610,17 @@
     -->
     <property name="NumDevices" type="u" access="read"/>
 
-    <!-- Running:
-         Set to %TRUE if the array is running.
+    <!-- Size:
+         The size of the array or 0 if unknown.
+
+         This is the usable size, e.g. for a RAID-5 array backed by 4
+         1TB disks, this will be approximately 3 TB.
     -->
-    <property name="Running" type="b" access="read"/>
+    <property name="Size" type="t" access="read"/>
 
     <!-- TODO: array state -->
 
-    <!-- TODO: start/stop -->
+    <!-- TODO: start/stop methods -->
 
   </interface>
 

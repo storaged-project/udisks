@@ -804,6 +804,114 @@ udisks_client_get_drive_for_block (UDisksClient  *client,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/**
+ * udisks_client_get_block_for_mdraid:
+ * @client: A #UDisksClient.
+ * @raid: A #UDisksMDRaid.
+ *
+ * Gets the RAID device (e.g. /dev/md0) for @raid.
+ *
+ * Returns: (transfer full): A #UDisksBlock or %NULL if no RAID device is running.
+ */
+UDisksBlock *
+udisks_client_get_block_for_mdraid (UDisksClient *client,
+                                    UDisksMDRaid *raid)
+{
+  UDisksBlock *ret = NULL;
+  GList *l, *object_proxies = NULL;
+  GDBusObject *raid_object;
+  const gchar *raid_objpath;
+
+  g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
+  g_return_val_if_fail (UDISKS_IS_MDRAID (raid), NULL);
+
+  raid_object = g_dbus_interface_get_object (G_DBUS_INTERFACE (raid));
+  if (raid_object == NULL)
+    goto out;
+
+  raid_objpath = g_dbus_object_get_object_path (raid_object);
+
+  object_proxies = g_dbus_object_manager_get_objects (client->object_manager);
+  for (l = object_proxies; l != NULL; l = l->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksBlock *block;
+
+      block = udisks_object_get_block (object);
+      if (block == NULL)
+        continue;
+
+      if (g_strcmp0 (udisks_block_get_mdraid (block), raid_objpath) == 0)
+        {
+          ret = block;
+          goto out;
+        }
+      g_object_unref (block);
+    }
+
+ out:
+  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
+  g_list_free (object_proxies);
+  return ret;
+}
+
+/**
+ * udisks_client_get_members_for_mdraid:
+ * @client: A #UDisksClient.
+ * @raid: A #UDisksMDRaid.
+ *
+ * Gets the physical block devices that are part of @raid.
+ *
+ * Returns: (transfer full) (element-type UDisksBlock): A list of #UDisksBlock instances. The
+ *   returned list should be freed with g_list_free() after each
+ *   element has been freed with g_object_unref().
+ */
+GList *
+udisks_client_get_members_for_mdraid (UDisksClient *client,
+                                      UDisksMDRaid *raid)
+{
+  GList *ret = NULL;
+  GList *l, *object_proxies = NULL;
+  GDBusObject *raid_object;
+  const gchar *raid_objpath;
+
+  g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
+  g_return_val_if_fail (UDISKS_IS_MDRAID (raid), NULL);
+
+  raid_object = g_dbus_interface_get_object (G_DBUS_INTERFACE (raid));
+  if (raid_object == NULL)
+    goto out;
+
+  raid_objpath = g_dbus_object_get_object_path (raid_object);
+
+  object_proxies = g_dbus_object_manager_get_objects (client->object_manager);
+  for (l = object_proxies; l != NULL; l = l->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksBlock *block;
+
+      block = udisks_object_get_block (object);
+      if (block == NULL)
+        continue;
+
+      if (g_strcmp0 (udisks_block_get_mdraid_member (block), raid_objpath) == 0)
+        {
+          ret = g_list_prepend (ret, block); /* adopts reference to block */
+        }
+      else
+        {
+          g_object_unref (block);
+        }
+    }
+
+ out:
+  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
+  g_list_free (object_proxies);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 typedef enum
 {
   DRIVE_TYPE_UNSET,

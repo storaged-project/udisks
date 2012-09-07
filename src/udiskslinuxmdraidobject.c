@@ -270,21 +270,64 @@ udisks_linux_mdraid_object_get_daemon (UDisksLinuxMDRaidObject *object)
 }
 
 /**
- * udisks_linux_mdraid_object_get_devices:
+ * udisks_linux_mdraid_object_get_members:
  * @object: A #UDisksLinuxMDRaidObject.
  *
- * Gets the current #GUdevDevice objects associated with @object.
+ * Gets the current #GUdevDevice objects for the RAID members associated with @object.
  *
  * Returns: A list of #GUdevDevice objects. Free each element with
  * g_object_unref(), then free the list with g_list_free().
  */
 GList *
-udisks_linux_mdraid_object_get_devices (UDisksLinuxMDRaidObject *object)
+udisks_linux_mdraid_object_get_members (UDisksLinuxMDRaidObject *object)
 {
-  GList *ret;
+  GList *ret = NULL;
+  GList *l;
+
   g_return_val_if_fail (UDISKS_IS_LINUX_MDRAID_OBJECT (object), NULL);
-  ret = g_list_copy (object->devices);
-  g_list_foreach (ret, (GFunc) g_object_ref, NULL);
+
+  for (l = object->devices; l != NULL; l = l->next)
+    {
+      GUdevDevice *device = G_UDEV_DEVICE (l->data);
+      /* TODO: find a better way to distinguish member vs array ? */
+      if (!g_str_has_prefix (g_udev_device_get_device_file (device), "/dev/md"))
+        {
+          ret = g_list_prepend (ret, g_object_ref (device));
+          goto out;
+        }
+    }
+ out:
+  return ret;
+}
+
+/**
+ * udisks_linux_mdraid_object_get_device:
+ * @object: A #UDisksLinuxMDRaidObject.
+ *
+ * Gets the current #GUdevDevice object for the RAID device
+ * (e.g. /dev/md0) associated with @object, if any.
+ *
+ * Returns: (transfer full): A #GUdevDevice or %NULL. Free with g_object_unref().
+ */
+GUdevDevice *
+udisks_linux_mdraid_object_get_device (UDisksLinuxMDRaidObject   *object)
+{
+  GUdevDevice *ret = NULL;
+  GList *l;
+
+  g_return_val_if_fail (UDISKS_IS_LINUX_MDRAID_OBJECT (object), NULL);
+
+  for (l = object->devices; l != NULL; l = l->next)
+    {
+      GUdevDevice *device = G_UDEV_DEVICE (l->data);
+      /* TODO: find a better way to distinguish member vs array ? */
+      if (g_str_has_prefix (g_udev_device_get_device_file (device), "/dev/md"))
+        {
+          ret = g_object_ref (device);
+          goto out;
+        }
+    }
+ out:
   return ret;
 }
 

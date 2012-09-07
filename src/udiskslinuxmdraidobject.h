@@ -37,7 +37,8 @@ void                     udisks_linux_mdraid_object_uevent        (UDisksLinuxMD
                                                                    const gchar               *action,
                                                                    GUdevDevice               *device);
 UDisksDaemon            *udisks_linux_mdraid_object_get_daemon    (UDisksLinuxMDRaidObject   *object);
-GList                   *udisks_linux_mdraid_object_get_devices   (UDisksLinuxMDRaidObject   *object);
+GList                   *udisks_linux_mdraid_object_get_members   (UDisksLinuxMDRaidObject   *object);
+GUdevDevice             *udisks_linux_mdraid_object_get_device    (UDisksLinuxMDRaidObject   *object);
 
 G_END_DECLS
 

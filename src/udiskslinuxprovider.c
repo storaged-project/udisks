@@ -495,7 +495,7 @@ handle_block_uevent_for_mdraid (UDisksLinuxProvider *provider,
 
           g_warn_if_fail (g_hash_table_remove (provider->sysfs_path_to_mdraid, sysfs_path));
 
-          devices = udisks_linux_mdraid_object_get_devices (object);
+          devices = udisks_linux_mdraid_object_get_members (object);
           if (devices == NULL)
             {
               const gchar *existing_uuid;
