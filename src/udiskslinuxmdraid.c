@@ -137,6 +137,8 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   GUdevDevice *raid_device;
   GList *member_devices;
   GUdevDevice *member_device;
+  guint degraded;
+  const gchar *sync_action = "";
 
   member_devices = udisks_linux_mdraid_object_get_members (object);
   if (member_devices == NULL)
@@ -163,6 +165,14 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   udisks_mdraid_set_level (iface, level);
   udisks_mdraid_set_num_devices (iface, num_devices);
   udisks_mdraid_set_size (iface, size);
+
+  if (raid_device != NULL)
+    {
+      degraded = g_udev_device_get_sysfs_attr_as_int (raid_device, "md/degraded");
+      sync_action = g_udev_device_get_sysfs_attr (raid_device, "md/sync_action");
+    }
+  udisks_mdraid_set_degraded (iface, degraded);
+  udisks_mdraid_set_sync_action (iface, sync_action);
 
   /* TODO: set other stuff */
 

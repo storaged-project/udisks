@@ -1618,7 +1618,26 @@
     -->
     <property name="Size" type="t" access="read"/>
 
-    <!-- TODO: array state -->
+    <!-- SyncAction:
+         The current state of the array or empty if the array is not
+         running.
+
+         This property corresponds to the
+         <literal>sync_action</literal> sysfs file, see the
+         <filename><ulink url="http://www.kernel.org/doc/Documentation/md.txt">Documentation/md.txt</ulink></filename>
+         file shipped with the kernel sources.
+    -->
+    <property name="SyncAction" type="s" access="read"/>
+
+    <!-- Degraded:
+         Number of devices by which the array is degraded (0 if not degraded).
+
+         This property corresponds to the
+         <literal>degraded</literal> sysfs file, see the
+         <filename><ulink url="http://www.kernel.org/doc/Documentation/md.txt">Documentation/md.txt</ulink></filename>
+         file shipped with the kernel sources.
+    -->
+    <property name="Degraded" type="u" access="read"/>
 
     <!-- TODO: start/stop methods -->
 
