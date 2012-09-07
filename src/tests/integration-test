@@ -734,6 +734,63 @@ class FS(UDisksTestCase):
         self.client.settle()
         self.assertEqual(fs.get_property('mount-points'), [])
 
+    def test_existing_manual_mount_point(self):
+        '''fs: does not reuse existing manual mount point'''
+
+        self.mkfs('ext4', 'udiskstest')
+        fs = self.udisks_filesystem()
+
+        # mount it, determine mount path, and unmount again
+        mount_path = fs.call_mount_sync(no_options, None)
+        self.assertTrue(mount_path.endswith('udiskstest'))
+
+        self.retry_busy(fs.call_unmount_sync, no_options, None)
+        self.client.settle()
+        self.assertEqual(fs.get_property('mount-points'), [])
+
+        # cleans up mountpoint
+        self.assertFalse(os.path.exists(mount_path))
+
+        # now manually create the mount point
+        os.mkdir(mount_path)
+
+        # now this should use mount_path + '1'
+        try:
+            new_mount_path = fs.call_mount_sync(no_options, None)
+            self.retry_busy(fs.call_unmount_sync, no_options, None)
+            self.client.settle()
+            self.assertEqual(fs.get_property('mount-points'), [])
+            self.assertEqual(new_mount_path, mount_path + '1')
+        finally:
+            os.rmdir(mount_path)
+
+    def test_existing_udisks_mount_point(self):
+        '''fs: reuses existing udisks mount point'''
+
+        self.mkfs('ext4', 'udiskstest')
+        fs = self.udisks_filesystem()
+
+        # mount it, determine mount path
+        mount_path = fs.call_mount_sync(no_options, None)
+        self.assertTrue(mount_path.endswith('udiskstest'))
+
+        # stop the daemon (happens during a package upgrade)
+        UDisksTestCase.stop_daemon()
+
+        # mount should still be there; unmount it manually
+        self.assertTrue(self.is_mountpoint(mount_path))
+        subprocess.check_call(['umount', mount_path])
+
+        # restart daemon, mount again; this should use the same mount point as
+        # before
+        UDisksTestCase.start_daemon()
+        fs = self.udisks_filesystem()
+        new_mount_path = fs.call_mount_sync(no_options, None)
+        self.retry_busy(fs.call_unmount_sync, no_options, None)
+        self.client.settle()
+        self.assertEqual(fs.get_property('mount-points'), [])
+        self.assertEqual(new_mount_path, mount_path)
+
     def _do_fs_check(self, type):
         '''Run checks for a particular file system.'''
 
