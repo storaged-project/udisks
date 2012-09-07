@@ -89,6 +89,7 @@ class UDisksTestCase(unittest.TestCase):
     This provides static functions which are useful for all test cases.
     '''
     daemon = None
+    daemon_path = None
     daemon_log = None
     device = None
 
@@ -104,20 +105,20 @@ class UDisksTestCase(unittest.TestCase):
             sys.exit(0)
 
         # run from local build tree if we are in one, otherwise use system instance
-        daemon_path = os.path.join(srcdir, 'src', 'udisksd')
-        if (os.access (daemon_path, os.X_OK)):
+        klass.daemon_path = os.path.join(srcdir, 'src', 'udisksd')
+        if (os.access (klass.daemon_path, os.X_OK)):
             print('Testing binaries from local build tree')
             klass.check_build_tree_config()
         else:
             print('Testing installed system binaries')
-            daemon_path = None
+            klass.daemon_path = None
             for l in open('/usr/share/dbus-1/system-services/org.freedesktop.UDisks2.service'):
                 if l.startswith('Exec='):
-                    daemon_path = l.split('=', 1)[1].split()[0]
+                    klass.daemon_path = l.split('=', 1)[1].split()[0]
                     break
-            assert daemon_path, 'could not determine daemon path from D-BUS .service file'
+            assert klass.daemon_path, 'could not determine daemon path from D-BUS .service file'
 
-        print('daemon path: ' + daemon_path)
+        print('daemon path: ' + klass.daemon_path)
 
         (klass.device, klass.cd_device) = klass.setup_vdev()
 
@@ -135,11 +136,30 @@ class UDisksTestCase(unittest.TestCase):
             klass.daemon_log = open(logfile, 'w')
         else:
             klass.daemon_log = tempfile.TemporaryFile()
-        klass.daemon = subprocess.Popen([daemon_path],
+        atexit.register(klass.cleanup)
+
+        klass.start_daemon()
+
+    @classmethod
+    def cleanup(klass):
+        '''stop daemon again and clean up test environment'''
+
+        subprocess.call(['umount', klass.device], stderr=subprocess.PIPE) # if a test failed
+
+        klass.stop_daemon()
+
+        klass.teardown_vdev(klass.device)
+        klass.device = None
+
+        del os.environ['DBUS_SYSTEM_BUS_ADDRESS']
+        klass.dbus.down()
+
+    @classmethod
+    def start_daemon(klass):
+        assert klass.daemon == None
+        klass.daemon = subprocess.Popen([klass.daemon_path, '--replace'],
             stdout=klass.daemon_log, stderr=subprocess.STDOUT)
         assert klass.daemon.pid, 'daemon failed to start'
-
-        atexit.register(klass.cleanup)
 
         # wait until the daemon has started up
         timeout = 10
@@ -150,24 +170,16 @@ class UDisksTestCase(unittest.TestCase):
             klass.manager = klass.client.get_manager()
             timeout -= 1
         assert klass.manager, 'daemon failed to start'
+        assert klass.daemon.pid, 'daemon failed to start'
 
         klass.sync()
 
     @classmethod
-    def cleanup(klass):
-        '''stop daemon again and clean up test environment'''
-
-        subprocess.call(['umount', klass.device], stderr=subprocess.PIPE) # if a test failed
-
+    def stop_daemon(klass):
+        assert klass.daemon
         os.kill(klass.daemon.pid, signal.SIGTERM)
         os.wait()
         klass.daemon = None
-
-        klass.teardown_vdev(klass.device)
-        klass.device = None
-
-        del os.environ['DBUS_SYSTEM_BUS_ADDRESS']
-        klass.dbus.down()
 
     @classmethod
     def sync(klass):
