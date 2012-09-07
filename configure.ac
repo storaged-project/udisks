@@ -88,6 +88,8 @@ CC_CHECK_CFLAGS_APPEND([                          \
         -ffunction-sections                       \
         -fno-common                               \
         -fno-strict-aliasing                      \
+        -D_LARGEFILE64_SOURCE                     \
+        -D_FILE_OFFSET_BITS=64                    \
 ])
 
 AC_PATH_PROG([XSLTPROC], [xsltproc])
