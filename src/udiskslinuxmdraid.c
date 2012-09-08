@@ -131,13 +131,13 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
 {
   UDisksMDRaid *iface = UDISKS_MDRAID (mdraid);
   gboolean ret = FALSE;
-  guint num_devices;
-  const gchar *level;
+  guint num_devices = 0;
+  const gchar *level = NULL;
   guint64 size = 0;
-  GUdevDevice *raid_device;
-  GList *member_devices;
-  GUdevDevice *member_device;
-  guint degraded;
+  GUdevDevice *raid_device = NULL;
+  GList *member_devices = NULL;
+  GUdevDevice *member_device = NULL;
+  guint degraded = 0;
   const gchar *sync_action = "";
 
   member_devices = udisks_linux_mdraid_object_get_members (object);
