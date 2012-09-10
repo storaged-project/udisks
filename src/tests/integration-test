@@ -989,27 +989,30 @@ class FS(UDisksTestCase):
         #self.assertEqual(iface.FilesystemCheck([]), True)
 
         # check mounting of a read-only device
-
-        # the scsi_debug CD drive content is the same as for the HD drive, but
-        # udev does not know about this; so give it a nudge to re-probe
-        subprocess.call(['udevadm', 'trigger', '--action=change',
-            '--sysname-match=' + os.path.basename(self.cd_device)])
-        self.sync()
-        self.sync()
-        cd_fs = self.udisks_filesystem(cd=True)
-
-        mount_path = cd_fs.call_mount_sync(no_options, None)
-        try:
-            self.assertTrue('/media/' in mount_path)
+        # this is known-broken for reiserfs and xfs right now:
+        # https://github.com/karelzak/util-linux/issues/17
+        # https://github.com/karelzak/util-linux/issues/18
+        if type not in ['reiserfs', 'xfs']:
+            # the scsi_debug CD drive content is the same as for the HD drive, but
+            # udev does not know about this; so give it a nudge to re-probe
+            subprocess.call(['udevadm', 'trigger', '--action=change',
+                '--sysname-match=' + os.path.basename(self.cd_device)])
             self.sync()
-            self.assertEqual(cd_fs.get_property('mount-points'), [mount_path])
-            self.assertTrue(self.is_mountpoint(mount_path))
+            self.sync()
+            cd_fs = self.udisks_filesystem(cd=True)
 
-            self.assertEqual(self.udisks_block(cd=True).get_property('read-only'), True)
-        finally:
-            self.retry_busy(cd_fs.call_unmount_sync, no_options, None)
-            self.assertFalse(os.path.exists(mount_path), 'mount point was not removed')
-            self.assertEqual(cd_fs.get_property('mount-points'), [mount_path])
+            mount_path = cd_fs.call_mount_sync(no_options, None)
+            try:
+                self.assertTrue('/media/' in mount_path)
+                self.sync()
+                self.assertEqual(cd_fs.get_property('mount-points'), [mount_path])
+                self.assertTrue(self.is_mountpoint(mount_path))
+
+                self.assertEqual(self.udisks_block(cd=True).get_property('read-only'), True)
+            finally:
+                self.retry_busy(cd_fs.call_unmount_sync, no_options, None)
+                self.assertFalse(os.path.exists(mount_path), 'mount point was not removed')
+                self.assertEqual(cd_fs.get_property('mount-points'), [mount_path])
 
     def _do_file_perms_checks(self, type, mount_point):
         '''Check for permissions for data files and executables.
