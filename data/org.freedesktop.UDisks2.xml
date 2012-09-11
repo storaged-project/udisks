@@ -1639,7 +1639,25 @@
     -->
     <property name="Degraded" type="u" access="read"/>
 
-    <!-- TODO: start/stop methods -->
+    <!--
+        Start:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Starts the RAID array.
+    -->
+    <method name="Start">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        Stop:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Stops the RAID array.
+    -->
+    <method name="Stop">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
 
   </interface>
 

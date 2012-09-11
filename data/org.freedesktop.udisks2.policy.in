@@ -204,6 +204,19 @@
   </action>
 
   <!-- ###################################################################### -->
+  <!-- Manage MD-RAID -->
+
+  <action id="org.freedesktop.udisks2.manage-md-raid">
+    <_description>Manage RAID arrays</_description>
+    <_message>Authentication is required to manage RAID arrays</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <!-- ###################################################################### -->
   <!-- Eject media from a drive -->
 
   <action id="org.freedesktop.udisks2.eject-media">

@@ -2770,6 +2770,8 @@ udisks_client_get_job_description (UDisksClient   *client,
       g_hash_table_insert (hash, (gpointer) "cleanup",              (gpointer) C_("job", "Cleaning Up"));
       g_hash_table_insert (hash, (gpointer) "ata-secure-erase",     (gpointer) C_("job", "ATA Secure Erase"));
       g_hash_table_insert (hash, (gpointer) "ata-enhanced-secure-erase", (gpointer) C_("job", "ATA Enhanced Secure Erase"));
+      g_hash_table_insert (hash, (gpointer) "md-raid-stop",         (gpointer) C_("job", "Stopping RAID Array"));
+      g_hash_table_insert (hash, (gpointer) "md-raid-start",        (gpointer) C_("job", "Starting RAID Array"));
       g_once_init_leave (&once, (gsize) 1);
     }
 

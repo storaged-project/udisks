@@ -184,7 +184,210 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+handle_start (UDisksMDRaid           *_mdraid,
+              GDBusMethodInvocation  *invocation,
+              GVariant               *options)
+{
+  UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (_mdraid);
+  UDisksDaemon *daemon;
+  UDisksLinuxMDRaidObject *object;
+  const gchar *action_id;
+  const gchar *message;
+  uid_t caller_uid;
+  gid_t caller_gid;
+  GUdevDevice *raid_device = NULL;
+  gchar *uuid = NULL;
+  gchar *escaped_uuid = NULL;
+  GError *error = NULL;
+  gchar *error_message = NULL;
+
+  object = udisks_daemon_util_dup_object (mdraid, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_mdraid_object_get_daemon (object);
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &caller_gid,
+                                               NULL,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  raid_device = udisks_linux_mdraid_object_get_device (object);
+  if (raid_device != NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "RAID Array is already running");
+      goto out;
+    }
+
+  /* Translators: Shown in authentication dialog when the attempts.
+   * to stop a RAID ARRAY.
+   */
+  /* TODO: variables */
+  message = N_("Authentication is required to start a RAID array");
+  action_id = "org.freedesktop.udisks2.manage-md-raid";
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    UDISKS_OBJECT (object),
+                                                    action_id,
+                                                    options,
+                                                    message,
+                                                    invocation))
+    goto out;
+
+  uuid = udisks_mdraid_dup_uuid (_mdraid);
+  escaped_uuid = udisks_daemon_util_escape_and_quote (uuid);
+
+  if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              UDISKS_OBJECT (object),
+                                              "md-raid-start", caller_uid,
+                                              NULL, /* GCancellable */
+                                              0,    /* uid_t run_as_uid */
+                                              0,    /* uid_t run_as_euid */
+                                              NULL, /* gint *out_status */
+                                              &error_message,
+                                              NULL,  /* input_string */
+                                              "mdadm --assemble --scan --uuid %s",
+                                              escaped_uuid))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error stopping RAID array with UUID %s: %s",
+                                             uuid,
+                                             error_message);
+      goto out;
+    }
+
+  /* TODO: wait for array to actually show up? */
+
+  udisks_mdraid_complete_stop (_mdraid, invocation);
+
+ out:
+  g_free (error_message);
+  g_free (uuid);
+  g_free (escaped_uuid);
+  g_clear_object (&raid_device);
+  g_clear_object (&object);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+handle_stop (UDisksMDRaid           *_mdraid,
+             GDBusMethodInvocation  *invocation,
+             GVariant               *options)
+{
+  UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (_mdraid);
+  UDisksDaemon *daemon;
+  UDisksLinuxMDRaidObject *object;
+  const gchar *action_id;
+  const gchar *message;
+  uid_t caller_uid;
+  gid_t caller_gid;
+  GUdevDevice *raid_device = NULL;
+  const gchar *device_file = NULL;
+  gchar *escaped_device_file = NULL;
+  GError *error = NULL;
+  gchar *error_message = NULL;
+
+  object = udisks_daemon_util_dup_object (mdraid, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_mdraid_object_get_daemon (object);
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &caller_gid,
+                                               NULL,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  raid_device = udisks_linux_mdraid_object_get_device (object);
+  if (raid_device == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "RAID Array is not running");
+      goto out;
+    }
+
+  /* Translators: Shown in authentication dialog when the attempts.
+   * to stop a RAID ARRAY.
+   */
+  /* TODO: variables */
+  message = N_("Authentication is required to stop a RAID array");
+  action_id = "org.freedesktop.udisks2.manage-md-raid";
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    UDISKS_OBJECT (object),
+                                                    action_id,
+                                                    options,
+                                                    message,
+                                                    invocation))
+    goto out;
+
+  device_file = g_udev_device_get_device_file (raid_device);
+  escaped_device_file = udisks_daemon_util_escape_and_quote (g_udev_device_get_device_file (raid_device));
+
+  if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              UDISKS_OBJECT (object),
+                                              "md-raid-stop", caller_uid,
+                                              NULL, /* GCancellable */
+                                              0,    /* uid_t run_as_uid */
+                                              0,    /* uid_t run_as_euid */
+                                              NULL, /* gint *out_status */
+                                              &error_message,
+                                              NULL,  /* input_string */
+                                              "mdadm --stop %s",
+                                              escaped_device_file))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error stopping RAID array %s: %s",
+                                             device_file,
+                                             error_message);
+      goto out;
+    }
+
+  udisks_mdraid_complete_stop (_mdraid, invocation);
+
+ out:
+  g_free (error_message);
+  g_free (escaped_device_file);
+  g_clear_object (&raid_device);
+  g_clear_object (&object);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 mdraid_iface_init (UDisksMDRaidIface *iface)
 {
+  iface->handle_start = handle_start;
+  iface->handle_stop = handle_stop;
 }
