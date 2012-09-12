@@ -152,6 +152,7 @@ read_sysfs_attr_as_int (GUdevDevice *device,
     goto out;
 
   ret = atoi (str);
+  g_free (str);
 
  out:
   return ret;
