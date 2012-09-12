@@ -826,7 +826,6 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
             md_name_dev_file = g_strdup_printf ("/dev/md/%s", sep + 1);
           else
             md_name_dev_file = g_strdup_printf ("/dev/md/%s", md_name);
-          udisks_debug ("booyah! `%s'", md_name_dev_file);
           for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
             {
               if (g_strcmp0 (symlinks[n], md_name_dev_file) == 0)
