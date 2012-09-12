@@ -265,7 +265,7 @@ handle_start (UDisksMDRaid           *_mdraid,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             "Error stopping RAID array with UUID %s: %s",
+                                             "Error starting RAID array with UUID %s: %s",
                                              uuid,
                                              error_message);
       goto out;
