@@ -60,6 +60,10 @@ struct _UDisksLinuxMDRaidObject
 
   /* interfaces */
   UDisksMDRaid *iface_mdraid;
+
+  /* watches for sysfs attr changes */
+  GSource *sync_action_source;
+  GSource *degraded_source;
 };
 
 struct _UDisksLinuxMDRaidObjectClass
@@ -74,6 +78,21 @@ enum
   PROP_DEVICE
 };
 
+static void
+remove_watches (UDisksLinuxMDRaidObject *object)
+{
+  if (object->sync_action_source != NULL)
+    {
+      g_source_destroy (object->sync_action_source);
+      object->sync_action_source = NULL;
+    }
+  if (object->degraded_source != NULL)
+    {
+      g_source_destroy (object->degraded_source);
+      object->degraded_source = NULL;
+    }
+}
+
 G_DEFINE_TYPE (UDisksLinuxMDRaidObject, udisks_linux_mdraid_object, UDISKS_TYPE_OBJECT_SKELETON);
 
 static void
@@ -82,6 +101,8 @@ udisks_linux_mdraid_object_finalize (GObject *_object)
   UDisksLinuxMDRaidObject *object = UDISKS_LINUX_MDRAID_OBJECT (_object);
 
   /* note: we don't hold a ref to object->daemon */
+
+  remove_watches (object);
 
   g_list_foreach (object->devices, (GFunc) g_object_unref, NULL);
   g_list_free (object->devices);
@@ -439,6 +460,116 @@ find_link_for_sysfs_path (UDisksLinuxMDRaidObject *object,
   return ret;
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
+static GSource *
+watch_attr (GUdevDevice *device,
+            const gchar *attr,
+            GSourceFunc  callback,
+            gpointer     user_data)
+{
+  GError *error = NULL;
+  gchar *path = NULL;
+  GIOChannel *channel = NULL;
+  GSource *ret = NULL;;
+
+  g_return_val_if_fail (G_UDEV_IS_DEVICE (device), NULL);
+
+  path = g_strdup_printf ("%s/%s", g_udev_device_get_sysfs_path (device), attr);
+  channel = g_io_channel_new_file (path, "r", &error);
+  if (channel != NULL)
+    {
+      ret = g_io_create_watch (channel, G_IO_ERR);
+      g_source_set_callback (ret, callback, user_data, NULL);
+      g_source_attach (ret, g_main_context_get_thread_default ());
+      g_source_unref (ret);
+      g_io_channel_unref (channel); /* the keeps a reference to this object */
+    }
+  else
+    {
+      udisks_warning ("Error creating watch for file %s: %s (%s, %d)",
+                      path, error->message, g_quark_to_string (error->domain), error->code);
+      g_clear_error (&error);
+    }
+  g_free (path);
+
+  return ret;
+}
+
+/* ----------------------------------------------------------------------------------------------------  */
+
+static gboolean
+attr_changed (GIOChannel   *channel,
+              GIOCondition  cond,
+              gpointer      user_data)
+{
+  UDisksLinuxMDRaidObject *object = UDISKS_LINUX_MDRAID_OBJECT (user_data);
+  GError *error = NULL;
+  gchar *str = NULL;
+  gsize len = 0;
+
+  if (cond & ~G_IO_ERR)
+    goto out;
+
+  if (g_io_channel_seek_position (channel, 0, G_SEEK_SET, &error) != G_IO_STATUS_NORMAL)
+    {
+      udisks_warning ("Error seeking in channel: %s (%s, %d)",
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_clear_error (&error);
+      goto out;
+    }
+  if (g_io_channel_read_to_end (channel, &str, &len, &error) != G_IO_STATUS_NORMAL)
+    {
+      udisks_warning ("Error reading: %s (%s, %d)",
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  /* synthesize uevent */
+  udisks_linux_mdraid_object_uevent (object, "change", NULL);
+
+ out:
+  return TRUE; /* keep event source around */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/* The md(4) driver does not use the usual uevent 'change' mechanism
+ * for notification - instead it excepts user-space to select(2)-ish
+ * on a fd for the sysfs attribute. Annoying. See
+ *
+ *  http://www.kernel.org/doc/Documentation/md.txt
+ *
+ * for more details.
+ */
+
+static void
+md_device_added (UDisksLinuxMDRaidObject *object,
+                 GUdevDevice             *device)
+{
+  g_assert (object->sync_action_source == NULL);
+  g_assert (object->degraded_source == NULL);
+
+  object->sync_action_source = watch_attr (device,
+                                           "md/sync_action",
+                                           (GSourceFunc) attr_changed,
+                                           object);
+  object->degraded_source = watch_attr (device,
+                                        "md/degraded",
+                                        (GSourceFunc) attr_changed,
+                                        object);
+}
+
+static void
+md_device_removed (UDisksLinuxMDRaidObject *object,
+                   GUdevDevice             *device)
+{
+  remove_watches (object);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 /**
  * udisks_linux_mdraid_object_uevent:
  * @object: A #UDisksLinuxMDRaidObject.
@@ -465,6 +596,8 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
     {
       if (link != NULL)
         {
+          if (g_str_has_prefix (g_udev_device_get_name (device), "md"))
+            md_device_removed (object, device);
           g_object_unref (G_UDEV_DEVICE (link->data));
           object->devices = g_list_delete_link (object->devices, link);
         }
@@ -484,7 +617,11 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
       else
         {
           if (device != NULL)
-            object->devices = g_list_append (object->devices, g_object_ref (device));
+            {
+              object->devices = g_list_append (object->devices, g_object_ref (device));
+              if (g_str_has_prefix (g_udev_device_get_name (device), "md"))
+                md_device_added (object, device);
+            }
         }
     }
 

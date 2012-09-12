@@ -116,6 +116,49 @@ udisks_linux_mdraid_new (void)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gchar *
+read_sysfs_attr (GUdevDevice *device,
+                 const gchar *attr)
+{
+  gchar *ret = NULL;
+  gchar *path = NULL;
+  GError *error = NULL;
+
+  g_return_val_if_fail (G_UDEV_IS_DEVICE (device), NULL);
+
+  path = g_strdup_printf ("%s/%s", g_udev_device_get_sysfs_path (device), attr);
+  if (!g_file_get_contents (path, &ret, NULL /* size */, &error))
+    {
+      udisks_warning ("Error reading sysfs attr `%s': %s (%s, %d)",
+                      path, error->message, g_quark_to_string (error->domain), error->code);
+      g_clear_error (&error);
+      goto out;
+    }
+
+ out:
+  g_free (path);
+  return ret;
+}
+
+static gint
+read_sysfs_attr_as_int (GUdevDevice *device,
+                        const gchar *attr)
+{
+  gint ret = 0;
+  gchar *str = NULL;
+
+  str = read_sysfs_attr (device, attr);
+  if (str == NULL)
+    goto out;
+
+  ret = atoi (str);
+
+ out:
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 /**
  * udisks_linux_mdraid_update:
  * @mdraid: A #UDisksLinuxMDRaid.
@@ -132,13 +175,13 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   UDisksMDRaid *iface = UDISKS_MDRAID (mdraid);
   gboolean ret = FALSE;
   guint num_devices = 0;
-  const gchar *level = NULL;
   guint64 size = 0;
   GUdevDevice *raid_device = NULL;
   GList *member_devices = NULL;
   GUdevDevice *member_device = NULL;
+  const gchar *level = NULL;
+  gchar *sync_action = NULL;
   guint degraded = 0;
-  const gchar *sync_action = "";
 
   member_devices = udisks_linux_mdraid_object_get_members (object);
   if (member_devices == NULL)
@@ -168,8 +211,9 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
 
   if (raid_device != NULL)
     {
-      degraded = g_udev_device_get_sysfs_attr_as_int (raid_device, "md/degraded");
-      sync_action = g_udev_device_get_sysfs_attr (raid_device, "md/sync_action");
+      /* Can't use GUdevDevice methods as they cache the result and these variables vary */
+      degraded = read_sysfs_attr_as_int (raid_device, "md/degraded");
+      sync_action = read_sysfs_attr (raid_device, "md/sync_action");
     }
   udisks_mdraid_set_degraded (iface, degraded);
   udisks_mdraid_set_sync_action (iface, sync_action);
@@ -177,6 +221,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   /* TODO: set other stuff */
 
  out:
+  g_free (sync_action);
   g_list_free_full (member_devices, g_object_unref);
   g_clear_object (&raid_device);
   return ret;
