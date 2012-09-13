@@ -841,6 +841,10 @@ udisks_client_get_block_for_mdraid (UDisksClient *client,
       if (block == NULL)
         continue;
 
+      /* ignore partitions */
+      if (udisks_object_peek_partition (object) != NULL)
+        continue;
+
       if (g_strcmp0 (udisks_block_get_mdraid (block), raid_objpath) == 0)
         {
           ret = block;
