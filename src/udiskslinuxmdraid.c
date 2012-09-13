@@ -215,6 +215,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
       /* Can't use GUdevDevice methods as they cache the result and these variables vary */
       degraded = read_sysfs_attr_as_int (raid_device, "md/degraded");
       sync_action = read_sysfs_attr (raid_device, "md/sync_action");
+      g_strstrip (sync_action);
     }
   udisks_mdraid_set_degraded (iface, degraded);
   udisks_mdraid_set_sync_action (iface, sync_action);
