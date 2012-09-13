@@ -828,7 +828,7 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
             md_name_dev_file = g_strdup_printf ("/dev/md/%s", md_name);
           for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
             {
-              if (g_strcmp0 (symlinks[n], md_name_dev_file) == 0)
+              if (g_str_has_prefix (symlinks[n], md_name_dev_file))
                 {
                   md_name_dev_file_as_symlink = symlinks[n];
                 }
