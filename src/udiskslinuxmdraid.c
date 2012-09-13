@@ -61,12 +61,16 @@ struct _UDisksLinuxMDRaid
 {
   UDisksMDRaidSkeleton parent_instance;
 
+  guint polling_timeout;
 };
 
 struct _UDisksLinuxMDRaidClass
 {
   UDisksMDRaidSkeletonClass parent_class;
 };
+
+static void ensure_polling (UDisksLinuxMDRaid  *mdraid,
+                            gboolean            polling_on);
 
 static void mdraid_iface_init (UDisksMDRaidIface *iface);
 
@@ -78,7 +82,9 @@ G_DEFINE_TYPE_WITH_CODE (UDisksLinuxMDRaid, udisks_linux_mdraid, UDISKS_TYPE_MDR
 static void
 udisks_linux_mdraid_finalize (GObject *object)
 {
-  /* UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (object); */
+  UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (object);
+
+  ensure_polling (mdraid, FALSE);
 
   if (G_OBJECT_CLASS (udisks_linux_mdraid_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_mdraid_parent_class)->finalize (object);
@@ -160,6 +166,50 @@ read_sysfs_attr_as_int (GUdevDevice *device,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+on_polling_timout (gpointer user_data)
+{
+  UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (user_data);
+  UDisksLinuxMDRaidObject *object = NULL;
+
+  udisks_debug ("polling timeout");
+
+  object = udisks_daemon_util_dup_object (mdraid, NULL);
+  if (object == NULL)
+    goto out;
+
+  /* synthesize uevent */
+  udisks_linux_mdraid_object_uevent (object, "change", NULL);
+
+ out:
+  g_clear_object (&object);
+  return TRUE; /* keep timeout around */
+}
+
+static void
+ensure_polling (UDisksLinuxMDRaid  *mdraid,
+                gboolean            polling_on)
+{
+  if (polling_on)
+    {
+      if (mdraid->polling_timeout == 0)
+        {
+          mdraid->polling_timeout = g_timeout_add_seconds (1,
+                                                           on_polling_timout,
+                                                           mdraid);
+        }
+    }
+  else
+    {
+      if (mdraid->polling_timeout != 0)
+        {
+          g_source_remove (mdraid->polling_timeout);
+          mdraid->polling_timeout = 0;
+        }
+    }
+}
+
+
 /**
  * udisks_linux_mdraid_update:
  * @mdraid: A #UDisksLinuxMDRaid.
@@ -182,7 +232,9 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   GUdevDevice *device = NULL;
   const gchar *level = NULL;
   gchar *sync_action = NULL;
+  gchar *sync_completed = NULL;
   guint degraded = 0;
+  gdouble sync_completed_val = 0.0;
 
   member_devices = udisks_linux_mdraid_object_get_members (object);
   raid_device = udisks_linux_mdraid_object_get_device (object);
@@ -228,13 +280,42 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
       degraded = read_sysfs_attr_as_int (raid_device, "md/degraded");
       sync_action = read_sysfs_attr (raid_device, "md/sync_action");
       g_strstrip (sync_action);
+      sync_completed = read_sysfs_attr (raid_device, "md/sync_completed");
+      g_strstrip (sync_completed);
     }
   udisks_mdraid_set_degraded (iface, degraded);
   udisks_mdraid_set_sync_action (iface, sync_action);
 
+  if (sync_completed != NULL && g_strcmp0 (sync_completed, "none") != 0)
+    {
+      guint64 completed_sectors = 0;
+      guint64 num_sectors = 1;
+      if (sscanf (sync_completed, "%" G_GUINT64_FORMAT " / %" G_GUINT64_FORMAT,
+                  &completed_sectors, &num_sectors) == 2)
+        {
+          if (num_sectors != 0)
+            sync_completed_val = ((gdouble) completed_sectors) / ((gdouble) num_sectors);
+        }
+    }
+  udisks_mdraid_set_sync_completed (iface, sync_completed_val);
+
+  /* ensure we poll, exactly when we need to */
+  if (g_strcmp0 (sync_action, "resync") == 0 ||
+      g_strcmp0 (sync_action, "recover") == 0 ||
+      g_strcmp0 (sync_action, "check") == 0 ||
+      g_strcmp0 (sync_action, "repair") == 0)
+    {
+      ensure_polling (mdraid, TRUE);
+    }
+  else
+    {
+      ensure_polling (mdraid, FALSE);
+    }
+
   /* TODO: set other stuff */
 
  out:
+  g_free (sync_completed);
   g_free (sync_action);
   g_list_free_full (member_devices, g_object_unref);
   g_clear_object (&raid_device);

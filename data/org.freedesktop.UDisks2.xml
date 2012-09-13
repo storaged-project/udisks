@@ -1629,6 +1629,16 @@
     -->
     <property name="SyncAction" type="s" access="read"/>
 
+    <!-- SyncCompleted:
+         The fraction or sectors completed (always between <constant>0.0</constant> and <constant>1.0</constant>) in the sync operation or 0.0 if no operation is in progress.
+
+         This property corresponds to the
+         <literal>sync_completed</literal> sysfs file, see the
+         <filename><ulink url="http://www.kernel.org/doc/Documentation/md.txt">Documentation/md.txt</ulink></filename>
+         file shipped with the kernel sources.
+    -->
+    <property name="SyncCompleted" type="d" access="read"/>
+
     <!-- Degraded:
          Number of devices by which the array is degraded (0 if not degraded).
 
