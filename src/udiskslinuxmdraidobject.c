@@ -592,9 +592,20 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
 {
   GList *link;
   gboolean conf_changed = FALSE;
+  gboolean is_md_device = FALSE;
 
   g_return_if_fail (UDISKS_IS_LINUX_MDRAID_OBJECT (object));
   g_return_if_fail (device == NULL || G_UDEV_IS_DEVICE (device));
+
+  if (device != NULL &&
+      g_str_has_prefix (g_udev_device_get_name (device), "md")) /* TODO: better heuristic */
+    is_md_device = TRUE;
+
+  /* Skip partitions of md devices */
+  if (is_md_device && device != NULL &&
+      g_strcmp0 (g_udev_device_get_devtype (device), "disk") != 0)
+    goto out;
+
 
   link = NULL;
   if (device != NULL)
@@ -603,7 +614,7 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
     {
       if (link != NULL)
         {
-          if (g_str_has_prefix (g_udev_device_get_name (device), "md"))
+          if (is_md_device)
             md_device_removed (object, device);
           g_object_unref (G_UDEV_DEVICE (link->data));
           object->devices = g_list_delete_link (object->devices, link);
@@ -626,7 +637,7 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
           if (device != NULL)
             {
               object->devices = g_list_append (object->devices, g_object_ref (device));
-              if (g_str_has_prefix (g_udev_device_get_name (device), "md"))
+              if (is_md_device)
                 md_device_added (object, device);
             }
         }
@@ -635,6 +646,8 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
   conf_changed = FALSE;
   conf_changed |= update_iface (object, action, mdraid_check, mdraid_connect, mdraid_update,
                                 UDISKS_TYPE_LINUX_MDRAID, &object->iface_mdraid);
+ out:
+  ;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
