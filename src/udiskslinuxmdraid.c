@@ -179,20 +179,32 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   guint64 size = 0;
   GUdevDevice *raid_device = NULL;
   GList *member_devices = NULL;
-  GUdevDevice *member_device = NULL;
+  GUdevDevice *device = NULL;
   const gchar *level = NULL;
   gchar *sync_action = NULL;
   guint degraded = 0;
 
   member_devices = udisks_linux_mdraid_object_get_members (object);
-  if (member_devices == NULL)
-    goto out;
-
   raid_device = udisks_linux_mdraid_object_get_device (object);
-  member_device = G_UDEV_DEVICE (member_devices->data);
 
-  num_devices = g_udev_device_get_property_as_int (member_device, "MD_DEVICES");
-  level = g_udev_device_get_property (member_device, "MD_LEVEL");
+  if (member_devices == NULL && raid_device == NULL)
+    {
+      /* this should never happen */
+      udisks_warning ("No members and no RAID device - bailing");
+      goto out;
+    }
+
+  /* it doesn't matter where we get the MD_ properties from - it can be
+   * either a member device or the raid device (/dev/md*) - prefer the
+   * former, if available
+   */
+  if (member_devices != NULL)
+    device = G_UDEV_DEVICE (member_devices->data);
+  else
+    device = G_UDEV_DEVICE (raid_device);
+
+  num_devices = g_udev_device_get_property_as_int (device, "MD_DEVICES");
+  level = g_udev_device_get_property (device, "MD_LEVEL");
 
   /* figure out size */
   if (raid_device != NULL)
@@ -204,8 +216,8 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
       /* TODO: need MD_ARRAY_SIZE, see https://bugs.freedesktop.org/show_bug.cgi?id=53239#c5 */
     }
 
-  udisks_mdraid_set_uuid (iface, g_udev_device_get_property (member_device, "MD_UUID"));
-  udisks_mdraid_set_name (iface, g_udev_device_get_property (member_device, "MD_NAME"));
+  udisks_mdraid_set_uuid (iface, g_udev_device_get_property (device, "MD_UUID"));
+  udisks_mdraid_set_name (iface, g_udev_device_get_property (device, "MD_NAME"));
   udisks_mdraid_set_level (iface, level);
   udisks_mdraid_set_num_devices (iface, num_devices);
   udisks_mdraid_set_size (iface, size);

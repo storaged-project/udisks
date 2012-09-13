@@ -151,8 +151,13 @@ udisks_linux_mdraid_object_set_property (GObject      *__object,
       break;
 
     case PROP_DEVICE:
-      g_assert (object->devices == NULL);
-      object->devices = g_list_prepend (NULL, g_value_dup_object (value));
+      /* initial coldplug */
+      {
+        GUdevDevice *device;
+        g_assert (object->devices == NULL);
+        device = G_UDEV_DEVICE (g_value_get_object (value));
+        udisks_linux_mdraid_object_uevent (object, "add", device);
+      }
       break;
 
     default:
@@ -193,9 +198,6 @@ udisks_linux_mdraid_object_constructed (GObject *_object)
   UDisksLinuxMDRaidObject *object = UDISKS_LINUX_MDRAID_OBJECT (_object);
   gchar *uuid;
   gchar *s;
-
-  /* initial coldplug */
-  udisks_linux_mdraid_object_uevent (object, "add", object->devices->data);
 
   /* compute the object path */
   uuid = udisks_mdraid_dup_uuid (object->iface_mdraid);
@@ -518,6 +520,7 @@ attr_changed (GIOChannel   *channel,
       g_clear_error (&error);
       goto out;
     }
+
   if (g_io_channel_read_to_end (channel, &str, &len, &error) != G_IO_STATUS_NORMAL)
     {
       udisks_warning ("Error reading: %s (%s, %d)",
@@ -525,6 +528,8 @@ attr_changed (GIOChannel   *channel,
       g_clear_error (&error);
       goto out;
     }
+
+  g_free (str);
 
   /* synthesize uevent */
   udisks_linux_mdraid_object_uevent (object, "change", NULL);
@@ -551,6 +556,7 @@ md_device_added (UDisksLinuxMDRaidObject *object,
   g_assert (object->sync_action_source == NULL);
   g_assert (object->degraded_source == NULL);
 
+  /* udisks_debug ("start watching %s", g_udev_device_get_sysfs_path (device)); */
   object->sync_action_source = watch_attr (device,
                                            "md/sync_action",
                                            (GSourceFunc) attr_changed,
@@ -565,6 +571,7 @@ static void
 md_device_removed (UDisksLinuxMDRaidObject *object,
                    GUdevDevice             *device)
 {
+  /* udisks_debug ("stop watching %s", g_udev_device_get_sysfs_path (device)); */
   remove_watches (object);
 }
 
