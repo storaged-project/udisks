@@ -257,10 +257,13 @@ udisks_daemon_util_resolve_link (const gchar *path,
   if (num != -1)
     {
       char *absolute_path;
+      gchar *full_path_dir;
 
       link_path[num] = '\0';
 
-      absolute_path = g_build_filename (path, link_path, NULL);
+      full_path_dir = g_path_get_dirname (full_path);
+      absolute_path = g_build_filename (full_path_dir, link_path, NULL);
+      g_free (full_path_dir);
       if (realpath (absolute_path, resolved_path) != NULL)
         {
           found_it = TRUE;
