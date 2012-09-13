@@ -164,6 +164,24 @@ read_sysfs_attr_as_int (GUdevDevice *device,
   return ret;
 }
 
+static guint64
+read_sysfs_attr_as_uint64 (GUdevDevice *device,
+                           const gchar *attr)
+{
+  guint64 ret = 0;
+  gchar *str = NULL;
+
+  str = read_sysfs_attr (device, attr);
+  if (str == NULL)
+    goto out;
+
+  ret = atoll (str);
+  g_free (str);
+
+ out:
+  return ret;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
@@ -235,6 +253,10 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   gchar *sync_completed = NULL;
   guint degraded = 0;
   gdouble sync_completed_val = 0.0;
+  GVariantBuilder builder;
+  UDisksDaemon *daemon = NULL;
+
+  daemon = udisks_linux_mdraid_object_get_daemon (object);
 
   member_devices = udisks_linux_mdraid_object_get_members (object);
   raid_device = udisks_linux_mdraid_object_get_device (object);
@@ -313,6 +335,60 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
     {
       ensure_polling (mdraid, FALSE);
     }
+
+  /* figure out active devices */
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a{u(osta{sv})}"));
+  if (raid_device != NULL)
+    {
+      const gchar *raid_sysfs_path = g_udev_device_get_sysfs_path (raid_device);
+      gchar p[256];
+      guint n;
+
+      for (n = 0; n < num_devices; n++)
+        {
+          gchar *block_sysfs_path = NULL;
+          UDisksObject *member_object = NULL;
+          gchar *member_state = NULL;
+          guint64 member_errors = 0;
+
+          snprintf (p, sizeof (p), "md/rd%d/block", n);
+          block_sysfs_path = udisks_daemon_util_resolve_link (raid_sysfs_path, p);
+          if (block_sysfs_path == NULL)
+            {
+              udisks_warning ("Unable to resolve %s/%s symlink",
+                              raid_sysfs_path, p);
+              goto skip_member;
+            }
+
+          member_object = udisks_daemon_find_block_by_sysfs_path (daemon, block_sysfs_path);
+          if (member_object == NULL)
+            {
+              /* TODO: only warn on !coldplug */
+              /* udisks_warning ("No object for block device with sysfs path %s", block_sysfs_path); */
+              goto skip_member;
+            }
+
+          snprintf (p, sizeof (p), "md/rd%d/state", n);
+          member_state = read_sysfs_attr (raid_device, p);
+          if (member_state != NULL)
+            g_strstrip (member_state);
+
+          snprintf (p, sizeof (p), "md/rd%d/errors", n);
+          member_errors = read_sysfs_attr_as_uint64 (raid_device, p);
+
+          g_variant_builder_add (&builder, "{u(osta{sv})}",
+                                 n,
+                                 g_dbus_object_get_object_path (G_DBUS_OBJECT (member_object)),
+                                 member_state,
+                                 member_errors,
+                                 NULL); /* expansion, unused for now */
+
+        skip_member:
+          g_clear_object (&member_object);
+          g_free (block_sysfs_path);
+        }
+    }
+  udisks_mdraid_set_active_devices (iface, g_variant_builder_end (&builder));
 
   /* TODO: set other stuff */
 
