@@ -337,7 +337,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
     }
 
   /* figure out active devices */
-  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a{u(osta{sv})}"));
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a(osta{sv})"));
   if (raid_device != NULL)
     {
       const gchar *raid_sysfs_path = g_udev_device_get_sysfs_path (raid_device);
@@ -357,7 +357,9 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
             {
               udisks_warning ("Unable to resolve %s/%s symlink",
                               raid_sysfs_path, p);
-              goto skip_member;
+              g_variant_builder_add (&builder, "(osta{sv})",
+                                     "/", "", 0, NULL);
+              goto member_done;
             }
 
           member_object = udisks_daemon_find_block_by_sysfs_path (daemon, block_sysfs_path);
@@ -365,7 +367,9 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
             {
               /* TODO: only warn on !coldplug */
               /* udisks_warning ("No object for block device with sysfs path %s", block_sysfs_path); */
-              goto skip_member;
+              g_variant_builder_add (&builder, "(osta{sv})",
+                                     "/", "", 0, NULL);
+              goto member_done;
             }
 
           snprintf (p, sizeof (p), "md/rd%d/state", n);
@@ -376,14 +380,13 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
           snprintf (p, sizeof (p), "md/rd%d/errors", n);
           member_errors = read_sysfs_attr_as_uint64 (raid_device, p);
 
-          g_variant_builder_add (&builder, "{u(osta{sv})}",
-                                 n,
+          g_variant_builder_add (&builder, "(osta{sv})",
                                  g_dbus_object_get_object_path (G_DBUS_OBJECT (member_object)),
                                  member_state,
                                  member_errors,
                                  NULL); /* expansion, unused for now */
 
-        skip_member:
+        member_done:
           g_clear_object (&member_object);
           g_free (block_sysfs_path);
         }

@@ -1650,27 +1650,26 @@
     <property name="Degraded" type="u" access="read"/>
 
     <!-- ActiveDevices:
-         This property is a dictionary from the position of the member device
-         in question (0, 1, 2, up to but not including #org.freedesktop.UDisks2.MDRaid:NumDevices)
-         into a struct of with the following members
+         This property is an array with #org.freedesktop.UDisks2.MDRaid:NumDevices elements if
+         the array is running, zero elements otherwise. Each element of the array is a struct
+         with the following members:
          <variablelist>
          <varlistentry><term>block (type 'o')</term>
-         <listitem><para>The object for the underlying block device - guaranteed to implement the #org.freedesktop.UDisks2.Block interface</para></listitem></varlistentry>
+         <listitem><para>If there is no member in the given position this is set to '/', otherwise it is the object path for the underlying block device (guaranteed to implement the #org.freedesktop.UDisks2.Block interface)</para></listitem></varlistentry>
          <varlistentry><term>state (type 's')</term>
-         <listitem><para>The state of the member, e.g. one of <literal>faulty</literal>, <literal>in_sync</literal>, <literal>writemostly</literal>, <literal>blocked</literal> and <literal>spare</literal></para></listitem></varlistentry>
-         <varlistentry><term>errors (type 't')</term>
-         <listitem><para>Ongoing count of read errors that have been detected on this device but have not caused the device to be evicted from the array</para></listitem></varlistentry>
+         <listitem><para>Blank if there is no member in the position, otherwise the state of the member, e.g. one of <literal>faulty</literal>, <literal>in_sync</literal>, <literal>writemostly</literal>, <literal>blocked</literal> and <literal>spare</literal></para></listitem></varlistentry>
+         <varlistentry><term>num_read_errors (type 't')</term>
+         <listitem><para>Zero if there is no member in the position in question, otherwise an ongoing count of read errors that have been detected on this device but have not caused the device to be evicted from the array</para></listitem></varlistentry>
          <varlistentry><term>expansion (type 'a{sv}')</term>
          <listitem><para>Currently unused. Intended for future expansion.</para></listitem></varlistentry>
          </variablelist>
-
-         This property and its struct members corresponds to the
+         This property correspond to the
          <literal>rdNN</literal> symlinks in sysfs and the sysfs files in each directory.
          See the
          <filename><ulink url="http://www.kernel.org/doc/Documentation/md.txt">Documentation/md.txt</ulink></filename>
          file shipped with the kernel sources.
     -->
-    <property name="ActiveDevices" type="a{u(osta{sv})}" access="read"/>
+    <property name="ActiveDevices" type="a(osta{sv})" access="read"/>
 
     <!--
         Start:
