@@ -1695,6 +1695,26 @@
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
+    <!--
+        RemoveDevice:
+        @device: An object path to an object implementing the #org.freedesktop.UDisks2.Block interface.
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>wipe</parameter> (of type 'b').
+
+        Removes @device from the array.
+
+        For this to work @device must already be associated with the
+        array, e.g. referenced in the
+        #org.freedesktop.UDisks2.MDRaid:ActiveDevices property.
+
+        If the @option parameter contains the key @wipe with the value
+        %TRUE, all known filesystem signatures will be erased from the
+        @device after removal.
+    -->
+    <method name="RemoveDevice">
+      <arg name="block_device" direction="in" type="o"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
   </interface>
 
   <!-- ********************************************************************** -->

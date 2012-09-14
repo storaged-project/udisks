@@ -415,9 +415,11 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
               snprintf (buf, sizeof (buf), "md/%s/slot", name);
               member_slot = read_sysfs_attr (raid_device, buf);
               if (member_slot != NULL)
-                g_strstrip (member_slot);
-              if (g_strcmp0 (member_slot, "none") != 0)
-                member_slot_as_int = atoi (member_slot);
+                {
+                  g_strstrip (member_slot);
+                  if (g_strcmp0 (member_slot, "none") != 0)
+                    member_slot_as_int = atoi (member_slot);
+                }
 
               snprintf (buf, sizeof (buf), "md/%s/errors", name);
               member_errors = read_sysfs_attr_as_uint64 (raid_device, buf);
@@ -514,8 +516,8 @@ handle_start (UDisksMDRaid           *_mdraid,
       goto out;
     }
 
-  /* Translators: Shown in authentication dialog when the attempts.
-   * to stop a RAID ARRAY.
+  /* Translators: Shown in authentication dialog when the user
+   * attempts to start a RAID Array.
    */
   /* TODO: variables */
   message = N_("Authentication is required to start a RAID array");
@@ -616,8 +618,8 @@ handle_stop (UDisksMDRaid           *_mdraid,
       goto out;
     }
 
-  /* Translators: Shown in authentication dialog when the attempts.
-   * to stop a RAID ARRAY.
+  /* Translators: Shown in authentication dialog when the user
+   * attempts to stop a RAID Array.
    */
   /* TODO: variables */
   message = N_("Authentication is required to stop a RAID array");
@@ -666,9 +668,233 @@ handle_stop (UDisksMDRaid           *_mdraid,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gchar *
+find_member_state (UDisksLinuxMDRaid *mdraid,
+                   const gchar       *member_device_objpath)
+{
+  GVariantIter iter;
+  GVariant *active_devices = NULL;
+  const gchar *iter_objpath;
+  const gchar *iter_state;
+  gchar *ret = NULL;
+
+  active_devices = udisks_mdraid_dup_active_devices (UDISKS_MDRAID (mdraid));
+  if (active_devices == NULL)
+    goto out;
+
+  g_variant_iter_init (&iter, active_devices);
+  while (g_variant_iter_next (&iter, "(&oi&sta{sv})", &iter_objpath, NULL, &iter_state, NULL, NULL))
+    {
+      if (g_strcmp0 (iter_objpath, member_device_objpath) == 0)
+        {
+          ret = g_strdup (iter_state);
+          goto out;
+        }
+    }
+
+ out:
+  if (active_devices != NULL)
+    g_variant_unref (active_devices);
+  return ret;
+}
+
+static gboolean
+handle_remove_device (UDisksMDRaid           *_mdraid,
+                      GDBusMethodInvocation  *invocation,
+                      const gchar            *member_device_objpath,
+                      GVariant               *options)
+{
+  UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (_mdraid);
+  UDisksDaemon *daemon;
+  UDisksLinuxMDRaidObject *object;
+  const gchar *action_id;
+  const gchar *message;
+  uid_t caller_uid;
+  gid_t caller_gid;
+  GUdevDevice *raid_device = NULL;
+  const gchar *device_file = NULL;
+  gchar *escaped_device_file = NULL;
+  const gchar *member_device_file = NULL;
+  gchar *escaped_member_device_file = NULL;
+  GError *error = NULL;
+  gchar *error_message = NULL;
+  UDisksObject *member_device_object = NULL;
+  UDisksBlock *member_device = NULL;
+  gchar *member_state = NULL;
+  gboolean opt_wipe = FALSE;
+
+  object = udisks_daemon_util_dup_object (mdraid, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_mdraid_object_get_daemon (object);
+
+  g_variant_lookup (options, "wipe", "b", &opt_wipe);
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &caller_gid,
+                                               NULL,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  raid_device = udisks_linux_mdraid_object_get_device (object);
+  if (raid_device == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "RAID Array is not running");
+      goto out;
+    }
+
+  member_device_object = udisks_daemon_find_object (daemon, member_device_objpath);
+  if (member_device_object == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "No device for given object path");
+      goto out;
+    }
+
+  member_device = udisks_object_get_block (member_device_object);
+  if (member_device == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "No block interface on given object");
+      goto out;
+    }
+
+  member_state = find_member_state (mdraid, member_device_objpath);
+  if (member_state == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Cannot determine member state of given object");
+      goto out;
+    }
+
+  /* Translators: Shown in authentication dialog when the user
+   * attempts to remove a device from a RAID Array.
+   */
+  /* TODO: variables */
+  message = N_("Authentication is required to remove a device from a RAID array");
+  action_id = "org.freedesktop.udisks2.manage-md-raid";
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    UDISKS_OBJECT (object),
+                                                    action_id,
+                                                    options,
+                                                    message,
+                                                    invocation))
+    goto out;
+
+  device_file = g_udev_device_get_device_file (raid_device);
+  escaped_device_file = udisks_daemon_util_escape_and_quote (device_file);
+
+  member_device_file = udisks_block_get_device (member_device);
+  escaped_member_device_file = udisks_daemon_util_escape_and_quote (member_device_file);
+
+  /* if necessary, mark as faulty first */
+  if (g_strcmp0 (member_state, "in_sync") == 0 || g_strcmp0 (member_state, "writemostly") == 0)
+    {
+      if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                                  UDISKS_OBJECT (object),
+                                                  "md-raid-fault-device", caller_uid,
+                                                  NULL, /* GCancellable */
+                                                  0,    /* uid_t run_as_uid */
+                                                  0,    /* uid_t run_as_euid */
+                                                  NULL, /* gint *out_status */
+                                                  &error_message,
+                                                  NULL,  /* input_string */
+                                                  "mdadm --manage %s --set-faulty %s",
+                                                  escaped_device_file,
+                                                  escaped_member_device_file))
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error marking %s as faulty in RAID array %s: %s",
+                                                 member_device_file,
+                                                 device_file,
+                                                 error_message);
+          goto out;
+        }
+    }
+
+  if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              UDISKS_OBJECT (object),
+                                              "md-raid-remove-device", caller_uid,
+                                              NULL, /* GCancellable */
+                                              0,    /* uid_t run_as_uid */
+                                              0,    /* uid_t run_as_euid */
+                                              NULL, /* gint *out_status */
+                                              &error_message,
+                                              NULL,  /* input_string */
+                                              "mdadm --manage %s --remove %s",
+                                              escaped_device_file,
+                                              escaped_member_device_file))
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error remove %s from RAID array %s: %s",
+                                                 member_device_file,
+                                                 device_file,
+                                                 error_message);
+          goto out;
+        }
+
+  if (opt_wipe)
+    {
+      if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                                  UDISKS_OBJECT (member_device_object),
+                                                  "format-erase", caller_uid,
+                                                  NULL, /* GCancellable */
+                                                  0,    /* uid_t run_as_uid */
+                                                  0,    /* uid_t run_as_euid */
+                                                  NULL, /* gint *out_status */
+                                                  &error_message,
+                                                  NULL,  /* input_string */
+                                                  "wipefs -a %s",
+                                                  escaped_member_device_file))
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error wiping  %s after removal from RAID array %s: %s",
+                                                 member_device_file,
+                                                 device_file,
+                                                 error_message);
+          goto out;
+        }
+    }
+
+  udisks_mdraid_complete_remove_device (_mdraid, invocation);
+
+ out:
+  g_free (error_message);
+  g_free (escaped_device_file);
+  g_free (escaped_member_device_file);
+  g_free (member_state);
+  g_clear_object (&member_device_object);
+  g_clear_object (&member_device);
+  g_clear_object (&raid_device);
+  g_clear_object (&object);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 mdraid_iface_init (UDisksMDRaidIface *iface)
 {
   iface->handle_start = handle_start;
   iface->handle_stop = handle_stop;
+  iface->handle_remove_device = handle_remove_device;
 }
