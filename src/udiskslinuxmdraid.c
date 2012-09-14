@@ -227,6 +227,27 @@ ensure_polling (UDisksLinuxMDRaid  *mdraid,
     }
 }
 
+static gint
+member_cmpfunc (GVariant **a,
+                GVariant **b)
+{
+  gint slot_a;
+  gint slot_b;
+  const gchar *objpath_a;
+  const gchar *objpath_b;
+
+  g_return_val_if_fail (a != NULL, 0);
+  g_return_val_if_fail (b != NULL, 0);
+
+  g_variant_get (*a, "(&oista{sv})", &objpath_a, &slot_a, NULL, NULL, NULL);
+  g_variant_get (*b, "(&oista{sv})", &objpath_b, &slot_b, NULL, NULL, NULL);
+
+  if (slot_a == slot_b)
+    return g_strcmp0 (objpath_a, objpath_b);
+
+  return slot_a - slot_b;
+}
+
 
 /**
  * udisks_linux_mdraid_update:
@@ -337,59 +358,98 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
     }
 
   /* figure out active devices */
-  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a(osta{sv})"));
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a(oista{sv})"));
   if (raid_device != NULL)
     {
-      const gchar *raid_sysfs_path = g_udev_device_get_sysfs_path (raid_device);
-      gchar p[256];
+      gchar *md_dir_name = NULL;
+      GDir *md_dir;
+      GPtrArray *p;
       guint n;
 
-      for (n = 0; n < num_devices; n++)
+      /* First build an array of variants, then sort it, then build
+       *
+       * Why sort it? Because directory traversal does not preserve
+       * the order and we want the same order every time to avoid
+       * spurious property changes on MDRaid:ActiveDevices
+       */
+      p = g_ptr_array_new ();
+      md_dir_name = g_strdup_printf ("%s/md", g_udev_device_get_sysfs_path (raid_device));
+      md_dir = g_dir_open (md_dir_name, 0, NULL);
+      if (md_dir != NULL)
         {
-          gchar *block_sysfs_path = NULL;
-          UDisksObject *member_object = NULL;
-          gchar *member_state = NULL;
-          guint64 member_errors = 0;
-
-          snprintf (p, sizeof (p), "md/rd%d/block", n);
-          block_sysfs_path = udisks_daemon_util_resolve_link (raid_sysfs_path, p);
-          if (block_sysfs_path == NULL)
+          gchar buf[256];
+          const gchar *name;
+          while ((name = g_dir_read_name (md_dir)) != NULL)
             {
-              udisks_warning ("Unable to resolve %s/%s symlink",
-                              raid_sysfs_path, p);
-              g_variant_builder_add (&builder, "(osta{sv})",
-                                     "/", "", 0, NULL);
-              goto member_done;
-            }
+              gchar *block_sysfs_path = NULL;
+              UDisksObject *member_object = NULL;
+              gchar *member_state = NULL;
+              gchar *member_slot = NULL;
+              gint member_slot_as_int = -1;
+              guint64 member_errors = 0;
 
-          member_object = udisks_daemon_find_block_by_sysfs_path (daemon, block_sysfs_path);
-          if (member_object == NULL)
-            {
-              /* TODO: only warn on !coldplug */
-              /* udisks_warning ("No object for block device with sysfs path %s", block_sysfs_path); */
-              g_variant_builder_add (&builder, "(osta{sv})",
-                                     "/", "", 0, NULL);
-              goto member_done;
-            }
+              if (!g_str_has_prefix (name, "dev-"))
+                goto member_done;
 
-          snprintf (p, sizeof (p), "md/rd%d/state", n);
-          member_state = read_sysfs_attr (raid_device, p);
-          if (member_state != NULL)
-            g_strstrip (member_state);
+              snprintf (buf, sizeof (buf), "%s/block", name);
+              block_sysfs_path = udisks_daemon_util_resolve_link (md_dir_name, buf);
+              if (block_sysfs_path == NULL)
+                {
+                  udisks_warning ("Unable to resolve %s/%s symlink", md_dir_name, buf);
+                  goto member_done;
+                }
 
-          snprintf (p, sizeof (p), "md/rd%d/errors", n);
-          member_errors = read_sysfs_attr_as_uint64 (raid_device, p);
+              member_object = udisks_daemon_find_block_by_sysfs_path (daemon, block_sysfs_path);
+              if (member_object == NULL)
+                {
+                  /* TODO: only warn on !coldplug */
+                  /* udisks_warning ("No object for block device with sysfs path %s", block_sysfs_path); */
+                  goto member_done;
+                }
 
-          g_variant_builder_add (&builder, "(osta{sv})",
-                                 g_dbus_object_get_object_path (G_DBUS_OBJECT (member_object)),
-                                 member_state,
-                                 member_errors,
-                                 NULL); /* expansion, unused for now */
+              snprintf (buf, sizeof (buf), "md/%s/state", name);
+              member_state = read_sysfs_attr (raid_device, buf);
+              if (member_state != NULL)
+                g_strstrip (member_state);
 
-        member_done:
-          g_clear_object (&member_object);
-          g_free (block_sysfs_path);
+              snprintf (buf, sizeof (buf), "md/%s/slot", name);
+              member_slot = read_sysfs_attr (raid_device, buf);
+              if (member_slot != NULL)
+                g_strstrip (member_slot);
+              if (g_strcmp0 (member_slot, "none") != 0)
+                member_slot_as_int = atoi (member_slot);
+
+              snprintf (buf, sizeof (buf), "md/%s/errors", name);
+              member_errors = read_sysfs_attr_as_uint64 (raid_device, buf);
+
+              g_ptr_array_add (p,
+                               g_variant_new ("(oista{sv})",
+                                              g_dbus_object_get_object_path (G_DBUS_OBJECT (member_object)),
+                                              member_slot_as_int,
+                                              member_state,
+                                              member_errors,
+                                              NULL)); /* expansion, unused for now */
+
+            member_done:
+              g_free (member_slot);
+              g_free (member_state);
+              g_clear_object (&member_object);
+              g_free (block_sysfs_path);
+
+            } /* for all dev- directories */
+
+          /* ... and sort */
+          g_ptr_array_sort (p, (GCompareFunc) member_cmpfunc);
+
+          /* ... and finally build (builder consumes each GVariant instance) */
+          for (n = 0; n < p->len; n++)
+            g_variant_builder_add_value (&builder, p->pdata[n]);
+          g_ptr_array_free (p, TRUE);
+
+          g_dir_close (md_dir);
         }
+      g_free (md_dir_name);
+
     }
   udisks_mdraid_set_active_devices (iface, g_variant_builder_end (&builder));
 
