@@ -265,6 +265,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   UDisksMDRaid *iface = UDISKS_MDRAID (mdraid);
   gboolean ret = FALSE;
   guint num_devices = 0;
+  guint num_members = 0;
   guint64 size = 0;
   GUdevDevice *raid_device = NULL;
   GList *member_devices = NULL;
@@ -276,6 +277,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   gdouble sync_completed_val = 0.0;
   GVariantBuilder builder;
   UDisksDaemon *daemon = NULL;
+  gboolean can_start = FALSE, can_start_degraded = FALSE;
 
   daemon = udisks_linux_mdraid_object_get_daemon (object);
 
@@ -288,6 +290,8 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
       udisks_warning ("No members and no RAID device - bailing");
       goto out;
     }
+
+  num_members = g_list_length (member_devices);
 
   /* it doesn't matter where we get the MD_ properties from - it can be
    * either a member device or the raid device (/dev/md*) - prefer the
@@ -316,6 +320,30 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   udisks_mdraid_set_level (iface, level);
   udisks_mdraid_set_num_devices (iface, num_devices);
   udisks_mdraid_set_size (iface, size);
+
+  /* Figure out CanStart[Degraded]
+   *
+   * We ignore corner-cases RAID-10 can start with 2, 3, N/2 missing drives...
+   *
+   * TODO: We probably should ignore devices marked as spares...
+   */
+  if (num_members >= num_devices)
+    can_start = TRUE;
+  if (g_strcmp0 (level, "raid1") == 0 ||
+      g_strcmp0 (level, "raid4") == 0 ||
+      g_strcmp0 (level, "raid5") == 0 ||
+      g_strcmp0 (level, "raid10") == 0)
+    {
+      if (num_members >= num_devices - 1)
+        can_start_degraded = TRUE;
+    }
+  else if (g_strcmp0 (level, "raid6") == 0)
+    {
+      if (num_members >= num_devices - 2)
+        can_start_degraded = TRUE;
+    }
+  udisks_mdraid_set_can_start (iface, can_start);
+  udisks_mdraid_set_can_start_degraded (iface, can_start_degraded);
 
   if (raid_device != NULL)
     {
@@ -467,6 +495,38 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gchar *
+calculate_mdname_and_escape_and_quote (UDisksLinuxMDRaid *mdraid)
+{
+  gchar *ret;
+  gchar *name;
+
+  name = udisks_mdraid_dup_name (UDISKS_MDRAID (mdraid));
+  if (name != NULL)
+    {
+      /* skip homehost */
+      const gchar *s = strstr (name, ":");
+      if (s != NULL && strlen (s) > 1)
+        {
+          ret = udisks_daemon_util_escape_and_quote (s + 1);
+          g_free (name);
+        }
+      else
+        {
+          ret = name;
+          name = NULL;
+        }
+    }
+  else
+    {
+      gchar *uuid = udisks_mdraid_dup_uuid (UDISKS_MDRAID (mdraid));
+      ret = udisks_daemon_util_escape_and_quote (uuid);
+      g_free (uuid);
+    }
+
+  return ret;
+}
+
 static gboolean
 handle_start (UDisksMDRaid           *_mdraid,
               GDBusMethodInvocation  *invocation,
@@ -480,10 +540,13 @@ handle_start (UDisksMDRaid           *_mdraid,
   uid_t caller_uid;
   gid_t caller_gid;
   GUdevDevice *raid_device = NULL;
-  gchar *uuid = NULL;
-  gchar *escaped_uuid = NULL;
+  GString *str = NULL;
+  gchar *escaped_name = NULL;
+  gchar *escaped_devices = NULL;
   GError *error = NULL;
   gchar *error_message = NULL;
+  GList *member_devices = NULL, *l;
+  gboolean opt_start_degraded = FALSE;
 
   object = udisks_daemon_util_dup_object (mdraid, &error);
   if (object == NULL)
@@ -493,6 +556,8 @@ handle_start (UDisksMDRaid           *_mdraid,
     }
 
   daemon = udisks_linux_mdraid_object_get_daemon (object);
+
+  g_variant_lookup (options, "start-degraded", "b", &opt_start_degraded);
 
   error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
@@ -516,6 +581,14 @@ handle_start (UDisksMDRaid           *_mdraid,
       goto out;
     }
 
+  member_devices = udisks_linux_mdraid_object_get_members (object);
+  if (member_devices == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "No member devices");
+      goto out;
+    }
+
   /* Translators: Shown in authentication dialog when the user
    * attempts to start a RAID Array.
    */
@@ -530,8 +603,20 @@ handle_start (UDisksMDRaid           *_mdraid,
                                                     invocation))
     goto out;
 
-  uuid = udisks_mdraid_dup_uuid (_mdraid);
-  escaped_uuid = udisks_daemon_util_escape_and_quote (uuid);
+  /* figure out the name and member devices */
+  escaped_name = calculate_mdname_and_escape_and_quote (mdraid);
+  str = g_string_new (NULL);
+  for (l = member_devices; l != NULL; l = l->next)
+    {
+      GUdevDevice *device = G_UDEV_DEVICE (l->data);
+      gchar *escaped_device_file;
+      if (str->len > 0)
+        g_string_append_c (str, ' ');
+      escaped_device_file = udisks_daemon_util_escape_and_quote (g_udev_device_get_device_file (device));
+      g_string_append (str, escaped_device_file);
+      g_free (escaped_device_file);
+    }
+  escaped_devices = g_string_free (str, FALSE);
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               UDISKS_OBJECT (object),
@@ -542,14 +627,15 @@ handle_start (UDisksMDRaid           *_mdraid,
                                               NULL, /* gint *out_status */
                                               &error_message,
                                               NULL,  /* input_string */
-                                              "mdadm --assemble --scan --uuid %s",
-                                              escaped_uuid))
+                                              "mdadm --assemble%s %s %s",
+                                              opt_start_degraded ? " --run" : " ",
+                                              escaped_name,
+                                              escaped_devices))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             "Error starting RAID array with UUID %s: %s",
-                                             uuid,
+                                             "Error starting RAID array: %s",
                                              error_message);
       goto out;
     }
@@ -559,9 +645,10 @@ handle_start (UDisksMDRaid           *_mdraid,
   udisks_mdraid_complete_stop (_mdraid, invocation);
 
  out:
+  g_list_free_full (member_devices, g_object_unref);
   g_free (error_message);
-  g_free (uuid);
-  g_free (escaped_uuid);
+  g_free (escaped_name);
+  g_free (escaped_devices);
   g_clear_object (&raid_device);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */

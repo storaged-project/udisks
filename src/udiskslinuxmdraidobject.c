@@ -316,10 +316,8 @@ udisks_linux_mdraid_object_get_members (UDisksLinuxMDRaidObject *object)
       if (!g_str_has_prefix (g_udev_device_get_device_file (device), "/dev/md"))
         {
           ret = g_list_prepend (ret, g_object_ref (device));
-          goto out;
         }
     }
- out:
   return ret;
 }
 

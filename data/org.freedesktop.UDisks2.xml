@@ -710,7 +710,7 @@
     <property name="MDRaid" type="o" access="read"/>
 
     <!-- MDRaidMember:
-         If the block device is part a member of a MD-RAID array, this
+         If the block device is a member of a MD-RAID array, this
          is set to the #org.freedesktop.UDisks2.MDRaid object that it
          correspond to. Is '/' if no such object exists.
       -->
@@ -1640,7 +1640,7 @@
     <property name="SyncCompleted" type="d" access="read"/>
 
     <!-- Degraded:
-         Number of devices by which the array is degraded (0 if not degraded).
+         Number of devices by which the array is degraded (0 if not degraded or not running).
 
          This property corresponds to the
          <literal>degraded</literal> sysfs file, see the
@@ -1648,6 +1648,24 @@
          file shipped with the kernel sources.
     -->
     <property name="Degraded" type="u" access="read"/>
+
+    <!-- CanStart:
+         Set to %TRUE if the array can be started in non-degraded mode.
+
+         This property is calculated by looking at the various block
+         devices that appear to be a member of the array (cf. the
+         #org.freedesktop.UDisks2.Block:MDRaidMember property).
+    -->
+    <property name="CanStart" type="b" access="read"/>
+
+    <!-- CanStartDegraded:
+         Set to %TRUE if the array can be started in non-degraded mode.
+
+         This property is calculated by looking at the various block
+         devices that appear to be a member of the array (cf. the
+         #org.freedesktop.UDisks2.Block:MDRaidMember property).
+    -->
+    <property name="CanStartDegraded" type="b" access="read"/>
 
     <!-- ActiveDevices:
          This property is an array with block devices that are
@@ -1677,9 +1695,13 @@
 
     <!--
         Start:
-        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>start-degraded</parameter> (of type 'b').
 
         Starts the RAID array.
+
+        If the @option parameter contains the key @start-degraded with
+        the value %TRUE, the array will be started even if some members
+        are missing.
     -->
     <method name="Start">
       <arg name="options" direction="in" type="a{sv}"/>
