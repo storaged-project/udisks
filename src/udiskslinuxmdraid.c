@@ -275,6 +275,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   gchar *sync_completed = NULL;
   gchar *bitmap_location = NULL;
   guint degraded = 0;
+  guint64 chunk_size = 0;
   gdouble sync_completed_val = 0.0;
   GVariantBuilder builder;
   UDisksDaemon *daemon = NULL;
@@ -359,10 +360,12 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
       bitmap_location = read_sysfs_attr (raid_device, "md/bitmap/location");
       if (bitmap_location != NULL)
         g_strstrip (bitmap_location);
+      chunk_size = read_sysfs_attr_as_uint64 (raid_device, "md/chunk_size");
     }
   udisks_mdraid_set_degraded (iface, degraded);
   udisks_mdraid_set_sync_action (iface, sync_action);
   udisks_mdraid_set_bitmap_location (iface, bitmap_location);
+  udisks_mdraid_set_chunk_size (iface, chunk_size);
 
   if (sync_completed != NULL && g_strcmp0 (sync_completed, "none") != 0)
     {

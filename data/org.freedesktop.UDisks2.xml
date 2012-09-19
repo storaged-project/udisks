@@ -1659,6 +1659,16 @@
     -->
     <property name="BitmapLocation" type="ay" access="read"/>
 
+    <!-- ChunkSize:
+         The chunk size (0 if the array is not running or not using striping).
+
+         This property corresponds to the
+         <literal>chunk_size</literal> sysfs file, see the
+         <filename><ulink url="http://www.kernel.org/doc/Documentation/md.txt">Documentation/md.txt</ulink></filename>
+         file shipped with the kernel sources.
+    -->
+    <property name="ChunkSize" type="t" access="read"/>
+
     <!-- CanStart:
          Set to %TRUE if the array can be started in non-degraded mode.
 
