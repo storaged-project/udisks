@@ -2409,6 +2409,7 @@ udisks_object_info_new (void)
 {
   UDisksObjectInfo *ret;
   ret = g_slice_new0 (UDisksObjectInfo);
+  ret->ref_count = 1;
   return ret;
 }
 
