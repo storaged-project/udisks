@@ -273,6 +273,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   const gchar *level = NULL;
   gchar *sync_action = NULL;
   gchar *sync_completed = NULL;
+  gchar *bitmap_location = NULL;
   guint degraded = 0;
   gdouble sync_completed_val = 0.0;
   GVariantBuilder builder;
@@ -355,9 +356,13 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
       sync_completed = read_sysfs_attr (raid_device, "md/sync_completed");
       if (sync_completed != NULL)
         g_strstrip (sync_completed);
+      bitmap_location = read_sysfs_attr (raid_device, "md/bitmap/location");
+      if (bitmap_location != NULL)
+        g_strstrip (bitmap_location);
     }
   udisks_mdraid_set_degraded (iface, degraded);
   udisks_mdraid_set_sync_action (iface, sync_action);
+  udisks_mdraid_set_bitmap_location (iface, bitmap_location);
 
   if (sync_completed != NULL && g_strcmp0 (sync_completed, "none") != 0)
     {
@@ -493,6 +498,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
  out:
   g_free (sync_completed);
   g_free (sync_action);
+  g_free (bitmap_location);
   g_list_free_full (member_devices, g_object_unref);
   g_clear_object (&raid_device);
   return ret;

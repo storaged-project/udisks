@@ -1649,6 +1649,16 @@
     -->
     <property name="Degraded" type="u" access="read"/>
 
+    <!-- BitmapLocation:
+         The location of a write-intent bitmap (empty if the array is not running), if any.
+
+         This property corresponds to the
+         <literal>bitmap/location</literal> sysfs file, see the
+         <filename><ulink url="http://www.kernel.org/doc/Documentation/md.txt">Documentation/md.txt</ulink></filename>
+         file shipped with the kernel sources.
+    -->
+    <property name="BitmapLocation" type="ay" access="read"/>
+
     <!-- CanStart:
          Set to %TRUE if the array can be started in non-degraded mode.
 
