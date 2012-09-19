@@ -2517,12 +2517,19 @@ udisks_client_get_object_info_for_mdraid (UDisksClient     *client,
 {
   guint64 size = 0;
   gchar *size_str = NULL;
+  const gchar *name;
+  const gchar *s;
 
   size = udisks_mdraid_get_size (mdraid);
   if (size > 0)
     size_str = udisks_client_get_size_for_display (client, size, FALSE, FALSE);
 
-  info->name = udisks_mdraid_dup_name (mdraid);
+  name = udisks_mdraid_get_name (mdraid);
+  s = strstr (name, ":");
+  if (s != NULL && strlen (s) > 1)
+    info->name = g_strdup (s + 1);
+  else
+    info->name = g_strdup (name);
   info->icon = g_themed_icon_new_with_default_fallbacks ("gdu-enclosure");
   info->icon_symbolic = g_themed_icon_new_with_default_fallbacks ("gdu-enclosure-symbolic");
   if (size_str != NULL)
