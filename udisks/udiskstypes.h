@@ -36,6 +36,9 @@ typedef struct _UDisksClient UDisksClient;
 struct _UDisksPartitionTypeInfo;
 typedef struct _UDisksPartitionTypeInfo UDisksPartitionTypeInfo;
 
+struct _UDisksObjectInfo;
+typedef struct _UDisksObjectInfo UDisksObjectInfo;
+
 G_END_DECLS
 
 #endif /* __UDISKS_TYPES_H__ */

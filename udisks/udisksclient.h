@@ -63,6 +63,8 @@ UDisksBlock        *udisks_client_get_block_for_drive (UDisksClient        *clie
                                                        gboolean             get_physical);
 UDisksDrive        *udisks_client_get_drive_for_block (UDisksClient        *client,
                                                        UDisksBlock         *block);
+UDisksMDRaid       *udisks_client_get_mdraid_for_block (UDisksClient        *client,
+                                                        UDisksBlock         *block);
 
 UDisksBlock        *udisks_client_get_cleartext_block (UDisksClient        *client,
                                                        UDisksBlock         *block);
@@ -85,6 +87,7 @@ GList              *udisks_client_get_partitions      (UDisksClient        *clie
 GList              *udisks_client_get_jobs_for_object (UDisksClient        *client,
                                                        UDisksObject        *object);
 
+G_DEPRECATED_FOR(udisks_client_get_object_info)
 void                udisks_client_get_drive_info      (UDisksClient        *client,
                                                        UDisksDrive         *drive,
                                                        gchar              **out_name,
@@ -92,6 +95,9 @@ void                udisks_client_get_drive_info      (UDisksClient        *clie
                                                        GIcon              **out_drive_icon,
                                                        gchar              **out_media_description,
                                                        GIcon              **out_media_icon);
+
+UDisksObjectInfo   *udisks_client_get_object_info     (UDisksClient        *client,
+                                                       UDisksObject        *object);
 
 gchar              *udisks_client_get_partition_info  (UDisksClient        *client,
                                                        UDisksPartition     *partition);
@@ -147,7 +153,7 @@ gchar *udisks_client_get_job_description (UDisksClient   *client,
  * @table_type into a logical subsets. It is typically only used in
  * user interfaces where the partition type is selected.
  *
- * This struct may grow in the future.
+ * This struct may grow in the future with it being considered an ABI break.
  */
 struct _UDisksPartitionTypeInfo
 {
@@ -160,6 +166,40 @@ struct _UDisksPartitionTypeInfo
 
 GType                udisks_partition_type_info_get_type   (void) G_GNUC_CONST;
 void                 udisks_partition_type_info_free       (UDisksPartitionTypeInfo  *info);
+
+/**
+ * UDisksObjectInfo:
+ * @name: (allow-none): An name for the object or %NULL.
+ * @description: (allow-none): A description for the object or %NULL.
+ * @icon: (allow-none): An icon for the object or %NULL.
+ * @icon_symbolic: (allow-none): A symbolic icon for the object or %NULL.
+ * @media_description: (allow-none): An icon for the media of the object or %NULL.
+ * @media_icon: (allow-none): An icon for the media for the object or %NULL.
+ * @media_icon_symbolic: (allow-none): A symbolic icon for the media for the object or %NULL.
+ *
+ * Detailed information about a #UDisksObject that is suitable to
+ * display in an user interface. Use udisks_client_get_object_info()
+ * to get an instance and udisks_object_info_unref() to free it.
+ *
+ * This struct may grow in the future with it being considered an ABI break.
+ */
+struct _UDisksObjectInfo
+{
+  /*< private >*/
+  volatile gint ref_count;
+  /*< public >*/
+  gchar *name;
+  gchar *description;
+  GIcon *icon;
+  GIcon *icon_symbolic;
+  gchar *media_description;
+  GIcon *media_icon;
+  GIcon *media_icon_symbolic;
+};
+
+GType              udisks_object_info_get_type   (void) G_GNUC_CONST;
+UDisksObjectInfo  *udisks_object_info_ref        (UDisksObjectInfo  *info);
+void               udisks_object_info_unref      (UDisksObjectInfo  *info);
 
 G_END_DECLS
 

@@ -37,6 +37,8 @@ udisks_client_peek_object
 udisks_client_get_object_manager
 udisks_client_get_manager
 udisks_client_settle
+udisks_client_get_jobs_for_object
+udisks_client_get_job_description
 udisks_client_get_block_for_dev
 udisks_client_get_block_for_label
 udisks_client_get_block_for_uuid
@@ -48,10 +50,13 @@ udisks_client_get_loop_for_block
 udisks_client_get_partitions
 udisks_client_get_block_for_mdraid
 udisks_client_get_members_for_mdraid
-udisks_client_get_jobs_for_object
-udisks_client_get_job_description
+udisks_client_get_mdraid_for_block
+udisks_client_get_object_info
 <SUBSECTION>
-udisks_client_get_drive_info
+UDisksObjectInfo
+udisks_object_info_ref
+udisks_object_info_unref
+<SUBSECTION>
 udisks_client_get_partition_info
 <SUBSECTION>
 udisks_client_get_size_for_display
@@ -74,6 +79,7 @@ UDISKS_IS_CLIENT
 UDISKS_TYPE_PARTITION_TYPE_INFO_FLAGS
 <SUBSECTION Private>
 udisks_client_get_type
+udisks_object_info_get_type
 udisks_partition_type_info_get_type
 udisks_partition_type_info_flags_get_type
 </SECTION>
