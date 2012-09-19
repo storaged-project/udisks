@@ -239,8 +239,8 @@ member_cmpfunc (GVariant **a,
   g_return_val_if_fail (a != NULL, 0);
   g_return_val_if_fail (b != NULL, 0);
 
-  g_variant_get (*a, "(&oista{sv})", &objpath_a, &slot_a, NULL, NULL, NULL);
-  g_variant_get (*b, "(&oista{sv})", &objpath_b, &slot_b, NULL, NULL, NULL);
+  g_variant_get (*a, "(&oiasta{sv})", &objpath_a, &slot_a, NULL, NULL, NULL);
+  g_variant_get (*b, "(&oiasta{sv})", &objpath_b, &slot_b, NULL, NULL, NULL);
 
   if (slot_a == slot_b)
     return g_strcmp0 (objpath_a, objpath_b);
@@ -386,7 +386,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
     }
 
   /* figure out active devices */
-  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a(oista{sv})"));
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a(oiasta{sv})"));
   if (raid_device != NULL)
     {
       gchar *md_dir_name = NULL;
@@ -412,6 +412,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
               gchar *block_sysfs_path = NULL;
               UDisksObject *member_object = NULL;
               gchar *member_state = NULL;
+              gchar **member_state_elements = NULL;
               gchar *member_slot = NULL;
               gint member_slot_as_int = -1;
               guint64 member_errors = 0;
@@ -438,7 +439,10 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
               snprintf (buf, sizeof (buf), "md/%s/state", name);
               member_state = read_sysfs_attr (raid_device, buf);
               if (member_state != NULL)
-                g_strstrip (member_state);
+                {
+                  g_strstrip (member_state);
+                  member_state_elements = g_strsplit (member_state, ",", 0);
+                }
 
               snprintf (buf, sizeof (buf), "md/%s/slot", name);
               member_slot = read_sysfs_attr (raid_device, buf);
@@ -453,16 +457,17 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
               member_errors = read_sysfs_attr_as_uint64 (raid_device, buf);
 
               g_ptr_array_add (p,
-                               g_variant_new ("(oista{sv})",
+                               g_variant_new ("(oi^asta{sv})",
                                               g_dbus_object_get_object_path (G_DBUS_OBJECT (member_object)),
                                               member_slot_as_int,
-                                              member_state,
+                                              member_state_elements,
                                               member_errors,
                                               NULL)); /* expansion, unused for now */
 
             member_done:
               g_free (member_slot);
               g_free (member_state);
+              g_strfreev (member_state_elements);
               g_clear_object (&member_object);
               g_free (block_sysfs_path);
 
@@ -755,33 +760,62 @@ handle_stop (UDisksMDRaid           *_mdraid,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gchar *
-find_member_state (UDisksLinuxMDRaid *mdraid,
-                   const gchar       *member_device_objpath)
+static gchar **
+find_member_states (UDisksLinuxMDRaid *mdraid,
+                    const gchar       *member_device_objpath)
 {
   GVariantIter iter;
   GVariant *active_devices = NULL;
   const gchar *iter_objpath;
-  const gchar *iter_state;
-  gchar *ret = NULL;
+  const gchar **iter_state;
+  gchar **ret = NULL;
 
   active_devices = udisks_mdraid_dup_active_devices (UDISKS_MDRAID (mdraid));
   if (active_devices == NULL)
     goto out;
 
   g_variant_iter_init (&iter, active_devices);
-  while (g_variant_iter_next (&iter, "(&oi&sta{sv})", &iter_objpath, NULL, &iter_state, NULL, NULL))
+  while (g_variant_iter_next (&iter, "(&oi^a&sta{sv})", &iter_objpath, NULL, &iter_state, NULL, NULL))
     {
       if (g_strcmp0 (iter_objpath, member_device_objpath) == 0)
         {
-          ret = g_strdup (iter_state);
+          guint n;
+          /* we only own the container, so need to dup the values */
+          ret = (gchar **) iter_state;
+          for (n = 0; ret[n] != NULL; n++)
+            ret[n] = g_strdup (ret[n]);
           goto out;
+        }
+      else
+        {
+          g_free (iter_state);
         }
     }
 
  out:
   if (active_devices != NULL)
     g_variant_unref (active_devices);
+  return ret;
+}
+
+static gboolean
+has_state (gchar **states, const gchar *state)
+{
+  gboolean ret = FALSE;
+  guint n;
+
+  if (states == NULL)
+    goto out;
+
+  for (n = 0; states[n] != NULL; n++)
+    {
+      if (g_strcmp0 (states[n], state) == 0)
+        {
+          ret = TRUE;
+          goto out;
+        }
+    }
+ out:
   return ret;
 }
 
@@ -807,7 +841,7 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
   gchar *error_message = NULL;
   UDisksObject *member_device_object = NULL;
   UDisksBlock *member_device = NULL;
-  gchar *member_state = NULL;
+  gchar **member_states = NULL;
   gboolean opt_wipe = FALSE;
 
   object = udisks_daemon_util_dup_object (mdraid, &error);
@@ -859,8 +893,8 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
       goto out;
     }
 
-  member_state = find_member_state (mdraid, member_device_objpath);
-  if (member_state == NULL)
+  member_states = find_member_states (mdraid, member_device_objpath);
+  if (member_states == NULL)
     {
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                              "Cannot determine member state of given object");
@@ -888,7 +922,7 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
   escaped_member_device_file = udisks_daemon_util_escape_and_quote (member_device_file);
 
   /* if necessary, mark as faulty first */
-  if (g_strcmp0 (member_state, "in_sync") == 0 || g_strcmp0 (member_state, "writemostly") == 0)
+  if (has_state (member_states, "in_sync"))
     {
       if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                                   UDISKS_OBJECT (object),
@@ -968,7 +1002,7 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
   g_free (error_message);
   g_free (escaped_device_file);
   g_free (escaped_member_device_file);
-  g_free (member_state);
+  g_free (member_states);
   g_clear_object (&member_device_object);
   g_clear_object (&member_device);
   g_clear_object (&raid_device);

@@ -1678,8 +1678,8 @@
          <listitem><para>The object path for the underlying block device (guaranteed to implement the #org.freedesktop.UDisks2.Block interface)</para></listitem></varlistentry>
          <varlistentry><term>slot (type 'i')</term>
          <listitem><para>-1 if the device is not currently part of the array (ie. <literal>spare</literal> or <literal>faulty</literal>), otherwise the slot number the device currently fills (between 0 and #org.freedesktop.UDisks2.MDRaid:NumDevices)</para></listitem></varlistentry>
-         <varlistentry><term>state (type 's')</term>
-         <listitem><para>The state of the device - known values include <literal>faulty</literal>, <literal>in_sync</literal>, <literal>writemostly</literal>, <literal>blocked</literal> and <literal>spare</literal></para></listitem></varlistentry>
+         <varlistentry><term>state (type 'as')</term>
+         <listitem><para>The state of the device - known elements include <literal>faulty</literal>, <literal>in_sync</literal>, <literal>write_mostly</literal>, <literal>blocked</literal> and <literal>spare</literal></para></listitem></varlistentry>
          <varlistentry><term>num_read_errors (type 't')</term>
          <listitem><para>An ongoing count of read errors that have been detected on this device but have not caused the device to be evicted from the array</para></listitem></varlistentry>
          <varlistentry><term>expansion (type 'a{sv}')</term>
@@ -1691,7 +1691,7 @@
          <filename><ulink url="http://www.kernel.org/doc/Documentation/md.txt">Documentation/md.txt</ulink></filename>
          file shipped with the kernel sources.
     -->
-    <property name="ActiveDevices" type="a(oista{sv})" access="read"/>
+    <property name="ActiveDevices" type="a(oiasta{sv})" access="read"/>
 
     <!--
         Start:
