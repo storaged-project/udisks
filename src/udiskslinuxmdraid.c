@@ -843,6 +843,7 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
   UDisksBlock *member_device = NULL;
   gchar **member_states = NULL;
   gboolean opt_wipe = FALSE;
+  gboolean set_faulty = FALSE;
 
   object = udisks_daemon_util_dup_object (mdraid, &error);
   if (object == NULL)
@@ -922,31 +923,8 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
   escaped_member_device_file = udisks_daemon_util_escape_and_quote (member_device_file);
 
   /* if necessary, mark as faulty first */
-  if (has_state (member_states, "in_sync"))
-    {
-      if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                                  UDISKS_OBJECT (object),
-                                                  "md-raid-fault-device", caller_uid,
-                                                  NULL, /* GCancellable */
-                                                  0,    /* uid_t run_as_uid */
-                                                  0,    /* uid_t run_as_euid */
-                                                  NULL, /* gint *out_status */
-                                                  &error_message,
-                                                  NULL,  /* input_string */
-                                                  "mdadm --manage %s --set-faulty %s",
-                                                  escaped_device_file,
-                                                  escaped_member_device_file))
-        {
-          g_dbus_method_invocation_return_error (invocation,
-                                                 UDISKS_ERROR,
-                                                 UDISKS_ERROR_FAILED,
-                                                 "Error marking %s as faulty in RAID array %s: %s",
-                                                 member_device_file,
-                                                 device_file,
-                                                 error_message);
-          goto out;
-        }
-    }
+  if (!has_state (member_states, "in_sync"))
+    set_faulty = TRUE;
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               UDISKS_OBJECT (object),
@@ -957,8 +935,9 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
                                               NULL, /* gint *out_status */
                                               &error_message,
                                               NULL,  /* input_string */
-                                              "mdadm --manage %s --remove %s",
+                                              "mdadm --manage %s %s--remove %s",
                                               escaped_device_file,
+                                              set_faulty ? "--set-faulty " : "",
                                               escaped_member_device_file))
         {
           g_dbus_method_invocation_return_error (invocation,
