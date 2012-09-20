@@ -287,7 +287,10 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   gdouble sync_completed_val = 0.0;
   GVariantBuilder builder;
   UDisksDaemon *daemon = NULL;
-  gboolean can_start = FALSE, can_start_degraded = FALSE;
+  gboolean can_start = FALSE;
+  gboolean can_start_degraded = FALSE;
+  gboolean has_redundancy = FALSE;
+  gboolean has_stripes = FALSE;
 
   daemon = udisks_linux_mdraid_object_get_daemon (object);
 
@@ -365,13 +368,23 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   udisks_mdraid_set_can_start (iface, can_start);
   udisks_mdraid_set_can_start_degraded (iface, can_start_degraded);
 
+  if (g_strcmp0 (level, "raid1") == 0 ||
+      g_strcmp0 (level, "raid4") == 0 ||
+      g_strcmp0 (level, "raid5") == 0 ||
+      g_strcmp0 (level, "raid6") == 0 ||
+      g_strcmp0 (level, "raid10") == 0)
+    has_redundancy = TRUE;
+
+  if (g_strcmp0 (level, "raid0") == 0 ||
+      g_strcmp0 (level, "raid4") == 0 ||
+      g_strcmp0 (level, "raid5") == 0 ||
+      g_strcmp0 (level, "raid6") == 0 ||
+      g_strcmp0 (level, "raid10") == 0)
+    has_stripes = TRUE;
+
   if (raid_device != NULL)
     {
-      if (g_strcmp0 (level, "raid1") == 0 ||
-          g_strcmp0 (level, "raid4") == 0 ||
-          g_strcmp0 (level, "raid5") == 0 ||
-          g_strcmp0 (level, "raid6") == 0 ||
-          g_strcmp0 (level, "raid10") == 0)
+      if (has_redundancy)
         {
           /* Can't use GUdevDevice methods as they cache the result and these variables vary */
           degraded = read_sysfs_attr_as_int (raid_device, "md/degraded");
@@ -384,11 +397,11 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
           bitmap_location = read_sysfs_attr (raid_device, "md/bitmap/location");
           if (bitmap_location != NULL)
             g_strstrip (bitmap_location);
-          chunk_size = read_sysfs_attr_as_uint64 (raid_device, "md/chunk_size");
         }
-      else
+
+      if (has_stripes)
         {
-          /* no redundancy, e.g. raid0 or linear */
+          chunk_size = read_sysfs_attr_as_uint64 (raid_device, "md/chunk_size");
         }
     }
   udisks_mdraid_set_degraded (iface, degraded);
