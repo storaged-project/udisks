@@ -2515,6 +2515,29 @@ udisks_client_get_object_info_for_loop (UDisksClient     *client,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static const gchar *
+format_mdraid_level (const gchar *level)
+{
+  const gchar *ret = NULL;
+
+  if (g_strcmp0 (level, "raid0") == 0)
+    ret = C_("mdraid-desc", "RAID-0 Array");
+  else if (g_strcmp0 (level, "raid1") == 0)
+    ret = C_("mdraid-desc", "RAID-1 Array");
+  else if (g_strcmp0 (level, "raid4") == 0)
+    ret = C_("mdraid-desc", "RAID-4 Array");
+  else if (g_strcmp0 (level, "raid5") == 0)
+    ret = C_("mdraid-desc", "RAID-5 Array");
+  else if (g_strcmp0 (level, "raid6") == 0)
+    ret = C_("mdraid-desc", "RAID-6 Array");
+  else if (g_strcmp0 (level, "raid10") == 0)
+    ret = C_("mdraid-desc", "RAID-10 Array");
+  else
+    ret = C_("mdraid-desc", "RAID Array");
+
+  return ret;
+}
+
 static void
 udisks_client_get_object_info_for_mdraid (UDisksClient     *client,
                                           UDisksMDRaid     *mdraid,
@@ -2523,6 +2546,7 @@ udisks_client_get_object_info_for_mdraid (UDisksClient     *client,
   guint64 size = 0;
   gchar *size_str = NULL;
   const gchar *name;
+  const gchar *level;
   const gchar *s;
 
   size = udisks_mdraid_get_size (mdraid);
@@ -2537,13 +2561,21 @@ udisks_client_get_object_info_for_mdraid (UDisksClient     *client,
     info->name = g_strdup (name);
   info->icon = g_themed_icon_new_with_default_fallbacks ("gdu-enclosure");
   info->icon_symbolic = g_themed_icon_new_with_default_fallbacks ("gdu-enclosure-symbolic");
+
+  level = udisks_mdraid_get_level (mdraid);
   if (size_str != NULL)
     {
-      info->description = g_strdup_printf (_("%s RAID Array"), size_str);
+      /* Translators: Used to format the description for a RAID array.
+       *              The first %s is the size (e.g. '42.0 GB').
+       *              The second %s is the level (e.g. 'RAID-5 Array').
+       */
+      info->description = g_strdup_printf (C_("mdraid-desc", "%s %s"),
+                                           size_str,
+                                           format_mdraid_level (level));
     }
   else
     {
-      info->description = g_strdup (_("RAID Array"));
+      info->description = g_strdup (format_mdraid_level (level));
     }
 }
 
