@@ -587,7 +587,7 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
   g_return_if_fail (UDISKS_IS_LINUX_MDRAID_OBJECT (object));
   g_return_if_fail (G_UDEV_IS_DEVICE (device));
 
-  udisks_debug ("is_member=%d for uuid %s and device %s", is_member, object->uuid, g_udev_device_get_device_file (device));
+  /* udisks_debug ("is_member=%d for uuid %s and device %s", is_member, object->uuid, g_udev_device_get_device_file (device)); */
 
   if (is_member)
     {

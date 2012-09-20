@@ -191,7 +191,7 @@ on_polling_timout (gpointer user_data)
   UDisksLinuxMDRaidObject *object = NULL;
   GUdevDevice *raid_device;
 
-  udisks_debug ("polling timeout");
+  /* udisks_debug ("polling timeout"); */
 
   object = udisks_daemon_util_dup_object (mdraid, NULL);
   if (object == NULL)

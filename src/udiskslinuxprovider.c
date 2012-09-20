@@ -522,7 +522,6 @@ handle_block_uevent_for_mdraid_with_uuid (UDisksLinuxProvider *provider,
           udisks_linux_mdraid_object_uevent (object, action, device, TRUE /* is_member */);
           g_warn_if_fail (g_hash_table_remove (provider->sysfs_path_to_mdraid_members, sysfs_path));
           maybe_remove_mdraid_object (provider, object);
-          udisks_debug ("removed member for %s", sysfs_path);
         }
 
       /* then check if the device was the raid device */
@@ -532,7 +531,6 @@ handle_block_uevent_for_mdraid_with_uuid (UDisksLinuxProvider *provider,
           udisks_linux_mdraid_object_uevent (object, action, device, FALSE /* is_member */);
           g_warn_if_fail (g_hash_table_remove (provider->sysfs_path_to_mdraid, sysfs_path));
           maybe_remove_mdraid_object (provider, object);
-          udisks_debug ("removed object for %s", sysfs_path);
         }
     }
   else
