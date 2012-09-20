@@ -1620,7 +1620,8 @@
 
     <!-- SyncAction:
          The current state of the array or empty if the array is not
-         running.
+         running or if the array does not have any redundancy
+         (e.g. RAID-0 or linear).
 
          This property corresponds to the
          <literal>sync_action</literal> sysfs file, see the
