@@ -278,29 +278,35 @@ update_mdraid (UDisksLinuxBlock         *block,
                GDBusObjectManagerServer *object_manager)
 {
   UDisksBlock *iface = UDISKS_BLOCK (block);
-  const gchar *md_uuid;
+  const gchar *uuid;
   const gchar *objpath_mdraid = "/";
   const gchar *objpath_mdraid_member = "/";
   UDisksLinuxMDRaidObject *object = NULL;
 
-  md_uuid = g_udev_device_get_property (device, "MD_UUID");
-  if (md_uuid == NULL || strlen (md_uuid) == 0)
-    goto out;
+  uuid = g_udev_device_get_property (device, "MD_UUID");
+  if (uuid != NULL && strlen (uuid) > 0)
+    {
+      object = find_mdraid (object_manager, uuid);
+      if (object != NULL)
+        {
+          objpath_mdraid = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
+          g_clear_object (&object);
+        }
+    }
 
-  object = find_mdraid (object_manager, md_uuid);
-  if (object == NULL)
-    goto out;
+  uuid = g_udev_device_get_property (device, "MD_MEMBER_UUID");
+  if (uuid != NULL && strlen (uuid) > 0)
+    {
+      object = find_mdraid (object_manager, uuid);
+      if (object != NULL)
+        {
+          objpath_mdraid_member = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
+          g_clear_object (&object);
+        }
+    }
 
-  /* TODO: find a better way to distinguish member vs array ? */
-  if (g_str_has_prefix (g_udev_device_get_device_file (device), "/dev/md"))
-    objpath_mdraid = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
-  else
-    objpath_mdraid_member = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
-
- out:
   udisks_block_set_mdraid (iface, objpath_mdraid);
   udisks_block_set_mdraid_member (iface, objpath_mdraid_member);
-  g_clear_object (&object);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

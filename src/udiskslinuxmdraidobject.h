@@ -32,13 +32,17 @@ G_BEGIN_DECLS
 
 GType                    udisks_linux_mdraid_object_get_type      (void) G_GNUC_CONST;
 UDisksLinuxMDRaidObject *udisks_linux_mdraid_object_new           (UDisksDaemon              *daemon,
-                                                                   GUdevDevice               *device);
+                                                                   const gchar               *uuid);
 void                     udisks_linux_mdraid_object_uevent        (UDisksLinuxMDRaidObject   *object,
                                                                    const gchar               *action,
-                                                                   GUdevDevice               *device);
+                                                                   GUdevDevice               *device,
+                                                                   gboolean                   is_member);
+const gchar             *udisks_linux_mdraid_object_get_uuid      (UDisksLinuxMDRaidObject   *object);
 UDisksDaemon            *udisks_linux_mdraid_object_get_daemon    (UDisksLinuxMDRaidObject   *object);
 GList                   *udisks_linux_mdraid_object_get_members   (UDisksLinuxMDRaidObject   *object);
 GUdevDevice             *udisks_linux_mdraid_object_get_device    (UDisksLinuxMDRaidObject   *object);
+
+gboolean                 udisks_linux_mdraid_object_have_devices  (UDisksLinuxMDRaidObject   *object);
 
 G_END_DECLS
 

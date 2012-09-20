@@ -189,6 +189,7 @@ on_polling_timout (gpointer user_data)
 {
   UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (user_data);
   UDisksLinuxMDRaidObject *object = NULL;
+  GUdevDevice *raid_device;
 
   udisks_debug ("polling timeout");
 
@@ -197,7 +198,12 @@ on_polling_timout (gpointer user_data)
     goto out;
 
   /* synthesize uevent */
-  udisks_linux_mdraid_object_uevent (object, "change", NULL);
+  raid_device = udisks_linux_mdraid_object_get_device (object);
+  if (raid_device != NULL)
+    {
+      udisks_linux_mdraid_object_uevent (object, "change", raid_device, FALSE);
+      g_object_unref (raid_device);
+    }
 
  out:
   g_clear_object (&object);
@@ -271,6 +277,8 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   GList *member_devices = NULL;
   GUdevDevice *device = NULL;
   const gchar *level = NULL;
+  const gchar *uuid = NULL;
+  const gchar *name = NULL;
   gchar *sync_action = NULL;
   gchar *sync_completed = NULL;
   gchar *bitmap_location = NULL;
@@ -300,12 +308,21 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
    * former, if available
    */
   if (member_devices != NULL)
-    device = G_UDEV_DEVICE (member_devices->data);
+    {
+      device = G_UDEV_DEVICE (member_devices->data);
+      num_devices = g_udev_device_get_property_as_int (device, "MD_MEMBER_DEVICES");
+      level = g_udev_device_get_property (device, "MD_MEMBER_LEVEL");
+      uuid = g_udev_device_get_property (device, "MD_MEMBER_UUID");
+      name = g_udev_device_get_property (device, "MD_MEMBER_NAME");
+    }
   else
-    device = G_UDEV_DEVICE (raid_device);
-
-  num_devices = g_udev_device_get_property_as_int (device, "MD_DEVICES");
-  level = g_udev_device_get_property (device, "MD_LEVEL");
+    {
+      device = G_UDEV_DEVICE (raid_device);
+      num_devices = g_udev_device_get_property_as_int (device, "MD_DEVICES");
+      level = g_udev_device_get_property (device, "MD_LEVEL");
+      uuid = g_udev_device_get_property (device, "MD_UUID");
+      name = g_udev_device_get_property (device, "MD_NAME");
+    }
 
   /* figure out size */
   if (raid_device != NULL)
@@ -317,8 +334,8 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
       /* TODO: need MD_ARRAY_SIZE, see https://bugs.freedesktop.org/show_bug.cgi?id=53239#c5 */
     }
 
-  udisks_mdraid_set_uuid (iface, g_udev_device_get_property (device, "MD_UUID"));
-  udisks_mdraid_set_name (iface, g_udev_device_get_property (device, "MD_NAME"));
+  udisks_mdraid_set_uuid (iface, uuid);
+  udisks_mdraid_set_name (iface, name);
   udisks_mdraid_set_level (iface, level);
   udisks_mdraid_set_num_devices (iface, num_devices);
   udisks_mdraid_set_size (iface, size);
@@ -331,6 +348,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
    */
   if (num_members >= num_devices)
     can_start = TRUE;
+
   if (g_strcmp0 (level, "raid1") == 0 ||
       g_strcmp0 (level, "raid4") == 0 ||
       g_strcmp0 (level, "raid5") == 0 ||
@@ -349,18 +367,29 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
 
   if (raid_device != NULL)
     {
-      /* Can't use GUdevDevice methods as they cache the result and these variables vary */
-      degraded = read_sysfs_attr_as_int (raid_device, "md/degraded");
-      sync_action = read_sysfs_attr (raid_device, "md/sync_action");
-      if (sync_action != NULL)
-        g_strstrip (sync_action);
-      sync_completed = read_sysfs_attr (raid_device, "md/sync_completed");
-      if (sync_completed != NULL)
-        g_strstrip (sync_completed);
-      bitmap_location = read_sysfs_attr (raid_device, "md/bitmap/location");
-      if (bitmap_location != NULL)
-        g_strstrip (bitmap_location);
-      chunk_size = read_sysfs_attr_as_uint64 (raid_device, "md/chunk_size");
+      if (g_strcmp0 (level, "raid1") == 0 ||
+          g_strcmp0 (level, "raid4") == 0 ||
+          g_strcmp0 (level, "raid5") == 0 ||
+          g_strcmp0 (level, "raid6") == 0 ||
+          g_strcmp0 (level, "raid10") == 0)
+        {
+          /* Can't use GUdevDevice methods as they cache the result and these variables vary */
+          degraded = read_sysfs_attr_as_int (raid_device, "md/degraded");
+          sync_action = read_sysfs_attr (raid_device, "md/sync_action");
+          if (sync_action != NULL)
+            g_strstrip (sync_action);
+          sync_completed = read_sysfs_attr (raid_device, "md/sync_completed");
+          if (sync_completed != NULL)
+            g_strstrip (sync_completed);
+          bitmap_location = read_sysfs_attr (raid_device, "md/bitmap/location");
+          if (bitmap_location != NULL)
+            g_strstrip (bitmap_location);
+          chunk_size = read_sysfs_attr_as_uint64 (raid_device, "md/chunk_size");
+        }
+      else
+        {
+          /* no redundancy, e.g. raid0 or linear */
+        }
     }
   udisks_mdraid_set_degraded (iface, degraded);
   udisks_mdraid_set_sync_action (iface, sync_action);
@@ -414,8 +443,8 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
       if (md_dir != NULL)
         {
           gchar buf[256];
-          const gchar *name;
-          while ((name = g_dir_read_name (md_dir)) != NULL)
+          const gchar *file_name;
+          while ((file_name = g_dir_read_name (md_dir)) != NULL)
             {
               gchar *block_sysfs_path = NULL;
               UDisksObject *member_object = NULL;
@@ -425,10 +454,10 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
               gint member_slot_as_int = -1;
               guint64 member_errors = 0;
 
-              if (!g_str_has_prefix (name, "dev-"))
+              if (!g_str_has_prefix (file_name, "dev-"))
                 goto member_done;
 
-              snprintf (buf, sizeof (buf), "%s/block", name);
+              snprintf (buf, sizeof (buf), "%s/block", file_name);
               block_sysfs_path = udisks_daemon_util_resolve_link (md_dir_name, buf);
               if (block_sysfs_path == NULL)
                 {
@@ -444,7 +473,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
                   goto member_done;
                 }
 
-              snprintf (buf, sizeof (buf), "md/%s/state", name);
+              snprintf (buf, sizeof (buf), "md/%s/state", file_name);
               member_state = read_sysfs_attr (raid_device, buf);
               if (member_state != NULL)
                 {
@@ -452,7 +481,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
                   member_state_elements = g_strsplit (member_state, ",", 0);
                 }
 
-              snprintf (buf, sizeof (buf), "md/%s/slot", name);
+              snprintf (buf, sizeof (buf), "md/%s/slot", file_name);
               member_slot = read_sysfs_attr (raid_device, buf);
               if (member_slot != NULL)
                 {
@@ -461,7 +490,7 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
                     member_slot_as_int = atoi (member_slot);
                 }
 
-              snprintf (buf, sizeof (buf), "md/%s/errors", name);
+              snprintf (buf, sizeof (buf), "md/%s/errors", file_name);
               member_errors = read_sysfs_attr_as_uint64 (raid_device, buf);
 
               g_ptr_array_add (p,
@@ -495,8 +524,6 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
 
     }
   udisks_mdraid_set_active_devices (iface, g_variant_builder_end (&builder));
-
-  /* TODO: set other stuff */
 
  out:
   g_free (sync_completed);
