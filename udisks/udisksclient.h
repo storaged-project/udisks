@@ -153,7 +153,8 @@ gchar *udisks_client_get_job_description (UDisksClient   *client,
  * @table_type into a logical subsets. It is typically only used in
  * user interfaces where the partition type is selected.
  *
- * This struct may grow in the future with it being considered an ABI break.
+ * This struct may grow in the future without it being considered an
+ * ABI break.
  */
 struct _UDisksPartitionTypeInfo
 {
@@ -169,6 +170,7 @@ void                 udisks_partition_type_info_free       (UDisksPartitionTypeI
 
 /**
  * UDisksObjectInfo:
+ * @object: The #UDisksObject that the information is for.
  * @name: (allow-none): An name for the object or %NULL.
  * @description: (allow-none): A description for the object or %NULL.
  * @icon: (allow-none): An icon for the object or %NULL.
@@ -177,17 +179,32 @@ void                 udisks_partition_type_info_free       (UDisksPartitionTypeI
  * @media_icon: (allow-none): An icon for the media for the object or %NULL.
  * @media_icon_symbolic: (allow-none): A symbolic icon for the media for the object or %NULL.
  *
- * Detailed information about a #UDisksObject that is suitable to
- * display in an user interface. Use udisks_client_get_object_info()
- * to get an instance and udisks_object_info_unref() to free it.
+ * Detailed information about the D-Bus interfaces (such as
+ * #UDisksBlock and #UDisksDrive) on a #UDisksObject that is suitable
+ * to display in an user interface. Use
+ * udisks_client_get_object_info() to get an instance and
+ * udisks_object_info_unref() to free it.
  *
- * This struct may grow in the future with it being considered an ABI break.
+ * The
+ * <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.HintName">HintName</link>
+ * and/or
+ * <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.HintName">HintIconName</link>
+ * propreties on associated #UDisksBlock interfaces (if any) may influence
+ * the @icon and @media_icon fields.
+ *
+ * The @media_description, @media_icon and @media_icon_symbolic fields
+ * are only set for #UDisksDrive interfaces where the drive has
+ * removable media.
+ *
+ * This struct may grow in the future without it being considered an
+ * ABI break.
  */
 struct _UDisksObjectInfo
 {
   /*< private >*/
   volatile gint ref_count;
   /*< public >*/
+  UDisksObject *object;
   gchar *name;
   gchar *description;
   GIcon *icon;

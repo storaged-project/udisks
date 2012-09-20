@@ -2405,11 +2405,15 @@ G_DEFINE_BOXED_TYPE (UDisksPartitionTypeInfo, udisks_partition_type_info, udisks
 /* ---------------------------------------------------------------------------------------------------- */
 
 static UDisksObjectInfo *
-udisks_object_info_new (void)
+udisks_object_info_new (UDisksObject *object)
 {
   UDisksObjectInfo *ret;
+
+  g_return_val_if_fail (object == NULL || UDISKS_IS_OBJECT (object), NULL);
+
   ret = g_slice_new0 (UDisksObjectInfo);
   ret->ref_count = 1;
+  ret->object = object != NULL ? g_object_ref (object) : NULL;
   return ret;
 }
 
@@ -2440,6 +2444,7 @@ udisks_object_info_unref (UDisksObjectInfo  *info)
 {
   if (g_atomic_int_dec_and_test (&info->ref_count))
     {
+      g_clear_object (&info->object);
       g_free (info->name);
       g_free (info->description);
       g_clear_object (&info->icon);
@@ -2856,183 +2861,6 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
  * present in an user interface. Information is returned in the
  * #UDisksObjectInfo object and is localized.
  *
- * The
- * <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.HintName">HintName</link>
- * and/or
- * <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.HintName">HintIconName</link>
- * propreties on associated #UDisksBlock interfaces associated with @object may influence
- * the result (either directly or indirectly).
- *
- * The returned data is best described by example:
- * <informaltable>
- *   <tgroup cols="6">
- *     <thead>
- *       <row>
- *         <entry>Interfaces on @object</entry>
- *         <entry>@name</entry>
- *         <entry>@description</entry>
- *         <entry>@icon</entry>
- *         <entry>@media_description</entry>
- *         <entry>@media_icon</entry>
- *       </row>
- *     </thead>
- *     <tbody>
- *       <row>
- *         <entry>#UDisksDrive: USB Thumb Drive</entry>
- *         <entry>Kingston DataTraveler 2.0</entry>
- *         <entry>4.0 GB Thumb Drive</entry>
- *         <entry>media-removable</entry>
- *         <entry>%NULL</entry>
- *         <entry>%NULL</entry>
- *       </row>
- *       <row>
- *         <entry>#UDisksDrive: Internal System Disk (Hard Disk)</entry>
- *         <entry>ST3320620AS</entry>
- *         <entry>320 GB Hard Disk</entry>
- *         <entry>drive-harddisk</entry>
- *         <entry>%NULL</entry>
- *         <entry>%NULL</entry>
- *       </row>
- *       <row>
- *         <entry>#UDisksDrive: Internal System Disk (Solid State)</entry>
- *         <entry>INTEL SSDSA2MH080G1GC</entry>
- *         <entry>80 GB Disk</entry>
- *         <entry>drive-harddisk</entry>
- *         <entry>%NULL</entry>
- *         <entry>%NULL</entry>
- *       </row>
- *       <row>
- *         <entry>#UDisksDrive: Optical Drive (empty)</entry>
- *         <entry>LITE-ON DVDRW SOHW-812S</entry>
- *         <entry>CD/DVD Drive</entry>
- *         <entry>drive-optical</entry>
- *         <entry>%NULL</entry>
- *         <entry>%NULL</entry>
- *       </row>
- *       <row>
- *         <entry>#UDisksDrive: Optical Drive (with CD-ROM data disc)</entry>
- *         <entry>LITE-ON DVDRW SOHW-812S</entry>
- *         <entry>CD/DVD Drive</entry>
- *         <entry>drive-optical</entry>
- *         <entry>CD-ROM Disc</entry>
- *         <entry>media-optical-cd-rom</entry>
- *       </row>
- *       <row>
- *         <entry>#UDisksDrive: Optical Drive (with mixed disc)</entry>
- *         <entry>LITE-ON DVDRW SOHW-812S</entry>
- *         <entry>CD/DVD Drive</entry>
- *         <entry>drive-optical</entry>
- *         <entry>Audio/Data CD-ROM Disc</entry>
- *         <entry>media-optical-cd-rom</entry>
- *       </row>
- *       <row>
- *         <entry>#UDisksDrive: Optical Drive (with audio disc)</entry>
- *         <entry>LITE-ON DVDRW SOHW-812S</entry>
- *         <entry>CD/DVD Drive</entry>
- *         <entry>drive-optical</entry>
- *         <entry>Audio Disc</entry>
- *         <entry>media-optical-cd-audio</entry>
- *       </row>
- *       <row>
- *         <entry>#UDisksDrive: Optical Drive (with DVD-ROM disc)</entry>
- *         <entry>LITE-ON DVDRW SOHW-812S</entry>
- *         <entry>CD/DVD Drive</entry>
- *         <entry>drive-optical</entry>
- *         <entry>DVD-ROM Disc</entry>
- *         <entry>media-optical-dvd-rom</entry>
- *       </row>
- *       <row>
- *         <entry>#UDisksDrive: Optical Drive (with blank DVD-R disc)</entry>
- *         <entry>LITE-ON DVDRW SOHW-812S</entry>
- *         <entry>CD/DVD Drive</entry>
- *         <entry>drive-optical</entry>
- *         <entry>Blank DVD-R Disc</entry>
- *         <entry>media-optical-dvd-r</entry>
- *       </row>
- *       <row>
- *         <entry>#UDisksDrive: External USB Hard Disk</entry>
- *         <entry>WD 2500JB External</entry>
- *         <entry>250 GB Hard Disk</entry>
- *         <entry>drive-harddisk-usb</entry>
- *         <entry>%NULL</entry>
- *         <entry>%NULL</entry>
- *       </row>
- *       <row>
- *         <entry>#UDisksDrive: USB Compact Flash Reader (without media)</entry>
- *         <entry>BELKIN USB 2 HS-CF</entry>
- *         <entry>Compact Flash Drive</entry>
- *         <entry>drive-removable-media-flash-cf</entry>
- *         <entry>%NULL</entry>
- *         <entry>%NULL</entry>
- *       </row>
- *       <row>
- *         <entry>#UDisksDrive: USB Compact Flash Reader (with media)</entry>
- *         <entry>BELKIN USB 2 HS-CF</entry>
- *         <entry>Compact Flash Drive</entry>
- *         <entry>drive-removable-media-flash-cf</entry>
- *         <entry>Compact Flash media</entry>
- *         <entry>media-flash-cf</entry>
- *       </row>
- *       <row>
- *         <entry>#UDisksBlock whole disk with associated #UDisksDrive</entry>
- *         <entry><emphasis>(same as drive)</emphasis></entry>
- *         <entry><emphasis>(same as drive)</emphasis></entry>
- *         <entry><emphasis>(same as drive)</emphasis></entry>
- *         <entry><emphasis>(same as drive)</emphasis></entry>
- *         <entry><emphasis>(same as drive)</emphasis></entry>
- *       </row>
- *       <row>
- *         <entry>#UDisksBlock partition with associated #UDisksDrive</entry>
- *         <entry><emphasis>(same as drive)</emphasis></entry>
- *         <entry>Partition N of <emphasis>(drive description)</emphasis></entry>
- *         <entry><emphasis>(same as drive)</emphasis></entry>
- *         <entry><emphasis>(same as drive)</emphasis></entry>
- *         <entry><emphasis>(same as drive)</emphasis></entry>
- *       </row>
- *       <row>
- *         <entry>#UDisksBlock without associated #UDisksDrive</entry>
- *         <entry>The value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.PreferredDevice">PreferredDevice</link> property, e.g. <filename>/dev/vg_thinkpad/lv_root</filename></entry>
- *         <entry>42.0 MB Block Device</entry>
- *         <entry>drive-removable-media</entry>
- *         <entry>%NULL</entry>
- *         <entry>%NULL</entry>
- *       </row>
- *       <row>
- *         <entry>#UDisksBlock for a loop device</entry>
- *         <entry>The value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Loop.BackingFile">BackingFile</link> property, e.g. <filename>/path/to/file.iso</filename></entry>
- *         <entry>42.0 MB Loop Device</entry>
- *         <entry>drive-removable-media</entry>
- *         <entry>%NULL</entry>
- *         <entry>%NULL</entry>
- *       </row>
- *       <row>
- *         <entry>#UDisksMDRaid</entry>
- *         <entry>The value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-MDRaid.Name">Name</link> property, e.g. <filename>MirrorOnTheWall</filename></entry>
- *         <entry>12 TB RAID Array</entry>
- *         <entry>gdu-enclosure (TODO: use name from icon naming spec)</entry>
- *         <entry>%NULL</entry>
- *         <entry>%NULL</entry>
- *       </row>
- *       <row>
- *         <entry>#UDisksBlock whole disk with associated #UDisksMDRaid</entry>
- *         <entry><emphasis>(same as RAID)</emphasis></entry>
- *         <entry><emphasis>(same as RAID)</emphasis></entry>
- *         <entry><emphasis>(same as RAID)</emphasis></entry>
- *         <entry><emphasis>(same as RAID)</emphasis></entry>
- *         <entry><emphasis>(same as RAID)</emphasis></entry>
- *       </row>
- *       <row>
- *         <entry>#UDisksBlock partition with associated #UDisksMDRaid</entry>
- *         <entry><emphasis>(same as RAID)</emphasis></entry>
- *         <entry>Partition N of <emphasis>(RAID description)</emphasis></entry>
- *         <entry><emphasis>(same as RAID)</emphasis></entry>
- *         <entry><emphasis>(same as RAID)</emphasis></entry>
- *         <entry><emphasis>(same as RAID)</emphasis></entry>
- *       </row>
- *     </tbody>
- *   </tgroup>
- * </informaltable>
- *
  * Returns: A #UDisksObjectInfo instance that should be freed with udisks_object_info_unref().
  */
 UDisksObjectInfo *
@@ -3050,7 +2878,7 @@ udisks_client_get_object_info (UDisksClient        *client,
   g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
   g_return_val_if_fail (UDISKS_IS_OBJECT (object), NULL);
 
-  ret = udisks_object_info_new ();
+  ret = udisks_object_info_new (object);
   drive = udisks_object_get_drive (object);
   block = udisks_object_get_block (object);
   loop = udisks_object_get_loop (object);
@@ -3154,7 +2982,7 @@ udisks_client_get_drive_info (UDisksClient  *client,
   g_return_if_fail (UDISKS_IS_CLIENT (client));
   g_return_if_fail (UDISKS_IS_DRIVE (drive));
 
-  info = udisks_object_info_new ();
+  info = udisks_object_info_new (NULL);
   udisks_client_get_object_info_for_drive (client, drive, info);
 
   if (out_name != NULL)
