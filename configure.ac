@@ -145,7 +145,7 @@ AC_SUBST(LIBATASMART_CFLAGS)
 AC_SUBST(LIBATASMART_LIBS)
 
 PKG_CHECK_MODULES(LIBSYSTEMD_LOGIN,
-                  [libsystemd-login >= 44],
+                  [libsystemd-login >= 44 libsystemd-daemon],
                   have_libsystemd_login=yes,
                   have_libsystemd_login=no)
 AM_CONDITIONAL(HAVE_LIBSYSTEMD_LOGIN, test x$have_libsystemd_login = xyes)

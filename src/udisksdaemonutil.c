@@ -42,6 +42,7 @@
 #include "udiskslinuxdriveobject.h"
 
 #if defined(HAVE_LIBSYSTEMD_LOGIN)
+#include <systemd/sd-daemon.h>
 #include <systemd/sd-login.h>
 #endif
 
@@ -1020,6 +1021,10 @@ udisks_daemon_util_on_same_seat (UDisksDaemon          *daemon,
   const gchar *drive_seat;
   UDisksObject *drive_object = NULL;
   UDisksDrive *drive = NULL;
+
+  /* if we haven't booted with systemd, assume it's always the same seat */
+  if (sd_booted () <= 0)
+    return TRUE;
 
   if (UDISKS_IS_LINUX_BLOCK_OBJECT (object))
     {
