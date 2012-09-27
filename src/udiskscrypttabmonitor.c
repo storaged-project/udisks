@@ -258,7 +258,8 @@ on_file_monitor_changed (GFileMonitor      *file_monitor,
 {
   UDisksCrypttabMonitor *monitor = UDISKS_CRYPTTAB_MONITOR (user_data);
   if (event_type == G_FILE_MONITOR_EVENT_CHANGED ||
-      event_type == G_FILE_MONITOR_EVENT_CREATED)
+      event_type == G_FILE_MONITOR_EVENT_CREATED ||
+      event_type == G_FILE_MONITOR_EVENT_DELETED)
     {
       udisks_debug ("/etc/crypttab changed!");
       reload_crypttab_entries (monitor);
@@ -368,8 +369,11 @@ udisks_crypttab_monitor_ensure (UDisksCrypttabMonitor *monitor)
                             NULL, /* size */
                             &error))
     {
-      udisks_warning ("Error opening /etc/crypttab file: %s (%s, %d)",
-                      error->message, g_quark_to_string (error->domain), error->code);
+      if (!(error->domain == G_FILE_ERROR && error->code == G_FILE_ERROR_NOENT))
+        {
+          udisks_warning ("Error opening /etc/crypttab file: %s (%s, %d)",
+                          error->message, g_quark_to_string (error->domain), error->code);
+        }
       g_error_free (error);
       goto out;
     }
