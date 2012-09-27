@@ -538,7 +538,7 @@ udisks_mount_monitor_get_swaps (UDisksMountMonitor  *monitor,
         }
       else
         {
-          g_propagate_prefixed_error (error, local_error, "Error reading /proc/self/mountinfo: ");
+          g_propagate_prefixed_error (error, local_error, "Error reading /proc/swaps: ");
           goto out;
         }
     }
