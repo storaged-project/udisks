@@ -259,7 +259,8 @@ on_file_monitor_changed (GFileMonitor      *file_monitor,
 {
   UDisksFstabMonitor *monitor = UDISKS_FSTAB_MONITOR (user_data);
   if (event_type == G_FILE_MONITOR_EVENT_CHANGED ||
-      event_type == G_FILE_MONITOR_EVENT_CREATED)
+      event_type == G_FILE_MONITOR_EVENT_CREATED ||
+      event_type == G_FILE_MONITOR_EVENT_DELETED)
     {
       udisks_debug ("/etc/fstab changed!");
       reload_fstab_entries (monitor);
@@ -365,7 +366,10 @@ udisks_fstab_monitor_ensure (UDisksFstabMonitor *monitor)
   f = fopen ("/etc/fstab", "r");
   if (f == NULL)
     {
-      udisks_warning ("Error opening /etc/fstab file: %m");
+      if (errno != ENOENT)
+        {
+          udisks_warning ("Error opening /etc/fstab file: %m");
+        }
       goto out;
     }
 
