@@ -1382,7 +1382,7 @@
 
         Unmount a mounted device.
 
-        If the device in question was not mounted by the calling user
+        If the device in question was mounted by the calling user
         via the org.freedesktop.UDisks2.Filesystem.Mount() method the
         filesystem is unmounted without any authorization checks.
         Otherwise, an authorization check is performed (which
