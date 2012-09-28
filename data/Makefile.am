@@ -32,6 +32,11 @@ polkitdir        = $(datadir)/polkit-1/actions
 polkit_in_files  = org.freedesktop.udisks2.policy.in
 polkit_DATA      = $(polkit_in_files:.policy.in=.policy)
 
+completionsdir = $(datadir)/bash-completion/completions
+completions_DATA = 					\
+	completions/udisksctl				\
+	$(NULL)
+
 @INTLTOOL_POLICY_RULE@
 
 EXTRA_DIST = 						\
@@ -41,6 +46,7 @@ EXTRA_DIST = 						\
 	$(dbusservice_in_files)				\
 	$(dbusconf_in_files)				\
 	$(polkit_in_files)				\
+	$(completions_DATA)				\
 	$(NULL)
 
 clean-local :
