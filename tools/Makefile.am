@@ -12,7 +12,6 @@ INCLUDES = \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\" 		\
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\" 			\
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT			\
-	-DUDISKS_API_IS_SUBJECT_TO_CHANGE			\
 	$(WARN_CFLAGS)						\
 	$(NULL)
 

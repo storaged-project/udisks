@@ -21,10 +21,6 @@
 #ifndef __UDISKS_H__
 #define __UDISKS_H__
 
-#if !defined(UDISKS_API_IS_SUBJECT_TO_CHANGE) && !defined(UDISKS_COMPILATION)
-#error  libudisks is unstable API. You must define UDISKS_API_IS_SUBJECT_TO_CHANGE before including udisks/udisks.h
-#endif
-
 #define __UDISKS_INSIDE_UDISKS_H__
 #include <udisks/udiskstypes.h>
 #include <udisks/udisksenums.h>
