@@ -132,6 +132,17 @@
     <variablelist>
 
       <varlistentry>
+        <term><option>info</option></term>
+        <listitem>
+          <para>
+            Shows detailed information about
+            <replaceable>OBJECT</replaceable> or
+            <replaceable>DEVICE</replaceable>.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><option>mount</option></term>
         <listitem>
           <para>
