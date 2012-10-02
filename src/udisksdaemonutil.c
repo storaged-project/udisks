@@ -1140,7 +1140,7 @@ udisks_daemon_util_hexdump_debug (gconstpointer data, gsize len)
  * udisks_daemon_util_file_set_contents:
  * @filename: (type filename): Name of a file to write @contents to, in the GLib file name encoding.
  * @contents: (array length=length) (element-type guint8): String to write to the file.
- * @length: Length of @contents, or -1 if @contents is a NUL-terminated string.
+ * @contents_len: Length of @contents, or -1 if @contents is a NUL-terminated string.
  * @mode_for_new_file: Mode for new file.
  * @error: Return location for a #GError, or %NULL.
  *
