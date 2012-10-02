@@ -442,6 +442,14 @@ job_iface_init (UDisksJobIface *iface)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/**
+ * udisks_base_job_get_auto_estimate:
+ * @job: A #UDisksBaseJob.
+ *
+ * Gets whether auto-estimation is being used.
+ *
+ * Returns: %TRUE if auto-estimation is being used, %FALSE otherwise.
+ */
 gboolean
 udisks_base_job_get_auto_estimate (UDisksBaseJob  *job)
 {
