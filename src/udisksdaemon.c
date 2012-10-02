@@ -500,6 +500,8 @@ static guint job_id = 0;
  * udisks_daemon_launch_simple_job:
  * @daemon: A #UDisksDaemon.
  * @object: (allow-none): A #UDisksObject to add to the job or %NULL.
+ * @job_operation: The operation for the job.
+ * @job_started_by_uid: The user who started the job.
  * @cancellable: A #GCancellable or %NULL.
  *
  * Launches a new simple job.
