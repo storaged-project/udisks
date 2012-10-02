@@ -994,7 +994,7 @@ udisks_daemon_util_escape (const gchar *str)
 }
 
 /**
- * udisks_daemon_util_on_other_seat:
+ * udisks_daemon_util_on_same_seat:
  * @daemon: A #UDisksDaemon.
  * @object: The #GDBusObject that the call is on or %NULL.
  * @process: The process to check for.
