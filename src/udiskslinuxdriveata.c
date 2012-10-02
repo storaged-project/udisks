@@ -1957,8 +1957,17 @@ apply_configuration_thread_func (gpointer user_data)
   return NULL;
 }
 
+/**
+ * udisks_linux_drive_ata_apply_configuration:
+ * @drive: A #UDisksLinuxDriveAta.
+ * @device: A #GUdevDevice
+ * @configuration: The configuration to apply.
+ *
+ * Spawns a thread to apply @configuration to @drive, if any. Does not
+ * wait for the thread to terminate.
+ */
 void
-udisks_linux_drive_ata_apply_configuration (UDisksLinuxDriveAta     *ata,
+udisks_linux_drive_ata_apply_configuration (UDisksLinuxDriveAta     *drive,
                                             GUdevDevice             *device,
                                             GVariant                *configuration)
 {
@@ -1969,11 +1978,11 @@ udisks_linux_drive_ata_apply_configuration (UDisksLinuxDriveAta     *ata,
   data->ata_pm_standby = -1;
   data->ata_apm_level = -1;
   data->ata_aam_level = -1;
-  data->ata = g_object_ref (ata);
+  data->ata = g_object_ref (drive);
   data->device = g_object_ref (device);
   data->configuration = g_variant_ref (configuration);
 
-  data->object = udisks_daemon_util_dup_object (ata, NULL);
+  data->object = udisks_daemon_util_dup_object (drive, NULL);
   if (data->object == NULL)
     goto out;
 
