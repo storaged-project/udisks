@@ -19,6 +19,11 @@
   <refsynopsisdiv><title>SYNOPSIS</title>
     <cmdsynopsis>
       <command>udisksctl</command>
+      <arg choice="plain">status</arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>udisksctl</command>
       <arg choice="plain">info</arg>
       <group choice="req">
         <arg choice="plain">--object-path <replaceable>OBJECT</replaceable></arg>
@@ -130,6 +135,16 @@
   <refsect1>
     <title>COMMANDS</title>
     <variablelist>
+
+      <varlistentry>
+        <term><option>status</option></term>
+        <listitem>
+          <para>
+            Shows high-level information about disk drives and block
+            devices.
+          </para>
+        </listitem>
+      </varlistentry>
 
       <varlistentry>
         <term><option>info</option></term>
