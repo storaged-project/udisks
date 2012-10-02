@@ -1,3 +1,7 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[<!ENTITY version SYSTEM "../version.xml">]>
 <refentry id="udisksctl.1">
   <refentryinfo>
     <title>udisksctl</title>
@@ -8,7 +12,9 @@
   <refmeta>
     <refentrytitle>udisksctl</refentrytitle>
     <manvolnum>1</manvolnum>
-    <refmiscinfo class="version"></refmiscinfo>
+    <refmiscinfo class="manual">User Commands</refmiscinfo>
+    <refmiscinfo class="source">udisks</refmiscinfo>
+    <refmiscinfo class="version">&version;</refmiscinfo>
   </refmeta>
 
   <refnamediv>
