@@ -23,7 +23,8 @@
       unprivileged ones) can access the
       <link linkend="udisksd.8"><citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>
       daemon via the name <emphasis>org.freedesktop.UDisks2</emphasis>
-      on the system message bus. In addition to the D-Bus API, a
+      on the <ulink url="http://www.freedesktop.org/wiki/Software/dbus">system message bus</ulink>.
+      In addition to the D-Bus API, a
       library, <filename>libudisks2</filename> is also provided. This
       library can be used from C/C++ and any high-level language with
       <ulink
