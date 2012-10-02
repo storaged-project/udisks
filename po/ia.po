@@ -3,100 +3,99 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# Gabor Kelemen <kelemeng at gnome dot hu>, 2012.
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-07-23 16:45-0400\n"
-"PO-Revision-Date: 2012-09-03 14:15+0000\n"
-"Last-Translator: kelemeng <kelemeng@gnome.hu>\n"
-"Language-Team: Hungarian <openscope@googlegroups.com>\n"
+"PO-Revision-Date: 2012-01-23 22:25+0000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: Interlingua (http://www.transifex.com/projects/p/freedesktop/language/ia/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: hu\n"
+"Language: ia\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:1
 msgid "Mount a filesystem"
-msgstr "Fájlrendszer csatolása"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:2
 msgid "Authentication is required to mount the filesystem"
-msgstr "Hitelesítés szükséges a fájlrendszer csatolásához"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:3
 msgid "Mount a filesystem on a system device"
-msgstr "Fájlrendszer csatolása rendszereszközön"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:4
 msgid "Mount a filesystem from a device plugged into another seat"
-msgstr "Másik ülésbe csatlakoztatott eszköz fájlrendszerének csatolása"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:5
 msgid ""
 "Mount/unmount filesystems defined in the fstab file with the x-udisks-auth "
 "option"
-msgstr "Az fstab fájlban az x-udisks-auth beállítással definiált fájlrendszerek csatolása/leválasztása"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:6
 msgid "Authentication is required to mount/unmount the filesystem"
-msgstr "Hitelesítés szükséges a fájlrendszer csatolásához/leválasztásához"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:7
 msgid "Unmount a device mounted by another user"
-msgstr "Másik felhasználó által csatolt eszköz leválasztása"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:8
 msgid ""
 "Authentication is required to unmount a filesystem mounted by another user"
-msgstr "Hitelesítés szükséges egy másik felhasználó által csatolt fájlrendszer leválasztásához"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:9
 msgid "Unlock an encrypted device"
-msgstr "Titkosított eszköz feloldása"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:10
 msgid "Authentication is required to unlock an encrypted device"
-msgstr "Hitelesítés szükséges egy titkosított eszköz feloldásához"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:11
 msgid "Unlock an encrypted system device"
-msgstr "Titkosított rendszereszköz feloldása"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:12
 msgid "Unlock an encrypted device plugged into another seat"
-msgstr "Másik ülésbe csatlakoztatott titkosított eszköz feloldása"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:13
 msgid ""
 "Unlock an encrypted device specified in the crypttab file with the x-udisks-"
 "auth option"
-msgstr "A crypttab fájlban az x-udisks-auth beállítással megadott titkosított eszköz feloldása"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:14
 msgid "Lock an encrypted device unlocked by another user"
-msgstr "Másik felhasználó által feloldott titkosított eszköz zárolása"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:15
 msgid ""
 "Authentication is required to lock an encrypted device unlocked by another "
 "user"
-msgstr "Hitelesítés szükséges egy másik felhasználó által feloldott titkosított eszköz zárolásához"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:16
 msgid "Change passphrase for an encrypted device"
-msgstr "Titkosított eszköz jelmondatának módosítása"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:17
 msgid ""
 "Authentication is required to change the passphrase for an encrypted device"
-msgstr "Hitelesítés szükséges egy titkosított eszköz jelmondatának módosításához"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:18
 msgid "Manage loop devices"
-msgstr "Hurokeszközök kezelése"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting up a loop device.
@@ -104,188 +103,188 @@ msgstr "Hurokeszközök kezelése"
 #: ../data/org.freedesktop.udisks2.policy.in.h:19
 #: ../src/udiskslinuxmanager.c:334
 msgid "Authentication is required to set up a loop device"
-msgstr "Hitelesítés szükséges egy hurokeszköz beállításához"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:20
 msgid "Delete loop devices"
-msgstr "Hurokeszközök törlése"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:21
 msgid ""
 "Authentication is required to delete a loop device set up by another user"
-msgstr "Hitelesítés szükséges egy másik felhasználó által beállított hurokeszköz törléséhez"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:22
 msgid "Modify loop devices"
-msgstr "Hurokeszközök módosítása"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:23
 msgid ""
 "Authentication is required to modify a loop device set up by another user"
-msgstr "Hitelesítés szükséges egy másik felhasználó által beállított hurokeszköz módosításához"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:24
 msgid "Manage swapspace"
-msgstr "Cserehely kezelése"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:25
 msgid "Authentication is required to manage swapspace"
-msgstr "Hitelesítés szükséges a cserehely kezeléséhez"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:26
 msgid "Eject media"
-msgstr "Adathordozó kiadása"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:27
 msgid "Authentication is required to eject media"
-msgstr "Hitelesítés szükséges az adathordozó kiadásához"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:28
 msgid "Eject media from a system drive"
-msgstr "Adathordozó kiadása rendszermeghajtóból"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:29
 msgid "Eject media from a drive attached to another seat"
-msgstr "Adathordozó kiadása másik üléshez csatlakoztatott meghajtóból"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:30
 msgid ""
 "Authentication is required to eject media from a drive plugged into another "
 "seat"
-msgstr "Hitelesítés szükséges az adathordozó kiadásához egy másik üléshez csatlakoztatott meghajtóból"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:31
 msgid "Modify a device"
-msgstr "Eszköz módosítása"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:32
 msgid "Authentication is required to modify a device"
-msgstr "Hitelesítés szükséges egy eszköz módosításához"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:33
 msgid "Modify a system device"
-msgstr "Rendszereszköz módosítása"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:34
 msgid ""
 "Authentication is required to modify a device plugged into another seat"
-msgstr "Hitelesítés szükséges egy másik ülésbe csatlakoztatott eszköz módosításához"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:35
 msgid "Rescan a device"
-msgstr "Eszköz ismételt vizsgálata"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:36
 msgid "Authentication is to rescan a device"
-msgstr "Hitelesítés szükséges egy eszköz ismételt vizsgálatához"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:37
 msgid "Open a device"
-msgstr "Eszköz megnyitása"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:38
 msgid "Authentication is required to open a device"
-msgstr "Hitelesítés szükséges egy eszköz megnyitásához"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:39
 msgid "Open a system device"
-msgstr "Rendszereszköz megnyitása"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:40
 msgid "Modify system-wide configuration"
-msgstr "Rendszerszintű beállítások módosítása"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:41
 msgid "Authentication is required to modify system-wide configuration"
-msgstr "Hitelesítés szükséges a rendszerszintű beállítások módosításához"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:42
 msgid ""
 "Authentication is required to retrieve secrets from system-wide "
 "configuration"
-msgstr "Hitelesítés szükséges titkos információk lekéréséhez a rendszerszintű beállításokból"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:43
 msgid "Modify drive settings"
-msgstr "Meghajtóbeállítások módosítása"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:44
 msgid "Authentication is required to modify drive settings"
-msgstr "Hitelesítés szükséges egy meghajtó beállításainak módosításához"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:45
 msgid "Update SMART data"
-msgstr "SMART adatok frissítése"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:46
 msgid "Authentication is required to update SMART data"
-msgstr "Hitelesítés szükséges a SMART adatok frissítéséhez"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:47
 msgid "Set SMART data from blob"
-msgstr "SMART adatok beállítása adatcsomagból"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:48
 msgid "Authentication is required to set SMART data from blob"
-msgstr "Hitelesítés szükséges a SMART adatok beállításához adatcsomagból"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:49
 msgid "Run SMART self-test"
-msgstr "SMART önteszt futtatása"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:50
 msgid "Authentication is required to run a SMART self-test"
-msgstr "Hitelesítés szükséges a SMART önteszt futtatásához"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:51
 msgid "Check power state"
-msgstr "Bekapcsoltság ellenőrzése"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:52
 msgid "Authentication is required to check the power state"
-msgstr "Hitelesítés szükséges a bekapcsoltság ellenőrzéséhez"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:53
 msgid "Send standby command"
-msgstr "Készenlét parancs küldése"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:54
 msgid "Authentication is required to put a drive into standby mode"
-msgstr "Hitelesítés szükséges egy meghajtó készenléti állapotba helyezéséhez"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:55
 msgid "Send standby command to a system drive"
-msgstr "Készenlét parancs küldése rendszermeghajtónak"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:56
 msgid "Send standby command to drive on other seat"
-msgstr "Készenlét parancs küldése másik helyen lévő meghajtónak"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:57
 msgid "Securely erase a hard disk"
-msgstr "Merevlemez biztonságos törlése"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:58
 msgid "Authentication is required to securely erase a hard disk"
-msgstr "Hitelesítés szükséges a merevlemez biztonságos törléséhez"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:59
 msgid "Cancel job"
-msgstr "Feladat megszakítása"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when canceling a job.
 #. 
 #: ../data/org.freedesktop.udisks2.policy.in.h:60 ../src/udisksbasejob.c:404
 msgid "Authentication is required to cancel a job"
-msgstr "Hitelesítés szükséges a feladat megszakításához"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:61
 msgid "Cancel job started by another user"
-msgstr "Másik felhasználó által indított feladat megszakítása"
+msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:62
 msgid "Authentication is required to cancel a job started by another user"
-msgstr "Hitelesítés szükséges a másik felhasználó által indított feladat megszakításához"
+msgstr ""
 
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
@@ -293,41 +292,41 @@ msgstr "Hitelesítés szükséges a másik felhasználó által indított felada
 #. 
 #: ../src/udiskslinuxblock.c:824
 msgid "Authentication is required to read system-level secrets"
-msgstr "Hitelesítés szükséges rendszerszintű titkos információk olvasásához"
+msgstr ""
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
 #: ../src/udiskslinuxblock.c:1358
 msgid "Authentication is required to add an entry to the /etc/fstab file"
-msgstr "Hitelesítés szükséges egy bejegyzés /etc/fstab fájlhoz adásához"
+msgstr ""
 
 #. Translators: shown in authentication dialog - do not tranlsate
 #. /etc/crypttab
 #: ../src/udiskslinuxblock.c:1376
 msgid "Authentication is required to add an entry to the /etc/crypttab file"
-msgstr "Hitelesítés szükséges egy bejegyzés /etc/crypttab fájlhoz adásához"
+msgstr ""
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
 #: ../src/udiskslinuxblock.c:1435
 msgid "Authentication is required to remove an entry from /etc/fstab file"
-msgstr "Hitelesítés szükséges egy bejegyzés /etc/fstab fájlból való eltávolításához"
+msgstr ""
 
 #. Translators: shown in authentication dialog - do not translate
 #. /etc/crypttab
 #: ../src/udiskslinuxblock.c:1453
 msgid ""
 "Authentication is required to remove an entry from the /etc/crypttab file"
-msgstr "Hitelesítés szükséges egy bejegyzés /etc/crypttab fájlból való eltávolításához"
+msgstr ""
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
 #: ../src/udiskslinuxblock.c:1525
 msgid "Authentication is required to modify the /etc/fstab file"
-msgstr "Hitelesítés szükséges az /etc/fstab fájl módosításához"
+msgstr ""
 
 #. Translators: shown in authentication dialog - do not translate
 #. /etc/crypttab
 #: ../src/udiskslinuxblock.c:1543
 msgid "Authentication is required to modify the /etc/crypttab file"
-msgstr "Hitelesítés szükséges az /etc/crypttab fájl módosításához"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests erasing a hard disk using the SECURE ERASE UNIT
@@ -344,7 +343,7 @@ msgstr "Hitelesítés szükséges az /etc/crypttab fájl módosításához"
 #. 
 #: ../src/udiskslinuxblock.c:1958 ../src/udiskslinuxdriveata.c:2361
 msgid "Authentication is required to perform a secure erase of $(drive)"
-msgstr "Hitelesítés szükséges a(z) $(drive) biztonságos törléséhez"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when formatting a
 #. * device. This includes both creating a filesystem or partition
@@ -355,11 +354,11 @@ msgstr "Hitelesítés szükséges a(z) $(drive) biztonságos törléséhez"
 #. 
 #: ../src/udiskslinuxblock.c:1970
 msgid "Authentication is required to format $(drive)"
-msgstr "Hitelesítés szükséges a(z) $(drive) formázásához"
+msgstr ""
 
 #: ../src/udiskslinuxblock.c:2012 ../src/udiskslinuxdriveata.c:2373
 msgid "Formatting Device"
-msgstr "Eszköz formázása"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when creating a
 #. * disk image file.
@@ -369,7 +368,7 @@ msgstr "Eszköz formázása"
 #. 
 #: ../src/udiskslinuxblock.c:2372
 msgid "Authentication is required to open $(drive) for reading"
-msgstr "Hitelesítés szükséges a(z) $(drive) olvasásra való megnyitásához"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when restoring
 #. * from a disk image file.
@@ -379,7 +378,7 @@ msgstr "Hitelesítés szükséges a(z) $(drive) olvasásra való megnyitásához
 #. 
 #: ../src/udiskslinuxblock.c:2436
 msgid "Authentication is required to open $(drive) for writing"
-msgstr "Hitelesítés szükséges a(z) $(drive) írásra való megnyitásához"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to benchmark a device.
@@ -389,7 +388,7 @@ msgstr "Hitelesítés szükséges a(z) $(drive) írásra való megnyitásához"
 #. 
 #: ../src/udiskslinuxblock.c:2502
 msgid "Authentication is required to open $(drive) for benchmarking"
-msgstr "Hitelesítés szükséges a(z) $(drive) teljesítményteszteléshez való megnyitásához"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to rescan a device.
@@ -399,7 +398,7 @@ msgstr "Hitelesítés szükséges a(z) $(drive) teljesítményteszteléshez val�
 #. 
 #: ../src/udiskslinuxblock.c:2563
 msgid "Authentication is required to rescan $(drive)"
-msgstr "Hitelesítés szükséges a(z) $(drive) ismételt vizsgálatához"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests ejecting media from a drive.
@@ -409,7 +408,7 @@ msgstr "Hitelesítés szükséges a(z) $(drive) ismételt vizsgálatához"
 #. 
 #: ../src/udiskslinuxdrive.c:960
 msgid "Authentication is required to eject $(drive)"
-msgstr "Hitelesítés szükséges a(z) $(drive) kiadásához"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * changes settings for a drive.
@@ -419,7 +418,7 @@ msgstr "Hitelesítés szükséges a(z) $(drive) kiadásához"
 #. 
 #: ../src/udiskslinuxdrive.c:1048
 msgid "Authentication is required to configure settings for $(drive)"
-msgstr "Hitelesítés szükséges a(z) $(drive) beállításainak megadásához"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * refreshes SMART data from a disk.
@@ -429,7 +428,7 @@ msgstr "Hitelesítés szükséges a(z) $(drive) beállításainak megadásához"
 #. 
 #: ../src/udiskslinuxdriveata.c:700
 msgid "Authentication is required to update SMART data from $(drive)"
-msgstr "Hitelesítés szükséges a SMART adatok frissítéséhez erről: $(drive)"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to simulate SMART data from a libatasmart blob.
@@ -439,7 +438,7 @@ msgstr "Hitelesítés szükséges a SMART adatok frissítéséhez erről: $(driv
 #. 
 #: ../src/udiskslinuxdriveata.c:711
 msgid "Authentication is required to set SMART data from a blob on $(drive)"
-msgstr "Hitelesítés szükséges a SMART adatok beállításához adatcsomagból ezen: $(drive)"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * aborts a running SMART self-test.
@@ -449,7 +448,7 @@ msgstr "Hitelesítés szükséges a SMART adatok beállításához adatcsomagbó
 #. 
 #: ../src/udiskslinuxdriveata.c:845
 msgid "Authentication is required to abort a SMART self-test on $(drive)"
-msgstr "Hitelesítés szükséges a SMART önteszt megszakításához ezen: $(drive)"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * initiates a SMART self-test.
@@ -459,7 +458,7 @@ msgstr "Hitelesítés szükséges a SMART önteszt megszakításához ezen: $(dr
 #. 
 #: ../src/udiskslinuxdriveata.c:1095
 msgid "Authentication is required to start a SMART self-test on $(drive)"
-msgstr "Hitelesítés szükséges a SMART önteszt indításához ezen: $(drive)"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests the power state of a drive.
@@ -469,7 +468,7 @@ msgstr "Hitelesítés szükséges a SMART önteszt indításához ezen: $(drive)
 #. 
 #: ../src/udiskslinuxdriveata.c:1404
 msgid "Authentication is required to check power state for $(drive)"
-msgstr "Hitelesítés szükséges a bekapcsoltság ellenőrzéséhez ezen: $(drive)"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to put a drive into standby mode.
@@ -479,7 +478,7 @@ msgstr "Hitelesítés szükséges a bekapcsoltság ellenőrzéséhez ezen: $(dri
 #. 
 #: ../src/udiskslinuxdriveata.c:1529
 msgid "Authentication is required to put $(drive) in standby mode"
-msgstr "Hitelesítés szükséges a(z) $(drive) készenléti állapotba helyezéséhez"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to wake up a drive from standby mode.
@@ -489,7 +488,7 @@ msgstr "Hitelesítés szükséges a(z) $(drive) készenléti állapotba helyezé
 #. 
 #: ../src/udiskslinuxdriveata.c:1661
 msgid "Authentication is required to wake up $(drive) from standby mode"
-msgstr "Hitelesítés szükséges a(z) $(drive) felébresztéséhez készenléti állapotból"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests unlocking an encrypted device.
@@ -499,7 +498,7 @@ msgstr "Hitelesítés szükséges a(z) $(drive) felébresztéséhez készenléti
 #. 
 #: ../src/udiskslinuxencrypted.c:352 ../src/udiskslinuxencrypted.c:706
 msgid "Authentication is required to unlock the encrypted device $(drive)"
-msgstr "Hitelesítés szükséges a titkosított $(drive) eszköz feloldásához"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests locking an encrypted device that was previously.
@@ -512,7 +511,7 @@ msgstr "Hitelesítés szükséges a titkosított $(drive) eszköz feloldásához
 msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by"
 " another user"
-msgstr "Hitelesítés szükséges egy másik felhasználó által feloldott $(drive) titkosított eszköz zárolásához"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests mounting a filesystem.
@@ -522,7 +521,7 @@ msgstr "Hitelesítés szükséges egy másik felhasználó által feloldott $(dr
 #. 
 #: ../src/udiskslinuxfilesystem.c:1222 ../src/udiskslinuxfilesystem.c:1384
 msgid "Authentication is required to mount $(drive)"
-msgstr "Hitelesítés szükséges a(z) $(drive) csatolásához"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the
 #. * user requests mounting a filesystem that is in
@@ -538,7 +537,7 @@ msgstr "Hitelesítés szükséges a(z) $(drive) csatolásához"
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
-msgstr "Hitelesítés szükséges az /etc/fstab fájlban hivatkozott $(drive) csatolásához"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the
 #. * user requests unmounting a filesystem that is in
@@ -554,7 +553,7 @@ msgstr "Hitelesítés szükséges az /etc/fstab fájlban hivatkozott $(drive) cs
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
-msgstr "Hitelesítés szükséges az /etc/fstab fájlban hivatkozott $(drive) leválasztásához"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests unmounting a filesystem previously mounted by
@@ -565,7 +564,7 @@ msgstr "Hitelesítés szükséges az /etc/fstab fájlban hivatkozott $(drive) le
 #. 
 #: ../src/udiskslinuxfilesystem.c:1685
 msgid "Authentication is required to unmount $(drive) mounted by another user"
-msgstr "Hitelesítés szükséges egy másik felhasználó által csatolt $(drive) leválasztásához"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing the filesystem label.
@@ -575,7 +574,7 @@ msgstr "Hitelesítés szükséges egy másik felhasználó által csatolt $(driv
 #. 
 #: ../src/udiskslinuxfilesystem.c:1923
 msgid "Authentication is required to change the filesystem label on $(drive)"
-msgstr "Hitelesítés szükséges a fájlrendszercímke módosításához ezen: $(drive)"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a loop device previously set up by
@@ -586,7 +585,7 @@ msgstr "Hitelesítés szükséges a fájlrendszercímke módosításához ezen: 
 #. 
 #: ../src/udiskslinuxloop.c:244
 msgid "Authentication is required to delete the loop device $(drive)"
-msgstr "Hitelesítés szükséges a(z) $(drive) hurokeszköz törléséhez"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing autoclear on a loop device set up by
@@ -597,7 +596,7 @@ msgstr "Hitelesítés szükséges a(z) $(drive) hurokeszköz törléséhez"
 #. 
 #: ../src/udiskslinuxloop.c:423
 msgid "Authentication is required to modify the loop device $(drive)"
-msgstr "Hitelesítés szükséges a(z) $(drive) hurokeszköz módosításához"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
@@ -608,7 +607,7 @@ msgstr "Hitelesítés szükséges a(z) $(drive) hurokeszköz módosításához"
 #: ../src/udiskslinuxpartition.c:281 ../src/udiskslinuxpartition.c:443
 #: ../src/udiskslinuxpartition.c:642
 msgid "Authentication is required to modify the partition on device $(drive)"
-msgstr "Hitelesítés szükséges a(z) $(drive) eszköz partíciójának módosításához"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a partition.
@@ -618,7 +617,7 @@ msgstr "Hitelesítés szükséges a(z) $(drive) eszköz partíciójának módos�
 #. 
 #: ../src/udiskslinuxpartition.c:832
 msgid "Authentication is required to delete the partition $(drive)"
-msgstr "Hitelesítés szükséges a(z) $(drive) partíció törléséhez"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests creating a new partition.
@@ -628,7 +627,7 @@ msgstr "Hitelesítés szükséges a(z) $(drive) partíció törléséhez"
 #. 
 #: ../src/udiskslinuxpartitiontable.c:348
 msgid "Authentication is required to create a partition on $(drive)"
-msgstr "Hitelesítés szükséges egy partíció létrehozásához ezen: $(drive)"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests activating a swap device.
@@ -638,7 +637,7 @@ msgstr "Hitelesítés szükséges egy partíció létrehozásához ezen: $(drive
 #. 
 #: ../src/udiskslinuxswapspace.c:201
 msgid "Authentication is required to activate swapspace on $(drive)"
-msgstr "Hitelesítés szükséges a cserehely aktiválásához ezen: $(drive)"
+msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deactivating a swap device.
@@ -648,92 +647,92 @@ msgstr "Hitelesítés szükséges a cserehely aktiválásához ezen: $(drive)"
 #. 
 #: ../src/udiskslinuxswapspace.c:293
 msgid "Authentication is required to deactivate swapspace on $(drive)"
-msgstr "Hitelesítés szükséges a cserehely deaktiválásához ezen: $(drive)"
+msgstr ""
 
 #. Translators: 'Thumb' here refers to "USB thumb drive", see
 #. http://en.wikipedia.org/wiki/Thumb_drive
 #: ../udisks/udisksclient.c:827
 msgctxt "media-type"
 msgid "Thumb"
-msgstr "Pen drive"
+msgstr ""
 
 #: ../udisks/udisksclient.c:829
 msgctxt "media-type"
 msgid "Floppy"
-msgstr "Floppy"
+msgstr ""
 
 #: ../udisks/udisksclient.c:830
 msgctxt "media-type"
 msgid "Zip"
-msgstr "Zip"
+msgstr ""
 
 #: ../udisks/udisksclient.c:831
 msgctxt "media-type"
 msgid "Jaz"
-msgstr "Jaz"
+msgstr ""
 
 #: ../udisks/udisksclient.c:833
 msgctxt "media-type"
 msgid "Flash"
-msgstr "Flash"
+msgstr ""
 
 #: ../udisks/udisksclient.c:834
 msgctxt "media-type"
 msgid "MemoryStick"
-msgstr "MemoryStick"
+msgstr ""
 
 #: ../udisks/udisksclient.c:835
 msgctxt "media-type"
 msgid "SmartMedia"
-msgstr "SmartMedia"
+msgstr ""
 
 #: ../udisks/udisksclient.c:836
 msgctxt "media-type"
 msgid "CompactFlash"
-msgstr "CompactFlash"
+msgstr ""
 
 #: ../udisks/udisksclient.c:837
 msgctxt "media-type"
 msgid "MMC"
-msgstr "MMC"
+msgstr ""
 
 #: ../udisks/udisksclient.c:837 ../udisks/udisksclient.c:838
 #: ../udisks/udisksclient.c:839 ../udisks/udisksclient.c:840
 msgctxt "media-type"
 msgid "SD"
-msgstr "SD"
+msgstr ""
 
 #: ../udisks/udisksclient.c:839
 msgctxt "media-type"
 msgid "SDXC"
-msgstr "SDXC"
+msgstr ""
 
 #: ../udisks/udisksclient.c:840
 msgctxt "media-type"
 msgid "SDHC"
-msgstr "SDHC"
+msgstr ""
 
 #: ../udisks/udisksclient.c:842
 msgctxt "media-type"
 msgid "CD-ROM"
-msgstr "CD-ROM"
+msgstr ""
 
 #: ../udisks/udisksclient.c:842 ../udisks/udisksclient.c:843
 #: ../udisks/udisksclient.c:844 ../udisks/udisksclient.c:859
 #: ../udisks/udisksclient.c:860 ../udisks/udisksclient.c:861
 msgctxt "media-type"
 msgid "CD"
-msgstr "CD"
+msgstr ""
 
 #: ../udisks/udisksclient.c:843
 msgctxt "media-type"
 msgid "CD-R"
-msgstr "CD-R"
+msgstr ""
 
 #: ../udisks/udisksclient.c:844
 msgctxt "media-type"
 msgid "CD-RW"
-msgstr "CD-RW"
+msgstr ""
 
 #: ../udisks/udisksclient.c:845 ../udisks/udisksclient.c:846
 #: ../udisks/udisksclient.c:847 ../udisks/udisksclient.c:848
@@ -741,94 +740,94 @@ msgstr "CD-RW"
 #: ../udisks/udisksclient.c:851 ../udisks/udisksclient.c:852
 msgctxt "media-type"
 msgid "DVD"
-msgstr "DVD"
+msgstr ""
 
 #: ../udisks/udisksclient.c:846
 msgctxt "media-type"
 msgid "DVD-R"
-msgstr "DVD-R"
+msgstr ""
 
 #: ../udisks/udisksclient.c:847
 msgctxt "media-type"
 msgid "DVD-RW"
-msgstr "DVD-RW"
+msgstr ""
 
 #: ../udisks/udisksclient.c:848
 msgctxt "media-type"
 msgid "DVD-RAM"
-msgstr "DVD-RAM"
+msgstr ""
 
 #: ../udisks/udisksclient.c:849
 msgctxt "media-type"
 msgid "DVD+R"
-msgstr "DVD+R"
+msgstr ""
 
 #: ../udisks/udisksclient.c:850
 msgctxt "media-type"
 msgid "DVD+RW"
-msgstr "DVD+RW"
+msgstr ""
 
 #: ../udisks/udisksclient.c:851
 msgctxt "media-type"
 msgid "DVD+R DL"
-msgstr "DVD+R DL"
+msgstr ""
 
 #: ../udisks/udisksclient.c:852
 msgctxt "media-type"
 msgid "DVD+RW DL"
-msgstr "DVD+RW DL"
+msgstr ""
 
 #: ../udisks/udisksclient.c:853
 msgctxt "media-type"
 msgid "BD-ROM"
-msgstr "BD-ROM"
+msgstr ""
 
 #: ../udisks/udisksclient.c:853 ../udisks/udisksclient.c:854
 #: ../udisks/udisksclient.c:855
 msgctxt "media-type"
 msgid "Blu-Ray"
-msgstr "Blu-Ray"
+msgstr ""
 
 #: ../udisks/udisksclient.c:854
 msgctxt "media-type"
 msgid "BD-R"
-msgstr "BD-R"
+msgstr ""
 
 #: ../udisks/udisksclient.c:855
 msgctxt "media-type"
 msgid "BD-RE"
-msgstr "BD-RE"
+msgstr ""
 
 #: ../udisks/udisksclient.c:856 ../udisks/udisksclient.c:857
 #: ../udisks/udisksclient.c:858
 msgctxt "media-type"
 msgid "HDDVD"
-msgstr "HDDVD"
+msgstr ""
 
 #: ../udisks/udisksclient.c:857
 msgctxt "media-type"
 msgid "HDDVD-R"
-msgstr "HDDVD-R"
+msgstr ""
 
 #: ../udisks/udisksclient.c:858
 msgctxt "media-type"
 msgid "HDDVD-RW"
-msgstr "HDDVD-RW"
+msgstr ""
 
 #: ../udisks/udisksclient.c:859
 msgctxt "media-type"
 msgid "MO"
-msgstr "MO"
+msgstr ""
 
 #: ../udisks/udisksclient.c:860
 msgctxt "media-type"
 msgid "MRW"
-msgstr "MRW"
+msgstr ""
 
 #: ../udisks/udisksclient.c:861
 msgctxt "media-type"
 msgid "MRW-W"
-msgstr "MRW-W"
+msgstr ""
 
 #. Translators: Used to describe drive without removable media. The %s is the
 #. type, e.g. 'Thumb'
@@ -836,7 +835,7 @@ msgstr "MRW-W"
 #, c-format
 msgctxt "drive-with-fixed-media"
 msgid "%s Drive"
-msgstr "%s meghajtó"
+msgstr ""
 
 #. Translators: Used to describe generic media. The %s is the type, e.g. 'Zip'
 #. or 'Floppy'
@@ -844,7 +843,7 @@ msgstr "%s meghajtó"
 #, c-format
 msgctxt "drive-with-generic-media"
 msgid "%s Disk"
-msgstr "%s lemez"
+msgstr ""
 
 #. Translators: Used to describe flash media. The %s is the type, e.g. 'SD' or
 #. 'CompactFlash'
@@ -852,7 +851,7 @@ msgstr "%s lemez"
 #, c-format
 msgctxt "flash-media"
 msgid "%s Card"
-msgstr "%s kártya"
+msgstr ""
 
 #. Translators: Used to describe optical discs. The %s is the type, e.g.
 #. 'CD-R' or 'DVD-ROM'
@@ -860,21 +859,21 @@ msgstr "%s kártya"
 #, c-format
 msgctxt "optical-media"
 msgid "%s Disc"
-msgstr "%s lemez"
+msgstr ""
 
 #. Translators: Used to describe a drive. The %s is the size, e.g. '20 GB'
 #: ../udisks/udisksclient.c:1156
 #, c-format
 msgctxt "drive-with-size"
 msgid "%s Drive"
-msgstr "%s meghajtó"
+msgstr ""
 
 #. Translators: Used to describe a drive we know very little about (removable
 #. media or size not known)
 #: ../udisks/udisksclient.c:1161
 msgctxt "generic-drive"
 msgid "Drive"
-msgstr "Meghajtó"
+msgstr ""
 
 #. Translators: Used to describe a non-rotating drive (rotation rate either
 #. unknown
@@ -883,7 +882,7 @@ msgstr "Meghajtó"
 #, c-format
 msgctxt "disk-non-rotational"
 msgid "%s Disk"
-msgstr "%s lemez"
+msgstr ""
 
 #. Translators: Used to describe a non-rotating drive (rotation rate either
 #. unknown
@@ -893,7 +892,7 @@ msgstr "%s lemez"
 #: ../udisks/udisksclient.c:1179
 msgctxt "disk-non-rotational"
 msgid "Disk"
-msgstr "Lemez"
+msgstr ""
 
 #. Translators: Used to describe a hard-disk drive (HDD). The %s is the size,
 #. e.g. '20 GB'.
@@ -901,14 +900,14 @@ msgstr "Lemez"
 #, c-format
 msgctxt "disk-hdd"
 msgid "%s Hard Disk"
-msgstr "%s merevlemez"
+msgstr ""
 
 #. Translators: Used to describe a hard-disk drive (HDD) (removable media or
 #. size not known)
 #: ../udisks/udisksclient.c:1192
 msgctxt "disk-hdd"
 msgid "Hard Disk"
-msgstr "Merevlemez"
+msgstr ""
 
 #. Translators: Used to describe a card reader. The %s is the card type e.g.
 #. 'CompactFlash'.
@@ -916,7 +915,7 @@ msgstr "Merevlemez"
 #, c-format
 msgctxt "drive-card-reader"
 msgid "%s Card Reader"
-msgstr "%s kártyaolvasó"
+msgstr ""
 
 #. Translators: Used to describe drive. The first %s is the size e.g. '20 GB'
 #. and the
@@ -926,7 +925,7 @@ msgstr "%s kártyaolvasó"
 #, c-format
 msgctxt "drive-with-size-and-type"
 msgid "%s %s Drive"
-msgstr "%s %s meghajtó"
+msgstr ""
 
 #. Translators: Used to describe drive. The first %s is the drive type e.g.
 #. 'Thumb'.
@@ -935,7 +934,7 @@ msgstr "%s %s meghajtó"
 #, c-format
 msgctxt "drive-with-type"
 msgid "%s Drive"
-msgstr "%s meghajtó"
+msgstr ""
 
 #. Translators: String used for a blank disc. The %s is the disc type e.g.
 #. "CD-RW Disc"
@@ -943,7 +942,7 @@ msgstr "%s meghajtó"
 #, c-format
 msgctxt "optical-media"
 msgid "Blank %s"
-msgstr "Üres %s"
+msgstr ""
 
 #. Translators: String used for a mixed disc. The %s is the disc type e.g.
 #. "CD-ROM Disc"
@@ -951,7 +950,7 @@ msgstr "Üres %s"
 #, c-format
 msgctxt "optical-media"
 msgid "Mixed %s"
-msgstr "Vegyes %s"
+msgstr ""
 
 #. Translators: String used for an audio disc. The %s is the disc type e.g.
 #. "CD-ROM Disc"
@@ -959,14 +958,14 @@ msgstr "Vegyes %s"
 #, c-format
 msgctxt "optical-media"
 msgid "Audio %s"
-msgstr "Hang %s"
+msgstr ""
 
 #. Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for
 #. a partition
 #: ../udisks/udisksclient.c:1393
 msgctxt "dos-part-flag"
 msgid "Bootable"
-msgstr "Indítható"
+msgstr ""
 
 #. Translators: Corresponds to the GPT "system" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
@@ -974,7 +973,7 @@ msgstr "Indítható"
 #: ../udisks/udisksclient.c:1403
 msgctxt "gpt-part-flag"
 msgid "System"
-msgstr "Rendszer"
+msgstr ""
 
 #. Translators: Corresponds to the GPT "legacy bios bootable" flag for a
 #. partition,
@@ -983,7 +982,7 @@ msgstr "Rendszer"
 #: ../udisks/udisksclient.c:1410
 msgctxt "gpt-part-flag"
 msgid "Legacy BIOS Bootable"
-msgstr "Örökölt BIOS indítható"
+msgstr ""
 
 #. Translators: Corresponds to the GPT "read-only" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
@@ -991,7 +990,7 @@ msgstr "Örökölt BIOS indítható"
 #: ../udisks/udisksclient.c:1417
 msgctxt "gpt-part-flag"
 msgid "Read-only"
-msgstr "Csak olvasható"
+msgstr ""
 
 #. Translators: Corresponds to the GPT "hidden" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
@@ -999,7 +998,7 @@ msgstr "Csak olvasható"
 #: ../udisks/udisksclient.c:1424
 msgctxt "gpt-part-flag"
 msgid "Hidden"
-msgstr "Rejtett"
+msgstr ""
 
 #. Translators: Corresponds to the GPT "no automount" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
@@ -1007,7 +1006,7 @@ msgstr "Rejtett"
 #: ../udisks/udisksclient.c:1431
 msgctxt "gpt-part-flag"
 msgid "No Automount"
-msgstr "Nincs automatikus csatolás"
+msgstr ""
 
 #. Translators: Partition info. First %s is the type, second %s is a list of
 #. flags
@@ -1015,13 +1014,13 @@ msgstr "Nincs automatikus csatolás"
 #, c-format
 msgctxt "partition-info"
 msgid "%s (%s)"
-msgstr "%s (%s)"
+msgstr ""
 
 #. Translators: The Partition info when unknown
 #: ../udisks/udisksclient.c:1455
 msgctxt "partition-info"
 msgid "Unknown"
-msgstr "Ismeretlen"
+msgstr ""
 
 #. Translators: The first %s is the size in power-of-2 units, e.g. '64 KiB'
 #. * the second %s is the size as a number e.g. '65,536' (always > 1)
@@ -1030,7 +1029,7 @@ msgstr "Ismeretlen"
 #, c-format
 msgctxt "byte-size-pow2"
 msgid "%s (%s bytes)"
-msgstr "%s (%s bájt)"
+msgstr ""
 
 #. Translators: The first %s is the size in power-of-10 units, e.g. '100 kB'
 #. * the second %s is the size as a number e.g. '100,000' (always > 1)
@@ -1039,61 +1038,61 @@ msgstr "%s (%s bájt)"
 #, c-format
 msgctxt "byte-size-pow10"
 msgid "%s (%s bytes)"
-msgstr "%s (%s bájt)"
+msgstr ""
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:2014
 msgctxt "media"
 msgid "CompactFlash"
-msgstr "CompactFlash"
+msgstr ""
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:2019
 msgctxt "media"
 msgid "MemoryStick"
-msgstr "MemoryStick"
+msgstr ""
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:2024
 msgctxt "media"
 msgid "SmartMedia"
-msgstr "SmartMedia"
+msgstr ""
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:2029
 msgctxt "media"
 msgid "SecureDigital"
-msgstr "SecureDigital"
+msgstr ""
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:2034
 msgctxt "media"
 msgid "SD High Capacity"
-msgstr "SD High Capacity"
+msgstr ""
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:2039
 msgctxt "media"
 msgid "Floppy"
-msgstr "Floppy"
+msgstr ""
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:2044
 msgctxt "media"
 msgid "Zip"
-msgstr "Zip"
+msgstr ""
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:2049
 msgctxt "media"
 msgid "Jaz"
-msgstr "Jaz"
+msgstr ""
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:2054
 msgctxt "media"
 msgid "Flash"
-msgstr "Flash"
+msgstr ""
 
 #. Translators: This word is used to describe the optical disc type, it may
 #. appear
@@ -1102,7 +1101,7 @@ msgstr "Flash"
 #: ../udisks/udisksclient.c:2088
 msgctxt "disc-type"
 msgid "CD"
-msgstr "CD"
+msgstr ""
 
 #. Translators: This word is used to describe the optical disc type, it may
 #. appear
@@ -1111,7 +1110,7 @@ msgstr "CD"
 #: ../udisks/udisksclient.c:2097
 msgctxt "disc-type"
 msgid "DVD"
-msgstr "DVD"
+msgstr ""
 
 #. Translators: This word is used to describe the optical disc type, it may
 #. appear
@@ -1120,7 +1119,7 @@ msgstr "DVD"
 #: ../udisks/udisksclient.c:2106
 msgctxt "disc-type"
 msgid "Blu-Ray"
-msgstr "Blu-Ray"
+msgstr ""
 
 #. Translators: This word is used to describe the optical disc type, it may
 #. appear
@@ -1129,269 +1128,269 @@ msgstr "Blu-Ray"
 #: ../udisks/udisksclient.c:2115
 msgctxt "disc-type"
 msgid "HDDVD"
-msgstr "HDDVD"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2136
 msgctxt "fs-type"
 msgid "FAT (12-bit version)"
-msgstr "FAT (12 bites)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2136 ../udisks/udisksclient.c:2137
 #: ../udisks/udisksclient.c:2138 ../udisks/udisksclient.c:2139
 #: ../udisks/udisksclient.c:2140
 msgctxt "fs-type"
 msgid "FAT"
-msgstr "FAT"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2137
 msgctxt "fs-type"
 msgid "FAT (16-bit version)"
-msgstr "FAT (16 bites)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2138
 msgctxt "fs-type"
 msgid "FAT (32-bit version)"
-msgstr "FAT (32 bites)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2139
 #, c-format
 msgctxt "fs-type"
 msgid "FAT (version %s)"
-msgstr "FAT (%s verzió)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2141
 #, c-format
 msgctxt "fs-type"
 msgid "NTFS (version %s)"
-msgstr "NTFS (%s verzió)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2141 ../udisks/udisksclient.c:2142
 msgctxt "fs-type"
 msgid "NTFS"
-msgstr "NTFS"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2143
 msgctxt "fs-type"
 msgid "HFS"
-msgstr "HFS"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2144
 msgctxt "fs-type"
 msgid "HFS+"
-msgstr "HFS+"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2145
 #, c-format
 msgctxt "fs-type"
 msgid "Ext2 (version %s)"
-msgstr "Ext2 (%s verzió)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2145 ../udisks/udisksclient.c:2146
 msgctxt "fs-type"
 msgid "Ext2"
-msgstr "Ext2"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2147
 #, c-format
 msgctxt "fs-type"
 msgid "Ext3 (version %s)"
-msgstr "Ext3 (%s verzió)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2147 ../udisks/udisksclient.c:2148
 msgctxt "fs-type"
 msgid "Ext3"
-msgstr "Ext3"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2149
 #, c-format
 msgctxt "fs-type"
 msgid "Ext4 (version %s)"
-msgstr "Ext4 (%s verzió)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2149 ../udisks/udisksclient.c:2150
 msgctxt "fs-type"
 msgid "Ext4"
-msgstr "Ext4"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2151
 #, c-format
 msgctxt "fs-type"
 msgid "Journal for Ext (version %s)"
-msgstr "Napló Ext-hez (%s verzió)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2151 ../udisks/udisksclient.c:2152
 msgctxt "fs-type"
 msgid "JDB"
-msgstr "JDB"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2152
 msgctxt "fs-type"
 msgid "Journal for Ext"
-msgstr "Napló Ext-hez"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2153
 #, c-format
 msgctxt "fs-type"
 msgid "XFS (version %s)"
-msgstr "XFS (%s verzió)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2153 ../udisks/udisksclient.c:2154
 msgctxt "fs-type"
 msgid "XFS"
-msgstr "XFS"
+msgstr ""
 
 #. TODO: No ID_FS_VERSION yet for btrfs...
 #: ../udisks/udisksclient.c:2156
 msgctxt "fs-type"
 msgid "Btrfs"
-msgstr "Btrfs"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2157
 #, c-format
 msgctxt "fs-type"
 msgid "ISO 9660 (version %s)"
-msgstr "ISO 9660 (%s verzió)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2157 ../udisks/udisksclient.c:2158
 msgctxt "fs-type"
 msgid "ISO9660"
-msgstr "ISO9660"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2158
 msgctxt "fs-type"
 msgid "ISO 9660"
-msgstr "ISO 9660"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2159
 #, c-format
 msgctxt "fs-type"
 msgid "UDF (version %s)"
-msgstr "UDF (%s verzió)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2159 ../udisks/udisksclient.c:2160
 msgctxt "fs-type"
 msgid "UDF"
-msgstr "UDF"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2161
 #, c-format
 msgctxt "fs-type"
 msgid "Swap (version %s)"
-msgstr "Cserehely (%s verzió)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2161 ../udisks/udisksclient.c:2162
 msgctxt "fs-type"
 msgid "Swap"
-msgstr "Cserehely"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2163
 #, c-format
 msgctxt "fs-type"
 msgid "LVM2 Physical Volume (%s)"
-msgstr "LVM2 fizikai kötet (%s)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2163 ../udisks/udisksclient.c:2164
 msgctxt "fs-type"
 msgid "LVM2 PV"
-msgstr "LVM2 PV"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2164
 msgctxt "fs-type"
 msgid "LVM2 Physical Volume"
-msgstr "LVM2 fizikai kötet"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2165
 #, c-format
 msgctxt "fs-type"
 msgid "Software RAID Component (version %s)"
-msgstr "Szoftveres RAID összetevő (%s verzió)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2165 ../udisks/udisksclient.c:2166
 msgctxt "fs-type"
 msgid "MD Raid"
-msgstr "MD Raid"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2166
 msgctxt "fs-type"
 msgid "Software RAID Component"
-msgstr "Szoftveres RAID összetevő"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2167
 #, c-format
 msgctxt "fs-type"
 msgid "ZFS Device (ZPool version %s)"
-msgstr "ZFS eszköz (%s ZPool verzió)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2167
 #, c-format
 msgctxt "fs-type"
 msgid "ZFS (v%s)"
-msgstr "ZFS (v%s)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2168
 msgctxt "fs-type"
 msgid "ZFS Device"
-msgstr "ZFS eszköz"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2168
 msgctxt "fs-type"
 msgid "ZFS"
-msgstr "ZFS"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2169
 #, c-format
 msgctxt "fs-type"
 msgid "LUKS Encryption (version %s)"
-msgstr "LUKS titkosítás (%s verzió)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2169 ../udisks/udisksclient.c:2170
 msgctxt "fs-type"
 msgid "LUKS"
-msgstr "LUKS"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2170
 msgctxt "fs-type"
 msgid "LUKS Encryption"
-msgstr "LUKS titkosítás"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2171
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS (version %s)"
-msgstr "VMFS (%s verzió)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2171
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS (v%s)"
-msgstr "VMFS (v%s)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2172
 msgctxt "fs-type"
 msgid "VMFS"
-msgstr "VMFS"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2173
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS Volume Member (version %s)"
-msgstr "VMFS kötettag (%s verzió)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2173
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS Member (v%s)"
-msgstr "VMFS tag (v%s)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2174
 msgctxt "fs-type"
 msgid "VMFS Volume Member"
-msgstr "VMFS kötettag"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2174
 msgctxt "fs-type"
 msgid "VMFS Member"
-msgstr "VMFS tag"
+msgstr ""
 
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev, second %s is
@@ -1401,7 +1400,7 @@ msgstr "VMFS tag"
 #, c-format
 msgctxt "fs-type"
 msgid "Unknown (%s %s)"
-msgstr "Ismeretlen (%s %s)"
+msgstr ""
 
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev.
@@ -1410,656 +1409,656 @@ msgstr "Ismeretlen (%s %s)"
 #, c-format
 msgctxt "fs-type"
 msgid "Unknown (%s)"
-msgstr "Ismeretlen (%s)"
+msgstr ""
 
 #. Translators: Shown for unknown filesystem types.
 #. 
 #: ../udisks/udisksclient.c:2253 ../udisks/udisksclient.c:2267
 msgctxt "fs-type"
 msgid "Unknown"
-msgstr "Ismeretlen"
+msgstr ""
 
 #. Translators: name of partition table format
 #: ../udisks/udisksclient.c:2284
 msgid "Master Boot Record"
-msgstr "Elsődleges indítórekord"
+msgstr ""
 
 #. Translators: name of partition table format
 #: ../udisks/udisksclient.c:2286
 msgid "GUID Partition Table"
-msgstr "GUID partíciós tábla"
+msgstr ""
 
 #. Translators: name of partition table format
 #: ../udisks/udisksclient.c:2288
 msgid "Apple Partition Map"
-msgstr "Apple partíciótérkép"
+msgstr ""
 
 #. Translators: name of partition table format
 #: ../udisks/udisksclient.c:2331 ../udisks/udisksclient.c:2336
 msgctxt "partition-subtype"
 msgid "Generic"
-msgstr "Általános"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2332 ../udisks/udisksclient.c:2337
 msgctxt "partition-subtype"
 msgid "Linux"
-msgstr "Linux"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2333 ../udisks/udisksclient.c:2338
 #: ../udisks/udisksclient.c:2343
 msgctxt "partition-subtype"
 msgid "Windows"
-msgstr "Windows"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2334 ../udisks/udisksclient.c:2340
 msgctxt "partition-subtype"
 msgid "Other"
-msgstr "Egyéb"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2339 ../udisks/udisksclient.c:2342
 msgctxt "partition-subtype"
 msgid "Mac OS X"
-msgstr "Mac OS X"
+msgstr ""
 
 #. see http://en.wikipedia.org/wiki/GUID_Partition_Table
 #. Not associated with any OS
 #: ../udisks/udisksclient.c:2430
 msgctxt "part-type"
 msgid "MBR Partition Scheme"
-msgstr "MBR partícióséma"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2431
 msgctxt "part-type"
 msgid "EFI System"
-msgstr "EFI rendszer"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2432
 msgctxt "part-type"
 msgid "BIOS Boot"
-msgstr "BIOS indító"
+msgstr ""
 
 #. Linux
 #: ../udisks/udisksclient.c:2434
 msgctxt "part-type"
 msgid "Linux Filesystem"
-msgstr "Linux fájlrendszer"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2435
 msgctxt "part-type"
 msgid "Linux RAID"
-msgstr "Linux RAID"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2436
 msgctxt "part-type"
 msgid "Linux Swap"
-msgstr "Linux cserehely"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2437 ../udisks/udisksclient.c:2513
 msgctxt "part-type"
 msgid "Linux LVM"
-msgstr "Linux LVM"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2438
 msgctxt "part-type"
 msgid "Linux Reserved"
-msgstr "Linux fenntartott"
+msgstr ""
 
 #. Microsoft
 #: ../udisks/udisksclient.c:2440
 msgctxt "part-type"
 msgid "Basic Data"
-msgstr "Alapszintű adatok"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2441
 msgctxt "part-type"
 msgid "Microsoft Reserved"
-msgstr "Microsoft fenntartott"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2442
 msgctxt "part-type"
 msgid "Microsoft LDM metadata"
-msgstr "Microsoft LDM metaadatok"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2443
 msgctxt "part-type"
 msgid "Microsoft LDM data"
-msgstr "Microsoft LDM adatok"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2444
 msgctxt "part-type"
 msgid "Microsoft Windows Recovery Environment"
-msgstr "Microsoft Windows helyreállítási környezet"
+msgstr ""
 
 #. Apple OS X
 #: ../udisks/udisksclient.c:2446
 msgctxt "part-type"
 msgid "Apple HFS/HFS+"
-msgstr "Apple HFS/HFS+"
+msgstr ""
 
 #. see http://developer.apple.com/documentation/mac/devices/devices-126.html
 #. *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html
 #: ../udisks/udisksclient.c:2447 ../udisks/udisksclient.c:2492
 msgctxt "part-type"
 msgid "Apple UFS"
-msgstr "Apple UFS"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2448
 msgctxt "part-type"
 msgid "Apple ZFS"
-msgstr "Apple ZFS"
+msgstr ""
 
 #. same as Solaris /usr
 #: ../udisks/udisksclient.c:2449
 msgctxt "part-type"
 msgid "Apple RAID"
-msgstr "Apple RAID"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2450
 msgctxt "part-type"
 msgid "Apple RAID (offline)"
-msgstr "Apple RAID (offline)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2451
 msgctxt "part-type"
 msgid "Apple Boot"
-msgstr "Apple indító"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2452
 msgctxt "part-type"
 msgid "Apple Label"
-msgstr "Apple címke"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2453
 msgctxt "part-type"
 msgid "Apple TV Recovery"
-msgstr "Apple TV helyreállító"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2454
 msgctxt "part-type"
 msgid "Apple Core Storage"
-msgstr "Apple Core tárhely"
+msgstr ""
 
 #. HP-UX
 #: ../udisks/udisksclient.c:2456
 msgctxt "part-type"
 msgid "HP-UX Data"
-msgstr "HP-UX adatok"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2457
 msgctxt "part-type"
 msgid "HP-UX Service"
-msgstr "HP-UX szerviz"
+msgstr ""
 
 #. FreeBSD
 #: ../udisks/udisksclient.c:2459
 msgctxt "part-type"
 msgid "FreeBSD Boot"
-msgstr "FreeBSD indító"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2460
 msgctxt "part-type"
 msgid "FreeBSD Data"
-msgstr "FreeBSD adatok"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2461
 msgctxt "part-type"
 msgid "FreeBSD Swap"
-msgstr "FreeBSD cserehely"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2462
 msgctxt "part-type"
 msgid "FreeBSD UFS"
-msgstr "FreeBSD UFS"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2463
 msgctxt "part-type"
 msgid "FreeBSD Vinum"
-msgstr "FreeBSD Vinum"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2464
 msgctxt "part-type"
 msgid "FreeBSD ZFS"
-msgstr "FreeBSD ZFS"
+msgstr ""
 
 #. Solaris
 #: ../udisks/udisksclient.c:2466
 msgctxt "part-type"
 msgid "Solaris Boot"
-msgstr "Solaris indító"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2467
 msgctxt "part-type"
 msgid "Solaris Root"
-msgstr "Solaris gyökér"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2468
 msgctxt "part-type"
 msgid "Solaris Swap"
-msgstr "Solaris cserehely"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2469
 msgctxt "part-type"
 msgid "Solaris Backup"
-msgstr "Solaris tartalék"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2470
 msgctxt "part-type"
 msgid "Solaris /usr"
-msgstr "Solaris /usr"
+msgstr ""
 
 #. same as Apple ZFS
 #: ../udisks/udisksclient.c:2471
 msgctxt "part-type"
 msgid "Solaris /var"
-msgstr "Solaris /var"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2472
 msgctxt "part-type"
 msgid "Solaris /home"
-msgstr "Solaris /home"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2473
 msgctxt "part-type"
 msgid "Solaris Alternate Sector"
-msgstr "Solaris alternatív szektor"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2474
 msgctxt "part-type"
 msgid "Solaris Reserved"
-msgstr "Solaris fenntartott"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2475
 msgctxt "part-type"
 msgid "Solaris Reserved (2)"
-msgstr "Solaris fenntartott (2)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2476
 msgctxt "part-type"
 msgid "Solaris Reserved (3)"
-msgstr "Solaris fenntartott (3)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2477
 msgctxt "part-type"
 msgid "Solaris Reserved (4)"
-msgstr "Solaris fenntartott (4)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2478
 msgctxt "part-type"
 msgid "Solaris Reserved (5)"
-msgstr "Solaris fenntartott (5)"
+msgstr ""
 
 #. NetBSD
 #: ../udisks/udisksclient.c:2480
 msgctxt "part-type"
 msgid "NetBSD Swap"
-msgstr "NetBSD cserehely"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2481
 msgctxt "part-type"
 msgid "NetBSD FFS"
-msgstr "NetBSD FFS"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2482
 msgctxt "part-type"
 msgid "NetBSD LFS"
-msgstr "NetBSD LFS"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2483
 msgctxt "part-type"
 msgid "NetBSD RAID"
-msgstr "NetBSD RAID"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2484
 msgctxt "part-type"
 msgid "NetBSD Concatenated"
-msgstr "NetBSD összefűzött"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2485
 msgctxt "part-type"
 msgid "NetBSD Encrypted"
-msgstr "NetBSD titkosított"
+msgstr ""
 
 #. VMWare, see http://blogs.vmware.com/vsphere/2011/08/vsphere-50-storage-
 #. features-part-7-gpt.html
 #: ../udisks/udisksclient.c:2487
 msgctxt "part-type"
 msgid "VMWare VMFS"
-msgstr "VMWare VMFS"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2488
 msgctxt "part-type"
 msgid "VMWare vmkcore"
-msgstr "VMWare vmkcore"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2493
 msgctxt "part-type"
 msgid "Apple HFS/HFS"
-msgstr "Apple HFS/HFS"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2494
 msgctxt "part-type"
 msgid "Apple Partition Map"
-msgstr "Apple partíciótérkép"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2495
 msgctxt "part-type"
 msgid "Unused"
-msgstr "Szabad"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2496
 msgctxt "part-type"
 msgid "Empty"
-msgstr "Üres"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2497
 msgctxt "part-type"
 msgid "Driver"
-msgstr "Illesztőprogram"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2498
 msgctxt "part-type"
 msgid "Driver 4.3"
-msgstr "Illesztőprogram 4.3"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2499
 msgctxt "part-type"
 msgid "ProDOS file system"
-msgstr "ProDOS fájlrendszer"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2500
 msgctxt "part-type"
 msgid "FAT 12"
-msgstr "FAT 12"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2501
 msgctxt "part-type"
 msgid "FAT 16"
-msgstr "FAT 16"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2502
 msgctxt "part-type"
 msgid "FAT 32"
-msgstr "FAT 32"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2503
 msgctxt "part-type"
 msgid "FAT 16 (Windows)"
-msgstr "FAT 16 (Windows)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2504
 msgctxt "part-type"
 msgid "FAT 32 (Windows)"
-msgstr "FAT 32 (Windows)"
+msgstr ""
 
 #. see http://www.win.tue.nl/~aeb/partitions/partition_types-1.html
 #: ../udisks/udisksclient.c:2507
 msgctxt "part-type"
 msgid "Extended"
-msgstr "Kiterjesztett"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2508
 msgctxt "part-type"
 msgid "EFI GPT"
-msgstr "EFI GPT"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2509
 msgctxt "part-type"
 msgid "EFI (FAT-12/16/32)"
-msgstr "EFI (FAT-12/16/32)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2510
 msgctxt "part-type"
 msgid "Linux swap"
-msgstr "Linux cserehely"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2511
 msgctxt "part-type"
 msgid "Linux"
-msgstr "Linux"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2512
 msgctxt "part-type"
 msgid "Linux Extended"
-msgstr "Linux kiterjesztett"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2514
 msgctxt "part-type"
 msgid "Linux RAID auto"
-msgstr "Linux RAID auto"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2515
 msgctxt "part-type"
 msgid "FAT12"
-msgstr "FAT12"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2516
 msgctxt "part-type"
 msgid "FAT16 <32M"
-msgstr "FAT16 <32M"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2517
 msgctxt "part-type"
 msgid "FAT16"
-msgstr "FAT16"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2518
 msgctxt "part-type"
 msgid "HPFS/NTFS"
-msgstr "HPFS/NTFS"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2519
 msgctxt "part-type"
 msgid "W95 FAT32"
-msgstr "W95 FAT32"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2520
 msgctxt "part-type"
 msgid "W95 FAT32 (LBA)"
-msgstr "W95 FAT32 (LBA)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2521
 msgctxt "part-type"
 msgid "W95 FAT16 (LBA)"
-msgstr "W95 FAT16 (LBA)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2522
 msgctxt "part-type"
 msgid "W95 Ext d (LBA)"
-msgstr "W95 kiterj. (LBA)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2523
 msgctxt "part-type"
 msgid "Hidden FAT12"
-msgstr "Rejtett FAT12"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2524
 msgctxt "part-type"
 msgid "Hidden FAT16 <32M"
-msgstr "Rejtett FAT16 <32M"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2525
 msgctxt "part-type"
 msgid "Hidden FAT16"
-msgstr "Rejtett FAT16"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2526
 msgctxt "part-type"
 msgid "Hidden HPFS/NTFS"
-msgstr "Rejtett HPFS/NTFS"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2527
 msgctxt "part-type"
 msgid "Hidden W95 FAT32"
-msgstr "Rejtett W95 FAT32"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2528
 msgctxt "part-type"
 msgid "Hidden W95 FAT32 (LBA)"
-msgstr "Rejtett W95 FAT32 (LBA)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2529
 msgctxt "part-type"
 msgid "Hidden W95 FAT16 (LBA)"
-msgstr "Rejtett W95 FAT16 (LBA)"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2530
 msgctxt "part-type"
 msgid "OPUS"
-msgstr "OPUS"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2531
 msgctxt "part-type"
 msgid "Compaq diagnostics"
-msgstr "Compaq diagnosztikai"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2532
 msgctxt "part-type"
 msgid "PartitionMagic"
-msgstr "PartitionMagic"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2533
 msgctxt "part-type"
 msgid "Minix"
-msgstr "Minix"
+msgstr ""
 
 #. cf. http://en.wikipedia.org/wiki/MINIX_file_system
 #: ../udisks/udisksclient.c:2534 ../udisks/udisksclient.c:2535
 msgctxt "part-type"
 msgid "Hibernation"
-msgstr "Hibernációs"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2536
 msgctxt "part-type"
 msgid "FreeBSD"
-msgstr "FreeBSD"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2537
 msgctxt "part-type"
 msgid "OpenBSD"
-msgstr "OpenBSD"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2538 ../udisks/udisksclient.c:2539
 msgctxt "part-type"
 msgid "Mac OS X"
-msgstr "Mac OS X"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2540
 msgctxt "part-type"
 msgid "Solaris boot"
-msgstr "Solaris indító"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2541
 msgctxt "part-type"
 msgid "Solaris"
-msgstr "Solaris"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2542
 msgctxt "part-type"
 msgid "BeOS BFS"
-msgstr "BeOS BFS"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2543
 msgctxt "part-type"
 msgid "SkyOS SkyFS"
-msgstr "SkyOS SkyFS"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2642
 msgctxt "job"
 msgid "SMART self-test"
-msgstr "SMART önteszt"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2643
 msgctxt "job"
 msgid "Ejecting Medium"
-msgstr "Adathordozó kiadása"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2644
 msgctxt "job"
 msgid "Unlocking Device"
-msgstr "Eszköz feloldása"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2645
 msgctxt "job"
 msgid "Locking Device"
-msgstr "Eszköz zárolása"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2646
 msgctxt "job"
 msgid "Modifying Encrypted Device"
-msgstr "Titkosított eszköz módosítása"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2647
 msgctxt "job"
 msgid "Starting Swap Device"
-msgstr "Cserehely elindítása"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2648
 msgctxt "job"
 msgid "Stopping Swap Device"
-msgstr "Cserehely leállítása"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2649
 msgctxt "job"
 msgid "Mounting Filesystem"
-msgstr "Fájlrendszer csatolása"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2650
 msgctxt "job"
 msgid "Unmounting Filesystem"
-msgstr "Fájlrendszer leválasztása"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2651
 msgctxt "job"
 msgid "Modifying Filesystem"
-msgstr "Fájlrendszer módosítása"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2652
 msgctxt "job"
 msgid "Erasing Device"
-msgstr "Eszköz törlése"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2653
 msgctxt "job"
 msgid "Creating Filesystem"
-msgstr "Fájlrendszer létrehozása"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2654
 msgctxt "job"
 msgid "Setting Up Loop Device"
-msgstr "Hurokeszköz beállítása"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2655
 msgctxt "job"
 msgid "Modifying Partition"
-msgstr "Partíció módosítása"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2656
 msgctxt "job"
 msgid "Deleting Partition"
-msgstr "Partíció törlése"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2657
 msgctxt "job"
 msgid "Creating Partition"
-msgstr "Partíció létrehozása"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2658
 msgctxt "job"
 msgid "Cleaning Up"
-msgstr "Takarítás"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2659
 msgctxt "job"
 msgid "ATA Secure Erase"
-msgstr "ATA biztonságos törlése"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2660
 msgctxt "job"
 msgid "ATA Enhanced Secure Erase"
-msgstr "ATA bővített biztonságos törlése"
+msgstr ""
 
 #: ../udisks/udisksclient.c:2666
 #, c-format
 msgctxt "unknown-job"
 msgid "Unknown (%s)"
-msgstr "Ismeretlen (%s)"
+msgstr ""
