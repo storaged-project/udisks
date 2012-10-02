@@ -46,9 +46,7 @@
       see the <quote><link
       linkend="udisks-polkit-actions">Authorization
       Checks</link></quote> chapter in the udisks documentation for
-      more information (<ulink
-      url="http://udisks.freedesktop.org/docs/latest/udisks-polkit-actions.html">available
-      online here</ulink>).
+      more information.
       Note that the <literal>x-udisks-auth</literal> option can be
       used in the <filename>/etc/fstab</filename> and
       <filename>/etc/crypttab</filename> files to specify that
