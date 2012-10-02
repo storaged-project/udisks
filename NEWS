@@ -1,4 +1,81 @@
 ------------
+udisks 2.0.0
+------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks and storage devices.
+
+Changes since udisks 1.99.0:
+
+Claudio Saavedra (1):
+      configure.ac: raise gudev dependency
+
+Colin Walters (1):
+      Add --disable-man configure option
+
+David Zeuthen (36):
+      Post-release version bump to 1.100.0
+      Update list of recovery/system partitions
+      Add support for creating exFAT filesystems and changing exFAT labels
+      Add textual descriptions for IMSM Raid members
+      Use all-caps for RAID
+      Only do the isohybrid hack for the first partition
+      Don't complain about missing /etc/crypttab file
+      Don't complain about missing /etc/fstab file
+      Make it work without requiring the kernel to be CONFIG_SWAP=y
+      Mention the right file when complaing about /proc/swaps
+      Fix glaringly wrong documentation for Filesystem.Mount()
+      Move bash completion script into /usr/share/bash-completion/completions
+      Don't require that users define UDISKS_API_IS_SUBJECT_TO_CHANGE
+      Bump version number to 2.0.0
+      docs: only reference hdparm(8) at the end of the paragraph
+      docs: Remove "(available online here)" comment in udisks(8) man page
+      docs: Link to http://www.freedesktop.org/wiki/Software/dbus in udisks(8)
+      docs: update man page dates to "October 2012"
+      docs: Document udisksctl(1)'s info command
+      docs: Document udisksctl(1)'s status command
+      docs: add some more meta information to the man pages (version, source, manual)
+      docs: use CDATA for email addresses to avoid them being mangled
+      Fix docs for udisks_daemon_util_on_same_seat()
+      Fix up docs for udisks_daemon_util_file_set_contents()
+      Add docs for udisks_base_job_get_auto_estimate()
+      Add docs for udisks_base_job_set_auto_estimate()
+      Fix docs for udisks_daemon_launch_simple_job()
+      Fix docs for udisks_daemon_launch_spawned_job()
+      Fix docs for udisks_daemon_launch_spawned_job_sync()
+      Fix docs for udisks_daemon_launch_threaded_job()
+      Fix docs for udisks_daemon_util_file_set_contents()
+      Remove udisks_daemon_util_on_other_seat() from sections.txt
+      Add docs for udisks_linux_drive_ata_apply_configuration()
+      Add docs for udisks_linux_drive_ata_secure_erase_sync()
+      Update translations from Transifex
+      Update NEWS for release
+
+Martin Pitt (14):
+      integration-test: Consistent mount path validation
+      test_polkitd.py: Add --replace option
+      integration-test: Create a read-only fake CD-ROM device
+      integration-test: Add test case for mounting removable device
+      integration-test: Robustify test_luks_forced_removal()
+      Add workaround annotation for udisks_client_get_block_for_dev()
+      integration-test: Fix occasional failure of test_luks_forced_removal
+      Bug 51063 — Mount vfat with "flush" option
+      integration-test: Check mounting of read-only devices
+      integration-test: Split out and fix daemon startup
+      integration-tests: Check handling of existing mount points
+      integration-test: Fix start_daemon() for restarts
+      Enable large file support
+      integration-test: Skip r/o mount checks for XFS and reiserfs
+
+Vincent Untz (1):
+      Fix same seat detection if built with systemd, but not booted with it
+
+Thanks to all our contributors.
+
+David Zeuthen,
+October 2, 2012
+
+------------
 udisks 1.99.0
 ------------
 
