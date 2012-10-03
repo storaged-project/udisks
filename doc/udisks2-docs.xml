@@ -365,6 +365,7 @@
       <xi:include href="xml/UDisksManager.xml"/>
       <xi:include href="xml/UDisksDrive.xml"/>
       <xi:include href="xml/UDisksDriveAta.xml"/>
+      <xi:include href="xml/UDisksMDRaid.xml"/>
       <xi:include href="xml/UDisksJob.xml"/>
       <xi:include href="xml/UDisksBlock.xml"/>
       <xi:include href="xml/UDisksPartition.xml"/>
