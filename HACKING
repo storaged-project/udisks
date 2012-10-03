@@ -24,6 +24,59 @@ Checkouts for ssh account holders
 
   $ git clone ssh://[username@]git.freedesktop.org/git/udisks
 
+MAKING RELEASES
+===============
+
+Checklist for making a release:
+
+ - Pull translations from Transfix ("tx pull -a")
+   - Remember to add new po/*.po files and update po/LINGUAS
+   - Make sure that you pushed the POT file a couple of weeks before
+     this and that no new strings has been added
+
+ - Update the NEWS file
+
+ - Check that everything works
+   - Run 'make check'
+   - Run 'sudo ./integration-test' in src/tests
+   - Check that you have no uncommitted or unpushed changes
+   - Check there are no glaring TODO or FIXME
+   - Sanity-check all new API
+   - Ensure newly added API is marked properly with "Since: X.Y"
+   - Ensure that deprecated API is marked as such
+
+ - Do the actual release (see Makefile.am, do it manually if not davidz)
+   - run 'make publish'
+   - run 'make publish-docs'
+
+ - Tag the release: git tag -s -m X.Y.Z X.Y.Z
+
+ - Post-release actions:
+   - Bump the version in configure.in
+     - Commit message: Post-release version bump to X.Y.Z
+   - Prepare NEWS file - append " (unreleased)" to version number
+     - Commit message: Start writing NEWS for X.Y.Z
+
+When doing the first micro release in a new minor series (for example
+starting the 2.0.0, 2.1.0, 2.2.0 etc. series), do the following
+
+ - Update the date in man pages to "$MONTH $YEAR" e.g. "October 2012"
+
+ - At some point after the release, create the udisks-X-Y branch
+   - Perform the post-release actions above on the created branch
+   - This is for maintenance releases
+   - Do this when focus is on new feature development
+   - Then bump version on master to X.Y.90 (prereleases for X.Y+1.0)
+   - Add "Index of new symbols in X.Y+1" index to doc/udisks2-docs.xml
+
+For maintenance releases, the rules are simple
+
+ - Work on the udisks-X-Y branch
+ - If possible, cherry-pick fixes from master ('git cherry-pick')
+ - Do not add (or backport) any new API or features
+ - Do not add, remove or change any translatable strings
+ - Do not add new dependencies
+
 COMMITTING CODE
 ===============
 

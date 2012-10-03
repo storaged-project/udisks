@@ -87,6 +87,9 @@ gboolean udisks_daemon_util_file_set_contents (const gchar  *filename,
 UDisksInhibitCookie *udisks_daemon_util_inhibit_system_sync   (const gchar          *reason);
 void                 udisks_daemon_util_uninhibit_system_sync (UDisksInhibitCookie  *cookie);
 
+gboolean udisks_daemon_util_on_same_seat (UDisksDaemon          *daemon,
+                                          UDisksObject          *object,
+                                          pid_t                  process);
 
 G_END_DECLS
 

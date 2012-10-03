@@ -1,11 +1,15 @@
 
 NULL =
 
-man_MANS = 				\
+man_MANS =
+
+if ENABLE_MAN
+man_MANS +=				\
 	udisksctl.1			\
 	udisksd.8			\
 	udisks.8			\
 	$(NULL)
+endif
 
 udisksctl.1 : udisksctl.xml
 	$(XSLTPROC) -nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<

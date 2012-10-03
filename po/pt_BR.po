@@ -9,14 +9,14 @@ msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-07-23 16:45-0400\n"
-"PO-Revision-Date: 2012-07-23 20:46+0000\n"
-"Last-Translator: davidz <zeuthen@gmail.com>\n"
+"PO-Revision-Date: 2012-08-02 00:29+0000\n"
+"Last-Translator: Rafael Ferreira <rafael.f.f1@gmail.com>\n"
 "Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/freedesktop/language/pt_BR/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: pt_BR\n"
-"Plural-Forms: nplurals=2; plural=(n > 1)\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:1
 msgid "Mount a filesystem"
@@ -173,11 +173,11 @@ msgstr "Autenticação é necessparia para modificar um dispositivo conectado em
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:35
 msgid "Rescan a device"
-msgstr ""
+msgstr "Reescanear um dispositivo"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:36
 msgid "Authentication is to rescan a device"
-msgstr ""
+msgstr "Autenticação é necessária para reescanear um dispositivo"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:37
 msgid "Open a device"
@@ -399,7 +399,7 @@ msgstr "Autenticação é necessária para abrir $(drive) para avaliação de de
 #. 
 #: ../src/udiskslinuxblock.c:2563
 msgid "Authentication is required to rescan $(drive)"
-msgstr ""
+msgstr "Autenticação é necessária para reescanear $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests ejecting media from a drive.
@@ -565,7 +565,7 @@ msgstr "Autenticação é necessária para desmontar $(drive) referenciado no ar
 #. 
 #: ../src/udiskslinuxfilesystem.c:1685
 msgid "Authentication is required to unmount $(drive) mounted by another user"
-msgstr "Autenticação é necessária para desmontar$(drive) montado por outro usuário"
+msgstr "Autenticação é necessária para desmontar $(drive) montado por outro usuário"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing the filesystem label.
@@ -655,7 +655,7 @@ msgstr "Autenticação é necessária para desativar o espaço de swap em $(driv
 #: ../udisks/udisksclient.c:827
 msgctxt "media-type"
 msgid "Thumb"
-msgstr "Polegar"
+msgstr "Thumb"
 
 #: ../udisks/udisksclient.c:829
 msgctxt "media-type"
@@ -1482,7 +1482,7 @@ msgstr "BIOS Boot"
 #: ../udisks/udisksclient.c:2434
 msgctxt "part-type"
 msgid "Linux Filesystem"
-msgstr ""
+msgstr "Sistema de Arquivos Linux"
 
 #: ../udisks/udisksclient.c:2435
 msgctxt "part-type"
@@ -1577,7 +1577,7 @@ msgstr "Restauração AppleTV"
 #: ../udisks/udisksclient.c:2454
 msgctxt "part-type"
 msgid "Apple Core Storage"
-msgstr ""
+msgstr "Apple Core Storage"
 
 #. HP-UX
 #: ../udisks/udisksclient.c:2456

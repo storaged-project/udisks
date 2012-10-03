@@ -1,11 +1,6 @@
+# udisksctl(1) completion                                  -*- shell-script -*-
 
-# Check for bash
-[ -z "$BASH_VERSION" ] && return
-
-####################################################################################################
-
-
-__udisksctl() {
+_udisksctl() {
     local IFS=$'\n'
     local cur=`_get_cword :`
 
@@ -30,8 +25,5 @@ __udisksctl() {
             esac
             ;;
     esac
-}
-
-####################################################################################################
-
-complete -o nospace -F __udisksctl udisksctl
+} &&
+complete -o nospace -F _udisksctl udisksctl

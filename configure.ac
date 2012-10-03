@@ -1,7 +1,7 @@
 
-m4_define([udisks_major_version], [1])
-m4_define([udisks_minor_version], [100])
-m4_define([udisks_micro_version], [0])
+m4_define([udisks_major_version], [2])
+m4_define([udisks_minor_version], [0])
+m4_define([udisks_micro_version], [90])
 
 m4_define([udisks_version], [udisks_major_version.udisks_minor_version.udisks_micro_version])
 
@@ -88,6 +88,8 @@ CC_CHECK_CFLAGS_APPEND([                          \
         -ffunction-sections                       \
         -fno-common                               \
         -fno-strict-aliasing                      \
+        -D_LARGEFILE64_SOURCE                     \
+        -D_FILE_OFFSET_BITS=64                    \
 ])
 
 AC_PATH_PROG([XSLTPROC], [xsltproc])
@@ -97,12 +99,28 @@ fi
 
 GTK_DOC_CHECK([1.3])
 
+AC_ARG_ENABLE(man,
+              [AS_HELP_STRING([--enable-man],
+                              [generate man pages [default=auto]])],,
+              enable_man=maybe)
+AS_IF([test "$enable_man" != no], [
+  AC_PATH_PROG([XSLTPROC], [xsltproc])
+  AS_IF([test -z "$XSLTPROC"], [
+    AS_IF([test "$enable_man" = yes], [
+      AC_MSG_ERROR([xsltproc is required for --enable-man])
+    ])
+    enable_man=no
+  ])
+  enable_man=yes
+])
+AM_CONDITIONAL(ENABLE_MAN, test "$enable_man" != no)
+
 GOBJECT_INTROSPECTION_CHECK([0.6.2])
 
 # Libraries
 #
 
-PKG_CHECK_MODULES(GUDEV, [gudev-1.0 >= 147])
+PKG_CHECK_MODULES(GUDEV, [gudev-1.0 >= 165])
 AC_SUBST(GUDEV_CFLAGS)
 AC_SUBST(GUDEV_LIBS)
 
@@ -127,7 +145,7 @@ AC_SUBST(LIBATASMART_CFLAGS)
 AC_SUBST(LIBATASMART_LIBS)
 
 PKG_CHECK_MODULES(LIBSYSTEMD_LOGIN,
-                  [libsystemd-login >= 44],
+                  [libsystemd-login >= 44 libsystemd-daemon],
                   have_libsystemd_login=yes,
                   have_libsystemd_login=no)
 AM_CONDITIONAL(HAVE_LIBSYSTEMD_LOGIN, test x$have_libsystemd_login = xyes)
@@ -220,4 +238,5 @@ echo "
 
         Maintainer mode:            ${USE_MAINTAINER_MODE}
         Building api docs:          ${enable_gtk_doc}
+        Building man pages:         ${enable_man}
 "

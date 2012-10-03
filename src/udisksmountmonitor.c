@@ -322,7 +322,11 @@ udisks_mount_monitor_constructed (GObject *object)
     }
   else
     {
-      g_error ("No /proc/swaps file: %s", error->message);
+      if (!(error->domain == G_FILE_ERROR && error->code == G_FILE_ERROR_NOENT))
+        {
+          udisks_warning ("Error opening /proc/swaps file: %s (%s, %d)",
+                          error->message, g_quark_to_string (error->domain), error->code);
+        }
       g_error_free (error);
     }
 
@@ -518,15 +522,25 @@ udisks_mount_monitor_get_swaps (UDisksMountMonitor  *monitor,
   gchar *contents;
   gchar **lines;
   guint n;
+  GError *local_error = NULL;
 
   ret = FALSE;
   contents = NULL;
   lines = NULL;
 
-  if (!g_file_get_contents ("/proc/swaps", &contents, NULL, error))
+  if (!g_file_get_contents ("/proc/swaps", &contents, NULL, &local_error))
     {
-      g_prefix_error (error, "Error reading /proc/self/mountinfo: ");
-      goto out;
+      if (local_error->domain == G_FILE_ERROR && local_error->code == G_FILE_ERROR_NOENT)
+        {
+          g_clear_error (&local_error);
+          ret = TRUE;
+          goto out;
+        }
+      else
+        {
+          g_propagate_prefixed_error (error, local_error, "Error reading /proc/swaps: ");
+          goto out;
+        }
     }
 
   lines = g_strsplit (contents, "\n", 0);

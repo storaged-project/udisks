@@ -1,14 +1,20 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[<!ENTITY version SYSTEM "../version.xml">]>
 <refentry id="udisks.8">
   <refentryinfo>
     <title>udisks</title>
-    <date>March 2008</date>
+    <date>October 2012</date>
     <productname>udisks</productname>
   </refentryinfo>
 
   <refmeta>
     <refentrytitle>udisks</refentrytitle>
     <manvolnum>8</manvolnum>
-    <refmiscinfo class="version"></refmiscinfo>
+    <refmiscinfo class="manual">System Administration</refmiscinfo>
+    <refmiscinfo class="source">udisks</refmiscinfo>
+    <refmiscinfo class="version">&version;</refmiscinfo>
   </refmeta>
 
   <refnamediv>
@@ -23,7 +29,8 @@
       unprivileged ones) can access the
       <link linkend="udisksd.8"><citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>
       daemon via the name <emphasis>org.freedesktop.UDisks2</emphasis>
-      on the system message bus. In addition to the D-Bus API, a
+      on the <ulink url="http://www.freedesktop.org/wiki/Software/dbus">system message bus</ulink>.
+      In addition to the D-Bus API, a
       library, <filename>libudisks2</filename> is also provided. This
       library can be used from C/C++ and any high-level language with
       <ulink
@@ -46,9 +53,7 @@
       see the <quote><link
       linkend="udisks-polkit-actions">Authorization
       Checks</link></quote> chapter in the udisks documentation for
-      more information (<ulink
-      url="http://udisks.freedesktop.org/docs/latest/udisks-polkit-actions.html">available
-      online here</ulink>).
+      more information.
       Note that the <literal>x-udisks-auth</literal> option can be
       used in the <filename>/etc/fstab</filename> and
       <filename>/etc/crypttab</filename> files to specify that
@@ -121,7 +126,7 @@
               through 254 (which do not permit spin-down).  The
               highest degree of power management is attained with a
               setting of 1, and the highest I/O performance with a
-              setting of 254. A value of 255 tells hdparm to disable
+              setting of 254. A value of 255 can be used to disable
               Advanced Power Management altogether on the drive (not
               all drives support disabling it, but most do).
               This is similar to the <option>-B</option> option in
@@ -320,8 +325,9 @@
 
   <refsect1><title>AUTHOR</title>
     <para>
-      Written by David Zeuthen <email>zeuthen@gmail.com</email> with
-      a lot of help from many others.
+      Written by David Zeuthen
+      <email><![CDATA[zeuthen@gmail.com]]></email> with a lot of help
+      from many others.
     </para>
   </refsect1>
 

@@ -1957,8 +1957,17 @@ apply_configuration_thread_func (gpointer user_data)
   return NULL;
 }
 
+/**
+ * udisks_linux_drive_ata_apply_configuration:
+ * @drive: A #UDisksLinuxDriveAta.
+ * @device: A #GUdevDevice
+ * @configuration: The configuration to apply.
+ *
+ * Spawns a thread to apply @configuration to @drive, if any. Does not
+ * wait for the thread to terminate.
+ */
 void
-udisks_linux_drive_ata_apply_configuration (UDisksLinuxDriveAta     *ata,
+udisks_linux_drive_ata_apply_configuration (UDisksLinuxDriveAta     *drive,
                                             GUdevDevice             *device,
                                             GVariant                *configuration)
 {
@@ -1969,11 +1978,11 @@ udisks_linux_drive_ata_apply_configuration (UDisksLinuxDriveAta     *ata,
   data->ata_pm_standby = -1;
   data->ata_apm_level = -1;
   data->ata_aam_level = -1;
-  data->ata = g_object_ref (ata);
+  data->ata = g_object_ref (drive);
   data->device = g_object_ref (device);
   data->configuration = g_variant_ref (configuration);
 
-  data->object = udisks_daemon_util_dup_object (ata, NULL);
+  data->object = udisks_daemon_util_dup_object (drive, NULL);
   if (data->object == NULL)
     goto out;
 
@@ -2035,14 +2044,27 @@ on_secure_erase_update_progress_timeout (gpointer user_data)
   return TRUE; /* keep source around */
 }
 
+/**
+ * udisks_linux_drive_ata_secure_erase_sync:
+ * @drive: A #UDisksLinuxDriveAta.
+ * @caller_uid: The unix user if of the caller requesting the operation.
+ * @enhanced: %TRUE to use the enhanced version of the ATA secure erase command.
+ * @error: Return location for error or %NULL.
+ *
+ * Performs an ATA Secure Erase opeartion. Blocks the calling thread until the operation completes.
+ *
+ * This operation may take a very long time (hours) to complete.
+ *
+ * Returns: %TRUE if the operation succeeded, %FALSE if @error is set.
+ */
 gboolean
-udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta     *ata,
+udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta     *drive,
                                           uid_t                    caller_uid,
                                           gboolean                 enhanced,
-                                          GError                 **_error)
+                                          GError                 **error)
 {
   gboolean ret = FALSE;
-  UDisksDrive *drive = NULL;
+  UDisksDrive *_drive = NULL;
   UDisksLinuxDriveObject *object = NULL;
   UDisksLinuxBlockObject *block_object = NULL;
   UDisksDaemon *daemon;
@@ -2060,22 +2082,22 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta     *ata,
   gint num_minutes = 0;
   guint timeout_id = 0;
   gboolean claimed = FALSE;
-  GError *error = NULL;
+  GError *local_error = NULL;
   const gchar *pass = "xxxx";
   gboolean clear_passwd_on_failure = FALSE;
 
-  g_return_val_if_fail (UDISKS_IS_LINUX_DRIVE_ATA (ata), FALSE);
-  g_return_val_if_fail (_error == NULL || *_error == NULL, FALSE);
+  g_return_val_if_fail (UDISKS_IS_LINUX_DRIVE_ATA (drive), FALSE);
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-  object = udisks_daemon_util_dup_object (ata, &error);
+  object = udisks_daemon_util_dup_object (drive, &local_error);
   if (object == NULL)
     goto out;
-  drive = udisks_object_peek_drive (UDISKS_OBJECT (object));
+  _drive = udisks_object_peek_drive (UDISKS_OBJECT (object));
 
   block_object = udisks_linux_drive_object_get_block (object, FALSE);
   if (block_object == NULL)
     {
-      g_set_error (&error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+      g_set_error (&local_error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                    "Unable to find block device for drive");
       goto out;
     }
@@ -2085,14 +2107,14 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta     *ata,
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
   if (device == NULL)
     {
-      g_set_error (&error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+      g_set_error (&local_error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                    "No udev device");
       goto out;
     }
 
-  if (ata->secure_erase_in_progress)
+  if (drive->secure_erase_in_progress)
     {
-      g_set_error (&error, UDISKS_ERROR, UDISKS_ERROR_DEVICE_BUSY,
+      g_set_error (&local_error, UDISKS_ERROR, UDISKS_ERROR_DEVICE_BUSY,
                    "Secure erase in progress");
       goto out;
     }
@@ -2102,13 +2124,13 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta     *ata,
   fd = open (g_udev_device_get_device_file (device), O_RDONLY | O_EXCL);
   if (fd == -1)
     {
-      g_set_error (&error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+      g_set_error (&local_error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                    "Error opening device file %s: %m",
                    device_file);
       goto out;
     }
 
-  ata->secure_erase_in_progress = TRUE;
+  drive->secure_erase_in_progress = TRUE;
 
   claimed = TRUE;
 
@@ -2122,9 +2144,9 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta     *ata,
                            ATA_COMMAND_PROTOCOL_DRIVE_TO_HOST,
                            &input,
                            &output,
-                           &error))
+                           &local_error))
       {
-        g_prefix_error (&error, "Error sending ATA command IDENTIFY DEVICE: ");
+        g_prefix_error (&local_error, "Error sending ATA command IDENTIFY DEVICE: ");
         goto out;
       }
   }
@@ -2158,21 +2180,21 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta     *ata,
         (word_82 & (1<<1)) && (word_128 & (1<<0))
         ))
     {
-      g_set_error (&error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+      g_set_error (&local_error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                    "Drive does not support the ATA security feature");
       goto out;
     }
 
   if (word_128 & (1<<3))
     {
-      g_set_error (&error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+      g_set_error (&local_error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                    "Drive is frozen, cannot perform a secure erase");
       goto out;
     }
 
   if (enhanced && !(word_128 & (1<<5)))
     {
-      g_set_error (&error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+      g_set_error (&local_error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                    "Enhanced erase requested but not supported");
       goto out;
     }
@@ -2216,9 +2238,9 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta     *ata,
                            ATA_COMMAND_PROTOCOL_HOST_TO_DRIVE,
                            &input,
                            &output,
-                           &error))
+                           &local_error))
       {
-        g_prefix_error (&error, "Error sending ATA command SECURITY SET PASSWORD: ");
+        g_prefix_error (&local_error, "Error sending ATA command SECURITY SET PASSWORD: ");
         goto out;
       }
   }
@@ -2228,7 +2250,7 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta     *ata,
   udisks_notice ("Commencing ATA%s secure erase of %s (%s). This operation is expected to take at least %d minutes to complete",
                  enhanced ? " enhanced" : "",
                  device_file,
-                 udisks_drive_get_id (drive),
+                 udisks_drive_get_id (_drive),
                  num_minutes);
 
   /* Third... do SECURITY ERASE PREPARE */
@@ -2241,9 +2263,9 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta     *ata,
                            ATA_COMMAND_PROTOCOL_NONE,
                            &input,
                            &output,
-                           &error))
+                           &local_error))
       {
-        g_prefix_error (&error, "Error sending ATA command SECURITY ERASE PREPARE: ");
+        g_prefix_error (&local_error, "Error sending ATA command SECURITY ERASE PREPARE: ");
         goto out;
       }
   }
@@ -2263,9 +2285,9 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta     *ata,
                            ATA_COMMAND_PROTOCOL_HOST_TO_DRIVE,
                            &input,
                            &output,
-                           &error))
+                           &local_error))
       {
-        g_prefix_error (&error, "Error sending ATA command SECURITY ERASE UNIT (enhanced=%d): ",
+        g_prefix_error (&local_error, "Error sending ATA command SECURITY ERASE UNIT (enhanced=%d): ",
                         enhanced ? 1 : 0);
         goto out;
       }
@@ -2298,7 +2320,7 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta     *ata,
           udisks_error ("Failed to clear user password '%s' on %s (%s) while attemping clean-up after a failed secure erase operation. You may need to manually unlock the drive. The error was: %s (%s, %d)",
                         pass,
                         device_file,
-                        udisks_drive_get_id (drive),
+                        udisks_drive_get_id (_drive),
                         cleanup_error->message, g_quark_to_string (cleanup_error->domain), cleanup_error->code);
           g_clear_error (&cleanup_error);
         }
@@ -2307,7 +2329,7 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta     *ata,
           udisks_info ("Successfully removed user password '%s' from %s (%s) during clean-up after a failed secure erase operation",
                        pass,
                        device_file,
-                       udisks_drive_get_id (drive));
+                       udisks_drive_get_id (_drive));
         }
     }
 
@@ -2315,38 +2337,38 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta     *ata,
     {
       udisks_notice ("Finished securely erasing %s (%s)",
                      device_file,
-                     udisks_drive_get_id (drive));
+                     udisks_drive_get_id (_drive));
     }
   else
     {
       udisks_notice ("Error securely erasing %s (%s): %s (%s, %d)",
                      device_file,
-                     udisks_drive_get_id (drive),
-                     error->message, g_quark_to_string (error->domain), error->code);
+                     udisks_drive_get_id (_drive),
+                     local_error->message, g_quark_to_string (local_error->domain), local_error->code);
     }
 
   if (claimed)
-    ata->secure_erase_in_progress = FALSE;
+    drive->secure_erase_in_progress = FALSE;
 
   if (timeout_id > 0)
     g_source_remove (timeout_id);
   if (job != NULL)
     {
       /* propagate error, if any */
-      if (error == NULL)
+      if (local_error == NULL)
         {
           udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, "");
         }
       else
         {
           gchar *s = g_strdup_printf ("Secure Erase failed: %s (%s, %d)",
-                                      error->message, g_quark_to_string (error->domain), error->code);
+                                      local_error->message, g_quark_to_string (local_error->domain), local_error->code);
           udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), FALSE, s);
           g_free (s);
         }
     }
-  if (error != NULL)
-    g_propagate_error (_error, error);
+  if (local_error != NULL)
+    g_propagate_error (error, local_error);
   if (fd != -1)
     close (fd);
   g_clear_object (&device);

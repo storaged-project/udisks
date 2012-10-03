@@ -500,6 +500,8 @@ static guint job_id = 0;
  * udisks_daemon_launch_simple_job:
  * @daemon: A #UDisksDaemon.
  * @object: (allow-none): A #UDisksObject to add to the job or %NULL.
+ * @job_operation: The operation for the job.
+ * @job_started_by_uid: The user who started the job.
  * @cancellable: A #GCancellable or %NULL.
  *
  * Launches a new simple job.
@@ -558,6 +560,8 @@ udisks_daemon_launch_simple_job (UDisksDaemon    *daemon,
  * udisks_daemon_launch_threaded_job:
  * @daemon: A #UDisksDaemon.
  * @object: (allow-none): A #UDisksObject to add to the job or %NULL.
+ * @job_operation: The operation for the job.
+ * @job_started_by_uid: The user who started the job.
  * @job_func: The function to run in another thread.
  * @user_data: User data to pass to @job_func.
  * @user_data_free_func: Function to free @user_data with or %NULL.
@@ -629,6 +633,8 @@ udisks_daemon_launch_threaded_job  (UDisksDaemon    *daemon,
  * udisks_daemon_launch_spawned_job:
  * @daemon: A #UDisksDaemon.
  * @object: (allow-none): A #UDisksObject to add to the job or %NULL.
+ * @job_operation: The operation for the job.
+ * @job_started_by_uid: The user who started the job.
  * @cancellable: A #GCancellable or %NULL.
  * @run_as_uid: The #uid_t to run the command as.
  * @run_as_euid: The effective #uid_t to run the command as.
@@ -739,6 +745,8 @@ spawned_job_sync_on_completed (UDisksJob    *job,
  * udisks_daemon_launch_spawned_job_sync:
  * @daemon: A #UDisksDaemon.
  * @object: (allow-none): A #UDisksObject to add to the job or %NULL.
+ * @job_operation: The operation for the job.
+ * @job_started_by_uid: The user who started the job.
  * @cancellable: A #GCancellable or %NULL.
  * @run_as_uid: The #uid_t to run the command as.
  * @run_as_euid: The effective #uid_t to run the command as.
