@@ -412,6 +412,11 @@
       <xi:include href="xml/udiskslinuxdriveata.xml"/>
       <xi:include href="xml/udiskslinuxdriveobject.xml"/>
     </chapter>
+    <chapter id="ref-daemon-mdraid">
+      <title>Linux RAID</title>
+      <xi:include href="xml/udiskslinuxmdraid.xml"/>
+      <xi:include href="xml/udiskslinuxmdraidobject.xml"/>
+    </chapter>
     <chapter id="ref-daemon-block-devices">
       <title>Block devices on Linux</title>
       <xi:include href="xml/udiskslinuxblock.xml"/>
