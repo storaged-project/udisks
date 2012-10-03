@@ -703,6 +703,7 @@
     <property name="Drive" type="o" access="read"/>
 
     <!-- MDRaid:
+         @since: 2.1
          If the block device is a running MD-RAID array, this is set
          to the #org.freedesktop.UDisks2.MDRaid object that it
          correspond to. Is '/' if no such object exists.
@@ -710,6 +711,7 @@
     <property name="MDRaid" type="o" access="read"/>
 
     <!-- MDRaidMember:
+         @since: 2.1
          If the block device is a member of a MD-RAID array, this
          is set to the #org.freedesktop.UDisks2.MDRaid object that it
          correspond to. Is '/' if no such object exists.
@@ -1577,6 +1579,7 @@
   <!--
       org.freedesktop.UDisks2.MDRaid:
       @short_description: Linux Software RAID
+      @since: 2.1
 
       Objects implementing this interface represent
       <ulink url="https://raid.wiki.kernel.org/index.php/Linux_Raid">Linux Software RAID arrays</ulink>
