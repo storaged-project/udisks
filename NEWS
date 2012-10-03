@@ -1,4 +1,20 @@
 ------------
+udisks 2.0.90 (unreleased)
+------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks and storage devices.
+
+Changes since udisks 2.0.0:
+
+ TODO
+
+Thanks to all our contributors.
+
+David Zeuthen,
+$DATE
+
+------------
 udisks 2.0.0
 ------------
 
