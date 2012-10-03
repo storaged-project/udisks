@@ -52,6 +52,7 @@ udisks_client_get_block_for_mdraid
 udisks_client_get_members_for_mdraid
 udisks_client_get_mdraid_for_block
 udisks_client_get_object_info
+udisks_client_get_drive_info
 <SUBSECTION>
 UDisksObjectInfo
 udisks_object_info_ref
