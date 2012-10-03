@@ -51,7 +51,11 @@ Checklist for making a release:
 
  - Tag the release: git tag -s -m X.Y.Z X.Y.Z
 
- - Bump the version in configure.in ("Post-release version bump to X.Y.Z")
+ - Post-release actions:
+   - Bump the version in configure.in
+     - Commit message: Post-release version bump to X.Y.Z
+   - Prepare NEWS file - append " (unreleased)" to version number
+     - Commit message: Start writing NEWS for X.Y.Z
 
 When doing the first micro release in a new minor series (for example
 starting the 2.0.0, 2.1.0, 2.2.0 etc. series), do the following
@@ -59,6 +63,7 @@ starting the 2.0.0, 2.1.0, 2.2.0 etc. series), do the following
  - Update the date in man pages to "$MONTH $YEAR" e.g. "October 2012"
 
  - At some point after the release, create the udisks-X-Y branch
+   - Perform the post-release actions above on the created branch
    - This is for maintenance releases
    - Do this when focus is on new feature development
    - Then bump version on master to X.Y.90 (prereleases for X.Y+1.0)
@@ -67,6 +72,7 @@ starting the 2.0.0, 2.1.0, 2.2.0 etc. series), do the following
 For maintenance releases, the rules are simple
 
  - Work on the udisks-X-Y branch
+ - If possible, cherry-pick fixes from master ('git cherry-pick')
  - Do not add (or backport) any new API or features
  - Do not add, remove or change any translatable strings
  - Do not add new dependencies
