@@ -198,6 +198,8 @@ void                 udisks_partition_type_info_free       (UDisksPartitionTypeI
  *
  * This struct may grow in the future without it being considered an
  * ABI break.
+ *
+ * Since: 2.1
  */
 struct _UDisksObjectInfo
 {

@@ -817,6 +817,8 @@ udisks_client_get_drive_for_block (UDisksClient  *client,
  * Returns: (transfer full): A #UDisksMDRaid or %NULL if there is no
  *   #UDisksMDRaid for @block or @block is not a MD-RAID block
  *   device. Free the returned object with g_object_unref().
+ *
+ * Since: 2.1
  */
 UDisksMDRaid *
 udisks_client_get_mdraid_for_block (UDisksClient  *client,
@@ -844,6 +846,8 @@ udisks_client_get_mdraid_for_block (UDisksClient  *client,
  * Gets the RAID device (e.g. /dev/md0) for @raid.
  *
  * Returns: (transfer full): A #UDisksBlock or %NULL if no RAID device is running.
+ *
+ * Since: 2.1
  */
 UDisksBlock *
 udisks_client_get_block_for_mdraid (UDisksClient *client,
@@ -901,6 +905,8 @@ udisks_client_get_block_for_mdraid (UDisksClient *client,
  * Returns: (transfer full) (element-type UDisksBlock): A list of #UDisksBlock instances. The
  *   returned list should be freed with g_list_free() after each
  *   element has been freed with g_object_unref().
+ *
+ * Since: 2.1
  */
 GList *
 udisks_client_get_members_for_mdraid (UDisksClient *client,
@@ -2897,6 +2903,8 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
  * #UDisksObjectInfo object and is localized.
  *
  * Returns: A #UDisksObjectInfo instance that should be freed with udisks_object_info_unref().
+ *
+ * Since: 2.1
  */
 UDisksObjectInfo *
 udisks_client_get_object_info (UDisksClient        *client,
@@ -3002,6 +3010,22 @@ _g_object_ref0 (gpointer object)
   else
     return NULL;
 }
+
+/**
+ * udisks_client_get_drive_info:
+ * @client: A #UDisksClient.
+ * @drive: A #UDisksDrive.
+ * @out_name: (out) (allow-none): Return location for name or %NULL.
+ * @out_description: (out) (allow-none): Return location for description or %NULL.
+ * @out_drive_icon: (out) (allow-none): Return location for icon representing the drive or %NULL.
+ * @out_media_description: (out) (allow-none): Return location for description of the media or %NULL.
+ * @out_media_icon: (out) (allow-none): Return location for icon representing the media or %NULL.
+ *
+ * Gets information about a #UDisksDrive object that is suitable to
+ * present in an user interface. The returned strings are localized.
+ *
+ * Deprecated: 2.1: Use udisks_client_get_object_info() instead.
+ */
 
 void
 udisks_client_get_drive_info (UDisksClient  *client,
