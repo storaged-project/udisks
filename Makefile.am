@@ -27,5 +27,15 @@ publish-docs :
 	scp doc/html/* "david@people.freedesktop.org:/srv/udisks.freedesktop.org/www/docs/$(VERSION)"
 	ssh "david@people.freedesktop.org" "rm -f /srv/udisks.freedesktop.org/www/docs/latest; ln -s $(VERSION) /srv/udisks.freedesktop.org/www/docs/latest"
 
+# publish docs readable from http://udisks.freedesktop.org/docs/master/ (instead of latest)
+#
+# This is useful for work-in-progress when hacking on master and you want
+# to easily share API ideas etc. with others without requiring them to
+# build master themselves
+publish-docs-master :
+	gtkdoc-rebase --html-dir doc/html --online
+	ssh "david@people.freedesktop.org" "rm -rf /srv/udisks.freedesktop.org/www/docs/master; mkdir -p /srv/udisks.freedesktop.org/www/docs/master"
+	scp doc/html/* "david@people.freedesktop.org:/srv/udisks.freedesktop.org/www/docs/master"
+
 clean-local :
 	rm -f *~
