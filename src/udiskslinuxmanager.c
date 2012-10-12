@@ -483,8 +483,385 @@ handle_loop_setup (UDisksManager          *object,
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
+typedef struct
+{
+  gint md_num;
+} WaitForArrayData;
+
+static UDisksObject *
+wait_for_array_object (UDisksDaemon *daemon,
+                       gpointer      user_data)
+{
+  const gchar *raid_device_file = user_data;
+  UDisksObject *object = NULL;
+  UDisksBlock *block = NULL;
+  gchar *mdraid_objpath = NULL;
+  UDisksObject *ret = NULL;
+
+  /* First see if we have the right array object */
+  object = udisks_daemon_find_block_by_device_file (daemon, raid_device_file);
+  block = udisks_object_get_block (object);
+  if (block == NULL)
+    goto out;
+
+  mdraid_objpath = udisks_block_dup_mdraid (block);
+  if (g_strcmp0 (mdraid_objpath, "/") == 0)
+    goto out;
+
+  ret = udisks_daemon_find_object (daemon, mdraid_objpath);
+
+ out:
+  g_free (mdraid_objpath);
+  g_clear_object (&block);
+  g_clear_object (&object);
+  return ret;
+}
+
+static gint
+find_free_md (void)
+{
+  gint ret = -1;
+  gint n;
+  gchar buf[PATH_MAX];
+
+  for (n = 127; n >= 0; n++)
+    {
+      snprintf (buf, sizeof buf, "/sys/block/md%d", n);
+      if (!g_file_test (buf, G_FILE_TEST_EXISTS))
+        {
+          ret = n;
+          goto out;
+        }
+    }
+
+ out:
+  return ret;
+}
+
+static const gchar *raid_level_whitelist[] = {"raid0", "raid1", "raid4", "raid5", "raid6", "raid10", NULL};
+
+static gboolean
+handle_mdraid_create (UDisksManager         *_object,
+                      GDBusMethodInvocation *invocation,
+                      const gchar *const    *arg_blocks,
+                      const gchar           *arg_level,
+                      const gchar           *arg_name,
+                      guint64                arg_chunk,
+                      GVariant              *arg_options)
+{
+  UDisksLinuxManager *manager = UDISKS_LINUX_MANAGER (_object);
+  UDisksObject *array_object = NULL;
+  WaitForArrayData wait_data;
+  uid_t caller_uid;
+  GError *error = NULL;
+  const gchar *message;
+  const gchar *action_id;
+  guint num_devices = 0;
+  GList *blocks = NULL;
+  GList *l;
+  guint n;
+  gchar *escaped_name = NULL;
+  GString *str = NULL;
+  gint status;
+  gchar *error_message = NULL;
+  gint free_md;
+  gchar *raid_device_file = NULL;
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (manager->daemon, invocation, NULL /* GCancellable */, &caller_uid, NULL, NULL, &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  /* Translators: Shown in authentication dialog when the user
+   * attempts to start a RAID Array.
+   */
+  /* TODO: variables */
+  message = N_("Authentication is required to create a RAID array");
+  action_id = "org.freedesktop.udisks2.manage-md-raid";
+  if (!udisks_daemon_util_check_authorization_sync (manager->daemon,
+                                                    NULL,
+                                                    action_id,
+                                                    arg_options,
+                                                    message,
+                                                    invocation))
+    goto out;
+
+  /* validate level */
+  for (n = 0; raid_level_whitelist[n] != NULL; n++)
+    {
+      if (g_strcmp0 (raid_level_whitelist[n], arg_level) == 0)
+        break;
+    }
+  if (raid_level_whitelist[n] == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Unsupported RAID level %s", arg_level);
+      goto out;
+    }
+
+  /* validate chunk (TODO: check that it's a power of 2) */
+  if ((arg_chunk & 0x0fff) != 0)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Chunk %" G_GUINT64_FORMAT " is not a multiple of 4KiB", arg_chunk);
+      goto out;
+    }
+
+  /* validate name */
+  if (g_strcmp0 (arg_level, "raid1") == 0 && arg_chunk != 0)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Chunk must be zero for level 'raid1'");
+      goto out;
+    }
+
+  /* validate name */
+  if (strlen (arg_name) > 32)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Name is invalid");
+      goto out;
+    }
+
+  num_devices = g_strv_length ((gchar **) arg_blocks);
+
+  /* validate number of devices */
+  if (num_devices < 2)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Must have at least two devices");
+      goto out;
+    }
+
+  /* Collect and validate block objects
+   *
+   * Also, check we can open the block devices at the same time - this
+   * is to avoid start deleting half the block devices while the other
+   * half is already in use.
+   */
+  for (n = 0; arg_blocks != NULL && arg_blocks[n] != NULL; n++)
+    {
+      UDisksObject *object = NULL;
+      UDisksBlock *block = NULL;
+      gchar *device_file = NULL;
+      int fd;
+
+      object = udisks_daemon_find_object (manager->daemon, arg_blocks[n]);
+      if (object == NULL)
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Invalid object path %s at index %d",
+                                                 arg_blocks[n], n);
+          goto out;
+        }
+
+      block = udisks_object_get_block (object);
+      if (block == NULL)
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Object path %s for index %d is not a block device",
+                                                 arg_blocks[n], n);
+          goto out;
+        }
+
+      device_file = udisks_block_dup_device (block);
+      fd = open (device_file, O_RDWR | O_EXCL);
+      if (fd < 0)
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error opening device %s: %m",
+                                                 device_file);
+          g_free (device_file);
+          goto out;
+        }
+      close (fd);
+      g_free (device_file);
+
+      blocks = g_list_prepend (blocks, block); /* adopts ownership */
+      g_object_unref (object);
+    }
+  blocks = g_list_reverse (blocks);
+
+  /* wipe existing devices */
+  for (l = blocks; l != NULL; l = l->next)
+    {
+      UDisksBlock *block = UDISKS_BLOCK (l->data);
+      UDisksObject *object_for_block;
+      gchar *escaped_device;
+      object_for_block = udisks_daemon_util_dup_object (block, &error);
+      if (object_for_block == NULL)
+        {
+          g_dbus_method_invocation_return_gerror (invocation, error);
+          g_clear_error (&error);
+          goto out;
+        }
+      escaped_device = udisks_daemon_util_escape (udisks_block_get_device (block));
+      if (!udisks_daemon_launch_spawned_job_sync (manager->daemon,
+                                                  object_for_block,
+                                                  "format-erase", caller_uid,
+                                                  NULL, /* cancellable */
+                                                  0,    /* uid_t run_as_uid */
+                                                  0,    /* uid_t run_as_euid */
+                                                  &status,
+                                                  &error_message,
+                                                  NULL, /* input_string */
+                                                  "wipefs -a \"%s\"",
+                                                  escaped_device))
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error wiping device %s to be used in a RAID array: %s",
+                                                 udisks_block_get_device (block),
+                                                 error_message);
+          g_free (error_message);
+          g_object_unref (object_for_block);
+          g_free (escaped_device);
+          goto out;
+        }
+      g_object_unref (object_for_block);
+      g_free (escaped_device);
+    }
+
+  /* Create the array... */
+  escaped_name = udisks_daemon_util_escape (arg_name);
+  str = g_string_new ("mdadm");
+  free_md = find_free_md ();
+  if (free_md < 0)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Unable to find free MD device");
+      goto out;
+    }
+  raid_device_file = g_strdup_printf ("/dev/md%d", free_md);
+  g_string_append_printf (str, " --create %s", raid_device_file);
+  g_string_append_printf (str, " --run");
+  if (arg_chunk > 0)
+    g_string_append_printf (str, " --chunk %" G_GUINT64_FORMAT, (guint64) (arg_chunk / 1024LL));
+  g_string_append_printf (str, " --level %s", arg_level);
+  if (strlen (arg_name) > 0)
+    g_string_append_printf (str, " --name \"%s\"", escaped_name);
+  g_string_append_printf (str, " --raid-devices %d", num_devices);
+  for (l = blocks; l != NULL; l = l->next)
+    {
+      UDisksBlock *block = UDISKS_BLOCK (l->data);
+      gchar *escaped_device;
+      escaped_device = udisks_daemon_util_escape (udisks_block_get_device (block));
+      g_string_append_printf (str, " \"%s\"", escaped_device);
+      g_free (escaped_device);
+    }
+
+  if (!udisks_daemon_launch_spawned_job_sync (manager->daemon,
+                                              NULL,
+                                              "mdraid-create", caller_uid,
+                                              NULL, /* cancellable */
+                                              0,    /* uid_t run_as_uid */
+                                              0,    /* uid_t run_as_euid */
+                                              &status,
+                                              &error_message,
+                                              NULL, /* input_string */
+                                              "%s",
+                                              str->str))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error creating RAID array: %s",
+                                             error_message);
+      g_free (error_message);
+      goto out;
+    }
+
+  /* ... then, sit and wait for raid array object to show up */
+  array_object = udisks_daemon_wait_for_object_sync (manager->daemon,
+                                                     wait_for_array_object,
+                                                     raid_device_file,
+                                                     NULL,
+                                                     10, /* timeout_seconds */
+                                                     &error);
+  if (array_object == NULL)
+    {
+      g_prefix_error (&error,
+                      "Error waiting for array object after creating /dev/md%d",
+                      wait_data.md_num);
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* ... wipe the created RAID array */
+  if (!udisks_daemon_launch_spawned_job_sync (manager->daemon,
+                                              array_object,
+                                              "format-erase", caller_uid,
+                                              NULL, /* cancellable */
+                                              0,    /* uid_t run_as_uid */
+                                              0,    /* uid_t run_as_euid */
+                                              &status,
+                                              &error_message,
+                                              NULL, /* input_string */
+                                              "wipefs -a %s",
+                                              raid_device_file))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error wiping raid device %s: %s",
+                                             raid_device_file,
+                                             error_message);
+      goto out;
+    }
+
+  /* ... finally trigger uevents on the members - we want this so the
+   * udev database is updated for them with e.g. ID_FS_TYPE. Ideally
+   * mdadm(8) or whatever thing is writing out the RAID metadata would
+   * ensure this, but that's not how things currently work :-/
+   */
+  for (l = blocks; l != NULL; l = l->next)
+    {
+      UDisksBlock *block = UDISKS_BLOCK (l->data);
+      UDisksObject *object_for_block;
+      object_for_block = udisks_daemon_util_dup_object (block, &error);
+      if (object_for_block == NULL)
+        {
+          g_dbus_method_invocation_return_gerror (invocation, error);
+          g_clear_error (&error);
+          goto out;
+        }
+      udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object_for_block));
+      g_object_unref (object_for_block);
+    }
+
+  /* ... and, we're done! */
+  udisks_manager_complete_mdraid_create (_object,
+                                         invocation,
+                                         g_dbus_object_get_object_path (G_DBUS_OBJECT (array_object)));
+
+ out:
+  g_free (raid_device_file);
+  if (str != NULL)
+    g_string_free (str, TRUE);
+  g_list_free_full (blocks, g_object_unref);
+  g_free (escaped_name);
+  g_clear_object (&array_object);
+
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 manager_iface_init (UDisksManagerIface *iface)
 {
   iface->handle_loop_setup = handle_loop_setup;
+  iface->handle_mdraid_create = handle_mdraid_create;
 }

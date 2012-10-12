@@ -49,6 +49,39 @@
       <arg name="options" direction="in" type="a{sv}"/>
       <arg name="resulting_device" direction="out" type="o"/>
     </method>
+
+    <!--
+        MDRaidCreate:
+        @blocks: An array of object paths to objects implementing the #org.freedesktop.UDisks2.Block interface.
+        @level: The RAID level for the array.
+        @name: The name for the array.
+        @chunk: The chunk size (in bytes) or 0 if @level is <quote>raid1</quote>.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @resulting_array: An object path to the object implementing the #org.freedesktop.UDisks2.MDRaid interface.
+        @since: 2.1
+
+        Creates a new RAID array on the block devices specified by
+        @blocks. Each element in this array must be an object path to
+        an object implementing the #org.freedesktop.UDisks2.Block
+        interface.
+
+        Known and supported values for @level include
+        <quote>raid0</quote>, <quote>raid1</quote>,
+        <quote>raid4</quote>, <quote>raid5</quote>,
+        <quote>raid6</quote> and <quote>raid10</quote>.
+
+        Before the array is created, all devices in @blocks are
+        erased. Once created (but before the method returns), the RAID
+        array will be erased.
+    -->
+    <method name="MDRaidCreate">
+      <arg name="blocks" direction="in" type="ao"/>
+      <arg name="level" direction="in" type="s"/>
+      <arg name="name" direction="in" type="s"/>
+      <arg name="chunk" direction="in" type="t"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="resulting_array" direction="out" type="o"/>
+    </method>
   </interface>
 
   <!--
@@ -1860,6 +1893,8 @@
              <listitem><para>Marking device in RAID Array as faulty.</para></listitem></varlistentry>
            <varlistentry><term>md-raid-remove-device</term>
              <listitem><para>Removing device from RAID Array.</para></listitem></varlistentry>
+           <varlistentry><term>md-raid-create</term>
+             <listitem><para>Create a RAID Array.</para></listitem></varlistentry>
          </variablelist>
          The
          <link linkend="udisks-client-get-job-description">udisks_client_get_job_description()</link>
