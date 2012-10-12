@@ -1848,6 +1848,10 @@
              <listitem><para>Creating a partition.</para></listitem></varlistentry>
            <varlistentry><term>cleanup</term>
              <listitem><para>Cleaning up devices that were removed without being properly unmounted or shut down.</para></listitem></varlistentry>
+           <varlistentry><term>ata-secure-erase</term>
+             <listitem><para>ATA Secure Erase.</para></listitem></varlistentry>
+           <varlistentry><term>ata-enhanced-secure-erase</term>
+             <listitem><para>ATA Enhanced Secure Erase.</para></listitem></varlistentry>
          </variablelist>
          The
          <link linkend="udisks-client-get-job-description">udisks_client_get_job_description()</link>
