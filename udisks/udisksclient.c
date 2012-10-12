@@ -2330,6 +2330,10 @@ udisks_client_get_partition_type_for_display (UDisksClient  *client,
  * Gets a human-readable and localized text string describing the
  * operation of @job.
  *
+ * For known job types, see the documentation for the
+ * <link linkend="gdbus-property-org-freedesktop-UDisks2-Job.Operation">Job:Operation</link>
+ * D-Bus property.
+ *
  * Returns: A string that should be freed with g_free().
  */
 gchar *
