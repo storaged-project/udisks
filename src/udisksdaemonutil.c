@@ -1384,3 +1384,36 @@ udisks_daemon_util_uninhibit_system_sync (UDisksInhibitCookie *cookie)
 #endif
 }
 
+/**
+ * udisks_daemon_util_get_free_mdraid_device:
+ *
+ * Gets a free MD RAID device.
+ *
+ * Returns: A string of the form "/dev/mdNNN" that should be freed
+ * with g_free() or %NULL if no free device is available.
+ */
+gchar *
+udisks_daemon_util_get_free_mdraid_device (void)
+{
+  gchar *ret = NULL;
+  gint n;
+  gchar buf[PATH_MAX];
+
+  /* Ideally we wouldn't need this racy function... but mdadm(8)
+   * insists that the user chooses a name. It should just choose one
+   * itself but that's not how things work right now.
+   */
+
+  for (n = 127; n >= 0; n++)
+    {
+      snprintf (buf, sizeof buf, "/sys/block/md%d", n);
+      if (!g_file_test (buf, G_FILE_TEST_EXISTS))
+        {
+          ret = g_strdup_printf ("/dev/md%d", n);
+          goto out;
+        }
+    }
+
+ out:
+  return ret;
+}

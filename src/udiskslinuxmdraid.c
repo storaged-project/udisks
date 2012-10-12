@@ -549,38 +549,6 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gchar *
-calculate_mdname_and_escape_and_quote (UDisksLinuxMDRaid *mdraid)
-{
-  gchar *ret;
-  gchar *name;
-
-  name = udisks_mdraid_dup_name (UDISKS_MDRAID (mdraid));
-  if (name != NULL)
-    {
-      /* skip homehost */
-      const gchar *s = strstr (name, ":");
-      if (s != NULL && strlen (s) > 1)
-        {
-          ret = udisks_daemon_util_escape_and_quote (s + 1);
-          g_free (name);
-        }
-      else
-        {
-          ret = name;
-          name = NULL;
-        }
-    }
-  else
-    {
-      gchar *uuid = udisks_mdraid_dup_uuid (UDISKS_MDRAID (mdraid));
-      ret = udisks_daemon_util_escape_and_quote (uuid);
-      g_free (uuid);
-    }
-
-  return ret;
-}
-
 static gboolean
 handle_start (UDisksMDRaid           *_mdraid,
               GDBusMethodInvocation  *invocation,
@@ -595,7 +563,7 @@ handle_start (UDisksMDRaid           *_mdraid,
   gid_t caller_gid;
   GUdevDevice *raid_device = NULL;
   GString *str = NULL;
-  gchar *escaped_name = NULL;
+  gchar *raid_device_file = NULL;
   gchar *escaped_devices = NULL;
   GError *error = NULL;
   gchar *error_message = NULL;
@@ -657,8 +625,16 @@ handle_start (UDisksMDRaid           *_mdraid,
                                                     invocation))
     goto out;
 
-  /* figure out the name and member devices */
-  escaped_name = calculate_mdname_and_escape_and_quote (mdraid);
+  /* find a free /dev/md%d device to use */
+  raid_device_file = udisks_daemon_util_get_free_mdraid_device ();
+  if (raid_device_file == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "No free MD device");
+      goto out;
+    }
+
+  /* figure out the member devices */
   str = g_string_new (NULL);
   for (l = member_devices; l != NULL; l = l->next)
     {
@@ -683,7 +659,7 @@ handle_start (UDisksMDRaid           *_mdraid,
                                               NULL,  /* input_string */
                                               "mdadm --assemble%s %s %s",
                                               opt_start_degraded ? " --run" : " ",
-                                              escaped_name,
+                                              raid_device_file,
                                               escaped_devices))
     {
       g_dbus_method_invocation_return_error (invocation,
@@ -701,7 +677,7 @@ handle_start (UDisksMDRaid           *_mdraid,
  out:
   g_list_free_full (member_devices, g_object_unref);
   g_free (error_message);
-  g_free (escaped_name);
+  g_free (raid_device_file);
   g_free (escaped_devices);
   g_clear_object (&raid_device);
   g_clear_object (&object);

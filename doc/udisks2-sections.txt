@@ -361,6 +361,7 @@ udisks_daemon_util_hexdump
 udisks_daemon_util_hexdump_debug
 udisks_daemon_util_file_set_contents
 udisks_daemon_util_on_same_seat
+udisks_daemon_util_get_free_mdraid_device
 </SECTION>
 
 <SECTION>

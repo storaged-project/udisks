@@ -519,27 +519,6 @@ wait_for_array_object (UDisksDaemon *daemon,
   return ret;
 }
 
-static gint
-find_free_md (void)
-{
-  gint ret = -1;
-  gint n;
-  gchar buf[PATH_MAX];
-
-  for (n = 127; n >= 0; n++)
-    {
-      snprintf (buf, sizeof buf, "/sys/block/md%d", n);
-      if (!g_file_test (buf, G_FILE_TEST_EXISTS))
-        {
-          ret = n;
-          goto out;
-        }
-    }
-
- out:
-  return ret;
-}
-
 static const gchar *raid_level_whitelist[] = {"raid0", "raid1", "raid4", "raid5", "raid6", "raid10", NULL};
 
 static gboolean
@@ -566,7 +545,6 @@ handle_mdraid_create (UDisksManager         *_object,
   GString *str = NULL;
   gint status;
   gchar *error_message = NULL;
-  gint free_md;
   gchar *raid_device_file = NULL;
 
   error = NULL;
@@ -737,14 +715,13 @@ handle_mdraid_create (UDisksManager         *_object,
   /* Create the array... */
   escaped_name = udisks_daemon_util_escape (arg_name);
   str = g_string_new ("mdadm");
-  free_md = find_free_md ();
-  if (free_md < 0)
+  raid_device_file = udisks_daemon_util_get_free_mdraid_device ();
+  if (raid_device_file == NULL)
     {
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                              "Unable to find free MD device");
       goto out;
     }
-  raid_device_file = g_strdup_printf ("/dev/md%d", free_md);
   g_string_append_printf (str, " --create %s", raid_device_file);
   g_string_append_printf (str, " --run");
   if (arg_chunk > 0)
