@@ -480,6 +480,8 @@ check_authorization_no_polkit (UDisksDaemon          *daemon,
   return ret;
 }
 
+G_LOCK_DEFINE_STATIC (authorization_lock);
+
 /**
  * udisks_daemon_util_check_authorization_sync:
  * @daemon: A #UDisksDaemon.
@@ -539,6 +541,8 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
   gboolean auth_no_user_interaction = FALSE;
   const gchar *details_device = NULL;
   gchar *details_drive = NULL;
+
+  G_LOCK (authorization_lock);
 
   authority = udisks_daemon_get_authority (daemon);
   if (authority == NULL)
@@ -711,6 +715,9 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
   g_clear_object (&subject);
   g_clear_object (&details);
   g_clear_object (&result);
+
+  G_UNLOCK (authorization_lock);
+
   return ret;
 }
 
