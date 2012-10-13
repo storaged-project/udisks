@@ -2022,6 +2022,7 @@ handle_format (UDisksBlock           *block,
   gchar *escaped_device = NULL;
   gboolean was_partitioned = FALSE;
   UDisksInhibitCookie *inhibit_cookie = NULL;
+  gboolean no_block = FALSE;
 
   error = NULL;
   object = udisks_daemon_util_dup_object (block, &error);
@@ -2039,6 +2040,7 @@ handle_format (UDisksBlock           *block,
   g_variant_lookup (options, "take-ownership", "b", &take_ownership);
   g_variant_lookup (options, "encrypt.passphrase", "s", &encrypt_passphrase);
   g_variant_lookup (options, "erase", "s", &erase_type);
+  g_variant_lookup (options, "no-block", "b", &no_block);
 
   error = NULL;
   if (!udisks_daemon_util_get_caller_pid_sync (daemon,
@@ -2122,6 +2124,13 @@ handle_format (UDisksBlock           *block,
 
   was_partitioned = (udisks_object_peek_partition_table (object) != NULL);
 
+  /* return early, if requested */
+  if (no_block)
+    {
+      udisks_block_complete_format (block, invocation);
+      invocation = NULL;
+    }
+
   /* First wipe the device... */
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               object,
@@ -2135,11 +2144,12 @@ handle_format (UDisksBlock           *block,
                                               "wipefs -a %s",
                                               escaped_device))
     {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error wiping device: %s",
-                                             error_message);
+      if (invocation != NULL)
+        g_dbus_method_invocation_return_error (invocation,
+                                               UDISKS_ERROR,
+                                               UDISKS_ERROR_FAILED,
+                                               "Error wiping device: %s",
+                                               error_message);
       g_free (error_message);
       goto out;
     }
@@ -2158,7 +2168,10 @@ handle_format (UDisksBlock           *block,
                                           &error) == NULL)
     {
       g_prefix_error (&error, "Error synchronizing after initial wipe: ");
-      g_dbus_method_invocation_take_error (invocation, error);
+      if (invocation != NULL)
+        g_dbus_method_invocation_take_error (invocation, error);
+      else
+        g_clear_error (&error);
       goto out;
     }
 
@@ -2171,7 +2184,10 @@ handle_format (UDisksBlock           *block,
       if (!erase_device (block, object, daemon, caller_uid, erase_type, &error))
         {
           g_prefix_error (&error, "Error erasing device: ");
-          g_dbus_method_invocation_take_error (invocation, error);
+          if (invocation != NULL)
+            g_dbus_method_invocation_take_error (invocation, error);
+          else
+            g_clear_error (&error);
           goto out;
         }
     }
@@ -2194,11 +2210,12 @@ handle_format (UDisksBlock           *block,
                                                   "cryptsetup luksFormat \"%s\"",
                                                   escaped_device))
         {
-          g_dbus_method_invocation_return_error (invocation,
-                                                 UDISKS_ERROR,
-                                                 UDISKS_ERROR_FAILED,
-                                                 "Error creating LUKS device: %s",
-                                                 error_message);
+          if (invocation != NULL)
+            g_dbus_method_invocation_return_error (invocation,
+                                                   UDISKS_ERROR,
+                                                   UDISKS_ERROR_FAILED,
+                                                   "Error creating LUKS device: %s",
+                                                   error_message);
           g_free (error_message);
           goto out;
         }
@@ -2212,7 +2229,10 @@ handle_format (UDisksBlock           *block,
                                               &error) == NULL)
         {
           g_prefix_error (&error, "Error waiting for LUKS UUID: ");
-          g_dbus_method_invocation_take_error (invocation, error);
+          if (invocation != NULL)
+            g_dbus_method_invocation_take_error (invocation, error);
+          else
+            g_clear_error (&error);
           goto out;
         }
 
@@ -2231,11 +2251,12 @@ handle_format (UDisksBlock           *block,
                                                   escaped_device,
                                                   mapped_name))
         {
-          g_dbus_method_invocation_return_error (invocation,
-                                                 UDISKS_ERROR,
-                                                 UDISKS_ERROR_FAILED,
-                                                 "Error opening LUKS device: %s",
-                                                 error_message);
+          if (invocation != NULL)
+            g_dbus_method_invocation_return_error (invocation,
+                                                   UDISKS_ERROR,
+                                                   UDISKS_ERROR_FAILED,
+                                                   "Error opening LUKS device: %s",
+                                                   error_message);
           g_free (error_message);
           goto out;
         }
@@ -2250,14 +2271,18 @@ handle_format (UDisksBlock           *block,
       if (cleartext_object == NULL)
         {
           g_prefix_error (&error, "Error waiting for LUKS cleartext device: ");
-          g_dbus_method_invocation_take_error (invocation, error);
+          if (invocation != NULL)
+            g_dbus_method_invocation_take_error (invocation, error);
+          else
+            g_clear_error (&error);
           goto out;
         }
       cleartext_block = udisks_object_get_block (cleartext_object);
       if (cleartext_block == NULL)
         {
-          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                                 "LUKS cleartext device does not have block interface");
+          if (invocation != NULL)
+            g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                   "LUKS cleartext device does not have block interface");
           goto out;
         }
 
@@ -2284,7 +2309,10 @@ handle_format (UDisksBlock           *block,
       if (!erase_device (block_to_mkfs, object_to_mkfs, daemon, caller_uid, erase_type, &error))
         {
           g_prefix_error (&error, "Error erasing cleartext device: ");
-          g_dbus_method_invocation_take_error (invocation, error);
+          if (invocation != NULL)
+            g_dbus_method_invocation_take_error (invocation, error);
+          else
+            g_clear_error (&error);
           goto out;
         }
     }
@@ -2295,11 +2323,12 @@ handle_format (UDisksBlock           *block,
       /* TODO: return an error if label is too long */
       if (strstr (fs_info->command_create_fs, "$LABEL") == NULL)
         {
-          g_dbus_method_invocation_return_error (invocation,
-                       UDISKS_ERROR,
-                       UDISKS_ERROR_NOT_SUPPORTED,
-                       "File system type %s does not support labels",
-                       type);
+          if (invocation != NULL)
+            g_dbus_method_invocation_return_error (invocation,
+                                                   UDISKS_ERROR,
+                                                   UDISKS_ERROR_NOT_SUPPORTED,
+                                                   "File system type %s does not support labels",
+                                                   type);
           goto out;
         }
     }
@@ -2319,11 +2348,12 @@ handle_format (UDisksBlock           *block,
                                               NULL, /* input_string */
                                               "%s", command))
     {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error creating file system: %s",
-                                             error_message);
+      if (invocation != NULL)
+        g_dbus_method_invocation_return_error (invocation,
+                                               UDISKS_ERROR,
+                                               UDISKS_ERROR_FAILED,
+                                               "Error creating file system: %s",
+                                               error_message);
       g_free (error_message);
       goto out;
     }
@@ -2342,7 +2372,10 @@ handle_format (UDisksBlock           *block,
       g_prefix_error (&error,
                       "Error synchronizing after formatting with type `%s': ",
                       type);
-      g_dbus_method_invocation_take_error (invocation, error);
+      if (invocation != NULL)
+        g_dbus_method_invocation_take_error (invocation, error);
+      else
+        g_clear_error (&error);
       goto out;
     }
 
@@ -2353,16 +2386,18 @@ handle_format (UDisksBlock           *block,
 
       if (mkdtemp (tos_dir) == NULL)
         {
-          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                                 "Cannot create directory %s: %m", tos_dir);
+          if (invocation != NULL)
+            g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                   "Cannot create directory %s: %m", tos_dir);
           goto out;
         }
       if (mount (udisks_block_get_device (block_to_mkfs), tos_dir, type, 0, NULL) != 0)
         {
-          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                                 "Cannot mount %s at %s: %m",
-                                                 udisks_block_get_device (block_to_mkfs),
-                                                 tos_dir);
+          if (invocation != NULL)
+            g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                   "Cannot mount %s at %s: %m",
+                                                   udisks_block_get_device (block_to_mkfs),
+                                                   tos_dir);
           if (rmdir (tos_dir) != 0)
             {
               udisks_warning ("Error removing directory %s: %m", tos_dir);
@@ -2371,8 +2406,9 @@ handle_format (UDisksBlock           *block,
         }
       if (chown (tos_dir, caller_uid, caller_gid) != 0)
         {
-          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                                 "Cannot chown %s to uid=%d and gid=%d: %m", tos_dir, caller_uid, caller_gid);
+          if (invocation != NULL)
+            g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                   "Cannot chown %s to uid=%d and gid=%d: %m", tos_dir, caller_uid, caller_gid);
           if (umount (tos_dir) != 0)
             {
               udisks_warning ("Error unmounting directory %s: %m", tos_dir);
@@ -2386,8 +2422,9 @@ handle_format (UDisksBlock           *block,
         }
       if (chmod (tos_dir, 0700) != 0)
         {
-          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                                 "Cannot chmod %s to mode 0700: %m", tos_dir);
+          if (invocation != NULL)
+            g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                   "Cannot chmod %s to mode 0700: %m", tos_dir);
           if (umount (tos_dir) != 0)
             {
               udisks_warning ("Error unmounting directory %s: %m", tos_dir);
@@ -2402,8 +2439,9 @@ handle_format (UDisksBlock           *block,
 
       if (umount (tos_dir) != 0)
         {
-          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                                 "Cannot unmount %s: %m", tos_dir);
+          if (invocation != NULL)
+            g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                   "Cannot unmount %s: %m", tos_dir);
           if (rmdir (tos_dir) != 0)
             {
               udisks_warning ("Error removing directory %s: %m", tos_dir);
@@ -2413,13 +2451,15 @@ handle_format (UDisksBlock           *block,
 
       if (rmdir (tos_dir) != 0)
         {
-          g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                                 "Cannot remove directory %s: %m", tos_dir);
+          if (invocation != NULL)
+            g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                                   "Cannot remove directory %s: %m", tos_dir);
           goto out;
         }
     }
 
-  udisks_block_complete_format (block, invocation);
+  if (invocation != NULL)
+    udisks_block_complete_format (block, invocation);
 
  out:
   udisks_daemon_util_uninhibit_system_sync (inhibit_cookie);

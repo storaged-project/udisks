@@ -1043,7 +1043,7 @@
     <!--
         Format:
         @type: The type of file system, partition table or other content to format the device with.
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's'), <parameter>take-ownership</parameter> (of type 'b'), <parameter>encrypt.passphrase</parameter> (of type 's') and <parameter>erase</parameter> (of type 's').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's'), <parameter>take-ownership</parameter> (of type 'b'), <parameter>encrypt.passphrase</parameter> (of type 's'), <parameter>erase</parameter> (of type 's') and <parameter>no-block</parameter> (of type 'b').
 
         Formats the device with a file system, partition table or
         other well-known content.
@@ -1079,6 +1079,12 @@
         before formatting, <quote>ata-secure-erase</quote> to perform
         a secure erase or <quote>ata-secure-erase-enhanced</quote> to
         perform an enhanced secure erase.
+
+        If the option <parameter>no-block</parameter> is set to %TRUE
+        then the method returns just before the actual formatting
+        takes place but after authorization and other checks are
+        done. This is useful for applications that want to format
+        several devices in parallel.
     -->
     <method name="Format">
       <arg name="type" direction="in" type="s"/>
