@@ -3118,7 +3118,7 @@ udisks_client_get_object_info (UDisksClient        *client,
   g_clear_object (&block);
   g_clear_object (&drive);
 
-#if 1
+#if 0
   /* for debugging */
   g_print ("%s -> dd='%s', md='%s', ol='%s' and di='%s', mi='%s'\n",
            g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
