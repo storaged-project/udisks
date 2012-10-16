@@ -178,6 +178,7 @@ void                 udisks_partition_type_info_free       (UDisksPartitionTypeI
  * @media_description: (allow-none): An icon for the media of the object or %NULL.
  * @media_icon: (allow-none): An icon for the media for the object or %NULL.
  * @media_icon_symbolic: (allow-none): A symbolic icon for the media for the object or %NULL.
+ * @one_liner: (allow-none): A one-line description of the object or %NULL.
  *
  * Detailed information about the D-Bus interfaces (such as
  * #UDisksBlock and #UDisksDrive) on a #UDisksObject that is suitable
@@ -195,6 +196,11 @@ void                 udisks_partition_type_info_free       (UDisksPartitionTypeI
  * The @media_description, @media_icon and @media_icon_symbolic fields
  * are only set for #UDisksDrive interfaces where the drive has
  * removable media.
+ *
+ * The @one_liner field is designed to contain enough information such
+ * that it is all that needs to be shown about the object. As a result
+ * for e.g.  block devices or drives it contains the special device
+ * device e.g. <filename>/dev/sda</filename>.
  *
  * This struct may grow in the future without it being considered an
  * ABI break.
@@ -214,6 +220,7 @@ struct _UDisksObjectInfo
   gchar *media_description;
   GIcon *media_icon;
   GIcon *media_icon_symbolic;
+  gchar *one_liner;
 };
 
 GType              udisks_object_info_get_type   (void) G_GNUC_CONST;

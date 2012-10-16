@@ -2490,10 +2490,12 @@ G_DEFINE_BOXED_TYPE (UDisksObjectInfo, udisks_object_info, udisks_object_info_re
 static void
 udisks_client_get_object_info_for_block (UDisksClient     *client,
                                          UDisksBlock      *block,
+                                         UDisksPartition  *partition,
                                          UDisksObjectInfo *info)
 {
   guint64 size = 0;
   gchar *size_str = NULL;
+  gchar *s;
 
   size = udisks_block_get_size (block);
   if (size > 0)
@@ -2510,6 +2512,26 @@ udisks_client_get_object_info_for_block (UDisksClient     *client,
     {
       info->description = g_strdup (_("Block Device"));
     }
+
+  if (partition != NULL)
+    {
+      /* Translators: Used to describe a partition of a block device.
+       *              The %d is the partition number.
+       *              The %s is the description for the block device (e.g. "5 GB Block Device").
+       */
+      s = g_strdup_printf (C_("part-block", "Partition %d of %s"),
+                           udisks_partition_get_number (partition), info->description);
+      g_free (info->description);
+      info->description = s;
+    }
+
+  /* Translators: String used for one-liner description of a block device.
+   *              The first %s is the description of the object (e.g. "50 GB Block Device").
+   *              The second %s is the special device file (e.g. "/dev/sda2").
+   */
+  info->one_liner = g_strdup_printf (C_("one-liner-block", "%s — %s"),
+                                     info->description,
+                                     udisks_block_get_preferred_device (block));
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -2518,10 +2540,12 @@ static void
 udisks_client_get_object_info_for_loop (UDisksClient     *client,
                                         UDisksLoop       *loop,
                                         UDisksBlock      *block,
+                                        UDisksPartition  *partition,
                                         UDisksObjectInfo *info)
 {
   guint64 size = 0;
   gchar *size_str = NULL;
+  gchar *s;
 
   size = udisks_block_get_size (block);
   if (size > 0)
@@ -2538,6 +2562,28 @@ udisks_client_get_object_info_for_loop (UDisksClient     *client,
     {
       info->description = g_strdup (_("Loop Device"));
     }
+
+  if (partition != NULL)
+    {
+      /* Translators: Used to describe a partition of a loop device.
+       *              The %d is the partition number.
+       *              The %s is the description for the loop device (e.g. "5 GB Loop Device").
+       */
+      s = g_strdup_printf (C_("part-loop", "Partition %d of %s"),
+                           udisks_partition_get_number (partition), info->description);
+      g_free (info->description);
+      info->description = s;
+    }
+
+  /* Translators: String used for one-liner description of a loop device.
+   *              The first %s is the description of the object (e.g. "2 GB Loop Device").
+   *              The second %s is the name of the backing file (e.g. "/home/davidz/file.iso").
+   *              The third %s is the special device file (e.g. "/dev/loop2").
+   */
+  info->one_liner = g_strdup_printf (C_("one-liner-loop", "%s — %s — %s"),
+                                     info->description,
+                                     info->name,
+                                     udisks_block_get_preferred_device (block));
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -2568,13 +2614,17 @@ format_mdraid_level (const gchar *level)
 static void
 udisks_client_get_object_info_for_mdraid (UDisksClient     *client,
                                           UDisksMDRaid     *mdraid,
+                                          UDisksPartition  *partition,
                                           UDisksObjectInfo *info)
 {
+  UDisksBlock *block = NULL;
   guint64 size = 0;
   gchar *size_str = NULL;
   const gchar *name;
   const gchar *level;
-  const gchar *s;
+  gchar *s;
+
+  block = udisks_client_get_block_for_mdraid (client, mdraid);
 
   size = udisks_mdraid_get_size (mdraid);
   if (size > 0)
@@ -2604,6 +2654,69 @@ udisks_client_get_object_info_for_mdraid (UDisksClient     *client,
     {
       info->description = g_strdup (format_mdraid_level (level));
     }
+
+  if (partition != NULL)
+    {
+      /* Translators: Used to describe a partition of a RAID Array.
+       *              The %d is the partition number.
+       *              The %s is the description for the drive (e.g. "2 TB RAID-5").
+       */
+      s = g_strdup_printf (C_("part-raid", "Partition %d of %s"),
+                           udisks_partition_get_number (partition), info->description);
+      g_free (info->description);
+      info->description = s;
+    }
+
+  if (strlen (info->name) > 0)
+    {
+      if (block != NULL)
+        {
+          /* Translators: String used for one-liner description of running RAID array.
+           *              The first %s is the array name (e.g. "AlphaGo").
+           *              The second %s is the size and level (e.g. "2 TB RAID-5").
+           *              The third %s is the special device file (e.g. "/dev/sda").
+           */
+          info->one_liner = g_strdup_printf (C_("one-liner-mdraid-running", "%s — %s — %s"),
+                                             info->name,
+                                             info->description,
+                                             udisks_block_get_preferred_device (block));
+        }
+      else
+        {
+          /* Translators: String used for one-liner description of non-running RAID array.
+           *              The first %s is the array name (e.g. "AlphaGo").
+           *              The second %s is the size and level (e.g. "2 TB RAID-5").
+           */
+          info->one_liner = g_strdup_printf (C_("one-liner-mdraid-not-running", "%s — %s"),
+                                             info->name,
+                                             info->description);
+        }
+    }
+  else
+    {
+      if (block != NULL)
+        {
+          /* Translators: String used for one-liner description of running RAID array w/o a name.
+           *              The first %s is the array name (e.g. "AlphaGo").
+           *              The second %s is the size and level (e.g. "2 TB RAID-5").
+           *              The third %s is the special device file (e.g. "/dev/sda").
+           */
+          info->one_liner = g_strdup_printf (C_("one-liner-mdraid-no-name-running", "%s — %s"),
+                                             info->description,
+                                             udisks_block_get_preferred_device (block));
+        }
+      else
+        {
+          /* Translators: String used for one-liner description of non-running RAID array w/o a name.
+           *              The first %s is the array name (e.g. "AlphaGo").
+           *              The second %s is the size and level (e.g. "2 TB RAID-5").
+           */
+          info->one_liner = g_strdup_printf (C_("one-liner-mdraid-no-name-not-running", "%s"),
+                                             info->description);
+        }
+    }
+
+  g_clear_object (&block);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -2611,6 +2724,7 @@ udisks_client_get_object_info_for_mdraid (UDisksClient     *client,
 static void
 udisks_client_get_object_info_for_drive (UDisksClient     *client,
                                          UDisksDrive      *drive,
+                                         UDisksPartition  *partition,
                                          UDisksObjectInfo *info)
 {
   const gchar *vendor;
@@ -2628,8 +2742,8 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
   gchar *hyphenated_connection_bus;
   const gchar *connection_bus;
   UDisksBlock *block = NULL;
-
-  /* TODO: symbolic icons */
+  gchar *s;
+  const gchar *cs;
 
   g_return_if_fail (UDISKS_IS_DRIVE (drive));
 
@@ -2797,7 +2911,6 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
   /* fallback for icon */
   if (info->icon == NULL)
     {
-      gchar *s;
       if (media_removable)
         s = g_strdup_printf ("drive-removable-media%s", hyphenated_connection_bus);
       else
@@ -2808,7 +2921,6 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
   /* fallback for icon_symbolic */
   if (info->icon_symbolic == NULL)
     {
-      gchar *s;
       if (media_removable)
         s = g_strdup_printf ("drive-removable-media%s-symbolic", hyphenated_connection_bus);
       else
@@ -2819,7 +2931,6 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
   /* fallback for media_icon */
   if (media_removable && media_available && info->media_icon == NULL)
     {
-      gchar *s;
       if (media_removable)
         s = g_strdup_printf ("drive-removable-media%s", hyphenated_connection_bus);
       else
@@ -2830,7 +2941,6 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
   /* fallback for media_icon_symbolic */
   if (media_removable && media_available && info->media_icon_symbolic == NULL)
     {
-      gchar *s;
       if (media_removable)
         s = g_strdup_printf ("drive-removable-media%s-symbolic", hyphenated_connection_bus);
       else
@@ -2842,7 +2952,6 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
   /* prepend a qualifier to the media description, based on the disc state */
   if (udisks_drive_get_optical_blank (drive))
     {
-      gchar *s;
       /* Translators: String used for a blank disc. The %s is the disc type e.g. "CD-RW Disc" */
       s = g_strdup_printf (C_("optical-media", "Blank %s"), info->media_description);
       g_free (info->media_description);
@@ -2851,7 +2960,6 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
   else if (udisks_drive_get_optical_num_audio_tracks (drive) > 0 &&
            udisks_drive_get_optical_num_data_tracks (drive) > 0)
     {
-      gchar *s;
       /* Translators: String used for a mixed disc. The %s is the disc type e.g. "CD-ROM Disc" */
       s = g_strdup_printf (C_("optical-media", "Mixed %s"), info->media_description);
       g_free (info->media_description);
@@ -2860,7 +2968,6 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
   else if (udisks_drive_get_optical_num_audio_tracks (drive) > 0 &&
            udisks_drive_get_optical_num_data_tracks (drive) == 0)
     {
-      gchar *s;
       /* Translators: String used for an audio disc. The %s is the disc type e.g. "CD-ROM Disc" */
       s = g_strdup_printf (C_("optical-media", "Audio %s"), info->media_description);
       g_free (info->media_description);
@@ -2871,37 +2978,68 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
   block = udisks_client_get_block_for_drive (client, drive, TRUE);
   if (block != NULL)
     {
-      const gchar *s;
-
-      s = udisks_block_get_hint_name (block);
-      if (s != NULL && strlen (s) > 0)
+      cs = udisks_block_get_hint_name (block);
+      if (cs != NULL && strlen (cs) > 0)
         {
           g_free (info->description);
           g_free (info->media_description);
-          info->description = g_strdup (s);
-          info->media_description = g_strdup (s);
+          info->description = g_strdup (cs);
+          info->media_description = g_strdup (cs);
         }
 
-      s = udisks_block_get_hint_icon_name (block);
-      if (s != NULL && strlen (s) > 0)
+      cs = udisks_block_get_hint_icon_name (block);
+      if (cs != NULL && strlen (cs) > 0)
         {
           g_clear_object (&info->icon);
           g_clear_object (&info->media_icon);
-          info->icon = g_themed_icon_new_with_default_fallbacks (s);
-          info->media_icon = g_themed_icon_new_with_default_fallbacks (s);
+          info->icon = g_themed_icon_new_with_default_fallbacks (cs);
+          info->media_icon = g_themed_icon_new_with_default_fallbacks (cs);
         }
     }
 
-#if 0
-  /* for debugging */
-  g_print ("mr=%d,ma=%d dd=%s, md=%s and di='%s', mi='%s'\n",
-           media_removable,
-           media_available,
-           info->description,
-           info->media_description,
-           info->icon == NULL ? "" : g_icon_to_string (info->icon),
-           info->media_icon == NULL ? "" : g_icon_to_string (info->media_icon));
-#endif
+  if (partition != NULL)
+    {
+      /* Translators: Used to describe a partition of a drive.
+       *              The %d is the partition number.
+       *              The %s is the description for the drive (e.g. "2 GB Thumb Drive").
+       */
+      s = g_strdup_printf (C_("part-drive", "Partition %d of %s"),
+                           udisks_partition_get_number (partition), info->description);
+      g_free (info->description);
+      info->description = s;
+    }
+
+  /* calculate and set one-liner */
+  if (block != NULL)
+    {
+      const gchar *drive_revision = udisks_drive_get_revision (drive);
+      if (strlen (drive_revision) > 0)
+        {
+          /* Translators: String used for one-liner description of drive.
+           *              The first %s is the description of the object (e.g. "80 GB Disk" or "Partition 2 of 2 GB Thumb Drive").
+           *              The second %s is the name of the object (e.g. "INTEL SSDSA2MH080G1GC").
+           *              The third %s is the fw revision (e.g "45ABX21").
+           *              The fourth %s is the special device file (e.g. "/dev/sda").
+           */
+          info->one_liner = g_strdup_printf (C_("one-liner-drive", "%s — %s (%s) — %s"),
+                                             info->description,
+                                             info->name,
+                                             drive_revision,
+                                             udisks_block_get_preferred_device (block));
+        }
+      else
+        {
+          /* Translators: String used for one-liner description of drive w/o known fw revision.
+           *              The first %s is the description of the object (e.g. "80 GB Disk").
+           *              The second %s is the name of the object (e.g. "INTEL SSDSA2MH080G1GC").
+           *              The third %s is the special device file (e.g. "/dev/sda").
+           */
+          info->one_liner = g_strdup_printf (C_("one-liner-drive", "%s — %s — %s"),
+                                             info->description,
+                                             info->name,
+                                             udisks_block_get_preferred_device (block));
+        }
+    }
 
   g_free (hyphenated_connection_bus);
   g_free (size_str);
@@ -2934,7 +3072,6 @@ udisks_client_get_object_info (UDisksClient        *client,
   UDisksPartition *partition = NULL;
   UDisksMDRaid *mdraid = NULL;
   UDisksLoop *loop = NULL;
-  gchar *s;
 
   g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
   g_return_val_if_fail (UDISKS_IS_OBJECT (object), NULL);
@@ -2947,66 +3084,32 @@ udisks_client_get_object_info (UDisksClient        *client,
   mdraid = udisks_object_get_mdraid (object);
   if (drive != NULL)
     {
-      udisks_client_get_object_info_for_drive (client, drive, ret);
+      udisks_client_get_object_info_for_drive (client, drive, NULL, ret);
     }
   else if (mdraid != NULL)
     {
-      udisks_client_get_object_info_for_mdraid (client, mdraid, ret);
+      udisks_client_get_object_info_for_mdraid (client, mdraid, NULL, ret);
     }
   else if (block != NULL)
     {
       drive = udisks_client_get_drive_for_block (client, block);
       if (drive != NULL)
         {
-          udisks_client_get_object_info_for_drive (client, drive, ret);
-          if (partition != NULL)
-            {
-              /* Translators: Used to describe a partition of a drive.
-               *              The %d is the partition number.
-               *              The %s is the description for the drive (e.g. "2 GB Thumb Drive").
-               */
-              s = g_strdup_printf (_("Partition %d of %s"),
-                                   udisks_partition_get_number (partition), ret->description);
-              ret->description = s;
-              s = NULL;
-            }
+          udisks_client_get_object_info_for_drive (client, drive, partition, ret);
           goto out;
         }
 
       mdraid = udisks_client_get_mdraid_for_block (client, block);
       if (mdraid != NULL)
         {
-          udisks_client_get_object_info_for_mdraid (client, mdraid, ret);
-          if (partition != NULL)
-            {
-              /* Translators: Used to describe a partition of a RAID array.
-               *              The %d is the partition number.
-               *              The %s is the description for the RAID array (e.g. "12 TB RAID Array").
-               */
-              s = g_strdup_printf (_("Partition %d of %s"),
-                                   udisks_partition_get_number (partition), ret->description);
-              ret->description = s;
-              s = NULL;
-            }
+          udisks_client_get_object_info_for_mdraid (client, mdraid, partition, ret);
           goto out;
         }
 
       if (loop != NULL)
-        udisks_client_get_object_info_for_loop (client, loop, block, ret);
+        udisks_client_get_object_info_for_loop (client, loop, block, partition, ret);
       else
-        udisks_client_get_object_info_for_block (client, block, ret);
-
-      if (partition != NULL)
-        {
-          /* Translators: Used to describe a partition of a block device.
-           *              The %d is the partition number.
-           *              The %s is the description for the block device.
-           */
-          s = g_strdup_printf (_("Partition %d of %s"),
-                               udisks_partition_get_number (partition), ret->description);
-          ret->description = s;
-          s = NULL;
-        }
+        udisks_client_get_object_info_for_block (client, block, partition, ret);
     }
  out:
   g_clear_object (&loop);
@@ -3014,6 +3117,17 @@ udisks_client_get_object_info (UDisksClient        *client,
   g_clear_object (&partition);
   g_clear_object (&block);
   g_clear_object (&drive);
+
+#if 1
+  /* for debugging */
+  g_print ("%s -> dd='%s', md='%s', ol='%s' and di='%s', mi='%s'\n",
+           g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
+           ret->description,
+           ret->media_description,
+           ret->one_liner,
+           ret->icon == NULL ? "" : g_icon_to_string (ret->icon),
+           ret->media_icon == NULL ? "" : g_icon_to_string (ret->media_icon));
+#endif
 
   return ret;
 }
@@ -3060,7 +3174,7 @@ udisks_client_get_drive_info (UDisksClient  *client,
   g_return_if_fail (UDISKS_IS_DRIVE (drive));
 
   info = udisks_object_info_new (NULL);
-  udisks_client_get_object_info_for_drive (client, drive, info);
+  udisks_client_get_object_info_for_drive (client, drive, NULL, info);
 
   if (out_name != NULL)
     *out_name = g_strdup (info->name);
