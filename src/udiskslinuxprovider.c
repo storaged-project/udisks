@@ -509,8 +509,8 @@ handle_block_uevent_for_mdraid_with_uuid (UDisksLinuxProvider *provider,
   daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
   sysfs_path = g_udev_device_get_sysfs_path (device);
 
-  /* if uuid is NULL, consider it a remove event */
-  if (uuid == NULL)
+  /* if uuid is NULL or bogus, consider it a remove event */
+  if (uuid == NULL || g_strcmp0 (uuid, "00000000:00000000:00000000:00000000") == 0)
     action = "remove";
 
   if (g_strcmp0 (action, "remove") == 0)
