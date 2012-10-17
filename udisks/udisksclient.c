@@ -2744,6 +2744,7 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
   UDisksBlock *block = NULL;
   gchar *s;
   const gchar *cs;
+  UDisksBlock *block_for_partition = NULL;
 
   g_return_if_fail (UDISKS_IS_DRIVE (drive));
 
@@ -2999,6 +3000,16 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
 
   if (partition != NULL)
     {
+      GDBusObject *object_for_partition;
+      object_for_partition = g_dbus_interface_get_object (G_DBUS_INTERFACE (partition));
+      if (object_for_partition != NULL)
+        block_for_partition = udisks_object_peek_block (UDISKS_OBJECT (object_for_partition));
+    }
+  if (block_for_partition == NULL)
+    block_for_partition = block;
+
+  if (partition != NULL)
+    {
       /* Translators: Used to describe a partition of a drive.
        *              The %d is the partition number.
        *              The %s is the description for the drive (e.g. "2 GB Thumb Drive").
@@ -3025,7 +3036,7 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
                                              info->description,
                                              info->name,
                                              drive_revision,
-                                             udisks_block_get_preferred_device (block));
+                                             udisks_block_get_preferred_device (block_for_partition));
         }
       else
         {
@@ -3037,7 +3048,7 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
           info->one_liner = g_strdup_printf (C_("one-liner-drive", "%s — %s — %s"),
                                              info->description,
                                              info->name,
-                                             udisks_block_get_preferred_device (block));
+                                             udisks_block_get_preferred_device (block_for_partition));
         }
     }
 
