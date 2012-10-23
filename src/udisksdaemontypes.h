@@ -172,4 +172,25 @@ typedef enum
   UDISKS_LOG_LEVEL_ERROR
 } UDisksLogLevel;
 
+struct _UDisksAtaCommandOutput;
+typedef struct _UDisksAtaCommandOutput UDisksAtaCommandOutput;
+
+struct _UDisksAtaCommandInput;
+typedef struct _UDisksAtaCommandInput UDisksAtaCommandInput;
+
+/**
+ * UDisksAtaCommandProtocol:
+ * @UDISKS_ATA_COMMAND_PROTOCOL_NONE: Non-data
+ * @UDISKS_ATA_COMMAND_PROTOCOL_DRIVE_TO_HOST: PIO Data-In
+ * @UDISKS_ATA_COMMAND_PROTOCOL_HOST_TO_DRIVE: PIO Data-Out
+ *
+ * Enumeration used to specify the protocol of an ATA command
+ */
+typedef enum
+{
+  UDISKS_ATA_COMMAND_PROTOCOL_NONE,
+  UDISKS_ATA_COMMAND_PROTOCOL_DRIVE_TO_HOST,
+  UDISKS_ATA_COMMAND_PROTOCOL_HOST_TO_DRIVE
+} UDisksAtaCommandProtocol;
+
 #endif /* __UDISKS_DAEMON_TYPES_H__ */
