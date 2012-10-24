@@ -36,6 +36,7 @@
 #include "udiskscleanup.h"
 #include "udisksdaemonutil.h"
 #include "udisksmountmonitor.h"
+#include "udiskslinuxdevice.h"
 
 /**
  * SECTION:udiskslinuxswapspace
@@ -111,7 +112,7 @@ udisks_linux_swapspace_update (UDisksLinuxSwapspace   *swapspace,
                                UDisksLinuxBlockObject *object)
 {
   UDisksMountMonitor *mount_monitor;
-  GUdevDevice *device;
+  UDisksLinuxDevice *device;
   UDisksMountType mount_type;
   gboolean active;
 
@@ -119,7 +120,7 @@ udisks_linux_swapspace_update (UDisksLinuxSwapspace   *swapspace,
   device = udisks_linux_block_object_get_device (object);
 
   active = FALSE;
-  if (udisks_mount_monitor_is_dev_in_use (mount_monitor, g_udev_device_get_device_number (device), &mount_type) &&
+  if (udisks_mount_monitor_is_dev_in_use (mount_monitor, g_udev_device_get_device_number (device->udev_device), &mount_type) &&
       mount_type == UDISKS_MOUNT_TYPE_SWAP)
     active = TRUE;
   udisks_swapspace_set_active (UDISKS_SWAPSPACE (swapspace), active);

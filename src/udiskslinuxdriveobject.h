@@ -32,13 +32,13 @@ G_BEGIN_DECLS
 
 GType                   udisks_linux_drive_object_get_type      (void) G_GNUC_CONST;
 UDisksLinuxDriveObject *udisks_linux_drive_object_new           (UDisksDaemon             *daemon,
-                                                                 GUdevDevice              *device);
+                                                                 UDisksLinuxDevice        *device);
 void                    udisks_linux_drive_object_uevent        (UDisksLinuxDriveObject   *object,
                                                                  const gchar              *action,
-                                                                 GUdevDevice              *device);
+                                                                 UDisksLinuxDevice        *device);
 UDisksDaemon           *udisks_linux_drive_object_get_daemon    (UDisksLinuxDriveObject   *object);
 GList                  *udisks_linux_drive_object_get_devices   (UDisksLinuxDriveObject   *object);
-GUdevDevice            *udisks_linux_drive_object_get_device    (UDisksLinuxDriveObject   *object,
+UDisksLinuxDevice      *udisks_linux_drive_object_get_device    (UDisksLinuxDriveObject   *object,
                                                                  gboolean                  get_hw);
 UDisksLinuxBlockObject *udisks_linux_drive_object_get_block     (UDisksLinuxDriveObject   *object,
                                                                  gboolean                  get_hw);
@@ -52,9 +52,9 @@ gboolean                udisks_linux_drive_object_is_not_in_use (UDisksLinuxDriv
                                                                  GCancellable             *cancellable,
                                                                  GError                  **error);
 
-gboolean                udisks_linux_drive_object_should_include_device (GUdevClient  *client,
-                                                                         GUdevDevice  *device,
-                                                                         gchar       **out_vpd);
+gboolean                udisks_linux_drive_object_should_include_device (GUdevClient        *client,
+                                                                         UDisksLinuxDevice  *device,
+                                                                         gchar             **out_vpd);
 
 G_END_DECLS
 

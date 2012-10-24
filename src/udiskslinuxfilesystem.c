@@ -43,6 +43,7 @@
 #include "udisksdaemonutil.h"
 #include "udisksmountmonitor.h"
 #include "udisksmount.h"
+#include "udiskslinuxdevice.h"
 
 /**
  * SECTION:udiskslinuxfilesystem
@@ -135,7 +136,7 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
                                 UDisksLinuxBlockObject *object)
 {
   UDisksMountMonitor *mount_monitor;
-  GUdevDevice *device;
+  UDisksLinuxDevice *device;
   GPtrArray *p;
   GList *mounts;
   GList *l;
@@ -144,7 +145,7 @@ udisks_linux_filesystem_update (UDisksLinuxFilesystem  *filesystem,
   device = udisks_linux_block_object_get_device (object);
 
   p = g_ptr_array_new ();
-  mounts = udisks_mount_monitor_get_mounts_for_dev (mount_monitor, g_udev_device_get_device_number (device));
+  mounts = udisks_mount_monitor_get_mounts_for_dev (mount_monitor, g_udev_device_get_device_number (device->udev_device));
   /* we are guaranteed that the list is sorted so if there are
    * multiple mounts we'll always get the same order
    */

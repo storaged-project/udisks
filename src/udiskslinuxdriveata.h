@@ -48,7 +48,7 @@ gboolean        udisks_linux_drive_ata_secure_erase_sync   (UDisksLinuxDriveAta 
                                                             GError                 **error);
 
 void            udisks_linux_drive_ata_apply_configuration (UDisksLinuxDriveAta     *drive,
-                                                            GUdevDevice             *device,
+                                                            UDisksLinuxDevice       *device,
                                                             GVariant                *configuration);
 
 G_END_DECLS

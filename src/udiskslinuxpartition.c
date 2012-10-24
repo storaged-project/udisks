@@ -36,6 +36,7 @@
 #include "udisksdaemon.h"
 #include "udiskscleanup.h"
 #include "udisksdaemonutil.h"
+#include "udiskslinuxdevice.h"
 
 /**
  * SECTION:udiskslinuxpartition
@@ -111,7 +112,7 @@ udisks_linux_partition_update (UDisksLinuxPartition  *partition,
                                UDisksLinuxBlockObject     *object)
 {
   UDisksObject *disk_block_object = NULL;
-  GUdevDevice *device = NULL;
+  UDisksLinuxDevice *device = NULL;
   guint number = 0;
   const gchar *type = NULL;
   gchar type_buf[16];
@@ -125,18 +126,18 @@ udisks_linux_partition_update (UDisksLinuxPartition  *partition,
   gboolean is_contained = FALSE;
 
   device = udisks_linux_block_object_get_device (object);
-  if (g_udev_device_has_property (device, "ID_PART_ENTRY_TYPE"))
+  if (g_udev_device_has_property (device->udev_device, "ID_PART_ENTRY_TYPE"))
     {
       const gchar *disk_string;
-      number = g_udev_device_get_property_as_int (device, "ID_PART_ENTRY_NUMBER");
-      type = g_udev_device_get_property (device, "ID_PART_ENTRY_TYPE");
-      offset = g_udev_device_get_property_as_uint64 (device, "ID_PART_ENTRY_OFFSET") * G_GUINT64_CONSTANT (512);
-      size = g_udev_device_get_property_as_uint64 (device, "ID_PART_ENTRY_SIZE") * G_GUINT64_CONSTANT (512);
-      name = udisks_decode_udev_string (g_udev_device_get_property (device, "ID_PART_ENTRY_NAME"));
-      uuid = g_udev_device_get_property (device, "ID_PART_ENTRY_UUID");
-      flags = g_udev_device_get_property_as_uint64 (device, "ID_PART_ENTRY_FLAGS");
+      number = g_udev_device_get_property_as_int (device->udev_device, "ID_PART_ENTRY_NUMBER");
+      type = g_udev_device_get_property (device->udev_device, "ID_PART_ENTRY_TYPE");
+      offset = g_udev_device_get_property_as_uint64 (device->udev_device, "ID_PART_ENTRY_OFFSET") * G_GUINT64_CONSTANT (512);
+      size = g_udev_device_get_property_as_uint64 (device->udev_device, "ID_PART_ENTRY_SIZE") * G_GUINT64_CONSTANT (512);
+      name = udisks_decode_udev_string (g_udev_device_get_property (device->udev_device, "ID_PART_ENTRY_NAME"));
+      uuid = g_udev_device_get_property (device->udev_device, "ID_PART_ENTRY_UUID");
+      flags = g_udev_device_get_property_as_uint64 (device->udev_device, "ID_PART_ENTRY_FLAGS");
 
-      disk_string = g_udev_device_get_property (device, "ID_PART_ENTRY_DISK");
+      disk_string = g_udev_device_get_property (device->udev_device, "ID_PART_ENTRY_DISK");
       if (disk_string != NULL)
         {
           gint disk_major, disk_minor;
@@ -147,7 +148,7 @@ udisks_linux_partition_update (UDisksLinuxPartition  *partition,
             }
         }
 
-      if (g_strcmp0 (g_udev_device_get_property (device, "ID_PART_ENTRY_SCHEME"), "dos") == 0)
+      if (g_strcmp0 (g_udev_device_get_property (device->udev_device, "ID_PART_ENTRY_SCHEME"), "dos") == 0)
         {
           char *endp;
           gint type_as_int = strtol (type, &endp, 0);
@@ -173,10 +174,10 @@ udisks_linux_partition_update (UDisksLinuxPartition  *partition,
   else
     {
       GUdevDevice *parent_device;
-      number = g_udev_device_get_sysfs_attr_as_int (device, "partition");
-      offset = g_udev_device_get_sysfs_attr_as_uint64 (device, "start") * G_GUINT64_CONSTANT (512);
-      size = g_udev_device_get_sysfs_attr_as_uint64 (device, "size") * G_GUINT64_CONSTANT (512);
-      parent_device = g_udev_device_get_parent_with_subsystem (device, "block", "disk");
+      number = g_udev_device_get_sysfs_attr_as_int (device->udev_device, "partition");
+      offset = g_udev_device_get_sysfs_attr_as_uint64 (device->udev_device, "start") * G_GUINT64_CONSTANT (512);
+      size = g_udev_device_get_sysfs_attr_as_uint64 (device->udev_device, "size") * G_GUINT64_CONSTANT (512);
+      parent_device = g_udev_device_get_parent_with_subsystem (device->udev_device, "block", "disk");
       if (parent_device != NULL)
         {
           disk_block_object = udisks_daemon_find_block (udisks_linux_block_object_get_daemon (object),

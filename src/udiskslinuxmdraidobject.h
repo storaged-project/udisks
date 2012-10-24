@@ -35,12 +35,12 @@ UDisksLinuxMDRaidObject *udisks_linux_mdraid_object_new           (UDisksDaemon 
                                                                    const gchar               *uuid);
 void                     udisks_linux_mdraid_object_uevent        (UDisksLinuxMDRaidObject   *object,
                                                                    const gchar               *action,
-                                                                   GUdevDevice               *device,
+                                                                   UDisksLinuxDevice         *device,
                                                                    gboolean                   is_member);
 const gchar             *udisks_linux_mdraid_object_get_uuid      (UDisksLinuxMDRaidObject   *object);
 UDisksDaemon            *udisks_linux_mdraid_object_get_daemon    (UDisksLinuxMDRaidObject   *object);
 GList                   *udisks_linux_mdraid_object_get_members   (UDisksLinuxMDRaidObject   *object);
-GUdevDevice             *udisks_linux_mdraid_object_get_device    (UDisksLinuxMDRaidObject   *object);
+UDisksLinuxDevice       *udisks_linux_mdraid_object_get_device    (UDisksLinuxMDRaidObject   *object);
 
 gboolean                 udisks_linux_mdraid_object_have_devices  (UDisksLinuxMDRaidObject   *object);
 

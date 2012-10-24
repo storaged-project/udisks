@@ -38,6 +38,7 @@
 #include "udiskscrypttabmonitor.h"
 #include "udiskscrypttabentry.h"
 #include "udiskslinuxblockobject.h"
+#include "udiskslinuxdevice.h"
 
 /**
  * SECTION:udisksdaemon
@@ -1059,7 +1060,7 @@ udisks_daemon_find_block_by_sysfs_path (UDisksDaemon *daemon,
   for (l = objects; l != NULL; l = l->next)
     {
       UDisksObject *object = UDISKS_OBJECT (l->data);
-      GUdevDevice *device;
+      UDisksLinuxDevice *device;
 
       if (!UDISKS_IS_LINUX_BLOCK_OBJECT (object))
         continue;
@@ -1068,7 +1069,7 @@ udisks_daemon_find_block_by_sysfs_path (UDisksDaemon *daemon,
       if (device == NULL)
         continue;
 
-      if (g_strcmp0 (g_udev_device_get_sysfs_path (device), sysfs_path) == 0)
+      if (g_strcmp0 (g_udev_device_get_sysfs_path (device->udev_device), sysfs_path) == 0)
         {
           g_object_unref (device);
           ret = g_object_ref (object);

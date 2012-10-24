@@ -36,6 +36,7 @@
 #include "udiskspersistentstore.h"
 #include "udisksdaemonutil.h"
 #include "udiskscleanup.h"
+#include "udiskslinuxdevice.h"
 
 /**
  * SECTION:udiskslinuxencrypted
@@ -244,7 +245,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   gchar *escaped_name = NULL;
   UDisksObject *cleartext_object = NULL;
   UDisksBlock *cleartext_block;
-  GUdevDevice *udev_cleartext_device = NULL;
+  UDisksLinuxDevice *cleartext_device = NULL;
   GError *error = NULL;
   uid_t caller_uid;
   pid_t caller_pid;
@@ -438,13 +439,13 @@ handle_unlock (UDisksEncrypted        *encrypted,
                  udisks_block_get_device (block),
                  udisks_block_get_device (cleartext_block));
 
-  udev_cleartext_device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (cleartext_object));
+  cleartext_device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (cleartext_object));
 
   /* update the unlocked-luks file */
   udisks_cleanup_add_unlocked_luks (cleanup,
                                     udisks_block_get_device_number (cleartext_block),
                                     udisks_block_get_device_number (block),
-                                    g_udev_device_get_sysfs_attr (udev_cleartext_device, "dm/uuid"),
+                                    g_udev_device_get_sysfs_attr (cleartext_device->udev_device, "dm/uuid"),
                                     caller_uid);
 
   udisks_encrypted_complete_unlock (encrypted,
@@ -459,10 +460,8 @@ handle_unlock (UDisksEncrypted        *encrypted,
   g_free (escaped_name);
   g_free (name);
   g_free (error_message);
-  if (udev_cleartext_device != NULL)
-    g_object_unref (udev_cleartext_device);
-  if (cleartext_object != NULL)
-    g_object_unref (cleartext_object);
+  g_clear_object (&cleartext_device);
+  g_clear_object (&cleartext_object);
   g_clear_object (&object);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
@@ -485,7 +484,7 @@ handle_lock (UDisksEncrypted        *encrypted,
   gchar *escaped_name;
   UDisksObject *cleartext_object;
   UDisksBlock *cleartext_block;
-  GUdevDevice *device;
+  UDisksLinuxDevice *device;
   uid_t unlocked_by_uid;
   dev_t cleartext_device_from_file;
   GError *error;
@@ -587,7 +586,7 @@ handle_lock (UDisksEncrypted        *encrypted,
     }
 
   device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (cleartext_object));
-  escaped_name = udisks_daemon_util_escape_and_quote (g_udev_device_get_sysfs_attr (device, "dm/name"));
+  escaped_name = udisks_daemon_util_escape_and_quote (g_udev_device_get_sysfs_attr (device->udev_device, "dm/name"));
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               object,

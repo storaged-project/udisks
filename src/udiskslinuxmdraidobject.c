@@ -32,6 +32,7 @@
 #include "udiskslinuxmdraidobject.h"
 #include "udiskslinuxmdraid.h"
 #include "udiskslinuxblockobject.h"
+#include "udiskslinuxdevice.h"
 
 /**
  * SECTION:udiskslinuxmdraidobject
@@ -58,10 +59,10 @@ struct _UDisksLinuxMDRaidObject
   /* The UUID for the object */
   gchar *uuid;
 
-  /* The GUdevDevice for the RAID device (e.g. /dev/md0), if any */
-  GUdevDevice *raid_device;
+  /* The UDisksLinuxDevice for the RAID device (e.g. /dev/md0), if any */
+  UDisksLinuxDevice *raid_device;
 
-  /* list of GUdevDevice objects for detected member devices */
+  /* list of UDisksLinuxDevice objects for detected member devices */
   GList *member_devices;
 
   /* interfaces */
@@ -298,9 +299,9 @@ udisks_linux_mdraid_object_get_daemon (UDisksLinuxMDRaidObject *object)
  * udisks_linux_mdraid_object_get_members:
  * @object: A #UDisksLinuxMDRaidObject.
  *
- * Gets the current #GUdevDevice objects for the RAID members associated with @object.
+ * Gets the current #UDisksLinuxDevice objects for the RAID members associated with @object.
  *
- * Returns: A list of #GUdevDevice objects. Free each element with
+ * Returns: A list of #UDisksLinuxDevice objects. Free each element with
  * g_object_unref(), then free the list with g_list_free().
  */
 GList *
@@ -320,15 +321,15 @@ udisks_linux_mdraid_object_get_members (UDisksLinuxMDRaidObject *object)
  * udisks_linux_mdraid_object_get_device:
  * @object: A #UDisksLinuxMDRaidObject.
  *
- * Gets the current #GUdevDevice object for the RAID device
+ * Gets the current #UDisksLinuxDevice object for the RAID device
  * (e.g. /dev/md0) associated with @object, if any.
  *
- * Returns: (transfer full): A #GUdevDevice or %NULL. Free with g_object_unref().
+ * Returns: (transfer full): A #UDisksLinuxDevice or %NULL. Free with g_object_unref().
  */
-GUdevDevice *
+UDisksLinuxDevice *
 udisks_linux_mdraid_object_get_device (UDisksLinuxMDRaidObject   *object)
 {
-  GUdevDevice *ret = NULL;
+  UDisksLinuxDevice *ret = NULL;
 
   g_return_val_if_fail (UDISKS_IS_LINUX_MDRAID_OBJECT (object), NULL);
 
@@ -435,8 +436,8 @@ find_link_for_sysfs_path_for_member (UDisksLinuxMDRaidObject *object,
 
   for (l = object->member_devices; l != NULL; l = l->next)
     {
-      GUdevDevice *device = G_UDEV_DEVICE (l->data);
-      if (g_strcmp0 (g_udev_device_get_sysfs_path (device), sysfs_path) == 0)
+      UDisksLinuxDevice *device = UDISKS_LINUX_DEVICE (l->data);
+      if (g_strcmp0 (g_udev_device_get_sysfs_path (device->udev_device), sysfs_path) == 0)
         {
           ret = l;
           goto out;
@@ -449,19 +450,19 @@ find_link_for_sysfs_path_for_member (UDisksLinuxMDRaidObject *object,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static GSource *
-watch_attr (GUdevDevice *device,
-            const gchar *attr,
-            GSourceFunc  callback,
-            gpointer     user_data)
+watch_attr (UDisksLinuxDevice *device,
+            const gchar       *attr,
+            GSourceFunc        callback,
+            gpointer           user_data)
 {
   GError *error = NULL;
   gchar *path = NULL;
   GIOChannel *channel = NULL;
   GSource *ret = NULL;;
 
-  g_return_val_if_fail (G_UDEV_IS_DEVICE (device), NULL);
+  g_return_val_if_fail (UDISKS_IS_LINUX_DEVICE (device), NULL);
 
-  path = g_strdup_printf ("%s/%s", g_udev_device_get_sysfs_path (device), attr);
+  path = g_strdup_printf ("%s/%s", g_udev_device_get_sysfs_path (device->udev_device), attr);
   channel = g_io_channel_new_file (path, "r", &error);
   if (channel != NULL)
     {
@@ -541,12 +542,12 @@ attr_changed (GIOChannel   *channel,
 
 static void
 raid_device_added (UDisksLinuxMDRaidObject *object,
-                   GUdevDevice             *device)
+                   UDisksLinuxDevice       *device)
 {
   g_assert (object->sync_action_source == NULL);
   g_assert (object->degraded_source == NULL);
 
-  /* udisks_debug ("start watching %s", g_udev_device_get_sysfs_path (device)); */
+  /* udisks_debug ("start watching %s", g_udev_device_get_sysfs_path (device->udev_device)); */
   object->sync_action_source = watch_attr (device,
                                            "md/sync_action",
                                            (GSourceFunc) attr_changed,
@@ -559,9 +560,9 @@ raid_device_added (UDisksLinuxMDRaidObject *object,
 
 static void
 raid_device_removed (UDisksLinuxMDRaidObject *object,
-                     GUdevDevice             *device)
+                     UDisksLinuxDevice       *device)
 {
-  /* udisks_debug ("stop watching %s", g_udev_device_get_sysfs_path (device)); */
+  /* udisks_debug ("stop watching %s", g_udev_device_get_sysfs_path (device->udev_device)); */
   remove_watches (object);
 }
 
@@ -571,7 +572,7 @@ raid_device_removed (UDisksLinuxMDRaidObject *object,
  * udisks_linux_mdraid_object_uevent:
  * @object: A #UDisksLinuxMDRaidObject.
  * @action: Uevent action or %NULL
- * @device: A #GUdevDevice device object or %NULL if the device hasn't changed.
+ * @device: A #UDisksLinuxDevice device object or %NULL if the device hasn't changed.
  * @is_member: %TRUE if @device is a member, %FALSE if it's the raid device.
  *
  * Updates all information on interfaces on @mdraid.
@@ -579,35 +580,35 @@ raid_device_removed (UDisksLinuxMDRaidObject *object,
 void
 udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
                                    const gchar             *action,
-                                   GUdevDevice             *device,
+                                   UDisksLinuxDevice       *device,
                                    gboolean                 is_member)
 {
   gboolean conf_changed = FALSE;
 
   g_return_if_fail (UDISKS_IS_LINUX_MDRAID_OBJECT (object));
-  g_return_if_fail (G_UDEV_IS_DEVICE (device));
+  g_return_if_fail (UDISKS_IS_LINUX_DEVICE (device));
 
-  /* udisks_debug ("is_member=%d for uuid %s and device %s", is_member, object->uuid, g_udev_device_get_device_file (device)); */
+  /* udisks_debug ("is_member=%d for uuid %s and device %s", is_member, object->uuid, g_udev_device_get_device_file (device->udev_device)); */
 
   if (is_member)
     {
       GList *link = NULL;
       link = NULL;
       if (device != NULL)
-        link = find_link_for_sysfs_path_for_member (object, g_udev_device_get_sysfs_path (device));
+        link = find_link_for_sysfs_path_for_member (object, g_udev_device_get_sysfs_path (device->udev_device));
 
       if (g_strcmp0 (action, "remove") == 0)
         {
           if (link != NULL)
             {
-              g_object_unref (G_UDEV_DEVICE (link->data));
+              g_object_unref (UDISKS_LINUX_DEVICE (link->data));
               object->member_devices = g_list_delete_link (object->member_devices, link);
             }
           else
             {
               udisks_warning ("MDRaid with UUID %s doesn't have member device with sysfs path %s on remove event",
                               object->uuid,
-                              g_udev_device_get_sysfs_path (device));
+                              g_udev_device_get_sysfs_path (device->udev_device));
             }
         }
       else
@@ -616,7 +617,7 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
             {
               if (device != link->data)
                 {
-                  g_object_unref (G_UDEV_DEVICE (link->data));
+                  g_object_unref (UDISKS_LINUX_DEVICE (link->data));
                   link->data = g_object_ref (device);
                 }
             }
@@ -632,14 +633,14 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
   else
     {
       /* Skip partitions of raid devices */
-      if (g_strcmp0 (g_udev_device_get_devtype (device), "disk") != 0)
+      if (g_strcmp0 (g_udev_device_get_devtype (device->udev_device), "disk") != 0)
         goto out;
 
       if (g_strcmp0 (action, "remove") == 0)
         {
           if (object->raid_device != NULL)
-            if (g_strcmp0 (g_udev_device_get_sysfs_path (object->raid_device),
-                           g_udev_device_get_sysfs_path (device)) == 0)
+            if (g_strcmp0 (g_udev_device_get_sysfs_path (object->raid_device->udev_device),
+                           g_udev_device_get_sysfs_path (device->udev_device)) == 0)
               {
                 g_clear_object (&object->raid_device);
                 raid_device_removed (object, object->raid_device);
@@ -648,14 +649,14 @@ udisks_linux_mdraid_object_uevent (UDisksLinuxMDRaidObject *object,
               {
                 udisks_warning ("MDRaid with UUID %s doesn't have raid device with sysfs path %s on remove event (it has %s)",
                                 object->uuid,
-                                g_udev_device_get_sysfs_path (device),
-                                g_udev_device_get_sysfs_path (object->raid_device));
+                                g_udev_device_get_sysfs_path (device->udev_device),
+                                g_udev_device_get_sysfs_path (object->raid_device->udev_device));
               }
           else
             {
               udisks_warning ("MDRaid with UUID %s doesn't have raid device with sysfs path %s on remove event",
                               object->uuid,
-                              g_udev_device_get_sysfs_path (device));
+                              g_udev_device_get_sysfs_path (device->udev_device));
             }
         }
       else

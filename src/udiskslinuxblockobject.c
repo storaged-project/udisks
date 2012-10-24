@@ -58,6 +58,7 @@
 #include "udisksfstabentry.h"
 #include "udiskscrypttabmonitor.h"
 #include "udiskscrypttabentry.h"
+#include "udiskslinuxdevice.h"
 
 /**
  * SECTION:udiskslinuxblockobject
@@ -82,7 +83,7 @@ struct _UDisksLinuxBlockObject
   UDisksDaemon *daemon;
   UDisksMountMonitor *mount_monitor;
 
-  GUdevDevice *device;
+  UDisksLinuxDevice *device;
 
   /* interface */
   UDisksBlock *iface_block_device;
@@ -223,7 +224,7 @@ udisks_linux_block_object_constructed (GObject *_object)
 
   /* compute the object path */
   str = g_string_new ("/org/freedesktop/UDisks2/block_devices/");
-  udisks_safe_append_to_object_path (str, g_udev_device_get_name (object->device));
+  udisks_safe_append_to_object_path (str, g_udev_device_get_name (object->device->udev_device));
   g_dbus_object_skeleton_set_object_path (G_DBUS_OBJECT_SKELETON (object), str->str);
   g_string_free (str, TRUE);
 
@@ -261,7 +262,7 @@ udisks_linux_block_object_class_init (UDisksLinuxBlockObjectClass *klass)
   /**
    * UDisksLinuxBlockObject:device:
    *
-   * The #GUdevDevice for the object. Connect to the #GObject::notify
+   * The #UDisksLinuxDevice for the object. Connect to the #GObject::notify
    * signal to get notified whenever this is updated.
    */
   g_object_class_install_property (gobject_class,
@@ -269,7 +270,7 @@ udisks_linux_block_object_class_init (UDisksLinuxBlockObjectClass *klass)
                                    g_param_spec_object ("device",
                                                         "Device",
                                                         "The device for the object",
-                                                        G_UDEV_TYPE_DEVICE,
+                                                        UDISKS_TYPE_LINUX_DEVICE,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
@@ -280,15 +281,15 @@ udisks_linux_block_object_class_init (UDisksLinuxBlockObjectClass *klass)
 /**
  * udisks_linux_block_object_new:
  * @daemon: A #UDisksDaemon.
- * @device: The #GUdevDevice for the sysfs block device.
+ * @device: The #UDisksLinuxDevice for the device.
  *
  * Create a new block object.
  *
  * Returns: A #UDisksLinuxBlockObject object. Free with g_object_unref().
  */
 UDisksLinuxBlockObject *
-udisks_linux_block_object_new (UDisksDaemon  *daemon,
-                               GUdevDevice   *device)
+udisks_linux_block_object_new (UDisksDaemon      *daemon,
+                               UDisksLinuxDevice *device)
 {
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
   return UDISKS_LINUX_BLOCK_OBJECT (g_object_new (UDISKS_TYPE_LINUX_BLOCK_OBJECT,
@@ -316,13 +317,13 @@ udisks_linux_block_object_get_daemon (UDisksLinuxBlockObject *object)
  * udisks_linux_block_object_get_device:
  * @object: A #UDisksLinuxBlockObject.
  *
- * Gets the current #GUdevDevice for @object. Connect to
+ * Gets the current #UDisksLinuxDevice for @object. Connect to
  * #GObject::notify to track changes to the #UDisksLinuxBlockObject:device
  * property.
  *
- * Returns: A #GUdevDevice. Free with g_object_unref().
+ * Returns: A #UDisksLinuxDevice. Free with g_object_unref().
  */
-GUdevDevice *
+UDisksLinuxDevice *
 udisks_linux_block_object_get_device (UDisksLinuxBlockObject *object)
 {
   g_return_val_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (object), NULL);
@@ -456,11 +457,11 @@ partition_table_check (UDisksLinuxBlockObject *object)
   gboolean ret = FALSE;
 
   /* only consider whole disks, never partitions */
-  if (g_strcmp0 (g_udev_device_get_devtype (object->device), "disk") != 0)
+  if (g_strcmp0 (g_udev_device_get_devtype (object->device->udev_device), "disk") != 0)
     goto out;
 
   /* if blkid(8) already identified the device as a partition table, it's all good */
-  if (g_udev_device_has_property (object->device, "ID_PART_TABLE_TYPE"))
+  if (g_udev_device_has_property (object->device->udev_device, "ID_PART_TABLE_TYPE"))
     {
       /* however, if blkid(8) also think that we're a filesystem... then don't
        * mark us as a partition table ... except if we are partitioned by the
@@ -469,9 +470,9 @@ partition_table_check (UDisksLinuxBlockObject *object)
        * (see filesystem_check() for the similar case where we don't pretend
        * to be a filesystem)
        */
-      if (g_strcmp0 (g_udev_device_get_property (object->device, "ID_FS_USAGE"), "filesystem") == 0)
+      if (g_strcmp0 (g_udev_device_get_property (object->device->udev_device, "ID_FS_USAGE"), "filesystem") == 0)
         {
-          if (!disk_is_partitioned_by_kernel (object->device))
+          if (!disk_is_partitioned_by_kernel (object->device->udev_device))
             {
               goto out;
             }
@@ -490,7 +491,7 @@ partition_table_check (UDisksLinuxBlockObject *object)
    * children... then it must be partitioned by the kernel, hence it
    * must contain a partition table.
    */
-  if (disk_is_partitioned_by_kernel (object->device))
+  if (disk_is_partitioned_by_kernel (object->device->udev_device))
     {
       ret = TRUE;
       goto out;
@@ -522,14 +523,14 @@ partition_check (UDisksLinuxBlockObject *object)
   gboolean ret = FALSE;
 
   /* could be partitioned by the kernel */
-  if (g_strcmp0 (g_udev_device_get_devtype (object->device), "partition") == 0)
+  if (g_strcmp0 (g_udev_device_get_devtype (object->device->udev_device), "partition") == 0)
     {
       ret = TRUE;
       goto out;
     }
 
   /* if blkid(8) already identified the device as a partition, it's all good */
-  if (g_udev_device_has_property (object->device, "ID_PART_ENTRY_SCHEME"))
+  if (g_udev_device_has_property (object->device->udev_device, "ID_PART_ENTRY_SCHEME"))
     {
       ret = TRUE;
       goto out;
@@ -592,8 +593,8 @@ filesystem_check (UDisksLinuxBlockObject *object)
        * (see partition_table_check() above for the similar case where we don't pretend
        * to be a partition table)
        */
-      if (g_strcmp0 (g_udev_device_get_devtype (object->device), "disk") == 0 &&
-          disk_is_partitioned_by_kernel (object->device))
+      if (g_strcmp0 (g_udev_device_get_devtype (object->device->udev_device), "disk") == 0 &&
+          disk_is_partitioned_by_kernel (object->device->udev_device))
         {
           detected_as_filesystem = FALSE;
         }
@@ -602,7 +603,7 @@ filesystem_check (UDisksLinuxBlockObject *object)
   if (drive_does_not_detect_media_change (object) ||
       detected_as_filesystem ||
       (udisks_mount_monitor_is_dev_in_use (object->mount_monitor,
-                                           g_udev_device_get_device_number (object->device),
+                                           g_udev_device_get_device_number (object->device->udev_device),
                                            &mount_type) &&
        mount_type == UDISKS_MOUNT_TYPE_FILESYSTEM))
     ret = TRUE;
@@ -637,7 +638,7 @@ swapspace_check (UDisksLinuxBlockObject *object)
   if ((g_strcmp0 (udisks_block_get_id_usage (object->iface_block_device), "other") == 0 &&
        g_strcmp0 (udisks_block_get_id_type (object->iface_block_device), "swap") == 0)
       || (udisks_mount_monitor_is_dev_in_use (object->mount_monitor,
-                                              g_udev_device_get_device_number (object->device),
+                                              g_udev_device_get_device_number (object->device->udev_device),
                                               &mount_type)
           && mount_type == UDISKS_MOUNT_TYPE_SWAP))
     ret = TRUE;
@@ -694,8 +695,8 @@ loop_check (UDisksLinuxBlockObject *object)
   gboolean ret;
 
   ret = FALSE;
-  if (g_str_has_prefix (g_udev_device_get_name (object->device), "loop") &&
-      g_strcmp0 (g_udev_device_get_devtype (object->device), "disk") == 0)
+  if (g_str_has_prefix (g_udev_device_get_name (object->device->udev_device), "loop") &&
+      g_strcmp0 (g_udev_device_get_devtype (object->device->udev_device), "disk") == 0)
     ret = TRUE;
 
   return ret;
@@ -720,17 +721,17 @@ loop_update (UDisksLinuxBlockObject  *object,
  * udisks_linux_block_object_uevent:
  * @object: A #UDisksLinuxBlockObject.
  * @action: Uevent action or %NULL
- * @device: A new #GUdevDevice device object or %NULL if the device hasn't changed.
+ * @device: A new #UDisksLinuxDevice device object or %NULL if the device hasn't changed.
  *
  * Updates all information on interfaces on @object.
  */
 void
 udisks_linux_block_object_uevent (UDisksLinuxBlockObject *object,
                                   const gchar            *action,
-                                  GUdevDevice            *device)
+                                  UDisksLinuxDevice      *device)
 {
   g_return_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (object));
-  g_return_if_fail (device == NULL || G_UDEV_IS_DEVICE (device));
+  g_return_if_fail (device == NULL || UDISKS_IS_LINUX_DEVICE (device));
 
   if (device != NULL)
     {
@@ -763,7 +764,7 @@ on_mount_monitor_mount_added (UDisksMountMonitor  *monitor,
                               gpointer             user_data)
 {
   UDisksLinuxBlockObject *object = UDISKS_LINUX_BLOCK_OBJECT (user_data);
-  if (udisks_mount_get_dev (mount) == g_udev_device_get_device_number (object->device))
+  if (udisks_mount_get_dev (mount) == g_udev_device_get_device_number (object->device->udev_device))
     udisks_linux_block_object_uevent (object, NULL, NULL);
 }
 
@@ -773,7 +774,7 @@ on_mount_monitor_mount_removed (UDisksMountMonitor  *monitor,
                                 gpointer             user_data)
 {
   UDisksLinuxBlockObject *object = UDISKS_LINUX_BLOCK_OBJECT (user_data);
-  if (udisks_mount_get_dev (mount) == g_udev_device_get_device_number (object->device))
+  if (udisks_mount_get_dev (mount) == g_udev_device_get_device_number (object->device->udev_device))
     udisks_linux_block_object_uevent (object, NULL, NULL);
 }
 
@@ -800,7 +801,7 @@ udisks_linux_block_object_trigger_uevent (UDisksLinuxBlockObject *object)
 
   /* TODO: would be nice with a variant to wait until the request uevent has been received by ourselves */
 
-  path = g_strconcat (g_udev_device_get_sysfs_path (object->device), "/uevent", NULL);
+  path = g_strconcat (g_udev_device_get_sysfs_path (object->device->udev_device), "/uevent", NULL);
   fd = open (path, O_WRONLY);
   if (fd < 0)
     {
@@ -841,7 +842,7 @@ udisks_linux_block_object_reread_partition_table (UDisksLinuxBlockObject *object
 
   g_return_if_fail (UDISKS_IS_LINUX_BLOCK_OBJECT (object));
 
-  device_file = g_udev_device_get_device_file (object->device);
+  device_file = g_udev_device_get_device_file (object->device->udev_device);
   fd = open (device_file, O_RDONLY);
   if (fd == -1)
     {

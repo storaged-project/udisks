@@ -50,6 +50,7 @@
 #include "udiskssimplejob.h"
 #include "udisksthreadedjob.h"
 #include "udisksata.h"
+#include "udiskslinuxdevice.h"
 
 /**
  * SECTION:udiskslinuxdriveata
@@ -152,7 +153,7 @@ udisks_linux_drive_ata_new (void)
 /* may be called from *any* thread when the SMART data has been updated */
 static void
 update_smart (UDisksLinuxDriveAta *drive,
-              GUdevDevice         *device)
+              UDisksLinuxDevice   *device)
 {
   gboolean supported = FALSE;
   gboolean enabled = FALSE;
@@ -166,8 +167,8 @@ update_smart (UDisksLinuxDriveAta *drive,
   gint num_attributes_failed_in_the_past = -1;
   gint64 num_bad_sectors = 1;
 
-  supported = g_udev_device_get_property_as_boolean (device, "ID_ATA_FEATURE_SET_SMART");
-  enabled = g_udev_device_get_property_as_boolean (device, "ID_ATA_FEATURE_SET_SMART_ENABLED");
+  supported = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_SMART");
+  enabled = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_SMART_ENABLED");
 
   G_LOCK (object_lock);
   if (drive->smart_updated > 0)
@@ -208,7 +209,7 @@ update_smart (UDisksLinuxDriveAta *drive,
 
 static void
 update_pm (UDisksLinuxDriveAta *drive,
-           GUdevDevice         *device)
+           UDisksLinuxDevice   *device)
 {
   gboolean supported = FALSE;
   gboolean enabled = FALSE;
@@ -218,13 +219,13 @@ update_pm (UDisksLinuxDriveAta *drive,
   gboolean aam_enabled = FALSE;
   gint aam_vendor_recommended_value = 0;
 
-  supported = g_udev_device_get_property_as_boolean (device, "ID_ATA_FEATURE_SET_PM");
-  enabled = g_udev_device_get_property_as_boolean (device, "ID_ATA_FEATURE_SET_PM_ENABLED");
-  apm_supported = g_udev_device_get_property_as_boolean (device, "ID_ATA_FEATURE_SET_APM");
-  apm_enabled = g_udev_device_get_property_as_boolean (device, "ID_ATA_FEATURE_SET_APM_ENABLED");
-  aam_supported = g_udev_device_get_property_as_boolean (device, "ID_ATA_FEATURE_SET_AAM");
-  aam_enabled = g_udev_device_get_property_as_boolean (device, "ID_ATA_FEATURE_SET_AAM_ENABLED");
-  aam_vendor_recommended_value = g_udev_device_get_property_as_int (device, "ID_ATA_FEATURE_SET_AAM_VENDOR_RECOMMENDED_VALUE");
+  supported = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_PM");
+  enabled = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_PM_ENABLED");
+  apm_supported = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_APM");
+  apm_enabled = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_APM_ENABLED");
+  aam_supported = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_AAM");
+  aam_enabled = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_AAM_ENABLED");
+  aam_vendor_recommended_value = g_udev_device_get_property_as_int (device->udev_device, "ID_ATA_FEATURE_SET_AAM_VENDOR_RECOMMENDED_VALUE");
 
   g_object_freeze_notify (G_OBJECT (drive));
   udisks_drive_ata_set_pm_supported (UDISKS_DRIVE_ATA (drive), supported);
@@ -241,15 +242,15 @@ update_pm (UDisksLinuxDriveAta *drive,
 
 static void
 update_security (UDisksLinuxDriveAta *drive,
-                 GUdevDevice         *device)
+                 UDisksLinuxDevice   *device)
 {
   gint erase_unit = 0;
   gint enhanced_erase_unit = 0;
   gboolean frozen = FALSE;
 
-  erase_unit = g_udev_device_get_property_as_int (device, "ID_ATA_FEATURE_SET_SECURITY_ERASE_UNIT_MIN");
-  enhanced_erase_unit = g_udev_device_get_property_as_int (device, "ID_ATA_FEATURE_SET_SECURITY_ENHANCED_ERASE_UNIT_MIN");
-  frozen = g_udev_device_get_property_as_boolean (device, "ID_ATA_FEATURE_SET_SECURITY_FROZEN");
+  erase_unit = g_udev_device_get_property_as_int (device->udev_device, "ID_ATA_FEATURE_SET_SECURITY_ERASE_UNIT_MIN");
+  enhanced_erase_unit = g_udev_device_get_property_as_int (device->udev_device, "ID_ATA_FEATURE_SET_SECURITY_ENHANCED_ERASE_UNIT_MIN");
+  frozen = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_SECURITY_FROZEN");
 
   g_object_freeze_notify (G_OBJECT (drive));
   udisks_drive_ata_set_security_erase_unit_minutes (UDISKS_DRIVE_ATA (drive), erase_unit);
@@ -273,7 +274,8 @@ gboolean
 udisks_linux_drive_ata_update (UDisksLinuxDriveAta    *drive,
                                UDisksLinuxDriveObject *object)
 {
-  GUdevDevice *device;
+  UDisksLinuxDevice *device
+;
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
   if (device == NULL)
     goto out;
@@ -409,7 +411,7 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
                                            GError              **error)
 {
   UDisksLinuxDriveObject *object;
-  GUdevDevice *device = NULL;
+  UDisksLinuxDevice *device = NULL;
   gboolean ret = FALSE;
   SkDisk *d = NULL;
   SkBool awake;
@@ -471,7 +473,7 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
     }
   else
     {
-      if (sk_disk_open (g_udev_device_get_device_file (device), &d) != 0)
+      if (sk_disk_open (g_udev_device_get_device_file (device->udev_device), &d) != 0)
         {
           g_set_error (error,
                        UDISKS_ERROR,
@@ -589,7 +591,7 @@ udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta     *drive,
                                             GError                 **error)
 {
   UDisksLinuxDriveObject  *object;
-  GUdevDevice *device;
+  UDisksLinuxDevice *device;
   SkDisk *d = NULL;
   gboolean ret = FALSE;
   SkSmartSelfTest test;
@@ -618,7 +620,7 @@ udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta     *drive,
       goto out;
     }
 
-  if (sk_disk_open (g_udev_device_get_device_file (device), &d) != 0)
+  if (sk_disk_open (g_udev_device_get_device_file (device->udev_device), &d) != 0)
     {
       g_set_error (error,
                    UDISKS_ERROR,
@@ -1135,7 +1137,7 @@ handle_pm_get_state (UDisksDriveAta        *_drive,
   UDisksLinuxDriveAta *drive = UDISKS_LINUX_DRIVE_ATA (_drive);
   UDisksLinuxDriveObject  *object = NULL;
   UDisksDaemon *daemon;
-  GUdevDevice *device = NULL;
+  UDisksLinuxDevice *device = NULL;
   gint fd = -1;
   GError *error = NULL;
   const gchar *message;
@@ -1197,12 +1199,12 @@ handle_pm_get_state (UDisksDriveAta        *_drive,
       goto out;
     }
 
-  fd = open (g_udev_device_get_device_file (device), O_RDONLY|O_NONBLOCK);
+  fd = open (g_udev_device_get_device_file (device->udev_device), O_RDONLY|O_NONBLOCK);
   if (fd == -1)
     {
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                              "Error opening device file %s: %m",
-                                             g_udev_device_get_device_file (device));
+                                             g_udev_device_get_device_file (device->udev_device));
       goto out;
     }
 
@@ -1245,7 +1247,7 @@ handle_pm_standby (UDisksDriveAta        *_drive,
   UDisksLinuxBlockObject *block_object = NULL;
   UDisksBlock *block = NULL;
   UDisksDaemon *daemon;
-  GUdevDevice *device = NULL;
+  UDisksLinuxDevice *device = NULL;
   gint fd = -1;
   GError *error = NULL;
   const gchar *message;
@@ -1328,12 +1330,12 @@ handle_pm_standby (UDisksDriveAta        *_drive,
       goto out;
     }
 
-  fd = open (g_udev_device_get_device_file (device), O_RDONLY|O_NONBLOCK);
+  fd = open (g_udev_device_get_device_file (device->udev_device), O_RDONLY|O_NONBLOCK);
   if (fd == -1)
     {
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                              "Error opening device file %s: %m",
-                                             g_udev_device_get_device_file (device));
+                                             g_udev_device_get_device_file (device->udev_device));
       goto out;
     }
 
@@ -1376,7 +1378,7 @@ handle_pm_wakeup (UDisksDriveAta        *_drive,
   UDisksLinuxBlockObject *block_object = NULL;
   UDisksBlock *block = NULL;
   UDisksDaemon *daemon;
-  GUdevDevice *device = NULL;
+  UDisksLinuxDevice *device = NULL;
   gint fd = -1;
   GError *error = NULL;
   const gchar *message;
@@ -1460,12 +1462,12 @@ handle_pm_wakeup (UDisksDriveAta        *_drive,
       goto out;
     }
 
-  fd = open (g_udev_device_get_device_file (device), O_RDONLY);
+  fd = open (g_udev_device_get_device_file (device->udev_device), O_RDONLY);
   if (fd == -1)
     {
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                              "Error opening device file %s: %m",
-                                             g_udev_device_get_device_file (device));
+                                             g_udev_device_get_device_file (device->udev_device));
       goto out;
     }
 
@@ -1474,7 +1476,7 @@ handle_pm_wakeup (UDisksDriveAta        *_drive,
       g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
                                              "Error reading %d bytes from %s: %m",
                                              (gint) sizeof (buf),
-                                             g_udev_device_get_device_file (device));
+                                             g_udev_device_get_device_file (device->udev_device));
       goto out;
     }
 
@@ -1543,7 +1545,7 @@ typedef struct
   gint ata_apm_level;
   gint ata_aam_level;
   UDisksLinuxDriveAta *ata;
-  GUdevDevice *device;
+  UDisksLinuxDevice *device;
   GVariant *configuration;
   UDisksDrive *drive;
   UDisksLinuxDriveObject *object;
@@ -1568,7 +1570,7 @@ apply_configuration_thread_func (gpointer user_data)
   gint fd = -1;
   GError *error = NULL;
 
-  device_file = g_udev_device_get_device_file (data->device);
+  device_file = g_udev_device_get_device_file (data->device->udev_device);
 
   udisks_notice ("Applying configuration from %s/udisks2/%s.conf to %s",
                  PACKAGE_SYSCONF_DIR, udisks_drive_get_id (data->drive), device_file);
@@ -1679,7 +1681,7 @@ apply_configuration_thread_func (gpointer user_data)
 /**
  * udisks_linux_drive_ata_apply_configuration:
  * @drive: A #UDisksLinuxDriveAta.
- * @device: A #GUdevDevice
+ * @device: A #UDisksLinuxDevice
  * @configuration: The configuration to apply.
  *
  * Spawns a thread to apply @configuration to @drive, if any. Does not
@@ -1687,7 +1689,7 @@ apply_configuration_thread_func (gpointer user_data)
  */
 void
 udisks_linux_drive_ata_apply_configuration (UDisksLinuxDriveAta     *drive,
-                                            GUdevDevice             *device,
+                                            UDisksLinuxDevice       *device,
                                             GVariant                *configuration)
 {
   gboolean has_conf = FALSE;
@@ -1787,7 +1789,7 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta     *drive,
   UDisksLinuxDriveObject *object = NULL;
   UDisksLinuxBlockObject *block_object = NULL;
   UDisksDaemon *daemon;
-  GUdevDevice *device = NULL;
+  UDisksLinuxDevice *device = NULL;
   const gchar *device_file = NULL;
   gint fd = -1;
   union
@@ -1839,8 +1841,8 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta     *drive,
     }
 
   /* Use O_EXCL so it fails if mounted or in use */
-  device_file = g_udev_device_get_device_file (device);
-  fd = open (g_udev_device_get_device_file (device), O_RDONLY | O_EXCL);
+  device_file = g_udev_device_get_device_file (device->udev_device);
+  fd = open (g_udev_device_get_device_file (device->udev_device), O_RDONLY | O_EXCL);
   if (fd == -1)
     {
       g_set_error (&local_error, UDISKS_ERROR, UDISKS_ERROR_FAILED,

@@ -32,12 +32,12 @@ G_BEGIN_DECLS
 
 GType                     udisks_linux_block_object_get_type   (void) G_GNUC_CONST;
 UDisksLinuxBlockObject   *udisks_linux_block_object_new        (UDisksDaemon            *daemon,
-                                                                GUdevDevice             *device);
+                                                                UDisksLinuxDevice       *device);
 void                      udisks_linux_block_object_uevent     (UDisksLinuxBlockObject  *object,
                                                                 const gchar             *action,
-                                                                GUdevDevice             *device);
+                                                                UDisksLinuxDevice       *device);
 UDisksDaemon             *udisks_linux_block_object_get_daemon (UDisksLinuxBlockObject  *object);
-GUdevDevice              *udisks_linux_block_object_get_device (UDisksLinuxBlockObject  *object);
+UDisksLinuxDevice        *udisks_linux_block_object_get_device (UDisksLinuxBlockObject  *object);
 
 void                      udisks_linux_block_object_trigger_uevent (UDisksLinuxBlockObject  *object);
 void                      udisks_linux_block_object_reread_partition_table (UDisksLinuxBlockObject *object);

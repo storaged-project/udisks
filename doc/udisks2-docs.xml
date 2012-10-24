@@ -406,6 +406,7 @@
       <title>Linux-specific types</title>
       <xi:include href="xml/udiskslinuxmanager.xml"/>
       <xi:include href="xml/udiskslinuxprovider.xml"/>
+      <xi:include href="xml/udiskslinuxdevice.xml"/>
     </chapter>
     <chapter id="ref-daemon-drives">
       <title>Drives on Linux</title>

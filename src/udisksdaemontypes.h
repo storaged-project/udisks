@@ -193,4 +193,7 @@ typedef enum
   UDISKS_ATA_COMMAND_PROTOCOL_HOST_TO_DRIVE
 } UDisksAtaCommandProtocol;
 
+struct _UDisksLinuxDevice;
+typedef struct _UDisksLinuxDevice UDisksLinuxDevice;
+
 #endif /* __UDISKS_DAEMON_TYPES_H__ */

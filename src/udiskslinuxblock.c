@@ -55,6 +55,7 @@
 #include "udiskssimplejob.h"
 #include "udiskslinuxdriveata.h"
 #include "udiskslinuxmdraidobject.h"
+#include "udiskslinuxdevice.h"
 
 /**
  * SECTION:udiskslinuxblock
@@ -154,13 +155,13 @@ find_block_device_by_sysfs_path (GDBusObjectManagerServer *object_manager,
   for (l = objects; l != NULL; l = l->next)
     {
       GDBusObjectSkeleton *object = G_DBUS_OBJECT_SKELETON (l->data);
-      GUdevDevice *device;
+      UDisksLinuxDevice *device;
 
       if (!UDISKS_IS_LINUX_BLOCK_OBJECT (object))
         continue;
 
       device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (object));
-      if (g_strcmp0 (sysfs_path, g_udev_device_get_sysfs_path (device)) == 0)
+      if (g_strcmp0 (sysfs_path, g_udev_device_get_sysfs_path (device->udev_device)) == 0)
         {
           ret = g_strdup (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
           g_object_unref (device);
@@ -209,10 +210,10 @@ find_drive (GDBusObjectManagerServer  *object_manager,
       drive_devices = udisks_linux_drive_object_get_devices (UDISKS_LINUX_DRIVE_OBJECT (object));
       for (j = drive_devices; j != NULL; j = j->next)
         {
-          GUdevDevice *drive_device = G_UDEV_DEVICE (j->data);
+          UDisksLinuxDevice *drive_device = UDISKS_LINUX_DEVICE (j->data);
           const gchar *drive_sysfs_path;
 
-          drive_sysfs_path = g_udev_device_get_sysfs_path (drive_device);
+          drive_sysfs_path = g_udev_device_get_sysfs_path (drive_device->udev_device);
           if (g_strcmp0 (whole_disk_block_device_sysfs_path, drive_sysfs_path) == 0)
             {
               if (out_drive != NULL)
@@ -273,7 +274,7 @@ find_mdraid (GDBusObjectManagerServer  *object_manager,
 
 static void
 update_mdraid (UDisksLinuxBlock         *block,
-               GUdevDevice              *device,
+               UDisksLinuxDevice        *device,
                UDisksDrive              *drive,
                GDBusObjectManagerServer *object_manager)
 {
@@ -283,7 +284,7 @@ update_mdraid (UDisksLinuxBlock         *block,
   const gchar *objpath_mdraid_member = "/";
   UDisksLinuxMDRaidObject *object = NULL;
 
-  uuid = g_udev_device_get_property (device, "MD_UUID");
+  uuid = g_udev_device_get_property (device->udev_device, "MD_UUID");
   if (uuid != NULL && strlen (uuid) > 0)
     {
       object = find_mdraid (object_manager, uuid);
@@ -294,7 +295,7 @@ update_mdraid (UDisksLinuxBlock         *block,
         }
     }
 
-  uuid = g_udev_device_get_property (device, "MD_MEMBER_UUID");
+  uuid = g_udev_device_get_property (device->udev_device, "MD_MEMBER_UUID");
   if (uuid != NULL && strlen (uuid) > 0)
     {
       object = find_mdraid (object_manager, uuid);
@@ -313,7 +314,7 @@ update_mdraid (UDisksLinuxBlock         *block,
 
 static void
 update_hints (UDisksLinuxBlock  *block,
-              GUdevDevice       *device,
+              UDisksLinuxDevice *device,
               UDisksDrive       *drive)
 {
   UDisksBlock *iface = UDISKS_BLOCK (block);
@@ -333,7 +334,7 @@ update_hints (UDisksLinuxBlock  *block,
   hint_name = NULL;
   hint_icon_name = NULL;
 
-  device_file = g_udev_device_get_device_file (device);
+  device_file = g_udev_device_get_device_file (device->udev_device);
 
   /* Provide easy access to _only_ the following devices
    *
@@ -366,26 +367,26 @@ update_hints (UDisksLinuxBlock  *block,
     }
 
   /* CD-ROM media / drives are not partitionable, at least not here on Linux */
-  if (g_udev_device_get_property_as_boolean (device, "ID_CDROM"))
+  if (g_udev_device_get_property_as_boolean (device->udev_device, "ID_CDROM"))
     hint_partitionable = FALSE;
 
   /* device-mapper devices are not partitionable (TODO: for multipath, they are via kpartx(8) hacks) */
-  if (g_str_has_prefix (g_udev_device_get_name (device), "dm-"))
+  if (g_str_has_prefix (g_udev_device_get_name (device->udev_device), "dm-"))
     hint_partitionable = FALSE;
 
   /* TODO: set ignore to TRUE for physical paths belonging to a drive with multiple paths */
 
   /* override from udev properties */
-  if (g_udev_device_has_property (device, "UDISKS_SYSTEM"))
-    hint_system = g_udev_device_get_property_as_boolean (device, "UDISKS_SYSTEM");
-  if (g_udev_device_has_property (device, "UDISKS_IGNORE"))
-    hint_ignore = g_udev_device_get_property_as_boolean (device, "UDISKS_IGNORE");
-  if (g_udev_device_has_property (device, "UDISKS_AUTO"))
-    hint_auto = g_udev_device_get_property_as_boolean (device, "UDISKS_AUTO");
-  if (g_udev_device_has_property (device, "UDISKS_NAME"))
-    hint_name = g_udev_device_get_property (device, "UDISKS_NAME");
-  if (g_udev_device_has_property (device, "UDISKS_ICON_NAME"))
-    hint_icon_name = g_udev_device_get_property (device, "UDISKS_ICON_NAME");
+  if (g_udev_device_has_property (device->udev_device, "UDISKS_SYSTEM"))
+    hint_system = g_udev_device_get_property_as_boolean (device->udev_device, "UDISKS_SYSTEM");
+  if (g_udev_device_has_property (device->udev_device, "UDISKS_IGNORE"))
+    hint_ignore = g_udev_device_get_property_as_boolean (device->udev_device, "UDISKS_IGNORE");
+  if (g_udev_device_has_property (device->udev_device, "UDISKS_AUTO"))
+    hint_auto = g_udev_device_get_property_as_boolean (device->udev_device, "UDISKS_AUTO");
+  if (g_udev_device_has_property (device->udev_device, "UDISKS_NAME"))
+    hint_name = g_udev_device_get_property (device->udev_device, "UDISKS_NAME");
+  if (g_udev_device_has_property (device->udev_device, "UDISKS_ICON_NAME"))
+    hint_icon_name = g_udev_device_get_property (device->udev_device, "UDISKS_ICON_NAME");
 
   /* ... and scene! */
   udisks_block_set_hint_partitionable (iface, hint_partitionable);
@@ -708,7 +709,7 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
   UDisksBlock *iface = UDISKS_BLOCK (block);
   UDisksDaemon *daemon;
   GDBusObjectManagerServer *object_manager;
-  GUdevDevice *device;
+  UDisksLinuxDevice *device;
   GUdevDeviceNumber dev;
   gchar *drive_object_path;
   UDisksDrive *drive;
@@ -730,21 +731,21 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
   daemon = udisks_linux_block_object_get_daemon (object);
   object_manager = udisks_daemon_get_object_manager (daemon);
 
-  dev = g_udev_device_get_device_number (device);
-  device_file = g_udev_device_get_device_file (device);
-  symlinks = g_udev_device_get_device_file_symlinks (device);
+  dev = g_udev_device_get_device_number (device->udev_device);
+  device_file = g_udev_device_get_device_file (device->udev_device);
+  symlinks = g_udev_device_get_device_file_symlinks (device->udev_device);
 
   udisks_block_set_device (iface, device_file);
   udisks_block_set_symlinks (iface, symlinks);
   udisks_block_set_device_number (iface, dev);
 
-  size = udisks_daemon_util_block_get_size (device,
+  size = udisks_daemon_util_block_get_size (device->udev_device,
                                             &media_available,
                                             &media_change_detected);
   udisks_block_set_size (iface, size);
 
-  read_only = g_udev_device_get_sysfs_attr_as_boolean (device, "ro");
-  if (!read_only && g_str_has_prefix (g_udev_device_get_name (device), "sr"))
+  read_only = g_udev_device_get_sysfs_attr_as_boolean (device->udev_device, "ro");
+  if (!read_only && g_str_has_prefix (g_udev_device_get_name (device->udev_device), "sr"))
     read_only = TRUE;
   udisks_block_set_read_only (iface, read_only);
 
@@ -755,14 +756,14 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
    *       in user-space and wants you to use libdevmapper to obtain it...
    */
   udisks_block_set_crypto_backing_device (iface, "/");
-  if (g_str_has_prefix (g_udev_device_get_name (device), "dm-"))
+  if (g_str_has_prefix (g_udev_device_get_name (device->udev_device), "dm-"))
     {
       gchar *dm_uuid;
-      dm_uuid = get_sysfs_attr (device, "dm/uuid");
+      dm_uuid = get_sysfs_attr (device->udev_device, "dm/uuid");
       if (dm_uuid != NULL && g_str_has_prefix (dm_uuid, "CRYPT-LUKS1"))
         {
           gchar **slaves;
-          slaves = udisks_daemon_util_resolve_links (g_udev_device_get_sysfs_path (device),
+          slaves = udisks_daemon_util_resolve_links (g_udev_device_get_sysfs_path (device->udev_device),
                                                      "slaves");
           if (g_strv_length (slaves) == 1)
             {
@@ -794,7 +795,7 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
       gchar *dm_name_dev_file = NULL;
       const gchar *dm_name_dev_file_as_symlink = NULL;
 
-      dm_name = g_udev_device_get_property (device, "DM_NAME");
+      dm_name = g_udev_device_get_property (device->udev_device, "DM_NAME");
       if (dm_name != NULL)
         dm_name_dev_file = g_strdup_printf ("/dev/mapper/%s", dm_name);
       for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
@@ -819,7 +820,7 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
     {
       const gchar *md_name;
 
-      md_name = g_udev_device_get_property (device, "MD_NAME");
+      md_name = g_udev_device_get_property (device->udev_device, "MD_NAME");
       if (md_name != NULL)
         {
           guint n;
@@ -847,7 +848,7 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
     }
   /* fallback to the device name */
   if (preferred_device_file == NULL)
-    preferred_device_file = g_udev_device_get_device_file (device);
+    preferred_device_file = g_udev_device_get_device_file (device->udev_device);
   udisks_block_set_preferred_device (iface, preferred_device_file);
 
   /* Determine the drive this block device belongs to
@@ -855,7 +856,7 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
    * TODO: if this is slow we could have a cache or ensure that we
    * only do this once or something else
    */
-  drive_object_path = find_drive (object_manager, device, &drive);
+  drive_object_path = find_drive (object_manager, device->udev_device, &drive);
   if (drive_object_path != NULL)
     {
       udisks_block_set_drive (iface, drive_object_path);
@@ -866,15 +867,15 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
       udisks_block_set_drive (iface, "/");
     }
 
-  udisks_block_set_id_usage (iface, g_udev_device_get_property (device, "ID_FS_USAGE"));
-  udisks_block_set_id_type (iface, g_udev_device_get_property (device, "ID_FS_TYPE"));
-  s = udisks_decode_udev_string (g_udev_device_get_property (device, "ID_FS_VERSION"));
+  udisks_block_set_id_usage (iface, g_udev_device_get_property (device->udev_device, "ID_FS_USAGE"));
+  udisks_block_set_id_type (iface, g_udev_device_get_property (device->udev_device, "ID_FS_TYPE"));
+  s = udisks_decode_udev_string (g_udev_device_get_property (device->udev_device, "ID_FS_VERSION"));
   udisks_block_set_id_version (iface, s);
   g_free (s);
-  s = udisks_decode_udev_string (g_udev_device_get_property (device, "ID_FS_LABEL_ENC"));
+  s = udisks_decode_udev_string (g_udev_device_get_property (device->udev_device, "ID_FS_LABEL_ENC"));
   udisks_block_set_id_label (iface, s);
   g_free (s);
-  s = udisks_decode_udev_string (g_udev_device_get_property (device, "ID_FS_UUID_ENC"));
+  s = udisks_decode_udev_string (g_udev_device_get_property (device->udev_device, "ID_FS_UUID_ENC"));
   udisks_block_set_id_uuid (iface, s);
   g_free (s);
 
@@ -1998,7 +1999,7 @@ handle_format (UDisksBlock           *block,
   UDisksObject *object;
   UDisksObject *cleartext_object = NULL;
   UDisksBlock *cleartext_block = NULL;
-  GUdevDevice *udev_cleartext_device = NULL;
+  UDisksLinuxDevice *udev_cleartext_device = NULL;
   UDisksBlock *block_to_mkfs = NULL;
   UDisksObject *object_to_mkfs = NULL;
   UDisksDaemon *daemon;
@@ -2291,7 +2292,7 @@ handle_format (UDisksBlock           *block,
       udisks_cleanup_add_unlocked_luks (cleanup,
                                         udisks_block_get_device_number (cleartext_block),
                                         udisks_block_get_device_number (block),
-                                        g_udev_device_get_sysfs_attr (udev_cleartext_device, "dm/uuid"),
+                                        g_udev_device_get_sysfs_attr (udev_cleartext_device->udev_device, "dm/uuid"),
                                         caller_uid);
 
       object_to_mkfs = cleartext_object;
@@ -2686,7 +2687,7 @@ handle_rescan (UDisksBlock           *block,
                GVariant              *options)
 {
   UDisksObject *object = NULL;
-  GUdevDevice *udev_device = NULL;
+  UDisksLinuxDevice *device = NULL;
   UDisksDaemon *daemon;
   const gchar *action_id;
   const gchar *message;
@@ -2718,16 +2719,16 @@ handle_rescan (UDisksBlock           *block,
                                                     invocation))
     goto out;
 
-  udev_device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (object));
+  device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (object));
 
   udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (object));
-  if (g_strcmp0 (g_udev_device_get_devtype (udev_device), "disk") == 0)
+  if (g_strcmp0 (g_udev_device_get_devtype (device->udev_device), "disk") == 0)
     udisks_linux_block_object_reread_partition_table (UDISKS_LINUX_BLOCK_OBJECT (object));
 
   udisks_block_complete_rescan (block, invocation);
 
  out:
-  g_clear_object (&udev_device);
+  g_clear_object (&device);
   g_clear_object (&object);
   return TRUE; /* returning true means that we handled the method invocation */
 }

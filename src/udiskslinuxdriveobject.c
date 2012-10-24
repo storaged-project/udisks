@@ -33,6 +33,7 @@
 #include "udiskslinuxdrive.h"
 #include "udiskslinuxdriveata.h"
 #include "udiskslinuxblockobject.h"
+#include "udiskslinuxdevice.h"
 
 /**
  * SECTION:udiskslinuxdriveobject
@@ -56,7 +57,7 @@ struct _UDisksLinuxDriveObject
 
   UDisksDaemon *daemon;
 
-  /* list of GUdevDevice objects for block objects */
+  /* list of UDisksLinuxDevice objects for block objects */
   GList *devices;
 
   /* interfaces */
@@ -170,7 +171,7 @@ udisks_linux_drive_object_constructor (GType                  type,
   GObjectConstructParam *cp;
   UDisksDaemon *daemon;
   GUdevClient *client;
-  GUdevDevice *device;
+  UDisksLinuxDevice *device;
 
   cp = find_construct_property (n_construct_properties, construct_properties, "daemon");
   g_assert (cp != NULL);
@@ -181,7 +182,7 @@ udisks_linux_drive_object_constructor (GType                  type,
 
   cp = find_construct_property (n_construct_properties, construct_properties, "device");
   g_assert (cp != NULL);
-  device = G_UDEV_DEVICE (g_value_get_object (cp->value));
+  device = g_value_get_object (cp->value);
   g_assert (device != NULL);
 
   if (!udisks_linux_drive_object_should_include_device (client, device, NULL))
@@ -301,7 +302,7 @@ udisks_linux_drive_object_class_init (UDisksLinuxDriveObjectClass *klass)
   /**
    * UDisksLinuxDriveObject:device:
    *
-   * The #GUdevDevice for the object. Connect to the #GObject::notify
+   * The #UDisksLinuxDevice for the object. Connect to the #GObject::notify
    * signal to get notified whenever this is updated.
    */
   g_object_class_install_property (gobject_class,
@@ -309,7 +310,7 @@ udisks_linux_drive_object_class_init (UDisksLinuxDriveObjectClass *klass)
                                    g_param_spec_object ("device",
                                                         "Device",
                                                         "The device for the object",
-                                                        G_UDEV_TYPE_DEVICE,
+                                                        UDISKS_TYPE_LINUX_DEVICE,
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
                                                         G_PARAM_STATIC_STRINGS));
@@ -319,20 +320,20 @@ udisks_linux_drive_object_class_init (UDisksLinuxDriveObjectClass *klass)
 /**
  * udisks_linux_drive_object_new:
  * @daemon: A #UDisksDaemon.
- * @device: The #GUdevDevice for the sysfs block device.
+ * @device: The #UDisksLinuxDevice for the sysfs block device.
  *
  * Create a new drive object.
  *
  * Returns: A #UDisksLinuxDriveObject object or %NULL if @device does not represent a drive. Free with g_object_unref().
  */
 UDisksLinuxDriveObject *
-udisks_linux_drive_object_new (UDisksDaemon  *daemon,
-                               GUdevDevice   *device)
+udisks_linux_drive_object_new (UDisksDaemon      *daemon,
+                               UDisksLinuxDevice *device)
 {
   GObject *object;
 
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
-  g_return_val_if_fail (G_UDEV_IS_DEVICE (device), NULL);
+  g_return_val_if_fail (UDISKS_IS_LINUX_DEVICE (device), NULL);
 
   object = g_object_new (UDISKS_TYPE_LINUX_DRIVE_OBJECT,
                          "daemon", daemon,
@@ -364,9 +365,9 @@ udisks_linux_drive_object_get_daemon (UDisksLinuxDriveObject *object)
  * udisks_linux_drive_object_get_devices:
  * @object: A #UDisksLinuxDriveObject.
  *
- * Gets the current #GUdevDevice objects associated with @object.
+ * Gets the current #UDisksLinuxDevice objects associated with @object.
  *
- * Returns: A list of #GUdevDevice objects. Free each element with
+ * Returns: A list of #UDisksLinuxDevice objects. Free each element with
  * g_object_unref(), then free the list with g_list_free().
  */
 GList *
@@ -384,20 +385,20 @@ udisks_linux_drive_object_get_devices (UDisksLinuxDriveObject *object)
  * @object: A #UDisksLinuxDriveObject.
  * @get_hw: If the drive is multipath, set to %TRUE to get a path device instead of the multipath device.
  *
- * Gets one of the #GUdevDevice object associated with @object.
+ * Gets one of the #UDisksLinuxDevice object associated with @object.
  *
  * If @get_hw is %TRUE and @object represents a multipath device then
  * one of the paths is returned rather than the multipath device. This
  * is useful if you e.g. need to configure the physical hardware.
  *
- * Returns: A #GUdevDevice or %NULL. The returned object must be freed
+ * Returns: A #UDisksLinuxDevice or %NULL. The returned object must be freed
  * with g_object_unref().
  */
-GUdevDevice *
+UDisksLinuxDevice *
 udisks_linux_drive_object_get_device (UDisksLinuxDriveObject   *object,
                                       gboolean                  get_hw)
 {
-  GUdevDevice *ret = NULL;
+  UDisksLinuxDevice *ret = NULL;
   /* TODO: actually look at @get_hw */
   if (object->devices != NULL)
     {
@@ -437,14 +438,14 @@ udisks_linux_drive_object_get_block (UDisksLinuxDriveObject   *object,
     {
       GDBusObjectSkeleton *iter_object = G_DBUS_OBJECT_SKELETON (l->data);
       UDisksBlock *block;
-      GUdevDevice *device;
+      UDisksLinuxDevice *device;
       gboolean is_disk;
 
       if (!UDISKS_IS_LINUX_BLOCK_OBJECT (iter_object))
         continue;
 
       device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (iter_object));
-      is_disk = (g_strcmp0 (g_udev_device_get_devtype (device), "disk") == 0);
+      is_disk = (g_strcmp0 (g_udev_device_get_devtype (device->udev_device), "disk") == 0);
       g_object_unref (device);
 
       if (!is_disk)
@@ -557,14 +558,14 @@ static gboolean
 drive_ata_check (UDisksLinuxDriveObject *object)
 {
   gboolean ret;
-  GUdevDevice *device;
+  UDisksLinuxDevice *device;
 
   ret = FALSE;
   if (object->devices == NULL)
     goto out;
 
-  device = G_UDEV_DEVICE (object->devices->data);
-  if (!g_udev_device_get_property_as_boolean (device, "ID_ATA"))
+  device = object->devices->data;
+  if (!g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA"))
     goto out;
 
   ret = TRUE;
@@ -600,8 +601,8 @@ find_link_for_sysfs_path (UDisksLinuxDriveObject *object,
   ret = NULL;
   for (l = object->devices; l != NULL; l = l->next)
     {
-      GUdevDevice *device = G_UDEV_DEVICE (l->data);
-      if (g_strcmp0 (g_udev_device_get_sysfs_path (device), sysfs_path) == 0)
+      UDisksLinuxDevice *device = l->data;
+      if (g_strcmp0 (g_udev_device_get_sysfs_path (device->udev_device), sysfs_path) == 0)
         {
           ret = l;
           goto out;
@@ -615,42 +616,42 @@ find_link_for_sysfs_path (UDisksLinuxDriveObject *object,
  * udisks_linux_drive_object_uevent:
  * @object: A #UDisksLinuxDriveObject.
  * @action: Uevent action or %NULL
- * @device: A #GUdevDevice device object or %NULL if the device hasn't changed.
+ * @device: A #UDisksLinuxDevice device object or %NULL if the device hasn't changed.
  *
  * Updates all information on interfaces on @drive.
  */
 void
 udisks_linux_drive_object_uevent (UDisksLinuxDriveObject *object,
                                   const gchar            *action,
-                                  GUdevDevice            *device)
+                                  UDisksLinuxDevice      *device)
 {
   GList *link;
   gboolean conf_changed;
 
   g_return_if_fail (UDISKS_IS_LINUX_DRIVE_OBJECT (object));
-  g_return_if_fail (device == NULL || G_UDEV_IS_DEVICE (device));
+  g_return_if_fail (device == NULL || UDISKS_IS_LINUX_DEVICE (device));
 
   link = NULL;
   if (device != NULL)
-    link = find_link_for_sysfs_path (object, g_udev_device_get_sysfs_path (device));
+    link = find_link_for_sysfs_path (object, g_udev_device_get_sysfs_path (device->udev_device));
   if (g_strcmp0 (action, "remove") == 0)
     {
       if (link != NULL)
         {
-          g_object_unref (G_UDEV_DEVICE (link->data));
+          g_object_unref (UDISKS_LINUX_DEVICE (link->data));
           object->devices = g_list_delete_link (object->devices, link);
         }
       else
         {
           udisks_warning ("Drive doesn't have device with sysfs path %s on remove event",
-                          g_udev_device_get_sysfs_path (device));
+                          g_udev_device_get_sysfs_path (device->udev_device));
         }
     }
   else
     {
       if (link != NULL)
         {
-          g_object_unref (G_UDEV_DEVICE (link->data));
+          g_object_unref (UDISKS_LINUX_DEVICE (link->data));
           link->data = g_object_ref (device);
         }
       else
@@ -676,7 +677,7 @@ static void
 apply_configuration (UDisksLinuxDriveObject *object)
 {
   GVariant *configuration = NULL;
-  GUdevDevice *device = NULL;
+  UDisksLinuxDevice *device = NULL;
 
   if (object->iface_drive == NULL)
     goto out;
@@ -758,7 +759,7 @@ check_for_vpd (GUdevDevice *device)
 /* <internal>
  * udisks_linux_drive_object_should_include_device:
  * @client: A #GUdevClient.
- * @device: A #GUdevDevice.
+ * @device: A #UDisksLinuxDevice.
  * @out_vpd: Return location for unique ID or %NULL.
  *
  * Checks if we should even construct a #UDisksLinuxDriveObject for @device.
@@ -767,7 +768,7 @@ check_for_vpd (GUdevDevice *device)
  */
 gboolean
 udisks_linux_drive_object_should_include_device (GUdevClient  *client,
-                                                 GUdevDevice  *device,
+                                                 UDisksLinuxDevice  *device,
                                                  gchar       **out_vpd)
 {
   gboolean ret;
@@ -784,10 +785,10 @@ udisks_linux_drive_object_should_include_device (GUdevClient  *client,
    *
    * and we are only interested in the first.
    */
-  if (g_strcmp0 (g_udev_device_get_devtype (device), "disk") != 0)
+  if (g_strcmp0 (g_udev_device_get_devtype (device->udev_device), "disk") != 0)
     goto out;
 
-  vpd = check_for_vpd (device);
+  vpd = check_for_vpd (device->udev_device);
 
   if (vpd == NULL)
     {
@@ -797,7 +798,7 @@ udisks_linux_drive_object_should_include_device (GUdevClient  *client,
       const gchar *dm_name;
       GUdevDevice *parent;
 
-      name = g_udev_device_get_name (device);
+      name = g_udev_device_get_name (device->udev_device);
 
       /* workaround for floppy devices */
       if (g_str_has_prefix (name, "fd"))
@@ -814,8 +815,8 @@ udisks_linux_drive_object_should_include_device (GUdevClient  *client,
         }
 
       /* workaround for missing serial/wwn on VMware */
-      vendor = g_udev_device_get_property (device, "ID_VENDOR");
-      model = g_udev_device_get_property (device, "ID_MODEL");
+      vendor = g_udev_device_get_property (device->udev_device, "ID_VENDOR");
+      model = g_udev_device_get_property (device->udev_device, "ID_MODEL");
       if (g_str_has_prefix (name, "sd") &&
           vendor != NULL && g_strcmp0 (vendor, "VMware") == 0 &&
           model != NULL && g_str_has_prefix (model, "Virtual"))
@@ -825,7 +826,7 @@ udisks_linux_drive_object_should_include_device (GUdevClient  *client,
         }
 
       /* workaround for missing serial/wwn on firewire devices */
-      parent = g_udev_device_get_parent_with_subsystem (device, "firewire", NULL);
+      parent = g_udev_device_get_parent_with_subsystem (device->udev_device, "firewire", NULL);
       if (parent != NULL)
         {
           vpd = g_strdup (name);
@@ -834,12 +835,12 @@ udisks_linux_drive_object_should_include_device (GUdevClient  *client,
         }
 
       /* dm-multipath */
-      dm_name = g_udev_device_get_sysfs_attr (device, "dm/name");
+      dm_name = g_udev_device_get_sysfs_attr (device->udev_device, "dm/name");
       if (dm_name != NULL && g_str_has_prefix (dm_name, "mpath"))
         {
           gchar **slaves;
           guint n;
-          slaves = udisks_daemon_util_resolve_links (g_udev_device_get_sysfs_path (device), "slaves");
+          slaves = udisks_daemon_util_resolve_links (g_udev_device_get_sysfs_path (device->udev_device), "slaves");
           for (n = 0; slaves[n] != NULL; n++)
             {
               GUdevDevice *slave;

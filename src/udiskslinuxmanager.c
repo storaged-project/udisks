@@ -42,6 +42,7 @@
 #include "udisksdaemonutil.h"
 #include "udiskscleanup.h"
 #include "udiskslinuxblockobject.h"
+#include "udiskslinuxdevice.h"
 
 /**
  * SECTION:udiskslinuxmanager
@@ -224,7 +225,7 @@ wait_for_loop_object (UDisksDaemon *daemon,
   UDisksObject *object = NULL;
   UDisksBlock *block;
   UDisksLoop *loop;
-  GUdevDevice *device = NULL;
+  UDisksLinuxDevice *device = NULL;
   GDir *dir;
 
   /* First see if we have the right loop object */
@@ -245,19 +246,19 @@ wait_for_loop_object (UDisksDaemon *daemon,
   if (device == NULL)
     goto out;
 
-  dir = g_dir_open (g_udev_device_get_sysfs_path (device), 0 /* flags */, NULL /* GError */);
+  dir = g_dir_open (g_udev_device_get_sysfs_path (device->udev_device), 0 /* flags */, NULL /* GError */);
   if (dir != NULL)
     {
       const gchar *name;
       const gchar *device_name;
-      device_name = g_udev_device_get_name (device);
+      device_name = g_udev_device_get_name (device->udev_device);
       while ((name = g_dir_read_name (dir)) != NULL)
         {
           if (g_str_has_prefix (name, device_name))
             {
               gchar *sysfs_path;
               UDisksObject *partition_object;
-              sysfs_path = g_strconcat (g_udev_device_get_sysfs_path (device), "/", name, NULL);
+              sysfs_path = g_strconcat (g_udev_device_get_sysfs_path (device->udev_device), "/", name, NULL);
               partition_object = udisks_daemon_find_block_by_sysfs_path (daemon, sysfs_path);
               if (partition_object == NULL)
                 {

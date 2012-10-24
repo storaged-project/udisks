@@ -35,6 +35,7 @@
 #include "udisksdaemon.h"
 #include "udiskscleanup.h"
 #include "udisksdaemonutil.h"
+#include "udiskslinuxdevice.h"
 
 /**
  * SECTION:udiskslinuxpartitiontable
@@ -110,11 +111,11 @@ udisks_linux_partition_table_update (UDisksLinuxPartitionTable  *table,
                                      UDisksLinuxBlockObject     *object)
 {
   const gchar *type = NULL;
-  GUdevDevice *device = NULL;;
+  UDisksLinuxDevice *device = NULL;;
 
   device = udisks_linux_block_object_get_device (object);
   if (device != NULL)
-    type = g_udev_device_get_property (device, "ID_PART_TABLE_TYPE");
+    type = g_udev_device_get_property (device->udev_device, "ID_PART_TABLE_TYPE");
 
   udisks_partition_table_set_type_ (UDISKS_PARTITION_TABLE (table), type);
 

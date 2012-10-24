@@ -349,6 +349,19 @@ udisks_ata_send_command_sync
 </SECTION>
 
 <SECTION>
+<FILE>udiskslinuxdevice</FILE>
+<TITLE>UDisksLinuxDevice</TITLE>
+UDisksLinuxDevice
+udisks_linux_device_new_sync
+<SUBSECTION Standard>
+UDISKS_TYPE_LINUX_DEVICE
+UDISKS_LINUX_DEVICE
+UDISKS_IS_LINUX_DEVICE
+<SUBSECTION Private>
+udisks_linux_device_get_type
+</SECTION>
+
+<SECTION>
 <FILE>udisksdaemonutil</FILE>
 udisks_decode_udev_string
 udisks_safe_append_to_object_path
