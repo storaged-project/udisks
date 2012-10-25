@@ -31,7 +31,6 @@ G_BEGIN_DECLS
 
 /**
  * UDisksLinuxDevice:
- * @parent_instance: The parent instance.
  * @udev_device: A #GUdevDevice.
  * @ata_identify_device_data: 512-byte array containing the result of the IDENTIY DEVICE command or %NULL.
  * @ata_identify_packet_device_data: 512-byte array containing the result of the IDENTIY PACKET DEVICE command or %NULL.
@@ -43,8 +42,9 @@ G_BEGIN_DECLS
  */
 struct _UDisksLinuxDevice
 {
-  /*< public >*/
+  /*< private >*/
   GObject parent_instance;
+  /*< public >*/
   GUdevDevice *udev_device;
   guchar *ata_identify_device_data;
   guchar *ata_identify_packet_device_data;
