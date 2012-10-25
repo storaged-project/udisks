@@ -441,7 +441,9 @@ udisks_linux_provider_start (UDisksProvider *_provider)
 
   /* make sure we process sda before sdz and sdz before sdaa */
   devices = g_list_sort (devices, (GCompareFunc) udev_device_name_cmp);
+
   /* probe for extra data we don't get from udev */
+  udisks_info ("Initialization (device probing)");
   udisks_devices = NULL;
   for (l = devices; l != NULL; l = l->next)
     {
@@ -449,9 +451,11 @@ udisks_linux_provider_start (UDisksProvider *_provider)
       udisks_devices = g_list_prepend (udisks_devices, udisks_linux_device_new_sync (device));
     }
   udisks_devices = g_list_reverse (udisks_devices);
+
   /* do two coldplug runs to handle dependencies between devices */
   for (n = 0; n < 2; n++)
     {
+      udisks_info ("Initialization (coldplug %d/2)", n + 1);
       for (l = udisks_devices; l != NULL; l = l->next)
         {
           UDisksLinuxDevice *device = l->data;
@@ -460,6 +464,7 @@ udisks_linux_provider_start (UDisksProvider *_provider)
     }
   g_list_free_full (devices, g_object_unref);
   g_list_free_full (udisks_devices, g_object_unref);
+  udisks_info ("Initialization complete");
 
   /* schedule housekeeping for every 10 minutes */
   provider->housekeeping_timeout = g_timeout_add_seconds (10*60,
