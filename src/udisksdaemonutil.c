@@ -1417,3 +1417,32 @@ udisks_daemon_util_get_free_mdraid_device (void)
  out:
   return ret;
 }
+
+
+/**
+ * udisks_ata_identify_get_word:
+ * @identify_data: (allow-none): A 512-byte array containing ATA IDENTIFY or ATA IDENTIFY PACKET DEVICE data or %NULL.
+ * @word_number: The word number to get - must be less than 256.
+ *
+ * Gets a <quote>word</quote> from position @word_number from
+ * @identify_data.
+ *
+ * Returns: The word at the specified position or 0 if @identify_data is %NULL.
+ */
+guint16
+udisks_ata_identify_get_word (const guchar *identify_data, guint word_number)
+{
+  const guint16 *words = (const guint16 *) identify_data;
+  guint16 ret = 0;
+
+  g_return_val_if_fail (word_number < 256, 0);
+
+  if (identify_data == NULL)
+    goto out;
+
+  ret = GUINT16_FROM_LE (words[word_number]);
+
+ out:
+  return ret;
+}
+
