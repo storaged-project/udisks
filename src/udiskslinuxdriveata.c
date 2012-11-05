@@ -166,9 +166,14 @@ update_smart (UDisksLinuxDriveAta *drive,
   gint num_attributes_failing = -1;
   gint num_attributes_failed_in_the_past = -1;
   gint64 num_bad_sectors = 1;
+  guint16 word_82 = 0;
+  guint16 word_85 = 0;
 
-  supported = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_SMART");
-  enabled = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_SMART_ENABLED");
+  /* ATA8: 7.16 IDENTIFY DEVICE - ECh, PIO Data-In - Table 29 IDENTIFY DEVICE data */
+  word_82 = udisks_ata_identify_get_word (device->ata_identify_device_data, 82);
+  word_85 = udisks_ata_identify_get_word (device->ata_identify_device_data, 85);
+  supported = word_82 & (1<<0);
+  enabled = word_85 & (1<<0);
 
   G_LOCK (object_lock);
   if (drive->smart_updated > 0)
