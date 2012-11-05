@@ -265,15 +265,38 @@ update_security (UDisksLinuxDriveAta *drive,
   gint erase_unit = 0;
   gint enhanced_erase_unit = 0;
   gboolean frozen = FALSE;
+  gboolean security_supported = FALSE;
+  G_GNUC_UNUSED gboolean security_enabled = FALSE;
+  guint16 word_82 = 0;
+  guint16 word_85 = 0;
+  guint16 word_89 = 0;
+  guint16 word_90 = 0;
+  guint16 word_128 = 0;
 
-  erase_unit = g_udev_device_get_property_as_int (device->udev_device, "ID_ATA_FEATURE_SET_SECURITY_ERASE_UNIT_MIN");
-  enhanced_erase_unit = g_udev_device_get_property_as_int (device->udev_device, "ID_ATA_FEATURE_SET_SECURITY_ENHANCED_ERASE_UNIT_MIN");
-  frozen = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_SECURITY_FROZEN");
+  /* ATA8: 7.16 IDENTIFY DEVICE - ECh, PIO Data-In - Table 29 IDENTIFY DEVICE data */
+  word_82  = udisks_ata_identify_get_word (device->ata_identify_device_data, 82);
+  word_85  = udisks_ata_identify_get_word (device->ata_identify_device_data, 85);
+  word_89  = udisks_ata_identify_get_word (device->ata_identify_device_data, 89);
+  word_90  = udisks_ata_identify_get_word (device->ata_identify_device_data, 90);
+  word_128 = udisks_ata_identify_get_word (device->ata_identify_device_data, 128);
+
+  security_supported  = word_82 & (1<<1);
+  security_enabled    = word_85 & (1<<1);
+  if (security_supported)
+    {
+      erase_unit = (word_89 & 0xff) * 2;
+      enhanced_erase_unit = (word_90 & 0xff) * 2;
+    }
+  frozen = word_128 & (1<<3);
 
   g_object_freeze_notify (G_OBJECT (drive));
+  /* TODO: export Security{Supported,Enabled} properties
+  udisks_drive_ata_set_security_supported (UDISKS_DRIVE_ATA (drive), !!security_supported);
+  udisks_drive_ata_set_security_enabled (UDISKS_DRIVE_ATA (drive), !!security_enabled);
+  */
   udisks_drive_ata_set_security_erase_unit_minutes (UDISKS_DRIVE_ATA (drive), erase_unit);
   udisks_drive_ata_set_security_enhanced_erase_unit_minutes (UDISKS_DRIVE_ATA (drive), enhanced_erase_unit);
-  udisks_drive_ata_set_security_frozen (UDISKS_DRIVE_ATA (drive), frozen);
+  udisks_drive_ata_set_security_frozen (UDISKS_DRIVE_ATA (drive), !!frozen);
   g_object_thaw_notify (G_OBJECT (drive));
 }
 
