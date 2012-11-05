@@ -216,29 +216,41 @@ static void
 update_pm (UDisksLinuxDriveAta *drive,
            UDisksLinuxDevice   *device)
 {
-  gboolean supported = FALSE;
-  gboolean enabled = FALSE;
+  gboolean pm_supported = FALSE;
+  gboolean pm_enabled = FALSE;
   gboolean apm_supported = FALSE;
   gboolean apm_enabled = FALSE;
   gboolean aam_supported = FALSE;
   gboolean aam_enabled = FALSE;
   gint aam_vendor_recommended_value = 0;
+  guint16 word_82 = 0;
+  guint16 word_83 = 0;
+  guint16 word_85 = 0;
+  guint16 word_86 = 0;
+  guint16 word_94 = 0;
 
-  supported = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_PM");
-  enabled = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_PM_ENABLED");
-  apm_supported = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_APM");
-  apm_enabled = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_APM_ENABLED");
-  aam_supported = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_AAM");
-  aam_enabled = g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA_FEATURE_SET_AAM_ENABLED");
-  aam_vendor_recommended_value = g_udev_device_get_property_as_int (device->udev_device, "ID_ATA_FEATURE_SET_AAM_VENDOR_RECOMMENDED_VALUE");
+  /* ATA8: 7.16 IDENTIFY DEVICE - ECh, PIO Data-In - Table 29 IDENTIFY DEVICE data */
+  word_82 = udisks_ata_identify_get_word (device->ata_identify_device_data, 82);
+  word_83 = udisks_ata_identify_get_word (device->ata_identify_device_data, 83);
+  word_85 = udisks_ata_identify_get_word (device->ata_identify_device_data, 85);
+  word_86 = udisks_ata_identify_get_word (device->ata_identify_device_data, 86);
+  word_94 = udisks_ata_identify_get_word (device->ata_identify_device_data, 94);
+
+  pm_supported  = word_82 & (1<<3);
+  pm_enabled    = word_85 & (1<<3);
+  apm_supported = word_83 & (1<<3);
+  apm_enabled   = word_86 & (1<<3);
+  aam_supported = word_83 & (1<<9);
+  aam_enabled   = word_86 & (1<<9);
+  aam_vendor_recommended_value = (word_94 >> 8);
 
   g_object_freeze_notify (G_OBJECT (drive));
-  udisks_drive_ata_set_pm_supported (UDISKS_DRIVE_ATA (drive), supported);
-  udisks_drive_ata_set_pm_enabled (UDISKS_DRIVE_ATA (drive), enabled);
-  udisks_drive_ata_set_apm_supported (UDISKS_DRIVE_ATA (drive), apm_supported);
-  udisks_drive_ata_set_apm_enabled (UDISKS_DRIVE_ATA (drive), apm_enabled);
-  udisks_drive_ata_set_aam_supported (UDISKS_DRIVE_ATA (drive), aam_supported);
-  udisks_drive_ata_set_aam_enabled (UDISKS_DRIVE_ATA (drive), aam_enabled);
+  udisks_drive_ata_set_pm_supported (UDISKS_DRIVE_ATA (drive), !!pm_supported);
+  udisks_drive_ata_set_pm_enabled (UDISKS_DRIVE_ATA (drive), !!pm_enabled);
+  udisks_drive_ata_set_apm_supported (UDISKS_DRIVE_ATA (drive), !!apm_supported);
+  udisks_drive_ata_set_apm_enabled (UDISKS_DRIVE_ATA (drive), !!apm_enabled);
+  udisks_drive_ata_set_aam_supported (UDISKS_DRIVE_ATA (drive), !!aam_supported);
+  udisks_drive_ata_set_aam_enabled (UDISKS_DRIVE_ATA (drive), !!aam_enabled);
   udisks_drive_ata_set_aam_vendor_recommended_value (UDISKS_DRIVE_ATA (drive), aam_vendor_recommended_value);
   g_object_thaw_notify (G_OBJECT (drive));
 }
