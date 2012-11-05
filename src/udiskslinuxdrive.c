@@ -499,8 +499,26 @@ set_rotation_rate (UDisksDrive       *iface,
   else
     {
       rate = -1;
-      if (g_udev_device_has_property (device->udev_device, "ID_ATA_ROTATION_RATE_RPM"))
-        rate = g_udev_device_get_property_as_int (device->udev_device, "ID_ATA_ROTATION_RATE_RPM");
+      if (device->ata_identify_device_data != NULL)
+        {
+          guint word_217 = 0;
+
+          /* ATA8: 7.16 IDENTIFY DEVICE - ECh, PIO Data-In - Table 29 IDENTIFY DEVICE data
+           *
+           * Table 37 - Nominal Media Rotation Rate:
+           *
+           *  0000h        Rate not reported
+           *  0001h        Non-rotating media (e.g., solid state device)
+           *  0002h-0400h  Reserved
+           *  0401h-FFFEh  Nominal media rotation rate in rotations per minute (rpm) (e.g., 7200 rpm = 1C20h)
+           *  FFFFh        Reserved
+           */
+          word_217 = udisks_ata_identify_get_word (device->ata_identify_device_data, 217);
+          if (word_217 == 0x0001)
+            rate = 0;
+          else if (word_217 >= 0x0401 && word_217 <= 0xfffe)
+            rate = word_217;
+        }
     }
   udisks_drive_set_rotation_rate (iface, rate);
 }
