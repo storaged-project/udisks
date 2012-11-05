@@ -242,7 +242,8 @@ update_pm (UDisksLinuxDriveAta *drive,
   apm_enabled   = word_86 & (1<<3);
   aam_supported = word_83 & (1<<9);
   aam_enabled   = word_86 & (1<<9);
-  aam_vendor_recommended_value = (word_94 >> 8);
+  if (aam_supported)
+    aam_vendor_recommended_value = (word_94 >> 8);
 
   g_object_freeze_notify (G_OBJECT (drive));
   udisks_drive_ata_set_pm_supported (UDISKS_DRIVE_ATA (drive), !!pm_supported);
