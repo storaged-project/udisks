@@ -1459,6 +1459,7 @@ udisks_partition_table_skeleton_get_type
 UDisksLinuxPartition
 udisks_linux_partition_new
 udisks_linux_partition_update
+udisks_linux_partition_set_type_sync
 <SUBSECTION Standard>
 UDISKS_LINUX_PARTITION
 UDISKS_IS_LINUX_PARTITION

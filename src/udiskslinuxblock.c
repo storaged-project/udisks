@@ -56,6 +56,7 @@
 #include "udiskslinuxdriveata.h"
 #include "udiskslinuxmdraidobject.h"
 #include "udiskslinuxdevice.h"
+#include "udiskslinuxpartition.h"
 
 /**
  * SECTION:udiskslinuxblock
@@ -1989,6 +1990,59 @@ erase_device (UDisksBlock  *block,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static const struct
+{
+  const gchar *table_type;
+  const gchar *id_type;
+  const gchar *partition_type;
+} partition_types_by_id[] = {
+  {"dos", "vfat",         "0x0c"},
+  {"dos", "ntfs",         "0x07"},
+  {"dos", "exfat",        "0x0c"},
+  {"dos", "swap",         "0x82"},
+  {"dos", "ext2",         "0x83"},
+  {"dos", "ext3",         "0x83"},
+  {"dos", "ext4",         "0x83"},
+  {"dos", "xfs",          "0x83"},
+  {"dos", "btrfs",        "0x83"},
+  {"dos", "crypto_LUKS",  "0x83"}, /* TODO: perhaps default to LUKS-specific type */
+
+  {"gpt", "vfat",         "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7"}, /* Microsoft Basic Data */
+  {"gpt", "ntfs",         "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7"},
+  {"gpt", "exfat",        "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7"},
+  {"gpt", "swap",         "0657fd6d-a4ab-43c4-84e5-0933c84b4f4f"}, /* Linux Swap */
+  {"gpt", "ext2",         "0fc63daf-8483-4772-8e79-3d69d8477de4"}, /* Linux Filesystem */
+  {"gpt", "ext3",         "0fc63daf-8483-4772-8e79-3d69d8477de4"},
+  {"gpt", "ext4",         "0fc63daf-8483-4772-8e79-3d69d8477de4"},
+  {"gpt", "xfs",          "0fc63daf-8483-4772-8e79-3d69d8477de4"},
+  {"gpt", "btrfs",        "0fc63daf-8483-4772-8e79-3d69d8477de4"},
+  {"gpt", "crypto_LUKS",  "0fc63daf-8483-4772-8e79-3d69d8477de4"}, /* TODO: perhaps default to LUKS-specific type */
+};
+
+
+/* may return NULL if nothing suitable was found */
+static const gchar *
+determine_partition_type_for_id (const gchar *table_type,
+                                 const gchar *id_type)
+{
+  const gchar *ret = NULL;
+  guint n;
+
+  for (n = 0; n < G_N_ELEMENTS (partition_types_by_id); n++)
+    {
+      if (g_strcmp0 (partition_types_by_id[n].table_type, table_type) == 0 &&
+          g_strcmp0 (partition_types_by_id[n].id_type,    id_type) == 0)
+        {
+          ret = partition_types_by_id[n].partition_type;
+          goto out;
+        }
+    }
+ out:
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static gboolean
 handle_format (UDisksBlock           *block,
                GDBusMethodInvocation *invocation,
@@ -1997,6 +2051,8 @@ handle_format (UDisksBlock           *block,
 {
   FormatWaitData *wait_data = NULL;
   UDisksObject *object;
+  UDisksPartition *partition = NULL;
+  UDisksPartitionTable *partition_table = NULL;
   UDisksObject *cleartext_object = NULL;
   UDisksBlock *cleartext_block = NULL;
   UDisksLinuxDevice *udev_cleartext_device = NULL;
@@ -2024,6 +2080,8 @@ handle_format (UDisksBlock           *block,
   gboolean was_partitioned = FALSE;
   UDisksInhibitCookie *inhibit_cookie = NULL;
   gboolean no_block = FALSE;
+  gboolean update_partition_type = FALSE;
+  const gchar *partition_type = NULL;
 
   error = NULL;
   object = udisks_daemon_util_dup_object (block, &error);
@@ -2042,6 +2100,29 @@ handle_format (UDisksBlock           *block,
   g_variant_lookup (options, "encrypt.passphrase", "s", &encrypt_passphrase);
   g_variant_lookup (options, "erase", "s", &erase_type);
   g_variant_lookup (options, "no-block", "b", &no_block);
+  g_variant_lookup (options, "update-partition-type", "b", &update_partition_type);
+
+  partition = udisks_object_get_partition (object);
+  if (partition != NULL)
+    {
+      UDisksObject *partition_table_object;
+      partition_table_object = udisks_daemon_find_object (daemon, udisks_partition_get_table (partition));
+      if (partition_table_object == NULL)
+        {
+          g_clear_object (&partition);
+        }
+      else
+        {
+          partition_table = udisks_object_get_partition_table (partition_table_object);
+          g_clear_object (&partition_table_object);
+        }
+    }
+  /* figure out partition type to set, if requested */
+  if (update_partition_type && partition != NULL && partition_table != NULL)
+    {
+      partition_type = determine_partition_type_for_id (udisks_partition_table_get_type_ (partition_table),
+                                                        encrypt_passphrase != NULL ? "crypto_LUKS" : type);
+    }
 
   error = NULL;
   if (!udisks_daemon_util_get_caller_pid_sync (daemon,
@@ -2459,6 +2540,25 @@ handle_format (UDisksBlock           *block,
         }
     }
 
+  /* Set the partition type, if requested */
+  if (partition_type != NULL && partition != NULL)
+    {
+      if (g_strcmp0 (udisks_partition_get_type_ (partition), partition_type) != 0)
+        {
+          if (!udisks_linux_partition_set_type_sync (UDISKS_LINUX_PARTITION (partition),
+                                                     partition_type,
+                                                     caller_uid,
+                                                     NULL, /* cancellable */
+                                                     &error))
+            {
+              g_prefix_error (&error, "Error setting partition type after formatting: ");
+              g_dbus_method_invocation_take_error (invocation, error);
+              goto out;
+            }
+        }
+    }
+
+
   if (invocation != NULL)
     udisks_block_complete_format (block, invocation);
 
@@ -2473,6 +2573,8 @@ handle_format (UDisksBlock           *block,
   g_clear_object (&cleartext_block);
   g_clear_object (&udev_cleartext_device);
   g_free (wait_data);
+  g_clear_object (&partition_table);
+  g_clear_object (&partition);
   g_clear_object (&object);
   return TRUE; /* returning true means that we handled the method invocation */
 }

@@ -34,6 +34,12 @@ UDisksPartition *udisks_linux_partition_new      (void);
 void             udisks_linux_partition_update   (UDisksLinuxPartition   *partition,
                                                   UDisksLinuxBlockObject *object);
 
+gboolean         udisks_linux_partition_set_type_sync (UDisksLinuxPartition  *partition,
+                                                       const gchar           *type,
+                                                       uid_t                  caller_uid,
+                                                       GCancellable          *cancellable,
+                                                       GError               **error);
+
 G_END_DECLS
 
 #endif /* __UDISKS_LINUX_PARTITION_H__ */

@@ -1043,7 +1043,7 @@
     <!--
         Format:
         @type: The type of file system, partition table or other content to format the device with.
-        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's'), <parameter>take-ownership</parameter> (of type 'b'), <parameter>encrypt.passphrase</parameter> (of type 's'), <parameter>erase</parameter> (of type 's') and <parameter>no-block</parameter> (of type 'b').
+        @options: Options - known options (in addition to <link linkend="udisks-std-options">standard options</link>) includes <parameter>label</parameter> (of type 's'), <parameter>take-ownership</parameter> (of type 'b'), <parameter>encrypt.passphrase</parameter> (of type 's'), <parameter>erase</parameter> (of type 's'), <parameter>no-block</parameter> (of type 'b') and <parameter>update-partition-type</parameter> (of type 'b').
 
         Formats the device with a file system, partition table or
         other well-known content.
@@ -1079,6 +1079,16 @@
         before formatting, <quote>ata-secure-erase</quote> to perform
         a secure erase or <quote>ata-secure-erase-enhanced</quote> to
         perform an enhanced secure erase.
+
+        If the option <parameter>update-partition-type</parameter> is
+        set to %TRUE and the object in question is a partition, then
+        its type (cf. the #org.freedesktop.UDisks2.Partition:Type
+        property) will be set to the <emphasis>natural</emphasis>
+        partition type matching @type, if any. For example, if
+        formatting a GPT partition with a FAT filesystem, the
+        <quote>Microsoft Basic Data</quote> partition type will be
+        chosen; similar, if formatting a DOS partition with a Ext4
+        filesystem then partition type 0x83 is chosen.
 
         If the option <parameter>no-block</parameter> is set to %TRUE
         then the method returns just before the actual formatting
