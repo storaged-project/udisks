@@ -115,6 +115,14 @@ const FSInfo _fs_info[] =
       FALSE, /* supports_owners */
       "mkfs.minix $DEVICE",
     },
+    {
+      "udf",
+      NULL,
+      NULL,
+      FALSE, /* supports_online_label_rename */
+      FALSE, /* supports_owners */
+      "mkudffs --vid $LABEL $DEVICE",
+    },
     /* swap space */
     {
       "swap",
