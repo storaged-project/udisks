@@ -567,6 +567,19 @@ is_valid_uuid (const gchar *str)
   return ret;
 }
 
+/**
+ * udisks_linux_partition_set_type_sync:
+ * @partition: A #UDisksLinuxPartition.
+ * @type: The partition type to set.
+ * @caller_uid: The uid of the process requesting this change or 0.
+ * @cancellable: A #GCancellable or %NULL.
+ * @error: Return location for error or %NULL.
+ *
+ * Sets the partition type. The calling thread is blocked while the
+ * operation is pending.
+ *
+ * Returns: %TRUE if the operation succeeded, %FALSE if error is set.
+ */
 gboolean
 udisks_linux_partition_set_type_sync (UDisksLinuxPartition  *partition,
                                       const gchar           *type,
