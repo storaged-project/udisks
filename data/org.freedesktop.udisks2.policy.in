@@ -435,6 +435,17 @@
     </defaults>
   </action>
 
+  <!-- Enable/Disable SMART -->
+  <action id="org.freedesktop.udisks2.ata-smart-enable-disable">
+    <_description>Enable/Disable SMART</_description>
+    <_message>Authentication is required to enable/disable SMART</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
   <!-- ###################################################################### -->
   <!-- ATA Power Management -->
 

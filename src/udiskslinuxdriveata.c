@@ -2231,6 +2231,145 @@ handle_security_erase_unit (UDisksDriveAta        *_drive,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+handle_smart_set_enabled (UDisksDriveAta        *_drive,
+                          GDBusMethodInvocation *invocation,
+                          gboolean               value,
+                          GVariant              *options)
+{
+  UDisksLinuxDriveAta *drive = UDISKS_LINUX_DRIVE_ATA (_drive);
+  UDisksLinuxDriveObject *object = NULL;
+  UDisksLinuxBlockObject *block_object = NULL;
+  UDisksDaemon *daemon;
+  GError *error = NULL;
+  UDisksLinuxDevice *device = NULL;
+  gint fd = -1;
+  const gchar *message;
+  const gchar *action_id;
+  uid_t caller_uid;
+  gid_t caller_gid;
+
+  object = udisks_daemon_util_dup_object (drive, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  block_object = udisks_linux_drive_object_get_block (object, FALSE);
+  if (block_object == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Unable to find block device for drive");
+      goto out;
+    }
+
+  daemon = udisks_linux_drive_object_get_daemon (object);
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &caller_gid,
+                                               NULL,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  if (value)
+    {
+      /* Translators: Shown in authentication dialog when the user
+       * requests enabling SMART on a disk.
+       *
+       * Do not translate $(drive), it's a placeholder and
+       * will be replaced by the name of the drive/device in question
+       */
+      message = N_("Authentication is required to enable SMART on $(drive)");
+    }
+  else
+    {
+      /* Translators: Shown in authentication dialog when the user
+       * requests enabling SMART on a disk.
+       *
+       * Do not translate $(drive), it's a placeholder and
+       * will be replaced by the name of the drive/device in question
+       */
+      message = N_("Authentication is required to disable SMART on $(drive)");
+    }
+  action_id = "org.freedesktop.udisks2.ata-smart-enable-disable";
+
+  /* Check that the user is authorized */
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    UDISKS_OBJECT (object),
+                                                    action_id,
+                                                    options,
+                                                    message,
+                                                    invocation))
+    goto out;
+
+  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  if (device == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "No udev device");
+      goto out;
+    }
+
+  fd = open (g_udev_device_get_device_file (device->udev_device), O_RDONLY|O_NONBLOCK);
+  if (fd == -1)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Error opening device file %s: %m",
+                                             g_udev_device_get_device_file (device->udev_device));
+      goto out;
+    }
+
+  {
+    /* ATA8: 7.53.4 SMART ENABLE OPERATIONS - B0h/D8h, Non-Data
+     *       7.53.2 SMART DISABLE OPERATIONS - B0h/D9h, Non-Data
+     */
+    UDisksAtaCommandInput input = {.command = 0xb0};
+    UDisksAtaCommandOutput output = {0};
+    if (value)
+      input.feature = 0xd8;
+    else
+      input.feature = 0xd9;
+    input.lba = 0x004fc2; /* will be encoded as 0xc2 0x4f 0x00 as per the ATA spec */
+    if (!udisks_ata_send_command_sync (fd,
+                                       -1,
+                                       UDISKS_ATA_COMMAND_PROTOCOL_NONE,
+                                       &input,
+                                       &output,
+                                       &error))
+      {
+        g_prefix_error (&error, "Error sending ATA command SMART, sub-command %s OPERATIONS: ",
+                        value ? "ENABLE" : "DISABLE");
+        g_dbus_method_invocation_take_error (invocation, error);
+        goto out;
+      }
+  }
+
+  udisks_linux_block_object_trigger_uevent (block_object);
+
+  udisks_drive_ata_complete_smart_set_enabled (_drive, invocation);
+
+ out:
+  if (fd != -1)
+    close (fd);
+  g_clear_object (&device);
+  g_clear_object (&block_object);
+  g_clear_object (&object);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 drive_ata_iface_init (UDisksDriveAtaIface *iface)
 {
@@ -2238,6 +2377,7 @@ drive_ata_iface_init (UDisksDriveAtaIface *iface)
   iface->handle_smart_get_attributes = handle_smart_get_attributes;
   iface->handle_smart_selftest_abort = handle_smart_selftest_abort;
   iface->handle_smart_selftest_start = handle_smart_selftest_start;
+  iface->handle_smart_set_enabled = handle_smart_set_enabled;
 
   iface->handle_pm_get_state = handle_pm_get_state;
   iface->handle_pm_standby = handle_pm_standby;
