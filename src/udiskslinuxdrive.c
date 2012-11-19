@@ -22,6 +22,10 @@
 #include <glib/gi18n-lib.h>
 
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
+
 #include <pwd.h>
 #include <grp.h>
 #include <string.h>
@@ -417,8 +421,8 @@ set_media (UDisksDrive       *iface,
   guint disc_track_count_data = 0;
   gboolean force_non_removable = FALSE;
   gboolean force_removable = FALSE;
-  gboolean ejectable;
-  gboolean removable;
+  gboolean ejectable = FALSE;
+  gboolean removable = FALSE;
 
   media_compat_array = g_ptr_array_new ();
   for (n = 0; drive_media_mapping[n].udev_property != NULL; n++)
@@ -528,6 +532,8 @@ set_connection_bus (UDisksDrive       *iface,
                     UDisksLinuxDevice *device)
 {
   GUdevDevice *parent;
+  gboolean can_power_off = FALSE;
+  gchar *sibling_id = NULL;
 
   /* note: @device may vary - it can be any path for drive */
 
@@ -537,7 +543,9 @@ set_connection_bus (UDisksDrive       *iface,
     {
       /* TODO: should probably check that it's a storage interface */
       udisks_drive_set_connection_bus (iface, "usb");
+      sibling_id = g_strdup (g_udev_device_get_sysfs_path (parent));
       g_object_unref (parent);
+      can_power_off = TRUE;
       goto out;
     }
 
@@ -557,7 +565,9 @@ set_connection_bus (UDisksDrive       *iface,
     }
 
  out:
-  ;
+  udisks_drive_set_can_power_off (iface, can_power_off);
+  udisks_drive_set_sibling_id (iface, sibling_id);
+  g_free (sibling_id);
 }
 
 static void
@@ -1150,9 +1160,241 @@ handle_set_configuration (UDisksDrive           *_drive,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+handle_power_off (UDisksDrive           *_drive,
+                  GDBusMethodInvocation *invocation,
+                  GVariant              *options)
+{
+  UDisksLinuxDrive *drive = UDISKS_LINUX_DRIVE (_drive);
+  UDisksLinuxDevice *device = NULL;
+  gchar *remove_path = NULL;
+  FILE *f;
+  GUdevDevice *usb_device = NULL;
+  UDisksLinuxDriveObject *object;
+  UDisksLinuxBlockObject *block_object = NULL;
+  GList *blocks_to_sync = NULL;
+  UDisksBlock *block = NULL;
+  UDisksDaemon *daemon = NULL;
+  const gchar *action_id;
+  const gchar *message;
+  gchar *error_message = NULL;
+  GError *error = NULL;
+  gchar *escaped_device = NULL;
+  uid_t caller_uid;
+  gid_t caller_gid;
+  pid_t caller_pid;
+  GList *sibling_objects = NULL, *l;
+
+  object = udisks_daemon_util_dup_object (drive, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_drive_object_get_daemon (object);
+  block_object = udisks_linux_drive_object_get_block (object, FALSE);
+  if (block_object == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Unable to find block device for drive");
+      goto out;
+    }
+  block = udisks_object_peek_block (UDISKS_OBJECT (block_object));
+  blocks_to_sync = g_list_prepend (blocks_to_sync, g_object_ref (block));
+
+  sibling_objects = udisks_linux_drive_object_get_siblings (object);
+
+  /* refuse if drive - or one of its siblings - appears to be in use */
+  if (!udisks_linux_drive_object_is_not_in_use (object, NULL, &error))
+    {
+      g_prefix_error (&error, "The drive in use: ");
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+  for (l = sibling_objects; l != NULL; l = l->next)
+    {
+      UDisksLinuxDriveObject *sibling_object = UDISKS_LINUX_DRIVE_OBJECT (l->data);
+      UDisksLinuxBlockObject *sibling_block_object;
+
+      if (!udisks_linux_drive_object_is_not_in_use (sibling_object, NULL, &error))
+        {
+          g_prefix_error (&error, "A drive that is part of the same device is in use: ");
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
+
+      sibling_block_object = udisks_linux_drive_object_get_block (sibling_object, FALSE); /* get_hw */
+      if (sibling_block_object != NULL)
+        {
+          UDisksBlock *sibling_block = udisks_object_get_block (UDISKS_OBJECT (sibling_block_object));
+          if (sibling_block != NULL)
+            blocks_to_sync = g_list_prepend (blocks_to_sync, sibling_block);
+        }
+    }
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_pid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_pid,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &caller_gid,
+                                               NULL,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  /* Translators: Shown in authentication dialog when the user
+   * requests ejecting media from a drive.
+   *
+   * Do not translate $(drive), it's a placeholder and
+   * will be replaced by the name of the drive/device in question
+   */
+  message = N_("Authentication is required to power off $(drive)");
+  action_id = "org.freedesktop.udisks2.power-off-drive";
+  if (udisks_block_get_hint_system (block))
+    {
+      action_id = "org.freedesktop.udisks2.power-off-drive-system";
+    }
+  else if (!udisks_daemon_util_on_same_seat (daemon, UDISKS_OBJECT (object), caller_pid))
+    {
+      action_id = "org.freedesktop.udisks2.power-off-drive-other-seat";
+    }
+
+  /* Check that the user is actually authorized */
+  if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                    UDISKS_OBJECT (block_object),
+                                                    action_id,
+                                                    options,
+                                                    message,
+                                                    invocation))
+    goto out;
+
+  /* sync all block devices */
+  for (l = blocks_to_sync; l != NULL ; l = l->next)
+    {
+      UDisksBlock *block_to_sync = UDISKS_BLOCK (l->data);
+      const gchar *device_file;
+      gint fd;
+      device_file = udisks_block_get_device (block_to_sync);
+      fd = open (device_file, O_RDONLY|O_NONBLOCK|O_EXCL);
+      if (fd == -1)
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error opening %s: %m",
+                                                 device_file);
+          goto out;
+        }
+      if (fsync (fd) != 0)
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error syncing  %s: %m",
+                                                 device_file);
+          goto out;
+        }
+      if (close (fd) != 0)
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error closing %s (after syncing): %m",
+                                                 device_file);
+          goto out;
+        }
+    }
+
+  escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
+
+  /* TODO: Send the eject? Send SCSI START STOP UNIT? */
+  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  if (device == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "No device");
+      goto out;
+    }
+  usb_device = g_udev_device_get_parent_with_subsystem (device->udev_device, "usb", "usb_device");
+  if (usb_device == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "No usb device");
+      goto out;
+    }
+
+  /* http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=253e05724f9230910344357b1142ad8642ff9f5a */
+  remove_path = g_strdup_printf ("%s/remove", g_udev_device_get_sysfs_path (usb_device));
+  f = fopen (remove_path, "w");
+  if (f == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error opening %s: %m",
+                                             remove_path);
+      goto out;
+    }
+  else
+    {
+      gchar contents[1] = {'1'};
+      if (fwrite (contents, 1, 1, f) != 1)
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error writing to sysfs file %s: %m",
+                                                 remove_path);
+          fclose (f);
+          goto out;
+        }
+    }
+  fclose (f);
+
+  udisks_drive_complete_power_off (UDISKS_DRIVE (drive), invocation);
+
+ out:
+  g_list_free_full (blocks_to_sync, g_object_unref);
+  g_list_free_full (sibling_objects, g_object_unref);
+  g_free (remove_path);
+  g_clear_object (&usb_device);
+  g_clear_object (&device);
+  g_free (escaped_device);
+  g_clear_object (&block_object);
+  g_free (error_message);
+  g_clear_object (&object);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 drive_iface_init (UDisksDriveIface *iface)
 {
   iface->handle_eject = handle_eject;
   iface->handle_set_configuration = handle_set_configuration;
+  iface->handle_power_off = handle_power_off;
 }

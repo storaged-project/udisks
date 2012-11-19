@@ -217,6 +217,41 @@
   </action>
 
   <!-- ###################################################################### -->
+  <!-- Power off a drive -->
+
+  <action id="org.freedesktop.udisks2.power-off-drive">
+    <_description>Power off drive</_description>
+    <_message>Authentication is required to power off a drive</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+
+  <!-- Power off a drive considered a "system device" -->
+  <action id="org.freedesktop.udisks2.power-off-drive-system">
+    <_description>Power off a system drive</_description>
+    <_message>Authentication is required to power off a drive</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <!-- Power off a a drive attached to another seat -->
+  <action id="org.freedesktop.udisks2.power-off-drive-other-seat">
+    <_description>Power off a drive attached to another seat</_description>
+    <_message>Authentication is required to power off a drive plugged into another seat</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <!-- ###################################################################### -->
   <!-- Eject media from a drive -->
 
   <action id="org.freedesktop.udisks2.eject-media">

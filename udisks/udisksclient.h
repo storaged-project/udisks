@@ -84,6 +84,9 @@ UDisksLoop         *udisks_client_get_loop_for_block  (UDisksClient  *client,
 GList              *udisks_client_get_partitions      (UDisksClient        *client,
                                                        UDisksPartitionTable *table);
 
+GList              *udisks_client_get_drive_siblings  (UDisksClient       *client,
+                                                       UDisksDrive        *drive);
+
 GList              *udisks_client_get_jobs_for_object (UDisksClient        *client,
                                                        UDisksObject        *object);
 

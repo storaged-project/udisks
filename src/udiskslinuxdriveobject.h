@@ -43,6 +43,8 @@ UDisksLinuxDevice      *udisks_linux_drive_object_get_device    (UDisksLinuxDriv
 UDisksLinuxBlockObject *udisks_linux_drive_object_get_block     (UDisksLinuxDriveObject   *object,
                                                                  gboolean                  get_hw);
 
+GList                  *udisks_linux_drive_object_get_siblings  (UDisksLinuxDriveObject   *object);
+
 gboolean                udisks_linux_drive_object_housekeeping  (UDisksLinuxDriveObject   *object,
                                                                  guint                     secs_since_last,
                                                                  GCancellable             *cancellable,
@@ -55,6 +57,7 @@ gboolean                udisks_linux_drive_object_is_not_in_use (UDisksLinuxDriv
 gboolean                udisks_linux_drive_object_should_include_device (GUdevClient        *client,
                                                                          UDisksLinuxDevice  *device,
                                                                          gchar             **out_vpd);
+
 
 G_END_DECLS
 

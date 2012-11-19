@@ -1061,3 +1061,55 @@ udisks_linux_drive_object_is_not_in_use (UDisksLinuxDriveObject   *object,
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_linux_drive_object_get_siblings:
+ * @object: A #UDisksLinuxDriveObject.
+ *
+ * Gets the siblings for @object, if any.
+ *
+ * Returns: (transfer full) (element-type UDisksLinuxDriveObject): A list of #UDisksLinuxDriveObject
+ *   instances. The returned list should be freed with g_list_free() after each element has been
+ *   freed with g_object_unref().
+ */
+GList *
+udisks_linux_drive_object_get_siblings (UDisksLinuxDriveObject *object)
+{
+  GDBusObjectManagerServer *object_manager;
+  GList *ret = NULL;
+  GList *objects, *l;
+  gchar *sibling_id = NULL;
+
+  if (object->iface_drive == NULL)
+    goto out;
+
+  sibling_id = udisks_drive_dup_sibling_id (object->iface_drive);
+  if (sibling_id == NULL || strlen (sibling_id) == 0)
+    goto out;
+
+  object_manager = udisks_daemon_get_object_manager (object->daemon);
+  objects = g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (object_manager));
+  for (l = objects; l != NULL; l = l->next)
+    {
+      GDBusObjectSkeleton *iter_object = G_DBUS_OBJECT_SKELETON (l->data);
+      UDisksLinuxDriveObject *iter_linux_drive_object;
+
+      if (!UDISKS_IS_LINUX_DRIVE_OBJECT (iter_object))
+        continue;
+
+      iter_linux_drive_object = UDISKS_LINUX_DRIVE_OBJECT (iter_object);
+      if (iter_linux_drive_object->iface_drive != NULL &&
+          g_strcmp0 (udisks_drive_get_sibling_id (iter_linux_drive_object->iface_drive), sibling_id) == 0)
+        {
+          ret = g_list_prepend (ret, g_object_ref (iter_object));
+        }
+    }
+
+ out:
+  ret = g_list_reverse (ret);
+  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+  g_list_free (objects);
+  g_free (sibling_id);
+  return ret;
+}
+

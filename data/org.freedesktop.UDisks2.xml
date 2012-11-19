@@ -380,6 +380,54 @@
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
+    <!--
+        PowerOff:
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @since: 2.1
+
+        Arranges for the drive to be safely removed and powered
+        off. On the OS side this includes ensuring that no process is
+        using the drive, then requesting that in-flight buffers and
+        caches are committed to stable storage. The exact steps for
+        powering off the drive depends on the drive itself and the
+        interconnect used. For drives connected through USB, the
+        effect is that the USB device will be deconfigured followed by
+        disabling the upstream hub port it is connected to.
+
+        Note that as some physical devices contain multiple drives
+        (for example 4-in-1 flash card reader USB devices) powering
+        off one drive may affect other drives. Applications can
+        examine the #org.freedesktop.UDisks2.Drive:SiblingId property
+        to determine such relationships.
+
+        There are not a lot of guarantees associated with this method
+        so it should only be called in response to an user
+        action. Usually the effect is that the drive disappears as if
+        it was unplugged.
+
+        This method only works if the
+        #org.freedesktop.UDisks2.Drive:CanPowerOff property
+        is set to %TRUE.
+    -->
+    <method name="PowerOff">
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!-- CanPowerOff:
+         @since: 2.1
+         Whether the drive can be safely removed / powered off. See
+         the org.freedesktop.UDisks2.Drive.PowerOff() method for more
+         information.
+    -->
+    <property name="CanPowerOff" type="b" access="read"/>
+
+    <!-- SiblingId:
+         @since: 2.1
+         An opaque token that, if non-blank, is used to group drives
+         that are part of the same physical device.
+    -->
+    <property name="SiblingId" type="s" access="read"/>
+
   </interface>
 
   <!--

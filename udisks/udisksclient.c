@@ -1221,6 +1221,61 @@ udisks_client_get_cleartext_block (UDisksClient  *client,
 /* ---------------------------------------------------------------------------------------------------- */
 
 /**
+ * udisks_client_get_drive_siblings:
+ * @client: A #UDisksClient
+ * @drive: A #UDisksDrive.
+ *
+ * Gets all siblings for @drive.
+ *
+ * Returns: (transfer full) (element-type UDisksDrive): A list of #UDisksDrive instances. The
+ *   returned list should be freed with g_list_free() after each element has been
+ *   freed with g_object_unref().
+ *
+ * Since: 2.1
+ */
+GList *
+udisks_client_get_drive_siblings  (UDisksClient  *client,
+                                   UDisksDrive   *drive)
+{
+  GList *ret = NULL;
+  const gchar *sibling_id = NULL;
+  GList *l, *object_proxies = NULL;
+
+  g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
+  g_return_val_if_fail (UDISKS_IS_DRIVE (drive), NULL);
+
+  sibling_id = udisks_drive_get_sibling_id (drive);
+  if (sibling_id == NULL || strlen (sibling_id) == 0)
+    goto out;
+
+  object_proxies = g_dbus_object_manager_get_objects (client->object_manager);
+  for (l = object_proxies; l != NULL; l = l->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksDrive *iter_drive;
+
+      iter_drive = udisks_object_get_drive (object);
+      if (iter_drive == NULL)
+        continue;
+
+      if (iter_drive != drive &&
+          g_strcmp0 (udisks_drive_get_sibling_id (iter_drive), sibling_id) == 0)
+        {
+          ret = g_list_prepend (ret, g_object_ref (iter_drive));
+        }
+
+      g_object_unref (iter_drive);
+    }
+  ret = g_list_reverse (ret);
+ out:
+  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
+  g_list_free (object_proxies);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
  * udisks_client_get_partitions:
  * @client: A #UDisksClient.
  * @table: A #UDisksPartitionTable.
