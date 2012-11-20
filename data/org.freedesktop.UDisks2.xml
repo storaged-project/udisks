@@ -608,6 +608,7 @@
         SmartSetEnabled:
         @value: %TRUE to enable SMART, %FALSE to disable SMART.
         @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+        @since: 2.1
 
         Sets whether SMART is enabled for the drive. This setting is
         stored in the non-volatile memory in the drive itself and does
