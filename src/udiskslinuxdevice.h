@@ -50,8 +50,11 @@ struct _UDisksLinuxDevice
   guchar *ata_identify_packet_device_data;
 };
 
-GType              udisks_linux_device_get_type (void) G_GNUC_CONST;
-UDisksLinuxDevice *udisks_linux_device_new_sync (GUdevDevice *udev_device);
+GType              udisks_linux_device_get_type     (void) G_GNUC_CONST;
+UDisksLinuxDevice *udisks_linux_device_new_sync     (GUdevDevice *udev_device);
+gboolean           udisks_linux_device_reprobe_sync (UDisksLinuxDevice  *device,
+                                                     GCancellable       *cancellable,
+                                                     GError            **error);
 
 G_END_DECLS
 

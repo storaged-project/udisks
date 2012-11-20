@@ -91,6 +91,7 @@ udisks_linux_device_class_init (UDisksLinuxDeviceClass *klass)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean probe_ata (UDisksLinuxDevice  *device,
+                           GCancellable       *cancellable,
                            GError            **error);
 
 /**
@@ -119,14 +120,8 @@ udisks_linux_device_new_sync (GUdevDevice *udev_device)
   /* No point in probing on remove events */
   if (!(g_strcmp0 (g_udev_device_get_action (udev_device), "remove") == 0))
     {
-      /* Get IDENTIFY DEVICE / IDENTIFY PACKET DEVICE data for ATA devices */
-      if (g_strcmp0 (g_udev_device_get_subsystem (device->udev_device), "block") == 0 &&
-          g_strcmp0 (g_udev_device_get_devtype (device->udev_device), "disk") == 0 &&
-          g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA"))
-        {
-          if (!probe_ata (device, &error))
-            goto out;
-        }
+      if (!udisks_linux_device_reprobe_sync (device, NULL, &error))
+        goto out;
     }
 
  out:
@@ -140,11 +135,47 @@ udisks_linux_device_new_sync (GUdevDevice *udev_device)
   return device;
 }
 
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_linux_device_reprobe_sync:
+ * @device: A #UDisksLinuxDevice.
+ * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @error: Return location for error or %NULL.
+ *
+ * Forcibly reprobe information on @device. The calling thread may be
+ * blocked for a non-trivial amount of time while the probing is
+ * underway.
+ *
+ * Returns: %TRUE if reprobing succeeded, %FALSE otherwise.
+ */
+gboolean
+udisks_linux_device_reprobe_sync (UDisksLinuxDevice  *device,
+                                  GCancellable       *cancellable,
+                                  GError            **error)
+{
+  gboolean ret = FALSE;
+
+  /* Get IDENTIFY DEVICE / IDENTIFY PACKET DEVICE data for ATA devices */
+  if (g_strcmp0 (g_udev_device_get_subsystem (device->udev_device), "block") == 0 &&
+      g_strcmp0 (g_udev_device_get_devtype (device->udev_device), "disk") == 0 &&
+      g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA"))
+    {
+      if (!probe_ata (device, cancellable, error))
+        goto out;
+    }
+
+  ret = TRUE;
+
+ out:
+  return ret;
+}
 
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
 probe_ata (UDisksLinuxDevice  *device,
+           GCancellable       *cancellable,
            GError            **error)
 {
   const gchar *device_file;
@@ -167,9 +198,8 @@ probe_ata (UDisksLinuxDevice  *device,
   if (ioctl (fd, CDROM_GET_CAPABILITY, NULL) == -1)
     {
       /* ATA8: 7.16 IDENTIFY DEVICE - ECh, PIO Data-In */
-      device->ata_identify_device_data = g_new0 (guchar, 512);
       input.command = 0xec;
-      output.buffer = device->ata_identify_device_data;
+      output.buffer = g_new0 (guchar, 512);
       output.buffer_size = 512;
       if (!udisks_ata_send_command_sync (fd,
                                          -1,
@@ -178,18 +208,20 @@ probe_ata (UDisksLinuxDevice  *device,
                                          &output,
                                          error))
         {
+          g_free (output.buffer);
           g_prefix_error (error, "Error sending ATA command IDENTIFY DEVICE to %s: ",
                           device_file);
           goto out;
         }
+      g_free (device->ata_identify_device_data);
+      device->ata_identify_device_data = output.buffer;
       /* udisks_daemon_util_hexdump_debug (device->ata_identify_device_data, 512); */
     }
   else
     {
       /* ATA8: 7.17 IDENTIFY PACKET DEVICE - A1h, PIO Data-In */
-      device->ata_identify_packet_device_data = g_new0 (guchar, 512);
       input.command = 0xa1;
-      output.buffer = device->ata_identify_packet_device_data;
+      output.buffer = g_new0 (guchar, 512);
       output.buffer_size = 512;
       if (!udisks_ata_send_command_sync (fd,
                                          -1,
@@ -198,10 +230,13 @@ probe_ata (UDisksLinuxDevice  *device,
                                          &output,
                                          error))
         {
+          g_free (output.buffer);
           g_prefix_error (error, "Error sending ATA command IDENTIFY PACKET DEVICE to %s: ",
                           device_file);
           goto out;
         }
+      g_free (device->ata_identify_packet_device_data);
+      device->ata_identify_packet_device_data = output.buffer;
       /* udisks_daemon_util_hexdump_debug (device->ata_identify_packet_device_data, 512); */
     }
 
