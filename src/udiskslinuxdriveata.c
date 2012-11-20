@@ -176,7 +176,7 @@ update_smart (UDisksLinuxDriveAta *drive,
   enabled = word_85 & (1<<0);
 
   G_LOCK (object_lock);
-  if (drive->smart_updated > 0)
+  if ((drive->smart_is_from_blob || enabled) && drive->smart_updated > 0)
     {
       if (drive->smart_is_from_blob)
         supported = enabled = TRUE;
@@ -2355,7 +2355,34 @@ handle_smart_set_enabled (UDisksDriveAta        *_drive,
       }
   }
 
-  udisks_linux_block_object_trigger_uevent (block_object);
+  /* Reread new IDENTIFY data */
+  if (!udisks_linux_device_reprobe_sync (device, NULL, &error))
+    {
+      g_prefix_error (&error, "Error reprobing device: ");
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* if we just enabled SMART, re-read SMART data before returning */
+  if (value)
+    {
+      if (!udisks_linux_drive_ata_refresh_smart_sync (drive,
+                                                      FALSE, /* nowakeup */
+                                                      NULL, /* simulate_path */
+                                                      NULL, /* cancellable */
+                                                      &error))
+        {
+          g_prefix_error (&error, "Error updating SMART data: ");
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
+    }
+  else
+    {
+      update_smart (drive, device);
+    }
+  /* ensure property changes are sent before the method return */
+  g_dbus_interface_skeleton_flush (G_DBUS_INTERFACE_SKELETON (drive));
 
   udisks_drive_ata_complete_smart_set_enabled (_drive, invocation);
 
