@@ -357,6 +357,7 @@
   <part id="ref-library">
     <title>Library API Reference</title>
       <xi:include href="xml/udisksclient.xml"/>
+      <xi:include href="xml/udisksobjectinfo.xml"/>
       <xi:include href="xml/udiskserror.xml"/>
     <chapter id="ref-library-generated">
       <title>Generated Code</title>

@@ -171,65 +171,6 @@ struct _UDisksPartitionTypeInfo
 GType                udisks_partition_type_info_get_type   (void) G_GNUC_CONST;
 void                 udisks_partition_type_info_free       (UDisksPartitionTypeInfo  *info);
 
-/**
- * UDisksObjectInfo:
- * @object: The #UDisksObject that the information is for.
- * @name: (allow-none): An name for the object or %NULL.
- * @description: (allow-none): A description for the object or %NULL.
- * @icon: (allow-none): An icon for the object or %NULL.
- * @icon_symbolic: (allow-none): A symbolic icon for the object or %NULL.
- * @media_description: (allow-none): An icon for the media of the object or %NULL.
- * @media_icon: (allow-none): An icon for the media for the object or %NULL.
- * @media_icon_symbolic: (allow-none): A symbolic icon for the media for the object or %NULL.
- * @one_liner: (allow-none): A one-line description of the object or %NULL.
- *
- * Detailed information about the D-Bus interfaces (such as
- * #UDisksBlock and #UDisksDrive) on a #UDisksObject that is suitable
- * to display in an user interface. Use
- * udisks_client_get_object_info() to get an instance and
- * udisks_object_info_unref() to free it.
- *
- * The
- * <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.HintName">HintName</link>
- * and/or
- * <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.HintName">HintIconName</link>
- * propreties on associated #UDisksBlock interfaces (if any) may influence
- * the @icon and @media_icon fields.
- *
- * The @media_description, @media_icon and @media_icon_symbolic fields
- * are only set for #UDisksDrive interfaces where the drive has
- * removable media.
- *
- * The @one_liner field is designed to contain enough information such
- * that it is all that needs to be shown about the object. As a result
- * for e.g.  block devices or drives it contains the special device
- * device e.g. <filename>/dev/sda</filename>.
- *
- * This struct may grow in the future without it being considered an
- * ABI break.
- *
- * Since: 2.1
- */
-struct _UDisksObjectInfo
-{
-  /*< private >*/
-  volatile gint ref_count;
-  /*< public >*/
-  UDisksObject *object;
-  gchar *name;
-  gchar *description;
-  GIcon *icon;
-  GIcon *icon_symbolic;
-  gchar *media_description;
-  GIcon *media_icon;
-  GIcon *media_icon_symbolic;
-  gchar *one_liner;
-};
-
-GType              udisks_object_info_get_type   (void) G_GNUC_CONST;
-UDisksObjectInfo  *udisks_object_info_ref        (UDisksObjectInfo  *info);
-void               udisks_object_info_unref      (UDisksObjectInfo  *info);
-
 G_END_DECLS
 
 #endif /* __UDISKS_CLIENT_H__ */

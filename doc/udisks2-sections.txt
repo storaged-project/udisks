@@ -55,10 +55,6 @@ udisks_client_get_mdraid_for_block
 udisks_client_get_object_info
 udisks_client_get_drive_info
 <SUBSECTION>
-UDisksObjectInfo
-udisks_object_info_ref
-udisks_object_info_unref
-<SUBSECTION>
 udisks_client_get_partition_info
 <SUBSECTION>
 udisks_client_get_size_for_display
@@ -84,6 +80,27 @@ udisks_client_get_type
 udisks_object_info_get_type
 udisks_partition_type_info_get_type
 udisks_partition_type_info_flags_get_type
+</SECTION>
+
+<SECTION>
+<FILE>udisksobjectinfo</FILE>
+<TITLE>UDisksObjectInfo</TITLE>
+UDisksObjectInfo
+udisks_object_info_get_object
+udisks_object_info_get_name
+udisks_object_info_get_description
+udisks_object_info_get_icon
+udisks_object_info_get_icon_symbolic
+udisks_object_info_get_media_description
+udisks_object_info_get_media_icon
+udisks_object_info_get_media_icon_symbolic
+udisks_object_info_get_one_liner
+<SUBSECTION Standard>
+UDISKS_TYPE_OBJECT_INFO
+UDISKS_OBJECT_INFO
+UDISKS_IS_OBJECT_INFO
+<SUBSECTION Private>
+udisks_object_info_get_type
 </SECTION>
 
 <SECTION>

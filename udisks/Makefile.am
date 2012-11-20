@@ -66,6 +66,7 @@ libudisks2includedir=$(includedir)/udisks2/udisks
 libudisks2include_HEADERS=								\
 	udisks.h									\
 	udisksclient.h									\
+	udisksobjectinfo.h								\
 	udisksenums.h									\
 	udisksenumtypes.h								\
 	udiskserror.h									\
@@ -77,6 +78,7 @@ libudisks2include_HEADERS=								\
 libudisks2_la_SOURCES =									\
 	$(BUILT_SOURCES)								\
 	udisksclient.h				udisksclient.c				\
+	udisksobjectinfo.h			udisksobjectinfo.c			\
 	udisksenums.h									\
 	udiskserror.h				udiskserror.c				\
 	udiskstypes.h									\

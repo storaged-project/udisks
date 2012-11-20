@@ -28,6 +28,7 @@
 #include <udisks/udiskserror.h>
 #include <udisks/udisks-generated.h>
 #include <udisks/udisksclient.h>
+#include <udisks/udisksobjectinfo.h>
 #include <udisks/udisksversion.h>
 #undef __UDISKS_INSIDE_UDISKS_H__
 
