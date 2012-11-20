@@ -2584,7 +2584,7 @@ udisks_client_get_object_info_for_block (UDisksClient     *client,
    *              The first %s is the description of the object (e.g. "50 GB Block Device").
    *              The second %s is the special device file (e.g. "/dev/sda2").
    */
-  info->one_liner = g_strdup_printf (C_("one-liner-block", "%s — %s"),
+  info->one_liner = g_strdup_printf (C_("one-liner-block", "%s (%s)"),
                                      info->description,
                                      udisks_block_get_preferred_device (block));
 }
@@ -2635,7 +2635,7 @@ udisks_client_get_object_info_for_loop (UDisksClient     *client,
    *              The second %s is the name of the backing file (e.g. "/home/davidz/file.iso").
    *              The third %s is the special device file (e.g. "/dev/loop2").
    */
-  info->one_liner = g_strdup_printf (C_("one-liner-loop", "%s — %s — %s"),
+  info->one_liner = g_strdup_printf (C_("one-liner-loop", "%s — %s (%s)"),
                                      info->description,
                                      info->name,
                                      udisks_block_get_preferred_device (block));
@@ -2731,7 +2731,7 @@ udisks_client_get_object_info_for_mdraid (UDisksClient     *client,
            *              The second %s is the size and level (e.g. "2 TB RAID-5").
            *              The third %s is the special device file (e.g. "/dev/sda").
            */
-          info->one_liner = g_strdup_printf (C_("one-liner-mdraid-running", "%s — %s — %s"),
+          info->one_liner = g_strdup_printf (C_("one-liner-mdraid-running", "%s — %s (%s)"),
                                              info->name,
                                              info->description,
                                              udisks_block_get_preferred_device (block));
@@ -3087,7 +3087,7 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
            *              The third %s is the fw revision (e.g "45ABX21").
            *              The fourth %s is the special device file (e.g. "/dev/sda").
            */
-          info->one_liner = g_strdup_printf (C_("one-liner-drive", "%s — %s (%s) — %s"),
+          info->one_liner = g_strdup_printf (C_("one-liner-drive", "%s — %s [%s] (%s)"),
                                              info->description,
                                              info->name,
                                              drive_revision,
@@ -3100,7 +3100,7 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
            *              The second %s is the name of the object (e.g. "INTEL SSDSA2MH080G1GC").
            *              The third %s is the special device file (e.g. "/dev/sda").
            */
-          info->one_liner = g_strdup_printf (C_("one-liner-drive", "%s — %s — %s"),
+          info->one_liner = g_strdup_printf (C_("one-liner-drive", "%s — %s (%s)"),
                                              info->description,
                                              info->name,
                                              udisks_block_get_preferred_device (block_for_partition));
