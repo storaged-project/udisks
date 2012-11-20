@@ -616,7 +616,7 @@
         connected.
 
         Since this may require authentication and thus may fail, it is
-        a implemented this way instead of the
+        implemented this way instead of the
         #org.freedesktop.UDisks2.Drive.Ata:SmartEnabled property being
         writable.
     -->
@@ -1683,8 +1683,8 @@
 
         Setter for the #org.freedesktop.UDisks2.Loop:Autoclear
         property. Since this may require authentication and thus may
-        fail, it is a implemented this way instead of the property
-        being writable.
+        fail, it is implemented this way instead of the property being
+        writable.
     -->
     <method name="SetAutoclear">
       <arg name="value" direction="in" type="b"/>
