@@ -360,11 +360,12 @@ update_hints (UDisksLinuxBlock  *block,
         }
     }
 
-  /* Floppy drives are not partitionable */
+  /* Floppy drives are not partitionable and should never be auto-mounted */
   if (g_str_has_prefix (device_file, "/dev/fd"))
     {
       hint_system = FALSE;
       hint_partitionable = FALSE;
+      hint_auto = FALSE;
     }
 
   /* CD-ROM media / drives are not partitionable, at least not here on Linux */
