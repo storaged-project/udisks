@@ -792,6 +792,32 @@
     <!-- DeviceNumber: The dev_t of the block device. -->
     <property name="DeviceNumber" type="t" access="read"/>
 
+    <!-- Id:
+         @since: 2.1
+         A unique and persistent identifier for the device or blank if
+         no such identifier is available.
+
+         For devices with fixed media, this identifier is derived from
+         vital product data / UUIDs / serial numbers of the drive or
+         construct (e.g. LVM or MD-RAID) the block device is part
+         of. For devices with removable media, this identifier is
+         derived from the medium currently inserted.
+
+         This identifier is guaranteed to not include the slash
+         character '/' (U+002F SOLIDUS) which means it can be used as
+         a filename.
+
+         Examples:
+         <quote>by-id-ata-INTEL_SSDSA2MH080G1GC_CVEM842101HD080DGN</quote>,
+         <quote>by-id-ata-ST1000LM024_HN-M101MBB_S2TBJA0C230233-part3</quote>,
+         <quote>by-id-usb-Kingston_DataTraveler_2.0_0013729940C4F9A166250D3E-0:0</quote>,
+         <quote>by-id-dm-name-luks-6d81fe85-26b1-4f8b-b834-405454c1cd46</quote>,
+         <quote>by-id-dm-name-vg_thinkpad-lv_swap</quote>,
+         <quote>by-label-HARRY_POTTER_SORCERERS_STONE-</quote>,
+         <quote>by-uuid-D22D-08B8</quote>.
+    -->
+    <property name="Id" type="s" access="read"/>
+
     <!-- Size: The size of the block device. -->
     <property name="Size" type="t" access="read"/>
 

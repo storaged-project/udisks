@@ -1103,6 +1103,7 @@ udisks_block_get_id_uuid
 udisks_block_get_id_version
 udisks_block_get_device_number
 udisks_block_get_preferred_device
+udisks_block_get_id
 udisks_block_get_size
 udisks_block_get_read_only
 udisks_block_get_symlinks
@@ -1124,6 +1125,7 @@ udisks_block_dup_id_usage
 udisks_block_dup_id_uuid
 udisks_block_dup_id_version
 udisks_block_dup_preferred_device
+udisks_block_dup_id
 udisks_block_dup_symlinks
 udisks_block_dup_hint_name
 udisks_block_dup_hint_icon_name
@@ -1140,6 +1142,7 @@ udisks_block_set_id_uuid
 udisks_block_set_id_version
 udisks_block_set_device_number
 udisks_block_set_preferred_device
+udisks_block_set_id
 udisks_block_set_size
 udisks_block_set_read_only
 udisks_block_set_symlinks

@@ -719,10 +719,13 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
   const gchar *device_file;
   const gchar *const *symlinks;
   const gchar *preferred_device_file;
+  const gchar *id_device_file;
+  gboolean media_removable = FALSE;
   guint64 size;
   gboolean media_available;
   gboolean media_change_detected;
   gboolean read_only;
+  guint n;
 
   drive = NULL;
 
@@ -792,7 +795,6 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
   preferred_device_file = NULL;
   if (g_str_has_prefix (device_file, "/dev/dm-"))
     {
-      guint n;
       const gchar *dm_name;
       gchar *dm_name_dev_file = NULL;
       const gchar *dm_name_dev_file_as_symlink = NULL;
@@ -825,7 +827,6 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
       md_name = g_udev_device_get_property (device->udev_device, "MD_NAME");
       if (md_name != NULL)
         {
-          guint n;
           gchar *md_name_dev_file = NULL;
           const gchar *sep;
           const gchar *md_name_dev_file_as_symlink = NULL;
@@ -867,6 +868,65 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
   else
     {
       udisks_block_set_drive (iface, "/");
+    }
+
+  if (drive != NULL)
+    media_removable = udisks_drive_get_media_removable (drive);
+
+  id_device_file = NULL;
+  if (media_removable)
+    {
+      /* Drive with removable media: determine id by finding a
+       * suitable /dev/disk/by-uuid symlink (fall back to
+       * /dev/disk/by-label)
+       *
+       * TODO: add features to ata_id / cdrom_id in systemd to extract
+       *       medium identiers (at optical discs have these) and add
+       *       udev rules to create symlinks in something like
+       *       /dev/disk/by-medium. Then use said symlinks to for the
+       *       id_device_file
+       */
+      for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
+        {
+          if (g_str_has_prefix (symlinks[n], "/dev/disk/by-uuid/"))
+            {
+              id_device_file = symlinks[n];
+              break;
+            }
+          else if (g_str_has_prefix (symlinks[n], "/dev/disk/by-label/"))
+            {
+              id_device_file = symlinks[n];
+            }
+        }
+    }
+  else
+    {
+      /* Drive without removable media: determine id by finding a
+       * suitable /dev/disk/by-id symlink
+       */
+      for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
+        {
+          if (g_str_has_prefix (symlinks[n], "/dev/disk/by-id/"))
+            {
+              id_device_file = symlinks[n];
+              break;
+            }
+        }
+    }
+  if (id_device_file != NULL)
+    {
+      gchar *id = g_strdup (id_device_file + strlen ("/dev/disk/"));
+      for (n = 0; id[n] != '\0'; n++)
+        {
+          if (id[n] == '/' || id[n] == ' ')
+            id[n] = '-';
+        }
+      udisks_block_set_id (iface, id);
+      g_free (id);
+    }
+  else
+    {
+      udisks_block_set_id (iface, NULL);
     }
 
   udisks_block_set_id_usage (iface, g_udev_device_get_property (device->udev_device, "ID_FS_USAGE"));
