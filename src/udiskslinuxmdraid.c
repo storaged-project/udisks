@@ -897,9 +897,11 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
 {
   UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (_mdraid);
   UDisksDaemon *daemon;
+  UDisksCleanup *cleanup;
   UDisksLinuxMDRaidObject *object;
   const gchar *action_id;
   const gchar *message;
+  uid_t started_by_uid;
   uid_t caller_uid;
   gid_t caller_gid;
   UDisksLinuxDevice *raid_device = NULL;
@@ -922,6 +924,7 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
     }
 
   daemon = udisks_linux_mdraid_object_get_daemon (object);
+  cleanup = udisks_daemon_get_cleanup (daemon);
 
   g_variant_lookup (options, "wipe", "b", &opt_wipe);
 
@@ -971,19 +974,30 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
       goto out;
     }
 
-  /* Translators: Shown in authentication dialog when the user
-   * attempts to remove a device from a RAID Array.
-   */
-  /* TODO: variables */
-  message = N_("Authentication is required to remove a device from a RAID array");
-  action_id = "org.freedesktop.udisks2.manage-md-raid";
-  if (!udisks_daemon_util_check_authorization_sync (daemon,
-                                                    UDISKS_OBJECT (object),
-                                                    action_id,
-                                                    options,
-                                                    message,
-                                                    invocation))
-    goto out;
+  if (!udisks_cleanup_has_mdraid (cleanup,
+                                  g_udev_device_get_device_number (raid_device->udev_device),
+                                  &started_by_uid))
+    {
+      /* allow stopping arrays stuff not mentioned in mounted-fs, but treat it like root mounted it */
+      started_by_uid = 0;
+    }
+
+  if (caller_uid != 0 && (caller_uid != started_by_uid))
+    {
+      /* Translators: Shown in authentication dialog when the user
+       * attempts to remove a device from a RAID Array.
+       */
+      /* TODO: variables */
+      message = N_("Authentication is required to remove a device from a RAID array");
+      action_id = "org.freedesktop.udisks2.manage-md-raid";
+      if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                        UDISKS_OBJECT (object),
+                                                        action_id,
+                                                        options,
+                                                        message,
+                                                        invocation))
+        goto out;
+    }
 
   device_file = g_udev_device_get_device_file (raid_device->udev_device);
   escaped_device_file = udisks_daemon_util_escape_and_quote (device_file);
