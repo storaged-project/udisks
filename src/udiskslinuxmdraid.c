@@ -557,6 +557,7 @@ handle_start (UDisksMDRaid           *_mdraid,
 {
   UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (_mdraid);
   UDisksDaemon *daemon;
+  UDisksCleanup *cleanup;
   UDisksLinuxMDRaidObject *object;
   const gchar *action_id;
   const gchar *message;
@@ -570,6 +571,8 @@ handle_start (UDisksMDRaid           *_mdraid,
   gchar *error_message = NULL;
   GList *member_devices = NULL, *l;
   gboolean opt_start_degraded = FALSE;
+  struct stat statbuf;
+  dev_t raid_device_num;
 
   object = udisks_daemon_util_dup_object (mdraid, &error);
   if (object == NULL)
@@ -579,6 +582,7 @@ handle_start (UDisksMDRaid           *_mdraid,
     }
 
   daemon = udisks_linux_mdraid_object_get_daemon (object);
+  cleanup = udisks_daemon_get_cleanup (daemon);
 
   g_variant_lookup (options, "start-degraded", "b", &opt_start_degraded);
 
@@ -671,9 +675,34 @@ handle_start (UDisksMDRaid           *_mdraid,
       goto out;
     }
 
-  /* TODO: wait for array to actually show up? */
+  if (stat (raid_device_file, &statbuf) != 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error calling stat(2) on %s: %m",
+                                             raid_device_file);
+      goto out;
+    }
+  if (!S_ISBLK (statbuf.st_mode))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Device file %s is not a block device",
+                                             raid_device_file);
+      goto out;
+    }
+  raid_device_num = statbuf.st_rdev;
 
-  udisks_mdraid_complete_stop (_mdraid, invocation);
+  /* update the mdraid file */
+  udisks_cleanup_add_mdraid (cleanup,
+                             raid_device_num,
+                             caller_uid);
+
+  /* TODO: wait for array to actually show up in udisks? Probably */
+
+  udisks_mdraid_complete_start (_mdraid, invocation);
 
  out:
   g_list_free_full (member_devices, g_object_unref);
@@ -694,9 +723,9 @@ handle_stop (UDisksMDRaid           *_mdraid,
 {
   UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (_mdraid);
   UDisksDaemon *daemon;
+  UDisksCleanup *cleanup;
   UDisksLinuxMDRaidObject *object;
-  const gchar *action_id;
-  const gchar *message;
+  uid_t started_by_uid;
   uid_t caller_uid;
   gid_t caller_gid;
   UDisksLinuxDevice *raid_device = NULL;
@@ -713,6 +742,7 @@ handle_stop (UDisksMDRaid           *_mdraid,
     }
 
   daemon = udisks_linux_mdraid_object_get_daemon (object);
+  cleanup = udisks_daemon_get_cleanup (daemon);
 
   error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
@@ -736,19 +766,33 @@ handle_stop (UDisksMDRaid           *_mdraid,
       goto out;
     }
 
-  /* Translators: Shown in authentication dialog when the user
-   * attempts to stop a RAID Array.
-   */
-  /* TODO: variables */
-  message = N_("Authentication is required to stop a RAID array");
-  action_id = "org.freedesktop.udisks2.manage-md-raid";
-  if (!udisks_daemon_util_check_authorization_sync (daemon,
-                                                    UDISKS_OBJECT (object),
-                                                    action_id,
-                                                    options,
-                                                    message,
-                                                    invocation))
-    goto out;
+  if (!udisks_cleanup_has_mdraid (cleanup,
+                                  g_udev_device_get_device_number (raid_device->udev_device),
+                                  &started_by_uid))
+    {
+      /* allow stopping arrays stuff not mentioned in mounted-fs, but treat it like root mounted it */
+      started_by_uid = 0;
+    }
+
+  if (caller_uid != 0 && (caller_uid != started_by_uid))
+    {
+      const gchar *action_id;
+      const gchar *message;
+
+      /* Translators: Shown in authentication dialog when the user
+       * attempts to stop a RAID Array.
+       */
+      /* TODO: variables */
+      message = N_("Authentication is required to stop a RAID array");
+      action_id = "org.freedesktop.udisks2.manage-md-raid";
+      if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                        UDISKS_OBJECT (object),
+                                                        action_id,
+                                                        options,
+                                                        message,
+                                                        invocation))
+        goto out;
+    }
 
   device_file = g_udev_device_get_device_file (raid_device->udev_device);
   escaped_device_file = udisks_daemon_util_escape_and_quote (g_udev_device_get_device_file (raid_device->udev_device));

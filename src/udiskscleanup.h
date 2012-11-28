@@ -74,6 +74,16 @@ gboolean         udisks_cleanup_has_loop      (UDisksCleanup   *cleanup,
                                                const gchar     *device_file,
                                                uid_t           *out_uid);
 
+/* mdraid */
+
+void             udisks_cleanup_add_mdraid (UDisksCleanup   *cleanup,
+                                            dev_t            raid_device,
+                                            uid_t            uid);
+
+gboolean         udisks_cleanup_has_mdraid (UDisksCleanup   *cleanup,
+                                            dev_t            raid_device,
+                                            uid_t           *out_uid);
+
 G_END_DECLS
 
 #endif /* __UDISKS_CLEANUP_H__ */

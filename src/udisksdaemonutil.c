@@ -400,6 +400,20 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
       g_object_unref (crypto_object);
     }
 
+  /* MDRaid devices */
+  if (g_strcmp0 (udisks_block_get_mdraid (block), "/") != 0)
+    {
+      uid_t started_by_user;
+      if (udisks_cleanup_has_mdraid (cleanup, udisks_block_get_device_number (block), &started_by_user))
+        {
+          if (started_by_user == user)
+            {
+              ret = TRUE;
+              goto out;
+            }
+        }
+    }
+
  out:
   g_clear_object (&partition);
   g_clear_object (&block);

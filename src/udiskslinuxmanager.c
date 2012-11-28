@@ -547,6 +547,8 @@ handle_mdraid_create (UDisksManager         *_object,
   gint status;
   gchar *error_message = NULL;
   gchar *raid_device_file = NULL;
+  struct stat statbuf;
+  dev_t raid_device_num;
 
   error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (manager->daemon, invocation, NULL /* GCancellable */, &caller_uid, NULL, NULL, &error))
@@ -776,6 +778,31 @@ handle_mdraid_create (UDisksManager         *_object,
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
+
+  if (stat (raid_device_file, &statbuf) != 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error calling stat(2) on %s: %m",
+                                             raid_device_file);
+      goto out;
+    }
+  if (!S_ISBLK (statbuf.st_mode))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Device file %s is not a block device",
+                                             raid_device_file);
+      goto out;
+    }
+  raid_device_num = statbuf.st_rdev;
+
+  /* update the mdraid file */
+  udisks_cleanup_add_mdraid (udisks_daemon_get_cleanup (manager->daemon),
+                             raid_device_num,
+                             caller_uid);
 
   /* ... wipe the created RAID array */
   if (!udisks_daemon_launch_spawned_job_sync (manager->daemon,

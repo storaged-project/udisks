@@ -351,6 +351,9 @@ udisks_cleanup_find_unlocked_luks
 <SUBSECTION>
 udisks_cleanup_add_loop
 udisks_cleanup_has_loop
+<SUBSECTION>
+udisks_cleanup_add_mdraid
+udisks_cleanup_has_mdraid
 <SUBSECTION Standard>
 UDISKS_TYPE_CLEANUP
 UDISKS_CLEANUP

@@ -110,6 +110,17 @@
  *           of the user who set up the loop device.
  *         </entry>
  *       </row>
+ *       <row>
+ *         <entry><filename>/run/udisks2/mdraid</filename></entry>
+ *         <entry>
+ *           A serialized 'a{ta{sv}}' #GVariant mapping from the
+ *           #dev_t of the raid device (e.g. <filename>/dev/md127</filename>) into a set of details.
+ *           Known details include
+ *           <literal>started-by-uid</literal>
+ *           (of type <link linkend="G-VARIANT-TYPE-UINT32:CAPS">'u'</link>) that is the #uid_t
+ *           of the user who started the array.
+ *         </entry>
+ *       </row>
  *     </tbody>
  *   </tgroup>
  * </table>
@@ -172,6 +183,10 @@ static void udisks_cleanup_check_unlocked_luks (UDisksCleanup *cleanup,
 static void udisks_cleanup_check_loop (UDisksCleanup *cleanup,
                                        gboolean       check_only,
                                        GArray        *devs_to_clean);
+
+static void udisks_cleanup_check_mdraid (UDisksCleanup *cleanup,
+                                         gboolean       check_only,
+                                         GArray        *devs_to_clean);
 
 G_DEFINE_TYPE (UDisksCleanup, udisks_cleanup, G_TYPE_OBJECT);
 
@@ -411,6 +426,10 @@ udisks_cleanup_check_in_thread (UDisksCleanup *cleanup)
                              TRUE, /* check_only */
                              devs_to_clean);
 
+  udisks_cleanup_check_mdraid (cleanup,
+                               TRUE, /* check_only */
+                               devs_to_clean);
+
   /* Then go through all mounted filesystems and pass the
    * devices that we intend to clean...
    */
@@ -425,6 +444,10 @@ udisks_cleanup_check_in_thread (UDisksCleanup *cleanup)
   udisks_cleanup_check_loop (cleanup,
                              FALSE, /* check_only */
                              NULL);
+
+  udisks_cleanup_check_mdraid (cleanup,
+                               FALSE, /* check_only */
+                               NULL);
 
   g_array_unref (devs_to_clean);
 
@@ -1872,4 +1895,337 @@ udisks_cleanup_has_loop (UDisksCleanup   *cleanup,
   g_mutex_unlock (&cleanup->lock);
   return ret;
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/* returns TRUE if the entry should be kept */
+static gboolean
+udisks_cleanup_check_mdraid_entry (UDisksCleanup  *cleanup,
+                                   GVariant       *value,
+                                   gboolean        check_only,
+                                   GArray         *devs_to_clean)
+{
+  dev_t raid_device;
+  GVariant *details = NULL;
+  gboolean keep = FALSE;
+  GUdevClient *udev_client;
+  GUdevDevice *device = NULL;
+  const gchar *array_state;
+
+  udev_client = udisks_linux_provider_get_udev_client (udisks_daemon_get_linux_provider (cleanup->daemon));
+
+  g_variant_get (value,
+                 "{t@a{sv}}",
+                 &raid_device,
+                 &details);
+
+  /* check if the RAID device is still set up */
+  device = g_udev_client_query_by_device_number (udev_client, G_UDEV_DEVICE_TYPE_BLOCK, raid_device);
+  if (device == NULL)
+    {
+      udisks_info ("no udev device for raid device %d:%d", major (raid_device), minor (raid_device));
+      goto out;
+    }
+  array_state = g_udev_device_get_sysfs_attr (device, "md/array_state");
+  if (array_state == NULL)
+    {
+      udisks_info ("raid device %d:%d is not setup  (no md/array_state sysfs file)",
+                   major (raid_device), minor (raid_device));
+      goto out;
+    }
+
+  if (g_strcmp0 (array_state, "clear") == 0)
+    {
+      /* 'clear' means that the array is not set up any more */
+      goto out;
+    }
+
+  /* OK, entry is valid - keep it around */
+  keep = TRUE;
+
+ out:
+
+  if (check_only && !keep)
+    {
+      if (device != NULL)
+        {
+          g_array_append_val (devs_to_clean, raid_device);
+        }
+      keep = TRUE;
+      goto out2;
+    }
+
+  if (!keep)
+    {
+      udisks_notice ("No longer watching mdraid device %d:%d", major (raid_device), minor (raid_device));
+    }
+
+ out2:
+  g_clear_object (&device);
+  if (details != NULL)
+    g_variant_unref (details);
+  return keep;
+}
+
+static void
+udisks_cleanup_check_mdraid (UDisksCleanup *cleanup,
+                             gboolean       check_only,
+                             GArray        *devs_to_clean)
+{
+  gboolean changed;
+  GVariant *value;
+  GVariant *new_value;
+  GVariantBuilder builder;
+  GError *error;
+
+  changed = FALSE;
+
+  /* load existing entries */
+  error = NULL;
+  value = udisks_persistent_store_get (cleanup->persistent_store,
+                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
+                                       "mdraid",
+                                       G_VARIANT_TYPE ("a{ta{sv}}"),
+                                       &error);
+  if (error != NULL)
+    {
+      udisks_warning ("Error getting mdraid: %s (%s, %d)",
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_error_free (error);
+      goto out;
+    }
+
+  /* check valid entries */
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a{ta{sv}}"));
+  if (value != NULL)
+    {
+      GVariantIter iter;
+      GVariant *child;
+      g_variant_iter_init (&iter, value);
+      while ((child = g_variant_iter_next_value (&iter)) != NULL)
+        {
+          if (udisks_cleanup_check_mdraid_entry (cleanup, child, check_only, devs_to_clean))
+            g_variant_builder_add_value (&builder, child);
+          else
+            changed = TRUE;
+          g_variant_unref (child);
+        }
+      g_variant_unref (value);
+    }
+
+  new_value = g_variant_builder_end (&builder);
+
+  /* save new entries */
+  if (changed)
+    {
+      error = NULL;
+      if (!udisks_persistent_store_set (cleanup->persistent_store,
+                                        UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
+                                        "mdraid",
+                                        G_VARIANT_TYPE ("a{ta{sv}}"),
+                                        new_value, /* consumes new_value */
+                                        &error))
+        {
+          udisks_warning ("Error setting mdraid: %s (%s, %d)",
+                          error->message,
+                          g_quark_to_string (error->domain),
+                          error->code);
+          g_error_free (error);
+          goto out;
+        }
+    }
+  else
+    {
+      g_variant_unref (new_value);
+    }
+
+ out:
+  ;
+}
+
+/**
+ * udisks_cleanup_add_mdraid:
+ * @cleanup: A #UDisksCleanup.
+ * @raid_device: The #dev_t for the RAID device.
+ * @uid: The user id of the process requesting the loop device.
+ *
+ * Adds a new entry to the <filename>/run/udisks2/mdraid</filename>
+ * file.
+ */
+void
+udisks_cleanup_add_mdraid (UDisksCleanup   *cleanup,
+                           dev_t            raid_device,
+                           uid_t            uid)
+{
+  GVariant *value;
+  GVariant *new_value;
+  GVariant *details_value;
+  GVariantBuilder builder;
+  GVariantBuilder details_builder;
+  GError *error;
+
+  g_return_if_fail (UDISKS_IS_CLEANUP (cleanup));
+
+  g_mutex_lock (&cleanup->lock);
+
+  /* load existing entries */
+  error = NULL;
+  value = udisks_persistent_store_get (cleanup->persistent_store,
+                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
+                                       "mdraid",
+                                       G_VARIANT_TYPE ("a{ta{sv}}"),
+                                       &error);
+  if (error != NULL)
+    {
+      udisks_warning ("Error getting mdraid: %s (%s, %d)",
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_error_free (error);
+      goto out;
+    }
+
+  /* start by including existing entries */
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a{ta{sv}}"));
+  if (value != NULL)
+    {
+      GVariantIter iter;
+      GVariant *child;
+      g_variant_iter_init (&iter, value);
+      while ((child = g_variant_iter_next_value (&iter)) != NULL)
+        {
+          guint64 entry_raid_device;
+          g_variant_get (child, "{t@a{sv}}", &entry_raid_device, NULL);
+          /* Skip/remove stale entries */
+          if (entry_raid_device == raid_device)
+            {
+              udisks_warning ("Removing stale entry for raid device %d:%d in /run/udisks2/mdraid file",
+                              major (raid_device), minor (raid_device));
+            }
+          else
+            {
+              g_variant_builder_add_value (&builder, child);
+            }
+          g_variant_unref (child);
+        }
+      g_variant_unref (value);
+    }
+
+  /* build the details */
+  g_variant_builder_init (&details_builder, G_VARIANT_TYPE ("a{sv}"));
+  g_variant_builder_add (&details_builder,
+                         "{sv}",
+                         "started-by-uid",
+                         g_variant_new_uint32 (uid));
+  details_value = g_variant_builder_end (&details_builder);
+
+  /* finally add the new entry */
+  g_variant_builder_add (&builder,
+                         "{t@a{sv}}",
+                         raid_device,
+                         details_value); /* consumes details_value */
+  new_value = g_variant_builder_end (&builder);
+
+  /* save new entries */
+  error = NULL;
+  if (!udisks_persistent_store_set (cleanup->persistent_store,
+                                    UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
+                                    "mdraid",
+                                    G_VARIANT_TYPE ("a{ta{sv}}"),
+                                    new_value, /* consumes new_value */
+                                    &error))
+    {
+      udisks_warning ("Error setting mdraid: %s (%s, %d)",
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_error_free (error);
+      goto out;
+    }
+
+ out:
+  g_mutex_unlock (&cleanup->lock);
+}
+
+/**
+ * udisks_cleanup_has_mdraid:
+ * @cleanup: A #UDisksCleanup
+ * @raid_device: A #dev_t for the RAID device.
+ * @out_uid: Return location for the user id who setup the loop device or %NULL.
+ * @error: Return location for error or %NULL.
+ *
+ * Checks if @raid_device is set up via udisks.
+ *
+ * Returns: %TRUE if set up via udisks, otherwise %FALSE or if @error is set.
+ */
+gboolean
+udisks_cleanup_has_mdraid (UDisksCleanup   *cleanup,
+                           dev_t            raid_device,
+                           uid_t           *out_uid)
+{
+  gboolean ret = FALSE;
+  GVariant *value = NULL;
+  GError *error = NULL;
+
+  g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
+
+  g_mutex_lock (&cleanup->lock);
+
+  /* load existing entries */
+  value = udisks_persistent_store_get (cleanup->persistent_store,
+                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
+                                       "mdraid",
+                                       G_VARIANT_TYPE ("a{ta{sv}}"),
+                                       &error);
+  if (error != NULL)
+    {
+      udisks_warning ("Error getting mdraid: %s (%s, %d)",
+                      error->message, g_quark_to_string (error->domain), error->code);
+      g_clear_error (&error);
+      goto out;
+    }
+
+  /* look through list */
+  if (value != NULL)
+    {
+      GVariantIter iter;
+      GVariant *child;
+      g_variant_iter_init (&iter, value);
+      while ((child = g_variant_iter_next_value (&iter)) != NULL)
+        {
+          guint64 iter_raid_device;
+          GVariant *details;
+
+          g_variant_get (child,
+                         "{t@a{sv}}",
+                         &iter_raid_device,
+                         &details);
+
+          if (iter_raid_device == raid_device)
+            {
+              ret = TRUE;
+              if (out_uid != NULL)
+                {
+                  GVariant *lookup_value;
+                  lookup_value = lookup_asv (details, "started-by-uid");
+                  *out_uid = 0;
+                  if (lookup_value != NULL)
+                    {
+                      *out_uid = g_variant_get_uint32 (lookup_value);
+                      g_variant_unref (lookup_value);
+                    }
+                }
+              g_variant_unref (details);
+              g_variant_unref (child);
+              goto out;
+            }
+          g_variant_unref (details);
+          g_variant_unref (child);
+        }
+    }
+
+ out:
+  if (value != NULL)
+    g_variant_unref (value);
+  g_mutex_unlock (&cleanup->lock);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
 
