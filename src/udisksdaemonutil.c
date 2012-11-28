@@ -1417,8 +1417,7 @@ udisks_daemon_util_get_free_mdraid_device (void)
    * insists that the user chooses a name. It should just choose one
    * itself but that's not how things work right now.
    */
-
-  for (n = 127; n >= 0; n++)
+  for (n = 127; n >= 0; n--)
     {
       snprintf (buf, sizeof buf, "/sys/block/md%d", n);
       if (!g_file_test (buf, G_FILE_TEST_EXISTS))
