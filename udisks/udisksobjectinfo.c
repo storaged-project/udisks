@@ -344,8 +344,8 @@ udisks_client_get_object_info_for_mdraid (UDisksClient     *client,
     info->name = g_strdup (s + 1);
   else
     info->name = g_strdup (name);
-  info->icon = g_themed_icon_new_with_default_fallbacks ("gdu-enclosure");
-  info->icon_symbolic = g_themed_icon_new_with_default_fallbacks ("gdu-enclosure-symbolic");
+  info->icon = g_themed_icon_new_with_default_fallbacks ("drive-multidisk");
+  info->icon_symbolic = g_themed_icon_new_with_default_fallbacks ("drive-multidisk-symbolic");
 
   level = udisks_mdraid_get_level (mdraid);
   if (size_str != NULL)
