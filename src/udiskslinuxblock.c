@@ -2197,6 +2197,14 @@ handle_format (UDisksBlock           *block,
       goto out;
     }
 
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &caller_gid, NULL, &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
   if (g_strcmp0 (erase_type, "ata-secure-erase") == 0 ||
       g_strcmp0 (erase_type, "ata-secure-erase-enhanced") == 0)
     {
@@ -2221,22 +2229,17 @@ handle_format (UDisksBlock           *block,
        */
       message = N_("Authentication is required to format $(drive)");
       action_id = "org.freedesktop.udisks2.modify-device";
-      if (udisks_block_get_hint_system (block))
+      if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
         {
-          action_id = "org.freedesktop.udisks2.modify-device-system";
+          if (udisks_block_get_hint_system (block))
+            {
+              action_id = "org.freedesktop.udisks2.modify-device-system";
+            }
+          else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
+            {
+              action_id = "org.freedesktop.udisks2.modify-device-other-seat";
+            }
         }
-      else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
-        {
-          action_id = "org.freedesktop.udisks2.modify-device-other-seat";
-        }
-    }
-
-  error = NULL;
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, &caller_gid, NULL, &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
-      goto out;
     }
 
   /* TODO: Consider just accepting any @type and just running "mkfs -t <type>".
