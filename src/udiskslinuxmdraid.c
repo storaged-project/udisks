@@ -1048,7 +1048,7 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
           g_dbus_method_invocation_return_error (invocation,
                                                  UDISKS_ERROR,
                                                  UDISKS_ERROR_FAILED,
-                                                 "Error remove %s from RAID array %s: %s",
+                                                 "Error removing %s from RAID array %s: %s",
                                                  member_device_file,
                                                  device_file,
                                                  error_message);
@@ -1094,6 +1094,147 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
+static gboolean
+handle_add_device (UDisksMDRaid           *_mdraid,
+                   GDBusMethodInvocation  *invocation,
+                   const gchar            *new_member_device_objpath,
+                   GVariant               *options)
+{
+  UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (_mdraid);
+  UDisksDaemon *daemon;
+  UDisksCleanup *cleanup;
+  UDisksLinuxMDRaidObject *object;
+  const gchar *action_id;
+  const gchar *message;
+  uid_t started_by_uid;
+  uid_t caller_uid;
+  gid_t caller_gid;
+  UDisksLinuxDevice *raid_device = NULL;
+  const gchar *device_file = NULL;
+  gchar *escaped_device_file = NULL;
+  const gchar *new_member_device_file = NULL;
+  gchar *escaped_new_member_device_file = NULL;
+  GError *error = NULL;
+  gchar *error_message = NULL;
+  UDisksObject *new_member_device_object = NULL;
+  UDisksBlock *new_member_device = NULL;
+
+  object = udisks_daemon_util_dup_object (mdraid, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_mdraid_object_get_daemon (object);
+  cleanup = udisks_daemon_get_cleanup (daemon);
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &caller_gid,
+                                               NULL,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  raid_device = udisks_linux_mdraid_object_get_device (object);
+  if (raid_device == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "RAID Array is not running");
+      goto out;
+    }
+
+  new_member_device_object = udisks_daemon_find_object (daemon, new_member_device_objpath);
+  if (new_member_device_object == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "No device for given object path");
+      goto out;
+    }
+
+  new_member_device = udisks_object_get_block (new_member_device_object);
+  if (new_member_device == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "No block interface on given object");
+      goto out;
+    }
+
+  if (!udisks_cleanup_has_mdraid (cleanup,
+                                  g_udev_device_get_device_number (raid_device->udev_device),
+                                  &started_by_uid))
+    {
+      /* allow stopping arrays stuff not mentioned in mounted-fs, but treat it like root mounted it */
+      started_by_uid = 0;
+    }
+
+  /* First check the user is authorized to manage RAID */
+  if (caller_uid != 0 && (caller_uid != started_by_uid))
+    {
+      /* Translators: Shown in authentication dialog when the user
+       * attempts to add a device to a RAID Array.
+       */
+      /* TODO: variables */
+      message = N_("Authentication is required to add a device to a RAID array");
+      action_id = "org.freedesktop.udisks2.manage-md-raid";
+      if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                        UDISKS_OBJECT (object),
+                                                        action_id,
+                                                        options,
+                                                        message,
+                                                        invocation))
+        goto out;
+    }
+
+  device_file = g_udev_device_get_device_file (raid_device->udev_device);
+  escaped_device_file = udisks_daemon_util_escape_and_quote (device_file);
+
+  new_member_device_file = udisks_block_get_device (new_member_device);
+  escaped_new_member_device_file = udisks_daemon_util_escape_and_quote (new_member_device_file);
+
+  if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                              UDISKS_OBJECT (object),
+                                              "md-raid-add-device", caller_uid,
+                                              NULL, /* GCancellable */
+                                              0,    /* uid_t run_as_uid */
+                                              0,    /* uid_t run_as_euid */
+                                              NULL, /* gint *out_status */
+                                              &error_message,
+                                              NULL,  /* input_string */
+                                              "mdadm --manage %s --add %s",
+                                              escaped_device_file,
+                                              escaped_new_member_device_file))
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error adding %s to RAID array %s: %s",
+                                                 new_member_device_file,
+                                                 device_file,
+                                                 error_message);
+          goto out;
+        }
+
+  udisks_mdraid_complete_add_device (_mdraid, invocation);
+
+ out:
+  g_free (error_message);
+  g_free (escaped_device_file);
+  g_free (escaped_new_member_device_file);
+  g_clear_object (&new_member_device_object);
+  g_clear_object (&new_member_device);
+  g_clear_object (&raid_device);
+  g_clear_object (&object);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
@@ -1102,4 +1243,5 @@ mdraid_iface_init (UDisksMDRaidIface *iface)
   iface->handle_start = handle_start;
   iface->handle_stop = handle_stop;
   iface->handle_remove_device = handle_remove_device;
+  iface->handle_add_device = handle_add_device;
 }

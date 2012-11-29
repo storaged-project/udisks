@@ -1901,7 +1901,19 @@
         @device after removal.
     -->
     <method name="RemoveDevice">
-      <arg name="block_device" direction="in" type="o"/>
+      <arg name="device" direction="in" type="o"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        AddDevice:
+        @device: An object path to an object implementing the #org.freedesktop.UDisks2.Block interface.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Adds @device to the array.
+    -->
+    <method name="AddDevice">
+      <arg name="device" direction="in" type="o"/>
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
