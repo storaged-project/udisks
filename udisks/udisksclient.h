@@ -71,6 +71,8 @@ UDisksBlock        *udisks_client_get_cleartext_block (UDisksClient        *clie
 
 UDisksBlock        *udisks_client_get_block_for_mdraid (UDisksClient       *client,
                                                         UDisksMDRaid       *raid);
+GList              *udisks_client_get_all_blocks_for_mdraid (UDisksClient  *client,
+                                                             UDisksMDRaid  *raid);
 
 GList              *udisks_client_get_members_for_mdraid (UDisksClient       *client,
                                                           UDisksMDRaid       *raid);
