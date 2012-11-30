@@ -1800,6 +1800,9 @@
     <!-- BitmapLocation:
          The location of a write-intent bitmap (empty if the array is not running), if any.
 
+         If the RAID array does not suppor write-intent bitmaps (for
+         example RAID-0 arrays), this is empty.
+
          This property corresponds to the
          <literal>bitmap/location</literal> sysfs file, see the
          <filename><ulink url="http://www.kernel.org/doc/Documentation/md.txt">Documentation/md.txt</ulink></filename>
@@ -1914,6 +1917,18 @@
     -->
     <method name="AddDevice">
       <arg name="device" direction="in" type="o"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        SetBitmapLocation:
+        @value: The value for the bitmap, currently only the values 'none' and 'internal' are supported.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        Sets whether the array has a write-intent bitmap.
+    -->
+    <method name="SetBitmapLocation">
+      <arg name="value" direction="in" type="ay"/>
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
