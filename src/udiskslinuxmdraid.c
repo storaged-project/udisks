@@ -550,6 +550,39 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static UDisksObject *
+wait_for_md_block_object (UDisksDaemon *daemon,
+                          gpointer      user_data)
+{
+  UDisksLinuxMDRaidObject *mdraid_object = UDISKS_LINUX_MDRAID_OBJECT (user_data);
+  UDisksObject *ret = NULL;
+  GList *objects, *l;
+
+  objects = udisks_daemon_get_objects (daemon);
+  for (l = objects; l != NULL; l = l->next)
+    {
+      UDisksObject *object = UDISKS_OBJECT (l->data);
+      UDisksBlock *block = NULL;
+
+      block = udisks_object_get_block (object);
+      if (block != NULL)
+        {
+          if (g_strcmp0 (udisks_block_get_mdraid (block),
+                         g_dbus_object_get_object_path (G_DBUS_OBJECT (mdraid_object))) == 0)
+            {
+              g_object_unref (block);
+              ret = g_object_ref (object);
+              goto out;
+            }
+          g_object_unref (block);
+        }
+    }
+
+ out:
+  g_list_free_full (objects, g_object_unref);
+  return ret;
+}
+
 static gboolean
 handle_start (UDisksMDRaid           *_mdraid,
               GDBusMethodInvocation  *invocation,
@@ -564,15 +597,16 @@ handle_start (UDisksMDRaid           *_mdraid,
   uid_t caller_uid;
   gid_t caller_gid;
   UDisksLinuxDevice *raid_device = NULL;
-  GString *str = NULL;
+  GList *member_devices = NULL;
   gchar *raid_device_file = NULL;
-  gchar *escaped_devices = NULL;
   GError *error = NULL;
   gchar *error_message = NULL;
-  GList *member_devices = NULL, *l;
+  gchar *escaped_uuid = NULL;
   gboolean opt_start_degraded = FALSE;
   struct stat statbuf;
   dev_t raid_device_num;
+  UDisksObject *block_object = NULL;
+  UDisksBlock *block = NULL;
 
   object = udisks_daemon_util_dup_object (mdraid, &error);
   if (object == NULL)
@@ -630,28 +664,7 @@ handle_start (UDisksMDRaid           *_mdraid,
                                                     invocation))
     goto out;
 
-  /* find a free /dev/md%d device to use */
-  raid_device_file = udisks_daemon_util_get_free_mdraid_device ();
-  if (raid_device_file == NULL)
-    {
-      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "No free MD device");
-      goto out;
-    }
-
-  /* figure out the member devices */
-  str = g_string_new (NULL);
-  for (l = member_devices; l != NULL; l = l->next)
-    {
-      UDisksLinuxDevice *device = UDISKS_LINUX_DEVICE (l->data);
-      gchar *escaped_device_file;
-      if (str->len > 0)
-        g_string_append_c (str, ' ');
-      escaped_device_file = udisks_daemon_util_escape_and_quote (g_udev_device_get_device_file (device->udev_device));
-      g_string_append (str, escaped_device_file);
-      g_free (escaped_device_file);
-    }
-  escaped_devices = g_string_free (str, FALSE);
+  escaped_uuid = udisks_daemon_util_escape_and_quote (udisks_mdraid_get_uuid (UDISKS_MDRAID (mdraid)));
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               UDISKS_OBJECT (object),
@@ -662,10 +675,9 @@ handle_start (UDisksMDRaid           *_mdraid,
                                               NULL, /* gint *out_status */
                                               &error_message,
                                               NULL,  /* input_string */
-                                              "mdadm --assemble%s %s %s",
+                                              "mdadm --assemble%s --scan --uuid %s",
                                               opt_start_degraded ? " --run" : " ",
-                                              raid_device_file,
-                                              escaped_devices))
+                                              escaped_uuid))
     {
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
@@ -675,6 +687,33 @@ handle_start (UDisksMDRaid           *_mdraid,
       goto out;
     }
 
+  /* ... then, sit and wait for MD block device to show up */
+  block_object = udisks_daemon_wait_for_object_sync (daemon,
+                                                     wait_for_md_block_object,
+                                                     object,
+                                                     NULL,
+                                                     10, /* timeout_seconds */
+                                                     &error);
+  if (block_object == NULL)
+    {
+      g_prefix_error (&error,
+                      "Error waiting for MD block device after starting array");
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+  block = udisks_object_get_block (block_object);
+  if (block == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "No block interface for object",
+                                             raid_device_file);
+      goto out;
+    }
+  raid_device_file = udisks_block_dup_device (block);
+
+  /* Check that it's a block device */
   if (stat (raid_device_file, &statbuf) != 0)
     {
       g_dbus_method_invocation_return_error (invocation,
@@ -705,10 +744,12 @@ handle_start (UDisksMDRaid           *_mdraid,
   udisks_mdraid_complete_start (_mdraid, invocation);
 
  out:
+  g_clear_object (&block);
+  g_clear_object (&block_object);
   g_list_free_full (member_devices, g_object_unref);
   g_free (error_message);
   g_free (raid_device_file);
-  g_free (escaped_devices);
+  g_free (escaped_uuid);
   g_clear_object (&raid_device);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
