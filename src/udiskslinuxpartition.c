@@ -280,13 +280,16 @@ handle_set_flags (UDisksPartition        *partition,
    * will be replaced by the name of the drive/device in question
    */
   message = N_("Authentication is required to modify the partition on device $(drive)");
-  if (udisks_block_get_hint_system (block))
+  if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
     {
-      action_id = "org.freedesktop.udisks2.modify-device-system";
-    }
-  else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
-    {
-      action_id = "org.freedesktop.udisks2.modify-device-system-other-seat";
+      if (udisks_block_get_hint_system (block))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-system";
+        }
+      else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-system-other-seat";
+        }
     }
 
   if (!udisks_daemon_util_check_authorization_sync (daemon,
@@ -442,15 +445,17 @@ handle_set_name (UDisksPartition        *partition,
    * will be replaced by the name of the drive/device in question
    */
   message = N_("Authentication is required to modify the partition on device $(drive)");
-  if (udisks_block_get_hint_system (block))
+  if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
     {
-      action_id = "org.freedesktop.udisks2.modify-device-system";
+      if (udisks_block_get_hint_system (block))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-system";
+        }
+      else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-system-other-seat";
+        }
     }
-  else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
-    {
-      action_id = "org.freedesktop.udisks2.modify-device-system-other-seat";
-    }
-
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
                                                     action_id,
@@ -782,15 +787,17 @@ handle_set_type (UDisksPartition        *partition,
    * will be replaced by the name of the drive/device in question
    */
   message = N_("Authentication is required to modify the partition on device $(drive)");
-  if (udisks_block_get_hint_system (block))
+  if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
     {
-      action_id = "org.freedesktop.udisks2.modify-device-system";
+      if (udisks_block_get_hint_system (block))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-system";
+        }
+      else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-system-other-seat";
+        }
     }
-  else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
-    {
-      action_id = "org.freedesktop.udisks2.modify-device-system-other-seat";
-    }
-
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
                                                     action_id,
@@ -891,15 +898,17 @@ handle_delete (UDisksPartition        *partition,
    * will be replaced by the name of the drive/device in question
    */
   message = N_("Authentication is required to delete the partition $(drive)");
-  if (udisks_block_get_hint_system (block))
+  if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
     {
-      action_id = "org.freedesktop.udisks2.modify-device-system";
+      if (udisks_block_get_hint_system (block))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-system";
+        }
+      else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-system-other-seat";
+        }
     }
-  else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
-    {
-      action_id = "org.freedesktop.udisks2.modify-device-system-other-seat";
-    }
-
   if (!udisks_daemon_util_check_authorization_sync (daemon,
                                                     object,
                                                     action_id,

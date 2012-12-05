@@ -1922,13 +1922,16 @@ handle_set_label (UDisksFilesystem       *filesystem,
    * will be replaced by the name of the drive/device in question
    */
   message = N_("Authentication is required to change the filesystem label on $(drive)");
-  if (udisks_block_get_hint_system (block))
+  if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
     {
-      action_id = "org.freedesktop.udisks2.modify-device-system";
-    }
-  else if (!udisks_daemon_util_on_same_seat (daemon, UDISKS_OBJECT (object), caller_pid))
-    {
-      action_id = "org.freedesktop.udisks2.modify-device-other-seat";
+      if (udisks_block_get_hint_system (block))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-system";
+        }
+      else if (!udisks_daemon_util_on_same_seat (daemon, UDISKS_OBJECT (object), caller_pid))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-other-seat";
+        }
     }
 
   /* Check that the user is actually authorized to change the

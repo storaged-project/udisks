@@ -347,13 +347,16 @@ handle_create_partition (UDisksPartitionTable   *table,
    * will be replaced by the name of the drive/device in question
    */
   message = N_("Authentication is required to create a partition on $(drive)");
-  if (udisks_block_get_hint_system (block))
+  if (!udisks_daemon_util_setup_by_user (daemon, object, caller_uid))
     {
-      action_id = "org.freedesktop.udisks2.modify-device-system";
-    }
-  else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
-    {
-      action_id = "org.freedesktop.udisks2.modify-device-system-other-seat";
+      if (udisks_block_get_hint_system (block))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-system";
+        }
+      else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
+        {
+          action_id = "org.freedesktop.udisks2.modify-device-system-other-seat";
+        }
     }
 
   if (!udisks_daemon_util_check_authorization_sync (daemon,
