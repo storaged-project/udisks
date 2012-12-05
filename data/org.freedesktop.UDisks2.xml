@@ -1068,6 +1068,17 @@
     -->
     <property name="HintIconName" type="s" access="read"/>
 
+    <!-- HintSymbolicIconName:
+         @since: 2.1
+         If not blank, the icon name to use when presenting the device using a symbolic icon.
+
+         The name must adhere to the
+         <ulink url="http://www.freedesktop.org/wiki/Specifications/icon-theme-spec">freedesktop.org icon theme specification</ulink>.
+
+         See <xref linkend="udisks.8"/> for how to influence the value of this property.
+    -->
+    <property name="HintSymbolicIconName" type="s" access="read"/>
+
     <!--
         AddConfigurationItem:
         @item: The configuration item to add.

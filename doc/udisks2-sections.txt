@@ -1118,6 +1118,7 @@ udisks_block_get_hint_ignore
 udisks_block_get_hint_auto
 udisks_block_get_hint_name
 udisks_block_get_hint_icon_name
+udisks_block_get_hint_symbolic_icon_name
 udisks_block_get_mdraid
 udisks_block_get_mdraid_member
 udisks_block_dup_configuration
@@ -1134,6 +1135,7 @@ udisks_block_dup_id
 udisks_block_dup_symlinks
 udisks_block_dup_hint_name
 udisks_block_dup_hint_icon_name
+udisks_block_dup_hint_symbolic_icon_name
 udisks_block_dup_mdraid
 udisks_block_dup_mdraid_member
 udisks_block_set_configuration
@@ -1157,6 +1159,7 @@ udisks_block_set_hint_ignore
 udisks_block_set_hint_auto
 udisks_block_set_hint_name
 udisks_block_set_hint_icon_name
+udisks_block_set_hint_symbolic_icon_name
 udisks_block_set_mdraid
 udisks_block_set_mdraid_member
 UDisksBlockProxy

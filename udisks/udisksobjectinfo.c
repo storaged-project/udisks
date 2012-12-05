@@ -753,7 +753,7 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
       info->media_description = s;
     }
 
-  /* Apply UDISKS_NAME and UDISKS_ICON_NAME hints, if available */
+  /* Apply UDISKS_NAME, UDISKS_ICON_NAME, UDISKS_SYMBOLIC_ICON_NAME hints, if available */
   block = udisks_client_get_block_for_drive (client, drive, TRUE);
   if (block != NULL)
     {
@@ -773,6 +773,15 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
           g_clear_object (&info->media_icon);
           info->icon = g_themed_icon_new_with_default_fallbacks (cs);
           info->media_icon = g_themed_icon_new_with_default_fallbacks (cs);
+        }
+
+      cs = udisks_block_get_hint_symbolic_icon_name (block);
+      if (cs != NULL && strlen (cs) > 0)
+        {
+          g_clear_object (&info->icon_symbolic);
+          g_clear_object (&info->media_icon_symbolic);
+          info->icon_symbolic = g_themed_icon_new_with_default_fallbacks (cs);
+          info->media_icon_symbolic = g_themed_icon_new_with_default_fallbacks (cs);
         }
     }
 

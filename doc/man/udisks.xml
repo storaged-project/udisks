@@ -218,6 +218,18 @@
         </listitem>
       </varlistentry>
       <varlistentry>
+        <term><option>UDISKS_SYMBOLIC_ICON_NAME</option></term>
+        <listitem>
+          <para>
+            The icon to use for the device when presenting it in an user interface using a symbolic icon. If
+            set, the name must adhere to the
+            <ulink url="http://www.freedesktop.org/wiki/Specifications/icon-theme-spec">freedesktop.org icon theme specification</ulink>.
+            This corresponds to the
+            <link linkend="gdbus-property-org-freedesktop-UDisks2-Block.HintIconName">HintSymbolicIconName</link> property.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
         <term><option>ID_SEAT</option></term>
         <listitem>
           <para>

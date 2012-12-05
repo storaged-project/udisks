@@ -325,6 +325,7 @@ update_hints (UDisksLinuxBlock  *block,
   gboolean hint_auto;
   const gchar *hint_name;
   const gchar *hint_icon_name;
+  const gchar *hint_symbolic_icon_name;
   const gchar *device_file;
 
   /* very conservative defaults */
@@ -334,6 +335,7 @@ update_hints (UDisksLinuxBlock  *block,
   hint_auto = FALSE;
   hint_name = NULL;
   hint_icon_name = NULL;
+  hint_symbolic_icon_name = NULL;
 
   device_file = g_udev_device_get_device_file (device->udev_device);
 
@@ -389,6 +391,8 @@ update_hints (UDisksLinuxBlock  *block,
     hint_name = g_udev_device_get_property (device->udev_device, "UDISKS_NAME");
   if (g_udev_device_has_property (device->udev_device, "UDISKS_ICON_NAME"))
     hint_icon_name = g_udev_device_get_property (device->udev_device, "UDISKS_ICON_NAME");
+  if (g_udev_device_has_property (device->udev_device, "UDISKS_SYMBOLIC_ICON_NAME"))
+    hint_symbolic_icon_name = g_udev_device_get_property (device->udev_device, "UDISKS_SYMBOLIC_ICON_NAME");
 
   /* ... and scene! */
   udisks_block_set_hint_partitionable (iface, hint_partitionable);
@@ -397,6 +401,7 @@ update_hints (UDisksLinuxBlock  *block,
   udisks_block_set_hint_auto (iface, hint_auto);
   udisks_block_set_hint_name (iface, hint_name);
   udisks_block_set_hint_icon_name (iface, hint_icon_name);
+  udisks_block_set_hint_symbolic_icon_name (iface, hint_symbolic_icon_name);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
