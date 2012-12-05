@@ -102,6 +102,8 @@ udisks_object_info_finalize (GObject *object)
   g_free (info->media_description);
   g_clear_object (&info->media_icon);
   g_clear_object (&info->media_icon_symbolic);
+  g_free (info->one_liner);
+  g_free (info->sort_key);
 
   G_OBJECT_CLASS (udisks_object_info_parent_class)->finalize (object);
 }
