@@ -75,6 +75,7 @@ struct _UDisksObjectInfo
   GIcon *media_icon;
   GIcon *media_icon_symbolic;
   gchar *one_liner;
+  gchar *sort_key;
 };
 
 typedef struct _UDisksObjectInfoClass UDisksObjectInfoClass;
@@ -195,6 +196,38 @@ static const struct
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static const gchar *
+last_segment (const gchar *str)
+{
+  const gchar *ret = NULL;
+  gint n;
+  gint len;
+
+  if (str == NULL)
+    goto out;
+
+  len = strlen (str);
+  if (len == 0)
+    {
+      ret = str;
+      goto out;
+    }
+
+  for (n = len - 1; n >= 0; --n)
+    {
+      if (str[n] == '/' && n < len - 1)
+        {
+          ret = str + n + 1;
+          goto out;
+        }
+    }
+
+  ret = str;
+
+ out:
+  return ret;
+}
+
 static void
 udisks_client_get_object_info_for_block (UDisksClient     *client,
                                          UDisksBlock      *block,
@@ -240,6 +273,10 @@ udisks_client_get_object_info_for_block (UDisksClient     *client,
   info->one_liner = g_strdup_printf (C_("one-liner-block", "%s (%s)"),
                                      info->description,
                                      udisks_block_get_preferred_device (block));
+
+  info->sort_key = g_strdup_printf ("02_block_%s_%d",
+                                    last_segment (g_dbus_object_get_object_path (G_DBUS_OBJECT (info->object))),
+                                    partition != NULL ? udisks_partition_get_number (partition) : 0);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -292,6 +329,10 @@ udisks_client_get_object_info_for_loop (UDisksClient     *client,
                                      info->description,
                                      info->name,
                                      udisks_block_get_preferred_device (block));
+
+  info->sort_key = g_strdup_printf ("03_loop_%s_%d",
+                                    last_segment (g_dbus_object_get_object_path (G_DBUS_OBJECT (info->object))),
+                                    partition != NULL ? udisks_partition_get_number (partition) : 0);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -425,6 +466,9 @@ udisks_client_get_object_info_for_mdraid (UDisksClient     *client,
     }
 
   g_clear_object (&block);
+
+  info->sort_key = g_strdup_printf ("01_mdraid_%s_%d", udisks_mdraid_get_uuid (mdraid),
+                                    partition != NULL ? udisks_partition_get_number (partition) : 0);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -787,6 +831,8 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
   g_free (hyphenated_connection_bus);
   g_free (size_str);
 
+  info->sort_key = g_strdup_printf ("00_drive_%s", udisks_drive_get_sort_key (drive));
+
   g_clear_object (&block);
 }
 
@@ -861,13 +907,14 @@ udisks_client_get_object_info (UDisksClient        *client,
 
 #if 0
   /* for debugging */
-  g_print ("%s -> dd='%s', md='%s', ol='%s' and di='%s', mi='%s'\n",
+  g_print ("%s -> dd='%s', md='%s', ol='%s' and di='%s', mi='%s' sk='%s'\n",
            g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
            ret->description,
            ret->media_description,
            ret->one_liner,
            ret->icon == NULL ? "" : g_icon_to_string (ret->icon),
-           ret->media_icon == NULL ? "" : g_icon_to_string (ret->media_icon));
+           ret->media_icon == NULL ? "" : g_icon_to_string (ret->media_icon),
+           ret->sort_key);
 #endif
 
   return ret;
@@ -1087,4 +1134,22 @@ udisks_object_info_get_one_liner (UDisksObjectInfo *info)
 {
   g_return_val_if_fail (UDISKS_IS_OBJECT_INFO (info), NULL);
   return info->one_liner;
+}
+
+/**
+ * udisks_object_info_get_sort_key:
+ * @info: A #UDisksObjectInfo.
+ *
+ * Gets the sort-key for @info. This can be used with g_strcmp0() to
+ * sort objects.
+ *
+ * Returns: (transfer none): The sort key or %NULL. Do not free or unref, the value belongs to @info.
+ *
+ * Since: 2.1
+ */
+const gchar *
+udisks_object_info_get_sort_key (UDisksObjectInfo *info)
+{
+  g_return_val_if_fail (UDISKS_IS_OBJECT_INFO (info), NULL);
+  return info->sort_key;
 }

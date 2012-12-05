@@ -44,6 +44,7 @@ const gchar  *udisks_object_info_get_media_description   (UDisksObjectInfo  *inf
 GIcon        *udisks_object_info_get_media_icon          (UDisksObjectInfo  *info);
 GIcon        *udisks_object_info_get_media_icon_symbolic (UDisksObjectInfo  *info);
 const gchar  *udisks_object_info_get_one_liner           (UDisksObjectInfo  *info);
+const gchar  *udisks_object_info_get_sort_key            (UDisksObjectInfo  *info);
 
 G_END_DECLS
 

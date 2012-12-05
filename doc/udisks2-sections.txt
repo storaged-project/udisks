@@ -96,6 +96,7 @@ udisks_object_info_get_media_description
 udisks_object_info_get_media_icon
 udisks_object_info_get_media_icon_symbolic
 udisks_object_info_get_one_liner
+udisks_object_info_get_sort_key
 <SUBSECTION Standard>
 UDISKS_TYPE_OBJECT_INFO
 UDISKS_OBJECT_INFO
