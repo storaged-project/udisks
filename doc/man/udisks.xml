@@ -156,12 +156,15 @@
           </listitem>
         </varlistentry>
         <varlistentry>
-          <term><option>WriteCacheEnabled</option> (Since 2.1)</term>
+          <term><option>WriteCacheEnabled</option></term>
           <listitem>
             <para>
-              Whether to enabled or disable the Write Cache.
-              This is similar to the <option>-W</option> option in
+              A boolean specifying whether to enable or disable the
+              Write Cache. Valid values for this key are
+              <quote>true</quote> and <quote>false</quote>. This is
+              similar to the <option>-W</option> option in
               <citerefentry><refentrytitle>hdparm</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+              This key was added in 2.1.
             </para>
           </listitem>
         </varlistentry>
