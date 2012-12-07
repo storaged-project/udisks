@@ -155,6 +155,16 @@
             </para>
           </listitem>
         </varlistentry>
+        <varlistentry>
+          <term><option>WriteCacheEnabled</option> (Since 2.1)</term>
+          <listitem>
+            <para>
+              Whether to enabled or disable the Write Cache.
+              This is similar to the <option>-W</option> option in
+              <citerefentry><refentrytitle>hdparm</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+            </para>
+          </listitem>
+        </varlistentry>
       </variablelist>
     </refsect2>
   </refsect1>

@@ -222,6 +222,8 @@ update_pm (UDisksLinuxDriveAta *drive,
   gboolean apm_enabled = FALSE;
   gboolean aam_supported = FALSE;
   gboolean aam_enabled = FALSE;
+  gboolean write_cache_supported = FALSE;
+  gboolean write_cache_enabled = FALSE;
   gint aam_vendor_recommended_value = 0;
   guint16 word_82 = 0;
   guint16 word_83 = 0;
@@ -244,6 +246,8 @@ update_pm (UDisksLinuxDriveAta *drive,
   aam_enabled   = word_86 & (1<<9);
   if (aam_supported)
     aam_vendor_recommended_value = (word_94 >> 8);
+  write_cache_supported  = word_82 & (1<<5);
+  write_cache_enabled    = word_85 & (1<<5);
 
   g_object_freeze_notify (G_OBJECT (drive));
   udisks_drive_ata_set_pm_supported (UDISKS_DRIVE_ATA (drive), !!pm_supported);
@@ -253,6 +257,8 @@ update_pm (UDisksLinuxDriveAta *drive,
   udisks_drive_ata_set_aam_supported (UDISKS_DRIVE_ATA (drive), !!aam_supported);
   udisks_drive_ata_set_aam_enabled (UDISKS_DRIVE_ATA (drive), !!aam_enabled);
   udisks_drive_ata_set_aam_vendor_recommended_value (UDISKS_DRIVE_ATA (drive), aam_vendor_recommended_value);
+  udisks_drive_ata_set_write_cache_supported (UDISKS_DRIVE_ATA (drive), !!write_cache_supported);
+  udisks_drive_ata_set_write_cache_enabled (UDISKS_DRIVE_ATA (drive), !!write_cache_enabled);
   g_object_thaw_notify (G_OBJECT (drive));
 }
 
@@ -1585,6 +1591,8 @@ typedef struct
   gint ata_pm_standby;
   gint ata_apm_level;
   gint ata_aam_level;
+  gboolean ata_write_cache_enabled;
+  gboolean ata_write_cache_enabled_set;
   UDisksLinuxDriveAta *ata;
   UDisksLinuxDevice *device;
   GVariant *configuration;
@@ -1712,6 +1720,35 @@ apply_configuration_thread_func (gpointer user_data)
         }
     }
 
+  if (data->ata_write_cache_enabled_set)
+    {
+      /* ATA8: 7.48 SET FEATURES - EFh, Non-Data
+       *       7.48.4 Enable/disable volatile write cache
+       */
+      UDisksAtaCommandInput input = {.command = 0xef, .feature = 0x82};
+      UDisksAtaCommandOutput output = {0};
+      if (data->ata_write_cache_enabled)
+        input.feature = 0x02;
+      if (!udisks_ata_send_command_sync (fd,
+                                         -1,
+                                         UDISKS_ATA_COMMAND_PROTOCOL_NONE,
+                                         &input,
+                                         &output,
+                                         &error))
+        {
+          udisks_error ("Error sending ATA command SET FEATURES, sub-command 0x%02x to %s: %s (%s, %d)",
+                        input.feature, device_file,
+                        error->message, g_quark_to_string (error->domain), error->code);
+          g_clear_error (&error);
+        }
+      else
+        {
+          udisks_notice ("%s Write-Cache on %s [%s]",
+                         data->ata_write_cache_enabled ? "Enabled" : "Disabled",
+                         device_file, udisks_drive_get_id (data->drive));
+        }
+    }
+
  out:
   if (fd != -1)
     close (fd);
@@ -1740,6 +1777,8 @@ udisks_linux_drive_ata_apply_configuration (UDisksLinuxDriveAta     *drive,
   data->ata_pm_standby = -1;
   data->ata_apm_level = -1;
   data->ata_aam_level = -1;
+  data->ata_write_cache_enabled = FALSE;
+  data->ata_write_cache_enabled_set = FALSE;
   data->ata = g_object_ref (drive);
   data->device = g_object_ref (device);
   data->configuration = g_variant_ref (configuration);
@@ -1756,6 +1795,11 @@ udisks_linux_drive_ata_apply_configuration (UDisksLinuxDriveAta     *drive,
   has_conf |= g_variant_lookup (configuration, "ata-pm-standby", "i", &data->ata_pm_standby);
   has_conf |= g_variant_lookup (configuration, "ata-apm-level", "i", &data->ata_apm_level);
   has_conf |= g_variant_lookup (configuration, "ata-aam-level", "i", &data->ata_aam_level);
+  if (g_variant_lookup (configuration, "ata-write-cache-enabled", "b", &data->ata_write_cache_enabled))
+    {
+      data->ata_write_cache_enabled_set = TRUE;
+      has_conf = TRUE;
+    }
 
   /* don't do anything if none of the configuration is set */
   if (!has_conf)

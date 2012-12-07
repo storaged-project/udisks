@@ -211,10 +211,11 @@ typedef struct {
   const GVariantType *type;
 } VariantKeyfileMapping;
 
-static const VariantKeyfileMapping drive_configuration_mapping[3] = {
-  {"ata-pm-standby",  "ATA", "StandbyTimeout", G_VARIANT_TYPE_INT32},
-  {"ata-apm-level",   "ATA", "APMLevel",       G_VARIANT_TYPE_INT32},
-  {"ata-aam-level",   "ATA", "AAMLevel",       G_VARIANT_TYPE_INT32},
+static const VariantKeyfileMapping drive_configuration_mapping[4] = {
+  {"ata-pm-standby",          "ATA", "StandbyTimeout",    G_VARIANT_TYPE_INT32},
+  {"ata-apm-level",           "ATA", "APMLevel",          G_VARIANT_TYPE_INT32},
+  {"ata-aam-level",           "ATA", "AAMLevel",          G_VARIANT_TYPE_INT32},
+  {"ata-write-cache-enabled", "ATA", "WriteCacheEnabled", G_VARIANT_TYPE_BOOLEAN},
 };
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -289,6 +290,21 @@ update_configuration (UDisksLinuxDrive       *drive,
           else
             {
               g_variant_builder_add (&builder, "{sv}", mapping->asv_key, g_variant_new_int32 (int_value));
+            }
+        }
+      else if (mapping->type == G_VARIANT_TYPE_BOOLEAN)
+        {
+          gboolean bool_value = g_key_file_get_boolean (key_file, mapping->group, mapping->key, &error);
+          if (error != NULL)
+            {
+              udisks_error ("Error parsing boolean key %s in group %s in drive config file %s: %s (%s, %d)",
+                            mapping->key, mapping->group, path,
+                            error->message, g_quark_to_string (error->domain), error->code);
+              g_clear_error (&error);
+            }
+          else
+            {
+              g_variant_builder_add (&builder, "{sv}", mapping->asv_key, g_variant_new_boolean (bool_value));
             }
         }
       else
@@ -1128,6 +1144,10 @@ handle_set_configuration (UDisksDrive           *_drive,
           if (mapping->type == G_VARIANT_TYPE_INT32)
             {
               g_key_file_set_integer (key_file, mapping->group, mapping->key, g_variant_get_int32 (value));
+            }
+          else if (mapping->type == G_VARIANT_TYPE_BOOLEAN)
+            {
+              g_key_file_set_boolean (key_file, mapping->group, mapping->key, g_variant_get_boolean (value));
             }
           else
             {
