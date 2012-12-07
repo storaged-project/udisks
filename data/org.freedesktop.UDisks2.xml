@@ -159,7 +159,7 @@
            <varlistentry>
              <term>ata-write-cache-enabled (type <literal>'b'</literal>)</term>
              <listitem><para>
-               Whether the write-cache is enabled (See ATA command <quote>SET FEATURES</quote>, sub-commands 0x42 and 0xc2). Since 2.1.
+               Whether the write-cache is enabled (See ATA command <quote>SET FEATURES</quote>, sub-commands 0x82 and 0x02). Since 2.1.
              </para></listitem>
            </varlistentry>
          </variablelist>
