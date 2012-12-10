@@ -1491,7 +1491,9 @@ on_changed_timeout (gpointer user_data)
  * udisks_client_queue_changed:
  * @client: A #UDisksClient.
  *
- * Queues up a UDisksClient::changed signal.
+ * Queues up a #UDisksClient::changed signal and rate-limit it. See
+ * the documentation for the #UDisksClient::changed property for more
+ * information.
  *
  * Since: 2.1
  */
