@@ -1487,9 +1487,19 @@ on_changed_timeout (gpointer user_data)
   return FALSE; /* remove source */
 }
 
-static void
-queue_changed (UDisksClient *client)
+/**
+ * udisks_client_queue_changed:
+ * @client: A #UDisksClient.
+ *
+ * Queues up a UDisksClient::changed signal.
+ *
+ * Since: 2.1
+ */
+void
+udisks_client_queue_changed (UDisksClient *client)
 {
+  g_return_if_fail (UDISKS_IS_CLIENT (client));
+
   if (client->changed_timeout_source != NULL)
     goto out;
 
@@ -1521,7 +1531,7 @@ on_object_added (GDBusObjectManager  *manager,
   g_list_foreach (interfaces, (GFunc) g_object_unref, NULL);
   g_list_free (interfaces);
 
-  queue_changed (client);
+  udisks_client_queue_changed (client);
 }
 
 static void
@@ -1530,7 +1540,7 @@ on_object_removed (GDBusObjectManager  *manager,
                    gpointer             user_data)
 {
   UDisksClient *client = UDISKS_CLIENT (user_data);
-  queue_changed (client);
+  udisks_client_queue_changed (client);
 }
 
 static void
@@ -1551,7 +1561,7 @@ on_interface_added (GDBusObjectManager  *manager,
 
   init_interface_proxy (client, G_DBUS_PROXY (interface));
 
-  queue_changed (client);
+  udisks_client_queue_changed (client);
 }
 
 static void
@@ -1561,7 +1571,7 @@ on_interface_removed (GDBusObjectManager  *manager,
                       gpointer             user_data)
 {
   UDisksClient *client = UDISKS_CLIENT (user_data);
-  queue_changed (client);
+  udisks_client_queue_changed (client);
 }
 
 static void
@@ -1573,7 +1583,7 @@ on_interface_proxy_properties_changed (GDBusObjectManagerClient   *manager,
                                        gpointer                    user_data)
 {
   UDisksClient *client = UDISKS_CLIENT (user_data);
-  queue_changed (client);
+  udisks_client_queue_changed (client);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -2404,6 +2414,7 @@ udisks_client_get_job_description (UDisksClient   *client,
 {
   static gsize once = 0;
   static GHashTable *hash = NULL;
+  const gchar *operation = NULL;
   gchar *ret = NULL;
 
   g_return_val_if_fail (UDISKS_IS_CLIENT (client), NULL);
@@ -2440,7 +2451,9 @@ udisks_client_get_job_description (UDisksClient   *client,
       g_once_init_leave (&once, (gsize) 1);
     }
 
-  ret = g_strdup (g_hash_table_lookup (hash, udisks_job_get_operation (job)));
+  operation = udisks_job_get_operation (job);
+  if (operation != NULL)
+    ret = g_strdup (g_hash_table_lookup (hash, operation));
   if (ret == NULL)
     ret = g_strdup_printf (C_("unknown-job", "Unknown (%s)"), udisks_job_get_operation (job));
 

@@ -37,6 +37,7 @@ udisks_client_peek_object
 udisks_client_get_object_manager
 udisks_client_get_manager
 udisks_client_settle
+udisks_client_queue_changed
 udisks_client_get_jobs_for_object
 udisks_client_get_job_description
 udisks_client_get_block_for_dev
