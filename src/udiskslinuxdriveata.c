@@ -1625,7 +1625,8 @@ apply_configuration_thread_func (gpointer user_data)
                  PACKAGE_SYSCONF_DIR, udisks_drive_get_id (data->drive), device_file);
 
 
-  fd = open (device_file, O_RDONLY|O_NONBLOCK);
+  /* Use O_RDRW instead of O_RDONLY to force a 'change' uevent so properties are updated */
+  fd = open (device_file, O_RDWR|O_NONBLOCK);
   if (fd == -1)
     {
       udisks_error ("Error opening device file %s: %m", device_file);
