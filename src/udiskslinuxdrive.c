@@ -581,6 +581,9 @@ set_connection_bus (UDisksDrive       *iface,
     }
 
  out:
+  /* Make it possible to override if a drive can be powered off */
+  if (g_udev_device_has_property (device->udev_device, "UDISKS_CAN_POWER_OFF"))
+    can_power_off = g_udev_device_get_property_as_boolean (device->udev_device, "UDISKS_CAN_POWER_OFF");
   udisks_drive_set_can_power_off (iface, can_power_off);
   udisks_drive_set_sibling_id (iface, sibling_id);
   g_free (sibling_id);

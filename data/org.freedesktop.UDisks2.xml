@@ -424,6 +424,8 @@
          Whether the drive can be safely removed / powered off. See
          the org.freedesktop.UDisks2.Drive.PowerOff() method for more
          information.
+
+         See <xref linkend="udisks.8"/> for how to influence the value of this property.
     -->
     <property name="CanPowerOff" type="b" access="read"/>
 

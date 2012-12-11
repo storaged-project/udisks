@@ -209,6 +209,15 @@
         </listitem>
       </varlistentry>
       <varlistentry>
+        <term><option>UDISKS_CAN_POWER_OFF</option></term>
+        <listitem>
+          <para>
+            If set, this overrides the value of the
+            <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.CanPowerOff">CanPowerOff</link> property.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
         <term><option>UDISKS_NAME</option></term>
         <listitem>
           <para>
