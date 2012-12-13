@@ -2081,6 +2081,31 @@
     <!-- ProgressValid: Set to %TRUE if the #org.freedesktop.UDisks2.Job:Progress is valid. -->
     <property name="ProgressValid" type="b" access="read"/>
 
+    <!-- Bytes:
+         @since: 2.1
+         If the job involves processing a known number of bytes (for
+         example, erasing a disk), this property contains the total
+         number of bytes to process. If not, the value of this
+         property is zero.
+
+         The intent of this property is for user interfaces to convey
+         information such as <quote>123 GB of 1.0 TB completed</quote>.
+    -->
+    <property name="Bytes" type="t" access="read"/>
+
+    <!-- Rate:
+         @since: 2.1
+         If the job involves processing a number of bytes (for
+         example, erasing) and the rate at which the processing takes
+         place is known, this property contains the rate (measured in
+         bytes per second).  Otherwise the value of this property is
+         zero.
+
+         The intent of this property is for user interfaces to convey
+         information such as <quote>110 MB/sec</quote>.
+    -->
+    <property name="Rate" type="t" access="read"/>
+
     <!-- StartTime:
 
          The point in time (micro-seconds since the <ulink

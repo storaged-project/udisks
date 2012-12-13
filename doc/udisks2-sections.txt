@@ -849,6 +849,8 @@ udisks_job_complete_cancel
 udisks_job_emit_completed
 udisks_job_get_expected_end_time
 udisks_job_get_progress
+udisks_job_get_bytes
+udisks_job_get_rate
 udisks_job_get_start_time
 udisks_job_get_objects
 udisks_job_get_cancelable
@@ -859,6 +861,8 @@ udisks_job_dup_objects
 udisks_job_dup_operation
 udisks_job_set_expected_end_time
 udisks_job_set_progress
+udisks_job_set_bytes
+udisks_job_set_rate
 udisks_job_set_start_time
 udisks_job_set_objects
 udisks_job_set_cancelable

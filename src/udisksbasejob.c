@@ -471,6 +471,7 @@ on_notify_progress (GObject     *object,
   gdouble avg_speed;
   gint64 usec_remaining;
   gint64 now;
+  guint64 bytes;
   gdouble current_progress;
 
   now = g_get_real_time ();
@@ -505,8 +506,17 @@ on_notify_progress (GObject     *object,
     }
   avg_speed = sum_of_speeds / num_speeds;
 
-  usec_remaining = (1.0 - current_progress) / avg_speed;
+  bytes = udisks_job_get_bytes (UDISKS_JOB (job));
+  if (bytes > 0)
+    {
+      udisks_job_set_rate (UDISKS_JOB (job), bytes * avg_speed * G_USEC_PER_SEC);
+    }
+  else
+    {
+      udisks_job_set_rate (UDISKS_JOB (job), 0);
+    }
 
+  usec_remaining = (1.0 - current_progress) / avg_speed;
   udisks_job_set_expected_end_time (UDISKS_JOB (job), now + usec_remaining);
 
  out:

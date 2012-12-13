@@ -1996,6 +1996,8 @@ erase_device (UDisksBlock  *block,
       goto out;
     }
 
+  udisks_job_set_bytes (UDISKS_JOB (job), size);
+
   buf = g_new0 (guchar, ERASE_SIZE);
   pos = 0;
   time_of_last_signal = g_get_monotonic_time ();
