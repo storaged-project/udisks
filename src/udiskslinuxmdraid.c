@@ -272,7 +272,6 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   UDisksMDRaid *iface = UDISKS_MDRAID (mdraid);
   gboolean ret = FALSE;
   guint num_devices = 0;
-  guint num_members = 0;
   guint64 size = 0;
   UDisksLinuxDevice *raid_device = NULL;
   GList *member_devices = NULL;
@@ -288,8 +287,6 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   gdouble sync_completed_val = 0.0;
   GVariantBuilder builder;
   UDisksDaemon *daemon = NULL;
-  gboolean can_start = FALSE;
-  gboolean can_start_degraded = FALSE;
   gboolean has_redundancy = FALSE;
   gboolean has_stripes = FALSE;
 
@@ -304,8 +301,6 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
       udisks_warning ("No members and no RAID device - bailing");
       goto out;
     }
-
-  num_members = g_list_length (member_devices);
 
   /* it doesn't matter where we get the MD_ properties from - it can be
    * either a member device or the raid device (/dev/md*) - prefer the
@@ -343,31 +338,6 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   udisks_mdraid_set_level (iface, level);
   udisks_mdraid_set_num_devices (iface, num_devices);
   udisks_mdraid_set_size (iface, size);
-
-  /* Figure out CanStart[Degraded]
-   *
-   * We ignore corner-cases RAID-10 can start with 2, 3, N/2 missing drives...
-   *
-   * TODO: We probably should ignore devices marked as spares...
-   */
-  if (num_members >= num_devices)
-    can_start = TRUE;
-
-  if (g_strcmp0 (level, "raid1") == 0 ||
-      g_strcmp0 (level, "raid4") == 0 ||
-      g_strcmp0 (level, "raid5") == 0 ||
-      g_strcmp0 (level, "raid10") == 0)
-    {
-      if (num_members >= num_devices - 1)
-        can_start_degraded = TRUE;
-    }
-  else if (g_strcmp0 (level, "raid6") == 0)
-    {
-      if (num_members >= num_devices - 2)
-        can_start_degraded = TRUE;
-    }
-  udisks_mdraid_set_can_start (iface, can_start);
-  udisks_mdraid_set_can_start_degraded (iface, can_start_degraded);
 
   if (g_strcmp0 (level, "raid1") == 0 ||
       g_strcmp0 (level, "raid4") == 0 ||

@@ -1851,24 +1851,6 @@
     -->
     <property name="ChunkSize" type="t" access="read"/>
 
-    <!-- CanStart:
-         Set to %TRUE if the array can be started in non-degraded mode.
-
-         This property is calculated by looking at the various block
-         devices that appear to be a member of the array (cf. the
-         #org.freedesktop.UDisks2.Block:MDRaidMember property).
-    -->
-    <property name="CanStart" type="b" access="read"/>
-
-    <!-- CanStartDegraded:
-         Set to %TRUE if the array can be started in non-degraded mode.
-
-         This property is calculated by looking at the various block
-         devices that appear to be a member of the array (cf. the
-         #org.freedesktop.UDisks2.Block:MDRaidMember property).
-    -->
-    <property name="CanStartDegraded" type="b" access="read"/>
-
     <!-- ActiveDevices:
          This property is an array with block devices that are
          currently associated with the with the array. It is empty if
