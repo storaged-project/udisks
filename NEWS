@@ -1,18 +1,145 @@
 ------------
-udisks 2.0.90 (unreleased)
+udisks 2.0.90
 ------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks and storage devices.
 
+This is an unstable pre-release leading up to udisks 2.1.0 and newly
+introduced API and ABI may change in incompatible ways before release
+2.1.0. The udisks 2.1.0 release will be backwards compatible will
+earlier releases. See the udisks(8) man page for more information
+about API stability guarantees.
+
 Changes since udisks 2.0.0:
 
- TODO
+David Zeuthen (121):
+      Initial MD-RAID support
+      Add Block:MDRaid and Block:MDRaidMember properties pointing to MDRaid objects
+      Add MDRaid:Size property and utility to get member, raid block devices
+      Add MDRaid:SyncAction and MDRaid:Degraded properties
+      Properly initialize variables
+      Add Start()/Stop() methods to MDRaid D-Bus interface
+      Don't error out with "error stopping" if failing to start a RAID array
+      Set Block:PreferredDevice to /dev/md/$MD_NAME, if available
+      Nuke debug spew
+      Watch for changes on the md/sync_action and md/degraded sysfs files
+      Avoid leaking memory when parsing sysfs attributes with integers
+      Strip trailing white-space from md/sync_action sysfs attr
+      Fix corner-cases for detecting RAID arrays
+      Add MDRaid:SyncCompleted property
+      Skip partitions of MD-RAID devices
+      Make udisks_daemon_util_resolve_link() work when @name contains slashes
+      Add MDRaid:ActiveDevices property
+      UDisksClient: ignore partitions when finding block device for RAID Array
+      Make Block:PreferredDevice work for partitions of RAID arrays
+      Slightly change how the MDRaid:ActiveDevice property works
+      Tweak MDRaid:ActiveDevices some more
+      Add MDRaid.RemoveDevice() method
+      Add @start-degraded option to MDRaid.Start()
+      Express RAID member state as an array of strings, instead of just a string
+      Simplify codepath when removing a RAID disk
+      Add MDRaid:BitmapLocation property
+      Export MDRaid:ChunkSize property
+      Revert "Simplify codepath when removing a RAID disk"
+      Deprecate udisks_client_get_drive_info() with udisks_client_get_object_info()
+      Initialize reference count to 1
+      Skip homehost when calcuating @name member in UDisksObjectInfo for MD-RAID
+      Slightly rework UDisksObjectInfo docs
+      UDisksClient: include RAID level in description of RAID Array
+      Mention that MDRaid:SyncAction is the empty string for arrays w/o redundancy
+      Handle nested arrays
+      Nuke debug spew
+      Set MDRaid:ChunkSize for raid0 but not for raid1
+      Consistently refer to MD-RAID as "Linux RAID" in user-visible strings
+      Post-release version bump to 2.0.1
+      Update my email address
+      Document the release process
+      Explain post-release actions in HACKING
+      Bump version to 2.0.90
+      Start writing NEWS for 2.0.90
+      Merge branch 'master' into wip/mdraid
+      Use @since annotations to mark new D-Bus API available 2.1
+      Use Deprecated and Since annotations to mark deprecated and new API for 2.1
+      Re-include udisks_client_get_drive_info() in API docs
+      Add indexes of deprecated and new-in-2.1 symbols
+      Update gtk-doc sections
+      Include docs for MD-RAID implementation details
+      Update gtk-doc types file
+      Add publish-docs-master target
+      Remove fa_IR translation
+      Update POTFILES.in with new source files
+      Add translations for eu, fa, hr and sq from Transifix
+      Add missing known jobs for ATA Secure erase to Job:Description docs
+      Add missing known jobs for MD-RAID to Job:Description docs
+      UDisksClient: Add reference to Job:Operation to get_job_description() docs
+      Add Manager.MDRaidCreate() method for RAID Array creation
+      Always pass MD devices of the form /dev/mdNNN when assembling RAID arrays
+      Serialize authorization checks
+      Revert "Serialize authorization checks"
+      Add support for option 'no-block' in the Block.Format() method
+      Only use #pragma GCC diagnostic on GCC >= 4.6
+      UDisksObjectInfo: add one_liner field
+      Nuke debug spew
+      Don't count /dev/md* devices with bogus UUIDs as MD-RAID arrays
+      Use the right device file UDisksObjectInfo.one_liner for a partition of a drive
+      Factor out ATA routines
+      Introduce UDisksLinuxDevice as a replacement for GUdevDevice
+      Forgot to add files
+      UDisksLinuxDevice: Don't include the parent_instance member in the docs
+      Add logging statements so it's possible to pin-point probing time
+      Add udisks_ata_identify_get_word() utility function
+      Stop relying on ata_id to set ID_ATA_FEATURE_SET_SMART{,_ENABLED}
+      Stop relying on ata_id to set ID_ATA_FEATURE_SET_{PM,APM,AAM}*
+      Don't set AamVendorRecommendedValue unless AAM is actually supported
+      Stop relying on ata_id to set ID_ATA_FEATURE_SET_SECURITY*
+      Stop relying on ata_id to set ID_ATA_ROTATION_RATE_RPM
+      Use gathered IDENTIFY DATA as primary way of identifying ATA devices
+      Block.Format: add @update-partition-type option
+      Add support for creating UDF filesystems using mkudffs(8)
+      Add a Drive.PowerOff() method
+      Add Drive.Ata.SmartSetEnabled() method
+      Fix up docs
+      UDisksLinuxDevice: add a reprobe_sync() method
+      Update SMART data after enabling SMART
+      Add missing since tag to newly added Drive.Ata.SmartSetEnabled() method
+      Fix grammar
+      UDisksObjectInfo: Change format of one_liner
+      Make UDisksObjectInfo a GObject and hide its struct
+      Update what symbolic icons to use
+      Ensure HintAuto is FALSE for PC floppy drives
+      Add Block:Id property
+      Always use .modify-device for devices set up by the calling user
+      Keep track of MD RAID arrays started/created via udisks
+      Fix thinko in routine to find a free MD RAID device
+      Allow MDRaid.RemoveDevice() without authz if the caller started the array
+      Use 'drive-multidisk' instead of 'gdu-enclosure' for RAID arrays
+      Mention RAID split-brain syndrome
+      Add new MDRaid.AddDevice() method
+      Add MDRaid.SetBitmapLocation() method
+      Use --scan and --uuid when starting a MD-RAID device
+      Use setup_by_user() in more places
+      UDisksObjectInfo: Add get_sort_key() method
+      UDisksObjectInfo: fix memory leak
+      Add support for setting the symbolic icon for a device
+      Add support for querying and configuring the Write Cache for ATA devices
+      docs: Fix up description of WriteCacheEnabled and document valid values
+      Mention the right ATA subcommand for the ata-write-cache-enabled key
+      Make sure drive properties are updated after applying configuration
+      Add UDisksClient.queue_changed()
+      Fix docs for UDisksClient.queue_changed()
+      Add support for UDISKS_CAN_POWER_OFF udev property
+      Introduce new Job:Bytes and Job:Rate properties
+      Use both WWN and serials for VPD, if available
+      Remove MDRaid:CanStart{,Degraded} properties
+      Pull latest translations from Transifex
+      Add new translations from Transifix
+      Update NEWS for release
 
 Thanks to all our contributors.
 
 David Zeuthen,
-$DATE
+December 18, 2012
 
 ------------
 udisks 2.0.0
