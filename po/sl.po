@@ -3,14 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+#   <>, 2012.
 # Martin Srebotnjak <miles@filmsi.net>, 2012.
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-07-23 16:45-0400\n"
-"PO-Revision-Date: 2012-08-06 14:43+0000\n"
-"Last-Translator: Martin Srebotnjak <miles@filmsi.net>\n"
+"PO-Revision-Date: 2012-11-09 12:00+0000\n"
+"Last-Translator: mateju <>\n"
 "Language-Team: Slovenian <lugos-slo@lugos.si>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -24,7 +25,7 @@ msgstr "Priklopi datotečni sistem"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:2
 msgid "Authentication is required to mount the filesystem"
-msgstr "Za priklop datotečnega sistema je potrebna overitev."
+msgstr "Za priklop datotečnega sistema je zahtevana overitev."
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:3
 msgid "Mount a filesystem on a system device"
@@ -42,7 +43,7 @@ msgstr "Priklopi/odklopi datotečne sisteme, določene v datoteki fstab z možno
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:6
 msgid "Authentication is required to mount/unmount the filesystem"
-msgstr "Za priklop/odklop datotečnega sistema je potrebna overitev."
+msgstr "Za priklop ali odklop datotečnega sistema je zahtevana overitev."
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:7
 msgid "Unmount a device mounted by another user"
@@ -51,7 +52,7 @@ msgstr "Odklopi napravo, ki jo je priklopil drug uporabnik"
 #: ../data/org.freedesktop.udisks2.policy.in.h:8
 msgid ""
 "Authentication is required to unmount a filesystem mounted by another user"
-msgstr "Za odklop datotečnega sistema, ki ga je priklopil drug uporabnik, je potrebna overitev."
+msgstr "Za odklop datotečnega sistema, ki ga je priklopil drug uporabnik, je zahtevana overitev."
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:9
 msgid "Unlock an encrypted device"
@@ -59,7 +60,7 @@ msgstr "Odkleni šifrirano napravo"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:10
 msgid "Authentication is required to unlock an encrypted device"
-msgstr "Za odklep šifrirane naprave je potrebna overitev."
+msgstr "Za odklep šifrirane naprave je zahtevana overitev."
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:11
 msgid "Unlock an encrypted system device"
@@ -83,7 +84,7 @@ msgstr "Zakleni šifrirano napravo, ki jo je odklenil drug uporabnik"
 msgid ""
 "Authentication is required to lock an encrypted device unlocked by another "
 "user"
-msgstr "Overjanje je obvezno, če želite zakleniti zankano napravo, ki jo je odklenil drug uporabnik."
+msgstr "Za zaklepanje šifrirane naprave, ki jo je odklenil drug uporabnik, je zahtevana overitev."
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:16
 msgid "Change passphrase for an encrypted device"
@@ -92,11 +93,11 @@ msgstr "Spremeni geslo za šifrirano napravo"
 #: ../data/org.freedesktop.udisks2.policy.in.h:17
 msgid ""
 "Authentication is required to change the passphrase for an encrypted device"
-msgstr "Overjanje je obvezno, če želite spremeniti geslo za šifrirano napravo."
+msgstr "Za spreminjanje šifrirnega gesla šifrirane naprave je zahtevana overitev."
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:18
 msgid "Manage loop devices"
-msgstr "Upravljaj z zankanimi napravami"
+msgstr "Upravljaj z zančnimi napravami"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting up a loop device.
@@ -104,25 +105,25 @@ msgstr "Upravljaj z zankanimi napravami"
 #: ../data/org.freedesktop.udisks2.policy.in.h:19
 #: ../src/udiskslinuxmanager.c:334
 msgid "Authentication is required to set up a loop device"
-msgstr "Za vzpostavitev zankane naprave je potrebna overitev."
+msgstr "Za vzpostavitev zančne naprave je zahtevana overitev."
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:20
 msgid "Delete loop devices"
-msgstr "Izbriši zankane naprave"
+msgstr "Izbriši zančne naprave"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:21
 msgid ""
 "Authentication is required to delete a loop device set up by another user"
-msgstr "Overjanje je obvezno, če želite izbrisati zankano napravo, ki jo je vzpostavil drug uporabnik."
+msgstr "Za izbris zančne naprave, ki jo je vzpostavil drug uporabnik, je zahtevana overitev."
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:22
 msgid "Modify loop devices"
-msgstr "Spremeni zankane naprave"
+msgstr "Spremeni zančne naprave"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:23
 msgid ""
 "Authentication is required to modify a loop device set up by another user"
-msgstr "Za spremembo zankane naprave, ki jo je nastavil drug uporabnik, je potrebna overitev."
+msgstr "Za spreminjanje zančne naprave, ki jo je nastavil drug uporabnik, je zahtevana overitev."
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:24
 msgid "Manage swapspace"
@@ -130,7 +131,7 @@ msgstr "Upravljaj z izmenjalnim prostorom"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:25
 msgid "Authentication is required to manage swapspace"
-msgstr "Za upravljanje z izmenjalnim prostorom je potrebna overitev."
+msgstr "Za upravljanje z izmenjalnim prostorom je zahtevana overitev."
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:26
 msgid "Eject media"
@@ -160,7 +161,7 @@ msgstr "Spremeni napravo"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:32
 msgid "Authentication is required to modify a device"
-msgstr "Za spremembo naprave je potrebna overitev."
+msgstr "Za spreminjanje naprave je zahtevana overitev."
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:33
 msgid "Modify a system device"
@@ -185,7 +186,7 @@ msgstr "Odpri napravo"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:38
 msgid "Authentication is required to open a device"
-msgstr "Za odpiranje naprave je potrebna overitev."
+msgstr "Za odpiranje naprave je zahtevana overitev."
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:39
 msgid "Open a system device"
@@ -197,13 +198,13 @@ msgstr "Spremeni sistemsko prilagoditev"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:41
 msgid "Authentication is required to modify system-wide configuration"
-msgstr "Za spremembo sistemske prilagoditve je potrebna overitev."
+msgstr "Za spreminjanje sistemskih overitev je zahtevana overitev."
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:42
 msgid ""
 "Authentication is required to retrieve secrets from system-wide "
 "configuration"
-msgstr "Za pridobitev skrivnosti s sistemske prilagoditve je potrebna overitev."
+msgstr "Za pridobitev skrivnosti s sistemske prilagoditve je zahtevana overitev."
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:43
 msgid "Modify drive settings"
@@ -219,7 +220,7 @@ msgstr "Posodobi podatke SMART"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:46
 msgid "Authentication is required to update SMART data"
-msgstr "Za posodobitev podatkov SMART je potrebna overitev."
+msgstr "Za posodobitev podatkov SMART je zahtevana overitev."
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:47
 msgid "Set SMART data from blob"
@@ -235,7 +236,7 @@ msgstr "Izvedi samopreizkus SMART"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:50
 msgid "Authentication is required to run a SMART self-test"
-msgstr "Za izvedbo samopreizkusa SMART je potrebna overitev."
+msgstr "Za izvedbo samopreizkusa SMART je zahtevana overitev."
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:51
 msgid "Check power state"
@@ -586,7 +587,7 @@ msgstr "Za spremembo oznake datotečnega sistema na pogonu $(drive) je potrebna 
 #. 
 #: ../src/udiskslinuxloop.c:244
 msgid "Authentication is required to delete the loop device $(drive)"
-msgstr "Za brisanje zankane naprave $(drive) je potrebna overitev."
+msgstr "Za brisanje zančne naprave $(drive) je zahtevana overitev."
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing autoclear on a loop device set up by
@@ -597,7 +598,7 @@ msgstr "Za brisanje zankane naprave $(drive) je potrebna overitev."
 #. 
 #: ../src/udiskslinuxloop.c:423
 msgid "Authentication is required to modify the loop device $(drive)"
-msgstr "Za spremembo zankane naprave $(drive) je potrebna overitev."
+msgstr "Za spreminjanje zančne naprave $(drive) je zahtevana overitev."
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
@@ -2026,7 +2027,7 @@ msgstr "Ustvarjanje datotečnega sistema"
 #: ../udisks/udisksclient.c:2654
 msgctxt "job"
 msgid "Setting Up Loop Device"
-msgstr "Vzpostavljanje zankane naprave"
+msgstr "Vzpostavljanje zančne naprave"
 
 #: ../udisks/udisksclient.c:2655
 msgctxt "job"

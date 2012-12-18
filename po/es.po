@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-07-23 16:45-0400\n"
-"PO-Revision-Date: 2012-08-27 16:13+0000\n"
+"PO-Revision-Date: 2012-10-18 08:49+0000\n"
 "Last-Translator: Daniel Mustieles <daniel.mustieles@gmail.com>\n"
 "Language-Team: Spanish (http://www.transifex.com/projects/p/freedesktop/language/es/)\n"
 "MIME-Version: 1.0\n"
@@ -178,7 +178,7 @@ msgstr "Reanalizar un dispositivo"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:36
 msgid "Authentication is to rescan a device"
-msgstr ""
+msgstr "Se requiere autenticación para volver a analizar un dispositivo"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:37
 msgid "Open a device"
@@ -224,11 +224,11 @@ msgstr "Se requiere autenticación para actualizar los datos SMART"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:47
 msgid "Set SMART data from blob"
-msgstr ""
+msgstr "Establecer datos SMART desde «blob»"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:48
 msgid "Authentication is required to set SMART data from blob"
-msgstr ""
+msgstr "Se requiere autenticación para establecer datos SMART desde «blob»"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:49
 msgid "Run SMART self-test"
@@ -248,19 +248,19 @@ msgstr "Para comprobar el estado de energía necesita autenticarse"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:53
 msgid "Send standby command"
-msgstr ""
+msgstr "Enviar comando de modo en espera"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:54
 msgid "Authentication is required to put a drive into standby mode"
-msgstr ""
+msgstr "Se requiere autenticación para poner una unidad en espera"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:55
 msgid "Send standby command to a system drive"
-msgstr ""
+msgstr "Enviar comando de modo en espera a una unidad del sistema"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:56
 msgid "Send standby command to drive on other seat"
-msgstr ""
+msgstr "Enviar comando de modo en espera a una unidad en otra ubicación"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:57
 msgid "Securely erase a hard disk"
@@ -440,7 +440,7 @@ msgstr "Se requiere autenticación para actualizar los datos SMART desde $(drive
 #. 
 #: ../src/udiskslinuxdriveata.c:711
 msgid "Authentication is required to set SMART data from a blob on $(drive)"
-msgstr ""
+msgstr "Se requiere autenticación para establecer datos SMART desde «blob» en $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * aborts a running SMART self-test.
@@ -450,7 +450,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdriveata.c:845
 msgid "Authentication is required to abort a SMART self-test on $(drive)"
-msgstr ""
+msgstr "Se requiere autenticación para abortar una autocomprobación SMART en $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * initiates a SMART self-test.
@@ -460,7 +460,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdriveata.c:1095
 msgid "Authentication is required to start a SMART self-test on $(drive)"
-msgstr ""
+msgstr "Se requiere autenticación para iniciar una autocomprobación SMART en $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests the power state of a drive.
@@ -470,7 +470,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdriveata.c:1404
 msgid "Authentication is required to check power state for $(drive)"
-msgstr ""
+msgstr "Se requiere autenticación para comprobar el estado el estado de la alimentación de $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to put a drive into standby mode.
@@ -480,7 +480,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdriveata.c:1529
 msgid "Authentication is required to put $(drive) in standby mode"
-msgstr ""
+msgstr "Se requiere autenticación para poner  $(drive) en espera"
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to wake up a drive from standby mode.
@@ -490,7 +490,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdriveata.c:1661
 msgid "Authentication is required to wake up $(drive) from standby mode"
-msgstr ""
+msgstr "Se requiere autenticación para despertar a $(drive) del modo en espera"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests unlocking an encrypted device.
@@ -500,7 +500,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxencrypted.c:352 ../src/udiskslinuxencrypted.c:706
 msgid "Authentication is required to unlock the encrypted device $(drive)"
-msgstr ""
+msgstr "Se requiere autenticación para desbloquear la unidad $(drive) cifrada"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests locking an encrypted device that was previously.
@@ -513,7 +513,7 @@ msgstr ""
 msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by"
 " another user"
-msgstr ""
+msgstr "Se requiere autenticación para bloquear el dispositivo $(drive), cifrado por otro usuario"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests mounting a filesystem.
@@ -539,7 +539,7 @@ msgstr "Para montar $(drive) necesita autenticarse"
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
-msgstr ""
+msgstr "Se requiere autenticación para montar $(drive), referenciada en el archivo /etc/fstab"
 
 #. Translators: Shown in authentication dialog when the
 #. * user requests unmounting a filesystem that is in
@@ -555,7 +555,7 @@ msgstr ""
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
-msgstr ""
+msgstr "Se requiere autenticación para desmontar $(drive), referenciada en el archivo /etc/fstab"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests unmounting a filesystem previously mounted by
@@ -566,7 +566,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxfilesystem.c:1685
 msgid "Authentication is required to unmount $(drive) mounted by another user"
-msgstr ""
+msgstr "Se requiere autenticación para desmontar $(drive), montada por otro usuario"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing the filesystem label.
@@ -576,7 +576,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxfilesystem.c:1923
 msgid "Authentication is required to change the filesystem label on $(drive)"
-msgstr ""
+msgstr "Se requiere autenticación para cambiar la etiqueta del sistema de archivos de  $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a loop device previously set up by
@@ -609,7 +609,7 @@ msgstr "Se requiere autenticación para modificar el dispositivo de «loop» $(d
 #: ../src/udiskslinuxpartition.c:281 ../src/udiskslinuxpartition.c:443
 #: ../src/udiskslinuxpartition.c:642
 msgid "Authentication is required to modify the partition on device $(drive)"
-msgstr ""
+msgstr "Se requiere autenticación para modificar el particionado en  $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a partition.
@@ -1376,23 +1376,23 @@ msgstr "VMFS"
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS Volume Member (version %s)"
-msgstr ""
+msgstr "Miembro del volumen VMFS (versión %s)"
 
 #: ../udisks/udisksclient.c:2173
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS Member (v%s)"
-msgstr ""
+msgstr "Miembro VMFS (v%s)"
 
 #: ../udisks/udisksclient.c:2174
 msgctxt "fs-type"
 msgid "VMFS Volume Member"
-msgstr ""
+msgstr "Miembro del volumen VMFS"
 
 #: ../udisks/udisksclient.c:2174
 msgctxt "fs-type"
 msgid "VMFS Member"
-msgstr ""
+msgstr "Miembro VMFS"
 
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev, second %s is
@@ -1578,7 +1578,7 @@ msgstr "Recuperación de TV de Apple"
 #: ../udisks/udisksclient.c:2454
 msgctxt "part-type"
 msgid "Apple Core Storage"
-msgstr ""
+msgstr "«Core Storage» de Appel"
 
 #. HP-UX
 #: ../udisks/udisksclient.c:2456
@@ -1730,7 +1730,7 @@ msgstr "VMWare VMFS"
 #: ../udisks/udisksclient.c:2488
 msgctxt "part-type"
 msgid "VMWare vmkcore"
-msgstr ""
+msgstr "vmkcore de VMWare"
 
 #: ../udisks/udisksclient.c:2493
 msgctxt "part-type"
@@ -1967,7 +1967,7 @@ msgstr "SkyOS SkyFS"
 #: ../udisks/udisksclient.c:2642
 msgctxt "job"
 msgid "SMART self-test"
-msgstr ""
+msgstr "Autocomprobación SMART"
 
 #: ../udisks/udisksclient.c:2643
 msgctxt "job"
@@ -2047,7 +2047,7 @@ msgstr "Creando la partición"
 #: ../udisks/udisksclient.c:2658
 msgctxt "job"
 msgid "Cleaning Up"
-msgstr ""
+msgstr "Limpiando"
 
 #: ../udisks/udisksclient.c:2659
 msgctxt "job"
@@ -2057,7 +2057,7 @@ msgstr "Borrado ATA seguro"
 #: ../udisks/udisksclient.c:2660
 msgctxt "job"
 msgid "ATA Enhanced Secure Erase"
-msgstr ""
+msgstr "Borrado ATA seguro mejorado"
 
 #: ../udisks/udisksclient.c:2666
 #, c-format
