@@ -491,7 +491,7 @@ attr_changed (GIOChannel   *channel,
               gpointer      user_data)
 {
   UDisksLinuxMDRaidObject *object = UDISKS_LINUX_MDRAID_OBJECT (user_data);
-  gboolean bail = TRUE;
+  gboolean bail = FALSE;
   GError *error = NULL;
   gchar *str = NULL;
   gsize len = 0;
@@ -501,8 +501,8 @@ attr_changed (GIOChannel   *channel,
 
   if (g_io_channel_seek_position (channel, 0, G_SEEK_SET, &error) != G_IO_STATUS_NORMAL)
     {
-      udisks_warning ("Error seeking in channel (uuid %s): %s (%s, %d)",
-                      object->uuid, error->message, g_quark_to_string (error->domain), error->code);
+      udisks_debug ("Error seeking in channel (uuid %s): %s (%s, %d)",
+                    object->uuid, error->message, g_quark_to_string (error->domain), error->code);
       g_clear_error (&error);
       bail = TRUE;
       goto out;
@@ -510,8 +510,8 @@ attr_changed (GIOChannel   *channel,
 
   if (g_io_channel_read_to_end (channel, &str, &len, &error) != G_IO_STATUS_NORMAL)
     {
-      udisks_warning ("Error reading (uuid %s): %s (%s, %d)",
-                      object->uuid, error->message, g_quark_to_string (error->domain), error->code);
+      udisks_debug ("Error reading (uuid %s): %s (%s, %d)",
+                    object->uuid, error->message, g_quark_to_string (error->domain), error->code);
       g_clear_error (&error);
       bail = TRUE;
       goto out;
