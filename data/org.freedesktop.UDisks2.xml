@@ -1801,6 +1801,9 @@
          running or if the array does not have any redundancy
          (e.g. RAID-0 or linear).
 
+         Use the org.freedesktop.UDisks2.MDRaid.RequestSyncAction()
+         method to change this.
+
          This property corresponds to the
          <literal>sync_action</literal> sysfs file, see the
          <filename><ulink url="http://www.kernel.org/doc/Documentation/md.txt">Documentation/md.txt</ulink></filename>
@@ -1942,6 +1945,28 @@
     -->
     <method name="SetBitmapLocation">
       <arg name="value" direction="in" type="ay"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <!--
+        RequestSyncAction:
+        @sync_action: The action to request.
+        @options: Options (currently unused except for <link linkend="udisks-std-options">standard options</link>).
+
+        This method call can be used to trigger and cancel data
+        redundancy checks and repairs. Currently only the values
+        <literal>check</literal>, <literal>repair</literal> and
+        <literal>idle</literal> can be used for @sync_action.
+
+        See also the property #org.freedesktop.UDisks2.MDRaid:SyncAction.
+
+        This method call is similar to writing to the
+        <literal>sync_action</literal> sysfs file, see the
+        <filename><ulink url="http://www.kernel.org/doc/Documentation/md.txt">Documentation/md.txt</ulink></filename>
+        file shipped with the kernel sources.
+    -->
+    <method name="RequestSyncAction">
+      <arg name="sync_action" direction="in" type="s"/>
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 

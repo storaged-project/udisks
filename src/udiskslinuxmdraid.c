@@ -1373,6 +1373,130 @@ handle_set_bitmap_location (UDisksMDRaid           *_mdraid,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+handle_request_sync_action (UDisksMDRaid           *_mdraid,
+                            GDBusMethodInvocation  *invocation,
+                            const gchar            *sync_action,
+                            GVariant               *options)
+{
+  UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (_mdraid);
+  UDisksDaemon *daemon;
+  UDisksCleanup *cleanup;
+  UDisksLinuxMDRaidObject *object;
+  const gchar *action_id;
+  const gchar *message;
+  uid_t started_by_uid;
+  uid_t caller_uid;
+  gid_t caller_gid;
+  UDisksLinuxDevice *raid_device = NULL;
+  GError *error = NULL;
+  gchar *sync_action_path = NULL;
+  FILE *f;
+
+  object = udisks_daemon_util_dup_object (mdraid, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = udisks_linux_mdraid_object_get_daemon (object);
+  cleanup = udisks_daemon_get_cleanup (daemon);
+
+  error = NULL;
+  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+                                               invocation,
+                                               NULL /* GCancellable */,
+                                               &caller_uid,
+                                               &caller_gid,
+                                               NULL,
+                                               &error))
+    {
+      g_dbus_method_invocation_return_gerror (invocation, error);
+      g_error_free (error);
+      goto out;
+    }
+
+  if (!(g_strcmp0 (sync_action, "check") == 0 ||
+        g_strcmp0 (sync_action, "repair") == 0 ||
+        g_strcmp0 (sync_action, "idle") == 0))
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "Only values 'check', 'repair' and 'idle' are currently supported.");
+      goto out;
+    }
+
+  raid_device = udisks_linux_mdraid_object_get_device (object);
+  if (raid_device == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                                             "RAID Array is not running");
+      goto out;
+    }
+
+  if (!udisks_cleanup_has_mdraid (cleanup,
+                                  g_udev_device_get_device_number (raid_device->udev_device),
+                                  &started_by_uid))
+    {
+      /* allow stopping arrays stuff not mentioned in mounted-fs, but treat it like root mounted it */
+      started_by_uid = 0;
+    }
+
+  /* First check the user is authorized to manage RAID */
+  if (caller_uid != 0 && (caller_uid != started_by_uid))
+    {
+      /* Translators: Shown in authentication dialog when the user
+       * attempts to start/stop data scrubbing operations
+       */
+      /* TODO: variables */
+      message = N_("Authentication is required to start/stop data scrubbing of a RAID array");
+      action_id = "org.freedesktop.udisks2.manage-md-raid";
+      if (!udisks_daemon_util_check_authorization_sync (daemon,
+                                                        UDISKS_OBJECT (object),
+                                                        action_id,
+                                                        options,
+                                                        message,
+                                                        invocation))
+        goto out;
+    }
+
+  sync_action_path = g_strdup_printf ("%s/md/sync_action", g_udev_device_get_sysfs_path (raid_device->udev_device));
+  f = fopen (sync_action_path, "w");
+  if (f == NULL)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error opening %s: %m",
+                                             sync_action_path);
+      goto out;
+    }
+  else
+    {
+      if (fwrite (sync_action, 1, strlen (sync_action), f) != strlen (sync_action))
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error writing to sysfs file %s: %m",
+                                                 sync_action_path);
+          fclose (f);
+          goto out;
+        }
+    }
+  fclose (f);
+
+  udisks_mdraid_complete_request_sync_action (_mdraid, invocation);
+
+ out:
+  g_free (sync_action_path);
+  g_clear_object (&raid_device);
+  g_clear_object (&object);
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 mdraid_iface_init (UDisksMDRaidIface *iface)
 {
@@ -1381,4 +1505,5 @@ mdraid_iface_init (UDisksMDRaidIface *iface)
   iface->handle_remove_device = handle_remove_device;
   iface->handle_add_device = handle_add_device;
   iface->handle_set_bitmap_location = handle_set_bitmap_location;
+  iface->handle_request_sync_action = handle_request_sync_action;
 }
