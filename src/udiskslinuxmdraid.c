@@ -285,6 +285,8 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
   guint degraded = 0;
   guint64 chunk_size = 0;
   gdouble sync_completed_val = 0.0;
+  guint64 sync_rate = 0;
+  guint64 sync_remaining_time = 0;
   GVariantBuilder builder;
   UDisksDaemon *daemon = NULL;
   gboolean has_redundancy = FALSE;
@@ -390,8 +392,19 @@ udisks_linux_mdraid_update (UDisksLinuxMDRaid       *mdraid,
           if (num_sectors != 0)
             sync_completed_val = ((gdouble) completed_sectors) / ((gdouble) num_sectors);
         }
+
+      /* this is KiB/s (see drivers/md/md.c:sync_speed_show() */
+      sync_rate = read_sysfs_attr_as_uint64 (raid_device->udev_device, "md/sync_completed") * 1024;
+
+      if (sync_rate > 0)
+        {
+          guint64 num_bytes_remaining = (num_sectors - completed_sectors) * 512ULL;
+          sync_remaining_time = ((guint64) G_USEC_PER_SEC) * num_bytes_remaining / sync_rate;
+        }
     }
   udisks_mdraid_set_sync_completed (iface, sync_completed_val);
+  udisks_mdraid_set_sync_rate (iface, sync_rate);
+  udisks_mdraid_set_sync_remaining_time (iface, sync_remaining_time);
 
   /* ensure we poll, exactly when we need to */
   if (g_strcmp0 (sync_action, "resync") == 0 ||

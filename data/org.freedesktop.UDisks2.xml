@@ -1821,6 +1821,35 @@
     -->
     <property name="SyncCompleted" type="d" access="read"/>
 
+    <!-- SyncRate:
+         The rate (or speed) at which the sync operation takes
+         place. It is averaged over the last 30 seconds and measured
+         in bytes per second.
+
+         If the rate is unknown or no operation is in progress, the
+         value of this property is 0.
+
+         This property corresponds to the
+         <literal>sync_speed</literal> sysfs file, see the
+         <filename><ulink url="http://www.kernel.org/doc/Documentation/md.txt">Documentation/md.txt</ulink></filename>
+         file shipped with the kernel sources.
+    -->
+    <property name="SyncRate" type="t" access="read"/>
+
+    <!-- SyncRemainingTime:
+         The estimated number of micro-seconds until the operation is
+         finished
+
+         If the amount of remaining time is unknown or no operation is
+         in progress, the value of this property is 0.
+
+         This property is based on the value of the
+         <literal>sync_speed</literal> sysfs file, see the
+         <filename><ulink url="http://www.kernel.org/doc/Documentation/md.txt">Documentation/md.txt</ulink></filename>
+         file shipped with the kernel sources.
+    -->
+    <property name="SyncRemainingTime" type="t" access="read"/>
+
     <!-- Degraded:
          Number of devices by which the array is degraded (0 if not degraded or not running).
 

@@ -1605,6 +1605,8 @@ udisks_mdraid_get_num_devices
 udisks_mdraid_get_size
 udisks_mdraid_get_sync_action
 udisks_mdraid_get_sync_completed
+udisks_mdraid_get_sync_rate
+udisks_mdraid_get_sync_remaining_time
 udisks_mdraid_get_uuid
 udisks_mdraid_dup_active_devices
 udisks_mdraid_dup_bitmap_location
@@ -1622,6 +1624,8 @@ udisks_mdraid_set_num_devices
 udisks_mdraid_set_size
 udisks_mdraid_set_sync_action
 udisks_mdraid_set_sync_completed
+udisks_mdraid_set_sync_rate
+udisks_mdraid_set_sync_remaining_time
 udisks_mdraid_set_uuid
 UDisksMDRaidProxy
 UDisksMDRaidProxyClass
