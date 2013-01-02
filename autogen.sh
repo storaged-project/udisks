@@ -17,4 +17,4 @@ which gnome-autogen.sh || {
     exit 1
 }
 
-. gnome-autogen.sh --enable-gtk-doc $*
+. gnome-autogen.sh --enable-gtk-doc "$@"
