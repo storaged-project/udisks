@@ -33,7 +33,6 @@
 #include "udiskslinuxswapspace.h"
 #include "udiskslinuxblockobject.h"
 #include "udisksdaemon.h"
-#include "udiskscleanup.h"
 #include "udisksdaemonutil.h"
 #include "udisksmountmonitor.h"
 #include "udiskslinuxdevice.h"

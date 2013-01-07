@@ -25,7 +25,7 @@ udisks_linux_encrypted_get_type
 udisks_linux_swapspace_get_type
 udisks_linux_loop_get_type
 udisks_linux_manager_get_type
-udisks_cleanup_get_type
+udisks_state_get_type
 udisks_fstab_entry_get_type
 udisks_fstab_monitor_get_type
 udisks_crypttab_entry_get_type

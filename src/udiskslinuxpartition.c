@@ -34,7 +34,6 @@
 #include "udiskslinuxpartition.h"
 #include "udiskslinuxblockobject.h"
 #include "udisksdaemon.h"
-#include "udiskscleanup.h"
 #include "udisksdaemonutil.h"
 #include "udiskslinuxdevice.h"
 

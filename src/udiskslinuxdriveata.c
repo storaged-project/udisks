@@ -44,7 +44,6 @@
 #include "udiskslinuxdriveata.h"
 #include "udiskslinuxblockobject.h"
 #include "udisksdaemon.h"
-#include "udiskscleanup.h"
 #include "udisksdaemonutil.h"
 #include "udisksbasejob.h"
 #include "udiskssimplejob.h"

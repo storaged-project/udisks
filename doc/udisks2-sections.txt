@@ -118,7 +118,7 @@ udisks_daemon_get_fstab_monitor
 udisks_daemon_get_crypttab_monitor
 udisks_daemon_get_linux_provider
 udisks_daemon_get_authority
-udisks_daemon_get_cleanup
+udisks_daemon_get_state
 UDisksDaemonWaitFunc
 udisks_daemon_wait_for_object_sync
 udisks_daemon_get_objects
@@ -318,32 +318,32 @@ udisks_mount_monitor_get_type
 </SECTION>
 
 <SECTION>
-<FILE>udiskscleanup</FILE>
-<TITLE>UDisksCleanup</TITLE>
-UDisksCleanup
-udisks_cleanup_new
-udisks_cleanup_start
-udisks_cleanup_stop
-udisks_cleanup_check
-udisks_cleanup_get_daemon
+<FILE>udisksstate</FILE>
+<TITLE>UDisksState</TITLE>
+UDisksState
+udisks_state_new
+udisks_state_start_cleanup
+udisks_state_stop_cleanup
+udisks_state_check
+udisks_state_get_daemon
 <SUBSECTION>
-udisks_cleanup_add_mounted_fs
-udisks_cleanup_find_mounted_fs
+udisks_state_add_mounted_fs
+udisks_state_find_mounted_fs
 <SUBSECTION>
-udisks_cleanup_add_unlocked_luks
-udisks_cleanup_find_unlocked_luks
+udisks_state_add_unlocked_luks
+udisks_state_find_unlocked_luks
 <SUBSECTION>
-udisks_cleanup_add_loop
-udisks_cleanup_has_loop
+udisks_state_add_loop
+udisks_state_has_loop
 <SUBSECTION>
-udisks_cleanup_add_mdraid
-udisks_cleanup_has_mdraid
+udisks_state_add_mdraid
+udisks_state_has_mdraid
 <SUBSECTION Standard>
-UDISKS_TYPE_CLEANUP
-UDISKS_CLEANUP
-UDISKS_IS_CLEANUP
+UDISKS_TYPE_STATE
+UDISKS_STATE
+UDISKS_IS_STATE
 <SUBSECTION Private>
-udisks_cleanup_get_type
+udisks_state_get_type
 </SECTION>
 
 <SECTION>

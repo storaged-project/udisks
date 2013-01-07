@@ -31,7 +31,7 @@
 #include "udiskslinuxdriveobject.h"
 #include "udiskslinuxmdraidobject.h"
 #include "udiskslinuxmanager.h"
-#include "udiskscleanup.h"
+#include "udisksstate.h"
 #include "udiskslinuxdevice.h"
 
 /**
@@ -884,7 +884,7 @@ handle_block_uevent (UDisksLinuxProvider *provider,
   if (g_strcmp0 (action, "add") != 0)
     {
       /* Possibly need to clean up */
-      udisks_cleanup_check (udisks_daemon_get_cleanup (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))));
+      udisks_state_check (udisks_daemon_get_state (udisks_provider_get_daemon (UDISKS_PROVIDER (provider))));
     }
 }
 

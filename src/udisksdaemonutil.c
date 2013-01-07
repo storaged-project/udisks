@@ -36,7 +36,7 @@
 
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
-#include "udiskscleanup.h"
+#include "udisksstate.h"
 #include "udiskslogging.h"
 #include "udiskslinuxblockobject.h"
 #include "udiskslinuxdriveobject.h"
@@ -341,20 +341,20 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
   gboolean ret;
   UDisksBlock *block = NULL;
   UDisksPartition *partition = NULL;
-  UDisksCleanup *cleanup;
+  UDisksState *state;
   uid_t setup_by_user;
   UDisksObject *crypto_object;
 
   ret = FALSE;
 
-  cleanup = udisks_daemon_get_cleanup (daemon);
+  state = udisks_daemon_get_state (daemon);
   block = udisks_object_get_block (object);
   if (block == NULL)
     goto out;
   partition = udisks_object_get_partition (object);
 
   /* loop devices */
-  if (udisks_cleanup_has_loop (cleanup, udisks_block_get_device (block), &setup_by_user))
+  if (udisks_state_has_loop (state, udisks_block_get_device (block), &setup_by_user))
     {
       if (setup_by_user == user)
         {
@@ -386,9 +386,9 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
     {
       UDisksBlock *crypto_block;
       crypto_block = udisks_object_peek_block (crypto_object);
-      if (udisks_cleanup_find_unlocked_luks (cleanup,
-                                             udisks_block_get_device_number (crypto_block),
-                                             &setup_by_user))
+      if (udisks_state_find_unlocked_luks (state,
+                                           udisks_block_get_device_number (crypto_block),
+                                           &setup_by_user))
         {
           if (setup_by_user == user)
             {
@@ -404,7 +404,7 @@ udisks_daemon_util_setup_by_user (UDisksDaemon *daemon,
   if (g_strcmp0 (udisks_block_get_mdraid (block), "/") != 0)
     {
       uid_t started_by_user;
-      if (udisks_cleanup_has_mdraid (cleanup, udisks_block_get_device_number (block), &started_by_user))
+      if (udisks_state_has_mdraid (state, udisks_block_get_device_number (block), &started_by_user))
         {
           if (started_by_user == user)
             {

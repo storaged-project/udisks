@@ -40,7 +40,7 @@
 #include "udiskslinuxmanager.h"
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
-#include "udiskscleanup.h"
+#include "udisksstate.h"
 #include "udiskslinuxblockobject.h"
 #include "udiskslinuxdevice.h"
 
@@ -417,11 +417,11 @@ handle_loop_setup (UDisksManager          *object,
     }
 
   /* update the loop file - need to do this before getting the uevent for the device  */
-  udisks_cleanup_add_loop (udisks_daemon_get_cleanup (manager->daemon),
-                           loop_device,
-                           path,
-                           fd_statbuf_valid ? fd_statbuf.st_dev : 0,
-                           caller_uid);
+  udisks_state_add_loop (udisks_daemon_get_state (manager->daemon),
+                         loop_device,
+                         path,
+                         fd_statbuf_valid ? fd_statbuf.st_dev : 0,
+                         caller_uid);
 
   memset (&li64, '\0', sizeof (li64));
   strncpy ((char *) li64.lo_file_name, path, LO_NAME_SIZE - 1);
@@ -800,9 +800,9 @@ handle_mdraid_create (UDisksManager         *_object,
   raid_device_num = statbuf.st_rdev;
 
   /* update the mdraid file */
-  udisks_cleanup_add_mdraid (udisks_daemon_get_cleanup (manager->daemon),
-                             raid_device_num,
-                             caller_uid);
+  udisks_state_add_mdraid (udisks_daemon_get_state (manager->daemon),
+                           raid_device_num,
+                           caller_uid);
 
   /* ... wipe the created RAID array */
   if (!udisks_daemon_launch_spawned_job_sync (manager->daemon,

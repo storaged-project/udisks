@@ -41,7 +41,7 @@
 #include "udiskslinuxloop.h"
 #include "udiskslinuxblockobject.h"
 #include "udisksdaemon.h"
-#include "udiskscleanup.h"
+#include "udisksstate.h"
 #include "udisksdaemonutil.h"
 #include "udiskslinuxdevice.h"
 
@@ -119,12 +119,12 @@ udisks_linux_loop_update (UDisksLinuxLoop        *loop,
                           UDisksLinuxBlockObject *object)
 {
   UDisksDaemon *daemon;
-  UDisksCleanup *cleanup;
+  UDisksState *state;
   UDisksLinuxDevice *device;
   uid_t setup_by_uid;
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
-  cleanup = udisks_daemon_get_cleanup (daemon);
+  state = udisks_daemon_get_state (daemon);
 
   device = udisks_linux_block_object_get_device (object);
   if (g_str_has_prefix (g_udev_device_get_name (device->udev_device), "loop"))
@@ -168,11 +168,11 @@ udisks_linux_loop_update (UDisksLinuxLoop        *loop,
                              g_udev_device_get_sysfs_attr_as_boolean (device->udev_device, "loop/autoclear"));
 
   setup_by_uid = 0;
-  if (cleanup != NULL)
+  if (state != NULL)
     {
-      udisks_cleanup_has_loop (cleanup,
-                               g_udev_device_get_device_file (device->udev_device),
-                               &setup_by_uid);
+      udisks_state_has_loop (state,
+                             g_udev_device_get_device_file (device->udev_device),
+                             &setup_by_uid);
     }
   udisks_loop_set_setup_by_uid (UDISKS_LOOP (loop), setup_by_uid);
 
@@ -190,7 +190,7 @@ handle_delete (UDisksLoop             *loop,
   UDisksObject *object;
   UDisksBlock *block;
   UDisksDaemon *daemon;
-  UDisksCleanup *cleanup;
+  UDisksState *state;
   gchar *error_message;
   gchar *escaped_device;
   GError *error;
@@ -212,7 +212,7 @@ handle_delete (UDisksLoop             *loop,
 
   block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
-  cleanup = udisks_daemon_get_cleanup (daemon);
+  state = udisks_daemon_get_state (daemon);
 
   error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon, invocation, NULL, &caller_uid, NULL, NULL, &error))
@@ -222,9 +222,9 @@ handle_delete (UDisksLoop             *loop,
       goto out;
     }
 
-  if (!udisks_cleanup_has_loop (cleanup,
-                                udisks_block_get_device (block),
-                                &setup_by_uid))
+  if (!udisks_state_has_loop (state,
+                              udisks_block_get_device (block),
+                              &setup_by_uid))
     {
       setup_by_uid = -1;
     }

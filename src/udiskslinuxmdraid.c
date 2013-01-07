@@ -37,7 +37,7 @@
 #include "udiskslinuxmdraid.h"
 #include "udiskslinuxblockobject.h"
 #include "udisksdaemon.h"
-#include "udiskscleanup.h"
+#include "udisksstate.h"
 #include "udisksdaemonutil.h"
 #include "udiskslinuxdevice.h"
 
@@ -572,7 +572,7 @@ handle_start (UDisksMDRaid           *_mdraid,
 {
   UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (_mdraid);
   UDisksDaemon *daemon;
-  UDisksCleanup *cleanup;
+  UDisksState *state;
   UDisksLinuxMDRaidObject *object;
   const gchar *action_id;
   const gchar *message;
@@ -598,7 +598,7 @@ handle_start (UDisksMDRaid           *_mdraid,
     }
 
   daemon = udisks_linux_mdraid_object_get_daemon (object);
-  cleanup = udisks_daemon_get_cleanup (daemon);
+  state = udisks_daemon_get_state (daemon);
 
   g_variant_lookup (options, "start-degraded", "b", &opt_start_degraded);
 
@@ -717,9 +717,9 @@ handle_start (UDisksMDRaid           *_mdraid,
   raid_device_num = statbuf.st_rdev;
 
   /* update the mdraid file */
-  udisks_cleanup_add_mdraid (cleanup,
-                             raid_device_num,
-                             caller_uid);
+  udisks_state_add_mdraid (state,
+                           raid_device_num,
+                           caller_uid);
 
   /* TODO: wait for array to actually show up in udisks? Probably */
 
@@ -746,7 +746,7 @@ handle_stop (UDisksMDRaid           *_mdraid,
 {
   UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (_mdraid);
   UDisksDaemon *daemon;
-  UDisksCleanup *cleanup;
+  UDisksState *state;
   UDisksLinuxMDRaidObject *object;
   uid_t started_by_uid;
   uid_t caller_uid;
@@ -765,7 +765,7 @@ handle_stop (UDisksMDRaid           *_mdraid,
     }
 
   daemon = udisks_linux_mdraid_object_get_daemon (object);
-  cleanup = udisks_daemon_get_cleanup (daemon);
+  state = udisks_daemon_get_state (daemon);
 
   error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
@@ -789,9 +789,9 @@ handle_stop (UDisksMDRaid           *_mdraid,
       goto out;
     }
 
-  if (!udisks_cleanup_has_mdraid (cleanup,
-                                  g_udev_device_get_device_number (raid_device->udev_device),
-                                  &started_by_uid))
+  if (!udisks_state_has_mdraid (state,
+                                g_udev_device_get_device_number (raid_device->udev_device),
+                                &started_by_uid))
     {
       /* allow stopping arrays stuff not mentioned in mounted-fs, but treat it like root mounted it */
       started_by_uid = 0;
@@ -920,7 +920,7 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
 {
   UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (_mdraid);
   UDisksDaemon *daemon;
-  UDisksCleanup *cleanup;
+  UDisksState *state;
   UDisksLinuxMDRaidObject *object;
   const gchar *action_id;
   const gchar *message;
@@ -947,7 +947,7 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
     }
 
   daemon = udisks_linux_mdraid_object_get_daemon (object);
-  cleanup = udisks_daemon_get_cleanup (daemon);
+  state = udisks_daemon_get_state (daemon);
 
   g_variant_lookup (options, "wipe", "b", &opt_wipe);
 
@@ -997,9 +997,9 @@ handle_remove_device (UDisksMDRaid           *_mdraid,
       goto out;
     }
 
-  if (!udisks_cleanup_has_mdraid (cleanup,
-                                  g_udev_device_get_device_number (raid_device->udev_device),
-                                  &started_by_uid))
+  if (!udisks_state_has_mdraid (state,
+                                g_udev_device_get_device_number (raid_device->udev_device),
+                                &started_by_uid))
     {
       /* allow stopping arrays stuff not mentioned in mounted-fs, but treat it like root mounted it */
       started_by_uid = 0;
@@ -1127,7 +1127,7 @@ handle_add_device (UDisksMDRaid           *_mdraid,
 {
   UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (_mdraid);
   UDisksDaemon *daemon;
-  UDisksCleanup *cleanup;
+  UDisksState *state;
   UDisksLinuxMDRaidObject *object;
   const gchar *action_id;
   const gchar *message;
@@ -1152,7 +1152,7 @@ handle_add_device (UDisksMDRaid           *_mdraid,
     }
 
   daemon = udisks_linux_mdraid_object_get_daemon (object);
-  cleanup = udisks_daemon_get_cleanup (daemon);
+  state = udisks_daemon_get_state (daemon);
 
   error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
@@ -1192,9 +1192,9 @@ handle_add_device (UDisksMDRaid           *_mdraid,
       goto out;
     }
 
-  if (!udisks_cleanup_has_mdraid (cleanup,
-                                  g_udev_device_get_device_number (raid_device->udev_device),
-                                  &started_by_uid))
+  if (!udisks_state_has_mdraid (state,
+                                g_udev_device_get_device_number (raid_device->udev_device),
+                                &started_by_uid))
     {
       /* allow stopping arrays stuff not mentioned in mounted-fs, but treat it like root mounted it */
       started_by_uid = 0;
@@ -1270,7 +1270,7 @@ handle_set_bitmap_location (UDisksMDRaid           *_mdraid,
 {
   UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (_mdraid);
   UDisksDaemon *daemon;
-  UDisksCleanup *cleanup;
+  UDisksState *state;
   UDisksLinuxMDRaidObject *object;
   const gchar *action_id;
   const gchar *message;
@@ -1291,7 +1291,7 @@ handle_set_bitmap_location (UDisksMDRaid           *_mdraid,
     }
 
   daemon = udisks_linux_mdraid_object_get_daemon (object);
-  cleanup = udisks_daemon_get_cleanup (daemon);
+  state = udisks_daemon_get_state (daemon);
 
   error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
@@ -1322,9 +1322,9 @@ handle_set_bitmap_location (UDisksMDRaid           *_mdraid,
       goto out;
     }
 
-  if (!udisks_cleanup_has_mdraid (cleanup,
-                                  g_udev_device_get_device_number (raid_device->udev_device),
-                                  &started_by_uid))
+  if (!udisks_state_has_mdraid (state,
+                                g_udev_device_get_device_number (raid_device->udev_device),
+                                &started_by_uid))
     {
       /* allow stopping arrays stuff not mentioned in mounted-fs, but treat it like root mounted it */
       started_by_uid = 0;
@@ -1393,7 +1393,7 @@ handle_request_sync_action (UDisksMDRaid           *_mdraid,
 {
   UDisksLinuxMDRaid *mdraid = UDISKS_LINUX_MDRAID (_mdraid);
   UDisksDaemon *daemon;
-  UDisksCleanup *cleanup;
+  UDisksState *state;
   UDisksLinuxMDRaidObject *object;
   const gchar *action_id;
   const gchar *message;
@@ -1413,7 +1413,7 @@ handle_request_sync_action (UDisksMDRaid           *_mdraid,
     }
 
   daemon = udisks_linux_mdraid_object_get_daemon (object);
-  cleanup = udisks_daemon_get_cleanup (daemon);
+  state = udisks_daemon_get_state (daemon);
 
   error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
@@ -1446,9 +1446,9 @@ handle_request_sync_action (UDisksMDRaid           *_mdraid,
       goto out;
     }
 
-  if (!udisks_cleanup_has_mdraid (cleanup,
-                                  g_udev_device_get_device_number (raid_device->udev_device),
-                                  &started_by_uid))
+  if (!udisks_state_has_mdraid (state,
+                                g_udev_device_get_device_number (raid_device->udev_device),
+                                &started_by_uid))
     {
       /* allow stopping arrays stuff not mentioned in mounted-fs, but treat it like root mounted it */
       started_by_uid = 0;

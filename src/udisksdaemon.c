@@ -31,7 +31,7 @@
 #include "udisksspawnedjob.h"
 #include "udisksthreadedjob.h"
 #include "udiskssimplejob.h"
-#include "udiskscleanup.h"
+#include "udisksstate.h"
 #include "udisksfstabmonitor.h"
 #include "udisksfstabentry.h"
 #include "udiskscrypttabmonitor.h"
@@ -68,7 +68,7 @@ struct _UDisksDaemon
   /* may be NULL if polkit is masked */
   PolkitAuthority *authority;
 
-  UDisksCleanup *cleanup;
+  UDisksState *state;
 
   UDisksFstabMonitor *fstab_monitor;
 
@@ -97,8 +97,8 @@ udisks_daemon_finalize (GObject *object)
 {
   UDisksDaemon *daemon = UDISKS_DAEMON (object);
 
-  udisks_cleanup_stop (daemon->cleanup);
-  g_object_unref (daemon->cleanup);
+  udisks_state_stop_cleanup (daemon->state);
+  g_object_unref (daemon->state);
 
   g_clear_object (&daemon->authority);
   g_object_unref (daemon->object_manager);
@@ -180,7 +180,7 @@ mount_monitor_on_mount_removed (UDisksMountMonitor *monitor,
                                 gpointer            user_data)
 {
   UDisksDaemon *daemon = UDISKS_DAEMON (user_data);
-  udisks_cleanup_check (daemon->cleanup);
+  udisks_state_check (daemon->state);
 }
 
 static void
@@ -218,7 +218,7 @@ udisks_daemon_constructed (GObject *object)
 
   daemon->mount_monitor = udisks_mount_monitor_new ();
 
-  daemon->cleanup = udisks_cleanup_new (daemon);
+  daemon->state = udisks_state_new (daemon);
 
   g_signal_connect (daemon->mount_monitor,
                     "mount-removed",
@@ -237,8 +237,8 @@ udisks_daemon_constructed (GObject *object)
   g_dbus_object_manager_server_set_connection (daemon->object_manager, daemon->connection);
 
   /* Start cleaning up */
-  udisks_cleanup_start (daemon->cleanup);
-  udisks_cleanup_check (daemon->cleanup);
+  udisks_state_start_cleanup (daemon->state);
+  udisks_state_check (daemon->state);
 
   if (G_OBJECT_CLASS (udisks_daemon_parent_class)->constructed != NULL)
     G_OBJECT_CLASS (udisks_daemon_parent_class)->constructed (object);
@@ -426,18 +426,18 @@ udisks_daemon_get_authority (UDisksDaemon *daemon)
 }
 
 /**
- * udisks_daemon_get_cleanup:
+ * udisks_daemon_get_state:
  * @daemon: A #UDisksDaemon.
  *
- * Gets the cleanup object used by @daemon.
+ * Gets the state object used by @daemon.
  *
- * Returns: A #UDisksCleanup instance. Do not free, the object is owned by @daemon.
+ * Returns: A #UDisksState instance. Do not free, the object is owned by @daemon.
  */
-UDisksCleanup *
-udisks_daemon_get_cleanup (UDisksDaemon *daemon)
+UDisksState *
+udisks_daemon_get_state (UDisksDaemon *daemon)
 {
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
-  return daemon->cleanup;
+  return daemon->state;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

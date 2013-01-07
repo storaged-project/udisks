@@ -43,7 +43,7 @@
 #include "udiskslinuxdriveobject.h"
 #include "udiskslinuxfsinfo.h"
 #include "udisksdaemon.h"
-#include "udiskscleanup.h"
+#include "udisksstate.h"
 #include "udisksdaemonutil.h"
 #include "udiskslinuxprovider.h"
 #include "udisksfstabmonitor.h"
@@ -2127,7 +2127,7 @@ handle_format (UDisksBlock           *block,
   UDisksBlock *block_to_mkfs = NULL;
   UDisksObject *object_to_mkfs = NULL;
   UDisksDaemon *daemon;
-  UDisksCleanup *cleanup;
+  UDisksState *state;
   const gchar *action_id;
   const gchar *message;
   const FSInfo *fs_info;
@@ -2160,7 +2160,7 @@ handle_format (UDisksBlock           *block,
     }
 
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
-  cleanup = udisks_daemon_get_cleanup (daemon);
+  state = udisks_daemon_get_state (daemon);
   command = NULL;
   error_message = NULL;
 
@@ -2441,11 +2441,11 @@ handle_format (UDisksBlock           *block,
 
       /* update the unlocked-luks file */
       udev_cleartext_device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (cleartext_object));
-      udisks_cleanup_add_unlocked_luks (cleanup,
-                                        udisks_block_get_device_number (cleartext_block),
-                                        udisks_block_get_device_number (block),
-                                        g_udev_device_get_sysfs_attr (udev_cleartext_device->udev_device, "dm/uuid"),
-                                        caller_uid);
+      udisks_state_add_unlocked_luks (state,
+                                      udisks_block_get_device_number (cleartext_block),
+                                      udisks_block_get_device_number (block),
+                                      g_udev_device_get_sysfs_attr (udev_cleartext_device->udev_device, "dm/uuid"),
+                                      caller_uid);
 
       object_to_mkfs = cleartext_object;
       block_to_mkfs = cleartext_block;

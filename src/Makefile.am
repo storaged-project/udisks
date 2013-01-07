@@ -70,7 +70,7 @@ libudisks_daemon_la_SOURCES =						\
 	udisksmountmonitor.h		udisksmountmonitor.c		\
 	udisksdaemonutil.h		udisksdaemonutil.c		\
 	udiskslogging.h			udiskslogging.c			\
-	udiskscleanup.h			udiskscleanup.c			\
+	udisksstate.h			udisksstate.c			\
 	udisksprivate.h							\
 	udisksfstabentry.h		udisksfstabentry.c		\
 	udisksfstabmonitor.h		udisksfstabmonitor.c		\

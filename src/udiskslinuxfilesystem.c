@@ -39,7 +39,7 @@
 #include "udiskslinuxblockobject.h"
 #include "udiskslinuxfsinfo.h"
 #include "udisksdaemon.h"
-#include "udiskscleanup.h"
+#include "udisksstate.h"
 #include "udisksdaemonutil.h"
 #include "udisksmountmonitor.h"
 #include "udisksmount.h"
@@ -1103,7 +1103,7 @@ handle_mount (UDisksFilesystem       *filesystem,
   UDisksObject *object;
   UDisksBlock *block;
   UDisksDaemon *daemon;
-  UDisksCleanup *cleanup;
+  UDisksState *state;
   uid_t caller_uid;
   gid_t caller_gid;
   pid_t caller_pid;
@@ -1149,7 +1149,7 @@ handle_mount (UDisksFilesystem       *filesystem,
 
   block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
-  cleanup = udisks_daemon_get_cleanup (daemon);
+  state = udisks_daemon_get_state (daemon);
 
   /* check if mount point is managed by e.g. /etc/fstab or similar */
   if (is_system_managed (block, &mount_point_to_use, &fstab_mount_options))
@@ -1310,11 +1310,11 @@ handle_mount (UDisksFilesystem       *filesystem,
                      caller_uid);
 
       /* update the mounted-fs file */
-      udisks_cleanup_add_mounted_fs (cleanup,
-                                     mount_point_to_use,
-                                     udisks_block_get_device_number (block),
-                                     caller_uid,
-                                     TRUE); /* fstab_mounted */
+      udisks_state_add_mounted_fs (state,
+                                   mount_point_to_use,
+                                   udisks_block_get_device_number (block),
+                                   caller_uid,
+                                   TRUE); /* fstab_mounted */
 
       udisks_filesystem_complete_mount (filesystem, invocation, mount_point_to_use);
       goto out;
@@ -1465,11 +1465,11 @@ handle_mount (UDisksFilesystem       *filesystem,
     }
 
   /* update the mounted-fs file */
-  udisks_cleanup_add_mounted_fs (cleanup,
-                                 mount_point_to_use,
-                                 udisks_block_get_device_number (block),
-                                 caller_uid,
-                                 FALSE); /* fstab_mounted */
+  udisks_state_add_mounted_fs (state,
+                               mount_point_to_use,
+                               udisks_block_get_device_number (block),
+                               caller_uid,
+                               FALSE); /* fstab_mounted */
 
   udisks_notice ("Mounted %s at %s on behalf of uid %d",
                  udisks_block_get_device (block),
@@ -1519,7 +1519,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
   UDisksObject *object;
   UDisksBlock *block;
   UDisksDaemon *daemon;
-  UDisksCleanup *cleanup;
+  UDisksState *state;
   gchar *mount_point;
   gchar *fstab_mount_options;
   gchar *escaped_mount_point;
@@ -1554,7 +1554,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
 
   block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
-  cleanup = udisks_daemon_get_cleanup (daemon);
+  state = udisks_daemon_get_state (daemon);
   system_managed = FALSE;
 
   if (options != NULL)
@@ -1660,10 +1660,10 @@ handle_unmount (UDisksFilesystem       *filesystem,
     }
 
   error = NULL;
-  mount_point = udisks_cleanup_find_mounted_fs (cleanup,
-                                                udisks_block_get_device_number (block),
-                                                &mounted_by_uid,
-                                                &fstab_mounted);
+  mount_point = udisks_state_find_mounted_fs (state,
+                                              udisks_block_get_device_number (block),
+                                              &mounted_by_uid,
+                                              &fstab_mounted);
   if (mount_point == NULL)
     {
       /* allow unmounting stuff not mentioned in mounted-fs, but treat it like root mounted it */
@@ -1741,7 +1741,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
       goto out;
     }
 
-  /* OK, filesystem unmounted.. the cleanup routines will remove the mountpoint for us */
+  /* OK, filesystem unmounted.. the state/cleanup routines will remove the mountpoint for us */
 
   udisks_notice ("Unmounted %s on behalf of uid %d",
                  udisks_block_get_device (block),

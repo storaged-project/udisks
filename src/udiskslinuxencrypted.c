@@ -34,7 +34,7 @@
 #include "udiskslinuxblockobject.h"
 #include "udisksdaemon.h"
 #include "udisksdaemonutil.h"
-#include "udiskscleanup.h"
+#include "udisksstate.h"
 #include "udiskslinuxdevice.h"
 
 /**
@@ -238,7 +238,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
   UDisksObject *object = NULL;
   UDisksBlock *block;
   UDisksDaemon *daemon;
-  UDisksCleanup *cleanup;
+  UDisksState *state;
   gchar *error_message = NULL;
   gchar *name = NULL;
   gchar *escaped_name = NULL;
@@ -266,7 +266,7 @@ handle_unlock (UDisksEncrypted        *encrypted,
 
   block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
-  cleanup = udisks_daemon_get_cleanup (daemon);
+  state = udisks_daemon_get_state (daemon);
 
   /* TODO: check if the device is mentioned in /etc/crypttab (see crypttab(5)) - if so use that
    *
@@ -441,11 +441,11 @@ handle_unlock (UDisksEncrypted        *encrypted,
   cleartext_device = udisks_linux_block_object_get_device (UDISKS_LINUX_BLOCK_OBJECT (cleartext_object));
 
   /* update the unlocked-luks file */
-  udisks_cleanup_add_unlocked_luks (cleanup,
-                                    udisks_block_get_device_number (cleartext_block),
-                                    udisks_block_get_device_number (block),
-                                    g_udev_device_get_sysfs_attr (cleartext_device->udev_device, "dm/uuid"),
-                                    caller_uid);
+  udisks_state_add_unlocked_luks (state,
+                                  udisks_block_get_device_number (cleartext_block),
+                                  udisks_block_get_device_number (block),
+                                  g_udev_device_get_sysfs_attr (cleartext_device->udev_device, "dm/uuid"),
+                                  caller_uid);
 
   udisks_encrypted_complete_unlock (encrypted,
                                     invocation,
@@ -477,7 +477,7 @@ handle_lock (UDisksEncrypted        *encrypted,
   UDisksObject *object;
   UDisksBlock *block;
   UDisksDaemon *daemon;
-  UDisksCleanup *cleanup;
+  UDisksState *state;
   gchar *error_message;
   gchar *name;
   gchar *escaped_name;
@@ -507,7 +507,7 @@ handle_lock (UDisksEncrypted        *encrypted,
 
   block = udisks_object_peek_block (object);
   daemon = udisks_linux_block_object_get_daemon (UDISKS_LINUX_BLOCK_OBJECT (object));
-  cleanup = udisks_daemon_get_cleanup (daemon);
+  state = udisks_daemon_get_state (daemon);
 
   /* TODO: check if the device is mentioned in /etc/crypttab (see crypttab(5)) - if so use that
    *
@@ -545,9 +545,9 @@ handle_lock (UDisksEncrypted        *encrypted,
   cleartext_block = udisks_object_peek_block (cleartext_object);
 
   error = NULL;
-  cleartext_device_from_file = udisks_cleanup_find_unlocked_luks (cleanup,
-                                                                  udisks_block_get_device_number (block),
-                                                                  &unlocked_by_uid);
+  cleartext_device_from_file = udisks_state_find_unlocked_luks (state,
+                                                                udisks_block_get_device_number (block),
+                                                                &unlocked_by_uid);
   if (cleartext_device_from_file == 0)
     {
       /* allow locking stuff not mentioned in unlocked-luks, but treat it like root unlocked it */
