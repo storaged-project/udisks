@@ -217,7 +217,7 @@
   </action>
 
   <!-- ###################################################################### -->
-  <!-- Power off a drive -->
+  <!-- Power off drives -->
 
   <action id="org.freedesktop.udisks2.power-off-drive">
     <_description>Power off drive</_description>
@@ -240,7 +240,7 @@
     </defaults>
   </action>
 
-  <!-- Power off a a drive attached to another seat -->
+  <!-- Power off a drive attached to another seat -->
   <action id="org.freedesktop.udisks2.power-off-drive-other-seat">
     <_description>Power off a drive attached to another seat</_description>
     <_message>Authentication is required to power off a drive plugged into another seat</_message>
@@ -521,7 +521,7 @@
     </defaults>
   </action>
 
-  <!-- Cancel own job -->
+  <!-- Cancel job initiated by other user -->
   <action id="org.freedesktop.udisks2.cancel-job-other-user">
     <_description>Cancel job started by another user</_description>
     <_message>Authentication is required to cancel a job started by another user</_message>
