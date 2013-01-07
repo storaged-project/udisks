@@ -52,7 +52,6 @@
 #include "udiskslinuxencrypted.h"
 #include "udiskslinuxswapspace.h"
 #include "udiskslinuxloop.h"
-#include "udiskspersistentstore.h"
 #include "udiskslinuxprovider.h"
 #include "udisksfstabmonitor.h"
 #include "udisksfstabentry.h"

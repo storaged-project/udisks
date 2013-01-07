@@ -31,7 +31,6 @@
 
 #include "udisksdaemon.h"
 #include "udiskscleanup.h"
-#include "udiskspersistentstore.h"
 #include "udisksmount.h"
 #include "udisksmountmonitor.h"
 #include "udiskslogging.h"
@@ -45,9 +44,7 @@
  *
  * This type is used for cleaning up when devices set up via the
  * udisks interfaces are removed while still in use - for example, a
- * USB stick being yanked. The #UDisksPersistentStore type is used to
- * record this information to ensure that it exists across daemon
- * restarts and OS reboots.
+ * USB stick being yanked.
  *
  * The following files are used:
  * <table frame='all'>
@@ -151,11 +148,13 @@ struct _UDisksCleanup
   GMutex lock;
 
   UDisksDaemon *daemon;
-  UDisksPersistentStore *persistent_store;
 
   GThread *thread;
   GMainContext *context;
   GMainLoop *loop;
+
+  /* key-path -> GVariant */
+  GHashTable *cache;
 };
 
 typedef struct _UDisksCleanupClass UDisksCleanupClass;
@@ -188,6 +187,18 @@ static void udisks_cleanup_check_mdraid (UDisksCleanup *cleanup,
                                          gboolean       check_only,
                                          GArray        *devs_to_clean);
 
+static GVariant *udisks_cleanup_get (UDisksCleanup           *cleanup,
+                                     const gchar             *key,
+                                     const GVariantType      *type,
+                                     GError                 **error);
+
+static gboolean udisks_cleanup_set (UDisksCleanup           *cleanup,
+                                    const gchar             *key,
+                                    const GVariantType      *type,
+                                    GVariant                *value,
+                                    GError                 **error);
+
+
 G_DEFINE_TYPE (UDisksCleanup, udisks_cleanup, G_TYPE_OBJECT);
 
 
@@ -195,6 +206,7 @@ static void
 udisks_cleanup_init (UDisksCleanup *cleanup)
 {
   g_mutex_init (&cleanup->lock);
+  cleanup->cache = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_variant_unref);
 }
 
 static void
@@ -202,6 +214,7 @@ udisks_cleanup_finalize (GObject *object)
 {
   UDisksCleanup *cleanup = UDISKS_CLEANUP (object);
 
+  g_hash_table_unref (cleanup->cache);
   g_mutex_clear (&cleanup->lock);
 
   G_OBJECT_CLASS (udisks_cleanup_parent_class)->finalize (object);
@@ -242,8 +255,6 @@ udisks_cleanup_set_property (GObject      *object,
       /* we don't take a reference to the daemon */
       cleanup->daemon = g_value_get_object (value);
       g_assert (cleanup->daemon != NULL);
-      cleanup->persistent_store = udisks_daemon_get_persistent_store (cleanup->daemon);
-      g_assert (cleanup->persistent_store != NULL);
       break;
 
     default:
@@ -775,11 +786,10 @@ udisks_cleanup_check_mounted_fs (UDisksCleanup *cleanup,
 
   /* load existing entries */
   error = NULL;
-  value = udisks_persistent_store_get (cleanup->persistent_store,
-                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                       "mounted-fs",
-                                       G_VARIANT_TYPE ("a{sa{sv}}"),
-                                       &error);
+  value = udisks_cleanup_get (cleanup,
+                              "mounted-fs",
+                              G_VARIANT_TYPE ("a{sa{sv}}"),
+                              &error);
   if (error != NULL)
     {
       udisks_warning ("Error getting mounted-fs: %s (%s, %d)",
@@ -812,12 +822,11 @@ udisks_cleanup_check_mounted_fs (UDisksCleanup *cleanup,
   if (changed)
     {
       error = NULL;
-      if (!udisks_persistent_store_set (cleanup->persistent_store,
-                                        UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                        "mounted-fs",
-                                        G_VARIANT_TYPE ("a{sa{sv}}"),
-                                        new_value, /* consumes new_value */
-                                        &error))
+      if (!udisks_cleanup_set (cleanup,
+                               "mounted-fs",
+                               G_VARIANT_TYPE ("a{sa{sv}}"),
+                               new_value, /* consumes new_value */
+                               &error))
         {
           udisks_warning ("Error setting mounted-fs: %s (%s, %d)",
                           error->message,
@@ -870,11 +879,10 @@ udisks_cleanup_add_mounted_fs (UDisksCleanup  *cleanup,
 
   /* load existing entries */
   error = NULL;
-  value = udisks_persistent_store_get (cleanup->persistent_store,
-                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                       "mounted-fs",
-                                       G_VARIANT_TYPE ("a{sa{sv}}"),
-                                       &error);
+  value = udisks_cleanup_get (cleanup,
+                              "mounted-fs",
+                              G_VARIANT_TYPE ("a{sa{sv}}"),
+                              &error);
   if (error != NULL)
     {
       udisks_warning ("Error getting mounted-fs: %s (%s, %d)",
@@ -935,12 +943,11 @@ udisks_cleanup_add_mounted_fs (UDisksCleanup  *cleanup,
 
   /* save new entries */
   error = NULL;
-  if (!udisks_persistent_store_set (cleanup->persistent_store,
-                                    UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                    "mounted-fs",
-                                    G_VARIANT_TYPE ("a{sa{sv}}"),
-                                    new_value, /* consumes new_value */
-                                    &error))
+  if (!udisks_cleanup_set (cleanup,
+                           "mounted-fs",
+                           G_VARIANT_TYPE ("a{sa{sv}}"),
+                           new_value, /* consumes new_value */
+                           &error))
     {
       udisks_warning ("Error setting mounted-fs: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
@@ -983,11 +990,10 @@ udisks_cleanup_find_mounted_fs (UDisksCleanup   *cleanup,
 
   /* load existing entries */
   error = NULL;
-  value = udisks_persistent_store_get (cleanup->persistent_store,
-                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                       "mounted-fs",
-                                       G_VARIANT_TYPE ("a{sa{sv}}"),
-                                       &error);
+  value = udisks_cleanup_get (cleanup,
+                              "mounted-fs",
+                              G_VARIANT_TYPE ("a{sa{sv}}"),
+                              &error);
   if (error != NULL)
     {
       udisks_warning ("Error getting mounted-fs: %s (%s, %d)",
@@ -1247,11 +1253,10 @@ udisks_cleanup_check_unlocked_luks (UDisksCleanup *cleanup,
 
   /* load existing entries */
   error = NULL;
-  value = udisks_persistent_store_get (cleanup->persistent_store,
-                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                       "unlocked-luks",
-                                       G_VARIANT_TYPE ("a{ta{sv}}"),
-                                       &error);
+  value = udisks_cleanup_get (cleanup,
+                              "unlocked-luks",
+                              G_VARIANT_TYPE ("a{ta{sv}}"),
+                              &error);
   if (error != NULL)
     {
       udisks_warning ("Error getting unlocked-luks: %s (%s, %d)",
@@ -1284,12 +1289,11 @@ udisks_cleanup_check_unlocked_luks (UDisksCleanup *cleanup,
   if (changed)
     {
       error = NULL;
-      if (!udisks_persistent_store_set (cleanup->persistent_store,
-                                        UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                        "unlocked-luks",
-                                        G_VARIANT_TYPE ("a{ta{sv}}"),
-                                        new_value, /* consumes new_value */
-                                        &error))
+      if (!udisks_cleanup_set (cleanup,
+                               "unlocked-luks",
+                               G_VARIANT_TYPE ("a{ta{sv}}"),
+                               new_value, /* consumes new_value */
+                               &error))
         {
           udisks_warning ("Error setting unlocked-luks: %s (%s, %d)",
                           error->message,
@@ -1342,11 +1346,10 @@ udisks_cleanup_add_unlocked_luks (UDisksCleanup  *cleanup,
 
   /* load existing entries */
   error = NULL;
-  value = udisks_persistent_store_get (cleanup->persistent_store,
-                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                       "unlocked-luks",
-                                       G_VARIANT_TYPE ("a{ta{sv}}"),
-                                       &error);
+  value = udisks_cleanup_get (cleanup,
+                              "unlocked-luks",
+                              G_VARIANT_TYPE ("a{ta{sv}}"),
+                              &error);
   if (error != NULL)
     {
       udisks_warning ("Error getting unlocked-luks: %s (%s, %d)",
@@ -1407,12 +1410,11 @@ udisks_cleanup_add_unlocked_luks (UDisksCleanup  *cleanup,
 
   /* save new entries */
   error = NULL;
-  if (!udisks_persistent_store_set (cleanup->persistent_store,
-                                    UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                    "unlocked-luks",
-                                    G_VARIANT_TYPE ("a{ta{sv}}"),
-                                    new_value, /* consumes new_value */
-                                    &error))
+  if (!udisks_cleanup_set (cleanup,
+                           "unlocked-luks",
+                           G_VARIANT_TYPE ("a{ta{sv}}"),
+                           new_value, /* consumes new_value */
+                           &error))
     {
       udisks_warning ("Error setting unlocked-luks: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
@@ -1453,11 +1455,10 @@ udisks_cleanup_find_unlocked_luks (UDisksCleanup   *cleanup,
 
   /* load existing entries */
   error = NULL;
-  value = udisks_persistent_store_get (cleanup->persistent_store,
-                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                       "unlocked-luks",
-                                       G_VARIANT_TYPE ("a{ta{sv}}"),
-                                       &error);
+  value = udisks_cleanup_get (cleanup,
+                              "unlocked-luks",
+                              G_VARIANT_TYPE ("a{ta{sv}}"),
+                              &error);
   if (error != NULL)
     {
       udisks_warning ("Error getting unlocked-luks: %s (%s, %d)",
@@ -1631,11 +1632,10 @@ udisks_cleanup_check_loop (UDisksCleanup *cleanup,
 
   /* load existing entries */
   error = NULL;
-  value = udisks_persistent_store_get (cleanup->persistent_store,
-                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                       "loop",
-                                       G_VARIANT_TYPE ("a{sa{sv}}"),
-                                       &error);
+  value = udisks_cleanup_get (cleanup,
+                              "loop",
+                              G_VARIANT_TYPE ("a{sa{sv}}"),
+                              &error);
   if (error != NULL)
     {
       udisks_warning ("Error getting loop: %s (%s, %d)",
@@ -1668,12 +1668,11 @@ udisks_cleanup_check_loop (UDisksCleanup *cleanup,
   if (changed)
     {
       error = NULL;
-      if (!udisks_persistent_store_set (cleanup->persistent_store,
-                                        UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                        "loop",
-                                        G_VARIANT_TYPE ("a{sa{sv}}"),
-                                        new_value, /* consumes new_value */
-                                        &error))
+      if (!udisks_cleanup_set (cleanup,
+                               "loop",
+                               G_VARIANT_TYPE ("a{sa{sv}}"),
+                               new_value, /* consumes new_value */
+                               &error))
         {
           udisks_warning ("Error setting loop: %s (%s, %d)",
                           error->message,
@@ -1727,11 +1726,10 @@ udisks_cleanup_add_loop (UDisksCleanup   *cleanup,
 
   /* load existing entries */
   error = NULL;
-  value = udisks_persistent_store_get (cleanup->persistent_store,
-                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                       "loop",
-                                       G_VARIANT_TYPE ("a{sa{sv}}"),
-                                       &error);
+  value = udisks_cleanup_get (cleanup,
+                              "loop",
+                              G_VARIANT_TYPE ("a{sa{sv}}"),
+                              &error);
   if (error != NULL)
     {
       udisks_warning ("Error getting loop: %s (%s, %d)",
@@ -1791,12 +1789,11 @@ udisks_cleanup_add_loop (UDisksCleanup   *cleanup,
 
   /* save new entries */
   error = NULL;
-  if (!udisks_persistent_store_set (cleanup->persistent_store,
-                                    UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                    "loop",
-                                    G_VARIANT_TYPE ("a{sa{sv}}"),
-                                    new_value, /* consumes new_value */
-                                    &error))
+  if (!udisks_cleanup_set (cleanup,
+                           "loop",
+                           G_VARIANT_TYPE ("a{sa{sv}}"),
+                           new_value, /* consumes new_value */
+                           &error))
     {
       udisks_warning ("Error setting loop: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
@@ -1837,11 +1834,10 @@ udisks_cleanup_has_loop (UDisksCleanup   *cleanup,
 
   /* load existing entries */
   error = NULL;
-  value = udisks_persistent_store_get (cleanup->persistent_store,
-                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                       "loop",
-                                       G_VARIANT_TYPE ("a{sa{sv}}"),
-                                       &error);
+  value = udisks_cleanup_get (cleanup,
+                              "loop",
+                              G_VARIANT_TYPE ("a{sa{sv}}"),
+                              &error);
   if (error != NULL)
     {
       udisks_warning ("Error getting loop: %s (%s, %d)",
@@ -1982,11 +1978,10 @@ udisks_cleanup_check_mdraid (UDisksCleanup *cleanup,
 
   /* load existing entries */
   error = NULL;
-  value = udisks_persistent_store_get (cleanup->persistent_store,
-                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                       "mdraid",
-                                       G_VARIANT_TYPE ("a{ta{sv}}"),
-                                       &error);
+  value = udisks_cleanup_get (cleanup,
+                              "mdraid",
+                              G_VARIANT_TYPE ("a{ta{sv}}"),
+                              &error);
   if (error != NULL)
     {
       udisks_warning ("Error getting mdraid: %s (%s, %d)",
@@ -2019,12 +2014,11 @@ udisks_cleanup_check_mdraid (UDisksCleanup *cleanup,
   if (changed)
     {
       error = NULL;
-      if (!udisks_persistent_store_set (cleanup->persistent_store,
-                                        UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                        "mdraid",
-                                        G_VARIANT_TYPE ("a{ta{sv}}"),
-                                        new_value, /* consumes new_value */
-                                        &error))
+      if (!udisks_cleanup_set (cleanup,
+                               "mdraid",
+                               G_VARIANT_TYPE ("a{ta{sv}}"),
+                               new_value, /* consumes new_value */
+                               &error))
         {
           udisks_warning ("Error setting mdraid: %s (%s, %d)",
                           error->message,
@@ -2070,11 +2064,10 @@ udisks_cleanup_add_mdraid (UDisksCleanup   *cleanup,
 
   /* load existing entries */
   error = NULL;
-  value = udisks_persistent_store_get (cleanup->persistent_store,
-                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                       "mdraid",
-                                       G_VARIANT_TYPE ("a{ta{sv}}"),
-                                       &error);
+  value = udisks_cleanup_get (cleanup,
+                              "mdraid",
+                              G_VARIANT_TYPE ("a{ta{sv}}"),
+                              &error);
   if (error != NULL)
     {
       udisks_warning ("Error getting mdraid: %s (%s, %d)",
@@ -2126,12 +2119,11 @@ udisks_cleanup_add_mdraid (UDisksCleanup   *cleanup,
 
   /* save new entries */
   error = NULL;
-  if (!udisks_persistent_store_set (cleanup->persistent_store,
-                                    UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                    "mdraid",
-                                    G_VARIANT_TYPE ("a{ta{sv}}"),
-                                    new_value, /* consumes new_value */
-                                    &error))
+  if (!udisks_cleanup_set (cleanup,
+                           "mdraid",
+                           G_VARIANT_TYPE ("a{ta{sv}}"),
+                           new_value, /* consumes new_value */
+                           &error))
     {
       udisks_warning ("Error setting mdraid: %s (%s, %d)",
                       error->message, g_quark_to_string (error->domain), error->code);
@@ -2168,11 +2160,10 @@ udisks_cleanup_has_mdraid (UDisksCleanup   *cleanup,
   g_mutex_lock (&cleanup->lock);
 
   /* load existing entries */
-  value = udisks_persistent_store_get (cleanup->persistent_store,
-                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                       "mdraid",
-                                       G_VARIANT_TYPE ("a{ta{sv}}"),
-                                       &error);
+  value = udisks_cleanup_get (cleanup,
+                              "mdraid",
+                              G_VARIANT_TYPE ("a{ta{sv}}"),
+                              &error);
   if (error != NULL)
     {
       udisks_warning ("Error getting mdraid: %s (%s, %d)",
@@ -2229,3 +2220,114 @@ udisks_cleanup_has_mdraid (UDisksCleanup   *cleanup,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static GVariant *
+udisks_cleanup_get (UDisksCleanup           *cleanup,
+                    const gchar             *key,
+                    const GVariantType      *type,
+                    GError                 **error)
+{
+  gchar *path = NULL;
+  GVariant *ret = NULL;
+  gchar *contents = NULL;
+  GError *local_error = NULL;
+  gsize length = 0;
+
+  g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), NULL);
+  g_return_val_if_fail (key != NULL, NULL);
+  g_return_val_if_fail (g_variant_type_is_definite (type), NULL);
+  g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+  /* TODO:
+   *
+   * - could use a cache here to avoid loading files all the time
+   * - could also mmap the file
+   */
+
+  path = g_strdup_printf ("/run/udisks2/%s", key);
+
+  /* see if it's already in the cache */
+  ret = g_hash_table_lookup (cleanup->cache, path);
+  if (ret != NULL)
+    {
+      g_variant_ref (ret);
+      goto out;
+    }
+
+  if (!g_file_get_contents (path,
+                            &contents,
+                            &length,
+                            &local_error))
+    {
+      if (local_error->domain == G_FILE_ERROR && local_error->code == G_FILE_ERROR_NOENT)
+        {
+          /* this is not an error */
+          g_clear_error (&local_error);
+          goto out;
+        }
+      g_propagate_error (error, local_error);
+      goto out;
+    }
+
+  ret = g_variant_new_from_data (type,
+                                 (gconstpointer) contents,
+                                 length,
+                                 FALSE,
+                                 g_free,
+                                 contents);
+  g_variant_ref_sink (ret);
+
+  contents = NULL; /* ownership transfered to the returned GVariant */
+
+ out:
+  g_free (contents);
+  g_free (path);
+  return ret;
+}
+
+static gboolean
+udisks_cleanup_set (UDisksCleanup           *cleanup,
+                    const gchar             *key,
+                    const GVariantType      *type,
+                    GVariant                *value,
+                    GError                 **error)
+{
+  gboolean ret = FALSE;
+  gsize size = 0;
+  gchar *path = NULL;
+  gchar *data= NULL;
+  GVariant *normalized = NULL;
+
+  g_return_val_if_fail (UDISKS_IS_CLEANUP (cleanup), FALSE);
+  g_return_val_if_fail (key != NULL, FALSE);
+  g_return_val_if_fail (g_variant_type_is_definite (type), FALSE);
+  g_return_val_if_fail (g_variant_is_of_type (value, type), FALSE);
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+  g_variant_ref_sink (value);
+  normalized = g_variant_get_normal_form (value);
+  size = g_variant_get_size (normalized);
+  data = g_malloc (size);
+  g_variant_store (normalized, data);
+
+  path = g_strdup_printf ("/run/udisks2/%s", key);
+
+  g_hash_table_insert (cleanup->cache, g_strdup (path), g_variant_ref (value));
+
+  if (!g_file_set_contents (path,
+                            data,
+                            size,
+                            error))
+    goto out;
+
+  ret = TRUE;
+
+ out:
+
+  g_free (path);
+  g_free (data);
+  g_variant_unref (normalized);
+  g_variant_unref (value);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */

@@ -68,7 +68,6 @@ libudisks_daemon_la_SOURCES =						\
 	udiskssimplejob.h		udiskssimplejob.c		\
 	udisksmount.h			udisksmount.c			\
 	udisksmountmonitor.h		udisksmountmonitor.c		\
-	udiskspersistentstore.h		udiskspersistentstore.c		\
 	udisksdaemonutil.h		udisksdaemonutil.c		\
 	udiskslogging.h			udiskslogging.c			\
 	udiskscleanup.h			udiskscleanup.c			\

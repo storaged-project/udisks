@@ -37,7 +37,6 @@ UDisksMountMonitor       *udisks_daemon_get_mount_monitor     (UDisksDaemon    *
 UDisksFstabMonitor       *udisks_daemon_get_fstab_monitor     (UDisksDaemon    *daemon);
 UDisksCrypttabMonitor    *udisks_daemon_get_crypttab_monitor  (UDisksDaemon    *daemon);
 UDisksLinuxProvider      *udisks_daemon_get_linux_provider    (UDisksDaemon    *daemon);
-UDisksPersistentStore    *udisks_daemon_get_persistent_store  (UDisksDaemon    *daemon);
 PolkitAuthority          *udisks_daemon_get_authority         (UDisksDaemon    *daemon);
 UDisksCleanup            *udisks_daemon_get_cleanup           (UDisksDaemon    *daemon);
 

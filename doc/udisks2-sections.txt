@@ -117,7 +117,6 @@ udisks_daemon_get_mount_monitor
 udisks_daemon_get_fstab_monitor
 udisks_daemon_get_crypttab_monitor
 udisks_daemon_get_linux_provider
-udisks_daemon_get_persistent_store
 udisks_daemon_get_authority
 udisks_daemon_get_cleanup
 UDisksDaemonWaitFunc
@@ -316,24 +315,6 @@ UDISKS_IS_MOUNT_MONITOR
 <SUBSECTION Private>
 udisks_mount_get_type
 udisks_mount_monitor_get_type
-</SECTION>
-
-<SECTION>
-<FILE>udiskspersistentstore</FILE>
-<TITLE>UDisksPersistentStore</TITLE>
-UDisksPersistentStore
-udisks_persistent_store_new
-udisks_persistent_store_get_path
-udisks_persistent_store_get_temp_path
-UDisksPersistentFlags
-udisks_persistent_store_get
-udisks_persistent_store_set
-<SUBSECTION Standard>
-UDISKS_TYPE_PERSISTENT_STORE
-UDISKS_PERSISTENT_STORE
-UDISKS_IS_PERSISTENT_STORE
-<SUBSECTION Private>
-udisks_persistent_store_get_type
 </SECTION>
 
 <SECTION>

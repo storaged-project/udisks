@@ -30,7 +30,6 @@
 #include <udisksdaemon.h>
 #include <udisksspawnedjob.h>
 #include <udisksthreadedjob.h>
-#include <udiskspersistentstore.h>
 
 #include "testutil.h"
 
@@ -529,159 +528,6 @@ test_threaded_job_override_signal_handler (void)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static void
-check_store (UDisksPersistentStore *store)
-{
-  GError *error;
-  GVariant *value;
-  gchar *s;
-
-  error = NULL;
-  value = udisks_persistent_store_get (store,
-                                       UDISKS_PERSISTENT_FLAGS_NORMAL_STORE,
-                                       "non-existing",
-                                       G_VARIANT_TYPE ("(sss)"),
-                                       &error);
-  g_assert_no_error (error);
-  g_assert (value == NULL);
-
-  error = NULL;
-  value = udisks_persistent_store_get (store,
-                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                       "non-existing",
-                                       G_VARIANT_TYPE ("(sss)"),
-                                       &error);
-  g_assert_no_error (error);
-  g_assert (value == NULL);
-
-  error = NULL;
-  value = udisks_persistent_store_get (store,
-                                       UDISKS_PERSISTENT_FLAGS_NORMAL_STORE,
-                                       "ducks",
-                                       G_VARIANT_TYPE ("(sss)"),
-                                       &error);
-  g_assert_no_error (error);
-  g_assert (value != NULL);
-  s = g_variant_print (value, TRUE);
-  g_assert_cmpstr (s, ==, "('Huey', 'Dewey', 'Louie')");
-  g_free (s);
-  g_variant_unref (value);
-
-  error = NULL;
-  value = udisks_persistent_store_get (store,
-                                       UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                       "ducks",
-                                       G_VARIANT_TYPE ("(sss)"),
-                                       &error);
-  g_assert_no_error (error);
-  g_assert (value != NULL);
-  s = g_variant_print (value, TRUE);
-  g_assert_cmpstr (s, ==, "('Rip', 'Rap', 'Rup')");
-  g_free (s);
-  g_variant_unref (value);
-}
-
-static void
-cleanup_dir (const gchar *dirname)
-{
-  gchar *command;
-
-  g_assert (g_str_has_prefix (dirname, "/tmp/test-udisks-persistent-store-"));
-  g_assert (strstr (dirname, "\"") == NULL);
-  command = g_strdup_printf ("rm -rf \"%s\"", dirname);
-  g_assert_cmpint (system (command), ==, 0);
-  g_free (command);
-}
-
-static void
-test_persistent_store (void)
-{
-  UDisksPersistentStore *store;
-  gchar *dirname;
-  gchar *dirname_temp;
-  GError *error;
-  gboolean rc;
-  GVariant *value;
-  gchar *s;
-
-  dirname = g_strdup ("/tmp/test-udisks-persistent-store-XXXXXX");
-  if (mkdtemp (dirname) == 0)
-    {
-      g_warning ("Error creating temp dir with template %s: %m", dirname);
-      g_assert_not_reached ();
-    }
-
-  dirname_temp = g_strdup ("/tmp/test-udisks-persistent-store-temp-XXXXXX");
-  if (mkdtemp (dirname_temp) == 0)
-    {
-      g_warning ("Error creating temp dir with template %s: %m", dirname_temp);
-      g_assert_not_reached ();
-    }
-
-  store = udisks_persistent_store_new (dirname, dirname_temp);
-
-  error = NULL;
-  rc = udisks_persistent_store_set (store,
-                                    UDISKS_PERSISTENT_FLAGS_NORMAL_STORE,
-                                    "ducks",
-                                    G_VARIANT_TYPE ("(sss)"),
-                                    g_variant_new ("(sss)", "Huey", "Dewey", "Louie"),
-                                    &error);
-  g_assert_no_error (error);
-  g_assert (rc);
-
-  error = NULL;
-  rc = udisks_persistent_store_set (store,
-                                    UDISKS_PERSISTENT_FLAGS_TEMPORARY_STORE,
-                                    "ducks",
-                                    G_VARIANT_TYPE ("(sss)"),
-                                    g_variant_new ("(sss)", "Rip", "Rap", "Rup"),
-                                    &error);
-  g_assert_no_error (error);
-  g_assert (rc);
-
-  check_store (store);
-
-  /* now nuke the store object and create a new object - we should see
-   * the same data (since it's persistent!)
-   */
-  g_object_unref (store);
-  store = udisks_persistent_store_new (dirname, dirname_temp);
-  check_store (store);
-
-  /* check we can replace one of the entries */
-  error = NULL;
-  rc = udisks_persistent_store_set (store,
-                                    UDISKS_PERSISTENT_FLAGS_NORMAL_STORE,
-                                    "ducks",
-                                    G_VARIANT_TYPE ("(sss)"),
-                                    g_variant_new ("(sss)", "April", "May", "June"),
-                                    &error);
-  g_assert_no_error (error);
-  g_assert (rc);
-  /* and we can read it back */
-  error = NULL;
-  value = udisks_persistent_store_get (store,
-                                       UDISKS_PERSISTENT_FLAGS_NORMAL_STORE,
-                                       "ducks",
-                                       G_VARIANT_TYPE ("(sss)"),
-                                       &error);
-  g_assert_no_error (error);
-  g_assert (value != NULL);
-  s = g_variant_print (value, TRUE);
-  g_assert_cmpstr (s, ==, "('April', 'May', 'June')");
-  g_free (s);
-  g_variant_unref (value);
-
-  /* ok, done */
-  g_object_unref (store);
-
-  cleanup_dir (dirname);
-  cleanup_dir (dirname_temp);
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
-
 int
 main (int    argc,
       char **argv)
@@ -712,7 +558,6 @@ main (int    argc,
   g_test_add_func ("/udisks/daemon/threaded_job/cancelled_at_start", test_threaded_job_cancelled_at_start);
   g_test_add_func ("/udisks/daemon/threaded_job/cancelled_midway", test_threaded_job_cancelled_midway);
   g_test_add_func ("/udisks/daemon/threaded_job/override_signal_handler", test_threaded_job_override_signal_handler);
-  g_test_add_func ("/udisks/daemon/persistent_store", test_persistent_store);
 
   ret = g_test_run();
 

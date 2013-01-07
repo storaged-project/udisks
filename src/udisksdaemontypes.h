@@ -131,9 +131,6 @@ typedef gboolean (*UDisksThreadedJobFunc) (UDisksThreadedJob   *job,
                                            gpointer             user_data,
                                            GError             **error);
 
-struct _UDisksPersistentStore;
-typedef struct _UDisksPersistentStore UDisksPersistentStore;
-
 struct _UDisksCleanup;
 typedef struct _UDisksCleanup UDisksCleanup;
 

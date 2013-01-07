@@ -33,7 +33,6 @@
 #include "udiskslinuxencrypted.h"
 #include "udiskslinuxblockobject.h"
 #include "udisksdaemon.h"
-#include "udiskspersistentstore.h"
 #include "udisksdaemonutil.h"
 #include "udiskscleanup.h"
 #include "udiskslinuxdevice.h"
