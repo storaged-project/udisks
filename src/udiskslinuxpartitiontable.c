@@ -355,7 +355,7 @@ handle_create_partition (UDisksPartitionTable   *table,
         }
       else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
         {
-          action_id = "org.freedesktop.udisks2.modify-device-system-other-seat";
+          action_id = "org.freedesktop.udisks2.modify-device-other-seat";
         }
     }
 

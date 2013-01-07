@@ -288,7 +288,7 @@ handle_set_flags (UDisksPartition        *partition,
         }
       else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
         {
-          action_id = "org.freedesktop.udisks2.modify-device-system-other-seat";
+          action_id = "org.freedesktop.udisks2.modify-device-other-seat";
         }
     }
 
@@ -453,7 +453,7 @@ handle_set_name (UDisksPartition        *partition,
         }
       else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
         {
-          action_id = "org.freedesktop.udisks2.modify-device-system-other-seat";
+          action_id = "org.freedesktop.udisks2.modify-device-other-seat";
         }
     }
   if (!udisks_daemon_util_check_authorization_sync (daemon,
@@ -795,7 +795,7 @@ handle_set_type (UDisksPartition        *partition,
         }
       else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
         {
-          action_id = "org.freedesktop.udisks2.modify-device-system-other-seat";
+          action_id = "org.freedesktop.udisks2.modify-device-other-seat";
         }
     }
   if (!udisks_daemon_util_check_authorization_sync (daemon,
@@ -906,7 +906,7 @@ handle_delete (UDisksPartition        *partition,
         }
       else if (!udisks_daemon_util_on_same_seat (daemon, object, caller_pid))
         {
-          action_id = "org.freedesktop.udisks2.modify-device-system-other-seat";
+          action_id = "org.freedesktop.udisks2.modify-device-other-seat";
         }
     }
   if (!udisks_daemon_util_check_authorization_sync (daemon,
