@@ -1,4 +1,38 @@
 ------------
+udisks 2.0.91
+------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks and storage devices.
+
+This is an unstable pre-release leading up to udisks 2.1.0 and newly
+introduced API and ABI may change in incompatible ways before release
+2.1.0. The udisks 2.1.0 release will be backwards compatible will
+earlier releases. See the udisks(8) man page for more information
+about API stability guarantees.
+
+Changes since udisks 2.0.90:
+
+David Zeuthen (9):
+      Post-release version bump to 2.0.91
+      Don't bail in MD-RAID file monitor event handler
+      Add MDRaid:RequestSyncAction() method
+      Add MDRaid:SyncRate and MDRaid:SyncRemainingTime properties
+      Get the MD-RAID sync rate from the right file
+      Pull new translations from Transifex
+      Use correct polkit action
+      Fix up comments in polkit policy file
+      Update NEWS for release
+
+Evan Nemerson (1):
+      build: fix passing arguments to configure from autogen.sh
+
+Thanks to all our contributors.
+
+David Zeuthen,
+January 7, 2013
+
+------------
 udisks 2.0.90
 ------------
 
