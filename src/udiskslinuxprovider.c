@@ -202,7 +202,6 @@ on_idle_with_probed_uevent (gpointer user_data)
   udisks_linux_provider_handle_uevent (request->provider,
                                        g_udev_device_get_action (request->udev_device),
                                        request->udisks_device);
-  request->udisks_device = NULL; /* adopted */
   probe_request_free (request);
   return FALSE; /* remove source */
 }
