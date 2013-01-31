@@ -1080,7 +1080,8 @@ udisks_linux_drive_object_get_siblings (UDisksLinuxDriveObject *object)
 {
   GDBusObjectManagerServer *object_manager;
   GList *ret = NULL;
-  GList *objects, *l;
+  GList *objects = NULL;
+  GList *l;
   gchar *sibling_id = NULL;
 
   if (object->iface_drive == NULL)
