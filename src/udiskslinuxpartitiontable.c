@@ -293,6 +293,7 @@ handle_create_partition (UDisksPartitionTable   *table,
   pid_t caller_pid;
   uid_t caller_uid;
   gid_t caller_gid;
+  gboolean do_wipe = TRUE;
   GError *error;
 
   error = NULL;
@@ -392,6 +393,7 @@ handle_create_partition (UDisksPartitionTable   *table,
           (type_as_int == 0x05 || type_as_int == 0x0f || type_as_int == 0x85))
         {
           part_type = "extended";
+          do_wipe = FALSE;  // wiping an extended partition destroys it
           if (have_partition_in_range (table, object, offset, offset + size, FALSE))
             {
               g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
@@ -569,27 +571,31 @@ handle_create_partition (UDisksPartitionTable   *table,
 
   /* TODO: set partition type */
 
-  /* wipe the newly created partition */
-  if (!udisks_daemon_launch_spawned_job_sync (daemon,
-                                              partition_object,
-                                              "partition-create", caller_uid,
-                                              NULL, /* GCancellable */
-                                              0,    /* uid_t run_as_uid */
-                                              0,    /* uid_t run_as_euid */
-                                              NULL, /* gint *out_status */
-                                              &error_message,
-                                              NULL,  /* input_string */
-                                              "wipefs -a %s",
-                                              escaped_partition_device))
+  /* wipe the newly created partition if wanted */
+  if (do_wipe)
     {
-      g_dbus_method_invocation_return_error (invocation,
-                                             UDISKS_ERROR,
-                                             UDISKS_ERROR_FAILED,
-                                             "Error wiping newly created partition %s: %s",
-                                             udisks_block_get_device (partition_block),
-                                             error_message);
-      goto out;
+      if (!udisks_daemon_launch_spawned_job_sync (daemon,
+                                                  partition_object,
+                                                  "partition-create", caller_uid,
+                                                  NULL, /* GCancellable */
+                                                  0,    /* uid_t run_as_uid */
+                                                  0,    /* uid_t run_as_euid */
+                                                  NULL, /* gint *out_status */
+                                                  &error_message,
+                                                  NULL,  /* input_string */
+                                                  "wipefs -a %s",
+                                                  escaped_partition_device))
+        {
+          g_dbus_method_invocation_return_error (invocation,
+                                                 UDISKS_ERROR,
+                                                 UDISKS_ERROR_FAILED,
+                                                 "Error wiping newly created partition %s: %s",
+                                                 udisks_block_get_device (partition_block),
+                                                 error_message);
+          goto out;
+        }
     }
+
   /* this is sometimes needed because parted(8) does not generate the uevent itself */
   udisks_linux_block_object_trigger_uevent (UDISKS_LINUX_BLOCK_OBJECT (partition_object));
 
