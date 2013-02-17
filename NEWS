@@ -1,4 +1,41 @@
 ------------
+udisks 2.0.92
+------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks and storage devices.
+
+This is an unstable pre-release leading up to udisks 2.1.0 and newly
+introduced API and ABI may change in incompatible ways before release
+2.1.0. The udisks 2.1.0 release will be backwards compatible will
+earlier releases. See the udisks(8) man page for more information
+about API stability guarantees.
+
+Changes since udisks 2.0.91:
+
+Alban Browaeys (1):
+      build: fix out of source build - set xsltproc path
+
+David Zeuthen (8):
+      Post-release version bump to 2.0.92
+      Fold UDisksPersistentStore class into UDisksCleanup
+      Rename UDisksCleanup to UDisksState
+      Don't leak UDisksLinuxDevice when handling uevent
+      Check for NULL pointer when creating MD-RAID array
+      Use own udev namespace for MD-RAID properties
+      Introduce UDISKS_FILESYSTEM_SHARED=1 to use /media for mounting
+      Update NEWS for release
+
+Marius Vollmer (2):
+      Don't wipe extended partitions.
+      Make sure logical partitions stay within the extended partition.
+
+Thanks to all our contributors.
+
+David Zeuthen,
+February 17, 2013
+
+------------
 udisks 2.0.91
 ------------
 
