@@ -252,6 +252,14 @@
         </listitem>
       </varlistentry>
       <varlistentry>
+        <term><option>UDISKS_FILESYSTEM_SHARED</option></term>
+        <listitem>
+          <para>
+            If set to 1, the filesystem on the device will be mounted in a shared directory (e.g. <filename class='directory'>/media/VolumeName</filename>) instead of a private directory (e.g. <filename class='directory'>/run/media/$USER/VolumeName</filename>) when the <link linkend="gdbus-method-org-freedesktop-UDisks2-Filesystem.Mount">Filesystem.Mount()</link> method is handled.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
         <term><option>ID_SEAT</option></term>
         <listitem>
           <para>

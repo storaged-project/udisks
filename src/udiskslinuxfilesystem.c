@@ -841,6 +841,8 @@ calculate_mount_point (UDisksDaemon              *daemon,
                        const gchar               *fs_type,
                        GError                   **error)
 {
+  UDisksLinuxBlockObject *object = NULL;
+  gboolean fs_shared = FALSE;
   const gchar *label = NULL;
   const gchar *uuid = NULL;
   gchar *escaped_user_name = NULL;
@@ -859,10 +861,25 @@ calculate_mount_point (UDisksDaemon              *daemon,
       uuid = udisks_block_get_id_uuid (block);
     }
 
+  object = udisks_daemon_util_dup_object (block, NULL);
+  if (object != NULL)
+    {
+      UDisksLinuxDevice *device = udisks_linux_block_object_get_device (object);
+      if (device != NULL)
+        {
+          if (device->udev_device != NULL)
+            {
+              /* TODO: maybe introduce Block:HintFilesystemShared instead of pulling it directly from the udev device */
+              fs_shared = g_udev_device_get_property_as_boolean (device->udev_device, "UDISKS_FILESYSTEM_SHARED");
+            }
+          g_object_unref (device);
+        }
+    }
+
   /* If we know the user-name and it doesn't have any '/' character in
    * it, mount in /run/media/$USER
    */
-  if (user_name != NULL && strstr (user_name, "/") == NULL)
+  if (!fs_shared && (user_name != NULL && strstr (user_name, "/") == NULL))
     {
       mount_dir = g_strdup_printf ("/run/media/%s", user_name);
       if (!g_file_test (mount_dir, G_FILE_TEST_EXISTS))
@@ -963,6 +980,7 @@ calculate_mount_point (UDisksDaemon              *daemon,
   g_free (mount_dir);
 
  out:
+  g_clear_object (&object);
   g_free (escaped_user_name);
   return mount_point;
 }
