@@ -503,6 +503,9 @@ wait_for_array_object (UDisksDaemon *daemon,
 
   /* First see if we have the right array object */
   object = udisks_daemon_find_block_by_device_file (daemon, raid_device_file);
+  if (object == NULL)
+    goto out;
+
   block = udisks_object_get_block (object);
   if (block == NULL)
     goto out;
