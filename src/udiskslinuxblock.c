@@ -285,7 +285,7 @@ update_mdraid (UDisksLinuxBlock         *block,
   const gchar *objpath_mdraid_member = "/";
   UDisksLinuxMDRaidObject *object = NULL;
 
-  uuid = g_udev_device_get_property (device->udev_device, "MD_UUID");
+  uuid = g_udev_device_get_property (device->udev_device, "UDISKS_MD_UUID");
   if (uuid != NULL && strlen (uuid) > 0)
     {
       object = find_mdraid (object_manager, uuid);
@@ -296,7 +296,7 @@ update_mdraid (UDisksLinuxBlock         *block,
         }
     }
 
-  uuid = g_udev_device_get_property (device->udev_device, "MD_MEMBER_UUID");
+  uuid = g_udev_device_get_property (device->udev_device, "UDISKS_MD_MEMBER_UUID");
   if (uuid != NULL && strlen (uuid) > 0)
     {
       object = find_mdraid (object_manager, uuid);
@@ -829,7 +829,7 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
     {
       const gchar *md_name;
 
-      md_name = g_udev_device_get_property (device->udev_device, "MD_NAME");
+      md_name = g_udev_device_get_property (device->udev_device, "UDISKS_MD_NAME");
       if (md_name != NULL)
         {
           gchar *md_name_dev_file = NULL;

@@ -15,9 +15,11 @@ ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}=="?*", GOTO="udisks_probe_end"
 
 # MD-RAID (aka Linux Software RAID) members
 #
-# TODO: file bug against mdadm(8) to have --export-prefix option that can be used with MD_MEMBER
+# TODO: file bug against mdadm(8) to have --export-prefix option that can be used with e.g. UDISKS_MD_MEMBER
 #
-SUBSYSTEM=="block", ENV{ID_FS_USAGE}=="raid", ENV{ID_FS_TYPE}=="linux_raid_member", ENV{MD_MEMBER_LEVEL}=="", IMPORT{program}="/bin/sh -c '/sbin/mdadm --examine --export $tempnode | /bin/sed s/^MD_/MD_MEMBER_/g'"
+SUBSYSTEM=="block", ENV{ID_FS_USAGE}=="raid", ENV{ID_FS_TYPE}=="linux_raid_member", ENV{UDISKS_MD_MEMBER_LEVEL}=="", IMPORT{program}="/bin/sh -c '/sbin/mdadm --examine --export $tempnode | /bin/sed s/^MD_/UDISKS_MD_MEMBER_/g'"
+
+SUBSYSTEM=="block", KERNEL=="md*", ENV{DEVTYPE}!="partition", IMPORT{program}="/bin/sh -c '/sbin/mdadm --detail --export $tempnode | /bin/sed s/^MD_/UDISKS_MD_/g'"
 
 LABEL="udisks_probe_end"
 
