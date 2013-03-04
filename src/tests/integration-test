@@ -300,6 +300,7 @@ class UDisksTestCase(unittest.TestCase):
                     stdout=subprocess.PIPE)
 
         mkcmd =     { 'swap': 'mkswap',
+                      'ntfs': 'mkntfs',
                     }
         label_opt = { 'vfat': '-n', 
                       'reiserfs': '-l',
@@ -794,10 +795,14 @@ class FS(UDisksTestCase):
 
     def _do_fs_check(self, type):
         '''Run checks for a particular file system.'''
+        if type == 'ntfs':
+            mkfs = 'mkntfs'
+        else:
+            mkfs = 'mkfs.' + type
 
-        if type != 'swap' and subprocess.call(['which', 'mkfs.' + type],
+        if type != 'swap' and subprocess.call(['which', mkfs],
                 stdout=subprocess.PIPE) != 0:
-            sys.stderr.write('[no mkfs.%s, skip] ' % type)
+            sys.stderr.write('[no %s, skip] ' % mkfs)
 
             # check correct D-Bus exception
             try:
