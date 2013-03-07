@@ -689,8 +689,7 @@ handle_start (UDisksMDRaid           *_mdraid,
       g_dbus_method_invocation_return_error (invocation,
                                              UDISKS_ERROR,
                                              UDISKS_ERROR_FAILED,
-                                             "No block interface for object",
-                                             raid_device_file);
+                                             "No block interface for object");
       goto out;
     }
   raid_device_file = udisks_block_dup_device (block);
