@@ -1,4 +1,35 @@
 ------------
+udisks 2.1.0
+------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks and storage devices.
+
+Changes since udisks 2.0.92:
+
+Alban Browaeys (1):
+      mdraid: Remove spurious argument for the format (which takes none).
+
+David Zeuthen (6):
+      Post-release version bump to 2.0.93
+      Support broken setups where ID_SERIAL is available but ID_SERIAL_SHORT is not
+      Call the right D-Bus completion routines
+      Update translations from Transifex
+      Bump version to 2.1.0 and update date in man pages
+      Update NEWS for release
+
+Martin Pitt (1):
+      integration-test: Update for mkntfs
+
+Matthias Clasen (1):
+      Initialize a local variable
+
+Thanks to all our contributors.
+
+David Zeuthen,
+March 17, 2013
+
+------------
 udisks 2.0.92
 ------------
 
