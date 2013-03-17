@@ -8,8 +8,8 @@ msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-12-18 15:41-0500\n"
-"PO-Revision-Date: 2012-01-23 22:25+0000\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2013-02-05 08:29+0000\n"
+"Last-Translator: Baurzhan Muftakhidinov <baurthefirst@gmail.com>\n"
 "Language-Team: Kazakh (http://www.transifex.com/projects/p/freedesktop/language/kk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -19,11 +19,11 @@ msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:1
 msgid "Mount a filesystem"
-msgstr ""
+msgstr "Файлдық жүйені тіркеу"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:2
 msgid "Authentication is required to mount the filesystem"
-msgstr ""
+msgstr "Файлдық жүйені тіркеу үшін аутентификация керек"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:3
 msgid "Mount a filesystem on a system device"
@@ -391,11 +391,11 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxblock.c:2237
 msgid "Authentication is required to format $(drive)"
-msgstr ""
+msgstr "$(drive) пішімдеу үшін аутентификация керек"
 
 #: ../src/udiskslinuxblock.c:2274 ../src/udiskslinuxdriveata.c:2257
 msgid "Formatting Device"
-msgstr ""
+msgstr "Құрылғыны пішімдеу"
 
 #. Translators: Shown in authentication dialog when creating a
 #. * disk image file.
@@ -405,7 +405,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxblock.c:2693
 msgid "Authentication is required to open $(drive) for reading"
-msgstr ""
+msgstr "$(drive) оқу үшін ашу  үшін аутентификация керек"
 
 #. Translators: Shown in authentication dialog when restoring
 #. * from a disk image file.
@@ -415,7 +415,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxblock.c:2757
 msgid "Authentication is required to open $(drive) for writing"
-msgstr ""
+msgstr "$(drive) жазу үшін ашу үшін аутентификация керек"
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to benchmark a device.
@@ -445,7 +445,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdrive.c:1007
 msgid "Authentication is required to eject $(drive)"
-msgstr ""
+msgstr "$(drive) шығару үшін аутентификация керек"
 
 #. Translators: Shown in authentication dialog when the user
 #. * changes settings for a drive.
@@ -465,7 +465,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdrive.c:1293
 msgid "Authentication is required to power off $(drive)"
-msgstr ""
+msgstr "$(drive) сөндіру үшін аутентификация керек"
 
 #. Translators: Shown in authentication dialog when the user
 #. * refreshes SMART data from a disk.
@@ -588,7 +588,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxfilesystem.c:1223 ../src/udiskslinuxfilesystem.c:1385
 msgid "Authentication is required to mount $(drive)"
-msgstr ""
+msgstr "$(drive) тіркеу үшін аутентификация керек"
 
 #. Translators: Shown in authentication dialog when the
 #. * user requests mounting a filesystem that is in
@@ -779,7 +779,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:1104
 msgctxt "gpt-part-flag"
 msgid "System"
-msgstr ""
+msgstr "Жүйелік"
 
 #. Translators: Corresponds to the GPT "legacy bios bootable" flag for a
 #. partition,
@@ -796,7 +796,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:1118
 msgctxt "gpt-part-flag"
 msgid "Read-only"
-msgstr ""
+msgstr "Тек оқу үшін"
 
 #. Translators: Corresponds to the GPT "hidden" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
@@ -820,13 +820,13 @@ msgstr ""
 #, c-format
 msgctxt "partition-info"
 msgid "%s (%s)"
-msgstr ""
+msgstr "%s (%s)"
 
 #. Translators: The Partition info when unknown
 #: ../udisks/udisksclient.c:1156
 msgctxt "partition-info"
 msgid "Unknown"
-msgstr ""
+msgstr "Белгісіз"
 
 #. Translators: The first %s is the size in power-of-2 units, e.g. '64 KiB'
 #. * the second %s is the size as a number e.g. '65,536' (always > 1)
@@ -835,7 +835,7 @@ msgstr ""
 #, c-format
 msgctxt "byte-size-pow2"
 msgid "%s (%s bytes)"
-msgstr ""
+msgstr "%s (%s байт)"
 
 #. Translators: The first %s is the size in power-of-10 units, e.g. '100 kB'
 #. * the second %s is the size as a number e.g. '100,000' (always > 1)
@@ -844,61 +844,61 @@ msgstr ""
 #, c-format
 msgctxt "byte-size-pow10"
 msgid "%s (%s bytes)"
-msgstr ""
+msgstr "%s (%s байт)"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:1782
 msgctxt "media"
 msgid "CompactFlash"
-msgstr ""
+msgstr "CompactFlash"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:1787
 msgctxt "media"
 msgid "MemoryStick"
-msgstr ""
+msgstr "MemoryStick"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:1792
 msgctxt "media"
 msgid "SmartMedia"
-msgstr ""
+msgstr "SmartMedia"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:1797
 msgctxt "media"
 msgid "SecureDigital"
-msgstr ""
+msgstr "SecureDigital"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:1802
 msgctxt "media"
 msgid "SD High Capacity"
-msgstr ""
+msgstr "SD High Capacity"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:1807
 msgctxt "media"
 msgid "Floppy"
-msgstr ""
+msgstr "Floppy"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:1812
 msgctxt "media"
 msgid "Zip"
-msgstr ""
+msgstr "Zip"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:1817
 msgctxt "media"
 msgid "Jaz"
-msgstr ""
+msgstr "Jaz"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:1822
 msgctxt "media"
 msgid "Flash"
-msgstr ""
+msgstr "Flash"
 
 #. Translators: This word is used to describe the optical disc type, it may
 #. appear
@@ -907,7 +907,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:1856
 msgctxt "disc-type"
 msgid "CD"
-msgstr ""
+msgstr "CD"
 
 #. Translators: This word is used to describe the optical disc type, it may
 #. appear
@@ -916,7 +916,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:1865
 msgctxt "disc-type"
 msgid "DVD"
-msgstr ""
+msgstr "DVD"
 
 #. Translators: This word is used to describe the optical disc type, it may
 #. appear
@@ -925,7 +925,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:1874
 msgctxt "disc-type"
 msgid "Blu-Ray"
-msgstr ""
+msgstr "Blu-Ray"
 
 #. Translators: This word is used to describe the optical disc type, it may
 #. appear
@@ -934,89 +934,89 @@ msgstr ""
 #: ../udisks/udisksclient.c:1883
 msgctxt "disc-type"
 msgid "HDDVD"
-msgstr ""
+msgstr "HDDVD"
 
 #: ../udisks/udisksclient.c:1904
 msgctxt "fs-type"
 msgid "FAT (12-bit version)"
-msgstr ""
+msgstr "FAT (12 биттік нұсқасы)"
 
 #: ../udisks/udisksclient.c:1904 ../udisks/udisksclient.c:1905
 #: ../udisks/udisksclient.c:1906 ../udisks/udisksclient.c:1907
 #: ../udisks/udisksclient.c:1908
 msgctxt "fs-type"
 msgid "FAT"
-msgstr ""
+msgstr "FAT"
 
 #: ../udisks/udisksclient.c:1905
 msgctxt "fs-type"
 msgid "FAT (16-bit version)"
-msgstr ""
+msgstr "FAT (16 биттік нұсқасы)"
 
 #: ../udisks/udisksclient.c:1906
 msgctxt "fs-type"
 msgid "FAT (32-bit version)"
-msgstr ""
+msgstr "FAT (32 биттік нұсқасы)"
 
 #: ../udisks/udisksclient.c:1907
 #, c-format
 msgctxt "fs-type"
 msgid "FAT (version %s)"
-msgstr ""
+msgstr "FAT (нұсқасы %s)"
 
 #: ../udisks/udisksclient.c:1909
 #, c-format
 msgctxt "fs-type"
 msgid "NTFS (version %s)"
-msgstr ""
+msgstr "NTFS (нұсқасы %s)"
 
 #: ../udisks/udisksclient.c:1909 ../udisks/udisksclient.c:1910
 msgctxt "fs-type"
 msgid "NTFS"
-msgstr ""
+msgstr "NTFS"
 
 #: ../udisks/udisksclient.c:1911
 msgctxt "fs-type"
 msgid "HFS"
-msgstr ""
+msgstr "HFS"
 
 #: ../udisks/udisksclient.c:1912
 msgctxt "fs-type"
 msgid "HFS+"
-msgstr ""
+msgstr "HFS+"
 
 #: ../udisks/udisksclient.c:1913
 #, c-format
 msgctxt "fs-type"
 msgid "Ext2 (version %s)"
-msgstr ""
+msgstr "Ext2 (нұсқасы %s)"
 
 #: ../udisks/udisksclient.c:1913 ../udisks/udisksclient.c:1914
 msgctxt "fs-type"
 msgid "Ext2"
-msgstr ""
+msgstr "Ext2"
 
 #: ../udisks/udisksclient.c:1915
 #, c-format
 msgctxt "fs-type"
 msgid "Ext3 (version %s)"
-msgstr ""
+msgstr "Ext3 (нұсқасы %s)"
 
 #: ../udisks/udisksclient.c:1915 ../udisks/udisksclient.c:1916
 msgctxt "fs-type"
 msgid "Ext3"
-msgstr ""
+msgstr "Ext3"
 
 #: ../udisks/udisksclient.c:1917
 #, c-format
 msgctxt "fs-type"
 msgid "Ext4 (version %s)"
-msgstr ""
+msgstr "Ext4 (нұсқасы %s)"
 
 #: ../udisks/udisksclient.c:1917 ../udisks/udisksclient.c:1918
 msgctxt "fs-type"
 msgid "Ext4"
-msgstr ""
+msgstr "Ext4"
 
 #: ../udisks/udisksclient.c:1919
 #, c-format
@@ -1027,7 +1027,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:1919 ../udisks/udisksclient.c:1920
 msgctxt "fs-type"
 msgid "JDB"
-msgstr ""
+msgstr "JDB"
 
 #: ../udisks/udisksclient.c:1920
 msgctxt "fs-type"
@@ -1038,116 +1038,116 @@ msgstr ""
 #, c-format
 msgctxt "fs-type"
 msgid "XFS (version %s)"
-msgstr ""
+msgstr "XFS (нұсқасы %s)"
 
 #: ../udisks/udisksclient.c:1921 ../udisks/udisksclient.c:1922
 msgctxt "fs-type"
 msgid "XFS"
-msgstr ""
+msgstr "XFS"
 
 #. TODO: No ID_FS_VERSION yet for btrfs...
 #: ../udisks/udisksclient.c:1924
 msgctxt "fs-type"
 msgid "Btrfs"
-msgstr ""
+msgstr "Btrfs"
 
 #: ../udisks/udisksclient.c:1925
 #, c-format
 msgctxt "fs-type"
 msgid "ISO 9660 (version %s)"
-msgstr ""
+msgstr "ISO 9660 (нұсқасы %s)"
 
 #: ../udisks/udisksclient.c:1925 ../udisks/udisksclient.c:1926
 msgctxt "fs-type"
 msgid "ISO9660"
-msgstr ""
+msgstr "ISO9660"
 
 #: ../udisks/udisksclient.c:1926
 msgctxt "fs-type"
 msgid "ISO 9660"
-msgstr ""
+msgstr "ISO 9660"
 
 #: ../udisks/udisksclient.c:1927
 #, c-format
 msgctxt "fs-type"
 msgid "UDF (version %s)"
-msgstr ""
+msgstr "UDF (нұсқасы %s)"
 
 #: ../udisks/udisksclient.c:1927 ../udisks/udisksclient.c:1928
 msgctxt "fs-type"
 msgid "UDF"
-msgstr ""
+msgstr "UDF"
 
 #: ../udisks/udisksclient.c:1929 ../udisks/udisksclient.c:1930
 msgctxt "fs-type"
 msgid "exFAT"
-msgstr ""
+msgstr "exFAT"
 
 #: ../udisks/udisksclient.c:1930
 #, c-format
 msgctxt "fs-type"
 msgid "exFAT (version %s)"
-msgstr ""
+msgstr "exFAT (нұсқасы %s)"
 
 #: ../udisks/udisksclient.c:1931
 #, c-format
 msgctxt "fs-type"
 msgid "Swap (version %s)"
-msgstr ""
+msgstr "Swap (нұсқасы %s)"
 
 #: ../udisks/udisksclient.c:1931 ../udisks/udisksclient.c:1932
 msgctxt "fs-type"
 msgid "Swap"
-msgstr ""
+msgstr "Swap"
 
 #: ../udisks/udisksclient.c:1933
 #, c-format
 msgctxt "fs-type"
 msgid "LVM2 Physical Volume (%s)"
-msgstr ""
+msgstr "LVM2 физикалық томы (%s)"
 
 #: ../udisks/udisksclient.c:1933 ../udisks/udisksclient.c:1934
 msgctxt "fs-type"
 msgid "LVM2 PV"
-msgstr ""
+msgstr "LVM2 PV"
 
 #: ../udisks/udisksclient.c:1934
 msgctxt "fs-type"
 msgid "LVM2 Physical Volume"
-msgstr ""
+msgstr "LVM2 физикалық томы"
 
 #: ../udisks/udisksclient.c:1935
 #, c-format
 msgctxt "fs-type"
 msgid "Linux RAID Member (version %s)"
-msgstr ""
+msgstr "Linux RAID мүшесі (нұсқасы %s)"
 
 #: ../udisks/udisksclient.c:1935 ../udisks/udisksclient.c:1936
 msgctxt "fs-type"
 msgid "Linux RAID Member"
-msgstr ""
+msgstr "Linux RAID мүшесі"
 
 #: ../udisks/udisksclient.c:1937
 #, c-format
 msgctxt "fs-type"
 msgid "ZFS Device (ZPool version %s)"
-msgstr ""
+msgstr "ZFS Device (ZPool нұсқасы %s)"
 
 #: ../udisks/udisksclient.c:1937
 #, c-format
 msgctxt "fs-type"
 msgid "ZFS (v%s)"
-msgstr ""
+msgstr "ZFS (v%s)"
 
 #: ../udisks/udisksclient.c:1938
 msgctxt "fs-type"
 msgid "ZFS Device"
-msgstr ""
+msgstr "ZFS құрылғысы"
 
 #: ../udisks/udisksclient.c:1938
 msgctxt "fs-type"
 msgid "ZFS"
-msgstr ""
+msgstr "ZFS"
 
 #: ../udisks/udisksclient.c:1939
 #, c-format
@@ -1234,7 +1234,7 @@ msgstr ""
 #, c-format
 msgctxt "fs-type"
 msgid "Unknown (%s %s)"
-msgstr ""
+msgstr "Белгісіз (%s %s)"
 
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev.
@@ -1243,19 +1243,19 @@ msgstr ""
 #, c-format
 msgctxt "fs-type"
 msgid "Unknown (%s)"
-msgstr ""
+msgstr "Белгісіз (%s)"
 
 #. Translators: Shown for unknown filesystem types.
 #. 
 #: ../udisks/udisksclient.c:2033 ../udisks/udisksclient.c:2047
 msgctxt "fs-type"
 msgid "Unknown"
-msgstr ""
+msgstr "Белгісіз"
 
 #. Translators: name of partition table format
 #: ../udisks/udisksclient.c:2064
 msgid "Master Boot Record"
-msgstr ""
+msgstr "Басты жүктелу жазбасы"
 
 #. Translators: name of partition table format
 #: ../udisks/udisksclient.c:2066
@@ -1287,7 +1287,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:2114 ../udisks/udisksclient.c:2120
 msgctxt "partition-subtype"
 msgid "Other"
-msgstr ""
+msgstr "Басқа"
 
 #: ../udisks/udisksclient.c:2119 ../udisks/udisksclient.c:2122
 msgctxt "partition-subtype"
@@ -1930,7 +1930,7 @@ msgstr ""
 #, c-format
 msgctxt "unknown-job"
 msgid "Unknown (%s)"
-msgstr ""
+msgstr "Белгісіз (%s)"
 
 #. Translators: 'Thumb' here refers to "USB thumb drive", see
 #. http://en.wikipedia.org/wiki/Thumb_drive
@@ -1957,65 +1957,65 @@ msgstr ""
 #: ../udisks/udisksobjectinfo.c:168
 msgctxt "media-type"
 msgid "Flash"
-msgstr ""
+msgstr "Flash"
 
 #: ../udisks/udisksobjectinfo.c:169
 msgctxt "media-type"
 msgid "MemoryStick"
-msgstr ""
+msgstr "MemoryStick"
 
 #: ../udisks/udisksobjectinfo.c:170
 msgctxt "media-type"
 msgid "SmartMedia"
-msgstr ""
+msgstr "SmartMedia"
 
 #: ../udisks/udisksobjectinfo.c:171
 msgctxt "media-type"
 msgid "CompactFlash"
-msgstr ""
+msgstr "CompactFlash"
 
 #: ../udisks/udisksobjectinfo.c:172
 msgctxt "media-type"
 msgid "MMC"
-msgstr ""
+msgstr "MMC"
 
 #: ../udisks/udisksobjectinfo.c:172 ../udisks/udisksobjectinfo.c:173
 #: ../udisks/udisksobjectinfo.c:174 ../udisks/udisksobjectinfo.c:175
 msgctxt "media-type"
 msgid "SD"
-msgstr ""
+msgstr "SD"
 
 #: ../udisks/udisksobjectinfo.c:174
 msgctxt "media-type"
 msgid "SDXC"
-msgstr ""
+msgstr "SDXC"
 
 #: ../udisks/udisksobjectinfo.c:175
 msgctxt "media-type"
 msgid "SDHC"
-msgstr ""
+msgstr "SDHC"
 
 #: ../udisks/udisksobjectinfo.c:177
 msgctxt "media-type"
 msgid "CD-ROM"
-msgstr ""
+msgstr "CD-ROM"
 
 #: ../udisks/udisksobjectinfo.c:177 ../udisks/udisksobjectinfo.c:178
 #: ../udisks/udisksobjectinfo.c:179 ../udisks/udisksobjectinfo.c:194
 #: ../udisks/udisksobjectinfo.c:195 ../udisks/udisksobjectinfo.c:196
 msgctxt "media-type"
 msgid "CD"
-msgstr ""
+msgstr "CD"
 
 #: ../udisks/udisksobjectinfo.c:178
 msgctxt "media-type"
 msgid "CD-R"
-msgstr ""
+msgstr "CD-R"
 
 #: ../udisks/udisksobjectinfo.c:179
 msgctxt "media-type"
 msgid "CD-RW"
-msgstr ""
+msgstr "CD-RW"
 
 #: ../udisks/udisksobjectinfo.c:180 ../udisks/udisksobjectinfo.c:181
 #: ../udisks/udisksobjectinfo.c:182 ../udisks/udisksobjectinfo.c:183
@@ -2023,103 +2023,103 @@ msgstr ""
 #: ../udisks/udisksobjectinfo.c:186 ../udisks/udisksobjectinfo.c:187
 msgctxt "media-type"
 msgid "DVD"
-msgstr ""
+msgstr "DVD"
 
 #: ../udisks/udisksobjectinfo.c:181
 msgctxt "media-type"
 msgid "DVD-R"
-msgstr ""
+msgstr "DVD-R"
 
 #: ../udisks/udisksobjectinfo.c:182
 msgctxt "media-type"
 msgid "DVD-RW"
-msgstr ""
+msgstr "DVD-RW"
 
 #: ../udisks/udisksobjectinfo.c:183
 msgctxt "media-type"
 msgid "DVD-RAM"
-msgstr ""
+msgstr "DVD-RAM"
 
 #: ../udisks/udisksobjectinfo.c:184
 msgctxt "media-type"
 msgid "DVD+R"
-msgstr ""
+msgstr "DVD+R"
 
 #: ../udisks/udisksobjectinfo.c:185
 msgctxt "media-type"
 msgid "DVD+RW"
-msgstr ""
+msgstr "DVD+RW"
 
 #: ../udisks/udisksobjectinfo.c:186
 msgctxt "media-type"
 msgid "DVD+R DL"
-msgstr ""
+msgstr "DVD+R DL"
 
 #: ../udisks/udisksobjectinfo.c:187
 msgctxt "media-type"
 msgid "DVD+RW DL"
-msgstr ""
+msgstr "DVD+RW DL"
 
 #: ../udisks/udisksobjectinfo.c:188
 msgctxt "media-type"
 msgid "BD-ROM"
-msgstr ""
+msgstr "BD-ROM"
 
 #: ../udisks/udisksobjectinfo.c:188 ../udisks/udisksobjectinfo.c:189
 #: ../udisks/udisksobjectinfo.c:190
 msgctxt "media-type"
 msgid "Blu-Ray"
-msgstr ""
+msgstr "Blu-Ray"
 
 #: ../udisks/udisksobjectinfo.c:189
 msgctxt "media-type"
 msgid "BD-R"
-msgstr ""
+msgstr "BD-R"
 
 #: ../udisks/udisksobjectinfo.c:190
 msgctxt "media-type"
 msgid "BD-RE"
-msgstr ""
+msgstr "BD-RE"
 
 #: ../udisks/udisksobjectinfo.c:191 ../udisks/udisksobjectinfo.c:192
 #: ../udisks/udisksobjectinfo.c:193
 msgctxt "media-type"
 msgid "HDDVD"
-msgstr ""
+msgstr "HDDVD"
 
 #: ../udisks/udisksobjectinfo.c:192
 msgctxt "media-type"
 msgid "HDDVD-R"
-msgstr ""
+msgstr "HDDVD-R"
 
 #: ../udisks/udisksobjectinfo.c:193
 msgctxt "media-type"
 msgid "HDDVD-RW"
-msgstr ""
+msgstr "HDDVD-RW"
 
 #: ../udisks/udisksobjectinfo.c:194
 msgctxt "media-type"
 msgid "MO"
-msgstr ""
+msgstr "MO"
 
 #: ../udisks/udisksobjectinfo.c:195
 msgctxt "media-type"
 msgid "MRW"
-msgstr ""
+msgstr "MRW"
 
 #: ../udisks/udisksobjectinfo.c:196
 msgctxt "media-type"
 msgid "MRW-W"
-msgstr ""
+msgstr "MRW-W"
 
 #: ../udisks/udisksobjectinfo.c:252
 #, c-format
 msgid "%s Block Device"
-msgstr ""
+msgstr "%s блоктық құрылғысы"
 
 #: ../udisks/udisksobjectinfo.c:256
 msgid "Block Device"
-msgstr ""
+msgstr "Блоктық құрылғы"
 
 #. Translators: Used to describe a partition of a block device.
 #. *              The %d is the partition number.
@@ -2141,7 +2141,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-block"
 msgid "%s (%s)"
-msgstr ""
+msgstr "%s (%s)"
 
 #: ../udisks/udisksobjectinfo.c:306
 #, c-format
@@ -2241,7 +2241,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-running"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"
 
 #. Translators: String used for one-liner description of non-running RAID
 #. array.
@@ -2252,7 +2252,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-not-running"
 msgid "%s — %s"
-msgstr ""
+msgstr "%s — %s"
 
 #. Translators: String used for one-liner description of running RAID array
 #. w/o a name.
@@ -2264,7 +2264,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-no-name-running"
 msgid "%s — %s"
-msgstr ""
+msgstr "%s — %s"
 
 #. Translators: String used for one-liner description of non-running RAID
 #. array w/o a name.
@@ -2275,7 +2275,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-no-name-not-running"
 msgid "%s"
-msgstr ""
+msgstr "%s"
 
 #. Translators: Used to describe drive without removable media. The %s is the
 #. type, e.g. 'Thumb'
@@ -2291,7 +2291,7 @@ msgstr ""
 #, c-format
 msgctxt "drive-with-generic-media"
 msgid "%s Disk"
-msgstr ""
+msgstr "%s дискі"
 
 #. Translators: Used to describe flash media. The %s is the type, e.g. 'SD' or
 #. 'CompactFlash'
@@ -2330,7 +2330,7 @@ msgstr ""
 #, c-format
 msgctxt "disk-non-rotational"
 msgid "%s Disk"
-msgstr ""
+msgstr "%s дискі"
 
 #. Translators: Used to describe a non-rotating drive (rotation rate either
 #. unknown
@@ -2340,7 +2340,7 @@ msgstr ""
 #: ../udisks/udisksobjectinfo.c:646
 msgctxt "disk-non-rotational"
 msgid "Disk"
-msgstr ""
+msgstr "Диск"
 
 #. Translators: Used to describe a hard-disk drive (HDD). The %s is the size,
 #. e.g. '20 GB'.
@@ -2348,14 +2348,14 @@ msgstr ""
 #, c-format
 msgctxt "disk-hdd"
 msgid "%s Hard Disk"
-msgstr ""
+msgstr "%s қатты дискі"
 
 #. Translators: Used to describe a hard-disk drive (HDD) (removable media or
 #. size not known)
 #: ../udisks/udisksobjectinfo.c:659
 msgctxt "disk-hdd"
 msgid "Hard Disk"
-msgstr ""
+msgstr "Қатты диск"
 
 #. Translators: Used to describe a card reader. The %s is the card type e.g.
 #. 'CompactFlash'.
@@ -2390,7 +2390,7 @@ msgstr ""
 #, c-format
 msgctxt "optical-media"
 msgid "Blank %s"
-msgstr ""
+msgstr "Таза %s"
 
 #. Translators: String used for a mixed disc. The %s is the disc type e.g.
 #. "CD-ROM Disc"
@@ -2398,7 +2398,7 @@ msgstr ""
 #, c-format
 msgctxt "optical-media"
 msgid "Mixed %s"
-msgstr ""
+msgstr "Аралас %s"
 
 #. Translators: String used for an audio disc. The %s is the disc type e.g.
 #. "CD-ROM Disc"
@@ -2406,7 +2406,7 @@ msgstr ""
 #, c-format
 msgctxt "optical-media"
 msgid "Audio %s"
-msgstr ""
+msgstr "Аудио %s"
 
 #. Translators: Used to describe a partition of a drive.
 #. *              The %d is the partition number.
@@ -2431,7 +2431,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s [%s] (%s)"
-msgstr ""
+msgstr "%s — %s [%s] (%s)"
 
 #. Translators: String used for one-liner description of drive w/o known fw
 #. revision.
@@ -2445,4 +2445,4 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"

@@ -10,8 +10,8 @@ msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-12-18 15:41-0500\n"
-"PO-Revision-Date: 2012-12-18 20:42+0000\n"
-"Last-Translator: davidz <zeuthen@gmail.com>\n"
+"PO-Revision-Date: 2013-02-01 22:22+0000\n"
+"Last-Translator: Christian <Christian.Kirbach@googlemail.com>\n"
 "Language-Team: German (http://www.transifex.com/projects/p/freedesktop/language/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -135,32 +135,32 @@ msgstr "Legitimation ist zum Verwalten von Auslagerunsspeicher erforderlich"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:26
 msgid "Manage RAID arrays"
-msgstr ""
+msgstr "RAID-Anordnungen verwalten"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:27
 msgid "Authentication is required to manage RAID arrays"
-msgstr ""
+msgstr "Legitimation ist zum Verwalten von RAID-Anordnungen erforderlich"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:28
 msgid "Power off drive"
-msgstr ""
+msgstr "Laufwerk ausschalten"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:29
 msgid "Authentication is required to power off a drive"
-msgstr ""
+msgstr "Legitmierung ist zum Ausschalten eines Laufwerks notwendig"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:30
 msgid "Power off a system drive"
-msgstr ""
+msgstr "Ein Systemlaufwerk ausschalten"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:31
 msgid "Power off a drive attached to another seat"
-msgstr ""
+msgstr "Ein Laufwerk an einem anderen Platz ausschalten"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:32
 msgid ""
 "Authentication is required to power off a drive plugged into another seat"
-msgstr ""
+msgstr "Legitimierung ist zum Ausschalten eines Geräts an einem anderen Platz notwendig"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:33
 msgid "Eject media"
@@ -269,15 +269,15 @@ msgstr "Legitimierung ist zum Ausführen eines SMART Selbsttests notwendig"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:58
 msgid "Enable/Disable SMART"
-msgstr ""
+msgstr "SMART aktivieren/deaktivieren"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:59
 msgid "Authentication is required to enable/disable SMART"
-msgstr ""
+msgstr "Legitimierung ist zum An-/Abschalten von SMART erforderlich"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:60
 msgid "Check power state"
-msgstr ""
+msgstr "Energiezustand prüfen"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:61
 msgid "Authentication is required to check the power state"
@@ -467,7 +467,7 @@ msgstr "Legitmierung ist zum Festlegen von Einstellungen für $(drive) notwendig
 #. 
 #: ../src/udiskslinuxdrive.c:1293
 msgid "Authentication is required to power off $(drive)"
-msgstr ""
+msgstr "Legitmierung ist zum Ausschalten von $(drive) notwendig"
 
 #. Translators: Shown in authentication dialog when the user
 #. * refreshes SMART data from a disk.
@@ -547,7 +547,7 @@ msgstr "Legitimierung ist zum Aufwecken von $(drive) aus dem Ruhemodus notwendig
 #. 
 #: ../src/udiskslinuxdriveata.c:2338
 msgid "Authentication is required to enable SMART on $(drive)"
-msgstr ""
+msgstr "Legitimierung ist zum Aktivieren von SMART auf $(drive) notwendig"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests enabling SMART on a disk.
@@ -557,7 +557,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdriveata.c:2348
 msgid "Authentication is required to disable SMART on $(drive)"
-msgstr ""
+msgstr "Legitimierung ist zum Deaktivieren von SMART auf $(drive) notwendig"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests unlocking an encrypted device.
@@ -673,7 +673,7 @@ msgstr "Legitmierung ist zum Verändern des Schleifen-Geräts $(drive) notwendig
 #. TODO: variables
 #: ../src/udiskslinuxmanager.c:565
 msgid "Authentication is required to create a RAID array"
-msgstr ""
+msgstr "Legitimierung ist zum Erstellen einer RAID-Anordnungen erforderlich"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
@@ -681,7 +681,7 @@ msgstr ""
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:627
 msgid "Authentication is required to start a RAID array"
-msgstr ""
+msgstr "Legitimierung ist zum Starten einer RAID-Anordnung erforderlich"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to stop a RAID Array.
@@ -689,7 +689,7 @@ msgstr ""
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:797
 msgid "Authentication is required to stop a RAID array"
-msgstr ""
+msgstr "Legitimierung ist zum Anhalten einer RAID-Anordnung erforderlich"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to remove a device from a RAID Array.
@@ -697,7 +697,7 @@ msgstr ""
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:1002
 msgid "Authentication is required to remove a device from a RAID array"
-msgstr ""
+msgstr "Legitmierung ist zum Entfernen eines Geräts aus einer RAID-Anordnung notwendig"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to add a device to a RAID Array.
@@ -705,7 +705,7 @@ msgstr ""
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:1198
 msgid "Authentication is required to add a device to a RAID array"
-msgstr ""
+msgstr "Legitmierung ist zum Hinzufügen eines Geräts zu einer RAID-Anordnung notwendig"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to change whether it has a write-intent bitmap
@@ -1083,13 +1083,13 @@ msgstr "UDF"
 #: ../udisks/udisksclient.c:1929 ../udisks/udisksclient.c:1930
 msgctxt "fs-type"
 msgid "exFAT"
-msgstr ""
+msgstr "exFAT"
 
 #: ../udisks/udisksclient.c:1930
 #, c-format
 msgctxt "fs-type"
 msgid "exFAT (version %s)"
-msgstr ""
+msgstr "exFAT (Version %s)"
 
 #: ../udisks/udisksclient.c:1931
 #, c-format
@@ -1122,12 +1122,12 @@ msgstr "Physikalischer LVM2-Datenträger"
 #, c-format
 msgctxt "fs-type"
 msgid "Linux RAID Member (version %s)"
-msgstr ""
+msgstr "Linux RAID-Bestandteil (Version %s)"
 
 #: ../udisks/udisksclient.c:1935 ../udisks/udisksclient.c:1936
 msgctxt "fs-type"
 msgid "Linux RAID Member"
-msgstr ""
+msgstr "Linux RAID-Bestandteil"
 
 #: ../udisks/udisksclient.c:1937
 #, c-format
@@ -1155,23 +1155,23 @@ msgstr "ZFS"
 #, c-format
 msgctxt "fs-type"
 msgid "Intel Matrix RAID Member (version %s)"
-msgstr ""
+msgstr "Intel Matrix RAID-Bestandteil (Version %s)"
 
 #: ../udisks/udisksclient.c:1939
 #, c-format
 msgctxt "fs-type"
 msgid "IMSM RAID Member (%s)"
-msgstr ""
+msgstr "IMSM RAID-Bestandteil (%s)"
 
 #: ../udisks/udisksclient.c:1940
 msgctxt "fs-type"
 msgid "Intel Matrix RAID Member"
-msgstr ""
+msgstr "Intel Matrix RAID-Bestandteil"
 
 #: ../udisks/udisksclient.c:1940
 msgctxt "fs-type"
 msgid "IMSM RAID"
-msgstr ""
+msgstr "IMSM RAID"
 
 #: ../udisks/udisksclient.c:1941
 #, c-format
@@ -1896,27 +1896,27 @@ msgstr "ATA Enhanced Secure Erase"
 #: ../udisks/udisksclient.c:2446
 msgctxt "job"
 msgid "Stopping RAID Array"
-msgstr ""
+msgstr "RAID-Anordnung wird angehalten"
 
 #: ../udisks/udisksclient.c:2447
 msgctxt "job"
 msgid "Starting RAID Array"
-msgstr ""
+msgstr "RAID-Anordnung wird gestartet"
 
 #: ../udisks/udisksclient.c:2448
 msgctxt "job"
 msgid "Marking Device as Faulty"
-msgstr ""
+msgstr "Gerät wird als fehlerhaft markiert"
 
 #: ../udisks/udisksclient.c:2449
 msgctxt "job"
 msgid "Removing Device from Array"
-msgstr ""
+msgstr "Gerät wird aus Anordnung entfernt"
 
 #: ../udisks/udisksclient.c:2450
 msgctxt "job"
 msgid "Adding Device to Array"
-msgstr ""
+msgstr "Gerät wird zu Anordnung hinzugefügt"
 
 #: ../udisks/udisksclient.c:2451
 msgctxt "job"
@@ -1926,7 +1926,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:2452
 msgctxt "job"
 msgid "Creating RAID Array"
-msgstr ""
+msgstr "RAID-Anordnung wird erstellt"
 
 #: ../udisks/udisksclient.c:2460
 #, c-format
@@ -2117,11 +2117,11 @@ msgstr "MRW-W-Medium"
 #: ../udisks/udisksobjectinfo.c:252
 #, c-format
 msgid "%s Block Device"
-msgstr ""
+msgstr "%s Blockgerät"
 
 #: ../udisks/udisksobjectinfo.c:256
 msgid "Block Device"
-msgstr ""
+msgstr "Blockgerät"
 
 #. Translators: Used to describe a partition of a block device.
 #. *              The %d is the partition number.
@@ -2132,7 +2132,7 @@ msgstr ""
 #, c-format
 msgctxt "part-block"
 msgid "Partition %d of %s"
-msgstr ""
+msgstr "Partition %d von %s"
 
 #. Translators: String used for one-liner description of a block device.
 #. *              The first %s is the description of the object (e.g. "50 GB
@@ -2143,16 +2143,16 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-block"
 msgid "%s (%s)"
-msgstr ""
+msgstr "%s (%s)"
 
 #: ../udisks/udisksobjectinfo.c:306
 #, c-format
 msgid "%s Loop Device"
-msgstr ""
+msgstr "%s Schleifen-Gerät"
 
 #: ../udisks/udisksobjectinfo.c:310
 msgid "Loop Device"
-msgstr ""
+msgstr "Schleifen-Gerät"
 
 #. Translators: Used to describe a partition of a loop device.
 #. *              The %d is the partition number.
@@ -2163,7 +2163,7 @@ msgstr ""
 #, c-format
 msgctxt "part-loop"
 msgid "Partition %d of %s"
-msgstr ""
+msgstr "Partition %d von %s"
 
 #. Translators: String used for one-liner description of a loop device.
 #. *              The first %s is the description of the object (e.g. "2 GB
@@ -2176,42 +2176,42 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-loop"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"
 
 #: ../udisks/udisksobjectinfo.c:348
 msgctxt "mdraid-desc"
 msgid "RAID-0 Array"
-msgstr ""
+msgstr "RAID-0 Anordnung"
 
 #: ../udisks/udisksobjectinfo.c:350
 msgctxt "mdraid-desc"
 msgid "RAID-1 Array"
-msgstr ""
+msgstr "RAID-1 Anordnung"
 
 #: ../udisks/udisksobjectinfo.c:352
 msgctxt "mdraid-desc"
 msgid "RAID-4 Array"
-msgstr ""
+msgstr "RAID-4 Anordnung"
 
 #: ../udisks/udisksobjectinfo.c:354
 msgctxt "mdraid-desc"
 msgid "RAID-5 Array"
-msgstr ""
+msgstr "RAID-5 Anordnung"
 
 #: ../udisks/udisksobjectinfo.c:356
 msgctxt "mdraid-desc"
 msgid "RAID-6 Array"
-msgstr ""
+msgstr "RAID-6 Anordnung"
 
 #: ../udisks/udisksobjectinfo.c:358
 msgctxt "mdraid-desc"
 msgid "RAID-10 Array"
-msgstr ""
+msgstr "RAID-10 Anordnung"
 
 #: ../udisks/udisksobjectinfo.c:360
 msgctxt "mdraid-desc"
 msgid "RAID Array"
-msgstr ""
+msgstr "RAID-Anordnung"
 
 #. Translators: Used to format the description for a RAID array.
 #. *              The first %s is the size (e.g. '42.0 GB').
@@ -2221,7 +2221,7 @@ msgstr ""
 #, c-format
 msgctxt "mdraid-desc"
 msgid "%s %s"
-msgstr ""
+msgstr "%s %s"
 
 #. Translators: Used to describe a partition of a RAID Array.
 #. *              The %d is the partition number.
@@ -2232,7 +2232,7 @@ msgstr ""
 #, c-format
 msgctxt "part-raid"
 msgid "Partition %d of %s"
-msgstr ""
+msgstr "Partition %d von %s"
 
 #. Translators: String used for one-liner description of running RAID array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
@@ -2243,7 +2243,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-running"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"
 
 #. Translators: String used for one-liner description of non-running RAID
 #. array.
@@ -2254,7 +2254,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-not-running"
 msgid "%s — %s"
-msgstr ""
+msgstr "%s — %s"
 
 #. Translators: String used for one-liner description of running RAID array
 #. w/o a name.
@@ -2266,7 +2266,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-no-name-running"
 msgid "%s — %s"
-msgstr ""
+msgstr "%s — %s"
 
 #. Translators: String used for one-liner description of non-running RAID
 #. array w/o a name.
@@ -2277,7 +2277,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-no-name-not-running"
 msgid "%s"
-msgstr ""
+msgstr "%s"
 
 #. Translators: Used to describe drive without removable media. The %s is the
 #. type, e.g. 'Thumb'
@@ -2419,7 +2419,7 @@ msgstr "Audio %s"
 #, c-format
 msgctxt "part-drive"
 msgid "Partition %d of %s"
-msgstr ""
+msgstr "Partition %d von %s"
 
 #. Translators: String used for one-liner description of drive.
 #. *              The first %s is the description of the object (e.g. "80 GB
@@ -2433,7 +2433,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s [%s] (%s)"
-msgstr ""
+msgstr "%s — %s [%s] (%s)"
 
 #. Translators: String used for one-liner description of drive w/o known fw
 #. revision.
@@ -2447,4 +2447,4 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"

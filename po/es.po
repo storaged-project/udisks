@@ -4,13 +4,13 @@
 # 
 # Translators:
 # Adolfo Jayme Barrientos <fitoschido@gmail.com>, 2012.
-# Daniel Mustieles <daniel.mustieles@gmail.com>, 2012.
+# Daniel Mustieles <daniel.mustieles@gmail.com>, 2012-2013.
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-12-18 15:41-0500\n"
-"PO-Revision-Date: 2012-12-27 21:24+0000\n"
+"PO-Revision-Date: 2013-01-20 09:49+0000\n"
 "Last-Translator: Daniel Mustieles <daniel.mustieles@gmail.com>\n"
 "Language-Team: Spanish (http://www.transifex.com/projects/p/freedesktop/language/es/)\n"
 "MIME-Version: 1.0\n"
@@ -139,7 +139,7 @@ msgstr "Gestiona conjuntos RAID"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:27
 msgid "Authentication is required to manage RAID arrays"
-msgstr ""
+msgstr "Se requiere autenticación para gestionar conjuntos RAID"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:28
 msgid "Power off drive"
@@ -155,12 +155,12 @@ msgstr "Apagar una unidad del sistema"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:31
 msgid "Power off a drive attached to another seat"
-msgstr ""
+msgstr "Apagar una unidad conectada en otra ubicación"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:32
 msgid ""
 "Authentication is required to power off a drive plugged into another seat"
-msgstr ""
+msgstr "Se requiere autenticación para apagar una unidad conectada en otra ubicación"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:33
 msgid "Eject media"
@@ -273,7 +273,7 @@ msgstr "Activar/desactivar SMART"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:59
 msgid "Authentication is required to enable/disable SMART"
-msgstr ""
+msgstr "Se requiere autenticación para activar/desactivar SMART"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:60
 msgid "Check power state"
@@ -467,7 +467,7 @@ msgstr "Para configurar opciones para $(drive) necesita autenticarse"
 #. 
 #: ../src/udiskslinuxdrive.c:1293
 msgid "Authentication is required to power off $(drive)"
-msgstr ""
+msgstr "Se requiere autenticación para apagar $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * refreshes SMART data from a disk.
@@ -547,7 +547,7 @@ msgstr "Se requiere autenticación para despertar a $(drive) del modo en espera"
 #. 
 #: ../src/udiskslinuxdriveata.c:2338
 msgid "Authentication is required to enable SMART on $(drive)"
-msgstr ""
+msgstr "Se requiere autenticación para activar SMART en $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests enabling SMART on a disk.
@@ -557,7 +557,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdriveata.c:2348
 msgid "Authentication is required to disable SMART on $(drive)"
-msgstr ""
+msgstr "Se requiere autenticación para desactivar SMART en $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests unlocking an encrypted device.
@@ -673,7 +673,7 @@ msgstr "Se requiere autenticación para modificar el dispositivo de «loop» $(d
 #. TODO: variables
 #: ../src/udiskslinuxmanager.c:565
 msgid "Authentication is required to create a RAID array"
-msgstr ""
+msgstr "Se requiere autenticación para crear un conjunto RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
@@ -681,7 +681,7 @@ msgstr ""
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:627
 msgid "Authentication is required to start a RAID array"
-msgstr ""
+msgstr "Se requiere autenticación para iniciar un conjunto RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to stop a RAID Array.
@@ -689,7 +689,7 @@ msgstr ""
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:797
 msgid "Authentication is required to stop a RAID array"
-msgstr ""
+msgstr "Se requiere autenticación para detenerun conjunto RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to remove a device from a RAID Array.
@@ -697,7 +697,7 @@ msgstr ""
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:1002
 msgid "Authentication is required to remove a device from a RAID array"
-msgstr ""
+msgstr "Se requiere autenticación para quitar un dispositivo de un conjunto RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to add a device to a RAID Array.
@@ -705,7 +705,7 @@ msgstr ""
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:1198
 msgid "Authentication is required to add a device to a RAID array"
-msgstr ""
+msgstr "Se requiere autenticación para añadir un dispositivo a un conjunto RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to change whether it has a write-intent bitmap
@@ -715,7 +715,7 @@ msgstr ""
 msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
-msgstr ""
+msgstr "Se requiere autenticación para configurar el mapa de bits de intentos de escritura en un conjunto RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
@@ -1122,12 +1122,12 @@ msgstr "Volumen físico LVM2"
 #, c-format
 msgctxt "fs-type"
 msgid "Linux RAID Member (version %s)"
-msgstr ""
+msgstr "Miembro de RAID Linux (versión %s)"
 
 #: ../udisks/udisksclient.c:1935 ../udisks/udisksclient.c:1936
 msgctxt "fs-type"
 msgid "Linux RAID Member"
-msgstr ""
+msgstr "Miembro de RAID Linux"
 
 #: ../udisks/udisksclient.c:1937
 #, c-format
@@ -1155,18 +1155,18 @@ msgstr "ZFS"
 #, c-format
 msgctxt "fs-type"
 msgid "Intel Matrix RAID Member (version %s)"
-msgstr ""
+msgstr "Miembro de matriz RAID Intel (versión %s)"
 
 #: ../udisks/udisksclient.c:1939
 #, c-format
 msgctxt "fs-type"
 msgid "IMSM RAID Member (%s)"
-msgstr ""
+msgstr "Miembro de RAID IMSM (%s)"
 
 #: ../udisks/udisksclient.c:1940
 msgctxt "fs-type"
 msgid "Intel Matrix RAID Member"
-msgstr ""
+msgstr "Miembro de matriz RAID Intel "
 
 #: ../udisks/udisksclient.c:1940
 msgctxt "fs-type"
@@ -1906,7 +1906,7 @@ msgstr "Iniciando conjunto RAID"
 #: ../udisks/udisksclient.c:2448
 msgctxt "job"
 msgid "Marking Device as Faulty"
-msgstr ""
+msgstr "Marcando dispositivo como erróneo"
 
 #: ../udisks/udisksclient.c:2449
 msgctxt "job"
@@ -1921,7 +1921,7 @@ msgstr "Añadiendo dispositivo al conjunto"
 #: ../udisks/udisksclient.c:2451
 msgctxt "job"
 msgid "Setting Write-Intent Bitmap"
-msgstr ""
+msgstr "Configurando el mapa de bits de intentos de escritura"
 
 #: ../udisks/udisksclient.c:2452
 msgctxt "job"
@@ -2148,11 +2148,11 @@ msgstr "%s (%s)"
 #: ../udisks/udisksobjectinfo.c:306
 #, c-format
 msgid "%s Loop Device"
-msgstr ""
+msgstr "Dispositivo «loop» %s"
 
 #: ../udisks/udisksobjectinfo.c:310
 msgid "Loop Device"
-msgstr ""
+msgstr "Dispositivo «loop»"
 
 #. Translators: Used to describe a partition of a loop device.
 #. *              The %d is the partition number.

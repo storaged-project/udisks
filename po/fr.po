@@ -3,13 +3,14 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# Jérôme Fenal <jfenal@gmail.com>, 2013.
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-12-18 15:41-0500\n"
-"PO-Revision-Date: 2012-12-18 20:42+0000\n"
-"Last-Translator: davidz <zeuthen@gmail.com>\n"
+"PO-Revision-Date: 2013-03-02 20:14+0000\n"
+"Last-Translator: Jérôme Fenal <jfenal@gmail.com>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -184,7 +185,7 @@ msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:38
 msgid "Modify a device"
-msgstr ""
+msgstr "Modifier un périphérique"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:39
 msgid "Authentication is required to modify a device"
@@ -1942,80 +1943,80 @@ msgstr ""
 #: ../udisks/udisksobjectinfo.c:164
 msgctxt "media-type"
 msgid "Floppy"
-msgstr ""
+msgstr "Floppy"
 
 #: ../udisks/udisksobjectinfo.c:165
 msgctxt "media-type"
 msgid "Zip"
-msgstr ""
+msgstr "Zip"
 
 #: ../udisks/udisksobjectinfo.c:166
 msgctxt "media-type"
 msgid "Jaz"
-msgstr ""
+msgstr "Jaz"
 
 #: ../udisks/udisksobjectinfo.c:168
 msgctxt "media-type"
 msgid "Flash"
-msgstr ""
+msgstr "Flash"
 
 #: ../udisks/udisksobjectinfo.c:169
 msgctxt "media-type"
 msgid "MemoryStick"
-msgstr ""
+msgstr "MemoryStick"
 
 #: ../udisks/udisksobjectinfo.c:170
 msgctxt "media-type"
 msgid "SmartMedia"
-msgstr ""
+msgstr "SmartMedia"
 
 #: ../udisks/udisksobjectinfo.c:171
 msgctxt "media-type"
 msgid "CompactFlash"
-msgstr ""
+msgstr "CompactFlash"
 
 #: ../udisks/udisksobjectinfo.c:172
 msgctxt "media-type"
 msgid "MMC"
-msgstr ""
+msgstr "MMC"
 
 #: ../udisks/udisksobjectinfo.c:172 ../udisks/udisksobjectinfo.c:173
 #: ../udisks/udisksobjectinfo.c:174 ../udisks/udisksobjectinfo.c:175
 msgctxt "media-type"
 msgid "SD"
-msgstr ""
+msgstr "SD"
 
 #: ../udisks/udisksobjectinfo.c:174
 msgctxt "media-type"
 msgid "SDXC"
-msgstr ""
+msgstr "SDXC"
 
 #: ../udisks/udisksobjectinfo.c:175
 msgctxt "media-type"
 msgid "SDHC"
-msgstr ""
+msgstr "SDHC"
 
 #: ../udisks/udisksobjectinfo.c:177
 msgctxt "media-type"
 msgid "CD-ROM"
-msgstr ""
+msgstr "CD-ROM"
 
 #: ../udisks/udisksobjectinfo.c:177 ../udisks/udisksobjectinfo.c:178
 #: ../udisks/udisksobjectinfo.c:179 ../udisks/udisksobjectinfo.c:194
 #: ../udisks/udisksobjectinfo.c:195 ../udisks/udisksobjectinfo.c:196
 msgctxt "media-type"
 msgid "CD"
-msgstr ""
+msgstr "CD"
 
 #: ../udisks/udisksobjectinfo.c:178
 msgctxt "media-type"
 msgid "CD-R"
-msgstr ""
+msgstr "CD-R"
 
 #: ../udisks/udisksobjectinfo.c:179
 msgctxt "media-type"
 msgid "CD-RW"
-msgstr ""
+msgstr "CD-RW"
 
 #: ../udisks/udisksobjectinfo.c:180 ../udisks/udisksobjectinfo.c:181
 #: ../udisks/udisksobjectinfo.c:182 ../udisks/udisksobjectinfo.c:183
@@ -2023,42 +2024,42 @@ msgstr ""
 #: ../udisks/udisksobjectinfo.c:186 ../udisks/udisksobjectinfo.c:187
 msgctxt "media-type"
 msgid "DVD"
-msgstr ""
+msgstr "DVD"
 
 #: ../udisks/udisksobjectinfo.c:181
 msgctxt "media-type"
 msgid "DVD-R"
-msgstr ""
+msgstr "DVD-R"
 
 #: ../udisks/udisksobjectinfo.c:182
 msgctxt "media-type"
 msgid "DVD-RW"
-msgstr ""
+msgstr "DVD-RW"
 
 #: ../udisks/udisksobjectinfo.c:183
 msgctxt "media-type"
 msgid "DVD-RAM"
-msgstr ""
+msgstr "DVD-RAM"
 
 #: ../udisks/udisksobjectinfo.c:184
 msgctxt "media-type"
 msgid "DVD+R"
-msgstr ""
+msgstr "DVD+R"
 
 #: ../udisks/udisksobjectinfo.c:185
 msgctxt "media-type"
 msgid "DVD+RW"
-msgstr ""
+msgstr "DVD+RW"
 
 #: ../udisks/udisksobjectinfo.c:186
 msgctxt "media-type"
 msgid "DVD+R DL"
-msgstr ""
+msgstr "DVD+R DL"
 
 #: ../udisks/udisksobjectinfo.c:187
 msgctxt "media-type"
 msgid "DVD+RW DL"
-msgstr ""
+msgstr "DVD+RW DL"
 
 #: ../udisks/udisksobjectinfo.c:188
 msgctxt "media-type"
