@@ -1616,7 +1616,7 @@ handle_remove_configuration_item (UDisksBlock           *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
-      udisks_block_complete_add_configuration_item (UDISKS_BLOCK (block), invocation);
+      udisks_block_complete_remove_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else if (g_strcmp0 (type, "crypttab") == 0)
     {
@@ -1634,7 +1634,7 @@ handle_remove_configuration_item (UDisksBlock           *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
-      udisks_block_complete_add_configuration_item (UDISKS_BLOCK (block), invocation);
+      udisks_block_complete_remove_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else
     {
@@ -1706,7 +1706,7 @@ handle_update_configuration_item (UDisksBlock           *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
-      udisks_block_complete_add_configuration_item (UDISKS_BLOCK (block), invocation);
+      udisks_block_complete_update_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else if (g_strcmp0 (old_type, "crypttab") == 0)
     {
@@ -1724,7 +1724,7 @@ handle_update_configuration_item (UDisksBlock           *_block,
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
         }
-      udisks_block_complete_add_configuration_item (UDISKS_BLOCK (block), invocation);
+      udisks_block_complete_update_configuration_item (UDISKS_BLOCK (block), invocation);
     }
   else
     {
@@ -2770,7 +2770,7 @@ handle_open_for_restore (UDisksBlock           *block,
     }
 
   out_fd_list = g_unix_fd_list_new_from_array (&fd, 1);
-  udisks_block_complete_open_for_backup (block, invocation, out_fd_list, g_variant_new_handle (0));
+  udisks_block_complete_open_for_restore (block, invocation, out_fd_list, g_variant_new_handle (0));
 
  out:
   g_clear_object (&out_fd_list);
@@ -2844,7 +2844,7 @@ handle_open_for_benchmark (UDisksBlock           *block,
     }
 
   out_fd_list = g_unix_fd_list_new_from_array (&fd, 1);
-  udisks_block_complete_open_for_backup (block, invocation, out_fd_list, g_variant_new_handle (0));
+  udisks_block_complete_open_for_benchmark (block, invocation, out_fd_list, g_variant_new_handle (0));
 
  out:
   g_clear_object (&out_fd_list);
