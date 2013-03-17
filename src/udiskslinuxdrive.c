@@ -715,6 +715,7 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
   if (g_udev_device_get_property_as_boolean (device->udev_device, "ID_ATA"))
     {
       const gchar *model;
+      const gchar *serial;
 
       model = g_udev_device_get_property (device->udev_device, "ID_MODEL_ENC");
       if (model != NULL)
@@ -726,9 +727,13 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
           g_free (s);
         }
 
+      serial = g_udev_device_get_property (device->udev_device, "ID_SERIAL_SHORT");
+      if (serial == NULL)
+        serial = g_udev_device_get_property (device->udev_device, "ID_SERIAL");
+
       udisks_drive_set_vendor (iface, "");
       udisks_drive_set_revision (iface, g_udev_device_get_property (device->udev_device, "ID_REVISION"));
-      udisks_drive_set_serial (iface, g_udev_device_get_property (device->udev_device, "ID_SERIAL_SHORT"));
+      udisks_drive_set_serial (iface, serial);
       udisks_drive_set_wwn (iface, g_udev_device_get_property (device->udev_device, "ID_WWN_WITH_EXTENSION"));
     }
   else if (g_udev_device_get_property_as_boolean (device->udev_device, "ID_SCSI"))
@@ -775,6 +780,7 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
       const gchar *vendor;
       const gchar *model;
       const gchar *name;
+      const gchar *serial;
 
       name = g_udev_device_get_name (device->udev_device);
 
@@ -836,8 +842,12 @@ udisks_linux_drive_update (UDisksLinuxDrive       *drive,
             }
         }
 
+      serial = g_udev_device_get_property (device->udev_device, "ID_SERIAL_SHORT");
+      if (serial == NULL)
+        serial = g_udev_device_get_property (device->udev_device, "ID_SERIAL");
+
       udisks_drive_set_revision (iface, g_udev_device_get_property (device->udev_device, "ID_REVISION"));
-      udisks_drive_set_serial (iface, g_udev_device_get_property (device->udev_device, "ID_SERIAL_SHORT"));
+      udisks_drive_set_serial (iface, serial);
       if (g_udev_device_has_property (device->udev_device, "ID_WWN_WITH_EXTENSION"))
         udisks_drive_set_wwn (iface, g_udev_device_get_property (device->udev_device, "ID_WWN_WITH_EXTENSION"));
       else
