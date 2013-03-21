@@ -44,6 +44,8 @@
 #if defined(HAVE_LIBSYSTEMD_LOGIN)
 #include <systemd/sd-daemon.h>
 #include <systemd/sd-login.h>
+
+#define LOGIND_AVAILABLE() (access("/run/systemd/seats/", F_OK) >= 0)
 #endif
 
 /**
@@ -1039,8 +1041,8 @@ udisks_daemon_util_on_same_seat (UDisksDaemon          *daemon,
   UDisksObject *drive_object = NULL;
   UDisksDrive *drive = NULL;
 
-  /* if we haven't booted with systemd, assume it's always the same seat */
-  if (sd_booted () <= 0)
+  /* if we don't have logind, assume it's always the same seat */
+  if (!LOGIND_AVAILABLE())
     return TRUE;
 
   if (UDISKS_IS_LINUX_BLOCK_OBJECT (object))
