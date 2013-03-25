@@ -114,7 +114,7 @@ ENV{ID_PART_ENTRY_SCHEME}=="gpt", \
 
 # MAC recovery/tool partitions which are useless on Linux
 ENV{ID_PART_ENTRY_SCHEME}=="mac", \
-  ENV{ID_CDROM}=="?*", ENV{ID_FS_TYPE}=="udf", ENV{ID_FS_LABEL}=="WD_SmartWare", \
+  ENV{ID_CDROM}=="?*", ENV{ID_FS_TYPE}=="udf", ENV{ID_FS_LABEL}=="WD*SmartWare", \
   ENV{UDISKS_IGNORE}="1"
 
 # recovery partitions
