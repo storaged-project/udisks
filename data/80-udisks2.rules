@@ -71,6 +71,10 @@ SUBSYSTEMS=="usb", ATTRS{idVendor}=="05ac", ATTRS{idProduct}=="8403", ENV{ID_DRI
 DRIVERS=="rts_pstor", ENV{ID_DRIVE_FLASH_SD}="1"
 DRIVERS=="rts5229", ENV{ID_DRIVE_FLASH_SD}="1"
 
+# Lexar Dual Slot USB 3.0 Reader Professional
+SUBSYSTEMS=="usb", ENV{ID_VENDOR_ID}=="05dc",ENV{ID_MODEL_ID}=="b049", ENV{ID_INSTANCE}=="0:0", ENV{ID_DRIVE_FLASH_CF}="1"
+SUBSYSTEMS=="usb", ENV{ID_VENDOR_ID}=="05dc",ENV{ID_MODEL_ID}=="b049", ENV{ID_INSTANCE}=="0:1", ENV{ID_DRIVE_FLASH_SD}="1"
+
 # Common theme
 #
 SUBSYSTEMS=="usb", ENV{ID_MODEL}=="*Reader*SD*", ENV{ID_DRIVE_FLASH_SD}="1"
