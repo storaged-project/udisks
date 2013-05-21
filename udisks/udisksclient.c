@@ -2267,6 +2267,11 @@ static const struct
   /* VMWare, see http://blogs.vmware.com/vsphere/2011/08/vsphere-50-storage-features-part-7-gpt.html */
   {"gpt", "other",     "aa31e02a-400f-11db-9590-000c2911d1b8", NC_("part-type", "VMWare VMFS"), 0},
   {"gpt", "other",     "9d275380-40ad-11db-bf97-000c2911d1b8", NC_("part-type", "VMWare vmkcore"), 0},
+  /* ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-docs/disk-format */
+  {"gpt", "other",     "cab6e88e-abf3-4102-a07a-d4bb9be3c1d3", NC_("part-type", "ChromeOS Firmware"), 0},
+  {"gpt", "other",     "fe3a2a5d-4f32-41a7-b725-accc3285a309", NC_("part-type", "ChromeOS Kernel"), 0},
+  {"gpt", "other",     "3cb8e202-3b7e-47dd-8a3c-7ff2a13cfcec", NC_("part-type", "ChromeOS Root Filesystem"), 0},
+  {"gpt", "other",     "2e0a753d-9e48-43b0-8337-b15192cb1b5e", NC_("part-type", "ChromeOS Reserved"), 0},
 
   /* see http://developer.apple.com/documentation/mac/devices/devices-126.html
    *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html */
