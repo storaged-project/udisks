@@ -2395,6 +2395,48 @@ udisks_client_get_partition_type_for_display (UDisksClient  *client,
   return ret;
 }
 
+/**
+ * udisks_client_get_partition_type_and_subtype_for_display:
+ * @client: A #UDisksClient.
+ * @partition_table_type: A partitioning type e.g. 'dos' or 'gpt'.
+ * @partition_table_subtype: A partitioning subtype or %NULL.
+ * @partition_type: A partition type.
+ *
+ * Like udisks_client_get_partition_type_for_display() but also takes
+ * the partition table subtype into account, if available. This is
+ * useful in scenarios where different subtypes is using the same
+ * partition type.
+ *
+ * Returns: A description of @partition_type or %NULL if unknown.
+ *
+ * Since: 2.1.1
+ */
+const gchar *
+udisks_client_get_partition_type_and_subtype_for_display (UDisksClient  *client,
+                                                          const gchar   *partition_table_type,
+                                                          const gchar   *partition_table_subtype,
+                                                          const gchar   *partition_type)
+{
+  const gchar *ret = NULL;
+  guint n;
+
+  for (n = 0; known_partition_types[n].name != NULL; n++)
+    {
+      if (g_strcmp0 (known_partition_types[n].table_type, partition_table_type) == 0 &&
+          g_strcmp0 (known_partition_types[n].type, partition_type) == 0)
+        {
+          if (partition_table_subtype != NULL &&
+              g_strcmp0 (known_partition_types[n].table_subtype, partition_table_subtype) != 0)
+            continue;
+          ret = g_dpgettext2 (GETTEXT_PACKAGE, "part-type", known_partition_types[n].name);
+          goto out;
+        }
+    }
+
+ out:
+  return ret;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 /**

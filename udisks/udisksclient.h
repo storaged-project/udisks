@@ -136,6 +136,12 @@ const gchar        *udisks_client_get_partition_type_for_display       (UDisksCl
                                                                         const gchar   *partition_table_type,
                                                                         const gchar   *partition_type);
 
+const gchar        *udisks_client_get_partition_type_and_subtype_for_display (UDisksClient  *client,
+                                                                              const gchar   *partition_table_type,
+                                                                              const gchar   *partition_table_subtype,
+                                                                              const gchar   *partition_type);
+
+
 const gchar        *udisks_client_get_partition_table_type_for_display (UDisksClient  *client,
                                                                         const gchar   *partition_table_type);
 
