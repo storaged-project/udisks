@@ -2210,6 +2210,7 @@ static const struct
   {"gpt", "generic",   "024dee41-33e7-11d3-9d69-0008c781f39f", NC_("part-type", "MBR Partition Scheme"), F_SYSTEM},
   {"gpt", "generic",   "c12a7328-f81f-11d2-ba4b-00a0c93ec93b", NC_("part-type", "EFI System"), F_SYSTEM},
   {"gpt", "generic",   "21686148-6449-6e6f-744e-656564454649", NC_("part-type", "BIOS Boot"), F_SYSTEM},
+  {"gpt", "generic",   "6a898cc3-1dd2-11b2-99a6-080020736631", NC_("part-type", "ZFS"), 0},   /* see also Apple, Sol. */
   /* Linux */
   {"gpt", "linux",     "0fc63daf-8483-4772-8e79-3d69d8477de4", NC_("part-type", "Linux Filesystem"), 0},
   {"gpt", "linux",     "a19d880f-05fc-4d3b-a006-743f0f84911e", NC_("part-type", "Linux RAID"), F_RAID},
@@ -2225,7 +2226,7 @@ static const struct
   /* Apple OS X */
   {"gpt", "apple",     "48465300-0000-11aa-aa11-00306543ecac", NC_("part-type", "Apple HFS/HFS+"), 0},
   {"gpt", "apple",     "55465300-0000-11aa-aa11-00306543ecac", NC_("part-type", "Apple UFS"), 0},
-  {"gpt", "apple",     "6a898cc3-1dd2-11b2-99a6-080020736631", NC_("part-type", "Apple ZFS"), 0}, /* same as Solaris /usr */
+  {"gpt", "apple",     "6a898cc3-1dd2-11b2-99a6-080020736631", NC_("part-type", "Apple ZFS"), 0}, /* same as ZFS */
   {"gpt", "apple",     "52414944-0000-11aa-aa11-00306543ecac", NC_("part-type", "Apple RAID"), F_RAID},
   {"gpt", "apple",     "52414944-5f4f-11aa-aa11-00306543ecac", NC_("part-type", "Apple RAID (offline)"), F_RAID},
   {"gpt", "apple",     "426f6f74-0000-11aa-aa11-00306543ecac", NC_("part-type", "Apple Boot"), F_SYSTEM},
@@ -2247,7 +2248,7 @@ static const struct
   {"gpt", "other",     "6a85cf4d-1dd2-11b2-99a6-080020736631", NC_("part-type", "Solaris Root"), 0},
   {"gpt", "other",     "6a87c46f-1dd2-11b2-99a6-080020736631", NC_("part-type", "Solaris Swap"), F_SWAP},
   {"gpt", "other",     "6a8b642b-1dd2-11b2-99a6-080020736631", NC_("part-type", "Solaris Backup"), 0},
-  {"gpt", "other",     "6a898cc3-1dd2-11b2-99a6-080020736631", NC_("part-type", "Solaris /usr"), 0}, /* same as Apple ZFS */
+  {"gpt", "other",     "6a898cc3-1dd2-11b2-99a6-080020736631", NC_("part-type", "Solaris /usr"), 0}, /* same as ZFS */
   {"gpt", "other",     "6a8ef2e9-1dd2-11b2-99a6-080020736631", NC_("part-type", "Solaris /var"), 0},
   {"gpt", "other",     "6a90ba39-1dd2-11b2-99a6-080020736631", NC_("part-type", "Solaris /home"), 0},
   {"gpt", "other",     "6a9283a5-1dd2-11b2-99a6-080020736631", NC_("part-type", "Solaris Alternate Sector"), 0},
