@@ -402,7 +402,8 @@ class UDisksTestCase(unittest.TestCase):
         # work around scsi_debug not implementing CD-ROM SCSI commands, so that
         # udev's cdrom_id does not recognize tracks
         scsi_debug_rules = '/run/udev/rules.d/60-persistent-storage-scsi_debug.rules'
-        if os.path.isdir('/run/udev/rules.d') and not os.path.exists(scsi_debug_rules):
+        if os.path.isdir('/run/udev') and not os.path.exists(scsi_debug_rules):
+            os.makedirs('/run/udev/rules.d', exist_ok=True)
             with open(scsi_debug_rules, 'w') as f:
                 f.write('''KERNEL=="sr*", ENV{DISK_EJECT_REQUEST}!="?*", ATTRS{model}=="scsi_debug*", ENV{ID_CDROM_MEDIA}=="?*", IMPORT{program}="/sbin/blkid -o udev -p -u noraid $tempnode"
 ''')
