@@ -847,7 +847,10 @@ class FS(UDisksTestCase):
         self.assertEqual(block.get_property('id-usage'), (type == 'swap') and 'other' or 'filesystem')
 
         self.assertEqual(block.get_property('id-type'), type)
-        self.assertEqual(block.get_property('id-label'), label or '')
+        l = block.get_property('id-label')
+        if type == 'vfat':
+            l = l.lower()  # VFAT is case insensitive
+        self.assertEqual(l, label or '')
         self.assertEqual(block.get_property('hint-name'), '')
         if type != 'minix':
             self.assertEqual(block.get_property('id-uuid'), self.blkid()['ID_FS_UUID'])
@@ -903,12 +906,18 @@ class FS(UDisksTestCase):
         id = self.blkid()
         self.assertEqual(id['ID_FS_USAGE'], type == 'swap' and 'other' or 'filesystem')
         self.assertEqual(id['ID_FS_TYPE'], type)
-        self.assertEqual(id.get('ID_FS_LABEL', ''), label or '')
+        l = id.get('ID_FS_LABEL', '')
+        if type == 'vfat':
+            l = l.lower()  # VFAT is case insensitive
+        self.assertEqual(l, label or '')
 
         block = self.udisks_block()
         self.assertEqual(block.get_property('id-usage'), (type == 'swap') and 'other' or 'filesystem')
         self.assertEqual(block.get_property('id-type'), type)
-        self.assertEqual(block.get_property('id-label'), label or '')
+        l = block.get_property('id-label')
+        if type == 'vfat':
+            l = l.lower()  # VFAT is case insensitive
+        self.assertEqual(l, label or '')
 
         if type == 'swap':
             return
@@ -926,7 +935,10 @@ class FS(UDisksTestCase):
 
         self.assertTrue('/media/' in mount_path)
         if label:
-            self.assertTrue(mount_path.endswith(label))
+            if type == 'vfat':
+                self.assertTrue(mount_path.lower().endswith(label))
+            else:
+                self.assertTrue(mount_path.endswith(label))
 
         self.sync()
         self.assertEqual(fs.get_property('mount-points'), [mount_path])
