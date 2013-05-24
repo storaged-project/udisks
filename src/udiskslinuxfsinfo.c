@@ -53,8 +53,8 @@ const FSInfo _fs_info[] =
     },
     {
       "vfat",
-      "mlabel -i $DEVICE ::$LABEL",
-      "mlabel -i $DEVICE -c ::",
+      "dosfslabel $DEVICE $LABEL",
+      NULL,
       FALSE, /* supports_online_label_rename */
       FALSE, /* supports_owners */
       "mkfs.vfat -I -n $LABEL $DEVICE",

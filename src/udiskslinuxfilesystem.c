@@ -1819,6 +1819,7 @@ handle_set_label (UDisksFilesystem       *filesystem,
   UDisksBaseJob *job;
   const gchar *action_id;
   const gchar *message;
+  gchar *real_label = NULL;
   uid_t caller_uid;
   gid_t caller_gid;
   pid_t caller_pid;
@@ -1893,8 +1894,9 @@ handle_set_label (UDisksFilesystem       *filesystem,
       goto out;
     }
 
-  /* VFAT does not allow some characters; as mlabel hangs with interactive
-   * question in this case, check in advance */
+  /* VFAT does not allow some characters; as dosfslabel does not enforce this,
+   * check in advance; also, VFAT only knows upper-case characters, dosfslabel
+   * enforces this */
   if (g_strcmp0 (probed_fs_type, "vfat") == 0)
     {
       const gchar *forbidden = "\"*/:<>?\\|";
@@ -1911,6 +1913,11 @@ handle_set_label (UDisksFilesystem       *filesystem,
                goto out;
             }
         }
+
+      /* we need to remember that we make a copy, so assign it to a new
+       * variable, too */
+      real_label = g_ascii_strup (label, -1);
+      label = real_label;
     }
 
   /* Fail if the device is already mounted and the tools/drivers doesn't
@@ -1988,6 +1995,8 @@ handle_set_label (UDisksFilesystem       *filesystem,
                     invocation);
 
  out:
+  /* for some FSes we need to copy and modify label; free our copy */
+  g_free (real_label);
   g_free (command);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
