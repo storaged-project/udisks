@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[<!ENTITY version SYSTEM "../version.xml">]>
+<refentry id="umount.udisks2.8">
+  <refentryinfo>
+    <title>umount.udisks2</title>
+    <date>March 2013</date>
+    <productname>udisks</productname>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>umount.udisks2</refentrytitle>
+    <manvolnum>8</manvolnum>
+    <refmiscinfo class="manual">System Administration</refmiscinfo>
+    <refmiscinfo class="source">udisks</refmiscinfo>
+    <refmiscinfo class="version">&version;</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>umount.udisks2</refname>
+    <refpurpose>unmount file systems that have been mounted by udisks</refpurpose>
+  </refnamediv>
+
+  <refsect1><title>DESCRIPTION</title>
+    <para>
+      The <command>umount.udisks2</command> program is a helper for the
+      <citerefentry><refentrytitle>umount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+      program. Its purpose is to clean up automatically created directories
+      created at file system mount-time. It should never be called directly.
+    </para>
+  </refsect1>
+
+  <refsect1><title>AUTHOR</title>
+    <para>
+      Written by David Zeuthen
+      <email><![CDATA[zeuthen@gmail.com]]></email> with a lot of help
+      from many others.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>BUGS</title>
+    <para>
+      Please send bug reports to either the distribution bug tracker
+      or the upstream bug tracker at
+      <ulink url="http://bugs.freedesktop.org/enter_bug.cgi?product=udisks"/>.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para>
+      <link linkend="udisks.8"><citerefentry><refentrytitle>udisks</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
+      <link linkend="udisksd.8"><citerefentry><refentrytitle>udisksd</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
+      <link linkend="udisksctl.1"><citerefentry><refentrytitle>udisksctl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>,
+      <link linkend="umount.8"><citerefentry><refentrytitle>umount</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
+    </para>
+  </refsect1>
+</refentry>

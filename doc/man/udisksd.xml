@@ -113,6 +113,7 @@
     <para>
       <link linkend="udisks.8"><citerefentry><refentrytitle>udisks</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
       <link linkend="udisksctl.1"><citerefentry><refentrytitle>udisksctl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>,
+      <link linkend="umount.udisks2.8"><citerefentry><refentrytitle>umount.udisks2</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
       <citerefentry>
         <refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum>
       </citerefentry>,
