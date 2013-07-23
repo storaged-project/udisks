@@ -511,7 +511,7 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
   const gchar *const *media_compat;
   gboolean media_available;
   gboolean media_removable;
-  gboolean rotation_rate;
+  gint rotation_rate;
   guint64 size;
   gchar *size_str;
   guint n;
@@ -691,9 +691,16 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
   if (info->icon == NULL)
     {
       if (media_removable)
-        s = g_strdup_printf ("drive-removable-media%s", hyphenated_connection_bus);
+        {
+          s = g_strdup_printf ("drive-removable-media%s", hyphenated_connection_bus);
+        }
       else
-        s = g_strdup_printf ("drive-harddisk%s", hyphenated_connection_bus);
+        {
+          if (rotation_rate == 0)
+            s = g_strdup_printf ("drive-harddisk-solidstate%s", hyphenated_connection_bus);
+          else
+            s = g_strdup_printf ("drive-harddisk%s", hyphenated_connection_bus);
+        }
       info->icon = g_themed_icon_new_with_default_fallbacks (s);
       g_free (s);
     }
@@ -701,9 +708,16 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
   if (info->icon_symbolic == NULL)
     {
       if (media_removable)
-        s = g_strdup_printf ("drive-removable-media%s-symbolic", hyphenated_connection_bus);
+        {
+          s = g_strdup_printf ("drive-removable-media%s-symbolic", hyphenated_connection_bus);
+        }
       else
-        s = g_strdup_printf ("drive-harddisk%s-symbolic", hyphenated_connection_bus);
+        {
+          if (rotation_rate == 0)
+            s = g_strdup_printf ("drive-harddisk-solidstate%s-symbolic", hyphenated_connection_bus);
+          else
+            s = g_strdup_printf ("drive-harddisk%s-symbolic", hyphenated_connection_bus);
+        }
       info->icon_symbolic = g_themed_icon_new_with_default_fallbacks (s);
       g_free (s);
     }
@@ -711,9 +725,16 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
   if (media_removable && media_available && info->media_icon == NULL)
     {
       if (media_removable)
-        s = g_strdup_printf ("drive-removable-media%s", hyphenated_connection_bus);
+        {
+          s = g_strdup_printf ("drive-removable-media%s", hyphenated_connection_bus);
+        }
       else
-        s = g_strdup_printf ("drive-harddisk%s", hyphenated_connection_bus);
+        {
+          if (rotation_rate == 0)
+            s = g_strdup_printf ("drive-harddisk-solidstate%s", hyphenated_connection_bus);
+          else
+            s = g_strdup_printf ("drive-harddisk%s", hyphenated_connection_bus);
+        }
       info->media_icon = g_themed_icon_new_with_default_fallbacks (s);
       g_free (s);
     }
@@ -721,9 +742,16 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
   if (media_removable && media_available && info->media_icon_symbolic == NULL)
     {
       if (media_removable)
-        s = g_strdup_printf ("drive-removable-media%s-symbolic", hyphenated_connection_bus);
+        {
+          s = g_strdup_printf ("drive-removable-media%s-symbolic", hyphenated_connection_bus);
+        }
       else
-        s = g_strdup_printf ("drive-harddisk%s-symbolic", hyphenated_connection_bus);
+        {
+          if (rotation_rate == 0)
+            s = g_strdup_printf ("drive-harddisk-solidstate%s-symbolic", hyphenated_connection_bus);
+          else
+            s = g_strdup_printf ("drive-harddisk%s-symbolic", hyphenated_connection_bus);
+        }
       info->media_icon_symbolic = g_themed_icon_new_with_default_fallbacks (s);
       g_free (s);
     }
