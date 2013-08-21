@@ -1,4 +1,36 @@
 ------------
+udisks 2.1.1
+------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks and storage devices.
+
+Changes since udisks 2.1.0:
+
+David Zeuthen (10):
+      Post-release version bump to 2.1.1
+      Properly identify firewire devices as non-system devices
+      Identify Lexar Dual Slot USB 3.0 Reader Professional as a card reader
+      Identify Transcend USB 3.0 Multi-Card reader as such
+      Promote ZFS partition type to generic
+      UDisksClient: Make it possible to get part desc based on the part table subtype
+      Add ChromeOS partition types
+      Use new SSD icon from g-i-t-e
+      Identify Patriot Memory USB sticks as thumb drives
+      Update NEWS for release
+
+Martin Pitt (4):
+      Fix test for logind availability
+      Fix hiding of "WD SmartWare" partitions
+      integration-test: Fix for nonexisting /run/udev/rules.d/
+      integration-test: For VFAT, ignore case for label comparison
+
+Thanks to all our contributors.
+
+David Zeuthen,
+August 20, 2013
+
+------------
 udisks 2.1.0
 ------------
 
