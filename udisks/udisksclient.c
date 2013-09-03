@@ -2280,6 +2280,10 @@ static const struct
   {"gpt", "other",     "fe3a2a5d-4f32-41a7-b725-accc3285a309", NC_("part-type", "ChromeOS Kernel"), 0},
   {"gpt", "other",     "3cb8e202-3b7e-47dd-8a3c-7ff2a13cfcec", NC_("part-type", "ChromeOS Root Filesystem"), 0},
   {"gpt", "other",     "2e0a753d-9e48-43b0-8337-b15192cb1b5e", NC_("part-type", "ChromeOS Reserved"), 0},
+  /* Intel Partition Types */
+  /*     FFS = Fast Flash Standby, aka Intel Rapid start  */
+  /*     http://downloadmirror.intel.com/22647/eng/Intel%20Rapid%20Start%20Technology%20Deployment%20Guide%20v1.0.pdf */
+  {"gpt", "other",     "d3bfe2de-3daf-11df-ba40-e3a556d89593", NC_("part-type", "Intel FFS Reserved"), 0},
 
   /* see http://developer.apple.com/documentation/mac/devices/devices-126.html
    *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html */
