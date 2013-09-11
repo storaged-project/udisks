@@ -4,6 +4,8 @@ NULL =
 
 SUBDIRS = data udisks src tools po doc
 
+ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
+
 EXTRA_DIST = 			\
 	HACKING 		\
 	$(NULL)
