@@ -129,7 +129,7 @@ ENV{ID_PART_ENTRY_SCHEME}=="mac", \
 
 # recovery partitions
 ENV{ID_FS_TYPE}=="ntfs|vfat", \
-  ENV{ID_FS_LABEL}=="RECOVERY|HP_RECOVERY|Recovery_Partition|DellUtility|DellRestore|IBM_SERVICE|SERVICEV001|SERVICEV002|SYSTEM_RESERVED|System_Reserved", \
+  ENV{ID_FS_LABEL}=="RECOVERY|Lenovo_Recovery|HP_RECOVERY|Recovery_Partition|DellUtility|DellRestore|IBM_SERVICE|SERVICEV001|SERVICEV002|SYSTEM_RESERVED|System_Reserved|WINRE_DRV", \
   ENV{UDISKS_IGNORE}="1"
 
 # read-only non-Linux software installer partitions
