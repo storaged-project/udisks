@@ -637,7 +637,31 @@ udisks_daemon_util_check_authorization_sync (UDisksDaemon          *daemon,
       _safe_polkit_details_insert (details, "drive.model", udisks_drive_get_model (drive));
       _safe_polkit_details_insert (details, "drive.revision", udisks_drive_get_revision (drive));
       if (udisks_drive_get_removable (drive))
-        polkit_details_insert (details, "drive.removable", "true");
+        {
+          const gchar *const *media_compat;
+          GString *media_compat_str;
+          const gchar *sep = ",";
+
+          polkit_details_insert (details, "drive.removable", "true");
+          _safe_polkit_details_insert (details, "drive.removable.bus", udisks_drive_get_connection_bus (drive));
+
+          media_compat_str = g_string_new (NULL);
+          media_compat = udisks_drive_get_media_compatibility (drive);
+          if (media_compat)
+            {
+              guint i;
+
+              for (i = 0; media_compat[i] && strlen(media_compat[i]); i++)
+                {
+                  if (i)
+                    g_string_append (media_compat_str, sep);
+                  g_string_append (media_compat_str, media_compat[i]);
+                }
+            }
+
+          _safe_polkit_details_insert (details, "drive.removable.media", media_compat_str->str);
+          g_string_free (media_compat_str, TRUE);
+        }
     }
 
   if (block != NULL)

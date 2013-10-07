@@ -248,6 +248,14 @@
                 <entry><parameter>drive.removable</parameter></entry>
                 <entry>If the object is a drive (or a block device that is part of a drive), this is set to the string <quote>true</quote> only if the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Removable">Drive:Removable</link> property is <constant>TRUE</constant>.</entry>
               </row>
+              <row>
+                <entry><parameter>drive.removable.bus</parameter></entry>
+                <entry>If the object is a drive (or a block device that is part of a drive), this is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.ConnectionBus">Drive:ConnectionBus</link> property. This variable is set only if the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Removable">Drive:Removable</link> property is <constant>TRUE</constant>.</entry>
+              </row>
+              <row>
+                <entry><parameter>drive.removable.media</parameter></entry>
+                <entry>If the object is a drive (or a block device that is part of a drive), this is set to the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.MediaCompatibility">Drive:MediaCompatibility</link> property. This variable is set only if the value of the <link linkend="gdbus-property-org-freedesktop-UDisks2-Drive.Removable">Drive:Removable</link> property is <constant>TRUE</constant>.</entry>
+              </row>
 
               <row>
                 <entry><parameter>id.type</parameter></entry>
