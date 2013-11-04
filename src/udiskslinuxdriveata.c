@@ -427,6 +427,42 @@ selftest_status_to_string (SkSmartSelfTestExecutionStatus status)
   return ret;
 }
 
+static gboolean get_pm_state (UDisksLinuxDevice *device, GError **error, guchar *count)
+{
+  int fd;
+  gboolean rc = FALSE;
+  /* ATA8: 7.8 CHECK POWER MODE - E5h, Non-Data */
+  UDisksAtaCommandInput input = {.command = 0xe5};
+  UDisksAtaCommandOutput output = {0};
+
+  fd = open (g_udev_device_get_device_file (device->udev_device), O_RDONLY|O_NONBLOCK);
+  if (fd == -1)
+    {
+      g_set_error (error, UDISKS_ERROR, UDISKS_ERROR_FAILED,
+                   "Error opening device file %s: %m",
+                   g_udev_device_get_device_file (device->udev_device));
+      goto out;
+    }
+
+  if (!udisks_ata_send_command_sync (fd,
+                                     -1,
+                                     UDISKS_ATA_COMMAND_PROTOCOL_NONE,
+                                     &input,
+                                     &output,
+                                     error))
+    {
+      g_prefix_error (error, "Error sending ATA command CHECK POWER MODE: ");
+      goto out;
+    }
+  /* count field is used for the state, see ATA8: table 102 */
+  *count = output.count;
+  rc = TRUE;
+ out:
+  if (fd != -1)
+    close (fd);
+  return rc;
+}
+
 /**
  * udisks_linux_drive_ata_refresh_smart_sync:
  * @drive: The #UDisksLinuxDriveAta to refresh.
@@ -519,24 +555,10 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
     }
   else
     {
-      if (sk_disk_open (g_udev_device_get_device_file (device->udev_device), &d) != 0)
-        {
-          g_set_error (error,
-                       UDISKS_ERROR,
-                       UDISKS_ERROR_FAILED,
-                       "sk_disk_open: %m");
-          goto out;
-        }
-
-      if (sk_disk_check_sleep_mode (d, &awake) != 0)
-        {
-          g_set_error (error,
-                       UDISKS_ERROR,
-                       UDISKS_ERROR_FAILED,
-                       "sk_disk_check_sleep_mode: %m");
-          goto out;
-        }
-
+      guchar count;
+      if (!get_pm_state(device, error, &count))
+        goto out;
+      awake = count == 0xFF || count == 0x80;
       /* don't wake up disk unless specically asked to */
       if (nowakeup && !awake)
         {
@@ -546,6 +568,15 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
                        "Disk is in sleep mode and the nowakeup option was passed");
           goto out;
         }
+    }
+
+  if (sk_disk_open (g_udev_device_get_device_file (device->udev_device), &d) != 0)
+    {
+      g_set_error (error,
+                   UDISKS_ERROR,
+                   UDISKS_ERROR_FAILED,
+                   "sk_disk_open: %m");
+      goto out;
     }
 
   if (sk_disk_smart_read_data (d) != 0)
@@ -1184,10 +1215,10 @@ handle_pm_get_state (UDisksDriveAta        *_drive,
   UDisksLinuxDriveObject  *object = NULL;
   UDisksDaemon *daemon;
   UDisksLinuxDevice *device = NULL;
-  gint fd = -1;
   GError *error = NULL;
   const gchar *message;
   const gchar *action_id;
+  guchar count;
 
   object = udisks_daemon_util_dup_object (drive, &error);
   if (object == NULL)
@@ -1244,38 +1275,12 @@ handle_pm_get_state (UDisksDriveAta        *_drive,
                                              "No udev device");
       goto out;
     }
-
-  fd = open (g_udev_device_get_device_file (device->udev_device), O_RDONLY|O_NONBLOCK);
-  if (fd == -1)
-    {
-      g_dbus_method_invocation_return_error (invocation, UDISKS_ERROR, UDISKS_ERROR_FAILED,
-                                             "Error opening device file %s: %m",
-                                             g_udev_device_get_device_file (device->udev_device));
-      goto out;
-    }
-
-  {
-    /* ATA8: 7.8 CHECK POWER MODE - E5h, Non-Data */
-    UDisksAtaCommandInput input = {.command = 0xe5};
-    UDisksAtaCommandOutput output = {0};
-    if (!udisks_ata_send_command_sync (fd,
-                                       -1,
-                                       UDISKS_ATA_COMMAND_PROTOCOL_NONE,
-                                       &input,
-                                       &output,
-                                       &error))
-      {
-        g_prefix_error (&error, "Error sending ATA command CHECK POWER MODE: ");
-        g_dbus_method_invocation_take_error (invocation, error);
-        goto out;
-      }
-    /* count field is used for the state, see ATA8: table 102 */
-    udisks_drive_ata_complete_pm_get_state (_drive, invocation, output.count);
-  }
+  if (get_pm_state (device, &error, &count))
+    udisks_drive_ata_complete_pm_get_state (_drive, invocation, count);
+  else
+    g_dbus_method_invocation_take_error (invocation, error);
 
  out:
-  if (fd != -1)
-    close (fd);
   g_clear_object (&device);
   g_clear_object (&object);
   return TRUE; /* returning TRUE means that we handled the method invocation */
