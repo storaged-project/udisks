@@ -302,6 +302,13 @@ static const gchar *udf_allow[] = { "iocharset=", "umask=", NULL };
 static const gchar *udf_allow_uid_self[] = { "uid=", NULL };
 static const gchar *udf_allow_gid_self[] = { "gid=", NULL };
 
+/* ---------------------- exfat -------------------- */
+
+static const gchar *exfat_defaults[] = { "uid=", "gid=", "iocharset=utf8", "namecase=0", "errors=remount-ro", "umask=0077", NULL };
+static const gchar *exfat_allow[] = { "dmask=", "errors=", "fmask=", "iocharset=", "namecase=", "umask=", NULL };
+static const gchar *exfat_allow_uid_self[] = { "uid=", NULL };
+static const gchar *exfat_allow_gid_self[] = { "gid=", NULL };
+
 /* ------------------------------------------------ */
 /* TODO: support context= */
 
@@ -313,6 +320,7 @@ static const FSMountOptions fs_mount_options[] =
     { "ntfs", ntfs_defaults, ntfs_allow, ntfs_allow_uid_self, ntfs_allow_gid_self },
     { "iso9660", iso9660_defaults, iso9660_allow, iso9660_allow_uid_self, iso9660_allow_gid_self },
     { "udf", udf_defaults, udf_allow, udf_allow_uid_self, udf_allow_gid_self },
+    { "exfat", exfat_defaults, exfat_allow, exfat_allow_uid_self, exfat_allow_gid_self },
   };
 
 /* ------------------------------------------------ */
