@@ -69,7 +69,7 @@ VDEV_SIZE = 300000000 # size of virtual test device
 
 # Those file systems are known to have a broken handling of permissions, in
 # particular the executable bit
-BROKEN_PERMISSIONS_FS = ['ntfs']
+BROKEN_PERMISSIONS_FS = ['ntfs', 'exfat']
 
 # Some D-BUS API methods cause properties to not be up to date yet when a
 # method call finishes, thus we do an udevadm settle as a workaround. Those
@@ -303,6 +303,7 @@ class UDisksTestCase(unittest.TestCase):
                       'ntfs': 'mkntfs',
                     }
         label_opt = { 'vfat': '-n', 
+                      'exfat': '-n',
                       'reiserfs': '-l',
                     }
         extra_opt = { 'vfat': [ '-I', '-F', '32'],
@@ -653,6 +654,10 @@ class FS(UDisksTestCase):
     def test_vfat(self):
         '''fs: FAT'''
         self._do_fs_check('vfat')
+
+    def test_exfat(self):
+        '''fs: exFAT'''
+        self._do_fs_check('exfat')
 
     def test_reiserfs(self):
         '''fs: reiserfs'''
