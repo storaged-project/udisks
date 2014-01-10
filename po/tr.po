@@ -3,20 +3,22 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# Necdet Yücel <necdetyucel@gmail.com>, 2012.
+# Caner BAŞARAN <basaran.caner@gmail.com>, 2013
+# Fatih Aşıcı <fatih.asici@gmail.com>, 2013
+# Necdet Yücel <necdetyucel@gmail.com>, 2012
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-12-18 15:41-0500\n"
-"PO-Revision-Date: 2012-12-18 20:42+0000\n"
-"Last-Translator: davidz <zeuthen@gmail.com>\n"
+"PO-Revision-Date: 2013-11-20 09:31+0000\n"
+"Last-Translator: Caner BAŞARAN <basaran.caner@gmail.com>\n"
 "Language-Team: Turkish (http://www.transifex.com/projects/p/freedesktop/language/tr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: tr\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:1
 msgid "Mount a filesystem"
@@ -24,7 +26,7 @@ msgstr "Bir dosya sistemi bağla"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:2
 msgid "Authentication is required to mount the filesystem"
-msgstr ""
+msgstr "Dosya sistemini bağlamak için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:3
 msgid "Mount a filesystem on a system device"
@@ -38,32 +40,32 @@ msgstr ""
 msgid ""
 "Mount/unmount filesystems defined in the fstab file with the x-udisks-auth "
 "option"
-msgstr ""
+msgstr "fstab içinde x-udisks-auth seçeneği ile tanımlanmış dosya sistemlerini bağla/ayır"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:6
 msgid "Authentication is required to mount/unmount the filesystem"
-msgstr ""
+msgstr "Dosya sistemini ayırmak/bağlamak için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:7
 msgid "Unmount a device mounted by another user"
-msgstr ""
+msgstr "Başka bir kullanıcı tarafından bağlanan bir aygıtı ayır"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:8
 msgid ""
 "Authentication is required to unmount a filesystem mounted by another user"
-msgstr ""
+msgstr "Başka bir kullanıcı tarafından bağlanmış dosya sistemini ayırmak için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:9
 msgid "Unlock an encrypted device"
-msgstr ""
+msgstr "Şifreli bir aygıtın kilidini aç"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:10
 msgid "Authentication is required to unlock an encrypted device"
-msgstr ""
+msgstr "Şifreli bir aygıtı açmak için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:11
 msgid "Unlock an encrypted system device"
-msgstr ""
+msgstr "Şifreli bir sistem aygıtının kilidini aç"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:12
 msgid "Unlock an encrypted device plugged into another seat"
@@ -73,30 +75,30 @@ msgstr ""
 msgid ""
 "Unlock an encrypted device specified in the crypttab file with the x-udisks-"
 "auth option"
-msgstr ""
+msgstr "crypttab dosyasında belirtilen şifreli bir aygıtın kilidini x-udisks-auth seçeneği ile aç"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:14
 msgid "Lock an encrypted device unlocked by another user"
-msgstr ""
+msgstr "Başka bir kullanıcı tarafından açılmış bir şifreli aygıtı kilitle"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:15
 msgid ""
 "Authentication is required to lock an encrypted device unlocked by another "
 "user"
-msgstr ""
+msgstr "Başka bir kullanıcının açtığı şifreli bir aygıtı kilitlemek için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:16
 msgid "Change passphrase for an encrypted device"
-msgstr ""
+msgstr "Şifreli bir aygıtın parolasını değiştir"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:17
 msgid ""
 "Authentication is required to change the passphrase for an encrypted device"
-msgstr ""
+msgstr "Şifreli bir aygıtın parolasını değiştirmek için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:18
 msgid "Manage loop devices"
-msgstr ""
+msgstr "Döngü aygıtlarını yönet"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting up a loop device.
@@ -104,53 +106,53 @@ msgstr ""
 #: ../data/org.freedesktop.udisks2.policy.in.h:19
 #: ../src/udiskslinuxmanager.c:335
 msgid "Authentication is required to set up a loop device"
-msgstr ""
+msgstr "Döngü aygıtı kurmak için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:20
 msgid "Delete loop devices"
-msgstr ""
+msgstr "Döngü aygıtlarını sil"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:21
 msgid ""
 "Authentication is required to delete a loop device set up by another user"
-msgstr ""
+msgstr "Başka bir kullanıcı tarafından kurulan döngü aygıtını silmek için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:22
 msgid "Modify loop devices"
-msgstr ""
+msgstr "Döngü aygıtlarını değiştir"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:23
 msgid ""
 "Authentication is required to modify a loop device set up by another user"
-msgstr ""
+msgstr "Başka bir kullanıcı tarafından kurulan bir döngü aygıtı değiştirmek için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:24
 msgid "Manage swapspace"
-msgstr ""
+msgstr "Takas alanını yönet"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:25
 msgid "Authentication is required to manage swapspace"
-msgstr ""
+msgstr "Takas alanını yönetmek için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:26
 msgid "Manage RAID arrays"
-msgstr ""
+msgstr "RAID dizilerini yönet"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:27
 msgid "Authentication is required to manage RAID arrays"
-msgstr ""
+msgstr "RAID dizilerini yönetmek için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:28
 msgid "Power off drive"
-msgstr ""
+msgstr "Sürücü gücünü kapat"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:29
 msgid "Authentication is required to power off a drive"
-msgstr ""
+msgstr "Sürücü gücünü kapatmak için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:30
 msgid "Power off a system drive"
-msgstr ""
+msgstr "Bir sistem sürücüsünün gücünü kapat"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:31
 msgid "Power off a drive attached to another seat"
@@ -167,11 +169,11 @@ msgstr "Aygıtı çıkar"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:34
 msgid "Authentication is required to eject media"
-msgstr ""
+msgstr "Ortam çıkarmak için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:35
 msgid "Eject media from a system drive"
-msgstr ""
+msgstr "Bir sistem sürücüsünden ortam çıkar"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:36
 msgid "Eject media from a drive attached to another seat"
@@ -185,15 +187,15 @@ msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:38
 msgid "Modify a device"
-msgstr ""
+msgstr "Aygıt düzenle"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:39
 msgid "Authentication is required to modify a device"
-msgstr ""
+msgstr "Aygıtı değiştirmek için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:40
 msgid "Modify a system device"
-msgstr ""
+msgstr "Sistem aygıtını düzenle"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:41
 msgid ""
@@ -202,11 +204,11 @@ msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:42
 msgid "Rescan a device"
-msgstr ""
+msgstr "Bir aygıtı yeniden tara"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:43
 msgid "Authentication is to rescan a device"
-msgstr ""
+msgstr "Bir aygıtı yeniden taramak için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:44
 msgid "Open a device"
@@ -214,7 +216,7 @@ msgstr "Bir aygıt aç"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:45
 msgid "Authentication is required to open a device"
-msgstr ""
+msgstr "Aygıt açmak için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:46
 msgid "Open a system device"
@@ -222,77 +224,77 @@ msgstr "Bir sistem aygıtı aç"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:47
 msgid "Modify system-wide configuration"
-msgstr ""
+msgstr "Sistem genelindeki yapılandırmayı değiştir"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:48
 msgid "Authentication is required to modify system-wide configuration"
-msgstr ""
+msgstr "Sistem genelindeki yapılandırmayı değiştirmek için kimlik doğrulaması gerekiyor"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:49
 msgid ""
 "Authentication is required to retrieve secrets from system-wide "
 "configuration"
-msgstr ""
+msgstr "Sistem genelindeki yapılandırmadan alınacak gizli bilgiler için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:50
 msgid "Modify drive settings"
-msgstr ""
+msgstr "Sürücü ayarlarını değiştir"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:51
 msgid "Authentication is required to modify drive settings"
-msgstr ""
+msgstr "Sürücü ayarlarını değiştirmek için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:52
 msgid "Update SMART data"
-msgstr ""
+msgstr "SMART verisini güncelle"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:53
 msgid "Authentication is required to update SMART data"
-msgstr ""
+msgstr "SMART verisini güncellemek için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:54
 msgid "Set SMART data from blob"
-msgstr ""
+msgstr "İkili veri ile SMART verisini değiştir"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:55
 msgid "Authentication is required to set SMART data from blob"
-msgstr ""
+msgstr "İkili veri ile SMART verisini değiştirmek için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:56
 msgid "Run SMART self-test"
-msgstr ""
+msgstr "SMART öz sınamasını çalıştır"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:57
 msgid "Authentication is required to run a SMART self-test"
-msgstr ""
+msgstr "SMART öz sınamasını çalıştırmak için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:58
 msgid "Enable/Disable SMART"
-msgstr ""
+msgstr "SMART'ı Etkinleştir/Kapat"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:59
 msgid "Authentication is required to enable/disable SMART"
-msgstr ""
+msgstr "SMART'ı etkinleştirmek/kapatmak için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:60
 msgid "Check power state"
-msgstr ""
+msgstr "Güç durumunu denetle"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:61
 msgid "Authentication is required to check the power state"
-msgstr ""
+msgstr "Güç durumunu denetlemek için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:62
 msgid "Send standby command"
-msgstr ""
+msgstr "Bekleme komutu gönder"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:63
 msgid "Authentication is required to put a drive into standby mode"
-msgstr ""
+msgstr "Bir sürücüyü bekleme kipine sokmak için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:64
 msgid "Send standby command to a system drive"
-msgstr ""
+msgstr "Bir sistem sürücüsüne bekleme komutu gönder"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:65
 msgid "Send standby command to drive on other seat"
@@ -300,29 +302,29 @@ msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:66
 msgid "Securely erase a hard disk"
-msgstr ""
+msgstr "Bir sabit diski güvenli bir şekilde sil"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:67
 msgid "Authentication is required to securely erase a hard disk"
-msgstr ""
+msgstr "Sabit diski güvenli silmek için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:68
 msgid "Cancel job"
-msgstr ""
+msgstr "İşlemi iptal et"
 
 #. Translators: Shown in authentication dialog when canceling a job.
 #. 
 #: ../data/org.freedesktop.udisks2.policy.in.h:69 ../src/udisksbasejob.c:404
 msgid "Authentication is required to cancel a job"
-msgstr ""
+msgstr "İşlem iptal etmek için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:70
 msgid "Cancel job started by another user"
-msgstr ""
+msgstr "Başka bir kullanıcı tarafından başlatılan işlemi iptal et"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:71
 msgid "Authentication is required to cancel a job started by another user"
-msgstr ""
+msgstr "Başka bir kullanıcının başlattığı işlemi iptal etmek için kimlik doğrulaması gerekli"
 
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
@@ -330,41 +332,41 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxblock.c:999
 msgid "Authentication is required to read system-level secrets"
-msgstr ""
+msgstr "Sistem düzeyindeki gizli bilgileri okumak için kimlik doğrulaması gerekli"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
 #: ../src/udiskslinuxblock.c:1533
 msgid "Authentication is required to add an entry to the /etc/fstab file"
-msgstr ""
+msgstr "/etc/fstab dosyasına kayıt eklemek için kimlik doğrulaması gerekli"
 
 #. Translators: shown in authentication dialog - do not tranlsate
 #. /etc/crypttab
 #: ../src/udiskslinuxblock.c:1551
 msgid "Authentication is required to add an entry to the /etc/crypttab file"
-msgstr ""
+msgstr "/etc/crypttab dosyasına kayıt eklemek için kimlik doğrulaması gerekli"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
 #: ../src/udiskslinuxblock.c:1610
 msgid "Authentication is required to remove an entry from /etc/fstab file"
-msgstr ""
+msgstr "/etc/fstab dosyasından kayıt silmek için kimlik doğrulaması gerekli"
 
 #. Translators: shown in authentication dialog - do not translate
 #. /etc/crypttab
 #: ../src/udiskslinuxblock.c:1628
 msgid ""
 "Authentication is required to remove an entry from the /etc/crypttab file"
-msgstr ""
+msgstr "/etc/crypttab dosyasından kayıt silmek için kimlik doğrulaması gerekli"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
 #: ../src/udiskslinuxblock.c:1700
 msgid "Authentication is required to modify the /etc/fstab file"
-msgstr ""
+msgstr "/etc/fstab dosyasını değiştirmek için kimlik doğrulaması gerekli"
 
 #. Translators: shown in authentication dialog - do not translate
 #. /etc/crypttab
 #: ../src/udiskslinuxblock.c:1718
 msgid "Authentication is required to modify the /etc/crypttab file"
-msgstr ""
+msgstr "/etc/crypttab dosyasını değiştirmek için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests erasing a hard disk using the SECURE ERASE UNIT
@@ -381,7 +383,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxblock.c:2225 ../src/udiskslinuxdriveata.c:2245
 msgid "Authentication is required to perform a secure erase of $(drive)"
-msgstr ""
+msgstr "$(drive) sürücüsünü güvenli bir şekilde silmek için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when formatting a
 #. * device. This includes both creating a filesystem or partition
@@ -392,11 +394,11 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxblock.c:2237
 msgid "Authentication is required to format $(drive)"
-msgstr ""
+msgstr "$(drive) sürücüsünü biçimlendirmek için kimlik doğrulaması gerekli"
 
 #: ../src/udiskslinuxblock.c:2274 ../src/udiskslinuxdriveata.c:2257
 msgid "Formatting Device"
-msgstr ""
+msgstr "Aygıt Biçimlendiriliyor"
 
 #. Translators: Shown in authentication dialog when creating a
 #. * disk image file.
@@ -406,7 +408,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxblock.c:2693
 msgid "Authentication is required to open $(drive) for reading"
-msgstr ""
+msgstr "$(drive) sürücüsünü okuma amaçlı açmak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when restoring
 #. * from a disk image file.
@@ -416,7 +418,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxblock.c:2757
 msgid "Authentication is required to open $(drive) for writing"
-msgstr ""
+msgstr "$(drive) sürücüsünü yazma amaçlı açmak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to benchmark a device.
@@ -426,7 +428,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxblock.c:2823
 msgid "Authentication is required to open $(drive) for benchmarking"
-msgstr ""
+msgstr "$(drive) sürücüsünü kıyaslama amaçlı açmak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to rescan a device.
@@ -436,7 +438,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxblock.c:2884
 msgid "Authentication is required to rescan $(drive)"
-msgstr ""
+msgstr "$(drive) sürücünü yeniden taramak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests ejecting media from a drive.
@@ -446,7 +448,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdrive.c:1007
 msgid "Authentication is required to eject $(drive)"
-msgstr ""
+msgstr "$(drive) sürücüsünü çıkarmak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * changes settings for a drive.
@@ -456,7 +458,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdrive.c:1095
 msgid "Authentication is required to configure settings for $(drive)"
-msgstr ""
+msgstr "$(drive) sürücüsünü yapılandırmak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests ejecting media from a drive.
@@ -466,7 +468,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdrive.c:1293
 msgid "Authentication is required to power off $(drive)"
-msgstr ""
+msgstr "$(drive) sürücüsünün gücünü kapatmak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * refreshes SMART data from a disk.
@@ -476,7 +478,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdriveata.c:745
 msgid "Authentication is required to update SMART data from $(drive)"
-msgstr ""
+msgstr "SMART verisini $(drive) sürücüsünden güncellemek için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to simulate SMART data from a libatasmart blob.
@@ -486,7 +488,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdriveata.c:756
 msgid "Authentication is required to set SMART data from a blob on $(drive)"
-msgstr ""
+msgstr "SMART verisini $(drive) üzerindeki bir ikili veri ile değiştirmek için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * aborts a running SMART self-test.
@@ -496,7 +498,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdriveata.c:890
 msgid "Authentication is required to abort a SMART self-test on $(drive)"
-msgstr ""
+msgstr "$(drive) üzerindeki SMART öz sınamasıni durdurmak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * initiates a SMART self-test.
@@ -506,7 +508,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdriveata.c:1140
 msgid "Authentication is required to start a SMART self-test on $(drive)"
-msgstr ""
+msgstr "$(drive) üzerinde SMART öz sınaması başlatmak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests the power state of a drive.
@@ -516,7 +518,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdriveata.c:1227
 msgid "Authentication is required to check power state for $(drive)"
-msgstr ""
+msgstr "$(drive) sürücüsünün güç durumunu denetlemek için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to put a drive into standby mode.
@@ -526,7 +528,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdriveata.c:1352
 msgid "Authentication is required to put $(drive) in standby mode"
-msgstr ""
+msgstr "$(drive) sürücüsünü bekleme kipine sokmak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to wake up a drive from standby mode.
@@ -536,7 +538,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdriveata.c:1484
 msgid "Authentication is required to wake up $(drive) from standby mode"
-msgstr ""
+msgstr "$(drive) sürücüsünü bekleme kipinden uyandırmak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests enabling SMART on a disk.
@@ -546,7 +548,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdriveata.c:2338
 msgid "Authentication is required to enable SMART on $(drive)"
-msgstr ""
+msgstr "$(drive) üzerinde SMART'ı etkinleştirmek için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests enabling SMART on a disk.
@@ -556,7 +558,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdriveata.c:2348
 msgid "Authentication is required to disable SMART on $(drive)"
-msgstr ""
+msgstr "$(drive) üzerinde SMART'ı kapatmak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests unlocking an encrypted device.
@@ -566,7 +568,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxencrypted.c:353 ../src/udiskslinuxencrypted.c:705
 msgid "Authentication is required to unlock the encrypted device $(drive)"
-msgstr ""
+msgstr "Şifreli $(drive) aygıtının kilidini açmak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests locking an encrypted device that was previously.
@@ -579,7 +581,7 @@ msgstr ""
 msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by"
 " another user"
-msgstr ""
+msgstr "Başka bir kullanıcının açmış olduğu şifreli $(drive) sürücüsünü kilitlemek için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests mounting a filesystem.
@@ -589,7 +591,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxfilesystem.c:1223 ../src/udiskslinuxfilesystem.c:1385
 msgid "Authentication is required to mount $(drive)"
-msgstr ""
+msgstr "$(drive) sürücüsünü bağlamak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the
 #. * user requests mounting a filesystem that is in
@@ -605,7 +607,7 @@ msgstr ""
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
-msgstr ""
+msgstr "/etc/fstab dosyasında referans verilen $(drive) sürücüsünü bağlamak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the
 #. * user requests unmounting a filesystem that is in
@@ -621,7 +623,7 @@ msgstr ""
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
-msgstr ""
+msgstr "/etc/fstab dosyasında referans verilen $(drive) sürücüsünü ayırmak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests unmounting a filesystem previously mounted by
@@ -632,7 +634,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxfilesystem.c:1686
 msgid "Authentication is required to unmount $(drive) mounted by another user"
-msgstr ""
+msgstr "Başka bir kullanıcı tarafından bağlanan $(drive) sürücüsünü ayırmak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing the filesystem label.
@@ -642,7 +644,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxfilesystem.c:1924
 msgid "Authentication is required to change the filesystem label on $(drive)"
-msgstr ""
+msgstr "$(drive) üzerindeki dosya sistemi etiketini değiştirmek için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a loop device previously set up by
@@ -653,7 +655,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxloop.c:245
 msgid "Authentication is required to delete the loop device $(drive)"
-msgstr ""
+msgstr "$(drive) döngü aygıtını silmek için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing autoclear on a loop device set up by
@@ -664,7 +666,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxloop.c:424
 msgid "Authentication is required to modify the loop device $(drive)"
-msgstr ""
+msgstr "$(drive) döngü aygıtını değiştirmek için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
@@ -672,7 +674,7 @@ msgstr ""
 #. TODO: variables
 #: ../src/udiskslinuxmanager.c:565
 msgid "Authentication is required to create a RAID array"
-msgstr ""
+msgstr "RAID dizisi oluşturmak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
@@ -680,7 +682,7 @@ msgstr ""
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:627
 msgid "Authentication is required to start a RAID array"
-msgstr ""
+msgstr "RAID dizisi başlatmak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to stop a RAID Array.
@@ -688,7 +690,7 @@ msgstr ""
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:797
 msgid "Authentication is required to stop a RAID array"
-msgstr ""
+msgstr "RAID dizisi durdurmak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to remove a device from a RAID Array.
@@ -696,7 +698,7 @@ msgstr ""
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:1002
 msgid "Authentication is required to remove a device from a RAID array"
-msgstr ""
+msgstr "RAID dizisinden bir aygıtı kaldırmak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to add a device to a RAID Array.
@@ -704,7 +706,7 @@ msgstr ""
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:1198
 msgid "Authentication is required to add a device to a RAID array"
-msgstr ""
+msgstr "RAID dizisine aygıt eklemek için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to change whether it has a write-intent bitmap
@@ -725,7 +727,7 @@ msgstr ""
 #: ../src/udiskslinuxpartition.c:282 ../src/udiskslinuxpartition.c:447
 #: ../src/udiskslinuxpartition.c:789
 msgid "Authentication is required to modify the partition on device $(drive)"
-msgstr ""
+msgstr "$(drive) aygıtı üzerindeki bölümü değiştirmek için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a partition.
@@ -735,7 +737,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxpartition.c:900
 msgid "Authentication is required to delete the partition $(drive)"
-msgstr ""
+msgstr "$(drive) bölümünü silmek için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests creating a new partition.
@@ -745,7 +747,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxpartitiontable.c:349
 msgid "Authentication is required to create a partition on $(drive)"
-msgstr ""
+msgstr "$(drive) üzerinde bölüm oluşturmak için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests activating a swap device.
@@ -755,7 +757,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxswapspace.c:202
 msgid "Authentication is required to activate swapspace on $(drive)"
-msgstr ""
+msgstr "$(drive) üzerindeki takas alanını etkinleştirmek için kimlik doğrulaması gerekli"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deactivating a swap device.
@@ -765,14 +767,14 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxswapspace.c:294
 msgid "Authentication is required to deactivate swapspace on $(drive)"
-msgstr ""
+msgstr "$(drive) üzerindeki takas alanını etkisiz hale getirmek için kimlik doğrulaması gerekli"
 
 #. Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for
 #. a partition
 #: ../udisks/udisksclient.c:1094
 msgctxt "dos-part-flag"
 msgid "Bootable"
-msgstr ""
+msgstr "Önyüklenebilir"
 
 #. Translators: Corresponds to the GPT "system" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
@@ -780,7 +782,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:1104
 msgctxt "gpt-part-flag"
 msgid "System"
-msgstr ""
+msgstr "Sistem"
 
 #. Translators: Corresponds to the GPT "legacy bios bootable" flag for a
 #. partition,
@@ -789,7 +791,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:1111
 msgctxt "gpt-part-flag"
 msgid "Legacy BIOS Bootable"
-msgstr ""
+msgstr "Eski BIOS ile Önyüklenebilir"
 
 #. Translators: Corresponds to the GPT "read-only" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
@@ -797,7 +799,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:1118
 msgctxt "gpt-part-flag"
 msgid "Read-only"
-msgstr ""
+msgstr "Salt-okunur"
 
 #. Translators: Corresponds to the GPT "hidden" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
@@ -805,7 +807,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:1125
 msgctxt "gpt-part-flag"
 msgid "Hidden"
-msgstr ""
+msgstr "Gizli"
 
 #. Translators: Corresponds to the GPT "no automount" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
@@ -813,7 +815,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:1132
 msgctxt "gpt-part-flag"
 msgid "No Automount"
-msgstr ""
+msgstr "Otomatik Bağlama Kapalı"
 
 #. Translators: Partition info. First %s is the type, second %s is a list of
 #. flags
@@ -836,7 +838,7 @@ msgstr "Bilinmeyen"
 #, c-format
 msgctxt "byte-size-pow2"
 msgid "%s (%s bytes)"
-msgstr ""
+msgstr "%s (%s bayt)"
 
 #. Translators: The first %s is the size in power-of-10 units, e.g. '100 kB'
 #. * the second %s is the size as a number e.g. '100,000' (always > 1)
@@ -845,7 +847,7 @@ msgstr ""
 #, c-format
 msgctxt "byte-size-pow10"
 msgid "%s (%s bytes)"
-msgstr ""
+msgstr "%s (%s bayt)"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:1782
@@ -857,7 +859,7 @@ msgstr "CompactFlash"
 #: ../udisks/udisksclient.c:1787
 msgctxt "media"
 msgid "MemoryStick"
-msgstr ""
+msgstr "MemoryStick"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:1792
@@ -1023,7 +1025,7 @@ msgstr "Ext4"
 #, c-format
 msgctxt "fs-type"
 msgid "Journal for Ext (version %s)"
-msgstr ""
+msgstr "Ext için günlük (sürüm %s)"
 
 #: ../udisks/udisksclient.c:1919 ../udisks/udisksclient.c:1920
 msgctxt "fs-type"
@@ -1033,7 +1035,7 @@ msgstr "JDB"
 #: ../udisks/udisksclient.c:1920
 msgctxt "fs-type"
 msgid "Journal for Ext"
-msgstr ""
+msgstr "Ext için günlük"
 
 #: ../udisks/udisksclient.c:1921
 #, c-format
@@ -1082,13 +1084,13 @@ msgstr "UDF"
 #: ../udisks/udisksclient.c:1929 ../udisks/udisksclient.c:1930
 msgctxt "fs-type"
 msgid "exFAT"
-msgstr ""
+msgstr "exFAT"
 
 #: ../udisks/udisksclient.c:1930
 #, c-format
 msgctxt "fs-type"
 msgid "exFAT (version %s)"
-msgstr ""
+msgstr "exFAT (sürüm %s)"
 
 #: ../udisks/udisksclient.c:1931
 #, c-format
@@ -1115,117 +1117,117 @@ msgstr "LVM2 PV"
 #: ../udisks/udisksclient.c:1934
 msgctxt "fs-type"
 msgid "LVM2 Physical Volume"
-msgstr ""
+msgstr "LVM2 Fiziksel Hacim"
 
 #: ../udisks/udisksclient.c:1935
 #, c-format
 msgctxt "fs-type"
 msgid "Linux RAID Member (version %s)"
-msgstr ""
+msgstr "Linux RAID Üyesi (sürüm %s)"
 
 #: ../udisks/udisksclient.c:1935 ../udisks/udisksclient.c:1936
 msgctxt "fs-type"
 msgid "Linux RAID Member"
-msgstr ""
+msgstr "Linux RAID Üyesi"
 
 #: ../udisks/udisksclient.c:1937
 #, c-format
 msgctxt "fs-type"
 msgid "ZFS Device (ZPool version %s)"
-msgstr ""
+msgstr "ZFS Aygıtı (ZPool sürüm %s)"
 
 #: ../udisks/udisksclient.c:1937
 #, c-format
 msgctxt "fs-type"
 msgid "ZFS (v%s)"
-msgstr ""
+msgstr "ZFS (v%s)"
 
 #: ../udisks/udisksclient.c:1938
 msgctxt "fs-type"
 msgid "ZFS Device"
-msgstr ""
+msgstr "ZFS Aygıtı"
 
 #: ../udisks/udisksclient.c:1938
 msgctxt "fs-type"
 msgid "ZFS"
-msgstr ""
+msgstr "ZFS"
 
 #: ../udisks/udisksclient.c:1939
 #, c-format
 msgctxt "fs-type"
 msgid "Intel Matrix RAID Member (version %s)"
-msgstr ""
+msgstr "Intel Matrix RAID Üyesi (sürüm %s)"
 
 #: ../udisks/udisksclient.c:1939
 #, c-format
 msgctxt "fs-type"
 msgid "IMSM RAID Member (%s)"
-msgstr ""
+msgstr "IMSM RAID Üyesi (%s)"
 
 #: ../udisks/udisksclient.c:1940
 msgctxt "fs-type"
 msgid "Intel Matrix RAID Member"
-msgstr ""
+msgstr "Intel Matrix RAID Üyesi"
 
 #: ../udisks/udisksclient.c:1940
 msgctxt "fs-type"
 msgid "IMSM RAID"
-msgstr ""
+msgstr "IMSM RAID"
 
 #: ../udisks/udisksclient.c:1941
 #, c-format
 msgctxt "fs-type"
 msgid "LUKS Encryption (version %s)"
-msgstr ""
+msgstr "LUKS Şifreleme (sürüm %s)"
 
 #: ../udisks/udisksclient.c:1941 ../udisks/udisksclient.c:1942
 msgctxt "fs-type"
 msgid "LUKS"
-msgstr ""
+msgstr "LUKS"
 
 #: ../udisks/udisksclient.c:1942
 msgctxt "fs-type"
 msgid "LUKS Encryption"
-msgstr ""
+msgstr "LUKS Şifreleme"
 
 #: ../udisks/udisksclient.c:1943
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS (version %s)"
-msgstr ""
+msgstr "VMFS (sürüm %s)"
 
 #: ../udisks/udisksclient.c:1943
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS (v%s)"
-msgstr ""
+msgstr "VMFS (v%s)"
 
 #: ../udisks/udisksclient.c:1944
 msgctxt "fs-type"
 msgid "VMFS"
-msgstr ""
+msgstr "VMFS"
 
 #: ../udisks/udisksclient.c:1945
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS Volume Member (version %s)"
-msgstr ""
+msgstr "VMFS Hacim Üyesi (sürüm %s)"
 
 #: ../udisks/udisksclient.c:1945
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS Member (v%s)"
-msgstr ""
+msgstr "VMFS Üyesi (v%s)"
 
 #: ../udisks/udisksclient.c:1946
 msgctxt "fs-type"
 msgid "VMFS Volume Member"
-msgstr ""
+msgstr "VMFS Hacim Üyesi"
 
 #: ../udisks/udisksclient.c:1946
 msgctxt "fs-type"
 msgid "VMFS Member"
-msgstr ""
+msgstr "VMFS Üyesi"
 
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev, second %s is
@@ -1235,7 +1237,7 @@ msgstr ""
 #, c-format
 msgctxt "fs-type"
 msgid "Unknown (%s %s)"
-msgstr ""
+msgstr "Bilinmeyen (%s %s)"
 
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev.
@@ -1244,125 +1246,125 @@ msgstr ""
 #, c-format
 msgctxt "fs-type"
 msgid "Unknown (%s)"
-msgstr ""
+msgstr "Bilinmeyen (%s)"
 
 #. Translators: Shown for unknown filesystem types.
 #. 
 #: ../udisks/udisksclient.c:2033 ../udisks/udisksclient.c:2047
 msgctxt "fs-type"
 msgid "Unknown"
-msgstr ""
+msgstr "Bilinmeyen"
 
 #. Translators: name of partition table format
 #: ../udisks/udisksclient.c:2064
 msgid "Master Boot Record"
-msgstr ""
+msgstr "Ana Önyükleme Kaydı"
 
 #. Translators: name of partition table format
 #: ../udisks/udisksclient.c:2066
 msgid "GUID Partition Table"
-msgstr ""
+msgstr "GUID Bölüm Tablosu"
 
 #. Translators: name of partition table format
 #: ../udisks/udisksclient.c:2068
 msgid "Apple Partition Map"
-msgstr ""
+msgstr "Apple Bölüm Haritası"
 
 #. Translators: name of partition table format
 #: ../udisks/udisksclient.c:2111 ../udisks/udisksclient.c:2116
 msgctxt "partition-subtype"
 msgid "Generic"
-msgstr ""
+msgstr "Genel"
 
 #: ../udisks/udisksclient.c:2112 ../udisks/udisksclient.c:2117
 msgctxt "partition-subtype"
 msgid "Linux"
-msgstr ""
+msgstr "Linux"
 
 #: ../udisks/udisksclient.c:2113 ../udisks/udisksclient.c:2118
 #: ../udisks/udisksclient.c:2123
 msgctxt "partition-subtype"
 msgid "Windows"
-msgstr ""
+msgstr "Windows"
 
 #: ../udisks/udisksclient.c:2114 ../udisks/udisksclient.c:2120
 msgctxt "partition-subtype"
 msgid "Other"
-msgstr ""
+msgstr "Diğer"
 
 #: ../udisks/udisksclient.c:2119 ../udisks/udisksclient.c:2122
 msgctxt "partition-subtype"
 msgid "Mac OS X"
-msgstr ""
+msgstr "Mac OS X"
 
 #. see http://en.wikipedia.org/wiki/GUID_Partition_Table
 #. Not associated with any OS
 #: ../udisks/udisksclient.c:2210
 msgctxt "part-type"
 msgid "MBR Partition Scheme"
-msgstr ""
+msgstr "MBR Bölüm Şeması"
 
 #: ../udisks/udisksclient.c:2211
 msgctxt "part-type"
 msgid "EFI System"
-msgstr ""
+msgstr "EFI Sistem"
 
 #: ../udisks/udisksclient.c:2212
 msgctxt "part-type"
 msgid "BIOS Boot"
-msgstr ""
+msgstr "BIOS Önyükleme"
 
 #. Linux
 #: ../udisks/udisksclient.c:2214
 msgctxt "part-type"
 msgid "Linux Filesystem"
-msgstr ""
+msgstr "Linux Dosya Sistemi"
 
 #: ../udisks/udisksclient.c:2215
 msgctxt "part-type"
 msgid "Linux RAID"
-msgstr ""
+msgstr "Linux RAID"
 
 #: ../udisks/udisksclient.c:2216
 msgctxt "part-type"
 msgid "Linux Swap"
-msgstr ""
+msgstr "Linux Takas Alanı"
 
 #: ../udisks/udisksclient.c:2217 ../udisks/udisksclient.c:2293
 msgctxt "part-type"
 msgid "Linux LVM"
-msgstr ""
+msgstr "Linux LVM"
 
 #: ../udisks/udisksclient.c:2218
 msgctxt "part-type"
 msgid "Linux Reserved"
-msgstr ""
+msgstr "Linux Ayrılmış Alan"
 
 #. Microsoft
 #: ../udisks/udisksclient.c:2220
 msgctxt "part-type"
 msgid "Basic Data"
-msgstr ""
+msgstr "Temel Veri"
 
 #: ../udisks/udisksclient.c:2221
 msgctxt "part-type"
 msgid "Microsoft Reserved"
-msgstr ""
+msgstr "Microsoft Ayrılmış Alan"
 
 #: ../udisks/udisksclient.c:2222
 msgctxt "part-type"
 msgid "Microsoft LDM metadata"
-msgstr ""
+msgstr "Microsoft LDM metaveri"
 
 #: ../udisks/udisksclient.c:2223
 msgctxt "part-type"
 msgid "Microsoft LDM data"
-msgstr ""
+msgstr "Microsoft LDM verisi"
 
 #: ../udisks/udisksclient.c:2224
 msgctxt "part-type"
 msgid "Microsoft Windows Recovery Environment"
-msgstr ""
+msgstr "Microsoft Windows Kurtarma Ortamı"
 
 #. Apple OS X
 #: ../udisks/udisksclient.c:2226
@@ -1411,7 +1413,7 @@ msgstr "Apple TV Recovery"
 #: ../udisks/udisksclient.c:2234
 msgctxt "part-type"
 msgid "Apple Core Storage"
-msgstr ""
+msgstr "Apple Çekirdek Bellek"
 
 #. HP-UX
 #: ../udisks/udisksclient.c:2236
@@ -1474,7 +1476,7 @@ msgstr "Solaris Takas Alanı"
 #: ../udisks/udisksclient.c:2249
 msgctxt "part-type"
 msgid "Solaris Backup"
-msgstr ""
+msgstr "Solaris Yedek"
 
 #: ../udisks/udisksclient.c:2250
 msgctxt "part-type"
@@ -1558,12 +1560,12 @@ msgstr "NetBSD Şifrelenmiş"
 #: ../udisks/udisksclient.c:2267
 msgctxt "part-type"
 msgid "VMWare VMFS"
-msgstr ""
+msgstr "VMWare VMFS"
 
 #: ../udisks/udisksclient.c:2268
 msgctxt "part-type"
 msgid "VMWare vmkcore"
-msgstr ""
+msgstr "VMWare vmkcore"
 
 #: ../udisks/udisksclient.c:2273
 msgctxt "part-type"
@@ -1598,7 +1600,7 @@ msgstr "Sürücü 4.3"
 #: ../udisks/udisksclient.c:2279
 msgctxt "part-type"
 msgid "ProDOS file system"
-msgstr ""
+msgstr "ProDOS dosya sistemi"
 
 #: ../udisks/udisksclient.c:2280
 msgctxt "part-type"
@@ -1634,288 +1636,288 @@ msgstr "Uzatılmış"
 #: ../udisks/udisksclient.c:2288
 msgctxt "part-type"
 msgid "EFI GPT"
-msgstr ""
+msgstr "EFI GPT"
 
 #: ../udisks/udisksclient.c:2289
 msgctxt "part-type"
 msgid "EFI (FAT-12/16/32)"
-msgstr ""
+msgstr "EFI (FAT-12/16/32)"
 
 #: ../udisks/udisksclient.c:2290
 msgctxt "part-type"
 msgid "Linux swap"
-msgstr ""
+msgstr "Linux takas alanı"
 
 #: ../udisks/udisksclient.c:2291
 msgctxt "part-type"
 msgid "Linux"
-msgstr ""
+msgstr "Linux"
 
 #: ../udisks/udisksclient.c:2292
 msgctxt "part-type"
 msgid "Linux Extended"
-msgstr ""
+msgstr "Linux Uzatılmış"
 
 #: ../udisks/udisksclient.c:2294
 msgctxt "part-type"
 msgid "Linux RAID auto"
-msgstr ""
+msgstr "Linux RAID otomatik"
 
 #: ../udisks/udisksclient.c:2295
 msgctxt "part-type"
 msgid "FAT12"
-msgstr ""
+msgstr "FAT12"
 
 #: ../udisks/udisksclient.c:2296
 msgctxt "part-type"
 msgid "FAT16 <32M"
-msgstr ""
+msgstr "FAT16 <32M"
 
 #: ../udisks/udisksclient.c:2297
 msgctxt "part-type"
 msgid "FAT16"
-msgstr ""
+msgstr "FAT16"
 
 #: ../udisks/udisksclient.c:2298
 msgctxt "part-type"
 msgid "HPFS/NTFS"
-msgstr ""
+msgstr "HPFS/NTFS"
 
 #: ../udisks/udisksclient.c:2299
 msgctxt "part-type"
 msgid "W95 FAT32"
-msgstr ""
+msgstr "W95 FAT32"
 
 #: ../udisks/udisksclient.c:2300
 msgctxt "part-type"
 msgid "W95 FAT32 (LBA)"
-msgstr ""
+msgstr "W95 FAT32 (LBA)"
 
 #: ../udisks/udisksclient.c:2301
 msgctxt "part-type"
 msgid "W95 FAT16 (LBA)"
-msgstr ""
+msgstr "W95 FAT16 (LBA)"
 
 #: ../udisks/udisksclient.c:2302
 msgctxt "part-type"
 msgid "W95 Ext d (LBA)"
-msgstr ""
+msgstr "W95 Ext d (LBA)"
 
 #: ../udisks/udisksclient.c:2303
 msgctxt "part-type"
 msgid "Hidden FAT12"
-msgstr ""
+msgstr "Gizli FAT12"
 
 #: ../udisks/udisksclient.c:2304
 msgctxt "part-type"
 msgid "Hidden FAT16 <32M"
-msgstr ""
+msgstr "Gizli FAT16 <32M"
 
 #: ../udisks/udisksclient.c:2305
 msgctxt "part-type"
 msgid "Hidden FAT16"
-msgstr ""
+msgstr "Gizli FAT16"
 
 #: ../udisks/udisksclient.c:2306
 msgctxt "part-type"
 msgid "Hidden HPFS/NTFS"
-msgstr ""
+msgstr "Gizli HPFS/NTFS"
 
 #: ../udisks/udisksclient.c:2307
 msgctxt "part-type"
 msgid "Hidden W95 FAT32"
-msgstr ""
+msgstr "Gizli W95 FAT32"
 
 #: ../udisks/udisksclient.c:2308
 msgctxt "part-type"
 msgid "Hidden W95 FAT32 (LBA)"
-msgstr ""
+msgstr "Gizli W95 FAT32 (LBA)"
 
 #: ../udisks/udisksclient.c:2309
 msgctxt "part-type"
 msgid "Hidden W95 FAT16 (LBA)"
-msgstr ""
+msgstr "Gizli W95 FAT16 (LBA)"
 
 #: ../udisks/udisksclient.c:2310
 msgctxt "part-type"
 msgid "OPUS"
-msgstr ""
+msgstr "OPUS"
 
 #: ../udisks/udisksclient.c:2311
 msgctxt "part-type"
 msgid "Compaq diagnostics"
-msgstr ""
+msgstr "Compaq tanılama"
 
 #: ../udisks/udisksclient.c:2312
 msgctxt "part-type"
 msgid "PartitionMagic"
-msgstr ""
+msgstr "PartitionMagic"
 
 #: ../udisks/udisksclient.c:2313
 msgctxt "part-type"
 msgid "Minix"
-msgstr ""
+msgstr "Minix"
 
 #. cf. http://en.wikipedia.org/wiki/MINIX_file_system
 #: ../udisks/udisksclient.c:2314 ../udisks/udisksclient.c:2315
 msgctxt "part-type"
 msgid "Hibernation"
-msgstr ""
+msgstr "Hazırda bekletme alanı"
 
 #: ../udisks/udisksclient.c:2316
 msgctxt "part-type"
 msgid "FreeBSD"
-msgstr ""
+msgstr "FreeBSD"
 
 #: ../udisks/udisksclient.c:2317
 msgctxt "part-type"
 msgid "OpenBSD"
-msgstr ""
+msgstr "OpenBSD"
 
 #: ../udisks/udisksclient.c:2318 ../udisks/udisksclient.c:2319
 msgctxt "part-type"
 msgid "Mac OS X"
-msgstr ""
+msgstr "Mac OS X"
 
 #: ../udisks/udisksclient.c:2320
 msgctxt "part-type"
 msgid "Solaris boot"
-msgstr ""
+msgstr "Solaris önyükleme"
 
 #: ../udisks/udisksclient.c:2321
 msgctxt "part-type"
 msgid "Solaris"
-msgstr ""
+msgstr "Solaris"
 
 #: ../udisks/udisksclient.c:2322
 msgctxt "part-type"
 msgid "BeOS BFS"
-msgstr ""
+msgstr "BeOS BFS"
 
 #: ../udisks/udisksclient.c:2323
 msgctxt "part-type"
 msgid "SkyOS SkyFS"
-msgstr ""
+msgstr "SkyOS SkyFS"
 
 #: ../udisks/udisksclient.c:2427
 msgctxt "job"
 msgid "SMART self-test"
-msgstr ""
+msgstr "SMART öz sınama"
 
 #: ../udisks/udisksclient.c:2428
 msgctxt "job"
 msgid "Ejecting Medium"
-msgstr ""
+msgstr "Ortam Çıkarılıyor"
 
 #: ../udisks/udisksclient.c:2429
 msgctxt "job"
 msgid "Unlocking Device"
-msgstr ""
+msgstr "Aygıt Kilidi Açılıyor"
 
 #: ../udisks/udisksclient.c:2430
 msgctxt "job"
 msgid "Locking Device"
-msgstr ""
+msgstr "Aygıt Kilitleniyor"
 
 #: ../udisks/udisksclient.c:2431
 msgctxt "job"
 msgid "Modifying Encrypted Device"
-msgstr ""
+msgstr "Şifreli Aygıt Değiştiriliyor"
 
 #: ../udisks/udisksclient.c:2432
 msgctxt "job"
 msgid "Starting Swap Device"
-msgstr ""
+msgstr "Takas Aygıtı Başlatılıyor"
 
 #: ../udisks/udisksclient.c:2433
 msgctxt "job"
 msgid "Stopping Swap Device"
-msgstr ""
+msgstr "Takas Aygıtı Durduruluyor"
 
 #: ../udisks/udisksclient.c:2434
 msgctxt "job"
 msgid "Mounting Filesystem"
-msgstr ""
+msgstr "Dosya Sistemi Bağlanıyor"
 
 #: ../udisks/udisksclient.c:2435
 msgctxt "job"
 msgid "Unmounting Filesystem"
-msgstr ""
+msgstr "Dosya Sistemi Ayrılıyor"
 
 #: ../udisks/udisksclient.c:2436
 msgctxt "job"
 msgid "Modifying Filesystem"
-msgstr ""
+msgstr "Dosya Sistemi Değiştiriliyor"
 
 #: ../udisks/udisksclient.c:2437
 msgctxt "job"
 msgid "Erasing Device"
-msgstr ""
+msgstr "Aygıt Siliniyor"
 
 #: ../udisks/udisksclient.c:2438
 msgctxt "job"
 msgid "Creating Filesystem"
-msgstr ""
+msgstr "Dosya Sistemi Oluşturuluyor"
 
 #: ../udisks/udisksclient.c:2439
 msgctxt "job"
 msgid "Setting Up Loop Device"
-msgstr ""
+msgstr "Döngü Aygıtı Kuruluyor"
 
 #: ../udisks/udisksclient.c:2440
 msgctxt "job"
 msgid "Modifying Partition"
-msgstr ""
+msgstr "Bölüm Değiştiriliyor"
 
 #: ../udisks/udisksclient.c:2441
 msgctxt "job"
 msgid "Deleting Partition"
-msgstr ""
+msgstr "Bölüm Siliniyor"
 
 #: ../udisks/udisksclient.c:2442
 msgctxt "job"
 msgid "Creating Partition"
-msgstr ""
+msgstr "Bölüm Oluşturuluyor"
 
 #: ../udisks/udisksclient.c:2443
 msgctxt "job"
 msgid "Cleaning Up"
-msgstr ""
+msgstr "Temizleniyor"
 
 #: ../udisks/udisksclient.c:2444
 msgctxt "job"
 msgid "ATA Secure Erase"
-msgstr ""
+msgstr "ATA Güvenli Silme"
 
 #: ../udisks/udisksclient.c:2445
 msgctxt "job"
 msgid "ATA Enhanced Secure Erase"
-msgstr ""
+msgstr "ATA Geliştirilmiş Güvenli Silme"
 
 #: ../udisks/udisksclient.c:2446
 msgctxt "job"
 msgid "Stopping RAID Array"
-msgstr ""
+msgstr "RAID Dizisi Durduruluyor"
 
 #: ../udisks/udisksclient.c:2447
 msgctxt "job"
 msgid "Starting RAID Array"
-msgstr ""
+msgstr "RAID Dizisi Başlatılıyor"
 
 #: ../udisks/udisksclient.c:2448
 msgctxt "job"
 msgid "Marking Device as Faulty"
-msgstr ""
+msgstr "Aygıt Bozuk Olarak İşaretleniyor"
 
 #: ../udisks/udisksclient.c:2449
 msgctxt "job"
 msgid "Removing Device from Array"
-msgstr ""
+msgstr "Aygıt Diziden Kaldırılıyor"
 
 #: ../udisks/udisksclient.c:2450
 msgctxt "job"
 msgid "Adding Device to Array"
-msgstr ""
+msgstr "Diziye Aygıt Ekleniyor"
 
 #: ../udisks/udisksclient.c:2451
 msgctxt "job"
@@ -1925,20 +1927,20 @@ msgstr ""
 #: ../udisks/udisksclient.c:2452
 msgctxt "job"
 msgid "Creating RAID Array"
-msgstr ""
+msgstr "RAID Dizisi Oluşturuluyor"
 
 #: ../udisks/udisksclient.c:2460
 #, c-format
 msgctxt "unknown-job"
 msgid "Unknown (%s)"
-msgstr ""
+msgstr "Bilinmeyen (%s)"
 
 #. Translators: 'Thumb' here refers to "USB thumb drive", see
 #. http://en.wikipedia.org/wiki/Thumb_drive
 #: ../udisks/udisksobjectinfo.c:162
 msgctxt "media-type"
 msgid "Thumb"
-msgstr ""
+msgstr "USB Taşınabilir"
 
 #: ../udisks/udisksobjectinfo.c:164
 msgctxt "media-type"
@@ -1963,12 +1965,12 @@ msgstr "Flash"
 #: ../udisks/udisksobjectinfo.c:169
 msgctxt "media-type"
 msgid "MemoryStick"
-msgstr ""
+msgstr "MemoryStick"
 
 #: ../udisks/udisksobjectinfo.c:170
 msgctxt "media-type"
 msgid "SmartMedia"
-msgstr ""
+msgstr "SmartMedia"
 
 #: ../udisks/udisksobjectinfo.c:171
 msgctxt "media-type"
@@ -2116,11 +2118,11 @@ msgstr "MRW-W"
 #: ../udisks/udisksobjectinfo.c:252
 #, c-format
 msgid "%s Block Device"
-msgstr ""
+msgstr "%s Blok Aygıtı"
 
 #: ../udisks/udisksobjectinfo.c:256
 msgid "Block Device"
-msgstr ""
+msgstr "Blok Aygıtı"
 
 #. Translators: Used to describe a partition of a block device.
 #. *              The %d is the partition number.
@@ -2131,7 +2133,7 @@ msgstr ""
 #, c-format
 msgctxt "part-block"
 msgid "Partition %d of %s"
-msgstr ""
+msgstr "Bölüm %d Aygıt %s"
 
 #. Translators: String used for one-liner description of a block device.
 #. *              The first %s is the description of the object (e.g. "50 GB
@@ -2142,16 +2144,16 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-block"
 msgid "%s (%s)"
-msgstr ""
+msgstr "%s (%s)"
 
 #: ../udisks/udisksobjectinfo.c:306
 #, c-format
 msgid "%s Loop Device"
-msgstr ""
+msgstr "%s Döngü Aygıtı"
 
 #: ../udisks/udisksobjectinfo.c:310
 msgid "Loop Device"
-msgstr ""
+msgstr "Döngü Aygıtı"
 
 #. Translators: Used to describe a partition of a loop device.
 #. *              The %d is the partition number.
@@ -2162,7 +2164,7 @@ msgstr ""
 #, c-format
 msgctxt "part-loop"
 msgid "Partition %d of %s"
-msgstr ""
+msgstr "Bölüm %d Aygıt %s"
 
 #. Translators: String used for one-liner description of a loop device.
 #. *              The first %s is the description of the object (e.g. "2 GB
@@ -2175,42 +2177,42 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-loop"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"
 
 #: ../udisks/udisksobjectinfo.c:348
 msgctxt "mdraid-desc"
 msgid "RAID-0 Array"
-msgstr ""
+msgstr "RAID-0 Dizisi"
 
 #: ../udisks/udisksobjectinfo.c:350
 msgctxt "mdraid-desc"
 msgid "RAID-1 Array"
-msgstr ""
+msgstr "RAID-1 Dizisi"
 
 #: ../udisks/udisksobjectinfo.c:352
 msgctxt "mdraid-desc"
 msgid "RAID-4 Array"
-msgstr ""
+msgstr "RAID-4 Dizisi"
 
 #: ../udisks/udisksobjectinfo.c:354
 msgctxt "mdraid-desc"
 msgid "RAID-5 Array"
-msgstr ""
+msgstr "RAID-5 Dizisi"
 
 #: ../udisks/udisksobjectinfo.c:356
 msgctxt "mdraid-desc"
 msgid "RAID-6 Array"
-msgstr ""
+msgstr "RAID-6 Dizisi"
 
 #: ../udisks/udisksobjectinfo.c:358
 msgctxt "mdraid-desc"
 msgid "RAID-10 Array"
-msgstr ""
+msgstr "RAID-10 Dizisi"
 
 #: ../udisks/udisksobjectinfo.c:360
 msgctxt "mdraid-desc"
 msgid "RAID Array"
-msgstr ""
+msgstr "RAID Dizisi"
 
 #. Translators: Used to format the description for a RAID array.
 #. *              The first %s is the size (e.g. '42.0 GB').
@@ -2220,7 +2222,7 @@ msgstr ""
 #, c-format
 msgctxt "mdraid-desc"
 msgid "%s %s"
-msgstr ""
+msgstr "%s %s"
 
 #. Translators: Used to describe a partition of a RAID Array.
 #. *              The %d is the partition number.
@@ -2231,7 +2233,7 @@ msgstr ""
 #, c-format
 msgctxt "part-raid"
 msgid "Partition %d of %s"
-msgstr ""
+msgstr "Bölüm %d Dizi %s"
 
 #. Translators: String used for one-liner description of running RAID array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
@@ -2242,7 +2244,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-running"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"
 
 #. Translators: String used for one-liner description of non-running RAID
 #. array.
@@ -2253,7 +2255,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-not-running"
 msgid "%s — %s"
-msgstr ""
+msgstr "%s — %s"
 
 #. Translators: String used for one-liner description of running RAID array
 #. w/o a name.
@@ -2265,7 +2267,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-no-name-running"
 msgid "%s — %s"
-msgstr ""
+msgstr "%s — %s"
 
 #. Translators: String used for one-liner description of non-running RAID
 #. array w/o a name.
@@ -2276,7 +2278,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-no-name-not-running"
 msgid "%s"
-msgstr ""
+msgstr "%s"
 
 #. Translators: Used to describe drive without removable media. The %s is the
 #. type, e.g. 'Thumb'
@@ -2284,7 +2286,7 @@ msgstr ""
 #, c-format
 msgctxt "drive-with-fixed-media"
 msgid "%s Drive"
-msgstr ""
+msgstr "%s Sürücü"
 
 #. Translators: Used to describe generic media. The %s is the type, e.g. 'Zip'
 #. or 'Floppy'
@@ -2292,7 +2294,7 @@ msgstr ""
 #, c-format
 msgctxt "drive-with-generic-media"
 msgid "%s Disk"
-msgstr ""
+msgstr "%s Disk"
 
 #. Translators: Used to describe flash media. The %s is the type, e.g. 'SD' or
 #. 'CompactFlash'
@@ -2300,7 +2302,7 @@ msgstr ""
 #, c-format
 msgctxt "flash-media"
 msgid "%s Card"
-msgstr ""
+msgstr "%s Kart"
 
 #. Translators: Used to describe optical discs. The %s is the type, e.g.
 #. 'CD-R' or 'DVD-ROM'
@@ -2308,21 +2310,21 @@ msgstr ""
 #, c-format
 msgctxt "optical-media"
 msgid "%s Disc"
-msgstr ""
+msgstr "%s Disk"
 
 #. Translators: Used to describe a drive. The %s is the size, e.g. '20 GB'
 #: ../udisks/udisksobjectinfo.c:623
 #, c-format
 msgctxt "drive-with-size"
 msgid "%s Drive"
-msgstr ""
+msgstr "%s Sürücü"
 
 #. Translators: Used to describe a drive we know very little about (removable
 #. media or size not known)
 #: ../udisks/udisksobjectinfo.c:628
 msgctxt "generic-drive"
 msgid "Drive"
-msgstr ""
+msgstr "Sürücü"
 
 #. Translators: Used to describe a non-rotating drive (rotation rate either
 #. unknown
@@ -2331,7 +2333,7 @@ msgstr ""
 #, c-format
 msgctxt "disk-non-rotational"
 msgid "%s Disk"
-msgstr ""
+msgstr "%s Disk"
 
 #. Translators: Used to describe a non-rotating drive (rotation rate either
 #. unknown
@@ -2341,7 +2343,7 @@ msgstr ""
 #: ../udisks/udisksobjectinfo.c:646
 msgctxt "disk-non-rotational"
 msgid "Disk"
-msgstr ""
+msgstr "Disk"
 
 #. Translators: Used to describe a hard-disk drive (HDD). The %s is the size,
 #. e.g. '20 GB'.
@@ -2349,14 +2351,14 @@ msgstr ""
 #, c-format
 msgctxt "disk-hdd"
 msgid "%s Hard Disk"
-msgstr ""
+msgstr "%s Sabit Disk"
 
 #. Translators: Used to describe a hard-disk drive (HDD) (removable media or
 #. size not known)
 #: ../udisks/udisksobjectinfo.c:659
 msgctxt "disk-hdd"
 msgid "Hard Disk"
-msgstr ""
+msgstr "Sabit Disk"
 
 #. Translators: Used to describe a card reader. The %s is the card type e.g.
 #. 'CompactFlash'.
@@ -2364,7 +2366,7 @@ msgstr ""
 #, c-format
 msgctxt "drive-card-reader"
 msgid "%s Card Reader"
-msgstr ""
+msgstr "%s Kart Okuyucu"
 
 #. Translators: Used to describe drive. The first %s is the size e.g. '20 GB'
 #. and the
@@ -2374,7 +2376,7 @@ msgstr ""
 #, c-format
 msgctxt "drive-with-size-and-type"
 msgid "%s %s Drive"
-msgstr ""
+msgstr "%s %s Sürücü"
 
 #. Translators: Used to describe drive. The first %s is the drive type e.g.
 #. 'Thumb'.
@@ -2383,7 +2385,7 @@ msgstr ""
 #, c-format
 msgctxt "drive-with-type"
 msgid "%s Drive"
-msgstr ""
+msgstr "%s Sürücü"
 
 #. Translators: String used for a blank disc. The %s is the disc type e.g.
 #. "CD-RW Disc"
@@ -2391,7 +2393,7 @@ msgstr ""
 #, c-format
 msgctxt "optical-media"
 msgid "Blank %s"
-msgstr ""
+msgstr "Boş %s"
 
 #. Translators: String used for a mixed disc. The %s is the disc type e.g.
 #. "CD-ROM Disc"
@@ -2399,7 +2401,7 @@ msgstr ""
 #, c-format
 msgctxt "optical-media"
 msgid "Mixed %s"
-msgstr ""
+msgstr "Karışık %s"
 
 #. Translators: String used for an audio disc. The %s is the disc type e.g.
 #. "CD-ROM Disc"
@@ -2407,7 +2409,7 @@ msgstr ""
 #, c-format
 msgctxt "optical-media"
 msgid "Audio %s"
-msgstr ""
+msgstr "Ses %s"
 
 #. Translators: Used to describe a partition of a drive.
 #. *              The %d is the partition number.
@@ -2418,7 +2420,7 @@ msgstr ""
 #, c-format
 msgctxt "part-drive"
 msgid "Partition %d of %s"
-msgstr ""
+msgstr "Bölüm %d Sürücü %s"
 
 #. Translators: String used for one-liner description of drive.
 #. *              The first %s is the description of the object (e.g. "80 GB
@@ -2432,7 +2434,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s [%s] (%s)"
-msgstr ""
+msgstr "%s — %s [%s] (%s)"
 
 #. Translators: String used for one-liner description of drive w/o known fw
 #. revision.
@@ -2446,4 +2448,4 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"

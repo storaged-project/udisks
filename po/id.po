@@ -3,14 +3,14 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# Andika Triwidada <andika@gmail.com>, 2012.
+# Andika Triwidada <andika@gmail.com>, 2012-2013
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-12-18 15:41-0500\n"
-"PO-Revision-Date: 2012-12-18 20:42+0000\n"
-"Last-Translator: davidz <zeuthen@gmail.com>\n"
+"PO-Revision-Date: 2013-11-20 09:31+0000\n"
+"Last-Translator: Andika Triwidada <andika@gmail.com>\n"
 "Language-Team: Indonesian (http://www.transifex.com/projects/p/freedesktop/language/id/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -134,32 +134,32 @@ msgstr "Otentikasi diperlukan untuk mengelola ruang swap"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:26
 msgid "Manage RAID arrays"
-msgstr ""
+msgstr "Kelola larik RAID"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:27
 msgid "Authentication is required to manage RAID arrays"
-msgstr ""
+msgstr "Perlu otentikasi untuk mengelola larik RAID"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:28
 msgid "Power off drive"
-msgstr ""
+msgstr "Matikan daya drive"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:29
 msgid "Authentication is required to power off a drive"
-msgstr ""
+msgstr "Perlu otentikasi untuk mematikan daya drive"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:30
 msgid "Power off a system drive"
-msgstr ""
+msgstr "Matikan daya suatu drive sistem"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:31
 msgid "Power off a drive attached to another seat"
-msgstr ""
+msgstr "Matikan daya suatu drive yang dicantolkan ke seat lain"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:32
 msgid ""
 "Authentication is required to power off a drive plugged into another seat"
-msgstr ""
+msgstr "Perlu otentikasi diperlukan untuk mematikan daya suatu drive yang ditancapkan ke seat lain"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:33
 msgid "Eject media"
@@ -268,11 +268,11 @@ msgstr "Otentikasi diperlukan untuk menjalankan uji-sendiri SMART"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:58
 msgid "Enable/Disable SMART"
-msgstr ""
+msgstr "Fungsikan/matikan SMART"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:59
 msgid "Authentication is required to enable/disable SMART"
-msgstr ""
+msgstr "Perlu otentikasi untuk memfungsikan/mematikan SMART"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:60
 msgid "Check power state"
@@ -466,7 +466,7 @@ msgstr "Otentikasi diperlukan untuk mengkonfigurasi pengaturan bagi $(drive)"
 #. 
 #: ../src/udiskslinuxdrive.c:1293
 msgid "Authentication is required to power off $(drive)"
-msgstr ""
+msgstr "Perlu otentikasi untuk mematikan daya $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * refreshes SMART data from a disk.
@@ -546,7 +546,7 @@ msgstr "Otentikasi diperlukan untuk membangunkan $(drive) dari mode siap sedia"
 #. 
 #: ../src/udiskslinuxdriveata.c:2338
 msgid "Authentication is required to enable SMART on $(drive)"
-msgstr ""
+msgstr "Perlu otentikasi untuk memfungsikan SMART pada $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests enabling SMART on a disk.
@@ -556,7 +556,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdriveata.c:2348
 msgid "Authentication is required to disable SMART on $(drive)"
-msgstr ""
+msgstr "Perlu otentikasi untuk mematikan SMART pada $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests unlocking an encrypted device.
@@ -672,7 +672,7 @@ msgstr "Otentikasi diperlukan untuk mengubah perangkat loop $(drive)"
 #. TODO: variables
 #: ../src/udiskslinuxmanager.c:565
 msgid "Authentication is required to create a RAID array"
-msgstr ""
+msgstr "Perlu otentikasi untuk membuat suatu larik RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
@@ -680,7 +680,7 @@ msgstr ""
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:627
 msgid "Authentication is required to start a RAID array"
-msgstr ""
+msgstr "Perlu otentikasi untuk memulai suatu larik RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to stop a RAID Array.
@@ -688,7 +688,7 @@ msgstr ""
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:797
 msgid "Authentication is required to stop a RAID array"
-msgstr ""
+msgstr "Perlu otentikasi untuk menghentikan suatu larik RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to remove a device from a RAID Array.
@@ -696,7 +696,7 @@ msgstr ""
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:1002
 msgid "Authentication is required to remove a device from a RAID array"
-msgstr ""
+msgstr "Perlu otentikasi untuk menghapus suatu perangkat dari larik RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to add a device to a RAID Array.
@@ -704,7 +704,7 @@ msgstr ""
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:1198
 msgid "Authentication is required to add a device to a RAID array"
-msgstr ""
+msgstr "Perlu otentikasi untuk menambah perangkat ke larik RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to change whether it has a write-intent bitmap
@@ -714,7 +714,7 @@ msgstr ""
 msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
-msgstr ""
+msgstr "Perlu otentikasi untuk menata bitmap write-intent pada suatu larik RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
@@ -1082,13 +1082,13 @@ msgstr "UDF"
 #: ../udisks/udisksclient.c:1929 ../udisks/udisksclient.c:1930
 msgctxt "fs-type"
 msgid "exFAT"
-msgstr ""
+msgstr "exFAT"
 
 #: ../udisks/udisksclient.c:1930
 #, c-format
 msgctxt "fs-type"
 msgid "exFAT (version %s)"
-msgstr ""
+msgstr "exFAT (versi %s)"
 
 #: ../udisks/udisksclient.c:1931
 #, c-format
@@ -1121,12 +1121,12 @@ msgstr "Volume Fisik LVM2"
 #, c-format
 msgctxt "fs-type"
 msgid "Linux RAID Member (version %s)"
-msgstr ""
+msgstr "Anggota Volume RAID (versi %s)"
 
 #: ../udisks/udisksclient.c:1935 ../udisks/udisksclient.c:1936
 msgctxt "fs-type"
 msgid "Linux RAID Member"
-msgstr ""
+msgstr "Anggota Volume RAID"
 
 #: ../udisks/udisksclient.c:1937
 #, c-format
@@ -1154,23 +1154,23 @@ msgstr "ZFS"
 #, c-format
 msgctxt "fs-type"
 msgid "Intel Matrix RAID Member (version %s)"
-msgstr ""
+msgstr "Anggota RAID Matriks Intel (versi %s)"
 
 #: ../udisks/udisksclient.c:1939
 #, c-format
 msgctxt "fs-type"
 msgid "IMSM RAID Member (%s)"
-msgstr ""
+msgstr "Anggota RAID IMSM (%s)"
 
 #: ../udisks/udisksclient.c:1940
 msgctxt "fs-type"
 msgid "Intel Matrix RAID Member"
-msgstr ""
+msgstr "Anggota RAID Matriks Intel"
 
 #: ../udisks/udisksclient.c:1940
 msgctxt "fs-type"
 msgid "IMSM RAID"
-msgstr ""
+msgstr "RAID IMSM"
 
 #: ../udisks/udisksclient.c:1941
 #, c-format
@@ -1546,7 +1546,7 @@ msgstr "RAID NetBSD"
 #: ../udisks/udisksclient.c:2264
 msgctxt "part-type"
 msgid "NetBSD Concatenated"
-msgstr "Konkatenasi NetBSD"
+msgstr "Terkonkatenasi NetBSD"
 
 #: ../udisks/udisksclient.c:2265
 msgctxt "part-type"
@@ -1895,37 +1895,37 @@ msgstr "Penghapusan Aman ATA Yang Ditingkatkan"
 #: ../udisks/udisksclient.c:2446
 msgctxt "job"
 msgid "Stopping RAID Array"
-msgstr ""
+msgstr "Menghentikan Larik RAID"
 
 #: ../udisks/udisksclient.c:2447
 msgctxt "job"
 msgid "Starting RAID Array"
-msgstr ""
+msgstr "Memulai Larik RAID"
 
 #: ../udisks/udisksclient.c:2448
 msgctxt "job"
 msgid "Marking Device as Faulty"
-msgstr ""
+msgstr "Menandai Perangkat sebagai Rusak"
 
 #: ../udisks/udisksclient.c:2449
 msgctxt "job"
 msgid "Removing Device from Array"
-msgstr ""
+msgstr "Menghapus Perangkat dari Larik"
 
 #: ../udisks/udisksclient.c:2450
 msgctxt "job"
 msgid "Adding Device to Array"
-msgstr ""
+msgstr "Menambahkan Perangkat ke Larik"
 
 #: ../udisks/udisksclient.c:2451
 msgctxt "job"
 msgid "Setting Write-Intent Bitmap"
-msgstr ""
+msgstr "Menata Bitmap Write-Intent"
 
 #: ../udisks/udisksclient.c:2452
 msgctxt "job"
 msgid "Creating RAID Array"
-msgstr ""
+msgstr "Membuat Larik RAID"
 
 #: ../udisks/udisksclient.c:2460
 #, c-format
@@ -2116,11 +2116,11 @@ msgstr "MRW-W"
 #: ../udisks/udisksobjectinfo.c:252
 #, c-format
 msgid "%s Block Device"
-msgstr ""
+msgstr "Perangkat Blok %s"
 
 #: ../udisks/udisksobjectinfo.c:256
 msgid "Block Device"
-msgstr ""
+msgstr "Perangkat Blok"
 
 #. Translators: Used to describe a partition of a block device.
 #. *              The %d is the partition number.
@@ -2131,7 +2131,7 @@ msgstr ""
 #, c-format
 msgctxt "part-block"
 msgid "Partition %d of %s"
-msgstr ""
+msgstr "Partisi %d dari %s"
 
 #. Translators: String used for one-liner description of a block device.
 #. *              The first %s is the description of the object (e.g. "50 GB
@@ -2142,16 +2142,16 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-block"
 msgid "%s (%s)"
-msgstr ""
+msgstr "%s (%s)"
 
 #: ../udisks/udisksobjectinfo.c:306
 #, c-format
 msgid "%s Loop Device"
-msgstr ""
+msgstr "Perangkat Loop %s"
 
 #: ../udisks/udisksobjectinfo.c:310
 msgid "Loop Device"
-msgstr ""
+msgstr "Perangkat Loop"
 
 #. Translators: Used to describe a partition of a loop device.
 #. *              The %d is the partition number.
@@ -2162,7 +2162,7 @@ msgstr ""
 #, c-format
 msgctxt "part-loop"
 msgid "Partition %d of %s"
-msgstr ""
+msgstr "Partisi %d dari %s"
 
 #. Translators: String used for one-liner description of a loop device.
 #. *              The first %s is the description of the object (e.g. "2 GB
@@ -2175,42 +2175,42 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-loop"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"
 
 #: ../udisks/udisksobjectinfo.c:348
 msgctxt "mdraid-desc"
 msgid "RAID-0 Array"
-msgstr ""
+msgstr "Larik RAID-0"
 
 #: ../udisks/udisksobjectinfo.c:350
 msgctxt "mdraid-desc"
 msgid "RAID-1 Array"
-msgstr ""
+msgstr "Larik RAID-1"
 
 #: ../udisks/udisksobjectinfo.c:352
 msgctxt "mdraid-desc"
 msgid "RAID-4 Array"
-msgstr ""
+msgstr "Larik RAID-4"
 
 #: ../udisks/udisksobjectinfo.c:354
 msgctxt "mdraid-desc"
 msgid "RAID-5 Array"
-msgstr ""
+msgstr "Larik RAID-5"
 
 #: ../udisks/udisksobjectinfo.c:356
 msgctxt "mdraid-desc"
 msgid "RAID-6 Array"
-msgstr ""
+msgstr "Larik RAID-6"
 
 #: ../udisks/udisksobjectinfo.c:358
 msgctxt "mdraid-desc"
 msgid "RAID-10 Array"
-msgstr ""
+msgstr "Larik RAID-10"
 
 #: ../udisks/udisksobjectinfo.c:360
 msgctxt "mdraid-desc"
 msgid "RAID Array"
-msgstr ""
+msgstr "Larik RAID"
 
 #. Translators: Used to format the description for a RAID array.
 #. *              The first %s is the size (e.g. '42.0 GB').
@@ -2220,7 +2220,7 @@ msgstr ""
 #, c-format
 msgctxt "mdraid-desc"
 msgid "%s %s"
-msgstr ""
+msgstr "%s %s"
 
 #. Translators: Used to describe a partition of a RAID Array.
 #. *              The %d is the partition number.
@@ -2231,7 +2231,7 @@ msgstr ""
 #, c-format
 msgctxt "part-raid"
 msgid "Partition %d of %s"
-msgstr ""
+msgstr "Partisi %d dari %s"
 
 #. Translators: String used for one-liner description of running RAID array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
@@ -2242,7 +2242,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-running"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"
 
 #. Translators: String used for one-liner description of non-running RAID
 #. array.
@@ -2253,7 +2253,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-not-running"
 msgid "%s — %s"
-msgstr ""
+msgstr "%s — %s"
 
 #. Translators: String used for one-liner description of running RAID array
 #. w/o a name.
@@ -2265,7 +2265,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-no-name-running"
 msgid "%s — %s"
-msgstr ""
+msgstr "%s — %s"
 
 #. Translators: String used for one-liner description of non-running RAID
 #. array w/o a name.
@@ -2276,7 +2276,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-no-name-not-running"
 msgid "%s"
-msgstr ""
+msgstr "%s"
 
 #. Translators: Used to describe drive without removable media. The %s is the
 #. type, e.g. 'Thumb'
@@ -2418,7 +2418,7 @@ msgstr "%s audio"
 #, c-format
 msgctxt "part-drive"
 msgid "Partition %d of %s"
-msgstr ""
+msgstr "Partisi %d dari %s"
 
 #. Translators: String used for one-liner description of drive.
 #. *              The first %s is the description of the object (e.g. "80 GB
@@ -2432,7 +2432,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s [%s] (%s)"
-msgstr ""
+msgstr "%s — %s [%s] (%s)"
 
 #. Translators: String used for one-liner description of drive w/o known fw
 #. revision.
@@ -2446,4 +2446,4 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"

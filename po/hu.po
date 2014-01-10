@@ -3,15 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# Gabor Kelemen <kelemeng at gnome dot hu>, 2012.
+# Gabor Kelemen <kelemeng at gnome dot hu>, 2012-2013
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-12-18 15:41-0500\n"
-"PO-Revision-Date: 2012-12-18 20:42+0000\n"
-"Last-Translator: davidz <zeuthen@gmail.com>\n"
-"Language-Team: Hungarian <openscope@googlegroups.com>\n"
+"PO-Revision-Date: 2013-11-20 09:31+0000\n"
+"Last-Translator: kelemeng <kelemeng@gnome.hu>\n"
+"Language-Team: Hungarian (http://www.transifex.com/projects/p/freedesktop/language/hu/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -32,7 +32,7 @@ msgstr "Fájlrendszer csatolása rendszereszközön"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:4
 msgid "Mount a filesystem from a device plugged into another seat"
-msgstr "Másik ülésbe csatlakoztatott eszköz fájlrendszerének csatolása"
+msgstr "Másik munkaállomáshoz csatlakoztatott eszköz fájlrendszerének csatolása"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:5
 msgid ""
@@ -67,7 +67,7 @@ msgstr "Titkosított rendszereszköz feloldása"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:12
 msgid "Unlock an encrypted device plugged into another seat"
-msgstr "Másik ülésbe csatlakoztatott titkosított eszköz feloldása"
+msgstr "Másik munkaállomáshoz csatlakoztatott titkosított eszköz feloldása"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:13
 msgid ""
@@ -134,32 +134,32 @@ msgstr "Hitelesítés szükséges a cserehely kezeléséhez"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:26
 msgid "Manage RAID arrays"
-msgstr ""
+msgstr "RAID-tömbök kezelése"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:27
 msgid "Authentication is required to manage RAID arrays"
-msgstr ""
+msgstr "Hitelesítés szükséges a RAID-tömbök kezeléséhez"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:28
 msgid "Power off drive"
-msgstr ""
+msgstr "Meghajtó kikapcsolása"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:29
 msgid "Authentication is required to power off a drive"
-msgstr ""
+msgstr "Hitelesítés szükséges egy meghajtó kikapcsolásához"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:30
 msgid "Power off a system drive"
-msgstr ""
+msgstr "Rendszermeghajtó kikapcsolása"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:31
 msgid "Power off a drive attached to another seat"
-msgstr ""
+msgstr "Másik munkaállomáshoz csatlakoztatott meghajtó kikapcsolása"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:32
 msgid ""
 "Authentication is required to power off a drive plugged into another seat"
-msgstr ""
+msgstr "Hitelesítés szükséges egy másik munkaállomáshoz csatlakoztatott meghajtó kikapcsolásához"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:33
 msgid "Eject media"
@@ -175,13 +175,13 @@ msgstr "Adathordozó kiadása rendszermeghajtóból"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:36
 msgid "Eject media from a drive attached to another seat"
-msgstr "Adathordozó kiadása másik üléshez csatlakoztatott meghajtóból"
+msgstr "Adathordozó kiadása másik munkaállomáshoz csatlakoztatott meghajtóból"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:37
 msgid ""
 "Authentication is required to eject media from a drive plugged into another "
 "seat"
-msgstr "Hitelesítés szükséges az adathordozó kiadásához egy másik üléshez csatlakoztatott meghajtóból"
+msgstr "Hitelesítés szükséges az adathordozó kiadásához egy másik munkaállomáshoz csatlakoztatott meghajtóból"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:38
 msgid "Modify a device"
@@ -198,7 +198,7 @@ msgstr "Rendszereszköz módosítása"
 #: ../data/org.freedesktop.udisks2.policy.in.h:41
 msgid ""
 "Authentication is required to modify a device plugged into another seat"
-msgstr "Hitelesítés szükséges egy másik ülésbe csatlakoztatott eszköz módosításához"
+msgstr "Hitelesítés szükséges egy másik munkaállomáshoz csatlakoztatott eszköz módosításához"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:42
 msgid "Rescan a device"
@@ -268,11 +268,11 @@ msgstr "Hitelesítés szükséges a SMART önteszt futtatásához"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:58
 msgid "Enable/Disable SMART"
-msgstr ""
+msgstr "SMART be/kikapcsolása"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:59
 msgid "Authentication is required to enable/disable SMART"
-msgstr ""
+msgstr "Hitelesítés szükséges a SMART be- vagy kikapcsolásához"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:60
 msgid "Check power state"
@@ -296,7 +296,7 @@ msgstr "Készenlét parancs küldése rendszermeghajtónak"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:65
 msgid "Send standby command to drive on other seat"
-msgstr "Készenlét parancs küldése másik helyen lévő meghajtónak"
+msgstr "Készenlét parancs küldése másik munkaállomáson lévő meghajtónak"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:66
 msgid "Securely erase a hard disk"
@@ -466,7 +466,7 @@ msgstr "Hitelesítés szükséges a(z) $(drive) beállításainak megadásához"
 #. 
 #: ../src/udiskslinuxdrive.c:1293
 msgid "Authentication is required to power off $(drive)"
-msgstr ""
+msgstr "Hitelesítés szükséges a következő kikapcsolásához: $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * refreshes SMART data from a disk.
@@ -546,7 +546,7 @@ msgstr "Hitelesítés szükséges a(z) $(drive) felébresztéséhez készenléti
 #. 
 #: ../src/udiskslinuxdriveata.c:2338
 msgid "Authentication is required to enable SMART on $(drive)"
-msgstr ""
+msgstr "Hitelesítés szükséges a SMART bekapcsolásához a következőn: $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests enabling SMART on a disk.
@@ -556,7 +556,7 @@ msgstr ""
 #. 
 #: ../src/udiskslinuxdriveata.c:2348
 msgid "Authentication is required to disable SMART on $(drive)"
-msgstr ""
+msgstr "Hitelesítés szükséges a SMART kikapcsolásához a következőn: $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests unlocking an encrypted device.
@@ -672,7 +672,7 @@ msgstr "Hitelesítés szükséges a(z) $(drive) hurokeszköz módosításához"
 #. TODO: variables
 #: ../src/udiskslinuxmanager.c:565
 msgid "Authentication is required to create a RAID array"
-msgstr ""
+msgstr "Hitelesítés szükséges egy RAID-tömb létrehozásához"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
@@ -680,7 +680,7 @@ msgstr ""
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:627
 msgid "Authentication is required to start a RAID array"
-msgstr ""
+msgstr "Hitelesítés szükséges egy RAID-tömb elindításához"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to stop a RAID Array.
@@ -688,7 +688,7 @@ msgstr ""
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:797
 msgid "Authentication is required to stop a RAID array"
-msgstr ""
+msgstr "Hitelesítés szükséges egy RAID-tömb leállításához"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to remove a device from a RAID Array.
@@ -696,7 +696,7 @@ msgstr ""
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:1002
 msgid "Authentication is required to remove a device from a RAID array"
-msgstr ""
+msgstr "Hitelesítés szükséges egy eszköz eltávolításához a RAID-tömbből"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to add a device to a RAID Array.
@@ -704,7 +704,7 @@ msgstr ""
 #. TODO: variables
 #: ../src/udiskslinuxmdraid.c:1198
 msgid "Authentication is required to add a device to a RAID array"
-msgstr ""
+msgstr "Hitelesítés szükséges egy eszköz hozzáadásához a RAID-tömbhöz"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to change whether it has a write-intent bitmap
@@ -714,7 +714,7 @@ msgstr ""
 msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
-msgstr ""
+msgstr "Hitelesítés szükséges a RAID-tömb írási szándékot jelző bittérképének beállításához"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
@@ -1082,13 +1082,13 @@ msgstr "UDF"
 #: ../udisks/udisksclient.c:1929 ../udisks/udisksclient.c:1930
 msgctxt "fs-type"
 msgid "exFAT"
-msgstr ""
+msgstr "exFAT"
 
 #: ../udisks/udisksclient.c:1930
 #, c-format
 msgctxt "fs-type"
 msgid "exFAT (version %s)"
-msgstr ""
+msgstr "exFAT (%s verzió)"
 
 #: ../udisks/udisksclient.c:1931
 #, c-format
@@ -1121,12 +1121,12 @@ msgstr "LVM2 fizikai kötet"
 #, c-format
 msgctxt "fs-type"
 msgid "Linux RAID Member (version %s)"
-msgstr ""
+msgstr "Linux RAID tag (%s verzió)"
 
 #: ../udisks/udisksclient.c:1935 ../udisks/udisksclient.c:1936
 msgctxt "fs-type"
 msgid "Linux RAID Member"
-msgstr ""
+msgstr "Linux RAID tag"
 
 #: ../udisks/udisksclient.c:1937
 #, c-format
@@ -1154,23 +1154,23 @@ msgstr "ZFS"
 #, c-format
 msgctxt "fs-type"
 msgid "Intel Matrix RAID Member (version %s)"
-msgstr ""
+msgstr "Intel Matrix RAID tag (%s verzió)"
 
 #: ../udisks/udisksclient.c:1939
 #, c-format
 msgctxt "fs-type"
 msgid "IMSM RAID Member (%s)"
-msgstr ""
+msgstr "IMSM RAID tag (%s)"
 
 #: ../udisks/udisksclient.c:1940
 msgctxt "fs-type"
 msgid "Intel Matrix RAID Member"
-msgstr ""
+msgstr "Intel Matrix RAID tag"
 
 #: ../udisks/udisksclient.c:1940
 msgctxt "fs-type"
 msgid "IMSM RAID"
-msgstr ""
+msgstr "IMSM RAID"
 
 #: ../udisks/udisksclient.c:1941
 #, c-format
@@ -1895,37 +1895,37 @@ msgstr "ATA bővített biztonságos törlése"
 #: ../udisks/udisksclient.c:2446
 msgctxt "job"
 msgid "Stopping RAID Array"
-msgstr ""
+msgstr "RAID-tömb leállítása"
 
 #: ../udisks/udisksclient.c:2447
 msgctxt "job"
 msgid "Starting RAID Array"
-msgstr ""
+msgstr "RAID-tömb indítása"
 
 #: ../udisks/udisksclient.c:2448
 msgctxt "job"
 msgid "Marking Device as Faulty"
-msgstr ""
+msgstr "Eszköz megjelölése hibásként"
 
 #: ../udisks/udisksclient.c:2449
 msgctxt "job"
 msgid "Removing Device from Array"
-msgstr ""
+msgstr "Eszköz eltávolítása a tömbből"
 
 #: ../udisks/udisksclient.c:2450
 msgctxt "job"
 msgid "Adding Device to Array"
-msgstr ""
+msgstr "Eszköz hozzáadása a tömbhöz"
 
 #: ../udisks/udisksclient.c:2451
 msgctxt "job"
 msgid "Setting Write-Intent Bitmap"
-msgstr ""
+msgstr "Írási szándékot jelző bittérkép beállítása"
 
 #: ../udisks/udisksclient.c:2452
 msgctxt "job"
 msgid "Creating RAID Array"
-msgstr ""
+msgstr "RAID-tömb létrehozása"
 
 #: ../udisks/udisksclient.c:2460
 #, c-format
@@ -2116,11 +2116,11 @@ msgstr "MRW-W"
 #: ../udisks/udisksobjectinfo.c:252
 #, c-format
 msgid "%s Block Device"
-msgstr ""
+msgstr "%s blokkeszköz"
 
 #: ../udisks/udisksobjectinfo.c:256
 msgid "Block Device"
-msgstr ""
+msgstr "Blokkeszköz"
 
 #. Translators: Used to describe a partition of a block device.
 #. *              The %d is the partition number.
@@ -2131,7 +2131,7 @@ msgstr ""
 #, c-format
 msgctxt "part-block"
 msgid "Partition %d of %s"
-msgstr ""
+msgstr "%d. partíció ezen: %s"
 
 #. Translators: String used for one-liner description of a block device.
 #. *              The first %s is the description of the object (e.g. "50 GB
@@ -2142,16 +2142,16 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-block"
 msgid "%s (%s)"
-msgstr ""
+msgstr "%s (%s)"
 
 #: ../udisks/udisksobjectinfo.c:306
 #, c-format
 msgid "%s Loop Device"
-msgstr ""
+msgstr "%s hurokeszköz"
 
 #: ../udisks/udisksobjectinfo.c:310
 msgid "Loop Device"
-msgstr ""
+msgstr "Hurokeszköz"
 
 #. Translators: Used to describe a partition of a loop device.
 #. *              The %d is the partition number.
@@ -2162,7 +2162,7 @@ msgstr ""
 #, c-format
 msgctxt "part-loop"
 msgid "Partition %d of %s"
-msgstr ""
+msgstr "%d. partíció ezen: %s"
 
 #. Translators: String used for one-liner description of a loop device.
 #. *              The first %s is the description of the object (e.g. "2 GB
@@ -2175,42 +2175,42 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-loop"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"
 
 #: ../udisks/udisksobjectinfo.c:348
 msgctxt "mdraid-desc"
 msgid "RAID-0 Array"
-msgstr ""
+msgstr "RAID-0 tömb"
 
 #: ../udisks/udisksobjectinfo.c:350
 msgctxt "mdraid-desc"
 msgid "RAID-1 Array"
-msgstr ""
+msgstr "RAID-1 tömb"
 
 #: ../udisks/udisksobjectinfo.c:352
 msgctxt "mdraid-desc"
 msgid "RAID-4 Array"
-msgstr ""
+msgstr "RAID-4 tömb"
 
 #: ../udisks/udisksobjectinfo.c:354
 msgctxt "mdraid-desc"
 msgid "RAID-5 Array"
-msgstr ""
+msgstr "RAID-5 tömb"
 
 #: ../udisks/udisksobjectinfo.c:356
 msgctxt "mdraid-desc"
 msgid "RAID-6 Array"
-msgstr ""
+msgstr "RAID-6 tömb"
 
 #: ../udisks/udisksobjectinfo.c:358
 msgctxt "mdraid-desc"
 msgid "RAID-10 Array"
-msgstr ""
+msgstr "RAID-10 tömb"
 
 #: ../udisks/udisksobjectinfo.c:360
 msgctxt "mdraid-desc"
 msgid "RAID Array"
-msgstr ""
+msgstr "RAID-tömb"
 
 #. Translators: Used to format the description for a RAID array.
 #. *              The first %s is the size (e.g. '42.0 GB').
@@ -2220,7 +2220,7 @@ msgstr ""
 #, c-format
 msgctxt "mdraid-desc"
 msgid "%s %s"
-msgstr ""
+msgstr "%s %s"
 
 #. Translators: Used to describe a partition of a RAID Array.
 #. *              The %d is the partition number.
@@ -2231,7 +2231,7 @@ msgstr ""
 #, c-format
 msgctxt "part-raid"
 msgid "Partition %d of %s"
-msgstr ""
+msgstr "%d. partíció ezen: %s"
 
 #. Translators: String used for one-liner description of running RAID array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
@@ -2242,7 +2242,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-running"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"
 
 #. Translators: String used for one-liner description of non-running RAID
 #. array.
@@ -2253,7 +2253,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-not-running"
 msgid "%s — %s"
-msgstr ""
+msgstr "%s — %s"
 
 #. Translators: String used for one-liner description of running RAID array
 #. w/o a name.
@@ -2265,7 +2265,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-no-name-running"
 msgid "%s — %s"
-msgstr ""
+msgstr "%s — %s"
 
 #. Translators: String used for one-liner description of non-running RAID
 #. array w/o a name.
@@ -2276,7 +2276,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-no-name-not-running"
 msgid "%s"
-msgstr ""
+msgstr "%s"
 
 #. Translators: Used to describe drive without removable media. The %s is the
 #. type, e.g. 'Thumb'
@@ -2418,7 +2418,7 @@ msgstr "Hang %s"
 #, c-format
 msgctxt "part-drive"
 msgid "Partition %d of %s"
-msgstr ""
+msgstr "%d. partíció ezen: %s"
 
 #. Translators: String used for one-liner description of drive.
 #. *              The first %s is the description of the object (e.g. "80 GB
@@ -2432,7 +2432,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s [%s] (%s)"
-msgstr ""
+msgstr "%s — %s [%s] (%s)"
 
 #. Translators: String used for one-liner description of drive w/o known fw
 #. revision.
@@ -2446,4 +2446,4 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"

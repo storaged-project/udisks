@@ -1,0 +1,2450 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# 
+# Translators:
+# Darkcircle <darkcircle.0426@gmail.com>, 2013
+# ujuc Gang <potopro@gmail.com>, 2013
+msgid ""
+msgstr ""
+"Project-Id-Version: udisks\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-12-18 15:41-0500\n"
+"PO-Revision-Date: 2013-11-20 09:31+0000\n"
+"Last-Translator: Darkcircle <darkcircle.0426@gmail.com>\n"
+"Language-Team: Korean (http://www.transifex.com/projects/p/freedesktop/language/ko/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ko\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:1
+msgid "Mount a filesystem"
+msgstr "파일 시스템 마운트"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:2
+msgid "Authentication is required to mount the filesystem"
+msgstr "파일 시스템을 마운트 하려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:3
+msgid "Mount a filesystem on a system device"
+msgstr "시스템 장치에 파일 시스템 마운트"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:4
+msgid "Mount a filesystem from a device plugged into another seat"
+msgstr "다른 위치에 연결된 장치에서 파일 시스템 마운트"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:5
+msgid ""
+"Mount/unmount filesystems defined in the fstab file with the x-udisks-auth "
+"option"
+msgstr "x-udisks-auth 옵션을 사용하여 fstab 파일에 정의한 파일 시스템 마운트/마운트 해제"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:6
+msgid "Authentication is required to mount/unmount the filesystem"
+msgstr "파일 시스템을 마운트/마운트 해제 하려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:7
+msgid "Unmount a device mounted by another user"
+msgstr "다른 사용자가 마운트한 장치 마운트 해제"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:8
+msgid ""
+"Authentication is required to unmount a filesystem mounted by another user"
+msgstr "다른 사용자가 마운트한 파일시스템을 마운트 해제하려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:9
+msgid "Unlock an encrypted device"
+msgstr "비암호화 장치 잠금 해제"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:10
+msgid "Authentication is required to unlock an encrypted device"
+msgstr "비암호화 장치의 잠금을 해제하려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:11
+msgid "Unlock an encrypted system device"
+msgstr "암호화 시스템 장치 잠금 해제"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:12
+msgid "Unlock an encrypted device plugged into another seat"
+msgstr "다른 위치에 연결된  암호화된 장치 잠금 해제"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:13
+msgid ""
+"Unlock an encrypted device specified in the crypttab file with the x-udisks-"
+"auth option"
+msgstr "x-udisks-auth 옵션을 사용하여 crypttab 파일에 지정한 암호화 장치의 잠금을 해제"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:14
+msgid "Lock an encrypted device unlocked by another user"
+msgstr "다른 사용자가 잠금 해제한 암호화 장치 잠금"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:15
+msgid ""
+"Authentication is required to lock an encrypted device unlocked by another "
+"user"
+msgstr "다른 사용자가 잠금 해제한 암호화 장치를 잠그려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:16
+msgid "Change passphrase for an encrypted device"
+msgstr "암호화된 장치에 대한 암호 바꾸기"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:17
+msgid ""
+"Authentication is required to change the passphrase for an encrypted device"
+msgstr "암호화 장치에 대한 암호를 바꾸려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:18
+msgid "Manage loop devices"
+msgstr "루프 장치 관리"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests setting up a loop device.
+#. 
+#: ../data/org.freedesktop.udisks2.policy.in.h:19
+#: ../src/udiskslinuxmanager.c:335
+msgid "Authentication is required to set up a loop device"
+msgstr "루프 장치를 설정하려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:20
+msgid "Delete loop devices"
+msgstr "루프 장치 삭제"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:21
+msgid ""
+"Authentication is required to delete a loop device set up by another user"
+msgstr "다른 사용자가 설정한 루프 장치를 삭제하려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:22
+msgid "Modify loop devices"
+msgstr "루프 장치 수정"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:23
+msgid ""
+"Authentication is required to modify a loop device set up by another user"
+msgstr "다른 사용자가 설정한 루프 장치를 수정하려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:24
+msgid "Manage swapspace"
+msgstr "스왑공간 관리"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:25
+msgid "Authentication is required to manage swapspace"
+msgstr "스왑 공간을 관리하려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:26
+msgid "Manage RAID arrays"
+msgstr "RAID 어레이 관리"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:27
+msgid "Authentication is required to manage RAID arrays"
+msgstr "RAID 어레이를 관리하려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:28
+msgid "Power off drive"
+msgstr "드라이브 전원 끄기"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:29
+msgid "Authentication is required to power off a drive"
+msgstr "드라이브의 전원을 끄려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:30
+msgid "Power off a system drive"
+msgstr "시스템 드라이브 전원 끄기"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:31
+msgid "Power off a drive attached to another seat"
+msgstr "다른 위치에 붙은 드라이브 전원 끄기"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:32
+msgid ""
+"Authentication is required to power off a drive plugged into another seat"
+msgstr "다른 위치에 연결한 드라이브의 전원을 끄려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:33
+msgid "Eject media"
+msgstr "미디어 꺼내기"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:34
+msgid "Authentication is required to eject media"
+msgstr "미디어를 꺼내려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:35
+msgid "Eject media from a system drive"
+msgstr "시스템 드라이브에서 미디어 꺼내기"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:36
+msgid "Eject media from a drive attached to another seat"
+msgstr "다른 위치에 붙은 드라이브에서 미디어 꺼내기"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:37
+msgid ""
+"Authentication is required to eject media from a drive plugged into another "
+"seat"
+msgstr "다른 위치에 연결한 드라이브에서 미디어를 꺼내려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:38
+msgid "Modify a device"
+msgstr "장치 수정"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:39
+msgid "Authentication is required to modify a device"
+msgstr "장치를 수정하려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:40
+msgid "Modify a system device"
+msgstr "시스템 장치 수정"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:41
+msgid ""
+"Authentication is required to modify a device plugged into another seat"
+msgstr "다른 위치에 연결한 장치를 수정하려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:42
+msgid "Rescan a device"
+msgstr "장치 다시 검색"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:43
+msgid "Authentication is to rescan a device"
+msgstr "장치를 다시 검색하려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:44
+msgid "Open a device"
+msgstr "장치 열기"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:45
+msgid "Authentication is required to open a device"
+msgstr "장치를 열려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:46
+msgid "Open a system device"
+msgstr "시스템 장치 열기"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:47
+msgid "Modify system-wide configuration"
+msgstr "시스템 구성 수정"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:48
+msgid "Authentication is required to modify system-wide configuration"
+msgstr "시스템 구성을 수정하려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:49
+msgid ""
+"Authentication is required to retrieve secrets from system-wide "
+"configuration"
+msgstr "시스템 구성에서 비밀 정보를 가져오려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:50
+msgid "Modify drive settings"
+msgstr "드라이브 설정 수정"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:51
+msgid "Authentication is required to modify drive settings"
+msgstr "드라이브 설정을 수정하려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:52
+msgid "Update SMART data"
+msgstr "SMART 데이터 업데이트"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:53
+msgid "Authentication is required to update SMART data"
+msgstr "SMART 데이터를 업데이트하려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:54
+msgid "Set SMART data from blob"
+msgstr "blob에서 SMART 데이터 설정"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:55
+msgid "Authentication is required to set SMART data from blob"
+msgstr "blob에서 SMART 데이터를 설정하려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:56
+msgid "Run SMART self-test"
+msgstr "SMART 자체 점검 실행"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:57
+msgid "Authentication is required to run a SMART self-test"
+msgstr "SMART 자체 점검을 수행하려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:58
+msgid "Enable/Disable SMART"
+msgstr "활성화/비활성화 SMART"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:59
+msgid "Authentication is required to enable/disable SMART"
+msgstr "SMART를 활성화/비활성화 하려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:60
+msgid "Check power state"
+msgstr "전원 상태 확인"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:61
+msgid "Authentication is required to check the power state"
+msgstr "전원 상태를 확인하려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:62
+msgid "Send standby command"
+msgstr "대기 모드 명령 보내기"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:63
+msgid "Authentication is required to put a drive into standby mode"
+msgstr "대기 모드 명령을 드라이브에 보내려면 인증이 필요합ㄴ디ㅏ"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:64
+msgid "Send standby command to a system drive"
+msgstr "시스템 드라이브에 대기 명령 보내기"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:65
+msgid "Send standby command to drive on other seat"
+msgstr "다른 위치의 드라이브에 대기 명령 보내기"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:66
+msgid "Securely erase a hard disk"
+msgstr "하드디스크 안전하게 지우기"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:67
+msgid "Authentication is required to securely erase a hard disk"
+msgstr "하드디스크를 안전하게 지우려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:68
+msgid "Cancel job"
+msgstr "작업 취소"
+
+#. Translators: Shown in authentication dialog when canceling a job.
+#. 
+#: ../data/org.freedesktop.udisks2.policy.in.h:69 ../src/udisksbasejob.c:404
+msgid "Authentication is required to cancel a job"
+msgstr "작업을 취소하려면 인증이 필요합니다"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:70
+msgid "Cancel job started by another user"
+msgstr "다른 사용자가 시작한 작업 취소"
+
+#: ../data/org.freedesktop.udisks2.policy.in.h:71
+msgid "Authentication is required to cancel a job started by another user"
+msgstr "다른 사용자가 시작한 작업을 취소하려면 인증이 필요합니다"
+
+#. Translators: This is shown in an authentcation dialog when
+#. * the user is editing settings that involve system-level
+#. * passwords and secrets
+#. 
+#: ../src/udiskslinuxblock.c:999
+msgid "Authentication is required to read system-level secrets"
+msgstr "시스템 수준 비밀 정보를 읽으려면 인증이 필요합니다"
+
+#. Translators: shown in authentication dialog - do not translate /etc/fstab
+#: ../src/udiskslinuxblock.c:1533
+msgid "Authentication is required to add an entry to the /etc/fstab file"
+msgstr "/etc/fstab 파일에 항목을 추가하려면 인증이 필요합니다"
+
+#. Translators: shown in authentication dialog - do not tranlsate
+#. /etc/crypttab
+#: ../src/udiskslinuxblock.c:1551
+msgid "Authentication is required to add an entry to the /etc/crypttab file"
+msgstr "/etc/crypttab 파일에 항목을 추가하려면 인증이 필요합니다"
+
+#. Translators: shown in authentication dialog - do not translate /etc/fstab
+#: ../src/udiskslinuxblock.c:1610
+msgid "Authentication is required to remove an entry from /etc/fstab file"
+msgstr "/etc/fstab 파일에서 항목을 제거하려면 인증이 필요합니다"
+
+#. Translators: shown in authentication dialog - do not translate
+#. /etc/crypttab
+#: ../src/udiskslinuxblock.c:1628
+msgid ""
+"Authentication is required to remove an entry from the /etc/crypttab file"
+msgstr "/etc/crypttab 파일에서 항목을 제거하려면 인증이 필요합니다"
+
+#. Translators: shown in authentication dialog - do not translate /etc/fstab
+#: ../src/udiskslinuxblock.c:1700
+msgid "Authentication is required to modify the /etc/fstab file"
+msgstr "/etc/fstab 파일을 수정하려면 인증이 필요합니다"
+
+#. Translators: shown in authentication dialog - do not translate
+#. /etc/crypttab
+#: ../src/udiskslinuxblock.c:1718
+msgid "Authentication is required to modify the /etc/crypttab file"
+msgstr "/etc/crypttab 파일을 수정하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests erasing a hard disk using the SECURE ERASE UNIT
+#. * command.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#. Translators: Shown in authentication dialog when the user
+#. * requests erasing a hard disk using the SECURE ERASE UNIT command.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxblock.c:2225 ../src/udiskslinuxdriveata.c:2245
+msgid "Authentication is required to perform a secure erase of $(drive)"
+msgstr "$(drive)을(를) 안전하게 삭제하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when formatting a
+#. * device. This includes both creating a filesystem or partition
+#. * table.
+#. *
+#. * Do not translate $(drive), it's a placeholder and will
+#. * be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxblock.c:2237
+msgid "Authentication is required to format $(drive)"
+msgstr "$(drive)을(를) 포맷하려면 인증이 필요합니다"
+
+#: ../src/udiskslinuxblock.c:2274 ../src/udiskslinuxdriveata.c:2257
+msgid "Formatting Device"
+msgstr "장치 포맷중"
+
+#. Translators: Shown in authentication dialog when creating a
+#. * disk image file.
+#. *
+#. * Do not translate $(drive), it's a placeholder and will
+#. * be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxblock.c:2693
+msgid "Authentication is required to open $(drive) for reading"
+msgstr "$(drive)을(를) 읽기 위해 열려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when restoring
+#. * from a disk image file.
+#. *
+#. * Do not translate $(drive), it's a placeholder and will
+#. * be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxblock.c:2757
+msgid "Authentication is required to open $(drive) for writing"
+msgstr "$(drive)를 쓰기 위해 열려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when an application
+#. * wants to benchmark a device.
+#. *
+#. * Do not translate $(drive), it's a placeholder and will
+#. * be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxblock.c:2823
+msgid "Authentication is required to open $(drive) for benchmarking"
+msgstr "$(drive)을(를) 벤치마킹하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when an application
+#. * wants to rescan a device.
+#. *
+#. * Do not translate $(drive), it's a placeholder and will
+#. * be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxblock.c:2884
+msgid "Authentication is required to rescan $(drive)"
+msgstr "$(drive)을(를) 다시 검색하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests ejecting media from a drive.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxdrive.c:1007
+msgid "Authentication is required to eject $(drive)"
+msgstr "$(drive)을(를) 꺼내려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * changes settings for a drive.
+#. *
+#. * Do not translate $(drive), it's a placeholder and will be
+#. * replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxdrive.c:1095
+msgid "Authentication is required to configure settings for $(drive)"
+msgstr "$(drive)을(를) 설정하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests ejecting media from a drive.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxdrive.c:1293
+msgid "Authentication is required to power off $(drive)"
+msgstr "$(drive)의 전원을 끄려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * refreshes SMART data from a disk.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxdriveata.c:745
+msgid "Authentication is required to update SMART data from $(drive)"
+msgstr "$(drive)의 SMART 데이터를 업데이트 하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * tries to simulate SMART data from a libatasmart blob.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxdriveata.c:756
+msgid "Authentication is required to set SMART data from a blob on $(drive)"
+msgstr "$(drive)의 SMART 데이터를 blob에서 설정하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * aborts a running SMART self-test.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxdriveata.c:890
+msgid "Authentication is required to abort a SMART self-test on $(drive)"
+msgstr "$(drive)의 SMART 자체 시험을 중지하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * initiates a SMART self-test.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxdriveata.c:1140
+msgid "Authentication is required to start a SMART self-test on $(drive)"
+msgstr "$(drive)의 SMART 자체 시험을 시작하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests the power state of a drive.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxdriveata.c:1227
+msgid "Authentication is required to check power state for $(drive)"
+msgstr "$(drive)의 전원 상태를 점검하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * tries to put a drive into standby mode.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxdriveata.c:1352
+msgid "Authentication is required to put $(drive) in standby mode"
+msgstr "$(drive)을(를) 대기 모드로 놓으려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * tries to wake up a drive from standby mode.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxdriveata.c:1484
+msgid "Authentication is required to wake up $(drive) from standby mode"
+msgstr "$(drive)을(를) 대기 모드에서 깨우려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests enabling SMART on a disk.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxdriveata.c:2338
+msgid "Authentication is required to enable SMART on $(drive)"
+msgstr "$(drive)의 SMART를 활성화 하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests enabling SMART on a disk.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxdriveata.c:2348
+msgid "Authentication is required to disable SMART on $(drive)"
+msgstr "$(drive)의 SMART를 비활성화 하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests unlocking an encrypted device.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxencrypted.c:353 ../src/udiskslinuxencrypted.c:705
+msgid "Authentication is required to unlock the encrypted device $(drive)"
+msgstr "비 암호화 장치 $(drive)을(를) 잠금해제하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests locking an encrypted device that was previously.
+#. * unlocked by another user.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxencrypted.c:583
+msgid ""
+"Authentication is required to lock the encrypted device $(drive) unlocked by"
+" another user"
+msgstr "다른 사용자가 잠금 해제한 암호화 장치 $(drive)를 잠그려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests mounting a filesystem.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxfilesystem.c:1223 ../src/udiskslinuxfilesystem.c:1385
+msgid "Authentication is required to mount $(drive)"
+msgstr "$(drive)을(를) 마운트 하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the
+#. * user requests mounting a filesystem that is in
+#. * /etc/fstab file with the x-udisks-auth option.
+#. *
+#. * Do not translate $(drive), it's a
+#. * placeholder and will be replaced by the name of
+#. * the drive/device in question
+#. *
+#. * Do not translate /etc/fstab
+#. 
+#: ../src/udiskslinuxfilesystem.c:1292
+msgid ""
+"Authentication is required to mount $(drive) referenced in the /etc/fstab "
+"file"
+msgstr "/etc/fstab 파일에서 참조하는 $(drive)을(를) 마운트 하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the
+#. * user requests unmounting a filesystem that is in
+#. * /etc/fstab file with the x-udisks-auth option.
+#. *
+#. * Do not translate $(drive), it's a
+#. * placeholder and will be replaced by the name of
+#. * the drive/device in question
+#. *
+#. * Do not translate /etc/fstab
+#. 
+#: ../src/udiskslinuxfilesystem.c:1639
+msgid ""
+"Authentication is required to unmount $(drive) referenced in the /etc/fstab "
+"file"
+msgstr "/etc/fstab 파일에서 참조하는 $(drive)을(를) 마운트해제 하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests unmounting a filesystem previously mounted by
+#. * another user.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxfilesystem.c:1686
+msgid "Authentication is required to unmount $(drive) mounted by another user"
+msgstr "다른 사용자가 마운트한 $(drive)을(를) 마운트 해제 하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests changing the filesystem label.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxfilesystem.c:1924
+msgid "Authentication is required to change the filesystem label on $(drive)"
+msgstr "$(drive)의 파일시스템 레이블을 바꾸려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests deleting a loop device previously set up by
+#. * another user.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxloop.c:245
+msgid "Authentication is required to delete the loop device $(drive)"
+msgstr "루프 장치 $(drive)을(를) 삭제하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests changing autoclear on a loop device set up by
+#. * another user.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxloop.c:424
+msgid "Authentication is required to modify the loop device $(drive)"
+msgstr "루프 장치 $(drive)를 수정하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * attempts to start a RAID Array.
+#. 
+#. TODO: variables
+#: ../src/udiskslinuxmanager.c:565
+msgid "Authentication is required to create a RAID array"
+msgstr "RAID 어레이를 만들려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * attempts to start a RAID Array.
+#. 
+#. TODO: variables
+#: ../src/udiskslinuxmdraid.c:627
+msgid "Authentication is required to start a RAID array"
+msgstr "RAID 어레이를 시작하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * attempts to stop a RAID Array.
+#. 
+#. TODO: variables
+#: ../src/udiskslinuxmdraid.c:797
+msgid "Authentication is required to stop a RAID array"
+msgstr "RAID 어레이를 멈추려면 인증이 필요합닏"
+
+#. Translators: Shown in authentication dialog when the user
+#. * attempts to remove a device from a RAID Array.
+#. 
+#. TODO: variables
+#: ../src/udiskslinuxmdraid.c:1002
+msgid "Authentication is required to remove a device from a RAID array"
+msgstr "RAID 어레이에서 장치를 제거하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * attempts to add a device to a RAID Array.
+#. 
+#. TODO: variables
+#: ../src/udiskslinuxmdraid.c:1198
+msgid "Authentication is required to add a device to a RAID array"
+msgstr "RAID 어레이에서 장치를 추가하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * attempts to change whether it has a write-intent bitmap
+#. 
+#. TODO: variables
+#: ../src/udiskslinuxmdraid.c:1328
+msgid ""
+"Authentication is required to configure the write-intent bitmap on a RAID "
+"array"
+msgstr "RAID 어레이에서 쓰기 인텐트 비트맵을 설정하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests modifying a partition (changing type, flags, name etc.).
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxpartition.c:282 ../src/udiskslinuxpartition.c:447
+#: ../src/udiskslinuxpartition.c:789
+msgid "Authentication is required to modify the partition on device $(drive)"
+msgstr "장치 $(drive)의 파티션을 수정하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests deleting a partition.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxpartition.c:900
+msgid "Authentication is required to delete the partition $(drive)"
+msgstr "$(drive)의 파티션을 삭제하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests creating a new partition.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxpartitiontable.c:349
+msgid "Authentication is required to create a partition on $(drive)"
+msgstr "$(drive)에 파티션을 만들려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests activating a swap device.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxswapspace.c:202
+msgid "Authentication is required to activate swapspace on $(drive)"
+msgstr "$(drive)에 스왑공간을 활성화 하려면 인증이 필요합니다"
+
+#. Translators: Shown in authentication dialog when the user
+#. * requests deactivating a swap device.
+#. *
+#. * Do not translate $(drive), it's a placeholder and
+#. * will be replaced by the name of the drive/device in question
+#. 
+#: ../src/udiskslinuxswapspace.c:294
+msgid "Authentication is required to deactivate swapspace on $(drive)"
+msgstr "$(drive)의 스왑공간을 활성 해제하려면 인증이 필요합니다"
+
+#. Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for
+#. a partition
+#: ../udisks/udisksclient.c:1094
+msgctxt "dos-part-flag"
+msgid "Bootable"
+msgstr "부팅 가능"
+
+#. Translators: Corresponds to the GPT "system" flag for a partition,
+#. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
+#. 
+#: ../udisks/udisksclient.c:1104
+msgctxt "gpt-part-flag"
+msgid "System"
+msgstr "시스템"
+
+#. Translators: Corresponds to the GPT "legacy bios bootable" flag for a
+#. partition,
+#. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
+#. 
+#: ../udisks/udisksclient.c:1111
+msgctxt "gpt-part-flag"
+msgid "Legacy BIOS Bootable"
+msgstr "부팅가능 고전 BIOS  "
+
+#. Translators: Corresponds to the GPT "read-only" flag for a partition,
+#. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
+#. 
+#: ../udisks/udisksclient.c:1118
+msgctxt "gpt-part-flag"
+msgid "Read-only"
+msgstr "읽기전"
+
+#. Translators: Corresponds to the GPT "hidden" flag for a partition,
+#. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
+#. 
+#: ../udisks/udisksclient.c:1125
+msgctxt "gpt-part-flag"
+msgid "Hidden"
+msgstr "숨김"
+
+#. Translators: Corresponds to the GPT "no automount" flag for a partition,
+#. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
+#. 
+#: ../udisks/udisksclient.c:1132
+msgctxt "gpt-part-flag"
+msgid "No Automount"
+msgstr "자동 마운트 안함"
+
+#. Translators: Partition info. First %s is the type, second %s is a list of
+#. flags
+#: ../udisks/udisksclient.c:1145
+#, c-format
+msgctxt "partition-info"
+msgid "%s (%s)"
+msgstr "%s (%s)"
+
+#. Translators: The Partition info when unknown
+#: ../udisks/udisksclient.c:1156
+msgctxt "partition-info"
+msgid "Unknown"
+msgstr "알 수 없음"
+
+#. Translators: The first %s is the size in power-of-2 units, e.g. '64 KiB'
+#. * the second %s is the size as a number e.g. '65,536' (always > 1)
+#. 
+#: ../udisks/udisksclient.c:1711
+#, c-format
+msgctxt "byte-size-pow2"
+msgid "%s (%s bytes)"
+msgstr "%s (%s 바이트)"
+
+#. Translators: The first %s is the size in power-of-10 units, e.g. '100 kB'
+#. * the second %s is the size as a number e.g. '100,000' (always > 1)
+#. 
+#: ../udisks/udisksclient.c:1721
+#, c-format
+msgctxt "byte-size-pow10"
+msgid "%s (%s bytes)"
+msgstr "%s (%s 바이트)"
+
+#. Translators: This word is used to describe the media inserted into a device
+#: ../udisks/udisksclient.c:1782
+msgctxt "media"
+msgid "CompactFlash"
+msgstr "컴팩트 플래시"
+
+#. Translators: This word is used to describe the media inserted into a device
+#: ../udisks/udisksclient.c:1787
+msgctxt "media"
+msgid "MemoryStick"
+msgstr "메모리 스틱"
+
+#. Translators: This word is used to describe the media inserted into a device
+#: ../udisks/udisksclient.c:1792
+msgctxt "media"
+msgid "SmartMedia"
+msgstr "스마트 미디어"
+
+#. Translators: This word is used to describe the media inserted into a device
+#: ../udisks/udisksclient.c:1797
+msgctxt "media"
+msgid "SecureDigital"
+msgstr "시큐어 디지털"
+
+#. Translators: This word is used to describe the media inserted into a device
+#: ../udisks/udisksclient.c:1802
+msgctxt "media"
+msgid "SD High Capacity"
+msgstr "고용량 SD"
+
+#. Translators: This word is used to describe the media inserted into a device
+#: ../udisks/udisksclient.c:1807
+msgctxt "media"
+msgid "Floppy"
+msgstr "플로피"
+
+#. Translators: This word is used to describe the media inserted into a device
+#: ../udisks/udisksclient.c:1812
+msgctxt "media"
+msgid "Zip"
+msgstr "집"
+
+#. Translators: This word is used to describe the media inserted into a device
+#: ../udisks/udisksclient.c:1817
+msgctxt "media"
+msgid "Jaz"
+msgstr "재즈"
+
+#. Translators: This word is used to describe the media inserted into a device
+#: ../udisks/udisksclient.c:1822
+msgctxt "media"
+msgid "Flash"
+msgstr "플래시"
+
+#. Translators: This word is used to describe the optical disc type, it may
+#. appear
+#. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
+#. 
+#: ../udisks/udisksclient.c:1856
+msgctxt "disc-type"
+msgid "CD"
+msgstr "컴팩트 디스크"
+
+#. Translators: This word is used to describe the optical disc type, it may
+#. appear
+#. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
+#. 
+#: ../udisks/udisksclient.c:1865
+msgctxt "disc-type"
+msgid "DVD"
+msgstr "DVD"
+
+#. Translators: This word is used to describe the optical disc type, it may
+#. appear
+#. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
+#. 
+#: ../udisks/udisksclient.c:1874
+msgctxt "disc-type"
+msgid "Blu-Ray"
+msgstr "블루레이"
+
+#. Translators: This word is used to describe the optical disc type, it may
+#. appear
+#. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
+#. 
+#: ../udisks/udisksclient.c:1883
+msgctxt "disc-type"
+msgid "HDDVD"
+msgstr "고밀도 DVD"
+
+#: ../udisks/udisksclient.c:1904
+msgctxt "fs-type"
+msgid "FAT (12-bit version)"
+msgstr "FAT (12비트 버전)"
+
+#: ../udisks/udisksclient.c:1904 ../udisks/udisksclient.c:1905
+#: ../udisks/udisksclient.c:1906 ../udisks/udisksclient.c:1907
+#: ../udisks/udisksclient.c:1908
+msgctxt "fs-type"
+msgid "FAT"
+msgstr "FAT"
+
+#: ../udisks/udisksclient.c:1905
+msgctxt "fs-type"
+msgid "FAT (16-bit version)"
+msgstr "FAT (16비트 버전)"
+
+#: ../udisks/udisksclient.c:1906
+msgctxt "fs-type"
+msgid "FAT (32-bit version)"
+msgstr "FAT (32비트 버전)"
+
+#: ../udisks/udisksclient.c:1907
+#, c-format
+msgctxt "fs-type"
+msgid "FAT (version %s)"
+msgstr "FAT (버전 %s)"
+
+#: ../udisks/udisksclient.c:1909
+#, c-format
+msgctxt "fs-type"
+msgid "NTFS (version %s)"
+msgstr "NTFS (버전 %s)"
+
+#: ../udisks/udisksclient.c:1909 ../udisks/udisksclient.c:1910
+msgctxt "fs-type"
+msgid "NTFS"
+msgstr "NTFS"
+
+#: ../udisks/udisksclient.c:1911
+msgctxt "fs-type"
+msgid "HFS"
+msgstr "HFS"
+
+#: ../udisks/udisksclient.c:1912
+msgctxt "fs-type"
+msgid "HFS+"
+msgstr "HFS+"
+
+#: ../udisks/udisksclient.c:1913
+#, c-format
+msgctxt "fs-type"
+msgid "Ext2 (version %s)"
+msgstr "Ext2 (버전 %s)"
+
+#: ../udisks/udisksclient.c:1913 ../udisks/udisksclient.c:1914
+msgctxt "fs-type"
+msgid "Ext2"
+msgstr "Ext2"
+
+#: ../udisks/udisksclient.c:1915
+#, c-format
+msgctxt "fs-type"
+msgid "Ext3 (version %s)"
+msgstr "Ext3 (버전 %s)"
+
+#: ../udisks/udisksclient.c:1915 ../udisks/udisksclient.c:1916
+msgctxt "fs-type"
+msgid "Ext3"
+msgstr "Ext3"
+
+#: ../udisks/udisksclient.c:1917
+#, c-format
+msgctxt "fs-type"
+msgid "Ext4 (version %s)"
+msgstr "Ext4 (버전 %s)"
+
+#: ../udisks/udisksclient.c:1917 ../udisks/udisksclient.c:1918
+msgctxt "fs-type"
+msgid "Ext4"
+msgstr "Ext4"
+
+#: ../udisks/udisksclient.c:1919
+#, c-format
+msgctxt "fs-type"
+msgid "Journal for Ext (version %s)"
+msgstr "Journal for Ext (버전 %s)"
+
+#: ../udisks/udisksclient.c:1919 ../udisks/udisksclient.c:1920
+msgctxt "fs-type"
+msgid "JDB"
+msgstr "JDB"
+
+#: ../udisks/udisksclient.c:1920
+msgctxt "fs-type"
+msgid "Journal for Ext"
+msgstr "Journal for Ext"
+
+#: ../udisks/udisksclient.c:1921
+#, c-format
+msgctxt "fs-type"
+msgid "XFS (version %s)"
+msgstr "XFS (버전 %s)"
+
+#: ../udisks/udisksclient.c:1921 ../udisks/udisksclient.c:1922
+msgctxt "fs-type"
+msgid "XFS"
+msgstr "XFS"
+
+#. TODO: No ID_FS_VERSION yet for btrfs...
+#: ../udisks/udisksclient.c:1924
+msgctxt "fs-type"
+msgid "Btrfs"
+msgstr "Btrfs"
+
+#: ../udisks/udisksclient.c:1925
+#, c-format
+msgctxt "fs-type"
+msgid "ISO 9660 (version %s)"
+msgstr "ISO 9660 (버전 %s)"
+
+#: ../udisks/udisksclient.c:1925 ../udisks/udisksclient.c:1926
+msgctxt "fs-type"
+msgid "ISO9660"
+msgstr "ISO9660"
+
+#: ../udisks/udisksclient.c:1926
+msgctxt "fs-type"
+msgid "ISO 9660"
+msgstr "ISO 9660"
+
+#: ../udisks/udisksclient.c:1927
+#, c-format
+msgctxt "fs-type"
+msgid "UDF (version %s)"
+msgstr "UDF (버전 %s)"
+
+#: ../udisks/udisksclient.c:1927 ../udisks/udisksclient.c:1928
+msgctxt "fs-type"
+msgid "UDF"
+msgstr "UDF"
+
+#: ../udisks/udisksclient.c:1929 ../udisks/udisksclient.c:1930
+msgctxt "fs-type"
+msgid "exFAT"
+msgstr "exFAT"
+
+#: ../udisks/udisksclient.c:1930
+#, c-format
+msgctxt "fs-type"
+msgid "exFAT (version %s)"
+msgstr "exFAT (버전 %s)"
+
+#: ../udisks/udisksclient.c:1931
+#, c-format
+msgctxt "fs-type"
+msgid "Swap (version %s)"
+msgstr "스왑 (버전 %s)"
+
+#: ../udisks/udisksclient.c:1931 ../udisks/udisksclient.c:1932
+msgctxt "fs-type"
+msgid "Swap"
+msgstr "스왑"
+
+#: ../udisks/udisksclient.c:1933
+#, c-format
+msgctxt "fs-type"
+msgid "LVM2 Physical Volume (%s)"
+msgstr "LVM2 물리 볼륨 (%s)"
+
+#: ../udisks/udisksclient.c:1933 ../udisks/udisksclient.c:1934
+msgctxt "fs-type"
+msgid "LVM2 PV"
+msgstr "LVM2 PV"
+
+#: ../udisks/udisksclient.c:1934
+msgctxt "fs-type"
+msgid "LVM2 Physical Volume"
+msgstr "LVM2 물리 볼륨"
+
+#: ../udisks/udisksclient.c:1935
+#, c-format
+msgctxt "fs-type"
+msgid "Linux RAID Member (version %s)"
+msgstr "리눅스 RAID 구성원 (버전 %s)"
+
+#: ../udisks/udisksclient.c:1935 ../udisks/udisksclient.c:1936
+msgctxt "fs-type"
+msgid "Linux RAID Member"
+msgstr "리눅스 RAID 구성원"
+
+#: ../udisks/udisksclient.c:1937
+#, c-format
+msgctxt "fs-type"
+msgid "ZFS Device (ZPool version %s)"
+msgstr "ZFS 장치 (ZPool 버전 %s)"
+
+#: ../udisks/udisksclient.c:1937
+#, c-format
+msgctxt "fs-type"
+msgid "ZFS (v%s)"
+msgstr "ZFS (v%s)"
+
+#: ../udisks/udisksclient.c:1938
+msgctxt "fs-type"
+msgid "ZFS Device"
+msgstr "ZFS 장치"
+
+#: ../udisks/udisksclient.c:1938
+msgctxt "fs-type"
+msgid "ZFS"
+msgstr "ZFS"
+
+#: ../udisks/udisksclient.c:1939
+#, c-format
+msgctxt "fs-type"
+msgid "Intel Matrix RAID Member (version %s)"
+msgstr "인텔 매트릭스 RAID 구성원 (버전 %s)"
+
+#: ../udisks/udisksclient.c:1939
+#, c-format
+msgctxt "fs-type"
+msgid "IMSM RAID Member (%s)"
+msgstr "IMSM RAID 구성원 (%s)"
+
+#: ../udisks/udisksclient.c:1940
+msgctxt "fs-type"
+msgid "Intel Matrix RAID Member"
+msgstr "인텔 매트릭스 RAID 구성원"
+
+#: ../udisks/udisksclient.c:1940
+msgctxt "fs-type"
+msgid "IMSM RAID"
+msgstr "IMSM RAID"
+
+#: ../udisks/udisksclient.c:1941
+#, c-format
+msgctxt "fs-type"
+msgid "LUKS Encryption (version %s)"
+msgstr "LUKS 암호화 (버전 %s)"
+
+#: ../udisks/udisksclient.c:1941 ../udisks/udisksclient.c:1942
+msgctxt "fs-type"
+msgid "LUKS"
+msgstr "LUKS"
+
+#: ../udisks/udisksclient.c:1942
+msgctxt "fs-type"
+msgid "LUKS Encryption"
+msgstr "LUKS 암호화"
+
+#: ../udisks/udisksclient.c:1943
+#, c-format
+msgctxt "fs-type"
+msgid "VMFS (version %s)"
+msgstr "VMFS (버전 %s)"
+
+#: ../udisks/udisksclient.c:1943
+#, c-format
+msgctxt "fs-type"
+msgid "VMFS (v%s)"
+msgstr "VMFS (v%s)"
+
+#: ../udisks/udisksclient.c:1944
+msgctxt "fs-type"
+msgid "VMFS"
+msgstr "VMFS"
+
+#: ../udisks/udisksclient.c:1945
+#, c-format
+msgctxt "fs-type"
+msgid "VMFS Volume Member (version %s)"
+msgstr "VMFS 볼륨 구성원 (버전 %s)"
+
+#: ../udisks/udisksclient.c:1945
+#, c-format
+msgctxt "fs-type"
+msgid "VMFS Member (v%s)"
+msgstr "VMFS 구성원 (v%s)"
+
+#: ../udisks/udisksclient.c:1946
+msgctxt "fs-type"
+msgid "VMFS Volume Member"
+msgstr "VMFS 볼륨 구성원"
+
+#: ../udisks/udisksclient.c:1946
+msgctxt "fs-type"
+msgid "VMFS Member"
+msgstr "VMFS 구성원"
+
+#. Translators: Shown for unknown filesystem types.
+#. * First %s is the raw filesystem type obtained from udev, second %s is
+#. version.
+#. 
+#: ../udisks/udisksclient.c:2018
+#, c-format
+msgctxt "fs-type"
+msgid "Unknown (%s %s)"
+msgstr "알 수 없음 (%s %s)"
+
+#. Translators: Shown for unknown filesystem types.
+#. * First %s is the raw filesystem type obtained from udev.
+#. 
+#: ../udisks/udisksclient.c:2027
+#, c-format
+msgctxt "fs-type"
+msgid "Unknown (%s)"
+msgstr "알 수 없음 (%s)"
+
+#. Translators: Shown for unknown filesystem types.
+#. 
+#: ../udisks/udisksclient.c:2033 ../udisks/udisksclient.c:2047
+msgctxt "fs-type"
+msgid "Unknown"
+msgstr "알 수 없음"
+
+#. Translators: name of partition table format
+#: ../udisks/udisksclient.c:2064
+msgid "Master Boot Record"
+msgstr "주 부트 영역"
+
+#. Translators: name of partition table format
+#: ../udisks/udisksclient.c:2066
+msgid "GUID Partition Table"
+msgstr "GUID 파티션 테이블"
+
+#. Translators: name of partition table format
+#: ../udisks/udisksclient.c:2068
+msgid "Apple Partition Map"
+msgstr "애플 파티션 맵"
+
+#. Translators: name of partition table format
+#: ../udisks/udisksclient.c:2111 ../udisks/udisksclient.c:2116
+msgctxt "partition-subtype"
+msgid "Generic"
+msgstr "일반"
+
+#: ../udisks/udisksclient.c:2112 ../udisks/udisksclient.c:2117
+msgctxt "partition-subtype"
+msgid "Linux"
+msgstr "리눅"
+
+#: ../udisks/udisksclient.c:2113 ../udisks/udisksclient.c:2118
+#: ../udisks/udisksclient.c:2123
+msgctxt "partition-subtype"
+msgid "Windows"
+msgstr "윈도우"
+
+#: ../udisks/udisksclient.c:2114 ../udisks/udisksclient.c:2120
+msgctxt "partition-subtype"
+msgid "Other"
+msgstr "기타"
+
+#: ../udisks/udisksclient.c:2119 ../udisks/udisksclient.c:2122
+msgctxt "partition-subtype"
+msgid "Mac OS X"
+msgstr "맥 OS X"
+
+#. see http://en.wikipedia.org/wiki/GUID_Partition_Table
+#. Not associated with any OS
+#: ../udisks/udisksclient.c:2210
+msgctxt "part-type"
+msgid "MBR Partition Scheme"
+msgstr "MBR 파티션 형식"
+
+#: ../udisks/udisksclient.c:2211
+msgctxt "part-type"
+msgid "EFI System"
+msgstr "EFI 시스템"
+
+#: ../udisks/udisksclient.c:2212
+msgctxt "part-type"
+msgid "BIOS Boot"
+msgstr "BIOS 부트"
+
+#. Linux
+#: ../udisks/udisksclient.c:2214
+msgctxt "part-type"
+msgid "Linux Filesystem"
+msgstr "리눅스 파일 시스템"
+
+#: ../udisks/udisksclient.c:2215
+msgctxt "part-type"
+msgid "Linux RAID"
+msgstr "리눅스 RAID"
+
+#: ../udisks/udisksclient.c:2216
+msgctxt "part-type"
+msgid "Linux Swap"
+msgstr "리눅스 스왑"
+
+#: ../udisks/udisksclient.c:2217 ../udisks/udisksclient.c:2293
+msgctxt "part-type"
+msgid "Linux LVM"
+msgstr "리눅스 LVM"
+
+#: ../udisks/udisksclient.c:2218
+msgctxt "part-type"
+msgid "Linux Reserved"
+msgstr "리눅스 예약"
+
+#. Microsoft
+#: ../udisks/udisksclient.c:2220
+msgctxt "part-type"
+msgid "Basic Data"
+msgstr "기본 데이터"
+
+#: ../udisks/udisksclient.c:2221
+msgctxt "part-type"
+msgid "Microsoft Reserved"
+msgstr "마이크로소프트 예약"
+
+#: ../udisks/udisksclient.c:2222
+msgctxt "part-type"
+msgid "Microsoft LDM metadata"
+msgstr "마이크로소프트 LDM 메타데이터"
+
+#: ../udisks/udisksclient.c:2223
+msgctxt "part-type"
+msgid "Microsoft LDM data"
+msgstr "마이크로소프트 LDM 데이터"
+
+#: ../udisks/udisksclient.c:2224
+msgctxt "part-type"
+msgid "Microsoft Windows Recovery Environment"
+msgstr "마이크로소프트 윈도우 복원 환경"
+
+#. Apple OS X
+#: ../udisks/udisksclient.c:2226
+msgctxt "part-type"
+msgid "Apple HFS/HFS+"
+msgstr "애플 HFS/HFS+"
+
+#. see http://developer.apple.com/documentation/mac/devices/devices-126.html
+#. *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html
+#: ../udisks/udisksclient.c:2227 ../udisks/udisksclient.c:2272
+msgctxt "part-type"
+msgid "Apple UFS"
+msgstr "애플 UFS"
+
+#: ../udisks/udisksclient.c:2228
+msgctxt "part-type"
+msgid "Apple ZFS"
+msgstr "애플 ZFS"
+
+#. same as Solaris /usr
+#: ../udisks/udisksclient.c:2229
+msgctxt "part-type"
+msgid "Apple RAID"
+msgstr "애플 RAID"
+
+#: ../udisks/udisksclient.c:2230
+msgctxt "part-type"
+msgid "Apple RAID (offline)"
+msgstr "애플 RAID (오프라인)"
+
+#: ../udisks/udisksclient.c:2231
+msgctxt "part-type"
+msgid "Apple Boot"
+msgstr "애플 Boot"
+
+#: ../udisks/udisksclient.c:2232
+msgctxt "part-type"
+msgid "Apple Label"
+msgstr "애플 레이블"
+
+#: ../udisks/udisksclient.c:2233
+msgctxt "part-type"
+msgid "Apple TV Recovery"
+msgstr "애플 TV 복원"
+
+#: ../udisks/udisksclient.c:2234
+msgctxt "part-type"
+msgid "Apple Core Storage"
+msgstr "애플 코어 저장장치"
+
+#. HP-UX
+#: ../udisks/udisksclient.c:2236
+msgctxt "part-type"
+msgid "HP-UX Data"
+msgstr "HP-UX 데이터"
+
+#: ../udisks/udisksclient.c:2237
+msgctxt "part-type"
+msgid "HP-UX Service"
+msgstr "HP-UX 서비스"
+
+#. FreeBSD
+#: ../udisks/udisksclient.c:2239
+msgctxt "part-type"
+msgid "FreeBSD Boot"
+msgstr "FreeBSD 부트"
+
+#: ../udisks/udisksclient.c:2240
+msgctxt "part-type"
+msgid "FreeBSD Data"
+msgstr "FreeBSD 데이터"
+
+#: ../udisks/udisksclient.c:2241
+msgctxt "part-type"
+msgid "FreeBSD Swap"
+msgstr "FreeBSD 스왑"
+
+#: ../udisks/udisksclient.c:2242
+msgctxt "part-type"
+msgid "FreeBSD UFS"
+msgstr "FreeBSD UFS"
+
+#: ../udisks/udisksclient.c:2243
+msgctxt "part-type"
+msgid "FreeBSD Vinum"
+msgstr "FreeBSD Vinum"
+
+#: ../udisks/udisksclient.c:2244
+msgctxt "part-type"
+msgid "FreeBSD ZFS"
+msgstr "FreeBSD ZFS"
+
+#. Solaris
+#: ../udisks/udisksclient.c:2246
+msgctxt "part-type"
+msgid "Solaris Boot"
+msgstr "솔라리스 부트"
+
+#: ../udisks/udisksclient.c:2247
+msgctxt "part-type"
+msgid "Solaris Root"
+msgstr "솔라리스 루트"
+
+#: ../udisks/udisksclient.c:2248
+msgctxt "part-type"
+msgid "Solaris Swap"
+msgstr "솔라리스 스왑"
+
+#: ../udisks/udisksclient.c:2249
+msgctxt "part-type"
+msgid "Solaris Backup"
+msgstr "솔라리스 백업"
+
+#: ../udisks/udisksclient.c:2250
+msgctxt "part-type"
+msgid "Solaris /usr"
+msgstr "솔라리스 /usr"
+
+#. same as Apple ZFS
+#: ../udisks/udisksclient.c:2251
+msgctxt "part-type"
+msgid "Solaris /var"
+msgstr "솔라리스 /var"
+
+#: ../udisks/udisksclient.c:2252
+msgctxt "part-type"
+msgid "Solaris /home"
+msgstr "솔라리스 /home"
+
+#: ../udisks/udisksclient.c:2253
+msgctxt "part-type"
+msgid "Solaris Alternate Sector"
+msgstr "솔라리스 대안 섹터"
+
+#: ../udisks/udisksclient.c:2254
+msgctxt "part-type"
+msgid "Solaris Reserved"
+msgstr "솔라리스 예약"
+
+#: ../udisks/udisksclient.c:2255
+msgctxt "part-type"
+msgid "Solaris Reserved (2)"
+msgstr "솔라리스 예약 (2)"
+
+#: ../udisks/udisksclient.c:2256
+msgctxt "part-type"
+msgid "Solaris Reserved (3)"
+msgstr "솔라리스 예약 (3)"
+
+#: ../udisks/udisksclient.c:2257
+msgctxt "part-type"
+msgid "Solaris Reserved (4)"
+msgstr "솔라리스 예약 (4)"
+
+#: ../udisks/udisksclient.c:2258
+msgctxt "part-type"
+msgid "Solaris Reserved (5)"
+msgstr "솔라리스 예약 (5)"
+
+#. NetBSD
+#: ../udisks/udisksclient.c:2260
+msgctxt "part-type"
+msgid "NetBSD Swap"
+msgstr "NetBSD 스왑"
+
+#: ../udisks/udisksclient.c:2261
+msgctxt "part-type"
+msgid "NetBSD FFS"
+msgstr "NetBSD FFS"
+
+#: ../udisks/udisksclient.c:2262
+msgctxt "part-type"
+msgid "NetBSD LFS"
+msgstr "NetBSD LFS"
+
+#: ../udisks/udisksclient.c:2263
+msgctxt "part-type"
+msgid "NetBSD RAID"
+msgstr "NetBSD RAID"
+
+#: ../udisks/udisksclient.c:2264
+msgctxt "part-type"
+msgid "NetBSD Concatenated"
+msgstr "NetBSD 병합"
+
+#: ../udisks/udisksclient.c:2265
+msgctxt "part-type"
+msgid "NetBSD Encrypted"
+msgstr "NetBSD 암호화"
+
+#. VMWare, see http://blogs.vmware.com/vsphere/2011/08/vsphere-50-storage-
+#. features-part-7-gpt.html
+#: ../udisks/udisksclient.c:2267
+msgctxt "part-type"
+msgid "VMWare VMFS"
+msgstr "VMWare VMFS"
+
+#: ../udisks/udisksclient.c:2268
+msgctxt "part-type"
+msgid "VMWare vmkcore"
+msgstr "VMWare vmkcore"
+
+#: ../udisks/udisksclient.c:2273
+msgctxt "part-type"
+msgid "Apple HFS/HFS"
+msgstr "애플 HFS/HFS"
+
+#: ../udisks/udisksclient.c:2274
+msgctxt "part-type"
+msgid "Apple Partition Map"
+msgstr "애플 파티션 맵"
+
+#: ../udisks/udisksclient.c:2275
+msgctxt "part-type"
+msgid "Unused"
+msgstr "사용하지 않음"
+
+#: ../udisks/udisksclient.c:2276
+msgctxt "part-type"
+msgid "Empty"
+msgstr "비어 있음"
+
+#: ../udisks/udisksclient.c:2277
+msgctxt "part-type"
+msgid "Driver"
+msgstr "드라이버"
+
+#: ../udisks/udisksclient.c:2278
+msgctxt "part-type"
+msgid "Driver 4.3"
+msgstr "드라이버 4.3"
+
+#: ../udisks/udisksclient.c:2279
+msgctxt "part-type"
+msgid "ProDOS file system"
+msgstr "ProDOS 파일 시스템"
+
+#: ../udisks/udisksclient.c:2280
+msgctxt "part-type"
+msgid "FAT 12"
+msgstr "FAT 12"
+
+#: ../udisks/udisksclient.c:2281
+msgctxt "part-type"
+msgid "FAT 16"
+msgstr "FAT 16"
+
+#: ../udisks/udisksclient.c:2282
+msgctxt "part-type"
+msgid "FAT 32"
+msgstr "FAT 32"
+
+#: ../udisks/udisksclient.c:2283
+msgctxt "part-type"
+msgid "FAT 16 (Windows)"
+msgstr "FAT 16 (윈도우즈)"
+
+#: ../udisks/udisksclient.c:2284
+msgctxt "part-type"
+msgid "FAT 32 (Windows)"
+msgstr "FAT 32 (윈도우즈)"
+
+#. see http://www.win.tue.nl/~aeb/partitions/partition_types-1.html
+#: ../udisks/udisksclient.c:2287
+msgctxt "part-type"
+msgid "Extended"
+msgstr "확장"
+
+#: ../udisks/udisksclient.c:2288
+msgctxt "part-type"
+msgid "EFI GPT"
+msgstr "EFI GPT"
+
+#: ../udisks/udisksclient.c:2289
+msgctxt "part-type"
+msgid "EFI (FAT-12/16/32)"
+msgstr "EFI (FAT-12/16/32)"
+
+#: ../udisks/udisksclient.c:2290
+msgctxt "part-type"
+msgid "Linux swap"
+msgstr "리눅스 스왑"
+
+#: ../udisks/udisksclient.c:2291
+msgctxt "part-type"
+msgid "Linux"
+msgstr "리눅"
+
+#: ../udisks/udisksclient.c:2292
+msgctxt "part-type"
+msgid "Linux Extended"
+msgstr "리눅스 확장"
+
+#: ../udisks/udisksclient.c:2294
+msgctxt "part-type"
+msgid "Linux RAID auto"
+msgstr "리눅스 RAID 자동"
+
+#: ../udisks/udisksclient.c:2295
+msgctxt "part-type"
+msgid "FAT12"
+msgstr "FAT12"
+
+#: ../udisks/udisksclient.c:2296
+msgctxt "part-type"
+msgid "FAT16 <32M"
+msgstr "FAT16 <32M"
+
+#: ../udisks/udisksclient.c:2297
+msgctxt "part-type"
+msgid "FAT16"
+msgstr "FAT16"
+
+#: ../udisks/udisksclient.c:2298
+msgctxt "part-type"
+msgid "HPFS/NTFS"
+msgstr "HPFS/NTFS"
+
+#: ../udisks/udisksclient.c:2299
+msgctxt "part-type"
+msgid "W95 FAT32"
+msgstr "W95 FAT32"
+
+#: ../udisks/udisksclient.c:2300
+msgctxt "part-type"
+msgid "W95 FAT32 (LBA)"
+msgstr "W95 FAT32 (LBA)"
+
+#: ../udisks/udisksclient.c:2301
+msgctxt "part-type"
+msgid "W95 FAT16 (LBA)"
+msgstr "W95 FAT16 (LBA)"
+
+#: ../udisks/udisksclient.c:2302
+msgctxt "part-type"
+msgid "W95 Ext d (LBA)"
+msgstr "W95 Ext d (LBA)"
+
+#: ../udisks/udisksclient.c:2303
+msgctxt "part-type"
+msgid "Hidden FAT12"
+msgstr "숨겨진 FAT12"
+
+#: ../udisks/udisksclient.c:2304
+msgctxt "part-type"
+msgid "Hidden FAT16 <32M"
+msgstr "숨겨진 FAT16 <32M"
+
+#: ../udisks/udisksclient.c:2305
+msgctxt "part-type"
+msgid "Hidden FAT16"
+msgstr "숨겨진 FAT16"
+
+#: ../udisks/udisksclient.c:2306
+msgctxt "part-type"
+msgid "Hidden HPFS/NTFS"
+msgstr "숨겨진 HPFS/NTFS"
+
+#: ../udisks/udisksclient.c:2307
+msgctxt "part-type"
+msgid "Hidden W95 FAT32"
+msgstr "숨겨진 W95 FAT32"
+
+#: ../udisks/udisksclient.c:2308
+msgctxt "part-type"
+msgid "Hidden W95 FAT32 (LBA)"
+msgstr "숨겨진 W95 FAT32 (LBA)"
+
+#: ../udisks/udisksclient.c:2309
+msgctxt "part-type"
+msgid "Hidden W95 FAT16 (LBA)"
+msgstr "숨겨진 W95 FAT16 (LBA)"
+
+#: ../udisks/udisksclient.c:2310
+msgctxt "part-type"
+msgid "OPUS"
+msgstr "OPUS"
+
+#: ../udisks/udisksclient.c:2311
+msgctxt "part-type"
+msgid "Compaq diagnostics"
+msgstr "컴팩 진단"
+
+#: ../udisks/udisksclient.c:2312
+msgctxt "part-type"
+msgid "PartitionMagic"
+msgstr "파티션매직"
+
+#: ../udisks/udisksclient.c:2313
+msgctxt "part-type"
+msgid "Minix"
+msgstr "미닉스"
+
+#. cf. http://en.wikipedia.org/wiki/MINIX_file_system
+#: ../udisks/udisksclient.c:2314 ../udisks/udisksclient.c:2315
+msgctxt "part-type"
+msgid "Hibernation"
+msgstr "최대절전"
+
+#: ../udisks/udisksclient.c:2316
+msgctxt "part-type"
+msgid "FreeBSD"
+msgstr "FreeBSD"
+
+#: ../udisks/udisksclient.c:2317
+msgctxt "part-type"
+msgid "OpenBSD"
+msgstr "OpenBSD"
+
+#: ../udisks/udisksclient.c:2318 ../udisks/udisksclient.c:2319
+msgctxt "part-type"
+msgid "Mac OS X"
+msgstr "맥 OS X"
+
+#: ../udisks/udisksclient.c:2320
+msgctxt "part-type"
+msgid "Solaris boot"
+msgstr "솔라리스 부트"
+
+#: ../udisks/udisksclient.c:2321
+msgctxt "part-type"
+msgid "Solaris"
+msgstr "솔라리스"
+
+#: ../udisks/udisksclient.c:2322
+msgctxt "part-type"
+msgid "BeOS BFS"
+msgstr "BeOS BFS"
+
+#: ../udisks/udisksclient.c:2323
+msgctxt "part-type"
+msgid "SkyOS SkyFS"
+msgstr "SkyOS SkyFS"
+
+#: ../udisks/udisksclient.c:2427
+msgctxt "job"
+msgid "SMART self-test"
+msgstr "SMART 자체 시험"
+
+#: ../udisks/udisksclient.c:2428
+msgctxt "job"
+msgid "Ejecting Medium"
+msgstr "미디어 꺼내는 중"
+
+#: ../udisks/udisksclient.c:2429
+msgctxt "job"
+msgid "Unlocking Device"
+msgstr "장치 잠금 해제 중"
+
+#: ../udisks/udisksclient.c:2430
+msgctxt "job"
+msgid "Locking Device"
+msgstr "장치 잠그는 중"
+
+#: ../udisks/udisksclient.c:2431
+msgctxt "job"
+msgid "Modifying Encrypted Device"
+msgstr "암호화 장치 수정중"
+
+#: ../udisks/udisksclient.c:2432
+msgctxt "job"
+msgid "Starting Swap Device"
+msgstr "스왑 장치 시작 중"
+
+#: ../udisks/udisksclient.c:2433
+msgctxt "job"
+msgid "Stopping Swap Device"
+msgstr "스왑 장치 멈추는 중"
+
+#: ../udisks/udisksclient.c:2434
+msgctxt "job"
+msgid "Mounting Filesystem"
+msgstr "파일 시스템 마운트 중"
+
+#: ../udisks/udisksclient.c:2435
+msgctxt "job"
+msgid "Unmounting Filesystem"
+msgstr "파일 시스템 마운트 해제 중"
+
+#: ../udisks/udisksclient.c:2436
+msgctxt "job"
+msgid "Modifying Filesystem"
+msgstr "파일 시스템 수정 중"
+
+#: ../udisks/udisksclient.c:2437
+msgctxt "job"
+msgid "Erasing Device"
+msgstr "장치 지우는 중"
+
+#: ../udisks/udisksclient.c:2438
+msgctxt "job"
+msgid "Creating Filesystem"
+msgstr "파일 시스템 만드는 중"
+
+#: ../udisks/udisksclient.c:2439
+msgctxt "job"
+msgid "Setting Up Loop Device"
+msgstr "루프 장치 설정 중"
+
+#: ../udisks/udisksclient.c:2440
+msgctxt "job"
+msgid "Modifying Partition"
+msgstr "파티션 수정 중"
+
+#: ../udisks/udisksclient.c:2441
+msgctxt "job"
+msgid "Deleting Partition"
+msgstr "파티션 삭제중"
+
+#: ../udisks/udisksclient.c:2442
+msgctxt "job"
+msgid "Creating Partition"
+msgstr "파티션 만드는 중"
+
+#: ../udisks/udisksclient.c:2443
+msgctxt "job"
+msgid "Cleaning Up"
+msgstr "삭제 중"
+
+#: ../udisks/udisksclient.c:2444
+msgctxt "job"
+msgid "ATA Secure Erase"
+msgstr "ATA 보안 소거"
+
+#: ../udisks/udisksclient.c:2445
+msgctxt "job"
+msgid "ATA Enhanced Secure Erase"
+msgstr "ATA 고급 보안 소거"
+
+#: ../udisks/udisksclient.c:2446
+msgctxt "job"
+msgid "Stopping RAID Array"
+msgstr "RAID 어레이 멈추는 중"
+
+#: ../udisks/udisksclient.c:2447
+msgctxt "job"
+msgid "Starting RAID Array"
+msgstr "RAID 어레이 시작하는 중"
+
+#: ../udisks/udisksclient.c:2448
+msgctxt "job"
+msgid "Marking Device as Faulty"
+msgstr "장치를 고장난 것으로 표시"
+
+#: ../udisks/udisksclient.c:2449
+msgctxt "job"
+msgid "Removing Device from Array"
+msgstr "어레이에서 장치 제거"
+
+#: ../udisks/udisksclient.c:2450
+msgctxt "job"
+msgid "Adding Device to Array"
+msgstr "어레이에 장치 추가"
+
+#: ../udisks/udisksclient.c:2451
+msgctxt "job"
+msgid "Setting Write-Intent Bitmap"
+msgstr "쓰기 인텐트 비트맵 설정"
+
+#: ../udisks/udisksclient.c:2452
+msgctxt "job"
+msgid "Creating RAID Array"
+msgstr "RAID 어레이 생성중"
+
+#: ../udisks/udisksclient.c:2460
+#, c-format
+msgctxt "unknown-job"
+msgid "Unknown (%s)"
+msgstr "알 수 없음 (%s)"
+
+#. Translators: 'Thumb' here refers to "USB thumb drive", see
+#. http://en.wikipedia.org/wiki/Thumb_drive
+#: ../udisks/udisksobjectinfo.c:162
+msgctxt "media-type"
+msgid "Thumb"
+msgstr "Thumb"
+
+#: ../udisks/udisksobjectinfo.c:164
+msgctxt "media-type"
+msgid "Floppy"
+msgstr "플로피"
+
+#: ../udisks/udisksobjectinfo.c:165
+msgctxt "media-type"
+msgid "Zip"
+msgstr "집"
+
+#: ../udisks/udisksobjectinfo.c:166
+msgctxt "media-type"
+msgid "Jaz"
+msgstr "재즈"
+
+#: ../udisks/udisksobjectinfo.c:168
+msgctxt "media-type"
+msgid "Flash"
+msgstr "플래시"
+
+#: ../udisks/udisksobjectinfo.c:169
+msgctxt "media-type"
+msgid "MemoryStick"
+msgstr "메모리스틱"
+
+#: ../udisks/udisksobjectinfo.c:170
+msgctxt "media-type"
+msgid "SmartMedia"
+msgstr "스마트 미디어"
+
+#: ../udisks/udisksobjectinfo.c:171
+msgctxt "media-type"
+msgid "CompactFlash"
+msgstr "컴팩트 플래시"
+
+#: ../udisks/udisksobjectinfo.c:172
+msgctxt "media-type"
+msgid "MMC"
+msgstr "MMC"
+
+#: ../udisks/udisksobjectinfo.c:172 ../udisks/udisksobjectinfo.c:173
+#: ../udisks/udisksobjectinfo.c:174 ../udisks/udisksobjectinfo.c:175
+msgctxt "media-type"
+msgid "SD"
+msgstr "SD"
+
+#: ../udisks/udisksobjectinfo.c:174
+msgctxt "media-type"
+msgid "SDXC"
+msgstr "SDXC"
+
+#: ../udisks/udisksobjectinfo.c:175
+msgctxt "media-type"
+msgid "SDHC"
+msgstr "SDHC"
+
+#: ../udisks/udisksobjectinfo.c:177
+msgctxt "media-type"
+msgid "CD-ROM"
+msgstr "CD-ROM"
+
+#: ../udisks/udisksobjectinfo.c:177 ../udisks/udisksobjectinfo.c:178
+#: ../udisks/udisksobjectinfo.c:179 ../udisks/udisksobjectinfo.c:194
+#: ../udisks/udisksobjectinfo.c:195 ../udisks/udisksobjectinfo.c:196
+msgctxt "media-type"
+msgid "CD"
+msgstr "컴팩트 디스크"
+
+#: ../udisks/udisksobjectinfo.c:178
+msgctxt "media-type"
+msgid "CD-R"
+msgstr "CD-R"
+
+#: ../udisks/udisksobjectinfo.c:179
+msgctxt "media-type"
+msgid "CD-RW"
+msgstr "CD-RW"
+
+#: ../udisks/udisksobjectinfo.c:180 ../udisks/udisksobjectinfo.c:181
+#: ../udisks/udisksobjectinfo.c:182 ../udisks/udisksobjectinfo.c:183
+#: ../udisks/udisksobjectinfo.c:184 ../udisks/udisksobjectinfo.c:185
+#: ../udisks/udisksobjectinfo.c:186 ../udisks/udisksobjectinfo.c:187
+msgctxt "media-type"
+msgid "DVD"
+msgstr "DVD"
+
+#: ../udisks/udisksobjectinfo.c:181
+msgctxt "media-type"
+msgid "DVD-R"
+msgstr "DVD-R"
+
+#: ../udisks/udisksobjectinfo.c:182
+msgctxt "media-type"
+msgid "DVD-RW"
+msgstr "DVD-RW"
+
+#: ../udisks/udisksobjectinfo.c:183
+msgctxt "media-type"
+msgid "DVD-RAM"
+msgstr "DVD-RAM"
+
+#: ../udisks/udisksobjectinfo.c:184
+msgctxt "media-type"
+msgid "DVD+R"
+msgstr "DVD+R"
+
+#: ../udisks/udisksobjectinfo.c:185
+msgctxt "media-type"
+msgid "DVD+RW"
+msgstr "DVD+RW"
+
+#: ../udisks/udisksobjectinfo.c:186
+msgctxt "media-type"
+msgid "DVD+R DL"
+msgstr "양면 DVD+R"
+
+#: ../udisks/udisksobjectinfo.c:187
+msgctxt "media-type"
+msgid "DVD+RW DL"
+msgstr "양면 DVD+RW"
+
+#: ../udisks/udisksobjectinfo.c:188
+msgctxt "media-type"
+msgid "BD-ROM"
+msgstr "BD-ROM"
+
+#: ../udisks/udisksobjectinfo.c:188 ../udisks/udisksobjectinfo.c:189
+#: ../udisks/udisksobjectinfo.c:190
+msgctxt "media-type"
+msgid "Blu-Ray"
+msgstr "블루레이"
+
+#: ../udisks/udisksobjectinfo.c:189
+msgctxt "media-type"
+msgid "BD-R"
+msgstr "BD-R"
+
+#: ../udisks/udisksobjectinfo.c:190
+msgctxt "media-type"
+msgid "BD-RE"
+msgstr "BD-RE"
+
+#: ../udisks/udisksobjectinfo.c:191 ../udisks/udisksobjectinfo.c:192
+#: ../udisks/udisksobjectinfo.c:193
+msgctxt "media-type"
+msgid "HDDVD"
+msgstr "고밀도 DVD"
+
+#: ../udisks/udisksobjectinfo.c:192
+msgctxt "media-type"
+msgid "HDDVD-R"
+msgstr "고밀도 DVD-R"
+
+#: ../udisks/udisksobjectinfo.c:193
+msgctxt "media-type"
+msgid "HDDVD-RW"
+msgstr "고밀도 DVD-RW"
+
+#: ../udisks/udisksobjectinfo.c:194
+msgctxt "media-type"
+msgid "MO"
+msgstr "광자기"
+
+#: ../udisks/udisksobjectinfo.c:195
+msgctxt "media-type"
+msgid "MRW"
+msgstr "MRW"
+
+#: ../udisks/udisksobjectinfo.c:196
+msgctxt "media-type"
+msgid "MRW-W"
+msgstr "MRW-W"
+
+#: ../udisks/udisksobjectinfo.c:252
+#, c-format
+msgid "%s Block Device"
+msgstr "%s 블록 장치"
+
+#: ../udisks/udisksobjectinfo.c:256
+msgid "Block Device"
+msgstr "블록 장치"
+
+#. Translators: Used to describe a partition of a block device.
+#. *              The %d is the partition number.
+#. *              The %s is the description for the block device (e.g. "5 GB
+#. Block Device").
+#. 
+#: ../udisks/udisksobjectinfo.c:265
+#, c-format
+msgctxt "part-block"
+msgid "Partition %d of %s"
+msgstr "%2$s의 %1$d번 파티션"
+
+#. Translators: String used for one-liner description of a block device.
+#. *              The first %s is the description of the object (e.g. "50 GB
+#. Block Device").
+#. *              The second %s is the special device file (e.g. "/dev/sda2").
+#. 
+#: ../udisks/udisksobjectinfo.c:275
+#, c-format
+msgctxt "one-liner-block"
+msgid "%s (%s)"
+msgstr "%s (%s)"
+
+#: ../udisks/udisksobjectinfo.c:306
+#, c-format
+msgid "%s Loop Device"
+msgstr "%s 루프 장치"
+
+#: ../udisks/udisksobjectinfo.c:310
+msgid "Loop Device"
+msgstr "루프 장치"
+
+#. Translators: Used to describe a partition of a loop device.
+#. *              The %d is the partition number.
+#. *              The %s is the description for the loop device (e.g. "5 GB
+#. Loop Device").
+#. 
+#: ../udisks/udisksobjectinfo.c:319
+#, c-format
+msgctxt "part-loop"
+msgid "Partition %d of %s"
+msgstr "%2$s의 %1$d번 파티션"
+
+#. Translators: String used for one-liner description of a loop device.
+#. *              The first %s is the description of the object (e.g. "2 GB
+#. Loop Device").
+#. *              The second %s is the name of the backing file (e.g.
+#. "/home/davidz/file.iso").
+#. *              The third %s is the special device file (e.g. "/dev/loop2").
+#. 
+#: ../udisks/udisksobjectinfo.c:330
+#, c-format
+msgctxt "one-liner-loop"
+msgid "%s — %s (%s)"
+msgstr "%s — %s (%s)"
+
+#: ../udisks/udisksobjectinfo.c:348
+msgctxt "mdraid-desc"
+msgid "RAID-0 Array"
+msgstr "RAID-0 어레이"
+
+#: ../udisks/udisksobjectinfo.c:350
+msgctxt "mdraid-desc"
+msgid "RAID-1 Array"
+msgstr "RAID-1 어레이"
+
+#: ../udisks/udisksobjectinfo.c:352
+msgctxt "mdraid-desc"
+msgid "RAID-4 Array"
+msgstr "RAID-4 어레이"
+
+#: ../udisks/udisksobjectinfo.c:354
+msgctxt "mdraid-desc"
+msgid "RAID-5 Array"
+msgstr "RAID-5 어레이"
+
+#: ../udisks/udisksobjectinfo.c:356
+msgctxt "mdraid-desc"
+msgid "RAID-6 Array"
+msgstr "RAID-6 어레이"
+
+#: ../udisks/udisksobjectinfo.c:358
+msgctxt "mdraid-desc"
+msgid "RAID-10 Array"
+msgstr "RAID-10 어레이"
+
+#: ../udisks/udisksobjectinfo.c:360
+msgctxt "mdraid-desc"
+msgid "RAID Array"
+msgstr "RAID 어레이"
+
+#. Translators: Used to format the description for a RAID array.
+#. *              The first %s is the size (e.g. '42.0 GB').
+#. *              The second %s is the level (e.g. 'RAID-5 Array').
+#. 
+#: ../udisks/udisksobjectinfo.c:400
+#, c-format
+msgctxt "mdraid-desc"
+msgid "%s %s"
+msgstr "%s %s"
+
+#. Translators: Used to describe a partition of a RAID Array.
+#. *              The %d is the partition number.
+#. *              The %s is the description for the drive (e.g. "2 TB
+#. RAID-5").
+#. 
+#: ../udisks/udisksobjectinfo.c:415
+#, c-format
+msgctxt "part-raid"
+msgid "Partition %d of %s"
+msgstr "%2$s의 %1$d번 파티션"
+
+#. Translators: String used for one-liner description of running RAID array.
+#. *              The first %s is the array name (e.g. "AlphaGo").
+#. *              The second %s is the size and level (e.g. "2 TB RAID-5").
+#. *              The third %s is the special device file (e.g. "/dev/sda").
+#. 
+#: ../udisks/udisksobjectinfo.c:430
+#, c-format
+msgctxt "one-liner-mdraid-running"
+msgid "%s — %s (%s)"
+msgstr "%s — %s (%s)"
+
+#. Translators: String used for one-liner description of non-running RAID
+#. array.
+#. *              The first %s is the array name (e.g. "AlphaGo").
+#. *              The second %s is the size and level (e.g. "2 TB RAID-5").
+#. 
+#: ../udisks/udisksobjectinfo.c:441
+#, c-format
+msgctxt "one-liner-mdraid-not-running"
+msgid "%s — %s"
+msgstr "%s — %s"
+
+#. Translators: String used for one-liner description of running RAID array
+#. w/o a name.
+#. *              The first %s is the array name (e.g. "AlphaGo").
+#. *              The second %s is the size and level (e.g. "2 TB RAID-5").
+#. *              The third %s is the special device file (e.g. "/dev/sda").
+#. 
+#: ../udisks/udisksobjectinfo.c:455
+#, c-format
+msgctxt "one-liner-mdraid-no-name-running"
+msgid "%s — %s"
+msgstr "%s — %s"
+
+#. Translators: String used for one-liner description of non-running RAID
+#. array w/o a name.
+#. *              The first %s is the array name (e.g. "AlphaGo").
+#. *              The second %s is the size and level (e.g. "2 TB RAID-5").
+#. 
+#: ../udisks/udisksobjectinfo.c:465
+#, c-format
+msgctxt "one-liner-mdraid-no-name-not-running"
+msgid "%s"
+msgstr "%s"
+
+#. Translators: Used to describe drive without removable media. The %s is the
+#. type, e.g. 'Thumb'
+#: ../udisks/udisksobjectinfo.c:591
+#, c-format
+msgctxt "drive-with-fixed-media"
+msgid "%s Drive"
+msgstr "%s 드라이브"
+
+#. Translators: Used to describe generic media. The %s is the type, e.g. 'Zip'
+#. or 'Floppy'
+#: ../udisks/udisksobjectinfo.c:595
+#, c-format
+msgctxt "drive-with-generic-media"
+msgid "%s Disk"
+msgstr "%s 디스크"
+
+#. Translators: Used to describe flash media. The %s is the type, e.g. 'SD' or
+#. 'CompactFlash'
+#: ../udisks/udisksobjectinfo.c:599
+#, c-format
+msgctxt "flash-media"
+msgid "%s Card"
+msgstr "%s 카드"
+
+#. Translators: Used to describe optical discs. The %s is the type, e.g.
+#. 'CD-R' or 'DVD-ROM'
+#: ../udisks/udisksobjectinfo.c:603
+#, c-format
+msgctxt "optical-media"
+msgid "%s Disc"
+msgstr "%s 디스크"
+
+#. Translators: Used to describe a drive. The %s is the size, e.g. '20 GB'
+#: ../udisks/udisksobjectinfo.c:623
+#, c-format
+msgctxt "drive-with-size"
+msgid "%s Drive"
+msgstr "%s 드라이브"
+
+#. Translators: Used to describe a drive we know very little about (removable
+#. media or size not known)
+#: ../udisks/udisksobjectinfo.c:628
+msgctxt "generic-drive"
+msgid "Drive"
+msgstr "드라이브"
+
+#. Translators: Used to describe a non-rotating drive (rotation rate either
+#. unknown
+#. * or it's a solid-state drive). The %s is the size, e.g. '20 GB'.
+#: ../udisks/udisksobjectinfo.c:639
+#, c-format
+msgctxt "disk-non-rotational"
+msgid "%s Disk"
+msgstr "%s 디스크"
+
+#. Translators: Used to describe a non-rotating drive (rotation rate either
+#. unknown
+#. * or it's a solid-state drive). The drive is either using removable media
+#. or its
+#. * size not known.
+#: ../udisks/udisksobjectinfo.c:646
+msgctxt "disk-non-rotational"
+msgid "Disk"
+msgstr "디스크"
+
+#. Translators: Used to describe a hard-disk drive (HDD). The %s is the size,
+#. e.g. '20 GB'.
+#: ../udisks/udisksobjectinfo.c:654
+#, c-format
+msgctxt "disk-hdd"
+msgid "%s Hard Disk"
+msgstr "%s 하드 디스크"
+
+#. Translators: Used to describe a hard-disk drive (HDD) (removable media or
+#. size not known)
+#: ../udisks/udisksobjectinfo.c:659
+msgctxt "disk-hdd"
+msgid "Hard Disk"
+msgstr "하드 디스크"
+
+#. Translators: Used to describe a card reader. The %s is the card type e.g.
+#. 'CompactFlash'.
+#: ../udisks/udisksobjectinfo.c:667
+#, c-format
+msgctxt "drive-card-reader"
+msgid "%s Card Reader"
+msgstr "%s 카드 리더"
+
+#. Translators: Used to describe drive. The first %s is the size e.g. '20 GB'
+#. and the
+#. * second %s is the drive type e.g. 'Thumb'.
+#. 
+#: ../udisks/udisksobjectinfo.c:678
+#, c-format
+msgctxt "drive-with-size-and-type"
+msgid "%s %s Drive"
+msgstr "%s %s 드라이브"
+
+#. Translators: Used to describe drive. The first %s is the drive type e.g.
+#. 'Thumb'.
+#. 
+#: ../udisks/udisksobjectinfo.c:684
+#, c-format
+msgctxt "drive-with-type"
+msgid "%s Drive"
+msgstr "%s 드라이브"
+
+#. Translators: String used for a blank disc. The %s is the disc type e.g.
+#. "CD-RW Disc"
+#: ../udisks/udisksobjectinfo.c:735
+#, c-format
+msgctxt "optical-media"
+msgid "Blank %s"
+msgstr "빈 %s"
+
+#. Translators: String used for a mixed disc. The %s is the disc type e.g.
+#. "CD-ROM Disc"
+#: ../udisks/udisksobjectinfo.c:743
+#, c-format
+msgctxt "optical-media"
+msgid "Mixed %s"
+msgstr "혼합 %s"
+
+#. Translators: String used for an audio disc. The %s is the disc type e.g.
+#. "CD-ROM Disc"
+#: ../udisks/udisksobjectinfo.c:751
+#, c-format
+msgctxt "optical-media"
+msgid "Audio %s"
+msgstr "오디오 %s"
+
+#. Translators: Used to describe a partition of a drive.
+#. *              The %d is the partition number.
+#. *              The %s is the description for the drive (e.g. "2 GB Thumb
+#. Drive").
+#. 
+#: ../udisks/udisksobjectinfo.c:804
+#, c-format
+msgctxt "part-drive"
+msgid "Partition %d of %s"
+msgstr "%2$s의 %1$d번 파티션"
+
+#. Translators: String used for one-liner description of drive.
+#. *              The first %s is the description of the object (e.g. "80 GB
+#. Disk" or "Partition 2 of 2 GB Thumb Drive").
+#. *              The second %s is the name of the object (e.g. "INTEL
+#. SSDSA2MH080G1GC").
+#. *              The third %s is the fw revision (e.g "45ABX21").
+#. *              The fourth %s is the special device file (e.g. "/dev/sda").
+#. 
+#: ../udisks/udisksobjectinfo.c:822
+#, c-format
+msgctxt "one-liner-drive"
+msgid "%s — %s [%s] (%s)"
+msgstr "%s — %s [%s] (%s)"
+
+#. Translators: String used for one-liner description of drive w/o known fw
+#. revision.
+#. *              The first %s is the description of the object (e.g. "80 GB
+#. Disk").
+#. *              The second %s is the name of the object (e.g. "INTEL
+#. SSDSA2MH080G1GC").
+#. *              The third %s is the special device file (e.g. "/dev/sda").
+#. 
+#: ../udisks/udisksobjectinfo.c:835
+#, c-format
+msgctxt "one-liner-drive"
+msgid "%s — %s (%s)"
+msgstr "%s — %s (%s)"

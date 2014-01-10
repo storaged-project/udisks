@@ -3,12 +3,13 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# Baurzhan Muftakhidinov <baurthefirst@gmail.com>, 2013
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-12-18 15:41-0500\n"
-"PO-Revision-Date: 2013-02-05 08:29+0000\n"
+"PO-Revision-Date: 2013-11-20 09:31+0000\n"
 "Last-Translator: Baurzhan Muftakhidinov <baurthefirst@gmail.com>\n"
 "Language-Team: Kazakh (http://www.transifex.com/projects/p/freedesktop/language/kk/)\n"
 "MIME-Version: 1.0\n"
@@ -27,7 +28,7 @@ msgstr "Файлдық жүйені тіркеу үшін аутентифика
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:3
 msgid "Mount a filesystem on a system device"
-msgstr ""
+msgstr "Жүйелік құрылғыдағы файлдық жүйені тіркеу"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:4
 msgid "Mount a filesystem from a device plugged into another seat"
@@ -41,7 +42,7 @@ msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:6
 msgid "Authentication is required to mount/unmount the filesystem"
-msgstr ""
+msgstr "Файлдық жүйені тіркеу/босату үшін аутентификация керек"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:7
 msgid "Unmount a device mounted by another user"
@@ -50,15 +51,15 @@ msgstr ""
 #: ../data/org.freedesktop.udisks2.policy.in.h:8
 msgid ""
 "Authentication is required to unmount a filesystem mounted by another user"
-msgstr ""
+msgstr "Басқа пайдаланушымен тіркелген файлдық жүйесін тіркеуден босату үшін аутентификация керек"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:9
 msgid "Unlock an encrypted device"
-msgstr ""
+msgstr "Шифрленген құрылғыны босату"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:10
 msgid "Authentication is required to unlock an encrypted device"
-msgstr ""
+msgstr "Шифрленген құрылғыны ашу үшін аутентификация керек"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:11
 msgid "Unlock an encrypted system device"
@@ -76,26 +77,26 @@ msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:14
 msgid "Lock an encrypted device unlocked by another user"
-msgstr ""
+msgstr "Басқа пайдаланушымен ашылған шифрленген құрылғыны блоктау"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:15
 msgid ""
 "Authentication is required to lock an encrypted device unlocked by another "
 "user"
-msgstr ""
+msgstr "Басқа пайдаланушымен ашылған шифрленген құрылғыны қайта блоктау үшін аутентификация керек"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:16
 msgid "Change passphrase for an encrypted device"
-msgstr ""
+msgstr "Шифрленген құрылғы үшін кілттік фразасын ауыстыру"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:17
 msgid ""
 "Authentication is required to change the passphrase for an encrypted device"
-msgstr ""
+msgstr "Шифрленген құрылғы кілттік фразасын ауыстыру үшін аутентификация керек"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:18
 msgid "Manage loop devices"
-msgstr ""
+msgstr "loop құрылғыларын басқару"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting up a loop device.
@@ -103,7 +104,7 @@ msgstr ""
 #: ../data/org.freedesktop.udisks2.policy.in.h:19
 #: ../src/udiskslinuxmanager.c:335
 msgid "Authentication is required to set up a loop device"
-msgstr ""
+msgstr "loop құрылғысын жасау үшін аутентификация керек"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:20
 msgid "Delete loop devices"
@@ -112,7 +113,7 @@ msgstr ""
 #: ../data/org.freedesktop.udisks2.policy.in.h:21
 msgid ""
 "Authentication is required to delete a loop device set up by another user"
-msgstr ""
+msgstr "Басқа пайдаланушымен орнатылған loop құрылғысын өшіру үшін аутентификация керек"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:22
 msgid "Modify loop devices"
@@ -125,11 +126,11 @@ msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:24
 msgid "Manage swapspace"
-msgstr ""
+msgstr "swap аймағын басқару"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:25
 msgid "Authentication is required to manage swapspace"
-msgstr ""
+msgstr "swap аймағын басқару үшін аутентификация керек"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:26
 msgid "Manage RAID arrays"
@@ -162,11 +163,11 @@ msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:33
 msgid "Eject media"
-msgstr ""
+msgstr "Тасушыны шығару"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:34
 msgid "Authentication is required to eject media"
-msgstr ""
+msgstr "Тасушыны шығару үшін аутентификация керек"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:35
 msgid "Eject media from a system drive"
@@ -184,15 +185,15 @@ msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:38
 msgid "Modify a device"
-msgstr ""
+msgstr "Құрылғыны түрлендіру"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:39
 msgid "Authentication is required to modify a device"
-msgstr ""
+msgstr "Құрылғыны түрлендіру үшін аутентификация керек"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:40
 msgid "Modify a system device"
-msgstr ""
+msgstr "Жүйелік құрылғыны түрлендіру"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:41
 msgid ""
@@ -209,23 +210,23 @@ msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:44
 msgid "Open a device"
-msgstr ""
+msgstr "Құрылғыны ашу"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:45
 msgid "Authentication is required to open a device"
-msgstr ""
+msgstr "Құрылғыны ашу үшін аутентификация керек"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:46
 msgid "Open a system device"
-msgstr ""
+msgstr "Жүйелік құрылғыны ашу"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:47
 msgid "Modify system-wide configuration"
-msgstr ""
+msgstr "Жүйелік баптауларды түрлендіру"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:48
 msgid "Authentication is required to modify system-wide configuration"
-msgstr ""
+msgstr "Жүйелік баптауларды түрлендіру үшін аутентификация керек"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:49
 msgid ""
@@ -247,7 +248,7 @@ msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:53
 msgid "Authentication is required to update SMART data"
-msgstr ""
+msgstr "SMART мәліметін жаңарту үшін аутентификация керек"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:54
 msgid "Set SMART data from blob"
@@ -259,11 +260,11 @@ msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:56
 msgid "Run SMART self-test"
-msgstr ""
+msgstr "SMART өздік сынауын жөнелту"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:57
 msgid "Authentication is required to run a SMART self-test"
-msgstr ""
+msgstr "SMART өздік сынауын жөнелту үшін аутентификация керек"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:58
 msgid "Enable/Disable SMART"
@@ -334,36 +335,36 @@ msgstr ""
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
 #: ../src/udiskslinuxblock.c:1533
 msgid "Authentication is required to add an entry to the /etc/fstab file"
-msgstr ""
+msgstr "/etc/fstab файлына жазбаны қосу үшін аутентификация керек"
 
 #. Translators: shown in authentication dialog - do not tranlsate
 #. /etc/crypttab
 #: ../src/udiskslinuxblock.c:1551
 msgid "Authentication is required to add an entry to the /etc/crypttab file"
-msgstr ""
+msgstr "/etc/crypttab файлына жазбаны қосу үшін аутентификация керек"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
 #: ../src/udiskslinuxblock.c:1610
 msgid "Authentication is required to remove an entry from /etc/fstab file"
-msgstr ""
+msgstr "/etc/fstab файлынан жазбаны өшіру үшін аутентификация керек"
 
 #. Translators: shown in authentication dialog - do not translate
 #. /etc/crypttab
 #: ../src/udiskslinuxblock.c:1628
 msgid ""
 "Authentication is required to remove an entry from the /etc/crypttab file"
-msgstr ""
+msgstr "/etc/crypttab файлынан жазбаны өшіру үшін аутентификация керек"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
 #: ../src/udiskslinuxblock.c:1700
 msgid "Authentication is required to modify the /etc/fstab file"
-msgstr ""
+msgstr "/etc/fstab файлын түзету үшін аутентификация керек"
 
 #. Translators: shown in authentication dialog - do not translate
 #. /etc/crypttab
 #: ../src/udiskslinuxblock.c:1718
 msgid "Authentication is required to modify the /etc/crypttab file"
-msgstr ""
+msgstr "/etc/crypttab файлын түзету үшін аутентификация керек"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests erasing a hard disk using the SECURE ERASE UNIT
@@ -771,7 +772,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:1094
 msgctxt "dos-part-flag"
 msgid "Bootable"
-msgstr ""
+msgstr "Жүктелетін"
 
 #. Translators: Corresponds to the GPT "system" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
@@ -788,7 +789,7 @@ msgstr "Жүйелік"
 #: ../udisks/udisksclient.c:1111
 msgctxt "gpt-part-flag"
 msgid "Legacy BIOS Bootable"
-msgstr ""
+msgstr "Legacy BIOS Bootable"
 
 #. Translators: Corresponds to the GPT "read-only" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
@@ -804,7 +805,7 @@ msgstr "Тек оқу үшін"
 #: ../udisks/udisksclient.c:1125
 msgctxt "gpt-part-flag"
 msgid "Hidden"
-msgstr ""
+msgstr "Жасырын"
 
 #. Translators: Corresponds to the GPT "no automount" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
@@ -1022,7 +1023,7 @@ msgstr "Ext4"
 #, c-format
 msgctxt "fs-type"
 msgid "Journal for Ext (version %s)"
-msgstr ""
+msgstr "Ext үшін журналы (нұсқасы %s)"
 
 #: ../udisks/udisksclient.c:1919 ../udisks/udisksclient.c:1920
 msgctxt "fs-type"
@@ -1032,7 +1033,7 @@ msgstr "JDB"
 #: ../udisks/udisksclient.c:1920
 msgctxt "fs-type"
 msgid "Journal for Ext"
-msgstr ""
+msgstr "Ext үшін журналы"
 
 #: ../udisks/udisksclient.c:1921
 #, c-format
@@ -1175,12 +1176,12 @@ msgstr ""
 #, c-format
 msgctxt "fs-type"
 msgid "LUKS Encryption (version %s)"
-msgstr ""
+msgstr "LUKS шифрлеуі (нұсқасы %s)"
 
 #: ../udisks/udisksclient.c:1941 ../udisks/udisksclient.c:1942
 msgctxt "fs-type"
 msgid "LUKS"
-msgstr ""
+msgstr "LUKS"
 
 #: ../udisks/udisksclient.c:1942
 msgctxt "fs-type"
@@ -1191,18 +1192,18 @@ msgstr ""
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS (version %s)"
-msgstr ""
+msgstr "VMFS (нұсқасы %s)"
 
 #: ../udisks/udisksclient.c:1943
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS (v%s)"
-msgstr ""
+msgstr "VMFS (v%s)"
 
 #: ../udisks/udisksclient.c:1944
 msgctxt "fs-type"
 msgid "VMFS"
-msgstr ""
+msgstr "VMFS"
 
 #: ../udisks/udisksclient.c:1945
 #, c-format
@@ -1260,29 +1261,29 @@ msgstr "Басты жүктелу жазбасы"
 #. Translators: name of partition table format
 #: ../udisks/udisksclient.c:2066
 msgid "GUID Partition Table"
-msgstr ""
+msgstr "GUID бөлімдер кестесі"
 
 #. Translators: name of partition table format
 #: ../udisks/udisksclient.c:2068
 msgid "Apple Partition Map"
-msgstr ""
+msgstr "Apple бөлімдер кестесі"
 
 #. Translators: name of partition table format
 #: ../udisks/udisksclient.c:2111 ../udisks/udisksclient.c:2116
 msgctxt "partition-subtype"
 msgid "Generic"
-msgstr ""
+msgstr "Жалпы"
 
 #: ../udisks/udisksclient.c:2112 ../udisks/udisksclient.c:2117
 msgctxt "partition-subtype"
 msgid "Linux"
-msgstr ""
+msgstr "Linux"
 
 #: ../udisks/udisksclient.c:2113 ../udisks/udisksclient.c:2118
 #: ../udisks/udisksclient.c:2123
 msgctxt "partition-subtype"
 msgid "Windows"
-msgstr ""
+msgstr "Windows"
 
 #: ../udisks/udisksclient.c:2114 ../udisks/udisksclient.c:2120
 msgctxt "partition-subtype"
@@ -1292,24 +1293,24 @@ msgstr "Басқа"
 #: ../udisks/udisksclient.c:2119 ../udisks/udisksclient.c:2122
 msgctxt "partition-subtype"
 msgid "Mac OS X"
-msgstr ""
+msgstr "Mac OS X"
 
 #. see http://en.wikipedia.org/wiki/GUID_Partition_Table
 #. Not associated with any OS
 #: ../udisks/udisksclient.c:2210
 msgctxt "part-type"
 msgid "MBR Partition Scheme"
-msgstr ""
+msgstr "MBR бөлімдер схемасы"
 
 #: ../udisks/udisksclient.c:2211
 msgctxt "part-type"
 msgid "EFI System"
-msgstr ""
+msgstr "EFI жүйесі"
 
 #: ../udisks/udisksclient.c:2212
 msgctxt "part-type"
 msgid "BIOS Boot"
-msgstr ""
+msgstr "BIOS Boot"
 
 #. Linux
 #: ../udisks/udisksclient.c:2214
@@ -1320,17 +1321,17 @@ msgstr ""
 #: ../udisks/udisksclient.c:2215
 msgctxt "part-type"
 msgid "Linux RAID"
-msgstr ""
+msgstr "Linux RAID"
 
 #: ../udisks/udisksclient.c:2216
 msgctxt "part-type"
 msgid "Linux Swap"
-msgstr ""
+msgstr "Linux Swap"
 
 #: ../udisks/udisksclient.c:2217 ../udisks/udisksclient.c:2293
 msgctxt "part-type"
 msgid "Linux LVM"
-msgstr ""
+msgstr "Linux LVM"
 
 #: ../udisks/udisksclient.c:2218
 msgctxt "part-type"
@@ -1341,7 +1342,7 @@ msgstr ""
 #: ../udisks/udisksclient.c:2220
 msgctxt "part-type"
 msgid "Basic Data"
-msgstr ""
+msgstr "Basic Data"
 
 #: ../udisks/udisksclient.c:2221
 msgctxt "part-type"
@@ -1367,45 +1368,45 @@ msgstr ""
 #: ../udisks/udisksclient.c:2226
 msgctxt "part-type"
 msgid "Apple HFS/HFS+"
-msgstr ""
+msgstr "Apple HFS/HFS+"
 
 #. see http://developer.apple.com/documentation/mac/devices/devices-126.html
 #. *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html
 #: ../udisks/udisksclient.c:2227 ../udisks/udisksclient.c:2272
 msgctxt "part-type"
 msgid "Apple UFS"
-msgstr ""
+msgstr "Apple UFS"
 
 #: ../udisks/udisksclient.c:2228
 msgctxt "part-type"
 msgid "Apple ZFS"
-msgstr ""
+msgstr "Apple ZFS"
 
 #. same as Solaris /usr
 #: ../udisks/udisksclient.c:2229
 msgctxt "part-type"
 msgid "Apple RAID"
-msgstr ""
+msgstr "Apple RAID"
 
 #: ../udisks/udisksclient.c:2230
 msgctxt "part-type"
 msgid "Apple RAID (offline)"
-msgstr ""
+msgstr "Apple RAID (желіден тыс)"
 
 #: ../udisks/udisksclient.c:2231
 msgctxt "part-type"
 msgid "Apple Boot"
-msgstr ""
+msgstr "Apple Boot"
 
 #: ../udisks/udisksclient.c:2232
 msgctxt "part-type"
 msgid "Apple Label"
-msgstr ""
+msgstr "Apple Label"
 
 #: ../udisks/udisksclient.c:2233
 msgctxt "part-type"
 msgid "Apple TV Recovery"
-msgstr ""
+msgstr "Apple TV Recovery"
 
 #: ../udisks/udisksclient.c:2234
 msgctxt "part-type"
@@ -1416,141 +1417,141 @@ msgstr ""
 #: ../udisks/udisksclient.c:2236
 msgctxt "part-type"
 msgid "HP-UX Data"
-msgstr ""
+msgstr "HP-UX Data"
 
 #: ../udisks/udisksclient.c:2237
 msgctxt "part-type"
 msgid "HP-UX Service"
-msgstr ""
+msgstr "HP-UX Service"
 
 #. FreeBSD
 #: ../udisks/udisksclient.c:2239
 msgctxt "part-type"
 msgid "FreeBSD Boot"
-msgstr ""
+msgstr "FreeBSD Boot"
 
 #: ../udisks/udisksclient.c:2240
 msgctxt "part-type"
 msgid "FreeBSD Data"
-msgstr ""
+msgstr "FreeBSD Data"
 
 #: ../udisks/udisksclient.c:2241
 msgctxt "part-type"
 msgid "FreeBSD Swap"
-msgstr ""
+msgstr "FreeBSD Swap"
 
 #: ../udisks/udisksclient.c:2242
 msgctxt "part-type"
 msgid "FreeBSD UFS"
-msgstr ""
+msgstr "FreeBSD UFS"
 
 #: ../udisks/udisksclient.c:2243
 msgctxt "part-type"
 msgid "FreeBSD Vinum"
-msgstr ""
+msgstr "FreeBSD Vinum"
 
 #: ../udisks/udisksclient.c:2244
 msgctxt "part-type"
 msgid "FreeBSD ZFS"
-msgstr ""
+msgstr "FreeBSD ZFS"
 
 #. Solaris
 #: ../udisks/udisksclient.c:2246
 msgctxt "part-type"
 msgid "Solaris Boot"
-msgstr ""
+msgstr "Solaris Boot"
 
 #: ../udisks/udisksclient.c:2247
 msgctxt "part-type"
 msgid "Solaris Root"
-msgstr ""
+msgstr "Solaris Root"
 
 #: ../udisks/udisksclient.c:2248
 msgctxt "part-type"
 msgid "Solaris Swap"
-msgstr ""
+msgstr "Solaris Swap"
 
 #: ../udisks/udisksclient.c:2249
 msgctxt "part-type"
 msgid "Solaris Backup"
-msgstr ""
+msgstr "Solaris Backup"
 
 #: ../udisks/udisksclient.c:2250
 msgctxt "part-type"
 msgid "Solaris /usr"
-msgstr ""
+msgstr "Solaris /usr"
 
 #. same as Apple ZFS
 #: ../udisks/udisksclient.c:2251
 msgctxt "part-type"
 msgid "Solaris /var"
-msgstr ""
+msgstr "Solaris /var"
 
 #: ../udisks/udisksclient.c:2252
 msgctxt "part-type"
 msgid "Solaris /home"
-msgstr ""
+msgstr "Solaris /home"
 
 #: ../udisks/udisksclient.c:2253
 msgctxt "part-type"
 msgid "Solaris Alternate Sector"
-msgstr ""
+msgstr "Solaris Alternate Sector"
 
 #: ../udisks/udisksclient.c:2254
 msgctxt "part-type"
 msgid "Solaris Reserved"
-msgstr ""
+msgstr "Solaris Reserved"
 
 #: ../udisks/udisksclient.c:2255
 msgctxt "part-type"
 msgid "Solaris Reserved (2)"
-msgstr ""
+msgstr "Solaris Reserved (2)"
 
 #: ../udisks/udisksclient.c:2256
 msgctxt "part-type"
 msgid "Solaris Reserved (3)"
-msgstr ""
+msgstr "Solaris Reserved (3)"
 
 #: ../udisks/udisksclient.c:2257
 msgctxt "part-type"
 msgid "Solaris Reserved (4)"
-msgstr ""
+msgstr "Solaris Reserved (4)"
 
 #: ../udisks/udisksclient.c:2258
 msgctxt "part-type"
 msgid "Solaris Reserved (5)"
-msgstr ""
+msgstr "Solaris Reserved (5)"
 
 #. NetBSD
 #: ../udisks/udisksclient.c:2260
 msgctxt "part-type"
 msgid "NetBSD Swap"
-msgstr ""
+msgstr "NetBSD Swap"
 
 #: ../udisks/udisksclient.c:2261
 msgctxt "part-type"
 msgid "NetBSD FFS"
-msgstr ""
+msgstr "NetBSD FFS"
 
 #: ../udisks/udisksclient.c:2262
 msgctxt "part-type"
 msgid "NetBSD LFS"
-msgstr ""
+msgstr "NetBSD LFS"
 
 #: ../udisks/udisksclient.c:2263
 msgctxt "part-type"
 msgid "NetBSD RAID"
-msgstr ""
+msgstr "NetBSD RAID"
 
 #: ../udisks/udisksclient.c:2264
 msgctxt "part-type"
 msgid "NetBSD Concatenated"
-msgstr ""
+msgstr "NetBSD Concatenated"
 
 #: ../udisks/udisksclient.c:2265
 msgctxt "part-type"
 msgid "NetBSD Encrypted"
-msgstr ""
+msgstr "NetBSD Encrypted"
 
 #. VMWare, see http://blogs.vmware.com/vsphere/2011/08/vsphere-50-storage-
 #. features-part-7-gpt.html
@@ -1567,234 +1568,234 @@ msgstr ""
 #: ../udisks/udisksclient.c:2273
 msgctxt "part-type"
 msgid "Apple HFS/HFS"
-msgstr ""
+msgstr "Apple HFS/HFS"
 
 #: ../udisks/udisksclient.c:2274
 msgctxt "part-type"
 msgid "Apple Partition Map"
-msgstr ""
+msgstr "Apple бөлімдер картасы"
 
 #: ../udisks/udisksclient.c:2275
 msgctxt "part-type"
 msgid "Unused"
-msgstr ""
+msgstr "Қолданылмаған"
 
 #: ../udisks/udisksclient.c:2276
 msgctxt "part-type"
 msgid "Empty"
-msgstr ""
+msgstr "Бос"
 
 #: ../udisks/udisksclient.c:2277
 msgctxt "part-type"
 msgid "Driver"
-msgstr ""
+msgstr "Драйвер"
 
 #: ../udisks/udisksclient.c:2278
 msgctxt "part-type"
 msgid "Driver 4.3"
-msgstr ""
+msgstr "Драйвер 4.3"
 
 #: ../udisks/udisksclient.c:2279
 msgctxt "part-type"
 msgid "ProDOS file system"
-msgstr ""
+msgstr "ProDOS файлдық жүйесі"
 
 #: ../udisks/udisksclient.c:2280
 msgctxt "part-type"
 msgid "FAT 12"
-msgstr ""
+msgstr "FAT 12"
 
 #: ../udisks/udisksclient.c:2281
 msgctxt "part-type"
 msgid "FAT 16"
-msgstr ""
+msgstr "FAT 16"
 
 #: ../udisks/udisksclient.c:2282
 msgctxt "part-type"
 msgid "FAT 32"
-msgstr ""
+msgstr "FAT 32"
 
 #: ../udisks/udisksclient.c:2283
 msgctxt "part-type"
 msgid "FAT 16 (Windows)"
-msgstr ""
+msgstr "FAT 16 (Windows)"
 
 #: ../udisks/udisksclient.c:2284
 msgctxt "part-type"
 msgid "FAT 32 (Windows)"
-msgstr ""
+msgstr "FAT 32 (Windows)"
 
 #. see http://www.win.tue.nl/~aeb/partitions/partition_types-1.html
 #: ../udisks/udisksclient.c:2287
 msgctxt "part-type"
 msgid "Extended"
-msgstr ""
+msgstr "Кеңейтілген"
 
 #: ../udisks/udisksclient.c:2288
 msgctxt "part-type"
 msgid "EFI GPT"
-msgstr ""
+msgstr "EFI GPT"
 
 #: ../udisks/udisksclient.c:2289
 msgctxt "part-type"
 msgid "EFI (FAT-12/16/32)"
-msgstr ""
+msgstr "EFI (FAT-12/16/32)"
 
 #: ../udisks/udisksclient.c:2290
 msgctxt "part-type"
 msgid "Linux swap"
-msgstr ""
+msgstr "Linux swap"
 
 #: ../udisks/udisksclient.c:2291
 msgctxt "part-type"
 msgid "Linux"
-msgstr ""
+msgstr "Linux"
 
 #: ../udisks/udisksclient.c:2292
 msgctxt "part-type"
 msgid "Linux Extended"
-msgstr ""
+msgstr "Linux кеңейтілген"
 
 #: ../udisks/udisksclient.c:2294
 msgctxt "part-type"
 msgid "Linux RAID auto"
-msgstr ""
+msgstr "Linux RAID auto"
 
 #: ../udisks/udisksclient.c:2295
 msgctxt "part-type"
 msgid "FAT12"
-msgstr ""
+msgstr "FAT12"
 
 #: ../udisks/udisksclient.c:2296
 msgctxt "part-type"
 msgid "FAT16 <32M"
-msgstr ""
+msgstr "FAT16 <32M"
 
 #: ../udisks/udisksclient.c:2297
 msgctxt "part-type"
 msgid "FAT16"
-msgstr ""
+msgstr "FAT16"
 
 #: ../udisks/udisksclient.c:2298
 msgctxt "part-type"
 msgid "HPFS/NTFS"
-msgstr ""
+msgstr "HPFS/NTFS"
 
 #: ../udisks/udisksclient.c:2299
 msgctxt "part-type"
 msgid "W95 FAT32"
-msgstr ""
+msgstr "W95 FAT32"
 
 #: ../udisks/udisksclient.c:2300
 msgctxt "part-type"
 msgid "W95 FAT32 (LBA)"
-msgstr ""
+msgstr "W95 FAT32 (LBA)"
 
 #: ../udisks/udisksclient.c:2301
 msgctxt "part-type"
 msgid "W95 FAT16 (LBA)"
-msgstr ""
+msgstr "W95 FAT16 (LBA)"
 
 #: ../udisks/udisksclient.c:2302
 msgctxt "part-type"
 msgid "W95 Ext d (LBA)"
-msgstr ""
+msgstr "W95 Ext d (LBA)"
 
 #: ../udisks/udisksclient.c:2303
 msgctxt "part-type"
 msgid "Hidden FAT12"
-msgstr ""
+msgstr "Жасырын FAT12"
 
 #: ../udisks/udisksclient.c:2304
 msgctxt "part-type"
 msgid "Hidden FAT16 <32M"
-msgstr ""
+msgstr "Жасырын FAT16 <32M"
 
 #: ../udisks/udisksclient.c:2305
 msgctxt "part-type"
 msgid "Hidden FAT16"
-msgstr ""
+msgstr "Жасырын FAT16"
 
 #: ../udisks/udisksclient.c:2306
 msgctxt "part-type"
 msgid "Hidden HPFS/NTFS"
-msgstr ""
+msgstr "Жасырын HPFS/NTFS"
 
 #: ../udisks/udisksclient.c:2307
 msgctxt "part-type"
 msgid "Hidden W95 FAT32"
-msgstr ""
+msgstr "Жасырын W95 FAT32"
 
 #: ../udisks/udisksclient.c:2308
 msgctxt "part-type"
 msgid "Hidden W95 FAT32 (LBA)"
-msgstr ""
+msgstr "Жасырын W95 FAT32 (LBA)"
 
 #: ../udisks/udisksclient.c:2309
 msgctxt "part-type"
 msgid "Hidden W95 FAT16 (LBA)"
-msgstr ""
+msgstr "Жасырын W95 FAT16 (LBA)"
 
 #: ../udisks/udisksclient.c:2310
 msgctxt "part-type"
 msgid "OPUS"
-msgstr ""
+msgstr "OPUS"
 
 #: ../udisks/udisksclient.c:2311
 msgctxt "part-type"
 msgid "Compaq diagnostics"
-msgstr ""
+msgstr "Compaq diagnostics"
 
 #: ../udisks/udisksclient.c:2312
 msgctxt "part-type"
 msgid "PartitionMagic"
-msgstr ""
+msgstr "PartitionMagic"
 
 #: ../udisks/udisksclient.c:2313
 msgctxt "part-type"
 msgid "Minix"
-msgstr ""
+msgstr "Minix"
 
 #. cf. http://en.wikipedia.org/wiki/MINIX_file_system
 #: ../udisks/udisksclient.c:2314 ../udisks/udisksclient.c:2315
 msgctxt "part-type"
 msgid "Hibernation"
-msgstr ""
+msgstr "Гибернация"
 
 #: ../udisks/udisksclient.c:2316
 msgctxt "part-type"
 msgid "FreeBSD"
-msgstr ""
+msgstr "FreeBSD"
 
 #: ../udisks/udisksclient.c:2317
 msgctxt "part-type"
 msgid "OpenBSD"
-msgstr ""
+msgstr "OpenBSD"
 
 #: ../udisks/udisksclient.c:2318 ../udisks/udisksclient.c:2319
 msgctxt "part-type"
 msgid "Mac OS X"
-msgstr ""
+msgstr "Mac OS X"
 
 #: ../udisks/udisksclient.c:2320
 msgctxt "part-type"
 msgid "Solaris boot"
-msgstr ""
+msgstr "Solaris boot"
 
 #: ../udisks/udisksclient.c:2321
 msgctxt "part-type"
 msgid "Solaris"
-msgstr ""
+msgstr "Solaris"
 
 #: ../udisks/udisksclient.c:2322
 msgctxt "part-type"
 msgid "BeOS BFS"
-msgstr ""
+msgstr "BeOS BFS"
 
 #: ../udisks/udisksclient.c:2323
 msgctxt "part-type"
 msgid "SkyOS SkyFS"
-msgstr ""
+msgstr "SkyOS SkyFS"
 
 #: ../udisks/udisksclient.c:2427
 msgctxt "job"
@@ -2174,42 +2175,42 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-loop"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"
 
 #: ../udisks/udisksobjectinfo.c:348
 msgctxt "mdraid-desc"
 msgid "RAID-0 Array"
-msgstr ""
+msgstr "RAID-0 массиві"
 
 #: ../udisks/udisksobjectinfo.c:350
 msgctxt "mdraid-desc"
 msgid "RAID-1 Array"
-msgstr ""
+msgstr "RAID-1 массиві"
 
 #: ../udisks/udisksobjectinfo.c:352
 msgctxt "mdraid-desc"
 msgid "RAID-4 Array"
-msgstr ""
+msgstr "RAID-4 массиві"
 
 #: ../udisks/udisksobjectinfo.c:354
 msgctxt "mdraid-desc"
 msgid "RAID-5 Array"
-msgstr ""
+msgstr "RAID-5 массиві"
 
 #: ../udisks/udisksobjectinfo.c:356
 msgctxt "mdraid-desc"
 msgid "RAID-6 Array"
-msgstr ""
+msgstr "RAID-6 массиві"
 
 #: ../udisks/udisksobjectinfo.c:358
 msgctxt "mdraid-desc"
 msgid "RAID-10 Array"
-msgstr ""
+msgstr "RAID-10 массиві"
 
 #: ../udisks/udisksobjectinfo.c:360
 msgctxt "mdraid-desc"
 msgid "RAID Array"
-msgstr ""
+msgstr "RAID массиві"
 
 #. Translators: Used to format the description for a RAID array.
 #. *              The first %s is the size (e.g. '42.0 GB').
@@ -2219,7 +2220,7 @@ msgstr ""
 #, c-format
 msgctxt "mdraid-desc"
 msgid "%s %s"
-msgstr ""
+msgstr "%s %s"
 
 #. Translators: Used to describe a partition of a RAID Array.
 #. *              The %d is the partition number.
@@ -2283,7 +2284,7 @@ msgstr "%s"
 #, c-format
 msgctxt "drive-with-fixed-media"
 msgid "%s Drive"
-msgstr ""
+msgstr "%s дискі"
 
 #. Translators: Used to describe generic media. The %s is the type, e.g. 'Zip'
 #. or 'Floppy'
@@ -2299,7 +2300,7 @@ msgstr "%s дискі"
 #, c-format
 msgctxt "flash-media"
 msgid "%s Card"
-msgstr ""
+msgstr "%s картасы"
 
 #. Translators: Used to describe optical discs. The %s is the type, e.g.
 #. 'CD-R' or 'DVD-ROM'
@@ -2307,21 +2308,21 @@ msgstr ""
 #, c-format
 msgctxt "optical-media"
 msgid "%s Disc"
-msgstr ""
+msgstr "%s дискі"
 
 #. Translators: Used to describe a drive. The %s is the size, e.g. '20 GB'
 #: ../udisks/udisksobjectinfo.c:623
 #, c-format
 msgctxt "drive-with-size"
 msgid "%s Drive"
-msgstr ""
+msgstr "%s дискі"
 
 #. Translators: Used to describe a drive we know very little about (removable
 #. media or size not known)
 #: ../udisks/udisksobjectinfo.c:628
 msgctxt "generic-drive"
 msgid "Drive"
-msgstr ""
+msgstr "Диск"
 
 #. Translators: Used to describe a non-rotating drive (rotation rate either
 #. unknown
@@ -2363,7 +2364,7 @@ msgstr "Қатты диск"
 #, c-format
 msgctxt "drive-card-reader"
 msgid "%s Card Reader"
-msgstr ""
+msgstr "%s карталар оқу құрылғысы"
 
 #. Translators: Used to describe drive. The first %s is the size e.g. '20 GB'
 #. and the
@@ -2373,7 +2374,7 @@ msgstr ""
 #, c-format
 msgctxt "drive-with-size-and-type"
 msgid "%s %s Drive"
-msgstr ""
+msgstr "%s %s дискі"
 
 #. Translators: Used to describe drive. The first %s is the drive type e.g.
 #. 'Thumb'.
@@ -2382,7 +2383,7 @@ msgstr ""
 #, c-format
 msgctxt "drive-with-type"
 msgid "%s Drive"
-msgstr ""
+msgstr "%s дискі"
 
 #. Translators: String used for a blank disc. The %s is the disc type e.g.
 #. "CD-RW Disc"

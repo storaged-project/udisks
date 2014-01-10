@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# Milo Casagrande <milo@ubuntu.com>, 2012-2013.
+# milo <milo@ubuntu.com>, 2012-2013
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-12-18 15:41-0500\n"
-"PO-Revision-Date: 2013-01-28 21:14+0000\n"
+"PO-Revision-Date: 2013-11-20 09:31+0000\n"
 "Last-Translator: milo <milo@ubuntu.com>\n"
 "Language-Team: Italian (http://www.transifex.com/projects/p/freedesktop/language/it/)\n"
 "MIME-Version: 1.0\n"

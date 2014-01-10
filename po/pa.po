@@ -3,14 +3,14 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# A S Alam <apreet.alam@gmail.com>, 2012.
+# A S Alam <apreet.alam@gmail.com>, 2012-2013
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-12-18 15:41-0500\n"
-"PO-Revision-Date: 2012-12-18 20:42+0000\n"
-"Last-Translator: davidz <zeuthen@gmail.com>\n"
+"PO-Revision-Date: 2013-11-20 09:31+0000\n"
+"Last-Translator: A S Alam <apreet.alam@gmail.com>\n"
 "Language-Team: Panjabi (Punjabi) (http://www.transifex.com/projects/p/freedesktop/language/pa/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -108,7 +108,7 @@ msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:20
 msgid "Delete loop devices"
-msgstr ""
+msgstr "ਲੂਪ ਜੰਤਰ ਹਟਾਓ"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:21
 msgid ""
@@ -117,12 +117,12 @@ msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:22
 msgid "Modify loop devices"
-msgstr ""
+msgstr "ਲੂਪ ਜੰਤਰ ਸੋਧੋ"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:23
 msgid ""
 "Authentication is required to modify a loop device set up by another user"
-msgstr ""
+msgstr "ਕਿਸੇ ਹੋਰ ਯੂਜ਼ਰ ਵਲੋਂ ਸੈੱਟਅੱਪ ਕੀਤੇ ਲੂਪ ਜੰਤਰ ਨੂੰ ਸੋਧਣ ਲਈ ਪਰਮਾਣਕਿਤਾ ਦੀ ਲੋੜ ਹੈ"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:24
 msgid "Manage swapspace"
@@ -142,7 +142,7 @@ msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:28
 msgid "Power off drive"
-msgstr ""
+msgstr "ਡਰਾਇਵਰ ਬੰਦ ਕਰੋ"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:29
 msgid "Authentication is required to power off a drive"
@@ -150,7 +150,7 @@ msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:30
 msgid "Power off a system drive"
-msgstr ""
+msgstr "ਸਿਸਟਮ ਡਰਾਇਵ ਬੰਦ ਕਰੋ"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:31
 msgid "Power off a drive attached to another seat"
@@ -202,7 +202,7 @@ msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:42
 msgid "Rescan a device"
-msgstr ""
+msgstr "ਜੰਤਰ ਮੁੜ-ਸਕੈਨ ਕਰੋ"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:43
 msgid "Authentication is to rescan a device"
@@ -218,7 +218,7 @@ msgstr "ਜੰਤਰ ਖੋਲ੍ਹਣ ਲਈ ਪਰਮਾਣਕਿਤਾ ਦ�
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:46
 msgid "Open a system device"
-msgstr ""
+msgstr "ਸਿਸਟਮ ਜੰਤਰ ਖੋਲ੍ਹੋ"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:47
 msgid "Modify system-wide configuration"
@@ -236,7 +236,7 @@ msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:50
 msgid "Modify drive settings"
-msgstr ""
+msgstr "ਡਰਾਇਵ ਸੈਟਿੰਗ ਸੋਧ"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:51
 msgid "Authentication is required to modify drive settings"
@@ -308,7 +308,7 @@ msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:68
 msgid "Cancel job"
-msgstr ""
+msgstr "ਕੰਮ ਰੱਦ ਕਰੋ"
 
 #. Translators: Shown in authentication dialog when canceling a job.
 #. 
@@ -396,7 +396,7 @@ msgstr ""
 
 #: ../src/udiskslinuxblock.c:2274 ../src/udiskslinuxdriveata.c:2257
 msgid "Formatting Device"
-msgstr ""
+msgstr "ਜੰਤਰ ਫਾਰਮੈਟ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ"
 
 #. Translators: Shown in authentication dialog when creating a
 #. * disk image file.
@@ -813,7 +813,7 @@ msgstr "ਲੁਕਵਾਂ"
 #: ../udisks/udisksclient.c:1132
 msgctxt "gpt-part-flag"
 msgid "No Automount"
-msgstr ""
+msgstr "ਆਟੋਮਾਊਂਟ ਨਹੀਂ"
 
 #. Translators: Partition info. First %s is the type, second %s is a list of
 #. flags
@@ -875,7 +875,7 @@ msgstr "ਸਕਿਉਰਡਿਜ਼ਿਟਲ"
 #: ../udisks/udisksclient.c:1802
 msgctxt "media"
 msgid "SD High Capacity"
-msgstr ""
+msgstr "SD ਉਚ ਸਮੱਰਥਾ"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../udisks/udisksclient.c:1807
@@ -1082,13 +1082,13 @@ msgstr "UDF"
 #: ../udisks/udisksclient.c:1929 ../udisks/udisksclient.c:1930
 msgctxt "fs-type"
 msgid "exFAT"
-msgstr ""
+msgstr "exFAT"
 
 #: ../udisks/udisksclient.c:1930
 #, c-format
 msgctxt "fs-type"
 msgid "exFAT (version %s)"
-msgstr ""
+msgstr "exFAT (ਵਰਜਨ %s)"
 
 #: ../udisks/udisksclient.c:1931
 #, c-format
@@ -1192,18 +1192,18 @@ msgstr "LUKS ਇੰਕ੍ਰਿਪਸ਼ਨ"
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS (version %s)"
-msgstr ""
+msgstr "VMFS (version %s)"
 
 #: ../udisks/udisksclient.c:1943
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS (v%s)"
-msgstr ""
+msgstr "VMFS (v%s)"
 
 #: ../udisks/udisksclient.c:1944
 msgctxt "fs-type"
 msgid "VMFS"
-msgstr ""
+msgstr "VMFS"
 
 #: ../udisks/udisksclient.c:1945
 #, c-format
@@ -1316,7 +1316,7 @@ msgstr "BIOS ਬੂਟ"
 #: ../udisks/udisksclient.c:2214
 msgctxt "part-type"
 msgid "Linux Filesystem"
-msgstr ""
+msgstr "ਲੀਨਕਸ ਫਾਇਲ-ਸਿਸਟਮ"
 
 #: ../udisks/udisksclient.c:2215
 msgctxt "part-type"
@@ -1800,32 +1800,32 @@ msgstr ""
 #: ../udisks/udisksclient.c:2427
 msgctxt "job"
 msgid "SMART self-test"
-msgstr ""
+msgstr "ਸਮਾਰਟ ਖੁਦ-ਜਾਂਚ"
 
 #: ../udisks/udisksclient.c:2428
 msgctxt "job"
 msgid "Ejecting Medium"
-msgstr ""
+msgstr "ਮੀਡਿਅਮ ਬਾਹਰ ਕੱਢਿਆ ਜਾ ਰਿਹਾ ਹੈ"
 
 #: ../udisks/udisksclient.c:2429
 msgctxt "job"
 msgid "Unlocking Device"
-msgstr ""
+msgstr "ਜੰਤਰ ਅਣ-ਲਾਕ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ"
 
 #: ../udisks/udisksclient.c:2430
 msgctxt "job"
 msgid "Locking Device"
-msgstr ""
+msgstr "ਜੰਤਰ ਲਾਕ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ"
 
 #: ../udisks/udisksclient.c:2431
 msgctxt "job"
 msgid "Modifying Encrypted Device"
-msgstr ""
+msgstr "ਇੰਕ੍ਰਿਪਟ ਕੀਤਾ ਜੰਤਰ ਸੋਧਿਆ ਜਾ ਰਿਹਾ ਹੈ"
 
 #: ../udisks/udisksclient.c:2432
 msgctxt "job"
 msgid "Starting Swap Device"
-msgstr ""
+msgstr "ਸਵੈਪ ਜੰਤਰ ਸ਼ੁਰੂ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ"
 
 #: ../udisks/udisksclient.c:2433
 msgctxt "job"
@@ -1845,42 +1845,42 @@ msgstr ""
 #: ../udisks/udisksclient.c:2436
 msgctxt "job"
 msgid "Modifying Filesystem"
-msgstr ""
+msgstr "ਫਾਇਲ-ਸਿਸਟਮ ਸੋਧਿਆ ਜਾ ਰਿਹਾ ਹੈ"
 
 #: ../udisks/udisksclient.c:2437
 msgctxt "job"
 msgid "Erasing Device"
-msgstr ""
+msgstr "ਜੰਤਰ ਸਾਫ਼ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ"
 
 #: ../udisks/udisksclient.c:2438
 msgctxt "job"
 msgid "Creating Filesystem"
-msgstr ""
+msgstr "ਫਾਇਲ-ਸਿਸਟਮ ਬਣਾਇਆ ਜਾ ਰਿਹਾ ਹੈ"
 
 #: ../udisks/udisksclient.c:2439
 msgctxt "job"
 msgid "Setting Up Loop Device"
-msgstr ""
+msgstr "ਲੂਪ ਜੰਤਰ ਸੈੱਟ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ"
 
 #: ../udisks/udisksclient.c:2440
 msgctxt "job"
 msgid "Modifying Partition"
-msgstr ""
+msgstr "ਪਾਰਟੀਸ਼ਨ ਸੋਧਿਆ ਜਾ ਰਿਹਾ ਹੈ"
 
 #: ../udisks/udisksclient.c:2441
 msgctxt "job"
 msgid "Deleting Partition"
-msgstr ""
+msgstr "ਪਾਰਟੀਸ਼ਨ ਹਟਾਇਆ ਜਾ ਰਿਹਾ ਹੈ"
 
 #: ../udisks/udisksclient.c:2442
 msgctxt "job"
 msgid "Creating Partition"
-msgstr ""
+msgstr "ਪਾਰਟੀਸ਼ਨ ਬਣਾਇਆ ਜਾ ਰਿਹਾ ਹੈ"
 
 #: ../udisks/udisksclient.c:2443
 msgctxt "job"
 msgid "Cleaning Up"
-msgstr ""
+msgstr "ਸਾਫ਼ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ"
 
 #: ../udisks/udisksclient.c:2444
 msgctxt "job"
@@ -1931,14 +1931,14 @@ msgstr ""
 #, c-format
 msgctxt "unknown-job"
 msgid "Unknown (%s)"
-msgstr ""
+msgstr "ਅਣਜਾਣ (%s)"
 
 #. Translators: 'Thumb' here refers to "USB thumb drive", see
 #. http://en.wikipedia.org/wiki/Thumb_drive
 #: ../udisks/udisksobjectinfo.c:162
 msgctxt "media-type"
 msgid "Thumb"
-msgstr ""
+msgstr "ਥੰਮ"
 
 #: ../udisks/udisksobjectinfo.c:164
 msgctxt "media-type"
@@ -2116,11 +2116,11 @@ msgstr "MRW-W"
 #: ../udisks/udisksobjectinfo.c:252
 #, c-format
 msgid "%s Block Device"
-msgstr ""
+msgstr "%s ਬਲਾਕ ਜੰਤਰ"
 
 #: ../udisks/udisksobjectinfo.c:256
 msgid "Block Device"
-msgstr ""
+msgstr "ਬਲਾਕ ਜੰਤਰ"
 
 #. Translators: Used to describe a partition of a block device.
 #. *              The %d is the partition number.
@@ -2142,16 +2142,16 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-block"
 msgid "%s (%s)"
-msgstr ""
+msgstr "%s (%s)"
 
 #: ../udisks/udisksobjectinfo.c:306
 #, c-format
 msgid "%s Loop Device"
-msgstr ""
+msgstr "%s ਲੂਪ ਜੰਤਰ"
 
 #: ../udisks/udisksobjectinfo.c:310
 msgid "Loop Device"
-msgstr ""
+msgstr "ਲੂਪ ਜੰਤ"
 
 #. Translators: Used to describe a partition of a loop device.
 #. *              The %d is the partition number.
@@ -2220,7 +2220,7 @@ msgstr ""
 #, c-format
 msgctxt "mdraid-desc"
 msgid "%s %s"
-msgstr ""
+msgstr "%s %s"
 
 #. Translators: Used to describe a partition of a RAID Array.
 #. *              The %d is the partition number.
@@ -2242,7 +2242,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-running"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"
 
 #. Translators: String used for one-liner description of non-running RAID
 #. array.
@@ -2253,7 +2253,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-not-running"
 msgid "%s — %s"
-msgstr ""
+msgstr "%s — %s"
 
 #. Translators: String used for one-liner description of running RAID array
 #. w/o a name.
@@ -2265,7 +2265,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-no-name-running"
 msgid "%s — %s"
-msgstr ""
+msgstr "%s — %s"
 
 #. Translators: String used for one-liner description of non-running RAID
 #. array w/o a name.
@@ -2276,7 +2276,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-mdraid-no-name-not-running"
 msgid "%s"
-msgstr ""
+msgstr "%s"
 
 #. Translators: Used to describe drive without removable media. The %s is the
 #. type, e.g. 'Thumb'
@@ -2432,7 +2432,7 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s [%s] (%s)"
-msgstr ""
+msgstr "%s — %s [%s] (%s)"
 
 #. Translators: String used for one-liner description of drive w/o known fw
 #. revision.
@@ -2446,4 +2446,4 @@ msgstr ""
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"
