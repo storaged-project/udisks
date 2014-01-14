@@ -1691,6 +1691,12 @@ handle_command_loop (gint        *argc,
           goto out;
         }
 
+      if (udisks_object_peek_loop (object) == NULL)
+        {
+          g_printerr ("Error: specified object is not a loop device\n");
+          goto out;
+        }
+
     delete_try_again:
       error = NULL;
       if (!udisks_loop_call_delete_sync (udisks_object_peek_loop (object),
