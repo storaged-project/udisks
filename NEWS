@@ -1,5 +1,5 @@
 ------------
-udisks 2.1.2 (unreleased)
+udisks 2.1.2
 ------------
 
 The udisks project provides a daemon, tools and libraries to access
@@ -7,12 +7,32 @@ and manipulate disks and storage devices.
 
 Changes since udisks 2.1.1:
 
-(TODO: git shortlog)
+Andrey Jr. Melnikov (1):
+      Add exfat mount options
+
+Bastien Nocera (1):
+      Hide more rescue partitions
+
+David Zeuthen (2):
+      Bug 67679 - build fails due to missing IT_PROG_INTLTOOL macro
+
+Martin Pitt (1):
+      Add exfat FS integration test
+      Drop "david" user name from publish make rules
+
+Michael Biebl (1):
+      Use dosfstools instead of mtools
+
+Pawel Wieczorkiewicz (1):
+      Add polkit authorization variables for removable media
+
+Tomas Bzatek (1):
+      Fix crash when waiting for loop device
 
 Thanks to all our contributors.
 
-David Zeuthen,
-(TODO: date)
+Martin Pitt,
+January 14, 2014
 
 ------------
 udisks 2.1.1
