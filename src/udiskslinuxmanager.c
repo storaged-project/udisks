@@ -230,6 +230,8 @@ wait_for_loop_object (UDisksDaemon *daemon,
 
   /* First see if we have the right loop object */
   object = udisks_daemon_find_block_by_device_file (daemon, data->loop_device);
+  if (object == NULL)
+    goto out;
   block = udisks_object_peek_block (object);
   loop = udisks_object_peek_loop (object);
   if (block == NULL || loop == NULL)
