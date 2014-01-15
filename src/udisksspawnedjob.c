@@ -371,22 +371,25 @@ static void
 child_setup (gpointer user_data)
 {
   UDisksSpawnedJob *job = UDISKS_SPAWNED_JOB (user_data);
-  struct passwd *pw;
+  struct passwd pwstruct;
+  gchar pwbuf[8192];
+  struct passwd *pw = NULL;
+  int rc;
   gid_t egid;
 
   if (job->run_as_uid == getuid () && job->run_as_euid == geteuid ())
     goto out;
 
-  pw = getpwuid (job->run_as_euid);
-  if (pw == NULL)
+  rc = getpwuid_r (job->run_as_euid, &pwstruct, pwbuf, sizeof pwbuf, &pw);
+  if (rc != 0 || pw == NULL)
    {
      g_printerr ("No password record for uid %d: %m\n", (gint) job->run_as_euid);
      abort ();
    }
   egid = pw->pw_gid;
 
-  pw = getpwuid (job->run_as_uid);
-  if (pw == NULL)
+  rc = getpwuid_r (job->run_as_uid, &pwstruct, pwbuf, sizeof pwbuf, &pw);
+  if (rc != 0 || pw == NULL)
    {
      g_printerr ("No password record for uid %d: %m\n", (gint) job->run_as_uid);
      abort ();

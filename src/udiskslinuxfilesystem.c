@@ -348,13 +348,16 @@ find_mount_options_for_fs (const gchar *fstype)
 static gid_t
 find_primary_gid (uid_t uid)
 {
-  struct passwd *pw;
+  struct passwd *pw = NULL;
+  struct passwd pwstruct;
+  gchar pwbuf[8192];
+  int rc;
   gid_t gid;
 
   gid = (gid_t) - 1;
 
-  pw = getpwuid (uid);
-  if (pw == NULL)
+  rc = getpwuid_r (uid, &pwstruct, pwbuf, sizeof pwbuf, &pw);
+  if (rc != 0 || pw == NULL)
     {
       udisks_warning ("Error looking up uid %d: %m", uid);
       goto out;
@@ -370,7 +373,10 @@ is_uid_in_gid (uid_t uid,
                gid_t gid)
 {
   gboolean ret;
-  struct passwd *pw;
+  struct passwd *pw = NULL;
+  struct passwd pwstruct;
+  gchar pwbuf[8192];
+  int rc;
   static gid_t supplementary_groups[128];
   int num_supplementary_groups = 128;
   int n;
@@ -379,8 +385,8 @@ is_uid_in_gid (uid_t uid,
 
   ret = FALSE;
 
-  pw = getpwuid (uid);
-  if (pw == NULL)
+  rc = getpwuid_r (uid, &pwstruct, pwbuf, sizeof pwbuf, &pw);
+  if (rc != 0 || pw == NULL)
     {
       udisks_warning ("Error looking up uid %d: %m", uid);
       goto out;

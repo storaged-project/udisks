@@ -830,7 +830,7 @@ udisks_daemon_util_get_caller_uid_sync (UDisksDaemon            *daemon,
     {
       struct passwd pwstruct;
       gchar pwbuf[8192];
-      static struct passwd *pw;
+      struct passwd *pw = NULL;
       int rc;
 
       rc = getpwuid_r (uid, &pwstruct, pwbuf, sizeof pwbuf, &pw);
