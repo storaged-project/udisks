@@ -804,12 +804,23 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
       gchar *dm_name_dev_file = NULL;
       const gchar *dm_name_dev_file_as_symlink = NULL;
 
+      const gchar *dm_vg_name;
+      const gchar *dm_lv_name;
+      gchar *dm_lvm_dev_file = NULL;
+
       dm_name = g_udev_device_get_property (device->udev_device, "DM_NAME");
       if (dm_name != NULL)
         dm_name_dev_file = g_strdup_printf ("/dev/mapper/%s", dm_name);
+
+      dm_vg_name = g_udev_device_get_property (device->udev_device, "DM_VG_NAME");
+      dm_lv_name = g_udev_device_get_property (device->udev_device, "DM_LV_NAME");
+      if (dm_vg_name != NULL && dm_lv_name != NULL)
+        dm_lvm_dev_file =  g_strdup_printf ("/dev/%s/%s", dm_vg_name, dm_lv_name);
+
       for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
         {
-          if (g_str_has_prefix (symlinks[n], "/dev/vg_"))
+          if (g_str_has_prefix (symlinks[n], "/dev/vg_")
+              || g_strcmp0 (symlinks[n], dm_lvm_dev_file) == 0)
             {
               /* LVM2 */
               preferred_device_file = symlinks[n];
@@ -824,6 +835,7 @@ udisks_linux_block_update (UDisksLinuxBlock        *block,
       if (preferred_device_file == NULL && dm_name_dev_file_as_symlink != NULL)
         preferred_device_file = dm_name_dev_file_as_symlink;
       g_free (dm_name_dev_file);
+      g_free (dm_lvm_dev_file);
     }
   else if (g_str_has_prefix (device_file, "/dev/md"))
     {
