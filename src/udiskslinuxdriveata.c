@@ -1943,7 +1943,7 @@ udisks_linux_drive_ata_secure_erase_sync (UDisksLinuxDriveAta     *drive,
   /* First get the IDENTIFY data directly from the drive, for sanity checks */
   {
     /* ATA8: 7.16 IDENTIFY DEVICE - ECh, PIO Data-In */
-    UDisksAtaCommandInput input = {.command = 0xec};
+    UDisksAtaCommandInput input = {.command = 0xec, .count = 1};
     UDisksAtaCommandOutput output = {.buffer = identify.buf, .buffer_size = sizeof (identify.buf)};
     if (!udisks_ata_send_command_sync (fd,
                                        -1,
