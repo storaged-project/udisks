@@ -668,7 +668,6 @@ handle_command_mount_unmount (gint        *argc,
           gboolean is_mounted;
 
           object = UDISKS_OBJECT (l->data);
-          block = udisks_object_peek_block (object);
           filesystem = udisks_object_peek_filesystem (object);
 
           if (filesystem == NULL)
@@ -1147,7 +1146,6 @@ handle_command_unlock_lock (gint        *argc,
           gboolean is_unlocked;
 
           object = UDISKS_OBJECT (l->data);
-          block = udisks_object_peek_block (object);
           encrypted = udisks_object_peek_encrypted (object);
 
           if (encrypted == NULL)
@@ -1179,7 +1177,6 @@ handle_command_unlock_lock (gint        *argc,
             {
               gboolean is_unlocked;
 
-              is_unlocked = FALSE;
               is_unlocked = encrypted_is_unlocked (object);
 
               if ((is_unlock && !is_unlocked) || (!is_unlock && is_unlocked))
@@ -1537,7 +1534,6 @@ handle_command_loop (gint        *argc,
               for (l = objects; l != NULL; l = l->next)
                 {
                   object = UDISKS_OBJECT (l->data);
-                  block = udisks_object_peek_block (object);
                   if (udisks_object_peek_loop (object) != NULL)
                     {
                       object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
