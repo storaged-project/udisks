@@ -642,7 +642,7 @@ udisks_linux_drive_object_uevent (UDisksLinuxDriveObject *object,
       else
         {
           udisks_warning ("Drive doesn't have device with sysfs path %s on remove event",
-                          g_udev_device_get_sysfs_path (device->udev_device));
+                          device ? g_udev_device_get_sysfs_path (device->udev_device) : "(null device)");
         }
     }
   else
