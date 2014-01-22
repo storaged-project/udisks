@@ -538,7 +538,6 @@ handle_mdraid_create (UDisksManager         *_object,
 {
   UDisksLinuxManager *manager = UDISKS_LINUX_MANAGER (_object);
   UDisksObject *array_object = NULL;
-  WaitForArrayData wait_data;
   uid_t caller_uid;
   GError *error = NULL;
   const gchar *message;
@@ -778,8 +777,8 @@ handle_mdraid_create (UDisksManager         *_object,
   if (array_object == NULL)
     {
       g_prefix_error (&error,
-                      "Error waiting for array object after creating /dev/md%d",
-                      wait_data.md_num);
+                      "Error waiting for array object after creating %s",
+                      raid_device_file);
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
