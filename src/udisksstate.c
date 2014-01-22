@@ -530,7 +530,7 @@ udisks_state_check_mounted_fs_entry (UDisksState  *state,
   const gchar *mount_point;
   GVariant *details;
   GVariant *block_device_value;
-  dev_t block_device;
+  dev_t block_device = 0;
   GVariant *fstab_mount_value;
   gboolean fstab_mount;
   gboolean keep;

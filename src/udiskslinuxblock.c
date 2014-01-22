@@ -1521,7 +1521,7 @@ handle_add_configuration_item (UDisksBlock           *_block,
   UDisksLinuxBlockObject *object;
   UDisksDaemon *daemon;
   const gchar *type;
-  GVariant *details;
+  GVariant *details = NULL;
   GError *error;
 
   error = NULL;
@@ -1598,7 +1598,7 @@ handle_remove_configuration_item (UDisksBlock           *_block,
   UDisksLinuxBlockObject *object;
   UDisksDaemon *daemon;
   const gchar *type;
-  GVariant *details;
+  GVariant *details = NULL;
   GError *error;
 
   error = NULL;
@@ -1677,8 +1677,8 @@ handle_update_configuration_item (UDisksBlock           *_block,
   UDisksDaemon *daemon;
   const gchar *old_type;
   const gchar *new_type;
-  GVariant *old_details;
-  GVariant *new_details;
+  GVariant *old_details = NULL;
+  GVariant *new_details = NULL;
   GError *error;
 
   error = NULL;

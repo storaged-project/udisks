@@ -701,7 +701,7 @@ udisks_linux_drive_ata_smart_selftest_sync (UDisksLinuxDriveAta     *drive,
                                             GError                 **error)
 {
   UDisksLinuxDriveObject  *object;
-  UDisksLinuxDevice *device;
+  UDisksLinuxDevice *device = NULL;
   SkDisk *d = NULL;
   gboolean ret = FALSE;
   SkSmartSelfTest test;

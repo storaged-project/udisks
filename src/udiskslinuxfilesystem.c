@@ -1556,7 +1556,7 @@ handle_unmount (UDisksFilesystem       *filesystem,
   GError *error;
   uid_t mounted_by_uid;
   uid_t caller_uid;
-  gint status;
+  gint status = 0;
   gchar *error_message;
   const gchar *const *mount_points;
   gboolean opt_force;

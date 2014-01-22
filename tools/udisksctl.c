@@ -890,6 +890,7 @@ read_passphrase (void)
   gchar *ret;
 
   ret = NULL;
+  str = NULL;
 
   tty_name = ctermid (NULL);
   if (tty_name == NULL)
