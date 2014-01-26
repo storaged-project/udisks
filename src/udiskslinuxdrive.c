@@ -25,6 +25,12 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
+#include <inttypes.h>
+#include <errno.h>
+#include <linux/bsg.h>
+#include <scsi/scsi.h>
+#include <scsi/sg.h>
+#include <scsi/scsi_ioctl.h>
 
 #include <pwd.h>
 #include <grp.h>
@@ -1192,6 +1198,122 @@ handle_set_configuration (UDisksDrive           *_drive,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* TODO: move to udisksscsi.[ch] similar what we do for ATA with udisksata.[ch] */
+
+static gboolean
+send_scsi_command_sync (gint      fd,
+                        guint8   *cdb,
+                        gsize     cdb_len,
+                        GError  **error)
+{
+  struct sg_io_v4 io_v4;
+  uint8_t sense[32];
+  gboolean ret = FALSE;
+  gint rc;
+  gint timeout_msec = 30000; /* 30 seconds */
+
+  g_return_val_if_fail (fd != -1, FALSE);
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+  /* See http://sg.danny.cz/sg/sg_io.html and http://www.tldp.org/HOWTO/SCSI-Generic-HOWTO/index.html
+   * for detailed information about how the SG_IO ioctl work
+   */
+
+  memset (sense, 0, sizeof (sense));
+  memset (&io_v4, 0, sizeof (io_v4));
+  io_v4.guard = 'Q';
+  io_v4.protocol = BSG_PROTOCOL_SCSI;
+  io_v4.subprotocol = BSG_SUB_PROTOCOL_SCSI_CMD;
+  io_v4.request_len = cdb_len;
+  io_v4.request = (uintptr_t) cdb;
+  io_v4.max_response_len = sizeof (sense);
+  io_v4.response = (uintptr_t) sense;
+  io_v4.timeout = timeout_msec;
+
+  rc = ioctl (fd, SG_IO, &io_v4);
+  if (rc != 0)
+    {
+      /* could be that the driver doesn't do version 4, try version 3 */
+      if (errno == EINVAL)
+        {
+          struct sg_io_hdr io_hdr;
+          memset (&io_hdr, 0, sizeof (struct sg_io_hdr));
+          io_hdr.interface_id = 'S';
+          io_hdr.cmdp = (unsigned char*) cdb;
+          io_hdr.cmd_len = cdb_len;
+          io_hdr.dxfer_direction = SG_DXFER_NONE;
+          io_hdr.sbp = sense;
+          io_hdr.mx_sb_len = sizeof (sense);
+          io_hdr.timeout = timeout_msec;
+
+          rc = ioctl (fd, SG_IO, &io_hdr);
+          if (rc != 0)
+            {
+              g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
+                           "SGIO v3 ioctl failed (v4 not supported): %m");
+              goto out;
+            }
+          else
+            {
+              if (!(io_hdr.status == 0 &&
+                    io_hdr.host_status == 0 &&
+                    io_hdr.driver_status == 0))
+                {
+                  g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                               "Non-GOOD SCSI status from SGIO v3 ioctl: "
+                               "status=%d host_status=%d driver_status=%d",
+                               io_hdr.status,
+                               io_hdr.host_status,
+                               io_hdr.driver_status);
+                  goto out;
+                }
+            }
+        }
+      else
+        {
+          g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
+                       "SGIO v4 ioctl failed: %m");
+          goto out;
+        }
+    }
+  else
+    {
+      if (!(io_v4.device_status == 0 &&
+            io_v4.transport_status == 0 &&
+            io_v4.driver_status == 0))
+        {
+          g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                       "Non-GOOD SCSI status from SGIO v4 ioctl: "
+                       "device_status=%d transport_status=%d driver_status=%d",
+                       io_v4.device_status,
+                       io_v4.transport_status,
+                       io_v4.driver_status);
+          goto out;
+        }
+    }
+
+  ret = TRUE;
+
+ out:
+  return ret;
+}
+
+static gboolean
+send_scsi_start_stop_command_sync (gint      fd,
+                                   GError  **error)
+{
+  uint8_t cdb[6];
+
+  /* SBC3 (SCSI Block Commands), 5.20 START STOP UNIT command
+   */
+  memset (cdb, 0, sizeof cdb);
+  cdb[0] = 0x1b;                        /* OPERATION CODE: START STOP UNIT */
+
+  return send_scsi_command_sync (fd, cdb, sizeof cdb, error);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static gboolean
 handle_power_off (UDisksDrive           *_drive,
                   GDBusMethodInvocation *invocation,
@@ -1216,6 +1338,7 @@ handle_power_off (UDisksDrive           *_drive,
   gid_t caller_gid;
   pid_t caller_pid;
   GList *sibling_objects = NULL, *l;
+  gint fd = -1;
 
   object = udisks_daemon_util_dup_object (drive, &error);
   if (object == NULL)
@@ -1324,10 +1447,10 @@ handle_power_off (UDisksDrive           *_drive,
     {
       UDisksBlock *block_to_sync = UDISKS_BLOCK (l->data);
       const gchar *device_file;
-      gint fd;
+      gint device_fd;
       device_file = udisks_block_get_device (block_to_sync);
-      fd = open (device_file, O_RDONLY|O_NONBLOCK|O_EXCL);
-      if (fd == -1)
+      device_fd = open (device_file, O_RDONLY|O_NONBLOCK|O_EXCL);
+      if (device_fd == -1)
         {
           g_dbus_method_invocation_return_error (invocation,
                                                  UDISKS_ERROR,
@@ -1336,7 +1459,7 @@ handle_power_off (UDisksDrive           *_drive,
                                                  device_file);
           goto out;
         }
-      if (fsync (fd) != 0)
+      if (fsync (device_fd) != 0)
         {
           g_dbus_method_invocation_return_error (invocation,
                                                  UDISKS_ERROR,
@@ -1345,7 +1468,7 @@ handle_power_off (UDisksDrive           *_drive,
                                                  device_file);
           goto out;
         }
-      if (close (fd) != 0)
+      if (close (device_fd) != 0)
         {
           g_dbus_method_invocation_return_error (invocation,
                                                  UDISKS_ERROR,
@@ -1356,9 +1479,45 @@ handle_power_off (UDisksDrive           *_drive,
         }
     }
 
-  escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
+  /* Send the "SCSI START STOP UNIT" command to request that the unit
+   * be stopped but don't treat failure as fatal. In fact some
+   * USB-attached hard-disks fails with this command, probably due to
+   * the SCSI/SATA translation layer.
+   */
+  fd = open (udisks_block_get_device (block), O_RDONLY|O_NONBLOCK|O_EXCL);
+  if (fd == -1)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error opening %s: %m",
+                                             udisks_block_get_device (block));
+      goto out;
+    }
+  if (!send_scsi_start_stop_command_sync (fd, &error))
+    {
+      udisks_warning ("Ignoring SCSI command START STOP UNIT failure (%s) on %s",
+                      error->message,
+                      udisks_block_get_device (block));
+      g_clear_error (&error);
+    }
+  else
+    {
+      udisks_notice ("Powering off %s - successfully sent SCSI command START STOP UNIT",
+                     udisks_block_get_device (block));
+    }
+  if (close (fd) != 0)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             UDISKS_ERROR,
+                                             UDISKS_ERROR_FAILED,
+                                             "Error closing %s: %m",
+                                             udisks_block_get_device (block));
+      goto out;
+    }
+  fd = -1;
 
-  /* TODO: Send the eject? Send SCSI START STOP UNIT? */
+  escaped_device = udisks_daemon_util_escape_and_quote (udisks_block_get_device (block));
   device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
   if (device == NULL)
     {
@@ -1405,10 +1564,20 @@ handle_power_off (UDisksDrive           *_drive,
         }
     }
   fclose (f);
+  udisks_notice ("Powered off %s - successfully wrote to sysfs path %s",
+                 udisks_block_get_device (block),
+                 remove_path);
 
   udisks_drive_complete_power_off (UDISKS_DRIVE (drive), invocation);
 
  out:
+  if (fd != -1)
+    {
+      if (close (fd) != 0)
+        {
+          udisks_warning ("Error closing device: %m");
+        }
+    }
   g_list_free_full (blocks_to_sync, g_object_unref);
   g_list_free_full (sibling_objects, g_object_unref);
   g_free (remove_path);
