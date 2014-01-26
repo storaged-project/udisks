@@ -265,7 +265,7 @@
             Note that as some physical devices contain multiple drives
             (for example 4-in-1 flash card reader USB devices)
             powering off one drive may affect other drives. As such
-            there are not a lot of guarantees associated with doing
+            there are not a lot of guarantees associated with
             performing this action. Usually the effect is that the
             drive disappears as if it was unplugged.
           </para>
