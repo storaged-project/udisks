@@ -104,6 +104,16 @@
 
     <cmdsynopsis>
       <command>udisksctl</command>
+      <arg choice="plain">power-off </arg>
+      <group choice="req">
+        <arg choice="plain">--object-path <replaceable>OBJECT</replaceable></arg>
+        <arg choice="plain">--block-device <replaceable>DEVICE</replaceable></arg>
+      </group>
+      <arg choice="opt">--no-user-interaction</arg>
+    </cmdsynopsis>
+
+    <cmdsynopsis>
+      <command>udisksctl</command>
       <arg choice="plain">smart-simulate </arg>
       <arg choice="plain">--file <replaceable>PATH</replaceable></arg>
       <group choice="req">
@@ -233,6 +243,31 @@
         <listitem>
           <para>
             Tears down a loop device.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>power-off</option></term>
+        <listitem>
+          <para>
+            Arranges for the drive to be safely removed and powered
+            off. On the OS side this includes ensuring that no process
+            is using the drive, then requesting that in-flight buffers
+            and caches are committed to stable storage. The exact
+            steps for powering off the drive depends on the drive
+            itself and the interconnect used. For drives connected
+            through USB, the effect is that the USB device will be
+            deconfigured followed by disabling the upstream hub port
+            it is connected to.
+          </para>
+          <para>
+            Note that as some physical devices contain multiple drives
+            (for example 4-in-1 flash card reader USB devices)
+            powering off one drive may affect other drives. As such
+            there are not a lot of guarantees associated with doing
+            performing this action. Usually the effect is that the
+            drive disappears as if it was unplugged.
           </para>
         </listitem>
       </varlistentry>

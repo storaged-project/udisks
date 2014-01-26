@@ -2015,6 +2015,238 @@ handle_command_smart_simulate (gint        *argc,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gchar   *opt_power_off_object_path = NULL;
+static gchar   *opt_power_off_device = NULL;
+static gboolean opt_power_off_no_user_interaction = FALSE;
+
+static const GOptionEntry command_power_off_entries[] =
+{
+  {
+    "object-path",
+    'p',
+    0,
+    G_OPTION_ARG_STRING,
+    &opt_power_off_object_path,
+    "Object path for ATA device",
+    NULL
+  },
+  {
+    "block-device",
+    'b',
+    0,
+    G_OPTION_ARG_STRING,
+    &opt_power_off_device,
+    "Device file for ATA device",
+    NULL
+  },
+  {
+    "no-user-interaction",
+    0, /* no short option */
+    0,
+    G_OPTION_ARG_NONE,
+    &opt_power_off_no_user_interaction,
+    "Do not authenticate the user if needed",
+    NULL
+  },
+  {
+    NULL
+  }
+};
+
+static gint
+handle_command_power_off (gint        *argc,
+                          gchar      **argv[],
+                          gboolean     request_completion,
+                          const gchar *completion_cur,
+                          const gchar *completion_prev)
+{
+  gint ret;
+  GOptionContext *o;
+  gchar *s;
+  gboolean complete_objects;
+  gboolean complete_devices;
+  GList *l;
+  GList *objects;
+  UDisksObject *object;
+  UDisksDriveAta *ata;
+  guint n;
+  GVariant *options;
+  GVariantBuilder builder;
+  GError *error;
+
+  ret = 1;
+  opt_power_off_object_path = NULL;
+  opt_power_off_device = NULL;
+  object = NULL;
+  options = NULL;
+
+  modify_argv0_for_command (argc, argv, "power-off");
+
+  o = g_option_context_new (NULL);
+  if (request_completion)
+    g_option_context_set_ignore_unknown_options (o, TRUE);
+  g_option_context_set_help_enabled (o, FALSE);
+  g_option_context_set_summary (o, "Safely power off a drive.");
+  g_option_context_add_main_entries (o,
+                                     command_power_off_entries,
+                                     NULL /* GETTEXT_PACKAGE*/);
+
+  complete_objects = FALSE;
+  if (request_completion && (g_strcmp0 (completion_prev, "--object-path") == 0 || g_strcmp0 (completion_prev, "-p") == 0))
+    {
+      complete_objects = TRUE;
+      remove_arg ((*argc) - 1, argc, argv);
+    }
+
+  complete_devices = FALSE;
+  if (request_completion && (g_strcmp0 (completion_prev, "--block-device") == 0 || g_strcmp0 (completion_prev, "-b") == 0))
+    {
+      complete_devices = TRUE;
+      remove_arg ((*argc) - 1, argc, argv);
+    }
+
+  if (!g_option_context_parse (o, argc, argv, NULL))
+    {
+      if (!request_completion)
+        {
+          s = g_option_context_get_help (o, FALSE, NULL);
+          g_printerr ("%s", s);
+          g_free (s);
+          goto out;
+        }
+    }
+
+  if (request_completion)
+    {
+      if ((opt_power_off_object_path == NULL && !complete_objects) &&
+          (opt_power_off_device == NULL && !complete_devices))
+        {
+          g_print ("--object-path \n"
+                   "--block-device \n");
+        }
+
+      if (complete_objects)
+        {
+          const gchar *object_path;
+          objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
+          for (l = objects; l != NULL; l = l->next)
+            {
+              object = UDISKS_OBJECT (l->data);
+              ata = udisks_object_peek_drive_ata (object);
+              if (ata != NULL)
+                {
+                  object_path = g_dbus_object_get_object_path (G_DBUS_OBJECT (object));
+                  g_assert (g_str_has_prefix (object_path, "/org/freedesktop/UDisks2/"));
+                  g_print ("%s \n", object_path + sizeof ("/org/freedesktop/UDisks2/") - 1);
+                }
+            }
+          g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+          g_list_free (objects);
+        }
+
+      if (complete_devices)
+        {
+          objects = g_dbus_object_manager_get_objects (udisks_client_get_object_manager (client));
+          for (l = objects; l != NULL; l = l->next)
+            {
+              object = UDISKS_OBJECT (l->data);
+              ata = udisks_object_peek_drive_ata (object);
+              if (ata != NULL)
+                {
+                  const gchar * const *symlinks;
+                  UDisksBlock *block;
+                  block = udisks_client_get_block_for_drive (client, udisks_object_peek_drive (object), TRUE);
+                  g_print ("%s \n", udisks_block_get_device (block));
+                  symlinks = udisks_block_get_symlinks (block);
+                  for (n = 0; symlinks != NULL && symlinks[n] != NULL; n++)
+                    g_print ("%s \n", symlinks[n]);
+                }
+            }
+          g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+          g_list_free (objects);
+        }
+      goto out;
+    }
+
+  g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
+  if (opt_power_off_no_user_interaction)
+    {
+      g_variant_builder_add (&builder,
+                             "{sv}",
+                             "auth.no_user_interaction", g_variant_new_boolean (TRUE));
+    }
+  options = g_variant_builder_end (&builder);
+  g_variant_ref_sink (options);
+
+  if (opt_power_off_object_path != NULL)
+    {
+      object = lookup_object_by_path (opt_power_off_object_path);
+      if (object == NULL)
+        {
+          g_printerr ("Error looking up object with path %s\n", opt_power_off_object_path);
+          goto out;
+        }
+    }
+  else if (opt_power_off_device != NULL)
+    {
+      UDisksObject *block_object;
+      UDisksDrive *drive;
+      block_object = lookup_object_by_device (opt_power_off_device);
+      if (block_object == NULL)
+        {
+          g_printerr ("Error looking up object for device %s\n", opt_power_off_device);
+          goto out;
+        }
+      drive = udisks_client_get_drive_for_block (client, udisks_object_peek_block (block_object));
+      object = (UDisksObject *) g_dbus_interface_dup_object (G_DBUS_INTERFACE (drive));
+      g_object_unref (block_object);
+    }
+  else
+    {
+      s = g_option_context_get_help (o, FALSE, NULL);
+      g_printerr ("%s", s);
+      g_free (s);
+      goto out;
+    }
+
+ try_again:
+  error = NULL;
+  if (!udisks_drive_call_power_off_sync (udisks_object_peek_drive (object),
+                                         options,
+                                         NULL,                       /* GCancellable */
+                                         &error))
+    {
+      if (error->domain == UDISKS_ERROR &&
+          error->code == UDISKS_ERROR_NOT_AUTHORIZED_CAN_OBTAIN &&
+          setup_local_polkit_agent ())
+        {
+          g_error_free (error);
+          goto try_again;
+        }
+      g_dbus_error_strip_remote_error (error);
+      g_printerr ("Error powering off drive: %s (%s, %d)\n",
+                  error->message, g_quark_to_string (error->domain), error->code);
+      g_clear_error (&error);
+      g_object_unref (object);
+      goto out;
+    }
+
+  g_object_unref (object);
+
+
+  ret = 0;
+
+ out:
+  if (options != NULL)
+    g_variant_unref (options);
+  g_option_context_free (o);
+  g_free (opt_power_off_object_path);
+  g_free (opt_power_off_device);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static gchar *opt_info_object = NULL;
 static gchar *opt_info_device = NULL;
 static gchar *opt_info_drive = NULL;
@@ -2861,6 +3093,7 @@ usage (gint *argc, gchar **argv[], gboolean use_stdout)
                        "  lock            Lock an encrypted device\n"
                        "  loop-setup      Set-up a loop device\n"
                        "  loop-delete     Delete a loop device\n"
+                       "  power-off       Safely power off a drive\n"
                        "  smart-simulate  Set SMART data for a drive\n"
                        "\n"
                        "Use \"%s COMMAND --help\" to get help on each command.\n",
@@ -3059,6 +3292,15 @@ main (int argc,
                                            completion_prev);
       goto out;
     }
+  else if (g_strcmp0 (command, "power-off") == 0)
+    {
+      ret = handle_command_power_off (&argc,
+                                      &argv,
+                                      request_completion,
+                                      completion_cur,
+                                      completion_prev);
+      goto out;
+    }
   else if (g_strcmp0 (command, "dump") == 0)
     {
       ret = handle_command_dump (&argc,
@@ -3162,6 +3404,7 @@ main (int argc,
                    "unlock \n"
                    "loop-setup \n"
                    "loop-delete \n"
+                   "power-off \n"
                    "smart-simulate \n"
                    );
           ret = 0;
