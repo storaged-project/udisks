@@ -1,17 +1,41 @@
-udisks 2.1.3 (unreleased)
+udisks 2.1.3
 ------------
 
 The udisks project provides a daemon, tools and libraries to access
 and manipulate disks and storage devices.
 
+This version fixes a security vulnerability (CVE-2014-0004), so please update
+as soon as possible!
+
 Changes since udisks 2.1.2:
 
-(TODO: git shortlog)
+David Zeuthen (4):
+      Identify SD Card Reader in ChromeBook Pixel
+      Send SCSI START STOP UNIT when powering down a drive
+      udisksctl: add power-off verb to power off drives
+      udisksctl: fix grammar
+
+Marius Vollmer (1):
+      Prefer /dev/VG/LV for LVM2 volumes.
+
+Martin Pitt (2):
+      Fix buffer overflow in mount path parsing. If users have the possibility
+      to create very long mount points, such as with FUSE, they could cause
+      udisksd to crash, or even to run arbitrary code as root with specially
+      crafted mount paths.  [CVE-2014-0004]
+
+Peter Paluch (1):
+      Use SECTOR_COUNT=1 when issuing ATA IDENTIFY COMMAND
+
+Tomas Bzatek (3):
+      Use reentrant version of getpwuid() for thread safety
+      udisks_daemon_util_get_caller_uid_sync(): Add missing goto
+      Fix crash when loop-deleting non-loop device
 
 Thanks to all our contributors.
 
-David Zeuthen,
-(TODO: date)
+Martin Pitt
+March 10, 2014
 
 ------------
 udisks 2.1.2
