@@ -1,3 +1,18 @@
+udisks 2.1.4 (unreleased)
+------------
+
+The udisks project provides a daemon, tools and libraries to access
+and manipulate disks and storage devices.
+
+Changes since udisks 2.1.3:
+
+(TODO: git shortlog)
+
+Thanks to all our contributors.
+
+David Zeuthen,
+(TODO: date)
+
 udisks 2.1.3
 ------------
 
