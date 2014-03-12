@@ -2218,7 +2218,6 @@ static const struct
   {"gpt", "generic",   "4f68bce3-e8cd-4db1-96e7-fbcaf984b709", NC_("part-type", "Auto-mounted Root Partition (x86_64)"), 0},
   {"gpt", "generic",   "933ac7e1-2eb4-4f13-b844-0e14e2aef915", NC_("part-type", "Auto-mounted /home Partition"), 0},
   {"gpt", "generic",   "3b8f8425-20e0-4f3b-907f-1a25a76f98e8", NC_("part-type", "Auto-mounted /srv Partition"), 0},
-  {"gpt", "generic",   "0657fd6d-a4ab-43c4-84e5-0933c84b4f4f", NC_("part-type", "Auto-enabled Swap"), 0},
   /* Linux */
   {"gpt", "linux",     "0fc63daf-8483-4772-8e79-3d69d8477de4", NC_("part-type", "Linux Filesystem"), 0},
   {"gpt", "linux",     "a19d880f-05fc-4d3b-a006-743f0f84911e", NC_("part-type", "Linux RAID"), F_RAID},
