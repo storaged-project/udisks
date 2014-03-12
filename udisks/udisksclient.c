@@ -2210,18 +2210,19 @@ static const struct
   {"gpt", "generic",   "024dee41-33e7-11d3-9d69-0008c781f39f", NC_("part-type", "MBR Partition Scheme"), F_SYSTEM},
   {"gpt", "generic",   "c12a7328-f81f-11d2-ba4b-00a0c93ec93b", NC_("part-type", "EFI System"), F_SYSTEM},
   {"gpt", "generic",   "21686148-6449-6e6f-744e-656564454649", NC_("part-type", "BIOS Boot"), F_SYSTEM},
-  {"gpt", "generic",   "6a898cc3-1dd2-11b2-99a6-080020736631", NC_("part-type", "ZFS"), 0},   /* see also Apple, Sol. */
+  /* This is also defined in the Apple and Solaris section */
+  {"gpt", "generic",   "6a898cc3-1dd2-11b2-99a6-080020736631", NC_("part-type", "ZFS"), 0},
   /* Extended Boot Partition, see http://www.freedesktop.org/wiki/Specifications/BootLoaderSpec/ */
   {"gpt", "generic",   "bc13c2ff-59e6-4262-a352-b275fd6f7172", NC_("part-type", "Extended Boot Partition"), 0},
-  /* Discoverable Partitions, see http://www.freedesktop.org/wiki/Specifications/DiscoverablePartitionsSpec */
-  {"gpt", "generic",   "44479540-f297-41b2-9af7-d131d5f0458a", NC_("part-type", "Auto-mounted Root Partition (x86)"), 0},
-  {"gpt", "generic",   "4f68bce3-e8cd-4db1-96e7-fbcaf984b709", NC_("part-type", "Auto-mounted Root Partition (x86_64)"), 0},
-  {"gpt", "generic",   "933ac7e1-2eb4-4f13-b844-0e14e2aef915", NC_("part-type", "Auto-mounted /home Partition"), 0},
-  {"gpt", "generic",   "3b8f8425-20e0-4f3b-907f-1a25a76f98e8", NC_("part-type", "Auto-mounted /srv Partition"), 0},
+  /* Discoverable Linux Partitions, see http://www.freedesktop.org/wiki/Specifications/DiscoverablePartitionsSpec */
+  {"gpt", "linux",     "44479540-f297-41b2-9af7-d131d5f0458a", NC_("part-type", "Linux Root Partition (x86)"), 0},
+  {"gpt", "linux",     "4f68bce3-e8cd-4db1-96e7-fbcaf984b709", NC_("part-type", "Linux Root Partition (x86_64)"), 0},
+  {"gpt", "linux",     "933ac7e1-2eb4-4f13-b844-0e14e2aef915", NC_("part-type", "Linux Home Partition"), 0},
+  {"gpt", "linux",     "3b8f8425-20e0-4f3b-907f-1a25a76f98e8", NC_("part-type", "Linux Server Data Partition"), 0},
   /* Linux */
+  {"gpt", "linux",     "0657fd6d-a4ab-43c4-84e5-0933c84b4f4f", NC_("part-type", "Linux Swap"), F_SWAP},
   {"gpt", "linux",     "0fc63daf-8483-4772-8e79-3d69d8477de4", NC_("part-type", "Linux Filesystem"), 0},
   {"gpt", "linux",     "a19d880f-05fc-4d3b-a006-743f0f84911e", NC_("part-type", "Linux RAID"), F_RAID},
-  {"gpt", "linux",     "0657fd6d-a4ab-43c4-84e5-0933c84b4f4f", NC_("part-type", "Linux Swap"), F_SWAP},
   {"gpt", "linux",     "e6d6d379-f507-44c2-a23c-238f2a3df928", NC_("part-type", "Linux LVM"), F_RAID},
   {"gpt", "linux",     "8da63339-0007-60c0-c436-083ac8230908", NC_("part-type", "Linux Reserved"), 0},
   /* Microsoft */
