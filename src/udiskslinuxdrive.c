@@ -1299,8 +1299,22 @@ send_scsi_command_sync (gint      fd,
 }
 
 static gboolean
-send_scsi_start_stop_command_sync (gint      fd,
-                                   GError  **error)
+send_scsi_synchronize_cache_command_sync (gint      fd,
+                                          GError  **error)
+{
+  uint8_t cdb[10];
+
+  /* SBC3 (SCSI Block Commands), 5.18 SYNCHRONIZE CACHE (10) command
+   */
+  memset (cdb, 0, sizeof cdb);
+  cdb[0] = 0x35;                        /* OPERATION CODE: SYNCHRONIZE CACHE (10) */
+
+  return send_scsi_command_sync (fd, cdb, sizeof cdb, error);
+}
+
+static gboolean
+send_scsi_start_stop_unit_command_sync (gint      fd,
+                                        GError  **error)
 {
   uint8_t cdb[6];
 
@@ -1479,10 +1493,11 @@ handle_power_off (UDisksDrive           *_drive,
         }
     }
 
-  /* Send the "SCSI START STOP UNIT" command to request that the unit
-   * be stopped but don't treat failure as fatal. In fact some
-   * USB-attached hard-disks fails with this command, probably due to
-   * the SCSI/SATA translation layer.
+  /* Send the "SCSI SYNCHRONIZE CACHE" and then the "SCSI START STOP
+   * UNIT" command to request that the unit be stopped. Don't treat
+   * failures as fatal. In fact some USB-attached hard-disks fails
+   * with one or both of these commands, probably due to the SCSI/SATA
+   * translation layer.
    */
   fd = open (udisks_block_get_device (block), O_RDONLY|O_NONBLOCK|O_EXCL);
   if (fd == -1)
@@ -1494,7 +1509,21 @@ handle_power_off (UDisksDrive           *_drive,
                                              udisks_block_get_device (block));
       goto out;
     }
-  if (!send_scsi_start_stop_command_sync (fd, &error))
+
+  if (!send_scsi_synchronize_cache_command_sync (fd, &error))
+    {
+      udisks_warning ("Ignoring SCSI command SYNCHRONIZE CACHE failure (%s) on %s",
+                      error->message,
+                      udisks_block_get_device (block));
+      g_clear_error (&error);
+    }
+  else
+    {
+      udisks_notice ("Successfully sent SCSI command SYNCHRONIZE CACHE to %s",
+                     udisks_block_get_device (block));
+    }
+
+  if (!send_scsi_start_stop_unit_command_sync (fd, &error))
     {
       udisks_warning ("Ignoring SCSI command START STOP UNIT failure (%s) on %s",
                       error->message,
@@ -1503,9 +1532,10 @@ handle_power_off (UDisksDrive           *_drive,
     }
   else
     {
-      udisks_notice ("Powering off %s - successfully sent SCSI command START STOP UNIT",
+      udisks_notice ("Successfully sent SCSI command START STOP UNIT to %s",
                      udisks_block_get_device (block));
     }
+
   if (close (fd) != 0)
     {
       g_dbus_method_invocation_return_error (invocation,
