@@ -1988,8 +1988,8 @@ udisks_client_get_id_for_display (UDisksClient *client,
                    (g_strcmp0 (id_type[n].version, "*") == 0 && strlen (version) > 0))
             {
               /* we know better than the compiler here */
-#ifdef __GNUC_PREREQ
-# if __GNUC_PREREQ(4,6)
+#if defined( __GNUC_PREREQ) || defined(__clang__)
+# if __GNUC_PREREQ(4,6) || __clang__
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wformat-nonliteral"
 # endif
@@ -1999,8 +1999,8 @@ udisks_client_get_id_for_display (UDisksClient *client,
               else
                 ret = g_strdup_printf (g_dpgettext2 (GETTEXT_PACKAGE, "fs-type", id_type[n].short_name), version);
               goto out;
-#ifdef __GNUC_PREREQ
-# if __GNUC_PREREQ(4,6)
+#if defined( __GNUC_PREREQ) || defined(__clang__)
+# if __GNUC_PREREQ(4,6) || __clang__
 #  pragma GCC diagnostic pop
 # endif
 #endif
