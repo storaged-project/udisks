@@ -1326,7 +1326,8 @@ class Polkit(UDisksTestCase, test_polkitd.PolkitTestCase):
     def test_removable_fs(self):
         '''Create FS on removable drive (allowed)'''
 
-        self.start_polkitd(['org.freedesktop.udisks2.filesystem-mount'])
+        self.start_polkitd(['org.freedesktop.udisks2.filesystem-mount',
+                            'org.freedesktop.udisks2.filesystem-mount-other-seat'])
 
         # the scsi_debug CD drive content is the same as for the HD drive, but
         # udev does not know about this; so give it a nudge to re-probe
