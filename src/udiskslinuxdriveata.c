@@ -88,6 +88,7 @@ struct _UDisksLinuxDriveAta
   UDisksThreadedJob *selftest_job;
 
   gboolean     secure_erase_in_progress;
+  unsigned long drive_read, drive_write;
 };
 
 struct _UDisksLinuxDriveAtaClass
@@ -556,11 +557,39 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
   else
     {
       guchar count;
+      gchar stat_path[PATH_MAX];
+      unsigned long drive_read, drive_write;
+      FILE *statf;
+      gboolean no_io = FALSE;
+
       if (!get_pm_state(device, error, &count))
         goto out;
       awake = count == 0xFF || count == 0x80;
+
+      snprintf (stat_path, sizeof (stat_path), "%s/stat", g_udev_device_get_sysfs_path (device->udev_device));
+      statf = fopen (stat_path, "r");
+      if (statf == NULL)
+        {
+          udisks_warning ("Failed to open %s", stat_path);
+        }
+      else
+        {
+          int res = fscanf (statf, "%lu %*u %*u %*u %lu", &drive_read, &drive_write);
+          fclose (statf);
+
+          if (res == 2)
+            {
+              no_io = (drive_read == drive->drive_read && drive_write == drive->drive_write);
+              udisks_debug ("drive_read=%lu, drive_write=%lu, old drive_read=%lu, old drive_write=%lu\n",
+                            drive_read, drive_write, drive->drive_read, drive->drive_write);
+              drive->drive_read = drive_read;
+              drive->drive_write = drive_write;
+            } else {
+              udisks_warning ("Failed to parse %s, only got %i items", stat_path, res);
+            }
+        }
       /* don't wake up disk unless specically asked to */
-      if (nowakeup && !awake)
+      if (nowakeup && (!awake || no_io))
         {
           g_set_error (error,
                        UDISKS_ERROR,
