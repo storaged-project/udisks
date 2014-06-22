@@ -88,6 +88,8 @@ struct _UDisksLinuxDriveAta
   UDisksThreadedJob *selftest_job;
 
   gboolean     secure_erase_in_progress;
+  unsigned long drive_read, drive_write;
+  gboolean     standby_enabled;
 };
 
 struct _UDisksLinuxDriveAtaClass
@@ -463,6 +465,32 @@ static gboolean get_pm_state (UDisksLinuxDevice *device, GError **error, guchar 
   return rc;
 }
 
+static gboolean update_io_stats (UDisksLinuxDriveAta *drive, UDisksLinuxDevice *device)
+{
+  const gchar *drivepath = g_udev_device_get_sysfs_path (device->udev_device);
+  gchar statpath[PATH_MAX];
+  unsigned long drive_read, drive_write;
+  FILE *statf;
+  gboolean noio = FALSE;
+  snprintf (statpath, sizeof(statpath), "%s/stat", drivepath);
+  statf = fopen (statpath, "r");
+  if (statf == NULL)
+    {
+      udisks_warning ("Failed to open %s\n", statpath);
+    }
+  else
+    {
+      fscanf (statf, "%lu %*u %*u %*u %lu", &drive_read, &drive_write);
+      fclose (statf);
+      noio = drive_read == drive->drive_read && drive_write == drive->drive_write;
+      udisks_debug ("drive_read=%lu, drive_write=%lu, old_drive_read=%lu, old_drive_write=%lu\n",
+                    drive_read, drive_write, drive->drive_read, drive->drive_write);
+      drive->drive_read = drive_read;
+      drive->drive_write = drive_write;
+    }
+  return noio;
+}
+
 /**
  * udisks_linux_drive_ata_refresh_smart_sync:
  * @drive: The #UDisksLinuxDriveAta to refresh.
@@ -556,11 +584,14 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
   else
     {
       guchar count;
+      gboolean noio = FALSE;
       if (!get_pm_state(device, error, &count))
         goto out;
       awake = count == 0xFF || count == 0x80;
+      if (drive->standby_enabled)
+        noio = update_io_stats (drive, device);
       /* don't wake up disk unless specically asked to */
-      if (nowakeup && !awake)
+      if (nowakeup && (!awake || noio))
         {
           g_set_error (error,
                        UDISKS_ERROR,
@@ -634,6 +665,8 @@ udisks_linux_drive_ata_refresh_smart_sync (UDisksLinuxDriveAta  *drive,
   update_smart (drive, device);
 
   ret = TRUE;
+  /* update stats again to account for the IO we just did to read the SMART info */
+  update_io_stats (drive, device);
 
  out:
   g_clear_object (&device);
@@ -1660,6 +1693,7 @@ apply_configuration_thread_func (gpointer user_data)
           udisks_notice ("Set standby timer to %s (value %d) on %s [%s]",
                          pretty, data->ata_pm_standby, device_file, udisks_drive_get_id (data->drive));
           g_free (pretty);
+          data->ata->standby_enabled = data->ata_pm_standby != 0;
         }
     }
 
