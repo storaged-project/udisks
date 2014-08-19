@@ -203,6 +203,7 @@ class UDisksTestCase(unittest.TestCase):
             sys.stderr.write('[wait timeout!] ')
             sys.stderr.flush()
         klass.client.settle()
+        os.sync()
 
     @classmethod
     def sync_workaround(klass):
