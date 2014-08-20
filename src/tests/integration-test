@@ -70,14 +70,6 @@ VDEV_SIZE = 300000000  # size of virtual test device
 # particular the executable bit
 BROKEN_PERMISSIONS_FS = ['ntfs', 'exfat']
 
-# Some D-BUS API methods cause properties to not be up to date yet when a
-# method call finishes, thus we do an udevadm settle as a workaround. Those
-# methods should eventually get fixed properly, but it's unnerving to have
-# the tests fail on them when you are working on something else. This flag
-# gets set by the --no-workarounds option to disable those syncs, so that these
-# race conditions can be fixed.
-workaround_syncs = False
-
 no_options = GLib.Variant('a{sv}', {})
 
 
@@ -201,23 +193,6 @@ class UDisksTestCase(unittest.TestCase):
             timeout -= 1
         if timeout <= 0:
             sys.stderr.write('[wait timeout!] ')
-            sys.stderr.flush()
-        klass.client.settle()
-        os.sync()
-
-    @classmethod
-    def sync_workaround(klass):
-        '''Wait until pending events finished processing (bug workaround).
-
-        This should be called for race conditions in the D-BUS API which cause
-        properties to not be up to date yet when a method call finishes. Those
-        should eventually get fixed properly, but it's unnerving to have the
-        tests fail on them when you are working on something else.
-
-        This sync is not done if running with --no-workarounds.
-        '''
-        if workaround_syncs:
-            klass.sync()
 
     @classmethod
     def zero_device(klass):
@@ -335,7 +310,6 @@ class UDisksTestCase(unittest.TestCase):
 
         block = klass.udisks_block(partition)
         block.call_format_sync(type, options, None)
-        klass.sync_workaround()
 
     @classmethod
     def retry_busy(klass, fn, *args):
@@ -487,6 +461,27 @@ class UDisksTestCase(unittest.TestCase):
         time.sleep(0.5)
         klass.sync()
 
+    def assertEventually(self, fn, value):
+        '''Check that an function is eventually equal to value.
+
+        This is mostly meant for checking object properties, as these are
+        updated asynchronously. This retries up to 10 times.
+        '''
+        retries = 10
+        while retries > 0:
+            if fn() == value:
+                break
+            retries -= 1
+            time.sleep(0.1)
+            self.sync()
+
+        self.assertEqual(fn(), value)
+
+    def assertProperty(self, obj, name, value):
+        '''Check that an object's property is eventually equal to value'''
+
+        self.assertEventually(lambda: obj.get_property(name), value)
+
 
 # ----------------------------------------------------------------------------
 
@@ -560,9 +555,9 @@ class Manager(UDisksTestCase):
                 # can't format due to permission error
                 self.assertRaises(GLib.GError, block.call_format_sync, 'ext2', no_options, None)
 
-                self.assertEqual(block.get_property('id-label'), '')
-                self.assertEqual(block.get_property('id-usage'), '')
-                self.assertEqual(block.get_property('id-type'), '')
+                self.assertProperty(block, 'id-label', '')
+                self.assertProperty(block, 'id-usage', '')
+                self.assertProperty(block, 'id-type', '')
             finally:
                 self.client.settle()
                 loop.call_delete_sync(no_options, None)
@@ -609,10 +604,10 @@ class FS(UDisksTestCase):
         '''properties of zeroed out device'''
 
         self.zero_device()
-        self.assertEqual(self.block.get_property('device'), self.device)
+        self.assertProperty(self.block, 'device', self.device)
         self.assertTrue('Linux_scsi_debug' in self.block.get_property('drive'))
+        self.assertProperty(self.block, 'id-label', '')
         self.assertEqual(self.block.get_property('hint-system'), True)
-        self.assertEqual(self.block.get_property('id-label'), '')
         self.assertEqual(self.block.get_property('id-usage'), '')
         self.assertEqual(self.block.get_property('id-type'), '')
         self.assertEqual(self.block.get_property('id-uuid'), '')
@@ -675,16 +670,16 @@ class FS(UDisksTestCase):
 
         self.mkfs('ext4', 'foo')
         block = self.udisks_block()
-        self.assertEqual(block.get_property('id-usage'), 'filesystem')
-        self.assertEqual(block.get_property('id-type'), 'ext4')
-        self.assertEqual(block.get_property('id-label'), 'foo')
+        self.assertProperty(block, 'id-usage', 'filesystem')
+        self.assertProperty(block, 'id-type', 'ext4')
+        self.assertProperty(block, 'id-label', 'foo')
         self.assertNotEqual(self.udisks_filesystem(), None)
 
         self.fs_create(None, 'empty', no_options)
 
-        self.assertEqual(block.get_property('id-usage'), '')
-        self.assertEqual(block.get_property('id-type'), '')
-        self.assertEqual(block.get_property('id-label'), '')
+        self.assertProperty(block, 'id-usage', '')
+        self.assertProperty(block, 'id-type', '')
+        self.assertProperty(block, 'id-label', '')
         self.assertEqual(self.udisks_filesystem(), None)
 
     def test_create_fs_unknown_type(self):
@@ -728,18 +723,16 @@ class FS(UDisksTestCase):
         # after putting it back, it should be mountable again
         self.readd_devices()
         fs = self.udisks_filesystem()
-        self.assertEqual(fs.get_property('mount-points'), [])
+        self.assertProperty(fs, 'mount-points', [])
 
         mount_path = fs.call_mount_sync(no_options, None)
         self.assertTrue(mount_path.endswith('udiskstest'))
         self.assertTrue('/media/' in mount_path)
         self.assertTrue(self.is_mountpoint(mount_path))
-        self.client.settle()
-        self.assertEqual(fs.get_property('mount-points'), [mount_path])
+        self.assertProperty(fs, 'mount-points', [mount_path])
 
         self.retry_busy(fs.call_unmount_sync, no_options, None)
-        self.client.settle()
-        self.assertEqual(fs.get_property('mount-points'), [])
+        self.assertProperty(fs, 'mount-points', [])
 
     def test_existing_manual_mount_point(self):
         '''fs: does not reuse existing manual mount point'''
@@ -752,8 +745,7 @@ class FS(UDisksTestCase):
         self.assertTrue(mount_path.endswith('udiskstest'))
 
         self.retry_busy(fs.call_unmount_sync, no_options, None)
-        self.client.settle()
-        self.assertEqual(fs.get_property('mount-points'), [])
+        self.assertProperty(fs, 'mount-points', [])
 
         # cleans up mountpoint
         self.assertFalse(os.path.exists(mount_path))
@@ -765,8 +757,7 @@ class FS(UDisksTestCase):
         try:
             new_mount_path = fs.call_mount_sync(no_options, None)
             self.retry_busy(fs.call_unmount_sync, no_options, None)
-            self.client.settle()
-            self.assertEqual(fs.get_property('mount-points'), [])
+            self.assertProperty(fs, 'mount-points', [])
             self.assertEqual(new_mount_path, mount_path + '1')
         finally:
             os.rmdir(mount_path)
@@ -794,8 +785,7 @@ class FS(UDisksTestCase):
         fs = self.udisks_filesystem()
         new_mount_path = fs.call_mount_sync(no_options, None)
         self.retry_busy(fs.call_unmount_sync, no_options, None)
-        self.client.settle()
-        self.assertEqual(fs.get_property('mount-points'), [])
+        self.assertProperty(fs, 'mount-points', [])
         self.assertEqual(new_mount_path, mount_path)
 
     def _do_fs_check(self, type):
@@ -848,9 +838,8 @@ class FS(UDisksTestCase):
 
         block = self.udisks_block()
 
-        self.assertEqual(block.get_property('id-usage'), (type == 'swap') and 'other' or 'filesystem')
-
-        self.assertEqual(block.get_property('id-type'), type)
+        self.assertProperty(block, 'id-usage', (type == 'swap') and 'other' or 'filesystem')
+        self.assertProperty(block, 'id-type', type)
         l = block.get_property('id-label')
         if type == 'vfat':
             l = l.lower()  # VFAT is case insensitive
@@ -887,14 +876,11 @@ class FS(UDisksTestCase):
             return
         self.assertEqual(ret, 0)
 
-        time.sleep(0.5)
-        self.sync()
-        self.assertEqual(fs.get_property('mount-points'), [self.workdir])
+        self.assertProperty(fs, 'mount-points', [self.workdir])
 
         # unmount it
         subprocess.call(['umount', self.workdir])
-        self.sync()
-        self.assertEqual(fs.get_property('mount-points'), [])
+        self.assertProperty(fs, 'mount-points', [])
 
     def _do_udisks_check(self, type, label=None):
         '''udisks API correctly changes file system'''
@@ -916,12 +902,13 @@ class FS(UDisksTestCase):
         self.assertEqual(l, label or '')
 
         block = self.udisks_block()
-        self.assertEqual(block.get_property('id-usage'), (type == 'swap') and 'other' or 'filesystem')
-        self.assertEqual(block.get_property('id-type'), type)
-        l = block.get_property('id-label')
-        if type == 'vfat':
-            l = l.lower()  # VFAT is case insensitive
-        self.assertEqual(l, label or '')
+        self.assertProperty(block, 'id-usage', (type == 'swap') and 'other' or 'filesystem')
+        self.assertProperty(block, 'id-type', type)
+        if type == 'vfat' and label:
+            # VFAT is case insensitive
+            self.assertEventually(lambda: block.get_property('id-label').lower(), label.lower())
+        else:
+            self.assertProperty(block, 'id-label', label or '')
 
         if type == 'swap':
             return
@@ -944,9 +931,11 @@ class FS(UDisksTestCase):
             else:
                 self.assertTrue(mount_path.endswith(label))
 
-        self.sync()
-        self.assertEqual(fs.get_property('mount-points'), [mount_path])
         self.assertTrue(self.is_mountpoint(mount_path))
+        # FIXME: this should work on the existing fs object, but doesn't!
+        self.sync()
+        fs = self.udisks_filesystem()
+        self.assertProperty(fs, 'mount-points', [mount_path])
 
         # no ownership taken, should be root owned
         st = os.stat(mount_path)
@@ -957,7 +946,7 @@ class FS(UDisksTestCase):
         # unmount
         self.retry_busy(fs.call_unmount_sync, no_options, None)
         self.assertFalse(os.path.exists(mount_path), 'mount point was not removed')
-        self.assertEqual(fs.get_property('mount-points'), [mount_path])
+        self.assertProperty(fs, 'mount-points', [])
 
         # create fs with taking ownership (daemon:mail == 1:8)
         # if supports_unix_owners:
@@ -991,20 +980,18 @@ class FS(UDisksTestCase):
             block = self.udisks_block()
             blkid_label = self.blkid().get('ID_FS_LABEL_ENC', '').replace('\\x22', '"').replace(
                 '\\x5c', '\\').replace('\\x24', '$')
-            self.sync_workaround()
             if type == 'vfat':
                 # EXFAIL: often (but not always) the label appears in all upper case
                 self.assertEqual(blkid_label.upper(), l.upper())
-                self.assertEqual(block.get_property('id-label').upper(), l.upper())
+                self.assertEventually(lambda: block.get_property('id-label').upper(), l.upper())
             else:
                 self.assertEqual(blkid_label, l)
-                self.assertEqual(block.get_property('id-label'), l)
+                self.assertProperty(block, 'id-label', l)
 
             # test setting empty label
             fs.call_set_label_sync('', no_options, None)
-            self.sync_workaround()
             self.assertEqual(self.blkid().get('ID_FS_LABEL_ENC', ''), '')
-            self.assertEqual(block.get_property('id-label'), '')
+            self.assertProperty(block, 'id-label', '')
 
         # check fs - Not implemented in udisks yet
         # self.assertEqual(iface.FilesystemCheck([]), True)
@@ -1025,15 +1012,14 @@ class FS(UDisksTestCase):
             mount_path = cd_fs.call_mount_sync(no_options, None)
             try:
                 self.assertTrue('/media/' in mount_path)
-                self.sync()
-                self.assertEqual(cd_fs.get_property('mount-points'), [mount_path])
+                self.assertProperty(cd_fs, 'mount-points', [mount_path])
                 self.assertTrue(self.is_mountpoint(mount_path))
 
-                self.assertEqual(self.udisks_block(cd=True).get_property('read-only'), True)
+                self.assertProperty(self.udisks_block(cd=True), 'read-only', True)
             finally:
                 self.retry_busy(cd_fs.call_unmount_sync, no_options, None)
                 self.assertFalse(os.path.exists(mount_path), 'mount point was not removed')
-                self.assertEqual(cd_fs.get_property('mount-points'), [mount_path])
+                self.assertProperty(cd_fs, 'mount-points', [])
 
     def _do_file_perms_checks(self, type, mount_point):
         '''Check for permissions for data files and executables.
@@ -1139,6 +1125,7 @@ class Luks(UDisksTestCase):
         self.fs_create(None, 'ext4', GLib.Variant('a{sv}', {
             'encrypt.passphrase': GLib.Variant('s', 's3kr1t'),
             'label': GLib.Variant('s', 'treasure')}))
+        self.client.settle()
 
         try:
             block = self.udisks_block()
@@ -1214,8 +1201,7 @@ class Luks(UDisksTestCase):
             self.assertTrue('/media/' in mount_path)
             self.assertTrue(mount_path.endswith('treasure'))
             self.assertTrue(self.is_mountpoint(mount_path))
-            self.client.settle()
-            self.assertEqual(fs.get_property('mount-points'), [mount_path])
+            self.assertProperty(fs, 'mount-points', [mount_path])
 
             # can't lock, busy
             try:
@@ -1318,7 +1304,7 @@ class Polkit(UDisksTestCase, test_polkitd.PolkitTestCase):
         options = GLib.Variant('a{sv}', {'label': GLib.Variant('s', 'polkityes')})
         self.fs_create(None, 'ext4', options)
         block = self.udisks_block()
-        self.assertEqual(block.get_property('id-usage'), 'filesystem')
+        self.assertProperty(block, 'id-usage', 'filesystem')
         self.assertEqual(block.get_property('id-type'), 'ext4')
         self.assertEqual(block.get_property('id-label'), 'polkityes')
 
@@ -1349,13 +1335,9 @@ if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='udisks2 integration test suite')
     argparser.add_argument('-l', '--log-file', dest='logfile',
                            help='write daemon log to a file')
-    argparser.add_argument('-w', '--no-workarounds', action="store_true", default=False,
-                           help='Disable workarounds for race conditions in the D-BUS API')
     argparser.add_argument('testname', nargs='*',
                            help='name of test class or method (e. g. "Drive", "FS.test_ext2")')
     args = argparser.parse_args()
-
-    workaround_syncs = not args.no_workarounds
 
     UDisksTestCase.init(logfile=args.logfile)
     if args.testname:
