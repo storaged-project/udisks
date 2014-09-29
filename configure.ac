@@ -145,10 +145,10 @@ PKG_CHECK_MODULES(LIBATASMART, [libatasmart >= 0.17])
 AC_SUBST(LIBATASMART_CFLAGS)
 AC_SUBST(LIBATASMART_LIBS)
 
-PKG_CHECK_MODULES(LIBSYSTEMD_LOGIN,
-                  [libsystemd-login >= 44 libsystemd-daemon],
-                  have_libsystemd_login=yes,
-                  have_libsystemd_login=no)
+PKG_CHECK_MODULES(LIBSYSTEMD_LOGIN, [libsystemd >= 209], [have_libsystemd_login=yes],
+                  [PKG_CHECK_MODULES(LIBSYSTEMD_LOGIN, [libsystemd-login >= 44 libsystemd-daemon],
+                  [have_libsystemd_login=yes],
+                  [have_libsystemd_login=no])])
 AM_CONDITIONAL(HAVE_LIBSYSTEMD_LOGIN, test x$have_libsystemd_login = xyes)
 if test "x$have_libsystemd_login" = "xyes"; then
   AC_DEFINE([HAVE_LIBSYSTEMD_LOGIN], 1, [Define to 1 if libsystemd-login is available])
