@@ -468,20 +468,14 @@ udisks_linux_drive_object_get_block (UDisksLinuxDriveObject   *object,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-typedef gboolean (*HasInterfaceFunc)    (UDisksLinuxDriveObject     *object);
-typedef void     (*ConnectInterfaceFunc) (UDisksLinuxDriveObject    *object);
-typedef gboolean (*UpdateInterfaceFunc) (UDisksLinuxDriveObject     *object,
-                                         const gchar    *uevent_action,
-                                         GDBusInterface *interface);
-
 static gboolean
-update_iface (UDisksLinuxDriveObject   *object,
-              const gchar              *uevent_action,
-              HasInterfaceFunc          has_func,
-              ConnectInterfaceFunc      connect_func,
-              UpdateInterfaceFunc       update_func,
-              GType                     skeleton_type,
-              gpointer                  _interface_pointer)
+update_iface (UDisksObject                     *object,
+              const gchar                      *uevent_action,
+              UDisksObjectHasInterfaceFunc      has_func,
+              UDisksObjectConnectInterfaceFunc  connect_func,
+              UDisksObjectUpdateInterfaceFunc   update_func,
+              GType                             skeleton_type,
+              gpointer                          _interface_pointer)
 {
   gboolean ret = FALSE;
   gboolean has;
@@ -534,37 +528,40 @@ update_iface (UDisksLinuxDriveObject   *object,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-drive_check (UDisksLinuxDriveObject *object)
+drive_check (UDisksObject *object)
 {
   return TRUE;
 }
 
 static void
-drive_connect (UDisksLinuxDriveObject *object)
+drive_connect (UDisksObject *object)
 {
 }
 
 static gboolean
-drive_update (UDisksLinuxDriveObject  *object,
-              const gchar             *uevent_action,
-              GDBusInterface          *_iface)
+drive_update (UDisksObject   *object,
+              const gchar    *uevent_action,
+              GDBusInterface *_iface)
 {
-  return udisks_linux_drive_update (UDISKS_LINUX_DRIVE (object->iface_drive), object);
+  UDisksLinuxDriveObject *drive_object = UDISKS_LINUX_DRIVE_OBJECT (object);
+
+  return udisks_linux_drive_update (UDISKS_LINUX_DRIVE (drive_object->iface_drive), drive_object);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-drive_ata_check (UDisksLinuxDriveObject *object)
+drive_ata_check (UDisksObject *object)
 {
+  UDisksLinuxDriveObject *drive_object = UDISKS_LINUX_DRIVE_OBJECT (object);
   gboolean ret;
   UDisksLinuxDevice *device;
 
   ret = FALSE;
-  if (object->devices == NULL)
+  if (drive_object->devices == NULL)
     goto out;
 
-  device = object->devices->data;
+  device = drive_object->devices->data;
   if (device->ata_identify_device_data != NULL || device->ata_identify_packet_device_data != NULL)
     ret = TRUE;
 
@@ -573,17 +570,19 @@ drive_ata_check (UDisksLinuxDriveObject *object)
 }
 
 static void
-drive_ata_connect (UDisksLinuxDriveObject *object)
+drive_ata_connect (UDisksObject *object)
 {
 
 }
 
 static gboolean
-drive_ata_update (UDisksLinuxDriveObject  *object,
-                  const gchar             *uevent_action,
-                  GDBusInterface          *_iface)
+drive_ata_update (UDisksObject   *object,
+                  const gchar    *uevent_action,
+                  GDBusInterface *_iface)
 {
-  return udisks_linux_drive_ata_update (UDISKS_LINUX_DRIVE_ATA (object->iface_drive_ata), object);
+  UDisksLinuxDriveObject *drive_object = UDISKS_LINUX_DRIVE_OBJECT (object);
+
+  return udisks_linux_drive_ata_update (UDISKS_LINUX_DRIVE_ATA (drive_object->iface_drive_ata), drive_object);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -660,9 +659,9 @@ udisks_linux_drive_object_uevent (UDisksLinuxDriveObject *object,
     }
 
   conf_changed = FALSE;
-  conf_changed |= update_iface (object, action, drive_check, drive_connect, drive_update,
+  conf_changed |= update_iface (UDISKS_OBJECT (object), action, drive_check, drive_connect, drive_update,
                                 UDISKS_TYPE_LINUX_DRIVE, &object->iface_drive);
-  conf_changed |= update_iface (object, action, drive_ata_check, drive_ata_connect, drive_ata_update,
+  conf_changed |= update_iface (UDISKS_OBJECT (object), action, drive_ata_check, drive_ata_connect, drive_ata_update,
                                 UDISKS_TYPE_LINUX_DRIVE_ATA, &object->iface_drive_ata);
 
   if (conf_changed)

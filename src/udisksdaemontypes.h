@@ -193,4 +193,11 @@ typedef enum
 struct _UDisksLinuxDevice;
 typedef struct _UDisksLinuxDevice UDisksLinuxDevice;
 
+
+typedef gboolean (*UDisksObjectHasInterfaceFunc)     (UDisksObject   *object);
+typedef void     (*UDisksObjectConnectInterfaceFunc) (UDisksObject   *object);
+typedef gboolean (*UDisksObjectUpdateInterfaceFunc)  (UDisksObject   *object,
+                                                      const gchar    *uevent_action,
+                                                      GDBusInterface *interface);
+
 #endif /* __UDISKS_DAEMON_TYPES_H__ */
