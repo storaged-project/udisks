@@ -717,7 +717,7 @@ handle_change_passphrase (UDisksEncrypted        *encrypted,
                                               NULL, /* gint *out_status */
                                               &error_message,
                                               passphrases,  /* input_string */
-                                              "cryptsetup luksChangeKey %s",
+                                              "cryptsetup --force-password luksChangeKey %s",
                                               escaped_device))
     {
       g_dbus_method_invocation_return_error (invocation,
