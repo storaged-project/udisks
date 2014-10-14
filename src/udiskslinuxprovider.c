@@ -840,6 +840,17 @@ handle_block_uevent_for_block (UDisksLinuxProvider *provider,
 
 /* called with lock held */
 static void
+handle_block_uevent_for_modules (UDisksLinuxProvider *provider,
+                                 const gchar         *action,
+                                 UDisksLinuxDevice   *device)
+{
+  /* FIXME: in the future modules will be able to export new kind of objects, other than block/drive/mdraid */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/* called with lock held */
+static void
 handle_block_uevent (UDisksLinuxProvider *provider,
                      const gchar         *action,
                      UDisksLinuxDevice   *device)
@@ -858,6 +869,7 @@ handle_block_uevent (UDisksLinuxProvider *provider,
       handle_block_uevent_for_block (provider, action, device);
       handle_block_uevent_for_drive (provider, action, device);
       handle_block_uevent_for_mdraid (provider, action, device);
+      handle_block_uevent_for_modules (provider, action, device);
     }
   else
     {
@@ -877,6 +889,7 @@ handle_block_uevent (UDisksLinuxProvider *provider,
           handle_block_uevent_for_mdraid (provider, action, device);
           handle_block_uevent_for_drive (provider, action, device);
           handle_block_uevent_for_block (provider, action, device);
+          handle_block_uevent_for_modules (provider, action, device);
         }
     }
 

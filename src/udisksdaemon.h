@@ -39,6 +39,7 @@ UDisksCrypttabMonitor    *udisks_daemon_get_crypttab_monitor  (UDisksDaemon    *
 UDisksLinuxProvider      *udisks_daemon_get_linux_provider    (UDisksDaemon    *daemon);
 PolkitAuthority          *udisks_daemon_get_authority         (UDisksDaemon    *daemon);
 UDisksState              *udisks_daemon_get_state             (UDisksDaemon    *daemon);
+UDisksModuleManager      *udisks_daemon_get_module_manager    (UDisksDaemon    *daemon);
 
 /**
  * UDisksDaemonWaitFunc:

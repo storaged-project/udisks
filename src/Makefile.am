@@ -21,6 +21,7 @@ AM_CPPFLAGS = \
 	$(GUDEV_CFLAGS) 					\
 	$(GLIB_CFLAGS) 						\
 	$(GIO_CFLAGS)						\
+	$(GMODULE_CFLAGS)					\
 	$(WARN_CFLAGS)						\
 	$(NULL)
 
@@ -78,6 +79,7 @@ libudisks_daemon_la_SOURCES =						\
 	udiskscrypttabmonitor.h		udiskscrypttabmonitor.c		\
 	udiskslinuxdevice.h		udiskslinuxdevice.c		\
 	udisksata.h			udisksata.c			\
+	udisksmodulemanager.h		udisksmodulemanager.c		\
 	$(BUILT_SOURCES)						\
 	$(NULL)
 
@@ -86,6 +88,7 @@ libudisks_daemon_la_CFLAGS =				\
 	-DG_LOG_DOMAIN=\"udisksd\"			\
 	$(GLIB_CFLAGS)					\
 	$(GIO_CFLAGS)					\
+	$(GMODULE_CFLAGS)				\
 	$(GUDEV_CFLAGS)					\
 	$(LIBATASMART_CFLAGS)				\
 	$(POLKIT_GOBJECT_1_CFLAGS) 			\
@@ -96,6 +99,7 @@ libudisks_daemon_la_CFLAGS =				\
 libudisks_daemon_la_LIBADD =				\
 	$(GLIB_LIBS)					\
 	$(GIO_LIBS)					\
+	$(GMODULE_LIBS)					\
 	$(GUDEV_LIBS)					\
 	$(LIBATASMART_LIBS)				\
 	$(POLKIT_GOBJECT_1_LIBS) 			\
@@ -120,6 +124,7 @@ udisksd_CFLAGS = 					\
 udisksd_LDADD = 					\
 	$(GLIB_LIBS)					\
 	$(GIO_LIBS)					\
+	$(GMODULE_LIBS)					\
 	libudisks-daemon.la				\
 	$(NULL)
 

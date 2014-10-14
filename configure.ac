@@ -142,6 +142,10 @@ PKG_CHECK_MODULES(GIO, [gio-unix-2.0 >= 2.36])
 AC_SUBST(GIO_CFLAGS)
 AC_SUBST(GIO_LIBS)
 
+PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
+AC_SUBST(GMODULE_CFLAGS)
+AC_SUBST(GMODULE_LIBS)
+
 PKG_CHECK_MODULES(POLKIT_GOBJECT_1, [polkit-gobject-1 >= 0.102])
 AC_SUBST(POLKIT_GOBJECT_1_CFLAGS)
 AC_SUBST(POLKIT_GOBJECT_1_LIBS)
@@ -216,6 +220,7 @@ udisks/udisks2.pc
 src/Makefile
 src/tests/Makefile
 tools/Makefile
+modules/Makefile
 doc/Makefile
 doc/version.xml
 doc/man/Makefile

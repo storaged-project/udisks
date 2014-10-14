@@ -112,6 +112,9 @@ typedef struct _UDisksLinuxPartitionTable UDisksLinuxPartitionTable;
 struct UDisksInhibitCookie;
 typedef struct UDisksInhibitCookie UDisksInhibitCookie;
 
+struct _UDisksModuleManager;
+typedef struct _UDisksModuleManager UDisksModuleManager;
+
 /**
  * UDisksThreadedJobFunc:
  * @job: A #UDisksThreadedJob.

@@ -38,6 +38,7 @@
 #include "udiskscrypttabentry.h"
 #include "udiskslinuxblockobject.h"
 #include "udiskslinuxdevice.h"
+#include "udisksmodulemanager.h"
 
 /**
  * SECTION:udisksdaemon
@@ -73,6 +74,8 @@ struct _UDisksDaemon
   UDisksFstabMonitor *fstab_monitor;
 
   UDisksCrypttabMonitor *crypttab_monitor;
+
+  UDisksModuleManager *module_manager;
 };
 
 struct _UDisksDaemonClass
@@ -107,6 +110,7 @@ udisks_daemon_finalize (GObject *object)
   g_object_unref (daemon->connection);
   g_object_unref (daemon->fstab_monitor);
   g_object_unref (daemon->crypttab_monitor);
+  g_clear_object (&daemon->module_manager);
 
   if (G_OBJECT_CLASS (udisks_daemon_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_daemon_parent_class)->finalize (object);
@@ -215,6 +219,9 @@ udisks_daemon_constructed (GObject *object)
           udisks_error ("Error creating directory %s: %m", PACKAGE_LOCALSTATE_DIR "/lib/udisks2");
         }
     }
+
+  /* TODO: load on demand instead of on startup */
+  daemon->module_manager = udisks_module_manager_new ();
 
   daemon->mount_monitor = udisks_mount_monitor_new ();
 
@@ -1091,6 +1098,15 @@ GList *
 udisks_daemon_get_objects (UDisksDaemon *daemon)
 {
   return g_dbus_object_manager_get_objects (G_DBUS_OBJECT_MANAGER (daemon->object_manager));
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+UDisksModuleManager *
+udisks_daemon_get_module_manager (UDisksDaemon *daemon)
+{
+  /* FIXME: add property and getter/setter? */
+  return daemon->module_manager;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

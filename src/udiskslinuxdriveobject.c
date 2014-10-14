@@ -34,6 +34,10 @@
 #include "udiskslinuxdriveata.h"
 #include "udiskslinuxblockobject.h"
 #include "udiskslinuxdevice.h"
+#include "udisksmodulemanager.h"
+
+#include <modules/udisksmoduleifacetypes.h>
+
 
 /**
  * SECTION:udiskslinuxdriveobject
@@ -63,12 +67,21 @@ struct _UDisksLinuxDriveObject
   /* interfaces */
   UDisksDrive *iface_drive;
   UDisksDriveAta *iface_drive_ata;
+  GHashTable *module_ifaces;
 };
 
 struct _UDisksLinuxDriveObjectClass
 {
   UDisksObjectSkeletonClass parent_class;
 };
+
+typedef struct
+{
+  UDisksObject *interface;
+  UDisksObjectHasInterfaceFunc has_func;
+  UDisksObjectConnectInterfaceFunc connect_func;
+  UDisksObjectUpdateInterfaceFunc update_func;
+} ModuleInterfaceEntry;
 
 enum
 {
@@ -92,6 +105,8 @@ udisks_linux_drive_object_finalize (GObject *_object)
     g_object_unref (object->iface_drive);
   if (object->iface_drive_ata != NULL)
     g_object_unref (object->iface_drive_ata);
+  if (object->module_ifaces != NULL)
+    g_hash_table_destroy (object->module_ifaces);
 
   if (G_OBJECT_CLASS (udisks_linux_drive_object_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_linux_drive_object_parent_class)->finalize (_object);
@@ -609,6 +624,40 @@ find_link_for_sysfs_path (UDisksLinuxDriveObject *object,
   return ret;
 }
 
+static void
+free_module_interface_entry (ModuleInterfaceEntry *entry)
+{
+  if (entry->interface != NULL)
+    g_object_unref (entry->interface);
+  g_free (entry);
+}
+
+static void
+ensure_module_ifaces (UDisksLinuxDriveObject *object,
+                      UDisksModuleManager    *module_manager)
+{
+  GList *l;
+  ModuleInterfaceEntry *entry;
+  UDisksModuleInterfaceInfo *ii;
+
+  /* Assume all modules are either unloaded or loaded at the same time, so don't regenerate entries */
+  if (object->module_ifaces == NULL)
+    {
+      object->module_ifaces = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, (GDestroyNotify) free_module_interface_entry);
+
+      l = udisks_module_manager_get_drive_object_iface_infos (module_manager);
+      for (; l; l = l->next)
+        {
+          ii = l->data;
+          entry = g_new0 (ModuleInterfaceEntry, 1);
+          entry->has_func = ii->has_func;
+          entry->connect_func = ii->connect_func;
+          entry->update_func = ii->update_func;
+          g_hash_table_replace (object->module_ifaces, GSIZE_TO_POINTER (ii->skeleton_type), entry);
+        }
+    }
+}
+
 /**
  * udisks_linux_drive_object_uevent:
  * @object: A #UDisksLinuxDriveObject.
@@ -624,6 +673,10 @@ udisks_linux_drive_object_uevent (UDisksLinuxDriveObject *object,
 {
   GList *link;
   gboolean conf_changed;
+  UDisksModuleManager *module_manager;
+  GHashTableIter iter;
+  gpointer key;
+  ModuleInterfaceEntry *entry;
 
   g_return_if_fail (UDISKS_IS_LINUX_DRIVE_OBJECT (object));
   g_return_if_fail (device == NULL || UDISKS_IS_LINUX_DEVICE (device));
@@ -663,6 +716,19 @@ udisks_linux_drive_object_uevent (UDisksLinuxDriveObject *object,
                                 UDISKS_TYPE_LINUX_DRIVE, &object->iface_drive);
   conf_changed |= update_iface (UDISKS_OBJECT (object), action, drive_ata_check, drive_ata_connect, drive_ata_update,
                                 UDISKS_TYPE_LINUX_DRIVE_ATA, &object->iface_drive_ata);
+
+  /* Attach interfaces from modules */
+  module_manager = udisks_daemon_get_module_manager (object->daemon);
+  if (module_manager != NULL)
+    {
+      ensure_module_ifaces (object, module_manager);
+      g_hash_table_iter_init (&iter, object->module_ifaces);
+      while (g_hash_table_iter_next (&iter, &key, (gpointer *) &entry))
+        {
+          conf_changed |= update_iface (UDISKS_OBJECT (object), action, entry->has_func, entry->connect_func, entry->update_func,
+                                        (GType) key, &entry->interface);
+        }
+    }
 
   if (conf_changed)
     apply_configuration (object);
