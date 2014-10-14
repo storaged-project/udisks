@@ -221,6 +221,8 @@ src/Makefile
 src/tests/Makefile
 tools/Makefile
 modules/Makefile
+modules/dummy/Makefile
+modules/dummy/data/Makefile
 doc/Makefile
 doc/version.xml
 doc/man/Makefile
