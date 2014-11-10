@@ -30,11 +30,13 @@
 #include <udisks/udisks-generated.h>
 #include <src/udiskslinuxblockobject.h>
 #include <src/udiskslinuxdriveobject.h>
+#include <src/udiskslinuxdevice.h>
 
 #include "dummy-generated.h"
 #include "dummytypes.h"
 #include "dummylinuxblock.h"
 #include "dummylinuxdrive.h"
+#include "dummyloopobject.h"
 
 
 
@@ -120,4 +122,32 @@ udisks_module_get_drive_object_iface_setup_entries (void)
   iface[0]->skeleton_type = DUMMY_TYPE_LINUX_DRIVE;
 
   return iface;
+}
+
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static GDBusObjectSkeleton *
+dummy_object_new (UDisksDaemon      *daemon,
+                  UDisksLinuxDevice *device)
+{
+  DummyLoopObject *object;
+
+  object = dummy_loop_object_new (daemon, device);
+
+  if (object)
+    return G_DBUS_OBJECT_SKELETON (object);
+  else
+    return NULL;
+}
+
+UDisksModuleObjectNewFunc *
+udisks_module_get_object_new_funcs (void)
+{
+  UDisksModuleObjectNewFunc *funcs;
+
+  funcs = g_new0 (UDisksModuleObjectNewFunc, 2);
+  funcs[0] = &dummy_object_new;
+
+  return funcs;
 }

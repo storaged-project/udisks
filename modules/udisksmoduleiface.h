@@ -29,9 +29,30 @@
 
 #include "udisksmoduleifacetypes.h"
 
+G_BEGIN_DECLS
+
+/**
+ * UDisks module interface setup functions:
+ *   Functions below are module entry functions that return an array of setup
+ *   functions (or structures). See udisksmoduleifacetypes.h for return type
+ *   definitions.
+ *
+ *   Modules can provide multiple setup structs or functions for every type of
+ *   UDisks way of extension. A result is then mixed by UDisksModuleManager
+ *   with other returned entries making it no strict relation to the particular
+ *   module.
+ *
+ *   Setup functions are queried by UDisksModuleManager only once (typically on
+ *   startup or on demand). Modules are never unloaded for safety reasons.
+ *
+ */
 
 G_MODULE_EXPORT UDisksModuleInterfaceInfo **udisks_module_get_block_object_iface_setup_entries (void);
 G_MODULE_EXPORT UDisksModuleInterfaceInfo **udisks_module_get_drive_object_iface_setup_entries (void);
 
+G_MODULE_EXPORT UDisksModuleObjectNewFunc  *udisks_module_get_object_new_funcs (void);
+
+
+G_END_DECLS
 
 #endif /* __UDISKS_MODULE_IFACE_H__ */

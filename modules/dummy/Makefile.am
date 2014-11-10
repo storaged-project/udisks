@@ -48,16 +48,21 @@ libudisks2_dummyincludedir=$(includedir)/udisks2/udisks
 libudisks2_dummyinclude_HEADERS=							\
 	$(top_srcdir)/modules/udisksmoduleiface.h					\
 	$(top_srcdir)/modules/udisksmoduleifacetypes.h					\
+	$(top_srcdir)/modules/udisksmoduleobject.h					\
 	$(NULL)
 
 libudisks2_dummy_la_SOURCES =								\
 	$(BUILT_SOURCES)								\
 	$(top_srcdir)/modules/udisksmoduleiface.h					\
 	$(top_srcdir)/modules/udisksmoduleifacetypes.h					\
+	$(top_srcdir)/modules/udisksmoduleobject.h					\
+	$(top_srcdir)/modules/udisksmoduleobject.c					\
 	dummytypes.h									\
 	dummymoduleiface.c								\
 	dummylinuxblock.h			dummylinuxblock.c			\
 	dummylinuxdrive.h			dummylinuxdrive.c			\
+	dummyloopobject.h			dummyloopobject.c			\
+	dummylinuxloop.h			dummylinuxloop.c			\
 	$(NULL)
 
 libudisks2_dummy_la_CPPFLAGS = 				\

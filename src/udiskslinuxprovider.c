@@ -33,6 +33,11 @@
 #include "udiskslinuxmanager.h"
 #include "udisksstate.h"
 #include "udiskslinuxdevice.h"
+#include "udisksmodulemanager.h"
+
+#include <modules/udisksmoduleifacetypes.h>
+#include <modules/udisksmoduleobject.h>
+
 
 /**
  * SECTION:udiskslinuxprovider
@@ -72,6 +77,10 @@ struct _UDisksLinuxProvider
   GHashTable *uuid_to_mdraid;
   GHashTable *sysfs_path_to_mdraid;
   GHashTable *sysfs_path_to_mdraid_members;
+
+  /* maps from UDisksModuleObjectNewFuncs to nested hashtables containing object
+   * skeleton instances as keys and GLists of consumed sysfs path as values */
+  GHashTable *module_funcs_to_instances;
 
   GFileMonitor *etc_udisks2_dir_monitor;
 
@@ -149,6 +158,7 @@ udisks_linux_provider_finalize (GObject *object)
   g_hash_table_unref (provider->uuid_to_mdraid);
   g_hash_table_unref (provider->sysfs_path_to_mdraid);
   g_hash_table_unref (provider->sysfs_path_to_mdraid_members);
+  g_hash_table_unref (provider->module_funcs_to_instances);
   g_object_unref (provider->gudev_client);
 
   udisks_object_skeleton_set_manager (provider->manager_object, NULL);
@@ -435,6 +445,10 @@ udisks_linux_provider_start (UDisksProvider *_provider)
                                                                   g_str_equal,
                                                                   g_free,
                                                                   NULL);
+  provider->module_funcs_to_instances = g_hash_table_new_full (g_direct_hash,
+                                                               g_direct_equal,
+                                                               NULL,
+                                                               (GDestroyNotify) g_hash_table_unref);
 
   devices = g_udev_client_query_by_subsystem (provider->gudev_client, "block");
 
@@ -844,7 +858,141 @@ handle_block_uevent_for_modules (UDisksLinuxProvider *provider,
                                  const gchar         *action,
                                  UDisksLinuxDevice   *device)
 {
-  /* FIXME: in the future modules will be able to export new kind of objects, other than block/drive/mdraid */
+  const gchar *sysfs_path;
+  GDBusObjectSkeleton *object;
+  UDisksDaemon *daemon;
+  UDisksModuleManager *module_manager;
+  GList *new_funcs, *l, *ll;
+  UDisksModuleObjectNewFunc module_object_new_func;
+  GHashTable *inst_table;
+  GHashTableIter iter;
+  gboolean handled;
+  GHashTable *inst_sysfs_paths;
+  GList *instances_to_remove;
+  GList *funcs_to_remove = NULL;
+
+  daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
+  module_manager = udisks_daemon_get_module_manager (daemon);
+  new_funcs = udisks_module_manager_get_module_object_new_funcs (module_manager);
+
+  /* The object hierarchy is as follows:
+   *
+   *   provider->module_funcs_to_instances:
+   *      key: a UDisksModuleObjectNewFunc (pointer)
+   *      value: nested hashtable
+   *          key: a UDisksObjectSkeleton instance implementing the UDisksModuleObject interface
+   *          value: nested hashtable
+   *              key: sysfs path attached to the UDisksObjectSkeleton instance
+   *              value: -- no values, just keys
+   */
+
+  sysfs_path = g_udev_device_get_sysfs_path (device->udev_device);
+
+  /* The following algorithm brings some guarantees to existing instances:
+   *  - every instance can claim one or more devices (sysfs paths)
+   *  - existing instances are asked first and only when none is interested in claiming the device
+   *    a new instance for the current UDisksModuleObjectNewFunc is attempted to be created
+   */
+
+  for (l = new_funcs; l; l = l->next)
+    {
+      handled = FALSE;
+      instances_to_remove = NULL;
+      module_object_new_func = l->data;
+      inst_table = g_hash_table_lookup (provider->module_funcs_to_instances, module_object_new_func);
+      if (inst_table)
+        {
+          /* First try existing instances and ask them to process the uevent */
+          g_hash_table_iter_init (&iter, inst_table);
+          while (g_hash_table_iter_next (&iter, (gpointer *) &object, (gpointer *) &inst_sysfs_paths))
+            {
+              if (udisks_module_object_process_uevent (UDISKS_MODULE_OBJECT (object), action, device))
+                {
+                  handled = TRUE;
+                  if (g_hash_table_contains (inst_sysfs_paths, sysfs_path))
+                    {
+                      /* sysfs paths match, the object has processed the event just fine */
+                    }
+                  else
+                    {
+                      /* sysfs paths don't match yet the foreign instance is interested in claiming the device */
+                      g_hash_table_add (inst_sysfs_paths, g_strdup (sysfs_path));
+                    }
+                }
+              else
+                {
+                  if (g_hash_table_contains (inst_sysfs_paths, sysfs_path))
+                    {
+                      /* sysfs paths match, the object has indicated it's no longer interested in the current sysfs path */
+                      g_warn_if_fail (g_hash_table_remove (inst_sysfs_paths, sysfs_path));
+                      if (g_hash_table_size (inst_sysfs_paths) == 0)
+                        {
+                          /* no more sysfs paths, queue for removal */
+                          instances_to_remove = g_list_append (instances_to_remove, object);
+                        }
+                      handled = TRUE;
+                     }
+                  else
+                    {
+                      /* the instance is not interested in claiming this device */
+                      ;
+                    }
+                }
+            }
+
+          /* Remove empty instances */
+          if (instances_to_remove != NULL)
+            {
+              for (ll = instances_to_remove; ll; ll = ll->next)
+                {
+                  object = ll->data;
+                  g_dbus_object_manager_server_unexport (udisks_daemon_get_object_manager (daemon),
+                                                         g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
+                  g_warn_if_fail (g_hash_table_remove (inst_table, object));
+                }
+              if (g_hash_table_size (inst_table) == 0)
+                {
+                  /* no more instances, queue for removal */
+                  funcs_to_remove = g_list_append (funcs_to_remove, module_object_new_func);
+                  inst_table = NULL;
+                }
+              g_list_free (instances_to_remove);
+            }
+        }
+
+      /* no instance claimed or no instance was interested in this sysfs path, try creating new instance for the current UDisksModuleObjectNewFunc */
+      if (! handled)
+        {
+          object = module_object_new_func (daemon, device);
+          if (object != NULL)
+            {
+              g_dbus_object_manager_server_export_uniquely (udisks_daemon_get_object_manager (daemon),
+                                                            G_DBUS_OBJECT_SKELETON (object));
+              inst_sysfs_paths = g_hash_table_new_full (g_str_hash,
+                                                        g_str_equal,
+                                                        (GDestroyNotify) g_free,
+                                                        NULL);
+              g_warn_if_fail (g_hash_table_add (inst_sysfs_paths, g_strdup (sysfs_path)));
+              if (inst_table == NULL)
+                {
+                  inst_table = g_hash_table_new_full (g_direct_hash,
+                                                      g_direct_equal,
+                                                      (GDestroyNotify) g_object_unref,
+                                                      (GDestroyNotify) g_hash_table_unref);
+                  g_warn_if_fail (g_hash_table_insert (provider->module_funcs_to_instances, module_object_new_func, inst_table));
+                }
+              g_warn_if_fail (g_hash_table_insert (inst_table, object, inst_sysfs_paths));
+            }
+        }
+    }
+
+  /* Remove empty funcs */
+  if (funcs_to_remove != NULL)
+    {
+      for (ll = funcs_to_remove; ll; ll = ll->next)
+        g_warn_if_fail (g_hash_table_remove (provider->module_funcs_to_instances, ll->data));
+      g_list_free (funcs_to_remove);
+    }
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -866,10 +1014,11 @@ handle_block_uevent (UDisksLinuxProvider *provider,
    */
   if (g_strcmp0 (action, "remove") == 0)
     {
+      /* FIXME: shall modules be processed before or after block/drive events? */
+      handle_block_uevent_for_modules (provider, action, device);
       handle_block_uevent_for_block (provider, action, device);
       handle_block_uevent_for_drive (provider, action, device);
       handle_block_uevent_for_mdraid (provider, action, device);
-      handle_block_uevent_for_modules (provider, action, device);
     }
   else
     {
@@ -889,6 +1038,7 @@ handle_block_uevent (UDisksLinuxProvider *provider,
           handle_block_uevent_for_mdraid (provider, action, device);
           handle_block_uevent_for_drive (provider, action, device);
           handle_block_uevent_for_block (provider, action, device);
+          /* FIXME: shall modules be processed before or after block/drive events? */
           handle_block_uevent_for_modules (provider, action, device);
         }
     }
@@ -960,6 +1110,49 @@ housekeeping_all_drives (UDisksLinuxProvider *provider,
   g_list_free (objects);
 }
 
+/* Runs in housekeeping thread - called without lock held */
+static void
+housekeeping_all_modules (UDisksLinuxProvider *provider,
+                          guint                secs_since_last)
+{
+  GList *objects = NULL;
+  GList *l;
+  GHashTable *inst_table;
+  GHashTableIter iter_funcs, iter_inst;
+  GDBusObjectSkeleton *inst;
+
+  G_LOCK (provider_lock);
+  g_hash_table_iter_init (&iter_funcs, provider->module_funcs_to_instances);
+  while (g_hash_table_iter_next (&iter_funcs, NULL, (gpointer *) &inst_table))
+    {
+      g_hash_table_iter_init (&iter_inst, inst_table);
+      while (g_hash_table_iter_next (&iter_inst, (gpointer *) &inst, NULL))
+        objects = g_list_append (objects, g_object_ref (inst));
+    }
+  G_UNLOCK (provider_lock);
+
+  for (l = objects; l != NULL; l = l->next)
+    {
+      UDisksModuleObject *object = UDISKS_MODULE_OBJECT (l->data);
+      GError *error;
+
+      error = NULL;
+      if (! udisks_module_object_housekeeping (object,
+                                               secs_since_last,
+                                               NULL, /* TODO: cancellable */
+                                               &error))
+        {
+          udisks_warning ("Error performing housekeeping for module object %s: %s (%s, %d)",
+                          g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
+                          error->message, g_quark_to_string (error->domain), error->code);
+          g_error_free (error);
+        }
+    }
+
+  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+  g_list_free (objects);
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
@@ -982,6 +1175,7 @@ housekeeping_thread_func (GIOSchedulerJob *job,
   udisks_info ("Housekeeping initiated (%d seconds since last housekeeping)", secs_since_last);
 
   housekeeping_all_drives (provider, secs_since_last);
+  housekeeping_all_modules (provider, secs_since_last);
 
   udisks_info ("Housekeeping complete");
   G_LOCK (provider_lock);

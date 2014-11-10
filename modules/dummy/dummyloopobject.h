@@ -18,26 +18,26 @@
  *
  */
 
-#ifndef __DUMMY_TYPES_H__
-#define __DUMMY_TYPES_H__
+#ifndef __DUMMY_LOOP_OBJECT_H__
+#define __DUMMY_LOOP_OBJECT_H__
 
-#include <gio/gio.h>
-#include <polkit/polkit.h>
-#include <udisks/udisks.h>
+#include <src/udisksdaemontypes.h>
+#include "dummytypes.h"
 #include <gudev/gudev.h>
 
-#include <sys/types.h>
+G_BEGIN_DECLS
 
-struct _DummyLinuxBlock;
-typedef struct _DummyLinuxBlock DummyLinuxBlock;
+#define DUMMY_TYPE_LOOP_OBJECT  (dummy_loop_object_get_type ())
+#define DUMMY_LOOP_OBJECT(o)    (G_TYPE_CHECK_INSTANCE_CAST ((o), DUMMY_TYPE_LOOP_OBJECT, DummyLoopObject))
+#define DUMMY_IS_LOOP_OBJECT(o) (G_TYPE_CHECK_INSTANCE_TYPE ((o), DUMMY_TYPE_LOOP_OBJECT))
 
-struct _DummyLinuxDrive;
-typedef struct _DummyLinuxDrive DummyLinuxDrive;
+GType                   dummy_loop_object_get_type      (void) G_GNUC_CONST;
+DummyLoopObject        *dummy_loop_object_new           (UDisksDaemon      *daemon,
+                                                         UDisksLinuxDevice *device);
+UDisksDaemon           *dummy_loop_object_get_daemon    (DummyLoopObject   *object);
+GList                  *dummy_loop_object_get_devices   (DummyLoopObject   *object);
 
-struct _DummyLoopObject;
-typedef struct _DummyLoopObject DummyLoopObject;
 
-struct _DummyLinuxLoop;
-typedef struct _DummyLinuxLoop DummyLinuxLoop;
+G_END_DECLS
 
-#endif /* __DUMMY_TYPES_H__ */
+#endif /* __DUMMY_LOOP_OBJECT_H__ */

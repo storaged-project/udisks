@@ -44,12 +44,11 @@
 
 
 /**
- * SECTION:udiskscrypttabmonitor
+ * SECTION:udisksmodulemanager
  * @title: UDisksModuleManager
- * @short_description: Monitors entries in the crypttab file
+ * @short_description: Manages plugins
  *
- * This type is used for monitoring entries in the
- * <filename>/etc/crypttab</filename> file.
+ * This type is used for managing daemon plugins.
  */
 
 /**
@@ -65,6 +64,7 @@ struct _UDisksModuleManager
   GList *modules;
   GList *block_object_interface_infos;
   GList *drive_object_interface_infos;
+  GList *module_object_new_funcs;
 
   gboolean modules_ready;
 };
@@ -118,6 +118,11 @@ udisks_module_manager_finalize (GObject *object)
       g_list_free (manager->drive_object_interface_infos);
     }
 
+  if (manager->module_object_new_funcs != NULL)
+    {
+      g_list_free (manager->module_object_new_funcs);
+    }
+
   if (manager->modules != NULL)
     {
       g_list_foreach (manager->modules, (GFunc) free_module_data, NULL);
@@ -145,7 +150,10 @@ load_modules (UDisksModuleManager *manager)
   gchar *pth;
   UDisksModuleIfaceSetupFunc block_object_iface_setup_func;
   UDisksModuleIfaceSetupFunc drive_object_iface_setup_func;
+  UDisksModuleObjectNewSetupFunc module_object_new_setup_func;
   UDisksModuleInterfaceInfo **infos, **infos_i;
+  UDisksModuleObjectNewFunc *module_object_new_funcs, *module_object_new_funcs_i;
+
 
   error = NULL;
   dir = g_dir_open (MODULE_DIR, 0, &error);
@@ -167,7 +175,8 @@ load_modules (UDisksModuleManager *manager)
           module_data->handle = module;
           udisks_notice ("Loading module %s...", dent);
           if (! g_module_symbol (module_data->handle, "udisks_module_get_block_object_iface_setup_entries", (gpointer *) &block_object_iface_setup_func) ||
-              ! g_module_symbol (module_data->handle, "udisks_module_get_drive_object_iface_setup_entries", (gpointer *) &drive_object_iface_setup_func))
+              ! g_module_symbol (module_data->handle, "udisks_module_get_drive_object_iface_setup_entries", (gpointer *) &drive_object_iface_setup_func) ||
+              ! g_module_symbol (module_data->handle, "udisks_module_get_object_new_funcs", (gpointer *) &module_object_new_setup_func))
             {
               udisks_warning ("  Error importing required symbols from module '%s'", pth);
               free_module_data (module_data);
@@ -183,6 +192,11 @@ load_modules (UDisksModuleManager *manager)
               for (infos_i = infos; infos_i && *infos_i; infos_i++)
                 manager->drive_object_interface_infos = g_list_append (manager->drive_object_interface_infos, *infos_i);
               g_free (infos);
+
+              module_object_new_funcs = module_object_new_setup_func ();
+              for (module_object_new_funcs_i = module_object_new_funcs; module_object_new_funcs_i && *module_object_new_funcs_i; module_object_new_funcs_i++)
+                manager->module_object_new_funcs = g_list_append (manager->module_object_new_funcs, *module_object_new_funcs_i);
+              g_free (module_object_new_funcs);
 
               manager->modules = g_list_append (manager->modules, module_data);
             }
@@ -246,7 +260,7 @@ udisks_module_manager_class_init (UDisksModuleManagerClass *klass)
   /**
    * UDisksModuleManager:modules-ready
    *
-   * The #GDBusConnection the daemon is for.
+   * Indicates whether modules have been loaded.
    */
   g_object_class_install_property (gobject_class,
                                    PROP_MODULES_READY,
@@ -263,10 +277,6 @@ udisks_module_manager_class_init (UDisksModuleManagerClass *klass)
  *
  * Creates a new #UDisksModuleManager object.
  *
- * Signals are emitted in the <link
- * linkend="g-main-context-push-thread-default">thread-default main
- * loop</link> that this function is called from.
- *
  * Returns: A #UDisksModuleManager. Free with g_object_unref().
  */
 UDisksModuleManager *
@@ -280,22 +290,49 @@ udisks_module_manager_new (void)
 
 
 /**
- * udisks_module_manager_get_entries:
- * @monitor: A #UDisksModuleManager.
+ * udisks_module_manager_get_block_object_iface_infos:
+ * @manager: A #UDisksModuleManager.
  *
- * Gets all /etc/crypttab entries
+ * Gets all block object interface info structs that can be plugged in #UDisksLinuxBlockObject instances.
  *
- * Returns: (transfer none) (element-type UDisksCrypttabEntry): A list of #UDisksCrypttabEntry objects that must be freed with g_list_free() after each element has been freed with g_object_unref().
+ * Returns: (transfer full) (element-type #UDisksModuleIfaceSetupFunc): A list of #UDisksModuleIfaceSetupFunc structs that belongs to the manager and must not be freed.
  */
-
 GList *
-udisks_module_manager_get_block_object_iface_infos (UDisksModuleManager *monitor)
+udisks_module_manager_get_block_object_iface_infos (UDisksModuleManager *manager)
 {
-  return monitor->block_object_interface_infos;
+  if (! manager->modules_ready)
+    return NULL;
+  return manager->block_object_interface_infos;
 }
 
+/**
+ * udisks_module_manager_get_drive_object_iface_infos:
+ * @manager: A #UDisksModuleManager.
+ *
+ * Gets all drive object interface info structs that can be plugged in #UDisksLinuxDriveObject instances.
+ *
+ * Returns: (transfer full) (element-type #UDisksModuleIfaceSetupFunc): A list of #UDisksModuleIfaceSetupFunc structs that belongs to the manager and must not be freed.
+ */
 GList *
-udisks_module_manager_get_drive_object_iface_infos (UDisksModuleManager *monitor)
+udisks_module_manager_get_drive_object_iface_infos (UDisksModuleManager *manager)
 {
-  return monitor->drive_object_interface_infos;
+  if (! manager->modules_ready)
+    return NULL;
+  return manager->drive_object_interface_infos;
+}
+
+/**
+ * udisks_module_manager_get_module_object_new_funcs:
+ * @manager: A #UDisksModuleManager.
+ *
+ * Gets all module object new functions that can be used to create new objects that are exported under the /org/freedesktop/UDisks2 path.
+ *
+ * Returns: (transfer full) (element-type #UDisksModuleObjectNewFunc): A list of #UDisksModuleObjectNewFunc function pointers that belongs to the manager and must not be freed.
+ */
+GList *
+udisks_module_manager_get_module_object_new_funcs (UDisksModuleManager *manager)
+{
+  if (! manager->modules_ready)
+    return NULL;
+  return manager->module_object_new_funcs;
 }

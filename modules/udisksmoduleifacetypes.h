@@ -29,6 +29,8 @@
 
 #include <src/udisksdaemontypes.h>
 
+G_BEGIN_DECLS
+
 
 typedef struct
 {
@@ -38,8 +40,24 @@ typedef struct
   GType skeleton_type;
 } UDisksModuleInterfaceInfo;
 
+/**
+ * UDisksModuleObjectNewFunc:
+ *
+ * A function prototype that creates new #GDBusObjectSkeleton instance that
+ * implements the #UDisksModuleObject interface.
+ *
+ * Returns: A new #GDBusObjectSkeleton or NULL when the plugin doesn't handle
+ *          the device specified. Free with g_object_unref().
+ */
+typedef GDBusObjectSkeleton* (*UDisksModuleObjectNewFunc) (UDisksDaemon      *daemon,
+                                                           UDisksLinuxDevice *device);
 
-typedef UDisksModuleInterfaceInfo** (*UDisksModuleIfaceSetupFunc) (void);
 
+/* Module setup functions */
+typedef UDisksModuleInterfaceInfo ** (*UDisksModuleIfaceSetupFunc) (void);
+typedef UDisksModuleObjectNewFunc *  (*UDisksModuleObjectNewSetupFunc) (void);
+
+
+G_END_DECLS
 
 #endif /* __UDISKS_MODULE_IFACE_TYPES_H__ */

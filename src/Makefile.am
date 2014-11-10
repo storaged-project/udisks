@@ -80,6 +80,8 @@ libudisks_daemon_la_SOURCES =						\
 	udiskslinuxdevice.h		udiskslinuxdevice.c		\
 	udisksata.h			udisksata.c			\
 	udisksmodulemanager.h		udisksmodulemanager.c		\
+	$(top_srcdir)/modules/udisksmoduleobject.h			\
+	$(top_srcdir)/modules/udisksmoduleobject.c			\
 	$(BUILT_SOURCES)						\
 	$(NULL)
 

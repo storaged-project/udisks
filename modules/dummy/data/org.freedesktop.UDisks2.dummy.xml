@@ -97,4 +97,18 @@
 
   <!-- ********************************************************************** -->
 
+  <!--
+      org.freedesktop.UDisks2.DummyLoop:
+      @short_description: A global loop object covering all loop block devices
+
+      This interface should appear on a separate object exported on the
+      master UDisks2 root.
+  -->
+  <interface name="org.freedesktop.UDisks2.DummyLoop">
+
+    <property name="num_devices" type="i" access="read"/>
+
+  </interface>
+  <!-- ********************************************************************** -->
+
 </node>
