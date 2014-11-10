@@ -55,12 +55,12 @@ typedef struct _DummyLinuxLoopClass   DummyLinuxLoopClass;
  */
 struct _DummyLinuxLoop
 {
-  DummyDriveDummySkeleton parent_instance;
+  DummyDummyLoopSkeleton parent_instance;
 };
 
 struct _DummyLinuxLoopClass
 {
-  DummyDriveDummySkeletonClass parent_class;
+  DummyDummyLoopSkeletonClass parent_class;
 };
 
 static void dummy_linux_loop_iface_init (DummyDummyLoopIface *iface);
