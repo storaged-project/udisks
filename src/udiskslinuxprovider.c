@@ -401,10 +401,13 @@ udisks_linux_provider_start (UDisksProvider *_provider)
   UDisksLinuxProvider *provider = UDISKS_LINUX_PROVIDER (_provider);
   UDisksDaemon *daemon;
   UDisksManager *manager;
+  UDisksModuleManager *module_manager;
   GList *devices;
   GList *udisks_devices;
   GList *l;
   guint n;
+  GDBusInterfaceSkeleton *iface;
+  UDisksModuleNewManagerIfaceFunc new_manager_iface_func;
 
   provider->coldplug = TRUE;
 
@@ -413,10 +416,28 @@ udisks_linux_provider_start (UDisksProvider *_provider)
 
   daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
 
+  module_manager = udisks_daemon_get_module_manager (daemon);
+
   provider->manager_object = udisks_object_skeleton_new ("/org/freedesktop/UDisks2/Manager");
   manager = udisks_linux_manager_new (daemon);
   udisks_object_skeleton_set_manager (provider->manager_object, manager);
   g_object_unref (manager);
+
+  /* Attach additional interfaces from modules */
+  if (module_manager != NULL)
+    {
+      l = udisks_module_manager_get_new_manager_iface_funcs (module_manager);
+      for (; l != NULL; l = l->next)
+        {
+          new_manager_iface_func = l->data;
+          iface = new_manager_iface_func (daemon);
+          if (iface != NULL)
+            {
+              g_dbus_object_skeleton_add_interface (G_DBUS_OBJECT_SKELETON (provider->manager_object), iface);
+              g_object_unref (iface);
+            }
+        }
+    }
 
   g_dbus_object_manager_server_export (udisks_daemon_get_object_manager (daemon),
                                        G_DBUS_OBJECT_SKELETON (provider->manager_object));

@@ -35,6 +35,7 @@ UDisksModuleManager    *udisks_module_manager_new         (void);
 GList                  *udisks_module_manager_get_block_object_iface_infos (UDisksModuleManager  *manager);
 GList                  *udisks_module_manager_get_drive_object_iface_infos (UDisksModuleManager  *manager);
 GList                  *udisks_module_manager_get_module_object_new_funcs  (UDisksModuleManager  *manager);
+GList                  *udisks_module_manager_get_new_manager_iface_funcs  (UDisksModuleManager  *manager);
 
 G_END_DECLS
 

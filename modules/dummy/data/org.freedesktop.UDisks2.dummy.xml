@@ -109,6 +109,31 @@
     <property name="num_devices" type="i" access="read"/>
 
   </interface>
+
+  <!-- ********************************************************************** -->
+
+  <!--
+      org.freedesktop.UDisks2.DummyManager:
+      @short_description: Dummy manager interface that lets you create wonders
+
+      This interface is meant as a supplement to the /org/freedesktop/UDisks2/Manager
+      object manager. Typically serves the purpose of creating new objects/devices
+      etc. of a specified type. E.g. new RAID arrays, LVM2 volume groups, etc.
+  -->
+  <interface name="org.freedesktop.UDisks2.DummyManager">
+
+    <!--
+        CreateLoopPool:
+        @name: The name of the pool to create.
+
+        Creates a loop pool (bogus).
+    -->
+    <method name="CreateLoopPool">
+      <arg name="name" direction="in" type="s"/>
+    </method>
+
+  </interface>
+
   <!-- ********************************************************************** -->
 
 </node>

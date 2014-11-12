@@ -37,6 +37,7 @@
 #include "dummylinuxblock.h"
 #include "dummylinuxdrive.h"
 #include "dummyloopobject.h"
+#include "dummylinuxmanager.h"
 
 
 
@@ -148,6 +149,29 @@ udisks_module_get_object_new_funcs (void)
 
   funcs = g_new0 (UDisksModuleObjectNewFunc, 2);
   funcs[0] = &dummy_object_new;
+
+  return funcs;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static GDBusInterfaceSkeleton *
+dummy_new_manager_iface (UDisksDaemon *daemon)
+{
+  DummyLinuxManager *manager;
+
+  manager = dummy_linux_manager_new ();
+
+  return G_DBUS_INTERFACE_SKELETON (manager);
+}
+
+UDisksModuleNewManagerIfaceFunc *
+udisks_module_get_new_manager_iface_funcs (void)
+{
+  UDisksModuleNewManagerIfaceFunc *funcs;
+
+  funcs = g_new0 (UDisksModuleNewManagerIfaceFunc, 2);
+  funcs[0] = &dummy_new_manager_iface;
 
   return funcs;
 }

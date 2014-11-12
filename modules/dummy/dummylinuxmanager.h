@@ -18,29 +18,22 @@
  *
  */
 
-#ifndef __DUMMY_TYPES_H__
-#define __DUMMY_TYPES_H__
+#ifndef __DUMMY_LINUX_MANAGER_H__
+#define __DUMMY_LINUX_MANAGER_H__
 
-#include <gio/gio.h>
-#include <polkit/polkit.h>
-#include <udisks/udisks.h>
-#include <gudev/gudev.h>
+#include <src/udisksdaemontypes.h>
+#include "dummytypes.h"
+#include "dummy-generated.h"
 
-#include <sys/types.h>
+G_BEGIN_DECLS
 
-struct _DummyLinuxBlock;
-typedef struct _DummyLinuxBlock DummyLinuxBlock;
+#define DUMMY_TYPE_LINUX_MANAGER  (dummy_linux_manager_get_type ())
+#define DUMMY_LINUX_MANAGER(o)    (G_TYPE_CHECK_INSTANCE_CAST ((o), DUMMY_TYPE_LINUX_MANAGER, DummyLinuxManager))
+#define DUMMY_IS_LINUX_MANAGER(o) (G_TYPE_CHECK_INSTANCE_TYPE ((o), DUMMY_TYPE_LINUX_MANAGER))
 
-struct _DummyLinuxDrive;
-typedef struct _DummyLinuxDrive DummyLinuxDrive;
+GType               dummy_linux_manager_get_type           (void) G_GNUC_CONST;
+DummyLinuxManager  *dummy_linux_manager_new                (void);
 
-struct _DummyLoopObject;
-typedef struct _DummyLoopObject DummyLoopObject;
+G_END_DECLS
 
-struct _DummyLinuxLoop;
-typedef struct _DummyLinuxLoop DummyLinuxLoop;
-
-struct _DummyLinuxManager;
-typedef struct _DummyLinuxManager DummyLinuxManager;
-
-#endif /* __DUMMY_TYPES_H__ */
+#endif /* __DUMMY_LINUX_MANAGER_H__ */

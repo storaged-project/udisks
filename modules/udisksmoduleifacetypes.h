@@ -52,10 +52,22 @@ typedef struct
 typedef GDBusObjectSkeleton* (*UDisksModuleObjectNewFunc) (UDisksDaemon      *daemon,
                                                            UDisksLinuxDevice *device);
 
+/**
+ * UDisksModuleNewManagerIfaceFunc:
+ *
+ * A function prototype that creates new #GDBusInterfaceSkeleton instance
+ * carrying an interface to be exported on the UDisks manager object.
+ *
+ * Returns: A new #GDBusInterfaceSkeleton. Free with g_object_unref().
+ */
+typedef GDBusInterfaceSkeleton* (*UDisksModuleNewManagerIfaceFunc) (UDisksDaemon *daemon);
+
 
 /* Module setup functions */
 typedef UDisksModuleInterfaceInfo ** (*UDisksModuleIfaceSetupFunc) (void);
 typedef UDisksModuleObjectNewFunc *  (*UDisksModuleObjectNewSetupFunc) (void);
+typedef UDisksModuleNewManagerIfaceFunc * (*UDisksModuleNewManagerIfaceSetupFunc) (void);
+
 
 
 G_END_DECLS

@@ -52,6 +52,8 @@ G_MODULE_EXPORT UDisksModuleInterfaceInfo **udisks_module_get_drive_object_iface
 
 G_MODULE_EXPORT UDisksModuleObjectNewFunc  *udisks_module_get_object_new_funcs (void);
 
+G_MODULE_EXPORT UDisksModuleNewManagerIfaceFunc *udisks_module_get_new_manager_iface_funcs (void);
+
 
 G_END_DECLS
 

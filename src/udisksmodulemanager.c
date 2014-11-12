@@ -65,6 +65,7 @@ struct _UDisksModuleManager
   GList *block_object_interface_infos;
   GList *drive_object_interface_infos;
   GList *module_object_new_funcs;
+  GList *new_manager_iface_funcs;
 
   gboolean modules_ready;
 };
@@ -123,6 +124,11 @@ udisks_module_manager_finalize (GObject *object)
       g_list_free (manager->module_object_new_funcs);
     }
 
+  if (manager->new_manager_iface_funcs != NULL)
+    {
+      g_list_free (manager->new_manager_iface_funcs);
+    }
+
   if (manager->modules != NULL)
     {
       g_list_foreach (manager->modules, (GFunc) free_module_data, NULL);
@@ -148,11 +154,15 @@ load_modules (UDisksModuleManager *manager)
   GModule *module;
   ModuleData *module_data;
   gchar *pth;
+
   UDisksModuleIfaceSetupFunc block_object_iface_setup_func;
   UDisksModuleIfaceSetupFunc drive_object_iface_setup_func;
   UDisksModuleObjectNewSetupFunc module_object_new_setup_func;
+  UDisksModuleNewManagerIfaceSetupFunc module_new_manager_iface_setup_func;
+
   UDisksModuleInterfaceInfo **infos, **infos_i;
   UDisksModuleObjectNewFunc *module_object_new_funcs, *module_object_new_funcs_i;
+  UDisksModuleNewManagerIfaceFunc *module_new_manager_iface_funcs, *module_new_manager_iface_funcs_i;
 
 
   error = NULL;
@@ -176,7 +186,8 @@ load_modules (UDisksModuleManager *manager)
           udisks_notice ("Loading module %s...", dent);
           if (! g_module_symbol (module_data->handle, "udisks_module_get_block_object_iface_setup_entries", (gpointer *) &block_object_iface_setup_func) ||
               ! g_module_symbol (module_data->handle, "udisks_module_get_drive_object_iface_setup_entries", (gpointer *) &drive_object_iface_setup_func) ||
-              ! g_module_symbol (module_data->handle, "udisks_module_get_object_new_funcs", (gpointer *) &module_object_new_setup_func))
+              ! g_module_symbol (module_data->handle, "udisks_module_get_object_new_funcs", (gpointer *) &module_object_new_setup_func) ||
+              ! g_module_symbol (module_data->handle, "udisks_module_get_new_manager_iface_funcs", (gpointer *) &module_new_manager_iface_setup_func))
             {
               udisks_warning ("  Error importing required symbols from module '%s'", pth);
               free_module_data (module_data);
@@ -197,6 +208,11 @@ load_modules (UDisksModuleManager *manager)
               for (module_object_new_funcs_i = module_object_new_funcs; module_object_new_funcs_i && *module_object_new_funcs_i; module_object_new_funcs_i++)
                 manager->module_object_new_funcs = g_list_append (manager->module_object_new_funcs, *module_object_new_funcs_i);
               g_free (module_object_new_funcs);
+
+              module_new_manager_iface_funcs = module_new_manager_iface_setup_func ();
+              for (module_new_manager_iface_funcs_i = module_new_manager_iface_funcs; module_new_manager_iface_funcs_i && *module_new_manager_iface_funcs_i; module_new_manager_iface_funcs_i++)
+                manager->new_manager_iface_funcs = g_list_append (manager->new_manager_iface_funcs, *module_new_manager_iface_funcs_i);
+              g_free (module_new_manager_iface_funcs);
 
               manager->modules = g_list_append (manager->modules, module_data);
             }
@@ -335,4 +351,20 @@ udisks_module_manager_get_module_object_new_funcs (UDisksModuleManager *manager)
   if (! manager->modules_ready)
     return NULL;
   return manager->module_object_new_funcs;
+}
+
+/**
+ * udisks_module_manager_get_new_manager_iface_funcs:
+ * @manager: A #UDisksModuleManager.
+ *
+ * Gets all module functions that can be used to create new interfaces that are supposed to be attached to the master /org/freedesktop/UDisks2/Manager object.
+ *
+ * Returns: (transfer full) (element-type #UDisksModuleNewManagerIfaceFunc): A list of #UDisksModuleNewManagerIfaceFunc function pointers that belongs to the manager and must not be freed.
+ */
+GList *
+udisks_module_manager_get_new_manager_iface_funcs (UDisksModuleManager *manager)
+{
+  if (! manager->modules_ready)
+    return NULL;
+  return manager->new_manager_iface_funcs;
 }

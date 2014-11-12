@@ -63,6 +63,7 @@ libudisks2_dummy_la_SOURCES =								\
 	dummylinuxdrive.h			dummylinuxdrive.c			\
 	dummyloopobject.h			dummyloopobject.c			\
 	dummylinuxloop.h			dummylinuxloop.c			\
+	dummylinuxmanager.h			dummylinuxmanager.c			\
 	$(NULL)
 
 libudisks2_dummy_la_CPPFLAGS = 				\
