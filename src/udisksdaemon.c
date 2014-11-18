@@ -91,6 +91,7 @@ enum
   PROP_MOUNT_MONITOR,
   PROP_FSTAB_MONITOR,
   PROP_CRYPTTAB_MONITOR,
+  PROP_MODULE_MANAGER,
 };
 
 G_DEFINE_TYPE (UDisksDaemon, udisks_daemon, G_TYPE_OBJECT);
@@ -144,6 +145,10 @@ udisks_daemon_get_property (GObject    *object,
 
     case PROP_CRYPTTAB_MONITOR:
       g_value_set_object (value, udisks_daemon_get_crypttab_monitor (daemon));
+      break;
+
+    case PROP_MODULE_MANAGER:
+      g_value_set_object (value, udisks_daemon_get_module_manager (daemon));
       break;
 
     default:
@@ -220,7 +225,6 @@ udisks_daemon_constructed (GObject *object)
         }
     }
 
-  /* TODO: load on demand instead of on startup */
   daemon->module_manager = udisks_module_manager_new ();
 
   daemon->mount_monitor = udisks_mount_monitor_new ();
@@ -1102,10 +1106,18 @@ udisks_daemon_get_objects (UDisksDaemon *daemon)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/**
+ * udisks_daemon_get_module_manager:
+ * @daemon: A #UDisksDaemon.
+ *
+ * Gets the module manager used by @daemon.
+ *
+ * Returns: A #UDisksModuleManager. Do not free, the object is owned by @daemon.
+ */
 UDisksModuleManager *
 udisks_daemon_get_module_manager (UDisksDaemon *daemon)
 {
-  /* FIXME: add property and getter/setter? */
+  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
   return daemon->module_manager;
 }
 

@@ -816,7 +816,7 @@ udisks_linux_block_object_uevent (UDisksLinuxBlockObject *object,
 
   /* Attach interfaces from modules */
   module_manager = udisks_daemon_get_module_manager (object->daemon);
-  if (module_manager != NULL)
+  if (udisks_module_manager_get_modules_available (module_manager))
     {
       ensure_module_ifaces (object, module_manager);
       g_hash_table_iter_init (&iter, object->module_ifaces);

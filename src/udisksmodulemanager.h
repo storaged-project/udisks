@@ -32,6 +32,9 @@ G_BEGIN_DECLS
 GType                   udisks_module_manager_get_type    (void) G_GNUC_CONST;
 UDisksModuleManager    *udisks_module_manager_new         (void);
 
+gboolean                udisks_module_manager_get_modules_available (UDisksModuleManager *manager);
+void                    udisks_module_manager_load_modules          (UDisksModuleManager *manager);
+
 GList                  *udisks_module_manager_get_block_object_iface_infos (UDisksModuleManager  *manager);
 GList                  *udisks_module_manager_get_drive_object_iface_infos (UDisksModuleManager  *manager);
 GList                  *udisks_module_manager_get_module_object_new_funcs  (UDisksModuleManager  *manager);

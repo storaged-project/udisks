@@ -395,6 +395,88 @@ udev_device_name_cmp (GUdevDevice *a,
   return device_name_cmp (g_udev_device_get_name (a), g_udev_device_get_name (b));
 }
 
+static GList *
+get_udisks_devices (UDisksLinuxProvider *provider)
+{
+  GList *devices;
+  GList *udisks_devices;
+  GList *l;
+
+  devices = g_udev_client_query_by_subsystem (provider->gudev_client, "block");
+
+  /* make sure we process sda before sdz and sdz before sdaa */
+  devices = g_list_sort (devices, (GCompareFunc) udev_device_name_cmp);
+
+  udisks_devices = NULL;
+  for (l = devices; l != NULL; l = l->next)
+    {
+      GUdevDevice *device = G_UDEV_DEVICE (l->data);
+      udisks_devices = g_list_prepend (udisks_devices, udisks_linux_device_new_sync (device));
+    }
+  udisks_devices = g_list_reverse (udisks_devices);
+  g_list_free_full (devices, g_object_unref);
+
+  return udisks_devices;
+}
+
+static void
+do_coldplug (UDisksLinuxProvider *provider,
+             GList               *udisks_devices)
+{
+  GList *l;
+
+  for (l = udisks_devices; l != NULL; l = l->next)
+    {
+      UDisksLinuxDevice *device = l->data;
+      udisks_linux_provider_handle_uevent (provider, "add", device);
+    }
+}
+
+static void
+ensure_modules (UDisksLinuxProvider *provider)
+{
+  UDisksDaemon *daemon;
+  UDisksModuleManager *module_manager;
+  GDBusInterfaceSkeleton *iface;
+  UDisksModuleNewManagerIfaceFunc new_manager_iface_func;
+  GList *udisks_devices;
+  GList *l;
+  gboolean do_refresh = FALSE;
+
+  daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
+  module_manager = udisks_daemon_get_module_manager (daemon);
+
+  if (! udisks_module_manager_get_modules_available (module_manager))
+    return;
+
+  udisks_debug ("Modules loaded, attaching interfaces...");
+  /* Attach additional interfaces from modules */
+  l = udisks_module_manager_get_new_manager_iface_funcs (module_manager);
+  for (; l != NULL; l = l->next)
+    {
+      new_manager_iface_func = l->data;
+      iface = new_manager_iface_func (daemon);
+      if (iface != NULL)
+        {
+          g_dbus_object_skeleton_add_interface (G_DBUS_OBJECT_SKELETON (provider->manager_object), iface);
+          g_object_unref (iface);
+          do_refresh = TRUE;
+        }
+    }
+
+  if (do_refresh)
+    {
+      /* Perform coldplug */
+      udisks_debug ("Performing coldplug...");
+
+      udisks_devices = get_udisks_devices (provider);
+      do_coldplug (provider, udisks_devices);
+      g_list_free_full (udisks_devices, g_object_unref);
+
+      udisks_debug ("Coldplug complete");
+    }
+}
+
 static void
 udisks_linux_provider_start (UDisksProvider *_provider)
 {
@@ -402,12 +484,8 @@ udisks_linux_provider_start (UDisksProvider *_provider)
   UDisksDaemon *daemon;
   UDisksManager *manager;
   UDisksModuleManager *module_manager;
-  GList *devices;
   GList *udisks_devices;
-  GList *l;
   guint n;
-  GDBusInterfaceSkeleton *iface;
-  UDisksModuleNewManagerIfaceFunc new_manager_iface_func;
 
   provider->coldplug = TRUE;
 
@@ -416,28 +494,14 @@ udisks_linux_provider_start (UDisksProvider *_provider)
 
   daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
 
-  module_manager = udisks_daemon_get_module_manager (daemon);
-
   provider->manager_object = udisks_object_skeleton_new ("/org/freedesktop/UDisks2/Manager");
   manager = udisks_linux_manager_new (daemon);
   udisks_object_skeleton_set_manager (provider->manager_object, manager);
   g_object_unref (manager);
 
-  /* Attach additional interfaces from modules */
-  if (module_manager != NULL)
-    {
-      l = udisks_module_manager_get_new_manager_iface_funcs (module_manager);
-      for (; l != NULL; l = l->next)
-        {
-          new_manager_iface_func = l->data;
-          iface = new_manager_iface_func (daemon);
-          if (iface != NULL)
-            {
-              g_dbus_object_skeleton_add_interface (G_DBUS_OBJECT_SKELETON (provider->manager_object), iface);
-              g_object_unref (iface);
-            }
-        }
-    }
+  module_manager = udisks_daemon_get_module_manager (daemon);
+  ensure_modules (provider);
+  g_signal_connect_swapped (module_manager, "notify::modules-ready", G_CALLBACK (ensure_modules), provider);
 
   g_dbus_object_manager_server_export (udisks_daemon_get_object_manager (daemon),
                                        G_DBUS_OBJECT_SKELETON (provider->manager_object));
@@ -471,32 +535,16 @@ udisks_linux_provider_start (UDisksProvider *_provider)
                                                                NULL,
                                                                (GDestroyNotify) g_hash_table_unref);
 
-  devices = g_udev_client_query_by_subsystem (provider->gudev_client, "block");
-
-  /* make sure we process sda before sdz and sdz before sdaa */
-  devices = g_list_sort (devices, (GCompareFunc) udev_device_name_cmp);
-
   /* probe for extra data we don't get from udev */
   udisks_info ("Initialization (device probing)");
-  udisks_devices = NULL;
-  for (l = devices; l != NULL; l = l->next)
-    {
-      GUdevDevice *device = G_UDEV_DEVICE (l->data);
-      udisks_devices = g_list_prepend (udisks_devices, udisks_linux_device_new_sync (device));
-    }
-  udisks_devices = g_list_reverse (udisks_devices);
+  udisks_devices = get_udisks_devices (provider);
 
   /* do two coldplug runs to handle dependencies between devices */
   for (n = 0; n < 2; n++)
     {
       udisks_info ("Initialization (coldplug %d/2)", n + 1);
-      for (l = udisks_devices; l != NULL; l = l->next)
-        {
-          UDisksLinuxDevice *device = l->data;
-          udisks_linux_provider_handle_uevent (provider, "add", device);
-        }
+      do_coldplug (provider, udisks_devices);
     }
-  g_list_free_full (devices, g_object_unref);
   g_list_free_full (udisks_devices, g_object_unref);
   udisks_info ("Initialization complete");
 
@@ -894,6 +942,9 @@ handle_block_uevent_for_modules (UDisksLinuxProvider *provider,
 
   daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
   module_manager = udisks_daemon_get_module_manager (daemon);
+  if (! udisks_module_manager_get_modules_available (module_manager))
+    return;
+
   new_funcs = udisks_module_manager_get_module_object_new_funcs (module_manager);
 
   /* The object hierarchy is as follows:

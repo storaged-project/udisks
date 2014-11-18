@@ -82,6 +82,18 @@
       <arg name="options" direction="in" type="a{sv}"/>
       <arg name="resulting_array" direction="out" type="o"/>
     </method>
+
+    <!--
+        EnableModules:
+        @enable: A boolean value indicating whether modules should be enabled. Currently only the %TRUE value is permitted.
+
+        Loads and activates modules. This action also causes all objects to receive "add" uevent that triggers additional module interfaces activation.
+
+        Modules cannot be deactivated for the moment. Any consecutive calls with modules already enabled equals to noop.
+    -->
+    <method name="EnableModules">
+      <arg name="enable" direction="in" type="b"/>
+    </method>
   </interface>
 
   <!--

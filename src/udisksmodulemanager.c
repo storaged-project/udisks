@@ -39,7 +39,7 @@
 #include <modules/udisksmoduleifacetypes.h>
 
 
-
+/* FIXME: move to configure.ac */
 #define MODULE_DIR PACKAGE_LIB_DIR "/udisks2/modules"
 
 
@@ -67,6 +67,7 @@ struct _UDisksModuleManager
   GList *module_object_new_funcs;
   GList *new_manager_iface_funcs;
 
+  GMutex modules_ready_lock;
   gboolean modules_ready;
 };
 
@@ -135,18 +136,21 @@ udisks_module_manager_finalize (GObject *object)
       g_list_free (manager->modules);
     }
 
+  g_mutex_clear (&manager->modules_ready_lock);
+
   if (G_OBJECT_CLASS (udisks_module_manager_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (udisks_module_manager_parent_class)->finalize (object);
 }
 
 
 static void
-udisks_module_manager_init (UDisksModuleManager *monitor)
+udisks_module_manager_init (UDisksModuleManager *manager)
 {
+  g_mutex_init (&manager->modules_ready_lock);
 }
 
-static void
-load_modules (UDisksModuleManager *manager)
+void
+udisks_module_manager_load_modules (UDisksModuleManager *manager)
 {
   GError *error;
   GDir *dir;
@@ -164,6 +168,14 @@ load_modules (UDisksModuleManager *manager)
   UDisksModuleObjectNewFunc *module_object_new_funcs, *module_object_new_funcs_i;
   UDisksModuleNewManagerIfaceFunc *module_new_manager_iface_funcs, *module_new_manager_iface_funcs_i;
 
+  g_return_if_fail (UDISKS_IS_MODULE_MANAGER (manager));
+
+  g_mutex_lock (&manager->modules_ready_lock);
+  if (manager->modules_ready)
+    {
+      g_mutex_unlock (&manager->modules_ready_lock);
+      return;
+    }
 
   error = NULL;
   dir = g_dir_open (MODULE_DIR, 0, &error);
@@ -171,6 +183,7 @@ load_modules (UDisksModuleManager *manager)
     {
       udisks_warning ("Error loading modules: %s", error->message);
       g_error_free (error);
+      g_mutex_unlock (&manager->modules_ready_lock);
       return;
     }
 
@@ -222,6 +235,9 @@ load_modules (UDisksModuleManager *manager)
   g_dir_close (dir);
 
   manager->modules_ready = TRUE;
+  g_mutex_unlock (&manager->modules_ready_lock);
+
+  /* Ensured to fire only once */
   g_object_notify (G_OBJECT (manager), "modules-ready");
 }
 
@@ -238,8 +254,6 @@ udisks_module_manager_constructed (GObject *object)
       return;
     }
 
-  load_modules (manager);
-
   if (G_OBJECT_CLASS (udisks_module_manager_parent_class)->constructed != NULL)
     (*G_OBJECT_CLASS (udisks_module_manager_parent_class)->constructed) (object);
 }
@@ -255,7 +269,7 @@ udisks_module_manager_get_property (GObject    *object,
   switch (prop_id)
     {
     case PROP_MODULES_READY:
-      g_value_set_boolean (value, manager->modules_ready);
+      g_value_set_boolean (value, udisks_module_manager_get_modules_available (manager));
       break;
 
     default:
@@ -301,6 +315,27 @@ udisks_module_manager_new (void)
   return UDISKS_MODULE_MANAGER (g_object_new (UDISKS_TYPE_MODULE_MANAGER, NULL));
 }
 
+/**
+ * udisks_module_manager_get_modules_available:
+ * @manager: A #UDisksModuleManager.
+ *
+ * Indicates whether modules have been loaded and activated.
+ *
+ * Returns: boolean value whether modules are available.
+ */
+gboolean
+udisks_module_manager_get_modules_available (UDisksModuleManager *manager)
+{
+  gboolean ret;
+
+  g_return_val_if_fail (UDISKS_IS_MODULE_MANAGER (manager), FALSE);
+
+  g_mutex_lock (&manager->modules_ready_lock);
+  ret = manager->modules_ready;
+  g_mutex_unlock (&manager->modules_ready_lock);
+
+  return ret;
+}
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -316,6 +351,7 @@ udisks_module_manager_new (void)
 GList *
 udisks_module_manager_get_block_object_iface_infos (UDisksModuleManager *manager)
 {
+  g_return_val_if_fail (UDISKS_IS_MODULE_MANAGER (manager), NULL);
   if (! manager->modules_ready)
     return NULL;
   return manager->block_object_interface_infos;
@@ -332,6 +368,7 @@ udisks_module_manager_get_block_object_iface_infos (UDisksModuleManager *manager
 GList *
 udisks_module_manager_get_drive_object_iface_infos (UDisksModuleManager *manager)
 {
+  g_return_val_if_fail (UDISKS_IS_MODULE_MANAGER (manager), NULL);
   if (! manager->modules_ready)
     return NULL;
   return manager->drive_object_interface_infos;
@@ -348,6 +385,7 @@ udisks_module_manager_get_drive_object_iface_infos (UDisksModuleManager *manager
 GList *
 udisks_module_manager_get_module_object_new_funcs (UDisksModuleManager *manager)
 {
+  g_return_val_if_fail (UDISKS_IS_MODULE_MANAGER (manager), NULL);
   if (! manager->modules_ready)
     return NULL;
   return manager->module_object_new_funcs;
@@ -364,6 +402,7 @@ udisks_module_manager_get_module_object_new_funcs (UDisksModuleManager *manager)
 GList *
 udisks_module_manager_get_new_manager_iface_funcs (UDisksModuleManager *manager)
 {
+  g_return_val_if_fail (UDISKS_IS_MODULE_MANAGER (manager), NULL);
   if (! manager->modules_ready)
     return NULL;
   return manager->new_manager_iface_funcs;

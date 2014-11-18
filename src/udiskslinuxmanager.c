@@ -43,6 +43,7 @@
 #include "udisksstate.h"
 #include "udiskslinuxblockobject.h"
 #include "udiskslinuxdevice.h"
+#include "udisksmodulemanager.h"
 
 /**
  * SECTION:udiskslinuxmanager
@@ -868,9 +869,38 @@ handle_mdraid_create (UDisksManager         *_object,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+handle_enable_modules (UDisksManager *object,
+                       GDBusMethodInvocation *invocation,
+                       gboolean arg_enable)
+{
+  UDisksLinuxManager *manager = UDISKS_LINUX_MANAGER (object);
+  UDisksModuleManager *module_manager;
+
+  if (! arg_enable)
+    {
+      /* TODO: implement proper module unloading */
+      g_dbus_method_invocation_return_error_literal (invocation,
+                                                     G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
+                                                     "Invalid value \"FALSE\"");
+      return TRUE;
+    }
+
+  module_manager = udisks_daemon_get_module_manager (manager->daemon);
+
+  udisks_module_manager_load_modules (module_manager);
+
+  udisks_manager_complete_enable_modules (object, invocation);
+
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 manager_iface_init (UDisksManagerIface *iface)
 {
   iface->handle_loop_setup = handle_loop_setup;
   iface->handle_mdraid_create = handle_mdraid_create;
+  iface->handle_enable_modules = handle_enable_modules;
 }
