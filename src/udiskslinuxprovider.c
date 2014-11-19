@@ -1086,11 +1086,10 @@ handle_block_uevent (UDisksLinuxProvider *provider,
    */
   if (g_strcmp0 (action, "remove") == 0)
     {
-      /* FIXME: shall modules be processed before or after block/drive events? */
-      handle_block_uevent_for_modules (provider, action, device);
       handle_block_uevent_for_block (provider, action, device);
       handle_block_uevent_for_drive (provider, action, device);
       handle_block_uevent_for_mdraid (provider, action, device);
+      handle_block_uevent_for_modules (provider, action, device);
     }
   else
     {
@@ -1107,11 +1106,10 @@ handle_block_uevent (UDisksLinuxProvider *provider,
         }
       else
         {
+          handle_block_uevent_for_modules (provider, action, device);
           handle_block_uevent_for_mdraid (provider, action, device);
           handle_block_uevent_for_drive (provider, action, device);
           handle_block_uevent_for_block (provider, action, device);
-          /* FIXME: shall modules be processed before or after block/drive events? */
-          handle_block_uevent_for_modules (provider, action, device);
         }
     }
 
