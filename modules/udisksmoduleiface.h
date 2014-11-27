@@ -47,6 +47,8 @@ G_BEGIN_DECLS
  *
  */
 
+G_MODULE_EXPORT gpointer udisks_module_init (gchar **module_id);
+
 G_MODULE_EXPORT UDisksModuleInterfaceInfo **udisks_module_get_block_object_iface_setup_entries (void);
 G_MODULE_EXPORT UDisksModuleInterfaceInfo **udisks_module_get_drive_object_iface_setup_entries (void);
 

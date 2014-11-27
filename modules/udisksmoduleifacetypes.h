@@ -68,6 +68,26 @@ typedef UDisksModuleInterfaceInfo ** (*UDisksModuleIfaceSetupFunc) (void);
 typedef UDisksModuleObjectNewFunc *  (*UDisksModuleObjectNewSetupFunc) (void);
 typedef UDisksModuleNewManagerIfaceFunc * (*UDisksModuleNewManagerIfaceSetupFunc) (void);
 
+/**
+ * UDisksModuleInitFunc:
+ *
+ * Function prototype that is called upon module initialization. Its purpose is
+ * to perform internal initialization and allocate memory that is then used e.g.
+ * for saving state. See udisks_module_manager_get_module_state_pointer()
+ * methods for how to work with state pointers.
+ *
+ * This function is called only once by #UDisksModuleManager who stores the
+ * pointer returned in a module state hashtable under the ID returned as the
+ * *module_id argument.
+ *
+ * creates new #GDBusInterfaceSkeleton instance
+ * carrying an interface to be exported on the UDisks manager object.
+ *
+ * Returns: Optional pointer to an opaque memory and *module_id set or NULL.
+ *          Since modules unloading is not supported, the memory gets never
+ *          freed.
+ */
+typedef gpointer (*UDisksModuleInitFunc) (gchar **module_id);
 
 
 G_END_DECLS

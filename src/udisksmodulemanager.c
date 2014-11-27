@@ -69,6 +69,8 @@ struct _UDisksModuleManager
 
   GMutex modules_ready_lock;
   gboolean modules_ready;
+
+  GHashTable *state_pointers;
 };
 
 typedef struct _UDisksModuleManagerClass UDisksModuleManagerClass;
@@ -130,6 +132,8 @@ udisks_module_manager_finalize (GObject *object)
       g_list_free (manager->new_manager_iface_funcs);
     }
 
+  g_hash_table_destroy (manager->state_pointers);
+
   if (manager->modules != NULL)
     {
       g_list_foreach (manager->modules, (GFunc) free_module_data, NULL);
@@ -147,6 +151,8 @@ static void
 udisks_module_manager_init (UDisksModuleManager *manager)
 {
   g_mutex_init (&manager->modules_ready_lock);
+
+  manager->state_pointers = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 }
 
 void
@@ -163,7 +169,10 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
   UDisksModuleIfaceSetupFunc drive_object_iface_setup_func;
   UDisksModuleObjectNewSetupFunc module_object_new_setup_func;
   UDisksModuleNewManagerIfaceSetupFunc module_new_manager_iface_setup_func;
+  UDisksModuleInitFunc module_init_func;
 
+  gchar *module_id;
+  gpointer module_state_pointer;
   UDisksModuleInterfaceInfo **infos, **infos_i;
   UDisksModuleObjectNewFunc *module_object_new_funcs, *module_object_new_funcs_i;
   UDisksModuleNewManagerIfaceFunc *module_new_manager_iface_funcs, *module_new_manager_iface_funcs_i;
@@ -197,7 +206,8 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
           module_data = g_new0 (ModuleData, 1);
           module_data->handle = module;
           udisks_notice ("Loading module %s...", dent);
-          if (! g_module_symbol (module_data->handle, "udisks_module_get_block_object_iface_setup_entries", (gpointer *) &block_object_iface_setup_func) ||
+          if (! g_module_symbol (module_data->handle, "udisks_module_init", (gpointer *) &module_init_func) ||
+              ! g_module_symbol (module_data->handle, "udisks_module_get_block_object_iface_setup_entries", (gpointer *) &block_object_iface_setup_func) ||
               ! g_module_symbol (module_data->handle, "udisks_module_get_drive_object_iface_setup_entries", (gpointer *) &drive_object_iface_setup_func) ||
               ! g_module_symbol (module_data->handle, "udisks_module_get_object_new_funcs", (gpointer *) &module_object_new_setup_func) ||
               ! g_module_symbol (module_data->handle, "udisks_module_get_new_manager_iface_funcs", (gpointer *) &module_new_manager_iface_setup_func))
@@ -207,6 +217,9 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
             }
           else
             {
+              module_id = NULL;
+              module_state_pointer = module_init_func (&module_id);
+
               infos = block_object_iface_setup_func ();
               for (infos_i = infos; infos_i && *infos_i; infos_i++)
                 manager->block_object_interface_infos = g_list_append (manager->block_object_interface_infos, *infos_i);
@@ -228,6 +241,9 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
               g_free (module_new_manager_iface_funcs);
 
               manager->modules = g_list_append (manager->modules, module_data);
+              if (module_state_pointer != NULL && module_id != NULL)
+                udisks_module_manager_set_module_state_pointer (manager, module_id, module_state_pointer);
+              g_free (module_id);
             }
         }
       g_free (pth);
@@ -407,3 +423,43 @@ udisks_module_manager_get_new_manager_iface_funcs (UDisksModuleManager *manager)
     return NULL;
   return manager->new_manager_iface_funcs;
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_module_manager_set_module_state_pointer:
+ * @manager: A #UDisksModuleManager.
+ * @module_name: A module name.
+ * @state: Pointer to a private data.
+ *
+ * Stores the @state pointer for the given @module_name.
+ */
+void
+udisks_module_manager_set_module_state_pointer (UDisksModuleManager *manager,
+                                                const gchar         *module_name,
+                                                gpointer             state)
+{
+  g_return_if_fail (UDISKS_IS_MODULE_MANAGER (manager));
+
+  g_warn_if_fail (g_hash_table_insert (manager->state_pointers, g_strdup (module_name), state));
+}
+
+/**
+ * udisks_module_manager_get_module_state_pointer:
+ * @manager: A #UDisksModuleManager.
+ * @module_name: A module name.
+ *
+ * Retrieves the stored module state pointer for the given @module_name.
+ *
+ * Returns: A stored pointer to the private data or NULL if there is no state pointer for the given @module_name.
+ */
+gpointer
+udisks_module_manager_get_module_state_pointer (UDisksModuleManager *manager,
+                                                const gchar         *module_name)
+{
+  g_return_val_if_fail (UDISKS_IS_MODULE_MANAGER (manager), NULL);
+
+  return g_hash_table_lookup (manager->state_pointers, module_name);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
