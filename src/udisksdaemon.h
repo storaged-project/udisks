@@ -30,7 +30,9 @@ G_BEGIN_DECLS
 #define UDISKS_IS_DAEMON(o)        (G_TYPE_CHECK_INSTANCE_TYPE ((o), UDISKS_TYPE_DAEMON))
 
 GType                     udisks_daemon_get_type             (void) G_GNUC_CONST;
-UDisksDaemon             *udisks_daemon_new                   (GDBusConnection *connection);
+UDisksDaemon             *udisks_daemon_new                   (GDBusConnection *connection,
+                                                               gboolean         disable_modules,
+                                                               gboolean         force_load_modules);
 GDBusConnection          *udisks_daemon_get_connection        (UDisksDaemon    *daemon);
 GDBusObjectManagerServer *udisks_daemon_get_object_manager    (UDisksDaemon    *daemon);
 UDisksMountMonitor       *udisks_daemon_get_mount_monitor     (UDisksDaemon    *daemon);
@@ -40,6 +42,8 @@ UDisksLinuxProvider      *udisks_daemon_get_linux_provider    (UDisksDaemon    *
 PolkitAuthority          *udisks_daemon_get_authority         (UDisksDaemon    *daemon);
 UDisksState              *udisks_daemon_get_state             (UDisksDaemon    *daemon);
 UDisksModuleManager      *udisks_daemon_get_module_manager    (UDisksDaemon    *daemon);
+gboolean                  udisks_daemon_get_disable_modules   (UDisksDaemon    *daemon);
+gboolean                  udisks_daemon_get_force_load_modules(UDisksDaemon    *daemon);
 
 /**
  * UDisksDaemonWaitFunc:

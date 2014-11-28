@@ -34,11 +34,15 @@ static GMainLoop *loop = NULL;
 static gboolean opt_replace = FALSE;
 static gboolean opt_no_debug = FALSE;
 static gboolean opt_no_sigint = FALSE;
+static gboolean opt_disable_modules = FALSE;
+static gboolean opt_force_load_modules = FALSE;
 static GOptionEntry opt_entries[] =
 {
   {"replace", 'r', 0, G_OPTION_ARG_NONE, &opt_replace, "Replace existing daemon", NULL},
   {"no-debug", 'n', 0, G_OPTION_ARG_NONE, &opt_no_debug, "Don't print debug information on stdout/stderr", NULL},
   {"no-sigint", 's', 0, G_OPTION_ARG_NONE, &opt_no_sigint, "Do not handle SIGINT for controlled shutdown", NULL},
+  {"disable-modules", 0, 0, G_OPTION_ARG_NONE, &opt_disable_modules, "Do not load modules even when asked for it", NULL},
+  {"force-load-modules", 0, 0, G_OPTION_ARG_NONE, &opt_force_load_modules, "Activate modules on startup", NULL},
   {NULL }
 };
 
@@ -49,7 +53,7 @@ on_bus_acquired (GDBusConnection *connection,
                  const gchar     *name,
                  gpointer         user_data)
 {
-  the_daemon = udisks_daemon_new (connection);
+  the_daemon = udisks_daemon_new (connection, opt_disable_modules, opt_force_load_modules);
   udisks_debug ("Connected to the system bus");
 }
 

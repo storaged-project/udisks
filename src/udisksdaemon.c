@@ -76,6 +76,9 @@ struct _UDisksDaemon
   UDisksCrypttabMonitor *crypttab_monitor;
 
   UDisksModuleManager *module_manager;
+
+  gboolean disable_modules;
+  gboolean force_load_modules;
 };
 
 struct _UDisksDaemonClass
@@ -92,6 +95,8 @@ enum
   PROP_FSTAB_MONITOR,
   PROP_CRYPTTAB_MONITOR,
   PROP_MODULE_MANAGER,
+  PROP_DISABLE_MODULES,
+  PROP_FORCE_LOAD_MODULES,
 };
 
 G_DEFINE_TYPE (UDisksDaemon, udisks_daemon, G_TYPE_OBJECT);
@@ -151,6 +156,14 @@ udisks_daemon_get_property (GObject    *object,
       g_value_set_object (value, udisks_daemon_get_module_manager (daemon));
       break;
 
+    case PROP_DISABLE_MODULES:
+      g_value_set_boolean (value, udisks_daemon_get_disable_modules (daemon));
+      break;
+
+    case PROP_FORCE_LOAD_MODULES:
+      g_value_set_boolean (value, udisks_daemon_get_force_load_modules (daemon));
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -170,6 +183,14 @@ udisks_daemon_set_property (GObject      *object,
     case PROP_CONNECTION:
       g_assert (daemon->connection == NULL);
       daemon->connection = g_value_dup_object (value);
+      break;
+
+    case PROP_DISABLE_MODULES:
+      daemon->disable_modules = g_value_get_boolean (value);
+      break;
+
+    case PROP_FORCE_LOAD_MODULES:
+      daemon->force_load_modules = g_value_get_boolean (value);
       break;
 
     default:
@@ -242,6 +263,9 @@ udisks_daemon_constructed (GObject *object)
   /* now add providers */
   daemon->linux_provider = udisks_linux_provider_new (daemon);
 
+  if (daemon->force_load_modules)
+    udisks_module_manager_load_modules (daemon->module_manager);
+
   udisks_provider_start (UDISKS_PROVIDER (daemon->linux_provider));
 
   /* Export the ObjectManager */
@@ -310,22 +334,58 @@ udisks_daemon_class_init (UDisksDaemonClass *klass)
                                                         UDISKS_TYPE_MOUNT_MONITOR,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_STATIC_STRINGS));
+
+  /**
+   * UDisksDaemon:disable-modules:
+   *
+   * Whether modules should be disabled
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_DISABLE_MODULES,
+                                   g_param_spec_boolean ("disable-modules",
+                                                         "Disable modules",
+                                                         "Whether modules should be disabled",
+                                                         FALSE,
+                                                         G_PARAM_READABLE |
+                                                         G_PARAM_WRITABLE |
+                                                         G_PARAM_CONSTRUCT_ONLY));
+
+  /**
+   * UDisksDaemon:force-load-modules:
+   *
+   * Whether modules should be activated upon startup
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_FORCE_LOAD_MODULES,
+                                   g_param_spec_boolean ("force-load-modules",
+                                                         "Force load modules",
+                                                         "Whether modules should be activated upon startup",
+                                                         FALSE,
+                                                         G_PARAM_READABLE |
+                                                         G_PARAM_WRITABLE |
+                                                         G_PARAM_CONSTRUCT_ONLY));
 }
 
 /**
  * udisks_daemon_new:
  * @connection: A #GDBusConnection.
+ * @disable_modules: Indicates whether modules should never be activated.
+ * @force_load_modules: Activate modules on startup (for debugging purposes).
  *
  * Create a new daemon object for exporting objects on @connection.
  *
  * Returns: A #UDisksDaemon object. Free with g_object_unref().
  */
 UDisksDaemon *
-udisks_daemon_new (GDBusConnection *connection)
+udisks_daemon_new (GDBusConnection *connection,
+                   gboolean disable_modules,
+                   gboolean force_load_modules)
 {
   g_return_val_if_fail (G_IS_DBUS_CONNECTION (connection), NULL);
   return UDISKS_DAEMON (g_object_new (UDISKS_TYPE_DAEMON,
                                       "connection", connection,
+                                      "disable-modules", disable_modules,
+                                      "force-load-modules", force_load_modules,
                                       NULL));
 }
 
@@ -1119,6 +1179,38 @@ udisks_daemon_get_module_manager (UDisksDaemon *daemon)
 {
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
   return daemon->module_manager;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+/**
+ * udisks_daemon_get_disable_modules:
+ * @daemon: A #UDisksDaemon.
+ *
+ * Gets @daemon setting whether modules should never be loaded.
+ *
+ * Returns: %TRUE if --disable-modules commandline switch has been specified.
+ */
+gboolean
+udisks_daemon_get_disable_modules (UDisksDaemon*daemon)
+{
+  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), FALSE);
+  return daemon->disable_modules;
+}
+
+/**
+ * udisks_daemon_get_force_load_modules:
+ * @daemon: A #UDisksDaemon.
+ *
+ * Gets @daemon setting whether modules should be activated upon start.
+ *
+ * Returns: %TRUE if --force-load-modules commandline switch has been specified.
+ */
+gboolean
+udisks_daemon_get_force_load_modules (UDisksDaemon *daemon)
+{
+  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), FALSE);
+  return daemon->force_load_modules;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

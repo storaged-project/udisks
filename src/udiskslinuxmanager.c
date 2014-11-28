@@ -886,9 +886,11 @@ handle_enable_modules (UDisksManager *object,
       return TRUE;
     }
 
-  module_manager = udisks_daemon_get_module_manager (manager->daemon);
-
-  udisks_module_manager_load_modules (module_manager);
+  if (! udisks_daemon_get_disable_modules (manager->daemon))
+    {
+      module_manager = udisks_daemon_get_module_manager (manager->daemon);
+      udisks_module_manager_load_modules (module_manager);
+    }
 
   udisks_manager_complete_enable_modules (object, invocation);
 

@@ -492,20 +492,6 @@ udisks_linux_provider_start (UDisksProvider *_provider)
   if (UDISKS_PROVIDER_CLASS (udisks_linux_provider_parent_class)->start != NULL)
     UDISKS_PROVIDER_CLASS (udisks_linux_provider_parent_class)->start (_provider);
 
-  daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
-
-  provider->manager_object = udisks_object_skeleton_new ("/org/freedesktop/UDisks2/Manager");
-  manager = udisks_linux_manager_new (daemon);
-  udisks_object_skeleton_set_manager (provider->manager_object, manager);
-  g_object_unref (manager);
-
-  module_manager = udisks_daemon_get_module_manager (daemon);
-  ensure_modules (provider);
-  g_signal_connect_swapped (module_manager, "notify::modules-ready", G_CALLBACK (ensure_modules), provider);
-
-  g_dbus_object_manager_server_export (udisks_daemon_get_object_manager (daemon),
-                                       G_DBUS_OBJECT_SKELETON (provider->manager_object));
-
   provider->sysfs_to_block = g_hash_table_new_full (g_str_hash,
                                                     g_str_equal,
                                                     g_free,
@@ -534,6 +520,20 @@ udisks_linux_provider_start (UDisksProvider *_provider)
                                                                g_direct_equal,
                                                                NULL,
                                                                (GDestroyNotify) g_hash_table_unref);
+
+  daemon = udisks_provider_get_daemon (UDISKS_PROVIDER (provider));
+
+  provider->manager_object = udisks_object_skeleton_new ("/org/freedesktop/UDisks2/Manager");
+  manager = udisks_linux_manager_new (daemon);
+  udisks_object_skeleton_set_manager (provider->manager_object, manager);
+  g_object_unref (manager);
+
+  module_manager = udisks_daemon_get_module_manager (daemon);
+  g_signal_connect_swapped (module_manager, "notify::modules-ready", G_CALLBACK (ensure_modules), provider);
+  ensure_modules (provider);
+
+  g_dbus_object_manager_server_export (udisks_daemon_get_object_manager (daemon),
+                                       G_DBUS_OBJECT_SKELETON (provider->manager_object));
 
   /* probe for extra data we don't get from udev */
   udisks_info ("Initialization (device probing)");
