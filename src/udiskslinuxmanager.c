@@ -870,12 +870,23 @@ handle_mdraid_create (UDisksManager         *_object,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
+load_modules_idle (gpointer user_data)
+{
+  UDisksDaemon *daemon = UDISKS_DAEMON (user_data);
+  UDisksModuleManager *module_manager;
+
+  module_manager = udisks_daemon_get_module_manager (daemon);
+  udisks_module_manager_load_modules (module_manager);
+
+  return FALSE;
+}
+
+static gboolean
 handle_enable_modules (UDisksManager *object,
                        GDBusMethodInvocation *invocation,
                        gboolean arg_enable)
 {
   UDisksLinuxManager *manager = UDISKS_LINUX_MANAGER (object);
-  UDisksModuleManager *module_manager;
 
   if (! arg_enable)
     {
@@ -887,10 +898,8 @@ handle_enable_modules (UDisksManager *object,
     }
 
   if (! udisks_daemon_get_disable_modules (manager->daemon))
-    {
-      module_manager = udisks_daemon_get_module_manager (manager->daemon);
-      udisks_module_manager_load_modules (module_manager);
-    }
+    /* Emit in main thread */
+    g_idle_add (load_modules_idle, manager->daemon);
 
   udisks_manager_complete_enable_modules (object, invocation);
 
