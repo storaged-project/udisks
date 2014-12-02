@@ -200,6 +200,14 @@ AC_CHECK_LIB(
 AC_SUBST(ACL_CFLAGS)
 AC_SUBST(ACL_LIBS)
 
+# Dummy test module
+have_module_dummy=no
+AC_ARG_ENABLE(module-dummy, AS_HELP_STRING([--enable-module-dummy], [enable dummy test module]))
+if test "x$enable_module_dummy" = "xyes"; then
+  have_module_dummy=yes
+fi
+AM_CONDITIONAL(HAVE_MODULE_DUMMY, [test "$have_module_dummy" = "yes"])
+
 # Internationalization
 #
 
@@ -257,4 +265,6 @@ echo "
         Maintainer mode:            ${USE_MAINTAINER_MODE}
         Building api docs:          ${enable_gtk_doc}
         Building man pages:         ${enable_man}
+
+        Dummy test module:          ${have_module_dummy}
 "
