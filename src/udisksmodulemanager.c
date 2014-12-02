@@ -39,10 +39,6 @@
 #include <modules/udisksmoduleifacetypes.h>
 
 
-/* FIXME: move to configure.ac */
-#define MODULE_DIR PACKAGE_LIB_DIR "/udisks2/modules"
-
-
 /**
  * SECTION:udisksmodulemanager
  * @title: UDisksModuleManager
@@ -187,7 +183,7 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
     }
 
   error = NULL;
-  dir = g_dir_open (MODULE_DIR, 0, &error);
+  dir = g_dir_open (UDISKS_MODULE_DIR, 0, &error);
   if (! dir)
     {
       udisks_warning ("Error loading modules: %s", error->message);
@@ -198,7 +194,7 @@ udisks_module_manager_load_modules (UDisksModuleManager *manager)
 
   while ((dent = g_dir_read_name (dir)))
     {
-      pth = g_build_filename (MODULE_DIR, dent, NULL);
+      pth = g_build_filename (UDISKS_MODULE_DIR, dent, NULL);
       module = g_module_open (pth, /* G_MODULE_BIND_LOCAL */ 0);
 
       if (module != NULL)

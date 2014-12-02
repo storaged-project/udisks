@@ -15,6 +15,7 @@ AM_CPPFLAGS = \
 	-DPACKAGE_LOCALSTATE_DIR=\""$(localstatedir)"\" 	\
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\" 		\
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\" 			\
+	-DUDISKS_MODULE_DIR=\"$(libdir)/udisks2/modules\"	\
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT			\
 	-DUDISKS_COMPILATION					\
 	$(POLKIT_GOBJECT_1_CFLAGS) 				\
