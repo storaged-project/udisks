@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
+
+<policyconfig>
+  <vendor>The udisks Project</vendor>
+  <vendor_url>http://udisks.freedesktop.org/</vendor_url>
+  <icon_name>drive-removable-media</icon_name>
+
+  <!-- ###################################################################### -->
+  <!-- Manage LVM -->
+
+  <action id="org.freedesktop.udisks2.lvm2.manage-lvm">
+    <_description>Manage LVM</_description>
+    <_message>Authentication is required to manage LVM</_message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+</policyconfig>

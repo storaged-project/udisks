@@ -1,0 +1,477 @@
+<!DOCTYPE node PUBLIC
+"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/" xmlns:doc="http://www.freedesktop.org/dbus/1.0/doc.dtd">
+
+<!--
+ Copyright (C) 2013 Marius Vollmer <marius.vollmer@gmail.com>
+ Copyright (C) 2014 Tomas Bzatek <tbzatek@redhat.com>
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+
+ You should have received a copy of the GNU Lesser General
+ Public License along with this library; if not, write to the
+ Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ Boston, MA 02111-1307, USA.
+-->
+
+  <!-- ********************************************************************** -->
+
+  <!--
+      org.freedesktop.UDisks2.Manager.LVM2:
+      @short_description: LVM2 add-on to the manager singleton
+      @since: x.x
+
+      Additional interface with LVM2 specifics for top-level manager singleton object
+      located at the object path <literal>/org/freedesktop/UDisks2/Manager</literal>.
+  -->
+  <interface name="org.freedesktop.UDisks2.Manager.LVM2">
+    <!-- prereq: org.freedesktop.UDisks2.Manager -->
+
+    <!--
+        VolumeGroupCreate:
+        @blocks: An array of object paths to objects implementing the #org.freedesktop.UDisks2.Block interface.
+        @name: The name for the volume group.
+        @extent_size: The extent size for the volume group.  0 means default.
+        @result: The object path of the new volume group object.
+        @since: x.x
+
+        Creates a new volume group, using @blocks as the initial
+        physical volumes.  Each block device will be wiped and all
+        data on them will be lost.
+
+        You must specify at least one block device to be used as a
+        physical volume.
+    -->
+    <method name="VolumeGroupCreate">
+      <arg name="blocks" direction="in" type="ao"/>
+      <arg name="name" direction="in" type="s"/>
+      <arg name="extent_size" direction="in" type="t"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="result" direction="out" type="o"/>
+    </method>
+
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+  <!--
+      org.freedesktop.UDisks2.Block.LVM2:
+      @short_description: LVM2 add-on to the block device
+      @since: x.x
+
+      Additional interface with LVM2 specifics for a block device.
+  -->
+  <interface name="org.freedesktop.UDisks2.Block.LVM2">
+    <!-- prereq: org.freedesktop.UDisks2.Block -->
+
+    <!-- LogicalVolume:
+         @since: x.x
+         If the block device is a logical volume in a volume group,
+         this is set to the #org.freedesktop.UDisks2.LogicalVolume
+         object that it corresponds to.  It is '/' otherwise.
+      -->
+    <property name="LogicalVolume" type="o" access="read"/>
+
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+  <!--
+      org.freedesktop.UDisks2.PhysicalVolume:
+      @short_description: Block device that is a physical volume.
+      @since: x.x
+
+      This interface is used for #org.freedesktop.UDisks2.Block
+      devices that are physical volumes in a volume group.
+  -->
+  <interface name="org.freedesktop.UDisks2.PhysicalVolume">
+    <!-- prereq: org.freedesktop.UDisks2.Block -->
+    <property name="VolumeGroup" type="o" access="read"/>
+    <property name="Size" type="t" access="read"/>
+    <property name="FreeSize" type="t" access="read"/>
+  </interface>
+
+  <!-- ********************************************************************** -->
+  <!--
+      org.freedesktop.UDisks2.VolumeGroup:
+      @short_description: A volume group
+      @since: x.x
+
+      Objects implementing this interface represent LVM2 volume
+      groups.  They appear under /org/freedesktop/UDisks2/lvm/.
+
+      The logical volume objects of a volume group are the children of
+      the volume group objects in the D-Bus object hierarchy.  See the
+      #org.freedesktop.UDisks2.LogicalVolume interface.
+
+      The physical volume objects of a volume group can be found by
+      looking for block devices with a
+      #org.freedesktop.UDisks2.PhysicalVolume.VolumeGroup property
+      that points to the volume group object.
+    -->
+  <interface name="org.freedesktop.UDisks2.VolumeGroup">
+    <!-- Name:
+
+         The name of this volume group, as known to LVM2.
+    -->
+    <property name="Name" type="s" access="read"/>
+
+    <!-- DisplayName:
+
+         The name of this volume group as it should be displayed to
+         the user.
+    -->
+    <property name="DisplayName" type="s" access="read"/>
+
+    <!-- UUID:
+
+         The UUID this volume group.  It is guaranteed to be unique,
+         but it might change over time.
+    -->
+    <property name="UUID" type="s" access="read"/>
+
+    <!-- Size:
+
+         The total capacity of this volume group, in bytes.
+    -->
+    <property name="Size" type="t" access="read"/>
+
+    <!-- FreeSize:
+
+         The unused capacity of this volume group, in bytes.
+    -->
+    <property name="FreeSize" type="t" access="read"/>
+
+    <!-- ExtentSize:
+
+         The size of extents.  When creating and resizing logical
+         volumes, sizes are rounded up to multiples of the extent
+         size.
+    -->
+    <property name="ExtentSize" type="t" access="read"/>
+
+    <!-- NeedsPolling:
+
+         Whether or not this volume group needs to be periodically
+         polled to guarantee updates.
+    -->
+    <property name="NeedsPolling" type="b" access="read"/>
+
+    <!-- Poll:
+
+         Make sure that all properties of this volume group and of all
+         their logical and physical volumes are up-to-date.
+
+         The properties are not guaranteed to be up-to-date yet when
+         this method returns.
+    -->
+    <method name="Poll">
+    </method>
+
+    <!-- Delete:
+
+         Delete this volume group.  All its logical volumes will be
+         deleted, too.
+
+         When @options includes "wipe" then all physical volumes of
+         this volume group will be wiped.
+    -->
+    <method name="Delete">
+      <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+
+    <!-- Rename:
+         @new_display_name: The new display name.
+
+         Rename this volume group.  This might cause the volume group
+         object to disappear from D-Bus and reappear with a different
+         path.
+
+         The new display name can be any string and is not restricted
+         by the rules for LVM2 names.
+    -->
+    <method name="Rename">
+      <arg name="new_display_name" type="s" direction="in"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+      <arg name="result" type="o" direction="out"/>
+    </method>
+
+    <!-- AddDevice:
+         @block: The block device to add.
+
+         Add a new physical volume to the volume group.  The block
+         device will be wiped and all data on it will be lost.
+    -->
+    <method name="AddDevice">
+      <arg name="block" type="o" direction="in"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+
+    <!-- EmptyDevice:
+         @block: The block device to empty.
+
+         Move all data on a the given block device somewhere else so
+         that the block device might be removed.
+
+         When @options includes "no-block" then the call returns as
+         soon as the operation has started.
+    -->
+    <method name="EmptyDevice">
+      <arg name="block" type="o" direction="in"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+
+    <!-- RemoveDevice:
+         @block: The block device to remove.
+
+         Remove the indicated physical volume from the volume group.
+         The physical device must be unused.
+
+         When @options includes "wipe" then the physical volume will
+         be wiped.
+    -->
+    <method name="RemoveDevice">
+      <arg name="block" type="o" direction="in"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+
+    <!-- CreatePlainVolume:
+         @name: The name of the new logical volume.
+         @size: The size.
+         @stripes: The stripe count.  0 means default.
+         @stripesize: The stripe size.  0 means default.
+         @result: The object path of the new logical volume.
+
+         Create a 'normal' new logical volume.
+    -->
+    <method name="CreatePlainVolume">
+      <arg name="name" type="s" direction="in"/>
+      <arg name="size" type="t" direction="in"/>
+      <arg name="stripes" type="i" direction="in"/>
+      <arg name="stripesize" type="t" direction="in"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+      <arg name="result" type="o" direction="out"/>
+    </method>
+
+    <!-- CreateThinPoolVolume:
+         @name: The name of the new logical volume.
+         @size: The size.
+         @result: The object path of the new logical volume.
+
+         Create a new logical volume that can be used to back
+         thinly-provisioned logical volumes.
+    -->
+    <method name="CreateThinPoolVolume">
+      <arg name="name" type="s" direction="in"/>
+      <arg name="size" type="t" direction="in"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+      <arg name="result" type="o" direction="out"/>
+    </method>
+
+    <!-- CreateThinVolume:
+         @name: The name of the new logical volume.
+         @size: The virtual size.
+         @pool: The thin pool to use.
+         @result: The object path of the new logical volume.
+
+         Create a new thinly provisioned logical volume in the given
+         pool.
+    -->
+    <method name="CreateThinVolume">
+      <arg name="name" type="s" direction="in"/>
+      <arg name="size" type="t" direction="in"/>
+      <arg name="pool" type="o" direction="in"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+      <arg name="result" type="o" direction="out"/>
+    </method>
+
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+  <!--
+      org.freedesktop.UDisks2.LogicalVolume:
+      @short_description: A logical volume.
+      @since: x.x
+
+      Objects with this interface represent logical volumes in a
+      volume group.  Active logical volumes are associated with a
+      block device, which link back to the logical volume object via
+      their #org.freedesktop.UDisks2.Block.LVM2:LogicalVolume property.
+
+      Logical volume objects are children of their volume group
+      object, and also link to it via the #VolumeGroup property.
+  -->
+  <interface name="org.freedesktop.UDisks2.LogicalVolume">
+
+    <!-- VolumeGroup:
+
+         The path of the volume group object that this logical volume
+         belongs to.
+    -->
+    <property name="VolumeGroup" type="o" access="read"/>
+
+    <!-- Name:
+
+         The name of this logical volume, as it is known to LVM2.
+    -->
+    <property name="Name" type="s" access="read"/>
+
+    <!-- DisplayName:
+
+         The name of this logical volume, as it should be displayed to
+         the user.
+    -->
+    <property name="DisplayName" type="s" access="read"/>
+
+    <!-- UUID:
+
+         The UUID of this logical volume.  It is guaranteed to be
+         unique within the group, but it might change over time.
+    -->
+    <property name="UUID" type="s" access="read"/>
+
+    <!-- Size:
+
+         The size of this logical volume in bytes.
+    -->
+    <property name="Size" type="t" access="read"/>
+
+    <!-- DataAllocatedRatio:
+
+         For a thin pool or a non-thin snapshot, indicates how full
+         the area for storing data is.  A value of 1.0 corresponds to
+         100%.
+    -->
+    <property name="DataAllocatedRatio" type="d" access="read"/>
+
+    <!-- MetadataAllocatedRatio:
+
+         For a thin pool or a non-thin snapshot, indicates how full
+         the area for storing meta data is.  A value of 1.0
+         corresponds to 100%.
+    -->
+    <property name="MetadataAllocatedRatio" type="d" access="read"/>
+
+    <!-- Type:
+
+         The general type of a logical volume.  One of "plain",
+         "thin-pool", "thin", "snapshot", "mirror", or "raid".
+    -->
+    <property name="Type" type="s" access="read"/>
+
+    <!-- ThinPool:
+
+         For a thin volume, the object path of its pool.
+    -->
+    <property name="ThinPool" type="o" access="read"/>
+
+    <!-- Origin:
+
+         For snapshots, the object path of its origin.
+    -->
+    <property name="Origin" type="o" access="read"/>
+
+    <!-- Activate:
+
+         Activate this logical volume, which makes it appear as a
+         block device in the system.
+    -->
+    <method name="Activate">
+      <arg name="options" type="a{sv}" direction="in"/>
+      <arg name="result" type="o" direction="out"/>
+    </method>
+
+    <!-- Deactivate:
+
+         Deactivate this logical volume, which makes its block device
+         disappear.
+    -->
+    <method name="Deactivate">
+      <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+
+    <!-- Delete:
+
+         Delete this logical volume.
+
+         If there are any non-thin snapshots of this logical volume,
+         they will be deleted as well.
+
+         If this is a thin pool, all its contained thin volumes will
+         be deleted as well.
+    -->
+    <method name="Delete">
+      <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+
+    <!-- Rename:
+         @new_display_name: The new display name.
+
+         Rename this logical volume.  This might cause the logical
+         volume object to disappear from D-Bus and reappear with a
+         different path.
+
+         The new display name can be any string and is not restricted
+         by the rules for LVM2 names.
+    -->
+    <method name="Rename">
+      <arg name="new_display_name" type="s" direction="in"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+      <arg name="result" type="o" direction="out"/>
+    </method>
+
+    <!-- Resize:
+         @new_size: The new size, in bytes.
+         @stripes: The strip count for the extension.
+         @stripesize: The strip size for the extension.
+
+         Resize this logical volume.
+
+         Specifying 0 for #stripes and #stripesize means to use a
+         default value.
+    -->
+    <method name="Resize">
+      <arg name="new_size" type="t" direction="in"/>
+      <arg name="stripes" type="i" direction="in"/>
+      <arg name="stripesize" type="t" direction="in"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+
+    <!-- CreateSnapshot:
+         @name: The name of the snapshot.
+         @size: The size of the backing store for the snapshot, in bytes.
+
+         Create a snapshot of this logical volume.
+
+         When creating a snapshot of a non-thin volume, a non-zero
+         size must be specified.  A non-thin snapshot is created in
+         this case.
+
+         When creating a snapshot of a thin volume, specifying a @size
+         of zero will create a thin snapshot in the same pool.
+
+         When creating a snapshot of a thin volume, specifying a
+         non-zero @size will create a non-thin snapshot.
+    -->
+    <method name="CreateSnapshot">
+      <arg name="name" type="s" direction="in"/>
+      <arg name="size" type="t" direction="in"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+      <arg name="result" type="o" direction="out"/>
+    </method>
+
+  </interface>
+
+  <!-- ********************************************************************** -->
+
+</node>
