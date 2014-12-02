@@ -41,7 +41,8 @@ BUILT_SOURCES =										\
 	$(dbus_built_sources)								\
 	$(NULL)
 
-lib_LTLIBRARIES=libudisks2_dummy.la
+libudisks2_dummydir=$(libdir)/udisks2/modules
+libudisks2_dummy_LTLIBRARIES=libudisks2_dummy.la
 
 libudisks2_dummyincludedir=$(includedir)/udisks2/udisks
 
