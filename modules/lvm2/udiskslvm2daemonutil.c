@@ -353,7 +353,13 @@ udisks_daemon_util_lvm2_spawn_for_variant (const gchar **argv,
 static gboolean
 valid_lvm_name_char (gint c)
 {
-  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '+' || c == '_' || c == '.' || c == '-';
+  return ((c >= 'a' && c <= 'z')
+          || (c >= 'A' && c <= 'Z')
+          || (c >= '0' && c <= '9')
+          || c == '+'
+          || c == '_'
+          || c == '.'
+          || c == '-');
 }
 
 #define LVM_ENCODING_PREFIX "+_"
