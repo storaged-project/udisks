@@ -378,15 +378,7 @@ udisks_daemon_util_lvm2_encode_lvm_name (const gchar *name,
   if (g_str_has_prefix (name, LVM_ENCODING_PREFIX))
     goto encode;
 
-  if (for_logical_volume
-      && (strstr (name, "_mlog")
-          || strstr (name, "_mimage")
-          || strstr (name, "_rimage")
-          || strstr (name, "_rmeta")
-          || strstr (name, "_tdata")
-          || strstr (name, "_tmeta")
-          || g_str_has_prefix (name, "pvmove")
-          || g_str_has_prefix (name, "snapshot")))
+  if (for_logical_volume && udisks_daemon_util_lvm2_name_is_reserved (name))
     goto encode;
 
   return g_strdup (name);
@@ -454,4 +446,22 @@ udisks_daemon_util_lvm2_find_volume_group_object (UDisksDaemon *daemon,
   g_assert (state != NULL);
 
   return g_hash_table_lookup (state->name_to_volume_group, name);
+}
+
+/* -------------------------------------------------------------------------------- */
+
+gboolean
+udisks_daemon_util_lvm2_name_is_reserved (const gchar *name)
+{
+ /* XXX - get this from lvm2app */
+
+ return (strstr (name, "_mlog")
+         || strstr (name, "_mimage")
+         || strstr (name, "_rimage")
+         || strstr (name, "_rmeta")
+         || strstr (name, "_tdata")
+         || strstr (name, "_tmeta")
+         || strstr (name, "_pmspare")
+         || g_str_has_prefix (name, "pvmove")
+         || g_str_has_prefix (name, "snapshot"));
 }

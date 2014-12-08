@@ -273,22 +273,6 @@ lv_is_pvmove_volume (const gchar *name)
   return name && g_str_has_prefix (name, "pvmove");
 }
 
-static gboolean
-lv_is_visible (const gchar *name)
-{
-  // XXX - get this from lvm2app
-
-  return (name
-          && strstr (name, "_mlog") == NULL
-          && strstr (name, "_mimage") == NULL
-          && strstr (name, "_rimage") == NULL
-          && strstr (name, "_rmeta") == NULL
-          && strstr (name, "_tdata") == NULL
-          && strstr (name, "_tmeta") == NULL
-          && !g_str_has_prefix (name, "pvmove")
-          && !g_str_has_prefix (name, "snapshot"));
-}
-
 static void
 update_progress_for_device (UDisksDaemon *daemon,
                             const gchar *operation,
@@ -496,7 +480,7 @@ update_with_variant (GPid pid,
           if (lv_is_pvmove_volume (name))
             needs_polling = TRUE;
 
-          if (!lv_is_visible (name))
+          if (udisks_daemon_util_lvm2_name_is_reserved (name))
             continue;
 
           volume = g_hash_table_lookup (object->logical_volumes, name);
