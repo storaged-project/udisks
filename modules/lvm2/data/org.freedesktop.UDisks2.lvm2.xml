@@ -333,6 +333,12 @@
     -->
     <property name="DisplayName" type="s" access="read"/>
 
+    <!-- Active:
+
+         Whether or not this volume is active.
+    -->
+    <property name="Active" type="b" access="read"/>
+
     <!-- UUID:
 
          The UUID of this logical volume.  It is guaranteed to be

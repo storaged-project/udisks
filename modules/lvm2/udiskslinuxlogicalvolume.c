@@ -117,6 +117,7 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume *logical_volume,
 {
   UDisksLogicalVolume *iface;
   const char *type;
+  gboolean active;
   const char *pool_objpath;
   const char *origin_objpath;
   const gchar *str;
@@ -139,10 +140,12 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume *logical_volume,
     udisks_logical_volume_set_size (iface, num);
 
   type = "unsupported";
+  active = FALSE;
   if (g_variant_lookup (info, "lv_attr", "&s", &str)
       && str && strlen (str) > 6)
     {
       char volume_type = str[0];
+      char state       = str[4];
       char target_type = str[6];
 
       switch (target_type)
@@ -167,8 +170,11 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume *logical_volume,
           type = "plain";
           break;
         }
+      if (state == 'a')
+        active = TRUE;
     }
   udisks_logical_volume_set_type_ (iface, type);
+  udisks_logical_volume_set_active (iface, active);
 
   if (g_variant_lookup (info, "data_percent", "t", &num)
       && (int64_t)num >= 0)
