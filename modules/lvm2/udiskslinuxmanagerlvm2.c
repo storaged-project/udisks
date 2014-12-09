@@ -215,7 +215,6 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
   GList *blocks = NULL;
   GList *l;
   guint n;
-  gchar *encoded_name = NULL;
   gchar *escaped_name = NULL;
   GString *str = NULL;
   gint status;
@@ -295,8 +294,7 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
     }
 
   /* Create the volume group... */
-  encoded_name = udisks_daemon_util_lvm2_encode_lvm_name (arg_name, FALSE);
-  escaped_name = udisks_daemon_util_escape_and_quote (encoded_name);
+  escaped_name = udisks_daemon_util_escape_and_quote (arg_name);
   str = g_string_new ("vgcreate");
   g_string_append_printf (str, " %s", escaped_name);
   if (arg_extent_size > 0)
@@ -344,7 +342,7 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
   /* ... then, sit and wait for the object to show up */
   group_object = udisks_daemon_wait_for_object_sync (manager->daemon,
                                                      wait_for_volume_group_object,
-                                                     (gpointer)encoded_name,
+                                                     (gpointer) arg_name,
                                                      NULL,
                                                      10, /* timeout_seconds */
                                                      &error);
@@ -366,7 +364,6 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
     g_string_free (str, TRUE);
   g_list_free_full (blocks, g_object_unref);
   g_free (escaped_name);
-  g_free (encoded_name);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }

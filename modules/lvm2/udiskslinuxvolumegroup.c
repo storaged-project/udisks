@@ -138,12 +138,7 @@ udisks_linux_volume_group_update (UDisksLinuxVolumeGroup *volume_group,
   guint64 num;
 
   if (g_variant_lookup (info, "name", "&s", &str))
-    {
-      gchar *decoded = udisks_daemon_util_lvm2_decode_lvm_name (str);
-      udisks_volume_group_set_name (iface, str);
-      udisks_volume_group_set_display_name (iface, decoded);
-      g_free (decoded);
-    }
+    udisks_volume_group_set_name (iface, str);
 
   if (g_variant_lookup (info, "uuid", "&s", &str))
     udisks_volume_group_set_uuid (iface, str);
@@ -320,7 +315,6 @@ handle_rename (UDisksVolumeGroup *_group,
   uid_t caller_uid;
   gid_t caller_gid;
   gchar *escaped_name = NULL;
-  gchar *encoded_new_name = NULL;
   gchar *escaped_new_name = NULL;
   gchar *error_message = NULL;
   UDisksObject *group_object = NULL;
@@ -358,8 +352,7 @@ handle_rename (UDisksVolumeGroup *_group,
     goto out;
 
   escaped_name = udisks_daemon_util_escape_and_quote (udisks_linux_volume_group_object_get_name (object));
-  encoded_new_name = udisks_daemon_util_lvm2_encode_lvm_name (new_name, FALSE);
-  escaped_new_name = udisks_daemon_util_escape_and_quote (encoded_new_name);
+  escaped_new_name = udisks_daemon_util_escape_and_quote (new_name);
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               UDISKS_OBJECT (object),
@@ -384,7 +377,7 @@ handle_rename (UDisksVolumeGroup *_group,
 
   group_object = udisks_daemon_wait_for_object_sync (daemon,
                                                      wait_for_volume_group_object,
-                                                     (gpointer)encoded_new_name,
+                                                     (gpointer) new_name,
                                                      NULL,
                                                      10, /* timeout_seconds */
                                                      &error);
@@ -404,7 +397,6 @@ handle_rename (UDisksVolumeGroup *_group,
  out:
   g_free (error_message);
   g_free (escaped_name);
-  g_free (encoded_new_name);
   g_free (escaped_new_name);
   g_clear_object (&object);
   return TRUE;
@@ -835,7 +827,6 @@ handle_create_plain_volume (UDisksVolumeGroup *_group,
   const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
-  gchar *encoded_volume_name = NULL;
   gchar *escaped_volume_name = NULL;
   gchar *escaped_group_name = NULL;
   GString *cmd = NULL;
@@ -874,8 +865,7 @@ handle_create_plain_volume (UDisksVolumeGroup *_group,
                                                     invocation))
     goto out;
 
-  encoded_volume_name = udisks_daemon_util_lvm2_encode_lvm_name (arg_name, TRUE);
-  escaped_volume_name = udisks_daemon_util_escape_and_quote (encoded_volume_name);
+  escaped_volume_name = udisks_daemon_util_escape_and_quote (arg_name);
   escaped_group_name = udisks_daemon_util_escape_and_quote (udisks_linux_volume_group_object_get_name (object));
   arg_size -= arg_size % 512;
 
@@ -908,7 +898,7 @@ handle_create_plain_volume (UDisksVolumeGroup *_group,
       goto out;
     }
 
-  lv_objpath = wait_for_logical_volume_path (object, encoded_volume_name, &error);
+  lv_objpath = wait_for_logical_volume_path (object, arg_name, &error);
   if (lv_objpath == NULL)
     {
       g_prefix_error (&error,
@@ -923,7 +913,6 @@ handle_create_plain_volume (UDisksVolumeGroup *_group,
  out:
   g_free (error_message);
   g_free (escaped_group_name);
-  g_free (encoded_volume_name);
   g_free (escaped_volume_name);
   g_string_free (cmd, TRUE);
   g_clear_object (&object);
@@ -947,7 +936,6 @@ handle_create_thin_pool_volume (UDisksVolumeGroup *_group,
   const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
-  gchar *encoded_volume_name = NULL;
   gchar *escaped_volume_name = NULL;
   gchar *escaped_group_name = NULL;
   GString *cmd = NULL;
@@ -986,8 +974,7 @@ handle_create_thin_pool_volume (UDisksVolumeGroup *_group,
                                                     invocation))
     goto out;
 
-  encoded_volume_name = udisks_daemon_util_lvm2_encode_lvm_name (arg_name, TRUE);
-  escaped_volume_name = udisks_daemon_util_escape_and_quote (encoded_volume_name);
+  escaped_volume_name = udisks_daemon_util_escape_and_quote (arg_name);
   escaped_group_name = udisks_daemon_util_escape_and_quote (udisks_linux_volume_group_object_get_name (object));
   arg_size -= arg_size % 512;
 
@@ -1014,7 +1001,7 @@ handle_create_thin_pool_volume (UDisksVolumeGroup *_group,
       goto out;
     }
 
-  lv_objpath = wait_for_logical_volume_path (object, encoded_volume_name, &error);
+  lv_objpath = wait_for_logical_volume_path (object, arg_name, &error);
   if (lv_objpath == NULL)
     {
       g_prefix_error (&error,
@@ -1028,7 +1015,6 @@ handle_create_thin_pool_volume (UDisksVolumeGroup *_group,
 
  out:
   g_free (error_message);
-  g_free (encoded_volume_name);
   g_free (escaped_volume_name);
   g_free (escaped_group_name);
   g_string_free (cmd, TRUE);
@@ -1055,7 +1041,6 @@ handle_create_thin_volume (UDisksVolumeGroup *_group,
   uid_t caller_uid;
   gid_t caller_gid;
   UDisksLinuxLogicalVolumeObject *pool_object = NULL;
-  gchar *encoded_volume_name = NULL;
   gchar *escaped_volume_name = NULL;
   gchar *escaped_group_name = NULL;
   gchar *escaped_pool_name = NULL;
@@ -1103,8 +1088,7 @@ handle_create_thin_volume (UDisksVolumeGroup *_group,
       goto out;
     }
 
-  encoded_volume_name = udisks_daemon_util_lvm2_encode_lvm_name (arg_name, TRUE);
-  escaped_volume_name = udisks_daemon_util_escape_and_quote (encoded_volume_name);
+  escaped_volume_name = udisks_daemon_util_escape_and_quote (arg_name);
   escaped_group_name = udisks_daemon_util_escape_and_quote (udisks_linux_volume_group_object_get_name (object));
   arg_size -= arg_size % 512;
   escaped_pool_name = udisks_daemon_util_escape_and_quote (udisks_linux_logical_volume_object_get_name (pool_object));
@@ -1132,7 +1116,7 @@ handle_create_thin_volume (UDisksVolumeGroup *_group,
       goto out;
     }
 
-  lv_objpath = wait_for_logical_volume_path (object, encoded_volume_name, &error);
+  lv_objpath = wait_for_logical_volume_path (object, arg_name, &error);
   if (lv_objpath == NULL)
     {
       g_prefix_error (&error,
@@ -1146,7 +1130,6 @@ handle_create_thin_volume (UDisksVolumeGroup *_group,
 
  out:
   g_free (error_message);
-  g_free (encoded_volume_name);
   g_free (escaped_volume_name);
   g_free (escaped_group_name);
   g_free (escaped_pool_name);

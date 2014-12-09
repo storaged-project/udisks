@@ -41,9 +41,6 @@ GPid udisks_daemon_util_lvm2_spawn_for_variant (const gchar        **argv,
                                                                   gpointer  user_data),
                                                 gpointer             user_data);
 
-gchar *udisks_daemon_util_lvm2_encode_lvm_name (const gchar *name,
-                                                gboolean     for_logical_volume);
-gchar *udisks_daemon_util_lvm2_decode_lvm_name (const gchar *encoded);
 gboolean udisks_daemon_util_lvm2_name_is_reserved (const gchar *name);
 
 UDisksLinuxVolumeGroupObject * udisks_daemon_util_lvm2_find_volume_group_object (UDisksDaemon *daemon,

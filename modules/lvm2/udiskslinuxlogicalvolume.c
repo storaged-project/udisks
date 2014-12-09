@@ -131,12 +131,7 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume *logical_volume,
   iface = UDISKS_LOGICAL_VOLUME (logical_volume);
 
   if (g_variant_lookup (info, "name", "&s", &str))
-    {
-      gchar *decoded = udisks_daemon_util_lvm2_decode_lvm_name (str);
-      udisks_logical_volume_set_name (iface, str);
-      udisks_logical_volume_set_display_name (iface, decoded);
-      g_free (decoded);
-    }
+    udisks_logical_volume_set_name (iface, str);
 
   if (g_variant_lookup (info, "uuid", "&s", &str))
     udisks_logical_volume_set_uuid (iface, str);
@@ -374,7 +369,6 @@ handle_rename (UDisksLogicalVolume   *_volume,
   UDisksLinuxVolumeGroupObject *group_object;
   gchar *escaped_group_name = NULL;
   gchar *escaped_name = NULL;
-  gchar *encoded_new_name = NULL;
   gchar *escaped_new_name = NULL;
   gchar *error_message = NULL;
   const gchar *lv_objpath;
@@ -414,8 +408,7 @@ handle_rename (UDisksLogicalVolume   *_volume,
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
   escaped_group_name = udisks_daemon_util_escape_and_quote (udisks_linux_volume_group_object_get_name (group_object));
   escaped_name = udisks_daemon_util_escape_and_quote (udisks_linux_logical_volume_object_get_name (object));
-  encoded_new_name = udisks_daemon_util_lvm2_encode_lvm_name (new_name, TRUE);
-  escaped_new_name = udisks_daemon_util_escape_and_quote (encoded_new_name);
+  escaped_new_name = udisks_daemon_util_escape_and_quote (new_name);
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               UDISKS_OBJECT (object),
@@ -439,7 +432,7 @@ handle_rename (UDisksLogicalVolume   *_volume,
       goto out;
     }
 
-  lv_objpath = wait_for_logical_volume_path (group_object, encoded_new_name, &error);
+  lv_objpath = wait_for_logical_volume_path (group_object, new_name, &error);
   if (lv_objpath == NULL)
     {
       g_prefix_error (&error,
@@ -455,7 +448,6 @@ handle_rename (UDisksLogicalVolume   *_volume,
   g_free (error_message);
   g_free (escaped_name);
   g_free (escaped_group_name);
-  g_free (encoded_new_name);
   g_free (escaped_new_name);
   g_clear_object (&object);
   return TRUE;
@@ -810,7 +802,6 @@ handle_create_snapshot (UDisksLogicalVolume *_volume,
   uid_t caller_uid;
   gid_t caller_gid;
   UDisksLinuxVolumeGroupObject *group_object;
-  gchar *encoded_volume_name = NULL;
   gchar *escaped_volume_name = NULL;
   gchar *escaped_group_name = NULL;
   gchar *escaped_origin_name = NULL;
@@ -850,8 +841,7 @@ handle_create_snapshot (UDisksLogicalVolume *_volume,
                                                     invocation))
     goto out;
 
-  encoded_volume_name = udisks_daemon_util_lvm2_encode_lvm_name (name, TRUE);
-  escaped_volume_name = udisks_daemon_util_escape_and_quote (encoded_volume_name);
+  escaped_volume_name = udisks_daemon_util_escape_and_quote (name);
   group_object = udisks_linux_logical_volume_object_get_volume_group (object);
   escaped_group_name = udisks_daemon_util_escape_and_quote (udisks_linux_volume_group_object_get_name (group_object));
   escaped_origin_name = udisks_daemon_util_escape_and_quote (udisks_linux_logical_volume_object_get_name (object));
@@ -885,7 +875,7 @@ handle_create_snapshot (UDisksLogicalVolume *_volume,
       goto out;
     }
 
-  lv_objpath = wait_for_logical_volume_path (group_object, encoded_volume_name, &error);
+  lv_objpath = wait_for_logical_volume_path (group_object, name, &error);
   if (lv_objpath == NULL)
     {
       g_prefix_error (&error,
@@ -899,7 +889,6 @@ handle_create_snapshot (UDisksLogicalVolume *_volume,
 
  out:
   g_free (error_message);
-  g_free (encoded_volume_name);
   g_free (escaped_volume_name);
   g_free (escaped_origin_name);
   g_free (escaped_group_name);
