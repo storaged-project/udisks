@@ -391,6 +391,9 @@
 
          Activate this logical volume, which makes it appear as a
          block device in the system.
+
+         Non-thin snapshots are always activated and deactivated
+         together with their origins.
     -->
     <method name="Activate">
       <arg name="options" type="a{sv}" direction="in"/>
@@ -401,6 +404,9 @@
 
          Deactivate this logical volume, which makes its block device
          disappear.
+
+         Non-thin snapshots are always activated and deactivated
+         together with their origins.
     -->
     <method name="Deactivate">
       <arg name="options" type="a{sv}" direction="in"/>

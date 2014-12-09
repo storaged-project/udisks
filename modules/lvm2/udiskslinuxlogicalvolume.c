@@ -666,7 +666,7 @@ handle_activate (UDisksLogicalVolume *_volume,
                                               NULL, /* gint *out_status */
                                               &error_message,
                                               NULL,  /* input_string */
-                                              "lvchange %s/%s -a y",
+                                              "lvchange %s/%s -ay -K --yes",
                                               escaped_group_name,
                                               escaped_name))
     {
@@ -770,7 +770,7 @@ handle_deactivate (UDisksLogicalVolume *_volume,
                                               NULL, /* gint *out_status */
                                               &error_message,
                                               NULL,  /* input_string */
-                                              "lvchange %s/%s -a n",
+                                              "lvchange %s/%s -an -K --yes",
                                               escaped_group_name,
                                               escaped_name))
     {
