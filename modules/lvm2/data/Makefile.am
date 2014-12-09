@@ -7,8 +7,13 @@ polkit_DATA      = $(polkit_in_files:.policy.in=.policy)
 
 @INTLTOOL_POLICY_RULE@
 
+install-data-local:
+	$(MKDIR_P) $(DESTDIR)$(libdir)/udisks2/lvm-nolocking
+	$(INSTALL_DATA) $(srcdir)/lvm-nolocking.conf $(DESTDIR)$(libdir)/udisks2/lvm-nolocking/lvm.conf
+
 EXTRA_DIST = 						\
 	org.freedesktop.UDisks2.lvm2.xml		\
+	lvm-nolocking.conf				\
 	$(polkit_in_files)				\
 	$(NULL)
 

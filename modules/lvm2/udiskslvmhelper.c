@@ -32,6 +32,9 @@
    group in its own thread or process.  The lvm2app library doesn't
    seem to be thread-safe, so we use processes.
 
+   However, we don't want to risk blocking during startup of udisksd.
+   In that case, we ignore locks.
+
    The program can list all volume groups or can return all needed
    information for a single volume group.  Output is a GVariant, by
    default as text (mostly for debugging and because it is impolite to
@@ -43,12 +46,24 @@
 #include <glib.h>
 #include <lvm2app.h>
 
+static gboolean opt_binary = FALSE;
+static gboolean opt_no_lock = FALSE;
+
 static void
 usage (void)
 {
-  fprintf (stderr, "Usage: udisks-lvm [-b] list\n");
-  fprintf (stderr, "       udisks-lvm [-b] show VG\n");
+  fprintf (stderr, "Usage: udisks-lvm [-b] [-f] list\n");
+  fprintf (stderr, "       udisks-lvm [-b] [-f] show VG\n");
   exit (1);
+}
+
+static lvm_t
+init_lvm (void)
+{
+  if (opt_no_lock)
+    return lvm_init (PACKAGE_LIB_DIR "/udisks2/lvm-nolocking");
+  else
+    return lvm_init (NULL);
 }
 
 static GVariant *
@@ -59,7 +74,7 @@ list_volume_groups (void)
   struct lvm_str_list *vg_name;
   GVariantBuilder result;
 
-  lvm = lvm_init (NULL);
+  lvm = init_lvm ();
 
   g_variant_builder_init (&result, G_VARIANT_TYPE ("as"));
   vg_names = lvm_list_vg_names (lvm);
@@ -73,19 +88,25 @@ list_volume_groups (void)
 }
 
 static void
-add_string (GVariantBuilder *bob, const gchar *key, const gchar *val)
+add_string (GVariantBuilder *bob,
+            const gchar *key,
+            const gchar *val)
 {
   g_variant_builder_add (bob, "{sv}", key, g_variant_new_string (val));
 }
 
 static void
-add_uint64 (GVariantBuilder *bob, const gchar *key, guint64 val)
+add_uint64 (GVariantBuilder *bob,
+            const gchar *key,
+            guint64 val)
 {
   g_variant_builder_add (bob, "{sv}", key, g_variant_new_uint64 (val));
 }
 
 static void
-add_lvprop (GVariantBuilder *bob, const gchar *key, lv_t lv)
+add_lvprop (GVariantBuilder *bob,
+            const gchar *key,
+            lv_t lv)
 {
   lvm_property_value_t p = lvm_lv_get_property (lv, key);
   if (p.is_valid)
@@ -98,7 +119,8 @@ add_lvprop (GVariantBuilder *bob, const gchar *key, lv_t lv)
 }
 
 static GVariant *
-show_logical_volume (vg_t vg, lv_t lv)
+show_logical_volume (vg_t vg,
+                     lv_t lv)
 {
   GVariantBuilder result;
   g_variant_builder_init (&result, G_VARIANT_TYPE ("a{sv}"));
@@ -120,7 +142,8 @@ show_logical_volume (vg_t vg, lv_t lv)
 }
 
 static GVariant *
-show_physical_volume (vg_t vg, pv_t pv)
+show_physical_volume (vg_t vg,
+                      pv_t pv)
 {
   GVariantBuilder result;
   g_variant_builder_init (&result, G_VARIANT_TYPE ("a{sv}"));
@@ -140,7 +163,7 @@ show_volume_group (const char *name)
   vg_t vg;
   GVariantBuilder result;
 
-  lvm = lvm_init (NULL);
+  lvm = init_lvm ();
   vg = lvm_vg_open (lvm, name, "r", 0);
 
   g_variant_builder_init (&result, G_VARIANT_TYPE ("a{sv}"));
@@ -189,7 +212,9 @@ show_volume_group (const char *name)
 }
 
 static void
-write_all (int fd, const char *mem, size_t size)
+write_all (int fd,
+           const char *mem,
+           size_t size)
 {
   while (size > 0)
     {
@@ -205,14 +230,19 @@ write_all (int fd, const char *mem, size_t size)
 }
 
 int
-main (int argc, char **argv)
+main (int argc,
+      char **argv)
 {
-  gboolean opt_binary = FALSE;
   GVariant *result;
 
-  if (argv[1] && strcmp (argv[1], "-b") == 0)
+  while (argv[1] && argv[1][0] == '-')
     {
-      opt_binary = TRUE;
+      if (strcmp (argv[1], "-b") == 0)
+        opt_binary = TRUE;
+      else if (strcmp (argv[1], "-f") == 0)
+        opt_no_lock = TRUE;
+      else
+        usage ();
       argv++;
     }
 
