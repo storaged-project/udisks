@@ -139,7 +139,7 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume *logical_volume,
   if (g_variant_lookup (info, "size", "t", &num))
     udisks_logical_volume_set_size (iface, num);
 
-  type = "unsupported";
+  type = "block";
   active = FALSE;
   if (g_variant_lookup (info, "lv_attr", "&s", &str)
       && str && strlen (str) > 6)
@@ -148,28 +148,12 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume *logical_volume,
       char state       = str[4];
       char target_type = str[6];
 
-      switch (target_type)
-        {
-        case 's':
-          type = "snapshot";
-          break;
-        case 'm':
-          type = "mirror";
-          break;
-        case 't':
-          if (volume_type == 't')
-            type = "thin-pool";
-          else
-            type = "thin";
-          *needs_polling_ret = TRUE;
-          break;
-        case 'r':
-          type = "raid";
-          break;
-        case '-':
-          type = "plain";
-          break;
-        }
+      if (target_type == 't')
+        *needs_polling_ret = TRUE;
+
+      if (target_type == 't' && volume_type == 't')
+        type = "pool";
+
       if (state == 'a')
         active = TRUE;
     }

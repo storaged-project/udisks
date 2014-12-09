@@ -350,8 +350,11 @@
 
     <!-- Type:
 
-         The general type of a logical volume.  One of "plain",
-         "thin-pool", "thin", "snapshot", "mirror", or "raid".
+         The general type of a logical volume. One of "block" or
+         "pool". More types might be defined in the future.
+
+         A volume of type "block" can be used as a block device. A
+         volume of type "pool" can be used to create thin volumes.
     -->
     <property name="Type" type="s" access="read"/>
 
@@ -363,7 +366,7 @@
 
     <!-- Origin:
 
-         For snapshots, the object path of its origin.
+         For a snapshot, the object path of its origin.
     -->
     <property name="Origin" type="o" access="read"/>
 
