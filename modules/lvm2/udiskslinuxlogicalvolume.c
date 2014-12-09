@@ -20,6 +20,7 @@
  */
 
 #include "config.h"
+#include <fcntl.h>
 #include <glib/gi18n-lib.h>
 
 #include <src/udiskslogging.h>
@@ -58,6 +59,8 @@ typedef struct _UDisksLinuxLogicalVolumeClass   UDisksLinuxLogicalVolumeClass;
 struct _UDisksLinuxLogicalVolume
 {
   UDisksLogicalVolumeSkeleton parent_instance;
+
+  gboolean needs_udev_hack;
 };
 
 struct _UDisksLinuxLogicalVolumeClass
@@ -76,6 +79,7 @@ G_DEFINE_TYPE_WITH_CODE (UDisksLinuxLogicalVolume, udisks_linux_logical_volume,
 static void
 udisks_linux_logical_volume_init (UDisksLinuxLogicalVolume *logical_volume)
 {
+  logical_volume->needs_udev_hack = TRUE;
   g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (logical_volume),
                                        G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
 }
@@ -120,6 +124,7 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume *logical_volume,
   gboolean active;
   const char *pool_objpath;
   const char *origin_objpath;
+  const gchar *dev_file;
   const gchar *str;
   guint64 num;
 
@@ -205,6 +210,24 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume *logical_volume,
   udisks_logical_volume_set_origin (iface, origin_objpath);
 
   udisks_logical_volume_set_volume_group (iface, g_dbus_object_get_object_path (G_DBUS_OBJECT (group_object)));
+
+  dev_file = NULL;
+  if (logical_volume->needs_udev_hack
+      && g_variant_lookup (info, "lv_path", "&s", &dev_file))
+    {
+      /* LVM2 versions before 2.02.105 sometimes incorrectly leave the
+       * DM_UDEV_DISABLE_OTHER_RULES flag set for thin volumes. As a
+       * workaround, we trigger an extra udev "change" event which
+       * will clear this up.
+       *
+       * https://www.redhat.com/archives/linux-lvm/2014-January/msg00030.html
+       */
+      int fd = open (dev_file, O_RDWR);
+      if (fd >= 0)
+        close (fd);
+
+      logical_volume->needs_udev_hack = FALSE;
+    }
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
