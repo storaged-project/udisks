@@ -691,7 +691,6 @@ handle_empty_device (UDisksVolumeGroup      *_group,
   gchar *error_message = NULL;
   UDisksObject *member_device_object = NULL;
   UDisksBlock *member_device = NULL;
-  gboolean no_block = FALSE;
 
   object = udisks_daemon_util_dup_object (group, &error);
   if (object == NULL)
@@ -701,8 +700,6 @@ handle_empty_device (UDisksVolumeGroup      *_group,
     }
 
   daemon = udisks_linux_volume_group_object_get_daemon (object);
-
-  g_variant_lookup (options, "no-block", "b", &no_block);
 
   error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
@@ -756,8 +753,7 @@ handle_empty_device (UDisksVolumeGroup      *_group,
                                               NULL, /* gint *out_status */
                                               &error_message,
                                               NULL,  /* input_string */
-                                              "pvmove %s%s",
-                                              no_block? "-b " : "",
+                                              "pvmove %s",
                                               escaped_member_device_file))
     {
       g_dbus_method_invocation_return_error (invocation,
@@ -769,8 +765,7 @@ handle_empty_device (UDisksVolumeGroup      *_group,
       goto out;
     }
 
-  if (!no_block)
-    udisks_volume_group_complete_remove_device (_group, invocation);
+  udisks_volume_group_complete_remove_device (_group, invocation);
 
  out:
   g_free (error_message);

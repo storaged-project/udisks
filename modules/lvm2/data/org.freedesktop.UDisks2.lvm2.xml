@@ -219,11 +219,8 @@
     <!-- EmptyDevice:
          @block: The block device to empty.
 
-         Move all data on a the given block device somewhere else so
+         Move all data on the given block device somewhere else so
          that the block device might be removed.
-
-         When @options includes "no-block" then the call returns as
-         soon as the operation has started.
     -->
     <method name="EmptyDevice">
       <arg name="block" type="o" direction="in"/>
