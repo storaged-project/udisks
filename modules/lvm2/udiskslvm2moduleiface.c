@@ -159,10 +159,20 @@ lvm_update_from_variant (GPid pid,
 }
 
 static void
-lvm_update (UDisksDaemon *daemon)
+lvm_update (UDisksDaemon *daemon, gboolean ignore_locks)
 {
+  const gchar *args[5];
+  int i;
+
+  i = 0;
   /* FIXME: hardcoded path */
-  const gchar *args[] = { "/usr/lib/udisks2/udisks-lvm", "-b", "list", NULL };
+  args[i++] = "/usr/lib/udisks2/udisks-lvm";
+  args[i++] = "-b";
+  if (ignore_locks)
+    args[i++] = "-f";
+  args[i++] = "list";
+  args[i++] = NULL;
+
   udisks_daemon_util_lvm2_spawn_for_variant (args, G_VARIANT_TYPE("as"),
                                              lvm_update_from_variant, daemon);
 }
@@ -175,7 +185,7 @@ delayed_lvm_update (gpointer user_data)
 
   state = get_module_state (daemon);
 
-  lvm_update (daemon);
+  lvm_update (daemon, FALSE);
   state->lvm_delayed_update_id = 0;
   return FALSE;
 }
@@ -190,7 +200,19 @@ trigger_delayed_lvm_update (UDisksDaemon *daemon)
   if (state->lvm_delayed_update_id > 0)
     return;
 
-  state->lvm_delayed_update_id = g_timeout_add (100, delayed_lvm_update, daemon);
+  if (! state->coldplug_done)
+    {
+      /* Spawn immediately and ignore locks when doing coldplug, i.e. when lvm2 module
+       * has just been activated. This is not 100% effective as this affects only the
+       * first request but from the plugin nature we don't know whether coldplugging
+       * has been finished or not. Might be subject to change in the future. */
+      state->coldplug_done = TRUE;
+      lvm_update (daemon, TRUE);
+    }
+  else
+    {
+      state->lvm_delayed_update_id = g_timeout_add (100, delayed_lvm_update, daemon);
+    }
 }
 
 static gboolean

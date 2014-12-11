@@ -41,6 +41,7 @@ udisks_lvm2_state_new (void)
                                                        g_str_equal,
                                                        g_free,
                                                        (GDestroyNotify) g_object_unref);
+  state->coldplug_done = FALSE;
 
   return state;
 }

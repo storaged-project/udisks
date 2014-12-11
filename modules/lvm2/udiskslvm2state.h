@@ -33,6 +33,7 @@ typedef struct
   GHashTable *name_to_volume_group;
 
   gint lvm_delayed_update_id;
+  gboolean coldplug_done;
 } UDisksLVM2State;
 
 
