@@ -202,9 +202,8 @@ wait_for_volume_group_object (UDisksDaemon *daemon,
 static gboolean
 handle_volume_group_create (UDisksManagerLVM2     *_object,
                             GDBusMethodInvocation *invocation,
-                            const gchar *const    *arg_blocks,
                             const gchar           *arg_name,
-                            guint64                arg_extent_size,
+                            const gchar *const    *arg_blocks,
                             GVariant              *arg_options)
 {
   UDisksLinuxManagerLVM2 *manager = UDISKS_LINUX_MANAGER_LVM2(_object);
@@ -297,8 +296,6 @@ handle_volume_group_create (UDisksManagerLVM2     *_object,
   escaped_name = udisks_daemon_util_escape_and_quote (arg_name);
   str = g_string_new ("vgcreate");
   g_string_append_printf (str, " %s", escaped_name);
-  if (arg_extent_size > 0)
-    g_string_append_printf (str, " -s %" G_GUINT64_FORMAT "b", arg_extent_size);
   for (l = blocks; l != NULL; l = l->next)
     {
       UDisksBlock *block = UDISKS_BLOCK (l->data);

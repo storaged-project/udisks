@@ -184,6 +184,7 @@ handle_poll (UDisksVolumeGroup *_group,
 static gboolean
 handle_delete (UDisksVolumeGroup *_group,
                GDBusMethodInvocation *invocation,
+               gboolean arg_wipe,
                GVariant *arg_options)
 {
   GError *error = NULL;
@@ -196,7 +197,6 @@ handle_delete (UDisksVolumeGroup *_group,
   gid_t caller_gid;
   gchar *escaped_name = NULL;
   gchar *error_message = NULL;
-  gboolean opt_wipe = FALSE;
   GList *objects_to_wipe = NULL;
   GList *l;
 
@@ -210,9 +210,7 @@ handle_delete (UDisksVolumeGroup *_group,
   daemon = udisks_linux_volume_group_object_get_daemon (object);
 
   /* Find physical volumes to wipe. */
-
-  g_variant_lookup (arg_options, "wipe", "b", &opt_wipe);
-  if (opt_wipe)
+  if (arg_wipe)
     {
       GList *objects = udisks_daemon_get_objects (daemon);
       for (l = objects; l; l = l->next)
@@ -530,6 +528,7 @@ static gboolean
 handle_remove_device (UDisksVolumeGroup      *_group,
                       GDBusMethodInvocation  *invocation,
                       const gchar            *member_device_objpath,
+                      gboolean                arg_wipe,
                       GVariant               *options)
 {
   UDisksLinuxVolumeGroup *group = UDISKS_LINUX_VOLUME_GROUP (_group);
@@ -546,7 +545,6 @@ handle_remove_device (UDisksVolumeGroup      *_group,
   UDisksObject *member_device_object = NULL;
   UDisksBlock *member_device = NULL;
   gchar *escaped_name = NULL;
-  gboolean opt_wipe = FALSE;
 
   object = udisks_daemon_util_dup_object (group, &error);
   if (object == NULL)
@@ -556,8 +554,6 @@ handle_remove_device (UDisksVolumeGroup      *_group,
     }
 
   daemon = udisks_linux_volume_group_object_get_daemon (object);
-
-  g_variant_lookup (options, "wipe", "b", &opt_wipe);
 
   error = NULL;
   if (!udisks_daemon_util_get_caller_uid_sync (daemon,
@@ -625,7 +621,7 @@ handle_remove_device (UDisksVolumeGroup      *_group,
       goto out;
     }
 
-  if (opt_wipe)
+  if (arg_wipe)
     {
       if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                                   UDISKS_OBJECT (member_device_object),
@@ -815,8 +811,6 @@ handle_create_plain_volume (UDisksVolumeGroup *_group,
                             GDBusMethodInvocation *invocation,
                             const gchar *arg_name,
                             guint64 arg_size,
-                            gint arg_stripes,
-                            guint64 arg_stripesize,
                             GVariant *options)
 {
   GError *error = NULL;
@@ -872,12 +866,6 @@ handle_create_plain_volume (UDisksVolumeGroup *_group,
   cmd = g_string_new ("");
   g_string_append_printf (cmd, "lvcreate %s -L %" G_GUINT64_FORMAT "b -n %s",
                           escaped_group_name, arg_size, escaped_volume_name);
-
-  if (arg_stripes > 0)
-    g_string_append_printf (cmd, " -i %d", arg_stripes);
-
-  if (arg_stripesize > 0)
-    g_string_append_printf (cmd, " -I %" G_GUINT64_FORMAT "b", arg_stripesize);
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               UDISKS_OBJECT (object),

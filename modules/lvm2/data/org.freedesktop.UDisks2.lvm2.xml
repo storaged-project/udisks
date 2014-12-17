@@ -38,11 +38,10 @@
 
     <!--
         VolumeGroupCreate:
-        @blocks: An array of object paths to objects implementing the #org.freedesktop.UDisks2.Block interface.
         @name: The name for the volume group.
-        @extent_size: The extent size for the volume group.  0 means default.
+        @blocks: The block devices to use as physical volumes, as UDisks2 object paths.
+        @options: Additional options.
         @result: The object path of the new volume group object.
-        @since: x.x
 
         Creates a new volume group, using @blocks as the initial
         physical volumes.  Each block device will be wiped and all
@@ -50,11 +49,12 @@
 
         You must specify at least one block device to be used as a
         physical volume.
+
+        No additional options are currently defined.
     -->
     <method name="VolumeGroupCreate">
-      <arg name="blocks" direction="in" type="ao"/>
       <arg name="name" direction="in" type="s"/>
-      <arg name="extent_size" direction="in" type="t"/>
+      <arg name="blocks" direction="in" type="ao"/>
       <arg name="options" direction="in" type="a{sv}"/>
       <arg name="result" direction="out" type="o"/>
     </method>
@@ -171,80 +171,91 @@
     </method>
 
     <!-- Delete:
+         @wipe: Whether to wipe the physical volumes.
+         @options: Additional options.
 
          Delete this volume group.  All its logical volumes will be
          deleted, too.
 
-         When @options includes "wipe" then all physical volumes of
-         this volume group will be wiped.
+         No additional options are currently defined.
     -->
     <method name="Delete">
-      <arg name="options" type="a{sv}" direction="in"/>
+      <arg name="wipe" type="b" direction="in"/>
+      <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
     <!-- Rename:
          @new_name: The new name.
+         @options: Additional options.
+         @result: The new object path.
 
          Rename this volume group.  This might cause the volume group
          object to disappear from D-Bus and reappear with a different
          path.
+
+         No additional options are currently defined.
     -->
     <method name="Rename">
       <arg name="new_name" type="s" direction="in"/>
-      <arg name="options" type="a{sv}" direction="in"/>
+      <arg name="options" direction="in" type="a{sv}"/>
       <arg name="result" type="o" direction="out"/>
     </method>
 
     <!-- AddDevice:
-         @block: The block device to add.
+         @block: The block device to add, as a UDisks2 object path.
+         @options: Additional options.
 
          Add a new physical volume to the volume group.  The block
          device will be wiped and all data on it will be lost.
     -->
     <method name="AddDevice">
       <arg name="block" type="o" direction="in"/>
-      <arg name="options" type="a{sv}" direction="in"/>
+      <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
     <!-- EmptyDevice:
-         @block: The block device to empty.
+         @block: The block device to empty, as a UDisks2 object path.
+         @options: Additional options.
 
          Move all data on the given block device somewhere else so
          that the block device might be removed.
+
+         No additional options are currently defined.
     -->
     <method name="EmptyDevice">
       <arg name="block" type="o" direction="in"/>
-      <arg name="options" type="a{sv}" direction="in"/>
+      <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
     <!-- RemoveDevice:
-         @block: The block device to remove.
+         @block: The block device to remove, as a UDisks2 object path.
+         @wipe: Whether to wipe the physical volume.
+         @options: Additional options.
 
          Remove the indicated physical volume from the volume group.
          The physical device must be unused.
 
-         When @options includes "wipe" then the physical volume will
-         be wiped.
+         No additional options are currently defined.
     -->
     <method name="RemoveDevice">
       <arg name="block" type="o" direction="in"/>
-      <arg name="options" type="a{sv}" direction="in"/>
+      <arg name="wipe" type="b" direction="in"/>
+      <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
     <!-- CreatePlainVolume:
          @name: The name of the new logical volume.
          @size: The size.
-         @stripes: The stripe count.  0 means default.
-         @stripesize: The stripe size.  0 means default.
+         @options: Additional options.
          @result: The object path of the new logical volume.
 
          Create a 'normal' new logical volume.
+
+         No additional options are currently defined.
     -->
     <method name="CreatePlainVolume">
       <arg name="name" type="s" direction="in"/>
       <arg name="size" type="t" direction="in"/>
-      <arg name="stripes" type="i" direction="in"/>
-      <arg name="stripesize" type="t" direction="in"/>
       <arg name="options" type="a{sv}" direction="in"/>
       <arg name="result" type="o" direction="out"/>
     </method>
@@ -252,10 +263,13 @@
     <!-- CreateThinPoolVolume:
          @name: The name of the new logical volume.
          @size: The size.
+         @options: Additional options.
          @result: The object path of the new logical volume.
 
          Create a new logical volume that can be used to back
          thinly-provisioned logical volumes.
+
+         No additional options are currently defined.
     -->
     <method name="CreateThinPoolVolume">
       <arg name="name" type="s" direction="in"/>
@@ -268,10 +282,13 @@
          @name: The name of the new logical volume.
          @size: The virtual size.
          @pool: The thin pool to use.
+         @options: Additional options.
          @result: The object path of the new logical volume.
 
          Create a new thinly provisioned logical volume in the given
          pool.
+
+         No additional options are currently defined.
     -->
     <method name="CreateThinVolume">
       <arg name="name" type="s" direction="in"/>
@@ -371,31 +388,39 @@
     <property name="Origin" type="o" access="read"/>
 
     <!-- Activate:
+         @options: Additional options.
+         @result: The UDisks2 object path of the block device.
 
          Activate this logical volume, which makes it appear as a
          block device in the system.
 
          Non-thin snapshots are always activated and deactivated
          together with their origins.
+
+         No additional options are currently defined.
     -->
     <method name="Activate">
-      <arg name="options" type="a{sv}" direction="in"/>
+      <arg name="options" direction="in" type="a{sv}"/>
       <arg name="result" type="o" direction="out"/>
     </method>
 
     <!-- Deactivate:
+         @options: Additional options.
 
          Deactivate this logical volume, which makes its block device
          disappear.
 
          Non-thin snapshots are always activated and deactivated
          together with their origins.
+
+         No additional options are currently defined.
     -->
     <method name="Deactivate">
-      <arg name="options" type="a{sv}" direction="in"/>
+      <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
     <!-- Delete:
+         @options: Additional options.
 
          Delete this logical volume.
 
@@ -404,44 +429,47 @@
 
          If this is a thin pool, all its contained thin volumes will
          be deleted as well.
+
+         No additional options are currently defined.
     -->
     <method name="Delete">
-      <arg name="options" type="a{sv}" direction="in"/>
+      <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
     <!-- Rename:
          @new_name: The new name.
+         @options: Additional options.
+         @result: The new object path.
 
          Rename this logical volume.  This might cause the logical
          volume object to disappear from D-Bus and reappear with a
          different path.
+
+         No additional options are currently defined.
     -->
     <method name="Rename">
       <arg name="new_name" type="s" direction="in"/>
-      <arg name="options" type="a{sv}" direction="in"/>
+      <arg name="options" direction="in" type="a{sv}"/>
       <arg name="result" type="o" direction="out"/>
     </method>
 
     <!-- Resize:
          @new_size: The new size, in bytes.
-         @stripes: The strip count for the extension.
-         @stripesize: The strip size for the extension.
+         @options: Additional options.
 
          Resize this logical volume.
 
-         Specifying 0 for #stripes and #stripesize means to use a
-         default value.
+         No additional options are currently specified.
     -->
     <method name="Resize">
       <arg name="new_size" type="t" direction="in"/>
-      <arg name="stripes" type="i" direction="in"/>
-      <arg name="stripesize" type="t" direction="in"/>
       <arg name="options" type="a{sv}" direction="in"/>
     </method>
 
     <!-- CreateSnapshot:
          @name: The name of the snapshot.
          @size: The size of the backing store for the snapshot, in bytes.
+         @options: Additional options.
 
          Create a snapshot of this logical volume.
 
@@ -454,6 +482,8 @@
 
          When creating a snapshot of a thin volume, specifying a
          non-zero @size will create a non-thin snapshot.
+
+         No additional options are currently defined.
     -->
     <method name="CreateSnapshot">
       <arg name="name" type="s" direction="in"/>

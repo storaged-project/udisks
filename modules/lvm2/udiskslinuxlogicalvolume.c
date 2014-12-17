@@ -443,8 +443,6 @@ static gboolean
 handle_resize (UDisksLogicalVolume *_volume,
                GDBusMethodInvocation *invocation,
                guint64 new_size,
-               int stripes,
-               guint64 stripesize,
                GVariant *options)
 {
   GError *error = NULL;
@@ -501,12 +499,6 @@ handle_resize (UDisksLogicalVolume *_volume,
   cmd = g_string_new ("");
   g_string_append_printf (cmd, "lvresize %s/%s -r -L %" G_GUINT64_FORMAT "b",
                           escaped_group_name, escaped_name, new_size);
-
-  if (stripes > 0)
-    g_string_append_printf (cmd, " -i %d", stripes);
-
-  if (stripesize > 0)
-    g_string_append_printf (cmd, " -I %" G_GUINT64_FORMAT "b", stripesize);
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               UDISKS_OBJECT (object),
