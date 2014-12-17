@@ -459,7 +459,10 @@
 
          Resize this logical volume.
 
-         No additional options are currently specified.
+         Additional options:
+
+         resize_fsys (b):  Whether to resize the filesystem on the
+                           logical volume as well. Default to 'false'.
     -->
     <method name="Resize">
       <arg name="new_size" type="t" direction="in"/>

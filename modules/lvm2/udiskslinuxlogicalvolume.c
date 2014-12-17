@@ -455,6 +455,7 @@ handle_resize (UDisksLogicalVolume *_volume,
   gchar *escaped_group_name = NULL;
   gchar *escaped_name = NULL;
   gchar *error_message = NULL;
+  gboolean resize_fsys = FALSE;
 
   object = udisks_daemon_util_dup_object (volume, &error);
   if (object == NULL)
@@ -493,9 +494,13 @@ handle_resize (UDisksLogicalVolume *_volume,
   escaped_name = udisks_daemon_util_escape_and_quote (udisks_linux_logical_volume_object_get_name (object));
   new_size -= new_size % 512;
 
+  g_variant_lookup (options, "resize_fsys", "b", &resize_fsys);
+
   cmd = g_string_new ("");
-  g_string_append_printf (cmd, "lvresize %s/%s -r -L %" G_GUINT64_FORMAT "b",
+  g_string_append_printf (cmd, "lvresize %s/%s -L %" G_GUINT64_FORMAT "b",
                           escaped_group_name, escaped_name, new_size);
+  if (resize_fsys)
+    g_string_append (cmd, " -r");
 
   if (!udisks_daemon_launch_spawned_job_sync (daemon,
                                               UDISKS_OBJECT (object),
