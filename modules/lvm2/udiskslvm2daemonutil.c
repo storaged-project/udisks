@@ -154,6 +154,7 @@ udisks_daemon_util_lvm2_wipe_block (UDisksDaemon *daemon,
   int fd = -1;
   gchar zeroes[512];
   gboolean ret = TRUE;
+  GError *local_error = NULL;
 
   /* Find the name of the volume group that this device is a physical
    * member of, if any.  Easy.
@@ -219,6 +220,19 @@ udisks_daemon_util_lvm2_wipe_block (UDisksDaemon *daemon,
   /* Try to bring affected volume group back into consistency. */
   if (volume_group_name != NULL)
     run_sync ("vgreduce", volume_group_name, "--removemissing", NULL, NULL);
+
+  /* Make sure lvmetad knows about all this.
+   *
+   * XXX - We need to do this because of a bug in the LVM udev rules
+   * which often fail to run pvscan on "change" events.
+   *
+   * https://bugzilla.redhat.com/show_bug.cgi?id=1063813
+   */
+  if (!run_sync ("pvscan", "--cache", device_file, NULL, &local_error))
+    {
+      udisks_warning ("%s", local_error->message);
+      g_clear_error (&local_error);
+    }
 
  out:
   if (fd >= 0)
