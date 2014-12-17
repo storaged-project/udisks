@@ -201,10 +201,7 @@ udisks_linux_logical_volume_update (UDisksLinuxLogicalVolume *logical_volume,
        *
        * https://www.redhat.com/archives/linux-lvm/2014-January/msg00030.html
        */
-      int fd = open (dev_file, O_RDWR);
-      if (fd >= 0)
-        close (fd);
-
+      udisks_daemon_util_lvm2_trigger_udev (dev_file);
       logical_volume->needs_udev_hack = FALSE;
     }
 }
