@@ -1904,7 +1904,7 @@ static const struct
   {"filesystem", "vfat",              "FAT12", NC_("fs-type", "FAT (12-bit version)"),              NC_("fs-type", "FAT")},
   {"filesystem", "vfat",              "FAT16", NC_("fs-type", "FAT (16-bit version)"),              NC_("fs-type", "FAT")},
   {"filesystem", "vfat",              "FAT32", NC_("fs-type", "FAT (32-bit version)"),              NC_("fs-type", "FAT")},
-  {"filesystem", "ntfs",              "*",     NC_("fs-type", "FAT (version %s)"),                  NC_("fs-type", "FAT")},
+  {"filesystem", "vfat",              "*",     NC_("fs-type", "FAT (version %s)"),                  NC_("fs-type", "FAT")},
   {"filesystem", "vfat",              NULL,    NC_("fs-type", "FAT"),                               NC_("fs-type", "FAT")},
   {"filesystem", "ntfs",              "*",     NC_("fs-type", "NTFS (version %s)"),                 NC_("fs-type", "NTFS")},
   {"filesystem", "ntfs",              NULL,    NC_("fs-type", "NTFS"),                              NC_("fs-type", "NTFS")},
