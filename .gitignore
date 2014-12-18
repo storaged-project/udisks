@@ -3,9 +3,13 @@
 *.gmo
 *.la
 *.lo
+*.log
 *.o
-*.typelib
+*.pot
 *.swp
+*.trs
+*.typelib
+__pycache__
 .deps
 .libs
 INSTALL
