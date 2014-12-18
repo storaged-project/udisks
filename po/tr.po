@@ -207,7 +207,7 @@ msgid "Rescan a device"
 msgstr "Bir aygıtı yeniden tara"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:43
-msgid "Authentication is to rescan a device"
+msgid "Authentication is required to rescan a device"
 msgstr "Bir aygıtı yeniden taramak için kimlik doğrulaması gerekli"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:44

@@ -205,7 +205,7 @@ msgid "Rescan a device"
 msgstr "Reanalizar un dispositivo"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:43
-msgid "Authentication is to rescan a device"
+msgid "Authentication is required to rescan a device"
 msgstr "Requírese autenticación para reanalizar un dispositivo"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:44

@@ -205,7 +205,7 @@ msgid "Rescan a device"
 msgstr "重新掃描裝置"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:43
-msgid "Authentication is to rescan a device"
+msgid "Authentication is required to rescan a device"
 msgstr "要重新掃描裝置需要先核對身分"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:44

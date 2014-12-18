@@ -206,7 +206,7 @@ msgid "Rescan a device"
 msgstr "Skan en enhed igen"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:43
-msgid "Authentication is to rescan a device"
+msgid "Authentication is required to rescan a device"
 msgstr "Godkendelse er at skanne en enhed igen"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:44

@@ -208,7 +208,7 @@ msgid "Rescan a device"
 msgstr "Повторно сканировать устройство"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:43
-msgid "Authentication is to rescan a device"
+msgid "Authentication is required to rescan a device"
 msgstr "Для повторного сканирования устройства требуется подтверждение подлинности пользователя"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:44

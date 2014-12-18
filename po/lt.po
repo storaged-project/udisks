@@ -206,7 +206,7 @@ msgid "Rescan a device"
 msgstr "Iš naujo perskaityti įrenginį"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:43
-msgid "Authentication is to rescan a device"
+msgid "Authentication is required to rescan a device"
 msgstr "Įrenginiui iš naujo perskaityti reikia patvirtinti tapatybę"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:44

@@ -206,7 +206,7 @@ msgid "Rescan a device"
 msgstr "장치 다시 검색"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:43
-msgid "Authentication is to rescan a device"
+msgid "Authentication is required to rescan a device"
 msgstr "장치를 다시 검색하려면 인증이 필요합니다"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:44
