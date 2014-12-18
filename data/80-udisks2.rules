@@ -93,6 +93,7 @@ SUBSYSTEMS=="usb", ENV{ID_VENDOR}=="*Kingston*", ENV{ID_MODEL}=="*DataTraveler*"
 SUBSYSTEMS=="usb", ENV{ID_VENDOR}=="*SanDisk*", ENV{ID_MODEL}=="*Cruzer*", ENV{ID_CDROM}!="1", ENV{ID_DRIVE_THUMB}="1"
 SUBSYSTEMS=="usb", ENV{ID_VENDOR}=="HP", ENV{ID_MODEL}=="*v125w*", ENV{ID_DRIVE_THUMB}="1"
 SUBSYSTEMS=="usb", ENV{ID_VENDOR_ID}=="13fe", ENV{ID_MODEL}=="*Patriot*", ENV{ID_DRIVE_THUMB}="1"
+SUBSYSTEMS=="usb", ENV{ID_VENDOR}=="*JetFlash*", ENV{ID_MODEL}=="*Transcend*", ENV{ID_DRIVE_THUMB}="1"
 
 # SD-Card reader in Chromebook Pixel
 SUBSYSTEMS=="usb", ENV{ID_VENDOR_ID}=="05e3", ENV{ID_MODEL_ID}=="0727", ENV{ID_DRIVE_FLASH_SD}="1"
