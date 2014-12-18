@@ -722,7 +722,7 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
       g_free (s);
     }
   /* fallback for media_icon */
-  if (media_removable && media_available && info->media_icon == NULL)
+  if (media_available && info->media_icon == NULL)
     {
       if (media_removable)
         {
@@ -739,7 +739,7 @@ udisks_client_get_object_info_for_drive (UDisksClient     *client,
       g_free (s);
     }
   /* fallback for media_icon_symbolic */
-  if (media_removable && media_available && info->media_icon_symbolic == NULL)
+  if (media_available && info->media_icon_symbolic == NULL)
     {
       if (media_removable)
         {
