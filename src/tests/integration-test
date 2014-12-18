@@ -288,6 +288,7 @@ class UDisksTestCase(unittest.TestCase):
                      'ext3': ['-F'],
                      'ext4': ['-F'],
                      'ntfs': ['-F'],
+                     'btrfs': ['-f'],
                      'reiserfs': ['-ff']}
 
         cmd = [mkcmd.get(type, 'mkfs.' + type)] + extra_opt.get(type, [])
