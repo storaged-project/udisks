@@ -3201,7 +3201,6 @@ main (int argc,
   completion_prev = NULL;
   loop = NULL;
 
-  g_type_init ();
   _color_init ();
 
   setlocale (LC_ALL, "");

@@ -80,8 +80,6 @@ main (int argc, char *argv[])
   client = NULL;
   object = NULL;
 
-  g_type_init ();
-
   if (argc < 2 || strlen (argv[1]) == 0)
     {
       g_printerr ("%s: this program is only supposed to be invoked by umount(8).\n", argv[0]);

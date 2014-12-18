@@ -101,8 +101,6 @@ main (int    argc,
   name_owner_id = 0;
   sigint_id = 0;
 
-  g_type_init ();
-
   /* avoid gvfs (http://bugzilla.gnome.org/show_bug.cgi?id=526454) */
   if (!g_setenv ("GIO_USE_VFS", "local", TRUE))
     {
