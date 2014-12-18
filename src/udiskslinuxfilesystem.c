@@ -22,6 +22,7 @@
 #include <glib/gi18n-lib.h>
 
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <pwd.h>
 #include <grp.h>
 #include <string.h>
