@@ -3150,6 +3150,12 @@ pick_word_at (const gchar  *s,
 {
   gint begin;
   gint end;
+  size_t len = strlen(s);
+
+  if (cursor < 0)
+    cursor = 0;
+  else if ((size_t) cursor >= len)
+    cursor = len - 1;
 
   if (s[0] == '\0')
     {
