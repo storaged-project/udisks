@@ -884,12 +884,16 @@ class FS(UDisksTestCase):
             return
         self.assertEqual(ret, 0)
 
-        subprocess.check_call([mount_prog, self.device, mount_b])
+        self.assertProperty(fs, 'mount-points', [mount_a])
 
-        self.assertProperty(fs, 'mount-points', [mount_a, mount_b])
+        if type != 'ntfs':
+            # ntfs-3g does not support multiple mounts
+            subprocess.check_call([mount_prog, self.device, mount_b])
+            self.assertProperty(fs, 'mount-points', [mount_a, mount_b])
+            subprocess.call(['umount', mount_b])
 
         # unmount it
-        subprocess.call(['umount', mount_a, mount_b])
+        subprocess.call(['umount', mount_a])
         self.assertProperty(fs, 'mount-points', [])
 
     def _do_udisks_check(self, type, label=None):
