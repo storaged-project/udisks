@@ -6,6 +6,9 @@ SUBDIRS = data udisks src tools po doc
 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
+GCC_COLORS ?= 'auto'
+export GCC_COLORS
+
 EXTRA_DIST = 			\
 	HACKING 		\
 	$(NULL)
