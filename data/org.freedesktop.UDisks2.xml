@@ -545,7 +545,7 @@
         The option @atasmart_blob can be used to inject libatasmart
         compatible blobs for testing how clients react to different
         kinds of SMART data. This option may be removed in the future
-        with it being considered an ABI break.
+        without it being considered an ABI break.
     -->
     <method name="SmartUpdate">
       <arg name="options" direction="in" type="a{sv}"/>
