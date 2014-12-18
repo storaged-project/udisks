@@ -32,6 +32,7 @@
 
 import sys
 import os
+import contextlib
 
 srcdir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 libdir = os.path.join(srcdir, 'udisks', '.libs')
@@ -862,7 +863,7 @@ class FS(UDisksTestCase):
         if type == 'swap':
             return
 
-        # mount it
+        # mount it on two points
         if type == 'ntfs' and subprocess.call(['which', 'mount.ntfs-3g'],
                                               stdout=subprocess.PIPE) == 0:
             # prefer mount.ntfs-3g if we have it (on Debian; Ubuntu
@@ -870,17 +871,25 @@ class FS(UDisksTestCase):
             mount_prog = 'mount.ntfs-3g'
         else:
             mount_prog = 'mount'
-        ret = subprocess.call([mount_prog, self.device, self.workdir])
+        mount_a = os.path.join(self.workdir, 'mp_a')
+        mount_b = os.path.join(self.workdir, 'mp_b')
+        with contextlib.suppress(FileExistsError):
+            os.mkdir(mount_a)
+            os.mkdir(mount_b)
+
+        ret = subprocess.call([mount_prog, self.device, mount_a])
         if ret == 32:
             # missing fs driver
             sys.stderr.write('[missing kernel driver, skip] ')
             return
         self.assertEqual(ret, 0)
 
-        self.assertProperty(fs, 'mount-points', [self.workdir])
+        subprocess.check_call([mount_prog, self.device, mount_b])
+
+        self.assertProperty(fs, 'mount-points', [mount_a, mount_b])
 
         # unmount it
-        subprocess.call(['umount', self.workdir])
+        subprocess.call(['umount', mount_a, mount_b])
         self.assertProperty(fs, 'mount-points', [])
 
     def _do_udisks_check(self, type, label=None):

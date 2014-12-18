@@ -151,15 +151,15 @@ udisks_mount_compare (UDisksMount  *mount,
   g_return_val_if_fail (UDISKS_IS_MOUNT (mount), 0);
   g_return_val_if_fail (UDISKS_IS_MOUNT (other_mount), 0);
 
-  ret = g_strcmp0 (other_mount->mount_path, mount->mount_path);
+  ret = g_strcmp0 (mount->mount_path, other_mount->mount_path);
   if (ret != 0)
     goto out;
 
-  ret = (mount->dev - other_mount->dev);
+  ret = (other_mount->dev - mount->dev);
   if (ret != 0)
     goto out;
 
-  ret = mount->type - other_mount->type;
+  ret = other_mount->type - mount->type;
 
  out:
   return ret;
