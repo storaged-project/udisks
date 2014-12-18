@@ -3,16 +3,11 @@ Makefile
 Makefile.in
 aclocal.m4
 autom4te.cache/
-compile
-config.*
 configure
-depcomp
+build-aux/
 gtk-doc.make
-install-sh
 intltool-*
 libtool
-ltmain.sh
 m4/
-missing
 stamp-h1
 
