@@ -4,17 +4,18 @@
 # 
 # Translators:
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2012
-# stmc <whats_up@tut.by>, 2012
+# Serge Vylekzhanin <vylekzhanin@mail.ru>, 2014
+# Stas Solovey <whats_up@tut.by>, 2012
 # Yuri Kozlov <yuray@komyakino.ru>, 2013
 # Yuri Myasoedov <omerta13@yandex.ru>, 2012
 msgid ""
 msgstr ""
 "Project-Id-Version: udisks\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-12-18 15:41-0500\n"
-"PO-Revision-Date: 2013-11-20 09:31+0000\n"
-"Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
-"Language-Team: Russian (http://www.transifex.com/projects/p/freedesktop/language/ru/)\n"
+"POT-Creation-Date: 2014-03-12 12:53-0700\n"
+"PO-Revision-Date: 2014-11-23 17:20+0000\n"
+"Last-Translator: Serge Vylekzhanin <vylekzhanin@mail.ru>\n"
+"Language-Team: Russian (http://www.transifex.com/projects/p/udisks/language/ru/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -23,38 +24,38 @@ msgstr ""
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:1
 msgid "Mount a filesystem"
-msgstr "Подключить файловую систему"
+msgstr "Монтировать файловую систему"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:2
 msgid "Authentication is required to mount the filesystem"
-msgstr "Для подключения файловой системы требуется подтверждение подлинности пользователя"
+msgstr "Для монтирования файловой системы требуется подтверждение подлинности пользователя"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:3
 msgid "Mount a filesystem on a system device"
-msgstr "Подключить файловую систему на системном устройстве"
+msgstr "Монтировать файловую систему на системном устройстве"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:4
 msgid "Mount a filesystem from a device plugged into another seat"
-msgstr "Подключить файловую систему с устройства, подключенного в другое место"
+msgstr "Монтировать файловую систему с устройства, подключенного в другое место"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:5
 msgid ""
 "Mount/unmount filesystems defined in the fstab file with the x-udisks-auth "
 "option"
-msgstr "Подключать/отключать заданные в файле fstab файловые системы с параметром x-udisks-auth"
+msgstr "Монтировать/демонтировать файловые системы, указанные в файле fstab, с параметром x-udisks-auth"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:6
 msgid "Authentication is required to mount/unmount the filesystem"
-msgstr "Для подключения/отключения файловой системы требуется подтверждение подлинности пользователя"
+msgstr "Для монтирования/демонтирования файловой системы требуется подтверждение подлинности пользователя"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:7
 msgid "Unmount a device mounted by another user"
-msgstr "Отключить устройство, подключённое другим пользователем"
+msgstr "Демонтировать устройство, смонтированное другим пользователем"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:8
 msgid ""
 "Authentication is required to unmount a filesystem mounted by another user"
-msgstr "Для отключения устройства, подключённого другим пользователем, требуется подтверждение подлинности пользователя"
+msgstr "Для демонтирования файловой системы, смонтированной другим пользователем, требуется подтверждение подлинности пользователя"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:9
 msgid "Unlock an encrypted device"
@@ -70,17 +71,17 @@ msgstr "Разблокировать зашифрованное системно
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:12
 msgid "Unlock an encrypted device plugged into another seat"
-msgstr "Разблокировать зашифрованное системное устройство, подключённое в другое место"
+msgstr "Разблокировать зашифрованное устройство, подключённое в другое место"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:13
 msgid ""
 "Unlock an encrypted device specified in the crypttab file with the x-udisks-"
 "auth option"
-msgstr "Разблокировать заданное в файле crypttab зашифрованное системное устройство с параметром x-udisks-auth"
+msgstr "Разблокировать заданное в файле crypttab зашифрованное устройство с параметром x-udisks-auth"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:14
 msgid "Lock an encrypted device unlocked by another user"
-msgstr "Заблокировать зашифрованное системное устройство, разблокированное другим пользователем"
+msgstr "Заблокировать зашифрованное устройство, разблокированное другим пользователем"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:15
 msgid ""
@@ -103,9 +104,8 @@ msgstr "Управление петлевыми устройствами"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting up a loop device.
-#. 
 #: ../data/org.freedesktop.udisks2.policy.in.h:19
-#: ../src/udiskslinuxmanager.c:335
+#: ../src/udiskslinuxmanager.c:337
 msgid "Authentication is required to set up a loop device"
 msgstr "Для настройки петлевого устройства требуется подтверждение подлинности пользователя"
 
@@ -125,7 +125,7 @@ msgstr "Изменить петлевые устройства"
 #: ../data/org.freedesktop.udisks2.policy.in.h:23
 msgid ""
 "Authentication is required to modify a loop device set up by another user"
-msgstr "Для изменения петлевого устройства требуется подтверждение подлинности пользователя"
+msgstr "Для изменения петлевого устройства, настроенного другим пользователем, требуется подтверждение подлинности пользователя"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:24
 msgid "Manage swapspace"
@@ -141,50 +141,50 @@ msgstr "Управление массивами RAID"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:27
 msgid "Authentication is required to manage RAID arrays"
-msgstr "Для управления массивами RAID требуется аутентификация"
+msgstr "Для управления массивами RAID требуется подтверждение подлинности пользователя"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:28
 msgid "Power off drive"
-msgstr "Выключить питание устройства"
+msgstr "Выключить питание привода"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:29
 msgid "Authentication is required to power off a drive"
-msgstr "Для выключения питания устройства требуется аутентификация"
+msgstr "Для выключения питания привода требуется подтверждение подлинности пользователя"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:30
 msgid "Power off a system drive"
-msgstr "Выключение питания системного устройства"
+msgstr "Выключение питания системного привода"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:31
 msgid "Power off a drive attached to another seat"
-msgstr "Выключение питания устройства, подключённого к другому месту привода"
+msgstr "Выключить питание привода, подключённого к другому месту"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:32
 msgid ""
 "Authentication is required to power off a drive plugged into another seat"
-msgstr "Для выключения питания устройства, подключённого к другому месту привода, требуется аутентификация"
+msgstr "Для выключения питания привода, подключённого к другому месту, требуется подтверждение подлинности пользователя"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:33
 msgid "Eject media"
-msgstr "Извлечь носитель"
+msgstr "Извлечь носитель информации"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:34
 msgid "Authentication is required to eject media"
-msgstr "Для извлечения носителя требуется подтверждение подлинности пользователя"
+msgstr "Для извлечения носителя информации требуется подтверждение подлинности пользователя"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:35
 msgid "Eject media from a system drive"
-msgstr "Извлечь носитель из системного привода"
+msgstr "Извлечь носитель информации из системного привода"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:36
 msgid "Eject media from a drive attached to another seat"
-msgstr "Извлечь носитель из подключённого в другое место привода"
+msgstr "Извлечь носитель информации из привода, подключённого в другое место"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:37
 msgid ""
 "Authentication is required to eject media from a drive plugged into another "
 "seat"
-msgstr "Для извлечения носителя из подключённого в другое место привода требуется подтверждение подлинности пользователя"
+msgstr "Для извлечения носителя информации из привода, подключённого в другое место, требуется подтверждение подлинности пользователя"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:38
 msgid "Modify a device"
@@ -201,7 +201,7 @@ msgstr "Изменить системное устройство"
 #: ../data/org.freedesktop.udisks2.policy.in.h:41
 msgid ""
 "Authentication is required to modify a device plugged into another seat"
-msgstr "Для изменения подключённого в другое место устройства требуется подтверждение подлинности пользователя"
+msgstr "Для изменения устройства, подключённого в другое место, требуется подтверждение подлинности пользователя"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:42
 msgid "Rescan a device"
@@ -259,7 +259,7 @@ msgstr "Установить данные SMART из объекта blob"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:55
 msgid "Authentication is required to set SMART data from blob"
-msgstr "Для установки данных SMART требуется подтверждение подлинности пользователя"
+msgstr "Для установки данных SMART из объекта blob требуется подтверждение подлинности пользователя"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:56
 msgid "Run SMART self-test"
@@ -275,7 +275,7 @@ msgstr "Включить/выключить SMART"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:59
 msgid "Authentication is required to enable/disable SMART"
-msgstr "Для включения/выключения SMART требуется аутентификация"
+msgstr "Для включения/выключения SMART требуется подтверждение подлинности пользователя"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:60
 msgid "Check power state"
@@ -287,7 +287,7 @@ msgstr "Для проверки состояния питания требует
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:62
 msgid "Send standby command"
-msgstr "Отправить команду ожидания"
+msgstr "Отправить команду перевода в режим ожидания"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:63
 msgid "Authentication is required to put a drive into standby mode"
@@ -295,33 +295,32 @@ msgstr "Для перевода привода в режим ожидания т
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:64
 msgid "Send standby command to a system drive"
-msgstr "Отправить команду ожидания системному приводу"
+msgstr "Отправить команду перевода в режим ожидания системному приводу"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:65
 msgid "Send standby command to drive on other seat"
-msgstr "Отправить команду ожидания подключённому в другое место системному приводу"
+msgstr "Отправить команду перевода в режим ожидания приводу, подключённому в другое место"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:66
 msgid "Securely erase a hard disk"
-msgstr "Безопасно очистить жёсткий диск"
+msgstr "Надёжно очистить жёсткий диск"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:67
 msgid "Authentication is required to securely erase a hard disk"
-msgstr "Для безопасной очистки требуется подтверждение подлинности пользователя"
+msgstr "Для надёжной очистки требуется подтверждение подлинности пользователя"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:68
 msgid "Cancel job"
 msgstr "Отменить задание"
 
 #. Translators: Shown in authentication dialog when canceling a job.
-#. 
 #: ../data/org.freedesktop.udisks2.policy.in.h:69 ../src/udisksbasejob.c:404
 msgid "Authentication is required to cancel a job"
 msgstr "Для отмены задания требуется подтверждение подлинности пользователя"
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:70
 msgid "Cancel job started by another user"
-msgstr "Отменить запущенное другим пользователем задание"
+msgstr "Отменить задание, запущенное другим пользователем "
 
 #: ../data/org.freedesktop.udisks2.policy.in.h:71
 msgid "Authentication is required to cancel a job started by another user"
@@ -330,42 +329,41 @@ msgstr "Для отмены задания, запущенного другим 
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
 #. * passwords and secrets
-#. 
-#: ../src/udiskslinuxblock.c:999
+#: ../src/udiskslinuxblock.c:1011
 msgid "Authentication is required to read system-level secrets"
 msgstr "Для чтения скрытых возможностей системного уровня требуется подтверждение подлинности пользователя"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: ../src/udiskslinuxblock.c:1533
+#: ../src/udiskslinuxblock.c:1545
 msgid "Authentication is required to add an entry to the /etc/fstab file"
 msgstr "Для добавления записи в файл /etc/fstab требуется подтверждение подлинности пользователя"
 
 #. Translators: shown in authentication dialog - do not tranlsate
 #. /etc/crypttab
-#: ../src/udiskslinuxblock.c:1551
+#: ../src/udiskslinuxblock.c:1563
 msgid "Authentication is required to add an entry to the /etc/crypttab file"
 msgstr "Для добавления записи в файл /etc/crypttab требуется подтверждение подлинности пользователя"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: ../src/udiskslinuxblock.c:1610
+#: ../src/udiskslinuxblock.c:1622
 msgid "Authentication is required to remove an entry from /etc/fstab file"
 msgstr "Для удаления записи из файла /etc/fstab требуется подтверждение подлинности пользователя"
 
 #. Translators: shown in authentication dialog - do not translate
 #. /etc/crypttab
-#: ../src/udiskslinuxblock.c:1628
+#: ../src/udiskslinuxblock.c:1640
 msgid ""
 "Authentication is required to remove an entry from the /etc/crypttab file"
 msgstr "Для удаления записи из файла /etc/crypttab требуется подтверждение подлинности пользователя"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
-#: ../src/udiskslinuxblock.c:1700
+#: ../src/udiskslinuxblock.c:1712
 msgid "Authentication is required to modify the /etc/fstab file"
 msgstr "Для изменения файла /etc/fstab требуется подтверждение подлинности пользователя"
 
 #. Translators: shown in authentication dialog - do not translate
 #. /etc/crypttab
-#: ../src/udiskslinuxblock.c:1718
+#: ../src/udiskslinuxblock.c:1730
 msgid "Authentication is required to modify the /etc/crypttab file"
 msgstr "Для изменения файла файл /etc/crypttab требуется подтверждение подлинности пользователя"
 
@@ -375,16 +373,14 @@ msgstr "Для изменения файла файл /etc/crypttab требуе
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
 #. Translators: Shown in authentication dialog when the user
 #. * requests erasing a hard disk using the SECURE ERASE UNIT command.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxblock.c:2225 ../src/udiskslinuxdriveata.c:2245
+#: ../src/udiskslinuxblock.c:2237 ../src/udiskslinuxdriveata.c:2244
 msgid "Authentication is required to perform a secure erase of $(drive)"
-msgstr "Для выполнения безопасной очистки $(drive) требуется подтверждение подлинности пользователя"
+msgstr "Для выполнения надёжной очистки $(drive) требуется подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when formatting a
 #. * device. This includes both creating a filesystem or partition
@@ -392,12 +388,11 @@ msgstr "Для выполнения безопасной очистки $(drive)
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxblock.c:2237
+#: ../src/udiskslinuxblock.c:2249
 msgid "Authentication is required to format $(drive)"
 msgstr "Для форматирования $(drive) требуется подтверждение подлинности пользователя"
 
-#: ../src/udiskslinuxblock.c:2274 ../src/udiskslinuxdriveata.c:2257
+#: ../src/udiskslinuxblock.c:2286 ../src/udiskslinuxdriveata.c:2256
 msgid "Formatting Device"
 msgstr "Форматирование устройства"
 
@@ -406,8 +401,7 @@ msgstr "Форматирование устройства"
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxblock.c:2693
+#: ../src/udiskslinuxblock.c:2705
 msgid "Authentication is required to open $(drive) for reading"
 msgstr "Для открытия $(drive) для чтения требуется подтверждение подлинности пользователя"
 
@@ -416,8 +410,7 @@ msgstr "Для открытия $(drive) для чтения требуется 
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxblock.c:2757
+#: ../src/udiskslinuxblock.c:2769
 msgid "Authentication is required to open $(drive) for writing"
 msgstr "Для открытия $(drive) для записи требуется подтверждение подлинности пользователя"
 
@@ -426,8 +419,7 @@ msgstr "Для открытия $(drive) для записи требуется 
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxblock.c:2823
+#: ../src/udiskslinuxblock.c:2835
 msgid "Authentication is required to open $(drive) for benchmarking"
 msgstr "Для открытия $(drive) для проверки производительности требуется подтверждение подлинности пользователя"
 
@@ -436,8 +428,7 @@ msgstr "Для открытия $(drive) для проверки произво�
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxblock.c:2884
+#: ../src/udiskslinuxblock.c:2896
 msgid "Authentication is required to rescan $(drive)"
 msgstr "Для повторного сканирования $(drive) требуется подтверждение подлинности пользователя"
 
@@ -446,8 +437,7 @@ msgstr "Для повторного сканирования $(drive) требу
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdrive.c:1007
+#: ../src/udiskslinuxdrive.c:1022
 msgid "Authentication is required to eject $(drive)"
 msgstr "Для извлечения $(drive) требуется подтверждение подлинности пользователя"
 
@@ -456,8 +446,7 @@ msgstr "Для извлечения $(drive) требуется подтверж
 #. *
 #. * Do not translate $(drive), it's a placeholder and will be
 #. * replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdrive.c:1095
+#: ../src/udiskslinuxdrive.c:1110
 msgid "Authentication is required to configure settings for $(drive)"
 msgstr "Для настройки параметров $(drive) требуется подтверждение подлинности пользователя"
 
@@ -466,18 +455,16 @@ msgstr "Для настройки параметров $(drive) требуетс
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdrive.c:1293
+#: ../src/udiskslinuxdrive.c:1425
 msgid "Authentication is required to power off $(drive)"
-msgstr "Для выключения питания $(drive) требуется аутентификация"
+msgstr "Для выключения питания $(drive) требуется подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when the user
 #. * refreshes SMART data from a disk.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdriveata.c:745
+#: ../src/udiskslinuxdriveata.c:744
 msgid "Authentication is required to update SMART data from $(drive)"
 msgstr "Для обновления SMART-данных $(drive) требуется подтверждение подлинности пользователя"
 
@@ -486,48 +473,43 @@ msgstr "Для обновления SMART-данных $(drive) требуетс
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdriveata.c:756
+#: ../src/udiskslinuxdriveata.c:755
 msgid "Authentication is required to set SMART data from a blob on $(drive)"
-msgstr "Для установки данных SMART на $(drive) требуется подтверждение подлинности пользователя"
+msgstr "Для установки данных SMART из объекта blob на $(drive) требуется подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when the user
 #. * aborts a running SMART self-test.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdriveata.c:890
+#: ../src/udiskslinuxdriveata.c:889
 msgid "Authentication is required to abort a SMART self-test on $(drive)"
-msgstr "Для прерывания самодиагностики SMART $(drive) требуется подтверждение подлинности пользователя"
+msgstr "Для прерывания самодиагностики SMART на $(drive) требуется подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when the user
 #. * initiates a SMART self-test.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdriveata.c:1140
+#: ../src/udiskslinuxdriveata.c:1139
 msgid "Authentication is required to start a SMART self-test on $(drive)"
-msgstr "Для выполнения самодиагностики SMART $(drive) требуется подтверждение подлинности пользователя"
+msgstr "Для выполнения самодиагностики SMART на $(drive) требуется подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests the power state of a drive.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdriveata.c:1227
+#: ../src/udiskslinuxdriveata.c:1226
 msgid "Authentication is required to check power state for $(drive)"
-msgstr "Для проверки состояния питания SMART $(drive) требуется подтверждение подлинности пользователя"
+msgstr "Для проверки состояния питания $(drive) требуется подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to put a drive into standby mode.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdriveata.c:1352
+#: ../src/udiskslinuxdriveata.c:1351
 msgid "Authentication is required to put $(drive) in standby mode"
 msgstr "Для перевода $(drive) в режим ожидания требуется подтверждение подлинности пользователя"
 
@@ -536,40 +518,36 @@ msgstr "Для перевода $(drive) в режим ожидания треб
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdriveata.c:1484
+#: ../src/udiskslinuxdriveata.c:1483
 msgid "Authentication is required to wake up $(drive) from standby mode"
-msgstr "Для выведения $(drive) из режима ожидания требуется подтверждение подлинности пользователя"
+msgstr "Для вывода $(drive) из режима ожидания требуется подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests enabling SMART on a disk.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdriveata.c:2338
+#: ../src/udiskslinuxdriveata.c:2337
 msgid "Authentication is required to enable SMART on $(drive)"
-msgstr "Для включения SMART на $(drive) требуется аутентификация"
+msgstr "Для включения SMART на $(drive) требуется подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests enabling SMART on a disk.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxdriveata.c:2348
+#: ../src/udiskslinuxdriveata.c:2347
 msgid "Authentication is required to disable SMART on $(drive)"
-msgstr "Для выключения SMART на $(drive) требуется аутентификация"
+msgstr "Для выключения SMART на $(drive) требуется подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests unlocking an encrypted device.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxencrypted.c:353 ../src/udiskslinuxencrypted.c:705
+#: ../src/udiskslinuxencrypted.c:352 ../src/udiskslinuxencrypted.c:704
 msgid "Authentication is required to unlock the encrypted device $(drive)"
-msgstr "Для разблокирования $(drive), использующеего шифрование, требуется подтверждение подлинности пользователя"
+msgstr "Для разблокирования зашифрованного устройства $(drive) требуется подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests locking an encrypted device that was previously.
@@ -577,22 +555,20 @@ msgstr "Для разблокирования $(drive), использующее
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxencrypted.c:583
+#: ../src/udiskslinuxencrypted.c:582
 msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by"
 " another user"
-msgstr "Для заблокирования зашифрованного $(drive), разблокированный другим пользователем, требуется подтверждение подлинности пользователя"
+msgstr "Для заблокирования зашифрованного устройства $(drive), разблокированного другим пользователем, требуется подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests mounting a filesystem.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxfilesystem.c:1223 ../src/udiskslinuxfilesystem.c:1385
+#: ../src/udiskslinuxfilesystem.c:1255 ../src/udiskslinuxfilesystem.c:1417
 msgid "Authentication is required to mount $(drive)"
-msgstr "Для подключения $(drive) требуется подтверждение подлинности пользователя"
+msgstr "Для монтирования $(drive) требуется подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when the
 #. * user requests mounting a filesystem that is in
@@ -603,12 +579,11 @@ msgstr "Для подключения $(drive) требуется подтвер
 #. * the drive/device in question
 #. *
 #. * Do not translate /etc/fstab
-#. 
-#: ../src/udiskslinuxfilesystem.c:1292
+#: ../src/udiskslinuxfilesystem.c:1324
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
-msgstr "Для подключения $(drive), записанного файле /etc/fstab, требуется подтверждение подлинности пользователя"
+msgstr "Для монтирования $(drive), указанного в файле /etc/fstab, требуется подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when the
 #. * user requests unmounting a filesystem that is in
@@ -619,12 +594,11 @@ msgstr "Для подключения $(drive), записанного файл�
 #. * the drive/device in question
 #. *
 #. * Do not translate /etc/fstab
-#. 
-#: ../src/udiskslinuxfilesystem.c:1639
+#: ../src/udiskslinuxfilesystem.c:1671
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
-msgstr "Для отключения $(drive), записанного в файле /etc/fstab, требуется подтверждение подлинности пользователя"
+msgstr "Для демонтирования $(drive), указанного в файле /etc/fstab, требуется подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests unmounting a filesystem previously mounted by
@@ -632,18 +606,16 @@ msgstr "Для отключения $(drive), записанного в файл
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxfilesystem.c:1686
+#: ../src/udiskslinuxfilesystem.c:1718
 msgid "Authentication is required to unmount $(drive) mounted by another user"
-msgstr "Для отключения $(drive), подключённого другим пользователем, требуется подтверждение подлинности пользователя"
+msgstr "Для демонтирования $(drive), смонтированного другим пользователем, требуется подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing the filesystem label.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxfilesystem.c:1924
+#: ../src/udiskslinuxfilesystem.c:1963
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr "Для изменения метки файловой системы на $(drive) требуется подтверждение подлинности пользователя"
 
@@ -653,7 +625,6 @@ msgstr "Для изменения метки файловой системы н�
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
 #: ../src/udiskslinuxloop.c:245
 msgid "Authentication is required to delete the loop device $(drive)"
 msgstr "Для удаления петвого устройства $(drive) требуется подтверждение подлинности пользователя"
@@ -664,69 +635,69 @@ msgstr "Для удаления петвого устройства $(drive) т�
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
 #: ../src/udiskslinuxloop.c:424
 msgid "Authentication is required to modify the loop device $(drive)"
 msgstr "Для изменения петвого устройства $(drive) требуется подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
-#. 
 #. TODO: variables
-#: ../src/udiskslinuxmanager.c:565
+#: ../src/udiskslinuxmanager.c:570
 msgid "Authentication is required to create a RAID array"
-msgstr "Для создания массива RAID требуется аутентификация"
+msgstr "Для создания массива RAID требуется подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
-#. 
 #. TODO: variables
-#: ../src/udiskslinuxmdraid.c:627
+#: ../src/udiskslinuxmdraid.c:639
 msgid "Authentication is required to start a RAID array"
-msgstr "Для запуска массива RAID требуется аутентификация"
+msgstr "Для запуска массива RAID требуется подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to stop a RAID Array.
-#. 
 #. TODO: variables
-#: ../src/udiskslinuxmdraid.c:797
+#: ../src/udiskslinuxmdraid.c:808
 msgid "Authentication is required to stop a RAID array"
-msgstr "Для остановки массива RAID требуется аутентификация"
+msgstr "Для остановки массива RAID требуется подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to remove a device from a RAID Array.
-#. 
 #. TODO: variables
-#: ../src/udiskslinuxmdraid.c:1002
+#: ../src/udiskslinuxmdraid.c:1013
 msgid "Authentication is required to remove a device from a RAID array"
-msgstr "Для удаления устройства из массива RAID требуется аутентификация"
+msgstr "Для удаления устройства из массива RAID требуется подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to add a device to a RAID Array.
-#. 
 #. TODO: variables
-#: ../src/udiskslinuxmdraid.c:1198
+#: ../src/udiskslinuxmdraid.c:1209
 msgid "Authentication is required to add a device to a RAID array"
-msgstr "Для добавления устройства в массив RAID требуется аутентификация"
+msgstr "Для добавления устройства в массив RAID требуется подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to change whether it has a write-intent bitmap
-#. 
 #. TODO: variables
-#: ../src/udiskslinuxmdraid.c:1328
+#: ../src/udiskslinuxmdraid.c:1339
 msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
-msgstr ""
+msgstr "Для настройки битовых карт записей (write-intent bitmap) в массиве RAID требуется подтверждение подлинности пользователя"
+
+#. Translators: Shown in authentication dialog when the user
+#. * attempts to start/stop data scrubbing operations
+#. TODO: variables
+#: ../src/udiskslinuxmdraid.c:1463
+msgid ""
+"Authentication is required to start/stop data scrubbing of a RAID array"
+msgstr "Для запуска/остановки процесса корректировки данных (data scrubbing) массива RAID требуется подтверждение подлинности пользователя"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxpartition.c:282 ../src/udiskslinuxpartition.c:447
-#: ../src/udiskslinuxpartition.c:789
+#: ../src/udiskslinuxpartition.c:281 ../src/udiskslinuxpartition.c:446
+#: ../src/udiskslinuxpartition.c:788
 msgid "Authentication is required to modify the partition on device $(drive)"
 msgstr "Для изменения раздела на устройстве $(drive) требуется подтверждение подлинности пользователя"
 
@@ -735,8 +706,7 @@ msgstr "Для изменения раздела на устройстве $(dri
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxpartition.c:900
+#: ../src/udiskslinuxpartition.c:899
 msgid "Authentication is required to delete the partition $(drive)"
 msgstr "Для удаления раздела $(drive) требуется подтверждение подлинности пользователя"
 
@@ -745,8 +715,7 @@ msgstr "Для удаления раздела $(drive) требуется по�
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxpartitiontable.c:349
+#: ../src/udiskslinuxpartitiontable.c:399
 msgid "Authentication is required to create a partition on $(drive)"
 msgstr "Для создания раздела $(drive) требуется подтверждение подлинности пользователя"
 
@@ -755,8 +724,7 @@ msgstr "Для создания раздела $(drive) требуется по�
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxswapspace.c:202
+#: ../src/udiskslinuxswapspace.c:201
 msgid "Authentication is required to activate swapspace on $(drive)"
 msgstr "Для включения области подкачки на $(drive) требуется подтверждение подлинности пользователя"
 
@@ -765,8 +733,7 @@ msgstr "Для включения области подкачки на $(drive) 
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#. 
-#: ../src/udiskslinuxswapspace.c:294
+#: ../src/udiskslinuxswapspace.c:293
 msgid "Authentication is required to deactivate swapspace on $(drive)"
 msgstr "Для выключения области подкачки на $(drive) требуется подтверждение подлинности пользователя"
 
@@ -779,7 +746,6 @@ msgstr "Загрузочный"
 
 #. Translators: Corresponds to the GPT "system" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
 #: ../udisks/udisksclient.c:1104
 msgctxt "gpt-part-flag"
 msgid "System"
@@ -788,7 +754,6 @@ msgstr "Системный"
 #. Translators: Corresponds to the GPT "legacy bios bootable" flag for a
 #. partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
 #: ../udisks/udisksclient.c:1111
 msgctxt "gpt-part-flag"
 msgid "Legacy BIOS Bootable"
@@ -796,7 +761,6 @@ msgstr "Legacy BIOS Bootable"
 
 #. Translators: Corresponds to the GPT "read-only" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
 #: ../udisks/udisksclient.c:1118
 msgctxt "gpt-part-flag"
 msgid "Read-only"
@@ -804,7 +768,6 @@ msgstr "Только для чтения"
 
 #. Translators: Corresponds to the GPT "hidden" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
 #: ../udisks/udisksclient.c:1125
 msgctxt "gpt-part-flag"
 msgid "Hidden"
@@ -812,11 +775,10 @@ msgstr "Скрытый"
 
 #. Translators: Corresponds to the GPT "no automount" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#. 
 #: ../udisks/udisksclient.c:1132
 msgctxt "gpt-part-flag"
 msgid "No Automount"
-msgstr "Без автоподключения"
+msgstr "Без автомонтирования"
 
 #. Translators: Partition info. First %s is the type, second %s is a list of
 #. flags
@@ -834,7 +796,6 @@ msgstr "Неизвестный"
 
 #. Translators: The first %s is the size in power-of-2 units, e.g. '64 KiB'
 #. * the second %s is the size as a number e.g. '65,536' (always > 1)
-#. 
 #: ../udisks/udisksclient.c:1711
 #, c-format
 msgctxt "byte-size-pow2"
@@ -843,7 +804,6 @@ msgstr "%s (%s байт)"
 
 #. Translators: The first %s is the size in power-of-10 units, e.g. '100 kB'
 #. * the second %s is the size as a number e.g. '100,000' (always > 1)
-#. 
 #: ../udisks/udisksclient.c:1721
 #, c-format
 msgctxt "byte-size-pow10"
@@ -907,7 +867,6 @@ msgstr "Флеш-накопитель"
 #. Translators: This word is used to describe the optical disc type, it may
 #. appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#. 
 #: ../udisks/udisksclient.c:1856
 msgctxt "disc-type"
 msgid "CD"
@@ -916,7 +875,6 @@ msgstr "CD"
 #. Translators: This word is used to describe the optical disc type, it may
 #. appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#. 
 #: ../udisks/udisksclient.c:1865
 msgctxt "disc-type"
 msgid "DVD"
@@ -925,7 +883,6 @@ msgstr "DVD"
 #. Translators: This word is used to describe the optical disc type, it may
 #. appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#. 
 #: ../udisks/udisksclient.c:1874
 msgctxt "disc-type"
 msgid "Blu-Ray"
@@ -934,7 +891,6 @@ msgstr "Blu-Ray"
 #. Translators: This word is used to describe the optical disc type, it may
 #. appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#. 
 #: ../udisks/udisksclient.c:1883
 msgctxt "disc-type"
 msgid "HDDVD"
@@ -1085,13 +1041,13 @@ msgstr "UDF"
 #: ../udisks/udisksclient.c:1929 ../udisks/udisksclient.c:1930
 msgctxt "fs-type"
 msgid "exFAT"
-msgstr ""
+msgstr "exFAT"
 
 #: ../udisks/udisksclient.c:1930
 #, c-format
 msgctxt "fs-type"
 msgid "exFAT (version %s)"
-msgstr ""
+msgstr "exFAT (версия %s)"
 
 #: ../udisks/udisksclient.c:1931
 #, c-format
@@ -1124,12 +1080,12 @@ msgstr "Физический раздел LVM2"
 #, c-format
 msgctxt "fs-type"
 msgid "Linux RAID Member (version %s)"
-msgstr ""
+msgstr "Компонент Linux RAID (версия %s)"
 
 #: ../udisks/udisksclient.c:1935 ../udisks/udisksclient.c:1936
 msgctxt "fs-type"
 msgid "Linux RAID Member"
-msgstr ""
+msgstr "Компонент Linux RAID"
 
 #: ../udisks/udisksclient.c:1937
 #, c-format
@@ -1157,23 +1113,23 @@ msgstr "ZFS"
 #, c-format
 msgctxt "fs-type"
 msgid "Intel Matrix RAID Member (version %s)"
-msgstr ""
+msgstr "Компонент Intel Matrix RAID (версия %s)"
 
 #: ../udisks/udisksclient.c:1939
 #, c-format
 msgctxt "fs-type"
 msgid "IMSM RAID Member (%s)"
-msgstr ""
+msgstr "Компонент IMSM RAID (%s)"
 
 #: ../udisks/udisksclient.c:1940
 msgctxt "fs-type"
 msgid "Intel Matrix RAID Member"
-msgstr ""
+msgstr "Компонент Intel Matrix RAID"
 
 #: ../udisks/udisksclient.c:1940
 msgctxt "fs-type"
 msgid "IMSM RAID"
-msgstr ""
+msgstr "IMSM RAID"
 
 #: ../udisks/udisksclient.c:1941
 #, c-format
@@ -1233,7 +1189,6 @@ msgstr "Компонент VMFS"
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev, second %s is
 #. version.
-#. 
 #: ../udisks/udisksclient.c:2018
 #, c-format
 msgctxt "fs-type"
@@ -1242,7 +1197,6 @@ msgstr "Неизвестная (%s %s)"
 
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev.
-#. 
 #: ../udisks/udisksclient.c:2027
 #, c-format
 msgctxt "fs-type"
@@ -1250,7 +1204,6 @@ msgid "Unknown (%s)"
 msgstr "Неизвестная (%s)"
 
 #. Translators: Shown for unknown filesystem types.
-#. 
 #: ../udisks/udisksclient.c:2033 ../udisks/udisksclient.c:2047
 msgctxt "fs-type"
 msgid "Unknown"
@@ -1259,7 +1212,7 @@ msgstr "Неизвестная"
 #. Translators: name of partition table format
 #: ../udisks/udisksclient.c:2064
 msgid "Master Boot Record"
-msgstr "Главная загрузочная запись"
+msgstr "Главная загрузочная запись (MBR)"
 
 #. Translators: name of partition table format
 #: ../udisks/udisksclient.c:2066
@@ -1315,622 +1268,679 @@ msgctxt "part-type"
 msgid "BIOS Boot"
 msgstr "Загрузочный BIOS"
 
-#. Linux
+#. This is also defined in the Apple and Solaris section
 #: ../udisks/udisksclient.c:2214
 msgctxt "part-type"
-msgid "Linux Filesystem"
-msgstr "Файловая система Linux"
+msgid "ZFS"
+msgstr "ZFS"
 
-#: ../udisks/udisksclient.c:2215
-msgctxt "part-type"
-msgid "Linux RAID"
-msgstr "Linux RAID"
-
+#. Extended Boot Partition, see
+#. http://www.freedesktop.org/wiki/Specifications/BootLoaderSpec/
 #: ../udisks/udisksclient.c:2216
+msgctxt "part-type"
+msgid "Extended Boot Partition"
+msgstr "Расширенный загрузочный раздел"
+
+#. Discoverable Linux Partitions, see
+#. http://www.freedesktop.org/wiki/Specifications/DiscoverablePartitionsSpec
+#: ../udisks/udisksclient.c:2218
+msgctxt "part-type"
+msgid "Linux Root Partition (x86)"
+msgstr "Корневой раздел Linux (x86)"
+
+#: ../udisks/udisksclient.c:2219
+msgctxt "part-type"
+msgid "Linux Root Partition (x86_64)"
+msgstr "Корневой раздел Linux (x86_64)"
+
+#: ../udisks/udisksclient.c:2220
+msgctxt "part-type"
+msgid "Linux Home Partition"
+msgstr "Домашний раздел Linux"
+
+#: ../udisks/udisksclient.c:2221
+msgctxt "part-type"
+msgid "Linux Server Data Partition"
+msgstr "Раздел серверных данных Linux"
+
+#. Linux
+#: ../udisks/udisksclient.c:2223
 msgctxt "part-type"
 msgid "Linux Swap"
 msgstr "Раздел подкачки Linux"
 
-#: ../udisks/udisksclient.c:2217 ../udisks/udisksclient.c:2293
+#: ../udisks/udisksclient.c:2224
+msgctxt "part-type"
+msgid "Linux Filesystem"
+msgstr "Файловая система Linux"
+
+#: ../udisks/udisksclient.c:2225
+msgctxt "part-type"
+msgid "Linux RAID"
+msgstr "Linux RAID"
+
+#: ../udisks/udisksclient.c:2226 ../udisks/udisksclient.c:2307
 msgctxt "part-type"
 msgid "Linux LVM"
 msgstr "Linux LVM"
 
-#: ../udisks/udisksclient.c:2218
+#: ../udisks/udisksclient.c:2227
 msgctxt "part-type"
 msgid "Linux Reserved"
 msgstr "Зарезервированый Linux"
 
 #. Microsoft
-#: ../udisks/udisksclient.c:2220
+#: ../udisks/udisksclient.c:2229
 msgctxt "part-type"
 msgid "Basic Data"
 msgstr "Основные данные"
 
-#: ../udisks/udisksclient.c:2221
+#: ../udisks/udisksclient.c:2230
 msgctxt "part-type"
 msgid "Microsoft Reserved"
 msgstr "Зарезервированый Microsoft"
 
-#: ../udisks/udisksclient.c:2222
+#: ../udisks/udisksclient.c:2231
 msgctxt "part-type"
 msgid "Microsoft LDM metadata"
 msgstr "Microsoft LDM metadata"
 
-#: ../udisks/udisksclient.c:2223
+#: ../udisks/udisksclient.c:2232
 msgctxt "part-type"
 msgid "Microsoft LDM data"
 msgstr "Microsoft LDM data"
 
-#: ../udisks/udisksclient.c:2224
+#: ../udisks/udisksclient.c:2233
 msgctxt "part-type"
 msgid "Microsoft Windows Recovery Environment"
 msgstr "Microsoft Windows Recovery Environment"
 
 #. Apple OS X
-#: ../udisks/udisksclient.c:2226
+#: ../udisks/udisksclient.c:2235
 msgctxt "part-type"
 msgid "Apple HFS/HFS+"
 msgstr "Apple HFS/HFS+"
 
 #. see http://developer.apple.com/documentation/mac/devices/devices-126.html
 #. *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html
-#: ../udisks/udisksclient.c:2227 ../udisks/udisksclient.c:2272
+#: ../udisks/udisksclient.c:2236 ../udisks/udisksclient.c:2286
 msgctxt "part-type"
 msgid "Apple UFS"
 msgstr "Apple UFS"
 
-#: ../udisks/udisksclient.c:2228
+#: ../udisks/udisksclient.c:2237
 msgctxt "part-type"
 msgid "Apple ZFS"
 msgstr "Apple ZFS"
 
-#. same as Solaris /usr
-#: ../udisks/udisksclient.c:2229
+#. same as ZFS
+#: ../udisks/udisksclient.c:2238
 msgctxt "part-type"
 msgid "Apple RAID"
 msgstr "Apple RAID"
 
-#: ../udisks/udisksclient.c:2230
+#: ../udisks/udisksclient.c:2239
 msgctxt "part-type"
 msgid "Apple RAID (offline)"
 msgstr "Apple RAID (автономный)"
 
-#: ../udisks/udisksclient.c:2231
+#: ../udisks/udisksclient.c:2240
 msgctxt "part-type"
 msgid "Apple Boot"
 msgstr "Загрузочный Apple"
 
-#: ../udisks/udisksclient.c:2232
+#: ../udisks/udisksclient.c:2241
 msgctxt "part-type"
 msgid "Apple Label"
 msgstr "Apple Label"
 
-#: ../udisks/udisksclient.c:2233
+#: ../udisks/udisksclient.c:2242
 msgctxt "part-type"
 msgid "Apple TV Recovery"
 msgstr "Apple TV Recovery"
 
-#: ../udisks/udisksclient.c:2234
+#: ../udisks/udisksclient.c:2243
 msgctxt "part-type"
 msgid "Apple Core Storage"
 msgstr "Apple Core Storage"
 
 #. HP-UX
-#: ../udisks/udisksclient.c:2236
+#: ../udisks/udisksclient.c:2245
 msgctxt "part-type"
 msgid "HP-UX Data"
 msgstr "HP-UX Data"
 
-#: ../udisks/udisksclient.c:2237
+#: ../udisks/udisksclient.c:2246
 msgctxt "part-type"
 msgid "HP-UX Service"
 msgstr "HP-UX Service"
 
 #. FreeBSD
-#: ../udisks/udisksclient.c:2239
+#: ../udisks/udisksclient.c:2248
 msgctxt "part-type"
 msgid "FreeBSD Boot"
 msgstr "Загрузочный FreeBSD"
 
-#: ../udisks/udisksclient.c:2240
+#: ../udisks/udisksclient.c:2249
 msgctxt "part-type"
 msgid "FreeBSD Data"
 msgstr "FreeBSD Data"
 
-#: ../udisks/udisksclient.c:2241
+#: ../udisks/udisksclient.c:2250
 msgctxt "part-type"
 msgid "FreeBSD Swap"
 msgstr "Раздел подкачки FreeBSD"
 
-#: ../udisks/udisksclient.c:2242
+#: ../udisks/udisksclient.c:2251
 msgctxt "part-type"
 msgid "FreeBSD UFS"
 msgstr "FreeBSD UFS"
 
-#: ../udisks/udisksclient.c:2243
+#: ../udisks/udisksclient.c:2252
 msgctxt "part-type"
 msgid "FreeBSD Vinum"
 msgstr "FreeBSD Vinum"
 
-#: ../udisks/udisksclient.c:2244
+#: ../udisks/udisksclient.c:2253
 msgctxt "part-type"
 msgid "FreeBSD ZFS"
 msgstr "FreeBSD ZFS"
 
 #. Solaris
-#: ../udisks/udisksclient.c:2246
+#: ../udisks/udisksclient.c:2255
 msgctxt "part-type"
 msgid "Solaris Boot"
 msgstr "Загрузочный Solaris"
 
-#: ../udisks/udisksclient.c:2247
+#: ../udisks/udisksclient.c:2256
 msgctxt "part-type"
 msgid "Solaris Root"
 msgstr "Solaris Root"
 
-#: ../udisks/udisksclient.c:2248
+#: ../udisks/udisksclient.c:2257
 msgctxt "part-type"
 msgid "Solaris Swap"
 msgstr "Раздел подкачки Solaris"
 
-#: ../udisks/udisksclient.c:2249
+#: ../udisks/udisksclient.c:2258
 msgctxt "part-type"
 msgid "Solaris Backup"
 msgstr "Solaris Backup"
 
-#: ../udisks/udisksclient.c:2250
+#: ../udisks/udisksclient.c:2259
 msgctxt "part-type"
 msgid "Solaris /usr"
 msgstr "Solaris /usr"
 
-#. same as Apple ZFS
-#: ../udisks/udisksclient.c:2251
+#. same as ZFS
+#: ../udisks/udisksclient.c:2260
 msgctxt "part-type"
 msgid "Solaris /var"
 msgstr "Solaris /var"
 
-#: ../udisks/udisksclient.c:2252
+#: ../udisks/udisksclient.c:2261
 msgctxt "part-type"
 msgid "Solaris /home"
 msgstr "Solaris /home"
 
-#: ../udisks/udisksclient.c:2253
+#: ../udisks/udisksclient.c:2262
 msgctxt "part-type"
 msgid "Solaris Alternate Sector"
 msgstr "Solaris Alternate Sector"
 
-#: ../udisks/udisksclient.c:2254
+#: ../udisks/udisksclient.c:2263
 msgctxt "part-type"
 msgid "Solaris Reserved"
 msgstr "Зарезервированый Solaris"
 
-#: ../udisks/udisksclient.c:2255
+#: ../udisks/udisksclient.c:2264
 msgctxt "part-type"
 msgid "Solaris Reserved (2)"
 msgstr "Зарезервированый Solaris (2)"
 
-#: ../udisks/udisksclient.c:2256
+#: ../udisks/udisksclient.c:2265
 msgctxt "part-type"
 msgid "Solaris Reserved (3)"
 msgstr "Зарезервированый Solaris (3)"
 
-#: ../udisks/udisksclient.c:2257
+#: ../udisks/udisksclient.c:2266
 msgctxt "part-type"
 msgid "Solaris Reserved (4)"
 msgstr "Зарезервированый Solaris (4)"
 
-#: ../udisks/udisksclient.c:2258
+#: ../udisks/udisksclient.c:2267
 msgctxt "part-type"
 msgid "Solaris Reserved (5)"
 msgstr "Зарезервированый Solaris (5)"
 
 #. NetBSD
-#: ../udisks/udisksclient.c:2260
+#: ../udisks/udisksclient.c:2269
 msgctxt "part-type"
 msgid "NetBSD Swap"
 msgstr "Раздел подкачки NetBSD"
 
-#: ../udisks/udisksclient.c:2261
+#: ../udisks/udisksclient.c:2270
 msgctxt "part-type"
 msgid "NetBSD FFS"
 msgstr "NetBSD FFS"
 
-#: ../udisks/udisksclient.c:2262
+#: ../udisks/udisksclient.c:2271
 msgctxt "part-type"
 msgid "NetBSD LFS"
 msgstr "NetBSD LFS"
 
-#: ../udisks/udisksclient.c:2263
+#: ../udisks/udisksclient.c:2272
 msgctxt "part-type"
 msgid "NetBSD RAID"
 msgstr "NetBSD RAID"
 
-#: ../udisks/udisksclient.c:2264
+#: ../udisks/udisksclient.c:2273
 msgctxt "part-type"
 msgid "NetBSD Concatenated"
 msgstr "Объединённый NetBSD"
 
-#: ../udisks/udisksclient.c:2265
+#: ../udisks/udisksclient.c:2274
 msgctxt "part-type"
 msgid "NetBSD Encrypted"
 msgstr "Зашифрованый NetBSD"
 
 #. VMWare, see http://blogs.vmware.com/vsphere/2011/08/vsphere-50-storage-
 #. features-part-7-gpt.html
-#: ../udisks/udisksclient.c:2267
+#: ../udisks/udisksclient.c:2276
 msgctxt "part-type"
 msgid "VMWare VMFS"
 msgstr "VMWare VMFS"
 
-#: ../udisks/udisksclient.c:2268
+#: ../udisks/udisksclient.c:2277
 msgctxt "part-type"
 msgid "VMWare vmkcore"
 msgstr "VMWare vmkcore"
 
-#: ../udisks/udisksclient.c:2273
+#. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-docs
+#. /disk-format
+#: ../udisks/udisksclient.c:2279
+msgctxt "part-type"
+msgid "ChromeOS Firmware"
+msgstr "Микропрограмма ChromeOS"
+
+#: ../udisks/udisksclient.c:2280
+msgctxt "part-type"
+msgid "ChromeOS Kernel"
+msgstr "Ядро ChromeOS"
+
+#: ../udisks/udisksclient.c:2281
+msgctxt "part-type"
+msgid "ChromeOS Root Filesystem"
+msgstr "Корневая файловая система ChromeOS"
+
+#: ../udisks/udisksclient.c:2282
+msgctxt "part-type"
+msgid "ChromeOS Reserved"
+msgstr "Зарезервировано ChromeOS"
+
+#: ../udisks/udisksclient.c:2287
 msgctxt "part-type"
 msgid "Apple HFS/HFS"
 msgstr "Apple HFS/HFS"
 
-#: ../udisks/udisksclient.c:2274
+#: ../udisks/udisksclient.c:2288
 msgctxt "part-type"
 msgid "Apple Partition Map"
 msgstr "Таблица разделов Apple"
 
-#: ../udisks/udisksclient.c:2275
+#: ../udisks/udisksclient.c:2289
 msgctxt "part-type"
 msgid "Unused"
 msgstr "Неиспользуемый"
 
-#: ../udisks/udisksclient.c:2276
+#: ../udisks/udisksclient.c:2290
 msgctxt "part-type"
 msgid "Empty"
 msgstr "Пустой"
 
-#: ../udisks/udisksclient.c:2277
+#: ../udisks/udisksclient.c:2291
 msgctxt "part-type"
 msgid "Driver"
 msgstr "Драйвер"
 
-#: ../udisks/udisksclient.c:2278
+#: ../udisks/udisksclient.c:2292
 msgctxt "part-type"
 msgid "Driver 4.3"
 msgstr "Драйвер 4.3"
 
-#: ../udisks/udisksclient.c:2279
+#: ../udisks/udisksclient.c:2293
 msgctxt "part-type"
 msgid "ProDOS file system"
 msgstr "Файловая система ProDOS"
 
-#: ../udisks/udisksclient.c:2280
+#: ../udisks/udisksclient.c:2294
 msgctxt "part-type"
 msgid "FAT 12"
 msgstr "FAT 12"
 
-#: ../udisks/udisksclient.c:2281
+#: ../udisks/udisksclient.c:2295
 msgctxt "part-type"
 msgid "FAT 16"
 msgstr "FAT 16"
 
-#: ../udisks/udisksclient.c:2282
+#: ../udisks/udisksclient.c:2296
 msgctxt "part-type"
 msgid "FAT 32"
 msgstr "FAT 32"
 
-#: ../udisks/udisksclient.c:2283
+#: ../udisks/udisksclient.c:2297
 msgctxt "part-type"
 msgid "FAT 16 (Windows)"
 msgstr "FAT 16 (Windows)"
 
-#: ../udisks/udisksclient.c:2284
+#: ../udisks/udisksclient.c:2298
 msgctxt "part-type"
 msgid "FAT 32 (Windows)"
 msgstr "FAT 32 (Windows)"
 
 #. see http://www.win.tue.nl/~aeb/partitions/partition_types-1.html
-#: ../udisks/udisksclient.c:2287
+#: ../udisks/udisksclient.c:2301
 msgctxt "part-type"
 msgid "Extended"
 msgstr "Расширенный"
 
-#: ../udisks/udisksclient.c:2288
+#: ../udisks/udisksclient.c:2302
 msgctxt "part-type"
 msgid "EFI GPT"
 msgstr "EFI GPT"
 
-#: ../udisks/udisksclient.c:2289
+#: ../udisks/udisksclient.c:2303
 msgctxt "part-type"
 msgid "EFI (FAT-12/16/32)"
 msgstr "EFI (FAT-12/16/32)"
 
-#: ../udisks/udisksclient.c:2290
+#: ../udisks/udisksclient.c:2304
 msgctxt "part-type"
 msgid "Linux swap"
 msgstr "Раздел подкачки Linux"
 
-#: ../udisks/udisksclient.c:2291
+#: ../udisks/udisksclient.c:2305
 msgctxt "part-type"
 msgid "Linux"
 msgstr "Linux"
 
-#: ../udisks/udisksclient.c:2292
+#: ../udisks/udisksclient.c:2306
 msgctxt "part-type"
 msgid "Linux Extended"
 msgstr "Расширенный Linux"
 
-#: ../udisks/udisksclient.c:2294
+#: ../udisks/udisksclient.c:2308
 msgctxt "part-type"
 msgid "Linux RAID auto"
 msgstr "Атоматический Linux RAID"
 
-#: ../udisks/udisksclient.c:2295
+#: ../udisks/udisksclient.c:2309
 msgctxt "part-type"
 msgid "FAT12"
 msgstr "FAT12"
 
-#: ../udisks/udisksclient.c:2296
+#: ../udisks/udisksclient.c:2310
 msgctxt "part-type"
 msgid "FAT16 <32M"
 msgstr "FAT16 <32M"
 
-#: ../udisks/udisksclient.c:2297
+#: ../udisks/udisksclient.c:2311
 msgctxt "part-type"
 msgid "FAT16"
 msgstr "FAT16"
 
-#: ../udisks/udisksclient.c:2298
+#: ../udisks/udisksclient.c:2312
 msgctxt "part-type"
 msgid "HPFS/NTFS"
 msgstr "HPFS/NTFS"
 
-#: ../udisks/udisksclient.c:2299
+#: ../udisks/udisksclient.c:2313
 msgctxt "part-type"
 msgid "W95 FAT32"
 msgstr "W95 FAT32"
 
-#: ../udisks/udisksclient.c:2300
+#: ../udisks/udisksclient.c:2314
 msgctxt "part-type"
 msgid "W95 FAT32 (LBA)"
 msgstr "W95 FAT32 (LBA)"
 
-#: ../udisks/udisksclient.c:2301
+#: ../udisks/udisksclient.c:2315
 msgctxt "part-type"
 msgid "W95 FAT16 (LBA)"
 msgstr "W95 FAT16 (LBA)"
 
-#: ../udisks/udisksclient.c:2302
+#: ../udisks/udisksclient.c:2316
 msgctxt "part-type"
 msgid "W95 Ext d (LBA)"
 msgstr "W95 Ext d (LBA)"
 
-#: ../udisks/udisksclient.c:2303
+#: ../udisks/udisksclient.c:2317
 msgctxt "part-type"
 msgid "Hidden FAT12"
 msgstr "Скрытый FAT12"
 
-#: ../udisks/udisksclient.c:2304
+#: ../udisks/udisksclient.c:2318
 msgctxt "part-type"
 msgid "Hidden FAT16 <32M"
 msgstr "Скрытый FAT16 <32M"
 
-#: ../udisks/udisksclient.c:2305
+#: ../udisks/udisksclient.c:2319
 msgctxt "part-type"
 msgid "Hidden FAT16"
 msgstr "Скрытый FAT16"
 
-#: ../udisks/udisksclient.c:2306
+#: ../udisks/udisksclient.c:2320
 msgctxt "part-type"
 msgid "Hidden HPFS/NTFS"
 msgstr "Скрытый HPFS/NTFS"
 
-#: ../udisks/udisksclient.c:2307
+#: ../udisks/udisksclient.c:2321
 msgctxt "part-type"
 msgid "Hidden W95 FAT32"
 msgstr "Скрытый W95 FAT32"
 
-#: ../udisks/udisksclient.c:2308
+#: ../udisks/udisksclient.c:2322
 msgctxt "part-type"
 msgid "Hidden W95 FAT32 (LBA)"
 msgstr "Скрытый W95 FAT32 (LBA)"
 
-#: ../udisks/udisksclient.c:2309
+#: ../udisks/udisksclient.c:2323
 msgctxt "part-type"
 msgid "Hidden W95 FAT16 (LBA)"
 msgstr "Скрытый W95 FAT16 (LBA)"
 
-#: ../udisks/udisksclient.c:2310
+#: ../udisks/udisksclient.c:2324
 msgctxt "part-type"
 msgid "OPUS"
 msgstr "OPUS"
 
-#: ../udisks/udisksclient.c:2311
+#: ../udisks/udisksclient.c:2325
 msgctxt "part-type"
 msgid "Compaq diagnostics"
 msgstr "Compaq diagnostics"
 
-#: ../udisks/udisksclient.c:2312
+#: ../udisks/udisksclient.c:2326
 msgctxt "part-type"
 msgid "PartitionMagic"
 msgstr "PartitionMagic"
 
-#: ../udisks/udisksclient.c:2313
+#: ../udisks/udisksclient.c:2327
 msgctxt "part-type"
 msgid "Minix"
 msgstr "Minix"
 
 #. cf. http://en.wikipedia.org/wiki/MINIX_file_system
-#: ../udisks/udisksclient.c:2314 ../udisks/udisksclient.c:2315
+#: ../udisks/udisksclient.c:2328 ../udisks/udisksclient.c:2329
 msgctxt "part-type"
 msgid "Hibernation"
 msgstr "Hibernation"
 
-#: ../udisks/udisksclient.c:2316
+#: ../udisks/udisksclient.c:2330
 msgctxt "part-type"
 msgid "FreeBSD"
 msgstr "FreeBSD"
 
-#: ../udisks/udisksclient.c:2317
+#: ../udisks/udisksclient.c:2331
 msgctxt "part-type"
 msgid "OpenBSD"
 msgstr "OpenBSD"
 
-#: ../udisks/udisksclient.c:2318 ../udisks/udisksclient.c:2319
+#: ../udisks/udisksclient.c:2332 ../udisks/udisksclient.c:2333
 msgctxt "part-type"
 msgid "Mac OS X"
 msgstr "Mac OS X"
 
-#: ../udisks/udisksclient.c:2320
+#: ../udisks/udisksclient.c:2334
 msgctxt "part-type"
 msgid "Solaris boot"
 msgstr "Загрузочный Solaris"
 
-#: ../udisks/udisksclient.c:2321
+#: ../udisks/udisksclient.c:2335
 msgctxt "part-type"
 msgid "Solaris"
 msgstr "Solaris"
 
-#: ../udisks/udisksclient.c:2322
+#: ../udisks/udisksclient.c:2336
 msgctxt "part-type"
 msgid "BeOS BFS"
 msgstr "BeOS BFS"
 
-#: ../udisks/udisksclient.c:2323
+#: ../udisks/udisksclient.c:2337
 msgctxt "part-type"
 msgid "SkyOS SkyFS"
 msgstr "SkyOS SkyFS"
 
-#: ../udisks/udisksclient.c:2427
+#: ../udisks/udisksclient.c:2483
 msgctxt "job"
 msgid "SMART self-test"
 msgstr "Самодиагностика SMART"
 
-#: ../udisks/udisksclient.c:2428
+#: ../udisks/udisksclient.c:2484
 msgctxt "job"
 msgid "Ejecting Medium"
 msgstr "Извлечение носителя"
 
-#: ../udisks/udisksclient.c:2429
+#: ../udisks/udisksclient.c:2485
 msgctxt "job"
 msgid "Unlocking Device"
 msgstr "Разблокирование устройства"
 
-#: ../udisks/udisksclient.c:2430
+#: ../udisks/udisksclient.c:2486
 msgctxt "job"
 msgid "Locking Device"
 msgstr "Блокирование устройства"
 
-#: ../udisks/udisksclient.c:2431
+#: ../udisks/udisksclient.c:2487
 msgctxt "job"
 msgid "Modifying Encrypted Device"
 msgstr "Изменение зашифрованного устройства"
 
-#: ../udisks/udisksclient.c:2432
+#: ../udisks/udisksclient.c:2488
 msgctxt "job"
 msgid "Starting Swap Device"
 msgstr "Запуск устройства подкачки"
 
-#: ../udisks/udisksclient.c:2433
+#: ../udisks/udisksclient.c:2489
 msgctxt "job"
 msgid "Stopping Swap Device"
 msgstr "Остановка устройства подкачки"
 
-#: ../udisks/udisksclient.c:2434
+#: ../udisks/udisksclient.c:2490
 msgctxt "job"
 msgid "Mounting Filesystem"
-msgstr "Подключение файловой системы"
+msgstr "Монтирование файловой системы"
 
-#: ../udisks/udisksclient.c:2435
+#: ../udisks/udisksclient.c:2491
 msgctxt "job"
 msgid "Unmounting Filesystem"
-msgstr "Отключение файловой системы"
+msgstr "Демонтирование файловой системы"
 
-#: ../udisks/udisksclient.c:2436
+#: ../udisks/udisksclient.c:2492
 msgctxt "job"
 msgid "Modifying Filesystem"
 msgstr "Изменение файловой системы"
 
-#: ../udisks/udisksclient.c:2437
+#: ../udisks/udisksclient.c:2493
 msgctxt "job"
 msgid "Erasing Device"
 msgstr "Очистка устройства"
 
-#: ../udisks/udisksclient.c:2438
+#: ../udisks/udisksclient.c:2494
 msgctxt "job"
 msgid "Creating Filesystem"
 msgstr "Создание файловой системы"
 
-#: ../udisks/udisksclient.c:2439
+#: ../udisks/udisksclient.c:2495
 msgctxt "job"
 msgid "Setting Up Loop Device"
 msgstr "Настройка петлевого устройства"
 
-#: ../udisks/udisksclient.c:2440
+#: ../udisks/udisksclient.c:2496
 msgctxt "job"
 msgid "Modifying Partition"
 msgstr "Изменение раздела"
 
-#: ../udisks/udisksclient.c:2441
+#: ../udisks/udisksclient.c:2497
 msgctxt "job"
 msgid "Deleting Partition"
 msgstr "Удаление раздела"
 
-#: ../udisks/udisksclient.c:2442
+#: ../udisks/udisksclient.c:2498
 msgctxt "job"
 msgid "Creating Partition"
 msgstr "Создание раздела"
 
-#: ../udisks/udisksclient.c:2443
+#: ../udisks/udisksclient.c:2499
 msgctxt "job"
 msgid "Cleaning Up"
 msgstr "Очистка"
 
-#: ../udisks/udisksclient.c:2444
+#: ../udisks/udisksclient.c:2500
 msgctxt "job"
 msgid "ATA Secure Erase"
-msgstr "Безопасная очистка ATA"
+msgstr "Надёжная очистка ATA"
 
-#: ../udisks/udisksclient.c:2445
+#: ../udisks/udisksclient.c:2501
 msgctxt "job"
 msgid "ATA Enhanced Secure Erase"
-msgstr "Улучшенная безопасная очистка ATA"
+msgstr "Улучшенная надёжная очистка ATA"
 
-#: ../udisks/udisksclient.c:2446
+#: ../udisks/udisksclient.c:2502
 msgctxt "job"
 msgid "Stopping RAID Array"
-msgstr ""
+msgstr "Остановка массива RAID"
 
-#: ../udisks/udisksclient.c:2447
+#: ../udisks/udisksclient.c:2503
 msgctxt "job"
 msgid "Starting RAID Array"
-msgstr ""
+msgstr "Запуск массива RAID"
 
-#: ../udisks/udisksclient.c:2448
+#: ../udisks/udisksclient.c:2504
 msgctxt "job"
 msgid "Marking Device as Faulty"
-msgstr ""
+msgstr "Маркировка устройства как неисправного"
 
-#: ../udisks/udisksclient.c:2449
+#: ../udisks/udisksclient.c:2505
 msgctxt "job"
 msgid "Removing Device from Array"
-msgstr ""
+msgstr "Удаление устройства из массива"
 
-#: ../udisks/udisksclient.c:2450
+#: ../udisks/udisksclient.c:2506
 msgctxt "job"
 msgid "Adding Device to Array"
-msgstr ""
+msgstr "Добавление устройства в массив"
 
-#: ../udisks/udisksclient.c:2451
+#: ../udisks/udisksclient.c:2507
 msgctxt "job"
 msgid "Setting Write-Intent Bitmap"
-msgstr ""
+msgstr "Установка битовых карт записей (write-intent bitmap)"
 
-#: ../udisks/udisksclient.c:2452
+#: ../udisks/udisksclient.c:2508
 msgctxt "job"
 msgid "Creating RAID Array"
-msgstr ""
+msgstr "Создание массива RAID"
 
-#: ../udisks/udisksclient.c:2460
+#: ../udisks/udisksclient.c:2516
 #, c-format
 msgctxt "unknown-job"
 msgid "Unknown (%s)"
@@ -2119,53 +2129,50 @@ msgstr "MRW-W"
 #: ../udisks/udisksobjectinfo.c:252
 #, c-format
 msgid "%s Block Device"
-msgstr ""
+msgstr "%s Блочное устройство"
 
 #: ../udisks/udisksobjectinfo.c:256
 msgid "Block Device"
-msgstr ""
+msgstr "Блочное устройство"
 
 #. Translators: Used to describe a partition of a block device.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the block device (e.g. "5 GB
 #. Block Device").
-#. 
 #: ../udisks/udisksobjectinfo.c:265
 #, c-format
 msgctxt "part-block"
 msgid "Partition %d of %s"
-msgstr ""
+msgstr "Раздел %d %s"
 
 #. Translators: String used for one-liner description of a block device.
 #. *              The first %s is the description of the object (e.g. "50 GB
 #. Block Device").
 #. *              The second %s is the special device file (e.g. "/dev/sda2").
-#. 
 #: ../udisks/udisksobjectinfo.c:275
 #, c-format
 msgctxt "one-liner-block"
 msgid "%s (%s)"
-msgstr ""
+msgstr "%s (%s)"
 
 #: ../udisks/udisksobjectinfo.c:306
 #, c-format
 msgid "%s Loop Device"
-msgstr ""
+msgstr "%s Петлевое устройство"
 
 #: ../udisks/udisksobjectinfo.c:310
 msgid "Loop Device"
-msgstr ""
+msgstr "Петлевое устройство"
 
 #. Translators: Used to describe a partition of a loop device.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the loop device (e.g. "5 GB
 #. Loop Device").
-#. 
 #: ../udisks/udisksobjectinfo.c:319
 #, c-format
 msgctxt "part-loop"
 msgid "Partition %d of %s"
-msgstr ""
+msgstr "Раздел %d %s"
 
 #. Translators: String used for one-liner description of a loop device.
 #. *              The first %s is the description of the object (e.g. "2 GB
@@ -2173,113 +2180,106 @@ msgstr ""
 #. *              The second %s is the name of the backing file (e.g.
 #. "/home/davidz/file.iso").
 #. *              The third %s is the special device file (e.g. "/dev/loop2").
-#. 
 #: ../udisks/udisksobjectinfo.c:330
 #, c-format
 msgctxt "one-liner-loop"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"
 
 #: ../udisks/udisksobjectinfo.c:348
 msgctxt "mdraid-desc"
 msgid "RAID-0 Array"
-msgstr ""
+msgstr "Массив RAID-0"
 
 #: ../udisks/udisksobjectinfo.c:350
 msgctxt "mdraid-desc"
 msgid "RAID-1 Array"
-msgstr ""
+msgstr "Массив RAID-1"
 
 #: ../udisks/udisksobjectinfo.c:352
 msgctxt "mdraid-desc"
 msgid "RAID-4 Array"
-msgstr ""
+msgstr "Массив RAID-4"
 
 #: ../udisks/udisksobjectinfo.c:354
 msgctxt "mdraid-desc"
 msgid "RAID-5 Array"
-msgstr ""
+msgstr "Массив RAID-5"
 
 #: ../udisks/udisksobjectinfo.c:356
 msgctxt "mdraid-desc"
 msgid "RAID-6 Array"
-msgstr ""
+msgstr "Массив RAID-6"
 
 #: ../udisks/udisksobjectinfo.c:358
 msgctxt "mdraid-desc"
 msgid "RAID-10 Array"
-msgstr ""
+msgstr "Массив RAID-10"
 
 #: ../udisks/udisksobjectinfo.c:360
 msgctxt "mdraid-desc"
 msgid "RAID Array"
-msgstr ""
+msgstr "Массив RAID"
 
 #. Translators: Used to format the description for a RAID array.
 #. *              The first %s is the size (e.g. '42.0 GB').
 #. *              The second %s is the level (e.g. 'RAID-5 Array').
-#. 
 #: ../udisks/udisksobjectinfo.c:400
 #, c-format
 msgctxt "mdraid-desc"
 msgid "%s %s"
-msgstr ""
+msgstr "%s %s"
 
 #. Translators: Used to describe a partition of a RAID Array.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the drive (e.g. "2 TB
 #. RAID-5").
-#. 
 #: ../udisks/udisksobjectinfo.c:415
 #, c-format
 msgctxt "part-raid"
 msgid "Partition %d of %s"
-msgstr ""
+msgstr "Раздел %d %s"
 
 #. Translators: String used for one-liner description of running RAID array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#. 
 #: ../udisks/udisksobjectinfo.c:430
 #, c-format
 msgctxt "one-liner-mdraid-running"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"
 
 #. Translators: String used for one-liner description of non-running RAID
 #. array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
-#. 
 #: ../udisks/udisksobjectinfo.c:441
 #, c-format
 msgctxt "one-liner-mdraid-not-running"
 msgid "%s — %s"
-msgstr ""
+msgstr "%s — %s"
 
 #. Translators: String used for one-liner description of running RAID array
 #. w/o a name.
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#. 
 #: ../udisks/udisksobjectinfo.c:455
 #, c-format
 msgctxt "one-liner-mdraid-no-name-running"
 msgid "%s — %s"
-msgstr ""
+msgstr "%s — %s"
 
 #. Translators: String used for one-liner description of non-running RAID
 #. array w/o a name.
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
-#. 
 #: ../udisks/udisksobjectinfo.c:465
 #, c-format
 msgctxt "one-liner-mdraid-no-name-not-running"
 msgid "%s"
-msgstr ""
+msgstr "%s"
 
 #. Translators: Used to describe drive without removable media. The %s is the
 #. type, e.g. 'Thumb'
@@ -2372,7 +2372,6 @@ msgstr "Устройство чтения карт памяти %s"
 #. Translators: Used to describe drive. The first %s is the size e.g. '20 GB'
 #. and the
 #. * second %s is the drive type e.g. 'Thumb'.
-#. 
 #: ../udisks/udisksobjectinfo.c:678
 #, c-format
 msgctxt "drive-with-size-and-type"
@@ -2381,7 +2380,6 @@ msgstr "Устройство %s %s"
 
 #. Translators: Used to describe drive. The first %s is the drive type e.g.
 #. 'Thumb'.
-#. 
 #: ../udisks/udisksobjectinfo.c:684
 #, c-format
 msgctxt "drive-with-type"
@@ -2390,7 +2388,7 @@ msgstr "Устройство %s"
 
 #. Translators: String used for a blank disc. The %s is the disc type e.g.
 #. "CD-RW Disc"
-#: ../udisks/udisksobjectinfo.c:735
+#: ../udisks/udisksobjectinfo.c:763
 #, c-format
 msgctxt "optical-media"
 msgid "Blank %s"
@@ -2398,7 +2396,7 @@ msgstr "Пустой %s"
 
 #. Translators: String used for a mixed disc. The %s is the disc type e.g.
 #. "CD-ROM Disc"
-#: ../udisks/udisksobjectinfo.c:743
+#: ../udisks/udisksobjectinfo.c:771
 #, c-format
 msgctxt "optical-media"
 msgid "Mixed %s"
@@ -2406,7 +2404,7 @@ msgstr "%s с различным содержимым"
 
 #. Translators: String used for an audio disc. The %s is the disc type e.g.
 #. "CD-ROM Disc"
-#: ../udisks/udisksobjectinfo.c:751
+#: ../udisks/udisksobjectinfo.c:779
 #, c-format
 msgctxt "optical-media"
 msgid "Audio %s"
@@ -2416,12 +2414,11 @@ msgstr "Звуковой %s"
 #. *              The %d is the partition number.
 #. *              The %s is the description for the drive (e.g. "2 GB Thumb
 #. Drive").
-#. 
-#: ../udisks/udisksobjectinfo.c:804
+#: ../udisks/udisksobjectinfo.c:832
 #, c-format
 msgctxt "part-drive"
 msgid "Partition %d of %s"
-msgstr ""
+msgstr "Раздел %d %s"
 
 #. Translators: String used for one-liner description of drive.
 #. *              The first %s is the description of the object (e.g. "80 GB
@@ -2430,12 +2427,11 @@ msgstr ""
 #. SSDSA2MH080G1GC").
 #. *              The third %s is the fw revision (e.g "45ABX21").
 #. *              The fourth %s is the special device file (e.g. "/dev/sda").
-#. 
-#: ../udisks/udisksobjectinfo.c:822
+#: ../udisks/udisksobjectinfo.c:850
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s [%s] (%s)"
-msgstr ""
+msgstr "%s — %s [%s] (%s)"
 
 #. Translators: String used for one-liner description of drive w/o known fw
 #. revision.
@@ -2444,9 +2440,8 @@ msgstr ""
 #. *              The second %s is the name of the object (e.g. "INTEL
 #. SSDSA2MH080G1GC").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#. 
-#: ../udisks/udisksobjectinfo.c:835
+#: ../udisks/udisksobjectinfo.c:863
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"
