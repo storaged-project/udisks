@@ -605,7 +605,7 @@ class FS(UDisksTestCase):
 
         self.zero_device()
         self.assertProperty(self.block, 'device', self.device)
-        self.assertTrue('Linux_scsi_debug' in self.block.get_property('drive'))
+        self.assertIn('Linux_scsi_debug', self.block.get_property('drive'))
         self.assertProperty(self.block, 'id-label', '')
         self.assertEqual(self.block.get_property('hint-system'), True)
         self.assertEqual(self.block.get_property('id-usage'), '')
@@ -689,8 +689,8 @@ class FS(UDisksTestCase):
             self.fs_create(None, 'bogus', no_options)
             self.fail('Expected failure for bogus file system')
         except GLib.GError as e:
-            self.assertTrue('UDisks2.Error.NotSupported' in e.message)
-            self.assertTrue('type bogus' in e.message)
+            self.assertIn('UDisks2.Error.NotSupported', e.message)
+            self.assertIn('type bogus', e.message)
 
     def test_create_fs_unsupported_label(self):
         '''Format() with unsupported label'''
@@ -700,7 +700,7 @@ class FS(UDisksTestCase):
             self.fs_create(None, 'minix', options)
             self.fail('Expected failure for unsupported label')
         except GLib.GError as e:
-            self.assertTrue('UDisks2.Error.NotSupported' in e.message)
+            self.assertIn('UDisks2.Error.NotSupported', e.message)
 
     def test_force_removal(self):
         '''fs: forced removal'''
@@ -710,7 +710,7 @@ class FS(UDisksTestCase):
         fs = self.udisks_filesystem()
         mount_path = fs.call_mount_sync(no_options, None)
         self.assertTrue(mount_path.endswith('udiskstest'))
-        self.assertTrue('/media/' in mount_path)
+        self.assertIn('/media/', mount_path)
         self.assertTrue(self.is_mountpoint(mount_path))
 
         dev_t = os.stat(self.devname()).st_rdev
@@ -727,7 +727,7 @@ class FS(UDisksTestCase):
 
         mount_path = fs.call_mount_sync(no_options, None)
         self.assertTrue(mount_path.endswith('udiskstest'))
-        self.assertTrue('/media/' in mount_path)
+        self.assertIn('/media/', mount_path)
         self.assertTrue(self.is_mountpoint(mount_path))
         self.assertProperty(fs, 'mount-points', [mount_path])
 
@@ -804,7 +804,7 @@ class FS(UDisksTestCase):
                 self.fs_create(None, type, no_options)
                 self.fail('Expected failure for missing mkfs.' + type)
             except GLib.GError as e:
-                self.assertTrue('UDisks2.Error.Failed' in e.message)
+                self.assertIn('UDisks2.Error.Failed', e.message)
             return
 
         # do checks with command line tools (mkfs/mount/umount)
@@ -924,7 +924,7 @@ class FS(UDisksTestCase):
         # mount
         mount_path = fs.call_mount_sync(no_options, None)
 
-        self.assertTrue('/media/' in mount_path)
+        self.assertIn('/media/', mount_path)
         if label:
             if type == 'vfat':
                 self.assertTrue(mount_path.lower().endswith(label))
@@ -971,7 +971,7 @@ class FS(UDisksTestCase):
         except GLib.GError as e:
             if 'UDisks2.Error.NotSupported' in e.message:
                 # these fses are known to not support relabeling
-                self.assertTrue(type in ['minix', 'btrfs'])
+                self.assertIn(type, ['minix', 'btrfs'])
                 supported = False
             else:
                 raise
@@ -1011,7 +1011,7 @@ class FS(UDisksTestCase):
 
             mount_path = cd_fs.call_mount_sync(no_options, None)
             try:
-                self.assertTrue('/media/' in mount_path)
+                self.assertIn('/media/', mount_path)
                 self.assertProperty(cd_fs, 'mount-points', [mount_path])
                 self.assertTrue(self.is_mountpoint(mount_path))
 
@@ -1095,7 +1095,7 @@ class Smart(UDisksTestCase):
             # this is of course not truly correct for a test suite, but let's
             # consider it a courtesy for developers :-)
             self.assertEqual(ata.get_property('smart-failing'), False)
-            self.assertTrue(ata.get_property('smart-selftest-status') in ['success', 'inprogress'])
+            self.assertIn(ata.get_property('smart-selftest-status'), ['success', 'inprogress'])
         else:
             sys.stderr.write('[N/A] ')
 
@@ -1198,7 +1198,7 @@ class Luks(UDisksTestCase):
         mount_path = fs.call_mount_sync(no_options, None)
 
         try:
-            self.assertTrue('/media/' in mount_path)
+            self.assertIn('/media/', mount_path)
             self.assertTrue(mount_path.endswith('treasure'))
             self.assertTrue(self.is_mountpoint(mount_path))
             self.assertProperty(fs, 'mount-points', [mount_path])
@@ -1208,7 +1208,7 @@ class Luks(UDisksTestCase):
                 encrypted.call_lock_sync(no_options, None)
                 self.fail('Lock() unexpectedly succeeded on mounted file system')
             except GLib.GError as e:
-                self.assertTrue('UDisks2.Error.Failed' in e.message)
+                self.assertIn('UDisks2.Error.Failed', e.message)
         finally:
             # umount
             self.retry_busy(fs.call_unmount_sync, no_options, None)
@@ -1231,7 +1231,7 @@ class Luks(UDisksTestCase):
         try:
             fs = self.client.get_object(path).get_property('filesystem')
             mount_path = fs.call_mount_sync(no_options, None)
-            self.assertTrue('/media/' in mount_path)
+            self.assertIn('/media/', mount_path)
             self.assertTrue(mount_path.endswith('treasure'))
 
             # removal should clean up mounts
@@ -1259,7 +1259,7 @@ class Luks(UDisksTestCase):
             self.client.settle()
             fs = self.client.get_object(path).get_property('filesystem')
             mount_path = fs.call_mount_sync(no_options, None)
-            self.assertTrue('/media/' in mount_path)
+            self.assertIn('/media/', mount_path)
             self.assertTrue(mount_path.endswith('treasure'))
 
             # umount
@@ -1288,8 +1288,7 @@ class Polkit(UDisksTestCase, test_polkitd.PolkitTestCase):
         options = GLib.Variant('a{sv}', {'label': GLib.Variant('s', 'polkitno')})
         with self.assertRaises(GLib.GError) as cm:
             self.fs_create(None, 'ext4', options)
-        self.assertTrue('UDisks2.Error.NotAuthorized' in cm.exception.message,
-                        cm.exception.message)
+        self.assertIn('UDisks2.Error.NotAuthorized', cm.exception.message)
 
         # did not actually do anything
         block = self.udisks_block()
@@ -1324,7 +1323,7 @@ class Polkit(UDisksTestCase, test_polkitd.PolkitTestCase):
         fs = self.udisks_filesystem(cd=True)
         self.assertNotEqual(fs, None)
         mount_path = fs.call_mount_sync(no_options, None)
-        self.assertTrue('/media/' in mount_path, mount_path)
+        self.assertIn('/media/', mount_path)
 
         self.retry_busy(fs.call_unmount_sync, no_options, None)
         self.client.settle()
