@@ -1,5 +1,5 @@
 ------------
-udisks 2.1.4 (unreleased)
+udisks 2.1.4
 ------------
 
 The udisks project provides a daemon, tools and libraries to access
@@ -7,12 +7,79 @@ and manipulate disks and storage devices.
 
 Changes since udisks 2.1.3:
 
-(TODO: git shortlog)
+David Zeuthen (4):
+      Add GPT partition types from the Discoverable Partitions Specification
+      Remove newly-added "Auto-enabled swap" GTP partition type
+      Fine-tune GTP partitions some more
+      Send SCSI SYNCHRONIZE CACHE before powering down a drive
+
+Denis Kasak (1):
+      Fix buffer overflow in pick_word_at()
+
+Dmitrijs Ledkovs (1):
+      Add Intel Fast Flash Standby partition GPT type
+
+Lubomir Rintel (1):
+      Skip password strength checks when changing LUKS passphrase
+
+Martin Pitt (26):
+      Fix build with clang
+      integration-test: Update for logind
+      Revert "Fix standby timers"
+      integration-test: Fix code formatting
+      integration-tests: sync file systems in sync()
+      integration-test: Drop sync_workaround, fix property testing
+      integration-test: Better failure messages
+      integration-test: Fix btrfs test
+      Fix display ID for generic FAT
+      Update obsolete gnome-common and automake macros
+      build: Use config-aux/ directory
+      Update .gitignore files
+      build: Enable gcc colors
+      Drop obsolete g_type_init()
+      Update .gitignore files
+      Drop obsolete polkit_unix_process_new()
+      Fix docs for SmartUpdate()
+      Hide Microsoft reserved partition
+      Identify JetFlash Transcend drives as thumb drives
+      Fix sorting of mount points
+      Fix fallback media icons for nonremovable media
+      Fix polkit auth string
+      Hide DIAGS and IntelRST partitions
+      Update translations from transifex
+
+Matthias Clasen (1):
+      Add a man page for umount.udisks2
+
+Michael Biebl (1):
+      Support building against libsystemd library
+
+Pawel Baldysiak (1):
+      udisks: Change name for Intel SW RAID
+
+Phillip Susi (3):
+      Use internal pm check for smart poll
+      Fix standby timers
+      Fix standby timers
+
+Ross Lagerwall (1):
+      Fix TOCTOU race when making directories
+
+Samuli Suominen (1):
+      Add missing #include
+
+Tomas Bzatek (5):
+      Properly initialize all used variables
+      udiskslinuxmanager.c: Don't use uninitialized wait_data struct
+      Remove useless assignments
+      udisks_linux_drive_object_uevent(): Handle null device
+      Hide Windows Recovery Environment partitions
+
 
 Thanks to all our contributors.
 
-David Zeuthen,
-(TODO: date)
+Martin Pitt,
+December 18, 2014
 
 ------------
 udisks 2.1.3
