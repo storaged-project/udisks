@@ -74,7 +74,7 @@ setup_local_polkit_agent (void)
   if (local_polkit_agent != NULL)
     goto out;
 
-  subject = polkit_unix_process_new (getpid ());
+  subject = polkit_unix_process_new_for_owner (getpid (), 0, getuid ());
 
   error = NULL;
   /* this will fail if we can't find a controlling terminal */
