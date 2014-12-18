@@ -122,7 +122,7 @@ ENV{ID_PART_ENTRY_SCHEME}=="dos", \
 # special GUID-identified partition types (EFI System Partition, BIOS Boot partition, RAID/LVM)
 # see http://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_type_GUIDs
 ENV{ID_PART_ENTRY_SCHEME}=="gpt", \
-  ENV{ID_PART_ENTRY_TYPE}=="c12a7328-f81f-11d2-ba4b-00a0c93ec93b|21686148-6449-6e6f-744e-656564454649|a19d880f-05fc-4d3b-a006-743f0f84911e|e6d6d379-f507-44c2-a23c-238f2a3df928", \
+  ENV{ID_PART_ENTRY_TYPE}=="c12a7328-f81f-11d2-ba4b-00a0c93ec93b|21686148-6449-6e6f-744e-656564454649|a19d880f-05fc-4d3b-a006-743f0f84911e|e6d6d379-f507-44c2-a23c-238f2a3df928|e3c9e316-0b5c-4db8-817d-f92df00215ae", \
   ENV{UDISKS_IGNORE}="1"
 
 # MAC recovery/tool partitions which are useless on Linux
