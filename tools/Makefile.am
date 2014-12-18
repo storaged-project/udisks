@@ -2,7 +2,7 @@
 
 NULL =
 
-INCLUDES = \
+AM_CPPFLAGS = \
 	-I$(top_builddir) -I$(top_srcdir)	 		\
 	-DPACKAGE_LIBEXEC_DIR=\""$(libexecdir)"\" 		\
 	-DPACKAGE_SYSCONF_DIR=\""$(sysconfdir)"\" 		\

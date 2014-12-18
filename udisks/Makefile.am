@@ -4,7 +4,7 @@ SUBDIRS =
 
 NULL =
 
-INCLUDES = \
+AM_CPPFLAGS = \
 	-I$(top_builddir) -I$(top_srcdir)	 		\
 	-DPACKAGE_LIBEXEC_DIR=\""$(libexecdir)"\" 		\
 	-DPACKAGE_SYSCONF_DIR=\""$(sysconfdir)"\" 		\
@@ -86,6 +86,7 @@ libudisks2_la_SOURCES =									\
 
 libudisks2_la_CPPFLAGS = 				\
 	-DG_LOG_DOMAIN=\"libudisks2\"			\
+	$(AM_CPPFLAGS)					\
 	$(NULL)
 
 libudisks2_la_CFLAGS = 					\
