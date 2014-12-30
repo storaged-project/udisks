@@ -95,7 +95,7 @@ if test -z "$XSLTPROC"; then
   AC_MSG_ERROR([xsltproc is needed])
 fi
 
-GTK_DOC_CHECK([1.3])
+GTK_DOC_CHECK([1.3],[--flavour no-tmpl])
 
 AC_ARG_ENABLE(man,
               [AS_HELP_STRING([--enable-man],
