@@ -1352,14 +1352,6 @@ if __name__ == '__main__':
                            help='name of test class or method (e. g. "Drive", "FS.test_ext2")')
     args = argparser.parse_args()
 
-    # don't run commands in a different cpu cgroup than udev, otherwise we get
-    # strange hangs (https://launchpad.net/bugs/1398859)
-    try:
-        with open('/sys/fs/cgroup/cpu,cpuacct/tasks', 'w') as f:
-            f.write(str(os.getpid()))
-    except IOError:
-        pass
-
     UDisksTestCase.init(logfile=args.logfile)
     if args.testname:
         tests = unittest.TestLoader().loadTestsFromNames(
