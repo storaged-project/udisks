@@ -133,22 +133,26 @@ udisks_client_finalize (GObject *object)
   if (client->initialization_error != NULL)
     g_error_free (client->initialization_error);
 
-  g_signal_handlers_disconnect_by_func (client->object_manager,
-                                        G_CALLBACK (on_object_added),
-                                        client);
-  g_signal_handlers_disconnect_by_func (client->object_manager,
-                                        G_CALLBACK (on_object_removed),
-                                        client);
-  g_signal_handlers_disconnect_by_func (client->object_manager,
-                                        G_CALLBACK (on_interface_added),
-                                        client);
-  g_signal_handlers_disconnect_by_func (client->object_manager,
-                                        G_CALLBACK (on_interface_removed),
-                                        client);
-  g_signal_handlers_disconnect_by_func (client->object_manager,
-                                        G_CALLBACK (on_interface_proxy_properties_changed),
-                                        client);
-  g_object_unref (client->object_manager);
+  /* might be NULL if failing early in the constructor */
+  if (client->object_manager != NULL)
+    {
+      g_signal_handlers_disconnect_by_func (client->object_manager,
+                                            G_CALLBACK (on_object_added),
+                                            client);
+      g_signal_handlers_disconnect_by_func (client->object_manager,
+                                            G_CALLBACK (on_object_removed),
+                                            client);
+      g_signal_handlers_disconnect_by_func (client->object_manager,
+                                            G_CALLBACK (on_interface_added),
+                                            client);
+      g_signal_handlers_disconnect_by_func (client->object_manager,
+                                            G_CALLBACK (on_interface_removed),
+                                            client);
+      g_signal_handlers_disconnect_by_func (client->object_manager,
+                                            G_CALLBACK (on_interface_proxy_properties_changed),
+                                            client);
+      g_object_unref (client->object_manager);
+    }
 
   if (client->context != NULL)
     g_main_context_unref (client->context);
