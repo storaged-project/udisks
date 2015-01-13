@@ -2235,7 +2235,14 @@ udisks_state_get (UDisksState           *state,
    * - could also mmap the file
    */
 
-  path = g_strdup_printf ("/run/udisks2/%s", key);
+#ifdef HAVE_FHS_MEDIA
+  /* /media usually isn't on a tmpfs, so we need to make this persistant */
+  if (strcmp (key, "mounted-fs") == 0)
+    path = g_strdup_printf (PACKAGE_LOCALSTATE_DIR "/lib/udisks2/%s", key);
+  else
+#endif
+    path = g_strdup_printf ("/run/udisks2/%s", key);
+
 
   /* see if it's already in the cache */
   ret = g_hash_table_lookup (state->cache, path);
@@ -2301,7 +2308,13 @@ udisks_state_set (UDisksState          *state,
   data = g_malloc (size);
   g_variant_store (normalized, data);
 
-  path = g_strdup_printf ("/run/udisks2/%s", key);
+#ifdef HAVE_FHS_MEDIA
+  /* /media usually isn't on a tmpfs, so we need to make this persistant */
+  if (strcmp (key, "mounted-fs") == 0)
+    path = g_strdup_printf (PACKAGE_LOCALSTATE_DIR "/lib/udisks2/%s", key);
+  else
+#endif
+    path = g_strdup_printf ("/run/udisks2/%s", key);
 
   g_hash_table_insert (state->cache, g_strdup (path), g_variant_ref (value));
 

@@ -79,6 +79,12 @@ static void filesystem_iface_init (UDisksFilesystemIface *iface);
 G_DEFINE_TYPE_WITH_CODE (UDisksLinuxFilesystem, udisks_linux_filesystem, UDISKS_TYPE_FILESYSTEM_SKELETON,
                          G_IMPLEMENT_INTERFACE (UDISKS_TYPE_FILESYSTEM, filesystem_iface_init));
 
+#ifdef HAVE_FHS_MEDIA
+#  define MOUNT_BASE "/media"
+#else
+#  define MOUNT_BASE "/run/media"
+#endif
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
@@ -892,23 +898,23 @@ calculate_mount_point (UDisksDaemon              *daemon,
     }
 
   /* If we know the user-name and it doesn't have any '/' character in
-   * it, mount in /run/media/$USER
+   * it, mount in MOUNT_BASE/$USER
    */
   if (!fs_shared && (user_name != NULL && strstr (user_name, "/") == NULL))
     {
-      mount_dir = g_strdup_printf ("/run/media/%s", user_name);
+      mount_dir = g_strdup_printf (MOUNT_BASE "/%s", user_name);
       if (!g_file_test (mount_dir, G_FILE_TEST_EXISTS))
         {
-          /* First ensure that /run/media exists */
-          if (g_mkdir ("/run/media", 0755) != 0 && errno != EEXIST)
+          /* First ensure that MOUNT_BASE exists */
+          if (g_mkdir (MOUNT_BASE, 0755) != 0 && errno != EEXIST)
             {
               g_set_error (error,
                            UDISKS_ERROR,
                            UDISKS_ERROR_FAILED,
-                           "Error creating directory /run/media: %m");
+                           "Error creating directory " MOUNT_BASE ": %m");
               goto out;
             }
-          /* Then create the per-user /run/media/$USER */
+          /* Then create the per-user MOUNT_BASE/$USER */
           if (g_mkdir (mount_dir, 0700) != 0 && errno != EEXIST)
             {
               g_set_error (error,
