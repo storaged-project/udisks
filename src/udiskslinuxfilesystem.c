@@ -823,12 +823,10 @@ add_acl (const gchar  *path,
       acl_calc_mask (&acl) == -1 ||
       acl_set_file (path, ACL_TYPE_ACCESS, acl) == -1)
     {
-      g_set_error (error,
-                   G_IO_ERROR,
-                   g_io_error_from_errno (errno),
+      udisks_warning(
                    "Adding read ACL for uid %d to `%s' failed: %m",
                    (gint) uid, path);
-      goto out;
+      chown(path, uid, -1);
     }
 
   ret = TRUE;
