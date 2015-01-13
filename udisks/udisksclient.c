@@ -1611,22 +1611,26 @@ get_pow2_size (guint64 size)
   if (size < MEBIBYTE_FACTOR)
     {
       displayed_size = (double) size / KIBIBYTE_FACTOR;
-      unit = "KiB";
+      /* Translators: SI prefix and standard unit symbol, translate cautiously (or not at all) */
+      unit = C_("byte-size-pow2", "KiB");
     }
   else if (size < GIBIBYTE_FACTOR)
     {
       displayed_size = (double) size / MEBIBYTE_FACTOR;
-      unit = "MiB";
+      /* Translators: SI prefix and standard unit symbol, translate cautiously (or not at all) */
+      unit = C_("byte-size-pow2", "MiB");
     }
   else if (size < TEBIBYTE_FACTOR)
     {
       displayed_size = (double) size / GIBIBYTE_FACTOR;
-      unit = "GiB";
+      /* Translators: SI prefix and standard unit symbol, translate cautiously (or not at all) */
+      unit = C_("byte-size-pow2", "GiB");
     }
   else
     {
       displayed_size = (double) size / TEBIBYTE_FACTOR;
-      unit = "TiB";
+      /* Translators: SI prefix and standard unit symbol, translate cautiously (or not at all) */
+      unit = C_("byte-size-pow2", "TiB");
     }
 
   if (displayed_size < 10.0)
@@ -1650,22 +1654,26 @@ get_pow10_size (guint64 size)
   if (size < MEGABYTE_FACTOR)
     {
       displayed_size = (double) size / KILOBYTE_FACTOR;
-      unit = "KB";
+      /* Translators: SI prefix and standard unit symbol, translate cautiously (or not at all) */
+      unit = C_("byte-size-pow10", "KB");
     }
   else if (size < GIGABYTE_FACTOR)
     {
       displayed_size = (double) size / MEGABYTE_FACTOR;
-      unit = "MB";
+      /* Translators: SI prefix and standard unit symbol, translate cautiously (or not at all) */
+      unit = C_("byte-size-pow10", "MB");
     }
   else if (size < TERABYTE_FACTOR)
     {
       displayed_size = (double) size / GIGABYTE_FACTOR;
-      unit = "GB";
+      /* Translators: SI prefix and standard unit symbol, translate cautiously (or not at all) */
+      unit = C_("byte-size-pow10", "GB");
     }
   else
     {
       displayed_size = (double) size / TERABYTE_FACTOR;
-      unit = "TB";
+      /* Translators: SI prefix and standard unit symbol, translate cautiously (or not at all) */
+      unit = C_("byte-size-pow10", "TB");
     }
 
   if (displayed_size < 10.0)
