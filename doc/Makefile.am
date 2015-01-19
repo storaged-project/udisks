@@ -15,8 +15,8 @@ SCAN_OPTIONS=
 # The directory containing the source code. Relative to $(srcdir)
 DOC_SOURCE_DIR=$(top_srcdir)
 
-HFILE_GLOB=$(top_srcdir)/udisks/*.h $(top_srcdir)/src/*.h
-CFILE_GLOB=$(top_srcdir)/udisks/*.c $(top_srcdir)/src/*.c
+HFILE_GLOB=$(top_srcdir)/udisks/*.h $(top_srcdir)/src/*.h $(top_srcdir)/modules/*.h
+CFILE_GLOB=$(top_srcdir)/udisks/*.c $(top_srcdir)/src/*.c $(top_srcdir)/modules/*.c
 
 # Headers to ignore
 IGNORE_HFILES=				\

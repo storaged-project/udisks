@@ -40,12 +40,111 @@
 
 
 /**
- * SECTION:udisksmodulemanager
+ * SECTION:UDisksModuleManager
  * @title: UDisksModuleManager
- * @short_description: Manages plugins
+ * @short_description: Manages daemon modules
  *
- * This type is used for managing daemon plugins.
+ * ## UDisks modular approach # {#udisks-modular-design}
+ *
+ * Since 2.xx the UDisks functionality can be extended by modules. It's not
+ * a fully pluggable system as we know it, in this case modules are almost
+ * integral parts of the source tree. Meaning that modules are free to use
+ * whatever internal objects they need as there is no universal module API
+ * (or a translation layer).
+ *
+ * This fact allows us to stay code-wise simple and transparent. It also means
+ * that there's no support for out-of-the-tree modules and care must be taken
+ * when changing UDisks internals. As a design decision, for sake of simplicity,
+ * once modules are loaded they stay active until the daemon exits (this may be
+ * a subject to change in the future).
+ *
+ * The primary motivation for this was to keep the daemon low on resource
+ * footprint for basic usage (typically desktop environments) and only
+ * activating the extended functionality when needed (e.g. enterprise storage
+ * applications). As the extra information comes in form of additional D-Bus
+ * objects and interfaces, no difference should be observed by legacy clients.
+ *
+ * ## D-Bus interface extensibility # {#udisks-modular-design-dbus}
+ *
+ * The modular approach is fairly simple, there are basically two primary ways
+ * of extending the D-Bus API:
+ *  * by attaching custom interfaces to existing objects (limited to block and
+ *    drive objects for the moment)
+ *  * by exporting objects of its own type directly in the object manager root
+ *
+ * Besides that there are several other ways of extensibility such as attaching
+ * custom interfaces on the master /org/freedesktop/UDisks2/Manager object.
+ *
+ * ## Modules activation # {#udisks-modular-activation}
+ *
+ * The UDisks daemon constructs a #UDisksModuleManager singleton acting as
+ * a manager. This object tracks module usage and takes care of its activation.
+ *
+ * By default, module manager is constructed on daemon startup but module
+ * loading is delayed until requested. This can be overriden by the
+ * --force-load-modules and --disable-modules commandline switches that makes
+ * modules loaded right on startup or never loaded respectively.
+ *
+ * Upon successful activation, the "modules-ready" property on the #UDisksModuleManager
+ * instance is set to %TRUE. Any daemon objects watching this property are
+ * responsible for performing "coldplug" on their exported objects to assure
+ * modules would pick up the devices they're interested in. See e.g.
+ * UDisksModuleObjectNewFunc() to see how device binding works for
+ * #UDisksModuleObject.
+ *
+ * Modules are in fact separate shared objects (.so) that are loaded from the
+ * "$(libdir)/udisks2/modules" path (usually "/usr/lib/udisks2/modules"). No
+ * extra or service files are needed, the directory is enumerated and all files
+ * are attempted to be loaded.
+ *
+ * Clients are supposed to call the org.freedesktop.UDisks2.Manager.EnableModules()
+ * D-Bus method as a "greeter" call. Please note that from asynchronous nature
+ * of uevents and the way modules are processing them the extra D-Bus interfaces
+ * may not be available right after this method call returns.
+ *
+ * ## Module API # {#udisks-modular-api}
+ *
+ * The (strictly internal) module API is simple - only a couple of functions
+ * are needed. The following text contains brief description of individual
+ * parts of the module API with further links to detailed description within
+ * this API reference book.
+ *
+ * The #UDisksModuleManager first loads all module entry functions, i.e.
+ * symbols defined in the public facing header "udisksmoduleiface.h". Only
+ * those symbols should be exported from each module. The header file is only
+ * meant to be compiled in modules, not the daemon. If any of the symbols is
+ * missing in the module library, the whole module is skipped.
+ *
+ * Once module symbols are resolved, module manager activates each module by
+ * calling udisks_module_init() on it. The returned so-called "state" pointer
+ * is stored in the #UDisksModuleManager and can be later retrieved by calling
+ * the udisks_module_manager_get_module_state_pointer() method. This is typically
+ * used further in the module code to retrieve and store module-specific runtime
+ * data.
+ *
+ * Every one of the "udisksmoduleiface.h" header file symbols has its counterpart
+ * defined in the "udisksmoduleifacetypes.h" header file in form of function
+ * pointers. Those are used internally for symbol resolving purposes. However,
+ * they also carry detailed documentation. For illustration purposes, let's
+ * call these symbol pairs the "module setup entry functions". See
+ * #UDisksModuleIfaceSetupFunc, #UDisksModuleObjectNewSetupFunc and
+ * #UDisksModuleNewManagerIfaceSetupFunc for reference. These however are
+ * essentially auxiliary symbols only described for demonstrating the big
+ * picture; for the useful part of the module API please read on.
+ *
+ * Every module setup entry function (besides the very simple udisks_module_init())
+ * returns an array of setup structures or functions, containing either none
+ * (NULL result), one or more elements. The result is then mixed by
+ * #UDisksModuleManager from all modules and separate lists are created for
+ * each kind of UDisks way of extension. Such lists are then used in the daemon
+ * code at appropriate places, sequentially calling elements from the lists to
+ * obtain data or objects that are then typically exported on D-Bus.
+ *
+ * In short, have a look at the #UDisksModuleInterfaceInfo,
+ * #UDisksModuleObjectNewFunc and #UDisksModuleNewManagerIfaceFunc definitions
+ * to learn more about particular ways of extending UDisks.
  */
+
 
 /**
  * UDisksModuleManager:
@@ -74,8 +173,6 @@ typedef struct _UDisksModuleManagerClass UDisksModuleManagerClass;
 struct _UDisksModuleManagerClass
 {
   GObjectClass parent_class;
-
-  void (*modules_ready)  (UDisksModuleManager *manager);
 };
 
 typedef struct
@@ -151,6 +248,13 @@ udisks_module_manager_init (UDisksModuleManager *manager)
   manager->state_pointers = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 }
 
+/**
+ * udisks_module_manager_load_modules:
+ * @manager: A #UDisksModuleManager instance.
+ *
+ * Loads all modules at a time and emits the "modules-ready" signal.
+ * Does nothing when called multiple times.
+ */
 void
 udisks_module_manager_load_modules (UDisksModuleManager *manager)
 {
@@ -300,7 +404,7 @@ udisks_module_manager_class_init (UDisksModuleManagerClass *klass)
   gobject_class->get_property = udisks_module_manager_get_property;
 
   /**
-   * UDisksModuleManager:modules-ready
+   * UDisksModuleManager:modules-ready:
    *
    * Indicates whether modules have been loaded.
    */
@@ -329,11 +433,11 @@ udisks_module_manager_new (void)
 
 /**
  * udisks_module_manager_get_modules_available:
- * @manager: A #UDisksModuleManager.
+ * @manager: A #UDisksModuleManager instance.
  *
- * Indicates whether modules have been loaded and activated.
+ * Indicates whether modules have been loaded.
  *
- * Returns: boolean value whether modules are available.
+ * Returns: %TRUE if modules have been loaded, %FALSE otherwise.
  */
 gboolean
 udisks_module_manager_get_modules_available (UDisksModuleManager *manager)
@@ -354,11 +458,11 @@ udisks_module_manager_get_modules_available (UDisksModuleManager *manager)
 
 /**
  * udisks_module_manager_get_block_object_iface_infos:
- * @manager: A #UDisksModuleManager.
+ * @manager: A #UDisksModuleManager instance.
  *
- * Gets all block object interface info structs that can be plugged in #UDisksLinuxBlockObject instances.
+ * Returns a list of block object interface info structs that can be plugged in #UDisksLinuxBlockObject instances. See #UDisksModuleIfaceSetupFunc for details.
  *
- * Returns: (transfer full) (element-type #UDisksModuleIfaceSetupFunc): A list of #UDisksModuleIfaceSetupFunc structs that belongs to the manager and must not be freed.
+ * Returns: (element-type UDisksModuleIfaceSetupFunc) (transfer full): A list of #UDisksModuleIfaceSetupFunc structs that belongs to the manager and must not be freed.
  */
 GList *
 udisks_module_manager_get_block_object_iface_infos (UDisksModuleManager *manager)
@@ -371,11 +475,11 @@ udisks_module_manager_get_block_object_iface_infos (UDisksModuleManager *manager
 
 /**
  * udisks_module_manager_get_drive_object_iface_infos:
- * @manager: A #UDisksModuleManager.
+ * @manager: A #UDisksModuleManager instance.
  *
- * Gets all drive object interface info structs that can be plugged in #UDisksLinuxDriveObject instances.
+ * Returns a list of drive object interface info structs that can be plugged in #UDisksLinuxDriveObject instances. See #UDisksModuleIfaceSetupFunc for details.
  *
- * Returns: (transfer full) (element-type #UDisksModuleIfaceSetupFunc): A list of #UDisksModuleIfaceSetupFunc structs that belongs to the manager and must not be freed.
+ * Returns: (element-type UDisksModuleIfaceSetupFunc) (transfer full): A list of #UDisksModuleIfaceSetupFunc structs that belongs to the manager and must not be freed.
  */
 GList *
 udisks_module_manager_get_drive_object_iface_infos (UDisksModuleManager *manager)
@@ -388,11 +492,11 @@ udisks_module_manager_get_drive_object_iface_infos (UDisksModuleManager *manager
 
 /**
  * udisks_module_manager_get_module_object_new_funcs:
- * @manager: A #UDisksModuleManager.
+ * @manager: A #UDisksModuleManager instance.
  *
- * Gets all module object new functions that can be used to create new objects that are exported under the /org/freedesktop/UDisks2 path.
+ * Returns a list of all module object new functions. See #UDisksModuleObjectNewFunc for details.
  *
- * Returns: (transfer full) (element-type #UDisksModuleObjectNewFunc): A list of #UDisksModuleObjectNewFunc function pointers that belongs to the manager and must not be freed.
+ * Returns: (element-type UDisksModuleObjectNewFunc) (transfer full): A list of #UDisksModuleObjectNewFunc function pointers that belongs to the manager and must not be freed.
  */
 GList *
 udisks_module_manager_get_module_object_new_funcs (UDisksModuleManager *manager)
@@ -405,11 +509,11 @@ udisks_module_manager_get_module_object_new_funcs (UDisksModuleManager *manager)
 
 /**
  * udisks_module_manager_get_new_manager_iface_funcs:
- * @manager: A #UDisksModuleManager.
+ * @manager: A #UDisksModuleManager instance.
  *
- * Gets all module functions that can be used to create new interfaces that are supposed to be attached to the master /org/freedesktop/UDisks2/Manager object.
+ * Returns a list of all module new manager interface functions. See #UDisksModuleNewManagerIfaceFunc for details.
  *
- * Returns: (transfer full) (element-type #UDisksModuleNewManagerIfaceFunc): A list of #UDisksModuleNewManagerIfaceFunc function pointers that belongs to the manager and must not be freed.
+ * Returns: (element-type UDisksModuleNewManagerIfaceFunc) (transfer full): A list of #UDisksModuleNewManagerIfaceFunc function pointers that belongs to the manager and must not be freed.
  */
 GList *
 udisks_module_manager_get_new_manager_iface_funcs (UDisksModuleManager *manager)
@@ -424,7 +528,7 @@ udisks_module_manager_get_new_manager_iface_funcs (UDisksModuleManager *manager)
 
 /**
  * udisks_module_manager_set_module_state_pointer:
- * @manager: A #UDisksModuleManager.
+ * @manager: A #UDisksModuleManager instance.
  * @module_name: A module name.
  * @state: Pointer to a private data.
  *
@@ -442,12 +546,12 @@ udisks_module_manager_set_module_state_pointer (UDisksModuleManager *manager,
 
 /**
  * udisks_module_manager_get_module_state_pointer:
- * @manager: A #UDisksModuleManager.
+ * @manager: A #UDisksModuleManager instance.
  * @module_name: A module name.
  *
  * Retrieves the stored module state pointer for the given @module_name.
  *
- * Returns: A stored pointer to the private data or NULL if there is no state pointer for the given @module_name.
+ * Returns: A stored pointer to the private data or %NULL if there is no state pointer for the given @module_name.
  */
 gpointer
 udisks_module_manager_get_module_state_pointer (UDisksModuleManager *manager,

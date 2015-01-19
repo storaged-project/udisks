@@ -196,9 +196,46 @@ typedef enum
 struct _UDisksLinuxDevice;
 typedef struct _UDisksLinuxDevice UDisksLinuxDevice;
 
-
+/**
+ * UDisksObjectHasInterfaceFunc:
+ * @object: A #UDisksObject to consider.
+ *
+ * Function prototype that is used to determine whether the @object is applicable
+ * for carrying a particular D-Bus interface (determined by the callback function itself).
+ *
+ * Used typically over #UDisksLinuxBlockObject and #UDisksLinuxDriveObject
+ * objects for checking specific feature that leads to exporting extra D-Bus
+ * interface on the object.
+ *
+ * Returns: %TRUE if the @object is a valid candidate for the particular D-Bus interface, %FALSE otherwise.
+ */
 typedef gboolean (*UDisksObjectHasInterfaceFunc)     (UDisksObject   *object);
+
+/**
+ * UDisksObjectConnectInterfaceFunc:
+ * @object: A #UDisksObject to perform connection operation onto.
+ *
+ * Function prototype that is used once a new D-Bus interface is created (meaning
+ * the #UDisksObjectHasInterfaceFunc call was successful) to perform optional
+ * additional tasks before the interface is exported on the @object.
+ *
+ * Used typically over #UDisksLinuxBlockObject and #UDisksLinuxDriveObject objects.
+ */
 typedef void     (*UDisksObjectConnectInterfaceFunc) (UDisksObject   *object);
+
+/**
+ * UDisksObjectUpdateInterfaceFunc:
+ * @object: A #UDisksObject.
+ * @uevent_action: An uevent action string.
+ * @interface: Existing #GDBusInterface exported on the @object.
+ *
+ * Function prototype that is used on existing @interface on the @object to process
+ * incoming uevents.
+ *
+ * Used typically over #UDisksLinuxBlockObject and #UDisksLinuxDriveObject objects.
+ *
+ * Returns: %TRUE if configuration (properties) on the interface have changed, %FALSE otherwise.
+ */
 typedef gboolean (*UDisksObjectUpdateInterfaceFunc)  (UDisksObject   *object,
                                                       const gchar    *uevent_action,
                                                       GDBusInterface *interface);

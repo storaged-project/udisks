@@ -396,6 +396,7 @@
       <xi:include href="xml/udisksprovider.xml"/>
       <xi:include href="xml/udisksstate.xml"/>
       <xi:include href="xml/udisksata.xml"/>
+      <xi:include href="xml/UDisksModuleManager.xml"/>
     </chapter>
     <chapter id="ref-daemon-monitoring">
       <title>State and Configuration</title>

@@ -33,6 +33,12 @@ G_BEGIN_DECLS
 #define UDISKS_IS_MODULE_OBJECT(obj)	       (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UDISKS_TYPE_MODULE_OBJECT))
 #define UDISKS_MODULE_OBJECT_GET_IFACE(obj)  (G_TYPE_INSTANCE_GET_INTERFACE ((obj), UDISKS_TYPE_MODULE_OBJECT, UDisksModuleObjectIface))
 
+/**
+ * UDisksModuleObject:
+ *
+ * The #UDisksModuleObject structure contains only private data and
+ * should only be accessed using the provided API.
+ */
 struct _UDisksModuleObject;
 typedef struct _UDisksModuleObject         UDisksModuleObject;
 typedef struct _UDisksModuleObjectIface    UDisksModuleObjectIface;

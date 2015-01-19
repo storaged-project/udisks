@@ -31,29 +31,29 @@
 
 G_BEGIN_DECLS
 
+
+/* Corresponds with the UDisksModuleInitFunc type */
+G_MODULE_EXPORT gpointer udisks_module_init (gchar **module_id);
+
+
 /**
- * UDisks module interface setup functions:
+ * UDisks module setup entry functions:
  *   Functions below are module entry functions that return an array of setup
- *   functions (or structures). See udisksmoduleifacetypes.h for return type
- *   definitions.
- *
- *   Modules can provide multiple setup structs or functions for every type of
- *   UDisks way of extension. A result is then mixed by UDisksModuleManager
- *   with other returned entries making it no strict relation to the particular
- *   module.
+ *   functions (or structures containing group of setup functions). See
+ *   udisksmoduleifacetypes.h for detailed description.
  *
  *   Setup functions are queried by UDisksModuleManager only once (typically on
  *   startup or on demand). Modules are never unloaded for safety reasons.
- *
  */
 
-G_MODULE_EXPORT gpointer udisks_module_init (gchar **module_id);
-
+/* Corresponds with the UDisksModuleIfaceSetupFunc type */
 G_MODULE_EXPORT UDisksModuleInterfaceInfo **udisks_module_get_block_object_iface_setup_entries (void);
 G_MODULE_EXPORT UDisksModuleInterfaceInfo **udisks_module_get_drive_object_iface_setup_entries (void);
 
+/* Corresponds with the UDisksModuleObjectNewSetupFunc type */
 G_MODULE_EXPORT UDisksModuleObjectNewFunc  *udisks_module_get_object_new_funcs (void);
 
+/* Corresponds with the UDisksModuleNewManagerIfaceSetupFunc type */
 G_MODULE_EXPORT UDisksModuleNewManagerIfaceFunc *udisks_module_get_new_manager_iface_funcs (void);
 
 

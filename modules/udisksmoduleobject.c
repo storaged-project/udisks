@@ -36,9 +36,13 @@ udisks_module_object_default_init (UDisksModuleObjectIface *iface)
  * @action: Uevent action, common values are "add", "changed" and "removed" or %NULL
  * @device: A #UDisksLinuxDevice device object or %NULL if the device hasn't changed.
  *
- * Processes the uevent and updates all information on interfaces on @object.
+ * Virtual method that processes the uevent and updates all information on interfaces
+ * on @object.
  *
- * Returns: FALSE if the object should be unexported and removed, TRUE if the object
+ * See #UDisksModuleObjectNewFunc for detailed information on how to work with
+ * the events.
+ *
+ * Returns: %FALSE if the object should be unexported and removed, %TRUE if the object
  *          has processed the information successfully and should be kept around.
  */
 gboolean
@@ -56,8 +60,8 @@ udisks_module_object_process_uevent (UDisksModuleObject  *object,
  * @cancellable: A %GCancellable or %NULL.
  * @error: Return location for error or %NULL.
  *
- * Called periodically (every ten minutes or so) to perform
- * housekeeping tasks such as refreshing ATA SMART data.
+ * Virtual method that is called periodically (every ten minutes or so)
+ * to perform housekeeping tasks such as refreshing ATA SMART data.
  *
  * The function runs in a dedicated thread and is allowed to perform
  * blocking I/O.
