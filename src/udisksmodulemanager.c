@@ -541,7 +541,7 @@ udisks_module_manager_set_module_state_pointer (UDisksModuleManager *manager,
 {
   g_return_if_fail (UDISKS_IS_MODULE_MANAGER (manager));
 
-  g_warn_if_fail (g_hash_table_insert (manager->state_pointers, g_strdup (module_name), state));
+  g_hash_table_insert (manager->state_pointers, g_strdup (module_name), state);
 }
 
 /**

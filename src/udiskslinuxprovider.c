@@ -1044,16 +1044,16 @@ handle_block_uevent_for_modules (UDisksLinuxProvider *provider,
                                                         g_str_equal,
                                                         (GDestroyNotify) g_free,
                                                         NULL);
-              g_warn_if_fail (g_hash_table_add (inst_sysfs_paths, g_strdup (sysfs_path)));
+              g_hash_table_add (inst_sysfs_paths, g_strdup (sysfs_path));
               if (inst_table == NULL)
                 {
                   inst_table = g_hash_table_new_full (g_direct_hash,
                                                       g_direct_equal,
                                                       (GDestroyNotify) g_object_unref,
                                                       (GDestroyNotify) g_hash_table_unref);
-                  g_warn_if_fail (g_hash_table_insert (provider->module_funcs_to_instances, module_object_new_func, inst_table));
+                  g_hash_table_insert (provider->module_funcs_to_instances, module_object_new_func, inst_table);
                 }
-              g_warn_if_fail (g_hash_table_insert (inst_table, object, inst_sysfs_paths));
+              g_hash_table_insert (inst_table, object, inst_sysfs_paths);
             }
         }
     }
