@@ -165,7 +165,7 @@ lvm_update (UDisksDaemon *daemon, gboolean ignore_locks)
   int i;
 
   i = 0;
-  args[i++] = PACKAGE_LIB_DIR "/udisks2/udisks-lvm";
+  args[i++] = LVM_HELPER_DIR "udisks-lvm";
   args[i++] = "-b";
   if (ignore_locks)
     args[i++] = "-f";

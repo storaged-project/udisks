@@ -549,7 +549,7 @@ update_with_variant (GPid pid,
 void
 udisks_linux_volume_group_object_update (UDisksLinuxVolumeGroupObject *object)
 {
-  const gchar *args[] = { PACKAGE_LIB_DIR "/udisks2/udisks-lvm", "-b", "show", object->name, NULL };
+  const gchar *args[] = { LVM_HELPER_DIR "udisks-lvm", "-b", "show", object->name, NULL };
   udisks_daemon_util_lvm2_spawn_for_variant (args, G_VARIANT_TYPE("a{sv}"),
                                         update_with_variant, g_object_ref (object));
 }
@@ -641,7 +641,7 @@ poll_timeout (gpointer user_data)
 static void
 poll_now (UDisksLinuxVolumeGroupObject *object)
 {
-  const gchar *args[] = { PACKAGE_LIB_DIR "/udisks2/udisks-lvm", "-b", "show", object->name, NULL };
+  const gchar *args[] = { LVM_HELPER_DIR "udisks-lvm", "-b", "show", object->name, NULL };
 
   object->poll_timeout_id = g_timeout_add (5000, poll_timeout, g_object_ref (object));
 
