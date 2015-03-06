@@ -1,18 +1,18 @@
 [encoding: UTF-8]
 # List of source files containing translatable strings.
 # Please keep this file sorted alphabetically.
-data/org.freedesktop.udisks2.policy.in
-src/udisksbasejob.c
-src/udiskslinuxblock.c
-src/udiskslinuxdrive.c
-src/udiskslinuxdriveata.c
-src/udiskslinuxencrypted.c
-src/udiskslinuxfilesystem.c
-src/udiskslinuxloop.c
-src/udiskslinuxmanager.c
-src/udiskslinuxmdraid.c
-src/udiskslinuxpartition.c
-src/udiskslinuxpartitiontable.c
-src/udiskslinuxswapspace.c
-udisks/udisksclient.c
-udisks/udisksobjectinfo.c
+data/org.storaged.Storaged.policy.in
+src/storagedbasejob.c
+src/storagedlinuxblock.c
+src/storagedlinuxdrive.c
+src/storagedlinuxdriveata.c
+src/storagedlinuxencrypted.c
+src/storagedlinuxfilesystem.c
+src/storagedlinuxloop.c
+src/storagedlinuxmanager.c
+src/storagedlinuxmdraid.c
+src/storagedlinuxpartition.c
+src/storagedlinuxpartitiontable.c
+src/storagedlinuxswapspace.c
+storaged/storagedclient.c
+storaged/storagedobjectinfo.c

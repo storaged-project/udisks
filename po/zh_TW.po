@@ -18,307 +18,307 @@ msgstr ""
 "Language: zh_TW\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:1
+#: ../data/org.storaged.Storaged.policy.in.h:1
 msgid "Mount a filesystem"
 msgstr "掛載檔案系統"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:2
+#: ../data/org.storaged.Storaged.policy.in.h:2
 msgid "Authentication is required to mount the filesystem"
 msgstr "要掛載檔案系統需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:3
+#: ../data/org.storaged.Storaged.policy.in.h:3
 msgid "Mount a filesystem on a system device"
 msgstr "在系統裝置掛載檔案系統"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:4
+#: ../data/org.storaged.Storaged.policy.in.h:4
 msgid "Mount a filesystem from a device plugged into another seat"
 msgstr "掛載插入其他位置的裝置的檔案系統"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:5
+#: ../data/org.storaged.Storaged.policy.in.h:5
 msgid ""
 "Mount/unmount filesystems defined in the fstab file with the x-udisks-auth "
 "option"
 msgstr "掛載／卸載在 fstab 檔案以 x-udisks-auth 選項指定的檔案系統"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:6
+#: ../data/org.storaged.Storaged.policy.in.h:6
 msgid "Authentication is required to mount/unmount the filesystem"
 msgstr "要掛載／卸載檔案系統需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:7
+#: ../data/org.storaged.Storaged.policy.in.h:7
 msgid "Unmount a device mounted by another user"
 msgstr "卸載由其他使用者掛載的裝置"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:8
+#: ../data/org.storaged.Storaged.policy.in.h:8
 msgid ""
 "Authentication is required to unmount a filesystem mounted by another user"
 msgstr "要卸載由其他使用者掛載的檔案系統需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:9
+#: ../data/org.storaged.Storaged.policy.in.h:9
 msgid "Unlock an encrypted device"
 msgstr "解鎖加密裝置"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:10
+#: ../data/org.storaged.Storaged.policy.in.h:10
 msgid "Authentication is required to unlock an encrypted device"
 msgstr "要解鎖加密裝置需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:11
+#: ../data/org.storaged.Storaged.policy.in.h:11
 msgid "Unlock an encrypted system device"
 msgstr "解鎖加密系統裝置"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:12
+#: ../data/org.storaged.Storaged.policy.in.h:12
 msgid "Unlock an encrypted device plugged into another seat"
 msgstr "解鎖插入其他位置的加密裝置"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:13
+#: ../data/org.storaged.Storaged.policy.in.h:13
 msgid ""
 "Unlock an encrypted device specified in the crypttab file with the x-udisks-"
 "auth option"
 msgstr "解鎖在 crypttab 檔案以 x-udisks-auth 選項指定的加密裝置"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:14
+#: ../data/org.storaged.Storaged.policy.in.h:14
 msgid "Lock an encrypted device unlocked by another user"
 msgstr "鎖定由其他使用者解鎖的加密裝置"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:15
+#: ../data/org.storaged.Storaged.policy.in.h:15
 msgid ""
 "Authentication is required to lock an encrypted device unlocked by another "
 "user"
 msgstr "要鎖定由其他使用者解鎖的加密裝置需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:16
+#: ../data/org.storaged.Storaged.policy.in.h:16
 msgid "Change passphrase for an encrypted device"
 msgstr "變更加密裝置的密語"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:17
+#: ../data/org.storaged.Storaged.policy.in.h:17
 msgid ""
 "Authentication is required to change the passphrase for an encrypted device"
 msgstr "要變更加密裝置的密語需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:18
+#: ../data/org.storaged.Storaged.policy.in.h:18
 msgid "Manage loop devices"
 msgstr "管理迴圈裝置"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting up a loop device.
-#: ../data/org.freedesktop.udisks2.policy.in.h:19
+#: ../data/org.storaged.Storaged.policy.in.h:19
 #: ../src/udiskslinuxmanager.c:337
 msgid "Authentication is required to set up a loop device"
 msgstr "要設置迴圈裝置需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:20
+#: ../data/org.storaged.Storaged.policy.in.h:20
 msgid "Delete loop devices"
 msgstr "刪除迴圈裝置"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:21
+#: ../data/org.storaged.Storaged.policy.in.h:21
 msgid ""
 "Authentication is required to delete a loop device set up by another user"
 msgstr "要刪除由其他使用者設置的迴圈裝置需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:22
+#: ../data/org.storaged.Storaged.policy.in.h:22
 msgid "Modify loop devices"
 msgstr "修改迴圈裝置"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:23
+#: ../data/org.storaged.Storaged.policy.in.h:23
 msgid ""
 "Authentication is required to modify a loop device set up by another user"
 msgstr "要修改由其他使用者設置的迴圈裝置需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:24
+#: ../data/org.storaged.Storaged.policy.in.h:24
 msgid "Manage swapspace"
 msgstr "管理置換空間"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:25
+#: ../data/org.storaged.Storaged.policy.in.h:25
 msgid "Authentication is required to manage swapspace"
 msgstr "要管理置換空間需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:26
+#: ../data/org.storaged.Storaged.policy.in.h:26
 msgid "Manage RAID arrays"
 msgstr "管理 RAID 陣列"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:27
+#: ../data/org.storaged.Storaged.policy.in.h:27
 msgid "Authentication is required to manage RAID arrays"
 msgstr "要管理 RAID 陣列需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:28
+#: ../data/org.storaged.Storaged.policy.in.h:28
 msgid "Power off drive"
 msgstr "關掉碟機"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:29
+#: ../data/org.storaged.Storaged.policy.in.h:29
 msgid "Authentication is required to power off a drive"
 msgstr "要關掉碟機需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:30
+#: ../data/org.storaged.Storaged.policy.in.h:30
 msgid "Power off a system drive"
 msgstr "關掉系統碟機"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:31
+#: ../data/org.storaged.Storaged.policy.in.h:31
 msgid "Power off a drive attached to another seat"
 msgstr "關掉連結至其他位置的碟機"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:32
+#: ../data/org.storaged.Storaged.policy.in.h:32
 msgid ""
 "Authentication is required to power off a drive plugged into another seat"
 msgstr "要關掉插入其他位置的碟機需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:33
+#: ../data/org.storaged.Storaged.policy.in.h:33
 msgid "Eject media"
 msgstr "退出媒體"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:34
+#: ../data/org.storaged.Storaged.policy.in.h:34
 msgid "Authentication is required to eject media"
 msgstr "要退出媒體需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:35
+#: ../data/org.storaged.Storaged.policy.in.h:35
 msgid "Eject media from a system drive"
 msgstr "退出系統磁碟的媒體"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:36
+#: ../data/org.storaged.Storaged.policy.in.h:36
 msgid "Eject media from a drive attached to another seat"
 msgstr "退出連結至其他位置碟機的媒體"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:37
+#: ../data/org.storaged.Storaged.policy.in.h:37
 msgid ""
 "Authentication is required to eject media from a drive plugged into another "
 "seat"
 msgstr "要退出插入其他位置碟機的媒體需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:38
+#: ../data/org.storaged.Storaged.policy.in.h:38
 msgid "Modify a device"
 msgstr "修改裝置"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:39
+#: ../data/org.storaged.Storaged.policy.in.h:39
 msgid "Authentication is required to modify a device"
 msgstr "要修改裝置需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:40
+#: ../data/org.storaged.Storaged.policy.in.h:40
 msgid "Modify a system device"
 msgstr "修改系統裝置"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:41
+#: ../data/org.storaged.Storaged.policy.in.h:41
 msgid ""
 "Authentication is required to modify a device plugged into another seat"
 msgstr "要修改插入其他位置的裝置需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:42
+#: ../data/org.storaged.Storaged.policy.in.h:42
 msgid "Rescan a device"
 msgstr "重新掃描裝置"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:43
+#: ../data/org.storaged.Storaged.policy.in.h:43
 msgid "Authentication is required to rescan a device"
 msgstr "要重新掃描裝置需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:44
+#: ../data/org.storaged.Storaged.policy.in.h:44
 msgid "Open a device"
 msgstr "開啟裝置"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:45
+#: ../data/org.storaged.Storaged.policy.in.h:45
 msgid "Authentication is required to open a device"
 msgstr "要開啟裝置需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:46
+#: ../data/org.storaged.Storaged.policy.in.h:46
 msgid "Open a system device"
 msgstr "開啟系統裝置"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:47
+#: ../data/org.storaged.Storaged.policy.in.h:47
 msgid "Modify system-wide configuration"
 msgstr "修改全域設定"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:48
+#: ../data/org.storaged.Storaged.policy.in.h:48
 msgid "Authentication is required to modify system-wide configuration"
 msgstr "要修改全域設定需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:49
+#: ../data/org.storaged.Storaged.policy.in.h:49
 msgid ""
 "Authentication is required to retrieve secrets from system-wide "
 "configuration"
 msgstr "要由全域設定取得密鑰需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:50
+#: ../data/org.storaged.Storaged.policy.in.h:50
 msgid "Modify drive settings"
 msgstr "修改碟機設定"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:51
+#: ../data/org.storaged.Storaged.policy.in.h:51
 msgid "Authentication is required to modify drive settings"
 msgstr "要修改碟機設定需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:52
+#: ../data/org.storaged.Storaged.policy.in.h:52
 msgid "Update SMART data"
 msgstr "更新 SMART 資料"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:53
+#: ../data/org.storaged.Storaged.policy.in.h:53
 msgid "Authentication is required to update SMART data"
 msgstr "要更新 SMART 資料需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:54
+#: ../data/org.storaged.Storaged.policy.in.h:54
 msgid "Set SMART data from blob"
 msgstr "由 blob 設定 SMART 資料"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:55
+#: ../data/org.storaged.Storaged.policy.in.h:55
 msgid "Authentication is required to set SMART data from blob"
 msgstr "要由 blob 設定 SMART 資料需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:56
+#: ../data/org.storaged.Storaged.policy.in.h:56
 msgid "Run SMART self-test"
 msgstr "執行 SMART 自我檢測"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:57
+#: ../data/org.storaged.Storaged.policy.in.h:57
 msgid "Authentication is required to run a SMART self-test"
 msgstr "要執行 SMART 自我檢測需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:58
+#: ../data/org.storaged.Storaged.policy.in.h:58
 msgid "Enable/Disable SMART"
 msgstr "啟動/停用 SMART"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:59
+#: ../data/org.storaged.Storaged.policy.in.h:59
 msgid "Authentication is required to enable/disable SMART"
 msgstr "要啟用/停用 SMART 需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:60
+#: ../data/org.storaged.Storaged.policy.in.h:60
 msgid "Check power state"
 msgstr "檢查電力狀態"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:61
+#: ../data/org.storaged.Storaged.policy.in.h:61
 msgid "Authentication is required to check the power state"
 msgstr "要檢查電力狀態需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:62
+#: ../data/org.storaged.Storaged.policy.in.h:62
 msgid "Send standby command"
 msgstr "傳送待命指令"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:63
+#: ../data/org.storaged.Storaged.policy.in.h:63
 msgid "Authentication is required to put a drive into standby mode"
 msgstr "要將碟機設為待命需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:64
+#: ../data/org.storaged.Storaged.policy.in.h:64
 msgid "Send standby command to a system drive"
 msgstr "向系統碟機傳送待命指令"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:65
+#: ../data/org.storaged.Storaged.policy.in.h:65
 msgid "Send standby command to drive on other seat"
 msgstr "向其他位置的碟機傳送待命指令"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:66
+#: ../data/org.storaged.Storaged.policy.in.h:66
 msgid "Securely erase a hard disk"
 msgstr "徹底清除硬碟"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:67
+#: ../data/org.storaged.Storaged.policy.in.h:67
 msgid "Authentication is required to securely erase a hard disk"
 msgstr "要徹底清除硬碟需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:68
+#: ../data/org.storaged.Storaged.policy.in.h:68
 msgid "Cancel job"
 msgstr "取消工作"
 
 #. Translators: Shown in authentication dialog when canceling a job.
-#: ../data/org.freedesktop.udisks2.policy.in.h:69 ../src/udisksbasejob.c:404
+#: ../data/org.storaged.Storaged.policy.in.h:69 ../src/udisksbasejob.c:404
 msgid "Authentication is required to cancel a job"
 msgstr "要取消工作需要先核對身分"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:70
+#: ../data/org.storaged.Storaged.policy.in.h:70
 msgid "Cancel job started by another user"
 msgstr "取消由其他使用者啟動的工作"
 
-#: ../data/org.freedesktop.udisks2.policy.in.h:71
+#: ../data/org.storaged.Storaged.policy.in.h:71
 msgid "Authentication is required to cancel a job started by another user"
 msgstr "要取消由其他使用者啟動的工作需要先核對身分"
 

@@ -28,22 +28,22 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <src/udiskslogging.h>
-#include <src/udiskslinuxdriveobject.h>
-#include <src/udiskslinuxblockobject.h>
-#include <src/udisksdaemon.h>
-#include <src/udisksdaemonutil.h>
-#include <src/udisksbasejob.h>
-#include <src/udiskssimplejob.h>
-#include <src/udisksthreadedjob.h>
-#include <src/udiskslinuxdevice.h>
+#include <src/storagedlogging.h>
+#include <src/storagedlinuxdriveobject.h>
+#include <src/storagedlinuxblockobject.h>
+#include <src/storageddaemon.h>
+#include <src/storageddaemonutil.h>
+#include <src/storagedbasejob.h>
+#include <src/storagedsimplejob.h>
+#include <src/storagedthreadedjob.h>
+#include <src/storagedlinuxdevice.h>
 
 #include "dummytypes.h"
 #include "dummylinuxdrive.h"
 #include "dummy-generated.h"
 
 /**
- * SECTION:udiskslinuxdriveata
+ * SECTION:storagedlinuxdriveata
  * @title: DummyLinuxDrive
  * @short_description: Linux implementation of #DummyDriveDummy
  *
@@ -63,7 +63,7 @@ struct _DummyLinuxDrive
 {
   DummyDriveDummySkeleton parent_instance;
 
-  UDisksThreadedJob *selftest_job;
+  StoragedThreadedJob *selftest_job;
 };
 
 struct _DummyLinuxDriveClass
@@ -127,19 +127,19 @@ dummy_linux_drive_new (void)
 /**
  * dummy_linux_drive_update:
  * @drive: A #DummyLinuxDrive.
- * @object: The enclosing #UDisksLinuxDriveObject instance.
+ * @object: The enclosing #StoragedLinuxDriveObject instance.
  *
  * Updates the interface.
  *
  * Returns: %TRUE if configuration has changed, %FALSE otherwise.
  */
 gboolean
-dummy_linux_drive_update (DummyLinuxDrive        *drive,
-                          UDisksLinuxDriveObject *object)
+dummy_linux_drive_update (DummyLinuxDrive          *drive,
+                          StoragedLinuxDriveObject *object)
 {
-  UDisksLinuxDevice *device;
+  StoragedLinuxDevice *device;
 
-  device = udisks_linux_drive_object_get_device (object, TRUE /* get_hw */);
+  device = storaged_linux_drive_object_get_device (object, TRUE /* get_hw */);
   if (device == NULL)
     goto out;
 
@@ -159,19 +159,19 @@ dummy_linux_drive_update (DummyLinuxDrive        *drive,
 static gboolean
 say_hello_timeout (gpointer user_data)
 {
-  UDisksJob *job = UDISKS_JOB (user_data);
+  StoragedJob *job = STORAGED_JOB (user_data);
   DummyDriveDummy *_drive;
   GDBusMethodInvocation *invocation;
 
   _drive = g_object_get_data (G_OBJECT (job), "src-object");
   invocation = g_object_get_data (G_OBJECT (job), "src-invocation");
 
-  udisks_simple_job_complete (UDISKS_SIMPLE_JOB (job), TRUE, "");
+  storaged_simple_job_complete (STORAGED_SIMPLE_JOB (job), TRUE, "");
   dummy_drive_dummy_set_hello (_drive, "Already said \"Hello world\" to you!");
   dummy_drive_dummy_complete_say_hello (_drive, invocation, "Successfully said \"Hello world\" to you!");
 
   /*  Emit the signal  */
-  /*  HINT: monitor e.g. with `gdbus monitor -y -d org.freedesktop.UDisks2 -o /org/freedesktop/UDisks2/drives/xxxx`  */
+  /*  HINT: monitor e.g. with `gdbus monitor -y -d org.storaged.Storaged -o /org/storaged/Storaged/drives/xxxx`  */
   dummy_drive_dummy_emit_hello_said (_drive, TRUE, "Signalling successful \"Hello world\" message.");
 
   return FALSE;
@@ -181,15 +181,15 @@ static gboolean
 handle_say_hello (DummyDriveDummy *_drive,
                   GDBusMethodInvocation *invocation)
 {
-  UDisksDaemon *daemon;
-  UDisksBaseJob *job = NULL;
-  UDisksLinuxDriveObject *object = NULL;
+  StoragedDaemon *daemon;
+  StoragedBaseJob *job = NULL;
+  StoragedLinuxDriveObject *object = NULL;
   GError *error = NULL;
   uid_t caller_uid;
 
   dummy_drive_dummy_set_hello (_drive, "Slowly saying \"Hello world\" to you!");
 
-  object = udisks_daemon_util_dup_object (_drive, &error);
+  object = storaged_daemon_util_dup_object (_drive, &error);
   if (object == NULL)
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -197,8 +197,8 @@ handle_say_hello (DummyDriveDummy *_drive,
       goto out;
     }
 
-  daemon = udisks_linux_drive_object_get_daemon (object);
-  if (!udisks_daemon_util_get_caller_uid_sync (daemon,
+  daemon = storaged_linux_drive_object_get_daemon (object);
+  if (!storaged_daemon_util_get_caller_uid_sync (daemon,
                                                invocation,
                                                NULL /* GCancellable */,
                                                &caller_uid,
@@ -211,10 +211,10 @@ handle_say_hello (DummyDriveDummy *_drive,
       goto out;
     }
 
-  job = udisks_daemon_launch_simple_job (daemon,
-                                         UDISKS_OBJECT (object),
-                                         "telling-hello",
-                                         caller_uid, NULL);
+  job = storaged_daemon_launch_simple_job (daemon,
+                                           STORAGED_OBJECT (object),
+                                           "telling-hello",
+                                           caller_uid, NULL);
   g_object_set_data_full (G_OBJECT (job),
                           "src-object",
                           g_object_ref (_drive),
@@ -223,9 +223,9 @@ handle_say_hello (DummyDriveDummy *_drive,
                           "src-invocation",
                           g_object_ref (invocation),
                           g_object_unref);
-  udisks_job_set_cancelable (UDISKS_JOB (job), FALSE);
-  udisks_job_set_expected_end_time (UDISKS_JOB (job), g_get_real_time () + HELLO_TIMEOUT * G_USEC_PER_SEC);
-  udisks_job_set_progress_valid (UDISKS_JOB (job), FALSE);
+  storaged_job_set_cancelable (STORAGED_JOB (job), FALSE);
+  storaged_job_set_expected_end_time (STORAGED_JOB (job), g_get_real_time () + HELLO_TIMEOUT * G_USEC_PER_SEC);
+  storaged_job_set_progress_valid (STORAGED_JOB (job), FALSE);
   g_timeout_add_seconds_full (G_PRIORITY_DEFAULT,
                               HELLO_TIMEOUT,
                               say_hello_timeout,

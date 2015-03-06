@@ -25,18 +25,18 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <src/udiskslogging.h>
-#include <src/udisksdaemon.h>
-#include <src/udisksdaemonutil.h>
-#include <src/udiskslinuxprovider.h>
-#include <src/udiskslinuxdevice.h>
-#include <src/udisksmodulemanager.h>
+#include <src/storagedlogging.h>
+#include <src/storageddaemon.h>
+#include <src/storageddaemonutil.h>
+#include <src/storagedlinuxprovider.h>
+#include <src/storagedlinuxdevice.h>
+#include <src/storagedmodulemanager.h>
 
 #include "dummyloopobject.h"
 #include "dummylinuxloop.h"
 #include "dummy-generated.h"
 
-#include <modules/udisksmoduleobject.h>
+#include <modules/storagedmoduleobject.h>
 
 
 /**
@@ -57,11 +57,11 @@ typedef struct _DummyLoopObjectClass   DummyLoopObjectClass;
  */
 struct _DummyLoopObject
 {
-  UDisksObjectSkeleton parent_instance;
+  StoragedObjectSkeleton parent_instance;
 
-  UDisksDaemon *daemon;
+  StoragedDaemon *daemon;
 
-  /* list of UDisksLinuxDevice objects for block objects */
+  /* list of StoragedLinuxDevice objects for block objects */
   GList *devices;
 
   /* interfaces */
@@ -70,7 +70,7 @@ struct _DummyLoopObject
 
 struct _DummyLoopObjectClass
 {
-  UDisksObjectSkeletonClass parent_class;
+  StoragedObjectSkeletonClass parent_class;
 };
 
 enum
@@ -81,15 +81,15 @@ enum
 };
 
 static gboolean
-dummy_loop_object_process_uevent (UDisksModuleObject  *object,
-                                  const gchar         *action,
-                                  UDisksLinuxDevice   *device);
+dummy_loop_object_process_uevent (StoragedModuleObject  *object,
+                                  const gchar           *action,
+                                  StoragedLinuxDevice   *device);
 
 
-static void dummy_loop_object_iface_init (UDisksModuleObjectIface *iface);
+static void dummy_loop_object_iface_init (StoragedModuleObjectIface *iface);
 
-G_DEFINE_TYPE_WITH_CODE (DummyLoopObject, dummy_loop_object, UDISKS_TYPE_OBJECT_SKELETON,
-                         G_IMPLEMENT_INTERFACE (UDISKS_TYPE_MODULE_OBJECT, dummy_loop_object_iface_init));
+G_DEFINE_TYPE_WITH_CODE (DummyLoopObject, dummy_loop_object, STORAGED_TYPE_OBJECT_SKELETON,
+                         G_IMPLEMENT_INTERFACE (STORAGED_TYPE_MODULE_OBJECT, dummy_loop_object_iface_init));
 
 static void
 dummy_loop_object_finalize (GObject *_object)
@@ -165,9 +165,9 @@ dummy_loop_object_constructed (GObject *_object)
   DummyLoopObject *object = DUMMY_LOOP_OBJECT (_object);
 
   /* initial coldplug */
-  dummy_loop_object_process_uevent (UDISKS_MODULE_OBJECT (_object), "add", object->devices->data);
+  dummy_loop_object_process_uevent (STORAGED_MODULE_OBJECT (_object), "add", object->devices->data);
 
-  g_dbus_object_skeleton_set_object_path (G_DBUS_OBJECT_SKELETON (object), "/org/freedesktop/UDisks2/dummy/loops");
+  g_dbus_object_skeleton_set_object_path (G_DBUS_OBJECT_SKELETON (object), "/org/storaged/Storaged/dummy/loops");
 
   if (G_OBJECT_CLASS (dummy_loop_object_parent_class)->constructed != NULL)
     G_OBJECT_CLASS (dummy_loop_object_parent_class)->constructed (_object);
@@ -187,14 +187,14 @@ dummy_loop_object_class_init (DummyLoopObjectClass *klass)
   /**
    * DummyLoopObject:daemon:
    *
-   * The #UDisksDaemon the object is for.
+   * The #StoragedDaemon the object is for.
    */
   g_object_class_install_property (gobject_class,
                                    PROP_DAEMON,
                                    g_param_spec_object ("daemon",
                                                         "Daemon",
                                                         "The daemon the object is for",
-                                                        UDISKS_TYPE_DAEMON,
+                                                        STORAGED_TYPE_DAEMON,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
@@ -203,7 +203,7 @@ dummy_loop_object_class_init (DummyLoopObjectClass *klass)
   /**
    * DummyLoopObject:device:
    *
-   * The #UDisksLinuxDevice for the object. Connect to the #GObject::notify
+   * The #StoragedLinuxDevice for the object. Connect to the #GObject::notify
    * signal to get notified whenever this is updated.
    */
   g_object_class_install_property (gobject_class,
@@ -211,7 +211,7 @@ dummy_loop_object_class_init (DummyLoopObjectClass *klass)
                                    g_param_spec_object ("device",
                                                         "Device",
                                                         "The device for the object",
-                                                        UDISKS_TYPE_LINUX_DEVICE,
+                                                        STORAGED_TYPE_LINUX_DEVICE,
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
                                                         G_PARAM_STATIC_STRINGS));
@@ -219,7 +219,7 @@ dummy_loop_object_class_init (DummyLoopObjectClass *klass)
 }
 
 static gboolean
-dummy_loop_object_should_include_device (UDisksLinuxDevice *device)
+dummy_loop_object_should_include_device (StoragedLinuxDevice *device)
 {
   const gchar *device_name;
 
@@ -229,21 +229,21 @@ dummy_loop_object_should_include_device (UDisksLinuxDevice *device)
 
 /**
  * dummy_loop_object_new:
- * @daemon: A #UDisksDaemon.
- * @device: The #UDisksLinuxDevice for the sysfs block device.
+ * @daemon: A #StoragedDaemon.
+ * @device: The #StoragedLinuxDevice for the sysfs block device.
  *
  * Create a new loop object.
  *
  * Returns: A #DummyLoopObject object or %NULL if @device does not represent a loop block device. Free with g_object_unref().
  */
 DummyLoopObject *
-dummy_loop_object_new (UDisksDaemon      *daemon,
-                       UDisksLinuxDevice *device)
+dummy_loop_object_new (StoragedDaemon      *daemon,
+                       StoragedLinuxDevice *device)
 {
   GObject *object;
 
-  g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
-  g_return_val_if_fail (UDISKS_IS_LINUX_DEVICE (device), NULL);
+  g_return_val_if_fail (STORAGED_IS_DAEMON (daemon), NULL);
+  g_return_val_if_fail (STORAGED_IS_LINUX_DEVICE (device), NULL);
 
   if (! dummy_loop_object_should_include_device (device))
     return NULL;
@@ -265,9 +265,9 @@ dummy_loop_object_new (UDisksDaemon      *daemon,
  *
  * Gets the daemon used by @object.
  *
- * Returns: A #UDisksDaemon. Do not free, the object is owned by @object.
+ * Returns: A #StoragedDaemon. Do not free, the object is owned by @object.
  */
-UDisksDaemon *
+StoragedDaemon *
 dummy_loop_object_get_daemon (DummyLoopObject *object)
 {
   g_return_val_if_fail (DUMMY_IS_LOOP_OBJECT (object), NULL);
@@ -278,9 +278,9 @@ dummy_loop_object_get_daemon (DummyLoopObject *object)
  * dummy_loop_object_get_devices:
  * @object: A #DummyLoopObject.
  *
- * Gets the current #UDisksLinuxDevice objects associated with @object.
+ * Gets the current #StoragedLinuxDevice objects associated with @object.
  *
- * Returns: A list of #UDisksLinuxDevice objects. Free each element with
+ * Returns: A list of #StoragedLinuxDevice objects. Free each element with
  * g_object_unref(), then free the list with g_list_free().
  */
 GList *
@@ -296,13 +296,13 @@ dummy_loop_object_get_devices (DummyLoopObject *object)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-update_iface (UDisksObject                     *object,
-              const gchar                      *uevent_action,
-              UDisksObjectHasInterfaceFunc      has_func,
-              UDisksObjectConnectInterfaceFunc  connect_func,
-              UDisksObjectUpdateInterfaceFunc   update_func,
-              GType                             skeleton_type,
-              gpointer                          _interface_pointer)
+update_iface (StoragedObject                     *object,
+              const gchar                        *uevent_action,
+              StoragedObjectHasInterfaceFunc      has_func,
+              StoragedObjectConnectInterfaceFunc  connect_func,
+              StoragedObjectUpdateInterfaceFunc   update_func,
+              GType                               skeleton_type,
+              gpointer                            _interface_pointer)
 {
   gboolean ret = FALSE;
   gboolean has;
@@ -355,20 +355,20 @@ update_iface (UDisksObject                     *object,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-linux_loop_check (UDisksObject *object)
+linux_loop_check (StoragedObject *object)
 {
   return TRUE;
 }
 
 static void
-linux_loop_connect (UDisksObject *object)
+linux_loop_connect (StoragedObject *object)
 {
 }
 
 static gboolean
-linux_loop_update (UDisksObject   *object,
-                   const gchar    *uevent_action,
-                   GDBusInterface *_iface)
+linux_loop_update (StoragedObject   *object,
+                   const gchar      *uevent_action,
+                   GDBusInterface   *_iface)
 {
   DummyLoopObject *loop_object = DUMMY_LOOP_OBJECT (object);
 
@@ -386,7 +386,7 @@ find_link_for_sysfs_path (DummyLoopObject *object,
   ret = NULL;
   for (l = object->devices; l != NULL; l = l->next)
     {
-      UDisksLinuxDevice *device = l->data;
+      StoragedLinuxDevice *device = l->data;
       if (g_strcmp0 (g_udev_device_get_sysfs_path (device->udev_device), sysfs_path) == 0)
         {
           ret = l;
@@ -398,15 +398,15 @@ find_link_for_sysfs_path (DummyLoopObject *object,
 }
 
 static gboolean
-dummy_loop_object_process_uevent (UDisksModuleObject  *module_object,
-                                  const gchar         *action,
-                                  UDisksLinuxDevice   *device)
+dummy_loop_object_process_uevent (StoragedModuleObject  *module_object,
+                                  const gchar           *action,
+                                  StoragedLinuxDevice   *device)
 {
   DummyLoopObject *object;
   GList *link;
 
   g_return_val_if_fail (DUMMY_IS_LOOP_OBJECT (module_object), FALSE);
-  g_return_val_if_fail (device == NULL || UDISKS_IS_LINUX_DEVICE (device), FALSE);
+  g_return_val_if_fail (device == NULL || STORAGED_IS_LINUX_DEVICE (device), FALSE);
 
   if (! dummy_loop_object_should_include_device (device))
     return FALSE;
@@ -420,20 +420,20 @@ dummy_loop_object_process_uevent (UDisksModuleObject  *module_object,
     {
       if (link != NULL)
         {
-          g_object_unref (UDISKS_LINUX_DEVICE (link->data));
+          g_object_unref (STORAGED_LINUX_DEVICE (link->data));
           object->devices = g_list_delete_link (object->devices, link);
         }
       else
         {
-          udisks_warning ("Object doesn't have device with sysfs path %s on remove event",
-                          g_udev_device_get_sysfs_path (device->udev_device));
+          storaged_warning ("Object doesn't have device with sysfs path %s on remove event",
+                            g_udev_device_get_sysfs_path (device->udev_device));
         }
     }
   else
     {
       if (link != NULL)
         {
-          g_object_unref (UDISKS_LINUX_DEVICE (link->data));
+          g_object_unref (STORAGED_LINUX_DEVICE (link->data));
           link->data = g_object_ref (device);
         }
       else
@@ -446,7 +446,7 @@ dummy_loop_object_process_uevent (UDisksModuleObject  *module_object,
         }
     }
 
-  update_iface (UDISKS_OBJECT (object), action, linux_loop_check, linux_loop_connect, linux_loop_update,
+  update_iface (STORAGED_OBJECT (object), action, linux_loop_check, linux_loop_connect, linux_loop_update,
                 DUMMY_TYPE_LINUX_LOOP, &object->iface_loop);
 
   return TRUE;
@@ -455,18 +455,18 @@ dummy_loop_object_process_uevent (UDisksModuleObject  *module_object,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-dummy_loop_object_housekeeping (UDisksModuleObject  *object,
-                                guint                secs_since_last,
-                                GCancellable        *cancellable,
-                                GError             **error)
+dummy_loop_object_housekeeping (StoragedModuleObject  *object,
+                                guint                  secs_since_last,
+                                GCancellable          *cancellable,
+                                GError               **error)
 {
   GList *l;
 
   for (l = DUMMY_LOOP_OBJECT (object)->devices; l; l = l->next)
     {
-      UDisksLinuxDevice *device = l->data;
+      StoragedLinuxDevice *device = l->data;
 
-      udisks_info ("Housekeeping on dummy loop object %s: processing device %s...",
+      storaged_info ("Housekeeping on dummy loop object %s: processing device %s...",
                    g_dbus_object_get_object_path (G_DBUS_OBJECT (object)),
                    g_udev_device_get_name (device->udev_device));
       sleep (1);
@@ -478,7 +478,7 @@ dummy_loop_object_housekeeping (UDisksModuleObject  *object,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
-dummy_loop_object_iface_init (UDisksModuleObjectIface *iface)
+dummy_loop_object_iface_init (StoragedModuleObjectIface *iface)
 {
   iface->process_uevent = dummy_loop_object_process_uevent;
   iface->housekeeping = dummy_loop_object_housekeeping;

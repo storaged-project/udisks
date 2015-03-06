@@ -15,9 +15,9 @@ AM_CPPFLAGS = \
 	-DPACKAGE_LOCALSTATE_DIR=\""$(localstatedir)"\" 	\
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\" 		\
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\" 			\
-	-DUDISKS_MODULE_DIR=\"$(libdir)/udisks2/modules\"	\
+	-DSTORAGED_MODULE_DIR=\"$(libdir)/storaged/modules\"	\
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT			\
-	-DUDISKS_COMPILATION					\
+	-DSTORAGED_COMPILATION					\
 	$(POLKIT_GOBJECT_1_CFLAGS) 				\
 	$(GUDEV_CFLAGS) 					\
 	$(GLIB_CFLAGS) 						\
@@ -28,67 +28,67 @@ AM_CPPFLAGS = \
 
 # ----------------------------------------------------------------------------------------------------
 
-BUILT_SOURCES = 							\
-	udisks-daemon-marshal.h		udisks-daemon-marshal.c		\
+BUILT_SOURCES = 								\
+	storaged-daemon-marshal.h	storaged-daemon-marshal.c		\
 	$(NULL)
 
-udisks-daemon-marshal.h: udisks-daemon-marshal.list
-	glib-genmarshal $< --prefix=udisks_daemon_marshal --header > $@
+storaged-daemon-marshal.h: storaged-daemon-marshal.list
+	glib-genmarshal $< --prefix=storaged_daemon_marshal --header > $@
 
-udisks-daemon-marshal.c: udisks-daemon-marshal.list
-	echo "#include \"udisks-daemon-marshal.h\"" > $@ && glib-genmarshal $< --prefix=udisks_daemon_marshal --body >> $@
+storaged-daemon-marshal.c: storaged-daemon-marshal.list
+	echo "#include \"storaged-daemon-marshal.h\"" > $@ && glib-genmarshal $< --prefix=storaged_daemon_marshal --body >> $@
 
-EXTRA_DIST += udisks-daemon-marshal.list
+EXTRA_DIST += storaged-daemon-marshal.list
 
 # ----------------------------------------------------------------------------------------------------
 
-noinst_LTLIBRARIES = libudisks-daemon.la
+noinst_LTLIBRARIES = libstoraged-daemon.la
 
-libudisks_daemon_la_SOURCES =						\
-	udisksdaemontypes.h						\
-	udisksdaemon.h			udisksdaemon.c			\
-	udisksprovider.h		udisksprovider.c		\
-	udiskslinuxprovider.h		udiskslinuxprovider.c		\
-	udiskslinuxblockobject.h	udiskslinuxblockobject.c	\
-	udiskslinuxblock.h		udiskslinuxblock.c		\
-	udiskslinuxpartition.h		udiskslinuxpartition.c		\
-	udiskslinuxpartitiontable.h	udiskslinuxpartitiontable.c	\
-	udiskslinuxfilesystem.h		udiskslinuxfilesystem.c		\
-	udiskslinuxencrypted.h		udiskslinuxencrypted.c		\
-	udiskslinuxswapspace.h		udiskslinuxswapspace.c		\
-	udiskslinuxloop.h		udiskslinuxloop.c		\
-	udiskslinuxdriveobject.h	udiskslinuxdriveobject.c	\
-	udiskslinuxdrive.h		udiskslinuxdrive.c		\
-	udiskslinuxdriveata.h		udiskslinuxdriveata.c		\
-	udiskslinuxmdraidobject.h	udiskslinuxmdraidobject.c	\
-	udiskslinuxmdraid.h		udiskslinuxmdraid.c		\
-	udiskslinuxmanager.h		udiskslinuxmanager.c		\
-	udiskslinuxfsinfo.h		udiskslinuxfsinfo.c		\
-	udisksbasejob.h			udisksbasejob.c			\
-	udisksspawnedjob.h		udisksspawnedjob.c		\
-	udisksthreadedjob.h		udisksthreadedjob.c		\
-	udiskssimplejob.h		udiskssimplejob.c		\
-	udisksmount.h			udisksmount.c			\
-	udisksmountmonitor.h		udisksmountmonitor.c		\
-	udisksdaemonutil.h		udisksdaemonutil.c		\
-	udiskslogging.h			udiskslogging.c			\
-	udisksstate.h			udisksstate.c			\
-	udisksprivate.h							\
-	udisksfstabentry.h		udisksfstabentry.c		\
-	udisksfstabmonitor.h		udisksfstabmonitor.c		\
-	udiskscrypttabentry.h		udiskscrypttabentry.c		\
-	udiskscrypttabmonitor.h		udiskscrypttabmonitor.c		\
-	udiskslinuxdevice.h		udiskslinuxdevice.c		\
-	udisksata.h			udisksata.c			\
-	udisksmodulemanager.h		udisksmodulemanager.c		\
-	$(top_srcdir)/modules/udisksmoduleobject.h			\
-	$(top_srcdir)/modules/udisksmoduleobject.c			\
-	$(BUILT_SOURCES)						\
+libstoraged_daemon_la_SOURCES =							\
+	storageddaemontypes.h							\
+	storageddaemon.h			storageddaemon.c		\
+	storagedprovider.h			storagedprovider.c		\
+	storagedlinuxprovider.h			storagedlinuxprovider.c		\
+	storagedlinuxblockobject.h		storagedlinuxblockobject.c	\
+	storagedlinuxblock.h			storagedlinuxblock.c		\
+	storagedlinuxpartition.h		storagedlinuxpartition.c	\
+	storagedlinuxpartitiontable.h		storagedlinuxpartitiontable.c	\
+	storagedlinuxfilesystem.h		storagedlinuxfilesystem.c	\
+	storagedlinuxencrypted.h		storagedlinuxencrypted.c	\
+	storagedlinuxswapspace.h		storagedlinuxswapspace.c	\
+	storagedlinuxloop.h			storagedlinuxloop.c		\
+	storagedlinuxdriveobject.h		storagedlinuxdriveobject.c	\
+	storagedlinuxdrive.h			storagedlinuxdrive.c		\
+	storagedlinuxdriveata.h			storagedlinuxdriveata.c		\
+	storagedlinuxmdraidobject.h		storagedlinuxmdraidobject.c	\
+	storagedlinuxmdraid.h			storagedlinuxmdraid.c		\
+	storagedlinuxmanager.h			storagedlinuxmanager.c		\
+	storagedlinuxfsinfo.h			storagedlinuxfsinfo.c		\
+	storagedbasejob.h			storagedbasejob.c		\
+	storagedspawnedjob.h			storagedspawnedjob.c		\
+	storagedthreadedjob.h			storagedthreadedjob.c		\
+	storagedsimplejob.h			storagedsimplejob.c		\
+	storagedmount.h				storagedmount.c			\
+	storagedmountmonitor.h			storagedmountmonitor.c		\
+	storageddaemonutil.h			storageddaemonutil.c		\
+	storagedlogging.h			storagedlogging.c		\
+	storagedstate.h				storagedstate.c			\
+	storagedprivate.h							\
+	storagedfstabentry.h			storagedfstabentry.c		\
+	storagedfstabmonitor.h			storagedfstabmonitor.c		\
+	storagedcrypttabentry.h			storagedcrypttabentry.c		\
+	storagedcrypttabmonitor.h		storagedcrypttabmonitor.c	\
+	storagedlinuxdevice.h			storagedlinuxdevice.c		\
+	storagedata.h				storagedata.c			\
+	storagedmodulemanager.h			storagedmodulemanager.c		\
+	$(top_srcdir)/modules/storagedmoduleobject.h				\
+	$(top_srcdir)/modules/storagedmoduleobject.c				\
+	$(BUILT_SOURCES)							\
 	$(NULL)
 
-libudisks_daemon_la_CFLAGS =				\
+libstoraged_daemon_la_CFLAGS =				\
 	-I$(top_srcdir)					\
-	-DG_LOG_DOMAIN=\"udisksd\"			\
+	-DG_LOG_DOMAIN=\"storaged\"			\
 	$(GLIB_CFLAGS)					\
 	$(GIO_CFLAGS)					\
 	$(GMODULE_CFLAGS)				\
@@ -99,7 +99,7 @@ libudisks_daemon_la_CFLAGS =				\
 	$(LIBSYSTEMD_LOGIN_CFLAGS)			\
 	$(NULL)
 
-libudisks_daemon_la_LIBADD =				\
+libstoraged_daemon_la_LIBADD =				\
 	$(GLIB_LIBS)					\
 	$(GIO_LIBS)					\
 	$(GMODULE_LIBS)					\
@@ -108,32 +108,32 @@ libudisks_daemon_la_LIBADD =				\
 	$(POLKIT_GOBJECT_1_LIBS) 			\
 	$(ACL_LIBS)					\
 	$(LIBSYSTEMD_LOGIN_LIBS)			\
-	$(top_builddir)/udisks/libudisks2.la		\
+	$(top_builddir)/storaged/libstoraged.la		\
 	$(NULL)
 
 # ----------------------------------------------------------------------------------------------------
 
-udisksdprivdir = $(prefix)/lib/udisks2
-udisksdpriv_PROGRAMS = udisksd
+storageddprivdir = $(prefix)/lib/storaged
+storageddpriv_PROGRAMS = storaged
 
-udisksd_SOURCES = 					\
+storaged_SOURCES = 					\
 				main.c			\
 	$(NULL)
 
-udisksd_CFLAGS = 					\
-	-DG_LOG_DOMAIN=\"udisksd\"			\
+storaged_CFLAGS = 					\
+	-DG_LOG_DOMAIN=\"storaged\"			\
 	$(NULL)
 
-udisksd_LDADD = 					\
+storaged_LDADD = 					\
 	$(GLIB_LIBS)					\
 	$(GIO_LIBS)					\
 	$(GMODULE_LIBS)					\
-	libudisks-daemon.la				\
+	libstoraged-daemon.la				\
 	$(NULL)
 
 # ----------------------------------------------------------------------------------------------------
 
 install-data-local:
-	-$(mkdir_p) $(DESTDIR)$(sysconfdir)/udisks2
-	-$(mkdir_p) $(DESTDIR)$(localstatedir)/lib/udisks2
-	-chmod 0700 $(DESTDIR)$(localstatedir)/lib/udisks2
+	-$(mkdir_p) $(DESTDIR)$(sysconfdir)/storaged
+	-$(mkdir_p) $(DESTDIR)$(localstatedir)/lib/storaged
+	-chmod 0700 $(DESTDIR)$(localstatedir)/lib/storaged

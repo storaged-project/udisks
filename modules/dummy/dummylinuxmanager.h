@@ -21,7 +21,7 @@
 #ifndef __DUMMY_LINUX_MANAGER_H__
 #define __DUMMY_LINUX_MANAGER_H__
 
-#include <src/udisksdaemontypes.h>
+#include <src/storageddaemontypes.h>
 #include "dummytypes.h"
 #include "dummy-generated.h"
 

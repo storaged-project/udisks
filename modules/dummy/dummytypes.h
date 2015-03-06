@@ -23,7 +23,7 @@
 
 #include <gio/gio.h>
 #include <polkit/polkit.h>
-#include <udisks/udisks.h>
+#include <storaged/storaged.h>
 #include <gudev/gudev.h>
 
 #include <sys/types.h>

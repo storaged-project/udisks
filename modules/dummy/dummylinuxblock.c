@@ -26,22 +26,22 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <src/udiskslogging.h>
-#include <src/udiskslinuxdriveobject.h>
-#include <src/udiskslinuxblockobject.h>
-#include <src/udisksdaemon.h>
-#include <src/udisksdaemonutil.h>
-#include <src/udisksbasejob.h>
-#include <src/udiskssimplejob.h>
-#include <src/udisksthreadedjob.h>
-#include <src/udiskslinuxdevice.h>
+#include <src/storagedlogging.h>
+#include <src/storagedlinuxdriveobject.h>
+#include <src/storagedlinuxblockobject.h>
+#include <src/storageddaemon.h>
+#include <src/storageddaemonutil.h>
+#include <src/storagedbasejob.h>
+#include <src/storagedsimplejob.h>
+#include <src/storagedthreadedjob.h>
+#include <src/storagedlinuxdevice.h>
 
 #include "dummytypes.h"
 #include "dummylinuxblock.h"
 #include "dummy-generated.h"
 
 /**
- * SECTION:udiskslinuxdriveata
+ * SECTION:storagedlinuxdriveata
  * @title: DummyLinuxBlock
  * @short_description: Linux implementation of #DummyDummyBlock
  *
@@ -61,7 +61,7 @@ struct _DummyLinuxBlock
 {
   DummyDummyBlockSkeleton parent_instance;
 
-  UDisksThreadedJob *selftest_job;
+  StoragedThreadedJob *selftest_job;
 };
 
 struct _DummyLinuxBlockClass
@@ -123,15 +123,15 @@ dummy_linux_block_new (void)
 /**
  * dummy_linux_block_update:
  * @drive: A #DummyLinuxBlock.
- * @object: The enclosing #UDisksLinuxDriveObject instance.
+ * @object: The enclosing #StoragedLinuxDriveObject instance.
  *
  * Updates the interface.
  *
  * Returns: %TRUE if configuration has changed, %FALSE otherwise.
  */
 gboolean
-dummy_linux_block_update (DummyLinuxBlock        *block,
-                          UDisksLinuxBlockObject *object)
+dummy_linux_block_update (DummyLinuxBlock          *block,
+                          StoragedLinuxBlockObject *object)
 {
   /* do something */
 

@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[<!ENTITY version SYSTEM "../version.xml">]>
+<refentry id="umount.storaged.8">
+  <refentryinfo>
+    <title>umount.storaged</title>
+    <date>March 2013</date>
+    <productname>storaged</productname>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>umount.storaged</refentrytitle>
+    <manvolnum>8</manvolnum>
+    <refmiscinfo class="manual">System Administration</refmiscinfo>
+    <refmiscinfo class="source">storaged</refmiscinfo>
+    <refmiscinfo class="version">&version;</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>umount.storaged</refname>
+    <refpurpose>unmount file systems that have been mounted by storaged</refpurpose>
+  </refnamediv>
+
+  <refsect1><title>DESCRIPTION</title>
+    <para>
+      The <command>umount.storaged</command> program is a helper for the
+      <citerefentry><refentrytitle>umount</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+      program. Its purpose is to clean up automatically created directories
+      created at file system mount-time. It should never be called directly.
+    </para>
+  </refsect1>
+
+  <refsect1><title>AUTHOR</title>
+    <para>
+      Written by David Zeuthen
+      <email><![CDATA[zeuthen@gmail.com]]></email> with a lot of help
+      from many others.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>BUGS</title>
+    <para>
+      Please send bug reports to either the distribution bug tracker
+      or the upstream bug tracker at
+      <ulink url="https://github.com/phatina/storaged/issues"/>.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para>
+      <link linkend="storaged.8"><citerefentry><refentrytitle>storaged</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
+      <link linkend="storagedd.8"><citerefentry><refentrytitle>storaged</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
+      <link linkend="storagedctl.1"><citerefentry><refentrytitle>storagedctl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>,
+      <link linkend="umount.8"><citerefentry><refentrytitle>umount</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
+    </para>
+  </refsect1>
+</refentry>

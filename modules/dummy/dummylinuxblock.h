@@ -21,7 +21,7 @@
 #ifndef __DUMMY_LINUX_BLOCK_H__
 #define __DUMMY_LINUX_BLOCK_H__
 
-#include <src/udisksdaemontypes.h>
+#include <src/storageddaemontypes.h>
 #include "dummytypes.h"
 #include "dummy-generated.h"
 
@@ -33,8 +33,8 @@ G_BEGIN_DECLS
 
 GType            dummy_linux_block_get_type           (void) G_GNUC_CONST;
 DummyDummyBlock *dummy_linux_block_new                (void);
-gboolean         dummy_linux_block_update             (DummyLinuxBlock         *drive,
-                                                       UDisksLinuxBlockObject  *object);
+gboolean         dummy_linux_block_update             (DummyLinuxBlock           *drive,
+                                                       StoragedLinuxBlockObject  *object);
 
 G_END_DECLS
 

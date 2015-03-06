@@ -14,7 +14,7 @@ INCLUDES = \
 	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\" 		\
 	-DPACKAGE_LIB_DIR=\""$(libdir)"\" 			\
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT			\
-	-DUDISKS_COMPILATION					\
+	-DSTORAGED_COMPILATION					\
 	$(POLKIT_GOBJECT_1_CFLAGS)				\
 	$(GLIB_CFLAGS) 						\
 	$(GIO_CFLAGS)						\
@@ -22,16 +22,16 @@ INCLUDES = \
 	$(WARN_CFLAGS)						\
 	$(NULL)
 
-$(dbus_built_sources) : Makefile.am data/org.freedesktop.UDisks2.dummy.xml
+$(dbus_built_sources) : Makefile.am data/org.storaged.Storaged.dummy.xml
 	gdbus-codegen									\
-		--interface-prefix org.freedesktop.UDisks2.				\
+		--interface-prefix org.storaged.Storaged.				\
 		--c-namespace Dummy							\
 		--generate-c-code dummy-generated					\
-		data/org.freedesktop.UDisks2.dummy.xml					\
+		data/org.storaged.Storaged.dummy.xml					\
 		$(NULL)
 
 
-module_flags = -export_dynamic -avoid-version -module -no-undefined -export-symbols-regex '^udisks_module_.*|g_io_module_load|g_io_module_unload|g_io_module_query'
+module_flags = -export_dynamic -avoid-version -module -no-undefined -export-symbols-regex '^storaged_module_.*|g_io_module_load|g_io_module_unload|g_io_module_query'
 
 dbus_built_sources =									\
 	dummy-generated.h			dummy-generated.c			\
@@ -41,23 +41,23 @@ BUILT_SOURCES =										\
 	$(dbus_built_sources)								\
 	$(NULL)
 
-libudisks2_dummydir=$(libdir)/udisks2/modules
-libudisks2_dummy_LTLIBRARIES=libudisks2_dummy.la
+libstoraged_dummydir=$(libdir)/storaged/modules
+libstoraged_dummy_LTLIBRARIES=libstoraged_dummy.la
 
-libudisks2_dummyincludedir=$(includedir)/udisks2/udisks
+libstoraged_dummyincludedir=$(includedir)/storaged/storaged
 
-libudisks2_dummyinclude_HEADERS=							\
-	$(top_srcdir)/modules/udisksmoduleiface.h					\
-	$(top_srcdir)/modules/udisksmoduleifacetypes.h					\
-	$(top_srcdir)/modules/udisksmoduleobject.h					\
+libstoraged_dummyinclude_HEADERS=							\
+	$(top_srcdir)/modules/storagedmoduleiface.h					\
+	$(top_srcdir)/modules/storagedmoduleifacetypes.h					\
+	$(top_srcdir)/modules/storagedmoduleobject.h					\
 	$(NULL)
 
-libudisks2_dummy_la_SOURCES =								\
+libstoraged_dummy_la_SOURCES =								\
 	$(BUILT_SOURCES)								\
-	$(top_srcdir)/modules/udisksmoduleiface.h					\
-	$(top_srcdir)/modules/udisksmoduleifacetypes.h					\
-	$(top_srcdir)/modules/udisksmoduleobject.h					\
-	$(top_srcdir)/modules/udisksmoduleobject.c					\
+	$(top_srcdir)/modules/storagedmoduleiface.h					\
+	$(top_srcdir)/modules/storagedmoduleifacetypes.h					\
+	$(top_srcdir)/modules/storagedmoduleobject.h					\
+	$(top_srcdir)/modules/storagedmoduleobject.c					\
 	dummytypes.h									\
 	dummymoduleiface.c								\
 	dummylinuxblock.h			dummylinuxblock.c			\
@@ -67,20 +67,20 @@ libudisks2_dummy_la_SOURCES =								\
 	dummylinuxmanager.h			dummylinuxmanager.c			\
 	$(NULL)
 
-libudisks2_dummy_la_CPPFLAGS = 				\
-	-DG_LOG_DOMAIN=\"libudisks2-dummy\"		\
+libstoraged_dummy_la_CPPFLAGS = 				\
+	-DG_LOG_DOMAIN=\"libstoraged-dummy\"		\
 	$(NULL)
 
-libudisks2_dummy_la_CFLAGS = 				\
+libstoraged_dummy_la_CFLAGS = 				\
 	$(GLIB_CFLAGS)					\
 	$(GIO_CFLAGS)					\
 	$(GUDEV_CFLAGS)					\
 	$(POLKIT_GOBJECT_1_CFLAGS)			\
 	$(NULL)
 
-libudisks2_dummy_la_LDFLAGS = $(module_flags)
+libstoraged_dummy_la_LDFLAGS = $(module_flags)
 
-libudisks2_dummy_la_LIBADD = 				\
+libstoraged_dummy_la_LIBADD = 				\
 	$(GLIB_LIBS)					\
 	$(GIO_LIBS)					\
 	$(GUDEV_LIBS)					\

@@ -15,44 +15,44 @@ AM_CPPFLAGS = \
 	$(WARN_CFLAGS)						\
 	$(NULL)
 
-bin_PROGRAMS = udisksctl
+bin_PROGRAMS = storagedctl
 
-udisksctl_SOURCES = 					\
-				udisksctl.c		\
+storagedctl_SOURCES = 					\
+				storagedctl.c		\
 	$(NULL)
 
-udisksctl_CFLAGS = 					\
+storagedctl_CFLAGS = 					\
 	$(GLIB_CFLAGS) 					\
 	$(GIO_CFLAGS)					\
 	$(POLKIT_GOBJECT_1_CFLAGS)			\
 	$(POLKIT_AGENT_1_CFLAGS)			\
 	$(NULL)
 
-udisksctl_LDADD = 					\
+storagedctl_LDADD = 					\
 	$(GLIB_LIBS) 					\
 	$(GIO_LIBS)					\
 	$(POLKIT_GOBJECT_1_LIBS)			\
 	$(POLKIT_AGENT_1_LIBS)				\
-	$(top_builddir)/udisks/libudisks2.la		\
+	$(top_builddir)/storaged/libstoraged.la		\
 	$(NULL)
 
 # ----------------------------------------------------------------------------------------------------
 
-sbin_PROGRAMS = umount.udisks2
+sbin_PROGRAMS = umount.storaged
 
-umount_udisks2_SOURCES = 				\
-				umount-udisks.c		\
+umount_storaged_SOURCES = 				\
+				umount-storaged.c		\
 	$(NULL)
 
-umount_udisks2_CFLAGS = 				\
+umount_storaged_CFLAGS = 				\
 	$(GLIB_CFLAGS) 					\
 	$(GIO_CFLAGS)					\
 	$(NULL)
 
-umount_udisks2_LDADD = 					\
+umount_storaged_LDADD = 					\
 	$(GLIB_LIBS) 					\
 	$(GIO_LIBS)					\
-	$(top_builddir)/udisks/libudisks2.la		\
+	$(top_builddir)/storaged/libstoraged.la		\
 	$(NULL)
 
 # ----------------------------------------------------------------------------------------------------

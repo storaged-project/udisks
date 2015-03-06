@@ -1,20 +1,20 @@
 
-m4_define([udisks_major_version], [2])
-m4_define([udisks_minor_version], [1])
-m4_define([udisks_micro_version], [5])
+m4_define([storaged_major_version], [2])
+m4_define([storaged_minor_version], [1])
+m4_define([storaged_micro_version], [5])
 
-m4_define([udisks_version], [udisks_major_version.udisks_minor_version.udisks_micro_version])
+m4_define([storaged_version], [storaged_major_version.storaged_minor_version.storaged_micro_version])
 
-AC_INIT([udisks],[udisks_version],[http://bugs.freedesktop.org/enter_bug.cgi?product=udisks],[udisks])
+AC_INIT([storaged],[storaged_version],[https://github.com/phatina/storaged],[storaged])
 
-UDISKS_MAJOR_VERSION=udisks_major_version
-UDISKS_MINOR_VERSION=udisks_minor_version
-UDISKS_MICRO_VERSION=udisks_micro_version
-UDISKS_VERSION=udisks_version
-AC_SUBST(UDISKS_MAJOR_VERSION)
-AC_SUBST(UDISKS_MINOR_VERSION)
-AC_SUBST(UDISKS_MICRO_VERSION)
-AC_SUBST(UDISKS_VERSION)
+STORAGED_MAJOR_VERSION=storaged_major_version
+STORAGED_MINOR_VERSION=storaged_minor_version
+STORAGED_MICRO_VERSION=storaged_micro_version
+STORAGED_VERSION=storaged_version
+AC_SUBST(STORAGED_MAJOR_VERSION)
+AC_SUBST(STORAGED_MINOR_VERSION)
+AC_SUBST(STORAGED_MICRO_VERSION)
+AC_SUBST(STORAGED_VERSION)
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([src])
@@ -236,7 +236,7 @@ AM_CONDITIONAL(HAVE_DEVMAPPER, [test "$have_devmapper" = "yes"])
 #
 
 IT_PROG_INTLTOOL([$INTLTOOL_REQUIRED])
-GETTEXT_PACKAGE=udisks2
+GETTEXT_PACKAGE=storaged
 AC_SUBST([GETTEXT_PACKAGE])
 AM_GLIB_GNU_GETTEXT
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE],["$GETTEXT_PACKAGE"],[gettext domain])
@@ -247,8 +247,8 @@ AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE],["$GETTEXT_PACKAGE"],[gettext domain])
 AC_OUTPUT([
 Makefile
 data/Makefile
-udisks/Makefile
-udisks/udisks2.pc
+storaged/Makefile
+storaged/storaged.pc
 src/Makefile
 src/tests/Makefile
 tools/Makefile
@@ -265,8 +265,8 @@ po/Makefile.in
 
 dnl ==========================================================================
 echo "
-               udisks $VERSION
-             ================
+               storaged $VERSION
+             ==================
 
         prefix:                     ${prefix}
         libdir:                     ${libdir}

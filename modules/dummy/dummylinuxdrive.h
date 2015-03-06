@@ -21,7 +21,7 @@
 #ifndef __DUMMY_LINUX_DRIVE_H__
 #define __DUMMY_LINUX_DRIVE_H__
 
-#include <src/udisksdaemontypes.h>
+#include <src/storageddaemontypes.h>
 #include "dummytypes.h"
 #include "dummy-generated.h"
 
@@ -33,8 +33,8 @@ G_BEGIN_DECLS
 
 GType            dummy_linux_drive_get_type           (void) G_GNUC_CONST;
 DummyDriveDummy *dummy_linux_drive_new                (void);
-gboolean         dummy_linux_drive_update             (DummyLinuxDrive         *drive,
-                                                       UDisksLinuxDriveObject  *object);
+gboolean         dummy_linux_drive_update             (DummyLinuxDrive           *drive,
+                                                       StoragedLinuxDriveObject  *object);
 
 G_END_DECLS
 

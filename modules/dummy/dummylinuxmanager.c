@@ -26,10 +26,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <src/udiskslogging.h>
-#include <src/udisksdaemon.h>
-#include <src/udisksdaemonutil.h>
-#include <src/udiskslinuxdevice.h>
+#include <src/storagedlogging.h>
+#include <src/storageddaemon.h>
+#include <src/storageddaemonutil.h>
+#include <src/storagedlinuxdevice.h>
 
 #include "dummytypes.h"
 #include "dummylinuxmanager.h"
@@ -99,7 +99,7 @@ handle_create_loop_pool (DummyDummyManager *object,
                          GDBusMethodInvocation *invocation,
                          const gchar *arg_name)
 {
-  udisks_notice ("Dummy plugin: called org.freedesktop.UDisks2.DummyManager.CreateLoopPool(name=\"%s\")", arg_name);
+  storaged_notice ("Dummy plugin: called org.storaged.Storaged.DummyManager.CreateLoopPool(name=\"%s\")", arg_name);
 
   dummy_dummy_manager_complete_create_loop_pool (object, invocation);
 

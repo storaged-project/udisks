@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?> <!-- -*- XML -*- -->
+
+<!DOCTYPE busconfig PUBLIC
+ "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
+<busconfig>
+  <!-- Only root can own the service -->
+  <policy user="root">
+    <allow own="org.storaged.Storaged"/>
+  </policy>
+
+  <!-- Anyone can send messages to the owner of org.storaged.Storaged -->
+  <policy context="default">
+    <allow send_destination="org.storaged.Storaged"/>
+  </policy>
+</busconfig>

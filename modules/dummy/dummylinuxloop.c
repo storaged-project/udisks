@@ -26,10 +26,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <src/udiskslogging.h>
-#include <src/udisksdaemon.h>
-#include <src/udisksdaemonutil.h>
-#include <src/udiskslinuxdevice.h>
+#include <src/storagedlogging.h>
+#include <src/storageddaemon.h>
+#include <src/storageddaemonutil.h>
+#include <src/storagedlinuxdevice.h>
 
 #include "dummytypes.h"
 #include "dummyloopobject.h"

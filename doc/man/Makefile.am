@@ -5,30 +5,30 @@ man_MANS =
 
 if ENABLE_MAN
 man_MANS +=				\
-	udisksctl.1			\
-	udisksd.8			\
-	udisks.8			\
-	umount.udisks2.8		\
+	storagedctl.1			\
+	storaged.8			\
+	storaged.8			\
+	umount.storaged.8		\
 	$(NULL)
 endif
 
-udisksctl.1 : udisksctl.xml
+storagedctl.1 : storagedctl.xml
 	$(XSLTPROC) -path "$(builddir)/.." -nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
 
-udisksd.8 : udisksd.xml
+storaged.8 : storaged-daemon.xml
 	$(XSLTPROC) -path "$(builddir)/.." -nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
 
-udisks.8 : udisks.xml
+storaged.8 : storaged.xml
 	$(XSLTPROC) -path "$(builddir)/.." -nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
 
-umount.udisks2.8 : umount.udisks2.xml
+umount.storaged.8 : umount.storaged.xml
 	$(XSLTPROC) -path "$(builddir)/.." -nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
 
 EXTRA_DIST= 				\
-	udisksctl.xml			\
-	udisksd.xml			\
-	udisks.xml             		\
-	umount.udisks2.xml		\
+	storagedctl.xml			\
+	storaged-daemon.xml		\
+	storaged.xml          		\
+	umount.storaged.xml		\
 	$(NULL)
 
 clean-local:

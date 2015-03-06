@@ -21,7 +21,7 @@
 #ifndef __DUMMY_LOOP_OBJECT_H__
 #define __DUMMY_LOOP_OBJECT_H__
 
-#include <src/udisksdaemontypes.h>
+#include <src/storageddaemontypes.h>
 #include "dummytypes.h"
 #include <gudev/gudev.h>
 
@@ -31,11 +31,11 @@ G_BEGIN_DECLS
 #define DUMMY_LOOP_OBJECT(o)    (G_TYPE_CHECK_INSTANCE_CAST ((o), DUMMY_TYPE_LOOP_OBJECT, DummyLoopObject))
 #define DUMMY_IS_LOOP_OBJECT(o) (G_TYPE_CHECK_INSTANCE_TYPE ((o), DUMMY_TYPE_LOOP_OBJECT))
 
-GType                   dummy_loop_object_get_type      (void) G_GNUC_CONST;
-DummyLoopObject        *dummy_loop_object_new           (UDisksDaemon      *daemon,
-                                                         UDisksLinuxDevice *device);
-UDisksDaemon           *dummy_loop_object_get_daemon    (DummyLoopObject   *object);
-GList                  *dummy_loop_object_get_devices   (DummyLoopObject   *object);
+GType                     dummy_loop_object_get_type      (void) G_GNUC_CONST;
+DummyLoopObject          *dummy_loop_object_new           (StoragedDaemon      *daemon,
+                                                           StoragedLinuxDevice *device);
+StoragedDaemon           *dummy_loop_object_get_daemon    (DummyLoopObject     *object);
+GList                    *dummy_loop_object_get_devices   (DummyLoopObject     *object);
 
 
 G_END_DECLS

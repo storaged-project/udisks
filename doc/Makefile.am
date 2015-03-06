@@ -4,7 +4,7 @@ NULL =
 SUBDIRS = man
 
 # The name of the module.
-DOC_MODULE=udisks2
+DOC_MODULE=storaged
 
 # The top-level SGML file.
 DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.xml
@@ -15,8 +15,8 @@ SCAN_OPTIONS=
 # The directory containing the source code. Relative to $(srcdir)
 DOC_SOURCE_DIR=$(top_srcdir)
 
-HFILE_GLOB=$(top_srcdir)/udisks/*.h $(top_srcdir)/src/*.h $(top_srcdir)/modules/*.h
-CFILE_GLOB=$(top_srcdir)/udisks/*.c $(top_srcdir)/src/*.c $(top_srcdir)/modules/*.c
+HFILE_GLOB=$(top_srcdir)/storaged/*.h $(top_srcdir)/src/*.h $(top_srcdir)/modules/*.h
+CFILE_GLOB=$(top_srcdir)/storaged/*.c $(top_srcdir)/src/*.c $(top_srcdir)/modules/*.c
 
 # Headers to ignore
 IGNORE_HFILES=				\
@@ -36,12 +36,12 @@ AM_CPPFLAGS = \
 GTKDOC_LIBS = 					\
 	$(GLIB_LIBS)				\
 	$(GIO_LIBS)				\
-	$(top_builddir)/udisks/libudisks2.la	\
-	$(top_builddir)/src/libudisks-daemon.la	\
+	$(top_builddir)/storaged/libstoraged.la	\
+	$(top_builddir)/src/libstoraged-daemon.la	\
 	$(NULL)
 
 # Extra options to supply to gtkdoc-mkdb
-MKDB_OPTIONS = --output-format=xml --sgml-mode --name-space=udisks
+MKDB_OPTIONS = --output-format=xml --sgml-mode --name-space=storaged
 
 # Images to copy into HTML directory
 HTML_IMAGES =			\

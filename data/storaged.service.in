@@ -1,0 +1,8 @@
+[Unit]
+Description=Storaged
+Documentation=man:storaged(8)
+
+[Service]
+Type=dbus
+BusName=org.storaged.Storaged
+ExecStart=@storagedprivdir@/storaged --no-debug

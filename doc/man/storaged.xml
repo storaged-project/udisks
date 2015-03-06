@@ -1,0 +1,398 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[<!ENTITY version SYSTEM "../version.xml">]>
+<refentry id="storaged.8">
+  <refentryinfo>
+    <title>storaged</title>
+    <date>March 2013</date>
+    <productname>storaged</productname>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>storaged</refentrytitle>
+    <manvolnum>8</manvolnum>
+    <refmiscinfo class="manual">System Administration</refmiscinfo>
+    <refmiscinfo class="source">storaged</refmiscinfo>
+    <refmiscinfo class="version">&version;</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>storaged</refname>
+    <refpurpose>Disk Manager</refpurpose>
+  </refnamediv>
+
+  <refsect1><title>DESCRIPTION</title>
+    <para>
+      storaged provides interfaces to enumerate and perform operations
+      on disks and storage devices. Any application (including
+      unprivileged ones) can access the
+      <link linkend="storaged.8"><citerefentry><refentrytitle>storaged</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>
+      daemon via the name <emphasis>org.storaged.Storaged</emphasis>
+      on the <ulink url="http://www.freedesktop.org/wiki/Software/dbus">system message bus</ulink>.
+      In addition to the D-Bus API, a
+      library, <filename>libstoraged</filename> is also provided. This
+      library can be used from C/C++ and any high-level language with
+      <ulink
+      url="https://live.gnome.org/GObjectIntrospection">GObjectIntrospection</ulink>
+      support such as Javascript and Python.
+      storaged is only indirectly involved in what devices and objects
+      are shown in the user interface.
+    </para>
+  </refsect1>
+
+  <refsect1><title>ACCESS CONTROL</title>
+    <para>
+      By default, logged-in users in active log-in sessions are
+      permitted to perform operations (for example, mounting,
+      unlocking or modifying) on devices attached to the seat their
+      session is on. Access-control is fine-grained and based on
+      <citerefentry><refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
+      see the <quote><link
+      linkend="storaged-polkit-actions">Authorization
+      Checks</link></quote> chapter in the storaged documentation for
+      more information.
+      Note that the <literal>x-storaged-auth</literal> option can be
+      used in the <filename>/etc/fstab</filename> and
+      <filename>/etc/crypttab</filename> files to specify that
+      additional authorization is required to mount resp. unlock the
+      device (typically requiring the user to authenticate as an
+      administrator).
+    </para>
+  </refsect1>
+
+  <refsect1><title>DRIVE CONFIGURATION</title>
+    <para>
+      At start-up and when a drive is connected,
+      <link linkend="storaged.8"><citerefentry><refentrytitle>storaged</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>
+      will apply configuration stored in the file
+      <filename class='directory'>/etc/storaged/IDENTIFIER.conf</filename>
+      where <emphasis>IDENTIFIER</emphasis> is the value of the
+      <link linkend="gdbus-property-org-storaged-Storaged-Drive.Id">Drive:Id</link>
+      property for the drive. If the file changes on disk its new
+      contents will also be applied to the drive.
+      Typically, users or administrators will never need to edit drive
+      configuration files as they are effectively managed through
+      graphical applications such as
+      <citerefentry><refentrytitle>gnome-disks</refentrytitle><manvolnum>1</manvolnum></citerefentry>.
+      Manually editing configuration files is however supported — the file
+      format is a simple <emphasis>.ini-like format</emphasis>
+      (see the
+      <ulink url="http://freedesktop.org/wiki/Specifications/desktop-entry-spec">Desktop Entry Specification</ulink>
+      for the exact syntax). New groups and keys may
+      be added in the future.
+    </para>
+
+    <refsect2>
+      <title>ATA group</title>
+      <para>
+        The <literal>ATA</literal> group is for settings that apply to
+        drives using the ATA command-set. The following keys are
+        supported:
+      </para>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>StandbyTimeout</option></term>
+          <listitem>
+            <para>
+              The standby timeout.  A value of zero means "timeouts
+              are disabled": the device will not automatically enter
+              standby mode.  Values from 1 to 240 specify multiples of
+              5 seconds, yielding timeouts from 5 seconds to 20
+              minutes. Values from 241 to 251 specify from 1 to 11
+              units of 30 minutes, yielding timeouts from 30 minutes
+              to 5.5 hours.  A value of 252 signifies a timeout of 21
+              minutes. A value of 253 sets a vendor-defined timeout
+              period between 8 and 12 hours, and the value 254 is
+              reserved.  255 is interpreted as 21 minutes plus 15
+              seconds. Note that some older drives may have very
+              different interpretations of these values.
+              This is similar to the <option>-S</option> option in
+              <citerefentry><refentrytitle>hdparm</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>APMLevel</option></term>
+          <listitem>
+            <para>
+              The Advanced Power Management level.  A low value means
+              aggressive power management and a high value means
+              better performance. Possible settings range from values
+              1 through 127 (which permit spin-down), and values 128
+              through 254 (which do not permit spin-down).  The
+              highest degree of power management is attained with a
+              setting of 1, and the highest I/O performance with a
+              setting of 254. A value of 255 can be used to disable
+              Advanced Power Management altogether on the drive (not
+              all drives support disabling it, but most do).
+              This is similar to the <option>-B</option> option in
+              <citerefentry><refentrytitle>hdparm</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>AAMLevel</option></term>
+          <listitem>
+            <para>
+              The Automatic Acoustic Management level. Most modern
+              harddisk drives have the ability to speed down the head
+              movements to reduce their noise output. The possible
+              values are between 0 and 254. 128 is the most quiet (and
+              therefore slowest) setting and 254 the fastest (and
+              loudest). Some drives have only two levels (quiet /
+              fast), while others may have different levels between
+              128 and 254. At the moment, most drives only support 3
+              options, off, quiet, and fast. These have been assigned
+              the values 0, 128, and 254 at present, respectively, but
+              integer space has been incorporated for future
+              expansion, should this change.
+              This is similar to the <option>-M</option> option in
+              <citerefentry><refentrytitle>hdparm</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><option>WriteCacheEnabled</option></term>
+          <listitem>
+            <para>
+              A boolean specifying whether to enable or disable the
+              Write Cache. Valid values for this key are
+              <quote>true</quote> and <quote>false</quote>. This is
+              similar to the <option>-W</option> option in
+              <citerefentry><refentrytitle>hdparm</refentrytitle><manvolnum>8</manvolnum></citerefentry>.
+              This key was added in 2.1.
+            </para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </refsect2>
+  </refsect1>
+
+  <refsect1>
+    <title>DEVICE INFORMATION</title>
+    <para>
+      storaged relies on recent versions of
+      <citerefentry><refentrytitle>udev</refentrytitle><manvolnum>7</manvolnum></citerefentry>
+      and the Linux kernel. Influential device properties in the udev
+      database include:
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term><option>STORAGED_SYSTEM</option></term>
+        <listitem>
+          <para>
+            If set, this overrides the value of the
+            <link linkend="gdbus-property-org-storaged-Storaged-Block.HintSystem">HintSystem</link> property.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>STORAGED_IGNORE</option></term>
+        <listitem>
+          <para>
+            If set, this overrides the value of the
+            <link linkend="gdbus-property-org-storaged-Storaged-Block.HintIgnore">HintIgnore</link> property.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>STORAGED_AUTO</option></term>
+        <listitem>
+          <para>
+            If set, this overrides the value of the
+            <link linkend="gdbus-property-org-storaged-Storaged-Block.HintAuto">HintAuto</link> property.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>STORAGED_CAN_POWER_OFF</option></term>
+        <listitem>
+          <para>
+            If set, this overrides the value of the
+            <link linkend="gdbus-property-org-storaged-Storaged-Drive.CanPowerOff">CanPowerOff</link> property.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>STORAGED_NAME</option></term>
+        <listitem>
+          <para>
+            The name to use for the device when presenting it in an user interface.
+            This corresponds to the
+            <link linkend="gdbus-property-org-storaged-Storaged-Block.HintName">HintName</link> property.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>STORAGED_ICON_NAME</option></term>
+        <listitem>
+          <para>
+            The icon to use for the device when presenting it in an user interface. If
+            set, the name must adhere to the
+            <ulink url="http://www.freedesktop.org/wiki/Specifications/icon-theme-spec">freedesktop.org icon theme specification</ulink>.
+            This corresponds to the
+            <link linkend="gdbus-property-org-storaged-Storaged-Block.HintIconName">HintIconName</link> property.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>STORAGED_SYMBOLIC_ICON_NAME</option></term>
+        <listitem>
+          <para>
+            The icon to use for the device when presenting it in an user interface using a symbolic icon. If
+            set, the name must adhere to the
+            <ulink url="http://www.freedesktop.org/wiki/Specifications/icon-theme-spec">freedesktop.org icon theme specification</ulink>.
+            This corresponds to the
+            <link linkend="gdbus-property-org-storaged-Storaged-Block.HintIconName">HintSymbolicIconName</link> property.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>STORAGED_FILESYSTEM_SHARED</option></term>
+        <listitem>
+          <para>
+            If set to 1, the filesystem on the device will be mounted in a shared directory (e.g. <filename class='directory'>/media/VolumeName</filename>) instead of a private directory (e.g. <filename class='directory'>/run/media/$USER/VolumeName</filename>) when the <link linkend="gdbus-method-org-storaged-Storaged-Filesystem.Mount">Filesystem.Mount()</link> method is handled.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>ID_SEAT</option></term>
+        <listitem>
+          <para>
+            The physical seat the device is attached to. If unset or
+            set to the empty string, <quote>seat0</quote> (the first
+            seat) is assumed.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1><title>API STABILITY</title>
+    <para>
+      storaged guarantees a stable D-Bus API within the same major
+      version and this guarantee also extends to the client-side
+      library <filename>libstoraged</filename>. Additionally, several
+      major versions of storaged can be installed and operate at the
+      same time although interoperability may be limited - for
+      example, a device mounted using the storaged N.x API may require
+      additional authorization if attempting to unmount it through the
+      the (N-1).x API.
+    </para>
+    <para>
+      The storaged developers do not anticipate breaking API but does
+      reserve the right to do so and if it happens, promises to bump
+      the major version and ensure the new major version of storaged is
+      parallel-installable with any older major version. However, note
+      that programs, man pages and other artifacts may change name
+      (for example, adopt a <quote>2</quote> suffix) to make room for
+      the next major version. Therefore, applications can not rely on
+      tools like e.g.
+      <link linkend="storagedctl.1"><citerefentry><refentrytitle>storagedctl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>
+      to be available. Additionally, there is no guarantee that the
+      options, command-line switches etc. of command-line tools or
+      similar will remain stable.
+    </para>
+    <para>
+      Instead, applications should only use the D-Bus API, the
+      <filename>libstoraged</filename> library or tools such as
+      <citerefentry>
+        <refentrytitle>dbus-send</refentrytitle><manvolnum>1</manvolnum>
+      </citerefentry>
+      or
+      <citerefentry>
+        <refentrytitle>gdbus</refentrytitle><manvolnum>1</manvolnum>
+      </citerefentry>
+      to interact with
+      <link linkend="storaged.8"><citerefentry><refentrytitle>storaged</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>.
+    </para>
+  </refsect1>
+
+  <refsect1><title>AUDIENCE</title>
+    <para>
+      The intended audience of storaged include operating system
+      developers working on the higher-level parts of the operating
+      system, for example the desktop shell (such as <ulink
+      url="http://www.gnome.org">GNOME</ulink>) and disk management
+      applications (e.g. GNOME's <ulink
+      url="https://live.gnome.org/Design/Apps/Disks">Disks</ulink>
+      application).  Software on this level typically depend on a
+      specific (major) version of storaged and may even have support for
+      previous versions of storaged or alternative interfaces performing
+      the same role as storaged.
+    </para>
+    <para>
+      While storaged indeed provides a stable API and a clear upgrade
+      path, it may not be an appropriate dependency for third party
+      applications. For example, if the operating system switches to
+      storaged version N.x and an application is still using the storaged
+      (N-1).x API, the application will not work unless storaged (N-1).x
+      is installed. While this situation is still workable (since both
+      storaged N.x and storaged (N-1).x can be installed) it may not be
+      desirable to ask the user to install the old version - in fact,
+      the operating system vendor may not even provide a packaged
+      version of the old version. Hence, if an application does not
+      want to tie itself to a specific version of the operating
+      system, it should not use storaged.
+    </para>
+    <para>
+      Viable alternatives to storaged are APIs that are guaranteed to be
+      around for longer time-frames, including:
+      <itemizedlist>
+        <listitem>
+          <para>
+            Low-level APIs and commands such as e.g.
+            <ulink url="http://en.wikipedia.org/wiki/Sysfs">sysfs</ulink>,
+            <ulink url="http://www.freedesktop.org/software/systemd/libudev/">libudev</ulink>,
+            <ulink url="http://www.kernel.org/doc/Documentation/filesystems/proc.txt">/proc/self/mountinfo</ulink> and
+            <ulink url="http://en.wikipedia.org/wiki/Util-linux">util-linux</ulink>.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            High-level APIs such as <ulink url="http://developer.gnome.org/gio/stable/volume_mon.html">GVolumeMonitor</ulink>.
+          </para>
+        </listitem>
+      </itemizedlist>
+      In particular, for desktop applications it is a much better idea
+      to use something like GVolumeMonitor since it will make the
+      application show the same devices as the desktop shell
+      (e.g. file manager, file chooser and so on) is showing.
+    </para>
+  </refsect1>
+
+  <refsect1><title>AUTHOR</title>
+    <para>
+      Written by David Zeuthen
+      <email><![CDATA[zeuthen@gmail.com]]></email> with a lot of help
+      from many others.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>BUGS</title>
+    <para>
+      Please send bug reports to either the distribution bug tracker
+      or the upstream bug tracker at
+      <ulink url="https://github.com/phatina/storaged/issues"/>.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>SEE ALSO</title>
+    <para>
+      <citerefentry>
+        <refentrytitle>udev</refentrytitle><manvolnum>7</manvolnum>
+      </citerefentry>,
+      <citerefentry>
+        <refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum>
+      </citerefentry>,
+      <link linkend="storaged.8"><citerefentry><refentrytitle>storaged</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
+      <link linkend="storagedctl.1"><citerefentry><refentrytitle>storagedctl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>,
+      <link linkend="umount.storaged.8"><citerefentry><refentrytitle>umount.storaged</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
+      <citerefentry><refentrytitle>gnome-disks</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+    </para>
+  </refsect1>
+</refentry>
