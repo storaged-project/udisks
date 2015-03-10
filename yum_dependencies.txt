@@ -1,0 +1,11 @@
+gettext-devel
+glib2-devel
+gnome-common
+gobject-introspection-devel
+gtk-doc
+intltool
+libacl-devel
+libatasmart-devel
+libgudev1-devel
+lvm2-devel
+polkit-devel
