@@ -1,10 +1,10 @@
 OVERVIEW
 ========
 
-The storaged project provides a daemon, tools and libraries to access
+The Storaged project provides a daemon, tools and libraries to access
 and manipulate disks and storage devices.
 
-For API stability and intended audience of storaged, see the API
+For API stability and intended audience of Storaged, see the API
 STABILITY and AUDIENCE section of the storaged(8) man page
 (doc/man/storaged.xml in the tarball and git repository).
 
@@ -45,7 +45,7 @@ The actual build and installation:
 RELEASES
 ========
 
-Releases of storaged are available in compressed tarballs from
+Releases of Storaged are available in compressed tarballs from
 
  https://github.com/phatina/storaged/releases
 
