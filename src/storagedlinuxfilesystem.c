@@ -366,7 +366,7 @@ find_primary_gid (uid_t uid)
   rc = getpwuid_r (uid, &pwstruct, pwbuf, sizeof pwbuf, &pw);
   if (rc != 0 || pw == NULL)
     {
-      storaged_warning ("Error looking up uid %d: %m", uid);
+      storaged_warning ("Error looking up uid %u: %m", uid);
       goto out;
     }
   gid = pw->pw_gid;
@@ -395,7 +395,7 @@ is_uid_in_gid (uid_t uid,
   rc = getpwuid_r (uid, &pwstruct, pwbuf, sizeof pwbuf, &pw);
   if (rc != 0 || pw == NULL)
     {
-      storaged_warning ("Error looking up uid %d: %m", uid);
+      storaged_warning ("Error looking up uid %u: %m", uid);
       goto out;
     }
   if (pw->pw_gid == gid)
@@ -406,7 +406,7 @@ is_uid_in_gid (uid_t uid,
 
   if (getgrouplist (pw->pw_name, pw->pw_gid, supplementary_groups, &num_supplementary_groups) < 0)
     {
-      storaged_warning ("Error getting supplementary groups for uid %d: %m", uid);
+      storaged_warning ("Error getting supplementary groups for uid %u: %m", uid);
       goto out;
     }
 
@@ -554,7 +554,7 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
 
           if (strcmp (option, "uid=") == 0)
             {
-              s = g_strdup_printf ("uid=%d", caller_uid);
+              s = g_strdup_printf ("uid=%u", caller_uid);
               g_ptr_array_add (options, s);
             }
           else if (strcmp (option, "gid=") == 0)
@@ -562,7 +562,7 @@ prepend_default_mount_options (const FSMountOptions *fsmo,
               gid = find_primary_gid (caller_uid);
               if (gid != (gid_t) - 1)
                 {
-                  s = g_strdup_printf ("gid=%d", gid);
+                  s = g_strdup_printf ("gid=%u", gid);
                   g_ptr_array_add (options, s);
                 }
             }
@@ -989,7 +989,7 @@ calculate_mount_point (StoragedDaemon              *daemon,
       else
         {
           g_free (mount_point);
-          mount_point = g_strdup_printf ("%s%d", orig_mount_point, n++);
+          mount_point = g_strdup_printf ("%s%u", orig_mount_point, n++);
         }
     }
   g_free (orig_mount_point);
@@ -1338,7 +1338,7 @@ handle_mount (StoragedFilesystem       *filesystem,
                                                  error_message);
           goto out;
         }
-      storaged_notice ("Mounted %s (system) at %s on behalf of uid %d",
+      storaged_notice ("Mounted %s (system) at %s on behalf of uid %u",
                        storaged_block_get_device (block),
                        mount_point_to_use,
                        caller_uid);
@@ -1505,7 +1505,7 @@ handle_mount (StoragedFilesystem       *filesystem,
                                  caller_uid,
                                  FALSE); /* fstab_mounted */
 
-  storaged_notice ("Mounted %s at %s on behalf of uid %d",
+  storaged_notice ("Mounted %s at %s on behalf of uid %u",
                    storaged_block_get_device (block),
                    mount_point_to_use,
                    caller_uid);
@@ -1685,7 +1685,7 @@ handle_unmount (StoragedFilesystem       *filesystem,
                                                  error_message);
           goto out;
         }
-      storaged_notice ("Unmounted %s (system) from %s on behalf of uid %d",
+      storaged_notice ("Unmounted %s (system) from %s on behalf of uid %u",
                        storaged_block_get_device (block),
                        mount_point,
                        caller_uid);
@@ -1777,7 +1777,7 @@ handle_unmount (StoragedFilesystem       *filesystem,
 
   /* OK, filesystem unmounted.. the state/cleanup routines will remove the mountpoint for us */
 
-  storaged_notice ("Unmounted %s on behalf of uid %d",
+  storaged_notice ("Unmounted %s on behalf of uid %u",
                    storaged_block_get_device (block),
                    caller_uid);
 

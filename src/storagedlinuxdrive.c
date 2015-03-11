@@ -1284,7 +1284,7 @@ send_scsi_command_sync (gint      fd,
         {
           g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
                        "Non-GOOD SCSI status from SGIO v4 ioctl: "
-                       "device_status=%d transport_status=%d driver_status=%d",
+                       "device_status=%u transport_status=%u driver_status=%u",
                        io_v4.device_status,
                        io_v4.transport_status,
                        io_v4.driver_status);

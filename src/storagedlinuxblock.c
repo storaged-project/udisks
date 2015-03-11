@@ -1040,7 +1040,7 @@ escape_fstab (const gchar *source)
         case '\t':
         case '\n':
         case '\\':
-          g_string_append_printf (s, "\\%03o", source[n]);
+          g_string_append_printf (s, "\\%03o", (guint) source[n]);
           break;
 
         default:
@@ -2573,7 +2573,7 @@ handle_format (StoragedBlock           *block,
         {
           if (invocation != NULL)
             g_dbus_method_invocation_return_error (invocation, STORAGED_ERROR, STORAGED_ERROR_FAILED,
-                                                   "Cannot chown %s to uid=%d and gid=%d: %m", tos_dir, caller_uid, caller_gid);
+                                                   "Cannot chown %s to uid=%u and gid=%u: %m", tos_dir, caller_uid, caller_gid);
           if (umount (tos_dir) != 0)
             {
               storaged_warning ("Error unmounting directory %s: %m", tos_dir);

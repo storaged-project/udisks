@@ -1717,7 +1717,7 @@ apply_configuration_thread_func (gpointer user_data)
                                            &error))
         {
           storaged_error ("Error sending ATA command SET FEATURES, sub-command 0x%02x (ata_apm_level=%d) to %s: %s (%s, %d)",
-                          input.feature, data->ata_apm_level, device_file,
+                          (guint) input.feature, data->ata_apm_level, device_file,
                           error->message, g_quark_to_string (error->domain), error->code);
           g_clear_error (&error);
         }
@@ -1748,7 +1748,7 @@ apply_configuration_thread_func (gpointer user_data)
                                            &error))
         {
           storaged_error ("Error sending ATA command SET FEATURES, sub-command 0x%02x (ata_aam_level=%d) to %s: %s (%s, %d)",
-                          input.feature, data->ata_aam_level, device_file,
+                          (guint) input.feature, data->ata_aam_level, device_file,
                           error->message, g_quark_to_string (error->domain), error->code);
           g_clear_error (&error);
         }
@@ -1776,7 +1776,7 @@ apply_configuration_thread_func (gpointer user_data)
                                            &error))
         {
           storaged_error ("Error sending ATA command SET FEATURES, sub-command 0x%02x to %s: %s (%s, %d)",
-                          input.feature, device_file,
+                          (guint) input.feature, device_file,
                           error->message, g_quark_to_string (error->domain), error->code);
           g_clear_error (&error);
         }

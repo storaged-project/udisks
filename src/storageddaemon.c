@@ -586,7 +586,7 @@ storaged_daemon_launch_simple_job (StoragedDaemon    *daemon,
     storaged_base_job_add_object (STORAGED_BASE_JOB (job), object);
 
   /* TODO: protect job_id by a mutex */
-  job_object_path = g_strdup_printf ("/org/storaged/Storaged/jobs/%d", job_id++);
+  job_object_path = g_strdup_printf ("/org/storaged/Storaged/jobs/%u", job_id++);
   job_object = storaged_object_skeleton_new (job_object_path);
   storaged_object_skeleton_set_job (job_object, STORAGED_JOB (job));
   g_free (job_object_path);
@@ -659,7 +659,7 @@ storaged_daemon_launch_threaded_job  (StoragedDaemon         *daemon,
     storaged_base_job_add_object (STORAGED_BASE_JOB (job), object);
 
   /* TODO: protect job_id by a mutex */
-  job_object_path = g_strdup_printf ("/org/storaged/Storaged/jobs/%d", job_id++);
+  job_object_path = g_strdup_printf ("/org/storaged/Storaged/jobs/%u", job_id++);
   job_object = storaged_object_skeleton_new (job_object_path);
   storaged_object_skeleton_set_job (job_object, STORAGED_JOB (job));
   g_free (job_object_path);
@@ -737,7 +737,7 @@ storaged_daemon_launch_spawned_job (StoragedDaemon    *daemon,
     storaged_base_job_add_object (STORAGED_BASE_JOB (job), object);
 
   /* TODO: protect job_id by a mutex */
-  job_object_path = g_strdup_printf ("/org/storaged/Storaged/jobs/%d", job_id++);
+  job_object_path = g_strdup_printf ("/org/storaged/Storaged/jobs/%u", job_id++);
   job_object = storaged_object_skeleton_new (job_object_path);
   storaged_object_skeleton_set_job (job_object, STORAGED_JOB (job));
   g_free (job_object_path);

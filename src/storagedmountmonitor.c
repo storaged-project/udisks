@@ -430,7 +430,7 @@ storaged_mount_monitor_get_mountinfo (StoragedMountMonitor  *monitor,
         continue;
 
       if (sscanf (lines[n],
-                  "%d %d %d:%d " PATH_MAX_FMT " " PATH_MAX_FMT,
+                  "%u %u %u:%u " PATH_MAX_FMT " " PATH_MAX_FMT,
                   &mount_id,
                   &parent_id,
                   &major,

@@ -110,14 +110,14 @@ main (int argc, char *argv[])
   object = lookup_object_for_block (client, block_device);
   if (object == NULL)
     {
-      g_printerr ("Error finding object for block device %d:%d\n", major (block_device), minor (block_device));
+      g_printerr ("Error finding object for block device %u:%u\n", major (block_device), minor (block_device));
       goto out;
     }
 
   filesystem = storaged_object_peek_filesystem (object);
   if (filesystem == NULL)
     {
-      g_printerr ("Block device %d:%d is not a mountable filesystem.\n", major (block_device), minor (block_device));
+      g_printerr ("Block device %u:%u is not a mountable filesystem.\n", major (block_device), minor (block_device));
       goto out;
     }
 
@@ -128,7 +128,7 @@ main (int argc, char *argv[])
                                               NULL, /* GCancellable */
                                               &error))
     {
-      g_printerr ("Error unmounting block device %d:%d: %s\n", major (block_device), minor (block_device), error->message);
+      g_printerr ("Error unmounting block device %u:%u: %s\n", major (block_device), minor (block_device), error->message);
       g_error_free (error);
       goto out;
     }

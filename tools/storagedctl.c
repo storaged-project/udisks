@@ -268,7 +268,7 @@ variant_to_string_with_indent (GVariant *value,
         {
           if (m > 0)
             g_string_append_printf (str, "\n%*s",
-                                    indent, "");
+                                    (gint) indent, "");
           g_string_append (str, strv[m]);
         }
       value_str = g_string_free (str, FALSE);
@@ -334,7 +334,7 @@ print_interface_properties (GDBusProxy *proxy,
       value_str = variant_to_string_with_indent (value, indent + strlen (property_name) + 2 + value_indent);
 
       g_print ("%*s%s%s:%s %*s%s\n",
-               indent, "",
+               (gint) indent, "",
                _color_get (_COLOR_FG_WHITE), property_name, _color_get (_COLOR_RESET),
                value_indent, "",
                value_str);
@@ -363,7 +363,7 @@ print_object (StoragedObject *object,
     {
       GDBusProxy *iproxy = G_DBUS_PROXY (l->data);
       g_print ("%*s%s%s%s:%s\n",
-               indent, "",
+               (gint) indent, "",
                _color_get (_COLOR_BOLD_ON), _color_get (_COLOR_FG_MAGENTA), g_dbus_proxy_get_interface_name (iproxy), _color_get (_COLOR_RESET));
       print_interface_properties (iproxy, indent + 2);
     }

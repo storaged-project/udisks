@@ -679,17 +679,17 @@ storaged_state_check_mounted_fs_entry (StoragedState  *state,
     {
       if (!device_exists)
         {
-          storaged_notice ("Cleaning up mount point %s (device %d:%d no longer exist)",
+          storaged_notice ("Cleaning up mount point %s (device %u:%u no longer exist)",
                            mount_point, major (block_device), minor (block_device));
         }
       else if (device_to_be_cleaned)
         {
-          storaged_notice ("Cleaning up mount point %s (device %d:%d is about to be cleaned up)",
+          storaged_notice ("Cleaning up mount point %s (device %u:%u is about to be cleaned up)",
                            mount_point, major (block_device), minor (block_device));
         }
       else if (!is_mounted)
         {
-          storaged_notice ("Cleaning up mount point %s (device %d:%d is not mounted)",
+          storaged_notice ("Cleaning up mount point %s (device %u:%u is not mounted)",
                            mount_point, major (block_device), minor (block_device));
         }
 
@@ -1182,7 +1182,7 @@ storaged_state_check_unlocked_luks_entry (StoragedState  *state,
           gchar *escaped_device_file;
           gchar *error_message;
 
-          storaged_notice ("Cleaning up LUKS device %s (backing device %d:%d no longer exist)",
+          storaged_notice ("Cleaning up LUKS device %s (backing device %u:%u no longer exist)",
                            device_file_cleartext,
                            major (crypto_device), minor (crypto_device));
 
@@ -1213,7 +1213,7 @@ storaged_state_check_unlocked_luks_entry (StoragedState  *state,
         }
       else
         {
-          storaged_notice ("LUKS device %d:%d was manually removed",
+          storaged_notice ("LUKS device %u:%u was manually removed",
                            major (cleartext_device), minor (cleartext_device));
         }
     }
@@ -1911,13 +1911,13 @@ storaged_state_check_mdraid_entry (StoragedState  *state,
   device = g_udev_client_query_by_device_number (udev_client, G_UDEV_DEVICE_TYPE_BLOCK, raid_device);
   if (device == NULL)
     {
-      storaged_info ("no udev device for raid device %d:%d", major (raid_device), minor (raid_device));
+      storaged_info ("no udev device for raid device %u:%u", major (raid_device), minor (raid_device));
       goto out;
     }
   array_state = g_udev_device_get_sysfs_attr (device, "md/array_state");
   if (array_state == NULL)
     {
-      storaged_info ("raid device %d:%d is not setup  (no md/array_state sysfs file)",
+      storaged_info ("raid device %u:%u is not setup  (no md/array_state sysfs file)",
                    major (raid_device), minor (raid_device));
       goto out;
     }
@@ -1945,7 +1945,7 @@ storaged_state_check_mdraid_entry (StoragedState  *state,
 
   if (!keep)
     {
-      storaged_notice ("No longer watching mdraid device %d:%d", major (raid_device), minor (raid_device));
+      storaged_notice ("No longer watching mdraid device %u:%u", major (raid_device), minor (raid_device));
     }
 
  out2:
@@ -2082,7 +2082,7 @@ storaged_state_add_mdraid (StoragedState   *state,
           /* Skip/remove stale entries */
           if (entry_raid_device == raid_device)
             {
-              storaged_warning ("Removing stale entry for raid device %d:%d in /run/storaged/mdraid file",
+              storaged_warning ("Removing stale entry for raid device %u:%u in /run/storaged/mdraid file",
                                 major (raid_device), minor (raid_device));
             }
           else

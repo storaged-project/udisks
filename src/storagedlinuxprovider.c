@@ -542,7 +542,7 @@ storaged_linux_provider_start (StoragedProvider *_provider)
   /* do two coldplug runs to handle dependencies between devices */
   for (n = 0; n < 2; n++)
     {
-      storaged_info ("Initialization (coldplug %d/2)", n + 1);
+      storaged_info ("Initialization (coldplug %u/2)", n + 1);
       do_coldplug (provider, storaged_devices);
     }
   g_list_free_full (storaged_devices, g_object_unref);
@@ -1242,7 +1242,7 @@ housekeeping_thread_func (GIOSchedulerJob *job,
     secs_since_last = now - provider->housekeeping_last;
   provider->housekeeping_last = now;
 
-  storaged_info ("Housekeeping initiated (%d seconds since last housekeeping)", secs_since_last);
+  storaged_info ("Housekeeping initiated (%u seconds since last housekeeping)", secs_since_last);
 
   housekeeping_all_drives (provider, secs_since_last);
   housekeeping_all_modules (provider, secs_since_last);

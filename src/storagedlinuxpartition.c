@@ -150,7 +150,7 @@ storaged_linux_partition_update (StoragedLinuxPartition  *partition,
       if (g_strcmp0 (g_udev_device_get_property (device->udev_device, "ID_PART_ENTRY_SCHEME"), "dos") == 0)
         {
           char *endp;
-          gint type_as_int = strtol (type, &endp, 0);
+          guint type_as_int = strtoul (type, &endp, 0);
           if (type[0] != '\0' && *endp == '\0')
             {
               /* ensure 'dos' partition types are always of the form 0x0c (e.g. with two digits) */
@@ -302,7 +302,7 @@ handle_set_flags (StoragedPartition        *partition,
   escaped_device = storaged_daemon_util_escape_and_quote (storaged_block_get_device (partition_table_block));
   if (g_strcmp0 (storaged_partition_table_get_type_ (partition_table), "gpt") == 0)
     {
-      command_line = g_strdup_printf ("sgdisk --attributes %d:=:0x%08x%08x %s",
+      command_line = g_strdup_printf ("sgdisk --attributes %u:=:0x%08x%08x %s",
                                       storaged_partition_get_number (partition),
                                       (guint32) (flags >> 32),
                                       (guint32) (flags & 0xffffffff),
@@ -310,7 +310,7 @@ handle_set_flags (StoragedPartition        *partition,
     }
   else if (g_strcmp0 (storaged_partition_table_get_type_ (partition_table), "dos") == 0)
     {
-      command_line = g_strdup_printf ("parted --script %s \"set %d boot %s\"",
+      command_line = g_strdup_printf ("parted --script %s \"set %u boot %s\"",
                                       escaped_device,
                                       storaged_partition_get_number (partition),
                                       flags & 0x80 ? "on" : "off");
@@ -479,7 +479,7 @@ handle_set_name (StoragedPartition        *partition,
        *
        * TODO is this assumption true or do we need to pass UTF-16? How is that going to work?
        */
-      command_line = g_strdup_printf ("sgdisk --change-name %d:%s %s",
+      command_line = g_strdup_printf ("sgdisk --change-name %u:%s %s",
                                       storaged_partition_get_number (partition),
                                       escaped_name,
                                       escaped_device);
@@ -629,7 +629,7 @@ storaged_linux_partition_set_type_sync (StoragedLinuxPartition  *partition,
                        type);
           goto out;
         }
-      command_line = g_strdup_printf ("sgdisk --typecode %d:%s %s",
+      command_line = g_strdup_printf ("sgdisk --typecode %u:%s %s",
                                       storaged_partition_get_number (STORAGED_PARTITION (partition)),
                                       escaped_type,
                                       escaped_device);
@@ -637,7 +637,7 @@ storaged_linux_partition_set_type_sync (StoragedLinuxPartition  *partition,
   else if (g_strcmp0 (storaged_partition_table_get_type_ (partition_table), "dos") == 0)
     {
       gchar *endp;
-      gint type_as_int = strtol (type, &endp, 0);
+      guint type_as_int = strtoul (type, &endp, 0);
       if (strlen (type) == 0 || *endp != '\0')
         {
           g_set_error (error,
@@ -656,7 +656,7 @@ storaged_linux_partition_set_type_sync (StoragedLinuxPartition  *partition,
                        "Delete the partition and create a new extended partition instead.");
           goto out;
         }
-      command_line = g_strdup_printf ("sfdisk --change-id %s %d 0x%02x",
+      command_line = g_strdup_printf ("sfdisk --change-id %s %u 0x%02x",
                                       escaped_device,
                                       storaged_partition_get_number (STORAGED_PARTITION (partition)),
                                       type_as_int);
@@ -927,7 +927,7 @@ handle_delete (StoragedPartition        *partition,
                                                 NULL, /* gint *out_status */
                                                 &error_message,
                                                 NULL,  /* input_string */
-                                                "parted --script %s \"rm %d\"",
+                                                "parted --script %s \"rm %u\"",
                                                 escaped_device,
                                                 storaged_partition_get_number (partition)))
     {

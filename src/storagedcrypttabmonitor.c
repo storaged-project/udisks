@@ -396,7 +396,7 @@ storaged_crypttab_monitor_ensure (StoragedCrypttabMonitor *monitor)
       num_tokens = g_strv_length (tokens);
       if (num_tokens < 2)
         {
-          storaged_warning ("Line %d of /etc/crypttab only contains %d tokens", n, num_tokens);
+          storaged_warning ("Line %u of /etc/crypttab only contains %u tokens", n, num_tokens);
           goto continue_loop;
         }
 

@@ -1610,7 +1610,7 @@ get_pow2_size (guint64 size)
   gchar *str;
   gdouble displayed_size;
   const gchar *unit;
-  guint digits;
+  gint digits;
 
   if (size < MEBIBYTE_FACTOR)
     {
@@ -1653,7 +1653,7 @@ get_pow10_size (guint64 size)
   gchar *str;
   gdouble displayed_size;
   const gchar *unit;
-  guint digits;
+  gint digits;
 
   if (size < MEGABYTE_FACTOR)
     {
@@ -1712,7 +1712,7 @@ storaged_client_get_size_for_display (StoragedClient  *client,
   if (long_string)
     {
       gchar *size_str;
-      size_str = g_strdup_printf ("%'" G_GINT64_FORMAT, size);
+      size_str = g_strdup_printf ("%'" G_GUINT64_FORMAT, size);
       if (use_pow2)
         {
           gchar *pow2_str;

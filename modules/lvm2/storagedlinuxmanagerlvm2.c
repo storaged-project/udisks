@@ -255,7 +255,7 @@ handle_volume_group_create (StoragedManagerLVM2     *_object,
           g_dbus_method_invocation_return_error (invocation,
                                                  STORAGED_ERROR,
                                                  STORAGED_ERROR_FAILED,
-                                                 "Invalid object path %s at index %d",
+                                                 "Invalid object path %s at index %u",
                                                  arg_blocks[n], n);
           goto out;
         }
@@ -266,7 +266,7 @@ handle_volume_group_create (StoragedManagerLVM2     *_object,
           g_dbus_method_invocation_return_error (invocation,
                                                  STORAGED_ERROR,
                                                  STORAGED_ERROR_FAILED,
-                                                 "Object path %s for index %d is not a block device",
+                                                 "Object path %s for index %u is not a block device",
                                                  arg_blocks[n], n);
           goto out;
         }

@@ -157,7 +157,7 @@ storaged_safe_append_to_object_path (GString      *str,
       else
         {
           /* Escape bytes not in [A-Z][a-z][0-9] as _<hex-with-two-digits> */
-          g_string_append_printf (str, "_%02x", c);
+          g_string_append_printf (str, "_%02x", (guint) c);
         }
     }
 }
@@ -1145,7 +1145,7 @@ storaged_daemon_util_hexdump (gconstpointer data, gsize len)
           if (m > n && (m%4) == 0)
             g_string_append_c (ret, ' ');
           if (m < len)
-            g_string_append_printf (ret, "%02x ", bdata[m]);
+            g_string_append_printf (ret, "%02x ", (guint) bdata[m]);
           else
             g_string_append (ret, "   ");
         }

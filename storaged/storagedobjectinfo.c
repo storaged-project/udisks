@@ -262,7 +262,7 @@ storaged_client_get_object_info_for_block (StoragedClient     *client,
        *              The %d is the partition number.
        *              The %s is the description for the block device (e.g. "5 GB Block Device").
        */
-      s = g_strdup_printf (C_("part-block", "Partition %d of %s"),
+      s = g_strdup_printf (C_("part-block", "Partition %u of %s"),
                            storaged_partition_get_number (partition), info->description);
       g_free (info->description);
       info->description = s;
@@ -276,7 +276,7 @@ storaged_client_get_object_info_for_block (StoragedClient     *client,
                                      info->description,
                                      storaged_block_get_preferred_device (block));
 
-  info->sort_key = g_strdup_printf ("02_block_%s_%d",
+  info->sort_key = g_strdup_printf ("02_block_%s_%u",
                                     last_segment (g_dbus_object_get_object_path (G_DBUS_OBJECT (info->object))),
                                     partition != NULL ? storaged_partition_get_number (partition) : 0);
 }
@@ -316,7 +316,7 @@ storaged_client_get_object_info_for_loop (StoragedClient     *client,
        *              The %d is the partition number.
        *              The %s is the description for the loop device (e.g. "5 GB Loop Device").
        */
-      s = g_strdup_printf (C_("part-loop", "Partition %d of %s"),
+      s = g_strdup_printf (C_("part-loop", "Partition %u of %s"),
                            storaged_partition_get_number (partition), info->description);
       g_free (info->description);
       info->description = s;
@@ -332,7 +332,7 @@ storaged_client_get_object_info_for_loop (StoragedClient     *client,
                                      info->name,
                                      storaged_block_get_preferred_device (block));
 
-  info->sort_key = g_strdup_printf ("03_loop_%s_%d",
+  info->sort_key = g_strdup_printf ("03_loop_%s_%u",
                                     last_segment (g_dbus_object_get_object_path (G_DBUS_OBJECT (info->object))),
                                     partition != NULL ? storaged_partition_get_number (partition) : 0);
 }
@@ -412,7 +412,7 @@ storaged_client_get_object_info_for_mdraid (StoragedClient     *client,
        *              The %d is the partition number.
        *              The %s is the description for the drive (e.g. "2 TB RAID-5").
        */
-      s = g_strdup_printf (C_("part-raid", "Partition %d of %s"),
+      s = g_strdup_printf (C_("part-raid", "Partition %u of %s"),
                            storaged_partition_get_number (partition), info->description);
       g_free (info->description);
       info->description = s;
@@ -469,7 +469,7 @@ storaged_client_get_object_info_for_mdraid (StoragedClient     *client,
 
   g_clear_object (&block);
 
-  info->sort_key = g_strdup_printf ("01_mdraid_%s_%d", storaged_mdraid_get_uuid (mdraid),
+  info->sort_key = g_strdup_printf ("01_mdraid_%s_%u", storaged_mdraid_get_uuid (mdraid),
                                     partition != NULL ? storaged_partition_get_number (partition) : 0);
 }
 
@@ -829,7 +829,7 @@ storaged_client_get_object_info_for_drive (StoragedClient     *client,
        *              The %d is the partition number.
        *              The %s is the description for the drive (e.g. "2 GB Thumb Drive").
        */
-      s = g_strdup_printf (C_("part-drive", "Partition %d of %s"),
+      s = g_strdup_printf (C_("part-drive", "Partition %u of %s"),
                            storaged_partition_get_number (partition), info->description);
       g_free (info->description);
       info->description = s;

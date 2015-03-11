@@ -303,7 +303,7 @@ storaged_ata_send_command_sync (gint                       fd,
     {
       g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
                    "ATA command failed: error=0x%02x count=0x%02x status=0x%02x",
-                   output->error, output->count, output->status);
+                   (guint) output->error, (guint) output->count, (guint) output->status);
       goto out;
     }
 
