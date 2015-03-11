@@ -98,7 +98,7 @@ class StoragedTestCase(unittest.TestCase):
             sys.exit(0)
 
         # run from local build tree if we are in one, otherwise use system instance
-        klass.daemon_path = os.path.join(srcdir, 'src', 'storaged')
+        klass.daemon_path = os.path.join(srcdir, 'src', '.libs', 'storaged')
         if (os.access(klass.daemon_path, os.X_OK)):
             print('Testing binaries from local build tree')
             klass.check_build_tree_config()
