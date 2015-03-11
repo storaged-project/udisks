@@ -477,7 +477,10 @@ class StoragedTestCase(unittest.TestCase):
             time.sleep(0.1)
             self.sync()
 
-        self.assertEqual(fn(), value)
+        if isinstance(value, set):
+            self.assertEqual(set(fn()), value)
+        else:
+            self.assertEqual(fn(), value)
 
     def assertProperty(self, obj, name, value):
         '''Check that an object's property is eventually equal to value'''
@@ -889,7 +892,7 @@ class FS(StoragedTestCase):
         if type != 'ntfs':
             # ntfs-3g does not support multiple mounts
             subprocess.check_call([mount_prog, self.device, mount_b])
-            self.assertProperty(fs, 'mount-points', [mount_a, mount_b])
+            self.assertProperty(fs, 'mount-points', set([mount_a, mount_b]))
             subprocess.call(['umount', mount_b])
 
         # unmount it
