@@ -831,7 +831,6 @@ add_acl (const gchar  *path,
 
   ret = TRUE;
 
- out:
   if (acl != NULL)
     acl_free (acl);
   return ret;
