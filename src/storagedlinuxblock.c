@@ -426,6 +426,8 @@ find_fstab_entries_for_device (StoragedLinuxBlock *block,
       const gchar *device = NULL;
       const gchar *label = NULL;
       const gchar *uuid = NULL;
+      const gchar *partuuid = NULL;
+      const gchar *partlabel = NULL;
       guint n;
 
       fsname = storaged_fstab_entry_get_fsname (entry);
@@ -437,6 +439,14 @@ find_fstab_entries_for_device (StoragedLinuxBlock *block,
       else if (g_str_has_prefix (fsname, "LABEL="))
         {
           label = fsname + 6;
+        }
+      else if (g_str_has_prefix (fsname, "PARTUUID="))
+        {
+          partuuid = fsname + 9;
+        }
+      else if (g_str_has_prefix (fsname, "PARTLABEL="))
+        {
+          partlabel = fsname + 10;
         }
       else if (g_str_has_prefix (fsname, "/dev"))
         {
@@ -476,6 +486,22 @@ find_fstab_entries_for_device (StoragedLinuxBlock *block,
       else if (uuid != NULL && g_strcmp0 (uuid, storaged_block_get_id_uuid (STORAGED_BLOCK (block))) == 0)
         {
           ret = g_list_prepend (ret, g_object_ref (entry));
+        }
+      else if (partlabel != NULL || partuuid != NULL)
+        {
+          StoragedLinuxBlockObject *object;
+          GUdevDevice *u_dev = NULL;
+
+          object = storaged_daemon_util_dup_object (block, NULL);
+          if (object == NULL)
+            goto continue_loop;
+          u_dev = storaged_linux_block_object_get_device (object)->udev_device;
+          g_clear_object (&object);
+          if (u_dev == NULL)
+            goto continue_loop;
+          if ((partuuid != NULL && g_strcmp0 (partuuid, g_udev_device_get_property (u_dev, "ID_PART_ENTRY_UUID")) == 0) ||
+              (partlabel != NULL && g_strcmp0 (partlabel, g_udev_device_get_property (u_dev, "ID_PART_ENTRY_NAME")) == 0))
+            ret = g_list_prepend (ret, g_object_ref (entry));
         }
 
     continue_loop:

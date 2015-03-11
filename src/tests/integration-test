@@ -1087,10 +1087,19 @@ class Fstab(UDisksTestCase):
         subprocess.check_call(
             ['parted', '-s', kls.device, 'mkpart', 'primary', '0', '64'],
             stdout=subprocess.PIPE)
+        kls.p1label = 'udtestp1'
         subprocess.check_call(
-            ['parted', '-s', kls.device, 'name', '1', 'udtestp1'],
+            ['parted', '-s', kls.device, 'name', '1', kls.p1label],
             stdout=subprocess.PIPE)
         kls.sync()
+        blkid = subprocess.check_output(
+            ['blkid', '-oudev', '-p', kls.devname(1)], universal_newlines=True).splitlines()
+        for line in blkid:
+            if line.startswith('ID_PART_ENTRY_UUID='):
+                kls.p1uuid = line.split('=', 1)[1]
+                break
+        else:
+            raise SystemError('blkid does not contain partition UUID')
 
         kls.mkfs('ext2', partition=1, label='udtestfst')
         kls.mountpoint = tempfile.mkdtemp()
@@ -1121,6 +1130,26 @@ class Fstab(UDisksTestCase):
         with open('/etc/fstab', 'a') as f:
             f.write('LABEL=udtestfst %s ext4 defaults,nosuid,noexec 0 0\n' %
                     self.mountpoint)
+        os.sync()
+        self.do_test()
+
+    def test_partuuid(self):
+        '''by PARTUUID'''
+
+        with open('/etc/fstab', 'a') as f:
+            f.write('PARTUUID=%s %s ext4 defaults,nosuid,noexec 0 0\n' %
+                    (self.p1uuid, self.mountpoint))
+
+        os.sync()
+        self.do_test()
+
+    def test_partlabel(self):
+        '''by PARTLABEL'''
+
+        with open('/etc/fstab', 'a') as f:
+            f.write('PARTLABEL=%s %s ext4 defaults,nosuid,noexec 0 0\n' %
+                    (self.p1label, self.mountpoint))
+
         os.sync()
         self.do_test()
 

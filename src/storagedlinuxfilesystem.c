@@ -1059,6 +1059,14 @@ is_in_fstab (StoragedBlock        *block,
         {
           device = g_strdup_printf ("/dev/disk/by-label/%s", m->mnt_fsname + 6);
         }
+      else if (g_str_has_prefix (m->mnt_fsname, "PARTUUID="))
+        {
+          device = g_strdup_printf ("/dev/disk/by-partuuid/%s", m->mnt_fsname + 9);
+        }
+      else if (g_str_has_prefix (m->mnt_fsname, "PARTLABEL="))
+        {
+          device = g_strdup_printf ("/dev/disk/by-partlabel/%s", m->mnt_fsname + 10);
+        }
       else if (g_str_has_prefix (m->mnt_fsname, "/dev"))
         {
           device = g_strdup (m->mnt_fsname);
