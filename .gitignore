@@ -9,6 +9,8 @@
 *.swp
 *.trs
 *.typelib
+*.tar.gz
+*.tar.bz2
 __pycache__
 .deps
 .libs

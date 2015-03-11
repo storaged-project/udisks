@@ -1,5 +1,5 @@
-org.freedesktop.*.conf
-org.freedesktop.*.service
-org.freedesktop.*.policy
+org.storaged.*.conf
+org.storaged.*.service
+org.storaged.*.policy
 *.pc
 
