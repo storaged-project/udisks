@@ -1072,6 +1072,84 @@ class FS(StoragedTestCase):
 
 # ----------------------------------------------------------------------------
 
+class Fstab(UDisksTestCase):
+    '''Test /etc/fstab custom options'''
+
+    @classmethod
+    def setUpClass(kls):
+        kls.orig_fstab = '/etc/fstab.udiskstest'
+        shutil.copy2('/etc/fstab', kls.orig_fstab)
+
+        # create one partition
+        subprocess.check_call(
+            ['parted', '-s', kls.device, 'mklabel', 'gpt'],
+            stdout=subprocess.PIPE)
+        subprocess.check_call(
+            ['parted', '-s', kls.device, 'mkpart', 'primary', '0', '64'],
+            stdout=subprocess.PIPE)
+        subprocess.check_call(
+            ['parted', '-s', kls.device, 'name', '1', 'udtestp1'],
+            stdout=subprocess.PIPE)
+        kls.sync()
+
+        kls.mkfs('ext2', partition=1, label='udtestfst')
+        kls.mountpoint = tempfile.mkdtemp()
+        kls.block = kls.udisks_block(partition=1)
+        kls.fs = kls.udisks_filesystem(partition=1)
+
+    @classmethod
+    def tearDownClass(kls):
+        os.rmdir(kls.mountpoint)
+        os.unlink(kls.orig_fstab)
+
+    def tearDown(self):
+        shutil.copy2(self.orig_fstab, '/etc/fstab')
+        self.retry_busy(self.fs.call_unmount_sync, no_options, None)
+
+    def test_devname(self):
+        '''by device name'''
+
+        with open('/etc/fstab', 'a') as f:
+            f.write('%s %s ext4 defaults,nosuid,noexec 0 0\n' %
+                    (self.devname(partition=1), self.mountpoint))
+        os.sync()
+        self.do_test()
+
+    def test_label(self):
+        '''by label'''
+
+        with open('/etc/fstab', 'a') as f:
+            f.write('LABEL=udtestfst %s ext4 defaults,nosuid,noexec 0 0\n' %
+                    self.mountpoint)
+        os.sync()
+        self.do_test()
+
+    def test_uuid(self):
+        '''by UUID'''
+
+        with open('/etc/fstab', 'a') as f:
+            f.write('UUID=%s %s ext4 defaults,nosuid,noexec 0 0\n' %
+                    (self.block.get_property('id-uuid'), self.mountpoint))
+        os.sync()
+        self.do_test()
+
+    def do_test(self):
+        self.assertEqual(self.fs.get_property('mount-points'), [])
+        mount_path = self.fs.call_mount_sync(no_options, None)
+        self.assertEqual(mount_path, self.mountpoint)
+        with open('/proc/self/mounts') as f:
+            for line in f:
+                if line.startswith(self.devname()):
+                    options = line.split()[3].split(',')
+                    break
+            else:
+                self.fail('%s not mounted' % self.devname())
+        self.assertIn('noexec', options)
+        self.assertIn('nosuid', options)
+
+
+# ----------------------------------------------------------------------------
+
 class Smart(StoragedTestCase):
     '''Check SMART operation.'''
 
