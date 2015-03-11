@@ -6,7 +6,7 @@ man_MANS =
 if ENABLE_MAN
 man_MANS +=				\
 	storagedctl.1			\
-	storaged.8			\
+	storaged-daemon.8		\
 	storaged.8			\
 	umount.storaged.8		\
 	$(NULL)
@@ -15,7 +15,7 @@ endif
 storagedctl.1 : storagedctl.xml
 	$(XSLTPROC) -path "$(builddir)/.." -nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
 
-storaged.8 : storaged-daemon.xml
+storaged-daemon.8 : storaged-daemon.xml
 	$(XSLTPROC) -path "$(builddir)/.." -nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
 
 storaged.8 : storaged.xml

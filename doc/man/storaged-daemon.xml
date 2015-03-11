@@ -2,29 +2,29 @@
 <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
                "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
 [<!ENTITY version SYSTEM "../version.xml">]>
-<refentry id="storaged.8">
+<refentry id="storaged-daemon.8">
   <refentryinfo>
-    <title>storaged</title>
+    <title>storaged-daemon</title>
     <date>March 2013</date>
-    <productname>storaged</productname>
+    <productname>storaged-daemon</productname>
   </refentryinfo>
 
   <refmeta>
-    <refentrytitle>storaged</refentrytitle>
+    <refentrytitle>storaged-daemon</refentrytitle>
     <manvolnum>8</manvolnum>
     <refmiscinfo class="manual">System Daemon</refmiscinfo>
-    <refmiscinfo class="source">storaged</refmiscinfo>
+    <refmiscinfo class="source">storaged-daemon</refmiscinfo>
     <refmiscinfo class="version">&version;</refmiscinfo>
   </refmeta>
 
   <refnamediv>
-    <refname>storaged</refname>
+    <refname>storaged-daemon</refname>
     <refpurpose>The storaged system daemon</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv><title>SYNOPSIS</title>
     <cmdsynopsis>
-      <command>storaged</command>
+      <command>storaged-daemon</command>
       <arg><option>--help</option></arg>
       <arg><option>--replace</option></arg>
       <arg><option>--no-debug</option></arg>
@@ -35,7 +35,7 @@
 
   <refsect1><title>DESCRIPTION</title>
     <para>
-      The <command>storaged</command> program provides the
+      The <command>storaged-daemon</command> program provides the
       <emphasis>org.storaged.Storaged</emphasis> name on the system
       message bus. Users or administrators should never need to start
       this daemon as it will be automatically started by
@@ -46,7 +46,7 @@
     </para>
     <para>
       See the
-      <citerefentry><refentrytitle>storaged</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+      <citerefentry><refentrytitle>storaged-daemon</refentrytitle><manvolnum>8</manvolnum></citerefentry>
       man page for more information.
     </para>
   </refsect1>
