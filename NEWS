@@ -1,17 +1,45 @@
-udisks 2.1.5 (unreleased)
-------------
+---------------------------
+storaged 2.0.1 (unreleased)
+---------------------------
 
-The udisks project provides a daemon, tools and libraries to access
-and manipulate disks and storage devices.
+The storaged project provides a daemon, tools and libraries to access
+and manipulate disks, storage devices and technologies.
 
-Changes since udisks 2.1.4:
+Changes since storaged 2.0.0:
 
-(TODO: git shortlog)
+David King (1):
+      Fix format string signedness warnings
+
+Martin Pitt (15):
+      Post-release version bump to 2.1.5
+      integration-test: Skip double mount check for NTFS
+      Support mounting in /media for FHS compatibility
+      Make StoragedClient.get_size_for_display() units translatable
+      Provide fallback for systems without ACL support
+      Fix crash in storaged_client_finalize()
+      Drop unused goto label
+      integration-test: Stop requiring the build dependencies
+      integration-test: Test fstab parsing
+      Recognize PARTUUID and PARTLABEL in fstab
+      Drop default [df]mask for VFAT and NTFS
+      integration-tests: Don't assume ordering in mount-points property
+      Update translations from transifex
+
+Stefan Sauer (2):
+      configure: stop using tmpl files for docs
+      docs: include the annotation glossary
 
 Thanks to all our contributors.
 
-Martin Pitt,
+Peter Hatina,
 (TODO: date)
+
+
+================================================================================
+Project storaged has been forked from udisks.  From now on, the changelog will
+contain cumulative changes either rebased from udisks or from this project.
+================================================================================
+
 
 ------------
 udisks 2.1.4
