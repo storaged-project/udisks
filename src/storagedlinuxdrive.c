@@ -1180,7 +1180,7 @@ handle_set_configuration (StoragedDrive           *_drive,
                                                data,
                                                data_len,
                                                0600, /* mode to use if non-existant */
-                                               &error) != 0)
+                                               &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;

@@ -1278,7 +1278,7 @@ add_remove_fstab_entry (GVariant  *remove,
                                                str->str,
                                                -1,
                                                0644, /* mode to use if non-existant */
-                                               error) != 0)
+                                               error))
     goto out;
 
   ret = TRUE;
@@ -1522,7 +1522,7 @@ add_remove_crypttab_entry (GVariant  *remove,
                                                str->str,
                                                -1,
                                                0600, /* mode to use if non-existant */
-                                               error) != 0)
+                                               error))
     goto out;
 
   ret = TRUE;
