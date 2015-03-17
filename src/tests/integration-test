@@ -1075,12 +1075,12 @@ class FS(StoragedTestCase):
 
 # ----------------------------------------------------------------------------
 
-class Fstab(UDisksTestCase):
+class Fstab(StoragedTestCase):
     '''Test /etc/fstab custom options'''
 
     @classmethod
     def setUpClass(kls):
-        kls.orig_fstab = '/etc/fstab.udiskstest'
+        kls.orig_fstab = '/etc/fstab.storagedtest'
         shutil.copy2('/etc/fstab', kls.orig_fstab)
 
         # create one partition
@@ -1106,8 +1106,8 @@ class Fstab(UDisksTestCase):
 
         kls.mkfs('ext2', partition=1, label='udtestfst')
         kls.mountpoint = tempfile.mkdtemp()
-        kls.block = kls.udisks_block(partition=1)
-        kls.fs = kls.udisks_filesystem(partition=1)
+        kls.block = kls.storaged_block(partition=1)
+        kls.fs = kls.storaged_filesystem(partition=1)
 
     @classmethod
     def tearDownClass(kls):
