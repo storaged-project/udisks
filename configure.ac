@@ -5,7 +5,7 @@ m4_define([storaged_micro_version], [0])
 
 m4_define([storaged_version], [storaged_major_version.storaged_minor_version.storaged_micro_version])
 
-AC_INIT([storaged],[storaged_version],[https://github.com/phatina/storaged],[storaged])
+AC_INIT([storaged],[storaged_version],[https://storaged-project.github.io],[storaged])
 
 STORAGED_MAJOR_VERSION=storaged_major_version
 STORAGED_MINOR_VERSION=storaged_minor_version
