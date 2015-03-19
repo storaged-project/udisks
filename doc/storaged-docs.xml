@@ -16,8 +16,9 @@
   <part id="overview">
     <title>Manual pages and Overview</title>
     <xi:include href="man/storaged.xml"/>
-    <xi:include href="man/storaged-daemon.xml"/>
+    <xi:include href="man/storaged-project.xml"/>
     <xi:include href="man/storagedctl.xml"/>
+    <xi:include href="man/umount.storaged.xml"/>
   </part>
 
   <part id="ref-dbus">
