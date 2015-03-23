@@ -49,7 +49,7 @@
 #include "storagedlvm2daemonutil.h"
 #include "storagedlvm2dbusutil.h"
 #include "storagedlvm2state.h"
-#include "module-lvm2-generated.h"
+#include "storaged-lvm2-generated.h"
 
 /**
  * SECTION:storagedlvm2daemonutil

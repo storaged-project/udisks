@@ -22,7 +22,7 @@
 #define __STORAGED_LVM2_DBUS_UTIL_H__
 
 #include <storaged/storaged-generated.h>
-#include "module-lvm2-generated.h"
+#include "storaged-lvm2-generated.h"
 
 G_BEGIN_DECLS
 

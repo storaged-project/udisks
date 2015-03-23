@@ -33,7 +33,7 @@
 #include <src/storagedlinuxdevice.h>
 
 #include "storagedlinuxblocklvm2.h"
-#include "module-lvm2-generated.h"
+#include "storaged-lvm2-generated.h"
 
 /**
  * SECTION:storagedlinuxblocklvm2

@@ -24,7 +24,7 @@
 #include <src/storageddaemontypes.h>
 #include "storagedlvm2types.h"
 
-#include "module-lvm2-generated.h"
+#include "storaged-lvm2-generated.h"
 
 G_BEGIN_DECLS
 

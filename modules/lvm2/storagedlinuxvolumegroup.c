@@ -48,7 +48,7 @@
 
 #include "storagedlvm2daemonutil.h"
 #include "storagedlvm2dbusutil.h"
-#include "module-lvm2-generated.h"
+#include "storaged-lvm2-generated.h"
 
 /**
  * SECTION:storagedlinuxvolume_group

@@ -58,7 +58,7 @@
         @chunk: The chunk size (in bytes) or 0 if @level is <quote>raid1</quote>.
         @options: Options (currently unused except for <link linkend="storaged-std-options">standard options</link>).
         @resulting_array: An object path to the object implementing the #org.storaged.Storaged.MDRaid interface.
-        @since: 2.1
+        @since: 2.0.0
 
         Creates a new RAID array on the block devices specified by
         @blocks. Each element in this array must be an object path to
@@ -401,7 +401,7 @@
     <!--
         PowerOff:
         @options: Options (currently unused except for <link linkend="storaged-std-options">standard options</link>).
-        @since: 2.1
+        @since: 2.0.0
 
         Arranges for the drive to be safely removed and powered
         off. On the OS side this includes ensuring that no process is
@@ -432,7 +432,7 @@
     </method>
 
     <!-- CanPowerOff:
-         @since: 2.1
+         @since: 2.0.0
          Whether the drive can be safely removed / powered off. See
          the org.storaged.Storaged.Drive.PowerOff() method for more
          information.
@@ -442,7 +442,7 @@
     <property name="CanPowerOff" type="b" access="read"/>
 
     <!-- SiblingId:
-         @since: 2.1
+         @since: 2.0.0
          An opaque token that, if non-blank, is used to group drives
          that are part of the same physical device.
     -->
@@ -628,7 +628,7 @@
         SmartSetEnabled:
         @value: %TRUE to enable SMART, %FALSE to disable SMART.
         @options: Options (currently unused except for <link linkend="storaged-std-options">standard options</link>).
-        @since: 2.1
+        @since: 2.0.0
 
         Sets whether SMART is enabled for the drive. This setting is
         stored in the non-volatile memory in the drive itself and does
@@ -667,13 +667,13 @@
     <property name="AamVendorRecommendedValue" type="i" access="read"/>
 
     <!-- WriteCacheSupported:
-         @since: 2.1
+         @since: 2.0.0
          Whether the drive supports configuring the write cache.
     -->
     <property name="WriteCacheSupported" type="b" access="read"/>
 
     <!-- WriteCacheEnabled:
-         @since: 2.1
+         @since: 2.0.0
          Whether the write-cache is enabled (or %FALSE if not supported).
     -->
     <property name="WriteCacheEnabled" type="b" access="read"/>
@@ -825,7 +825,7 @@
     <property name="DeviceNumber" type="t" access="read"/>
 
     <!-- Id:
-         @since: 2.1
+         @since: 2.0.0
          A unique and persistent identifier for the device or blank if
          no such identifier is available.
 
@@ -863,7 +863,7 @@
     <property name="Drive" type="o" access="read"/>
 
     <!-- MDRaid:
-         @since: 2.1
+         @since: 2.0.0
          If the block device is a running MD-RAID array, this is set
          to the #org.storaged.Storaged.MDRaid object that it
          correspond to. Is '/' if no such object exists.
@@ -871,7 +871,7 @@
     <property name="MDRaid" type="o" access="read"/>
 
     <!-- MDRaidMember:
-         @since: 2.1
+         @since: 2.0.0
          If the block device is a member of a MD-RAID array, this
          is set to the #org.storaged.Storaged.MDRaid object that it
          correspond to. Is '/' if no such object exists.
@@ -1101,7 +1101,7 @@
     <property name="HintIconName" type="s" access="read"/>
 
     <!-- HintSymbolicIconName:
-         @since: 2.1
+         @since: 2.0.0
          If not blank, the icon name to use when presenting the device using a symbolic icon.
 
          The name must adhere to the
@@ -1766,7 +1766,7 @@
   <!--
       org.storaged.Storaged.MDRaid:
       @short_description: Linux Software RAID
-      @since: 2.1
+      @since: 2.0.0
 
       Objects implementing this interface represent
       <ulink url="https://raid.wiki.kernel.org/index.php/Linux_Raid">Linux Software RAID arrays</ulink>
@@ -2130,7 +2130,7 @@
     <property name="ProgressValid" type="b" access="read"/>
 
     <!-- Bytes:
-         @since: 2.1
+         @since: 2.0.0
          If the job involves processing a known number of bytes (for
          example, erasing a disk), this property contains the total
          number of bytes to process. If not, the value of this
@@ -2142,7 +2142,7 @@
     <property name="Bytes" type="t" access="read"/>
 
     <!-- Rate:
-         @since: 2.1
+         @since: 2.0.0
          If the job involves processing a number of bytes (for
          example, erasing) and the rate at which the processing takes
          place is known, this property contains the rate (measured in

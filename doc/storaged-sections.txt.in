@@ -1317,6 +1317,8 @@ storaged_loop_proxy_get_type
 storaged_loop_skeleton_get_type
 </SECTION>
 
+<!-- LVM2_GENERATED_SECTIONS -->
+
 <SECTION>
 <FILE>storagedfstabmonitor</FILE>
 <TITLE>StoragedFstabMonitor</TITLE>

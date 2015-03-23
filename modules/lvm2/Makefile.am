@@ -27,15 +27,13 @@ $(dbus_built_sources) : Makefile.am data/org.storaged.Storaged.lvm2.xml
 	gdbus-codegen									\
 		--interface-prefix org.storaged.Storaged.				\
 		--c-namespace Storaged							\
-		--generate-c-code module-lvm2-generated					\
+		--generate-c-code storaged-lvm2-generated				\
+		--generate-docbook storaged-generated-doc				\
 		data/org.storaged.Storaged.lvm2.xml					\
 		$(NULL)
 
-
-module_flags = -export_dynamic -avoid-version -module -no-undefined -export-symbols-regex '^storaged_module_.*|g_io_module_load|g_io_module_unload|g_io_module_query'
-
 dbus_built_sources =									\
-	module-lvm2-generated.h			module-lvm2-generated.c			\
+	storaged-lvm2-generated.h			storaged-lvm2-generated.c	\
 	$(NULL)
 
 BUILT_SOURCES =										\
@@ -84,7 +82,12 @@ libstoraged_lvm2_la_CFLAGS = 				\
 	$(POLKIT_GOBJECT_1_CFLAGS)			\
 	$(NULL)
 
-libstoraged_lvm2_la_LDFLAGS = $(module_flags)
+libstoraged_lvm2_la_LDFLAGS = 				\
+	-export_dynamic 				\
+	-avoid-version 					\
+	-module 					\
+	-no-undefined 					\
+	-export-symbols-regex '^storaged_.*|g_io_module_load|g_io_module_unload|g_io_module_query'
 
 libstoraged_lvm2_la_LIBADD = 				\
 	$(GLIB_LIBS)					\
@@ -116,7 +119,7 @@ storaged_lvm_LDADD = 					\
 
 # ----------------------------------------------------------------------------------------------------
 
-CLEANFILES = module-lvm2-generated.[ch]
+CLEANFILES = storaged-generated-doc-*.xml storaged-generated.[ch]
 
 EXTRA_DIST = 						\
 	$(NULL)

@@ -35,7 +35,7 @@
 #include <src/storagedmodulemanager.h>
 #include <src/storagedlogging.h>
 
-#include "module-lvm2-generated.h"
+#include "storaged-lvm2-generated.h"
 #include "storagedlvm2types.h"
 #include "storagedlvm2dbusutil.h"
 #include "storagedlvm2daemonutil.h"

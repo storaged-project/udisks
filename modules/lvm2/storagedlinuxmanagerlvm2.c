@@ -37,7 +37,7 @@
 #include "storagedlvm2types.h"
 #include "storagedlinuxmanagerlvm2.h"
 #include "storagedlvm2daemonutil.h"
-#include "module-lvm2-generated.h"
+#include "storaged-lvm2-generated.h"
 
 /**
  * SECTION:storagedlinuxmanagerlvm2

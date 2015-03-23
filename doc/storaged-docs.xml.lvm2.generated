@@ -1,0 +1,5 @@
+      <xi:include href="xml/StoragedManagerLVM2.xml"/>
+      <xi:include href="xml/StoragedBlockLVM2.xml"/>
+      <xi:include href="xml/StoragedPhysicalVolume.xml"/>
+      <xi:include href="xml/StoragedVolumeGroup.xml"/>
+      <xi:include href="xml/StoragedLogicalVolume.xml"/>

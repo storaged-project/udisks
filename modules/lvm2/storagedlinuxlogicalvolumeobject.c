@@ -38,7 +38,7 @@
 #include "storagedlinuxlogicalvolumeobject.h"
 #include "storagedlinuxlogicalvolume.h"
 
-#include "module-lvm2-generated.h"
+#include "storaged-lvm2-generated.h"
 
 /**
  * SECTION:storagedlinuxlogicalvolumeobject

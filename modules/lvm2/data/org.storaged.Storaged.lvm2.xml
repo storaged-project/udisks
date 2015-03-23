@@ -28,7 +28,7 @@
   <!--
       org.storaged.Storaged.Manager.LVM2:
       @short_description: LVM2 add-on to the manager singleton
-      @since: x.x
+      @since: 2.0.0
 
       Additional interface with LVM2 specifics for top-level manager singleton object
       located at the object path <literal>/org/storaged/Storaged/Manager</literal>.
@@ -42,6 +42,7 @@
         @blocks: The block devices to use as physical volumes, as Storaged object paths.
         @options: Additional options.
         @result: The object path of the new volume group object.
+        @since: 2.0.0
 
         Creates a new volume group, using @blocks as the initial
         physical volumes.  Each block device will be wiped and all
@@ -66,7 +67,7 @@
   <!--
       org.storaged.Storaged.Block.LVM2:
       @short_description: LVM2 add-on to the block device
-      @since: x.x
+      @since: 2.0.0
 
       Additional interface with LVM2 specifics for a block device.
   -->
@@ -74,7 +75,7 @@
     <!-- prereq: org.storaged.Storaged.Block -->
 
     <!-- LogicalVolume:
-         @since: x.x
+         @since: 2.0.0
          If the block device is a logical volume in a volume group,
          this is set to the #org.storaged.Storaged.LogicalVolume
          object that it corresponds to.  It is '/' otherwise.
@@ -87,8 +88,8 @@
 
   <!--
       org.storaged.Storaged.PhysicalVolume:
-      @short_description: Block device that is a physical volume.
-      @since: x.x
+      @short_description: Block device that is a physical volume
+      @since: 2.0.0
 
       This interface is used for #org.storaged.Storaged.Block
       devices that are physical volumes in a volume group.
@@ -104,7 +105,7 @@
   <!--
       org.storaged.Storaged.VolumeGroup:
       @short_description: A volume group
-      @since: x.x
+      @since: 2.0.0
 
       Objects implementing this interface represent LVM2 volume
       groups.  They appear under /org/storaged/Storaged/lvm/.
@@ -304,8 +305,8 @@
 
   <!--
       org.storaged.Storaged.LogicalVolume:
-      @short_description: A logical volume.
-      @since: x.x
+      @short_description: A logical volume
+      @since: 2.0.0
 
       Objects with this interface represent logical volumes in a
       volume group.  Active logical volumes are associated with a
