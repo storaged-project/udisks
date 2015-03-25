@@ -2,7 +2,9 @@ Makefile
 Makefile.in
 storaged-decl-list.txt
 storaged-decl.txt
+storaged-docs.xml
 storaged-sections.txt
+storaged-overrides.txt
 storaged-undeclared.txt
 storaged-undocumented.txt
 storaged-unused.txt
@@ -23,4 +25,3 @@ tmpl.stamp
 tmpl
 version.xml
 xml
-

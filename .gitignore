@@ -1,3 +1,5 @@
+*.*~
+*.bak
 *-cache
 *.gir
 *.gmo
@@ -7,6 +9,7 @@
 *.o
 *.pot
 *.swp
+*.stamp
 *.trs
 *.typelib
 *.tar.gz
@@ -36,8 +39,8 @@ src/*-marshal.*
 src/tests/storaged-test
 src/tests/storaged-test-helper
 src/storaged
+modules/lvm2/storaged-lvm
 stamp-*
 tools/storagedctl
 tools/umount.storaged
 storaged/storaged-generated*
-storaged/
