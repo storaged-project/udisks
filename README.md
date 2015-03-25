@@ -47,7 +47,7 @@ RELEASES
 
 Releases of Storaged are available in compressed tarballs from
 
- https://github.com/phatina/storaged/releases
+ https://github.com/storaged-project/storaged/releases
 
 
 BUGS and DEVELOPMENT
@@ -55,4 +55,4 @@ BUGS and DEVELOPMENT
 
 Please report bugs via the GitHub's issues tracker at
 
- https://github.com/phatina/storaged/issues
+ https://github.com/storaged-project/storaged/issues
