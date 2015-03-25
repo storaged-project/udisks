@@ -118,18 +118,18 @@ gir_DATA = Storaged-2.0.gir
 typelibsdir = $(INTROSPECTION_TYPELIBDIR)
 typelibs_DATA = Storaged-2.0.typelib
 
-Storaged_2_0_gir_SCANNERFLAGS = 			\
-	--c-include='storaged/storaged.h' 	\
-	--warn-all                              \
-        --namespace Storaged                      \
-        --identifier-prefix Storaged              \
-        --symbol-prefix storaged                \
+Storaged_2_0_gir_SCANNERFLAGS =			\
+	--c-include='storaged/storaged.h'	\
+	--warn-all				\
+        --namespace Storaged			\
+        --identifier-prefix Storaged		\
+        --symbol-prefix storaged		\
 	--warn-all				\
 	$(NULL)
 
-Storaged_2_0_gir_CFLAGS = 			\
-        $(libstoraged_la_CFLAGS)       		\
-        -DSTORAGED_COMPILATION                  \
+Storaged_2_0_gir_CFLAGS =			\
+        $(libstoraged_la_CFLAGS)		\
+        -DSTORAGED_COMPILATION			\
 	-I$(top_srcdir)				\
 	-I$(top_builddir)			\
 	$(NULL)
