@@ -24,7 +24,7 @@ Storaged has several dependencies listed in `yum_dependencies.txt`.
 
 If you run yum based distro, install the dependencies by:
 
-    # yum install -y $(cat yum_dependencies)
+    # yum install -y $(cat yum_dependencies.txt)
 
 AUTOTOOLS
 ---------
