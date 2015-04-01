@@ -1,17 +1,35 @@
----------------------------
-storaged 2.0.1 (unreleased)
----------------------------
+--------------
+storaged 2.0.0
+--------------
 
 The storaged project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
-Changes since storaged 2.0.0:
+Changes since initial import:
+
+Peter Hatina (14):
+      Post-release version bump to 2.0.1
+      Update NEWS for 2.0.0 release
+      Doc: add link to man page for storaged-lvm
+      Man: fix upstream links
+      Man: introduce storaged-lvm.8 man page
+      Doc: fix yum_dependencies.txt filename in README.md
+      Build: fix coding style in storaged/Makefile.am
+      Doc: update links for generated documentation
+      gitignore: update for generated files
+      Doc: add LVM2 documentation
+      Man: Consolidate man pages
+      fix typos in integration-test
+      Fix storaged_daemon_util_file_set_contents() return value handling
+      Update NEWS
+
+Tomas Smetana (1):
+      Fix links for the documentation
 
 David King (1):
       Fix format string signedness warnings
 
 Martin Pitt (15):
-      Post-release version bump to 2.1.5
       integration-test: Skip double mount check for NTFS
       Support mounting in /media for FHS compatibility
       Make StoragedClient.get_size_for_display() units translatable
@@ -32,7 +50,7 @@ Stefan Sauer (2):
 Thanks to all our contributors.
 
 Peter Hatina,
-(TODO: date)
+2015-04-01
 
 
 ================================================================================
