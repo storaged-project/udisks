@@ -164,6 +164,7 @@ struct _StoragedModuleManager
 
   GMutex modules_ready_lock;
   gboolean modules_ready;
+  gboolean uninstalled;
 
   GHashTable *state_pointers;
 };
@@ -187,6 +188,7 @@ enum
 {
   PROP_0,
   PROP_MODULES_READY,
+  PROP_UNINSTALLED,
 };
 
 G_DEFINE_TYPE (StoragedModuleManager, storaged_module_manager, G_TYPE_OBJECT)
@@ -263,6 +265,7 @@ storaged_module_manager_load_modules (StoragedModuleManager *manager)
   const gchar *dent;
   GModule *module;
   ModuleData *module_data;
+  gchar *module_dir;
   gchar *pth;
 
   StoragedModuleIfaceSetupFunc block_object_iface_setup_func;
@@ -287,18 +290,33 @@ storaged_module_manager_load_modules (StoragedModuleManager *manager)
     }
 
   error = NULL;
-  dir = g_dir_open (STORAGED_MODULE_DIR, 0, &error);
+  module_dir = g_strdup(STORAGED_MODULE_DIR);
+  dir = g_dir_open (module_dir, 0, &error);
   if (! dir)
     {
-      storaged_warning ("Error loading modules: %s", error->message);
-      g_error_free (error);
-      g_mutex_unlock (&manager->modules_ready_lock);
-      return;
+      /* We don't want to exit prematurely.  Check build directory first. */
+      if (manager->uninstalled)
+        {
+          g_error_free (error);
+          g_free (module_dir);
+          error = NULL;
+          module_dir = g_strdup (BUILDDIR "/modules");
+          dir = g_dir_open (module_dir, 0, &error);
+        }
+
+      if (!dir)
+        {
+          storaged_warning ("Error loading modules: %s", error->message);
+          g_error_free (error);
+          g_free (module_dir);
+          g_mutex_unlock (&manager->modules_ready_lock);
+          return;
+        }
     }
 
   while ((dent = g_dir_read_name (dir)))
     {
-      pth = g_build_filename (STORAGED_MODULE_DIR, dent, NULL);
+      pth = g_build_filename (module_dir, dent, NULL);
       module = g_module_open (pth, /* G_MODULE_BIND_LOCAL */ 0);
 
       if (module != NULL)
@@ -350,6 +368,8 @@ storaged_module_manager_load_modules (StoragedModuleManager *manager)
     }
   g_dir_close (dir);
 
+  g_free (module_dir);
+
   manager->modules_ready = TRUE;
   g_mutex_unlock (&manager->modules_ready_lock);
 
@@ -388,6 +408,30 @@ storaged_module_manager_get_property (GObject    *object,
       g_value_set_boolean (value, storaged_module_manager_get_modules_available (manager));
       break;
 
+    case PROP_UNINSTALLED:
+      g_value_set_boolean (value, manager->uninstalled);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+    }
+}
+
+static void
+storaged_module_manager_set_property (GObject      *object,
+                                      guint         prop_id,
+                                      const GValue *value,
+                                      GParamSpec   *pspec)
+{
+  StoragedModuleManager *manager = STORAGED_MODULE_MANAGER (object);
+
+  switch (prop_id)
+    {
+    case PROP_UNINSTALLED:
+      manager->uninstalled = g_value_get_boolean (value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -402,6 +446,7 @@ storaged_module_manager_class_init (StoragedModuleManagerClass *klass)
   gobject_class->finalize     = storaged_module_manager_finalize;
   gobject_class->constructed  = storaged_module_manager_constructed;
   gobject_class->get_property = storaged_module_manager_get_property;
+  gobject_class->set_property = storaged_module_manager_set_property;
 
   /**
    * StoragedModuleManager:modules-ready:
@@ -416,6 +461,21 @@ storaged_module_manager_class_init (StoragedModuleManagerClass *klass)
                                                          FALSE,
                                                          G_PARAM_READABLE |
                                                          G_PARAM_STATIC_STRINGS));
+
+  /**
+   * StoragedModuleManager:uninstalled:
+   *
+   * Loads modules from the build directory.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_UNINSTALLED,
+                                   g_param_spec_boolean ("uninstalled",
+                                                         "Load modules from the build directory",
+                                                         "Whether the modules should be loaded from the build directory",
+                                                         FALSE,
+                                                         G_PARAM_READABLE |
+                                                         G_PARAM_WRITABLE |
+                                                         G_PARAM_CONSTRUCT_ONLY));
 }
 
 /**
@@ -429,6 +489,19 @@ StoragedModuleManager *
 storaged_module_manager_new (void)
 {
   return STORAGED_MODULE_MANAGER (g_object_new (STORAGED_TYPE_MODULE_MANAGER, NULL));
+}
+
+/**
+ * storaged_module_manager_new_uninstalled:
+ *
+ * Creates a new #StoragedModuleManager object.
+ *
+ * Returns: A #StoragedModuleManager. Free with g_object_notify().
+ */
+StoragedModuleManager *
+storaged_module_manager_new_uninstalled (void)
+{
+  return STORAGED_MODULE_MANAGER (g_object_new (STORAGED_TYPE_MODULE_MANAGER, "uninstalled", TRUE, NULL));
 }
 
 /**
@@ -451,6 +524,13 @@ storaged_module_manager_get_modules_available (StoragedModuleManager *manager)
   g_mutex_unlock (&manager->modules_ready_lock);
 
   return ret;
+}
+
+gboolean
+storaged_module_manager_get_uninstalled(StoragedModuleManager *manager)
+{
+  g_return_val_if_fail (STORAGED_IS_MODULE_MANAGER (manager), FALSE);
+  return manager->uninstalled;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

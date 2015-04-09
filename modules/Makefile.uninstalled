@@ -1,0 +1,6 @@
+# Due to --uninstalled option passed to storaged
+module_link:
+	$(AM_V_at)[ -L ../$(MODULE_SO) ] || ln -r -s .libs/$(MODULE_SO) ..
+
+module_unlink:
+	$(AM_V_at)[ -L ../$(MODULE_SO) ] && rm ../$(MODULE_SO)

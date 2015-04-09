@@ -1,2 +1,3 @@
+*.so
 */*-generated*
 org.storaged.*.policy

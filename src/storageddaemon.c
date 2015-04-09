@@ -79,6 +79,7 @@ struct _StoragedDaemon
 
   gboolean disable_modules;
   gboolean force_load_modules;
+  gboolean uninstalled;
 };
 
 struct _StoragedDaemonClass
@@ -97,6 +98,7 @@ enum
   PROP_MODULE_MANAGER,
   PROP_DISABLE_MODULES,
   PROP_FORCE_LOAD_MODULES,
+  PROP_UNINSTALLED,
 };
 
 G_DEFINE_TYPE (StoragedDaemon, storaged_daemon, G_TYPE_OBJECT);
@@ -164,6 +166,10 @@ storaged_daemon_get_property (GObject    *object,
       g_value_set_boolean (value, storaged_daemon_get_force_load_modules (daemon));
       break;
 
+    case PROP_UNINSTALLED:
+      g_value_set_boolean (value, storaged_daemon_get_uninstalled (daemon));
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -191,6 +197,10 @@ storaged_daemon_set_property (GObject      *object,
 
     case PROP_FORCE_LOAD_MODULES:
       daemon->force_load_modules = g_value_get_boolean (value);
+      break;
+
+    case PROP_UNINSTALLED:
+      daemon->uninstalled = g_value_get_boolean (value);
       break;
 
     default:
@@ -246,7 +256,10 @@ storaged_daemon_constructed (GObject *object)
         }
     }
 
-  daemon->module_manager = storaged_module_manager_new ();
+  if (!daemon->uninstalled)
+    daemon->module_manager = storaged_module_manager_new ();
+  else
+    daemon->module_manager = storaged_module_manager_new_uninstalled ();
 
   daemon->mount_monitor = storaged_mount_monitor_new ();
 
@@ -364,6 +377,21 @@ storaged_daemon_class_init (StoragedDaemonClass *klass)
                                                          G_PARAM_READABLE |
                                                          G_PARAM_WRITABLE |
                                                          G_PARAM_CONSTRUCT_ONLY));
+
+  /**
+   * StoragedDaemon:uninstalled:
+   *
+   * Loads modules from the build directory.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_UNINSTALLED,
+                                   g_param_spec_boolean ("uninstalled",
+                                                         "Load modules from the build directory",
+                                                         "Whether the modules should be loaded from the build directory",
+                                                         FALSE,
+                                                         G_PARAM_READABLE |
+                                                         G_PARAM_WRITABLE |
+                                                         G_PARAM_CONSTRUCT_ONLY));
 }
 
 /**
@@ -371,6 +399,7 @@ storaged_daemon_class_init (StoragedDaemonClass *klass)
  * @connection: A #GDBusConnection.
  * @disable_modules: Indicates whether modules should never be activated.
  * @force_load_modules: Activate modules on startup (for debugging purposes).
+ * @uninstalled: Loads modules from the build directory (for debugging purposes).
  *
  * Create a new daemon object for exporting objects on @connection.
  *
@@ -379,13 +408,15 @@ storaged_daemon_class_init (StoragedDaemonClass *klass)
 StoragedDaemon *
 storaged_daemon_new (GDBusConnection *connection,
                      gboolean         disable_modules,
-                     gboolean         force_load_modules)
+                     gboolean         force_load_modules,
+                     gboolean         uninstalled)
 {
   g_return_val_if_fail (G_IS_DBUS_CONNECTION (connection), NULL);
   return STORAGED_DAEMON (g_object_new (STORAGED_TYPE_DAEMON,
                                       "connection", connection,
                                       "disable-modules", disable_modules,
                                       "force-load-modules", force_load_modules,
+                                      "uninstalled", uninstalled,
                                       NULL));
 }
 
@@ -1211,6 +1242,22 @@ storaged_daemon_get_force_load_modules (StoragedDaemon *daemon)
 {
   g_return_val_if_fail (STORAGED_IS_DAEMON (daemon), FALSE);
   return daemon->force_load_modules;
+}
+
+/**
+ * storaged_daemon_get_uninstalled:
+ * @daemon: A #StoragedDaemon.
+ *
+ * Gets @daemon setting whether the modules should be loaded from the build
+ * directory.
+ *
+ * Returns: %TRUE if --uninstalled commandline switch has been specified.
+ */
+gboolean
+storaged_daemon_get_uninstalled (StoragedDaemon *daemon)
+{
+  g_return_val_if_fail (STORAGED_IS_DAEMON (daemon), FALSE);
+  return daemon->uninstalled;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

@@ -29,10 +29,12 @@ G_BEGIN_DECLS
 #define STORAGED_MODULE_MANAGER(o)    (G_TYPE_CHECK_INSTANCE_CAST ((o), STORAGED_TYPE_MODULE_MANAGER, StoragedModuleManager))
 #define STORAGED_IS_MODULE_MANAGER(o) (G_TYPE_CHECK_INSTANCE_TYPE ((o), STORAGED_TYPE_MODULE_MANAGER))
 
-GType                     storaged_module_manager_get_type    (void) G_GNUC_CONST;
-StoragedModuleManager    *storaged_module_manager_new         (void);
+GType                     storaged_module_manager_get_type        (void) G_GNUC_CONST;
+StoragedModuleManager    *storaged_module_manager_new             (void);
+StoragedModuleManager    *storaged_module_manager_new_uninstalled (void);
 
 gboolean                  storaged_module_manager_get_modules_available (StoragedModuleManager *manager);
+gboolean                  storaged_module_manager_get_uninstalled       (StoragedModuleManager *manager);
 void                      storaged_module_manager_load_modules          (StoragedModuleManager *manager);
 
 GList                    *storaged_module_manager_get_block_object_iface_infos (StoragedModuleManager  *manager);

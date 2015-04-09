@@ -32,7 +32,8 @@ G_BEGIN_DECLS
 GType                     storaged_daemon_get_type             (void) G_GNUC_CONST;
 StoragedDaemon           *storaged_daemon_new                  (GDBusConnection *connection,
                                                                 gboolean         disable_modules,
-                                                                gboolean         force_load_modules);
+                                                                gboolean         force_load_modules,
+                                                                gboolean         uninstalled);
 GDBusConnection          *storaged_daemon_get_connection        (StoragedDaemon    *daemon);
 GDBusObjectManagerServer *storaged_daemon_get_object_manager    (StoragedDaemon    *daemon);
 StoragedMountMonitor     *storaged_daemon_get_mount_monitor     (StoragedDaemon    *daemon);
@@ -44,6 +45,7 @@ StoragedState            *storaged_daemon_get_state             (StoragedDaemon 
 StoragedModuleManager    *storaged_daemon_get_module_manager    (StoragedDaemon    *daemon);
 gboolean                  storaged_daemon_get_disable_modules   (StoragedDaemon    *daemon);
 gboolean                  storaged_daemon_get_force_load_modules(StoragedDaemon    *daemon);
+gboolean                  storaged_daemon_get_uninstalled       (StoragedDaemon    *daemon);
 
 /**
  * StoragedDaemonWaitFunc:

@@ -36,6 +36,7 @@ static gboolean opt_no_debug = FALSE;
 static gboolean opt_no_sigint = FALSE;
 static gboolean opt_disable_modules = FALSE;
 static gboolean opt_force_load_modules = FALSE;
+static gboolean opt_uninstalled = FALSE;
 static GOptionEntry opt_entries[] =
 {
   {"replace", 'r', 0, G_OPTION_ARG_NONE, &opt_replace, "Replace existing daemon", NULL},
@@ -43,6 +44,7 @@ static GOptionEntry opt_entries[] =
   {"no-sigint", 's', 0, G_OPTION_ARG_NONE, &opt_no_sigint, "Do not handle SIGINT for controlled shutdown", NULL},
   {"disable-modules", 0, 0, G_OPTION_ARG_NONE, &opt_disable_modules, "Do not load modules even when asked for it", NULL},
   {"force-load-modules", 0, 0, G_OPTION_ARG_NONE, &opt_force_load_modules, "Activate modules on startup", NULL},
+  {"uninstalled", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &opt_uninstalled, "Load modules from build directory", NULL},
   {NULL }
 };
 
@@ -53,7 +55,10 @@ on_bus_acquired (GDBusConnection *connection,
                  const gchar     *name,
                  gpointer         user_data)
 {
-  the_daemon = storaged_daemon_new (connection, opt_disable_modules, opt_force_load_modules);
+  the_daemon = storaged_daemon_new (connection,
+                                    opt_disable_modules,
+                                    opt_force_load_modules,
+                                    opt_uninstalled);
   storaged_debug ("Connected to the system bus");
 }
 

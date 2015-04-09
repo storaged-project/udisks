@@ -89,6 +89,7 @@ libstoraged_daemon_la_SOURCES =							\
 libstoraged_daemon_la_CFLAGS =				\
 	-I$(top_srcdir)					\
 	-DG_LOG_DOMAIN=\"storaged\"			\
+	-DBUILDDIR=\"$(abs_top_builddir)\"		\
 	$(GLIB_CFLAGS)					\
 	$(GIO_CFLAGS)					\
 	$(GMODULE_CFLAGS)				\
