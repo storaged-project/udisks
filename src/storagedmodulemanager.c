@@ -46,11 +46,11 @@
  *
  * ## Storaged modular approach # {#storaged-modular-design}
  *
- * Since 2.xx the Storaged functionality can be extended by modules. It's not
- * a fully pluggable system as we know it, in this case modules are almost
- * integral parts of the source tree. Meaning that modules are free to use
- * whatever internal objects they need as there is no universal module API
- * (or a translation layer).
+ * Storaged functionality can be extended by modules. It's not a fully
+ * pluggable system as we know it, in this case modules are almost integral
+ * parts of the source tree. Meaning that modules are free to use whatever
+ * internal objects they need as there is no universal module API (or a
+ * translation layer).
  *
  * This fact allows us to stay code-wise simple and transparent. It also means
  * that there's no support for out-of-the-tree modules and care must be taken
