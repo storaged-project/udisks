@@ -5,8 +5,8 @@ The Storaged project provides a daemon, tools and libraries to access
 and manipulate disks and storage devices.
 
 For API stability and intended audience of Storaged, see the API
-STABILITY and AUDIENCE section of the storaged(8) man page
-(doc/man/storaged.xml in the tarball and git repository).
+STABILITY and AUDIENCE section of the storaged-project(8) man page
+(doc/man/storaged-project.xml in the tarball and git repository).
 
 
 LICENSE
