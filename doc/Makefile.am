@@ -79,26 +79,43 @@ STORAGED_DEPS=storaged-docs-generated
 
 $(DOC_MAIN_SGML_FILE): storaged-docs
 
+# Main docbook file
 storaged-docs: $(DOC_MAIN_SGML_FILE).in $(DOC_MAIN_SGML_FILE).lvm2.sed
+	$(AM_V_GEN) cp $(DOC_MAIN_SGML_FILE).in $(DOC_MAIN_SGML_FILE)
 if HAVE_LVM2
-	$(AM_V_GEN) $(SED) -f $(DOC_MAIN_SGML_FILE).lvm2.sed $< > $(DOC_MAIN_SGML_FILE)
-else
-	$(AM_V_GEN) cp $< $(DOC_MAIN_SGML_FILE)
+	$(AM_V_at) $(SED) -i -f $(DOC_MAIN_SGML_FILE).lvm2.sed $(DOC_MAIN_SGML_FILE)
 endif # HAVE_LVM2
+if HAVE_ISCSI
+	$(AM_V_at) $(SED) -i -f $(DOC_MAIN_SGML_FILE).iscsi.sed $(DOC_MAIN_SGML_FILE)
+endif # HAVE_ISCSI
 
+# Sections
 storaged-sections: $(STORAGED_SECTIONS).in $(STORAGED_SECTIONS).lvm2.sed
+	$(AM_V_GEN) cp $(STORAGED_SECTIONS).in $(STORAGED_SECTIONS)
 if HAVE_LVM2
-	$(AM_V_GEN) $(SED) -f $(STORAGED_SECTIONS).lvm2.sed $< > $(STORAGED_SECTIONS)
+	$(AM_V_at) $(SED) -i -f $(STORAGED_SECTIONS).lvm2.sed $(STORAGED_SECTIONS)
 else
-	$(AM_V_GEN) $(SED) "/<\!-- LVM2_GENERATED_SECTIONS -->/d" $< > $(STORAGED_SECTIONS)
+	$(AM_V_at) $(SED) -i "/<\!-- LVM2_GENERATED_SECTIONS -->/d" $(STORAGED_SECTIONS)
 endif # HAVE_LVM2
+if HAVE_ISCSI
+	$(AM_V_at) $(SED) -i -f $(STORAGED_SECTIONS).iscsi.sed $(STORAGED_SECTIONS)
+else
+	$(AM_V_at) $(SED) -i "/<\!-- ISCSI_GENERATED_SECTIONS -->/d" $(STORAGED_SECTIONS)
+endif # HAVE_ISCSI
 
+# Types
 storaged-types: $(STORAGED_TYPES).in $(STORAGED_TYPES).lvm2.sed
+	$(AM_V_GEN) cp $(STORAGED_TYPES).in $(STORAGED_TYPES)
 if HAVE_LVM2
-	$(AM_V_GEN) $(SED) -f $(STORAGED_TYPES).lvm2.sed $< > $(STORAGED_TYPES)
+	$(AM_V_at) $(SED) -i -f $(STORAGED_TYPES).lvm2.sed $(STORAGED_TYPES)
 else
-	$(AM_V_GEN) $(SED) "/\# LVM2_TYPES/d" $< > $(STORAGED_TYPES)
+	$(AM_V_at) $(SED) -i "/\# LVM2_TYPES/d" $(STORAGED_TYPES)
 endif # HAVE_LVM2
+if HAVE_ISCSI
+	$(AM_V_at) $(SED) -i -f $(STORAGED_TYPES).iscsi.sed $(STORAGED_TYPES)
+else
+	$(AM_V_at) $(SED) -i "/\# ISCSI_TYPES/d" $(STORAGED_TYPES)
+endif # HAVE_ISCSI
 
 # GTKDOC for LVM2
 if HAVE_LVM2
@@ -109,19 +126,35 @@ AM_CPPFLAGS += -I$(top_srcdir)/modules/lvm2
 GTKDOC_LIBS += $(top_builddir)/modules/lvm2/libstoraged_lvm2.la
 endif # HAVE_LVM2
 
+# GTKDOC for ISCSI
+if HAVE_ISCSI
+DOC_SOURCE_DIR += $(top_srcdir)/modules/iscsi
+HFILE_GLOB += $(top_srcdir)/modules/iscsi/*.h
+CFILE_GLOB += $(top_srcdir)/modules/iscsi/*.c
+AM_CPPFLAGS += -I$(top_srcdir)/modules/iscsi
+GTKDOC_LIBS += $(top_builddir)/modules/iscsi/libstoraged_iscsi.la
+endif # HAVE_ISCSI
+
 # ------------------------------------------------------------------------------
 
 include $(top_srcdir)/gtk-doc.make
 
 EXTRA_DIST +=					\
 	$(DOC_MAIN_SGML_FILE).in		\
+	$(DOC_MAIN_SGML_FILE).iscsi.dbus        \
+	$(DOC_MAIN_SGML_FILE).iscsi.generated   \
+	$(DOC_MAIN_SGML_FILE).iscsi.sed         \
 	$(DOC_MAIN_SGML_FILE).lvm2.dbus		\
 	$(DOC_MAIN_SGML_FILE).lvm2.generated	\
 	$(DOC_MAIN_SGML_FILE).lvm2.sed		\
 	$(STORAGED_TYPES).in			\
+	$(STORAGED_TYPES).iscsi                 \
+	$(STORAGED_TYPES).iscsi.sed             \
 	$(STORAGED_TYPES).lvm2			\
 	$(STORAGED_TYPES).lvm2.sed		\
 	$(STORAGED_SECTIONS).in         	\
+	$(STORAGED_SECTIONS).iscsi.sections     \
+	$(STORAGED_SECTIONS).iscsi.sed          \
 	$(STORAGED_SECTIONS).lvm2.sections	\
 	$(STORAGED_SECTIONS).lvm2.sed		\
 	version.xml.in

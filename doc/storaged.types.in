@@ -69,3 +69,5 @@ storaged_object_skeleton_get_type
 storaged_object_manager_client_get_type
 
 # LVM2_TYPES
+
+# ISCSI_TYPES

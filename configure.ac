@@ -232,6 +232,21 @@ fi
 AM_CONDITIONAL(HAVE_LVM2, [test "$have_lvm2" = "yes"])
 AM_CONDITIONAL(HAVE_DEVMAPPER, [test "$have_devmapper" = "yes"])
 
+# iSCSI module
+have_iscsi=no
+AC_ARG_ENABLE(iscsi, AS_HELP_STRING([--enable-iscsi], [enable iSCSI support]))
+if test "x$enable_iscsi" = "xyes"; then
+  AC_CHECK_HEADER([libiscsi.h],
+                  [AC_DEFINE(HAVE_ISCSI, 1, [Define if libiscsi from iscsi-initiator-utils is available])
+                   have_iscsi=yes],
+                  [have_iscsi=no])
+  if test "x$have_iscsi" = "xno"; then
+    AC_MSG_ERROR([iSCSI support requested but libraries not found])
+  fi
+fi
+AM_CONDITIONAL(HAVE_ISCSI, [test "$have_iscsi" = "yes"])
+
+
 # Internationalization
 #
 
@@ -255,6 +270,8 @@ tools/Makefile
 modules/Makefile
 modules/dummy/Makefile
 modules/dummy/data/Makefile
+modules/iscsi/Makefile
+modules/iscsi/data/Makefile
 modules/lvm2/Makefile
 modules/lvm2/data/Makefile
 doc/Makefile
@@ -293,5 +310,6 @@ echo "
         Building man pages:         ${enable_man}
 
         Dummy test module:          ${have_module_dummy}
+        iSCSI module:               ${have_iscsi}
         LVM2 module:                ${have_lvm2}
 "

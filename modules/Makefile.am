@@ -6,6 +6,10 @@ if HAVE_MODULE_DUMMY
 SUBDIRS += dummy
 endif
 
+if HAVE_ISCSI
+SUBDIRS += iscsi
+endif
+
 if HAVE_LVM2
 SUBDIRS += lvm2
 endif

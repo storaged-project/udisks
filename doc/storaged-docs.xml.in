@@ -362,6 +362,7 @@
       <xi:include href="../storaged/storaged-generated-doc-org.storaged.Storaged.Loop.xml"/>
       <xi:include href="../storaged/storaged-generated-doc-org.storaged.Storaged.Job.xml"/>
       <!-- LVM2_DBUS_INTERFACE -->
+      <!-- ISCSI_DBUS_INTERFACE -->
     </chapter>
   </part>
 
@@ -387,6 +388,7 @@
       <xi:include href="xml/StoragedEncrypted.xml"/>
       <xi:include href="xml/StoragedLoop.xml"/>
       <!-- LVM2_GENERATED_CODE -->
+      <!-- ISCSI_GENERATED_CODE -->
     </chapter>
   </part>
 
