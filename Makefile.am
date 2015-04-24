@@ -9,27 +9,27 @@ ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 GCC_COLORS ?= 'auto'
 export GCC_COLORS
 
-EXTRA_DIST = 			\
-	HACKING 		\
-	README.md               \
+EXTRA_DIST =                                                                   \
+	HACKING                                                                \
+	README.md                                                              \
 	$(NULL)
 
-DISTCHECK_CONFIGURE_FLAGS=							\
-	--enable-gtk-doc 							\
-	--disable-introspection							\
-	--with-udevdir=$$dc_install_base/$(udevdir)				\
-	--with-systemdsystemunitdir=$$dc_install_base/$(systemdsystemunitdir)	\
+DISTCHECK_CONFIGURE_FLAGS =                                                    \
+	--enable-gtk-doc                                                       \
+	--disable-introspection                                                \
+	--with-udevdir=$$dc_install_base/$(udevdir)                            \
+	--with-systemdsystemunitdir=$$dc_install_base/$(systemdsystemunitdir)  \
 	$(NULL)
 
 # TODO: check what we can do with github
 #
-#sign : dist
+#sign: dist
 #	gpg --armor --detach-sign --output storaged-$(VERSION).tar.bz2.sign storaged-$(VERSION).tar.bz2
 
-#publish : sign
+#publish: sign
 #	scp udisks-$(VERSION).tar.bz2 udisks-$(VERSION).tar.bz2.sign "people.freedesktop.org:/srv/udisks.freedesktop.org/www/releases/"
 
-#publish-docs :
+#publish-docs:
 #	gtkdoc-rebase --html-dir doc/html --online
 #	ssh "people.freedesktop.org" "mkdir -p /srv/udisks.freedesktop.org/www/docs/$(VERSION)"
 #	scp doc/html/* "people.freedesktop.org:/srv/udisks.freedesktop.org/www/docs/$(VERSION)"
@@ -40,10 +40,10 @@ DISTCHECK_CONFIGURE_FLAGS=							\
 # This is useful for work-in-progress when hacking on master and you want
 # to easily share API ideas etc. with others without requiring them to
 # build master themselves
-#publish-docs-master :
+#publish-docs-master:
 #	gtkdoc-rebase --html-dir doc/html --online
 #	ssh "people.freedesktop.org" "rm -rf /srv/udisks.freedesktop.org/www/docs/master; mkdir -p /srv/udisks.freedesktop.org/www/docs/master"
 #	scp doc/html/* "people.freedesktop.org:/srv/udisks.freedesktop.org/www/docs/master"
 
-clean-local :
+clean-local:
 	rm -f *~

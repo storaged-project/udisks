@@ -1,17 +1,17 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = 
+SUBDIRS =
 
 if HAVE_MODULE_DUMMY
 SUBDIRS += dummy
-endif
+endif # HAVE_MODULE_DUMMY
 
 if HAVE_ISCSI
 SUBDIRS += iscsi
-endif
+endif # HAVE_ISCSI
 
 if HAVE_LVM2
 SUBDIRS += lvm2
-endif
+endif # HAVE_LVM2
 
 NULL =

@@ -9,13 +9,14 @@ polkit_DATA      = $(polkit_in_files:.policy.in=.policy)
 
 install-data-local:
 	$(MKDIR_P) $(DESTDIR)$(libdir)/storaged/lvm-nolocking
-	$(INSTALL_DATA) $(srcdir)/lvm-nolocking.conf $(DESTDIR)$(libdir)/storaged/lvm-nolocking/lvm.conf
+	$(INSTALL_DATA) $(srcdir)/lvm-nolocking.conf                           \
+	                $(DESTDIR)$(libdir)/storaged/lvm-nolocking/lvm.conf
 
-EXTRA_DIST = 						\
-	org.storaged.Storaged.lvm2.xml		\
-	lvm-nolocking.conf				\
-	$(polkit_in_files)				\
+EXTRA_DIST =                                                                   \
+	org.storaged.Storaged.lvm2.xml                                         \
+	lvm-nolocking.conf                                                     \
+	$(polkit_in_files)                                                     \
 	$(NULL)
 
-clean-local :
+clean-local:
 	rm -f *~ $(polkit_DATA)

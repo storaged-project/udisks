@@ -21,52 +21,52 @@ STORAGED_SECTIONS=$(DOC_MODULE)-sections.txt
 # The directory containing the source code. Relative to $(srcdir)
 DOC_SOURCE_DIR = $(top_srcdir)
 
-HFILE_GLOB = 				\
-	$(top_srcdir)/storaged/*.h 	\
-	$(top_srcdir)/src/*.h 		\
+HFILE_GLOB =                                                                   \
+	$(top_srcdir)/storaged/*.h                                             \
+	$(top_srcdir)/src/*.h                                                  \
 	$(top_srcdir)/modules/*.h
 
-CFILE_GLOB = 				\
-	$(top_srcdir)/storaged/*.c 	\
-	$(top_srcdir)/src/*.c 		\
+CFILE_GLOB =                                                                   \
+	$(top_srcdir)/storaged/*.c                                             \
+	$(top_srcdir)/src/*.c                                                  \
 	$(top_srcdir)/modules/*.c
 
 # Headers to ignore
-IGNORE_HFILES=				\
-	config.h			\
+IGNORE_HFILES=                                                                 \
+	config.h                                                               \
 	$(NULL)
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed
 # if $(DOC_MODULE).types is non-empty.
-AM_CPPFLAGS = \
-	-I$(srcdir)			\
-	-I$(top_srcdir)			\
-	-I$(top_builddir)		\
-	$(GLIB_CFLAGS)			\
-	$(GIO_CFLAGS)			\
+AM_CPPFLAGS =                                                                  \
+	-I$(srcdir)                                                            \
+	-I$(top_srcdir)                                                        \
+	-I$(top_builddir)                                                      \
+	$(GLIB_CFLAGS)                                                         \
+	$(GIO_CFLAGS)                                                          \
 	$(NULL)
 
-GTKDOC_LIBS = 							\
-	$(GLIB_LIBS)						\
-	$(GIO_LIBS)						\
-	$(top_builddir)/storaged/libstoraged.la			\
-	$(top_builddir)/src/libstoraged-daemon.la		\
+GTKDOC_LIBS =                                                                  \
+	$(GLIB_LIBS)                                                           \
+	$(GIO_LIBS)                                                            \
+	$(top_builddir)/storaged/libstoraged.la                                \
+	$(top_builddir)/src/libstoraged-daemon.la                              \
 	$(NULL)
 
 # Extra options to supply to gtkdoc-mkdb
 MKDB_OPTIONS = --output-format=xml --sgml-mode --name-space=storaged
 
 # Images to copy into HTML directory
-HTML_IMAGES =			\
+HTML_IMAGES =                                                                  \
 	$(NULL)
 
-content_files =			\
+content_files =                                                                \
 	$(NULL)
 
-expand_content_files =		\
+expand_content_files =                                                         \
 	$(NULL)
 
-extra_files =			\
+extra_files =                                                                  \
 	$(NULL)
 
 # ------------------------------------------------------------------------------
@@ -139,40 +139,40 @@ endif # HAVE_ISCSI
 
 include $(top_srcdir)/gtk-doc.make
 
-EXTRA_DIST +=					\
-	$(DOC_MAIN_SGML_FILE).in		\
-	$(DOC_MAIN_SGML_FILE).iscsi.dbus        \
-	$(DOC_MAIN_SGML_FILE).iscsi.generated   \
-	$(DOC_MAIN_SGML_FILE).iscsi.sed         \
-	$(DOC_MAIN_SGML_FILE).lvm2.dbus		\
-	$(DOC_MAIN_SGML_FILE).lvm2.generated	\
-	$(DOC_MAIN_SGML_FILE).lvm2.sed		\
-	$(STORAGED_TYPES).in			\
-	$(STORAGED_TYPES).iscsi                 \
-	$(STORAGED_TYPES).iscsi.sed             \
-	$(STORAGED_TYPES).lvm2			\
-	$(STORAGED_TYPES).lvm2.sed		\
-	$(STORAGED_SECTIONS).in         	\
-	$(STORAGED_SECTIONS).iscsi.sections     \
-	$(STORAGED_SECTIONS).iscsi.sed          \
-	$(STORAGED_SECTIONS).lvm2.sections	\
-	$(STORAGED_SECTIONS).lvm2.sed		\
+EXTRA_DIST +=                                                                  \
+	$(DOC_MAIN_SGML_FILE).in                                               \
+	$(DOC_MAIN_SGML_FILE).iscsi.dbus                                       \
+	$(DOC_MAIN_SGML_FILE).iscsi.generated                                  \
+	$(DOC_MAIN_SGML_FILE).iscsi.sed                                        \
+	$(DOC_MAIN_SGML_FILE).lvm2.dbus                                        \
+	$(DOC_MAIN_SGML_FILE).lvm2.generated                                   \
+	$(DOC_MAIN_SGML_FILE).lvm2.sed                                         \
+	$(STORAGED_TYPES).in                                                   \
+	$(STORAGED_TYPES).iscsi                                                \
+	$(STORAGED_TYPES).iscsi.sed                                            \
+	$(STORAGED_TYPES).lvm2                                                 \
+	$(STORAGED_TYPES).lvm2.sed                                             \
+	$(STORAGED_SECTIONS).in                                                \
+	$(STORAGED_SECTIONS).iscsi.sections                                    \
+	$(STORAGED_SECTIONS).iscsi.sed                                         \
+	$(STORAGED_SECTIONS).lvm2.sections                                     \
+	$(STORAGED_SECTIONS).lvm2.sed                                          \
 	version.xml.in
 
-CLEANFILES +=   			\
-	$(DOC_MAIN_SGML_FILE)		\
-	$(DOC_MODULE)-decl-list.txt	\
-	$(DOC_MODULE)-decl.txt		\
-	$(DOC_MODULE)-overrides.txt	\
-	$(DOC_MODULE)-undeclared.txt	\
-	$(DOC_MODULE)-undocumented.txt	\
-	$(DOC_MODULE)-overrides.txt	\
-	$(DOC_MODULE)-unused.txt	\
-	$(DOC_MODULE).args		\
-	$(DOC_MODULE).hierarchy		\
-	$(DOC_MODULE).interfaces	\
-	$(DOC_MODULE).prerequisites	\
-	$(DOC_MODULE).signals		\
-	*.stamp				\
-	-rf xml html tmpl		\
+CLEANFILES +=                                                                  \
+	$(DOC_MAIN_SGML_FILE)                                                  \
+	$(DOC_MODULE)-decl-list.txt                                            \
+	$(DOC_MODULE)-decl.txt                                                 \
+	$(DOC_MODULE)-overrides.txt                                            \
+	$(DOC_MODULE)-undeclared.txt                                           \
+	$(DOC_MODULE)-undocumented.txt                                         \
+	$(DOC_MODULE)-overrides.txt                                            \
+	$(DOC_MODULE)-unused.txt                                               \
+	$(DOC_MODULE).args                                                     \
+	$(DOC_MODULE).hierarchy                                                \
+	$(DOC_MODULE).interfaces                                               \
+	$(DOC_MODULE).prerequisites                                            \
+	$(DOC_MODULE).signals                                                  \
+	*.stamp                                                                \
+	-rf xml html tmpl                                                      \
 	$(NULL)

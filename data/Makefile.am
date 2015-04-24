@@ -33,21 +33,25 @@ polkit_in_files  = org.storaged.Storaged.policy.in
 polkit_DATA      = $(polkit_in_files:.policy.in=.policy)
 
 completionsdir = $(datadir)/bash-completion/completions
-completions_DATA = 					\
-	completions/storagedctl				\
+completions_DATA =                                                             \
+	completions/storagedctl                                                \
 	$(NULL)
 
 @INTLTOOL_POLICY_RULE@
 
-EXTRA_DIST = 						\
-	80-storaged.rules				\
-	org.storaged.Storaged.xml			\
-	$(systemdservice_in_files)			\
-	$(dbusservice_in_files)				\
-	$(dbusconf_in_files)				\
-	$(polkit_in_files)				\
-	$(completions_DATA)				\
+EXTRA_DIST =                                                                   \
+	80-storaged.rules                                                      \
+	org.storaged.Storaged.xml                                              \
+	$(systemdservice_in_files)                                             \
+	$(dbusservice_in_files)                                                \
+	$(dbusconf_in_files)                                                   \
+	$(polkit_in_files)                                                     \
+	$(completions_DATA)                                                    \
 	$(NULL)
 
-clean-local :
-	rm -f *~ $(dbusservice_DATA) $(dbusconf_DATA) $(systemdservice_DATA) $(polkit_DATA)
+clean-local:
+	rm -f *~                                                               \
+	$(dbusservice_DATA)                                                    \
+	$(dbusconf_DATA)                                                       \
+	$(systemdservice_DATA)                                                 \
+	$(polkit_DATA)

@@ -6,33 +6,33 @@ MODULE_SO = libstoraged_iscsi.so
 
 NULL =
 
-INCLUDES =                                                                  \
-	-I$(top_builddir) -I$(top_srcdir)                                   \
-	-DPACKAGE_LIBEXEC_DIR=\""$(libexecdir)"\"                           \
-	-DPACKAGE_SYSCONF_DIR=\""$(sysconfdir)"\"                           \
-	-DPACKAGE_DATA_DIR=\""$(datadir)"\"                                 \
-	-DPACKAGE_BIN_DIR=\""$(bindir)"\"                                   \
-	-DPACKAGE_LOCALSTATE_DIR=\""$(localstatedir)"\"                     \
-	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\"                             \
-	-DPACKAGE_LIB_DIR=\""$(libdir)"\"                                   \
-	-DLVM_HELPER_DIR=\""$(prefix)/lib/storaged/"\"                      \
-	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT                             \
-	-DSTORAGED_COMPILATION                                              \
-	$(POLKIT_GOBJECT_1_CFLAGS)                                          \
-	$(GLIB_CFLAGS)                                                      \
-	$(GIO_CFLAGS)                                                       \
-	$(GUDEV_CFLAGS)                                                     \
-	$(WARN_CFLAGS)                                                      \
+INCLUDES =                                                                     \
+	-I$(top_builddir) -I$(top_srcdir)                                      \
+	-DPACKAGE_LIBEXEC_DIR=\""$(libexecdir)"\"                              \
+	-DPACKAGE_SYSCONF_DIR=\""$(sysconfdir)"\"                              \
+	-DPACKAGE_DATA_DIR=\""$(datadir)"\"                                    \
+	-DPACKAGE_BIN_DIR=\""$(bindir)"\"                                      \
+	-DPACKAGE_LOCALSTATE_DIR=\""$(localstatedir)"\"                        \
+	-DPACKAGE_LOCALE_DIR=\""$(localedir)"\"                                \
+	-DPACKAGE_LIB_DIR=\""$(libdir)"\"                                      \
+	-DLVM_HELPER_DIR=\""$(prefix)/lib/storaged/"\"                         \
+	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT                                \
+	-DSTORAGED_COMPILATION                                                 \
+	$(POLKIT_GOBJECT_1_CFLAGS)                                             \
+	$(GLIB_CFLAGS)                                                         \
+	$(GIO_CFLAGS)                                                          \
+	$(GUDEV_CFLAGS)                                                        \
+	$(WARN_CFLAGS)                                                         \
 	$(NULL)
 
 $(dbus_built_sources): Makefile.am data/org.storaged.Storaged.iscsi.xml
 	gdbus-codegen                                                          \
-		--interface-prefix org.storaged.Storaged.                      \
-		--c-namespace Storaged                                         \
-		--generate-c-code storaged-iscsi-generated                     \
-		--generate-docbook storaged-generated-doc                      \
-		data/org.storaged.Storaged.iscsi.xml                           \
-		$(NULL)
+	        --interface-prefix org.storaged.Storaged.                      \
+	        --c-namespace Storaged                                         \
+	        --generate-c-code storaged-iscsi-generated                     \
+	        --generate-docbook storaged-generated-doc                      \
+	        data/org.storaged.Storaged.iscsi.xml                           \
+	$(NULL)
 
 dbus_built_sources =                                                           \
 	storaged-iscsi-generated.h        storaged-iscsi-generated.c           \
@@ -60,7 +60,7 @@ libstoraged_iscsi_la_SOURCES =                                                 \
 	$(top_srcdir)/modules/storagedmoduleobject.h                           \
 	$(top_srcdir)/modules/storagedmoduleobject.c                           \
 	storagedlinuxmanageriscsiinitiator.h                                   \
-	storagedlinuxmanageriscsiinitiator.c	                               \
+	storagedlinuxmanageriscsiinitiator.c                                   \
 	storagediscsistate.h                                                   \
 	storagediscsistate.c                                                   \
 	storagediscsimoduleiface.c                                             \
@@ -82,7 +82,8 @@ libstoraged_iscsi_la_LDFLAGS =                                                 \
 	-avoid-version                                                         \
 	-module                                                                \
 	-no-undefined                                                          \
-	-export-symbols-regex '^storaged_.*|g_io_module_load|g_io_module_unload|g_io_module_query'
+	-export-symbols-regex                                                  \
+	 '^storaged_.*|g_io_module_load|g_io_module_unload|g_io_module_query'  \
 	$(NULL)
 
 libstoraged_iscsi_la_LIBADD =                                                  \
@@ -92,7 +93,7 @@ libstoraged_iscsi_la_LIBADD =                                                  \
 	$(POLKIT_GOBJECT_1_LIBS)                                               \
 	$(NULL)
 
-# ----------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 CLEANFILES = storaged-generated-doc-*.xml storaged-generated.[ch]
 
@@ -104,7 +105,7 @@ include ../Makefile.uninstalled
 all-local: module_link
 
 dist-hook:
-	(for i in $(BUILT_SOURCES) ; do rm -f $(distdir)/$$i ; done)
+	(for i in $(BUILT_SOURCES); do rm -f $(distdir)/$$i; done)
 
 clean-local: module_unlink
 	rm -f *~ $(BUILT_SOURCES)

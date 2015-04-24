@@ -7,9 +7,9 @@ polkit_DATA      = $(polkit_in_files:.policy.in=.policy)
 
 @INTLTOOL_POLICY_RULE@
 
-EXTRA_DIST =						\
-	org.storaged.Storaged.iscsi.xml			\
-	$(polkit_in_files)				\
+EXTRA_DIST =                                                                   \
+	org.storaged.Storaged.iscsi.xml                                        \
+	$(polkit_in_files)                                                     \
 	$(NULL)
 
 clean-local:
