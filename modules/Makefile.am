@@ -2,9 +2,9 @@
 
 SUBDIRS =
 
-if HAVE_MODULE_DUMMY
+if HAVE_DUMMY
 SUBDIRS += dummy
-endif # HAVE_MODULE_DUMMY
+endif # HAVE_DUMMY
 
 if HAVE_ISCSI
 SUBDIRS += iscsi
