@@ -200,6 +200,9 @@ AC_CHECK_LIB(
 AC_SUBST(ACL_CFLAGS)
 AC_SUBST(ACL_LIBS)
 
+# Enable all the modules; except dummy.
+AC_ARG_ENABLE(modules, AS_HELP_STRING([--enable-modules], [enable all modules]))
+
 # Dummy module
 have_dummy=no
 AC_ARG_ENABLE(dummy, AS_HELP_STRING([--enable-dummy], [enable dummy test module]))
@@ -212,7 +215,7 @@ AM_CONDITIONAL(HAVE_DUMMY, [test "$have_dummy" = "yes"])
 have_lvm2=no
 have_devmapper=no
 AC_ARG_ENABLE(lvm2, AS_HELP_STRING([--enable-lvm2], [enable LVM2 support]))
-if test "x$enable_lvm2" = "xyes"; then
+if test "x$enable_lvm2" = "xyes" -o "x$enable_modules" = "xyes"; then
   PKG_CHECK_MODULES(DEVMAPPER, devmapper >= 1.02,
                     [AC_DEFINE(HAVE_DEVMAPPER, 1, [Define if DEVMAPPER is available]) have_devmapper=yes],
                     have_devmapper=no)
@@ -235,7 +238,7 @@ AM_CONDITIONAL(HAVE_DEVMAPPER, [test "$have_devmapper" = "yes"])
 # iSCSI module
 have_iscsi=no
 AC_ARG_ENABLE(iscsi, AS_HELP_STRING([--enable-iscsi], [enable iSCSI support]))
-if test "x$enable_iscsi" = "xyes"; then
+if test "x$enable_iscsi" = "xyes" -o "x$enable_modules" = "xyes"; then
   AC_CHECK_HEADER([libiscsi.h],
                   [AC_DEFINE(HAVE_ISCSI, 1, [Define if libiscsi from iscsi-initiator-utils is available])
                    have_iscsi=yes],
