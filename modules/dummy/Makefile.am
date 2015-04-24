@@ -2,6 +2,8 @@
 
 SUBDIRS = data
 
+MODULE_SO = libstoraged_dummy.so
+
 NULL =
 
 INCLUDES =                                                                     \
@@ -100,8 +102,12 @@ CLEANFILES = dummy-generated.[ch]
 EXTRA_DIST =                                                                   \
 	$(NULL)
 
-dist-hook :
+include ../Makefile.uninstalled
+
+all-local: module_link
+
+dist-hook:
 	(for i in $(BUILT_SOURCES); do rm -f $(distdir)/$$i; done)
 
-clean-local :
+clean-local: module_unlink
 	rm -f *~ $(BUILT_SOURCES)
