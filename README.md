@@ -33,9 +33,19 @@ To configure and install the Storaged, perform following tasks:
 
     $ ./autogen.sh
 
-Optional module for LVM support:
+Functionality of storaged is split into several modules:
 
-    $ ./configure --enable-lvm2
+- iSCSI:
+
+        $ ./configure --enable-iscsi
+
+- LVM2:
+
+        $ ./configure --enable-lvm2
+
+It is possible to enable all the modules at once:
+
+    $ ./configure --enable-modules
 
 The actual build and installation:
 
