@@ -91,6 +91,7 @@ libstoraged_iscsi_la_LIBADD =                                                  \
 	$(GIO_LIBS)                                                            \
 	$(GUDEV_LIBS)                                                          \
 	$(POLKIT_GOBJECT_1_LIBS)                                               \
+	$(ISCSI_LIBS)                                                          \
 	$(NULL)
 
 # ------------------------------------------------------------------------------

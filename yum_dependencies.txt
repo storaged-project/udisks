@@ -4,6 +4,7 @@ gnome-common
 gobject-introspection-devel
 gtk-doc
 intltool
+iscsi-initiator-utils-devel
 libacl-devel
 libatasmart-devel
 libgudev1-devel

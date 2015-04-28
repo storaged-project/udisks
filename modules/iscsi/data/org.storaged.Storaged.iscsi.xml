@@ -55,9 +55,62 @@
         @since 2.0.1
 
         Sets a new iSCSI initiator name.
-     -->
+    -->
     <method name="SetInitiatorName">
       <arg name="name" direction="in" type="s"/>
+    </method>
+
+    <!--
+        DiscoverSendTargetsNoAuth:
+        @address: Hostname or IP-address to connect to.
+        @port: Port to connect to, or 0 for the default port.
+        @nodes: Discovered nodes.
+        @nodes_cnt: The number of found nodes will be returned.
+        @since 2.0.1
+
+        Performs targets' discovery with no authentication data.
+    -->
+    <method name="DiscoverSendTargetsNoAuth">
+      <arg name="address" direction="in" type="s"/>
+      <arg name="port" direction="in" type="q"/>
+      <arg name="nodes" direction="out" type="a(sisis)"/>
+      <arg name="nodes_cnt" direction="out" type="i"/>
+    </method>
+
+    <!--
+        DiscoverSendTargetsChap:
+        @address: Hostname or IP-address to connect to.
+        @port: Port to connect to, or 0 for the default port.
+        @username: Authentication username.
+        @password: Authentication password.
+        @reverse_username: Reverse authentication username. May be empty in which case only forward authentication will be done.
+        @reverse_password: Reverse authentication password.
+        @nodes: Discovered nodes.
+        @nodes_cnt: The number of found nodes will be returned.
+        @since 2.0.1
+
+        Performs targets' discovery with CHAP authentication method.
+    -->
+    <method name="DiscoverSendTargetsChap">
+      <arg name="address" direction="in" type="s"/>
+      <arg name="port" direction="in" type="q"/>
+      <arg name="username" direction="in" type="s"/>
+      <arg name="password" direction="in" type="s"/>
+      <arg name="reverse_username" direction="in" type="s"/>
+      <arg name="reverse_password" direction="in" type="s"/>
+      <arg name="nodes" direction="out" type="a(sisis)"/>
+      <arg name="nodes_cnt" direction="out" type="i"/>
+    </method>
+
+    <!--
+        DiscoverFirmware:
+        @since 2.0.1
+
+        Performs targets' discovery  using firmware (ppc or ibft).
+    -->
+    <method name="DiscoverFirmware">
+      <arg name="nodes" direction="out" type="a(sisis)"/>
+      <arg name="nodes_cnt" direction="out" type="i"/>
     </method>
 
   </interface>

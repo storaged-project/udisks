@@ -243,9 +243,14 @@ if test "x$enable_iscsi" = "xyes" -o "x$enable_modules" = "xyes"; then
                   [AC_DEFINE(HAVE_ISCSI, 1, [Define if libiscsi from iscsi-initiator-utils is available])
                    have_iscsi=yes],
                   [have_iscsi=no])
+  AC_CHECK_LIB([iscsi],
+               [libiscsi_init],
+               [ISCSI_LIBS="-liscsi"],
+               [have_iscsi="no"])
   if test "x$have_iscsi" = "xno"; then
     AC_MSG_ERROR([iSCSI support requested but libraries not found])
   fi
+  AC_SUBST([ISCSI_LIBS])
 fi
 AM_CONDITIONAL(HAVE_ISCSI, [test "$have_iscsi" = "yes"])
 
