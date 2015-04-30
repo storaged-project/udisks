@@ -1145,14 +1145,27 @@ out:
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gchar *
+make_block_fsname (StoragedBlock *block)
+{
+  const gchar *uuid = storaged_block_get_id_uuid (block);
+
+  if (uuid && *uuid)
+    return g_strdup_printf ("UUID=%s", uuid);
+  else
+    return g_strdup (storaged_block_get_device (block));
+}
+
 static gboolean
-add_remove_fstab_entry (GVariant  *remove,
+add_remove_fstab_entry (StoragedBlock *block,
+                        GVariant  *remove,
                         GVariant  *add,
                         GError   **error)
 {
   struct mntent mntent_remove;
   struct mntent mntent_add;
   gboolean ret;
+  gchar *auto_fsname = NULL;
   gchar *contents;
   gchar **lines;
   GString *str;
@@ -1183,8 +1196,13 @@ add_remove_fstab_entry (GVariant  *remove,
 
   if (add != NULL)
     {
-      if (!g_variant_lookup (add, "fsname", "^&ay", &mntent_add.mnt_fsname) ||
-          !g_variant_lookup (add, "dir", "^&ay", &mntent_add.mnt_dir) ||
+      if (!g_variant_lookup (add, "fsname", "^&ay", &mntent_add.mnt_fsname))
+        {
+          auto_fsname = make_block_fsname (block);
+          mntent_add.mnt_fsname = auto_fsname;
+        }
+
+      if (!g_variant_lookup (add, "dir", "^&ay", &mntent_add.mnt_dir) ||
           !g_variant_lookup (add, "type", "^&ay", &mntent_add.mnt_type) ||
           !g_variant_lookup (add, "opts", "^&ay", &mntent_add.mnt_opts) ||
           !g_variant_lookup (add, "freq", "i", &mntent_add.mnt_freq) ||
@@ -1193,7 +1211,7 @@ add_remove_fstab_entry (GVariant  *remove,
           g_set_error (error,
                        STORAGED_ERROR,
                        STORAGED_ERROR_FAILED,
-                       "Missing fsname, dir, type, opts, freq or passno parameter in entry to add");
+                       "Missing dir, type, opts, freq or passno parameter in entry to add");
           goto out;
         }
 
@@ -1305,6 +1323,7 @@ add_remove_fstab_entry (GVariant  *remove,
   ret = TRUE;
 
  out:
+  g_free (auto_fsname);
   g_strfreev (lines);
   g_free (contents);
   if (str != NULL)
@@ -1325,8 +1344,20 @@ has_whitespace (const gchar *s)
   return FALSE;
 }
 
+static gchar *
+make_block_luksname (StoragedBlock *block)
+{
+  const gchar *uuid = storaged_block_get_id_uuid (block);
+
+  if (uuid && *uuid)
+    return g_strdup_printf ("luks-%s", uuid);
+
+  return NULL;
+}
+
 static gboolean
-add_remove_crypttab_entry (GVariant  *remove,
+add_remove_crypttab_entry (StoragedBlock *block,
+                           GVariant  *remove,
                            GVariant  *add,
                            GError   **error)
 {
@@ -1340,6 +1371,9 @@ add_remove_crypttab_entry (GVariant  *remove,
   const gchar *add_options = NULL;
   const gchar *add_passphrase_contents = NULL;
   gboolean ret;
+  gchar *auto_name = NULL;
+  gchar *auto_device = NULL;
+  gchar *auto_passphrase_path = NULL;
   gchar *contents;
   gchar **lines;
   GString *str;
@@ -1368,17 +1402,47 @@ add_remove_crypttab_entry (GVariant  *remove,
 
   if (add != NULL)
     {
-      if (!g_variant_lookup (add, "name", "^&ay", &add_name) ||
-          !g_variant_lookup (add, "device", "^&ay", &add_device) ||
-          !g_variant_lookup (add, "passphrase-path", "^&ay", &add_passphrase_path) ||
-          !g_variant_lookup (add, "options", "^&ay", &add_options) ||
+      if (!g_variant_lookup (add, "name", "^&ay", &add_name))
+        {
+          const gchar *uuid = storaged_block_get_id_uuid (block);
+          if (uuid == NULL || *uuid == '\0')
+            {
+              g_set_error (error,
+                           STORAGED_ERROR,
+                           STORAGED_ERROR_FAILED,
+                           "Block device has no UUID, can't determine default name");
+              goto out;
+            }
+
+          auto_name = g_strdup_printf ("luks-%s", uuid);
+          add_name = auto_name;
+        }
+
+      if (!g_variant_lookup (add, "device", "^&ay", &add_device))
+        {
+          auto_device = make_block_fsname (block);
+          add_device = auto_device;
+        }
+
+      if (!g_variant_lookup (add, "options", "^&ay", &add_options) ||
           !g_variant_lookup (add, "passphrase-contents", "^&ay", &add_passphrase_contents))
         {
           g_set_error (error,
                        STORAGED_ERROR,
                        STORAGED_ERROR_FAILED,
-                       "Missing name, device, passphrase-path, options or passphrase-contents parameter in entry to add");
+                       "Missing passphrase-path, options or passphrase-contents parameter in entry to add");
           goto out;
+        }
+
+      if (!g_variant_lookup (add, "passphrase-path", "^&ay", &add_passphrase_path))
+        {
+          if (*add_passphrase_contents == '\0')
+            add_passphrase_path = "";
+          else
+            {
+              auto_passphrase_path = g_strdup_printf ("/etc/luks-keys/%s", add_name);
+              add_passphrase_path = auto_passphrase_path;
+            }
         }
 
       /* reject strings with whitespace in them */
@@ -1549,6 +1613,9 @@ add_remove_crypttab_entry (GVariant  *remove,
   ret = TRUE;
 
  out:
+  g_free (auto_name);
+  g_free (auto_device);
+  g_free (auto_passphrase_path);
   g_strfreev (lines);
   g_free (contents);
   if (str != NULL)
@@ -1593,7 +1660,7 @@ handle_add_configuration_item (StoragedBlock           *_block,
                                                           invocation))
         goto out;
       error = NULL;
-      if (!add_remove_fstab_entry (NULL, details, &error))
+      if (!add_remove_fstab_entry (_block, NULL, details, &error))
         {
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
@@ -1611,7 +1678,7 @@ handle_add_configuration_item (StoragedBlock           *_block,
                                                           invocation))
         goto out;
       error = NULL;
-      if (!add_remove_crypttab_entry (NULL, details, &error))
+      if (!add_remove_crypttab_entry (_block, NULL, details, &error))
         {
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
@@ -1670,7 +1737,7 @@ handle_remove_configuration_item (StoragedBlock           *_block,
                                                           invocation))
         goto out;
       error = NULL;
-      if (!add_remove_fstab_entry (details, NULL, &error))
+      if (!add_remove_fstab_entry (_block, details, NULL, &error))
         {
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
@@ -1688,7 +1755,7 @@ handle_remove_configuration_item (StoragedBlock           *_block,
                                                           invocation))
         goto out;
       error = NULL;
-      if (!add_remove_crypttab_entry (details, NULL, &error))
+      if (!add_remove_crypttab_entry (_block, details, NULL, &error))
         {
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
@@ -1760,7 +1827,7 @@ handle_update_configuration_item (StoragedBlock           *_block,
                                                           invocation))
         goto out;
       error = NULL;
-      if (!add_remove_fstab_entry (old_details, new_details, &error))
+      if (!add_remove_fstab_entry (_block, old_details, new_details, &error))
         {
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
@@ -1778,7 +1845,7 @@ handle_update_configuration_item (StoragedBlock           *_block,
                                                         invocation))
         goto out;
       error = NULL;
-      if (!add_remove_crypttab_entry (old_details, new_details, &error))
+      if (!add_remove_crypttab_entry (_block, old_details, new_details, &error))
         {
           g_dbus_method_invocation_take_error (invocation, error);
           goto out;
@@ -2209,6 +2276,7 @@ handle_format (StoragedBlock           *block,
   gboolean no_block = FALSE;
   gboolean update_partition_type = FALSE;
   const gchar *partition_type = NULL;
+  GVariant *config_items = NULL;
 
   error = NULL;
   object = storaged_daemon_util_dup_object (block, &error);
@@ -2228,6 +2296,7 @@ handle_format (StoragedBlock           *block,
   g_variant_lookup (options, "erase", "s", &erase_type);
   g_variant_lookup (options, "no-block", "b", &no_block);
   g_variant_lookup (options, "update-partition-type", "b", &update_partition_type);
+  g_variant_lookup (options, "config-items", "@a(sa{sv})", &config_items);
 
   partition = storaged_object_get_partition (object);
   if (partition != NULL)
@@ -2327,6 +2396,15 @@ handle_format (StoragedBlock           *block,
                                                       action_id,
                                                       options,
                                                       message,
+                                                      invocation))
+    goto out;
+
+  if (config_items != NULL &&
+      !storaged_daemon_util_check_authorization_sync (daemon,
+                                                      NULL,
+                                                      "org.storaged.Storaged.modify-system-configuration",
+                                                      options,
+                                                      N_("Authentication is required to modify the system configuration"),
                                                       invocation))
     goto out;
 
@@ -2449,7 +2527,8 @@ handle_format (StoragedBlock           *block,
         }
 
       /* Open it */
-      mapped_name = g_strdup_printf ("luks-%s", storaged_block_get_id_uuid (block));
+      mapped_name = make_block_luksname (block);
+      g_assert (mapped_name != NULL);
       if (!storaged_daemon_launch_spawned_job_sync (daemon,
                                                     object,
                                                     "format-mkfs", caller_uid,
@@ -2688,6 +2767,36 @@ handle_format (StoragedBlock           *block,
         }
     }
 
+  /* Add configuration items */
+
+  if (config_items)
+    {
+      GVariantIter iter;
+      const gchar *item_type;
+      GVariant *details;
+
+      g_variant_iter_init (&iter, config_items);
+      while (g_variant_iter_next (&iter, "(&s@a{sv})", &item_type, &details))
+        {
+          if (strcmp (item_type, "fstab") == 0)
+            {
+              if (!add_remove_fstab_entry (block_to_mkfs, NULL, details, &error))
+                {
+                  g_dbus_method_invocation_take_error (invocation, error);
+                  goto out;
+                }
+            }
+          else if (strcmp (item_type, "crypttab") == 0)
+            {
+              if (!add_remove_crypttab_entry (block, NULL, details, &error))
+                {
+                  g_dbus_method_invocation_take_error (invocation, error);
+                  goto out;
+                }
+            }
+          g_variant_unref (details);
+        }
+    }
 
   if (invocation != NULL)
     storaged_block_complete_format (block, invocation);
@@ -2697,6 +2806,8 @@ handle_format (StoragedBlock           *block,
   g_free (escaped_device);
   g_free (mapped_name);
   g_free (command);
+  if (config_items)
+    g_variant_unref (config_items);
   g_free (erase_type);
   g_free (encrypt_passphrase);
   g_clear_object (&cleartext_object);

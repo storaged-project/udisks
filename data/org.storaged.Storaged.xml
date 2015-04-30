@@ -1120,6 +1120,22 @@
 
         See the #org.storaged.Storaged.Block:Configuration
         property for details about valid configuration items.
+
+        Some fields can be omitted and will then receive default
+        values.  This is useful when passing configuration items to
+        Format, for example, because the proper values are not known
+        before the formatting is done.
+
+        If 'fsname' is omitted in a 'fstab' entry, or 'device' is
+        omitted in a 'crypttab' entry, it defaults to "UUID=..." when
+        the block device has a filesystem UUID, or to the name of the
+        device in the filesystem..
+
+        If 'name' is omitted in a 'crypttab' entry, it defaults to
+        "luks-<UUID>".
+
+        If 'passphrase-path' is omitted, it defaults to
+        "/etc/luks-keys/<NAME>".
     -->
     <method name="AddConfigurationItem">
       <arg name="item" direction="in" type="(sa{sv})"/>
@@ -1233,6 +1249,11 @@
         takes place but after authorization and other checks are
         done. This is useful for applications that want to format
         several devices in parallel.
+
+        If the option <parameter>config-items</parameter> is set, it
+        should be an array of configuration items suitable for
+        org.storaged.Storaged.Block.AddConfigurationItem.  They will
+        all be added after the formatting is done.
     -->
     <method name="Format">
       <arg name="type" direction="in" type="s"/>
