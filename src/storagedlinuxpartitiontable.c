@@ -35,6 +35,7 @@
 #include "storageddaemon.h"
 #include "storageddaemonutil.h"
 #include "storagedlinuxdevice.h"
+#include "storagedlinuxblock.h"
 
 /**
  * SECTION:storagedlinuxpartitiontable
@@ -317,15 +318,14 @@ wait_for_partition (StoragedDaemon *daemon,
 
 #define MIB_SIZE (1048576L)
 
-/* runs in thread dedicated to handling @invocation */
-static gboolean
-handle_create_partition (StoragedPartitionTable   *table,
-                         GDBusMethodInvocation    *invocation,
-                         guint64                   offset,
-                         guint64                   size,
-                         const gchar              *type,
-                         const gchar              *name,
-                         GVariant                 *options)
+static StoragedObject *
+storaged_linux_partition_table_handle_create_partition (StoragedPartitionTable   *table,
+                                                        GDBusMethodInvocation    *invocation,
+                                                        guint64                   offset,
+                                                        guint64                   size,
+                                                        const gchar              *type,
+                                                        const gchar              *name,
+                                                        GVariant                 *options)
 {
   const gchar *action_id = NULL;
   const gchar *message = NULL;
@@ -623,6 +623,7 @@ handle_create_partition (StoragedPartitionTable   *table,
     {
       g_dbus_method_invocation_return_error (invocation, STORAGED_ERROR, STORAGED_ERROR_FAILED,
                                              "Partition object is not a block device");
+      g_clear_object (&partition_object);
       goto out;
     }
   escaped_partition_device = storaged_daemon_util_escape_and_quote (storaged_block_get_device (partition_block));
@@ -650,6 +651,7 @@ handle_create_partition (StoragedPartitionTable   *table,
                                                  "Error wiping newly created partition %s: %s",
                                                  storaged_block_get_device (partition_block),
                                                  error_message);
+          g_clear_object (&partition_object);
           goto out;
         }
     }
@@ -657,21 +659,96 @@ handle_create_partition (StoragedPartitionTable   *table,
   /* this is sometimes needed because parted(8) does not generate the uevent itself */
   storaged_linux_block_object_trigger_uevent (STORAGED_LINUX_BLOCK_OBJECT (partition_object));
 
-
-  storaged_partition_table_complete_create_partition (table,
-                                                      invocation,
-                                                      g_dbus_object_get_object_path (G_DBUS_OBJECT (partition_object)));
-
  out:
   g_free (escaped_partition_device);
   g_free (wait_data);
   g_clear_object (&partition_block);
-  g_clear_object (&partition_object);
   g_free (command_line);
   g_free (escaped_device);
   g_free (error_message);
   g_clear_object (&object);
   g_clear_object (&block);
+  return partition_object;
+}
+
+/* runs in thread dedicated to handling @invocation */
+static gboolean
+handle_create_partition (StoragedPartitionTable   *table,
+                         GDBusMethodInvocation    *invocation,
+                         guint64                   offset,
+                         guint64                   size,
+                         const gchar              *type,
+                         const gchar              *name,
+                         GVariant                 *options)
+{
+  StoragedObject *partition_object =
+    storaged_linux_partition_table_handle_create_partition (table,
+                                                            invocation,
+                                                            offset,
+                                                            size,
+                                                            type,
+                                                            name,
+                                                            options);
+
+  if (partition_object)
+    {
+      storaged_partition_table_complete_create_partition
+        (table, invocation, g_dbus_object_get_object_path (G_DBUS_OBJECT (partition_object)));
+      g_object_unref (partition_object);
+    }
+
+  return TRUE; /* returning TRUE means that we handled the method invocation */
+}
+
+/* runs in thread dedicated to handling @invocation */
+struct FormatCompleteData {
+  StoragedPartitionTable *table;
+  GDBusMethodInvocation *invocation;
+  StoragedObject *partition_object;
+};
+
+static void
+handle_format_complete (gpointer user_data)
+{
+  struct FormatCompleteData *data = user_data;
+  storaged_partition_table_complete_create_partition
+    (data->table, data->invocation, g_dbus_object_get_object_path (G_DBUS_OBJECT (data->partition_object)));
+}
+
+static gboolean
+handle_create_partition_and_format (StoragedPartitionTable   *table,
+                                    GDBusMethodInvocation    *invocation,
+                                    guint64                   offset,
+                                    guint64                   size,
+                                    const gchar              *type,
+                                    const gchar              *name,
+                                    GVariant                 *options,
+                                    const gchar              *format_type,
+                                    GVariant                 *format_options)
+{
+  StoragedObject *partition_object =
+    storaged_linux_partition_table_handle_create_partition (table,
+                                                            invocation,
+                                                            offset,
+                                                            size,
+                                                            type,
+                                                            name,
+                                                            options);
+
+  if (partition_object)
+    {
+      struct FormatCompleteData data;
+      data.table = table;
+      data.invocation = invocation;
+      data.partition_object = partition_object;
+      storaged_linux_block_handle_format (storaged_object_peek_block (partition_object),
+                                          invocation,
+                                          format_type,
+                                          format_options,
+                                          handle_format_complete, &data);
+      g_object_unref (partition_object);
+    }
+
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }
 
@@ -681,4 +758,5 @@ static void
 partition_table_iface_init (StoragedPartitionTableIface *iface)
 {
   iface->handle_create_partition = handle_create_partition;
+  iface->handle_create_partition_and_format = handle_create_partition_and_format;
 }

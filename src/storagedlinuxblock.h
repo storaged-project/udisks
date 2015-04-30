@@ -34,6 +34,13 @@ StoragedBlock *storaged_linux_block_new      (void);
 void           storaged_linux_block_update   (StoragedLinuxBlock       *block,
                                               StoragedLinuxBlockObject *object);
 
+void           storaged_linux_block_handle_format (StoragedBlock           *block,
+                                                   GDBusMethodInvocation   *invocation,
+                                                   const gchar             *type,
+                                                   GVariant                *options,
+                                                   void                   (*complete)(gpointer user_data),
+                                                   gpointer                 complete_user_data);
+
 G_END_DECLS
 
 #endif /* __STORAGED_LINUX_BLOCK_H__ */

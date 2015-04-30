@@ -1386,6 +1386,34 @@
       <arg name="options" direction="in" type="a{sv}"/>
       <arg name="created_partition" direction="out" type="o"/>
     </method>
+
+    <!--
+        CreatePartitionAndFormat:
+        @offset: The desired offset where the partition should be created, in bytes.
+        @size: The desired size of the partition, in bytes.
+        @type: The type of partition to create (cf. the #org.storaged.Storaged.Partition:Type property) or blank to use the default for the partition table type and OS.
+        @name: The name for the new partition or blank if the partition table do not support names.
+        @options: Options (currently unused except for <link linkend="storaged-std-options">standard options</link>).
+        @created_partition: An object path to the created block device object implementing the #org.storaged.Storaged.Partition interface.
+        @format_type: The type to use for Format.
+        @format_options: Options for Format.
+
+        This is a combination of
+        #org.storaged.Storaged.PartitionTable:CreatePartition and
+        #org.storaged.Storaged.Block:Format.  After creating the
+        partition, the resulting block device is formatted.
+    -->
+    <method name="CreatePartitionAndFormat">
+      <arg name="offset" direction="in" type="t"/>
+      <arg name="size" direction="in" type="t"/>
+      <arg name="type" direction="in" type="s"/>
+      <arg name="name" direction="in" type="s"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="format_type" direction="in" type="s"/>
+      <arg name="format_options" direction="in" type="a{sv}"/>
+      <arg name="created_partition" direction="out" type="o"/>
+    </method>
+
   </interface>
 
   <!-- ********************************************************************** -->

@@ -2237,11 +2237,13 @@ determine_partition_type_for_id (const gchar *table_type,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gboolean
-handle_format (StoragedBlock           *block,
-               GDBusMethodInvocation   *invocation,
-               const gchar             *type,
-               GVariant                *options)
+void
+storaged_linux_block_handle_format (StoragedBlock           *block,
+                                    GDBusMethodInvocation   *invocation,
+                                    const gchar             *type,
+                                    GVariant                *options,
+                                    void                   (*complete)(gpointer user_data),
+                                    gpointer                 complete_user_data)
 {
   FormatWaitData *wait_data = NULL;
   StoragedObject *object;
@@ -2414,10 +2416,10 @@ handle_format (StoragedBlock           *block,
 
   was_partitioned = (storaged_object_peek_partition_table (object) != NULL);
 
-  /* return early, if requested */
+  /* complete early, if requested */
   if (no_block)
     {
-      storaged_block_complete_format (block, invocation);
+      complete (complete_user_data);
       invocation = NULL;
     }
 
@@ -2799,7 +2801,7 @@ handle_format (StoragedBlock           *block,
     }
 
   if (invocation != NULL)
-    storaged_block_complete_format (block, invocation);
+    complete (complete_user_data);
 
  out:
   storaged_daemon_util_uninhibit_system_sync (inhibit_cookie);
@@ -2817,6 +2819,32 @@ handle_format (StoragedBlock           *block,
   g_clear_object (&partition_table);
   g_clear_object (&partition);
   g_clear_object (&object);
+}
+
+struct FormatCompleteData {
+  StoragedBlock *block;
+  GDBusMethodInvocation *invocation;
+};
+
+static void
+handle_format_complete (gpointer user_data)
+{
+  struct FormatCompleteData *data = user_data;
+  storaged_block_complete_format (data->block, data->invocation);
+}
+
+static gboolean
+handle_format (StoragedBlock           *block,
+               GDBusMethodInvocation   *invocation,
+               const gchar             *type,
+               GVariant                *options)
+{
+  struct FormatCompleteData data;
+  data.block = block;
+  data.invocation = invocation;
+  storaged_linux_block_handle_format (block, invocation, type, options,
+                                      handle_format_complete, &data);
+
   return TRUE; /* returning true means that we handled the method invocation */
 }
 
