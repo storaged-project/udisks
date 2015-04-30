@@ -289,3 +289,45 @@ storaged_module_get_new_manager_iface_funcs (void)
 
   return funcs;
 }
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+gchar *
+storaged_module_track_parent (StoragedDaemon *daemon,
+                              const gchar    *path,
+                              gchar         **uuid_ret)
+{
+  const gchar *parent_path = NULL;
+  const gchar *parent_uuid = NULL;
+
+  StoragedObject *object;
+  StoragedObject *lvol_object;
+  StoragedBlockLVM2 *block_lvm2;
+  StoragedLogicalVolume *lvol;
+
+  object = storaged_daemon_find_object (daemon, path);
+  if (object == NULL)
+    goto out;
+
+  block_lvm2 = storaged_object_peek_block_lvm2 (object);
+  if (block_lvm2)
+    {
+      lvol_object = storaged_daemon_find_object (daemon, storaged_block_lvm2_get_logical_volume (block_lvm2));
+      if (lvol_object)
+        {
+          lvol = storaged_object_peek_logical_volume (lvol_object);
+          if (lvol)
+            {
+              parent_uuid = storaged_logical_volume_get_uuid (lvol);
+              parent_path = storaged_block_lvm2_get_logical_volume (block_lvm2);
+              goto out;
+            }
+        }
+    }
+
+ out:
+  g_clear_object (&object);
+  if (uuid_ret)
+    *uuid_ret = g_strdup (parent_uuid);
+  return g_strdup (parent_path);
+}

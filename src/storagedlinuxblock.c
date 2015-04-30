@@ -614,6 +614,92 @@ find_crypttab_entries_for_device (StoragedLinuxBlock *block,
   return ret;
 }
 
+static void
+add_fstab_entry (GVariantBuilder    *builder,
+                 StoragedFstabEntry *entry)
+{
+  GVariantBuilder dict_builder;
+  g_variant_builder_init (&dict_builder, G_VARIANT_TYPE_VARDICT);
+  g_variant_builder_add (&dict_builder, "{sv}", "fsname",
+                         g_variant_new_bytestring (storaged_fstab_entry_get_fsname (entry)));
+  g_variant_builder_add (&dict_builder, "{sv}", "dir",
+                         g_variant_new_bytestring (storaged_fstab_entry_get_dir (entry)));
+  g_variant_builder_add (&dict_builder, "{sv}", "type",
+                         g_variant_new_bytestring (storaged_fstab_entry_get_fstype (entry)));
+  g_variant_builder_add (&dict_builder, "{sv}", "opts",
+                         g_variant_new_bytestring (storaged_fstab_entry_get_opts (entry)));
+  g_variant_builder_add (&dict_builder, "{sv}", "freq",
+                         g_variant_new_int32 (storaged_fstab_entry_get_freq (entry)));
+  g_variant_builder_add (&dict_builder, "{sv}", "passno",
+                         g_variant_new_int32 (storaged_fstab_entry_get_passno (entry)));
+  g_variant_builder_add (builder,
+                         "(sa{sv})",
+                         "fstab", &dict_builder);
+}
+
+static gboolean
+add_crypttab_entry (GVariantBuilder       *builder,
+                    StoragedCrypttabEntry *entry,
+                    gboolean               include_secrets,
+                    GError               **error)
+{
+  GVariantBuilder dict_builder;
+  const gchar *passphrase_path;
+  const gchar *options;
+  gchar *passphrase_contents;
+  gsize passphrase_contents_length;
+
+  passphrase_path = storaged_crypttab_entry_get_passphrase_path (entry);
+  if (passphrase_path == NULL || g_strcmp0 (passphrase_path, "none") == 0)
+    passphrase_path = "";
+  passphrase_contents = NULL;
+  if (!(g_strcmp0 (passphrase_path, "") == 0 || g_str_has_prefix (passphrase_path, "/dev")))
+    {
+      if (include_secrets)
+        {
+          if (!g_file_get_contents (passphrase_path,
+                                    &passphrase_contents,
+                                    &passphrase_contents_length,
+                                    error))
+            {
+              g_prefix_error (error,
+                              "Error loading secrets from file `%s' referenced in /etc/crypttab entry: ",
+                              passphrase_path);
+              return FALSE;
+            }
+        }
+    }
+
+  options = storaged_crypttab_entry_get_options (entry);
+  if (options == NULL)
+    options = "";
+
+  g_variant_builder_init (&dict_builder, G_VARIANT_TYPE_VARDICT);
+  g_variant_builder_add (&dict_builder, "{sv}", "name",
+                         g_variant_new_bytestring (storaged_crypttab_entry_get_name (entry)));
+  g_variant_builder_add (&dict_builder, "{sv}", "device",
+                         g_variant_new_bytestring (storaged_crypttab_entry_get_device (entry)));
+  g_variant_builder_add (&dict_builder, "{sv}", "passphrase-path",
+                         g_variant_new_bytestring (passphrase_path));
+  if (passphrase_contents != NULL)
+    {
+      g_variant_builder_add (&dict_builder, "{sv}", "passphrase-contents",
+                             g_variant_new_bytestring (passphrase_contents));
+    }
+  g_variant_builder_add (&dict_builder, "{sv}", "options",
+                         g_variant_new_bytestring (options));
+  g_variant_builder_add (builder,
+                         "(sa{sv})",
+                         "crypttab", &dict_builder);
+  if (passphrase_contents != NULL)
+    {
+      memset (passphrase_contents, '\0', passphrase_contents_length);
+      g_free (passphrase_contents);
+    }
+
+  return TRUE;
+}
+
 /* returns a floating GVariant */
 static GVariant *
 calculate_configuration (StoragedLinuxBlock  *block,
@@ -634,26 +720,7 @@ calculate_configuration (StoragedLinuxBlock  *block,
   /* First the /etc/fstab entries */
   entries = find_fstab_entries_for_device (block, daemon);
   for (l = entries; l != NULL; l = l->next)
-    {
-      StoragedFstabEntry *entry = STORAGED_FSTAB_ENTRY (l->data);
-      GVariantBuilder dict_builder;
-      g_variant_builder_init (&dict_builder, G_VARIANT_TYPE_VARDICT);
-      g_variant_builder_add (&dict_builder, "{sv}", "fsname",
-                             g_variant_new_bytestring (storaged_fstab_entry_get_fsname (entry)));
-      g_variant_builder_add (&dict_builder, "{sv}", "dir",
-                             g_variant_new_bytestring (storaged_fstab_entry_get_dir (entry)));
-      g_variant_builder_add (&dict_builder, "{sv}", "type",
-                             g_variant_new_bytestring (storaged_fstab_entry_get_fstype (entry)));
-      g_variant_builder_add (&dict_builder, "{sv}", "opts",
-                             g_variant_new_bytestring (storaged_fstab_entry_get_opts (entry)));
-      g_variant_builder_add (&dict_builder, "{sv}", "freq",
-                             g_variant_new_int32 (storaged_fstab_entry_get_freq (entry)));
-      g_variant_builder_add (&dict_builder, "{sv}", "passno",
-                             g_variant_new_int32 (storaged_fstab_entry_get_passno (entry)));
-      g_variant_builder_add (&builder,
-                             "(sa{sv})",
-                             "fstab", &dict_builder);
-    }
+    add_fstab_entry (&builder, STORAGED_FSTAB_ENTRY (l->data));
   g_list_foreach (entries, (GFunc) g_object_unref, NULL);
   g_list_free (entries);
 
@@ -661,62 +728,12 @@ calculate_configuration (StoragedLinuxBlock  *block,
   entries = find_crypttab_entries_for_device (block, daemon);
   for (l = entries; l != NULL; l = l->next)
     {
-      StoragedCrypttabEntry *entry = STORAGED_CRYPTTAB_ENTRY (l->data);
-      GVariantBuilder dict_builder;
-      const gchar *passphrase_path;
-      const gchar *options;
-      gchar *passphrase_contents;
-      gsize passphrase_contents_length;
-
-      passphrase_path = storaged_crypttab_entry_get_passphrase_path (entry);
-      if (passphrase_path == NULL || g_strcmp0 (passphrase_path, "none") == 0)
-        passphrase_path = "";
-      passphrase_contents = NULL;
-      if (!(g_strcmp0 (passphrase_path, "") == 0 || g_str_has_prefix (passphrase_path, "/dev")))
+      if (!add_crypttab_entry (&builder, STORAGED_CRYPTTAB_ENTRY (l->data), include_secrets, error))
         {
-          if (include_secrets)
-            {
-              if (!g_file_get_contents (passphrase_path,
-                                        &passphrase_contents,
-                                        &passphrase_contents_length,
-                                        error))
-                {
-                  g_prefix_error (error,
-                                  "Error loading secrets from file `%s' referenced in /etc/crypttab entry: ",
-                                  passphrase_path);
-                  g_variant_builder_clear (&builder);
-                  g_list_foreach (entries, (GFunc) g_object_unref, NULL);
-                  g_list_free (entries);
-                  goto out;
-                }
-            }
-        }
-
-      options = storaged_crypttab_entry_get_options (entry);
-      if (options == NULL)
-        options = "";
-
-      g_variant_builder_init (&dict_builder, G_VARIANT_TYPE_VARDICT);
-      g_variant_builder_add (&dict_builder, "{sv}", "name",
-                             g_variant_new_bytestring (storaged_crypttab_entry_get_name (entry)));
-      g_variant_builder_add (&dict_builder, "{sv}", "device",
-                             g_variant_new_bytestring (storaged_crypttab_entry_get_device (entry)));
-      g_variant_builder_add (&dict_builder, "{sv}", "passphrase-path",
-                             g_variant_new_bytestring (passphrase_path));
-      if (passphrase_contents != NULL)
-        {
-          g_variant_builder_add (&dict_builder, "{sv}", "passphrase-contents",
-                                 g_variant_new_bytestring (passphrase_contents));
-        }
-      g_variant_builder_add (&dict_builder, "{sv}", "options",
-                             g_variant_new_bytestring (options));
-      g_variant_builder_add (&builder,
-                             "(sa{sv})",
-                             "crypttab", &dict_builder);
-      if (passphrase_contents != NULL)
-        {
-          memset (passphrase_contents, '\0', passphrase_contents_length);
-          g_free (passphrase_contents);
+          g_variant_builder_clear (&builder);
+          g_list_foreach (entries, (GFunc) g_object_unref, NULL);
+          g_list_free (entries);
+          goto out;
         }
     }
   g_list_foreach (entries, (GFunc) g_object_unref, NULL);
@@ -745,6 +762,125 @@ update_configuration (StoragedLinuxBlock  *block,
       configuration = g_variant_new ("a(sa{sv})", NULL);
     }
   storaged_block_set_configuration (STORAGED_BLOCK (block), configuration);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static GList *
+find_fstab_entries_for_needle (const gchar    *needle,
+                               StoragedDaemon *daemon)
+{
+  GList *entries;
+  GList *l;
+  GList *ret;
+
+  ret = NULL;
+
+  entries = storaged_fstab_monitor_get_entries (storaged_daemon_get_fstab_monitor (daemon));
+  for (l = entries; l != NULL; l = l->next)
+    {
+      StoragedFstabEntry *entry = STORAGED_FSTAB_ENTRY (l->data);
+      const gchar *opts = NULL;
+
+      opts = storaged_fstab_entry_get_opts (entry);
+      if (strstr(opts, needle))
+        ret = g_list_prepend (ret, g_object_ref (entry));
+    }
+
+  g_list_foreach (entries, (GFunc) g_object_unref, NULL);
+  g_list_free (entries);
+  return ret;
+}
+
+static GList *
+find_crypttab_entries_for_needle (gchar          *needle,
+                                  StoragedDaemon *daemon)
+{
+  GList *entries;
+  GList *l;
+  GList *ret;
+
+  ret = NULL;
+
+  entries = storaged_crypttab_monitor_get_entries (storaged_daemon_get_crypttab_monitor (daemon));
+  for (l = entries; l != NULL; l = l->next)
+    {
+      StoragedCrypttabEntry *entry = STORAGED_CRYPTTAB_ENTRY (l->data);
+      const gchar *opts = NULL;
+
+      opts = storaged_crypttab_entry_get_options (entry);
+      if (strstr(opts, needle))
+        ret = g_list_prepend (ret, g_object_ref (entry));
+    }
+
+  g_list_foreach (entries, (GFunc) g_object_unref, NULL);
+  g_list_free (entries);
+  return ret;
+}
+
+/* returns a floating GVariant */
+static GVariant *
+find_configurations (gchar                   *needle,
+                     StoragedDaemon          *daemon,
+                     gboolean                 include_secrets,
+                     GError                 **error)
+{
+  GList *entries;
+  GList *l;
+  GVariantBuilder builder;
+  GVariant *ret;
+
+  storaged_debug ("Looking for %s", needle);
+
+  g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+  ret = NULL;
+
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("a(sa{sv})"));
+  /* First the /etc/fstab entries */
+  entries = find_fstab_entries_for_needle (needle, daemon);
+  for (l = entries; l != NULL; l = l->next)
+    add_fstab_entry (&builder, STORAGED_FSTAB_ENTRY (l->data));
+  g_list_foreach (entries, (GFunc) g_object_unref, NULL);
+  g_list_free (entries);
+
+  /* Then the /etc/crypttab entries */
+  entries = find_crypttab_entries_for_needle (needle, daemon);
+  for (l = entries; l != NULL; l = l->next)
+    {
+      if (!add_crypttab_entry (&builder, STORAGED_CRYPTTAB_ENTRY (l->data), include_secrets, error))
+        {
+          g_variant_builder_clear (&builder);
+          g_list_foreach (entries, (GFunc) g_object_unref, NULL);
+          g_list_free (entries);
+          goto out;
+        }
+    }
+  g_list_foreach (entries, (GFunc) g_object_unref, NULL);
+  g_list_free (entries);
+
+  ret = g_variant_builder_end (&builder);
+
+ out:
+  return ret;
+}
+
+GVariant *
+storaged_linux_find_child_configuration (StoragedDaemon *daemon,
+                                         const gchar *uuid)
+{
+  GError *error = NULL;
+  gchar *needle = g_strdup_printf ("x-parent=%s", uuid);
+  GVariant *res = find_configurations (needle, daemon, FALSE, &error);
+  if (res == NULL)
+    {
+      storaged_warning ("Error loading configuration: %s (%s, %d)",
+                        error->message, g_quark_to_string (error->domain), error->code);
+      g_error_free (error);
+      res = g_variant_new ("a(sa{sv})", NULL);
+    }
+  g_free (needle);
+  return res;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1156,6 +1292,55 @@ make_block_fsname (StoragedBlock *block)
     return g_strdup (storaged_block_get_device (block));
 }
 
+static gchar *
+track_parents (StoragedBlock *block, const gchar *options)
+{
+  StoragedObject *object = STORAGED_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (block)));
+  StoragedDaemon *daemon = storaged_linux_block_object_get_daemon (STORAGED_LINUX_BLOCK_OBJECT (object));
+
+  gchar *new_options, *start, *end, *path;
+
+  /* Remove old x-parent entries
+   */
+  new_options = g_strdup (options);
+  start = new_options;
+  while ((start = strstr (start, "x-parent=")) != NULL)
+    {
+      end = strchr (start, ',');
+      if (end)
+        strcpy (start, end+1);
+      else
+        *start = '\0';
+    }
+
+  /* Walk up our ancestry and give each parent a chance to be tracked.
+   */
+  path = g_strdup (g_dbus_object_get_object_path (G_DBUS_OBJECT (object)));
+  do
+    {
+      gchar *uuid = NULL;
+      gchar *parent_path = storaged_daemon_get_parent_for_tracking (daemon, path, &uuid);
+
+      if (uuid && *uuid)
+        {
+          gchar *new;
+          if (new_options && *new_options)
+            new = g_strdup_printf ("%s,x-parent=%s", new_options, uuid);
+          else
+            new = g_strdup_printf ("x-parent=%s", uuid);
+          g_free (new_options);
+          new_options = new;
+        }
+
+      g_free (uuid);
+      g_free (path);
+      path = parent_path;
+    }
+  while (path);
+
+  return new_options;
+}
+
 static gboolean
 add_remove_fstab_entry (StoragedBlock *block,
                         GVariant  *remove,
@@ -1164,8 +1349,10 @@ add_remove_fstab_entry (StoragedBlock *block,
 {
   struct mntent mntent_remove;
   struct mntent mntent_add;
+  gboolean track_parents_flag;
   gboolean ret;
   gchar *auto_fsname = NULL;
+  gchar *auto_opts = NULL;
   gchar *contents;
   gchar **lines;
   GString *str;
@@ -1222,6 +1409,13 @@ add_remove_fstab_entry (StoragedBlock *block,
                        STORAGED_ERROR_FAILED,
                        "opts must not be blank");
           goto out;
+        }
+
+      if (g_variant_lookup (add, "track-parents", "b", &track_parents_flag) &&
+          track_parents_flag)
+        {
+          auto_opts = track_parents (block, mntent_add.mnt_opts);
+          mntent_add.mnt_opts = auto_opts;
         }
     }
 
@@ -1323,6 +1517,7 @@ add_remove_fstab_entry (StoragedBlock *block,
   ret = TRUE;
 
  out:
+  g_free (auto_opts);
   g_free (auto_fsname);
   g_strfreev (lines);
   g_free (contents);
@@ -1370,10 +1565,12 @@ add_remove_crypttab_entry (StoragedBlock *block,
   const gchar *add_passphrase_path = NULL;
   const gchar *add_options = NULL;
   const gchar *add_passphrase_contents = NULL;
+  gboolean track_parents_flag;
   gboolean ret;
   gchar *auto_name = NULL;
   gchar *auto_device = NULL;
   gchar *auto_passphrase_path = NULL;
+  gchar *auto_opts = NULL;
   gchar *contents;
   gchar **lines;
   GString *str;
@@ -1456,6 +1653,13 @@ add_remove_crypttab_entry (StoragedBlock *block,
                        STORAGED_ERROR_FAILED,
                        "One of name, device, passphrase-path or options parameter are invalid (whitespace)");
           goto out;
+        }
+
+      if (g_variant_lookup (add, "track-parents", "b", &track_parents_flag) &&
+          track_parents_flag)
+        {
+          auto_opts = track_parents (block, add_options);
+          add_options = auto_opts;
         }
     }
 
@@ -1613,6 +1817,7 @@ add_remove_crypttab_entry (StoragedBlock *block,
   ret = TRUE;
 
  out:
+  g_free (auto_opts);
   g_free (auto_name);
   g_free (auto_device);
   g_free (auto_passphrase_path);

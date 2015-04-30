@@ -1261,3 +1261,104 @@ storaged_daemon_get_uninstalled (StoragedDaemon *daemon)
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
+
+gchar *
+storaged_daemon_get_parent_for_tracking (StoragedDaemon *daemon,
+                                         const gchar    *path,
+                                         gchar         **uuid_ret)
+{
+  const gchar *parent_path = NULL;
+  const gchar *parent_uuid = NULL;
+
+  StoragedObject *object = NULL;
+  StoragedObject *crypto_object = NULL;
+  StoragedObject *mdraid_object = NULL;
+  StoragedObject *table_object = NULL;
+  GList *track_parent_funcs;
+
+  StoragedBlock *block;
+  StoragedBlock *crypto_block;
+  StoragedMDRaid *mdraid;
+  StoragedPartition *partition;
+  StoragedBlock *table_block;
+
+  object = storaged_daemon_find_object (daemon, path);
+  if (object == NULL)
+    goto out;
+
+  block = storaged_object_peek_block (object);
+  if (block)
+    {
+      crypto_object = storaged_daemon_find_object (daemon, storaged_block_get_crypto_backing_device (block));
+      if (crypto_object)
+        {
+          crypto_block = storaged_object_peek_block (crypto_object);
+          if (crypto_block)
+            {
+              parent_uuid = storaged_block_get_id_uuid (crypto_block);
+              parent_path = storaged_block_get_crypto_backing_device (block);
+              goto out;
+            }
+        }
+
+      mdraid_object = storaged_daemon_find_object (daemon, storaged_block_get_mdraid (block));
+      if (mdraid_object)
+        {
+          mdraid = storaged_object_peek_mdraid (mdraid_object);
+          if (mdraid)
+            {
+              parent_uuid = storaged_block_get_id_uuid (crypto_block);
+              parent_path = storaged_block_get_mdraid (block);
+              goto out;
+            }
+        }
+
+      partition = storaged_object_peek_partition (object);
+      if (partition)
+        {
+          table_object = storaged_daemon_find_object (daemon, storaged_partition_get_table (partition));
+          if (table_object)
+            {
+              table_block = storaged_object_peek_block (table_object);
+              if (table_block)
+                {
+                  /* We don't want to track partition tables because
+                     they can't be 'closed' in a way that their
+                     children temporarily invisible.
+                  */
+                  parent_uuid = NULL;
+                  parent_path = storaged_partition_get_table (partition);
+                  goto out;
+                }
+            }
+        }
+    }
+
+ out:
+  g_clear_object (&object);
+  g_clear_object (&crypto_object);
+  g_clear_object (&mdraid_object);
+  g_clear_object (&table_object);
+
+  if (parent_path)
+    {
+      if (uuid_ret)
+        *uuid_ret = g_strdup (parent_uuid);
+      return g_strdup (parent_path);
+    }
+
+  track_parent_funcs = storaged_module_manager_get_track_parent_funcs (daemon->module_manager);
+  while (track_parent_funcs)
+    {
+      StoragedTrackParentFunc func = track_parent_funcs->data;
+      gchar *path_ret = func (daemon, path, uuid_ret);
+      if (path_ret)
+        return path_ret;
+
+      track_parent_funcs = track_parent_funcs->next;
+    }
+
+  return NULL;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */

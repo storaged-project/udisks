@@ -40,6 +40,7 @@
 #include "storagedstate.h"
 #include "storageddaemonutil.h"
 #include "storagedlinuxdevice.h"
+#include "storagedlinuxblock.h"
 
 /**
  * SECTION:storagedlinuxmdraid
@@ -254,7 +255,6 @@ member_cmpfunc (GVariant **a,
 
   return slot_a - slot_b;
 }
-
 
 /**
  * storaged_linux_mdraid_update:
@@ -520,6 +520,10 @@ storaged_linux_mdraid_update (StoragedLinuxMDRaid       *mdraid,
 
     }
   storaged_mdraid_set_active_devices (iface, g_variant_builder_end (&builder));
+
+  storaged_mdraid_set_child_configuration (iface,
+                                           storaged_linux_find_child_configuration (daemon,
+                                                                                    uuid));
 
  out:
   g_free (sync_completed);

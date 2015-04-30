@@ -388,6 +388,16 @@
     -->
     <property name="Origin" type="o" access="read"/>
 
+    <!-- ChildConfiguration: Configuration items belonging to the
+         block device of this logical volume and its children.  This
+         is also valid when this logical volume is not currently
+         active and there is no block device for it.  It works via the
+         'track-parents' options of
+         org.storaged.Storaged.Block.AddConfigurationItem(), which
+         see.
+    -->
+    <property name="ChildConfiguration" type="a(sa{sv})" access="read"/>
+
     <!-- Activate:
          @options: Additional options.
          @result: The Storaged object path of the block device.

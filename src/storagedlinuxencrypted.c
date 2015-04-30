@@ -36,6 +36,11 @@
 #include "storageddaemonutil.h"
 #include "storagedstate.h"
 #include "storagedlinuxdevice.h"
+#include "storagedlinuxblock.h"
+#include "storagedfstabentry.h"
+#include "storagedfstabmonitor.h"
+#include "storagedcrypttabentry.h"
+#include "storagedcrypttabmonitor.h"
 
 /**
  * SECTION:storagedlinuxencrypted
@@ -98,6 +103,19 @@ storaged_linux_encrypted_new (void)
 }
 /* ---------------------------------------------------------------------------------------------------- */
 
+static void
+update_child_configuration (StoragedLinuxEncrypted   *encrypted,
+                            StoragedLinuxBlockObject *object)
+{
+  StoragedDaemon *daemon = storaged_linux_block_object_get_daemon (object);
+  StoragedBlock *block = storaged_object_peek_block (STORAGED_OBJECT (object));
+
+  storaged_encrypted_set_child_configuration
+    (STORAGED_ENCRYPTED (encrypted),
+     storaged_linux_find_child_configuration (daemon,
+                                              storaged_block_get_id_uuid (block)));
+}
+
 /**
  * storaged_linux_encrypted_update:
  * @encrypted: A #StoragedLinuxEncrypted.
@@ -109,7 +127,7 @@ void
 storaged_linux_encrypted_update (StoragedLinuxEncrypted   *encrypted,
                                  StoragedLinuxBlockObject *object)
 {
-  /* do nothing */
+  update_child_configuration (encrypted, object);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

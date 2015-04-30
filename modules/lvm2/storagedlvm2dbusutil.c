@@ -138,3 +138,42 @@ storaged_object_peek_volume_group (StoragedObject *object)
   g_object_unref (ret);
   return STORAGED_VOLUME_GROUP (ret);
 }
+
+/**
+ * storaged_object_get_logical_volume:
+ * @object: A #StoragedObject.
+ *
+ * Gets the #StoragedLogicalVolume instance for the D-Bus interface <link linkend="gdbus-interface-org-storaged-Storaged-LogicalVolume.top_of_page">org.storaged.Storaged.LogicalVolume</link> on @object, if any.
+ *
+ * Returns: (transfer full): A #StoragedLogicalVolume that must be freed with g_object_unref() or %NULL if @object does not implement the interface.
+ */
+StoragedLogicalVolume *
+storaged_object_get_logical_volume (StoragedObject *object)
+{
+  GDBusInterface *ret;
+  ret = g_dbus_object_get_interface (G_DBUS_OBJECT (object), "org.storaged.Storaged.LogicalVolume");
+  if (ret == NULL)
+    return NULL;
+  return STORAGED_LOGICAL_VOLUME (ret);
+}
+
+/**
+ * storaged_object_peek_logical_volume: (skip)
+ * @object: A #StoragedObject.
+ *
+ * Like storaged_object_get_logical_volume() but doesn't increase the reference count on the returned object.
+ *
+ * <warning>It is not safe to use the returned object if you are on another thread than the one where the #GDBusObjectManagerClient or #GDBusObjectManagerServer for @object is running.</warning>
+ *
+ * Returns: (transfer none): A #StoragedLogicalVolume or %NULL if @object does not implement the interface. Do not free the returned object, it is owned by @object.
+ */
+StoragedLogicalVolume *
+storaged_object_peek_logical_volume (StoragedObject *object)
+{
+  GDBusInterface *ret;
+  ret = g_dbus_object_get_interface (G_DBUS_OBJECT (object), "org.storaged.Storaged.LogicalVolume");
+  if (ret == NULL)
+    return NULL;
+  g_object_unref (ret);
+  return STORAGED_LOGICAL_VOLUME (ret);
+}

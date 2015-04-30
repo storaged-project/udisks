@@ -35,6 +35,9 @@ StoragedPhysicalVolume *storaged_object_peek_physical_volume (StoragedObject *ob
 StoragedVolumeGroup *storaged_object_get_volume_group  (StoragedObject *object);
 StoragedVolumeGroup *storaged_object_peek_volume_group (StoragedObject *object);
 
+StoragedLogicalVolume *storaged_object_get_logical_volume  (StoragedObject *object);
+StoragedLogicalVolume *storaged_object_peek_logical_volume (StoragedObject *object);
+
 G_END_DECLS
 
 #endif /* __STORAGED_LVM2_DBUS_UTIL_H__ */

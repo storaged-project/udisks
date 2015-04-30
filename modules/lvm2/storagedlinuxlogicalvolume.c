@@ -29,6 +29,7 @@
 #include <src/storagedstate.h>
 #include <src/storageddaemonutil.h>
 #include <src/storagedlinuxdevice.h>
+#include <src/storagedlinuxblock.h>
 
 #include "storagedlinuxlogicalvolume.h"
 #include "storagedlinuxlogicalvolumeobject.h"
@@ -126,6 +127,7 @@ storaged_linux_logical_volume_update (StoragedLinuxLogicalVolume     *logical_vo
   const char *origin_objpath;
   const gchar *dev_file;
   const gchar *str;
+  const gchar *uuid;
   guint64 num;
 
   iface = STORAGED_LOGICAL_VOLUME (logical_volume);
@@ -133,8 +135,8 @@ storaged_linux_logical_volume_update (StoragedLinuxLogicalVolume     *logical_vo
   if (g_variant_lookup (info, "name", "&s", &str))
     storaged_logical_volume_set_name (iface, str);
 
-  if (g_variant_lookup (info, "uuid", "&s", &str))
-    storaged_logical_volume_set_uuid (iface, str);
+  if (g_variant_lookup (info, "uuid", "&s", &uuid))
+    storaged_logical_volume_set_uuid (iface, uuid);
 
   if (g_variant_lookup (info, "size", "t", &num))
     storaged_logical_volume_set_size (iface, num);
@@ -204,6 +206,11 @@ storaged_linux_logical_volume_update (StoragedLinuxLogicalVolume     *logical_vo
       storaged_daemon_util_lvm2_trigger_udev (dev_file);
       logical_volume->needs_udev_hack = FALSE;
     }
+
+  StoragedDaemon *daemon = storaged_linux_volume_group_object_get_daemon (group_object);
+  storaged_logical_volume_set_child_configuration (iface,
+                                                   storaged_linux_find_child_configuration (daemon,
+                                                                                            uuid));
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

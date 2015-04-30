@@ -116,6 +116,13 @@ StoragedBaseJob            *storaged_daemon_launch_threaded_job   (StoragedDaemo
                                                                    GDestroyNotify          user_data_free_func,
                                                                    GCancellable           *cancellable);
 
+/* Return value and *uuid_ret must be freed with g_free.  If return
+   value is NULL, *uuid has not been changed.
+ */
+gchar                      *storaged_daemon_get_parent_for_tracking (StoragedDaemon *daemon,
+                                                                     const gchar    *path,
+                                                                     gchar         **uuid_ret);
+
 G_END_DECLS
 
 #endif /* __STORAGED_DAEMON_H__ */

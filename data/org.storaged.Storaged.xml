@@ -1136,6 +1136,13 @@
 
         If 'passphrase-path' is omitted, it defaults to
         "/etc/luks-keys/<NAME>".
+
+        If 'track-parents' is set to true in @item, then the 'opts'
+        and 'options' fields will be augmented with "x-parent"
+        elements, as appropriate.  This will make @item appear in the
+        ChildConfiguration properties, and will allow the 'tear-down'
+        option of Format, DeletePartition, and other methods to remove
+        this item reliably.
     -->
     <method name="AddConfigurationItem">
       <arg name="item" direction="in" type="(sa{sv})"/>
@@ -1698,6 +1705,16 @@
   <interface name="org.storaged.Storaged.Encrypted">
     <!-- prereq: org.storaged.Storaged.Block -->
 
+    <!-- ChildConfiguration: Configuration items belonging to the
+         clear text device of this encrypted block device and its
+         children.  This is also valid when this block device is
+         currently locked and there is no clear text device for it.
+         It works via the 'track-parents' options of
+         org.storaged.Storaged.Block.AddConfigurationItem(), which
+         see.
+    -->
+    <property name="ChildConfiguration" type="a(sa{sv})" access="read"/>
+
     <!--
         Unlock:
         @passphrase: The passphrase to use.
@@ -1969,6 +1986,15 @@
          file shipped with the kernel sources.
     -->
     <property name="ActiveDevices" type="a(oiasta{sv})" access="read"/>
+
+    <!-- ChildConfiguration: Configuration items belonging to the
+         block devices of this array (recursively).  This is also
+         valid when the array is stopped and there are no actual block
+         devices for it.  It works via the 'track-parents' options of
+         org.storaged.Storaged.Block.AddConfigurationItem(), which
+         see.
+    -->
+    <property name="ChildConfiguration" type="a(sa{sv})" access="read"/>
 
     <!--
         Start:

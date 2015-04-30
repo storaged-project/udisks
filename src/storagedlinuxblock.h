@@ -41,6 +41,14 @@ void           storaged_linux_block_handle_format (StoragedBlock           *bloc
                                                    void                   (*complete)(gpointer user_data),
                                                    gpointer                 complete_user_data);
 
+gchar         *storaged_linux_get_parent_for_tracking (StoragedDaemon *daemon,
+                                                       const gchar    *path,
+                                                       const gchar   **uuid_ret);
+
+GVariant      *storaged_linux_find_child_configuration (StoragedDaemon *daemon,
+                                                        const gchar *uuid);
+
+
 G_END_DECLS
 
 #endif /* __STORAGED_LINUX_BLOCK_H__ */
