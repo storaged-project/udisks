@@ -46,8 +46,15 @@ gchar         *storaged_linux_get_parent_for_tracking (StoragedDaemon *daemon,
                                                        const gchar   **uuid_ret);
 
 GVariant      *storaged_linux_find_child_configuration (StoragedDaemon *daemon,
-                                                        const gchar *uuid);
+                                                        const gchar    *uuid);
 
+gboolean       storaged_linux_remove_configuration (GVariant       *configuration,
+                                                    GError        **error);
+
+gboolean       storaged_linux_block_teardown (StoragedBlock           *block,
+                                              GDBusMethodInvocation   *invocation,
+                                              GVariant                *options,
+                                              GError                 **error);
 
 G_END_DECLS
 

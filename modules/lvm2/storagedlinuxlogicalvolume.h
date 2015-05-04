@@ -39,6 +39,12 @@ void                   storaged_linux_logical_volume_update   (StoragedLinuxLogi
                                                                GVariant                       *info,
                                                                gboolean                       *needs_polling_ret);
 
+gboolean               storaged_linux_logical_volume_teardown_block (StoragedLogicalVolume *volume,
+                                                                     StoragedDaemon        *daemon,
+                                                                     GDBusMethodInvocation *invocation,
+                                                                     GVariant              *options,
+                                                                     GError               **error);
+
 G_END_DECLS
 
 #endif /* __STORAGED_LINUX_LOGICAL_VOLUME_H__ */

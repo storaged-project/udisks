@@ -36,6 +36,7 @@
 #include "storageddaemon.h"
 #include "storageddaemonutil.h"
 #include "storagedlinuxdevice.h"
+#include "storagedlinuxblock.h"
 
 /**
  * SECTION:storagedlinuxpartition
@@ -846,7 +847,10 @@ handle_delete (StoragedPartition        *partition,
   uid_t caller_uid;
   gid_t caller_gid;
   pid_t caller_pid;
+  gboolean teardown_flag = FALSE;
   GError *error;
+
+  g_variant_lookup (options, "tear-down", "b", &teardown_flag);
 
   error = NULL;
   object = storaged_daemon_util_dup_object (partition, &error);
@@ -915,6 +919,26 @@ handle_delete (StoragedPartition        *partition,
                                                       message,
                                                       invocation))
     goto out;
+
+  if (teardown_flag)
+    {
+      if (!storaged_daemon_util_check_authorization_sync (daemon,
+                                                          NULL,
+                                                          "org.storaged.Storaged.modify-system-configuration",
+                                                          options,
+                                                          N_("Authentication is required to modify the system configuration"),
+                                                          invocation))
+        goto out;
+
+      if (!storaged_linux_block_teardown (block, invocation, options, &error))
+        {
+          if (invocation != NULL)
+            g_dbus_method_invocation_take_error (invocation, error);
+          else
+            g_clear_error (&error);
+          goto out;
+        }
+    }
 
   escaped_device = storaged_daemon_util_escape_and_quote (storaged_block_get_device (partition_table_block));
 

@@ -37,6 +37,9 @@ void                 storaged_linux_volume_group_update    (StoragedLinuxVolumeG
                                                             GVariant                  *info,
                                                             gboolean                  *needs_polling_ret);
 
+GList *storaged_linux_volume_group_get_logical_volumes (StoragedVolumeGroup *group,
+                                                        StoragedDaemon      *daemon);
+
 G_END_DECLS
 
 #endif /* __STORAGED_LINUX_VOLUME_GROUP_H__ */

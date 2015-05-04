@@ -57,6 +57,7 @@
 #include "storagedlinuxmdraidobject.h"
 #include "storagedlinuxdevice.h"
 #include "storagedlinuxpartition.h"
+#include "storagedlinuxencrypted.h"
 
 /**
  * SECTION:storagedlinuxblock
@@ -2442,6 +2443,262 @@ determine_partition_type_for_id (const gchar *table_type,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+typedef gboolean BlockWalker (StoragedDaemon *daemon,
+                              StoragedBlock *block,
+                              gboolean is_leaf,
+                              gpointer user_data,
+                              GError **error);
+
+static StoragedPartitionTable *
+peek_partition_table (StoragedDaemon *daemon,
+                      StoragedPartition *partition)
+{
+  StoragedObject *object = storaged_daemon_find_object (daemon, storaged_partition_get_table (partition));
+  return object? storaged_object_peek_partition_table (object) : NULL;
+}
+
+static GList *
+get_partitions (StoragedDaemon         *daemon,
+                StoragedPartitionTable *table)
+{
+  GList *ret = NULL;
+  GDBusObject *table_object;
+  const gchar *table_object_path;
+  GList *l, *object_proxies = NULL;
+
+  table_object = g_dbus_interface_get_object (G_DBUS_INTERFACE (table));
+  if (table_object == NULL)
+    goto out;
+  table_object_path = g_dbus_object_get_object_path (table_object);
+
+  object_proxies = storaged_daemon_get_objects (daemon);
+  for (l = object_proxies; l != NULL; l = l->next)
+    {
+      StoragedObject *object = STORAGED_OBJECT (l->data);
+      StoragedPartition *partition;
+
+      partition = storaged_object_get_partition (object);
+      if (partition == NULL)
+        continue;
+
+      if (g_strcmp0 (storaged_partition_get_table (partition), table_object_path) == 0)
+        ret = g_list_prepend (ret, g_object_ref (partition));
+
+      g_object_unref (partition);
+    }
+  ret = g_list_reverse (ret);
+ out:
+  g_list_foreach (object_proxies, (GFunc) g_object_unref, NULL);
+  g_list_free (object_proxies);
+  return ret;
+}
+
+static StoragedBlock *
+get_cleartext_block (StoragedDaemon  *daemon,
+                     StoragedBlock   *block)
+{
+  StoragedBlock *ret = NULL;
+  GDBusObject *object;
+  const gchar *object_path;
+  GList *objects = NULL;
+  GList *l;
+
+  object = g_dbus_interface_get_object (G_DBUS_INTERFACE (block));
+  if (object == NULL)
+    goto out;
+
+  object_path = g_dbus_object_get_object_path (object);
+  objects = storaged_daemon_get_objects (daemon);
+  for (l = objects; l != NULL; l = l->next)
+    {
+      StoragedObject *iter_object = STORAGED_OBJECT (l->data);
+      StoragedBlock *iter_block;
+
+      iter_block = storaged_object_peek_block (iter_object);
+      if (iter_block == NULL)
+        continue;
+
+      if (g_strcmp0 (storaged_block_get_crypto_backing_device (iter_block), object_path) == 0)
+        {
+          ret = g_object_ref (iter_block);
+          goto out;
+        }
+    }
+
+ out:
+  g_list_foreach (objects, (GFunc) g_object_unref, NULL);
+  g_list_free (objects);
+  return ret;
+}
+
+static gboolean
+walk_block (StoragedDaemon *daemon,
+            StoragedBlock *block,
+            BlockWalker *walker,
+            gpointer user_data,
+            GError **error)
+{
+  StoragedObject *object;
+  StoragedBlock *cleartext;
+  gboolean is_leaf = TRUE;
+
+  object = STORAGED_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (block)));
+  if (object != NULL)
+    {
+      // Recurse for all primary and extended partitions if this is a
+      // partition table, or for all logical partitions if this is a
+      // extended partition.
+
+      StoragedPartitionTable *table;
+      gboolean is_container;
+
+      StoragedPartition *partition = storaged_object_peek_partition (object);
+      if (partition && storaged_partition_get_is_container (partition))
+        {
+          table = peek_partition_table (daemon, partition);
+          is_container = TRUE;
+        }
+      else
+        {
+          table = storaged_object_peek_partition_table (object);
+          is_container = FALSE;
+        }
+
+      if (table)
+        {
+          GList *ps, *l;
+          ps = get_partitions (daemon, table);
+          for (l = ps; l != NULL; l = l->next)
+            {
+              StoragedPartition *p = STORAGED_PARTITION (l->data);
+              StoragedObject *o = (StoragedObject *) g_dbus_interface_get_object (G_DBUS_INTERFACE (p));
+              StoragedBlock *b = o ? storaged_object_peek_block (o) : NULL;
+              if (b && !is_container == !storaged_partition_get_is_contained (p))
+                {
+                  is_leaf = FALSE;
+                  if (!walk_block (daemon, b, walker, user_data, error))
+                    {
+                      g_list_free_full (ps, g_object_unref);
+                      return FALSE;
+                    }
+                }
+            }
+          g_list_free_full (ps, g_object_unref);
+        }
+    }
+
+  cleartext = get_cleartext_block (daemon, block);
+  if (cleartext)
+    {
+      is_leaf = FALSE;
+      if (!walk_block (daemon, cleartext, walker, user_data, error))
+        {
+          g_object_unref (cleartext);
+          return FALSE;
+        }
+      g_object_unref (cleartext);
+    }
+
+  return walker (daemon, block, is_leaf, user_data, error);
+}
+
+gboolean
+storaged_linux_remove_configuration (GVariant *config,
+                                     GError **error)
+{
+  GVariantIter iter;
+  const gchar *item_type;
+  GVariant *details;
+
+  storaged_debug ("Removing for teardown: %s", g_variant_print (config, FALSE));
+
+  g_variant_iter_init (&iter, config);
+  while (g_variant_iter_next (&iter, "(&s@a{sv})", &item_type, &details))
+    {
+      if (strcmp (item_type, "fstab") == 0)
+        {
+          if (!add_remove_fstab_entry (NULL, details, NULL, error))
+            {
+              g_variant_unref (details);
+              return FALSE;
+            }
+        }
+      else if (strcmp (item_type, "crypttab") == 0)
+        {
+          if (!add_remove_crypttab_entry (NULL, details, NULL, error))
+            {
+              g_variant_unref (details);
+              return FALSE;
+            }
+        }
+      g_variant_unref (details);
+    }
+
+  return TRUE;
+}
+
+struct TeardownData {
+  GDBusMethodInvocation *invocation;
+  GVariant              *options;
+};
+
+static gboolean
+teardown_block_walker (StoragedDaemon *daemon,
+                       StoragedBlock *block,
+                       gboolean is_leaf,
+                       gpointer user_data,
+                       GError **error)
+{
+  struct TeardownData *data = user_data;
+  StoragedObject *object = STORAGED_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (block)));
+  StoragedEncrypted *enc = storaged_object_peek_encrypted (object);
+
+  if (enc)
+    {
+      StoragedBlock *cleartext = get_cleartext_block (daemon, block);
+      if (cleartext)
+        {
+          /* The crypto backing device is unlocked and the cleartext
+             device has been cleaned up.  Lock the backing device so
+             that we can format or wipe it later.
+          */
+          if (enc && !storaged_linux_encrypted_lock (STORAGED_LINUX_ENCRYPTED (enc),
+                                                     data->invocation,
+                                                     data->options,
+                                                     error))
+            return FALSE;
+        }
+      else
+        {
+          /* The crypto backing device is locked and the cleartext
+             device has not been cleaned up (since it doesn't exist).
+             Remove its child configuration.
+          */
+          if (!storaged_linux_remove_configuration (storaged_encrypted_get_child_configuration (enc), error))
+              return FALSE;
+        }
+    }
+
+  return storaged_linux_remove_configuration (storaged_block_get_configuration (block), error);
+}
+
+gboolean
+storaged_linux_block_teardown (StoragedBlock           *block,
+                               GDBusMethodInvocation   *invocation,
+                               GVariant                *options,
+                               GError                 **error)
+{
+  StoragedObject *object = STORAGED_OBJECT (g_dbus_interface_get_object (G_DBUS_INTERFACE (block)));
+  StoragedDaemon *daemon = storaged_linux_block_object_get_daemon (STORAGED_LINUX_BLOCK_OBJECT (object));
+  struct TeardownData data;
+
+  data.invocation = invocation;
+  data.options = options;
+  return walk_block (daemon, block, teardown_block_walker, &data, error);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 void
 storaged_linux_block_handle_format (StoragedBlock           *block,
                                     GDBusMethodInvocation   *invocation,
@@ -2484,6 +2741,7 @@ storaged_linux_block_handle_format (StoragedBlock           *block,
   gboolean update_partition_type = FALSE;
   const gchar *partition_type = NULL;
   GVariant *config_items = NULL;
+  gboolean teardown_flag = FALSE;
 
   error = NULL;
   object = storaged_daemon_util_dup_object (block, &error);
@@ -2504,6 +2762,7 @@ storaged_linux_block_handle_format (StoragedBlock           *block,
   g_variant_lookup (options, "no-block", "b", &no_block);
   g_variant_lookup (options, "update-partition-type", "b", &update_partition_type);
   g_variant_lookup (options, "config-items", "@a(sa{sv})", &config_items);
+  g_variant_lookup (options, "tear-down", "b", &teardown_flag);
 
   partition = storaged_object_get_partition (object);
   if (partition != NULL)
@@ -2606,7 +2865,7 @@ storaged_linux_block_handle_format (StoragedBlock           *block,
                                                       invocation))
     goto out;
 
-  if (config_items != NULL &&
+  if ((config_items != NULL || teardown_flag) &&
       !storaged_daemon_util_check_authorization_sync (daemon,
                                                       NULL,
                                                       "org.storaged.Storaged.modify-system-configuration",
@@ -2620,6 +2879,15 @@ storaged_linux_block_handle_format (StoragedBlock           *block,
   escaped_device = storaged_daemon_util_escape_and_quote (storaged_block_get_device (block));
 
   was_partitioned = (storaged_object_peek_partition_table (object) != NULL);
+
+  if (teardown_flag)
+    {
+      if (!storaged_linux_block_teardown (block, invocation, options, &error))
+        {
+          g_dbus_method_invocation_take_error (invocation, error);
+          goto out;
+        }
+    }
 
   /* complete early, if requested */
   if (no_block)

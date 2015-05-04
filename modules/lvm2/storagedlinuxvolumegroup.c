@@ -181,6 +181,68 @@ handle_poll (StoragedVolumeGroup *_group,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+GList *
+storaged_linux_volume_group_get_logical_volumes (StoragedVolumeGroup *group,
+                                                 StoragedDaemon      *daemon)
+{
+  GList *ret = NULL;
+  GList *l, *objects = NULL;
+  GDBusObject *object;
+  StoragedLogicalVolume *volume;
+
+  object = g_dbus_interface_get_object (G_DBUS_INTERFACE (group));
+  if (object == NULL)
+    goto out;
+
+  objects = storaged_daemon_get_objects (daemon);
+  for (l = objects; l != NULL; l = l->next)
+    {
+      volume = storaged_object_peek_logical_volume (STORAGED_OBJECT(l->data));
+      if (volume &&
+          g_strcmp0 (storaged_logical_volume_get_volume_group (volume),
+                     g_dbus_object_get_object_path (object)) == 0)
+        ret = g_list_append (ret, g_object_ref (volume));
+    }
+
+ out:
+  g_list_free_full (objects, g_object_unref);
+  return ret;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
+teardown_volume_group (StoragedVolumeGroup   *group,
+                       StoragedDaemon        *daemon,
+                       GDBusMethodInvocation *invocation,
+                       GVariant              *options,
+                       GError               **error)
+{
+  GList *volumes;
+  StoragedLogicalVolume *volume;
+
+  volumes = storaged_linux_volume_group_get_logical_volumes (group, daemon);
+  for (GList *l = volumes; l; l = l->next)
+    {
+      volume = STORAGED_LOGICAL_VOLUME (l->data);
+      if (g_strcmp0 (storaged_logical_volume_get_type_ (volume), "pool") != 0)
+        {
+          if (!storaged_linux_logical_volume_teardown_block (volume,
+                                                             daemon,
+                                                             invocation,
+                                                             options,
+                                                             error))
+            {
+              g_list_free_full (volumes, g_object_unref);
+              return FALSE;
+            }
+        }
+    }
+  g_list_free_full (volumes, g_object_unref);
+
+  return TRUE;
+}
+
 static gboolean
 handle_delete (StoragedVolumeGroup   *_group,
                GDBusMethodInvocation *invocation,
@@ -195,10 +257,13 @@ handle_delete (StoragedVolumeGroup   *_group,
   const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
+  gboolean teardown_flag = FALSE;
   gchar *escaped_name = NULL;
   gchar *error_message = NULL;
   GList *objects_to_wipe = NULL;
   GList *l;
+
+  g_variant_lookup (arg_options, "tear-down", "b", &teardown_flag);
 
   object = storaged_daemon_util_dup_object (group, &error);
   if (object == NULL)
@@ -248,6 +313,16 @@ handle_delete (StoragedVolumeGroup   *_group,
                                                       invocation))
     goto out;
 
+  if (teardown_flag &&
+      !teardown_volume_group (_group,
+                              daemon,
+                              invocation,
+                              arg_options,
+                              &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
   escaped_name = storaged_daemon_util_escape_and_quote (storaged_linux_volume_group_object_get_name (object));
 
   if (!storaged_daemon_launch_spawned_job_sync (daemon,

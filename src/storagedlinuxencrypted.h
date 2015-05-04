@@ -34,6 +34,11 @@ StoragedEncrypted *storaged_linux_encrypted_new      (void);
 void               storaged_linux_encrypted_update   (StoragedLinuxEncrypted   *encrypted,
                                                       StoragedLinuxBlockObject *object);
 
+gboolean           storaged_linux_encrypted_lock     (StoragedLinuxEncrypted   *encrypted,
+                                                      GDBusMethodInvocation    *invocation,
+                                                      GVariant                 *options,
+                                                      GError **error);
+
 G_END_DECLS
 
 #endif /* __STORAGED_LINUX_ENCRYPTED_H__ */

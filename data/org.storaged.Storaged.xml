@@ -1261,6 +1261,15 @@
         should be an array of configuration items suitable for
         org.storaged.Storaged.Block.AddConfigurationItem.  They will
         all be added after the formatting is done.
+
+        If the option <parameter>tear-down</parameter> is set to
+        %TRUE, then the block device and all its children will be
+        cleaned up before formatting.  This cleanup consists of
+        removing entries from /etc/fstab and /etc/crypttab, and
+        locking of encrypted block devices.  Entries in /etc/fstab and
+        /etc/crypttab that have been created with the 'track-parents'
+        options to AddConfigurationItem will be removed even if their
+        block device is currently unavailable.
     -->
     <method name="Format">
       <arg name="type" direction="in" type="s"/>
@@ -1538,9 +1547,18 @@
     </method>
 
     <!-- Delete:
-         @options: Options (currently unused except for <link linkend="storaged-std-options">standard options</link>).
+         @options: Options.
 
          Deletes the partition.
+
+         If the option <parameter>tear-down</parameter> is set to
+         %TRUE, then the block device and all its children will be
+         cleaned up before formatting.  This cleanup consists of
+         removing entries from /etc/fstab and /etc/crypttab, and
+         locking of encrypted block devices.  Entries in /etc/fstab
+         and /etc/crypttab that have been created with the
+         'track-parents' options to AddConfigurationItem will be
+         removed even if their block device is currently unavailable.
     -->
     <method name="Delete">
       <arg name="options" direction="in" type="a{sv}"/>
@@ -2083,6 +2101,10 @@
     -->
     <method name="RequestSyncAction">
       <arg name="sync_action" direction="in" type="s"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <method name="Delete">
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 
