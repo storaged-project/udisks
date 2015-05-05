@@ -455,11 +455,12 @@ check_authorization_no_polkit (StoragedDaemon          *daemon,
                                const gchar             *action_id,
                                GVariant                *options,
                                const gchar             *message,
-                               GDBusMethodInvocation   *invocation)
+                               GDBusMethodInvocation   *invocation,
+                               GError                 **error)
 {
   gboolean ret = FALSE;
   uid_t caller_uid = -1;
-  GError *error = NULL;
+  GError *sub_error = NULL;
 
   if (!storaged_daemon_util_get_caller_uid_sync (daemon,
                                                  invocation,
@@ -467,15 +468,15 @@ check_authorization_no_polkit (StoragedDaemon          *daemon,
                                                  &caller_uid,
                                                  NULL,         /* gid_t *out_gid */
                                                  NULL,         /* gchar **out_user_name */
-                                                 &error))
+                                                 &sub_error))
     {
-      g_dbus_method_invocation_return_error (invocation,
-                                             STORAGED_ERROR,
-                                             STORAGED_ERROR_FAILED,
-                                             "Error getting uid for caller with bus name %s: %s (%s, %d)",
-                                             g_dbus_method_invocation_get_sender (invocation),
-                                             error->message, g_quark_to_string (error->domain), error->code);
-      g_clear_error (&error);
+      g_set_error (error,
+                   STORAGED_ERROR,
+                   STORAGED_ERROR_FAILED,
+                   "Error getting uid for caller with bus name %s: %s (%s, %d)",
+                   g_dbus_method_invocation_get_sender (invocation),
+                   sub_error->message, g_quark_to_string (sub_error->domain), sub_error->code);
+      g_clear_error (&sub_error);
       goto out;
     }
 
@@ -486,10 +487,10 @@ check_authorization_no_polkit (StoragedDaemon          *daemon,
     }
   else
     {
-      g_dbus_method_invocation_return_error_literal (invocation,
-                                                     STORAGED_ERROR,
-                                                     STORAGED_ERROR_NOT_AUTHORIZED,
-                                                     "Not authorized to perform operation (polkit authority not available and caller is not uid 0)");
+      g_set_error (error,
+                   STORAGED_ERROR,
+                   STORAGED_ERROR_NOT_AUTHORIZED,
+                   "Not authorized to perform operation (polkit authority not available and caller is not uid 0)");
     }
 
  out:
@@ -540,12 +541,37 @@ storaged_daemon_util_check_authorization_sync (StoragedDaemon          *daemon,
                                                const gchar             *message,
                                                GDBusMethodInvocation   *invocation)
 {
+  GError *error = NULL;
+  if (!storaged_daemon_util_check_authorization_sync_with_error (daemon,
+                                                                 object,
+                                                                 action_id,
+                                                                 options,
+                                                                 message,
+                                                                 invocation,
+                                                                 &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+gboolean
+storaged_daemon_util_check_authorization_sync_with_error (StoragedDaemon          *daemon,
+                                                          StoragedObject          *object,
+                                                          const gchar             *action_id,
+                                                          GVariant                *options,
+                                                          const gchar             *message,
+                                                          GDBusMethodInvocation   *invocation,
+                                                          GError                 **error)
+{
   PolkitAuthority *authority = NULL;
   PolkitSubject *subject = NULL;
   PolkitDetails *details = NULL;
   PolkitCheckAuthorizationFlags flags = POLKIT_CHECK_AUTHORIZATION_FLAGS_NONE;
   PolkitAuthorizationResult *result = NULL;
-  GError *error = NULL;
+  GError *sub_error = NULL;
   gboolean ret = FALSE;
   StoragedBlock *block = NULL;
   StoragedDrive *drive = NULL;
@@ -559,7 +585,7 @@ storaged_daemon_util_check_authorization_sync (StoragedDaemon          *daemon,
   authority = storaged_daemon_get_authority (daemon);
   if (authority == NULL)
     {
-      ret = check_authorization_no_polkit (daemon, object, action_id, options, message, invocation);
+      ret = check_authorization_no_polkit (daemon, object, action_id, options, message, invocation, error);
       goto out;
     }
 
@@ -691,51 +717,51 @@ storaged_daemon_util_check_authorization_sync (StoragedDaemon          *daemon,
   if (details_drive != NULL)
     polkit_details_insert (details, "drive", details_drive);
 
-  error = NULL;
+  sub_error = NULL;
   result = polkit_authority_check_authorization_sync (authority,
                                                       subject,
                                                       action_id,
                                                       details,
                                                       flags,
                                                       NULL, /* GCancellable* */
-                                                      &error);
+                                                      &sub_error);
   if (result == NULL)
     {
-      if (error->domain != POLKIT_ERROR)
+      if (sub_error->domain != POLKIT_ERROR)
         {
           /* assume polkit authority is not available (e.g. could be the service
            * manager returning org.freedesktop.systemd1.Masked)
            */
-          g_error_free (error);
-          ret = check_authorization_no_polkit (daemon, object, action_id, options, message, invocation);
+          g_error_free (sub_error);
+          ret = check_authorization_no_polkit (daemon, object, action_id, options, message, invocation, error);
         }
       else
         {
-          g_dbus_method_invocation_return_error (invocation,
-                                                 STORAGED_ERROR,
-                                                 STORAGED_ERROR_FAILED,
-                                                 "Error checking authorization: %s (%s, %d)",
-                                                 error->message,
-                                                 g_quark_to_string (error->domain),
-                                                 error->code);
-          g_error_free (error);
+          g_set_error (error,
+                       STORAGED_ERROR,
+                       STORAGED_ERROR_FAILED,
+                       "Error checking authorization: %s (%s, %d)",
+                       sub_error->message,
+                       g_quark_to_string (sub_error->domain),
+                       sub_error->code);
+          g_error_free (sub_error);
         }
       goto out;
     }
   if (!polkit_authorization_result_get_is_authorized (result))
     {
       if (polkit_authorization_result_get_dismissed (result))
-        g_dbus_method_invocation_return_error_literal (invocation,
-                                                       STORAGED_ERROR,
-                                                       STORAGED_ERROR_NOT_AUTHORIZED_DISMISSED,
-                                                       "The authentication dialog was dismissed");
+        g_set_error (error,
+                     STORAGED_ERROR,
+                     STORAGED_ERROR_NOT_AUTHORIZED_DISMISSED,
+                     "The authentication dialog was dismissed");
       else
-        g_dbus_method_invocation_return_error_literal (invocation,
-                                                       STORAGED_ERROR,
-                                                       polkit_authorization_result_get_is_challenge (result) ?
-                                                       STORAGED_ERROR_NOT_AUTHORIZED_CAN_OBTAIN :
-                                                       STORAGED_ERROR_NOT_AUTHORIZED,
-                                                       "Not authorized to perform operation");
+        g_set_error (error,
+                     STORAGED_ERROR,
+                     polkit_authorization_result_get_is_challenge (result) ?
+                     STORAGED_ERROR_NOT_AUTHORIZED_CAN_OBTAIN :
+                     STORAGED_ERROR_NOT_AUTHORIZED,
+                     "Not authorized to perform operation");
       goto out;
     }
 
@@ -1485,4 +1511,3 @@ storaged_ata_identify_get_word (const guchar *identify_data, guint word_number)
  out:
   return ret;
 }
-
