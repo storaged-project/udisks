@@ -410,13 +410,26 @@ libiscsi_nodes_free (const struct libiscsi_node *nodes)
   g_free ((gpointer) nodes);
 }
 
+/**
+ * discover_send_targets:
+ * @object: A #StoragedManagerISCSIInitiator
+ * @address: A portal hostname or IP-address
+ * @port: A portal port number
+ * @auth_info: A #libiscsi_auth_info struct
+ * @nodes: A #GVariant containing an array with discovery results
+ * @nodes_cnt: The count of discovered nodes
+ * @errorstr: An error string pointer; may be NULL. Free with g_free().
+ *
+ * Performs nodes discovery using sendtargets.
+ */
 static gint
 discover_send_targets (StoragedManagerISCSIInitiator  *object,
                        const gchar                    *address,
                        const guint16                   port,
                        struct libiscsi_auth_info      *auth_info,
                        GVariant                      **nodes,
-                       gint                           *nodes_cnt)
+                       gint                           *nodes_cnt,
+                       gchar                         **errorstr)
 {
   StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
 
@@ -437,8 +450,9 @@ discover_send_targets (StoragedManagerISCSIInitiator  *object,
                                         &found_nodes);
 
   if (rval == 0)
-    *nodes = libiscsi_nodes_to_gvariant (found_nodes,
-                                         *nodes_cnt);
+      *nodes = libiscsi_nodes_to_gvariant (found_nodes, *nodes_cnt);
+  else if (errorstr)
+      *errorstr = g_strdup (libiscsi_get_error_string (ctx));
 
   /* Leave the critical section. */
   g_mutex_unlock (&manager->libiscsi_mutex);
@@ -449,10 +463,21 @@ discover_send_targets (StoragedManagerISCSIInitiator  *object,
   return rval;
 }
 
+/**
+ * discover_firmware:
+ * @object: A #StoragedManagerISCSIInitiator
+ * @nodes: A #GVariant containing an array with discovery results
+ * @nodes_cnt: The count of discovered nodes
+ * @errorstr: An error string pointer; may be NULL. Free with g_free().
+ *
+ * Performs firmware discovery (ppc or ibft).
+ */
 static gint
+
 discover_firmware (StoragedManagerISCSIInitiator  *object,
                    GVariant                      **nodes,
-                   gint                           *nodes_cnt)
+                   gint                           *nodes_cnt,
+                   gchar                         **errorstr)
 {
   StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
 
@@ -471,6 +496,8 @@ discover_firmware (StoragedManagerISCSIInitiator  *object,
 
   if (rval == 0)
     *nodes = libiscsi_nodes_to_gvariant (found_nodes, *nodes_cnt);
+  else if (errorstr)
+    *errorstr = g_strdup (libiscsi_get_error_string (ctx));
 
   /* Leave the critical section. */
   g_mutex_unlock (&manager->libiscsi_mutex);
@@ -481,6 +508,21 @@ discover_firmware (StoragedManagerISCSIInitiator  *object,
   return rval;
 }
 
+/**
+ * perform_iscsi_login_action
+ * @object: A #StoragedManagerISCSIInitiator
+ * @action: A #libiscsi_login_action
+ * @name: An iSCSI iqn for the node
+ * @tpgt: A portal group number
+ * @address: A portal hostname or IP-address
+ * @port: A portal port number
+ * @iface: An interface to connect through
+ * @errorstr: An error string pointer; may be NULL. Free with g_free().
+ *
+ * Logs in or out to a iSCSI node.
+ *
+ * Returns: 0 if login/logout was successful; standard error code otherwise.
+ */
 static gint
 perform_iscsi_login_action (StoragedManagerISCSIInitiator  *object,
                             libiscsi_login_action           action,
@@ -488,7 +530,8 @@ perform_iscsi_login_action (StoragedManagerISCSIInitiator  *object,
                             const gint                      tpgt,
                             const gchar                    *address,
                             const gint                      port,
-                            const gchar                    *iface)
+                            const gchar                    *iface,
+                            gchar                         **errorstr)
 {
   StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
   struct libiscsi_context *ctx;
@@ -506,10 +549,13 @@ perform_iscsi_login_action (StoragedManagerISCSIInitiator  *object,
   node.tpgt = tpgt;
   node.port = port;
 
-  /* Login or Logout*/
+  /* Login or Logout */
   rval = action == ACTION_LOGIN ?
         libiscsi_node_login  (ctx, &node) :
         libiscsi_node_logout (ctx, &node);
+
+  if (errorstr && rval != 0)
+    *errorstr = g_strdup (libiscsi_get_error_string (ctx));
 
   /* Leave the critical section. */
   g_mutex_unlock (&manager->libiscsi_mutex);
@@ -525,6 +571,7 @@ handle_discover_send_targets_no_auth (StoragedManagerISCSIInitiator  *object,
 {
   gint err;
   gint nodes_cnt = 0;
+  gchar *errorstr = NULL;
   struct libiscsi_auth_info auth_info = { libiscsi_auth_none };
   GVariant *nodes = NULL;
 
@@ -534,26 +581,28 @@ handle_discover_send_targets_no_auth (StoragedManagerISCSIInitiator  *object,
                                arg_port,
                                &auth_info,
                                &nodes,
-                               &nodes_cnt);
+                               &nodes_cnt,
+                               &errorstr);
 
-  if (err == 0)
-    {
-      /* Return discovered portals. */
-      storaged_manager_iscsi_initiator_complete_discover_send_targets_no_auth (object,
-                                                                               invocation,
-                                                                               nodes,
-                                                                               nodes_cnt);
-    }
-  else
+  if (err != 0)
     {
       /* Discovery failed. */
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
                                              "Discovery failed: %s",
-                                             strerror (err));
+                                             errorstr);
+      g_free ((gpointer) errorstr);
+      goto out;
     }
 
+    /* Return discovered portals. */
+    storaged_manager_iscsi_initiator_complete_discover_send_targets_no_auth (object,
+                                                                             invocation,
+                                                                             nodes,
+                                                                             nodes_cnt);
+
+out:
   /* Indicate that we handled the method invocation. */
   return TRUE;
 }
@@ -570,6 +619,7 @@ handle_discover_send_targets_chap (StoragedManagerISCSIInitiator  *object,
 {
   gint err;
   gint nodes_cnt = 0;
+  gchar *errorstr = NULL;
   struct libiscsi_auth_info auth_info;
   GVariant *nodes = NULL;
 
@@ -626,7 +676,8 @@ handle_discover_send_targets_chap (StoragedManagerISCSIInitiator  *object,
                                arg_port,
                                &auth_info,
                                &nodes,
-                               &nodes_cnt);
+                               &nodes_cnt,
+                               &errorstr);
 
   if (err != 0)
     {
@@ -635,8 +686,8 @@ handle_discover_send_targets_chap (StoragedManagerISCSIInitiator  *object,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
                                              "Discovery failed: %s",
-                                             strerror (err));
-
+                                             errorstr);
+      g_free ((gpointer) errorstr);
       goto out;
     }
 
@@ -655,13 +706,15 @@ handle_discover_firmware (StoragedManagerISCSIInitiator  *object,
                           GDBusMethodInvocation          *invocation)
 {
   gint err;
+  gchar *errorstr = NULL;
   gint nodes_cnt = 0;
   GVariant *nodes = NULL;
 
   /* Perform the discovery. */
   err = discover_firmware (object,
                            &nodes,
-                           &nodes_cnt);
+                           &nodes_cnt,
+                           &errorstr);
 
   if (err != 0)
     {
@@ -670,8 +723,8 @@ handle_discover_firmware (StoragedManagerISCSIInitiator  *object,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
                                              "Discovery failed: %s",
-                                             strerror (err));
-
+                                             errorstr);
+      g_free ((gpointer) errorstr);
       goto out;
     }
 
@@ -696,6 +749,7 @@ handle_login(StoragedManagerISCSIInitiator  *object,
              const gchar                    *arg_iface)
 {
   gint err;
+  gchar *errorstr = NULL;
 
   /* Login */
   err = perform_iscsi_login_action (object,
@@ -704,7 +758,8 @@ handle_login(StoragedManagerISCSIInitiator  *object,
                                     arg_tpgt,
                                     arg_address,
                                     arg_port,
-                                    arg_iface);
+                                    arg_iface,
+                                    &errorstr);
 
   if (err != 0)
     {
@@ -713,8 +768,8 @@ handle_login(StoragedManagerISCSIInitiator  *object,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
                                              "Login failed: %s",
-                                             strerror (err));
-
+                                             errorstr);
+      g_free ((gpointer) errorstr);
       goto out;
     }
 
@@ -737,6 +792,7 @@ handle_logout(StoragedManagerISCSIInitiator  *object,
               const gchar *arg_iface)
 {
   gint err;
+  gchar *errorstr = NULL;
 
   /* Logout */
   err = perform_iscsi_login_action (object,
@@ -745,7 +801,8 @@ handle_logout(StoragedManagerISCSIInitiator  *object,
                                     arg_tpgt,
                                     arg_address,
                                     arg_port,
-                                    arg_iface);
+                                    arg_iface,
+                                    &errorstr);
 
   if (err != 0)
     {
@@ -754,8 +811,8 @@ handle_logout(StoragedManagerISCSIInitiator  *object,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
                                              "Logout failed: %s",
-                                             strerror (err));
-
+                                             errorstr);
+      g_free ((gpointer) errorstr);
       goto out;
     }
 
