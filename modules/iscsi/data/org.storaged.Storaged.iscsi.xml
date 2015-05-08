@@ -113,6 +113,43 @@
       <arg name="nodes_cnt" direction="out" type="i"/>
     </method>
 
+    <!--
+        Login:
+        @name: iSCSI iqn for the node.
+        @tpgt: Portal group number.
+        @address: Portal hostname or IP-address.
+        @port: Portal port number.
+        @iface: Interface to connect through.
+        @since 2.0.1
+
+        Login to the iSCSI node described by the given node properties.
+    -->
+    <method name="Login">
+      <arg name="name" direction="in" type="s"/>
+      <arg name="tpgt" direction="in" type="i"/>
+      <arg name="address" direction="in" type="s"/>
+      <arg name="port" direction="in" type="i"/>
+      <arg name="iface" direction="in" type="s"/>
+    </method>
+
+    <!--
+        Logout:
+        @name: iSCSI iqn for the node.
+        @tpgt: Portal group number.
+        @address: Portal hostname or IP-address.
+        @port: Portal port number.
+        @iface: Interface to connect through.
+        @since 2.0.1
+
+        Logout of the iSCSI node described by the given node properties.
+    -->
+    <method name="Logout">
+      <arg name="name" direction="in" type="s"/>
+      <arg name="tpgt" direction="in" type="i"/>
+      <arg name="address" direction="in" type="s"/>
+      <arg name="port" direction="in" type="i"/>
+      <arg name="iface" direction="in" type="s"/>
+    </method>
   </interface>
 
   <!-- ********************************************************************** -->

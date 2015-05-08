@@ -31,6 +31,12 @@
 #include "storaged-iscsi-generated.h"
 #include "storagedlinuxmanageriscsiinitiator.h"
 
+typedef enum
+{
+  ACTION_LOGIN,
+  ACTION_LOGOUT
+} libiscsi_login_action;
+
 /**
  * SECTION:storagedlinuxmanageriscsiinitiator
  * @title: StoragedLinuxManagerISCSIInitiator
@@ -475,6 +481,42 @@ discover_firmware (StoragedManagerISCSIInitiator  *object,
   return rval;
 }
 
+static gint
+perform_iscsi_login_action (StoragedManagerISCSIInitiator  *object,
+                            libiscsi_login_action           action,
+                            const gchar                    *name,
+                            const gint                      tpgt,
+                            const gchar                    *address,
+                            const gint                      port,
+                            const gchar                    *iface)
+{
+  StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
+  struct libiscsi_context *ctx;
+  struct libiscsi_node node;
+  gint rval;
+
+  /* Enter a critical section. */
+  g_mutex_lock (&manager->libiscsi_mutex);
+
+  /* Fill libiscsi parameters. */
+  ctx = storaged_linux_manager_iscsi_initiator_get_iscsi_context (manager);
+  strncpy (node.name, name, LIBISCSI_VALUE_MAXLEN);
+  strncpy (node.address, address, NI_MAXHOST);
+  strncpy (node.iface, iface, LIBISCSI_VALUE_MAXLEN);
+  node.tpgt = tpgt;
+  node.port = port;
+
+  /* Login or Logout*/
+  rval = action == ACTION_LOGIN ?
+        libiscsi_node_login  (ctx, &node) :
+        libiscsi_node_logout (ctx, &node);
+
+  /* Leave the critical section. */
+  g_mutex_unlock (&manager->libiscsi_mutex);
+
+  return rval;
+}
+
 static gboolean
 handle_discover_send_targets_no_auth (StoragedManagerISCSIInitiator  *object,
                                       GDBusMethodInvocation          *invocation,
@@ -644,6 +686,88 @@ out:
   return TRUE;
 }
 
+static gboolean
+handle_login(StoragedManagerISCSIInitiator  *object,
+             GDBusMethodInvocation          *invocation,
+             const gchar                    *arg_name,
+             gint                            arg_tpgt,
+             const gchar                    *arg_address,
+             gint                            arg_port,
+             const gchar                    *arg_iface)
+{
+  gint err;
+
+  /* Login */
+  err = perform_iscsi_login_action (object,
+                                    ACTION_LOGIN,
+                                    arg_name,
+                                    arg_tpgt,
+                                    arg_address,
+                                    arg_port,
+                                    arg_iface);
+
+  if (err != 0)
+    {
+      /* Login failed. */
+      g_dbus_method_invocation_return_error (invocation,
+                                             STORAGED_ERROR,
+                                             STORAGED_ERROR_FAILED,
+                                             "Login failed: %s",
+                                             strerror (err));
+
+      goto out;
+    }
+
+  /* Complete DBus call. */
+  storaged_manager_iscsi_initiator_complete_login (object,
+                                                   invocation);
+
+out:
+  /* Indicate that we handled the method invocation. */
+  return TRUE;
+}
+
+static gboolean
+handle_logout(StoragedManagerISCSIInitiator  *object,
+              GDBusMethodInvocation *invocation,
+              const gchar *arg_name,
+              gint arg_tpgt,
+              const gchar *arg_address,
+              gint arg_port,
+              const gchar *arg_iface)
+{
+  gint err;
+
+  /* Logout */
+  err = perform_iscsi_login_action (object,
+                                    ACTION_LOGOUT,
+                                    arg_name,
+                                    arg_tpgt,
+                                    arg_address,
+                                    arg_port,
+                                    arg_iface);
+
+  if (err != 0)
+    {
+      /* Logout failed. */
+      g_dbus_method_invocation_return_error (invocation,
+                                             STORAGED_ERROR,
+                                             STORAGED_ERROR_FAILED,
+                                             "Logout failed: %s",
+                                             strerror (err));
+
+      goto out;
+    }
+
+  /* Complete DBus call. */
+  storaged_manager_iscsi_initiator_complete_logout (object,
+                                                    invocation);
+
+out:
+  /* Indicate that we handled the method invocation. */
+  return TRUE;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
@@ -654,4 +778,6 @@ storaged_linux_manager_iscsi_initiator_iface_init (StoragedManagerISCSIInitiator
   iface->handle_discover_send_targets_no_auth = handle_discover_send_targets_no_auth;
   iface->handle_discover_send_targets_chap = handle_discover_send_targets_chap;
   iface->handle_discover_firmware = handle_discover_firmware;
+  iface->handle_login = handle_login;
+  iface->handle_logout = handle_logout;
 }
