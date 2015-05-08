@@ -236,7 +236,7 @@ handle_get_initiator_name (StoragedManagerISCSIInitiator  *object,
   size_t len;
   GString *content = NULL;
 
-  /* Enter a critical section */
+  /* Enter a critical section. */
   g_mutex_lock (&manager->initiator_config_mutex);
 
   initiator_name_fd = open (initiator_filename, O_RDONLY);
@@ -326,7 +326,7 @@ handle_set_initiator_name (StoragedManagerISCSIInitiator  *object,
       return TRUE;
     }
 
-  /* Enter a critical section */
+  /* Enter a critical section. */
   g_mutex_lock (&manager->initiator_config_mutex);
 
   initiator_name_fd = open (initiator_filename,
@@ -371,7 +371,7 @@ handle_set_initiator_name (StoragedManagerISCSIInitiator  *object,
                                                                 invocation);
 
 out:
-  /* Leave the critical section */
+  /* Leave the critical section. */
   g_mutex_unlock (&manager->initiator_config_mutex);
 
   /* Release the resources */
@@ -440,7 +440,7 @@ discover_send_targets (StoragedManagerISCSIInitiator  *object,
     *nodes = libiscsi_nodes_to_gvariant (found_nodes,
                                          *nodes_cnt);
 
-  /* Leave the critical section */
+  /* Leave the critical section. */
   g_mutex_unlock (&manager->libiscsi_mutex);
 
   /* Release the resources */
@@ -460,7 +460,7 @@ discover_firmware (StoragedManagerISCSIInitiator  *object,
   struct libiscsi_context *ctx;
   struct libiscsi_node *found_nodes;
 
-  /* Enter a critical section */
+  /* Enter a critical section. */
   g_mutex_lock (&manager->libiscsi_mutex);
 
   /* Discovery */
@@ -472,7 +472,7 @@ discover_firmware (StoragedManagerISCSIInitiator  *object,
   if (rval == 0)
     *nodes = libiscsi_nodes_to_gvariant (found_nodes, *nodes_cnt);
 
-  /* Leave the critical section */
+  /* Leave the critical section. */
   g_mutex_unlock (&manager->libiscsi_mutex);
 
   /* Release the resources */
