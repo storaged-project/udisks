@@ -323,6 +323,9 @@ storaged_module_manager_load_modules (StoragedModuleManager *manager)
 
   while ((dent = g_dir_read_name (dir)))
     {
+      if (!g_str_has_suffix (dent, ".so"))
+        continue;
+
       pth = g_build_filename (module_dir, dent, NULL);
       module = g_module_open (pth, /* G_MODULE_BIND_LOCAL */ 0);
 
