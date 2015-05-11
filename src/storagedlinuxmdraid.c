@@ -1547,6 +1547,7 @@ storaged_linux_mdraid_delete (StoragedMDRaid           *mdraid,
   const gchar *action_id;
   gboolean teardown_flag = FALSE;
   GList *member_devices = NULL;
+  GList *l;
   StoragedLinuxDevice *raid_device = NULL;
   gboolean ret;
 
@@ -1653,7 +1654,7 @@ storaged_linux_mdraid_delete (StoragedMDRaid           *mdraid,
       goto out;
     }
 
-  for (GList *l = member_devices; l; l = l->next)
+  for (l = member_devices; l; l = l->next)
     {
       StoragedLinuxDevice *member_device = STORAGED_LINUX_DEVICE (l->data);
       const gchar *device = g_udev_device_get_device_file (member_device->udev_device);

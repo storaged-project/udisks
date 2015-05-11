@@ -219,10 +219,11 @@ teardown_volume_group (StoragedVolumeGroup   *group,
                        GError               **error)
 {
   GList *volumes;
+  GList *l;
   StoragedLogicalVolume *volume;
 
   volumes = storaged_linux_volume_group_get_logical_volumes (group, daemon);
-  for (GList *l = volumes; l; l = l->next)
+  for (l = volumes; l; l = l->next)
     {
       volume = STORAGED_LOGICAL_VOLUME (l->data);
       if (g_strcmp0 (storaged_logical_volume_get_type_ (volume), "pool") != 0)

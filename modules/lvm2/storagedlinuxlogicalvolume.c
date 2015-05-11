@@ -290,6 +290,7 @@ teardown_logical_volume (StoragedLogicalVolume *volume,
   StoragedVolumeGroup *group;
   StoragedLogicalVolume *sibling_volume;
   GList *siblings;
+  GList *l;
 
   if (!storaged_linux_logical_volume_teardown_block (volume,
                                                      daemon,
@@ -309,7 +310,7 @@ teardown_logical_volume (StoragedLogicalVolume *volume,
       if (group)
         {
           siblings = storaged_linux_volume_group_get_logical_volumes (group, daemon);
-          for (GList *l = siblings; l; l = l->next)
+          for (l = siblings; l; l = l->next)
             {
               sibling_volume = STORAGED_LOGICAL_VOLUME (l->data);
               if (g_strcmp0 (storaged_logical_volume_get_thin_pool (sibling_volume),
