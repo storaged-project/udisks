@@ -29,6 +29,7 @@
 #include <src/storagedstate.h>
 #include <src/storageddaemonutil.h>
 #include <src/storagedlinuxdevice.h>
+#include <src/storagedlinuxblock.h>
 
 #include "storagedlinuxlogicalvolume.h"
 #include "storagedlinuxlogicalvolumeobject.h"
@@ -126,6 +127,7 @@ storaged_linux_logical_volume_update (StoragedLinuxLogicalVolume     *logical_vo
   const char *origin_objpath;
   const gchar *dev_file;
   const gchar *str;
+  const gchar *uuid;
   guint64 num;
 
   iface = STORAGED_LOGICAL_VOLUME (logical_volume);
@@ -133,8 +135,8 @@ storaged_linux_logical_volume_update (StoragedLinuxLogicalVolume     *logical_vo
   if (g_variant_lookup (info, "name", "&s", &str))
     storaged_logical_volume_set_name (iface, str);
 
-  if (g_variant_lookup (info, "uuid", "&s", &str))
-    storaged_logical_volume_set_uuid (iface, str);
+  if (g_variant_lookup (info, "uuid", "&s", &uuid))
+    storaged_logical_volume_set_uuid (iface, uuid);
 
   if (g_variant_lookup (info, "size", "t", &num))
     storaged_logical_volume_set_size (iface, num);
@@ -204,9 +206,134 @@ storaged_linux_logical_volume_update (StoragedLinuxLogicalVolume     *logical_vo
       storaged_daemon_util_lvm2_trigger_udev (dev_file);
       logical_volume->needs_udev_hack = FALSE;
     }
+
+  StoragedDaemon *daemon = storaged_linux_volume_group_object_get_daemon (group_object);
+  storaged_logical_volume_set_child_configuration (iface,
+                                                   storaged_linux_find_child_configuration (daemon,
+                                                                                            uuid));
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
+
+static StoragedBlock *
+peek_block_for_logical_volume (StoragedLogicalVolume *volume,
+                               StoragedDaemon        *daemon)
+{
+  StoragedBlock *ret = NULL;
+  GDBusObject *object;
+  GList *l, *objects = NULL;
+  StoragedBlockLVM2 *block_lvm2;
+
+  object = g_dbus_interface_get_object (G_DBUS_INTERFACE (volume));
+  if (object == NULL)
+    goto out;
+
+  objects = storaged_daemon_get_objects (daemon);
+  for (l = objects; l != NULL; l = l->next)
+    {
+      block_lvm2 = storaged_object_peek_block_lvm2 (STORAGED_OBJECT(l->data));
+      if (block_lvm2 &&
+          g_strcmp0 (storaged_block_lvm2_get_logical_volume (block_lvm2),
+                     g_dbus_object_get_object_path (object)) == 0)
+        {
+          ret = storaged_object_peek_block (STORAGED_OBJECT(l->data));
+          goto out;
+        }
+    }
+
+ out:
+  g_list_free_full (objects, g_object_unref);
+  return ret;
+}
+
+gboolean
+storaged_linux_logical_volume_teardown_block (StoragedLogicalVolume *volume,
+                                              StoragedDaemon        *daemon,
+                                              GDBusMethodInvocation *invocation,
+                                              GVariant              *options,
+                                              GError               **error)
+{
+  StoragedBlock *block;
+
+  block = peek_block_for_logical_volume (volume, daemon);
+  if (block)
+    {
+      /* The volume is active.  Tear down its block device.
+       */
+      if (!storaged_linux_block_teardown (block,
+                                          invocation,
+                                          options,
+                                          error))
+        return FALSE;
+    }
+  else
+    {
+      /* The volume is inactive.  Remove the child configurations.
+       */
+      if (!storaged_linux_remove_configuration (storaged_logical_volume_get_child_configuration (volume),
+                                                error))
+        return FALSE;
+    }
+
+  return TRUE;
+}
+
+static gboolean
+teardown_logical_volume (StoragedLogicalVolume *volume,
+                         StoragedDaemon        *daemon,
+                         GDBusMethodInvocation *invocation,
+                         GVariant              *options,
+                         GError               **error)
+{
+  GDBusObject *volume_object;
+  StoragedObject *group_object;
+  StoragedVolumeGroup *group;
+  StoragedLogicalVolume *sibling_volume;
+  GList *siblings;
+
+  if (!storaged_linux_logical_volume_teardown_block (volume,
+                                                     daemon,
+                                                     invocation,
+                                                     options,
+                                                     error))
+    return FALSE;
+
+  /* Recurse for pool members and snapshots.
+   */
+
+  volume_object = g_dbus_interface_get_object (G_DBUS_INTERFACE (volume));
+  group_object = storaged_daemon_find_object (daemon, storaged_logical_volume_get_volume_group (volume));
+  if (volume_object && group_object)
+    {
+      group = storaged_object_peek_volume_group (group_object);
+      if (group)
+        {
+          siblings = storaged_linux_volume_group_get_logical_volumes (group, daemon);
+          for (GList *l = siblings; l; l = l->next)
+            {
+              sibling_volume = STORAGED_LOGICAL_VOLUME (l->data);
+              if (g_strcmp0 (storaged_logical_volume_get_thin_pool (sibling_volume),
+                             g_dbus_object_get_object_path (volume_object)) == 0 ||
+                  g_strcmp0 (storaged_logical_volume_get_origin (sibling_volume),
+                             g_dbus_object_get_object_path (volume_object)) == 0)
+                {
+                  if (!teardown_logical_volume (sibling_volume,
+                                                daemon,
+                                                invocation,
+                                                options,
+                                                error))
+                    {
+                      g_list_free_full (siblings, g_object_unref);
+                      return FALSE;
+                    }
+                }
+            }
+          g_list_free_full (siblings, g_object_unref);
+        }
+    }
+
+  return TRUE;
+}
 
 static gboolean
 handle_delete (StoragedLogicalVolume *_volume,
@@ -221,10 +348,13 @@ handle_delete (StoragedLogicalVolume *_volume,
   const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
+  gboolean teardown_flag = FALSE;
   StoragedLinuxVolumeGroupObject *group_object;
   gchar *escaped_group_name = NULL;
   gchar *escaped_name = NULL;
   gchar *error_message = NULL;
+
+  g_variant_lookup (options, "tear-down", "b", &teardown_flag);
 
   object = storaged_daemon_util_dup_object (volume, &error);
   if (object == NULL)
@@ -257,6 +387,17 @@ handle_delete (StoragedLogicalVolume *_volume,
                                                       message,
                                                       invocation))
     goto out;
+
+  if (teardown_flag &&
+      !teardown_logical_volume (_volume,
+                                daemon,
+                                invocation,
+                                options,
+                                &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
 
   group_object = storaged_linux_logical_volume_object_get_volume_group (object);
   escaped_group_name = storaged_daemon_util_escape_and_quote (storaged_linux_volume_group_object_get_name (group_object));

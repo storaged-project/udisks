@@ -41,6 +41,7 @@ GList                    *storaged_module_manager_get_block_object_iface_infos (
 GList                    *storaged_module_manager_get_drive_object_iface_infos (StoragedModuleManager  *manager);
 GList                    *storaged_module_manager_get_module_object_new_funcs  (StoragedModuleManager  *manager);
 GList                    *storaged_module_manager_get_new_manager_iface_funcs  (StoragedModuleManager  *manager);
+GList                    *storaged_module_manager_get_track_parent_funcs       (StoragedModuleManager  *manager);
 
 void                      storaged_module_manager_set_module_state_pointer (StoragedModuleManager  *manager,
                                                                             const gchar            *module_name,

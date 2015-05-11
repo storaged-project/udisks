@@ -239,4 +239,16 @@ typedef gboolean (*StoragedObjectUpdateInterfaceFunc)  (StoragedObject   *object
                                                         const gchar      *uevent_action,
                                                         GDBusInterface   *interface);
 
+/**
+ * StoragedTrackParentFunc:
+ * @daemon: The #StoragedDaemon.
+ * @path: The object path of the object to examine.
+ * @uuid_ret: Place to return the UUID of the parent.
+ *
+ * Type of functions that hook into #storaged_daemon_get_parent_for_tracking.
+ */
+typedef gchar *(*StoragedTrackParentFunc) (StoragedDaemon *daemon,
+                                           const gchar    *path,
+                                           gchar         **uuid_ret);
+
 #endif /* __STORAGED_DAEMON_TYPES_H__ */

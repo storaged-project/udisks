@@ -36,6 +36,11 @@
 #include "storageddaemonutil.h"
 #include "storagedstate.h"
 #include "storagedlinuxdevice.h"
+#include "storagedlinuxblock.h"
+#include "storagedfstabentry.h"
+#include "storagedfstabmonitor.h"
+#include "storagedcrypttabentry.h"
+#include "storagedcrypttabmonitor.h"
 
 /**
  * SECTION:storagedlinuxencrypted
@@ -98,6 +103,19 @@ storaged_linux_encrypted_new (void)
 }
 /* ---------------------------------------------------------------------------------------------------- */
 
+static void
+update_child_configuration (StoragedLinuxEncrypted   *encrypted,
+                            StoragedLinuxBlockObject *object)
+{
+  StoragedDaemon *daemon = storaged_linux_block_object_get_daemon (object);
+  StoragedBlock *block = storaged_object_peek_block (STORAGED_OBJECT (object));
+
+  storaged_encrypted_set_child_configuration
+    (STORAGED_ENCRYPTED (encrypted),
+     storaged_linux_find_child_configuration (daemon,
+                                              storaged_block_get_id_uuid (block)));
+}
+
 /**
  * storaged_linux_encrypted_update:
  * @encrypted: A #StoragedLinuxEncrypted.
@@ -109,7 +127,7 @@ void
 storaged_linux_encrypted_update (StoragedLinuxEncrypted   *encrypted,
                                  StoragedLinuxBlockObject *object)
 {
-  /* do nothing */
+  update_child_configuration (encrypted, object);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -468,11 +486,11 @@ handle_unlock (StoragedEncrypted        *encrypted,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-/* runs in thread dedicated to handling @invocation */
-static gboolean
-handle_lock (StoragedEncrypted        *encrypted,
-             GDBusMethodInvocation    *invocation,
-             GVariant                 *options)
+gboolean
+storaged_linux_encrypted_lock (StoragedLinuxEncrypted   *encrypted,
+                               GDBusMethodInvocation    *invocation,
+                               GVariant                 *options,
+                               GError                  **error)
 {
   StoragedObject *object;
   StoragedBlock *block;
@@ -486,8 +504,8 @@ handle_lock (StoragedEncrypted        *encrypted,
   StoragedLinuxDevice *device;
   uid_t unlocked_by_uid;
   dev_t cleartext_device_from_file;
-  GError *error;
   uid_t caller_uid;
+  gboolean ret;
 
   object = NULL;
   daemon = NULL;
@@ -497,11 +515,10 @@ handle_lock (StoragedEncrypted        *encrypted,
   cleartext_object = NULL;
   device = NULL;
 
-  error = NULL;
-  object = storaged_daemon_util_dup_object (encrypted, &error);
+  object = storaged_daemon_util_dup_object (encrypted, error);
   if (object == NULL)
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      ret = FALSE;
       goto out;
     }
 
@@ -518,11 +535,12 @@ handle_lock (StoragedEncrypted        *encrypted,
   if (!(g_strcmp0 (storaged_block_get_id_usage (block), "crypto") == 0 &&
         g_strcmp0 (storaged_block_get_id_type (block), "crypto_LUKS") == 0))
     {
-      g_dbus_method_invocation_return_error (invocation,
-                                             STORAGED_ERROR,
-                                             STORAGED_ERROR_FAILED,
-                                             "Device %s does not appear to be a LUKS device",
-                                             storaged_block_get_device (block));
+      g_set_error (error,
+                   STORAGED_ERROR,
+                   STORAGED_ERROR_FAILED,
+                   "Device %s does not appear to be a LUKS device",
+                   storaged_block_get_device (block));
+      ret = FALSE;
       goto out;
     }
 
@@ -535,16 +553,16 @@ handle_lock (StoragedEncrypted        *encrypted,
                                                          NULL); /* error */
   if (cleartext_object == NULL)
     {
-      g_dbus_method_invocation_return_error (invocation,
-                                             STORAGED_ERROR,
-                                             STORAGED_ERROR_FAILED,
-                                             "Device %s is not unlocked",
-                                             storaged_block_get_device (block));
+      g_set_error (error,
+                   STORAGED_ERROR,
+                   STORAGED_ERROR_FAILED,
+                   "Device %s is not unlocked",
+                   storaged_block_get_device (block));
+      ret = FALSE;
       goto out;
     }
   cleartext_block = storaged_object_peek_block (cleartext_object);
 
-  error = NULL;
   cleartext_device_from_file = storaged_state_find_unlocked_luks (state,
                                                                   storaged_block_get_device_number (block),
                                                                   &unlocked_by_uid);
@@ -555,11 +573,15 @@ handle_lock (StoragedEncrypted        *encrypted,
     }
 
   /* we need the uid of the caller to check authorization */
-  error = NULL;
-  if (!storaged_daemon_util_get_caller_uid_sync (daemon, invocation, NULL /* GCancellable */, &caller_uid, NULL, NULL, &error))
+  if (!storaged_daemon_util_get_caller_uid_sync (daemon,
+                                                 invocation,
+                                                 NULL /* GCancellable */,
+                                                 &caller_uid,
+                                                 NULL,
+                                                 NULL,
+                                                 error))
     {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      ret = FALSE;
       goto out;
     }
 
@@ -568,20 +590,24 @@ handle_lock (StoragedEncrypted        *encrypted,
    */
   if (caller_uid != 0 && (caller_uid != unlocked_by_uid))
     {
-      if (!storaged_daemon_util_check_authorization_sync (daemon,
-                                                        object,
-                                                        "org.storaged.Storaged.encrypted-lock-others",
-                                                        options,
-                                                        /* Translators: Shown in authentication dialog when the user
-                                                         * requests locking an encrypted device that was previously.
-                                                         * unlocked by another user.
-                                                         *
-                                                         * Do not translate $(drive), it's a placeholder and
-                                                         * will be replaced by the name of the drive/device in question
-                                                         */
-                                                        N_("Authentication is required to lock the encrypted device $(drive) unlocked by another user"),
-                                                        invocation))
-        goto out;
+      if (!storaged_daemon_util_check_authorization_sync_with_error (daemon,
+                                                                     object,
+                                                                     "org.storaged.Storaged.encrypted-lock-others",
+                                                                     options,
+                                                                     /* Translators: Shown in authentication dialog when the user
+                                                                      * requests locking an encrypted device that was previously.
+                                                                      * unlocked by another user.
+                                                                      *
+                                                                      * Do not translate $(drive), it's a placeholder and
+                                                                      * will be replaced by the name of the drive/device in question
+                                                                      */
+                                                                     N_("Authentication is required to lock the encrypted device $(drive) unlocked by another user"),
+                                                                     invocation,
+                                                                     error))
+        {
+          ret = FALSE;
+          goto out;
+        }
     }
 
   device = storaged_linux_block_object_get_device (STORAGED_LINUX_BLOCK_OBJECT (cleartext_object));
@@ -599,21 +625,21 @@ handle_lock (StoragedEncrypted        *encrypted,
                                                 "cryptsetup luksClose %s",
                                                 escaped_name))
     {
-      g_dbus_method_invocation_return_error (invocation,
-                                             STORAGED_ERROR,
-                                             STORAGED_ERROR_FAILED,
-                                             "Error locking %s (%s): %s",
-                                             storaged_block_get_device (cleartext_block),
-                                             storaged_block_get_device (block),
-                                             error_message);
+      g_set_error (error,
+                   STORAGED_ERROR,
+                   STORAGED_ERROR_FAILED,
+                   "Error locking %s (%s): %s",
+                   storaged_block_get_device (cleartext_block),
+                   storaged_block_get_device (block),
+                   error_message);
+      ret = FALSE;
       goto out;
     }
 
   storaged_notice ("Locked LUKS device %s (was unlocked as %s)",
                    storaged_block_get_device (block),
                    storaged_block_get_device (cleartext_block));
-
-  storaged_encrypted_complete_lock (encrypted, invocation);
+  ret = TRUE;
 
  out:
   if (device != NULL)
@@ -624,6 +650,22 @@ handle_lock (StoragedEncrypted        *encrypted,
   if (cleartext_object != NULL)
     g_object_unref (cleartext_object);
   g_clear_object (&object);
+
+  return ret;
+}
+
+/* runs in thread dedicated to handling @invocation */
+static gboolean
+handle_lock (StoragedEncrypted        *encrypted,
+             GDBusMethodInvocation    *invocation,
+             GVariant                 *options)
+{
+  GError *error = NULL;
+
+  if (!storaged_linux_encrypted_lock (STORAGED_LINUX_ENCRYPTED (encrypted), invocation, options, &error))
+    g_dbus_method_invocation_take_error (invocation, error);
+  else
+    storaged_encrypted_complete_lock (encrypted, invocation);
 
   return TRUE; /* returning TRUE means that we handled the method invocation */
 }

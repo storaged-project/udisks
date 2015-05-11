@@ -56,6 +56,9 @@ G_MODULE_EXPORT StoragedModuleObjectNewFunc  *storaged_module_get_object_new_fun
 /* Corresponds with the StoragedModuleNewManagerIfaceSetupFunc type */
 G_MODULE_EXPORT StoragedModuleNewManagerIfaceFunc *storaged_module_get_new_manager_iface_funcs (void);
 
+G_MODULE_EXPORT gchar *storaged_module_track_parent (StoragedDaemon *daemon,
+                                                     const gchar    *path,
+                                                     gchar         **uuid_ret);
 
 G_END_DECLS
 

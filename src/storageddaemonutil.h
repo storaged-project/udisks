@@ -55,6 +55,14 @@ gboolean storaged_daemon_util_check_authorization_sync (StoragedDaemon          
                                                         const gchar             *message,
                                                         GDBusMethodInvocation   *invocation);
 
+gboolean storaged_daemon_util_check_authorization_sync_with_error (StoragedDaemon          *daemon,
+                                                                   StoragedObject          *object,
+                                                                   const gchar             *action_id,
+                                                                   GVariant                *options,
+                                                                   const gchar             *message,
+                                                                   GDBusMethodInvocation   *invocation,
+                                                                   GError                 **error);
+
 gboolean storaged_daemon_util_get_caller_uid_sync (StoragedDaemon            *daemon,
                                                    GDBusMethodInvocation     *invocation,
                                                    GCancellable              *cancellable,

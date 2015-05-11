@@ -40,6 +40,7 @@
 #include "storagedstate.h"
 #include "storageddaemonutil.h"
 #include "storagedlinuxdevice.h"
+#include "storagedlinuxblock.h"
 
 /**
  * SECTION:storagedlinuxmdraid
@@ -254,7 +255,6 @@ member_cmpfunc (GVariant **a,
 
   return slot_a - slot_b;
 }
-
 
 /**
  * storaged_linux_mdraid_update:
@@ -521,6 +521,10 @@ storaged_linux_mdraid_update (StoragedLinuxMDRaid       *mdraid,
     }
   storaged_mdraid_set_active_devices (iface, g_variant_builder_end (&builder));
 
+  storaged_mdraid_set_child_configuration (iface,
+                                           storaged_linux_find_child_configuration (daemon,
+                                                                                    uuid));
+
  out:
   g_free (sync_completed);
   g_free (sync_action);
@@ -739,9 +743,10 @@ handle_start (StoragedMDRaid           *_mdraid,
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
-handle_stop (StoragedMDRaid           *_mdraid,
-             GDBusMethodInvocation    *invocation,
-             GVariant                 *options)
+storaged_linux_mdraid_stop (StoragedMDRaid           *_mdraid,
+                            GDBusMethodInvocation    *invocation,
+                            GVariant                 *options,
+                            GError                  **error)
 {
   StoragedLinuxMDRaid *mdraid = STORAGED_LINUX_MDRAID (_mdraid);
   StoragedDaemon *daemon;
@@ -753,38 +758,37 @@ handle_stop (StoragedMDRaid           *_mdraid,
   StoragedLinuxDevice *raid_device = NULL;
   const gchar *device_file = NULL;
   gchar *escaped_device_file = NULL;
-  GError *error = NULL;
   gchar *error_message = NULL;
+  gboolean ret;
 
-  object = storaged_daemon_util_dup_object (mdraid, &error);
+  object = storaged_daemon_util_dup_object (mdraid, error);
   if (object == NULL)
     {
-      g_dbus_method_invocation_take_error (invocation, error);
+      ret = FALSE;
       goto out;
     }
 
   daemon = storaged_linux_mdraid_object_get_daemon (object);
   state = storaged_daemon_get_state (daemon);
 
-  error = NULL;
   if (!storaged_daemon_util_get_caller_uid_sync (daemon,
                                                  invocation,
                                                  NULL /* GCancellable */,
                                                  &caller_uid,
                                                  &caller_gid,
                                                  NULL,
-                                                 &error))
+                                                 error))
     {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
+      ret = FALSE;
       goto out;
     }
 
   raid_device = storaged_linux_mdraid_object_get_device (object);
   if (raid_device == NULL)
     {
-      g_dbus_method_invocation_return_error (invocation, STORAGED_ERROR, STORAGED_ERROR_FAILED,
-                                             "RAID Array is not running");
+      g_set_error (error, STORAGED_ERROR, STORAGED_ERROR_FAILED,
+                   "RAID Array is not running");
+      ret = FALSE;
       goto out;
     }
 
@@ -807,12 +811,14 @@ handle_stop (StoragedMDRaid           *_mdraid,
       /* TODO: variables */
       message = N_("Authentication is required to stop a RAID array");
       action_id = "org.storaged.Storaged.manage-md-raid";
-      if (!storaged_daemon_util_check_authorization_sync (daemon,
-                                                        STORAGED_OBJECT (object),
-                                                        action_id,
-                                                        options,
-                                                        message,
-                                                        invocation))
+      if (!storaged_daemon_util_check_authorization_sync_with_error (daemon,
+                                                                     STORAGED_OBJECT (object),
+                                                                     action_id,
+                                                                     options,
+                                                                     message,
+                                                                     invocation,
+                                                                     error))
+        ret = FALSE;
         goto out;
     }
 
@@ -831,23 +837,42 @@ handle_stop (StoragedMDRaid           *_mdraid,
                                                 "mdadm --stop %s",
                                                 escaped_device_file))
     {
-      g_dbus_method_invocation_return_error (invocation,
-                                             STORAGED_ERROR,
-                                             STORAGED_ERROR_FAILED,
-                                             "Error stopping RAID array %s: %s",
-                                             device_file,
-                                             error_message);
+      g_set_error (error,
+                   STORAGED_ERROR,
+                   STORAGED_ERROR_FAILED,
+                   "Error stopping RAID array %s: %s",
+                   device_file,
+                   error_message);
+      ret = FALSE;
       goto out;
     }
 
-  storaged_mdraid_complete_stop (_mdraid, invocation);
+  ret = TRUE;
 
  out:
   g_free (error_message);
   g_free (escaped_device_file);
   g_clear_object (&raid_device);
   g_clear_object (&object);
-  return TRUE; /* returning TRUE means that we handled the method invocation */
+  return ret;
+}
+
+static gboolean
+handle_stop (StoragedMDRaid           *_mdraid,
+             GDBusMethodInvocation    *invocation,
+             GVariant                 *options)
+{
+  GError *error = NULL;
+
+  if (!storaged_linux_mdraid_stop (_mdraid,
+                                   invocation,
+                                   options,
+                                   &error))
+    g_dbus_method_invocation_take_error (invocation, error);
+  else
+    storaged_mdraid_complete_stop (_mdraid, invocation);
+
+  return TRUE;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -1508,6 +1533,189 @@ handle_request_sync_action (StoragedMDRaid           *_mdraid,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+static gboolean
+storaged_linux_mdraid_delete (StoragedMDRaid           *mdraid,
+                              GDBusMethodInvocation    *invocation,
+                              GVariant                 *options,
+                              GError                  **error)
+{
+  StoragedLinuxMDRaidObject *object;
+  StoragedDaemon *daemon;
+  uid_t caller_uid;
+  gid_t caller_gid;
+  const gchar *message;
+  const gchar *action_id;
+  gboolean teardown_flag = FALSE;
+  GList *member_devices = NULL;
+  StoragedLinuxDevice *raid_device = NULL;
+  gboolean ret;
+
+  g_variant_lookup (options, "tear-down", "b", &teardown_flag);
+
+  /* Delete is just stop followed by wiping of all members.
+   */
+
+  object = storaged_daemon_util_dup_object (mdraid, error);
+  if (object == NULL)
+    {
+      ret = FALSE;
+      goto out;
+    }
+
+  daemon = storaged_linux_mdraid_object_get_daemon (object);
+
+  if (!storaged_daemon_util_get_caller_uid_sync (daemon,
+                                                 invocation,
+                                                 NULL /* GCancellable */,
+                                                 &caller_uid,
+                                                 &caller_gid,
+                                                 NULL,
+                                                 error))
+    {
+      ret = FALSE;
+      goto out;
+    }
+
+  message = N_("Authentication is required to delete a RAID array");
+  action_id = "org.storaged.Storaged.manage-md-raid";
+  if (!storaged_daemon_util_check_authorization_sync_with_error (daemon,
+                                                                 NULL,
+                                                                 action_id,
+                                                                 options,
+                                                                 message,
+                                                                 invocation,
+                                                                 error))
+    {
+      ret = FALSE;
+      goto out;
+    }
+
+  member_devices = storaged_linux_mdraid_object_get_members (object);
+  raid_device = storaged_linux_mdraid_object_get_device (object);
+
+  if (teardown_flag)
+    {
+      message = N_("Authentication is required to modify the system configuration");
+      action_id = "org.storaged.Storaged.modify-system-configuration";
+      if (!storaged_daemon_util_check_authorization_sync_with_error (daemon,
+                                                                     NULL,
+                                                                     action_id,
+                                                                     options,
+                                                                     message,
+                                                                     invocation,
+                                                                     error))
+        {
+          ret = FALSE;
+          goto out;
+        }
+
+      if (raid_device)
+        {
+          /* The array is running, teardown its block device.
+          */
+          StoragedObject *block_object =
+            storaged_daemon_find_block_by_device_file (daemon,
+                                                       g_udev_device_get_device_file (raid_device->udev_device));
+          StoragedBlock *block = block_object? storaged_object_peek_block (block_object) : NULL;
+          if (block &&
+              !storaged_linux_block_teardown (block,
+                                              invocation,
+                                              options,
+                                              error))
+            {
+              g_clear_object (&block_object);
+              ret = FALSE;
+              goto out;
+            }
+
+          g_clear_object (&block_object);
+        }
+      else
+        {
+          /* The array is not running, remove the ChildConfiguration.
+          */
+          if (!storaged_linux_remove_configuration (storaged_mdraid_get_child_configuration (mdraid),
+                                                    error))
+            {
+              ret = FALSE;
+              goto out;
+            }
+        }
+    }
+
+  if (raid_device &&
+      !storaged_linux_mdraid_stop (mdraid,
+                                   invocation,
+                                   options,
+                                   error))
+    {
+      ret = FALSE;
+      goto out;
+    }
+
+  for (GList *l = member_devices; l; l = l->next)
+    {
+      StoragedLinuxDevice *member_device = STORAGED_LINUX_DEVICE (l->data);
+      const gchar *device = g_udev_device_get_device_file (member_device->udev_device);
+      gchar *escaped_device = storaged_daemon_util_escape_and_quote (device);
+      gchar *error_message = NULL;
+      int status;
+
+      if (!storaged_daemon_launch_spawned_job_sync (daemon,
+                                                    STORAGED_OBJECT (object),
+                                                    "format-erase", caller_uid,
+                                                    NULL, /* cancellable */
+                                                    0,    /* uid_t run_as_uid */
+                                                    0,    /* uid_t run_as_euid */
+                                                    &status,
+                                                    &error_message,
+                                                    NULL, /* input_string */
+                                                    "wipefs -a %s",
+                                                    escaped_device))
+        {
+          g_set_error (error,
+                       STORAGED_ERROR,
+                       STORAGED_ERROR_FAILED,
+                       "Error wiping device: %s",
+                       error_message);
+          ret = FALSE;
+          g_free (escaped_device);
+          g_free (error_message);
+          goto out;
+        }
+
+      g_free (escaped_device);
+      g_free (error_message);
+    }
+
+  ret = TRUE;
+
+ out:
+  g_list_free_full (member_devices, g_object_unref);
+  g_clear_object (&raid_device);
+  return ret;
+}
+
+static gboolean
+handle_delete (StoragedMDRaid           *_mdraid,
+               GDBusMethodInvocation    *invocation,
+               GVariant                 *options)
+{
+  GError *error = NULL;
+
+  if (!storaged_linux_mdraid_delete (_mdraid,
+                                     invocation,
+                                     options,
+                                     &error))
+    g_dbus_method_invocation_take_error (invocation, error);
+  else
+    storaged_mdraid_complete_delete (_mdraid, invocation);
+
+  return TRUE;
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 static void
 mdraid_iface_init (StoragedMDRaidIface *iface)
 {
@@ -1517,4 +1725,5 @@ mdraid_iface_init (StoragedMDRaidIface *iface)
   iface->handle_add_device = handle_add_device;
   iface->handle_set_bitmap_location = handle_set_bitmap_location;
   iface->handle_request_sync_action = handle_request_sync_action;
+  iface->handle_delete = handle_delete;
 }

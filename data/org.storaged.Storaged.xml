@@ -1120,6 +1120,29 @@
 
         See the #org.storaged.Storaged.Block:Configuration
         property for details about valid configuration items.
+
+        Some fields can be omitted and will then receive default
+        values.  This is useful when passing configuration items to
+        Format, for example, because the proper values are not known
+        before the formatting is done.
+
+        If 'fsname' is omitted in a 'fstab' entry, or 'device' is
+        omitted in a 'crypttab' entry, it defaults to "UUID=..." when
+        the block device has a filesystem UUID, or to the name of the
+        device in the filesystem..
+
+        If 'name' is omitted in a 'crypttab' entry, it defaults to
+        "luks-<UUID>".
+
+        If 'passphrase-path' is omitted, it defaults to
+        "/etc/luks-keys/<NAME>".
+
+        If 'track-parents' is set to true in @item, then the 'opts'
+        and 'options' fields will be augmented with "x-parent"
+        elements, as appropriate.  This will make @item appear in the
+        ChildConfiguration properties, and will allow the 'tear-down'
+        option of Format, DeletePartition, and other methods to remove
+        this item reliably.
     -->
     <method name="AddConfigurationItem">
       <arg name="item" direction="in" type="(sa{sv})"/>
@@ -1233,6 +1256,20 @@
         takes place but after authorization and other checks are
         done. This is useful for applications that want to format
         several devices in parallel.
+
+        If the option <parameter>config-items</parameter> is set, it
+        should be an array of configuration items suitable for
+        org.storaged.Storaged.Block.AddConfigurationItem.  They will
+        all be added after the formatting is done.
+
+        If the option <parameter>tear-down</parameter> is set to
+        %TRUE, then the block device and all its children will be
+        cleaned up before formatting.  This cleanup consists of
+        removing entries from /etc/fstab and /etc/crypttab, and
+        locking of encrypted block devices.  Entries in /etc/fstab and
+        /etc/crypttab that have been created with the 'track-parents'
+        options to AddConfigurationItem will be removed even if their
+        block device is currently unavailable.
     -->
     <method name="Format">
       <arg name="type" direction="in" type="s"/>
@@ -1365,6 +1402,34 @@
       <arg name="options" direction="in" type="a{sv}"/>
       <arg name="created_partition" direction="out" type="o"/>
     </method>
+
+    <!--
+        CreatePartitionAndFormat:
+        @offset: The desired offset where the partition should be created, in bytes.
+        @size: The desired size of the partition, in bytes.
+        @type: The type of partition to create (cf. the #org.storaged.Storaged.Partition:Type property) or blank to use the default for the partition table type and OS.
+        @name: The name for the new partition or blank if the partition table do not support names.
+        @options: Options (currently unused except for <link linkend="storaged-std-options">standard options</link>).
+        @created_partition: An object path to the created block device object implementing the #org.storaged.Storaged.Partition interface.
+        @format_type: The type to use for Format.
+        @format_options: Options for Format.
+
+        This is a combination of
+        #org.storaged.Storaged.PartitionTable:CreatePartition and
+        #org.storaged.Storaged.Block:Format.  After creating the
+        partition, the resulting block device is formatted.
+    -->
+    <method name="CreatePartitionAndFormat">
+      <arg name="offset" direction="in" type="t"/>
+      <arg name="size" direction="in" type="t"/>
+      <arg name="type" direction="in" type="s"/>
+      <arg name="name" direction="in" type="s"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+      <arg name="format_type" direction="in" type="s"/>
+      <arg name="format_options" direction="in" type="a{sv}"/>
+      <arg name="created_partition" direction="out" type="o"/>
+    </method>
+
   </interface>
 
   <!-- ********************************************************************** -->
@@ -1482,9 +1547,18 @@
     </method>
 
     <!-- Delete:
-         @options: Options (currently unused except for <link linkend="storaged-std-options">standard options</link>).
+         @options: Options.
 
          Deletes the partition.
+
+         If the option <parameter>tear-down</parameter> is set to
+         %TRUE, then the block device and all its children will be
+         cleaned up before formatting.  This cleanup consists of
+         removing entries from /etc/fstab and /etc/crypttab, and
+         locking of encrypted block devices.  Entries in /etc/fstab
+         and /etc/crypttab that have been created with the
+         'track-parents' options to AddConfigurationItem will be
+         removed even if their block device is currently unavailable.
     -->
     <method name="Delete">
       <arg name="options" direction="in" type="a{sv}"/>
@@ -1648,6 +1722,16 @@
   -->
   <interface name="org.storaged.Storaged.Encrypted">
     <!-- prereq: org.storaged.Storaged.Block -->
+
+    <!-- ChildConfiguration: Configuration items belonging to the
+         clear text device of this encrypted block device and its
+         children.  This is also valid when this block device is
+         currently locked and there is no clear text device for it.
+         It works via the 'track-parents' options of
+         org.storaged.Storaged.Block.AddConfigurationItem(), which
+         see.
+    -->
+    <property name="ChildConfiguration" type="a(sa{sv})" access="read"/>
 
     <!--
         Unlock:
@@ -1921,6 +2005,15 @@
     -->
     <property name="ActiveDevices" type="a(oiasta{sv})" access="read"/>
 
+    <!-- ChildConfiguration: Configuration items belonging to the
+         block devices of this array (recursively).  This is also
+         valid when the array is stopped and there are no actual block
+         devices for it.  It works via the 'track-parents' options of
+         org.storaged.Storaged.Block.AddConfigurationItem(), which
+         see.
+    -->
+    <property name="ChildConfiguration" type="a(sa{sv})" access="read"/>
+
     <!--
         Start:
         @options: Options - known options (in addition to <link linkend="storaged-std-options">standard options</link>) includes <parameter>start-degraded</parameter> (of type 'b').
@@ -2008,6 +2101,10 @@
     -->
     <method name="RequestSyncAction">
       <arg name="sync_action" direction="in" type="s"/>
+      <arg name="options" direction="in" type="a{sv}"/>
+    </method>
+
+    <method name="Delete">
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
 

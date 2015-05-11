@@ -161,6 +161,7 @@ struct _StoragedModuleManager
   GList *drive_object_interface_infos;
   GList *module_object_new_funcs;
   GList *new_manager_iface_funcs;
+  GList *module_track_parent_funcs;
 
   GMutex modules_ready_lock;
   gboolean modules_ready;
@@ -227,6 +228,11 @@ storaged_module_manager_finalize (GObject *object)
       g_list_free (manager->new_manager_iface_funcs);
     }
 
+  if (manager->module_track_parent_funcs != NULL)
+    {
+      g_list_free (manager->module_track_parent_funcs);
+    }
+
   g_hash_table_destroy (manager->state_pointers);
 
   if (manager->modules != NULL)
@@ -279,6 +285,7 @@ storaged_module_manager_load_modules (StoragedModuleManager *manager)
   StoragedModuleInterfaceInfo **infos, **infos_i;
   StoragedModuleObjectNewFunc *module_object_new_funcs, *module_object_new_funcs_i;
   StoragedModuleNewManagerIfaceFunc *module_new_manager_iface_funcs, *module_new_manager_iface_funcs_i;
+  gpointer track_parent_func;
 
   g_return_if_fail (STORAGED_IS_MODULE_MANAGER (manager));
 
@@ -316,6 +323,9 @@ storaged_module_manager_load_modules (StoragedModuleManager *manager)
 
   while ((dent = g_dir_read_name (dir)))
     {
+      if (!g_str_has_suffix (dent, ".so"))
+        continue;
+
       pth = g_build_filename (module_dir, dent, NULL);
       module = g_module_open (pth, /* G_MODULE_BIND_LOCAL */ 0);
 
@@ -357,6 +367,13 @@ storaged_module_manager_load_modules (StoragedModuleManager *manager)
               for (module_new_manager_iface_funcs_i = module_new_manager_iface_funcs; module_new_manager_iface_funcs_i && *module_new_manager_iface_funcs_i; module_new_manager_iface_funcs_i++)
                 manager->new_manager_iface_funcs = g_list_append (manager->new_manager_iface_funcs, *module_new_manager_iface_funcs_i);
               g_free (module_new_manager_iface_funcs);
+
+              if (g_module_symbol (module_data->handle, "storaged_module_track_parent", &track_parent_func))
+                {
+                  storaged_debug("ADDING TRACK");
+                  manager->module_track_parent_funcs = g_list_append (manager->module_track_parent_funcs,
+                                                                      track_parent_func);
+                }
 
               manager->modules = g_list_append (manager->modules, module_data);
               if (module_state_pointer != NULL && module_id != NULL)
@@ -602,6 +619,26 @@ storaged_module_manager_get_new_manager_iface_funcs (StoragedModuleManager *mana
   if (! manager->modules_ready)
     return NULL;
   return manager->new_manager_iface_funcs;
+}
+
+/**
+ * storaged_module_manager_get_parent_tracking_funcs:
+ * @manager: A #StoragedModuleManager instance.
+ *
+ * Returns a list of all module parent tracking functions. See
+ * #StoragedTrackParentFunc for details.
+ *
+ * Returns: (element-type StoragedTrackParentFunc) (transfer none): A
+ * list of #StoragedTrackParentFunc function pointers that belongs to
+ * the manager and must not be freed.
+ */
+GList *
+storaged_module_manager_get_track_parent_funcs (StoragedModuleManager *manager)
+{
+  g_return_val_if_fail (STORAGED_IS_MODULE_MANAGER (manager), NULL);
+  if (! manager->modules_ready)
+    return NULL;
+  return manager->module_track_parent_funcs;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
