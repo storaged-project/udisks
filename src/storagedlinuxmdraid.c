@@ -818,8 +818,10 @@ storaged_linux_mdraid_stop (StoragedMDRaid           *_mdraid,
                                                                      message,
                                                                      invocation,
                                                                      error))
-        ret = FALSE;
-        goto out;
+        {
+          ret = FALSE;
+          goto out;
+        }
     }
 
   device_file = g_udev_device_get_device_file (raid_device->udev_device);
