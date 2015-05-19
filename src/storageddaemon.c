@@ -1307,7 +1307,7 @@ storaged_daemon_get_parent_for_tracking (StoragedDaemon *daemon,
           mdraid = storaged_object_peek_mdraid (mdraid_object);
           if (mdraid)
             {
-              parent_uuid = storaged_block_get_id_uuid (crypto_block);
+              parent_uuid = storaged_mdraid_get_uuid (mdraid);
               parent_path = storaged_block_get_mdraid (block);
               goto out;
             }
