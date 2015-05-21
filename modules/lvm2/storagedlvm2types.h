@@ -24,6 +24,9 @@
 
 #define LVM2_MODULE_NAME "lvm2"
 
+struct _StoragedLVM2State;
+typedef struct _StoragedLVM2State StoragedLVM2State;
+
 struct _StoragedLinuxVolumeGroupObject;
 typedef struct _StoragedLinuxVolumeGroupObject StoragedLinuxVolumeGroupObject;
 

@@ -42,8 +42,14 @@
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+gchar *
+storaged_module_id (void)
+{
+	return g_strdup (DUMMY_MODULE_NAME);
+}
+
 gpointer
-storaged_module_init (gchar **module_id)
+storaged_module_init (StoragedDaemon *daemon)
 {
   return NULL;
 }

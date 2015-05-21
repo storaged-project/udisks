@@ -31,10 +31,11 @@
 
 G_BEGIN_DECLS
 
+/* Corresponds with the StoragedModuleIDFunc type */
+G_MODULE_EXPORT gchar *storaged_module_id (void);
 
 /* Corresponds with the StoragedModuleInitFunc type */
-G_MODULE_EXPORT gpointer storaged_module_init (gchar **module_id);
-
+G_MODULE_EXPORT gpointer storaged_module_init (StoragedDaemon *daemon);
 
 /**
  * Storaged module setup entry functions:

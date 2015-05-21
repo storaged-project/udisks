@@ -22,4 +22,6 @@
 
 #define ISCSI_MODULE_NAME "iscsi"
 
+typedef struct _StoragedISCSIState StoragedISCSIState;
+
 #endif /* __STORAGED_ISCSI_TYPES_H__ */

@@ -132,19 +132,25 @@ typedef GDBusObjectSkeleton* (*StoragedModuleObjectNewFunc) (StoragedDaemon     
 typedef GDBusInterfaceSkeleton* (*StoragedModuleNewManagerIfaceFunc) (StoragedDaemon *daemon);
 
 
+/**
+ * StoragedModuleIDFunc:
+ *
+ * This function is called by #StoragedModuleManager which stores the pointer
+ * returned in a module state hashtable under the ID returned as the @module_id
+ * argument.
+ *
+ * Returns: The module ID string.
+ */
+typedef gchar *(*StoragedModuleIDFunc) (void);
 
 /**
  * StoragedModuleInitFunc:
- * @module_id: a pointer to a string where the module ID will be set.
+ * @daemon: A #StoragedDaemon instance.
  *
  * Function prototype that is called upon module initialization. Its purpose is
  * to perform internal initialization and allocate memory that is then used e.g.
  * for saving state. See the storaged_module_manager_get_module_state_pointer()
  * method for how to work with state pointers.
- *
- * This function is called only once by #StoragedModuleManager who stores the
- * pointer returned in a module state hashtable under the ID returned as the
- * @module_id argument.
  *
  * Note that since modules unloading is not supported, the memory returned gets
  * never freed.
@@ -153,10 +159,9 @@ typedef GDBusInterfaceSkeleton* (*StoragedModuleNewManagerIfaceFunc) (StoragedDa
  * Used internally by #StoragedModuleManager.
  *
  * Returns: Pointer to an opaque memory or %NULL when module doesn't need to save
- *          its state. The @module_id argument is filled with a module ID string
- *          when non-%NULL.
+ *          its state.
  */
-typedef gpointer (*StoragedModuleInitFunc) (gchar **module_id);
+typedef gpointer (*StoragedModuleInitFunc) (StoragedDaemon *daemon);
 
 /**
  * StoragedModuleIfaceSetupFunc:

@@ -23,23 +23,22 @@
 
 #include <glib.h>
 #include <glib-object.h>
-
+#include <src/storageddaemontypes.h>
+#include "storagedlvm2types.h"
 
 G_BEGIN_DECLS
 
-typedef struct
-{
-  /* maps from volume group name to StoragedLinuxVolumeGroupObject instances. */
-  GHashTable *name_to_volume_group;
-
-  gint lvm_delayed_update_id;
-  gboolean coldplug_done;
-} StoragedLVM2State;
-
-
-StoragedLVM2State *storaged_lvm2_state_new  (void);
+StoragedLVM2State *storaged_lvm2_state_new  (StoragedDaemon *daemon);
 void               storaged_lvm2_state_free (StoragedLVM2State *state);
 
+GHashTable        *storaged_lvm2_state_get_name_to_volume_group  (StoragedLVM2State *state);
+gint               storaged_lvm2_state_get_lvm_delayed_update_id (StoragedLVM2State *state);
+gboolean           storaged_lvm2_state_get_coldplug_done         (StoragedLVM2State *state);
+
+void               storaged_lvm2_state_set_lvm_delayed_update_id (StoragedLVM2State *state,
+                                                                  gint               id);
+void               storaged_lvm2_state_set_coldplug_done         (StoragedLVM2State *state,
+                                                                  gboolean           coldplug_done);
 
 G_END_DECLS
 

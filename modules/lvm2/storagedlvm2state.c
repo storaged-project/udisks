@@ -20,23 +20,36 @@
 
 #include "config.h"
 
+#include <src/storageddaemontypes.h>
 #include "storagedlvm2state.h"
 
+struct _StoragedLVM2State
+{
+  StoragedDaemon *daemon;
+
+  /* maps from volume group name to StoragedLinuxVolumeGroupObject instances. */
+  GHashTable *name_to_volume_group;
+
+  gint lvm_delayed_update_id;
+  gboolean coldplug_done;
+};
 
 /**
  * storaged_lvm2_state_new:
+ * @daemon: A #StoragedDaemon instance.
  *
  * Initializes the #StoragedLVM2State structure that holds global state within the LVM2 plugin.
  *
  * Returns: (transfer full): A #StoragedLVM2State that must be freed with storaged_lvm2_state_free().
  */
 StoragedLVM2State *
-storaged_lvm2_state_new (void)
+storaged_lvm2_state_new (StoragedDaemon *daemon)
 {
   StoragedLVM2State *state;
 
   state = g_malloc0 (sizeof (StoragedLVM2State));
 
+  state->daemon = daemon;
   state->name_to_volume_group = g_hash_table_new_full (g_str_hash,
                                                        g_str_equal,
                                                        g_free,
@@ -60,4 +73,46 @@ storaged_lvm2_state_free (StoragedLVM2State *state)
   g_hash_table_unref (state->name_to_volume_group);
 
   g_free (state);
+}
+
+GHashTable *
+storaged_lvm2_state_get_name_to_volume_group (StoragedLVM2State *state)
+{
+  g_assert (state != NULL);
+
+  return state->name_to_volume_group;
+}
+
+gint
+storaged_lvm2_state_get_lvm_delayed_update_id (StoragedLVM2State *state)
+{
+  g_assert (state != NULL);
+
+  return state->lvm_delayed_update_id;
+}
+
+gboolean
+storaged_lvm2_state_get_coldplug_done (StoragedLVM2State *state)
+{
+  g_assert (state != NULL);
+
+  return state->coldplug_done;
+}
+
+void
+storaged_lvm2_state_set_lvm_delayed_update_id (StoragedLVM2State *state,
+                                               gint               id)
+{
+  g_assert (state != NULL);
+
+  state->lvm_delayed_update_id = id;
+}
+
+void
+storaged_lvm2_state_set_coldplug_done (StoragedLVM2State *state,
+                                       gboolean           coldplug_done)
+{
+  g_assert (state != NULL);
+
+  state->coldplug_done = coldplug_done;
 }

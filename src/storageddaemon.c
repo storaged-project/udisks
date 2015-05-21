@@ -257,9 +257,9 @@ storaged_daemon_constructed (GObject *object)
     }
 
   if (!daemon->uninstalled)
-    daemon->module_manager = storaged_module_manager_new ();
+    daemon->module_manager = storaged_module_manager_new (daemon);
   else
-    daemon->module_manager = storaged_module_manager_new_uninstalled ();
+    daemon->module_manager = storaged_module_manager_new_uninstalled (daemon);
 
   daemon->mount_monitor = storaged_mount_monitor_new ();
 

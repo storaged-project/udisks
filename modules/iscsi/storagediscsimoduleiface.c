@@ -33,12 +33,16 @@
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-gpointer
-storaged_module_init (gchar **module_id)
+gchar *
+storaged_module_id (void)
 {
-  *module_id = g_strdup (ISCSI_MODULE_NAME);
+  return g_strdup (ISCSI_MODULE_NAME);
+}
 
-  return storaged_iscsi_state_new ();
+gpointer
+storaged_module_init (StoragedDaemon *daemon)
+{
+  return storaged_iscsi_state_new (daemon);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

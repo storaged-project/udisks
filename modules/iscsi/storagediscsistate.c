@@ -23,11 +23,12 @@
 
 struct _StoragedISCSIState
 {
-  /* TODO: Add necessary fields here */
+  StoragedDaemon *daemon;
 };
 
 /**
  * storaged_iscsi_state_new:
+ * @daemon: A #StoragedDaemon instance.
  *
  * Initializes the #StoragedISCSIState structure that holds the global state
  * within ISCSI plugin.
@@ -37,13 +38,17 @@ struct _StoragedISCSIState
  */
 
 StoragedISCSIState *
-storaged_iscsi_state_new (void)
+storaged_iscsi_state_new (StoragedDaemon *daemon)
 {
   StoragedISCSIState *state;
 
   state = g_malloc0 (sizeof(StoragedISCSIState));
 
-  /* Initialize necessary fields here. */
+  if (state)
+    {
+      /* Initialize members. */
+      state->daemon = daemon;
+    }
 
   return state;
 }

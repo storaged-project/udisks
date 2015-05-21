@@ -48,12 +48,16 @@
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-gpointer
-storaged_module_init (gchar **module_id)
+gchar *
+storaged_module_id (void)
 {
-  *module_id = g_strdup (LVM2_MODULE_NAME);
+  return g_strdup (LVM2_MODULE_NAME);
+}
 
-  return storaged_lvm2_state_new ();
+gpointer
+storaged_module_init (StoragedDaemon *daemon)
+{
+  return storaged_lvm2_state_new (daemon);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -115,7 +119,8 @@ lvm_update_from_variant (GPid      pid,
   state = get_module_state (daemon);
 
   /* Remove obsolete groups */
-  g_hash_table_iter_init (&vg_name_iter, state->name_to_volume_group);
+  g_hash_table_iter_init (&vg_name_iter,
+                          storaged_lvm2_state_get_name_to_volume_group (state));
   while (g_hash_table_iter_next (&vg_name_iter, &key, &value))
     {
       const gchar *vg;
@@ -147,12 +152,14 @@ lvm_update_from_variant (GPid      pid,
   while (g_variant_iter_next (&var_iter, "&s", &name))
     {
       StoragedLinuxVolumeGroupObject *group;
-      group = g_hash_table_lookup (state->name_to_volume_group, name);
+      group = g_hash_table_lookup (storaged_lvm2_state_get_name_to_volume_group (state),
+                                   name);
 
       if (group == NULL)
         {
           group = storaged_linux_volume_group_object_new (daemon, name);
-          g_hash_table_insert (state->name_to_volume_group, g_strdup (name), group);
+          g_hash_table_insert (storaged_lvm2_state_get_name_to_volume_group (state),
+                               g_strdup (name), group);
         }
       storaged_linux_volume_group_object_update (group);
     }
@@ -186,7 +193,7 @@ delayed_lvm_update (gpointer user_data)
   state = get_module_state (daemon);
 
   lvm_update (daemon, FALSE);
-  state->lvm_delayed_update_id = 0;
+  storaged_lvm2_state_set_lvm_delayed_update_id (state, 0);
   return FALSE;
 }
 
@@ -197,21 +204,24 @@ trigger_delayed_lvm_update (StoragedDaemon *daemon)
 
   state = get_module_state (daemon);
 
-  if (state->lvm_delayed_update_id > 0)
+  if (storaged_lvm2_state_get_lvm_delayed_update_id (state) > 0)
     return;
 
-  if (! state->coldplug_done)
+  if (! storaged_lvm2_state_get_coldplug_done (state))
     {
       /* Spawn immediately and ignore locks when doing coldplug, i.e. when lvm2 module
        * has just been activated. This is not 100% effective as this affects only the
        * first request but from the plugin nature we don't know whether coldplugging
        * has been finished or not. Might be subject to change in the future. */
-      state->coldplug_done = TRUE;
+      storaged_lvm2_state_set_coldplug_done (state, TRUE);
       lvm_update (daemon, TRUE);
     }
   else
     {
-      state->lvm_delayed_update_id = g_timeout_add (100, delayed_lvm_update, daemon);
+      storaged_lvm2_state_set_lvm_delayed_update_id (state,
+                                                     g_timeout_add (100,
+                                                                    delayed_lvm_update,
+                                                                    daemon));
     }
 }
 

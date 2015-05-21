@@ -33,6 +33,7 @@
 #include <glib-object.h>
 #include <gmodule.h>
 
+#include "storageddaemon.h"
 #include "storagedmodulemanager.h"
 #include "storagedprivate.h"
 #include "storagedlogging.h"
@@ -156,6 +157,8 @@ struct _StoragedModuleManager
 {
   GObject parent_instance;
 
+  StoragedDaemon *daemon;
+
   GList *modules;
   GList *block_object_interface_infos;
   GList *drive_object_interface_infos;
@@ -188,6 +191,7 @@ typedef struct
 enum
 {
   PROP_0,
+  PROP_DAEMON,
   PROP_MODULES_READY,
   PROP_UNINSTALLED,
 };
@@ -278,6 +282,7 @@ storaged_module_manager_load_modules (StoragedModuleManager *manager)
   StoragedModuleIfaceSetupFunc drive_object_iface_setup_func;
   StoragedModuleObjectNewSetupFunc module_object_new_setup_func;
   StoragedModuleNewManagerIfaceSetupFunc module_new_manager_iface_setup_func;
+  StoragedModuleIDFunc module_id_func;
   StoragedModuleInitFunc module_init_func;
 
   gchar *module_id;
@@ -334,7 +339,8 @@ storaged_module_manager_load_modules (StoragedModuleManager *manager)
           module_data = g_new0 (ModuleData, 1);
           module_data->handle = module;
           storaged_notice ("Loading module %s...", dent);
-          if (! g_module_symbol (module_data->handle, "storaged_module_init", (gpointer *) &module_init_func) ||
+          if (! g_module_symbol (module_data->handle, "storaged_module_id", (gpointer *) &module_id_func) ||
+              ! g_module_symbol (module_data->handle, "storaged_module_init", (gpointer *) &module_init_func) ||
               ! g_module_symbol (module_data->handle, "storaged_module_get_block_object_iface_setup_entries", (gpointer *) &block_object_iface_setup_func) ||
               ! g_module_symbol (module_data->handle, "storaged_module_get_drive_object_iface_setup_entries", (gpointer *) &drive_object_iface_setup_func) ||
               ! g_module_symbol (module_data->handle, "storaged_module_get_object_new_funcs", (gpointer *) &module_object_new_setup_func) ||
@@ -345,8 +351,11 @@ storaged_module_manager_load_modules (StoragedModuleManager *manager)
             }
           else
             {
-              module_id = NULL;
-              module_state_pointer = module_init_func (&module_id);
+              /* Module name */
+              module_id = module_id_func ();
+
+              /* Initialize the module and store its state pointer. */
+              module_state_pointer = module_init_func (storaged_module_manager_get_daemon (manager));
 
               infos = block_object_iface_setup_func ();
               for (infos_i = infos; infos_i && *infos_i; infos_i++)
@@ -381,6 +390,11 @@ storaged_module_manager_load_modules (StoragedModuleManager *manager)
               g_free (module_id);
             }
         }
+      else
+        {
+          storaged_error ("Module loading failed: %s", g_module_error ());
+        }
+
       g_free (pth);
     }
   g_dir_close (dir);
@@ -421,6 +435,10 @@ storaged_module_manager_get_property (GObject    *object,
 
   switch (prop_id)
     {
+    case PROP_DAEMON:
+      g_value_set_object (value, storaged_module_manager_get_daemon (manager));
+      break;
+
     case PROP_MODULES_READY:
       g_value_set_boolean (value, storaged_module_manager_get_modules_available (manager));
       break;
@@ -445,6 +463,12 @@ storaged_module_manager_set_property (GObject      *object,
 
   switch (prop_id)
     {
+    case PROP_DAEMON:
+      g_assert (manager->daemon == NULL);
+      /* We don't take a reference to the daemon */
+      manager->daemon = g_value_get_object (value);
+      break;
+
     case PROP_UNINSTALLED:
       manager->uninstalled = g_value_get_boolean (value);
       break;
@@ -478,6 +502,21 @@ storaged_module_manager_class_init (StoragedModuleManagerClass *klass)
                                                          FALSE,
                                                          G_PARAM_READABLE |
                                                          G_PARAM_STATIC_STRINGS));
+  /**
+   * StoragedModuleManager:daemon:
+   *
+   * The #StoragedDaemon for the object.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_DAEMON,
+                                   g_param_spec_object ("daemon",
+                                                        "Daemon",
+                                                        "The daemon for the object",
+                                                        STORAGED_TYPE_DAEMON,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_STRINGS));
 
   /**
    * StoragedModuleManager:uninstalled:
@@ -497,28 +536,48 @@ storaged_module_manager_class_init (StoragedModuleManagerClass *klass)
 
 /**
  * storaged_module_manager_new:
+ * @daemon: A #StoragedDaemon instance.
  *
  * Creates a new #StoragedModuleManager object.
  *
  * Returns: A #StoragedModuleManager. Free with g_object_unref().
  */
 StoragedModuleManager *
-storaged_module_manager_new (void)
+storaged_module_manager_new (StoragedDaemon *daemon)
 {
-  return STORAGED_MODULE_MANAGER (g_object_new (STORAGED_TYPE_MODULE_MANAGER, NULL));
+  return STORAGED_MODULE_MANAGER (g_object_new (STORAGED_TYPE_MODULE_MANAGER,
+                                                "daemon", daemon, NULL));
 }
 
 /**
  * storaged_module_manager_new_uninstalled:
+ * @daemon: A #StoragedDaemon instance.
  *
  * Creates a new #StoragedModuleManager object.
  *
  * Returns: A #StoragedModuleManager. Free with g_object_notify().
  */
 StoragedModuleManager *
-storaged_module_manager_new_uninstalled (void)
+storaged_module_manager_new_uninstalled (StoragedDaemon *daemon)
 {
-  return STORAGED_MODULE_MANAGER (g_object_new (STORAGED_TYPE_MODULE_MANAGER, "uninstalled", TRUE, NULL));
+  return STORAGED_MODULE_MANAGER (g_object_new (STORAGED_TYPE_MODULE_MANAGER,
+                                                "daemon", daemon,
+                                                "uninstalled", TRUE, NULL));
+}
+
+/**
+ * storaged_module_manager_get_daemon:
+ * @manager: A #StoragedModuleManager.
+ *
+ * Gets the daemon used by @manager.
+ *
+ * Returns: A #StoragedDaemon. Do not free, the object is owned by @manager.
+ */
+StoragedDaemon *
+storaged_module_manager_get_daemon (StoragedModuleManager *manager)
+{
+  g_return_val_if_fail (STORAGED_IS_MODULE_MANAGER (manager), NULL);
+  return manager->daemon;
 }
 
 /**

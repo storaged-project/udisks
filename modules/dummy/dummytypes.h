@@ -28,6 +28,8 @@
 
 #include <sys/types.h>
 
+#define DUMMY_MODULE_NAME "dummy"
+
 struct _DummyLinuxBlock;
 typedef struct _DummyLinuxBlock DummyLinuxBlock;
 

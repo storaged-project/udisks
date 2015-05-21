@@ -21,13 +21,13 @@
 #define __STORAGED_ISCSI_STATE_H__
 
 #include <glib.h>
+#include <src/storageddaemontypes.h>
+#include "storagediscsitypes.h"
 
 G_BEGIN_DECLS
 
-typedef struct _StoragedISCSIState StoragedISCSIState;
-
-StoragedISCSIState *storaged_iscsi_state_new  (void);
-void                storaged_iscsi_state_free (StoragedISCSIState *state);
+StoragedISCSIState                     *storaged_iscsi_state_new  (StoragedDaemon *daemon);
+void                                    storaged_iscsi_state_free (StoragedISCSIState *state);
 
 G_END_DECLS
 

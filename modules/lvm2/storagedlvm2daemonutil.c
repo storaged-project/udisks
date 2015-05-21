@@ -377,7 +377,7 @@ storaged_daemon_util_lvm2_find_volume_group_object (StoragedDaemon *daemon,
   state = (StoragedLVM2State *) storaged_module_manager_get_module_state_pointer (manager, LVM2_MODULE_NAME);
   g_assert (state != NULL);
 
-  return g_hash_table_lookup (state->name_to_volume_group, name);
+  return g_hash_table_lookup (storaged_lvm2_state_get_name_to_volume_group (state), name);
 }
 
 /* -------------------------------------------------------------------------------- */
