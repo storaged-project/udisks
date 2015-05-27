@@ -84,6 +84,9 @@ struct _StoragedLinuxProvider
 
   GFileMonitor *etc_storaged_dir_monitor;
 
+  /* Module interfaces list */
+  GList *module_ifaces;
+
   /* set to TRUE only in the coldplug phase */
   gboolean coldplug;
 
@@ -160,6 +163,8 @@ storaged_linux_provider_finalize (GObject *object)
   g_hash_table_unref (provider->sysfs_path_to_mdraid_members);
   g_hash_table_unref (provider->module_funcs_to_instances);
   g_object_unref (provider->gudev_client);
+
+  g_list_free (provider->module_ifaces);
 
   storaged_object_skeleton_set_manager (provider->manager_object, NULL);
   g_object_unref (provider->manager_object);
@@ -308,6 +313,7 @@ storaged_linux_provider_init (StoragedLinuxProvider *provider)
     }
   g_object_unref (file);
 
+  provider->module_ifaces = NULL;
 }
 
 static void
@@ -442,26 +448,53 @@ ensure_modules (StoragedLinuxProvider *provider)
   GList *storaged_devices;
   GList *l;
   gboolean do_refresh = FALSE;
+  gboolean loaded;
 
   daemon = storaged_provider_get_daemon (STORAGED_PROVIDER (provider));
   module_manager = storaged_daemon_get_module_manager (daemon);
 
-  if (! storaged_module_manager_get_modules_available (module_manager))
-    return;
+  loaded = storaged_module_manager_get_modules_available (module_manager);
 
-  storaged_debug ("Modules loaded, attaching interfaces...");
-  /* Attach additional interfaces from modules */
-  l = storaged_module_manager_get_new_manager_iface_funcs (module_manager);
-  for (; l != NULL; l = l->next)
+  if (loaded)
     {
-      new_manager_iface_func = l->data;
-      iface = new_manager_iface_func (daemon);
-      if (iface != NULL)
+      /* Attach additional interfaces from modules. */
+      storaged_debug ("Modules loaded, attaching interfaces...");
+
+      l = storaged_module_manager_get_new_manager_iface_funcs (module_manager);
+      for (; l != NULL; l = l->next)
         {
-          g_dbus_object_skeleton_add_interface (G_DBUS_OBJECT_SKELETON (provider->manager_object), iface);
-          g_object_unref (iface);
-          do_refresh = TRUE;
+          new_manager_iface_func = l->data;
+          iface = new_manager_iface_func (daemon);
+          if (iface != NULL)
+            {
+              g_dbus_object_skeleton_add_interface (G_DBUS_OBJECT_SKELETON (provider->manager_object), iface);
+              g_object_unref (iface);
+              do_refresh = TRUE;
+
+              provider->module_ifaces = g_list_append (provider->module_ifaces, iface);
+            }
         }
+    }
+  else
+    {
+      /* Detach additional interfaces from modules. */
+      storaged_debug ("Modules unloading, detaching interfaces...");
+
+      l = provider->module_ifaces;
+      for (; l != NULL; l = l->next)
+        {
+          iface = l->data;
+          g_dbus_object_skeleton_remove_interface (G_DBUS_OBJECT_SKELETON (provider->manager_object), iface);
+
+          storaged_debug ("Interface removed");
+        }
+      g_list_free (provider->module_ifaces);
+      provider->module_ifaces = NULL;
+
+      /* Finish module unloading. */
+      storaged_module_manager_unload_modules (module_manager);
+
+      do_refresh = TRUE;
     }
 
   if (do_refresh)

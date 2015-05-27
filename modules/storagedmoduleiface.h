@@ -37,6 +37,9 @@ G_MODULE_EXPORT gchar *storaged_module_id (void);
 /* Corresponds with the StoragedModuleInitFunc type */
 G_MODULE_EXPORT gpointer storaged_module_init (StoragedDaemon *daemon);
 
+/* Corresponds with the StoragedModuleTeardownFunc type */
+G_MODULE_EXPORT void storaged_module_teardown (StoragedDaemon *daemon);
+
 /**
  * Storaged module setup entry functions:
  *   Functions below are module entry functions that return an array of setup

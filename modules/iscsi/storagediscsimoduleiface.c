@@ -45,6 +45,17 @@ storaged_module_init (StoragedDaemon *daemon)
   return storaged_iscsi_state_new (daemon);
 }
 
+void
+storaged_module_teardown (StoragedDaemon *daemon)
+{
+  StoragedModuleManager *manager = storaged_daemon_get_module_manager (daemon);
+  StoragedISCSIState *state_pointer = (StoragedISCSIState *) \
+                                       storaged_module_manager_get_module_state_pointer (manager,
+                                                                                         ISCSI_MODULE_NAME);
+
+  storaged_iscsi_state_free (state_pointer);
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 StoragedModuleInterfaceInfo **

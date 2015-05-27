@@ -165,6 +165,7 @@ struct _StoragedModuleManager
   GList *module_object_new_funcs;
   GList *new_manager_iface_funcs;
   GList *module_track_parent_funcs;
+  GList *teardown_funcs;
 
   GMutex modules_ready_lock;
   gboolean modules_ready;
@@ -198,11 +199,14 @@ enum
 
 G_DEFINE_TYPE (StoragedModuleManager, storaged_module_manager, G_TYPE_OBJECT)
 
+static void storaged_module_manager_free_modules (StoragedModuleManager *manager);
+
 static void
 free_module_data (ModuleData *data)
 {
-  g_module_close (data->handle);
-  free (data);
+  if (! g_module_close (data->handle))
+    storaged_error ("Unloading failed: %s", g_module_error ());
+  g_free (data);
 }
 
 static void
@@ -210,42 +214,10 @@ storaged_module_manager_finalize (GObject *object)
 {
   StoragedModuleManager *manager = STORAGED_MODULE_MANAGER (object);
 
-  if (manager->block_object_interface_infos != NULL)
-    {
-      g_list_foreach (manager->block_object_interface_infos, (GFunc) g_free, NULL);
-      g_list_free (manager->block_object_interface_infos);
-    }
-
-  if (manager->drive_object_interface_infos != NULL)
-    {
-      g_list_foreach (manager->drive_object_interface_infos, (GFunc) g_free, NULL);
-      g_list_free (manager->drive_object_interface_infos);
-    }
-
-  if (manager->module_object_new_funcs != NULL)
-    {
-      g_list_free (manager->module_object_new_funcs);
-    }
-
-  if (manager->new_manager_iface_funcs != NULL)
-    {
-      g_list_free (manager->new_manager_iface_funcs);
-    }
-
-  if (manager->module_track_parent_funcs != NULL)
-    {
-      g_list_free (manager->module_track_parent_funcs);
-    }
-
-  g_hash_table_destroy (manager->state_pointers);
-
-  if (manager->modules != NULL)
-    {
-      g_list_foreach (manager->modules, (GFunc) free_module_data, NULL);
-      g_list_free (manager->modules);
-    }
+  storaged_module_manager_unload_modules (manager);
 
   g_mutex_clear (&manager->modules_ready_lock);
+  g_hash_table_destroy (manager->state_pointers);
 
   if (G_OBJECT_CLASS (storaged_module_manager_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (storaged_module_manager_parent_class)->finalize (object);
@@ -255,9 +227,66 @@ storaged_module_manager_finalize (GObject *object)
 static void
 storaged_module_manager_init (StoragedModuleManager *manager)
 {
-  g_mutex_init (&manager->modules_ready_lock);
+  g_return_if_fail (STORAGED_IS_MODULE_MANAGER (manager));
 
+  g_mutex_init (&manager->modules_ready_lock);
   manager->state_pointers = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+}
+
+static void
+storaged_module_manager_free_modules (StoragedModuleManager *manager)
+{
+  g_return_if_fail (STORAGED_IS_MODULE_MANAGER (manager));
+
+  if (manager->block_object_interface_infos != NULL)
+    {
+      g_list_foreach (manager->block_object_interface_infos, (GFunc) g_free, NULL);
+      g_list_free (manager->block_object_interface_infos);
+      manager->block_object_interface_infos = NULL;
+    }
+
+  if (manager->drive_object_interface_infos != NULL)
+    {
+      g_list_foreach (manager->drive_object_interface_infos, (GFunc) g_free, NULL);
+      g_list_free (manager->drive_object_interface_infos);
+      manager->drive_object_interface_infos = NULL;
+    }
+
+  if (manager->module_object_new_funcs != NULL)
+    {
+      g_list_free (manager->module_object_new_funcs);
+      manager->module_object_new_funcs = NULL;
+    }
+
+  if (manager->new_manager_iface_funcs != NULL)
+    {
+      g_list_free (manager->new_manager_iface_funcs);
+      manager->new_manager_iface_funcs = NULL;
+    }
+
+  if (manager->module_track_parent_funcs != NULL)
+    {
+      g_list_free (manager->module_track_parent_funcs);
+      manager->module_track_parent_funcs = NULL;
+    }
+
+  if (manager->teardown_funcs != NULL)
+    {
+      g_list_free (manager->teardown_funcs);
+      manager->teardown_funcs = NULL;
+    }
+
+  if (manager->state_pointers != NULL)
+    {
+      g_hash_table_remove_all (manager->state_pointers);
+    }
+
+  if (manager->modules != NULL)
+    {
+      g_list_foreach (manager->modules, (GFunc) free_module_data, NULL);
+      g_list_free (manager->modules);
+      manager->modules = NULL;
+    }
 }
 
 /**
@@ -284,6 +313,7 @@ storaged_module_manager_load_modules (StoragedModuleManager *manager)
   StoragedModuleNewManagerIfaceSetupFunc module_new_manager_iface_setup_func;
   StoragedModuleIDFunc module_id_func;
   StoragedModuleInitFunc module_init_func;
+  StoragedModuleTeardownFunc module_teardown_func;
 
   gchar *module_id;
   gpointer module_state_pointer;
@@ -341,6 +371,7 @@ storaged_module_manager_load_modules (StoragedModuleManager *manager)
           storaged_notice ("Loading module %s...", dent);
           if (! g_module_symbol (module_data->handle, "storaged_module_id", (gpointer *) &module_id_func) ||
               ! g_module_symbol (module_data->handle, "storaged_module_init", (gpointer *) &module_init_func) ||
+              ! g_module_symbol (module_data->handle, "storaged_module_teardown", (gpointer *) &module_teardown_func) ||
               ! g_module_symbol (module_data->handle, "storaged_module_get_block_object_iface_setup_entries", (gpointer *) &block_object_iface_setup_func) ||
               ! g_module_symbol (module_data->handle, "storaged_module_get_drive_object_iface_setup_entries", (gpointer *) &drive_object_iface_setup_func) ||
               ! g_module_symbol (module_data->handle, "storaged_module_get_object_new_funcs", (gpointer *) &module_object_new_setup_func) ||
@@ -356,6 +387,9 @@ storaged_module_manager_load_modules (StoragedModuleManager *manager)
 
               /* Initialize the module and store its state pointer. */
               module_state_pointer = module_init_func (storaged_module_manager_get_daemon (manager));
+
+              /* Module tear down function */
+              manager->teardown_funcs = g_list_append (manager->teardown_funcs,  module_teardown_func);
 
               infos = block_object_iface_setup_func ();
               for (infos_i = infos; infos_i && *infos_i; infos_i++)
@@ -406,6 +440,43 @@ storaged_module_manager_load_modules (StoragedModuleManager *manager)
 
   /* Ensured to fire only once */
   g_object_notify (G_OBJECT (manager), "modules-ready");
+}
+
+/**
+ * storaged_module_manager_unload_modules:
+ * @manager: A #StoragedModuleManager instance.
+ *
+ * Unloads all modules at a time.
+ * Does nothing when called multiple times.
+ */
+void
+storaged_module_manager_unload_modules (StoragedModuleManager *manager)
+{
+  GList *i;
+  StoragedModuleTeardownFunc teardown_func;
+
+  g_return_if_fail (STORAGED_IS_MODULE_MANAGER (manager));
+
+  g_mutex_lock (&manager->modules_ready_lock);
+  if (! manager->modules_ready)
+    {
+      g_mutex_unlock (&manager->modules_ready_lock);
+      return;
+    }
+
+  /* Call teardown functions first. */
+  for (i = manager->teardown_funcs; i; i = i->next)
+    {
+      teardown_func = (StoragedModuleTeardownFunc) i->data;
+      teardown_func (storaged_module_manager_get_daemon (manager));
+    }
+
+  manager->modules_ready = FALSE;
+
+  /* Free all the lists containing modules' API lists. */
+  storaged_module_manager_free_modules (manager);
+
+  g_mutex_unlock (&manager->modules_ready_lock);
 }
 
 static void

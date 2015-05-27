@@ -152,9 +152,6 @@ typedef gchar *(*StoragedModuleIDFunc) (void);
  * for saving state. See the storaged_module_manager_get_module_state_pointer()
  * method for how to work with state pointers.
  *
- * Note that since modules unloading is not supported, the memory returned gets
- * never freed.
- *
  * Corresponds with the storaged_module_init() module symbol.
  * Used internally by #StoragedModuleManager.
  *
@@ -162,6 +159,15 @@ typedef gchar *(*StoragedModuleIDFunc) (void);
  *          its state.
  */
 typedef gpointer (*StoragedModuleInitFunc) (StoragedDaemon *daemon);
+
+/**
+ * StoragedModuleTeardownFunc:
+ * @daemon: A #StoragedDaemon instance.
+ *
+ * Function prototype that is called upon module teardown cycle. Its purpose is
+ * to perform final steps when unloading the module; e.g. free memory, etc.
+ */
+typedef void (*StoragedModuleTeardownFunc) (StoragedDaemon *daemon);
 
 /**
  * StoragedModuleIfaceSetupFunc:

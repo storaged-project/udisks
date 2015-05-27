@@ -60,6 +60,17 @@ storaged_module_init (StoragedDaemon *daemon)
   return storaged_lvm2_state_new (daemon);
 }
 
+void
+storaged_module_teardown (StoragedDaemon *daemon)
+{
+  StoragedModuleManager *manager = storaged_daemon_get_module_manager (daemon);
+  StoragedLVM2State *state_pointer = (StoragedLVM2State *) \
+                                      storaged_module_manager_get_module_state_pointer (manager,
+                                                                                        LVM2_MODULE_NAME);
+
+  storaged_lvm2_state_free (state_pointer);
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static StoragedLVM2State *

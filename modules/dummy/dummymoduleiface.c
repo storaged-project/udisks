@@ -54,6 +54,11 @@ storaged_module_init (StoragedDaemon *daemon)
   return NULL;
 }
 
+void
+storaged_module_teardown (StoragedDaemon *daemon)
+{
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean

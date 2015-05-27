@@ -37,6 +37,7 @@ StoragedDaemon           *storaged_module_manager_get_daemon            (Storage
 gboolean                  storaged_module_manager_get_modules_available (StoragedModuleManager *manager);
 gboolean                  storaged_module_manager_get_uninstalled       (StoragedModuleManager *manager);
 void                      storaged_module_manager_load_modules          (StoragedModuleManager *manager);
+void                      storaged_module_manager_unload_modules        (StoragedModuleManager *manager);
 
 GList                    *storaged_module_manager_get_block_object_iface_infos (StoragedModuleManager  *manager);
 GList                    *storaged_module_manager_get_drive_object_iface_infos (StoragedModuleManager  *manager);

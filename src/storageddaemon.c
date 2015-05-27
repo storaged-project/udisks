@@ -118,6 +118,8 @@ storaged_daemon_finalize (GObject *object)
   g_object_unref (daemon->connection);
   g_object_unref (daemon->fstab_monitor);
   g_object_unref (daemon->crypttab_monitor);
+
+  storaged_module_manager_unload_modules (daemon->module_manager);
   g_clear_object (&daemon->module_manager);
 
   if (G_OBJECT_CLASS (storaged_daemon_parent_class)->finalize != NULL)
