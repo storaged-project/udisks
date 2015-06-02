@@ -103,6 +103,7 @@ storaged_linux_manager_iscsi_initiator_get_property (GObject *object, guint prop
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      break;
     }
 }
 
@@ -122,19 +123,22 @@ storaged_linux_manager_iscsi_initiator_set_property (GObject *object, guint prop
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      break;
     }
 }
 
 static void
 storaged_linux_manager_iscsi_initiator_dispose (GObject *object)
 {
-  G_OBJECT_CLASS (storaged_linux_manager_iscsi_initiator_parent_class)->dispose (object);
+  if (G_OBJECT_CLASS (storaged_linux_manager_iscsi_initiator_parent_class))
+    G_OBJECT_CLASS (storaged_linux_manager_iscsi_initiator_parent_class)->dispose (object);
 }
 
 static void
 storaged_linux_manager_iscsi_initiator_finalize (GObject *object)
 {
-  G_OBJECT_CLASS (storaged_linux_manager_iscsi_initiator_parent_class)->finalize (object);
+  if (G_OBJECT_CLASS (storaged_linux_manager_iscsi_initiator_parent_class))
+    G_OBJECT_CLASS (storaged_linux_manager_iscsi_initiator_parent_class)->finalize (object);
 }
 
 static void
