@@ -152,6 +152,30 @@
     </method>
   </interface>
 
+  <!--
+      org.storaged.Storaged.ISCSI.Session:
+      @short_description: iSCSI session object.
+
+      This interface should appear on a separate object exported on the master
+      Storaged root.
+  -->
+  <interface name="org.storaged.Storaged.ISCSI.Session">
+    <annotation name="org.gtk.GDBus.C.Name" value="ISCSI_Session"/>
+
+    <property name="target_name" type="s" access="read"/>
+    <property name="tpgt" type="i" access="read"/>
+    <property name="address" type="s" access="read"/>
+    <property name="port" type="i" access="read"/>
+    <property name="persistent_address" type="s" access="read"/>
+    <property name="persistent_port" type="i" access="read"/>
+
+    <!-- timeouts -->
+    <property name="abort_timeout" type="i" access="read"/>
+    <property name="lu_reset_timeout" type="i" access="read"/>
+    <property name="recovery_timeout" type="i" access="read"/>
+    <property name="tgt_reset_timeout" type="i" access="read"/>
+  </interface>
+
   <!-- ********************************************************************** -->
 
 </node>

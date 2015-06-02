@@ -24,4 +24,13 @@
 
 typedef struct _StoragedISCSIState StoragedISCSIState;
 
+typedef struct _StoragedLinuxManagerISCSIInitiator        StoragedLinuxManagerISCSIInitiator;
+typedef struct _StoragedLinuxManagerISCSIInitiatorClass   StoragedLinuxManagerISCSIInitiatorClass;
+
+typedef struct _StoragedLinuxISCSISession        StoragedLinuxISCSISession;
+typedef struct _StoragedLinuxISCSISessionClass   StoragedLinuxISCSISessionClass;
+
+typedef struct _StoragedLinuxISCSISessionObject        StoragedLinuxISCSISessionObject;
+typedef struct _StoragedLinuxISCSISessionObjectClass   StoragedLinuxISCSISessionObjectClass;
+
 #endif /* __STORAGED_ISCSI_TYPES_H__ */

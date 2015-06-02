@@ -23,12 +23,14 @@
 
 #include <storaged/storaged-generated.h>
 #include <src/storageddaemon.h>
-#include <src/storagedmodulemanager.h>
+#include <src/storagedlinuxdevice.h>
 #include <src/storagedlogging.h>
+#include <src/storagedmodulemanager.h>
 
 #include "storagediscsitypes.h"
 #include "storagediscsistate.h"
 
+#include "storagedlinuxiscsisessionobject.h"
 #include "storagedlinuxmanageriscsiinitiator.h"
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -74,13 +76,58 @@ storaged_module_get_drive_object_iface_setup_entries (void)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+#ifdef HAVE_LIBISCSI_GET_SESSION_INFOS
+
+static GDBusObjectSkeleton *
+iscsi_session_object_new (StoragedDaemon       *daemon,
+                          StoragedLinuxDevice  *device)
+{
+  StoragedLinuxISCSISessionObject *session_object = NULL;
+
+  GDBusObjectManagerServer *object_manager_server = NULL;
+  GDBusObject *object = NULL;
+  const gchar *sysfs_path = NULL;
+  gchar *session_id = NULL;
+  gchar *object_path = NULL;
+
+  /* Session ID */
+  sysfs_path = g_udev_device_get_sysfs_path (device->udev_device);
+  session_id = storaged_linux_iscsi_session_object_get_session_id_from_sysfs_path (sysfs_path);
+
+  if (session_id)
+    {
+      /* Check, if such object exists. */
+      object_manager_server = storaged_daemon_get_object_manager (daemon);
+      object_path = storaged_linux_iscsi_session_object_make_object_path (session_id);
+      object = g_dbus_object_manager_get_object (G_DBUS_OBJECT_MANAGER (object_manager_server),
+                                                 object_path);
+      g_free (object_path);
+
+      if (! object)
+        {
+          /* Create a new DBus object. */
+          session_object = storaged_linux_iscsi_session_object_new (daemon, session_id);
+        }
+    }
+
+  g_free (session_id);
+
+  if (session_object)
+    return G_DBUS_OBJECT_SKELETON (session_object);
+  return NULL;
+}
+
+#endif /* HAVE_LIBISCSI_GET_SESSION_INFOS */
+
 StoragedModuleObjectNewFunc *
 storaged_module_get_object_new_funcs (void)
 {
   StoragedModuleObjectNewFunc *funcs = NULL;
 
-  /* TODO: Add object_new funcs */
-  /* funcs = g_new0 (StoragedModuleObjectNewFunc, 2); */
+  funcs = g_new0 (StoragedModuleObjectNewFunc, 2);
+#ifdef HAVE_LIBISCSI_GET_SESSION_INFOS
+  funcs[0] = iscsi_session_object_new;
+#endif /* HAVE_LIBISCSI_GET_SESSION_INFOS */
 
   return funcs;
 }

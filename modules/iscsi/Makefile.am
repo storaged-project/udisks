@@ -61,6 +61,10 @@ libstoraged_iscsi_la_SOURCES =                                                 \
 	$(top_srcdir)/modules/storagedmoduleobject.c                           \
 	storagedlinuxmanageriscsiinitiator.h                                   \
 	storagedlinuxmanageriscsiinitiator.c                                   \
+	storagedlinuxiscsisession.h                                            \
+	storagedlinuxiscsisession.c                                            \
+	storagedlinuxiscsisessionobject.h                                      \
+	storagedlinuxiscsisessionobject.c                                      \
 	storagediscsistate.h                                                   \
 	storagediscsistate.c                                                   \
 	storagediscsimoduleiface.c                                             \

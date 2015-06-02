@@ -33,9 +33,6 @@ G_BEGIN_DECLS
 #define STORAGED_LINUX_MANAGER_ISCSI_INITIATOR_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), STORAGED_TYPE_LINUX_MANAGER_ISCSI_INITIATOR, StoragedLinuxManagerISCSIInitiatorClass))
 #define STORAGED_LINUX_MANAGER_ISCSI_INITIATOR_GET_PRIVATE(o)  ((StoragedLinuxManagerISCSIInitiatorPrivate *)((STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (o))->priv))
 
-typedef struct _StoragedLinuxManagerISCSIInitiator        StoragedLinuxManagerISCSIInitiator;
-typedef struct _StoragedLinuxManagerISCSIInitiatorClass   StoragedLinuxManagerISCSIInitiatorClass;
-
 GType                               storaged_linux_manager_iscsi_initiator_get_type   (void) G_GNUC_CONST;
 StoragedLinuxManagerISCSIInitiator *storaged_linux_manager_iscsi_initiator_new        (StoragedDaemon *daemon);
 StoragedDaemon                     *storaged_linux_manager_iscsi_initiator_get_daemon (StoragedLinuxManagerISCSIInitiator *manager);

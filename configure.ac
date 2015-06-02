@@ -254,6 +254,12 @@ if test "x$enable_iscsi" = "xyes" \
                [libiscsi_init],
                [ISCSI_LIBS="-liscsi"],
                [have_iscsi="no"])
+  AC_CHECK_LIB([iscsi],
+               [libiscsi_get_session_info_by_id],
+               [have_libiscsi_session_info="with iscsi sessions"
+                AC_DEFINE([HAVE_LIBISCSI_GET_SESSION_INFOS], [1],
+                          [libiscsi can retrieve session information])],
+               [have_libiscsi_session_info="without iscsi sessions"])
   if test "x$have_iscsi" = "xno"; then
     AC_MSG_ERROR([iSCSI support requested but libraries not found])
   fi
@@ -325,6 +331,6 @@ echo "
         Building man pages:         ${enable_man}
 
         Dummy module:               ${have_dummy}
-        iSCSI module:               ${have_iscsi}
+        iSCSI module:               ${have_iscsi}, ${have_libiscsi_session_info}
         LVM2  module:               ${have_lvm2}
 "

@@ -29,6 +29,8 @@ G_BEGIN_DECLS
 StoragedISCSIState                     *storaged_iscsi_state_new  (StoragedDaemon *daemon);
 void                                    storaged_iscsi_state_free (StoragedISCSIState *state);
 
+struct libiscsi_context                *storaged_iscsi_state_get_libiscsi_context (StoragedISCSIState *state);
+
 G_END_DECLS
 
 #endif /* __STORAGED_ISCSI_STATE_H__ */

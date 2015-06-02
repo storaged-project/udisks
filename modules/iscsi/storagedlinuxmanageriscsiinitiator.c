@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <config.h>
+#include "config.h"
 
 #include <fcntl.h>
 #include <errno.h>
@@ -27,8 +27,10 @@
 
 #include <src/storageddaemon.h>
 #include <src/storagedlogging.h>
+#include <src/storagedmodulemanager.h>
 
 #include "storaged-iscsi-generated.h"
+#include "storagediscsistate.h"
 #include "storagedlinuxmanageriscsiinitiator.h"
 
 typedef enum
@@ -57,7 +59,6 @@ struct _StoragedLinuxManagerISCSIInitiator{
   StoragedManagerISCSIInitiatorSkeleton parent_instance;
 
   StoragedDaemon *daemon;
-  struct libiscsi_context *iscsi_context;
   GMutex initiator_config_mutex;  /* We use separate mutex for configuration
                                      file because libiscsi doesn't provide us
                                      any API for this. */
@@ -127,14 +128,6 @@ storaged_linux_manager_iscsi_initiator_set_property (GObject *object, guint prop
 static void
 storaged_linux_manager_iscsi_initiator_dispose (GObject *object)
 {
-  StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
-
-  if (manager->iscsi_context)
-    {
-      libiscsi_cleanup (manager->iscsi_context);
-      manager->iscsi_context = NULL;
-    }
-
   G_OBJECT_CLASS (storaged_linux_manager_iscsi_initiator_parent_class)->dispose (object);
 }
 
@@ -174,7 +167,6 @@ static void
 storaged_linux_manager_iscsi_initiator_init (StoragedLinuxManagerISCSIInitiator *manager)
 {
   manager->daemon = NULL;
-  manager->iscsi_context = NULL;
 
   g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (manager),
                                        G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
@@ -215,10 +207,16 @@ storaged_linux_manager_iscsi_initiator_get_daemon (StoragedLinuxManagerISCSIInit
 static struct libiscsi_context *
 storaged_linux_manager_iscsi_initiator_get_iscsi_context (StoragedLinuxManagerISCSIInitiator *manager)
 {
+  StoragedModuleManager *module_manager;
+  StoragedISCSIState *state;
+
   g_return_val_if_fail (STORAGED_IS_LINUX_MANAGER_ISCSI_INITIATOR (manager), NULL);
-  if (!manager->iscsi_context)
-    manager->iscsi_context = libiscsi_init ();
-  return manager->iscsi_context;
+
+  module_manager = storaged_daemon_get_module_manager (manager->daemon);
+  state = storaged_module_manager_get_module_state_pointer (module_manager,
+                                                            ISCSI_MODULE_NAME);
+
+  return storaged_iscsi_state_get_libiscsi_context (state);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

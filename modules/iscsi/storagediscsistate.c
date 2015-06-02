@@ -19,11 +19,15 @@
 
 #include "config.h"
 
+#include <libiscsi.h>
+
 #include "storagediscsistate.h"
 
 struct _StoragedISCSIState
 {
   StoragedDaemon *daemon;
+
+  struct libiscsi_context *iscsi_ctx;
 };
 
 /**
@@ -36,7 +40,6 @@ struct _StoragedISCSIState
  * Returns: (transfer full): A #StoragedISCSIState that must be freed with
  * storaged_iscsi_state_free().
  */
-
 StoragedISCSIState *
 storaged_iscsi_state_new (StoragedDaemon *daemon)
 {
@@ -48,6 +51,8 @@ storaged_iscsi_state_new (StoragedDaemon *daemon)
     {
       /* Initialize members. */
       state->daemon = daemon;
+
+      state->iscsi_ctx = libiscsi_init ();
     }
 
   return state;
@@ -56,9 +61,18 @@ storaged_iscsi_state_new (StoragedDaemon *daemon)
 void
 storaged_iscsi_state_free (StoragedISCSIState *state)
 {
-  g_assert (state != NULL);
+  g_return_if_fail (state);
 
-  /* TODO: Free necessary fields here. */
+  /* Free/Unref members. */
+  if (state->iscsi_ctx)
+    libiscsi_cleanup (state->iscsi_ctx);
 
   g_free (state);
+}
+
+struct libiscsi_context *
+storaged_iscsi_state_get_libiscsi_context (StoragedISCSIState *state)
+{
+  g_return_val_if_fail (state, NULL);
+  return state->iscsi_ctx;
 }
