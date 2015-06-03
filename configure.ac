@@ -256,17 +256,19 @@ if test "x$enable_iscsi" = "xyes" \
                [have_iscsi="no"])
   AC_CHECK_LIB([iscsi],
                [libiscsi_get_session_info_by_id],
-               [have_libiscsi_session_info="with iscsi sessions"
+               [have_libiscsi_session_info="yes"
+                have_libiscsi_session_info_msg="with iscsi sessions"
                 AC_DEFINE([HAVE_LIBISCSI_GET_SESSION_INFOS], [1],
                           [libiscsi can retrieve session information])],
-               [have_libiscsi_session_info="without iscsi sessions"])
+               [have_libiscsi_session_info="no"
+                have_libiscsi_session_info_msg="without iscsi sessions"])
   if test "x$have_iscsi" = "xno"; then
     AC_MSG_ERROR([iSCSI support requested but libraries not found])
   fi
   AC_SUBST([ISCSI_LIBS])
 fi
-AM_CONDITIONAL(HAVE_ISCSI, [test "$have_iscsi" = "yes"])
-
+AM_CONDITIONAL(HAVE_ISCSI, [test "x$have_iscsi" = "xyes"])
+AM_CONDITIONAL(BUILD_ISCSI_SESSION_OBJECT, [test "x$have_libiscsi_session_info" = "xyes"])
 
 # Internationalization
 #
@@ -331,6 +333,6 @@ echo "
         Building man pages:         ${enable_man}
 
         Dummy module:               ${have_dummy}
-        iSCSI module:               ${have_iscsi}, ${have_libiscsi_session_info}
+        iSCSI module:               ${have_iscsi}, ${have_libiscsi_session_info_msg}
         LVM2  module:               ${have_lvm2}
 "

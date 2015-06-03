@@ -63,12 +63,16 @@ libstoraged_iscsi_la_SOURCES =                                                 \
 	storagedlinuxmanageriscsiinitiator.c                                   \
 	storagedlinuxiscsisession.h                                            \
 	storagedlinuxiscsisession.c                                            \
-	storagedlinuxiscsisessionobject.h                                      \
-	storagedlinuxiscsisessionobject.c                                      \
 	storagediscsistate.h                                                   \
 	storagediscsistate.c                                                   \
 	storagediscsimoduleiface.c                                             \
 	$(NULL)
+
+if BUILD_ISCSI_SESSION_OBJECT
+libstoraged_iscsi_la_SOURCES +=                                                \
+	storagedlinuxiscsisessionobject.h                                      \
+	storagedlinuxiscsisessionobject.c
+endif # BUILD_ISCSI_SESSION_OBJECT
 
 libstoraged_iscsi_la_CPPFLAGS =                                                \
 	-DG_LOG_DOMAIN=\"libstoraged-iscsi\"                                   \
