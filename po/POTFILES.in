@@ -2,6 +2,11 @@
 # List of source files containing translatable strings.
 # Please keep this file sorted alphabetically.
 data/org.storaged.Storaged.policy.in
+modules/iscsi/data/org.storaged.Storaged.iscsi.policy.in
+modules/lvm2/data/org.storaged.Storaged.lvm2.policy.in
+modules/lvm2/storagedlinuxlogicalvolume.c
+modules/lvm2/storagedlinuxmanagerlvm2.c
+modules/lvm2/storagedlinuxvolumegroup.c
 src/storagedbasejob.c
 src/storagedlinuxblock.c
 src/storagedlinuxdrive.c
