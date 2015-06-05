@@ -1132,10 +1132,10 @@
         device in the filesystem..
 
         If 'name' is omitted in a 'crypttab' entry, it defaults to
-        "luks-<UUID>".
+        "luks-&lt;UUID&gt;".
 
         If 'passphrase-path' is omitted, it defaults to
-        "/etc/luks-keys/<NAME>".
+        "/etc/luks-keys/&lt;NAME&gt;".
 
         If 'track-parents' is set to true in @item, then the 'opts'
         and 'options' fields will be augmented with "x-parent"
