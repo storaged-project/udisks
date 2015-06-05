@@ -136,6 +136,17 @@
         </para>
       </sect1>
 
+      <sect1 id="ref-iscsi-session">
+        <title>The /org/storaged/Storaged/iscsi/session[0-9]+ objects</title>
+        <para>
+          Objects with object paths starting with
+          <literal>/org/storaged/Storaged/iscsi/session[0-9]+</literal>
+          represent iSCSI session parameters. Such objects implement the
+          <link linkend="gdbus-interface-org-storaged-Storaged-ISCSI-Session.top_of_page">org.storaged.Storaged.ISCSI.Session</link>
+          D-Bus interface.
+        </para>
+      </sect1>
+
       <sect1 id="ref-dbus-jobs">
         <title>The /org/storaged/Storaged/jobs/* objects</title>
         <para>

@@ -154,7 +154,7 @@
 
   <!--
       org.storaged.Storaged.ISCSI.Session:
-      @short_description: iSCSI session object.
+      @short_description: iSCSI session.
 
       This interface should appear on a separate object exported on the master
       Storaged root.

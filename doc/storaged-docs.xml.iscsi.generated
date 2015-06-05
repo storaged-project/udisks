@@ -1,1 +1,2 @@
+      <xi:include href="xml/StoragedISCSISession.xml"/>
       <xi:include href="xml/StoragedManagerISCSIInitiator.xml"/>
