@@ -157,7 +157,8 @@ EXTRA_DIST +=                                                                  \
 	$(STORAGED_SECTIONS).iscsi.sed                                         \
 	$(STORAGED_SECTIONS).lvm2.sections                                     \
 	$(STORAGED_SECTIONS).lvm2.sed                                          \
-	version.xml.in
+	version.xml.in                                                         \
+	TODO-ISCSI
 
 CLEANFILES +=                                                                  \
 	$(DOC_MAIN_SGML_FILE)                                                  \

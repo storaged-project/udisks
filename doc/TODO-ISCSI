@@ -3,9 +3,7 @@ These notes are split into three parts;
 
  a) How to set up a iSCSI target
 
- b) How to connect to a iSCSI target
-
- c) Some thoughts on how to integrate iSCSI into DeviceKit-disks,
+ b) Some thoughts on how to integrate iSCSI into DeviceKit-disks,
     Palimpsest and the GNOME desktop
 
 Keep in mind that a) and b) are merely my research notes used for
@@ -39,57 +37,6 @@ mount the UDF file system); yet the initiator side didn't see it as a
 cdrom drive. E.g. probably no pass-through support.
 
 TODO: Need to find a good iSCSI target implementation.
-
-------------------------------------------------------------------------
-iSCSI initiator bits (the machine connecting to a remote device)
-------------------------------------------------------------------------
-
-This is using iscsi-initiator-utils-6.2.0.868-0.6.1dze.fc10.x86_64
-(basically rawhide package + patch referenced in https://bugzilla.redhat.com/show_bug.cgi?id=453282 )
-
-First, iscsi-initiator-utils maintains it's own persistent database of
-iSCSI targets associated with the machine. Initially this appears odd
-and potentially burdensome to deal with in the typical desktop
-workload: temporarily attach to a cd-rom on another system from a
-laptop for disc burning / dvd viewing.
-
-Another way to look at this is that the persistent database in many
-ways is analogous to cabling infrastructure. So tweaking this database
-is in many ways similar to attaching/detaching a device via a
-cable. Also, since iSCSI deals very well with connection loss and
-intermittent connections (e.g. through reconnection attempts /
-conservative error handling via timeouts) it makes even more sense.
-
-The interface to the persistent database is straightforward to deal
-with
-
- iscsiadm --mode node --targetname iqn.2001-04.com.example:storage.disk2.amiens.sys1.xyz --portal quad.local:3260,1 --op new
- iscsiadm --mode node --targetname iqn.2001-04.com.example:storage.disk2.amiens.sys1.xyz --portal quad.local:3260,1 --op update -n node.session.auth.authmethod -v CHAP
- iscsiadm --mode node --targetname iqn.2001-04.com.example:storage.disk2.amiens.sys1.xyz --portal quad.local:3260,1 --op update -n node.session.auth.username -v davidz
- iscsiadm --mode node --targetname iqn.2001-04.com.example:storage.disk2.amiens.sys1.xyz --portal quad.local:3260,1 --op update -n node.session.auth.password -v iscsi123
- iscsiadm --mode node --targetname iqn.2001-04.com.example:storage.disk2.amiens.sys1.xyz --portal quad.local:3260,1 --op update -n node.startup -v manual
-
-Here we've configured the machine to associate with the device we set
-up earlier. Note that the node.startup key controls whether the OS
-initscripts will attempt to connect to the device at boot up.
-
-We haven't yet actually _connected_ to the device; that's
-done this way
-
- iscsiadm --mode node --targetname iqn.2001-04.com.example:storage.disk2.amiens.sys1.xyz --portal quad.local:3260,1 --login
-
-So this is very similar to the act of attaching a physical device
-via e.g. a SATA cable. One gets the uevents when the device appears.
-
-One can disconnect from the device as well
-
- iscsiadm --mode node --targetname iqn.2001-04.com.example:storage.disk2.amiens.sys1.xyz --portal quad.local:3260,1 --logout
-
-which is similar to disconnecting e.g. a SATA cable.
-
-Finally, one can disassociate the device from the system.
-
- iscsiadm --mode node --targetname iqn.2001-04.com.example:storage.disk2.amiens.sys1.xyz --portal quad.local:3260,1 --op delete
 
 ------------------------------------------------------------------------
 Teaching DeviceKit-disks / Palimpsest / GNOME about iSCSI devices

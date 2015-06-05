@@ -69,7 +69,6 @@
 ------------------------------------------------------------------------
 
  - iSCSI
-   - initiator (connect to drive)
    - target (share drive)
    - see notes in doc/TODO-ISCSI
 
