@@ -319,7 +319,7 @@
         <para>
           For reference, the polkit actions defined by storaged &version;
           are included here:
-          <informalexample id="storaged-polkit-actions-file"><programlisting><xi:include xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" href="../data/org.storaged.Storaged.policy.in"><xi:fallback>FIXME: MISSING XINCLUDE CONTENT</xi:fallback></xi:include></programlisting></informalexample>
+          <informalexample id="storaged-polkit-actions-file"><programlisting><xi:include xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" href="@top_srcdir@/data/org.storaged.Storaged.policy.in"><xi:fallback>FIXME: MISSING XINCLUDE CONTENT</xi:fallback></xi:include></programlisting></informalexample>
         </para>
       </sect1>
 

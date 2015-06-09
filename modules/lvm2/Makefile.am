@@ -2,6 +2,8 @@
 
 SUBDIRS = data
 
+LVM2_MODULE_DIR = $(top_srcdir)/modules/lvm2
+
 MODULE_SO = libstoraged_lvm2.so
 
 NULL =
@@ -25,13 +27,13 @@ INCLUDES =                                                                     \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
 
-$(dbus_built_sources): Makefile.am data/org.storaged.Storaged.lvm2.xml
+$(dbus_built_sources): $(LVM2_MODULE_DIR)/data/org.storaged.Storaged.lvm2.xml Makefile.am
 	gdbus-codegen                                                          \
 	        --interface-prefix org.storaged.Storaged.                      \
 	        --c-namespace Storaged                                         \
 	        --generate-c-code storaged-lvm2-generated                      \
 	        --generate-docbook storaged-generated-doc                      \
-	        data/org.storaged.Storaged.lvm2.xml                            \
+	        $<                                                             \
 	$(NULL)
 
 dbus_built_sources =                                                           \

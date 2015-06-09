@@ -2,6 +2,8 @@
 
 SUBDIRS = data
 
+DUMMY_MODULE_DIR = $(top_srcdir)/modules/dummy
+
 MODULE_SO = libstoraged_dummy.so
 
 NULL =
@@ -24,12 +26,12 @@ INCLUDES =                                                                     \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
 
-$(dbus_built_sources): Makefile.am data/org.storaged.Storaged.dummy.xml
+$(dbus_built_sources): $(DUMMY_MODULE_DIR)/data/org.storaged.Storaged.dummy.xml Makefile.am
 	gdbus-codegen                                                          \
 	        --interface-prefix org.storaged.Storaged.                      \
 	        --c-namespace Dummy                                            \
 	        --generate-c-code dummy-generated                              \
-	        data/org.storaged.Storaged.dummy.xml                           \
+	        $<                                                             \
 	$(NULL)
 
 

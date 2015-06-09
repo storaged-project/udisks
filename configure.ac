@@ -242,6 +242,8 @@ AM_CONDITIONAL(HAVE_DEVMAPPER, [test "$have_devmapper" = "yes"])
 
 # iSCSI module
 have_iscsi=no
+have_libiscsi_session_info="no"
+have_libiscsi_session_info_msg=""
 AC_ARG_ENABLE(iscsi, AS_HELP_STRING([--enable-iscsi], [enable iSCSI support]))
 if test "x$enable_iscsi" = "xyes" \
      -o "x$enable_modules" = "xyes" \
@@ -257,11 +259,12 @@ if test "x$enable_iscsi" = "xyes" \
   AC_CHECK_LIB([iscsi],
                [libiscsi_get_session_info_by_id],
                [have_libiscsi_session_info="yes"
-                have_libiscsi_session_info_msg="with iscsi sessions"
+                have_libiscsi_session_info_msg=", with iscsi sessions"
                 AC_DEFINE([HAVE_LIBISCSI_GET_SESSION_INFOS], [1],
                           [libiscsi can retrieve session information])],
-               [have_libiscsi_session_info="no"
-                have_libiscsi_session_info_msg="without iscsi sessions"])
+               [have_libiscsi_session_info_msg=", without iscsi sessions"])
+
+
   if test "x$have_iscsi" = "xno"; then
     AC_MSG_ERROR([iSCSI support requested but libraries not found])
   fi
@@ -298,8 +301,23 @@ modules/iscsi/data/Makefile
 modules/lvm2/Makefile
 modules/lvm2/data/Makefile
 doc/Makefile
+doc/storaged-docs.xml.in
+doc/storaged-sections.txt.in
+doc/storaged.types.in
 doc/version.xml
 doc/man/Makefile
+doc/man/storaged-lvm.xml
+doc/man/storaged-project.xml
+doc/man/storaged.xml
+doc/man/storagedctl.xml
+doc/man/umount.storaged.xml
+doc/storaged-docs.xml.iscsi.dbus
+doc/storaged-docs.xml.iscsi.generated
+doc/storaged-sections.txt.iscsi.sections
+doc/storaged-docs.xml.lvm2.man
+doc/storaged-docs.xml.lvm2.dbus
+doc/storaged-docs.xml.lvm2.generated
+doc/storaged-sections.txt.lvm2.sections
 po/Makefile.in
 ])
 
@@ -333,6 +351,6 @@ echo "
         Building man pages:         ${enable_man}
 
         Dummy module:               ${have_dummy}
-        iSCSI module:               ${have_iscsi}, ${have_libiscsi_session_info_msg}
+        iSCSI module:               ${have_iscsi}${have_libiscsi_session_info_msg}
         LVM2  module:               ${have_lvm2}
 "

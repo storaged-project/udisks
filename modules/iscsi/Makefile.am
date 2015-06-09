@@ -2,6 +2,8 @@
 
 SUBDIRS = data
 
+ISCSI_MODULE_DIR = $(top_srcdir)/modules/iscsi
+
 MODULE_SO = libstoraged_iscsi.so
 
 NULL =
@@ -25,13 +27,13 @@ INCLUDES =                                                                     \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
 
-$(dbus_built_sources): Makefile.am data/org.storaged.Storaged.iscsi.xml
+$(dbus_built_sources): $(ISCSI_MODULE_DIR)/data/org.storaged.Storaged.iscsi.xml Makefile.am
 	gdbus-codegen                                                          \
 	        --interface-prefix org.storaged.Storaged.                      \
 	        --c-namespace Storaged                                         \
 	        --generate-c-code storaged-iscsi-generated                     \
 	        --generate-docbook storaged-generated-doc                      \
-	        data/org.storaged.Storaged.iscsi.xml                           \
+	        $<                                                             \
 	$(NULL)
 
 dbus_built_sources =                                                           \
@@ -65,6 +67,7 @@ libstoraged_iscsi_la_SOURCES =                                                 \
 	storagedlinuxiscsisession.c                                            \
 	storagediscsistate.h                                                   \
 	storagediscsistate.c                                                   \
+	storagediscsitypes.h                                                   \
 	storagediscsimoduleiface.c                                             \
 	$(NULL)
 

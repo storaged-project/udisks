@@ -3,6 +3,8 @@ NULL =
 
 SUBDIRS = man
 
+DOC_DIR = $(top_srcdir)/doc
+
 # The name of the module.
 DOC_MODULE=storaged
 
@@ -71,50 +73,29 @@ extra_files =                                                                  \
 
 # ------------------------------------------------------------------------------
 
-all-local: storaged-docs-generated
+all-local: $(DOC_MAIN_SGML_FILE)
 
-storaged-docs-generated: storaged-docs storaged-sections storaged-types
-
-STORAGED_DEPS=storaged-docs-generated
-
-$(DOC_MAIN_SGML_FILE): storaged-docs
-
-# Main docbook file
-storaged-docs: $(DOC_MAIN_SGML_FILE).in $(DOC_MAIN_SGML_FILE).lvm2.sed
-	$(AM_V_GEN) cp $(DOC_MAIN_SGML_FILE).in $(DOC_MAIN_SGML_FILE)
+# storaged-docs.xml, storaged-sections.txt storaged.types
+$(DOC_MAIN_SGML_FILE): $(DOC_MAIN_SGML_FILE).in $(STORAGED_SECTIONS).in $(STORAGED_TYPES).in
+	$(AM_V_at) rm -f $(DOC_MAIN_SGML_FILE) $(STORAGED_SECTIONS) $(STORAGED_TYPES) && \
+	cp $(DOC_MAIN_SGML_FILE).in $(builddir)/$(DOC_MAIN_SGML_FILE) && \
+	cp $(STORAGED_SECTIONS).in $(builddir)/$(STORAGED_SECTIONS) && \
+	cp $(STORAGED_TYPES).in $(builddir)/$(STORAGED_TYPES)
 if HAVE_LVM2
-	$(AM_V_at) $(SED) -i -f $(DOC_MAIN_SGML_FILE).lvm2.sed $(DOC_MAIN_SGML_FILE)
+	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).lvm2.sed $(builddir)/$(DOC_MAIN_SGML_FILE)
+	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(STORAGED_SECTIONS).lvm2.sed $(builddir)/$(STORAGED_SECTIONS)
+	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(STORAGED_TYPES).lvm2.sed $(builddir)/$(STORAGED_TYPES)
+else
+	$(AM_V_at) $(SED) -i "/<\!-- LVM2_GENERATED_SECTIONS -->/d" $(builddir)/$(STORAGED_SECTIONS)
+	$(AM_V_at) $(SED) -i "/\# LVM2_TYPES/d" $(builddir)/$(STORAGED_TYPES)
 endif # HAVE_LVM2
 if HAVE_ISCSI
-	$(AM_V_at) $(SED) -i -f $(DOC_MAIN_SGML_FILE).iscsi.sed $(DOC_MAIN_SGML_FILE)
-endif # HAVE_ISCSI
-
-# Sections
-storaged-sections: $(STORAGED_SECTIONS).in $(STORAGED_SECTIONS).lvm2.sed
-	$(AM_V_GEN) cp $(STORAGED_SECTIONS).in $(STORAGED_SECTIONS)
-if HAVE_LVM2
-	$(AM_V_at) $(SED) -i -f $(STORAGED_SECTIONS).lvm2.sed $(STORAGED_SECTIONS)
+	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).iscsi.sed $(builddir)/$(DOC_MAIN_SGML_FILE)
+	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(STORAGED_SECTIONS).iscsi.sed $(builddir)/$(STORAGED_SECTIONS)
+	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(STORAGED_TYPES).iscsi.sed $(builddir)/$(STORAGED_TYPES)
 else
-	$(AM_V_at) $(SED) -i "/<\!-- LVM2_GENERATED_SECTIONS -->/d" $(STORAGED_SECTIONS)
-endif # HAVE_LVM2
-if HAVE_ISCSI
-	$(AM_V_at) $(SED) -i -f $(STORAGED_SECTIONS).iscsi.sed $(STORAGED_SECTIONS)
-else
-	$(AM_V_at) $(SED) -i "/<\!-- ISCSI_GENERATED_SECTIONS -->/d" $(STORAGED_SECTIONS)
-endif # HAVE_ISCSI
-
-# Types
-storaged-types: $(STORAGED_TYPES).in $(STORAGED_TYPES).lvm2.sed
-	$(AM_V_GEN) cp $(STORAGED_TYPES).in $(STORAGED_TYPES)
-if HAVE_LVM2
-	$(AM_V_at) $(SED) -i -f $(STORAGED_TYPES).lvm2.sed $(STORAGED_TYPES)
-else
-	$(AM_V_at) $(SED) -i "/\# LVM2_TYPES/d" $(STORAGED_TYPES)
-endif # HAVE_LVM2
-if HAVE_ISCSI
-	$(AM_V_at) $(SED) -i -f $(STORAGED_TYPES).iscsi.sed $(STORAGED_TYPES)
-else
-	$(AM_V_at) $(SED) -i "/\# ISCSI_TYPES/d" $(STORAGED_TYPES)
+	$(AM_V_at) $(SED) -i "/<\!-- ISCSI_GENERATED_SECTIONS -->/d" $(builddir)/$(STORAGED_SECTIONS)
+	$(AM_V_at) $(SED) -i "/\# ISCSI_TYPES/d" $(builddir)/$(STORAGED_TYPES)
 endif # HAVE_ISCSI
 
 # GTKDOC for LVM2
@@ -140,28 +121,33 @@ endif # HAVE_ISCSI
 include $(top_srcdir)/gtk-doc.make
 
 EXTRA_DIST +=                                                                  \
+	$(DOC_MAIN_SGML_FILE).in.in                                            \
 	$(DOC_MAIN_SGML_FILE).in                                               \
-	$(DOC_MAIN_SGML_FILE).iscsi.dbus                                       \
-	$(DOC_MAIN_SGML_FILE).iscsi.generated                                  \
+	$(DOC_MAIN_SGML_FILE).iscsi.dbus.in                                    \
+	$(DOC_MAIN_SGML_FILE).iscsi.generated.in                               \
 	$(DOC_MAIN_SGML_FILE).iscsi.sed                                        \
-	$(DOC_MAIN_SGML_FILE).lvm2.dbus                                        \
-	$(DOC_MAIN_SGML_FILE).lvm2.generated                                   \
+	$(DOC_MAIN_SGML_FILE).lvm2.dbus.in                                     \
+	$(DOC_MAIN_SGML_FILE).lvm2.generated.in                                \
 	$(DOC_MAIN_SGML_FILE).lvm2.sed                                         \
+	$(STORAGED_TYPES).in.in                                                \
 	$(STORAGED_TYPES).in                                                   \
 	$(STORAGED_TYPES).iscsi                                                \
 	$(STORAGED_TYPES).iscsi.sed                                            \
 	$(STORAGED_TYPES).lvm2                                                 \
 	$(STORAGED_TYPES).lvm2.sed                                             \
+	$(STORAGED_SECTIONS).in.in                                             \
 	$(STORAGED_SECTIONS).in                                                \
-	$(STORAGED_SECTIONS).iscsi.sections                                    \
+	$(STORAGED_SECTIONS).iscsi.sections.in                                 \
 	$(STORAGED_SECTIONS).iscsi.sed                                         \
-	$(STORAGED_SECTIONS).lvm2.sections                                     \
+	$(STORAGED_SECTIONS).lvm2.sections.in                                  \
 	$(STORAGED_SECTIONS).lvm2.sed                                          \
 	version.xml.in                                                         \
 	TODO-ISCSI
 
 CLEANFILES +=                                                                  \
 	$(DOC_MAIN_SGML_FILE)                                                  \
+	$(STORAGED_SECTIONS)                                                   \
+	$(STORAGED_TYPES)                                                      \
 	$(DOC_MODULE)-decl-list.txt                                            \
 	$(DOC_MODULE)-decl.txt                                                 \
 	$(DOC_MODULE)-overrides.txt                                            \

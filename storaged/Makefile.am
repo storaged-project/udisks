@@ -30,14 +30,12 @@ $(dbus_built_sources): Makefile.am $(top_srcdir)/data/org.storaged.Storaged.xml
 		$(top_srcdir)/data/org.storaged.Storaged.xml                   \
 	$(NULL)
 
-# TODO: check sed
 storagedenumtypes.h: storagedenums.h storagedenumtypes.h.template
 	( top_builddir=`cd $(top_builddir) && pwd`;                                                \
 	  cd $(srcdir) && glib-mkenums --template storagedenumtypes.h.template storagedenums.h ) | \
 	          sed 's,U_TYPE_DISKS,STORAGED_TYPE,' | sed 's,u_disks,storaged,' >                \
 	          storagedenumtypes.h.tmp && mv storagedenumtypes.h.tmp storagedenumtypes.h
 
-# TODO: check sed
 storagedenumtypes.c: storagedenums.h storagedenumtypes.c.template
 	( top_builddir=`cd $(top_builddir) && pwd`;                                                \
 	  cd $(srcdir) && glib-mkenums --template storagedenumtypes.c.template storagedenums.h ) | \
