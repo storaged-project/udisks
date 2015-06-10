@@ -8,7 +8,7 @@ MODULE_SO = libstoraged_lvm2.so
 
 NULL =
 
-INCLUDES =                                                                     \
+CPPFLAGS =                                                                     \
 	-I$(top_builddir) -I$(top_srcdir)                                      \
 	-DPACKAGE_LIBEXEC_DIR=\""$(libexecdir)"\"                              \
 	-DPACKAGE_SYSCONF_DIR=\""$(sysconfdir)"\"                              \
@@ -77,6 +77,7 @@ libstoraged_lvm2_la_SOURCES =                                                  \
 	$(NULL)
 
 libstoraged_lvm2_la_CPPFLAGS =                                                 \
+	$(CPPFLAGS)                                                            \
 	-DG_LOG_DOMAIN=\"libstoraged-lvm2\"                                    \
 	$(NULL)
 
@@ -110,6 +111,10 @@ storageddpriv_PROGRAMS = storaged-lvm
 
 storaged_lvm_SOURCES =                                                         \
 	storagedlvmhelper.c                                                    \
+	$(NULL)
+
+storaged_lvm_CPPFLAGS =                                                        \
+	$(CPPFLAGS)                                                            \
 	$(NULL)
 
 storaged_lvm_CFLAGS =                                                          \

@@ -8,7 +8,7 @@ MODULE_SO = libstoraged_iscsi.so
 
 NULL =
 
-INCLUDES =                                                                     \
+CPPFLAGS =                                                                     \
 	-I$(top_builddir) -I$(top_srcdir)                                      \
 	-DPACKAGE_LIBEXEC_DIR=\""$(libexecdir)"\"                              \
 	-DPACKAGE_SYSCONF_DIR=\""$(sysconfdir)"\"                              \
@@ -78,6 +78,7 @@ libstoraged_iscsi_la_SOURCES +=                                                \
 endif # BUILD_ISCSI_SESSION_OBJECT
 
 libstoraged_iscsi_la_CPPFLAGS =                                                \
+	$(CPPFLAGS)                                                            \
 	-DG_LOG_DOMAIN=\"libstoraged-iscsi\"                                   \
 	$(NULL)
 
