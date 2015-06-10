@@ -120,6 +120,7 @@ storaged_linux_logical_volume_update (StoragedLinuxLogicalVolume     *logical_vo
                                       GVariant                       *info,
                                       gboolean                       *needs_polling_ret)
 {
+  StoragedDaemon *daemon;
   StoragedLogicalVolume *iface;
   const char *type;
   gboolean active;
@@ -207,7 +208,7 @@ storaged_linux_logical_volume_update (StoragedLinuxLogicalVolume     *logical_vo
       logical_volume->needs_udev_hack = FALSE;
     }
 
-  StoragedDaemon *daemon = storaged_linux_volume_group_object_get_daemon (group_object);
+  daemon = storaged_linux_volume_group_object_get_daemon (group_object);
   storaged_logical_volume_set_child_configuration (iface,
                                                    storaged_linux_find_child_configuration (daemon,
                                                                                             uuid));
