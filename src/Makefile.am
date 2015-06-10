@@ -18,6 +18,7 @@ CPPFLAGS =                                                                     \
 	-DSTORAGED_MODULE_DIR=\"$(libdir)/storaged/modules\"                   \
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT                                \
 	-DSTORAGED_COMPILATION                                                 \
+	-DBUILD_DIR=\"$(abs_top_builddir)/\"                                   \
 	$(POLKIT_GOBJECT_1_CFLAGS)                                             \
 	$(GUDEV_CFLAGS)                                                        \
 	$(GLIB_CFLAGS)                                                         \
@@ -90,7 +91,6 @@ libstoraged_daemon_la_SOURCES =                                                \
 libstoraged_daemon_la_CFLAGS =                                                 \
 	-I$(top_srcdir)                                                        \
 	-DG_LOG_DOMAIN=\"storaged\"                                            \
-	-DBUILDDIR=\"$(abs_top_builddir)\"                                     \
 	$(GLIB_CFLAGS)                                                         \
 	$(GIO_CFLAGS)                                                          \
 	$(GMODULE_CFLAGS)                                                      \

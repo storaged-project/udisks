@@ -342,7 +342,7 @@ storaged_module_manager_load_modules (StoragedModuleManager *manager)
           g_error_free (error);
           g_free (module_dir);
           error = NULL;
-          module_dir = g_strdup (BUILDDIR "/modules");
+          module_dir = g_strdup (BUILD_DIR "modules");
           dir = g_dir_open (module_dir, 0, &error);
         }
 

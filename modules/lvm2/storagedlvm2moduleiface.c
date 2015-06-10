@@ -181,10 +181,12 @@ lvm_update (StoragedDaemon *daemon,
             gboolean        ignore_locks)
 {
   const gchar *args[5];
-  int i;
+  int i = 0;
 
-  i = 0;
-  args[i++] = LVM_HELPER_DIR "storaged-lvm";
+  if (storaged_daemon_get_uninstalled (daemon))
+    args[i++] = BUILD_DIR "modules/lvm2/storaged-lvm";
+  else
+    args[i++] = LVM_HELPER_DIR "storaged-lvm";
   args[i++] = "-b";
   if (ignore_locks)
     args[i++] = "-f";

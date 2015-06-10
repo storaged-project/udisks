@@ -20,6 +20,7 @@ CPPFLAGS =                                                                     \
 	-DLVM_HELPER_DIR=\""$(prefix)/lib/storaged/"\"                         \
 	-D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT                                \
 	-DSTORAGED_COMPILATION                                                 \
+	-DBUILD_DIR=\"$(abs_top_builddir)/\"                                   \
 	$(POLKIT_GOBJECT_1_CFLAGS)                                             \
 	$(GLIB_CFLAGS)                                                         \
 	$(GIO_CFLAGS)                                                          \
