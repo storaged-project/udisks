@@ -8,6 +8,7 @@
 *.log
 *.o
 *.pot
+*.sign
 *.swp
 *.stamp
 *.trs
