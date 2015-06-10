@@ -1,0 +1,15 @@
+VARIOUS USE-CASES/FEATURES WORTH IMPLEMENTING
+=============================================
+
+Note: Following list isn't sorted in any way.  It just contains several items
+mentioned during a brainstorming.
+
+Add support for:
+
+- btrfs
+- b-cache
+- lvm cache
+- zram
+- luks (password change)
+- glusterfs
+- ceph
