@@ -80,6 +80,21 @@ libstoraged_lvm2_la_CPPFLAGS =                                                 \
 	-DG_LOG_DOMAIN=\"libstoraged-lvm2\"                                    \
 	$(NULL)
 
+libstoraged_lvm2_la_CFLAGS =                                                   \
+	$(GLIB_CFLAGS)                                                         \
+	$(GIO_CFLAGS)                                                          \
+	$(GUDEV_CFLAGS)                                                        \
+	$(POLKIT_GOBJECT_1_CFLAGS)                                             \
+	$(NULL)
+
+libstoraged_lvm2_la_LDFLAGS =                                                  \
+	-export_dynamic                                                        \
+	-avoid-version                                                         \
+	-module                                                                \
+	-no-undefined                                                          \
+	-export-symbols-regex                                                  \
+	 '^storaged_.*|g_io_module_load|g_io_module_unload|g_io_module_query'  \
+	$(NULL)
 
 libstoraged_lvm2_la_LIBADD =                                                   \
 	$(GLIB_LIBS)                                                           \
