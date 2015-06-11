@@ -1,18 +1,70 @@
----------------------------
-storaged 2.0.1 (unreleased)
----------------------------
+--------------
+storaged 2.1.0
+--------------
 
 The storaged project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.0.0:
 
-(TODO: git shortlog)
+Marius Vollmer (9):
+      Return correct parent UUID for mdraids.
+      Fix forgotten braces.
+      DBG - only load ".so" modules
+      Block, Partition, MDRaid, LVM2: Optional teardown.
+      Util: Add storaged_daemon_util_check_authorization_sync_with_error.
+      Block, Encrypted, MDRaid, LVM2: Child configuration tracking.
+      PartitionTable: Add CreatePartitionAndFormat.
+      Block: Add "config-items" option to Format.
+      Daemon: Also check UDISKS_* udev properties.
+
+Martin Hatina (1):
+      Tests: introduce install-storaged and storagedctl tests
+
+Peter Hatina (35):
+      LVM2: fix launching storaged-lvm helper when --uninstalled is passed to storaged
+      LVM2: fix C90 warning; mixed declaration and code
+      Build: get rid of deprecated INCLUDES
+      Build: add sign target to main makefile
+      TODO: add list of several possible features
+      LVM2: re-add module build flags
+      Build: fix make distcheck (fixes #6)
+      TODO-ISCSI: drop implemented features
+      ISCSI: update documentation for sessions
+      Doc: escape <UUID> and <NAME> for Storaged.Block interface
+      Modules: fix uninstalled rules
+      Translations: move from transifex to zanata
+      ISCSI: fix build without iscsi session objects
+      Merge pull request #9 from mvollmer/fix-track-parent
+      Merge pull request #10 from mvollmer/fix-mdraid-stop
+      ISCSI: initiator code cleanup
+      ISCSI: introduce listing iSCSI sessions
+      Modules: introduce storaged_module_teardown()
+      Modules: pass StoragedDaemon to storaged_module_init()
+      Build: fix C90 compilation issues
+      Merge pull request #5 from mvollmer/batching
+      Build: introduce --enable-all-modules option
+      ISCSI: add better error reporting for libiscsi calls
+      ISCSI: fix typos
+      ISCSI: introduce login/logout API
+      ISCSI: introduce target discovery API
+      README: update configure options
+      Build: introduce --enable-modules option
+      Build: rename module-dummy to dummy
+      Build: link dummy module into modules dir
+      Build: clean makefiles a bit
+      Polkit: fix upstream url
+      ISCSI: introduce module
+      Daemon: introduce --uninistalled option
+      Doc: drop version info for StoragedModuleManager
+
+Samikshan Bairagya (1):
+      Fixed README.md
 
 Thanks to all our contributors.
 
 Peter Hatina
-(TODO: date)
+2015-06-10
 
 --------------
 storaged 2.0.0
