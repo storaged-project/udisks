@@ -7,9 +7,9 @@ mentioned during a brainstorming.
 Add support for:
 
 - btrfs
-- b-cache
 - lvm cache
+- b-cache
 - zram
-- luks (password change)
+- create swap
 - glusterfs
 - ceph
