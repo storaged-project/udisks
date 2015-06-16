@@ -43,7 +43,7 @@ rlJournalStart
 
     rlPhaseStartTest
         rlRun "su -c './autogen.sh' storaged"
-        rlRun "su -c './configure --enable-lvm2 --localstatedir=/var' storaged"
+        rlRun "su -c './configure --enable-modules --localstatedir=/var' storaged"
         rlRun "su -c 'make' storaged"
 
         rlRun "make install"
