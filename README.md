@@ -20,11 +20,11 @@ licensed under LGPLv2 (or later).
 INSTALLATION
 ============
 
-Storaged has several dependencies listed in `yum_dependencies.txt`.
+Storaged has several dependencies listed in `rpm_dependencies.txt`.
 
-If you run yum based distro, install the dependencies by:
+If you run rpm based distro, install the dependencies by:
 
-    # yum install -y $(cat yum_dependencies.txt)
+    # yum install -y $(cat rpm_dependencies.txt)
 
 AUTOTOOLS
 ---------

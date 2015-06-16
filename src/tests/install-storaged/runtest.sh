@@ -38,7 +38,7 @@ rlJournalStart
         rlRun "cd /home/storaged"
         rlRun "su -c 'git clone $GIT_REPO' storaged"
         rlRun "cd $REPO_DIR"
-        rlRun "yum install -y $(cat yum_dependencies.txt)"
+        rlRun "yum install -y $(cat rpm_dependencies.txt)"
     rlPhaseEnd
 
     rlPhaseStartTest
