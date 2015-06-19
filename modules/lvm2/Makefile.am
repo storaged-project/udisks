@@ -29,13 +29,12 @@ CPPFLAGS =                                                                     \
 	$(NULL)
 
 $(dbus_built_sources): $(LVM2_MODULE_DIR)/data/org.storaged.Storaged.lvm2.xml Makefile.am
-	gdbus-codegen                                                          \
+	$(AM_V_GEN) gdbus-codegen                                              \
 	        --interface-prefix org.storaged.Storaged.                      \
 	        --c-namespace Storaged                                         \
 	        --generate-c-code storaged-lvm2-generated                      \
 	        --generate-docbook storaged-generated-doc                      \
-	        $<                                                             \
-	$(NULL)
+	        $<
 
 dbus_built_sources =                                                           \
 	storaged-lvm2-generated.h    storaged-lvm2-generated.c                 \

@@ -27,12 +27,11 @@ CPPFLAGS =                                                                     \
 	$(NULL)
 
 $(dbus_built_sources): $(DUMMY_MODULE_DIR)/data/org.storaged.Storaged.dummy.xml Makefile.am
-	gdbus-codegen                                                          \
+	$(AM_V_GEN) gdbus-codegen                                              \
 	        --interface-prefix org.storaged.Storaged.                      \
 	        --c-namespace Dummy                                            \
 	        --generate-c-code dummy-generated                              \
-	        $<                                                             \
-	$(NULL)
+	        $<
 
 
 module_flags =                                                                 \

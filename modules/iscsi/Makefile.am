@@ -28,13 +28,12 @@ CPPFLAGS =                                                                     \
 	$(NULL)
 
 $(dbus_built_sources): $(ISCSI_MODULE_DIR)/data/org.storaged.Storaged.iscsi.xml Makefile.am
-	gdbus-codegen                                                          \
+	$(AM_V_GEN) gdbus-codegen                                              \
 	        --interface-prefix org.storaged.Storaged.                      \
 	        --c-namespace Storaged                                         \
 	        --generate-c-code storaged-iscsi-generated                     \
 	        --generate-docbook storaged-generated-doc                      \
-	        $<                                                             \
-	$(NULL)
+	        $<
 
 dbus_built_sources =                                                           \
 	storaged-iscsi-generated.h        storaged-iscsi-generated.c           \

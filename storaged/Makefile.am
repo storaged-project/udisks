@@ -20,24 +20,23 @@ AM_CPPFLAGS =                                                                  \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
 
-$(dbus_built_sources): Makefile.am $(top_srcdir)/data/org.storaged.Storaged.xml
-	gdbus-codegen                                                          \
+$(dbus_built_sources): $(top_srcdir)/data/org.storaged.Storaged.xml Makefile.am
+	$(AM_V_GEN) gdbus-codegen                                              \
 	        --interface-prefix org.storaged.Storaged.                      \
 	        --c-namespace Storaged                                         \
 	        --c-generate-object-manager                                    \
 	        --generate-c-code storaged-generated                           \
 	        --generate-docbook storaged-generated-doc                      \
-		$(top_srcdir)/data/org.storaged.Storaged.xml                   \
-	$(NULL)
+		$<
 
 storagedenumtypes.h: storagedenums.h storagedenumtypes.h.template
-	( top_builddir=`cd $(top_builddir) && pwd`;                                                \
+	$(AM_V_GEN) ( top_builddir=`cd $(top_builddir) && pwd`;                                    \
 	  cd $(srcdir) && glib-mkenums --template storagedenumtypes.h.template storagedenums.h ) | \
 	          sed 's,U_TYPE_DISKS,STORAGED_TYPE,' | sed 's,u_disks,storaged,' >                \
 	          storagedenumtypes.h.tmp && mv storagedenumtypes.h.tmp storagedenumtypes.h
 
 storagedenumtypes.c: storagedenums.h storagedenumtypes.c.template
-	( top_builddir=`cd $(top_builddir) && pwd`;                                                \
+	$(AM_V_GEN) ( top_builddir=`cd $(top_builddir) && pwd`;                                    \
 	  cd $(srcdir) && glib-mkenums --template storagedenumtypes.c.template storagedenums.h ) | \
 	          sed 's,U_TYPE_DISKS,STORAGED_TYPE,' | sed 's,u_disks,storaged,' >                \
 	          storagedenumtypes.c.tmp && mv storagedenumtypes.c.tmp storagedenumtypes.c
@@ -51,7 +50,7 @@ dbus_built_sources =                                                           \
 	$(NULL)
 
 storagedversion.h: $(top_srcdir)/storaged/storagedversion.h.in
-	$(SED) -e 's/@MAJOR_VERSION@/$(STORAGED_MAJOR_VERSION)/'               \
+	$(AM_V_GEN) $(SED) -e 's/@MAJOR_VERSION@/$(STORAGED_MAJOR_VERSION)/'   \
 	       -e 's/@MINOR_VERSION@/$(STORAGED_MINOR_VERSION)/'               \
 	       -e 's/@MICRO_VERSION@/$(STORAGED_MICRO_VERSION)/'               \
 	       $(top_srcdir)/storaged/storagedversion.h.in                     \
