@@ -10,6 +10,5 @@ Add support for:
 - lvm cache
 - b-cache
 - zram
-- create swap
 - glusterfs
 - ceph
