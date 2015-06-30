@@ -1214,6 +1214,7 @@ class Smart(StoragedTestCase):
             # wait for SMART data to be read
             while ata.get_property('smart-updated') == 0:
                 sys.stderr.write('[wait for data] ')
+                self.client.settle()
                 time.sleep(0.5)
 
             # this is of course not truly correct for a test suite, but let's
