@@ -115,8 +115,8 @@ libstoraged_daemon_la_LIBADD =                                                 \
 
 # ------------------------------------------------------------------------------
 
-storageddprivdir = $(prefix)/lib/storaged
-storageddpriv_PROGRAMS = storaged
+storagedprivdir = $(libexecdir)/storaged
+storagedpriv_PROGRAMS = storaged
 
 storaged_SOURCES =                                                             \
 	main.c                                                                 \

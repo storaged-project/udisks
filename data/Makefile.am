@@ -6,7 +6,7 @@ dbusservice_in_files = org.storaged.Storaged.service.in
 dbusservice_DATA     = $(dbusservice_in_files:.service.in=.service)
 
 $(dbusservice_DATA): $(dbusservice_in_files) Makefile
-	@sed -e "s|\@storagedprivdir\@|$(prefix)/lib/storaged|" $< > $@
+	@sed -e "s|\@storagedprivdir\@|$(libexecdir)/storaged|" $< > $@
 
 dbusconfdir = $(sysconfdir)/dbus-1/system.d
 dbusconf_in_files = org.storaged.Storaged.conf.in
@@ -22,7 +22,7 @@ systemdservicedir       = $(systemdsystemunitdir)
 systemdservice_DATA     = $(systemdservice_in_files:.service.in=.service)
 
 $(systemdservice_DATA): $(systemdservice_in_files) Makefile
-	@sed -e "s|\@storagedprivdir\@|$(prefix)/lib/storaged|" $< > $@
+	@sed -e "s|\@storagedprivdir\@|$(libexecdir)/storaged|" $< > $@
 endif
 
 udevrulesdir = $(udevdir)/rules.d
