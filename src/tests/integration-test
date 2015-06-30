@@ -193,7 +193,7 @@ class StoragedTestCase(unittest.TestCase):
             time.sleep(0.1)
             timeout -= 1
         if timeout <= 0:
-            sys.stderr.write('[wait timeout!] ')
+            self.write_stderr('[wait timeout!] ')
 
     @classmethod
     def zero_device(klass):
@@ -324,7 +324,7 @@ class StoragedTestCase(unittest.TestCase):
             except GLib.GError as e:
                 if 'Storaged.Error.DeviceBusy' not in e.message:
                     raise
-                sys.stderr.write('[busy] ')
+                self.write_stderr('[busy] ')
                 time.sleep(0.3)
                 timeout -= 1
 
@@ -487,6 +487,11 @@ class StoragedTestCase(unittest.TestCase):
 
         self.assertEventually(lambda: obj.get_property(name), value)
 
+    def write_stderr(self, msg):
+        '''Write to stderr without buffering'''
+        sys.stderr.write(msg)
+        sys.stderr.flush()
+
 
 # ----------------------------------------------------------------------------
 
@@ -602,7 +607,7 @@ class FS(StoragedTestCase):
 
     def tearDown(self):
         if subprocess.call(['umount', self.device], stderr=subprocess.PIPE) == 0:
-            sys.stderr.write('[cleanup unmount] ')
+            self.write_stderr('[cleanup unmount] ')
         shutil.rmtree(self.workdir)
 
     def test_zero(self):
@@ -802,7 +807,7 @@ class FS(StoragedTestCase):
 
         if type != 'swap' and subprocess.call(['which', mkfs],
                                               stdout=subprocess.PIPE) != 0:
-            sys.stderr.write('[no %s, skip] ' % mkfs)
+            self.write_stderr('[no %s, skip] ' % mkfs)
 
             # check correct D-Bus exception
             try:
@@ -813,8 +818,7 @@ class FS(StoragedTestCase):
             return
 
         # do checks with command line tools (mkfs/mount/umount)
-        sys.stderr.write('[cli] ')
-        sys.stderr.flush()
+        self.write_stderr('[cli] ')
 
         self._do_cli_check(type)
         if type != 'minix':
@@ -829,7 +833,7 @@ class FS(StoragedTestCase):
             self.mkfs('ext3')
 
         # do checks with storaged operations
-        sys.stderr.write('[ud] ')
+        self.write_stderr('[ud] ')
         self._do_storaged_check(type)
         if type != 'minix':
             self._do_storaged_check(type, 'test%stst' % type)
@@ -883,7 +887,7 @@ class FS(StoragedTestCase):
         ret = subprocess.call([mount_prog, self.device, mount_a])
         if ret == 32:
             # missing fs driver
-            sys.stderr.write('[missing kernel driver, skip] ')
+            self.write_stderr('[missing kernel driver, skip] ')
             return
         self.assertEqual(ret, 0)
 
@@ -1193,7 +1197,7 @@ class Smart(StoragedTestCase):
         hd = '/dev/sda'
 
         if not os.path.exists(hd):
-            sys.stderr.write('[skip] ')
+            self.write_stderr('[skip] ')
             return
 
         has_smart = subprocess.call(['skdump', '--can-smart', hd],
@@ -1207,13 +1211,13 @@ class Smart(StoragedTestCase):
         self.assertEqual(ata is not None, has_smart)
 
         if has_smart:
-            sys.stderr.write('[avail] ')
+            self.write_stderr('[avail] ')
             self.assertEqual(ata.get_property('smart-supported'), True)
             self.assertEqual(ata.get_property('smart-enabled'), True)
 
             # wait for SMART data to be read
             while ata.get_property('smart-updated') == 0:
-                sys.stderr.write('[wait for data] ')
+                self.write_stderr('[wait for data] ')
                 self.client.settle()
                 time.sleep(0.5)
 
@@ -1224,7 +1228,7 @@ class Smart(StoragedTestCase):
                                            ['success', 'inprogress', 'aborted',
                                            'interrupted'])
         else:
-            sys.stderr.write('[N/A] ')
+            self.write_stderr('[N/A] ')
 
 
 # ----------------------------------------------------------------------------
@@ -1241,7 +1245,7 @@ class Luks(StoragedTestCase):
             if encrypted:
                 try:
                     encrypted.call_lock_sync(no_options, None)
-                    sys.stderr.write('[cleanup lock] ')
+                    self.write_stderr('[cleanup lock] ')
                 except GLib.GError:
                     pass
 
