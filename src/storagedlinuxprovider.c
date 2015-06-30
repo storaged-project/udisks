@@ -672,12 +672,13 @@ storaged_linux_provider_get_coldplug (StoragedLinuxProvider *provider)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gboolean
-perform_initial_housekeeping_for_drive (GIOSchedulerJob *job,
-                                        GCancellable    *cancellable,
-                                        gpointer         user_data)
+static void
+perform_initial_housekeeping_for_drive (GTask           *task,
+                                        gpointer         source_object,
+                                        gpointer         task_data,
+                                        GCancellable    *cancellable)
 {
-  StoragedLinuxDriveObject *object = STORAGED_LINUX_DRIVE_OBJECT (user_data);
+  StoragedLinuxDriveObject *object = STORAGED_LINUX_DRIVE_OBJECT (task_data);
   GError *error;
 
   error = NULL;
@@ -690,7 +691,6 @@ perform_initial_housekeeping_for_drive (GIOSchedulerJob *job,
                         error->message, g_quark_to_string (error->domain), error->code);
       g_error_free (error);
     }
-  return FALSE; /* job is complete */
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -833,6 +833,7 @@ handle_block_uevent_for_drive (StoragedLinuxProvider *provider,
 {
   StoragedLinuxDriveObject *object;
   StoragedDaemon *daemon;
+  GTask *task;
   const gchar *sysfs_path;
   gchar *vpd;
 
@@ -896,11 +897,10 @@ handle_block_uevent_for_drive (StoragedLinuxProvider *provider,
               /* schedule initial housekeeping for the drive unless coldplugging */
               if (!provider->coldplug)
                 {
-                  g_io_scheduler_push_job (perform_initial_housekeeping_for_drive,
-                                           g_object_ref (object),
-                                           (GDestroyNotify) g_object_unref,
-                                           G_PRIORITY_DEFAULT,
-                                           NULL);
+                  task = g_task_new (NULL, NULL, NULL, NULL);
+                  g_task_set_task_data (task, g_object_ref (object), NULL);
+                  g_task_run_in_thread (task, perform_initial_housekeeping_for_drive);
+                  g_object_unref (task);
                 }
             }
         }
@@ -1258,12 +1258,13 @@ housekeeping_all_modules (StoragedLinuxProvider *provider,
 
 /* ---------------------------------------------------------------------------------------------------- */
 
-static gboolean
-housekeeping_thread_func (GIOSchedulerJob *job,
-                          GCancellable    *cancellable,
-                          gpointer         user_data)
+static void
+housekeeping_thread_func (GTask           *task,
+                          gpointer         source_object,
+                          gpointer         task_data,
+                          GCancellable    *cancellable)
 {
-  StoragedLinuxProvider *provider = STORAGED_LINUX_PROVIDER (user_data);
+  StoragedLinuxProvider *provider = STORAGED_LINUX_PROVIDER (task_data);
   guint secs_since_last;
   guint64 now;
 
@@ -1284,8 +1285,6 @@ housekeeping_thread_func (GIOSchedulerJob *job,
   G_LOCK (provider_lock);
   provider->housekeeping_running = FALSE;
   G_UNLOCK (provider_lock);
-
-  return FALSE; /* job is complete */
 }
 
 /* called from the main thread on start-up and every 10 minutes or so */
@@ -1293,16 +1292,17 @@ static gboolean
 on_housekeeping_timeout (gpointer user_data)
 {
   StoragedLinuxProvider *provider = STORAGED_LINUX_PROVIDER (user_data);
+  GTask *task;
 
   G_LOCK (provider_lock);
   if (provider->housekeeping_running)
     goto out;
   provider->housekeeping_running = TRUE;
-  g_io_scheduler_push_job (housekeeping_thread_func,
-                           g_object_ref (provider),
-                           (GDestroyNotify) g_object_unref,
-                           G_PRIORITY_DEFAULT,
-                           NULL);
+  task = g_task_new (NULL, NULL, NULL, NULL);
+  g_task_set_task_data (task, g_object_ref (provider), NULL);
+  g_task_run_in_thread (task, housekeeping_thread_func);
+  g_object_unref (task);
+
  out:
   G_UNLOCK (provider_lock);
 

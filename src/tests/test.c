@@ -534,9 +534,16 @@ main (int    argc,
 {
   int ret;
 
+  /* Acquire the main context for this thread.  No main loop is running; this
+   * avoids a race condition which can occur when calling
+   * g_main_context_invoke ().
+   */
+  GMainContext *context = g_main_context_ref_thread_default ();
+  g_main_context_acquire (context);
+
   g_test_init (&argc, &argv, NULL);
 
-  loop = g_main_loop_new (NULL, FALSE);
+  loop = g_main_loop_new (context, FALSE);
   main_thread = g_thread_self ();
 
   g_test_add_func ("/storaged/daemon/spawned_job/successful", test_spawned_job_successful);
@@ -559,6 +566,10 @@ main (int    argc,
   g_test_add_func ("/storaged/daemon/threaded_job/override_signal_handler", test_threaded_job_override_signal_handler);
 
   ret = g_test_run();
+
+  /* Release the thread's main context. */
+  g_main_context_release (context);
+  g_main_context_unref (context);
 
   g_main_loop_unref (loop);
   return ret;
