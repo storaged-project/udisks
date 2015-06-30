@@ -17,9 +17,9 @@ ENV{DM_UDEV_DISABLE_OTHER_RULES_FLAG}=="?*", GOTO="storaged_probe_end"
 #
 # TODO: file bug against mdadm(8) to have --export-prefix option that can be used with e.g. STORAGED_MD_MEMBER
 #
-SUBSYSTEM=="block", ENV{ID_FS_USAGE}=="raid", ENV{ID_FS_TYPE}=="linux_raid_member", ENV{STORAGED_MD_MEMBER_LEVEL}=="", IMPORT{program}="/bin/sh -c '/sbin/mdadm --examine --export $tempnode | /bin/sed s/^MD_/STORAGED_MD_MEMBER_/g'"
+SUBSYSTEM=="block", ENV{ID_FS_USAGE}=="raid", ENV{ID_FS_TYPE}=="linux_raid_member", ENV{STORAGED_MD_MEMBER_LEVEL}=="", IMPORT{program}="/bin/sh -c '/sbin/mdadm --examine --export $tempnode | sed s/^MD_/STORAGED_MD_MEMBER_/g'"
 
-SUBSYSTEM=="block", KERNEL=="md*", ENV{DEVTYPE}!="partition", IMPORT{program}="/bin/sh -c '/sbin/mdadm --detail --export $tempnode | /bin/sed s/^MD_/STORAGED_MD_/g'"
+SUBSYSTEM=="block", KERNEL=="md*", ENV{DEVTYPE}!="partition", IMPORT{program}="/bin/sh -c '/sbin/mdadm --detail --export $tempnode | sed s/^MD_/STORAGED_MD_/g'"
 
 LABEL="storaged_probe_end"
 
