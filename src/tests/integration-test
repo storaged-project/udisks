@@ -1220,7 +1220,9 @@ class Smart(StoragedTestCase):
             # this is of course not truly correct for a test suite, but let's
             # consider it a courtesy for developers :-)
             self.assertEqual(ata.get_property('smart-failing'), False)
-            self.assertIn(ata.get_property('smart-selftest-status'), ['success', 'inprogress'])
+            self.assertIn(ata.get_property('smart-selftest-status'),
+                                           ['success', 'inprogress', 'aborted',
+                                           'interrupted'])
         else:
             sys.stderr.write('[N/A] ')
 
