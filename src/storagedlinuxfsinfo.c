@@ -123,6 +123,14 @@ const FSInfo _fs_info[] =
       FALSE, /* supports_owners */
       "mkudffs --vid $LABEL $DEVICE",
     },
+    {
+      "f2fs",
+      NULL,
+      NULL,
+      FALSE, /* supports_online_label_rename */
+      TRUE,  /* supports_owners */
+      "mkfs.f2fs -l $LABEL $DEVICE",
+    },
     /* swap space */
     {
       "swap",
