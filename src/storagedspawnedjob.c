@@ -64,6 +64,10 @@ struct _StoragedSpawnedJob
   gchar *input_string;
   uid_t run_as_uid;
   uid_t run_as_euid;
+  gid_t real_egid;
+  gid_t real_gid;
+  uid_t real_uid;
+  char *real_pwname;
   const gchar *input_string_cursor;
 
   GPid child_pid;
@@ -371,29 +375,9 @@ static void
 child_setup (gpointer user_data)
 {
   StoragedSpawnedJob *job = STORAGED_SPAWNED_JOB (user_data);
-  struct passwd pwstruct;
-  gchar pwbuf[8192];
-  struct passwd *pw = NULL;
-  int rc;
-  gid_t egid;
 
   if (job->run_as_uid == getuid () && job->run_as_euid == geteuid ())
     goto out;
-
-  rc = getpwuid_r (job->run_as_euid, &pwstruct, pwbuf, sizeof pwbuf, &pw);
-  if (rc != 0 || pw == NULL)
-   {
-     g_printerr ("No password record for uid %d: %m\n", (gint) job->run_as_euid);
-     abort ();
-   }
-  egid = pw->pw_gid;
-
-  rc = getpwuid_r (job->run_as_uid, &pwstruct, pwbuf, sizeof pwbuf, &pw);
-  if (rc != 0 || pw == NULL)
-   {
-     g_printerr ("No password record for uid %d: %m\n", (gint) job->run_as_uid);
-     abort ();
-   }
 
   /* become the user...
    *
@@ -408,22 +392,22 @@ child_setup (gpointer user_data)
       g_printerr ("Error resetting groups: %m\n");
       abort ();
     }
-  if (initgroups (pw->pw_name, pw->pw_gid) != 0)
+  if (initgroups (job->real_pwname, job->real_gid) != 0)
     {
       g_printerr ("Error initializing groups for user %s and group %d: %m\n",
-                  pw->pw_name, (gint) pw->pw_gid);
+                  job->real_pwname, (gint) job->real_gid);
       abort ();
     }
-  if (setregid (pw->pw_gid, egid) != 0)
+  if (setregid (job->real_gid, job->real_egid) != 0)
     {
       g_printerr ("Error setting real+effective gid %d and %d: %m\n",
-                  (gint) pw->pw_gid, (gint) egid);
+                  (gint) job->real_gid, (gint) job->real_egid);
       abort ();
     }
-  if (setreuid (pw->pw_uid, job->run_as_euid) != 0)
+  if (setreuid (job->real_uid, job->run_as_euid) != 0)
     {
       g_printerr ("Error setting real+effective uid %d and %d: %m\n",
-                  (gint) pw->pw_uid, (gint) job->run_as_euid);
+                  (gint) job->real_uid, (gint) job->run_as_euid);
       abort ();
     }
 
@@ -438,6 +422,10 @@ storaged_spawned_job_constructed (GObject *object)
   GError *error;
   gint child_argc;
   gchar **child_argv;
+  struct passwd pwstruct;
+  gchar pwbuf[8192];
+  struct passwd *pw = NULL;
+  int rc;
 
   if (G_OBJECT_CLASS (storaged_spawned_job_parent_class)->constructed != NULL)
     G_OBJECT_CLASS (storaged_spawned_job_parent_class)->constructed (object);
@@ -472,6 +460,34 @@ storaged_spawned_job_constructed (GObject *object)
       emit_completed_with_error_in_idle (job, error);
       g_error_free (error);
       goto out;
+    }
+
+  /* Save real egid and gid info for the child process */
+  if (job->run_as_uid != getuid () || job->run_as_euid != geteuid ())
+    {
+      rc = getpwuid_r (job->run_as_euid, &pwstruct, pwbuf, sizeof pwbuf, &pw);
+      if (rc != 0 || pw == NULL)
+        {
+          g_set_error(&error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                      "No password record for uid %d: %m\n", (gint) job->run_as_euid);
+          emit_completed_with_error_in_idle (job, error);
+          g_error_free (error);
+          goto out;
+        }
+      job->real_egid = pw->pw_gid;
+
+      rc = getpwuid_r (job->run_as_uid, &pwstruct, pwbuf, sizeof pwbuf, &pw);
+      if (rc != 0 || pw == NULL)
+        {
+          g_set_error(&error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                      "No password record for uid %d: %m\n", (gint) job->run_as_uid);
+          emit_completed_with_error_in_idle (job, error);
+          g_error_free (error);
+          goto out;
+        }
+      job->real_gid = pw->pw_gid;
+      job->real_uid = pw->pw_uid;
+      job->real_pwname = strdup (pw->pw_name);
     }
 
   error = NULL;
@@ -961,6 +977,12 @@ storaged_spawned_job_release_resources (StoragedSpawnedJob *job)
     {
       g_cancellable_disconnect (storaged_base_job_get_cancellable (STORAGED_BASE_JOB (job)), job->cancellable_handler_id);
       job->cancellable_handler_id = 0;
+    }
+
+  if (job->real_pwname != NULL)
+    {
+      free (job->real_pwname);
+      job->real_pwname = NULL;
     }
 }
 
