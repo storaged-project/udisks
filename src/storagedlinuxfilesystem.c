@@ -304,7 +304,7 @@ static const gchar *iso9660_allow_gid_self[] = { "gid=", NULL };
 
 /* ---------------------- udf -------------------- */
 
-static const gchar *udf_defaults[] = { "uid=", "gid=", "iocharset=utf8", "umask=0077", NULL };
+static const gchar *udf_defaults[] = { "uid=", "gid=", "iocharset=utf8", NULL };
 static const gchar *udf_allow[] = { "iocharset=", "umask=", NULL };
 static const gchar *udf_allow_uid_self[] = { "uid=", NULL };
 static const gchar *udf_allow_gid_self[] = { "gid=", NULL };
