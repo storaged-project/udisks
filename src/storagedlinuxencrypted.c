@@ -265,7 +265,6 @@ handle_unlock (StoragedEncrypted        *encrypted,
   StoragedLinuxDevice *cleartext_device = NULL;
   GError *error = NULL;
   uid_t caller_uid;
-  pid_t caller_pid;
   const gchar *action_id;
   const gchar *message;
   gboolean is_in_crypttab = FALSE;
@@ -332,18 +331,6 @@ handle_unlock (StoragedEncrypted        *encrypted,
       goto out;
     }
 
-  error = NULL;
-  if (!storaged_daemon_util_get_caller_pid_sync (daemon,
-                                                 invocation,
-                                                 NULL /* GCancellable */,
-                                                 &caller_pid,
-                                                 &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
-      goto out;
-    }
-
   /* check if in crypttab file */
   error = NULL;
   if (!check_crypttab (block,
@@ -378,7 +365,7 @@ handle_unlock (StoragedEncrypted        *encrypted,
         {
           action_id = "org.storaged.Storaged.encrypted-unlock-system";
         }
-      else if (!storaged_daemon_util_on_same_seat (daemon, object, caller_pid))
+      else if (!storaged_daemon_util_on_user_seat (daemon, object, caller_uid))
         {
           action_id = "org.storaged.Storaged.encrypted-unlock-other-seat";
         }

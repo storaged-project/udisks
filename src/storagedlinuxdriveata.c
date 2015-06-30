@@ -1336,7 +1336,7 @@ handle_pm_standby (StoragedDriveAta        *_drive,
   GError *error = NULL;
   const gchar *message;
   const gchar *action_id;
-  pid_t caller_pid;
+  uid_t caller_uid;
 
   object = storaged_daemon_util_dup_object (drive, &error);
   if (object == NULL)
@@ -1369,11 +1369,13 @@ handle_pm_standby (StoragedDriveAta        *_drive,
     }
 
   error = NULL;
-  if (!storaged_daemon_util_get_caller_pid_sync (daemon,
-                                               invocation,
-                                               NULL /* GCancellable */,
-                                               &caller_pid,
-                                               &error))
+  if (!storaged_daemon_util_get_caller_uid_sync (daemon,
+                                                 invocation,
+                                                 NULL /* GCancellable */,
+                                                 &caller_uid,
+                                                 NULL,
+                                                 NULL,
+                                                 &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
       g_error_free (error);
@@ -1392,7 +1394,7 @@ handle_pm_standby (StoragedDriveAta        *_drive,
     {
       action_id = "org.storaged.Storaged.ata-standby-system";
     }
-  else if (!storaged_daemon_util_on_same_seat (daemon, STORAGED_OBJECT (object), caller_pid))
+  else if (!storaged_daemon_util_on_user_seat (daemon, STORAGED_OBJECT (object), caller_uid))
     {
       action_id = "org.storaged.Storaged.ata-standby-other-seat";
     }
@@ -1467,7 +1469,7 @@ handle_pm_wakeup (StoragedDriveAta        *_drive,
   GError *error = NULL;
   const gchar *message;
   const gchar *action_id;
-  pid_t caller_pid;
+  uid_t caller_uid;
   guchar buf[4096];
 
   object = storaged_daemon_util_dup_object (drive, &error);
@@ -1501,10 +1503,12 @@ handle_pm_wakeup (StoragedDriveAta        *_drive,
     }
 
   error = NULL;
-  if (!storaged_daemon_util_get_caller_pid_sync (daemon,
+  if (!storaged_daemon_util_get_caller_uid_sync (daemon,
                                                  invocation,
                                                  NULL /* GCancellable */,
-                                                 &caller_pid,
+                                                 &caller_uid,
+                                                 NULL,
+                                                 NULL,
                                                  &error))
     {
       g_dbus_method_invocation_return_gerror (invocation, error);
@@ -1524,7 +1528,7 @@ handle_pm_wakeup (StoragedDriveAta        *_drive,
     {
       action_id = "org.storaged.Storaged.ata-standby-system";
     }
-  else if (!storaged_daemon_util_on_same_seat (daemon, STORAGED_OBJECT (object), caller_pid))
+  else if (!storaged_daemon_util_on_user_seat (daemon, STORAGED_OBJECT (object), caller_uid))
     {
       action_id = "org.storaged.Storaged.ata-standby-other-seat";
     }

@@ -958,7 +958,6 @@ handle_eject (StoragedDrive           *_drive,
   gchar *escaped_device = NULL;
   uid_t caller_uid;
   gid_t caller_gid;
-  pid_t caller_pid;
 
   object = storaged_daemon_util_dup_object (drive, &error);
   if (object == NULL)
@@ -988,18 +987,6 @@ handle_eject (StoragedDrive           *_drive,
     }
 
   error = NULL;
-  if (!storaged_daemon_util_get_caller_pid_sync (daemon,
-                                                 invocation,
-                                                 NULL /* GCancellable */,
-                                                 &caller_pid,
-                                                 &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
-      goto out;
-    }
-
-  error = NULL;
   if (!storaged_daemon_util_get_caller_uid_sync (daemon,
                                                  invocation,
                                                  NULL /* GCancellable */,
@@ -1025,7 +1012,7 @@ handle_eject (StoragedDrive           *_drive,
     {
       action_id = "org.storaged.Storaged.eject-media-system";
     }
-  else if (!storaged_daemon_util_on_same_seat (daemon, STORAGED_OBJECT (object), caller_pid))
+  else if (!storaged_daemon_util_on_user_seat (daemon, STORAGED_OBJECT (object), caller_uid))
     {
       action_id = "org.storaged.Storaged.eject-media-other-seat";
     }
@@ -1350,7 +1337,6 @@ handle_power_off (StoragedDrive           *_drive,
   gchar *escaped_device = NULL;
   uid_t caller_uid;
   gid_t caller_gid;
-  pid_t caller_pid;
   GList *sibling_objects = NULL, *l;
   gint fd = -1;
 
@@ -1405,18 +1391,6 @@ handle_power_off (StoragedDrive           *_drive,
     }
 
   error = NULL;
-  if (!storaged_daemon_util_get_caller_pid_sync (daemon,
-                                                 invocation,
-                                                 NULL /* GCancellable */,
-                                                 &caller_pid,
-                                                 &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
-      goto out;
-    }
-
-  error = NULL;
   if (!storaged_daemon_util_get_caller_uid_sync (daemon,
                                                  invocation,
                                                  NULL /* GCancellable */,
@@ -1442,7 +1416,7 @@ handle_power_off (StoragedDrive           *_drive,
     {
       action_id = "org.storaged.Storaged.power-off-drive-system";
     }
-  else if (!storaged_daemon_util_on_same_seat (daemon, STORAGED_OBJECT (object), caller_pid))
+  else if (!storaged_daemon_util_on_user_seat (daemon, STORAGED_OBJECT (object), caller_uid))
     {
       action_id = "org.storaged.Storaged.power-off-drive-other-seat";
     }

@@ -228,7 +228,6 @@ handle_set_flags (StoragedPartition        *partition,
   gint fd = -1;
   uid_t caller_uid;
   gid_t caller_gid;
-  pid_t caller_pid;
   GError *error;
 
   error = NULL;
@@ -241,18 +240,6 @@ handle_set_flags (StoragedPartition        *partition,
 
   daemon = storaged_linux_block_object_get_daemon (STORAGED_LINUX_BLOCK_OBJECT (object));
   block = storaged_object_get_block (object);
-
-  error = NULL;
-  if (!storaged_daemon_util_get_caller_pid_sync (daemon,
-                                                 invocation,
-                                                 NULL /* GCancellable */,
-                                                 &caller_pid,
-                                                 &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
-      goto out;
-    }
 
   error = NULL;
   if (!storaged_daemon_util_get_caller_uid_sync (daemon,
@@ -286,7 +273,7 @@ handle_set_flags (StoragedPartition        *partition,
         {
           action_id = "org.storaged.Storaged.modify-device-system";
         }
-      else if (!storaged_daemon_util_on_same_seat (daemon, object, caller_pid))
+      else if (!storaged_daemon_util_on_user_seat (daemon, object, caller_uid))
         {
           action_id = "org.storaged.Storaged.modify-device-other-seat";
         }
@@ -393,7 +380,6 @@ handle_set_name (StoragedPartition        *partition,
   gint fd = -1;
   uid_t caller_uid;
   gid_t caller_gid;
-  pid_t caller_pid;
   GError *error;
 
   error = NULL;
@@ -406,18 +392,6 @@ handle_set_name (StoragedPartition        *partition,
 
   daemon = storaged_linux_block_object_get_daemon (STORAGED_LINUX_BLOCK_OBJECT (object));
   block = storaged_object_get_block (object);
-
-  error = NULL;
-  if (!storaged_daemon_util_get_caller_pid_sync (daemon,
-                                                 invocation,
-                                                 NULL /* GCancellable */,
-                                                 &caller_pid,
-                                                 &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
-      goto out;
-    }
 
   error = NULL;
   if (!storaged_daemon_util_get_caller_uid_sync (daemon,
@@ -451,7 +425,7 @@ handle_set_name (StoragedPartition        *partition,
         {
           action_id = "org.storaged.Storaged.modify-device-system";
         }
-      else if (!storaged_daemon_util_on_same_seat (daemon, object, caller_pid))
+      else if (!storaged_daemon_util_on_user_seat (daemon, object, caller_uid))
         {
           action_id = "org.storaged.Storaged.modify-device-other-seat";
         }
@@ -735,7 +709,6 @@ handle_set_type (StoragedPartition        *partition,
   StoragedBlock *partition_table_block = NULL;
   uid_t caller_uid;
   gid_t caller_gid;
-  pid_t caller_pid;
   GError *error;
 
   error = NULL;
@@ -748,18 +721,6 @@ handle_set_type (StoragedPartition        *partition,
 
   daemon = storaged_linux_block_object_get_daemon (STORAGED_LINUX_BLOCK_OBJECT (object));
   block = storaged_object_get_block (object);
-
-  error = NULL;
-  if (!storaged_daemon_util_get_caller_pid_sync (daemon,
-                                                 invocation,
-                                                 NULL /* GCancellable */,
-                                                 &caller_pid,
-                                                 &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
-      goto out;
-    }
 
   error = NULL;
   if (!storaged_daemon_util_get_caller_uid_sync (daemon,
@@ -793,7 +754,7 @@ handle_set_type (StoragedPartition        *partition,
         {
           action_id = "org.storaged.Storaged.modify-device-system";
         }
-      else if (!storaged_daemon_util_on_same_seat (daemon, object, caller_pid))
+      else if (!storaged_daemon_util_on_user_seat (daemon, object, caller_uid))
         {
           action_id = "org.storaged.Storaged.modify-device-other-seat";
         }
@@ -846,7 +807,6 @@ handle_delete (StoragedPartition        *partition,
   gchar *command_line = NULL;
   uid_t caller_uid;
   gid_t caller_gid;
-  pid_t caller_pid;
   gboolean teardown_flag = FALSE;
   GError *error;
 
@@ -862,18 +822,6 @@ handle_delete (StoragedPartition        *partition,
 
   daemon = storaged_linux_block_object_get_daemon (STORAGED_LINUX_BLOCK_OBJECT (object));
   block = storaged_object_get_block (object);
-
-  error = NULL;
-  if (!storaged_daemon_util_get_caller_pid_sync (daemon,
-                                                 invocation,
-                                                 NULL /* GCancellable */,
-                                                 &caller_pid,
-                                                 &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
-      goto out;
-    }
 
   error = NULL;
   if (!storaged_daemon_util_get_caller_uid_sync (daemon,
@@ -907,7 +855,7 @@ handle_delete (StoragedPartition        *partition,
         {
           action_id = "org.storaged.Storaged.modify-device-system";
         }
-      else if (!storaged_daemon_util_on_same_seat (daemon, object, caller_pid))
+      else if (!storaged_daemon_util_on_user_seat (daemon, object, caller_uid))
         {
           action_id = "org.storaged.Storaged.modify-device-other-seat";
         }

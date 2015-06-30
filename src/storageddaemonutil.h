@@ -44,9 +44,9 @@ gboolean storaged_daemon_util_setup_by_user (StoragedDaemon *daemon,
                                              StoragedObject *object,
                                              uid_t           user);
 
-gboolean storaged_daemon_util_on_same_seat (StoragedDaemon          *daemon,
+gboolean storaged_daemon_util_on_user_seat (StoragedDaemon          *daemon,
                                             StoragedObject          *object,
-                                            pid_t                    process);
+                                            uid_t                    user);
 
 gboolean storaged_daemon_util_check_authorization_sync (StoragedDaemon          *daemon,
                                                         StoragedObject          *object,
@@ -94,10 +94,6 @@ gboolean storaged_daemon_util_file_set_contents (const gchar  *filename,
 
 StoragedInhibitCookie *storaged_daemon_util_inhibit_system_sync   (const gchar            *reason);
 void                   storaged_daemon_util_uninhibit_system_sync (StoragedInhibitCookie  *cookie);
-
-gboolean storaged_daemon_util_on_same_seat (StoragedDaemon          *daemon,
-                                            StoragedObject          *object,
-                                            pid_t                    process);
 
 gchar *storaged_daemon_util_get_free_mdraid_device (void);
 

@@ -1147,7 +1147,6 @@ handle_mount (StoragedFilesystem       *filesystem,
   StoragedState *state;
   uid_t caller_uid;
   gid_t caller_gid;
-  pid_t caller_pid;
   const gchar * const *existing_mount_points;
   const gchar *probed_fs_usage;
   gchar *fs_type_to_use;
@@ -1235,18 +1234,6 @@ handle_mount (StoragedFilesystem       *filesystem,
       goto out;
     }
 
-  error = NULL;
-  if (!storaged_daemon_util_get_caller_pid_sync (daemon,
-                                                 invocation,
-                                                 NULL /* GCancellable */,
-                                                 &caller_pid,
-                                                 &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
-      goto out;
-    }
-
   if (system_managed)
     {
       gint status;
@@ -1268,7 +1255,7 @@ handle_mount (StoragedFilesystem       *filesystem,
                 {
                   action_id = "org.storaged.Storaged.filesystem-mount-system";
                 }
-              else if (!storaged_daemon_util_on_same_seat (daemon, object, caller_pid))
+              else if (!storaged_daemon_util_on_user_seat (daemon, object, caller_uid))
                 {
                   action_id = "org.storaged.Storaged.filesystem-mount-other-seat";
                 }
@@ -1430,7 +1417,7 @@ handle_mount (StoragedFilesystem       *filesystem,
         {
           action_id = "org.storaged.Storaged.filesystem-mount-system";
         }
-      else if (!storaged_daemon_util_on_same_seat (daemon, object, caller_pid))
+      else if (!storaged_daemon_util_on_user_seat (daemon, object, caller_uid))
         {
           action_id = "org.storaged.Storaged.filesystem-mount-other-seat";
         }
@@ -1845,7 +1832,6 @@ handle_set_label (StoragedFilesystem       *filesystem,
   gchar *real_label = NULL;
   uid_t caller_uid;
   gid_t caller_gid;
-  pid_t caller_pid;
   gchar *command;
   gchar *tmp;
   GError *error;
@@ -1864,18 +1850,6 @@ handle_set_label (StoragedFilesystem       *filesystem,
 
   daemon = storaged_linux_block_object_get_daemon (STORAGED_LINUX_BLOCK_OBJECT (object));
   block = storaged_object_peek_block (object);
-
-  error = NULL;
-  if (!storaged_daemon_util_get_caller_pid_sync (daemon,
-                                                 invocation,
-                                                 NULL /* GCancellable */,
-                                                 &caller_pid,
-                                                 &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
-      goto out;
-    }
 
   error = NULL;
   if (!storaged_daemon_util_get_caller_uid_sync (daemon,
@@ -1976,7 +1950,7 @@ handle_set_label (StoragedFilesystem       *filesystem,
         {
           action_id = "org.storaged.Storaged.modify-device-system";
         }
-      else if (!storaged_daemon_util_on_same_seat (daemon, STORAGED_OBJECT (object), caller_pid))
+      else if (!storaged_daemon_util_on_user_seat (daemon, STORAGED_OBJECT (object), caller_uid))
         {
           action_id = "org.storaged.Storaged.modify-device-other-seat";
         }

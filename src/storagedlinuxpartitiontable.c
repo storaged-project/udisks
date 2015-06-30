@@ -340,7 +340,6 @@ storaged_linux_partition_table_handle_create_partition (StoragedPartitionTable  
   StoragedBlock *partition_block = NULL;
   gchar *escaped_partition_device = NULL;
   const gchar *table_type;
-  pid_t caller_pid;
   uid_t caller_uid;
   gid_t caller_gid;
   gboolean do_wipe = TRUE;
@@ -360,18 +359,6 @@ storaged_linux_partition_table_handle_create_partition (StoragedPartitionTable  
     {
       g_dbus_method_invocation_return_error (invocation, STORAGED_ERROR, STORAGED_ERROR_FAILED,
                                              "Partition table object is not a block device");
-      goto out;
-    }
-
-  error = NULL;
-  if (!storaged_daemon_util_get_caller_pid_sync (daemon,
-                                                 invocation,
-                                                 NULL /* GCancellable */,
-                                                 &caller_pid,
-                                                 &error))
-    {
-      g_dbus_method_invocation_return_gerror (invocation, error);
-      g_error_free (error);
       goto out;
     }
 
@@ -403,7 +390,7 @@ storaged_linux_partition_table_handle_create_partition (StoragedPartitionTable  
         {
           action_id = "org.storaged.Storaged.modify-device-system";
         }
-      else if (!storaged_daemon_util_on_same_seat (daemon, object, caller_pid))
+      else if (!storaged_daemon_util_on_user_seat (daemon, object, caller_uid))
         {
           action_id = "org.storaged.Storaged.modify-device-other-seat";
         }

@@ -1064,22 +1064,23 @@ storaged_daemon_util_escape (const gchar *str)
 }
 
 /**
- * storaged_daemon_util_on_same_seat:
+ * storaged_daemon_util_on_user_seat:
  * @daemon: A #StoragedDaemon.
  * @object: The #GDBusObject that the call is on or %NULL.
- * @process: The process to check for.
+ * @user: The user to check for.
  *
  * Checks whether the device represented by @object (if any) is plugged into
- * a seat where the caller represented by @process is logged in.
+ * a seat where the caller represented by @user is logged in and active.
  *
  * This works if @object is a drive or a block object.
  *
- * Returns: %TRUE if @object and @process is on the same seat, %FALSE otherwise.
+ * Returns: %TRUE if @object is on the same seat as one of @user's
+ *  active sessions, %FALSE otherwise.
  */
 gboolean
-storaged_daemon_util_on_same_seat (StoragedDaemon          *daemon,
+storaged_daemon_util_on_user_seat (StoragedDaemon          *daemon,
                                    StoragedObject          *object,
-                                   pid_t                    process)
+                                   uid_t                    user)
 {
 #if !defined(HAVE_LIBSYSTEMD_LOGIN)
   /* if we don't have systemd, assume it's always the same seat */
@@ -1120,16 +1121,9 @@ storaged_daemon_util_on_same_seat (StoragedDaemon          *daemon,
   if (drive == NULL)
     goto out;
 
-  /* It's not unexpected to not find a session, nor a seat associated with @process */
-  if (sd_pid_get_session (process, &session) == 0)
-    sd_session_get_seat (session, &seat);
-
-  /* If we don't know the seat of the caller, we assume the device is always on another seat */
-  if (seat == NULL)
-    goto out;
-
   drive_seat = storaged_drive_get_seat (drive);
-  if (g_strcmp0 (seat, drive_seat) == 0)
+
+  if (drive_seat != NULL && sd_uid_is_on_seat (user, TRUE, drive_seat) > 0)
     {
       ret = TRUE;
       goto out;
