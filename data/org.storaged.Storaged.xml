@@ -1,3 +1,4 @@
+
 <!DOCTYPE node PUBLIC
 "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
 "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
@@ -2013,6 +2014,13 @@
          see.
     -->
     <property name="ChildConfiguration" type="a(sa{sv})" access="read"/>
+
+    <!-- Running: Whether or not the array is considered running.
+
+         It is an error to call Start on a running array, and Stop on
+         a non-running array, for example.
+    -->
+    <property name="Running" type="b" access="read"/>
 
     <!--
         Start:

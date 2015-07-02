@@ -341,6 +341,8 @@ storaged_linux_mdraid_update (StoragedLinuxMDRaid       *mdraid,
   storaged_mdraid_set_num_devices (iface, num_devices);
   storaged_mdraid_set_size (iface, size);
 
+  storaged_mdraid_set_running (iface, raid_device != NULL);
+
   if (g_strcmp0 (level, "raid1") == 0 ||
       g_strcmp0 (level, "raid4") == 0 ||
       g_strcmp0 (level, "raid5") == 0 ||
