@@ -1,4 +1,55 @@
 --------------
+storaged 2.1.1
+--------------
+
+The storaged project provides a daemon, tools and libraries to access
+and manipulate disks, storage devices and technologies.
+
+Changes since 2.1.0:
+
+Marius Vollmer (1):
+      MDRaid: Add 'Running' property.
+
+Martin Pitt (3):
+      Backport: UDF: Drop umask=0077 default
+      Backport: Fix crash on inaccessible RAID member "state" attribute
+      Backport: udev rules: Stop hardcoding sed path
+
+Michael Catanzaro (1):
+      Backport: Install storaged into a libexecdir
+
+Ondrej Holy (1):
+      Backport: Fail before formatting if partition contains a partition table
+
+Peter Hatina (8):
+      Merge pull request #13 from mvollmer/mdraid-running-property
+      Remove deprecated g_io_scheduler_* calls
+      TODO: add new features
+      TODO: mkswap already supported
+      Build: make all rules silent by default
+      Tests: build storaged with all modules
+      Build: rename yum_dependencies to rpm_dependencies
+      TODO: update possible features
+
+Ross Lagerwall (5):
+      Backport: Add support for creating f2fs filesystems
+      Backport: Don't ignore isohybrid udf filesystems
+      Backport: integration-tests: Add a wrapper to write and flush stderr
+      Backport: integration-tests: Don't fail if a SMART test was aborted
+      Backport: integration-tests: Settle while waiting for property change
+
+Simon McVittie (1):
+      Backport: Decide whether devices are on the same seat by uid, not      pid
+
+Tomas Bzatek (1):
+      Backport: StoragedSpawnedJob: Retrieve uid/gid info before forking
+
+Thanks to all our contributors.
+
+Peter Hatina
+2015-07-02
+
+--------------
 storaged 2.1.0
 --------------
 
