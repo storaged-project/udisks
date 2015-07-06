@@ -61,7 +61,8 @@ struct _UDisksSpawnedJob
 
   GMainContext *main_context;
 
-  gchar *input_string;
+  GString *input_string;
+
   uid_t run_as_uid;
   uid_t run_as_euid;
   gid_t real_egid;
@@ -144,8 +145,8 @@ udisks_spawned_job_finalize (GObject *object)
   /* input string may contain key material - nuke contents */
   if (job->input_string != NULL)
     {
-      memset (job->input_string, '\0', strlen (job->input_string));
-      g_free (job->input_string);
+      memset (job->input_string->str, '\0', job->input_string->len);
+      g_string_free (job->input_string, TRUE);
     }
 
   if (G_OBJECT_CLASS (udisks_spawned_job_parent_class)->finalize != NULL)
@@ -179,6 +180,7 @@ udisks_spawned_job_set_property (GObject      *object,
                                  GParamSpec   *pspec)
 {
   UDisksSpawnedJob *job = UDISKS_SPAWNED_JOB (object);
+  const gchar* str_value;
 
   switch (prop_id)
     {
@@ -189,7 +191,12 @@ udisks_spawned_job_set_property (GObject      *object,
 
     case PROP_INPUT_STRING:
       g_assert (job->input_string == NULL);
-      job->input_string = g_value_dup_string (value);
+      str_value = g_value_get_string (value);
+      if (str_value != NULL)
+        {
+          job->input_string = g_string_new (str_value);
+          job->input_string_cursor = job->input_string->str;
+        }
       break;
 
     case PROP_RUN_AS_UID:
@@ -306,8 +313,14 @@ write_child_stdin (GIOChannel *channel,
 {
   UDisksSpawnedJob *job = UDISKS_SPAWNED_JOB (user_data);
   gsize bytes_written;
+  gsize bytes_to_write = 0;
 
-  if (job->input_string_cursor == NULL || *job->input_string_cursor == '\0')
+  if (job->input_string != NULL)
+    {
+      bytes_to_write = job->input_string->len - (job->input_string_cursor - job->input_string->str);
+    }
+
+  if (job->input_string_cursor == NULL || bytes_to_write == 0)
     {
       /* nothing left to write; close our end so the child will get EOF */
       g_io_channel_unref (job->child_stdin_channel);
@@ -321,7 +334,7 @@ write_child_stdin (GIOChannel *channel,
 
   g_io_channel_write_chars (channel,
                             job->input_string_cursor,
-                            strlen (job->input_string_cursor),
+                            bytes_to_write,
                             &bytes_written,
                             NULL);
   g_io_channel_flush (channel, NULL);
