@@ -418,6 +418,41 @@ test_spawned_job_input_string (void)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
+binary_input_string_on_spawned_job_completed (UDisksSpawnedJob *job,
+                                              GError           *error,
+                                              gint              status,
+                                              GString          *standard_output,
+                                              GString          *standard_error,
+                                              gpointer          user_data)
+{
+  g_assert_no_error (error);
+  g_assert_cmpstr (standard_error->str, ==, "");
+  g_assert (WIFEXITED (status));
+  g_assert (WEXITSTATUS (status) == 0);
+  g_assert_cmpstr (standard_output->str, ==, "Woah, you said `affe00affe', partner!\n");
+  return FALSE;
+}
+
+static void
+test_spawned_job_binary_input_string (void)
+{
+  UDisksSpawnedJob *job;
+  gchar *s;
+  GString *input;
+
+  input = g_string_new_len ("\xaf\xfe\0\xaf\xfe", 5);
+  s = g_strdup_printf (UDISKS_TEST_DIR "/udisks-test-helper 8");
+  job = udisks_spawned_job_new (s, input, getuid (), geteuid (), NULL, NULL);
+  udisks_spawned_job_start (job);
+  _g_assert_signal_received (job, "spawned-job-completed", G_CALLBACK (binary_input_string_on_spawned_job_completed), NULL);
+  g_object_unref (job);
+  g_free (s);
+  g_string_free (input, TRUE);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static gboolean
 threaded_job_successful_func (UDisksThreadedJob   *job,
                               GCancellable        *cancellable,
                               gpointer             user_data,
@@ -588,6 +623,7 @@ main (int    argc,
   g_test_add_func ("/udisks/daemon/spawned_job/abnormal_termination", test_spawned_job_abnormal_termination);
   g_test_add_func ("/udisks/daemon/spawned_job/binary_output", test_spawned_job_binary_output);
   g_test_add_func ("/udisks/daemon/spawned_job/input_string", test_spawned_job_input_string);
+  g_test_add_func ("/udisks/daemon/spawned_job/binary_input_string", test_spawned_job_binary_input_string);
   g_test_add_func ("/udisks/daemon/threaded_job/successful", test_threaded_job_successful);
   g_test_add_func ("/udisks/daemon/threaded_job/failure", test_threaded_job_failure);
   g_test_add_func ("/udisks/daemon/threaded_job/cancelled_at_start", test_threaded_job_cancelled_at_start);
