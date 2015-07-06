@@ -775,24 +775,59 @@ udisks_daemon_launch_spawned_job (UDisksDaemon    *daemon,
 {
   va_list var_args;
   gchar *command_line;
+  GString *input_string_as_gstring = NULL;
+  UDisksBaseJob *job;
+
+  if (input_string != NULL)
+    input_string_as_gstring = g_string_new (input_string);
+
+  va_start (var_args, command_line_format);
+  command_line = g_strdup_vprintf (command_line_format, var_args);
+  va_end (var_args);
+
+  job = udisks_daemon_launch_spawned_job_gstring (daemon,
+                                          object,
+                                          job_operation,
+                                          job_started_by_uid,
+                                          cancellable,
+                                          run_as_uid,
+                                          run_as_euid,
+                                          input_string_as_gstring,
+                                          "%s",
+                                          command_line);
+
+  udisks_string_wipe_and_free (input_string_as_gstring);
+  return job;
+}
+
+UDisksBaseJob *
+udisks_daemon_launch_spawned_job_gstring (
+                                  UDisksDaemon    *daemon,
+                                  UDisksObject    *object,
+                                  const gchar     *job_operation,
+                                  uid_t            job_started_by_uid,
+                                  GCancellable    *cancellable,
+                                  uid_t            run_as_uid,
+                                  uid_t            run_as_euid,
+                                  GString         *input_string,
+                                  const gchar     *command_line_format,
+                                  ...)
+{
+  va_list var_args;
+  gchar *command_line;
   UDisksSpawnedJob *job;
   UDisksObjectSkeleton *job_object;
   gchar *job_object_path;
-  GString *input_gstring = NULL;
 
   g_return_val_if_fail (UDISKS_IS_DAEMON (daemon), NULL);
   g_return_val_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable), NULL);
   g_return_val_if_fail (command_line_format != NULL, NULL);
 
-  if (input_string != NULL)
-    input_gstring = g_string_new (input_string);
-
   va_start (var_args, command_line_format);
   command_line = g_strdup_vprintf (command_line_format, var_args);
   va_end (var_args);
-  job = udisks_spawned_job_new (command_line, input_gstring, run_as_uid, run_as_euid, daemon, cancellable);
+  job = udisks_spawned_job_new (command_line, input_string, run_as_uid, run_as_euid, daemon, cancellable);
   g_free (command_line);
-  udisks_string_wipe_and_free (input_gstring);
 
   if (object != NULL)
     udisks_base_job_add_object (UDISKS_BASE_JOB (job), object);
@@ -887,6 +922,49 @@ udisks_daemon_launch_spawned_job_sync (UDisksDaemon    *daemon,
 {
   va_list var_args;
   gchar *command_line;
+  GString *input_string_as_gstring = NULL;
+  gboolean ret;
+
+  if (input_string != NULL)
+    input_string_as_gstring = g_string_new (input_string);
+
+  va_start (var_args, command_line_format);
+  command_line = g_strdup_vprintf (command_line_format, var_args);
+  va_end (var_args);
+
+  ret = udisks_daemon_launch_spawned_job_gstring_sync (daemon,
+                                          object,
+                                          job_operation,
+                                          job_started_by_uid,
+                                          cancellable,
+                                          run_as_uid,
+                                          run_as_euid,
+                                          out_status,
+                                          out_message,
+                                          input_string_as_gstring,
+                                          "%s",
+                                          command_line);
+
+  udisks_string_wipe_and_free (input_string_as_gstring);
+  return ret;
+}
+
+gboolean
+udisks_daemon_launch_spawned_job_gstring_sync (UDisksDaemon    *daemon,
+                                       UDisksObject    *object,
+                                       const gchar     *job_operation,
+                                       uid_t            job_started_by_uid,
+                                       GCancellable    *cancellable,
+                                       uid_t            run_as_uid,
+                                       uid_t            run_as_euid,
+                                       gint            *out_status,
+                                       gchar          **out_message,
+                                       GString         *input_string,
+                                       const gchar     *command_line_format,
+                                       ...)
+{
+  va_list var_args;
+  gchar *command_line;
   UDisksBaseJob *job;
   SpawnedJobSyncData data;
 
@@ -904,7 +982,7 @@ udisks_daemon_launch_spawned_job_sync (UDisksDaemon    *daemon,
   va_start (var_args, command_line_format);
   command_line = g_strdup_vprintf (command_line_format, var_args);
   va_end (var_args);
-  job = udisks_daemon_launch_spawned_job (daemon,
+  job = udisks_daemon_launch_spawned_job_gstring (daemon,
                                           object,
                                           job_operation,
                                           job_started_by_uid,
