@@ -70,6 +70,7 @@
         <arg choice="plain">--block-device <replaceable>DEVICE</replaceable></arg>
       </group>
       <arg choice="opt">--no-user-interaction</arg>
+      <arg choice="opt">--key-file <replaceable>PATH</replaceable></arg>
     </cmdsynopsis>
 
     <cmdsynopsis>
