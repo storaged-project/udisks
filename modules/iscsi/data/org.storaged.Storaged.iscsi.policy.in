@@ -12,7 +12,7 @@
   <!-- ###################################################################### -->
   <!-- Manage LVM -->
 
-  <action id="org.storaged.Storaged.iscsi.manage-lvm">
+  <action id="org.storaged.Storaged.iscsi.manage-iscsi">
     <_description>Manage iSCSI</_description>
     <_message>Authentication is required to manage iSCSI</_message>
     <defaults>
