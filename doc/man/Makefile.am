@@ -33,6 +33,10 @@ storaged-lvm.8 : storaged-lvm.xml
 	$(XSLTPROC) -path "$(builddir)/.." -nonet http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl $<
 endif # HAVE_LVM2
 
+if HAVE_LSM
+notrans_dist_man5_MANS=storaged_lsm.conf.5
+endif
+
 EXTRA_DIST =                                                                   \
 	storagedctl.xml                                                        \
 	storaged.xml                                                           \
