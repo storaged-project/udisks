@@ -736,6 +736,21 @@ handle_block_uevent_for_mdraid_with_uuid (StoragedLinuxProvider *provider,
   /* if uuid is NULL or bogus, consider it a remove event */
   if (uuid == NULL || g_strcmp0 (uuid, "00000000:00000000:00000000:00000000") == 0)
     action = "remove";
+  else
+    {
+      /* sometimes the bogus UUID looks legit, but it is still bogus. */
+      if (!is_member)
+        {
+          StoragedLinuxMDRaidObject *candidate = g_hash_table_lookup (provider->sysfs_path_to_mdraid, sysfs_path);
+          if (candidate != NULL &&
+              g_strcmp0 (uuid, storaged_linux_mdraid_object_get_uuid (candidate)) != 0)
+            {
+              storaged_debug ("UUID of %s became bogus (changed from %s to %s)",
+                              sysfs_path, storaged_linux_mdraid_object_get_uuid (candidate), uuid);
+              action = "remove";
+            }
+        }
+    }
 
   if (g_strcmp0 (action, "remove") == 0)
     {
