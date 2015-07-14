@@ -786,12 +786,12 @@ out:
 
 static gboolean
 handle_logout(StoragedManagerISCSIInitiator  *object,
-              GDBusMethodInvocation *invocation,
-              const gchar *arg_name,
-              gint arg_tpgt,
-              const gchar *arg_address,
-              gint arg_port,
-              const gchar *arg_iface)
+              GDBusMethodInvocation          *invocation,
+              const gchar                    *arg_name,
+              gint                            arg_tpgt,
+              const gchar                    *arg_address,
+              gint                            arg_port,
+              const gchar                    *arg_iface)
 {
   gint err;
   gchar *errorstr = NULL;
