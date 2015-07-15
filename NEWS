@@ -1,18 +1,25 @@
----------------------------
-storaged 2.1.2 (unreleased)
----------------------------
+--------------
+storaged 2.1.2
+--------------
 
 The storaged project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
 Changes since 2.1.1:
 
-(TODO: git shortlog)
+Marius Vollmer (1):
+      Catch bogus UUID changes of MDRAIDs.
+
+Peter Hatina (5):
+      ISCSI: fix polkit action typo
+      Merge pull request #14 from mvollmer/mdraid-bogus-uuid
+      Merge branch 'master' of https://github.com/storaged-project/storaged
+      ISCSI: code cleanup in initiator module
 
 Thanks to all our contributors.
 
 Peter Hatina
-(TODO: date)
+2015-07-15
 
 --------------
 storaged 2.1.1
