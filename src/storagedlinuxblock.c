@@ -2889,13 +2889,6 @@ storaged_linux_block_handle_format (StoragedBlock           *block,
         }
     }
 
-  /* complete early, if requested */
-  if (no_block)
-    {
-      complete (complete_user_data);
-      invocation = NULL;
-    }
-
   /* First wipe the device... */
   if (!storaged_daemon_launch_spawned_job_sync (daemon,
                                               object,
@@ -2938,6 +2931,13 @@ storaged_linux_block_handle_format (StoragedBlock           *block,
       else
         g_clear_error (&error);
       goto out;
+    }
+
+  /* complete early, if requested */
+  if (no_block)
+    {
+      complete (complete_user_data);
+      invocation = NULL;
     }
 
   /* Erase the device, if requested
