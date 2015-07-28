@@ -3070,15 +3070,18 @@ static void
 usage (gint *argc, gchar **argv[], gboolean use_stdout)
 {
   GOptionContext *o;
+  static GOptionEntry entries[] = { { NULL } };
+  gchar *description;
   gchar *s;
   gchar *program_name;
 
   o = g_option_context_new ("COMMAND");
   g_option_context_set_help_enabled (o, FALSE);
+  g_option_context_add_main_entries (o, entries, NULL);
   /* Ignore parsing result */
   g_option_context_parse (o, argc, argv, NULL);
   program_name = g_path_get_basename ((*argv)[0]);
-  s = g_strdup_printf ("Commands:\n"
+  description = g_strdup_printf ("Commands:\n"
                        "  help            Shows this information\n"
                        "  info            Shows information about an object\n"
                        "  dump            Shows information about all objects\n"
@@ -3096,14 +3099,14 @@ usage (gint *argc, gchar **argv[], gboolean use_stdout)
                        "Use \"%s COMMAND --help\" to get help on each command.\n",
                        program_name);
   g_free (program_name);
-  g_option_context_set_description (o, s);
-  g_free (s);
+  g_option_context_set_description (o, description);
   s = g_option_context_get_help (o, FALSE, NULL);
   if (use_stdout)
     g_print ("%s", s);
   else
     g_printerr ("%s", s);
   g_free (s);
+  g_free (description);
   g_option_context_free (o);
 }
 
