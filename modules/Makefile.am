@@ -14,4 +14,6 @@ if HAVE_LVM2
 SUBDIRS += lvm2
 endif # HAVE_LVM2
 
+SUBDIRS += glusterfs
+
 NULL =

@@ -273,6 +273,16 @@ fi
 AM_CONDITIONAL(HAVE_ISCSI, [test "x$have_iscsi" = "xyes"])
 AM_CONDITIONAL(BUILD_ISCSI_SESSION_OBJECT, [test "x$have_libiscsi_session_info" = "xyes"])
 
+# GlusterFS module
+have_glusterfs=no
+AC_ARG_ENABLE(glusterfs, AS_HELP_STRING([--enable-glusterfs], [enable GlusterFS support]))
+if test "x$enable_glusterfs" = "xyes" \
+     -o "x$enable_modules" = "xyes" \
+     -o "x$enable_all_modules" = "xyes"; then
+  have_glusterfs=yes
+fi
+AM_CONDITIONAL(HAVE_GLUSTERFS, [test "$have_glusterfs" = "yes"])
+
 # Internationalization
 #
 
@@ -300,6 +310,8 @@ modules/iscsi/Makefile
 modules/iscsi/data/Makefile
 modules/lvm2/Makefile
 modules/lvm2/data/Makefile
+modules/glusterfs/Makefile
+modules/glusterfs/data/Makefile
 doc/Makefile
 doc/storaged-docs.xml.in
 doc/storaged-sections.txt.in
@@ -353,4 +365,5 @@ echo "
         Dummy module:               ${have_dummy}
         iSCSI module:               ${have_iscsi}${have_libiscsi_session_info_msg}
         LVM2  module:               ${have_lvm2}
+        GlusterFS module:           ${have_glusterfs}
 "
