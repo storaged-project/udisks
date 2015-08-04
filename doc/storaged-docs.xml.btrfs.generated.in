@@ -1,0 +1,2 @@
+      <xi:include href="../doc/xml/StoragedManagerBTRFS.xml"/>
+      <xi:include href="../doc/xml/StoragedFilesystemBTRFS.xml"/>

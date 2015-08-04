@@ -71,3 +71,5 @@ storaged_object_manager_client_get_type
 # LVM2_TYPES
 
 # ISCSI_TYPES
+
+# BTRFS_TYPES

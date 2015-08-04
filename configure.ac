@@ -273,6 +273,42 @@ fi
 AM_CONDITIONAL(HAVE_ISCSI, [test "x$have_iscsi" = "xyes"])
 AM_CONDITIONAL(BUILD_ISCSI_SESSION_OBJECT, [test "x$have_libiscsi_session_info" = "xyes"])
 
+# BTRFS module
+have_btrfs=no
+AC_ARG_ENABLE(btrfs, AS_HELP_STRING([--enable-btrfs], [enable BTRFS support]))
+if test "x$enable_btrfs" = "xyes" \
+     -o "x$enable_modules" = "xyes" \
+     -o "x$enable_all_modules" = "xyes"; then
+    # libblockdev
+    SAVE_CFLAGS=$CFLAGS
+    SAVE_LDFLAGS=$LDFLAGS
+    CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
+    LDFLAGS="$GLIB_LIBS"
+    # We don't use AC_CHECK_HEADER to avoid these warnings:
+    #   - accepted by the compiler, rejected by the preprocessor!
+    #   - proceeding with the compiler's result
+    AC_MSG_CHECKING(["libblockdev-btrfs presence"])
+    AC_TRY_COMPILE([#include <btrfs.h>], [],
+                   [AC_MSG_RESULT([yes])
+                    AC_DEFINE(HAVE_BTRFS, 1, [Define, if libblockdev-btrfs is available])
+                    have_btrfs=yes],
+                   [AC_MSG_RESULT([no])
+                    have_btrfs=no])
+    CFLAGS=$SAVE_CFLAGS
+    LDFLAGS=$SAVE_LDFLAGS
+
+    BTRFS_CFLAGS="-I/usr/include/blockdev"
+    BTRFS_LIBS="-lbd_btrfs"
+
+    if test "x$have_btrfs" = "xno"; then
+      AC_MSG_ERROR([BTRFS support requested but header or library not found])
+    fi
+
+    AC_SUBST([BTRFS_CFLAGS])
+    AC_SUBST([BTRFS_LIBS])
+fi
+AM_CONDITIONAL(HAVE_BTRFS, [test "x$have_btrfs" = "xyes"])
+
 # Internationalization
 #
 
@@ -294,6 +330,8 @@ src/Makefile
 src/tests/Makefile
 tools/Makefile
 modules/Makefile
+modules/btrfs/Makefile
+modules/btrfs/data/Makefile
 modules/dummy/Makefile
 modules/dummy/data/Makefile
 modules/iscsi/Makefile
@@ -314,10 +352,16 @@ doc/man/umount.storaged.xml
 doc/storaged-docs.xml.iscsi.dbus
 doc/storaged-docs.xml.iscsi.generated
 doc/storaged-sections.txt.iscsi.sections
+doc/storaged.types.iscsi
 doc/storaged-docs.xml.lvm2.man
 doc/storaged-docs.xml.lvm2.dbus
 doc/storaged-docs.xml.lvm2.generated
 doc/storaged-sections.txt.lvm2.sections
+doc/storaged.types.lvm2
+doc/storaged-docs.xml.btrfs.dbus
+doc/storaged-docs.xml.btrfs.generated
+doc/storaged-sections.txt.btrfs.sections
+doc/storaged.types.btrfs
 po/Makefile.in
 ])
 
@@ -350,6 +394,7 @@ echo "
         Building api docs:          ${enable_gtk_doc}
         Building man pages:         ${enable_man}
 
+        BTRFS module:               ${have_btrfs}
         Dummy module:               ${have_dummy}
         iSCSI module:               ${have_iscsi}${have_libiscsi_session_info_msg}
         LVM2  module:               ${have_lvm2}
