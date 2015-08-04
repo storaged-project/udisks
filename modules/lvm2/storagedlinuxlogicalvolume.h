@@ -38,6 +38,8 @@ void                   storaged_linux_logical_volume_update   (StoragedLinuxLogi
                                                                StoragedLinuxVolumeGroupObject *group_object,
                                                                GVariant                       *info,
                                                                gboolean                       *needs_polling_ret);
+void                   storaged_linux_logical_volume_update_etctabs (StoragedLinuxLogicalVolume     *logical_volume,
+                                                                     StoragedLinuxVolumeGroupObject *group_object);
 
 gboolean               storaged_linux_logical_volume_teardown_block (StoragedLogicalVolume *volume,
                                                                      StoragedDaemon        *daemon,
