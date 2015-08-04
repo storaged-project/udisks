@@ -38,7 +38,7 @@
 /**
  * StoragedLinuxISCSISession:
  *
- * The #StoragedLinuxISCSISession structire contains only private data and
+ * The #StoragedLinuxISCSISession structure contains only private data and
  * should only be accessed using provided API.
  */
 struct _StoragedLinuxISCSISession {
