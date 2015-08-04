@@ -302,3 +302,12 @@ storaged_linux_logical_volume_object_update (StoragedLinuxLogicalVolumeObject *o
                                         info,
                                         needs_polling_ret);
 }
+
+void
+storaged_linux_logical_volume_object_update_etctabs (StoragedLinuxLogicalVolumeObject *object)
+{
+  g_return_if_fail (STORAGED_IS_LINUX_LOGICAL_VOLUME_OBJECT (object));
+
+  storaged_linux_logical_volume_update_etctabs (STORAGED_LINUX_LOGICAL_VOLUME (object->iface_logical_volume),
+                                                object->volume_group);
+}
