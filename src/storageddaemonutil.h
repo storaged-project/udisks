@@ -99,6 +99,23 @@ gchar *storaged_daemon_util_get_free_mdraid_device (void);
 
 guint16 storaged_ata_identify_get_word (const guchar *identify_data, guint word_number);
 
+/* Utility macro for policy verification. */
+#define STORAGED_DAEMON_CHECK_AUTHORIZATION(daemon,                   \
+                                            object,                   \
+                                            action_id,                \
+                                            properties,               \
+                                            message,                  \
+                                            invocation)               \
+  if (! storaged_daemon_util_check_authorization_sync ((daemon),      \
+                                                       (object),      \
+                                                       (action_id),   \
+                                                       (properties),  \
+                                                       (message),     \
+                                                       (invocation))) \
+    { \
+      goto out; \
+    }
+
 G_END_DECLS
 
 #endif /* __STORAGED_DAEMON_UTIL_H__ */

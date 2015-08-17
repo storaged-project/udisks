@@ -23,9 +23,12 @@
 #include <errno.h>
 #include <string.h>
 
+#include <glib/gi18n-lib.h>
+
 #include <libiscsi.h>
 
 #include <src/storageddaemon.h>
+#include <src/storageddaemonutil.h>
 #include <src/storagedlogging.h>
 #include <src/storagedmodulemanager.h>
 
@@ -84,6 +87,7 @@ G_DEFINE_TYPE_WITH_CODE (StoragedLinuxManagerISCSIInitiator, storaged_linux_mana
 
 const gchar *initiator_filename = "/etc/iscsi/initiatorname.iscsi";
 const gchar *initiator_name_prefix = "InitiatorName=";
+const gchar *iscsi_action_id = "org.storaged.Storaged.iscsi.manage-iscsi";
 const gchar *iscsi_nodes_fmt = "a(sisis)";
 const gchar *iscsi_node_fmt = "(sisis)";
 
@@ -317,7 +321,15 @@ handle_set_initiator_name (StoragedManagerISCSIInitiator  *object,
 {
   StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
   int initiator_name_fd = -1;
-  GString *content;
+  GString *content = NULL;
+
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
+                                       NULL,
+                                       iscsi_action_id,
+                                       NULL,
+                                       N_("Authentication is required change iSCSI initiator name"),
+                                       invocation);
 
   if (!arg_name || strlen (arg_name) == 0)
     {
@@ -348,7 +360,7 @@ handle_set_initiator_name (StoragedManagerISCSIInitiator  *object,
                                              initiator_filename,
                                              strerror (errno));
 
-      goto out;
+      goto mutex_out;
     }
 
   /* Make a new initiator name */
@@ -365,19 +377,21 @@ handle_set_initiator_name (StoragedManagerISCSIInitiator  *object,
                                              initiator_filename,
                                              strerror (errno));
 
-      goto out;
+      goto mutex_out;
     }
 
   /* Finish with no error */
   storaged_manager_iscsi_initiator_complete_set_initiator_name (object,
                                                                 invocation);
 
-out:
+mutex_out:
   /* Leave the critical section. */
   g_mutex_unlock (&manager->initiator_config_mutex);
 
+out:
   /* Release the resources */
-  g_string_free (content, TRUE);
+  if (content)
+    g_string_free (content, TRUE);
   if (initiator_name_fd != -1)
     close (initiator_name_fd);
 
@@ -571,11 +585,20 @@ handle_discover_send_targets_no_auth (StoragedManagerISCSIInitiator  *object,
                                       const gchar                    *arg_address,
                                       const guint16                   arg_port)
 {
+  StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
   gint err;
   gint nodes_cnt = 0;
   gchar *errorstr = NULL;
   struct libiscsi_auth_info auth_info = { libiscsi_auth_none };
   GVariant *nodes = NULL;
+
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
+                                       NULL,
+                                       iscsi_action_id,
+                                       NULL,
+                                       N_("Authentication is required to discover targets"),
+                                       invocation);
 
   /* Perform the discovery. */
   err = discover_send_targets (object,
@@ -619,11 +642,20 @@ handle_discover_send_targets_chap (StoragedManagerISCSIInitiator  *object,
                                    const gchar                    *arg_reverse_username,
                                    const gchar                    *arg_reverse_password)
 {
+  StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
+  GVariant *nodes = NULL;
   gint err;
   gint nodes_cnt = 0;
   gchar *errorstr = NULL;
   struct libiscsi_auth_info auth_info;
-  GVariant *nodes = NULL;
+
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
+                                       NULL,
+                                       iscsi_action_id,
+                                       NULL,
+                                       N_("Authentication is required to discover targets"),
+                                       invocation);
 
   /* Fill in authentication information */
   auth_info.method = libiscsi_auth_chap;
@@ -707,10 +739,19 @@ static gboolean
 handle_discover_firmware (StoragedManagerISCSIInitiator  *object,
                           GDBusMethodInvocation          *invocation)
 {
+  StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
+  GVariant *nodes = NULL;
   gint err;
   gchar *errorstr = NULL;
   gint nodes_cnt = 0;
-  GVariant *nodes = NULL;
+
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
+                                       NULL,
+                                       iscsi_action_id,
+                                       NULL,
+                                       N_("Authentication is required to discover firmware targets"),
+                                       invocation);
 
   /* Perform the discovery. */
   err = discover_firmware (object,
@@ -750,8 +791,17 @@ handle_login(StoragedManagerISCSIInitiator  *object,
              gint                            arg_port,
              const gchar                    *arg_iface)
 {
+  StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
   gint err;
   gchar *errorstr = NULL;
+
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
+                                       NULL,
+                                       iscsi_action_id,
+                                       NULL,
+                                       N_("Authentication is required to perform iSCSI login"),
+                                       invocation);
 
   /* Login */
   err = perform_iscsi_login_action (object,
@@ -793,8 +843,17 @@ handle_logout(StoragedManagerISCSIInitiator  *object,
               gint                            arg_port,
               const gchar                    *arg_iface)
 {
+  StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
   gint err;
   gchar *errorstr = NULL;
+
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
+                                       NULL,
+                                       iscsi_action_id,
+                                       NULL,
+                                       N_("Authentication is required to perform iSCSI logout"),
+                                       invocation);
 
   /* Logout */
   err = perform_iscsi_login_action (object,
