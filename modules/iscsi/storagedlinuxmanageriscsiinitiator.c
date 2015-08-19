@@ -82,8 +82,6 @@ G_DEFINE_TYPE_WITH_CODE (StoragedLinuxManagerISCSIInitiator, storaged_linux_mana
 
 const gchar *initiator_filename = "/etc/iscsi/initiatorname.iscsi";
 const gchar *initiator_name_prefix = "InitiatorName=";
-const gchar *iscsi_nodes_fmt = "a(sisis)";
-const gchar *iscsi_node_fmt = "(sisis)";
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -423,33 +421,6 @@ out:
   return TRUE;
 }
 
-static GVariant *
-libiscsi_nodes_to_gvariant (const struct libiscsi_node *nodes,
-                            const gint                  nodes_cnt)
-{
-  gint i;
-  GVariantBuilder builder;
-
-  g_variant_builder_init (&builder, G_VARIANT_TYPE (iscsi_nodes_fmt));
-  for (i = 0; i < nodes_cnt; ++i)
-    {
-      g_variant_builder_add (&builder,
-                             iscsi_node_fmt,
-                             nodes[i].name,
-                             nodes[i].tpgt,
-                             nodes[i].address,
-                             nodes[i].port,
-                             nodes[i].iface);
-    }
-  return g_variant_builder_end (&builder);
-}
-
-static void
-libiscsi_nodes_free (const struct libiscsi_node *nodes)
-{
-  g_free ((gpointer) nodes);
-}
-
 /**
  * discover_send_targets:
  * @object: A #StoragedManagerISCSIInitiator
@@ -491,7 +462,7 @@ discover_send_targets (StoragedManagerISCSIInitiator  *object,
                                         &found_nodes);
 
   if (rval == 0)
-      *nodes = libiscsi_nodes_to_gvariant (found_nodes, *nodes_cnt);
+      *nodes = iscsi_libiscsi_nodes_to_gvariant (found_nodes, *nodes_cnt);
   else if (errorstr)
       *errorstr = g_strdup (libiscsi_get_error_string (ctx));
 
@@ -499,7 +470,7 @@ discover_send_targets (StoragedManagerISCSIInitiator  *object,
   storaged_iscsi_state_unlock_libiscsi_context (state);
 
   /* Release the resources */
-  libiscsi_nodes_free (found_nodes);
+  iscsi_libiscsi_nodes_free (found_nodes);
 
   return rval;
 }
@@ -537,7 +508,7 @@ discover_firmware (StoragedManagerISCSIInitiator  *object,
                                      &found_nodes);
 
   if (rval == 0)
-    *nodes = libiscsi_nodes_to_gvariant (found_nodes, *nodes_cnt);
+    *nodes = iscsi_libiscsi_nodes_to_gvariant (found_nodes, *nodes_cnt);
   else if (errorstr)
     *errorstr = g_strdup (libiscsi_get_error_string (ctx));
 
@@ -545,7 +516,7 @@ discover_firmware (StoragedManagerISCSIInitiator  *object,
   storaged_iscsi_state_unlock_libiscsi_context (state);
 
   /* Release the resources */
-  libiscsi_nodes_free (found_nodes);
+  iscsi_libiscsi_nodes_free (found_nodes);
 
   return rval;
 }

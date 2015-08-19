@@ -31,16 +31,20 @@ typedef enum
 } libiscsi_login_action;
 
 struct libiscsi_context;
+struct libiscsi_node;
 
 extern const gchar      *iscsi_policy_action_id;
 
-gint                     iscsi_perform_login_action (StoragedDaemon        *daemon,
-                                                     libiscsi_login_action  action,
-                                                     const gchar           *name,
-                                                     const gint             tpgt,
-                                                     const gchar           *address,
-                                                     const gint             port,
-                                                     const gchar           *iface,
-                                                     gchar                **errorstr);
+gint                     iscsi_perform_login_action       (StoragedDaemon              *daemon,
+                                                           libiscsi_login_action        action,
+                                                           const gchar                 *name,
+                                                           const gint                   tpgt,
+                                                           const gchar                 *address,
+                                                           const gint                   port,
+                                                           const gchar                 *iface,
+                                                           gchar                      **errorstr);
+GVariant                *iscsi_libiscsi_nodes_to_gvariant (const struct libiscsi_node  *nodes,
+                                                           const gint                   nodes_cnt);
+void                     iscsi_libiscsi_nodes_free        (const struct libiscsi_node  *nodes);
 
 #endif /* __STORAGED_ISCSI_UTIL_H__ */

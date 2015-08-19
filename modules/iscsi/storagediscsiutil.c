@@ -27,6 +27,8 @@
 #include "storagediscsistate.h"
 #include "storagediscsiutil.h"
 
+const gchar *iscsi_nodes_fmt = "a(sisis)";
+const gchar *iscsi_node_fmt = "(sisis)";
 const gchar *iscsi_policy_action_id = "org.storaged.Storaged.iscsi.manage-iscsi";
 
 static struct libiscsi_context *
@@ -91,3 +93,32 @@ iscsi_perform_login_action (StoragedDaemon        *daemon,
   return rval;
 }
 
+/**
+ *
+ */
+GVariant *
+iscsi_libiscsi_nodes_to_gvariant (const struct libiscsi_node *nodes,
+                                  const gint                  nodes_cnt)
+{
+  gint i;
+  GVariantBuilder builder;
+
+  g_variant_builder_init (&builder, G_VARIANT_TYPE (iscsi_nodes_fmt));
+  for (i = 0; i < nodes_cnt; ++i)
+    {
+      g_variant_builder_add (&builder,
+                             iscsi_node_fmt,
+                             nodes[i].name,
+                             nodes[i].tpgt,
+                             nodes[i].address,
+                             nodes[i].port,
+                             nodes[i].iface);
+    }
+  return g_variant_builder_end (&builder);
+}
+
+void
+iscsi_libiscsi_nodes_free (const struct libiscsi_node *nodes)
+{
+  g_free ((gpointer) nodes);
+}
