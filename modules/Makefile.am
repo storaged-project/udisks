@@ -2,6 +2,10 @@
 
 SUBDIRS =
 
+if HAVE_BTRFS
+SUBDIRS += btrfs
+endif # HAVE_BTRFS
+
 if HAVE_DUMMY
 SUBDIRS += dummy
 endif # HAVE_DUMMY

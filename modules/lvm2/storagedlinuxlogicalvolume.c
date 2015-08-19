@@ -120,7 +120,6 @@ storaged_linux_logical_volume_update (StoragedLinuxLogicalVolume     *logical_vo
                                       GVariant                       *info,
                                       gboolean                       *needs_polling_ret)
 {
-  StoragedDaemon *daemon;
   StoragedLogicalVolume *iface;
   const char *type;
   gboolean active;
@@ -207,8 +206,20 @@ storaged_linux_logical_volume_update (StoragedLinuxLogicalVolume     *logical_vo
       storaged_daemon_util_lvm2_trigger_udev (dev_file);
       logical_volume->needs_udev_hack = FALSE;
     }
+}
+
+void
+storaged_linux_logical_volume_update_etctabs (StoragedLinuxLogicalVolume     *logical_volume,
+                                              StoragedLinuxVolumeGroupObject *group_object)
+{
+  StoragedDaemon *daemon;
+  StoragedLogicalVolume *iface;
+  const gchar *uuid;
 
   daemon = storaged_linux_volume_group_object_get_daemon (group_object);
+  iface = STORAGED_LOGICAL_VOLUME (logical_volume);
+  uuid = storaged_logical_volume_get_uuid (iface);
+
   storaged_logical_volume_set_child_configuration (iface,
                                                    storaged_linux_find_child_configuration (daemon,
                                                                                             uuid));

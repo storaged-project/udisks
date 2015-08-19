@@ -97,6 +97,14 @@ else
 	$(AM_V_at) $(SED) -i "/<\!-- ISCSI_GENERATED_SECTIONS -->/d" $(builddir)/$(STORAGED_SECTIONS)
 	$(AM_V_at) $(SED) -i "/\# ISCSI_TYPES/d" $(builddir)/$(STORAGED_TYPES)
 endif # HAVE_ISCSI
+if HAVE_BTRFS
+	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).btrfs.sed $(builddir)/$(DOC_MAIN_SGML_FILE)
+	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(STORAGED_SECTIONS).btrfs.sed $(builddir)/$(STORAGED_SECTIONS)
+	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(STORAGED_TYPES).btrfs.sed $(builddir)/$(STORAGED_TYPES)
+else
+	$(AM_V_at) $(SED) -i "/<\!-- BTRFS_GENERATED_SECTIONS -->/d" $(builddir)/$(STORAGED_SECTIONS)
+	$(AM_V_at) $(SED) -i "/\# BTRFS_TYPES/d" $(builddir)/$(STORAGED_TYPES)
+endif # HAVE_BTRFS
 
 	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).iscsi.sed $(builddir)/$(DOC_MAIN_SGML_FILE)
 	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(STORAGED_SECTIONS).iscsi.sed $(builddir)/$(STORAGED_SECTIONS)
@@ -127,6 +135,15 @@ CFILE_GLOB += $(top_srcdir)/modules/glusterfs/*.c
 AM_CPPFLAGS += -I$(top_srcdir)/modules/glusterfs
 GTKDOC_LIBS += $(top_builddir)/modules/glusterfs/libstoraged_glusterfs.la
 
+# GTKDOC for BTRFS
+if HAVE_BTRFS
+DOC_SOURCE_DIR += $(top_srcdir)/modules/btrfs
+HFILE_GLOB += $(top_srcdir)/modules/btrfs/*.h
+CFILE_GLOB += $(top_srcdir)/modules/btrfs/*.c
+AM_CPPFLAGS += -I$(top_srcdir)/modules/btrfs
+GTKDOC_LIBS += $(top_builddir)/modules/btrfs/libstoraged_btrfs.la
+endif # HAVE_BTRFS
+
 # ------------------------------------------------------------------------------
 
 include $(top_srcdir)/gtk-doc.make
@@ -134,6 +151,9 @@ include $(top_srcdir)/gtk-doc.make
 EXTRA_DIST +=                                                                  \
 	$(DOC_MAIN_SGML_FILE).in.in                                            \
 	$(DOC_MAIN_SGML_FILE).in                                               \
+	$(DOC_MAIN_SGML_FILE).btrfs.dbus.in                                    \
+	$(DOC_MAIN_SGML_FILE).btrfs.generated.in                               \
+	$(DOC_MAIN_SGML_FILE).btrfs.sed                                        \
 	$(DOC_MAIN_SGML_FILE).iscsi.dbus.in                                    \
 	$(DOC_MAIN_SGML_FILE).iscsi.generated.in                               \
 	$(DOC_MAIN_SGML_FILE).iscsi.sed                                        \
@@ -142,12 +162,16 @@ EXTRA_DIST +=                                                                  \
 	$(DOC_MAIN_SGML_FILE).lvm2.sed                                         \
 	$(STORAGED_TYPES).in.in                                                \
 	$(STORAGED_TYPES).in                                                   \
-	$(STORAGED_TYPES).iscsi                                                \
+	$(STORAGED_TYPES).btrfs.in                                             \
+	$(STORAGED_TYPES).btrfs.sed                                            \
+	$(STORAGED_TYPES).iscsi.in                                             \
 	$(STORAGED_TYPES).iscsi.sed                                            \
-	$(STORAGED_TYPES).lvm2                                                 \
+	$(STORAGED_TYPES).lvm2.in                                              \
 	$(STORAGED_TYPES).lvm2.sed                                             \
 	$(STORAGED_SECTIONS).in.in                                             \
 	$(STORAGED_SECTIONS).in                                                \
+	$(STORAGED_SECTIONS).btrfs.sections.in                                 \
+	$(STORAGED_SECTIONS).btrfs.sed                                         \
 	$(STORAGED_SECTIONS).iscsi.sections.in                                 \
 	$(STORAGED_SECTIONS).iscsi.sed                                         \
 	$(STORAGED_SECTIONS).lvm2.sections.in                                  \

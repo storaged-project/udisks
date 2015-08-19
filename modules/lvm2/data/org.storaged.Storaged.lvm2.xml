@@ -172,7 +172,7 @@
     </method>
 
     <!-- Delete:
-         @wipe: Whether to wipe the physical volumes.
+         @wipe: Whether to wipe the volume group.
          @options: Additional options.
 
          Delete this volume group.  All its logical volumes will be

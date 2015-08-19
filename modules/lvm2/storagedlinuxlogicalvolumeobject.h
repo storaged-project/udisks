@@ -44,6 +44,7 @@ const gchar                      *storaged_linux_logical_volume_object_get_name 
 void                              storaged_linux_logical_volume_object_update           (StoragedLinuxLogicalVolumeObject *object,
                                                                                          GVariant                         *info,
                                                                                          gboolean                         *needs_polling_ret);
+void                              storaged_linux_logical_volume_object_update_etctabs   (StoragedLinuxLogicalVolumeObject *object);
 
 
 G_END_DECLS

@@ -88,6 +88,10 @@ enum
 
 G_DEFINE_TYPE (StoragedLinuxVolumeGroupObject, storaged_linux_volume_group_object, STORAGED_TYPE_OBJECT_SKELETON);
 
+static void etctabs_changed (StoragedFstabMonitor *monitor,
+                             StoragedFstabEntry   *entry,
+                             gpointer              user_data);
+
 static void
 storaged_linux_volume_group_object_finalize (GObject *_object)
 {
@@ -100,6 +104,13 @@ storaged_linux_volume_group_object_finalize (GObject *_object)
 
   g_hash_table_unref (object->logical_volumes);
   g_free (object->name);
+
+  g_signal_handlers_disconnect_by_func (storaged_daemon_get_fstab_monitor (object->daemon),
+                                        G_CALLBACK (etctabs_changed),
+                                        object);
+  g_signal_handlers_disconnect_by_func (storaged_daemon_get_crypttab_monitor (object->daemon),
+                                        G_CALLBACK (etctabs_changed),
+                                        object);
 
   if (G_OBJECT_CLASS (storaged_linux_volume_group_object_parent_class)->finalize != NULL)
     G_OBJECT_CLASS (storaged_linux_volume_group_object_parent_class)->finalize (_object);
@@ -186,6 +197,25 @@ storaged_linux_volume_group_object_constructed (GObject *_object)
   object->iface_volume_group = storaged_linux_volume_group_new ();
   g_dbus_object_skeleton_add_interface (G_DBUS_OBJECT_SKELETON (object),
                                         G_DBUS_INTERFACE_SKELETON (object->iface_volume_group));
+
+  /* Watch fstab and crypttab for changes.
+   */
+  g_signal_connect (storaged_daemon_get_fstab_monitor (object->daemon),
+                    "entry-added",
+                    G_CALLBACK (etctabs_changed),
+                    object);
+  g_signal_connect (storaged_daemon_get_fstab_monitor (object->daemon),
+                    "entry-removed",
+                    G_CALLBACK (etctabs_changed),
+                    object);
+  g_signal_connect (storaged_daemon_get_crypttab_monitor (object->daemon),
+                    "entry-added",
+                    G_CALLBACK (etctabs_changed),
+                    object);
+  g_signal_connect (storaged_daemon_get_crypttab_monitor (object->daemon),
+                    "entry-removed",
+                    G_CALLBACK (etctabs_changed),
+                    object);
 }
 
 static void
@@ -265,6 +295,30 @@ storaged_linux_volume_group_object_get_daemon (StoragedLinuxVolumeGroupObject *o
 {
   g_return_val_if_fail (STORAGED_IS_LINUX_VOLUME_GROUP_OBJECT (object), NULL);
   return object->daemon;
+}
+
+static void
+update_etctabs (StoragedLinuxVolumeGroupObject *object)
+{
+  GHashTableIter iter;
+  gpointer key, value;
+
+  g_hash_table_iter_init (&iter, object->logical_volumes);
+  while (g_hash_table_iter_next (&iter, &key, &value))
+    {
+      const gchar *name = key;
+      StoragedLinuxLogicalVolumeObject *volume = value;
+
+      storaged_linux_logical_volume_object_update_etctabs (volume);
+    }
+}
+
+static void
+etctabs_changed (StoragedFstabMonitor *monitor,
+                 StoragedFstabEntry   *entry,
+                 gpointer              user_data)
+{
+  update_etctabs (STORAGED_LINUX_VOLUME_GROUP_OBJECT (user_data));
 }
 
 static gboolean
@@ -489,6 +543,7 @@ update_with_variant (GPid pid,
             {
               volume = storaged_linux_logical_volume_object_new (daemon, object, name);
               storaged_linux_logical_volume_object_update (volume, lv_info, &needs_polling);
+              storaged_linux_logical_volume_object_update_etctabs (volume);
               g_dbus_object_manager_server_export_uniquely (manager, G_DBUS_OBJECT_SKELETON (volume));
               g_hash_table_insert (object->logical_volumes, g_strdup (name), g_object_ref (volume));
             }
