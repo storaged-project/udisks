@@ -26,10 +26,12 @@
 
 G_BEGIN_DECLS
 
-StoragedISCSIState                     *storaged_iscsi_state_new  (StoragedDaemon *daemon);
-void                                    storaged_iscsi_state_free (StoragedISCSIState *state);
+StoragedISCSIState       *storaged_iscsi_state_new  (StoragedDaemon *daemon);
+void                      storaged_iscsi_state_free (StoragedISCSIState *state);
 
-struct libiscsi_context                *storaged_iscsi_state_get_libiscsi_context (StoragedISCSIState *state);
+struct libiscsi_context *storaged_iscsi_state_get_libiscsi_context    (StoragedISCSIState *state);
+void                     storaged_iscsi_state_lock_libiscsi_context   (StoragedISCSIState *state);
+void                     storaged_iscsi_state_unlock_libiscsi_context (StoragedISCSIState *state);
 
 G_END_DECLS
 

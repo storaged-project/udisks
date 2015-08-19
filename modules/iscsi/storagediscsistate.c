@@ -27,6 +27,7 @@ struct _StoragedISCSIState
 {
   StoragedDaemon *daemon;
 
+  GMutex libiscsi_mutex;
   struct libiscsi_context *iscsi_ctx;
 };
 
@@ -52,6 +53,7 @@ storaged_iscsi_state_new (StoragedDaemon *daemon)
       /* Initialize members. */
       state->daemon = daemon;
 
+      g_mutex_init (&state->libiscsi_mutex);
       state->iscsi_ctx = libiscsi_init ();
     }
 
@@ -68,6 +70,18 @@ storaged_iscsi_state_free (StoragedISCSIState *state)
     libiscsi_cleanup (state->iscsi_ctx);
 
   g_free (state);
+}
+
+void
+storaged_iscsi_state_lock_libiscsi_context (StoragedISCSIState *state)
+{
+  g_mutex_lock (&state->libiscsi_mutex);
+}
+
+void
+storaged_iscsi_state_unlock_libiscsi_context (StoragedISCSIState *state)
+{
+  g_mutex_unlock (&state->libiscsi_mutex);
 }
 
 struct libiscsi_context *

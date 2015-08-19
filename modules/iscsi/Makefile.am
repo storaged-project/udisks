@@ -68,6 +68,8 @@ libstoraged_iscsi_la_SOURCES =                                                 \
 	storagediscsistate.c                                                   \
 	storagediscsitypes.h                                                   \
 	storagediscsimoduleiface.c                                             \
+	storagediscsiutil.h                                                    \
+	storagediscsiutil.c                                                    \
 	$(NULL)
 
 if BUILD_ISCSI_SESSION_OBJECT

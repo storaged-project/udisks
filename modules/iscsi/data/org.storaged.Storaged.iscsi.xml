@@ -162,6 +162,11 @@
   <interface name="org.storaged.Storaged.ISCSI.Session">
     <annotation name="org.gtk.GDBus.C.Name" value="ISCSI_Session"/>
 
+    <method name="Logout"/>
+    <method name="LogoutInterface">
+      <arg name="iface" direction="in" type="s"/>
+    </method>
+
     <property name="target_name" type="s" access="read"/>
     <property name="tpgt" type="i" access="read"/>
     <property name="address" type="s" access="read"/>

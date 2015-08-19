@@ -41,6 +41,8 @@ StoragedDaemon                  *storaged_linux_iscsi_session_object_get_daemon
                                                             (StoragedLinuxISCSISessionObject *session_object);
 const gchar                     *storaged_linux_iscsi_session_object_get_session_id
                                                             (StoragedLinuxISCSISessionObject *session_object);
+StoragedISCSIState              *storaged_linux_iscsi_session_object_get_state
+                                                            (StoragedLinuxISCSISessionObject *session_object);
 gchar                           *storaged_linux_iscsi_session_object_get_object_path
                                                             (StoragedLinuxISCSISessionObject *session_object);
 

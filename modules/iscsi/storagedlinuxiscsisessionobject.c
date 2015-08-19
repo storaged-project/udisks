@@ -49,8 +49,9 @@
 struct _StoragedLinuxISCSISessionObject {
   StoragedObjectSkeleton parent_instance;
 
-  StoragedDaemon *daemon;
-  gchar          *session_id;
+  StoragedDaemon     *daemon;
+  StoragedISCSIState *state;
+  gchar              *session_id;
 
   /* Interface(s) */
   StoragedLinuxISCSISession *iface_iscsi_session;
@@ -129,9 +130,16 @@ static void
 storaged_linux_iscsi_session_object_constructed (GObject *object)
 {
   StoragedLinuxISCSISessionObject *session_object = STORAGED_LINUX_ISCSI_SESSION_OBJECT (object);
+  StoragedModuleManager *module_manager;
+  gchar *object_path;
+
+  /* Store state pointer for later usage; libiscsi_context. */
+  module_manager = storaged_daemon_get_module_manager (session_object->daemon);
+  session_object->state = storaged_module_manager_get_module_state_pointer (module_manager,
+                                                                            ISCSI_MODULE_NAME);
 
   /* Set the object path. */
-  gchar *object_path = storaged_linux_iscsi_session_object_get_object_path (session_object);
+  object_path = storaged_linux_iscsi_session_object_get_object_path (session_object);
   g_dbus_object_skeleton_set_object_path (G_DBUS_OBJECT_SKELETON (session_object), object_path);
   g_free (object_path);
 
@@ -266,6 +274,20 @@ storaged_linux_iscsi_session_object_get_session_id (StoragedLinuxISCSISessionObj
 }
 
 /**
+ * storaged_linux_iscsi_session_object_get_state:
+ * @session_object: A #StoragedLinuxISCSISessionObject.
+ *
+ * Returns: A #StoragedISCSIState. Do not free, the structure is owned by
+ * #StoragedModuleManager.
+ */
+StoragedISCSIState *
+storaged_linux_iscsi_session_object_get_state (StoragedLinuxISCSISessionObject *session_object)
+{
+  g_return_val_if_fail (STORAGED_IS_LINUX_ISCSI_SESSION_OBJECT (session_object), NULL);
+  return session_object->state;
+}
+
+/**
  * storaged_linux_iscsi_session_object_make_object_path:
  * @session_id: A string with iSCSI session id.
  *
@@ -331,15 +353,18 @@ storaged_linux_iscsi_session_object_get_object_path (StoragedLinuxISCSISessionOb
 static void
 storaged_linux_iscsi_session_object_update_iface (StoragedLinuxISCSISessionObject *session_object)
 {
-  StoragedModuleManager *module_manager;
   StoragedISCSISession *iface;
+  StoragedISCSIState *state;
   struct libiscsi_context *ctx;
   struct libiscsi_session_info session_info;
 
   g_return_if_fail (STORAGED_IS_LINUX_ISCSI_SESSION_OBJECT (session_object));
 
-  module_manager = storaged_daemon_get_module_manager (session_object->daemon);
-  ctx = storaged_module_manager_get_module_state_pointer (module_manager, ISCSI_MODULE_NAME);
+  state = storaged_linux_iscsi_session_object_get_state (session_object);
+  ctx = storaged_iscsi_state_get_libiscsi_context (state);
+
+  /* Enter a critical section. */
+  storaged_iscsi_state_lock_libiscsi_context (state);
 
   /* Get session info */
   if (libiscsi_get_session_info_by_id (ctx, &session_info, session_object->session_id) != 0)
@@ -347,6 +372,9 @@ storaged_linux_iscsi_session_object_update_iface (StoragedLinuxISCSISessionObjec
       storaged_error ("Can not retrieve session information for %s", session_object->session_id);
       return;
     }
+
+  /* Leave the critical section. */
+  storaged_iscsi_state_unlock_libiscsi_context (state);
 
   /* Set properties */
   iface = STORAGED_ISCSI_SESSION (session_object->iface_iscsi_session);

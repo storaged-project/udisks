@@ -34,13 +34,8 @@
 
 #include "storaged-iscsi-generated.h"
 #include "storagediscsistate.h"
+#include "storagediscsiutil.h"
 #include "storagedlinuxmanageriscsiinitiator.h"
-
-typedef enum
-{
-  ACTION_LOGIN,
-  ACTION_LOGOUT
-} libiscsi_login_action;
 
 /**
  * SECTION:storagedlinuxmanageriscsiinitiator
@@ -62,10 +57,10 @@ struct _StoragedLinuxManagerISCSIInitiator{
   StoragedManagerISCSIInitiatorSkeleton parent_instance;
 
   StoragedDaemon *daemon;
+  StoragedISCSIState *state;
   GMutex initiator_config_mutex;  /* We use separate mutex for configuration
                                      file because libiscsi doesn't provide us
                                      any API for this. */
-  GMutex libiscsi_mutex;
 };
 
 struct _StoragedLinuxManagerISCSIInitiatorClass {
@@ -87,7 +82,6 @@ G_DEFINE_TYPE_WITH_CODE (StoragedLinuxManagerISCSIInitiator, storaged_linux_mana
 
 const gchar *initiator_filename = "/etc/iscsi/initiatorname.iscsi";
 const gchar *initiator_name_prefix = "InitiatorName=";
-const gchar *iscsi_action_id = "org.storaged.Storaged.iscsi.manage-iscsi";
 const gchar *iscsi_nodes_fmt = "a(sisis)";
 const gchar *iscsi_node_fmt = "(sisis)";
 
@@ -132,6 +126,19 @@ storaged_linux_manager_iscsi_initiator_set_property (GObject *object, guint prop
 }
 
 static void
+storaged_linux_manager_iscsi_initiator_constructed (GObject *object)
+{
+  StoragedLinuxManagerISCSIInitiator *manager;
+  StoragedModuleManager *module_manager;
+
+  /* Store state pointer for later usage; libiscsi_context. */
+  manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
+  module_manager = storaged_daemon_get_module_manager (manager->daemon);
+  manager->state = storaged_module_manager_get_module_state_pointer (module_manager,
+                                                                     ISCSI_MODULE_NAME);
+}
+
+static void
 storaged_linux_manager_iscsi_initiator_dispose (GObject *object)
 {
   if (G_OBJECT_CLASS (storaged_linux_manager_iscsi_initiator_parent_class))
@@ -152,6 +159,7 @@ storaged_linux_manager_iscsi_initiator_class_init (StoragedLinuxManagerISCSIInit
 
   gobject_class->get_property = storaged_linux_manager_iscsi_initiator_get_property;
   gobject_class->set_property = storaged_linux_manager_iscsi_initiator_set_property;
+  gobject_class->constructed = storaged_linux_manager_iscsi_initiator_constructed;
   gobject_class->dispose = storaged_linux_manager_iscsi_initiator_dispose;
   gobject_class->finalize = storaged_linux_manager_iscsi_initiator_finalize;
 
@@ -210,6 +218,22 @@ storaged_linux_manager_iscsi_initiator_get_daemon (StoragedLinuxManagerISCSIInit
 {
   g_return_val_if_fail (STORAGED_IS_LINUX_MANAGER_ISCSI_INITIATOR (manager), NULL);
   return manager->daemon;
+}
+
+/**
+ * storaged_linux_manager_iscsi_initiator_get_state:
+ * @manager: A #StoragedLinuxManagerISCSIInitiator.
+ *
+ * Gets the state pointer for iSCSI module.
+ *
+ * Returns: A #StoragedISCSIState. Do not free, the structure is owned by
+ * #StoragedModuleManager.
+ */
+static StoragedISCSIState *
+storaged_linux_manager_iscsi_initiator_get_state (StoragedLinuxManagerISCSIInitiator *manager)
+{
+  g_return_val_if_fail (STORAGED_IS_LINUX_MANAGER_ISCSI_INITIATOR (manager), NULL);
+  return manager->state;
 }
 
 static struct libiscsi_context *
@@ -302,7 +326,7 @@ handle_get_initiator_name (StoragedManagerISCSIInitiator  *object,
                                                                 initiator_name);
 
 out:
-  /* Leave the critical section */
+  /* Leave the critical section. */
   g_mutex_unlock (&manager->initiator_config_mutex);
 
   /* Release the resources */
@@ -326,7 +350,7 @@ handle_set_initiator_name (StoragedManagerISCSIInitiator  *object,
   /* Policy check. */
   STORAGED_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
                                        NULL,
-                                       iscsi_action_id,
+                                       iscsi_policy_action_id,
                                        NULL,
                                        N_("Authentication is required change iSCSI initiator name"),
                                        invocation);
@@ -448,16 +472,17 @@ discover_send_targets (StoragedManagerISCSIInitiator  *object,
                        gchar                         **errorstr)
 {
   StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
+  StoragedISCSIState *state = storaged_linux_manager_iscsi_initiator_get_state (manager);
 
   gint rval;
   struct libiscsi_context *ctx;
   struct libiscsi_node *found_nodes;
 
-  /* Enter a critical section */
-  g_mutex_lock (&manager->libiscsi_mutex);
+  /* Enter a critical section. */
+  storaged_iscsi_state_lock_libiscsi_context (state);
 
   /* Discovery */
-  ctx = storaged_linux_manager_iscsi_initiator_get_iscsi_context (manager);
+  ctx = storaged_iscsi_state_get_libiscsi_context (state);
   rval = libiscsi_discover_sendtargets (ctx,
                                         address,
                                         port,
@@ -471,7 +496,7 @@ discover_send_targets (StoragedManagerISCSIInitiator  *object,
       *errorstr = g_strdup (libiscsi_get_error_string (ctx));
 
   /* Leave the critical section. */
-  g_mutex_unlock (&manager->libiscsi_mutex);
+  storaged_iscsi_state_unlock_libiscsi_context (state);
 
   /* Release the resources */
   libiscsi_nodes_free (found_nodes);
@@ -496,13 +521,14 @@ discover_firmware (StoragedManagerISCSIInitiator  *object,
                    gchar                         **errorstr)
 {
   StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
+  StoragedISCSIState *state = storaged_linux_manager_iscsi_initiator_get_state (manager);
 
   gint rval;
   struct libiscsi_context *ctx;
   struct libiscsi_node *found_nodes;
 
   /* Enter a critical section. */
-  g_mutex_lock (&manager->libiscsi_mutex);
+  storaged_iscsi_state_lock_libiscsi_context (state);
 
   /* Discovery */
   ctx = storaged_linux_manager_iscsi_initiator_get_iscsi_context (manager);
@@ -516,65 +542,10 @@ discover_firmware (StoragedManagerISCSIInitiator  *object,
     *errorstr = g_strdup (libiscsi_get_error_string (ctx));
 
   /* Leave the critical section. */
-  g_mutex_unlock (&manager->libiscsi_mutex);
+  storaged_iscsi_state_unlock_libiscsi_context (state);
 
   /* Release the resources */
   libiscsi_nodes_free (found_nodes);
-
-  return rval;
-}
-
-/**
- * perform_iscsi_login_action
- * @object: A #StoragedManagerISCSIInitiator
- * @action: A #libiscsi_login_action
- * @name: An iSCSI iqn for the node
- * @tpgt: A portal group number
- * @address: A portal hostname or IP-address
- * @port: A portal port number
- * @iface: An interface to connect through
- * @errorstr: An error string pointer; may be NULL. Free with g_free().
- *
- * Logs in or out to a iSCSI node.
- *
- * Returns: 0 if login/logout was successful; standard error code otherwise.
- */
-static gint
-perform_iscsi_login_action (StoragedManagerISCSIInitiator  *object,
-                            libiscsi_login_action           action,
-                            const gchar                    *name,
-                            const gint                      tpgt,
-                            const gchar                    *address,
-                            const gint                      port,
-                            const gchar                    *iface,
-                            gchar                         **errorstr)
-{
-  StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
-  struct libiscsi_context *ctx;
-  struct libiscsi_node node;
-  gint rval;
-
-  /* Enter a critical section. */
-  g_mutex_lock (&manager->libiscsi_mutex);
-
-  /* Fill libiscsi parameters. */
-  ctx = storaged_linux_manager_iscsi_initiator_get_iscsi_context (manager);
-  strncpy (node.name, name, LIBISCSI_VALUE_MAXLEN);
-  strncpy (node.address, address, NI_MAXHOST);
-  strncpy (node.iface, iface, LIBISCSI_VALUE_MAXLEN);
-  node.tpgt = tpgt;
-  node.port = port;
-
-  /* Login or Logout */
-  rval = action == ACTION_LOGIN ?
-        libiscsi_node_login  (ctx, &node) :
-        libiscsi_node_logout (ctx, &node);
-
-  if (errorstr && rval != 0)
-    *errorstr = g_strdup (libiscsi_get_error_string (ctx));
-
-  /* Leave the critical section. */
-  g_mutex_unlock (&manager->libiscsi_mutex);
 
   return rval;
 }
@@ -586,16 +557,16 @@ handle_discover_send_targets_no_auth (StoragedManagerISCSIInitiator  *object,
                                       const guint16                   arg_port)
 {
   StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
-  gint err;
-  gint nodes_cnt = 0;
-  gchar *errorstr = NULL;
-  struct libiscsi_auth_info auth_info = { libiscsi_auth_none };
   GVariant *nodes = NULL;
+  struct libiscsi_auth_info auth_info = { libiscsi_auth_none };
+  gchar *errorstr = NULL;
+  gint err = 0;
+  gint nodes_cnt = 0;
 
   /* Policy check. */
   STORAGED_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
                                        NULL,
-                                       iscsi_action_id,
+                                       iscsi_policy_action_id,
                                        NULL,
                                        N_("Authentication is required to discover targets"),
                                        invocation);
@@ -617,7 +588,6 @@ handle_discover_send_targets_no_auth (StoragedManagerISCSIInitiator  *object,
                                              STORAGED_ERROR_FAILED,
                                              "Discovery failed: %s",
                                              errorstr);
-      g_free ((gpointer) errorstr);
       goto out;
     }
 
@@ -628,6 +598,8 @@ handle_discover_send_targets_no_auth (StoragedManagerISCSIInitiator  *object,
                                                                              nodes_cnt);
 
 out:
+  g_free ((gpointer) errorstr);
+
   /* Indicate that we handled the method invocation. */
   return TRUE;
 }
@@ -644,15 +616,15 @@ handle_discover_send_targets_chap (StoragedManagerISCSIInitiator  *object,
 {
   StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
   GVariant *nodes = NULL;
-  gint err;
+  struct libiscsi_auth_info auth_info;
+  gint err = 0;
   gint nodes_cnt = 0;
   gchar *errorstr = NULL;
-  struct libiscsi_auth_info auth_info;
 
   /* Policy check. */
   STORAGED_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
                                        NULL,
-                                       iscsi_action_id,
+                                       iscsi_policy_action_id,
                                        NULL,
                                        N_("Authentication is required to discover targets"),
                                        invocation);
@@ -721,7 +693,6 @@ handle_discover_send_targets_chap (StoragedManagerISCSIInitiator  *object,
                                              STORAGED_ERROR_FAILED,
                                              "Discovery failed: %s",
                                              errorstr);
-      g_free ((gpointer) errorstr);
       goto out;
     }
 
@@ -730,7 +701,10 @@ handle_discover_send_targets_chap (StoragedManagerISCSIInitiator  *object,
                                                                            invocation,
                                                                            nodes,
                                                                            nodes_cnt);
+
 out:
+  g_free ((gpointer) errorstr);
+
   /* Indicate that we handled the method invocation. */
   return TRUE;
 }
@@ -741,14 +715,14 @@ handle_discover_firmware (StoragedManagerISCSIInitiator  *object,
 {
   StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
   GVariant *nodes = NULL;
-  gint err;
-  gchar *errorstr = NULL;
+  gint err = 0;
   gint nodes_cnt = 0;
+  gchar *errorstr = NULL;
 
   /* Policy check. */
   STORAGED_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
                                        NULL,
-                                       iscsi_action_id,
+                                       iscsi_policy_action_id,
                                        NULL,
                                        N_("Authentication is required to discover firmware targets"),
                                        invocation);
@@ -792,19 +766,23 @@ handle_login(StoragedManagerISCSIInitiator  *object,
              const gchar                    *arg_iface)
 {
   StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
-  gint err;
+  StoragedISCSIState *state = storaged_linux_manager_iscsi_initiator_get_state (manager);
+  gint err = 0;
   gchar *errorstr = NULL;
 
   /* Policy check. */
   STORAGED_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
                                        NULL,
-                                       iscsi_action_id,
+                                       iscsi_policy_action_id,
                                        NULL,
                                        N_("Authentication is required to perform iSCSI login"),
                                        invocation);
 
+  /* Enter a critical section. */
+  storaged_iscsi_state_lock_libiscsi_context (state);
+
   /* Login */
-  err = perform_iscsi_login_action (object,
+  err = iscsi_perform_login_action (manager->daemon,
                                     ACTION_LOGIN,
                                     arg_name,
                                     arg_tpgt,
@@ -821,7 +799,6 @@ handle_login(StoragedManagerISCSIInitiator  *object,
                                              STORAGED_ERROR_FAILED,
                                              "Login failed: %s",
                                              errorstr);
-      g_free ((gpointer) errorstr);
       goto out;
     }
 
@@ -829,7 +806,12 @@ handle_login(StoragedManagerISCSIInitiator  *object,
   storaged_manager_iscsi_initiator_complete_login (object,
                                                    invocation);
 
+  /* Leave the critical section. */
+  storaged_iscsi_state_unlock_libiscsi_context (state);
+
 out:
+  g_free ((gpointer) errorstr);
+
   /* Indicate that we handled the method invocation. */
   return TRUE;
 }
@@ -844,19 +826,23 @@ handle_logout(StoragedManagerISCSIInitiator  *object,
               const gchar                    *arg_iface)
 {
   StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
-  gint err;
+  StoragedISCSIState *state = storaged_linux_manager_iscsi_initiator_get_state (manager);
+  gint err = 0;
   gchar *errorstr = NULL;
 
   /* Policy check. */
   STORAGED_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
                                        NULL,
-                                       iscsi_action_id,
+                                       iscsi_policy_action_id,
                                        NULL,
                                        N_("Authentication is required to perform iSCSI logout"),
                                        invocation);
 
+  /* Enter a critical section. */
+  storaged_iscsi_state_lock_libiscsi_context (state);
+
   /* Logout */
-  err = perform_iscsi_login_action (object,
+  err = iscsi_perform_login_action (manager->daemon,
                                     ACTION_LOGOUT,
                                     arg_name,
                                     arg_tpgt,
@@ -873,7 +859,6 @@ handle_logout(StoragedManagerISCSIInitiator  *object,
                                              STORAGED_ERROR_FAILED,
                                              "Logout failed: %s",
                                              errorstr);
-      g_free ((gpointer) errorstr);
       goto out;
     }
 
@@ -881,7 +866,12 @@ handle_logout(StoragedManagerISCSIInitiator  *object,
   storaged_manager_iscsi_initiator_complete_logout (object,
                                                     invocation);
 
+  /* Leave the critical section. */
+  storaged_iscsi_state_unlock_libiscsi_context (state);
+
 out:
+  g_free ((gpointer) errorstr);
+
   /* Indicate that we handled the method invocation. */
   return TRUE;
 }
