@@ -24,6 +24,7 @@ CPPFLAGS =                                                                     \
 	$(GLIB_CFLAGS)                                                         \
 	$(GIO_CFLAGS)                                                          \
 	$(GUDEV_CFLAGS)                                                        \
+        $(LIBXML_CFLAGS)                                                       \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
 
@@ -54,12 +55,21 @@ libstoraged_glusterfsinclude_HEADERS =                                         \
 	$(top_srcdir)/modules/storagedmoduleobject.h                           \
 	$(NULL)
 
-libstoraged_glusterfs_la_SOURCES =                                                 \
+libstoraged_glusterfs_la_SOURCES =                                             \
 	$(BUILT_SOURCES)                                                       \
 	$(top_srcdir)/modules/storagedmoduleiface.h                            \
 	$(top_srcdir)/modules/storagedmoduleifacetypes.h                       \
 	$(top_srcdir)/modules/storagedmoduleobject.h                           \
 	$(top_srcdir)/modules/storagedmoduleobject.c                           \
+	storagedglusterfstypes.h                                               \
+	storagedglusterfsmoduleiface.c                                         \
+	storagedlinuxglusterfsvolumeobject.h                                   \
+	storagedlinuxglusterfsvolumeobject.c                                   \
+        storagedlinuxglusterfsvolume.h          storagedlinuxglusterfsvolume.c \
+	storagedlinuxmanagerglusterd.h          storagedlinuxmanagerglusterd.c \
+	storagedglusterfsutils.h                storagedglusterfsutils.c       \
+        storagedglusterfsinfo.h                 storagedglusterfsinfo.c        \
+	storagedglusterfsstate.h                storagedglusterfsstate.c       \
 	$(NULL)
 
 libstoraged_glusterfs_la_CPPFLAGS =                                            \
@@ -70,7 +80,6 @@ libstoraged_glusterfs_la_CPPFLAGS =                                            \
 libstoraged_glusterfs_la_CFLAGS =                                              \
 	$(GLIB_CFLAGS)                                                         \
 	$(GIO_CFLAGS)                                                          \
-	$(GUDEV_CFLAGS)                                                        \
 	$(POLKIT_GOBJECT_1_CFLAGS)                                             \
 	$(NULL)
 
@@ -86,9 +95,8 @@ libstoraged_glusterfs_la_LDFLAGS =                                             \
 libstoraged_glusterfs_la_LIBADD =                                              \
 	$(GLIB_LIBS)                                                           \
 	$(GIO_LIBS)                                                            \
-	$(GUDEV_LIBS)                                                          \
 	$(POLKIT_GOBJECT_1_LIBS)                                               \
-	$(GLUSTERFS_LIBS)                                                      \
+	$(LIBXML_LIBS)                                                         \
 	$(NULL)
 
 # ------------------------------------------------------------------------------

@@ -154,6 +154,10 @@ PKG_CHECK_MODULES(POLKIT_AGENT_1, [polkit-agent-1 >= 0.102])
 AC_SUBST(POLKIT_AGENT_1_CFLAGS)
 AC_SUBST(POLKIT_AGENT_1_LIBS)
 
+PKG_CHECK_MODULES(LIBXML, [libxml-2.0])
+AC_SUBST(LIBXML_CFLAGS)
+AC_SUBST(LIBXML_LIBS)
+
 PKG_CHECK_MODULES(LIBATASMART, [libatasmart >= 0.17])
 AC_SUBST(LIBATASMART_CFLAGS)
 AC_SUBST(LIBATASMART_LIBS)
@@ -274,14 +278,22 @@ AM_CONDITIONAL(HAVE_ISCSI, [test "x$have_iscsi" = "xyes"])
 AM_CONDITIONAL(BUILD_ISCSI_SESSION_OBJECT, [test "x$have_libiscsi_session_info" = "xyes"])
 
 # GlusterFS module
-have_glusterfs=no
+have_xml=no
 AC_ARG_ENABLE(glusterfs, AS_HELP_STRING([--enable-glusterfs], [enable GlusterFS support]))
 if test "x$enable_glusterfs" = "xyes" \
      -o "x$enable_modules" = "xyes" \
      -o "x$enable_all_modules" = "xyes"; then
-  have_glusterfs=yes
+
+  AC_CHECK_LIB([xml2],
+               [xmlParseDoc],
+               [have_xml="yes"],
+               [have_xml="no"])
+
+  if test "x$have_xml" = "xno"; then
+    AC_MSG_ERROR([GlusterFS support requested but xml libraries not found])
+  fi
 fi
-AM_CONDITIONAL(HAVE_GLUSTERFS, [test "$have_glusterfs" = "yes"])
+AM_CONDITIONAL(HAVE_XML, [test "$have_xml" = "yes"])
 
 # Internationalization
 #
@@ -365,5 +377,5 @@ echo "
         Dummy module:               ${have_dummy}
         iSCSI module:               ${have_iscsi}${have_libiscsi_session_info_msg}
         LVM2  module:               ${have_lvm2}
-        GlusterFS module:           ${have_glusterfs}
+        GlusterFS module:           ${have_xml}
 "

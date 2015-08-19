@@ -98,6 +98,10 @@ else
 	$(AM_V_at) $(SED) -i "/\# ISCSI_TYPES/d" $(builddir)/$(STORAGED_TYPES)
 endif # HAVE_ISCSI
 
+	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).iscsi.sed $(builddir)/$(DOC_MAIN_SGML_FILE)
+	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(STORAGED_SECTIONS).iscsi.sed $(builddir)/$(STORAGED_SECTIONS)
+	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(STORAGED_TYPES).iscsi.sed $(builddir)/$(STORAGED_TYPES)
+
 # GTKDOC for LVM2
 if HAVE_LVM2
 DOC_SOURCE_DIR += $(top_srcdir)/modules/lvm2
@@ -115,6 +119,13 @@ CFILE_GLOB += $(top_srcdir)/modules/iscsi/*.c
 AM_CPPFLAGS += -I$(top_srcdir)/modules/iscsi
 GTKDOC_LIBS += $(top_builddir)/modules/iscsi/libstoraged_iscsi.la
 endif # HAVE_ISCSI
+
+#GTKDOC for GlusterFS
+DOC_SOURCE_DIR += $(top_srcdir)/modules/glusterfs
+HFILE_GLOB += $(top_srcdir)/modules/glusterfs/*.h
+CFILE_GLOB += $(top_srcdir)/modules/glusterfs/*.c
+AM_CPPFLAGS += -I$(top_srcdir)/modules/glusterfs
+GTKDOC_LIBS += $(top_builddir)/modules/glusterfs/libstoraged_glusterfs.la
 
 # ------------------------------------------------------------------------------
 

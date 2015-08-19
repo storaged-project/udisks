@@ -25,43 +25,6 @@
   <!-- ********************************************************************** -->
 
   <!--
-      org.storaged.Storaged.Manager.GlusterFS.Node:
-      @short_description: A glusterfs node
-      @since: 2.1.2
-
-      Additional interface with GlusterFS node specifics for top-level manager
-      singleton object located at the object path
-      <literal>/org/storaged/Storaged/Manager</literal>.
-  -->
-  <interface name="org.storaged.Storaged.Manager.GlusterFS.Node">
-
-    <!-- prereq: org.storaged.Storaged.Manager -->
-    
-    <annotation name="org.gtk.GDBus.C.Name" value="Manager_GlusterFS_Node"/>
-
-    <!--
-        glusterd_status:
-
-        Running status of glusterd
-        Valid statuses: 0 = Unknown, 1 = Running, 2 = Not running
-        Unrecognized statuses should be considered equal to Unknown
-    -->
-    <property name="glusterd_status" type="u" access="read"/>
-    
-    <!--
-        GlusterdStatusChanged:
-        @changed_status: The changed glusterd status
-
-        Emitted when the glusterd status changes
-    -->
-
-    <signal name="GlusterdStatusChanged">
-        <arg name="changed_status" type="u"/>
-    </signal>
-  </interface>
-
-
-  <!--
       org.storaged.Storaged.Manager.GlusterD:
       @short_description: glusterd add-on to the manager singleton
       @since: 2.1.2
@@ -76,17 +39,99 @@
     <annotation name="org.gtk.GDBus.C.Name" value="Manager_GlusterD"/>
 
     <!--
-        GetGlusterDHost:
-        @result: Host on which the glusterd daemon is running.
-        @since 2.1.2
+        status:
 
-        Returns the host address on which the glusterd is running
+        Running status of glusterd daemon
+        Valid statuses: 0 = Unknown, 1 = Running, 2 = Not running
+        Unrecognized statuses should be considered equal to Unknown
     -->
-    <method name="GetGlusterdHost">
-        <arg name="result" direction="out" type="s"/> 
+    <property name="status" type="u" access="read"/>
+    
+    <!--
+        VolumeCreate:
+        @name: Name of the volume
+        @bricks: List of path to bricks that will be a part of the volume
+        @result: The path to the new gluster volume object
+        @since: 2.1.2
+
+       Creates a new GlusterFS volume using @bricks as the list of bricks that
+       are going to be the part of the volume
+    -->
+    <method name="VolumeCreate">
+        <arg name="name" direction="in" type="s"/>
+        <arg name="bricks" direction="in" type="as"/>
+        <arg name="result" direction="out" type="o"/>
     </method>
+
+    <method name="Reload"/>
 
   </interface>
 
   <!-- ********************************************************************** -->
+
+  <!--
+      org.storaged.Storaged.GlusterFS.Volume:
+      @short_description: A GlusterFS volume
+      @since: 2.1.2
+
+      Objects implementing this interface represent GlusterFS volumes
+  -->
+  <interface name="org.storaged.Storaged.GlusterFS.Volume">
+
+    <annotation name="org.gtk.GDBus.C.Name" value="GlusterFS_Volume"/>
+
+    <property name="id" type="s" access="read"/>
+
+    <!--
+        status:
+
+        Running status of the GlusterFS volume
+        Valid statuses: 0 = Unknown, 1 = Started, 2 = Stopped
+        Unrecognized statuses should be considered equal to Unknown
+    -->
+    <property name="state" type="u" access="read"/>
+ 
+    <!--
+        AddBrick:
+        @brick_path: The path to the brick that will be added to the volume
+        @result: The path to the new brick object
+        @since: 2.1.2
+
+        Adds a new brick with path specified by @brick_path to an existing
+        GlusterFS volume
+    -->
+    <method name="AddBrick">
+        <arg name="brick_path" direction="in" type="s"/>
+        <arg name="result" direction="out" type="o"/>
+    </method>
+
+  </interface>
+
+  <!--
+      org.storaged.Storaged.GlusterFS.Brick:
+      @short_description: A GlusterFS Brick
+      @since: 2.1.2
+
+      Objects implementing this interface represent bricks in a
+      GlusterFS volume.
+  -->
+  <interface name="org.storaged.Storaged.GlusterFS.Brick">
+    <annotation name="org.gtk.GDBus.C.Name" value="GlusterFS_Brick"/>
+    <!--
+        status:
+
+        Running status of the GlusterFS brick
+        Valid statuses: 0 = Unknown, 1 = Up, 2 = Down
+        Unrecognized statuses should be considered equal to Unknown
+    -->
+    <property name="status" type="u" access="read"/>
+
+    <property name="hostname" type="s" access="read"/>
+    <property name="path" type="s" access="read"/>
+    <property name="volume" type="o" access="read"/>
+     
+  </interface>
+
+  <!-- ********************************************************************** -->
+
 </node>
