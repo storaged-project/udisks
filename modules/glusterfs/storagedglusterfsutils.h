@@ -32,10 +32,7 @@ GPid storaged_glusterfs_spawn_for_variant (const gchar **argv,
                                                              gpointer user_data),
                                            gpointer user_data);
 
-
-/* StoragedLinuxVolumeGroupObject * storaged_daemon_util_lvm2_find_volume_group_object (StoragedDaemon *daemon, const gchar *name); */
-
-/* void storaged_daemon_util_lvm2_trigger_udev (const gchar *device_file);                                                          */
+void storaged_glusterfs_volumes_update (StoragedDaemon *daemon);
 
 G_END_DECLS
 

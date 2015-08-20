@@ -23,6 +23,7 @@
 #include <src/storageddaemonutil.h>
 #include <src/storagedlogging.h>
 
+#include "storagedglusterfsutils.h"
 #include "storagedglusterfsstate.h"
 #include "storagedlinuxmanagerglusterd.h"
 #include "storaged-glusterfs-generated.h"
@@ -182,6 +183,9 @@ handle_reload (StoragedManagerGlusterD *object,
                GDBusMethodInvocation   *invocation)
 {
   storaged_notice ("Reloading GlusterFS state");
+  StoragedLinuxManagerGlusterD *manager = STORAGED_LINUX_MANAGER_GLUSTERD (object);
+
+  storaged_glusterfs_volumes_update (manager->daemon); 
   return TRUE;
 }
 
