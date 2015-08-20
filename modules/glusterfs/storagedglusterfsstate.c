@@ -69,8 +69,8 @@ storaged_glusterfs_state_free (StoragedGlusterFSState *state)
 }
 
 GHashTable *
-storaged_glusterfs_state_get_name_to_glusterfs_volume(StoragedGlusterFSState *state)
+storaged_glusterfs_state_get_name_to_glusterfs_volume (StoragedGlusterFSState *state)
 {
-  g_return_val_if_fail(state, NULL);
+  g_return_val_if_fail (state, NULL);
   return state->name_to_glusterfs_volume;
 }

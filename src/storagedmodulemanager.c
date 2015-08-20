@@ -410,7 +410,7 @@ storaged_module_manager_load_modules (StoragedModuleManager *manager)
               for (module_new_manager_iface_funcs_i = module_new_manager_iface_funcs; module_new_manager_iface_funcs_i && *module_new_manager_iface_funcs_i; module_new_manager_iface_funcs_i++)
                 manager->new_manager_iface_funcs = g_list_append (manager->new_manager_iface_funcs, *module_new_manager_iface_funcs_i);
               g_free (module_new_manager_iface_funcs);
-
+              storaged_debug ("Here!");
               if (g_module_symbol (module_data->handle, "storaged_module_track_parent", &track_parent_func))
                 {
                   storaged_debug("ADDING TRACK");

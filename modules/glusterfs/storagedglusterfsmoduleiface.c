@@ -64,14 +64,14 @@ storaged_module_teardown (StoragedDaemon *daemon)
 static StoragedGlusterFSState *
 get_module_state (StoragedDaemon *daemon)         
 {
-  StoragedGlusterFSState *state;                       
-  StoragedModuleManager *manager;                 
+  StoragedGlusterFSState *state;
+  StoragedModuleManager *manager;
 
   manager = storaged_daemon_get_module_manager (daemon);
   g_assert (manager != NULL);
 
   state = (StoragedGlusterFSState *) storaged_module_manager_get_module_state_pointer (manager, GLUSTERFS_MODULE_NAME);
-  g_assert (state != NULL);                       
+  g_assert (state != NULL);   
 
   return state;
 }
@@ -95,8 +95,7 @@ storaged_module_get_drive_object_iface_setup_entries (void)
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
-glusterfs_update_all_from_variant (GPid pid,
-                                   GVariant *volume_all_info_xml,
+glusterfs_update_all_from_variant (GVariant *volume_all_info_xml,
                                    GError *error,
                                    gpointer user_data)
 {
@@ -115,16 +114,19 @@ glusterfs_update_all_from_variant (GPid pid,
       return;
     }
 
-  manager = storaged_daemon_get_object_manager(daemon);
-  state = get_module_state(daemon);
+  manager = storaged_daemon_get_object_manager (daemon);
+  state = get_module_state (daemon);
+  storaged_notice ("Got variant");
+  gfs_volumes = storaged_process_glusterfs_xml_info (g_variant_get_bytestring (volume_all_info_xml)); 
 
-  gfs_volumes = storaged_process_glusterfs_xml_info (g_variant_get_string (volume_all_info_xml, NULL)); 
-
+  storaged_notice ("Got GlusterFS volume names");
   /* Remove obsolete gluster volumes */
   g_hash_table_iter_init (&gfsvol_name_iter,
                           storaged_glusterfs_state_get_name_to_glusterfs_volume (state));
+  storaged_notice ("Removing obsolete glusterfs volumes");
   while (g_hash_table_iter_next (&gfsvol_name_iter, &key, &value))
-    {  
+    {
+      storaged_notice ("Checking gfsvol"); 
       const gchar *gfsvol;
       StoragedLinuxGlusterFSVolumeObject *volume;      
       gboolean found = FALSE;
@@ -160,10 +162,13 @@ glusterfs_update_all_from_variant (GPid pid,
       if (volume == NULL)
         {
           volume = storaged_linux_glusterfs_volume_object_new (daemon, name);
+          storaged_debug ("GLusterFS volume object created");
           g_hash_table_insert (storaged_glusterfs_state_get_name_to_glusterfs_volume (state),
                                g_strdup (name), volume);
+          storaged_debug ("New volume \"%s\" added to glusterfs state hashtable", name);
         }
       storaged_linux_glusterfs_volume_object_update (volume);
+      storaged_debug ("Hhshshs");
     }
 }
 
@@ -171,6 +176,7 @@ static void
 glusterfs_volumes_update (StoragedDaemon *daemon)
 {
   const gchar *args[] = { "/usr/sbin/gluster", "volume", "info", "all", "--xml", NULL };
+  storaged_debug ("glusterfs_volumes_update");
   storaged_glusterfs_spawn_for_variant (args, G_VARIANT_TYPE("s"),
                                         glusterfs_update_all_from_variant, daemon);
 }
@@ -178,6 +184,7 @@ glusterfs_volumes_update (StoragedDaemon *daemon)
 static GDBusObjectSkeleton *
 glusterfs_object_new (StoragedDaemon *daemon)
 {
+  storaged_debug ("glusterfs_object_new");
   glusterfs_volumes_update (daemon);
   return NULL;
 }
@@ -189,7 +196,7 @@ storaged_module_get_object_new_funcs (void)
   StoragedModuleObjectNewFunc *funcs = NULL;
 
   funcs = g_new0 (StoragedModuleObjectNewFunc, 2);
-  funcs[0] = glusterfs_object_new;
+  funcs[0] = &glusterfs_object_new;
 
   return funcs;
 }

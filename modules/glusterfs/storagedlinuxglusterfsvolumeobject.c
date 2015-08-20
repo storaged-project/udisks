@@ -22,6 +22,7 @@
 #include <storaged/storaged-generated.h>
 #include <src/storageddaemonutil.h>
 #include <src/storageddaemon.h>
+#include <src/storagedlogging.h>
 
 #include "storagedlinuxglusterfsvolumeobject.h"
 #include "storagedlinuxglusterfsvolume.h"
@@ -29,7 +30,7 @@
 #include "storaged-glusterfs-generated.h"
 
 struct _StoragedLinuxGlusterFSVolumeObject {
-  StoragedObjectSkeleton *parent_instance;
+  StoragedObjectSkeleton parent_instance;
 
   StoragedDaemon *daemon;
   gchar *name;
@@ -121,6 +122,7 @@ storaged_linux_glusterfs_volume_object_set_property (GObject      *__object,
 static void
 storaged_linux_glusterfs_volume_object_init (StoragedLinuxGlusterFSVolumeObject *object)
 {
+  storaged_notice ("in base_init");
 }
 
 static void
@@ -134,8 +136,9 @@ storaged_linux_glusterfs_volume_object_constructed (GObject *_object)
 
 
   /* compute the object path */
-  s = g_string_new ("/org/storaged/Storaged/glusterfs/volume");
+  s = g_string_new ("/org/storaged/Storaged/glusterfs/volume/");
   storaged_safe_append_to_object_path (s, object->name);
+  storaged_notice ("New GlusterFS Volume object with path %s", s->str);
   g_dbus_object_skeleton_set_object_path (G_DBUS_OBJECT_SKELETON (object), s->str);
   g_string_free (s, TRUE);
 
@@ -148,6 +151,7 @@ storaged_linux_glusterfs_volume_object_constructed (GObject *_object)
 static void
 storaged_linux_glusterfs_volume_object_class_init (StoragedLinuxGlusterFSVolumeObjectClass *klass)
 {
+  storaged_notice ("In class_init");
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
@@ -181,7 +185,7 @@ storaged_linux_glusterfs_volume_object_class_init (StoragedLinuxGlusterFSVolumeO
                                    PROP_NAME,
                                    g_param_spec_string ("name",
                                                         "Name",
-                                                        "The name of the volume group",
+                                                        "The name of the glusterfs volume",
                                                         NULL,
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
@@ -207,12 +211,38 @@ storaged_linux_glusterfs_volume_object_get_daemon (StoragedLinuxGlusterFSVolumeO
   return object->daemon;
 }
 
+static void
+update_with_variant (GVariant *info,
+                     GError *error,
+                     gpointer user_data)
+{
+  StoragedLinuxGlusterFSVolumeObject *object;
+  StoragedDaemon *daemon;
+  GDBusObjectManagerServer *manager;
+
+  object = user_data;
+  daemon = storaged_linux_glusterfs_volume_object_get_daemon (object);
+  manager = storaged_daemon_get_object_manager (daemon);
+
+  storaged_linux_glusterfs_volume_update (STORAGED_LINUX_GLUSTERFS_VOLUME (object->iface_glusterfs_volume), info);
+
+  if (!g_dbus_object_manager_server_is_exported (manager, G_DBUS_OBJECT_SKELETON (object)))
+    g_dbus_object_manager_server_export_uniquely (manager, G_DBUS_OBJECT_SKELETON (object));
+
+  g_object_unref (object);
+}
+
 void
 storaged_linux_glusterfs_volume_object_update (StoragedLinuxGlusterFSVolumeObject *object)
 {
-  StoragedDaemon *daemon = storaged_linux_glusterfs_volume_object_get_daemon (object);
+  GVariant *variant;
 
-  const gchar *args[] = { "/usr/sbin/gluster", "volume", "info", object->name, "--xml", NULL }; 
+  storaged_debug ("Update GlusterFS object: %s", object->name);
+
+  variant = g_variant_new_string (object->name);
+  update_with_variant (variant, NULL, g_object_ref (object));
+
+  /* const gchar *args[] = { "/usr/sbin/gluster", "volume", "info", object->name, "--xml", NULL }; */
 }
 
 void

@@ -129,11 +129,16 @@ storaged_linux_glusterfs_volume_update (StoragedLinuxGlusterFSVolume *gfs_volume
   const gchar *str;
   guint num;
 
-  if (g_variant_lookup (info, "id", "s", &str))
+  num = 1;
+  storaged_glusterfs_volume_set_name (iface, g_variant_get_string (info, NULL));
+  storaged_glusterfs_volume_set_id (iface, "dummy-id");
+  storaged_glusterfs_volume_set_state (iface, num);
+
+  /*if (g_variant_lookup (info, "id", "s", &str))
     storaged_glusterfs_volume_set_id (iface, str);
 
   if (g_variant_lookup (info, "state", "u", &num))
-    storaged_glusterfs_volume_set_state (iface, num);
+    storaged_glusterfs_volume_set_state (iface, num);*/
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

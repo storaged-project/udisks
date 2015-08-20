@@ -80,13 +80,14 @@
 
     <annotation name="org.gtk.GDBus.C.Name" value="GlusterFS_Volume"/>
 
+    <property name="name" type="s" access="read"/>
     <property name="id" type="s" access="read"/>
 
     <!--
         status:
 
         Running status of the GlusterFS volume
-        Valid statuses: 0 = Unknown, 1 = Started, 2 = Stopped
+        Valid statuses: 0 = Unknown, 1 = Created, 2 = Started, 3 = Stopped
         Unrecognized statuses should be considered equal to Unknown
     -->
     <property name="state" type="u" access="read"/>

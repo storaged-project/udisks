@@ -25,10 +25,9 @@
 
 G_BEGIN_DECLS
 
-void storaged_glusterfs_spawn_for_variant (const gchar **argv,
+GPid storaged_glusterfs_spawn_for_variant (const gchar **argv,
                                            const GVariantType *type,
-                                           void (*callback) (GPid pid,
-                                                             GVariant *result,
+                                           void (*callback) (GVariant *result,
                                                              GError *error,
                                                              gpointer user_data),
                                            gpointer user_data);

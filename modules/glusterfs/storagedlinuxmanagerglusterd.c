@@ -21,6 +21,7 @@
 
 #include <src/storageddaemon.h>
 #include <src/storageddaemonutil.h>
+#include <src/storagedlogging.h>
 
 #include "storagedglusterfsstate.h"
 #include "storagedlinuxmanagerglusterd.h"
@@ -180,7 +181,8 @@ static gboolean
 handle_reload (StoragedManagerGlusterD *object,
                GDBusMethodInvocation   *invocation)
 {
-  ;
+  storaged_notice ("Reloading GlusterFS state");
+  return TRUE;
 }
 
 static gboolean
