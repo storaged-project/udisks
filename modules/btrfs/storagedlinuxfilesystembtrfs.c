@@ -17,6 +17,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include "config.h"
+
+#include <glib/gi18n.h>
+
+#include <src/storageddaemon.h>
 #include <src/storageddaemonutil.h>
 #include <src/storagedlinuxblockobject.h>
 #include <src/storagedlinuxdevice.h>
@@ -25,6 +30,7 @@
 
 #include "storagedlinuxfilesystembtrfs.h"
 #include "storaged-btrfs-generated.h"
+#include "storagedbtrfsutil.h"
 
 /**
  * SECTION:storagedlinuxfilesystembtrfs
@@ -43,11 +49,21 @@
  */
 struct _StoragedLinuxFilesystemBTRFS{
   StoragedFilesystemBTRFSSkeleton parent_instance;
-  gpointer priv;
+
+  StoragedDaemon *daemon;
 };
 
 struct _StoragedLinuxFilesystemBTRFSClass {
   StoragedFilesystemBTRFSSkeletonClass parent_class;
+};
+
+typedef gboolean (*btrfs_subvolume_func)(gchar *mount_point, gchar *name, GError **error);
+
+enum
+{
+  PROP_0,
+  PROP_DAEMON,
+  N_PROPERTIES
 };
 
 static void storaged_linux_filesystem_btrfs_iface_init (StoragedFilesystemBTRFSIface *iface);
@@ -58,11 +74,19 @@ G_DEFINE_TYPE_WITH_CODE (StoragedLinuxFilesystemBTRFS, storaged_linux_filesystem
                          storaged_linux_filesystem_btrfs_iface_init));
 
 static void
-storaged_linux_filesystem_btrfs_get_property (GObject *object, guint property_id,
-                                              GValue *value, GParamSpec *pspec)
+storaged_linux_filesystem_btrfs_get_property (GObject    *object,
+                                              guint       property_id,
+                                              GValue     *value,
+                                              GParamSpec *pspec)
 {
+  StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (object);
+
   switch (property_id)
     {
+    case PROP_DAEMON:
+      g_value_set_object (value, storaged_linux_filesystem_btrfs_get_daemon (l_fs_btrfs));
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -70,11 +94,21 @@ storaged_linux_filesystem_btrfs_get_property (GObject *object, guint property_id
 }
 
 static void
-storaged_linux_filesystem_btrfs_set_property (GObject *object, guint property_id,
-                                              const GValue *value, GParamSpec *pspec)
+storaged_linux_filesystem_btrfs_set_property (GObject      *object,
+                                              guint         property_id,
+                                              const GValue *value,
+                                              GParamSpec   *pspec)
 {
+  StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (object);
+
   switch (property_id)
     {
+    case PROP_DAEMON:
+      g_assert (l_fs_btrfs->daemon == NULL);
+      /* We don't take a reference to the daemon. */
+      l_fs_btrfs->daemon = g_value_get_object (value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -104,12 +138,28 @@ storaged_linux_filesystem_btrfs_class_init (StoragedLinuxFilesystemBTRFSClass *k
   gobject_class->set_property = storaged_linux_filesystem_btrfs_set_property;
   gobject_class->dispose = storaged_linux_filesystem_btrfs_dispose;
   gobject_class->finalize = storaged_linux_filesystem_btrfs_finalize;
+
+  /**
+   * StoragedLinuxManager:daemon
+   *
+   * The #StoragedDaemon for the object.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_DAEMON,
+                                   g_param_spec_object ("daemon",
+                                                        "Daemon",
+                                                        "The daemon for the object",
+                                                        STORAGED_TYPE_DAEMON,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_STRINGS));
 }
 
 static void
-storaged_linux_filesystem_btrfs_init (StoragedLinuxFilesystemBTRFS *filesystem)
+storaged_linux_filesystem_btrfs_init (StoragedLinuxFilesystemBTRFS *l_fs_btrfs)
 {
-  g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (filesystem),
+  g_dbus_interface_skeleton_set_flags (G_DBUS_INTERFACE_SKELETON (l_fs_btrfs),
                                        G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD);
 }
 
@@ -123,12 +173,45 @@ storaged_linux_filesystem_btrfs_init (StoragedLinuxFilesystemBTRFS *filesystem)
 StoragedLinuxFilesystemBTRFS *
 storaged_linux_filesystem_btrfs_new (void)
 {
-  return g_object_new (STORAGED_TYPE_LINUX_FILESYSTEM_BTRFS, NULL);
+  return STORAGED_LINUX_FILESYSTEM_BTRFS (g_object_new (STORAGED_TYPE_LINUX_FILESYSTEM_BTRFS,
+                                                        NULL));
+}
+
+/**
+ * storaged_linux_filesystem_btrfs_get_daemon:
+ * @fs: A #StoragedLinuxFilesystemBTRFS.
+ *
+ * Gets the daemon used by @l_fs_btrfs.
+ *
+ * Returns: A #StoragedDaemon. Do not free, the object is owned by @l_fs_btrfs.
+ */
+StoragedDaemon *
+storaged_linux_filesystem_btrfs_get_daemon (StoragedLinuxFilesystemBTRFS *l_fs_btrfs)
+{
+  GError *error = NULL;
+  StoragedLinuxBlockObject *object;
+  StoragedDaemon *daemon = NULL;
+
+  g_return_val_if_fail (STORAGED_IS_LINUX_FILESYSTEM_BTRFS (l_fs_btrfs), NULL);
+
+  object = storaged_daemon_util_dup_object (l_fs_btrfs, &error);
+  if (object)
+    {
+      daemon = storaged_linux_block_object_get_daemon (object);
+      g_clear_object (&object);
+    }
+  else
+    {
+      storaged_error ("%s", error->message);
+      g_error_free (error);
+    }
+
+  return daemon;
 }
 
 /**
  * storaged_linux_filesystem_btrfs_update:
- * @filesystem: A #StoragedLinuxFilesystemBTRFS.
+ * @l_fs_btrfs: A #StoragedLinuxFilesystemBTRFS.
  * @object: The enclosing #StoragedLlinuxDriveObject instance.
  *
  * Updates the interface.
@@ -136,17 +219,17 @@ storaged_linux_filesystem_btrfs_new (void)
  * Returns: %TRUE if the configuration has changed, %FALSE otherwise.
  */
 gboolean
-storaged_linux_filesystem_btrfs_update (StoragedLinuxFilesystemBTRFS *filesystem,
+storaged_linux_filesystem_btrfs_update (StoragedLinuxFilesystemBTRFS *l_fs_btrfs,
                                         StoragedLinuxBlockObject     *object)
 {
-  StoragedFilesystemBTRFS *iface = STORAGED_FILESYSTEM_BTRFS (filesystem);
+  StoragedFilesystemBTRFS *fs_btrfs = STORAGED_FILESYSTEM_BTRFS (l_fs_btrfs);
   StoragedLinuxDevice *device = NULL;
   BDBtrfsFilesystemInfo *btrfs_info = NULL;
   GError *error = NULL;
   gchar *dev_file = NULL;
   gboolean rval = FALSE;
 
-  g_return_val_if_fail (STORAGED_IS_LINUX_FILESYSTEM_BTRFS (filesystem), FALSE);
+  g_return_val_if_fail (STORAGED_IS_LINUX_FILESYSTEM_BTRFS (fs_btrfs), FALSE);
   g_return_val_if_fail (STORAGED_IS_LINUX_BLOCK_OBJECT (object), FALSE);
 
   device = storaged_linux_block_object_get_device (STORAGED_LINUX_BLOCK_OBJECT (object));
@@ -162,46 +245,127 @@ storaged_linux_filesystem_btrfs_update (StoragedLinuxFilesystemBTRFS *filesystem
     }
 
   /* Update the interface */
-  storaged_filesystem_btrfs_set_label (iface, btrfs_info->label);
-  storaged_filesystem_btrfs_set_uuid (iface, btrfs_info->uuid);
-  storaged_filesystem_btrfs_set_num_devices (iface, btrfs_info->num_devices);
-  storaged_filesystem_btrfs_set_used (iface, btrfs_info->used);
+  storaged_filesystem_btrfs_set_label (fs_btrfs, btrfs_info->label);
+  storaged_filesystem_btrfs_set_uuid (fs_btrfs, btrfs_info->uuid);
+  storaged_filesystem_btrfs_set_num_devices (fs_btrfs, btrfs_info->num_devices);
+  storaged_filesystem_btrfs_set_used (fs_btrfs, btrfs_info->used);
 
 out:
   if (btrfs_info)
     bd_btrfs_filesystem_info_free (btrfs_info);
   if (error)
     g_error_free (error);
-  g_free (dev_file);
+  g_free ((gpointer) dev_file);
 
   return rval;
 }
 
+static gchar *
+storaged_filesystem_btrfs_get_device_file (StoragedFilesystemBTRFS  *fs_btrfs,
+                                           GError                  **error)
+{
+  StoragedObject *object = NULL;
+  StoragedLinuxDevice *device = NULL;
+  gchar *device_file = NULL;
+
+  g_return_val_if_fail (STORAGED_IS_FILESYSTEM_BTRFS (fs_btrfs), NULL);
+  g_return_val_if_fail (error, NULL);
+
+  /* Get enclosing object for this interface. */
+  object = storaged_daemon_util_dup_object (fs_btrfs, error);
+  g_return_val_if_fail (object, NULL);
+
+  /* Return the device filename (eg.: /dev/sda1) */
+  device = storaged_linux_block_object_get_device (STORAGED_LINUX_BLOCK_OBJECT (object));
+  device_file = g_strdup (g_udev_device_get_device_file (device->udev_device));
+
+  /* Free resources. */
+  g_clear_object (&object);
+  g_object_unref (device);
+
+  return device_file;
+}
+
+static const gchar *const *
+storaged_filesystem_btrfs_get_mount_points (StoragedFilesystemBTRFS  *fs_btrfs,
+                                            GError                  **error)
+{
+  StoragedObject *object = NULL;
+  StoragedFilesystem *fs = NULL;
+  const gchar *const *mount_points = NULL;
+
+  g_return_val_if_fail (STORAGED_IS_FILESYSTEM_BTRFS (fs_btrfs), NULL);
+  g_return_val_if_fail (error, NULL);
+
+  /* Get enclosing object for this interface. */
+  object = storaged_daemon_util_dup_object (fs_btrfs, error);
+  g_return_val_if_fail (object, NULL);
+
+  /* Get StoragedFilesystem. */
+  fs = storaged_object_get_filesystem (object);
+  mount_points = storaged_filesystem_get_mount_points (fs);
+
+  if (! mount_points || ! *mount_points)
+    {
+      *error = g_error_new (STORAGED_ERROR,
+                            STORAGED_ERROR_NOT_MOUNTED,
+                            "Volume not mounted");
+      return NULL;
+    }
+
+  return mount_points;
+}
+
+/**
+ * storaged_filesystem_btrfs_get_first_mount_point:
+ *
+ * @fs_btrfs: A #StoragedFilesystemBTRFS.
+ *
+ * Returns: the first mount_point for the given BTRFS volume. Free with g_free().
+ */
+static gchar *
+storaged_filesystem_btrfs_get_first_mount_point (StoragedFilesystemBTRFS  *fs_btrfs,
+                                                 GError                  **error)
+{
+  const gchar *const *mount_points;
+
+  g_return_val_if_fail (STORAGED_IS_FILESYSTEM_BTRFS (fs_btrfs), NULL);
+
+  mount_points = storaged_filesystem_btrfs_get_mount_points (fs_btrfs, error);
+  if (! mount_points)
+    return NULL;
+
+  return g_strdup (*mount_points);
+}
+
 static gboolean
-handle_set_label (StoragedFilesystemBTRFS  *filesystem_,
+handle_set_label (StoragedFilesystemBTRFS  *fs_btrfs,
                   GDBusMethodInvocation    *invocation,
                   const gchar              *label_)
 {
-  StoragedLinuxFilesystemBTRFS *filesystem = STORAGED_LINUX_FILESYSTEM_BTRFS (filesystem_);
-  StoragedObject *object = NULL;
-  StoragedLinuxDevice *device = NULL;
+  StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
   GError *error = NULL;
   gchar *dev_file = NULL;
   gchar *label = NULL;
 
-  /* Get the enclosing (exported) object for this interface. */
-  object = storaged_daemon_util_dup_object (filesystem, &error);
-  if (! object)
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
+                                       NULL,
+                                       btrfs_policy_action_id,
+                                       NULL,
+                                       N_("Authentication is required to change label for BTRFS volume"),
+                                       invocation);
+
+  /* Allow any arbitrary label. */
+  label = g_strdup (label_);
+
+  /* Get the device filename (eg.: /dev/sda1) */
+  dev_file = storaged_filesystem_btrfs_get_device_file (fs_btrfs, &error);
+  if (! dev_file)
     {
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
     }
-
-  label = g_strdup (label_);
-
-  /* Get the device filename (eg.: /dev/sda1) */
-  device = storaged_linux_block_object_get_device (STORAGED_LINUX_BLOCK_OBJECT (object));
-  dev_file = g_strdup (g_udev_device_get_device_file (device->udev_device));
 
   /* Change the label. */
   if (! bd_btrfs_change_label (dev_file, label, &error))
@@ -211,12 +375,153 @@ handle_set_label (StoragedFilesystemBTRFS  *filesystem_,
     }
 
   /* Complete DBus call. */
-  storaged_filesystem_btrfs_complete_set_label (filesystem_,
+  storaged_filesystem_btrfs_complete_set_label (fs_btrfs,
                                                 invocation);
 out:
-  g_free (dev_file);
-  g_free (label);
-  g_clear_object (&object);
+  g_free ((gpointer) dev_file);
+  g_free ((gpointer) label);
+  return TRUE;
+}
+
+static gboolean
+btrfs_subvolume_perform_action (StoragedFilesystemBTRFS  *fs_btrfs,
+                                GDBusMethodInvocation    *invocation,
+                                btrfs_subvolume_func      subvolume_action,
+                                const gchar              *arg_name,
+                                const gchar              *polkit_message)
+{
+  StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
+  GError *error = NULL;
+  gchar *name = NULL;
+  gchar *mount_point = NULL;
+
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
+                                       NULL,
+                                       btrfs_policy_action_id,
+                                       NULL,
+                                       N_(polkit_message),
+                                       invocation);
+
+  /* Do we have a valid subvolume name? */
+  if (! *arg_name)
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             STORAGED_ERROR,
+                                             STORAGED_ERROR_FAILED,
+                                             "Invalid subvolume name");
+      goto out;
+    }
+  name = g_strdup (arg_name);
+
+  /* Get the mount point for this volume. */
+  mount_point = storaged_filesystem_btrfs_get_first_mount_point (fs_btrfs, &error);
+  if (! mount_point)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* Add subvolume. */
+  if (! subvolume_action (mount_point, name, &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* Complete DBus call. */
+  storaged_filesystem_btrfs_complete_set_label (fs_btrfs,
+                                                invocation);
+
+out:
+  /* Release the resources */
+  g_free ((gpointer) name);
+  g_free ((gpointer) mount_point);
+
+  /* Indicate that we handled the method invocation */
+  return TRUE;
+}
+
+static gboolean
+handle_create_subvolume (StoragedFilesystemBTRFS  *fs_btrfs,
+                         GDBusMethodInvocation    *invocation,
+                         const gchar              *arg_name)
+{
+  return btrfs_subvolume_perform_action (fs_btrfs,
+                                         invocation,
+                                         bd_btrfs_create_subvolume,
+                                         arg_name,
+                                         "Authentication is required to add "
+                                         "a new subvolume for the given BTRFS volume");
+}
+
+static gboolean
+handle_remove_subvolume (StoragedFilesystemBTRFS  *fs_btrfs,
+                         GDBusMethodInvocation    *invocation,
+                         const gchar              *arg_name)
+{
+  return btrfs_subvolume_perform_action (fs_btrfs,
+                                         invocation,
+                                         bd_btrfs_delete_subvolume,
+                                         arg_name,
+                                         "Authentication is required to remove "
+                                         "the subvolume for the given BTRFS volume");
+}
+
+static gboolean
+handle_get_subvolumes (StoragedFilesystemBTRFS  *fs_btrfs,
+                       GDBusMethodInvocation    *invocation,
+                       gboolean                  arg_snapshots_only)
+{
+  StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
+  BDBtrfsSubvolumeInfo **subvolumes_info = NULL;
+  GVariant *subvolumes = NULL;
+  GError *error = NULL;
+  gchar *mount_point = NULL;
+  gint subvolumes_cnt = 0;
+
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
+                                       NULL,
+                                       btrfs_policy_action_id,
+                                       NULL,
+                                       N_("Authentication is required to change label "
+                                          "for BTRFS volume"),
+                                       invocation);
+
+  /* Get the mount point for this volume. */
+  mount_point = storaged_filesystem_btrfs_get_first_mount_point (fs_btrfs, &error);
+  if (! mount_point)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* Get subvolume infos. */
+  subvolumes_info = bd_btrfs_list_subvolumes (mount_point,
+                                              arg_snapshots_only,
+                                              &error);
+
+  if (! subvolumes_info)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  subvolumes = btrfs_subvolumes_to_gvariant (subvolumes_info, &subvolumes_cnt);
+
+  /* Complete DBus call. */
+  storaged_filesystem_btrfs_complete_get_subvolumes (fs_btrfs,
+                                                     invocation,
+                                                     subvolumes,
+                                                     subvolumes_cnt);
+
+out:
+  /* Release the resources */
+  btrfs_free_subvolumes_info (subvolumes_info);
+  g_free ((gpointer) mount_point);
+
+  /* Indicate that we handled the method invocation */
   return TRUE;
 }
 
@@ -224,4 +529,7 @@ static void
 storaged_linux_filesystem_btrfs_iface_init (StoragedFilesystemBTRFSIface *iface)
 {
   iface->handle_set_label = handle_set_label;
+  iface->handle_create_subvolume = handle_create_subvolume;
+  iface->handle_remove_subvolume = handle_remove_subvolume;
+  iface->handle_get_subvolumes = handle_get_subvolumes;
 }

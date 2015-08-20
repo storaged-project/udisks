@@ -36,10 +36,11 @@ G_BEGIN_DECLS
 typedef struct _StoragedLinuxFilesystemBTRFS        StoragedLinuxFilesystemBTRFS;
 typedef struct _StoragedLinuxFilesystemBTRFSClass   StoragedLinuxFilesystemBTRFSClass;
 
-GType                         storaged_linux_filesystem_btrfs_get_type (void) G_GNUC_CONST;
-StoragedLinuxFilesystemBTRFS *storaged_linux_filesystem_btrfs_new      (void);
-gboolean                      storaged_linux_filesystem_btrfs_update   (StoragedLinuxFilesystemBTRFS *filesystem,
-                                                                        StoragedLinuxBlockObject     *object);
+GType                         storaged_linux_filesystem_btrfs_get_type   (void) G_GNUC_CONST;
+StoragedLinuxFilesystemBTRFS *storaged_linux_filesystem_btrfs_new        (void);
+gboolean                      storaged_linux_filesystem_btrfs_update     (StoragedLinuxFilesystemBTRFS *l_fs_btrfs,
+                                                                          StoragedLinuxBlockObject     *object);
+StoragedDaemon               *storaged_linux_filesystem_btrfs_get_daemon (StoragedLinuxFilesystemBTRFS *l_fs_btrfs);
 
 G_END_DECLS
 

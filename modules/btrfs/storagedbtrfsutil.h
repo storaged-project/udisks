@@ -17,47 +17,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "config.h"
+#ifndef __STORAGED_BTRFS_UTIL_H__
+#define __STORAGED_BTRFS_UTIL_H__
 
-#include "storagedbtrfsstate.h"
+#include <glib.h>
 
-struct _StoragedBTRFSState
-{
-  StoragedDaemon *daemon;
-};
+typedef struct BDBtrfsSubvolumeInfo BDBtrfsSubvolumeInfo;
 
-/**
- * storaged_btrfs_state_new:
- * @daemon: A #StoragedDaemon instance.
- *
- * Initializes the #StoragedBTRFSState structure that holds the global state
- * within BTRFS plugin.
- *
- * Returns: (transfer full): A #StoragedBTRFSState that must be freed with
- * storaged_btrfs_state_free().
- */
-StoragedBTRFSState *
-storaged_btrfs_state_new (StoragedDaemon *daemon)
-{
-  StoragedBTRFSState *state;
+extern const gchar *btrfs_policy_action_id;
 
-  state = g_malloc0 (sizeof(StoragedBTRFSState));
+GVariant           *btrfs_subvolumes_to_gvariant (BDBtrfsSubvolumeInfo **subvolumes_info,
+                                                  gint                  *subvolumes_cnt);
 
-  if (state)
-    {
-      /* Initialize members. */
-      state->daemon = daemon;
-    }
+void                btrfs_free_subvolumes_info   (BDBtrfsSubvolumeInfo **subvolumes_info);
 
-  return state;
-}
-
-void
-storaged_btrfs_state_free (StoragedBTRFSState *state)
-{
-  g_return_if_fail (state);
-
-  /* Free/Unref members. */
-
-  g_free (state);
-}
+#endif /* __STORAGED_BTRFS_UTIL_H__ */

@@ -68,6 +68,8 @@ libstoraged_btrfs_la_SOURCES =                                                 \
 	storagedbtrfsstate.c                                                   \
 	storagedbtrfstypes.h                                                   \
 	storagedbtrfsmoduleiface.c                                             \
+	storagedbtrfsutil.h                                                    \
+	storagedbtrfsutil.c                                                    \
 	$(NULL)
 
 libstoraged_btrfs_la_CPPFLAGS =                                                \
