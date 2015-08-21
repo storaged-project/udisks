@@ -87,6 +87,21 @@
     </method>
 
     <!--
+        CreateSnapshot:
+        @source: A path to source subvolume.
+        @dest: A path to new snapshot volume.
+        @ro: True if the snapshot should be read-only; False otherwise.
+        @since: 2.1.3
+
+        Creates a snapshot.
+    -->
+    <method name="CreateSnapshot">
+      <arg name="source" direction="in" type="s"/>
+      <arg name="dest" direction="in" type="s"/>
+      <arg name="ro" direction="in" type="b"/>
+    </method>
+
+    <!--
         SetLabel:
         @since 2.1.3
         @label: New label.

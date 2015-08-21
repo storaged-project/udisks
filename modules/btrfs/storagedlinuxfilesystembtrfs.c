@@ -525,6 +525,60 @@ out:
   return TRUE;
 }
 
+static gboolean
+handle_create_snapshot(StoragedFilesystemBTRFS  *fs_btrfs,
+                       GDBusMethodInvocation    *invocation,
+                       const gchar              *arg_source,
+                       const gchar              *arg_dest,
+                       gboolean                  arg_ro)
+{
+  StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
+  GError *error = NULL;
+  gchar *source = NULL;
+  gchar *dest = NULL;
+  gchar *mount_point = NULL;
+
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
+                                       NULL,
+                                       btrfs_policy_action_id,
+                                       NULL,
+                                       N_("Authentication is required to create a new snapshot"),
+                                       invocation);
+
+  /* Prefix source and destination directories with mount point; so that user
+   * doesn't need to always type in a full path.
+   */
+  mount_point = storaged_filesystem_btrfs_get_first_mount_point (fs_btrfs, &error);
+  if (! mount_point)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+  source = g_build_path (G_DIR_SEPARATOR_S, mount_point, arg_source, NULL);
+  dest = g_build_path (G_DIR_SEPARATOR_S, mount_point, arg_dest, NULL);
+
+  /* Create the snapshot. */
+  if (! bd_btrfs_create_snapshot (source, dest, arg_ro, &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* Complete DBus call. */
+  storaged_filesystem_btrfs_complete_create_snapshot (fs_btrfs,
+                                                      invocation);
+
+out:
+  /* Release the resources */
+  g_free ((gpointer) source);
+  g_free ((gpointer) dest);
+  g_free ((gpointer) mount_point);
+
+  /* Indicate that we handled the method invocation */
+  return TRUE;
+}
+
 static void
 storaged_linux_filesystem_btrfs_iface_init (StoragedFilesystemBTRFSIface *iface)
 {
@@ -532,4 +586,5 @@ storaged_linux_filesystem_btrfs_iface_init (StoragedFilesystemBTRFSIface *iface)
   iface->handle_create_subvolume = handle_create_subvolume;
   iface->handle_remove_subvolume = handle_remove_subvolume;
   iface->handle_get_subvolumes = handle_get_subvolumes;
+  iface->handle_create_snapshot = handle_create_snapshot;
 }
