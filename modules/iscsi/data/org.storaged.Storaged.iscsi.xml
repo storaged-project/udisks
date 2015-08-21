@@ -162,7 +162,21 @@
   <interface name="org.storaged.Storaged.ISCSI.Session">
     <annotation name="org.gtk.GDBus.C.Name" value="ISCSI_Session"/>
 
+    <!--
+        Logout:
+        @since: 2.1.3
+
+        Logout iSCSI node in this session; default interface is used.
+    -->
     <method name="Logout"/>
+
+    <!--
+        LogoutInterface:
+        @iface: Interface to logout.
+        @since: 2.1.3
+
+        Logout iSCSI node in this session; @iface is used.
+    -->
     <method name="LogoutInterface">
       <arg name="iface" direction="in" type="s"/>
     </method>
