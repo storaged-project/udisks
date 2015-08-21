@@ -103,8 +103,8 @@
 
     <!--
         SetLabel:
-        @since 2.1.3
         @label: New label.
+        @since 2.1.3
 
         Sets a new label for the given volume.
     -->
