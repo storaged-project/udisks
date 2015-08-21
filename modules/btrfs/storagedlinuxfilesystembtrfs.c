@@ -341,7 +341,8 @@ storaged_filesystem_btrfs_get_first_mount_point (StoragedFilesystemBTRFS  *fs_bt
 static gboolean
 handle_set_label (StoragedFilesystemBTRFS  *fs_btrfs,
                   GDBusMethodInvocation    *invocation,
-                  const gchar              *label_)
+                  const gchar              *arg_label,
+                  GVariant                 *arg_options)
 {
   StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
   GError *error = NULL;
@@ -352,12 +353,12 @@ handle_set_label (StoragedFilesystemBTRFS  *fs_btrfs,
   STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
                                        NULL,
                                        btrfs_policy_action_id,
-                                       NULL,
+                                       arg_options,
                                        N_("Authentication is required to change label for BTRFS volume"),
                                        invocation);
 
   /* Allow any arbitrary label. */
-  label = g_strdup (label_);
+  label = g_strdup (arg_label);
 
   /* Get the device filename (eg.: /dev/sda1) */
   dev_file = storaged_filesystem_btrfs_get_device_file (fs_btrfs, &error);
@@ -388,6 +389,7 @@ btrfs_subvolume_perform_action (StoragedFilesystemBTRFS  *fs_btrfs,
                                 GDBusMethodInvocation    *invocation,
                                 btrfs_subvolume_func      subvolume_action,
                                 const gchar              *arg_name,
+                                GVariant                 *arg_options,
                                 const gchar              *polkit_message)
 {
   StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
@@ -399,7 +401,7 @@ btrfs_subvolume_perform_action (StoragedFilesystemBTRFS  *fs_btrfs,
   STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
                                        NULL,
                                        btrfs_policy_action_id,
-                                       NULL,
+                                       arg_options,
                                        N_(polkit_message),
                                        invocation);
 
@@ -445,12 +447,14 @@ out:
 static gboolean
 handle_create_subvolume (StoragedFilesystemBTRFS  *fs_btrfs,
                          GDBusMethodInvocation    *invocation,
-                         const gchar              *arg_name)
+                         const gchar              *arg_name,
+                         GVariant                 *arg_options)
 {
   return btrfs_subvolume_perform_action (fs_btrfs,
                                          invocation,
                                          bd_btrfs_create_subvolume,
                                          arg_name,
+                                         arg_options,
                                          "Authentication is required to add "
                                          "a new subvolume for the given BTRFS volume");
 }
@@ -458,12 +462,14 @@ handle_create_subvolume (StoragedFilesystemBTRFS  *fs_btrfs,
 static gboolean
 handle_remove_subvolume (StoragedFilesystemBTRFS  *fs_btrfs,
                          GDBusMethodInvocation    *invocation,
-                         const gchar              *arg_name)
+                         const gchar              *arg_name,
+                         GVariant                 *arg_options)
 {
   return btrfs_subvolume_perform_action (fs_btrfs,
                                          invocation,
                                          bd_btrfs_delete_subvolume,
                                          arg_name,
+                                         arg_options,
                                          "Authentication is required to remove "
                                          "the subvolume for the given BTRFS volume");
 }
@@ -471,7 +477,8 @@ handle_remove_subvolume (StoragedFilesystemBTRFS  *fs_btrfs,
 static gboolean
 handle_get_subvolumes (StoragedFilesystemBTRFS  *fs_btrfs,
                        GDBusMethodInvocation    *invocation,
-                       gboolean                  arg_snapshots_only)
+                       gboolean                  arg_snapshots_only,
+                       GVariant                 *arg_options)
 {
   StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
   BDBtrfsSubvolumeInfo **subvolumes_info = NULL;
@@ -484,7 +491,7 @@ handle_get_subvolumes (StoragedFilesystemBTRFS  *fs_btrfs,
   STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
                                        NULL,
                                        btrfs_policy_action_id,
-                                       NULL,
+                                       arg_options,
                                        N_("Authentication is required to change label "
                                           "for BTRFS volume"),
                                        invocation);
@@ -530,7 +537,8 @@ handle_create_snapshot(StoragedFilesystemBTRFS  *fs_btrfs,
                        GDBusMethodInvocation    *invocation,
                        const gchar              *arg_source,
                        const gchar              *arg_dest,
-                       gboolean                  arg_ro)
+                       gboolean                  arg_ro,
+                       GVariant                 *arg_options)
 {
   StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
   GError *error = NULL;
@@ -542,7 +550,7 @@ handle_create_snapshot(StoragedFilesystemBTRFS  *fs_btrfs,
   STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
                                        NULL,
                                        btrfs_policy_action_id,
-                                       NULL,
+                                       arg_options,
                                        N_("Authentication is required to create a new snapshot"),
                                        invocation);
 
