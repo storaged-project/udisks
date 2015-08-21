@@ -103,13 +103,13 @@ guint16 storaged_ata_identify_get_word (const guchar *identify_data, guint word_
 #define STORAGED_DAEMON_CHECK_AUTHORIZATION(daemon,                   \
                                             object,                   \
                                             action_id,                \
-                                            properties,               \
+                                            options,                  \
                                             message,                  \
                                             invocation)               \
   if (! storaged_daemon_util_check_authorization_sync ((daemon),      \
                                                        (object),      \
                                                        (action_id),   \
-                                                       (properties),  \
+                                                       (options),     \
                                                        (message),     \
                                                        (invocation))) \
     { \
