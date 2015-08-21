@@ -104,7 +104,8 @@ storaged_linux_iscsi_session_update (StoragedLinuxISCSISession        *session,
 static gboolean
 handle_logout_interface (StoragedISCSISession  *session,
                          GDBusMethodInvocation *invocation,
-                         const gchar           *arg_iface)
+                         const gchar           *arg_iface,
+                         GVariant              *arg_options)
 {
   StoragedDaemon *daemon = NULL;
   StoragedISCSIState *state = NULL;
@@ -124,7 +125,7 @@ handle_logout_interface (StoragedISCSISession  *session,
   STORAGED_DAEMON_CHECK_AUTHORIZATION (daemon,
                                        NULL,
                                        iscsi_policy_action_id,
-                                       NULL,
+                                       arg_options,
                                        N_("Authentication is required to perform iSCSI logout"),
                                        invocation);
 
@@ -177,10 +178,11 @@ out:
 
 static gboolean
 handle_logout (StoragedISCSISession  *object,
-               GDBusMethodInvocation *invocation)
+               GDBusMethodInvocation *invocation,
+               GVariant              *arg_options)
 {
   /* Logout the "default" interface. */
-  return handle_logout_interface (object, invocation, "default");
+  return handle_logout_interface (object, invocation, "default", arg_options);
 }
 
 /* -------------------------------------------------------------------------- */
