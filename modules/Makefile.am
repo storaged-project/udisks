@@ -18,4 +18,8 @@ if HAVE_LVM2
 SUBDIRS += lvm2
 endif # HAVE_LVM2
 
+if HAVE_ZRAM
+SUBDIRS += zram
+endif # HAVE_ZRAM
+
 NULL =

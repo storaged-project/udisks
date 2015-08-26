@@ -1323,6 +1323,8 @@ storaged_loop_skeleton_get_type
 
 <!-- BTRFS_GENERATED_SECTIONS -->
 
+<!-- ZRAM_GENERATED_SECTIONS -->
+
 <SECTION>
 <FILE>storagedfstabmonitor</FILE>
 <TITLE>StoragedFstabMonitor</TITLE>

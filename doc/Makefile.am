@@ -105,6 +105,14 @@ else
 	$(AM_V_at) $(SED) -i "/<\!-- BTRFS_GENERATED_SECTIONS -->/d" $(builddir)/$(STORAGED_SECTIONS)
 	$(AM_V_at) $(SED) -i "/\# BTRFS_TYPES/d" $(builddir)/$(STORAGED_TYPES)
 endif # HAVE_BTRFS
+if HAVE_ZRAM
+        $(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).zram.sed $(builddir)/$(DOC_MAIN_SGML_FILE)
+        $(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(STORAGED_SECTIONS).zram.sed $(builddir)/$(STORAGED_SECTIONS)
+        $(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(STORAGED_TYPES).zram.sed $(builddir)/$(STORAGED_TYPES)
+else
+        $(AM_V_at) $(SED) -i "/<\!-- ZRAM_GENERATED_SECTIONS -->/d" $(builddir)/$(STORAGED_SECTIONS)
+        $(AM_V_at) $(SED) -i "/\# ZRAM_TYPES/d" $(builddir)/$(STORAGED_TYPES)
+endif # HAVE_ZRAM
 
 # GTKDOC for LVM2
 if HAVE_LVM2
@@ -133,6 +141,15 @@ AM_CPPFLAGS += -I$(top_srcdir)/modules/btrfs
 GTKDOC_LIBS += $(top_builddir)/modules/btrfs/libstoraged_btrfs.la
 endif # HAVE_BTRFS
 
+# GTKDOC for ZRAM
+# if HAVE_ZRAM
+# DOC_SOURCE_DIR += $(top_srcdir)/modules/zram
+# HFILE_GLOB += $(top_srcdir)/modules/zram/*.h
+# CFILE_GLOB += $(top_srcdir)/modules/zram/*.c
+# AM_CPPFLAGS += -I$(top_srcdir)/modules/zram
+# GTKDOC_LIBS += $(top_builddir)/modules/zram/libstoraged_zram.la
+# endif # HAVE_ZRAM
+
 # ------------------------------------------------------------------------------
 
 include $(top_srcdir)/gtk-doc.make
@@ -149,6 +166,9 @@ EXTRA_DIST +=                                                                  \
 	$(DOC_MAIN_SGML_FILE).lvm2.dbus.in                                     \
 	$(DOC_MAIN_SGML_FILE).lvm2.generated.in                                \
 	$(DOC_MAIN_SGML_FILE).lvm2.sed                                         \
+        $(DOC_MAIN_SGML_FILE).zram.dbus.in                                     \
+        $(DOC_MAIN_SGML_FILE).zram.generated.in                                \
+        $(DOC_MAIN_SGML_FILE).zram.sed                                         \
 	$(STORAGED_TYPES).in.in                                                \
 	$(STORAGED_TYPES).in                                                   \
 	$(STORAGED_TYPES).btrfs.in                                             \
@@ -157,6 +177,8 @@ EXTRA_DIST +=                                                                  \
 	$(STORAGED_TYPES).iscsi.sed                                            \
 	$(STORAGED_TYPES).lvm2.in                                              \
 	$(STORAGED_TYPES).lvm2.sed                                             \
+        $(STORAGED_TYPES).zram.in                                              \
+        $(STORAGED_TYPES).zram.sed                                             \
 	$(STORAGED_SECTIONS).in.in                                             \
 	$(STORAGED_SECTIONS).in                                                \
 	$(STORAGED_SECTIONS).btrfs.sections.in                                 \
@@ -165,6 +187,8 @@ EXTRA_DIST +=                                                                  \
 	$(STORAGED_SECTIONS).iscsi.sed                                         \
 	$(STORAGED_SECTIONS).lvm2.sections.in                                  \
 	$(STORAGED_SECTIONS).lvm2.sed                                          \
+        $(STORAGED_SECTIONS).zram.sections.in                                  \
+        $(STORAGED_SECTIONS).zram.sed                                          \
 	version.xml.in                                                         \
 	TODO-ISCSI
 

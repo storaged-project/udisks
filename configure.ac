@@ -310,6 +310,72 @@ if test "x$enable_btrfs" = "xyes" \
 fi
 AM_CONDITIONAL(HAVE_BTRFS, [test "x$have_btrfs" = "xyes"])
 
+# ZRAM module
+have_kbd="no"
+have_swap="no"
+have_zram="no"
+AC_ARG_ENABLE(zram, AS_HELP_STRING([--enable-zram], [enable ZRAM support]))
+if test "x$enable_zram" = "xyes" \
+     -o "x$enable_modules" = "xyes" \
+     -o "x$enable_all_modules" = "xyes"; then
+    # libblockdev
+    SAVE_CFLAGS=$CFLAGS
+    SAVE_LDFLAGS=$LDFLAGS
+    CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
+    LDFLAGS="$GLIB_LIBS"
+
+    # libblockdev-kbd
+    AC_MSG_CHECKING([libblockdev-kbd presence])
+    AC_TRY_COMPILE([#include <kbd.h>], [],
+                   [AC_MSG_RESULT([yes])
+                    have_kbd=yes],
+                   [AC_MSG_RESULT([no])
+                    have_kbd=no])
+    CFLAGS=$SAVE_CFLAGS
+    LDFLAGS=$SAVE_LDFLAGS
+
+    KBD_CFLAGS="-I/usr/include/blockdev"
+    KBD_LIBS="-lbd_kbd"
+
+    if test "x$have_kbd" = "xno"; then
+      AC_MSG_ERROR([KBD support requested but header or library not found])
+    fi
+
+    AC_SUBST([KBD_CFLAGS])
+    AC_SUBST([KBD_LIBS])
+
+    CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
+    LDFLAGS="$GLIB_LIBS"
+
+    # libblockdev-swap
+    AC_MSG_CHECKING([libblockdev-swap presence])
+    AC_TRY_COMPILE([#include <swap.h>], [],
+                   [AC_MSG_RESULT([yes])
+                   have_swap=yes],
+                   [AC_MSG_RESULT([no])
+                   have_swap=no])
+
+    CFLAGS=$SAVE_CFLAGS
+    LDFLAGS=$SAVE_LDFLAGS
+
+    SWAP_CFLAGS="-I/usr/include/blockdev"
+    SWAP_LIBS="-lbd_swap"
+
+    if test "x$have_swap" = "xno"; then
+      AC_MSG_ERROR([SWAP support requested but header or library not found])
+    fi
+
+    AC_SUBST([SWAP_CFLAGS])
+    AC_SUBST([SWAP_LIBS])
+
+    have_zram="yes"
+
+    if test "$have_kbd" = "yes" -a "$have_swap" = "yes"; then
+       AC_DEFINE(HAVE_ZRAM, 1, [Define, if libblockdev-kbd and libblockdev-swap are available])
+    fi
+fi
+
+AM_CONDITIONAL(HAVE_ZRAM, [test "$have_kbd" = "yes" -a "$have_swap" = "yes"])
 # Internationalization
 #
 
@@ -339,6 +405,8 @@ modules/iscsi/Makefile
 modules/iscsi/data/Makefile
 modules/lvm2/Makefile
 modules/lvm2/data/Makefile
+modules/zram/Makefile
+modules/zram/data/Makefile
 doc/Makefile
 doc/storaged-docs.xml.in
 doc/storaged-sections.txt.in
@@ -363,6 +431,10 @@ doc/storaged-docs.xml.btrfs.dbus
 doc/storaged-docs.xml.btrfs.generated
 doc/storaged-sections.txt.btrfs.sections
 doc/storaged.types.btrfs
+doc/storaged-docs.xml.zram.dbus
+doc/storaged-docs.xml.zram.generated
+doc/storaged-sections.txt.zram.sections
+doc/storaged.types.zram
 po/Makefile.in
 ])
 
@@ -399,4 +471,5 @@ echo "
         Dummy module:               ${have_dummy}
         iSCSI module:               ${have_iscsi}${have_libiscsi_session_info_msg}
         LVM2  module:               ${have_lvm2}
+        Zram module:                ${have_zram}
 "
