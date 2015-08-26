@@ -1,0 +1,6 @@
+storaged_manager_zram_get_type
+storaged_manager_zram_proxy_get_type
+storaged_manager_zram_skeleton_get_type
+storaged_block_zram_get_type
+storaged_block_zram_proxy_get_type
+storaged_block_zram_skeleton_get_type
