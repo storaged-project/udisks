@@ -20,4 +20,3 @@
 #include "storagedzramutil.h"
 
 const gchar *zram_policy_action_id = "org.storaged.Storaged.zram.manage-zram";
-

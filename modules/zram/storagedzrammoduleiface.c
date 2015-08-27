@@ -144,4 +144,3 @@ storaged_module_get_new_manager_iface_funcs (void)
 
   return funcs;
 }
-
