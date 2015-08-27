@@ -45,14 +45,12 @@ variant_reader_child_output (GIOChannel *source,
                              GIOCondition condition,
                              gpointer user_data)
 {
-  storaged_debug ("variant_reader_child_output");
   struct VariantReaderData *data = user_data;
   guint8 buf[1024];
   gsize bytes_read;
 
   if (condition == G_IO_HUP)
     {
-      storaged_debug ("BROKEN Pipe");
       g_io_channel_unref (data->output_channel);
       return FALSE;
     }
@@ -83,10 +81,8 @@ variant_reader_watch_child (GPid     pid,
     {
       if (g_io_channel_read_to_end (data->output_channel, &buf, &buf_size, NULL) == G_IO_STATUS_NORMAL)
         {
-          storaged_notice ("Reading remaining gfsvol info");
           g_string_append_len (data->output, buf, buf_size);
           g_free(buf);
-          storaged_debug ("GlusterFS vol info read: \n %s", data->output->str);
         } 
  
       result = g_variant_new_bytestring (data->output->str);
@@ -94,7 +90,6 @@ variant_reader_watch_child (GPid     pid,
       g_variant_unref (result);
     }
 
-  storaged_debug ("Freeing stuff");
   g_io_channel_unref (data->output_channel);
   data->output_watch = NULL;
 
@@ -112,7 +107,6 @@ storaged_glusterfs_spawn_for_variant (const gchar       **argv,
                                                              gpointer user_data),
                                            gpointer user_data)
 {
-  storaged_debug ("storaged_glusterfs_spawn_for_variant");
   GError *error = NULL;                           
   struct VariantReaderData *data;                 
   GPid pid;
@@ -193,17 +187,13 @@ storaged_glusterfs_update_all_from_variant (GVariant *volume_all_info_xml,
 
   manager = storaged_daemon_get_object_manager (daemon);
   state = get_module_state (daemon);
-  storaged_notice ("Got variant");
   gfs_volumes = storaged_process_glusterfs_xml_info (g_variant_get_bytestring (volume_all_info_xml)); 
 
-  storaged_notice ("Got GlusterFS volume names");
   /* Remove obsolete gluster volumes */
   g_hash_table_iter_init (&gfsvol_name_iter,
                           storaged_glusterfs_state_get_name_to_glusterfs_volume (state));
-  storaged_notice ("Removing obsolete glusterfs volumes");
   while (g_hash_table_iter_next (&gfsvol_name_iter, &key, &value))
     {
-      storaged_notice ("Checking gfsvol"); 
       const gchar *gfsvol;
       StoragedLinuxGlusterFSVolumeObject *volume;      
       gboolean found = FALSE;
@@ -239,13 +229,11 @@ storaged_glusterfs_update_all_from_variant (GVariant *volume_all_info_xml,
       if (volume == NULL)
         {
           volume = storaged_linux_glusterfs_volume_object_new (daemon, name);
-          storaged_debug ("GLusterFS volume object created");
           g_hash_table_insert (storaged_glusterfs_state_get_name_to_glusterfs_volume (state),
                                g_strdup (name), volume);
           storaged_debug ("New volume \"%s\" added to glusterfs state hashtable", name);
         }
       storaged_linux_glusterfs_volume_object_update (volume);
-      storaged_debug ("Hhshshs");
     }
 }
 
@@ -253,7 +241,6 @@ void
 storaged_glusterfs_volumes_update (StoragedDaemon *daemon)
 {
   const gchar *args[] = { "/usr/sbin/gluster", "volume", "info", "all", "--xml", NULL };
-  storaged_debug ("glusterfs_volumes_update");
   storaged_glusterfs_spawn_for_variant (args, G_VARIANT_TYPE("s"),
                                         storaged_glusterfs_update_all_from_variant, daemon);
 }

@@ -34,7 +34,6 @@ add_volume_name_to_list(xmlNode *cur)
   while (cur != NULL) {
     if (cur->type == XML_ELEMENT_NODE) {
       if (xmlStrEqual(cur->name, (const xmlChar *) "name") == 1) {
-        storaged_debug ("Adding gfs vol: %s", xmlNodeGetContent(cur));
         g_variant_builder_add(builder, "s", xmlNodeGetContent(cur));
         return;
       }

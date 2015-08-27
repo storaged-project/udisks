@@ -122,7 +122,6 @@ storaged_linux_glusterfs_volume_object_set_property (GObject      *__object,
 static void
 storaged_linux_glusterfs_volume_object_init (StoragedLinuxGlusterFSVolumeObject *object)
 {
-  storaged_notice ("in base_init");
 }
 
 static void
@@ -151,7 +150,6 @@ storaged_linux_glusterfs_volume_object_constructed (GObject *_object)
 static void
 storaged_linux_glusterfs_volume_object_class_init (StoragedLinuxGlusterFSVolumeObjectClass *klass)
 {
-  storaged_notice ("In class_init");
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
@@ -236,8 +234,6 @@ void
 storaged_linux_glusterfs_volume_object_update (StoragedLinuxGlusterFSVolumeObject *object)
 {
   GVariant *variant;
-
-  storaged_debug ("Update GlusterFS object: %s", object->name);
 
   variant = g_variant_new_string (object->name);
   update_with_variant (variant, NULL, g_object_ref (object));
