@@ -32,3 +32,4 @@ void                storaged_zram_state_free (StoragedZRAMState  *state);
 G_END_DECLS
 
 #endif /* __STORAGED_BTRFS_STATE_H__ */
+

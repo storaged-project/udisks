@@ -42,3 +42,4 @@ StoragedDaemon            *storaged_linux_manager_zram_get_daemon  (StoragedLinu
 G_END_DECLS
 
 #endif /* __STORAGED_LINUX_MANAGER_ZRAM_H__ */
+

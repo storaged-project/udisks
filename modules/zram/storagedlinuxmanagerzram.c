@@ -20,10 +20,10 @@
 #include "config.h"
 #include <string.h>
 
-#include <kbd.h>
+#include <blockdev/kbd.h>
 
 #include <src/storageddaemon.h>
-#include<src/storageddaemonutil.h>
+#include <src/storageddaemonutil.h>
 #include <src/storagedlogging.h>
 #include "storaged-zram-generated.h"
 #include "storagedlinuxblockzram.h"
@@ -238,7 +238,7 @@ handle_destroy_devices (StoragedManagerZRAM    *object,
   StoragedLinuxManagerZRAM *manager = STORAGED_LINUX_MANAGER_ZRAM (object);
   
   /* Policy check */
-  STORAGED_DAEMON_CHECK_AUTHORIZATION (manager->daemon,
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_manager_zram_get_daemon (manager),
                                        NULL,
                                        zram_policy_action_id,
                                        options,

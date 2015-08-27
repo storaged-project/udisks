@@ -70,3 +70,4 @@ storaged_block_zram_set_orig_data_size
 storaged_block_zram_set_zero_pages
 storaged_block_zram_skeleton_new
 </SECTION>
+
