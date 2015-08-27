@@ -141,14 +141,14 @@ AM_CPPFLAGS += -I$(top_srcdir)/modules/btrfs
 GTKDOC_LIBS += $(top_builddir)/modules/btrfs/libstoraged_btrfs.la
 endif # HAVE_BTRFS
 
-# GTKDOC for ZRAM
-# if HAVE_ZRAM
-# DOC_SOURCE_DIR += $(top_srcdir)/modules/zram
-# HFILE_GLOB += $(top_srcdir)/modules/zram/*.h
-# CFILE_GLOB += $(top_srcdir)/modules/zram/*.c
-# AM_CPPFLAGS += -I$(top_srcdir)/modules/zram
-# GTKDOC_LIBS += $(top_builddir)/modules/zram/libstoraged_zram.la
-# endif # HAVE_ZRAM
+#GTKDOC for ZRAM
+if HAVE_ZRAM
+DOC_SOURCE_DIR += $(top_srcdir)/modules/zram
+HFILE_GLOB += $(top_srcdir)/modules/zram/*.h
+CFILE_GLOB += $(top_srcdir)/modules/zram/*.c
+AM_CPPFLAGS += -I$(top_srcdir)/modules/zram
+GTKDOC_LIBS += $(top_builddir)/modules/zram/libstoraged_zram.la
+endif # HAVE_ZRAM
 
 # ------------------------------------------------------------------------------
 
