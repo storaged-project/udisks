@@ -19,12 +19,18 @@
 
 #include "config.h"
 
+#include <glib/gi18n-lib.h>
+
 #include <src/storagedlogging.h>
 #include <src/storageddaemon.h>
+#include <src/storageddaemonutil.h>
 
+#include "storagediscsistate.h"
 #include "storagediscsitypes.h"
+#include "storagediscsiutil.h"
 #include "storaged-iscsi-generated.h"
 #include "storagedlinuxiscsisession.h"
+#include "storagedlinuxiscsisessionobject.h"
 
 /**
  * SECTION:storagedlinuxiscsisession
@@ -95,8 +101,94 @@ storaged_linux_iscsi_session_update (StoragedLinuxISCSISession        *session,
   return FALSE;
 }
 
+static gboolean
+handle_logout_interface (StoragedISCSISession  *session,
+                         GDBusMethodInvocation *invocation,
+                         const gchar           *arg_iface,
+                         GVariant              *arg_options)
+{
+  StoragedDaemon *daemon = NULL;
+  StoragedISCSIState *state = NULL;
+  StoragedLinuxISCSISessionObject *object = NULL;
+  GError *error = NULL;
+  gchar *errorstr = NULL;
+  gint err;
+  const gchar *name;
+  const gchar *address;
+  guint32 tpgt;
+  guint32 port;
+
+  object = storaged_daemon_util_dup_object (session, &error);
+  daemon = storaged_linux_iscsi_session_object_get_daemon (object);
+
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (daemon,
+                                       NULL,
+                                       iscsi_policy_action_id,
+                                       arg_options,
+                                       N_("Authentication is required to perform iSCSI logout"),
+                                       invocation);
+
+  state = storaged_linux_iscsi_session_object_get_state (object);
+
+  /* Parameters */
+  name = storaged_iscsi_session_get_target_name (session);
+  address = storaged_iscsi_session_get_address (session);
+  tpgt = storaged_iscsi_session_get_tpgt (session);
+  port = storaged_iscsi_session_get_persistent_port (session);
+
+  /* Enter a critical section. */
+  storaged_iscsi_state_lock_libiscsi_context (state);
+
+  /* Logout */
+  err = iscsi_perform_login_action (daemon,
+                                    ACTION_LOGOUT,
+                                    name,
+                                    tpgt,
+                                    address,
+                                    port,
+                                    arg_iface,
+                                    &errorstr);
+
+  if (err != 0)
+    {
+      /* Logout failed. */
+      g_dbus_method_invocation_return_error (invocation,
+                                             STORAGED_ERROR,
+                                             STORAGED_ERROR_FAILED,
+                                             "Logout failed: %s",
+                                             errorstr);
+      goto out;
+    }
+  /* Complete DBus call. */
+  storaged_iscsi_session_complete_logout (session,
+                                          invocation);
+
+  /* Leave the critical section. */
+  storaged_iscsi_state_unlock_libiscsi_context (state);
+
+out:
+  if (errorstr)
+    g_free (errorstr);
+  g_clear_object (&object);
+
+  /* Indicate that we handled the method invocation. */
+  return TRUE;
+}
+
+static gboolean
+handle_logout (StoragedISCSISession  *object,
+               GDBusMethodInvocation *invocation,
+               GVariant              *arg_options)
+{
+  /* Logout the "default" interface. */
+  return handle_logout_interface (object, invocation, "default", arg_options);
+}
+
 /* -------------------------------------------------------------------------- */
 
 void storaged_linux_iscsi_session_iface_init (StoragedISCSISessionIface *iface)
 {
+  iface->handle_logout_interface = handle_logout_interface;
+  iface->handle_logout = handle_logout;
 }

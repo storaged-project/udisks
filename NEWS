@@ -1,11 +1,11 @@
 ---------------------------
-storaged 2.1.3 (unreleased)
+storaged 2.2.1 (unreleased)
 ---------------------------
 
 The storaged project provides a daemon, tools and libraries to access
 and manipulate disks, storage devices and technologies.
 
-Changes since 2.1.2:
+Changes since 2.2.0:
 
 (TODO: git shortlog)
 
@@ -13,6 +13,43 @@ Thanks to all our contributors.
 
 Peter Hatina
 (TODO: date)
+
+--------------
+storaged 2.2.0
+--------------
+
+The storaged project provides a daemon, tools and libraries to access
+and manipulate disks, storage devices and technologies.
+
+Changes since 2.1.2:
+
+Marius Vollmer (2):
+      lvm2: Properly monitor fstab and crypttab.
+      Do the wipe before returning for a 'no-block' Format.
+
+Peter Hatina (14):
+      BTRFS: add missing sources to POTFILES.in
+      ISCSI: add missing sources to POTFILES.in
+      BTRFS: add additional options passed also to policy kit
+      ISCSI: add additional options passed also to policy kit
+      Core: rename properties to options in STORAGED_DAEMON_CHECK_AUTHORIZATION
+      ISCSI: add missing doc strings for /o/s/S/iscsi/sessionX Logout(Interface) methods
+      BTRFS: Fix DBus SetLabel() doc string
+      BTRFS: introduce snapshots API
+      BTRFS: introduce subvolumes API
+      ISCSI: refactor discovery utility functions
+      ISCSI: introduce /o/s/S/iscsi/sessionX Logout method
+      ISCSI: add missing policy checks
+      ISCSI: fix typo in StoragedLinuxISCSISession documentation
+      BTRFS: introduce module
+
+Stef Walter (1):
+      lvm2: Minor DBus interface doc fix
+
+Thanks to all our contributors.
+
+Peter Hatina
+2015-08-24
 
 --------------
 storaged 2.1.2

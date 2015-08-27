@@ -62,16 +62,18 @@ libstoraged_iscsi_la_SOURCES =                                                 \
 	$(top_srcdir)/modules/storagedmoduleobject.c                           \
 	storagedlinuxmanageriscsiinitiator.h                                   \
 	storagedlinuxmanageriscsiinitiator.c                                   \
-	storagedlinuxiscsisession.h                                            \
-	storagedlinuxiscsisession.c                                            \
 	storagediscsistate.h                                                   \
 	storagediscsistate.c                                                   \
 	storagediscsitypes.h                                                   \
 	storagediscsimoduleiface.c                                             \
+	storagediscsiutil.h                                                    \
+	storagediscsiutil.c                                                    \
 	$(NULL)
 
 if BUILD_ISCSI_SESSION_OBJECT
 libstoraged_iscsi_la_SOURCES +=                                                \
+	storagedlinuxiscsisession.h                                            \
+	storagedlinuxiscsisession.c                                            \
 	storagedlinuxiscsisessionobject.h                                      \
 	storagedlinuxiscsisessionobject.c
 endif # BUILD_ISCSI_SESSION_OBJECT

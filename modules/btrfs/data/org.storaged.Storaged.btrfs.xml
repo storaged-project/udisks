@@ -49,8 +49,87 @@
   <interface name="org.storaged.Storaged.Filesystem.BTRFS">
     <!-- prereq: org.storaged.Storaged.Filesystem -->
 
+    <!--
+        CreateSubvolume:
+        @name: Name of a new subvolume.
+        @options: Additional options.
+        @since 2.1.3
+
+        Creates a new subvolume.
+
+        No additional options are currently defined.
+    -->
+    <method name="CreateSubvolume">
+      <arg name="name" direction="in" type="s"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+
+    <!--
+        RemoveSubvolume:
+        @name: Name of the subvolume to be deleted.
+        @options: Additional options.
+        @since 2.1.3
+
+        Deletes a subvolume.
+
+        No additional options are currently defined.
+    -->
+    <method name="RemoveSubvolume">
+      <arg name="name" direction="in" type="s"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+
+    <!--
+        GetSubvolumes:
+        @snapshots_only: True if to list only snapshot subvolumes; False otherwise.
+        @subvolumes: Structure containing subvolume id, parent_id and path.
+        @subvolumes_cnt: The number of returned elements.
+        @options: Additional options.
+        @since: 2.1.3
+
+        Returns a list of subvolumes.
+
+        No additional options are currently defined.
+    -->
+    <method name="GetSubvolumes">
+      <arg name="snapshots_only" direction="in" type="b"/>
+      <arg name="subvolumes" direction="out" type="a(tts)"/>
+      <arg name="subvolumes_cnt" direction="out" type="i"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+
+    <!--
+        CreateSnapshot:
+        @source: A path to source subvolume.
+        @dest: A path to new snapshot volume.
+        @ro: True if the snapshot should be read-only; False otherwise.
+        @options: Additional options.
+        @since: 2.1.3
+
+        Creates a snapshot.
+
+        No additional options are currently defined.
+    -->
+    <method name="CreateSnapshot">
+      <arg name="source" direction="in" type="s"/>
+      <arg name="dest" direction="in" type="s"/>
+      <arg name="ro" direction="in" type="b"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+
+    <!--
+        SetLabel:
+        @label: New label.
+        @options: Additional options.
+        @since 2.1.3
+
+        Sets a new label for the given volume.
+
+        No additional options are currently defined.
+    -->
     <method name="SetLabel">
       <arg name="label" direction="in" type="s"/>
+      <arg name="options" type="a{sv}" direction="in"/>
     </method>
 
     <property name="label" type="s" access="read"/>

@@ -10,7 +10,7 @@
   <icon_name>drive-removable-media</icon_name>
 
   <!-- ###################################################################### -->
-  <!-- Manage LVM -->
+  <!-- Manage BTRFS -->
 
   <action id="org.storaged.Storaged.btrfs.manage-btrfs">
     <_description>Manage BTRFS</_description>

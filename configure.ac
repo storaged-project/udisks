@@ -1,7 +1,7 @@
 
 m4_define([storaged_major_version], [2])
-m4_define([storaged_minor_version], [1])
-m4_define([storaged_micro_version], [3])
+m4_define([storaged_minor_version], [2])
+m4_define([storaged_micro_version], [1])
 
 m4_define([storaged_version], [storaged_major_version.storaged_minor_version.storaged_micro_version])
 
@@ -237,7 +237,8 @@ if test "x$enable_lvm2" = "xyes" \
   AC_SUBST(DEVMAPPER_LIBS)
   AC_SUBST(LVM2_CFLAGS)
   AC_SUBST(LVM2_LIBS)
-  if test \( "x$have_devmapper" = xno -o "x$have_lvm2" = xno \) -a "x$enable_lvm2" = xyes; then
+  if test \( "x$have_devmapper" = xno  -o "x$have_lvm2"      = xno  \) \
+       -a \( "x$enable_lvm2"    = xyes -o "x$enable_modules" = xyes \); then
     AC_MSG_ERROR([lvm2 support requested but libraries not found])
   fi
 fi
