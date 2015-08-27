@@ -33,9 +33,6 @@ G_BEGIN_DECLS
 #define STORAGED_LINUX_FILESYSTEM_BTRFS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), STORAGED_TYPE_LINUX_FILESYSTEM_BTRFS, StoragedLinuxFilesystemBTRFSClass))
 #define STORAGED_LINUX_FILESYSTEM_BTRFS_GET_PRIVATE(o)  ((StoragedLinuxFilesystemBTRFSPrivate *)((STORAGED_LINUX_FILESYSTEM_BTRFS (o))->priv))
 
-typedef struct _StoragedLinuxFilesystemBTRFS        StoragedLinuxFilesystemBTRFS;
-typedef struct _StoragedLinuxFilesystemBTRFSClass   StoragedLinuxFilesystemBTRFSClass;
-
 GType                         storaged_linux_filesystem_btrfs_get_type   (void) G_GNUC_CONST;
 StoragedLinuxFilesystemBTRFS *storaged_linux_filesystem_btrfs_new        (void);
 gboolean                      storaged_linux_filesystem_btrfs_update     (StoragedLinuxFilesystemBTRFS *l_fs_btrfs,
