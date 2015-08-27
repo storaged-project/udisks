@@ -23,7 +23,7 @@
 #include <src/storagedlogging.h>
 #include <src/storageddaemon.h>
 #include <blockdev/kbd.h>
-#include <swap.h>
+#include <blockdev/swap.h>
 
 #include "storagedlinuxblockzram.h"
 #include "storagedzramutil.h"
@@ -46,7 +46,6 @@
 
 struct _StoragedLinuxBlockZRAM {
   StoragedBlockZRAMSkeleton parent_instance;
-  gpointer priv;
 };
 
 struct _StoragedLinuxBlockZRAMClass {

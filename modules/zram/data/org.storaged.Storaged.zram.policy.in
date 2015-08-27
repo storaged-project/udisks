@@ -9,9 +9,6 @@
   <vendor_url>https://github.com/storaged-project/storaged</vendor_url>
   <icon_name>drive-removable-media</icon_name>
 
-  <!-- ###################################################################### -->
-  <!-- Manage zRAM -->
-
   <action id="org.storaged.Storaged.zram.manage-zram">
     <_description>Manage zRam</_description>
     <_message>Authentication is required to manage zRAM</_message>
@@ -23,3 +20,4 @@
   </action>
 
 </policyconfig>
+

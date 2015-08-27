@@ -64,14 +64,19 @@ zram_block_check (StoragedObject *object)
 {
   const gchar *devname = NULL;
   StoragedLinuxDevice *device = NULL;
-  
-  g_return_val_if_fail (STORAGED_IS_LINUX_BLOCK_OBJECT (object), FALSE );
+  gboolean rval = FALSE;
+
+  g_return_val_if_fail (STORAGED_IS_LINUX_BLOCK_OBJECT (object), FALSE);
   
   /* Check device name */
   device = storaged_linux_block_object_get_device (STORAGED_LINUX_BLOCK_OBJECT (object));
   devname = g_strdup (g_udev_device_get_device_file (device->udev_device));
   
-  return g_str_has_prefix (devname, "/dev/zram");
+  rval = g_str_has_prefix (devname, "/dev/zram");
+
+  g_free ((gpointer) devname);
+
+  return rval;
 }
 
 static void
@@ -114,9 +119,7 @@ storaged_module_get_drive_object_iface_setup_entries (void)
 StoragedModuleObjectNewFunc *
 storaged_module_get_object_new_funcs (void)
 {
-  StoragedModuleObjectNewFunc *funcs = NULL;
-
-  return funcs;
+  return NULL;
 }
 
 /* ------------------------------------------------------------------------------------ */

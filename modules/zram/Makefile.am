@@ -68,8 +68,8 @@ libstoraged_zram_la_SOURCES =                                                 \
 	storagedzramstate.h                                                   \
 	storagedzramstate.c                                                   \
 	storagedzramtypes.h                                                   \
-	storagedzramutil.c                                                   \
-	storagedzramutil.h                                                   \
+	storagedzramutil.c                                                    \
+	storagedzramutil.h                                                    \
 	$(NULL)
 	
 libstoraged_zram_la_CPPFLAGS =                                                \
@@ -101,7 +101,7 @@ libstoraged_zram_la_LIBADD =                                                  \
 	$(GUDEV_LIBS)                                                         \
 	$(POLKIT_GOBJECT_1_LIBS)                                              \
 	$(KBD_LIBS)                                                           \
-	$(SWAP_LIBS)                                                        \
+	$(SWAP_LIBS)                                                          \
 	$(NULL)
 # ------------------------------------------------------------------------------
 

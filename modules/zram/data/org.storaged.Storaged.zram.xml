@@ -27,7 +27,7 @@
   <!--
        org.storaged.Storaged.Manager.ZRAM:
        @short_description: ZRAM add-on to the manager singleton
-       @since:
+       @since: 2.2.1
 
        Additional interface with ZRAM specifics for top-level manager
        singleton object located at the object path
@@ -40,11 +40,15 @@
 
     <!--
         CreateDevices:
-        @num_devices: number of devices to create
-        @sizes: requested sizes (in bytes) for created zRAM devices
-        @num_streams: number of streams for created zRAM devices
+        @num_devices: Number of devices to create.
+        @sizes: Requested sizes (in bytes) for created zRAM devices.
+        @num_streams: Number of streams for created zRAM devices.
+        @options: Additional options.
+        @since: 2.2.1
     
         Creates num_devices zram devices.
+        
+        No additional options are currently defined.
     -->
     <method name = "CreateDevices">
       <arg name="num_devices" direction="in" type="t"/>
@@ -55,8 +59,12 @@
 
     <!--
         DestroyDevices:
+        @options: Additional options.
+        @since: 2.2.1
 
-        Destroys all zram devices
+        Destroys all zram devices.
+
+        No additional options are currently defined.
     -->
     <method name = "DestroyDevices">
       <arg name="options" direction="in" type="a{sv}"/>
@@ -67,7 +75,7 @@
   <!--
       org.storaged.Storaged.Block.ZRAM:
       @short_description: ZRAM block device
-      @since:
+      @since: 2.2.1
 
       One of zram devices created by manager.
 
@@ -77,21 +85,38 @@
 
     <!--
         Refresh:
+        @since: 2.2.1
 
-        Used to refresh properties changed over time
+        Used to refresh properties changed over time.
     -->
     <method name="Refresh"/>
 
     <!--
         Activate:
-        @priority: priority of swap device
+        @priority: Priority of swap device.
+        @options: Additional options.
+        @since: 2.2.1
 
-        enables zram device for paging and swapping
+        Enables zram device for paging and swapping.
+
+        No additional options are currently defined.
     -->
     <method name="Activate">
       <arg name="priority" direction="in" type="i"/>
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
+
+    <!--
+        ActivateLabeled:
+        @priority: Priority of swap device.
+        @label: A label for the swap device.
+        @options: Additional options.
+        @since: 2.2.1
+
+        Enables zram device for paging and swapping.
+
+        No additional options are currently defined.
+    -->
 
     <method name="ActivateLabeled">
       <arg name="priority" direction="in" type="i"/>
@@ -100,8 +125,12 @@
     </method>
     <!--
         Deactivate:
-    
-        disables zram device for paging and swapping
+        @options: Additional options.
+        @since: 2.2.1
+
+        Disables zram device for paging and swapping.
+
+        No additional options are currently defined.
     -->
     <method name="Deactivate">
       <arg name="options" direction="in" type="a{sv}"/>
@@ -132,3 +161,4 @@
     <property name="mem_used_total" type="t" access="read"/>
     
   </interface>
+

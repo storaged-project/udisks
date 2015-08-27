@@ -14,3 +14,4 @@ EXTRA_DIST =                                                    \
 
 clean-local:
 	rm -f *~ $(polkit_DATA)
+

@@ -331,8 +331,6 @@ if test "x$enable_zram" = "xyes" \
                     have_kbd=yes],
                    [AC_MSG_RESULT([no])
                     have_kbd=no])
-    CFLAGS=$SAVE_CFLAGS
-    LDFLAGS=$SAVE_LDFLAGS
 
     KBD_CFLAGS="-I/usr/include/blockdev"
     KBD_LIBS="-lbd_kbd"

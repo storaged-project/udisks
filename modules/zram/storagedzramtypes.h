@@ -24,4 +24,10 @@
 
 typedef struct _StoragedZRAMState StoragedZRAMState;
 
+typedef struct _StoragedLinuxManagerZRAM StoragedLinuxManagerZRAM;
+typedef struct _StoragedLinuxManagerZRAMClass StoragedLinuxManagerZRAMClass;
+
+typedef struct _StoragedLinuxBlockZram StoragedLinuxBlockZram;
+typedef struct _StoragedLinuxBlockZramClass StoragedLinuxBlockZramClass;
+
 #endif /* __STORAGED_ZRAM_TYPES_H__ */
