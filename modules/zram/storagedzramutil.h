@@ -25,4 +25,3 @@
 extern const gchar  *zram_policy_action_id;
 
 #endif /* __STORAGED_ZRAM_UTIL_H__ */
-
