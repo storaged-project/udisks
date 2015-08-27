@@ -32,9 +32,6 @@ G_BEGIN_DECLS
 #define STORAGED_IS_LINUX_MANAGER_BTRFS_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), STORAGED_TYPE_LINUX_MANAGER_BTRFS))
 #define STORAGED_LINUX_MANAGER_BTRFS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), STORAGED_TYPE_LINUX_MANAGER_BTRFS, StoragedLinuxManagerBTRFSClass))
 
-typedef struct _StoragedLinuxManagerBTRFS        StoragedLinuxManagerBTRFS;
-typedef struct _StoragedLinuxManagerBTRFSClass   StoragedLinuxManagerBTRFSClass;
-
 GType                      storaged_linux_manager_btrfs_get_type   (void) G_GNUC_CONST;
 StoragedLinuxManagerBTRFS *storaged_linux_manager_btrfs_new        (StoragedDaemon *daemon);
 StoragedDaemon            *storaged_linux_manager_btrfs_get_daemon (StoragedLinuxManagerBTRFS *manager);

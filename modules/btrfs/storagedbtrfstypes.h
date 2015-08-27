@@ -24,4 +24,10 @@
 
 typedef struct _StoragedBTRFSState StoragedBTRFSState;
 
+typedef struct _StoragedLinuxManagerBTRFS        StoragedLinuxManagerBTRFS;
+typedef struct _StoragedLinuxManagerBTRFSClass   StoragedLinuxManagerBTRFSClass;
+
+typedef struct _StoragedLinuxFilesystemBTRFS        StoragedLinuxFilesystemBTRFS;
+typedef struct _StoragedLinuxFilesystemBTRFSClass   StoragedLinuxFilesystemBTRFSClass;
+
 #endif /* __STORAGED_BTRFS_TYPES_H__ */
