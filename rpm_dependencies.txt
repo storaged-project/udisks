@@ -8,6 +8,8 @@ iscsi-initiator-utils-devel
 libacl-devel
 libatasmart-devel
 libblockdev-btrfs-devel
+libblockdev-kbd-devel
+libblockdev-swap-devel
 libgudev1-devel
 lvm2-devel
 polkit-devel
