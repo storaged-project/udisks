@@ -209,57 +209,6 @@ storaged_linux_filesystem_btrfs_get_daemon (StoragedLinuxFilesystemBTRFS *l_fs_b
   return daemon;
 }
 
-/**
- * storaged_linux_filesystem_btrfs_update:
- * @l_fs_btrfs: A #StoragedLinuxFilesystemBTRFS.
- * @object: The enclosing #StoragedLlinuxDriveObject instance.
- *
- * Updates the interface.
- *
- * Returns: %TRUE if the configuration has changed, %FALSE otherwise.
- */
-gboolean
-storaged_linux_filesystem_btrfs_update (StoragedLinuxFilesystemBTRFS *l_fs_btrfs,
-                                        StoragedLinuxBlockObject     *object)
-{
-  StoragedFilesystemBTRFS *fs_btrfs = STORAGED_FILESYSTEM_BTRFS (l_fs_btrfs);
-  StoragedLinuxDevice *device = NULL;
-  BDBtrfsFilesystemInfo *btrfs_info = NULL;
-  GError *error = NULL;
-  gchar *dev_file = NULL;
-  gboolean rval = FALSE;
-
-  g_return_val_if_fail (STORAGED_IS_LINUX_FILESYSTEM_BTRFS (fs_btrfs), FALSE);
-  g_return_val_if_fail (STORAGED_IS_LINUX_BLOCK_OBJECT (object), FALSE);
-
-  device = storaged_linux_block_object_get_device (STORAGED_LINUX_BLOCK_OBJECT (object));
-  dev_file = g_strdup (g_udev_device_get_device_file (device->udev_device));
-
-  btrfs_info = bd_btrfs_filesystem_info (dev_file, &error);
-
-  if (! btrfs_info)
-    {
-      storaged_error ("Can't get BTRFS filesystem info for %s", dev_file);
-      rval = FALSE;
-      goto out;
-    }
-
-  /* Update the interface */
-  storaged_filesystem_btrfs_set_label (fs_btrfs, btrfs_info->label);
-  storaged_filesystem_btrfs_set_uuid (fs_btrfs, btrfs_info->uuid);
-  storaged_filesystem_btrfs_set_num_devices (fs_btrfs, btrfs_info->num_devices);
-  storaged_filesystem_btrfs_set_used (fs_btrfs, btrfs_info->used);
-
-out:
-  if (btrfs_info)
-    bd_btrfs_filesystem_info_free (btrfs_info);
-  if (error)
-    g_error_free (error);
-  g_free ((gpointer) dev_file);
-
-  return rval;
-}
-
 static gchar *
 storaged_filesystem_btrfs_get_device_file (StoragedFilesystemBTRFS  *fs_btrfs,
                                            GError                  **error)
@@ -284,6 +233,60 @@ storaged_filesystem_btrfs_get_device_file (StoragedFilesystemBTRFS  *fs_btrfs,
   g_object_unref (device);
 
   return device_file;
+}
+
+/**
+ * storaged_linux_filesystem_btrfs_update:
+ * @l_fs_btrfs: A #StoragedLinuxFilesystemBTRFS.
+ * @object: The enclosing #StoragedLlinuxDriveObject instance.
+ *
+ * Updates the interface.
+ *
+ * Returns: %TRUE if the configuration has changed, %FALSE otherwise.
+ */
+gboolean
+storaged_linux_filesystem_btrfs_update (StoragedLinuxFilesystemBTRFS *l_fs_btrfs,
+                                        StoragedLinuxBlockObject     *object)
+{
+  StoragedFilesystemBTRFS *fs_btrfs = STORAGED_FILESYSTEM_BTRFS (l_fs_btrfs);
+  BDBtrfsFilesystemInfo *btrfs_info = NULL;
+  GError *error = NULL;
+  gchar *dev_file = NULL;
+  gboolean rval = FALSE;
+
+  g_return_val_if_fail (STORAGED_IS_LINUX_FILESYSTEM_BTRFS (fs_btrfs), FALSE);
+  g_return_val_if_fail (STORAGED_IS_LINUX_BLOCK_OBJECT (object), FALSE);
+
+  dev_file = storaged_filesystem_btrfs_get_device_file (fs_btrfs, &error);
+  if (! dev_file)
+    {
+      rval = FALSE;
+      goto out;
+    }
+
+  btrfs_info = bd_btrfs_filesystem_info (dev_file, &error);
+
+  if (! btrfs_info)
+    {
+      storaged_error ("Can't get BTRFS filesystem info for %s", dev_file);
+      rval = FALSE;
+      goto out;
+    }
+
+  /* Update the interface */
+  storaged_filesystem_btrfs_set_label (fs_btrfs, btrfs_info->label);
+  storaged_filesystem_btrfs_set_uuid (fs_btrfs, btrfs_info->uuid);
+  storaged_filesystem_btrfs_set_num_devices (fs_btrfs, btrfs_info->num_devices);
+  storaged_filesystem_btrfs_set_used (fs_btrfs, btrfs_info->used);
+
+out:
+  if (btrfs_info)
+    bd_btrfs_filesystem_info_free (btrfs_info);
+  if (error)
+    g_error_free (error);
+  g_free ((gpointer) dev_file);
+
+  return rval;
 }
 
 static const gchar *const *
