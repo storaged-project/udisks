@@ -633,6 +633,50 @@ out:
   return TRUE;
 }
 
+static gboolean
+handle_resize (StoragedFilesystemBTRFS  *fs_btrfs,
+               GDBusMethodInvocation    *invocation,
+               guint64                   arg_size,
+               GVariant                 *arg_options)
+{
+  StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
+  GError *error = NULL;
+  gchar *mount_point = NULL;
+
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
+                                       NULL,
+                                       btrfs_policy_action_id,
+                                       arg_options,
+                                       N_("Authentication is required to resize the volume"),
+                                       invocation);
+
+  /* Get the mount point for this volume. */
+  mount_point = storaged_filesystem_btrfs_get_first_mount_point (fs_btrfs, &error);
+  if (! mount_point)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* Resize the volume. */
+  if (! bd_btrfs_resize (mount_point, arg_size, &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* Complete DBus call. */
+  storaged_filesystem_btrfs_complete_resize (fs_btrfs,
+                                             invocation);
+
+out:
+  g_free ((gpointer) mount_point);
+
+  /* Indicate that we handled the method invocation */
+  return TRUE;
+}
+
 static void
 storaged_linux_filesystem_btrfs_iface_init (StoragedFilesystemBTRFSIface *iface)
 {
@@ -642,4 +686,5 @@ storaged_linux_filesystem_btrfs_iface_init (StoragedFilesystemBTRFSIface *iface)
   iface->handle_get_subvolumes = handle_get_subvolumes;
   iface->handle_create_snapshot = handle_create_snapshot;
   iface->handle_repair = handle_repair;
+  iface->handle_resize = handle_resize;
 }

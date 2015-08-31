@@ -131,6 +131,21 @@
     </method>
 
     <!--
+        Resize:
+        @size: Requested new size in Bytes.
+        @options: Additional options.
+        @since: 2.3.0
+
+        Resizes the volume.
+
+        No additional options are currently defined.
+    -->
+    <method name="Resize">
+      <arg name="size" type="t" direction="in"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+
+    <!--
         SetLabel:
         @label: New label.
         @options: Additional options.
