@@ -118,6 +118,19 @@
     </method>
 
     <!--
+        Repair:
+        @options: Additional options.
+        @since: 2.3.0
+
+        Checks and repairs btrfs volume.
+
+        No additional options are currently defined.
+    -->
+    <method name="Repair">
+      <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+
+    <!--
         SetLabel:
         @label: New label.
         @options: Additional options.

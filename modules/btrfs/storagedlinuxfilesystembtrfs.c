@@ -590,6 +590,49 @@ out:
   return TRUE;
 }
 
+static gboolean
+handle_repair (StoragedFilesystemBTRFS  *fs_btrfs,
+               GDBusMethodInvocation    *invocation,
+               GVariant                 *arg_options)
+{
+  StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
+  GError *error = NULL;
+  gchar *dev_file = NULL;
+
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
+                                       NULL,
+                                       btrfs_policy_action_id,
+                                       arg_options,
+                                       N_("Authentication is required to check and repair the volume"),
+                                       invocation);
+
+  /* Get the device filename (eg.: /dev/sda1) */
+  dev_file = storaged_filesystem_btrfs_get_device_file (fs_btrfs, &error);
+  if (! dev_file)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* Check and repair. */
+  if (! bd_btrfs_repair (dev_file, &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* Complete DBus call. */
+  storaged_filesystem_btrfs_complete_repair (fs_btrfs,
+                                             invocation);
+
+out:
+  g_free ((gpointer) dev_file);
+
+  /* Indicate that we handled the method invocation */
+  return TRUE;
+}
+
 static void
 storaged_linux_filesystem_btrfs_iface_init (StoragedFilesystemBTRFSIface *iface)
 {
@@ -598,4 +641,5 @@ storaged_linux_filesystem_btrfs_iface_init (StoragedFilesystemBTRFSIface *iface)
   iface->handle_remove_subvolume = handle_remove_subvolume;
   iface->handle_get_subvolumes = handle_get_subvolumes;
   iface->handle_create_snapshot = handle_create_snapshot;
+  iface->handle_repair = handle_repair;
 }
