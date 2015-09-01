@@ -36,21 +36,21 @@
  * SECTION: storagedlinuxmanagerzram
  * @title: StoragedLinuxManagerZRAM
  * @short_description: Linux implementation  of #StoragedLinuxManagerZRAM
- * 
+ *
  * This type provides an implementation of the #StoragedLinuxManagerZRAM
  * interface on Linux.
  */
 
 /**
  * StoragedLinuxManagerZRAM:
- * 
+ *
  * The #StoragedLinuxManagerBTRFS structure contains only private data and
  * should only be accessed using the provided API.
  */
 
 struct _StoragedLinuxManagerZRAM {
   StoragedManagerZRAMSkeleton parent_instance;
-  
+
   StoragedDaemon *daemon;
 };
 
@@ -81,7 +81,7 @@ storaged_linux_manager_zram_get_property (GObject     *object,
                                           GParamSpec  *pspec)
 {
   StoragedLinuxManagerZRAM *manager = STORAGED_LINUX_MANAGER_ZRAM (object);
-  
+
   switch (property_id)
     {
     case PROP_DAEMON:
@@ -182,7 +182,7 @@ storaged_linux_manager_zram_new (StoragedDaemon *daemon)
 /**
  * storaged_linux_manager_zram_get_daemon:
  * @manager: A #StoragedLinuxManagerZRAM.
- * 
+ *
  * Gets the daemon used by @manager.
  *
  * Returns: A #StoragedDaemon. Do not free, the object is owned by @manager.
@@ -238,7 +238,7 @@ handle_destroy_devices (StoragedManagerZRAM    *object,
 
   GError *error = NULL;
   StoragedLinuxManagerZRAM *manager = STORAGED_LINUX_MANAGER_ZRAM (object);
-  
+
   /* Policy check */
   STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_manager_zram_get_daemon (manager),
                                        NULL,

@@ -53,7 +53,7 @@ storaged_module_teardown (StoragedDaemon *daemon)
   StoragedZRAMState *state_pointer = (StoragedZRAMState *) \
                                       storaged_module_manager_get_module_state_pointer (manager,
                                                                                         ZRAM_MODULE_NAME);
-  
+
   storaged_zram_state_free (state_pointer);
 }
 
@@ -67,11 +67,11 @@ zram_block_check (StoragedObject *object)
   gboolean rval = FALSE;
 
   g_return_val_if_fail (STORAGED_IS_LINUX_BLOCK_OBJECT (object), FALSE);
-  
+
   /* Check device name */
   device = storaged_linux_block_object_get_device (STORAGED_LINUX_BLOCK_OBJECT (object));
   devname = g_strdup (g_udev_device_get_device_file (device->udev_device));
-  
+
   rval = g_str_has_prefix (devname, "/dev/zram");
 
   g_free ((gpointer) devname);
@@ -81,7 +81,7 @@ zram_block_check (StoragedObject *object)
 
 static void
 zram_block_connect (StoragedObject *object)
-{ 
+{
 }
 
 static gboolean
@@ -128,9 +128,9 @@ static GDBusInterfaceSkeleton *
 new_manager_zram_manager_iface (StoragedDaemon *daemon)
 {
   StoragedLinuxManagerZRAM *manager;
-  
+
   manager = storaged_linux_manager_zram_new (daemon);
-  
+
   return G_DBUS_INTERFACE_SKELETON (manager);
 }
 

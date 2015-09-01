@@ -108,7 +108,7 @@ static void
 storaged_linux_block_zram_class_init (StoragedLinuxBlockZRAMClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  
+
   gobject_class->get_property = storaged_linux_block_zram_get_property;
   gobject_class->set_property = storaged_linux_block_zram_set_property;
   gobject_class->dispose = storaged_linux_block_zram_dispose;
@@ -189,7 +189,7 @@ storaged_linux_block_zram_update (StoragedLinuxBlockZRAM    *zramblock,
   gchar *dev_file = NULL;
   gboolean rval = FALSE;
   BDKBDZramStats *zram_info;
-  
+
   g_return_val_if_fail (STORAGED_IS_LINUX_BLOCK_ZRAM (zramblock), FALSE);
   g_return_val_if_fail (STORAGED_IS_LINUX_BLOCK_OBJECT (object), FALSE);
 
@@ -197,14 +197,14 @@ storaged_linux_block_zram_update (StoragedLinuxBlockZRAM    *zramblock,
   dev_file = g_strdup (g_udev_device_get_device_file (device->udev_device));
 
   zram_info = bd_kbd_zram_get_stats (dev_file, &error);
-  
+
   if (! zram_info)
     {
       storaged_error ("Can't get ZRAM block device info for %s", dev_file);
       rval = FALSE;
       goto out;
     }
-    
+
   /* Update the interface */
   storaged_block_zram_set_disksize (iface, zram_info->disksize);
   storaged_block_zram_set_num_reads (iface, zram_info->num_reads);
@@ -216,7 +216,7 @@ storaged_linux_block_zram_update (StoragedLinuxBlockZRAM    *zramblock,
   storaged_block_zram_set_orig_data_size (iface, zram_info->orig_data_size);
   storaged_block_zram_set_compr_data_size (iface, zram_info->compr_data_size);
   storaged_block_zram_set_mem_used_total (iface, zram_info->mem_used_total);
-  
+
   storaged_block_zram_set_active (iface, bd_swap_swapstatus (dev_file, &error));
 out:
   if (zram_info)
@@ -224,7 +224,7 @@ out:
   if (error)
     g_error_free (error);
   g_free (dev_file);
-  
+
   return rval;
 }
 
@@ -353,7 +353,7 @@ handle_deactivate (StoragedBlockZRAM      *zramblock_,
     {
       return TRUE;
     }
-    
+
   device = storaged_linux_block_object_get_device (STORAGED_LINUX_BLOCK_OBJECT (object));
   dev_file = g_strdup (g_udev_device_get_device_file (device->udev_device));
 
