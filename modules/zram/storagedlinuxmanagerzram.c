@@ -18,8 +18,10 @@
  */
 
 #include "config.h"
+
 #include <string.h>
 
+#include <glib/gi18n.h>
 #include <blockdev/kbd.h>
 
 #include <src/storageddaemon.h>
@@ -212,7 +214,7 @@ handle_create_devices (StoragedManagerZRAM    *object,
                                        NULL,
                                        zram_policy_action_id,
                                        options,
-                                       "Authenticationis required to add zRAM kernel module",
+                                       N_("Authenticationis required to add zRAM kernel module"),
                                        invocation);
 
   sizes = (guint64*) g_variant_get_fixed_array (sizes_, &num_devices, sizeof (guint64));
@@ -242,7 +244,7 @@ handle_destroy_devices (StoragedManagerZRAM    *object,
                                        NULL,
                                        zram_policy_action_id,
                                        options,
-                                       "Authenticationis required to remove zRAMkernel module",
+                                       N_("Authenticationis required to remove zRAMkernel module"),
                                        invocation);
 
   if (! bd_kbd_zram_destroy_devices (&error))

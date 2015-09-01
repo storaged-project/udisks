@@ -16,6 +16,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#include "config.h"
+
+#include <glib/gi18n.h>
 
 #include <src/storageddaemonutil.h>
 #include <src/storagedlinuxblockobject.h>
@@ -244,7 +247,7 @@ zram_device_activate (StoragedBlockZRAM      *zramblock_,
                                        NULL,
                                        zram_policy_action_id,
                                        options,
-                                       "Authentication is required to enable zRAM device",
+                                       N_("Authentication is required to enable zRAM device"),
                                        invocation);
 
   object = storaged_daemon_util_dup_object (zramblock, &error);
@@ -336,7 +339,7 @@ handle_deactivate (StoragedBlockZRAM      *zramblock_,
                                        NULL,
                                        zram_policy_action_id,
                                        options,
-                                       "Authentication is required to disable zRAM device",
+                                       N_("Authentication is required to disable zRAM device"),
                                        invocation);
 
   object = storaged_daemon_util_dup_object (zramblock, &error);
