@@ -512,7 +512,7 @@ handle_get_subvolumes (StoragedFilesystemBTRFS  *fs_btrfs,
                                               arg_snapshots_only,
                                               &error);
 
-  if (! subvolumes_info)
+  if (! subvolumes_info && error)
     {
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
