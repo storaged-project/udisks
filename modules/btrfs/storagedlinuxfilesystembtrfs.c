@@ -427,7 +427,7 @@ btrfs_subvolume_perform_action (StoragedFilesystemBTRFS  *fs_btrfs,
       goto out;
     }
 
-  /* Add subvolume. */
+  /* Add/remove the subvolume. */
   if (! subvolume_action (mount_point, name, &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
