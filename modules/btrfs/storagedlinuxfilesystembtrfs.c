@@ -58,6 +58,7 @@ struct _StoragedLinuxFilesystemBTRFSClass {
 };
 
 typedef gboolean (*btrfs_subvolume_func)(gchar *mount_point, gchar *name, GError **error);
+typedef gboolean (*btrfs_device_func)(gchar *mountpoint, gchar *device, GError **error);
 
 enum
 {
@@ -448,10 +449,11 @@ out:
 }
 
 static gboolean
-handle_add_device (StoragedFilesystemBTRFS  *fs_btrfs,
-                   GDBusMethodInvocation    *invocation,
-                   const gchar              *arg_device,
-                   GVariant                 *arg_options)
+btrfs_device_perform_action (StoragedFilesystemBTRFS  *fs_btrfs,
+                             GDBusMethodInvocation    *invocation,
+                             btrfs_device_func         device_action,
+                             const gchar              *arg_device,
+                             GVariant                 *arg_options)
 {
   StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
   GError *error = NULL;
@@ -477,8 +479,8 @@ handle_add_device (StoragedFilesystemBTRFS  *fs_btrfs,
 
   device = g_strdup (arg_device);
 
-  /* Add the device to the volume. */
-  if (! bd_btrfs_add_device (mount_point, device, &error))
+  /* Add/remove the device to/from the volume. */
+  if (! device_action (mount_point, device, &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
@@ -492,8 +494,34 @@ out:
   g_free ((gpointer) mount_point);
   g_free ((gpointer) device);
 
-  /* Indicate that we handled the method invocation */
+  /* Indicate that we handled the method invocation. */
   return TRUE;
+}
+
+static gboolean
+handle_add_device (StoragedFilesystemBTRFS  *fs_btrfs,
+                   GDBusMethodInvocation    *invocation,
+                   const gchar              *arg_device,
+                   GVariant                 *arg_options)
+{
+  return btrfs_device_perform_action (fs_btrfs,
+                                      invocation,
+                                      bd_btrfs_add_device,
+                                      arg_device,
+                                      arg_options);
+}
+
+static gboolean
+handle_remove_device (StoragedFilesystemBTRFS  *fs_btrfs,
+                      GDBusMethodInvocation    *invocation,
+                      const gchar              *arg_device,
+                      GVariant                 *arg_options)
+{
+  return btrfs_device_perform_action (fs_btrfs,
+                                      invocation,
+                                      bd_btrfs_remove_device,
+                                      arg_device,
+                                      arg_options);
 }
 
 static gboolean
@@ -731,6 +759,7 @@ storaged_linux_filesystem_btrfs_iface_init (StoragedFilesystemBTRFSIface *iface)
 {
   iface->handle_set_label = handle_set_label;
   iface->handle_add_device = handle_add_device;
+  iface->handle_remove_device = handle_remove_device;
   iface->handle_create_subvolume = handle_create_subvolume;
   iface->handle_remove_subvolume = handle_remove_subvolume;
   iface->handle_get_subvolumes = handle_get_subvolumes;

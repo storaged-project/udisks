@@ -87,6 +87,21 @@
     </method>
 
     <!--
+        RemoveDevice:
+        @device: A device to be removed from BTRFS volume.
+        @options: Additional options.
+        @since: 2.3.0
+
+        Removes the @device from the volume.
+
+        No additional options are currently defined.
+    -->
+    <method name="RemoveDevice">
+      <arg name="device" type="s" direction="in"/>
+      <arg name="options" type="a{sv}" direction="in"/>
+    </method>
+
+    <!--
         CreateSubvolume:
         @name: Name of a new subvolume.
         @options: Additional options.
