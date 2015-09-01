@@ -45,7 +45,7 @@
         @options: Additional options.
         @since 2.3.0
 
-        Creates a new volume from #devices.
+        Creates a new volume from @devices.
 
         No additional options are currently defined.
     -->
