@@ -211,6 +211,7 @@ storaged_log (StoragedLogLevel     level,
   if (level >= STORAGED_LOG_LEVEL_NOTICE)
     syslog (syslog_priority, "%s", message);
   g_free (message);
+  g_free (thread_str);
 
   G_UNLOCK (log_lock);
 }
