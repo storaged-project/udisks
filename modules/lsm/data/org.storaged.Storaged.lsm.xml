@@ -28,6 +28,7 @@
   <!--
     org.storaged.Storaged.Drive.LSM:
     @short_description: LSM interface exported on disk objects
+    @since: 2.3.0
 
     Objects implementing this interface also implement the
     #org.storaged.Storaged.Drive interface.
@@ -116,6 +117,7 @@
   <!--
     org.storaged.Storaged.Manager.LSM:
     @short_description: LSM add-on to the manager singleton
+    @since: 2.3.0
   -->
   <interface name="org.storaged.Storaged.Manager.LSM">
   </interface>
