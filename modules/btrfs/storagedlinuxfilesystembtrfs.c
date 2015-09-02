@@ -456,6 +456,7 @@ btrfs_device_perform_action (StoragedFilesystemBTRFS  *fs_btrfs,
                              GVariant                 *arg_options)
 {
   StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
+  StoragedLinuxBlockObject *object = NULL;
   GError *error = NULL;
   gchar *mount_point = NULL;
   gchar *device = NULL;
@@ -486,6 +487,15 @@ btrfs_device_perform_action (StoragedFilesystemBTRFS  *fs_btrfs,
       goto out;
     }
 
+  /* Update the interface. */
+  object = storaged_daemon_util_dup_object (fs_btrfs, &error);
+  if (! object)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+  storaged_linux_filesystem_btrfs_update (l_fs_btrfs, object);
+
   /* Complete DBus call. */
   storaged_filesystem_btrfs_complete_add_device (fs_btrfs, invocation);
 
@@ -493,6 +503,7 @@ out:
   /* Release the resources */
   g_free ((gpointer) mount_point);
   g_free ((gpointer) device);
+  g_clear_object (&object);
 
   /* Indicate that we handled the method invocation. */
   return TRUE;
