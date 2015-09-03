@@ -43,7 +43,7 @@
         @data_level: The RAID level for the new volume.
         @md_level: The RAID level for metadata.
         @options: Additional options.
-        @since 2.3.0
+        @since: 2.3.0
 
         Creates a new volume from @devices.
 
@@ -106,7 +106,7 @@
         CreateSubvolume:
         @name: Name of a new subvolume.
         @options: Additional options.
-        @since 2.1.3
+        @since: 2.1.3
 
         Creates a new subvolume.
 
@@ -121,7 +121,7 @@
         RemoveSubvolume:
         @name: Name of the subvolume to be deleted.
         @options: Additional options.
-        @since 2.1.3
+        @since: 2.1.3
 
         Deletes a subvolume.
 
@@ -202,7 +202,7 @@
         SetLabel:
         @label: New label.
         @options: Additional options.
-        @since 2.1.3
+        @since: 2.1.3
 
         Sets a new label for the given volume.
 
