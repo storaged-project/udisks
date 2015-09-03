@@ -156,7 +156,7 @@ handle_logout_interface (StoragedISCSISession  *session,
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
-                                             "Logout failed: %s",
+                                             N_("Logout failed: %s"),
                                              errorstr);
       goto out;
     }

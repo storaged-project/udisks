@@ -21,19 +21,17 @@
  Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  Boston, MA 02111-1307, USA.
 -->
-  
+
   <!-- ********************************************************************** -->
 
   <!--
        org.storaged.Storaged.Manager.ZRAM:
        @short_description: ZRAM add-on to the manager singleton
-       @since: 2.2.1
+       @since: 2.3.0
 
        Additional interface with ZRAM specifics for top-level manager
        singleton object located at the object path
        <literal>/org/storaged/Storaged/Manager</literal>.
-  
-
   -->
   <interface name = "org.storaged.Storaged.Manager.ZRAM">
     <!-- prereq: org.storaged.Storaged.Manager -->
@@ -44,10 +42,10 @@
         @sizes: Requested sizes (in bytes) for created zRAM devices.
         @num_streams: Number of streams for created zRAM devices.
         @options: Additional options.
-        @since: 2.2.1
-    
+        @since: 2.3.0
+
         Creates num_devices zram devices.
-        
+
         No additional options are currently defined.
     -->
     <method name = "CreateDevices">
@@ -60,7 +58,7 @@
     <!--
         DestroyDevices:
         @options: Additional options.
-        @since: 2.2.1
+        @since: 2.3.0
 
         Destroys all zram devices.
 
@@ -69,13 +67,13 @@
     <method name = "DestroyDevices">
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
-    
+
   </interface>
-  
+
   <!--
       org.storaged.Storaged.Block.ZRAM:
       @short_description: ZRAM block device
-      @since: 2.2.1
+      @since: 2.3.0
 
       One of zram devices created by manager.
 
@@ -85,7 +83,7 @@
 
     <!--
         Refresh:
-        @since: 2.2.1
+        @since: 2.3.0
 
         Used to refresh properties changed over time.
     -->
@@ -95,7 +93,7 @@
         Activate:
         @priority: Priority of swap device.
         @options: Additional options.
-        @since: 2.2.1
+        @since: 2.3.0
 
         Enables zram device for paging and swapping.
 
@@ -111,7 +109,7 @@
         @priority: Priority of swap device.
         @label: A label for the swap device.
         @options: Additional options.
-        @since: 2.2.1
+        @since: 2.3.0
 
         Enables zram device for paging and swapping.
 
@@ -126,7 +124,7 @@
     <!--
         Deactivate:
         @options: Additional options.
-        @since: 2.2.1
+        @since: 2.3.0
 
         Disables zram device for paging and swapping.
 
@@ -135,21 +133,21 @@
     <method name="Deactivate">
       <arg name="options" direction="in" type="a{sv}"/>
     </method>
-    
+
     <!--
-    
+
       Values set during device initialisation
-    
+
     -->
     <property name="disksize" type="t" access="read"/>
     <property name="max_comp_streams" type="t" access="read"/>
     <property name="comp_algorithm" type="s" access="read"/>
-    
-    <!-- 
-    
+
+    <!--
+
       Values which change over time and their actual value should be accessed
       after Refresh method call
-    
+
     -->
     <property name="active" type="b" access="read"/>
     <property name="num_reads" type="t" access="read"/>
@@ -159,6 +157,6 @@
     <property name="orig_data_size" type="t" access="read"/>
     <property name="compr_data_size" type="t" access="read"/>
     <property name="mem_used_total" type="t" access="read"/>
-    
+
   </interface>
 

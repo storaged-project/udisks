@@ -40,21 +40,21 @@ StoragedZRAMState *
 storaged_zram_state_new (StoragedDaemon *daemon)
 {
   StoragedZRAMState *state;
-  
+
   state = g_malloc (sizeof (StoragedZRAMState));
-  
+
   if (state)
     {
       state->daemon = daemon;
     }
   return state;
-  
+
 }
 
 void
 storaged_zram_state_free (StoragedZRAMState* state)
 {
   g_return_if_fail (state);
-  
+
   g_free (state);
 }

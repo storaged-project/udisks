@@ -58,6 +58,7 @@ struct _StoragedLinuxFilesystemBTRFSClass {
 };
 
 typedef gboolean (*btrfs_subvolume_func)(gchar *mount_point, gchar *name, GError **error);
+typedef gboolean (*btrfs_device_func)(gchar *mountpoint, gchar *device, GError **error);
 
 enum
 {
@@ -209,57 +210,6 @@ storaged_linux_filesystem_btrfs_get_daemon (StoragedLinuxFilesystemBTRFS *l_fs_b
   return daemon;
 }
 
-/**
- * storaged_linux_filesystem_btrfs_update:
- * @l_fs_btrfs: A #StoragedLinuxFilesystemBTRFS.
- * @object: The enclosing #StoragedLlinuxDriveObject instance.
- *
- * Updates the interface.
- *
- * Returns: %TRUE if the configuration has changed, %FALSE otherwise.
- */
-gboolean
-storaged_linux_filesystem_btrfs_update (StoragedLinuxFilesystemBTRFS *l_fs_btrfs,
-                                        StoragedLinuxBlockObject     *object)
-{
-  StoragedFilesystemBTRFS *fs_btrfs = STORAGED_FILESYSTEM_BTRFS (l_fs_btrfs);
-  StoragedLinuxDevice *device = NULL;
-  BDBtrfsFilesystemInfo *btrfs_info = NULL;
-  GError *error = NULL;
-  gchar *dev_file = NULL;
-  gboolean rval = FALSE;
-
-  g_return_val_if_fail (STORAGED_IS_LINUX_FILESYSTEM_BTRFS (fs_btrfs), FALSE);
-  g_return_val_if_fail (STORAGED_IS_LINUX_BLOCK_OBJECT (object), FALSE);
-
-  device = storaged_linux_block_object_get_device (STORAGED_LINUX_BLOCK_OBJECT (object));
-  dev_file = g_strdup (g_udev_device_get_device_file (device->udev_device));
-
-  btrfs_info = bd_btrfs_filesystem_info (dev_file, &error);
-
-  if (! btrfs_info)
-    {
-      storaged_error ("Can't get BTRFS filesystem info for %s", dev_file);
-      rval = FALSE;
-      goto out;
-    }
-
-  /* Update the interface */
-  storaged_filesystem_btrfs_set_label (fs_btrfs, btrfs_info->label);
-  storaged_filesystem_btrfs_set_uuid (fs_btrfs, btrfs_info->uuid);
-  storaged_filesystem_btrfs_set_num_devices (fs_btrfs, btrfs_info->num_devices);
-  storaged_filesystem_btrfs_set_used (fs_btrfs, btrfs_info->used);
-
-out:
-  if (btrfs_info)
-    bd_btrfs_filesystem_info_free (btrfs_info);
-  if (error)
-    g_error_free (error);
-  g_free ((gpointer) dev_file);
-
-  return rval;
-}
-
 static gchar *
 storaged_filesystem_btrfs_get_device_file (StoragedFilesystemBTRFS  *fs_btrfs,
                                            GError                  **error)
@@ -284,6 +234,60 @@ storaged_filesystem_btrfs_get_device_file (StoragedFilesystemBTRFS  *fs_btrfs,
   g_object_unref (device);
 
   return device_file;
+}
+
+/**
+ * storaged_linux_filesystem_btrfs_update:
+ * @l_fs_btrfs: A #StoragedLinuxFilesystemBTRFS.
+ * @object: The enclosing #StoragedLlinuxDriveObject instance.
+ *
+ * Updates the interface.
+ *
+ * Returns: %TRUE if the configuration has changed, %FALSE otherwise.
+ */
+gboolean
+storaged_linux_filesystem_btrfs_update (StoragedLinuxFilesystemBTRFS *l_fs_btrfs,
+                                        StoragedLinuxBlockObject     *object)
+{
+  StoragedFilesystemBTRFS *fs_btrfs = STORAGED_FILESYSTEM_BTRFS (l_fs_btrfs);
+  BDBtrfsFilesystemInfo *btrfs_info = NULL;
+  GError *error = NULL;
+  gchar *dev_file = NULL;
+  gboolean rval = FALSE;
+
+  g_return_val_if_fail (STORAGED_IS_LINUX_FILESYSTEM_BTRFS (fs_btrfs), FALSE);
+  g_return_val_if_fail (STORAGED_IS_LINUX_BLOCK_OBJECT (object), FALSE);
+
+  dev_file = storaged_filesystem_btrfs_get_device_file (fs_btrfs, &error);
+  if (! dev_file)
+    {
+      rval = FALSE;
+      goto out;
+    }
+
+  btrfs_info = bd_btrfs_filesystem_info (dev_file, &error);
+
+  if (! btrfs_info)
+    {
+      storaged_error ("Can't get BTRFS filesystem info for %s", dev_file);
+      rval = FALSE;
+      goto out;
+    }
+
+  /* Update the interface */
+  storaged_filesystem_btrfs_set_label (fs_btrfs, btrfs_info->label);
+  storaged_filesystem_btrfs_set_uuid (fs_btrfs, btrfs_info->uuid);
+  storaged_filesystem_btrfs_set_num_devices (fs_btrfs, btrfs_info->num_devices);
+  storaged_filesystem_btrfs_set_used (fs_btrfs, btrfs_info->used);
+
+out:
+  if (btrfs_info)
+    bd_btrfs_filesystem_info_free (btrfs_info);
+  if (error)
+    g_error_free (error);
+  g_free ((gpointer) dev_file);
+
+  return rval;
 }
 
 static const gchar *const *
@@ -424,7 +428,7 @@ btrfs_subvolume_perform_action (StoragedFilesystemBTRFS  *fs_btrfs,
       goto out;
     }
 
-  /* Add subvolume. */
+  /* Add/remove the subvolume. */
   if (! subvolume_action (mount_point, name, &error))
     {
       g_dbus_method_invocation_take_error (invocation, error);
@@ -442,6 +446,93 @@ out:
 
   /* Indicate that we handled the method invocation */
   return TRUE;
+}
+
+static gboolean
+btrfs_device_perform_action (StoragedFilesystemBTRFS  *fs_btrfs,
+                             GDBusMethodInvocation    *invocation,
+                             btrfs_device_func         device_action,
+                             const gchar              *arg_device,
+                             GVariant                 *arg_options)
+{
+  StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
+  StoragedLinuxBlockObject *object = NULL;
+  GError *error = NULL;
+  gchar *mount_point = NULL;
+  gchar *device = NULL;
+
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
+                                       NULL,
+                                       btrfs_policy_action_id,
+                                       arg_options,
+                                       N_("Authentication is required to add "
+                                          "the device to the volume"),
+                                       invocation);
+
+  /* Get the mount point for this volume. */
+  mount_point = storaged_filesystem_btrfs_get_first_mount_point (fs_btrfs, &error);
+  if (! mount_point)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  device = g_strdup (arg_device);
+
+  /* Add/remove the device to/from the volume. */
+  if (! device_action (mount_point, device, &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* Update the interface. */
+  object = storaged_daemon_util_dup_object (fs_btrfs, &error);
+  if (! object)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+  storaged_linux_filesystem_btrfs_update (l_fs_btrfs, object);
+
+  /* Complete DBus call. */
+  storaged_filesystem_btrfs_complete_add_device (fs_btrfs, invocation);
+
+out:
+  /* Release the resources */
+  g_free ((gpointer) mount_point);
+  g_free ((gpointer) device);
+  g_clear_object (&object);
+
+  /* Indicate that we handled the method invocation. */
+  return TRUE;
+}
+
+static gboolean
+handle_add_device (StoragedFilesystemBTRFS  *fs_btrfs,
+                   GDBusMethodInvocation    *invocation,
+                   const gchar              *arg_device,
+                   GVariant                 *arg_options)
+{
+  return btrfs_device_perform_action (fs_btrfs,
+                                      invocation,
+                                      bd_btrfs_add_device,
+                                      arg_device,
+                                      arg_options);
+}
+
+static gboolean
+handle_remove_device (StoragedFilesystemBTRFS  *fs_btrfs,
+                      GDBusMethodInvocation    *invocation,
+                      const gchar              *arg_device,
+                      GVariant                 *arg_options)
+{
+  return btrfs_device_perform_action (fs_btrfs,
+                                      invocation,
+                                      bd_btrfs_remove_device,
+                                      arg_device,
+                                      arg_options);
 }
 
 static gboolean
@@ -509,7 +600,7 @@ handle_get_subvolumes (StoragedFilesystemBTRFS  *fs_btrfs,
                                               arg_snapshots_only,
                                               &error);
 
-  if (! subvolumes_info)
+  if (! subvolumes_info && error)
     {
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
@@ -587,12 +678,103 @@ out:
   return TRUE;
 }
 
+static gboolean
+handle_repair (StoragedFilesystemBTRFS  *fs_btrfs,
+               GDBusMethodInvocation    *invocation,
+               GVariant                 *arg_options)
+{
+  StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
+  GError *error = NULL;
+  gchar *dev_file = NULL;
+
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
+                                       NULL,
+                                       btrfs_policy_action_id,
+                                       arg_options,
+                                       N_("Authentication is required to check and repair the volume"),
+                                       invocation);
+
+  /* Get the device filename (eg.: /dev/sda1) */
+  dev_file = storaged_filesystem_btrfs_get_device_file (fs_btrfs, &error);
+  if (! dev_file)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* Check and repair. */
+  if (! bd_btrfs_repair (dev_file, &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* Complete DBus call. */
+  storaged_filesystem_btrfs_complete_repair (fs_btrfs,
+                                             invocation);
+
+out:
+  g_free ((gpointer) dev_file);
+
+  /* Indicate that we handled the method invocation */
+  return TRUE;
+}
+
+static gboolean
+handle_resize (StoragedFilesystemBTRFS  *fs_btrfs,
+               GDBusMethodInvocation    *invocation,
+               guint64                   arg_size,
+               GVariant                 *arg_options)
+{
+  StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
+  GError *error = NULL;
+  gchar *mount_point = NULL;
+
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
+                                       NULL,
+                                       btrfs_policy_action_id,
+                                       arg_options,
+                                       N_("Authentication is required to resize the volume"),
+                                       invocation);
+
+  /* Get the mount point for this volume. */
+  mount_point = storaged_filesystem_btrfs_get_first_mount_point (fs_btrfs, &error);
+  if (! mount_point)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* Resize the volume. */
+  if (! bd_btrfs_resize (mount_point, arg_size, &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* Complete DBus call. */
+  storaged_filesystem_btrfs_complete_resize (fs_btrfs,
+                                             invocation);
+
+out:
+  g_free ((gpointer) mount_point);
+
+  /* Indicate that we handled the method invocation */
+  return TRUE;
+}
+
 static void
 storaged_linux_filesystem_btrfs_iface_init (StoragedFilesystemBTRFSIface *iface)
 {
   iface->handle_set_label = handle_set_label;
+  iface->handle_add_device = handle_add_device;
+  iface->handle_remove_device = handle_remove_device;
   iface->handle_create_subvolume = handle_create_subvolume;
   iface->handle_remove_subvolume = handle_remove_subvolume;
   iface->handle_get_subvolumes = handle_get_subvolumes;
   iface->handle_create_snapshot = handle_create_snapshot;
+  iface->handle_repair = handle_repair;
+  iface->handle_resize = handle_resize;
 }

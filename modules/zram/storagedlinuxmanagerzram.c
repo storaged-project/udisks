@@ -18,8 +18,10 @@
  */
 
 #include "config.h"
+
 #include <string.h>
 
+#include <glib/gi18n.h>
 #include <blockdev/kbd.h>
 
 #include <src/storageddaemon.h>
@@ -34,21 +36,21 @@
  * SECTION: storagedlinuxmanagerzram
  * @title: StoragedLinuxManagerZRAM
  * @short_description: Linux implementation  of #StoragedLinuxManagerZRAM
- * 
+ *
  * This type provides an implementation of the #StoragedLinuxManagerZRAM
  * interface on Linux.
  */
 
 /**
  * StoragedLinuxManagerZRAM:
- * 
+ *
  * The #StoragedLinuxManagerBTRFS structure contains only private data and
  * should only be accessed using the provided API.
  */
 
 struct _StoragedLinuxManagerZRAM {
   StoragedManagerZRAMSkeleton parent_instance;
-  
+
   StoragedDaemon *daemon;
 };
 
@@ -79,7 +81,7 @@ storaged_linux_manager_zram_get_property (GObject     *object,
                                           GParamSpec  *pspec)
 {
   StoragedLinuxManagerZRAM *manager = STORAGED_LINUX_MANAGER_ZRAM (object);
-  
+
   switch (property_id)
     {
     case PROP_DAEMON:
@@ -180,7 +182,7 @@ storaged_linux_manager_zram_new (StoragedDaemon *daemon)
 /**
  * storaged_linux_manager_zram_get_daemon:
  * @manager: A #StoragedLinuxManagerZRAM.
- * 
+ *
  * Gets the daemon used by @manager.
  *
  * Returns: A #StoragedDaemon. Do not free, the object is owned by @manager.
@@ -212,7 +214,7 @@ handle_create_devices (StoragedManagerZRAM    *object,
                                        NULL,
                                        zram_policy_action_id,
                                        options,
-                                       "Authenticationis required to add zRAM kernel module",
+                                       N_("Authenticationis required to add zRAM kernel module"),
                                        invocation);
 
   sizes = (guint64*) g_variant_get_fixed_array (sizes_, &num_devices, sizeof (guint64));
@@ -236,13 +238,13 @@ handle_destroy_devices (StoragedManagerZRAM    *object,
 
   GError *error = NULL;
   StoragedLinuxManagerZRAM *manager = STORAGED_LINUX_MANAGER_ZRAM (object);
-  
+
   /* Policy check */
   STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_manager_zram_get_daemon (manager),
                                        NULL,
                                        zram_policy_action_id,
                                        options,
-                                       "Authenticationis required to remove zRAMkernel module",
+                                       N_("Authenticationis required to remove zRAMkernel module"),
                                        invocation);
 
   if (! bd_kbd_zram_destroy_devices (&error))

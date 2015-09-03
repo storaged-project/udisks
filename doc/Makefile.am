@@ -131,6 +131,11 @@ CFILE_GLOB += $(top_srcdir)/modules/iscsi/*.c
 AM_CPPFLAGS += -I$(top_srcdir)/modules/iscsi
 GTKDOC_LIBS += $(top_builddir)/modules/iscsi/libstoraged_iscsi.la
 endif # HAVE_ISCSI
+if HAVE_LSM
+	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).lsm.sed $(builddir)/$(DOC_MAIN_SGML_FILE)
+else
+	$(AM_V_at) $(SED) -i "/<\!-- LSM_GENERATED_SECTIONS -->/d" $(builddir)/$(STORAGED_SECTIONS)
+endif # HAVE_LSM
 
 # GTKDOC for BTRFS
 if HAVE_BTRFS
@@ -141,7 +146,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/modules/btrfs
 GTKDOC_LIBS += $(top_builddir)/modules/btrfs/libstoraged_btrfs.la
 endif # HAVE_BTRFS
 
-#GTKDOC for ZRAM
+# GTKDOC for ZRAM
 if HAVE_ZRAM
 DOC_SOURCE_DIR += $(top_srcdir)/modules/zram
 HFILE_GLOB += $(top_srcdir)/modules/zram/*.h
@@ -149,6 +154,15 @@ CFILE_GLOB += $(top_srcdir)/modules/zram/*.c
 AM_CPPFLAGS += -I$(top_srcdir)/modules/zram
 GTKDOC_LIBS += $(top_builddir)/modules/zram/libstoraged_zram.la
 endif # HAVE_ZRAM
+
+# GTKDOC for LSM
+if HAVE_LSM
+DOC_SOURCE_DIR += $(top_srcdir)/modules/lsm
+HFILE_GLOB += $(top_srcdir)/modules/lsm/*.h
+CFILE_GLOB += $(top_srcdir)/modules/lsm/*.c
+AM_CPPFLAGS += -I$(top_srcdir)/modules/lsm
+GTKDOC_LIBS += $(top_builddir)/modules/lsm/libstoraged_lsm.la
+endif # HAVE_LSM
 
 # ------------------------------------------------------------------------------
 
@@ -189,6 +203,8 @@ EXTRA_DIST +=                                                                  \
 	$(STORAGED_SECTIONS).lvm2.sed                                          \
 	$(STORAGED_SECTIONS).zram.sections.in                                  \
 	$(STORAGED_SECTIONS).zram.sed                                          \
+	$(STORAGED_SECTIONS).lsm.sections.in                                   \
+	$(STORAGED_SECTIONS).lsm.sed                                           \
 	version.xml.in                                                         \
 	TODO-ISCSI
 

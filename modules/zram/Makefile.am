@@ -6,7 +6,7 @@ ZRAM_MODULE_DIR = $(top_srcdir)/modules/zram
 
 MODULE_SO = libstoraged_zram.so
 
-NULL = 
+NULL =
 
 CPPFLAGS =                                                                     \
 	-I$(top_builddir) -I$(top_srcdir)                                      \
@@ -34,11 +34,11 @@ $(dbus_built_sources): $(ZRAM_MODULE_DIR)/data/org.storaged.Storaged.zram.xml Ma
 	        --generate-c-code storaged-zram-generated                     \
 	        --generate-docbook storaged-generated-doc                     \
 	        $<
-	        
+
 dbus_built_sources =                                                          \
 	storaged-zram-generated.h        storaged-zram-generated.c            \
 	$(NULL)
-	
+
 BUILT_SOURCES =                                                               \
 	$(dbus_built_sources)                                                 \
 	$(NULL)
@@ -53,7 +53,7 @@ libstoraged_zraminclude_HEADERS =                                             \
 	$(top_srcdir)/modules/storagedmoduleifacetypes.h                      \
 	$(top_srcdir)/modules/storagedmoduleobject.h                          \
 	$(NULL)
-	
+
 libstoraged_zram_la_SOURCES =                                                 \
 	$(BUILT_SOURCES)                                                      \
 	$(top_srcdir)/modules/storagedmoduleiface.h                           \
@@ -71,12 +71,12 @@ libstoraged_zram_la_SOURCES =                                                 \
 	storagedzramutil.c                                                    \
 	storagedzramutil.h                                                    \
 	$(NULL)
-	
+
 libstoraged_zram_la_CPPFLAGS =                                                \
 	$(CPPFLAGS)                                                           \
 	-DG_LOG_DOMAIN=\"libstoraged-zram\"                                   \
 	$(NULL)
-	
+
 libstoraged_zram_la_CFLAGS =                                                  \
 	$(GLIB_CFLAGS)                                                        \
 	$(GIO_CFLAGS)                                                         \
@@ -85,7 +85,7 @@ libstoraged_zram_la_CFLAGS =                                                  \
 	$(KBD_CFLAGS)                                                         \
 	$(SWAP_CFLAGS)                                                        \
 	$(NULL)
-	
+
 libstoraged_zram_la_LDFLAGS =                                                 \
 	-export_dynamic                                                       \
 	-avoid-version                                                        \
@@ -103,6 +103,7 @@ libstoraged_zram_la_LIBADD =                                                  \
 	$(KBD_LIBS)                                                           \
 	$(SWAP_LIBS)                                                          \
 	$(NULL)
+
 # ------------------------------------------------------------------------------
 
 CLEANFILES = storaged-generated-doc-*.xml storaged-generated.[ch]
@@ -115,7 +116,7 @@ include ../Makefile.uninstalled
 all-local: module_link
 
 dist-hook:
-	(for i in $(BUILT_SOURCES) ; do rm -f $(distdir)/$$i ; done)
+	(for i in $(BUILT_SOURCES); do rm -f $(distdir)/$$i; done)
 
 clean-local: module_unlink
 	rm -f *~ $(BUILT_SOURCES)

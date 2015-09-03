@@ -1,7 +1,7 @@
 
 m4_define([storaged_major_version], [2])
-m4_define([storaged_minor_version], [2])
-m4_define([storaged_micro_version], [1])
+m4_define([storaged_minor_version], [3])
+m4_define([storaged_micro_version], [0])
 
 m4_define([storaged_version], [storaged_major_version.storaged_minor_version.storaged_micro_version])
 
@@ -373,6 +373,36 @@ if test "x$enable_zram" = "xyes" \
     fi
 fi
 
+
+# LSM module
+have_lsm=no
+AC_ARG_ENABLE(
+    lsm, AS_HELP_STRING([--enable-lsm], [enable LibStorageMgmt support]))
+if test "x$enable_lsm" = "xyes" \
+        -o "x$enable_modules" = "xyes" \
+        -o "x$enable_all_modules" = "xyes"; then
+    PKG_CHECK_MODULES(
+        [LIBLSM], [libstoragemgmt >= 1.2.0],
+        [AC_DEFINE(HAVE_LSM, 1, [Define if liblibstoragemgmt is available])
+            have_lsm=yes],
+        [AC_MSG_ERROR([libstoragemgmt 1.2.0 or newer not found.])
+            have_lsm=no])
+
+    PKG_CHECK_MODULES(
+        [LIBCONFIG], [libconfig >= 1.3.2],
+        [AC_DEFINE(HAVE_LSM, 1, [Define if libconfig is available])
+            have_lsm=yes],
+        [AC_MSG_ERROR([libconfig 1.3.2 or newer not found.])
+            have_lsm=no])
+
+  if test "x$have_lsm" = "xno"; then
+    AC_MSG_ERROR([LibStorageMgmt support requested but libraries not found])
+  fi
+fi
+AM_CONDITIONAL(HAVE_LSM, [test "x$have_lsm" = "xyes"])
+
+
+
 AM_CONDITIONAL(HAVE_ZRAM, [test "$have_kbd" = "yes" -a "$have_swap" = "yes"])
 # Internationalization
 #
@@ -405,6 +435,8 @@ modules/lvm2/Makefile
 modules/lvm2/data/Makefile
 modules/zram/Makefile
 modules/zram/data/Makefile
+modules/lsm/Makefile
+modules/lsm/data/Makefile
 doc/Makefile
 doc/storaged-docs.xml.in
 doc/storaged-sections.txt.in
@@ -416,6 +448,7 @@ doc/man/storaged-project.xml
 doc/man/storaged.xml
 doc/man/storagedctl.xml
 doc/man/umount.storaged.xml
+doc/man/storaged_lsm.conf.5
 doc/storaged-docs.xml.iscsi.dbus
 doc/storaged-docs.xml.iscsi.generated
 doc/storaged-sections.txt.iscsi.sections
@@ -433,6 +466,7 @@ doc/storaged-docs.xml.zram.dbus
 doc/storaged-docs.xml.zram.generated
 doc/storaged-sections.txt.zram.sections
 doc/storaged.types.zram
+doc/storaged-docs.xml.lsm.dbus
 po/Makefile.in
 ])
 
@@ -470,4 +504,5 @@ echo "
         iSCSI module:               ${have_iscsi}${have_libiscsi_session_info_msg}
         LVM2  module:               ${have_lvm2}
         Zram module:                ${have_zram}
+        LibStorageMgmt module:      ${have_lsm}
 "

@@ -376,6 +376,7 @@
       <!-- ISCSI_DBUS_INTERFACE -->
       <!-- BTRFS_DBUS_INTERFACE -->
       <!-- ZRAM_DBUS_INTERFACE -->
+      <!-- LSM_DBUS_INTERFACE -->
     </chapter>
   </part>
 
