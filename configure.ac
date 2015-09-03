@@ -280,7 +280,6 @@ if test "x$enable_iscsi" = "xyes" \
                           [libiscsi can retrieve session information])],
                [have_libiscsi_session_info_msg=", without iscsi sessions"])
 
-
   if test "x$have_iscsi" = "xno"; then
     AC_MSG_ERROR([iSCSI support requested but libraries not found])
   fi
