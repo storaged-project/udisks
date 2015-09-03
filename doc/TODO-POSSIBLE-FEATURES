@@ -11,6 +11,5 @@ Add support for:
 - raid tests
 - lvm cache
 - bcache
-- zram
 - glusterfs
 - ceph
