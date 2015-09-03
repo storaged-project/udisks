@@ -37,6 +37,7 @@
 #include "storagedlvm2types.h"
 #include "storagedlinuxmanagerlvm2.h"
 #include "storagedlvm2daemonutil.h"
+#include "storagedlvm2util.h"
 #include "storaged-lvm2-generated.h"
 
 /**
@@ -209,8 +210,6 @@ handle_volume_group_create (StoragedManagerLVM2     *_object,
   StoragedLinuxManagerLVM2 *manager = STORAGED_LINUX_MANAGER_LVM2(_object);
   uid_t caller_uid;
   GError *error = NULL;
-  const gchar *message;
-  const gchar *action_id;
   GList *blocks = NULL;
   GList *l;
   guint n;
@@ -228,15 +227,13 @@ handle_volume_group_create (StoragedManagerLVM2     *_object,
       goto out;
     }
 
-  message = N_("Authentication is required to create a volume group");
-  action_id = "org.storaged.Storaged.lvm2.manage-lvm";
-  if (!storaged_daemon_util_check_authorization_sync (manager->daemon,
-                                                      NULL,
-                                                      action_id,
-                                                      arg_options,
-                                                      message,
-                                                      invocation))
-    goto out;
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_manager_lvm2_get_daemon (manager),
+                                       NULL,
+                                       lvm2_policy_action_id,
+                                       arg_options,
+                                       N_("Authentication is required to create a volume group"),
+                                       invocation);
 
   /* Collect and validate block objects
    *
