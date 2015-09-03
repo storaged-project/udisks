@@ -53,7 +53,7 @@ gpointer
 storaged_module_init (StoragedDaemon *daemon)
 {
   storaged_debug ("LSM: storaged_module_init ()");
-  std_lsm_data_init ();
+  std_lsm_data_init (daemon);
   return NULL;
 }
 

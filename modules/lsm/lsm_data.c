@@ -19,8 +19,12 @@
  *
  */
 
+#include "config.h"
+
 #include "lsm_data.h"
 
+#include <src/storageddaemon.h>
+#include <src/storageddaemontypes.h>
 #include <src/storagedlogging.h>
 #include <glib.h>
 #include <glib/gprintf.h>
@@ -31,7 +35,9 @@
 #define _STD_LSM_SIM_URI "sim://"
 #define _STD_LSM_HPSA_URI "hpsa://"
 
-#define _STD_LSM_CONF_PATH "/etc/storaged/modules.conf.d/storaged_lsm.conf"
+#define _STD_LSM_CONF_PATH_PREFIX "/etc/"
+#define _STD_LSM_CONF_PATH "storaged/modules.conf.d/"
+#define _STD_LSM_CONF_FILE "storaged_lsm.conf"
 #define _STD_LSM_CONF_REFRESH_KEYNAME "refresh_interval"
 #define _STD_LSM_CONF_SIM_KEYNAME "enable_sim"
 #define _STD_LSM_CONF_HPSA_KEYNAME "enable_hpsa"
@@ -94,11 +100,12 @@ static GHashTable *_supported_sys_id_hash = NULL;
 static GHashTable *_vpd83_2_lsm_conn_data_hash = NULL;
 static GHashTable *_pl_id_2_lsm_pl_data_hash = NULL;
 static GHashTable *_vpd83_2_lsm_vri_data_hash = NULL;
+static char *_std_lsm_conf_file_abs_path = NULL;
 
 static struct _LsmUriSet *_lsm_uri_set_new (const char *uri, const char *pass);
 static void _handle_lsm_error (const char *msg, lsm_connect *lsm_conn);
 static const char *_lsm_raid_type_to_str (lsm_volume_raid_type raid_type);
-static void _load_module_conf (void);
+static void _load_module_conf (StoragedDaemon *daemon);
 static lsm_connect *_create_lsm_connect (struct _LsmUriSet *lsm_uri_set);
 static GPtrArray *_get_supported_lsm_volumes (lsm_connect *lsm_conn);
 static GPtrArray *_get_supported_lsm_pls (lsm_connect *lsm_conn);
@@ -113,6 +120,8 @@ static struct _LsmVriData *
 _refresh_lsm_vri_data (struct _LsmConnData *lsm_conn_data, const char *vpd83);
 static struct _LsmPlData *_lsm_pl_data_lookup (const char *vpd83);
 static struct _LsmVriData *_lsm_vri_data_lookup (const char *vpd83);
+
+static const gchar *_lsm_get_conf_path (StoragedDaemon *daemon);
 
 static void _free_lsm_connect (gpointer data);
 static void _free_lsm_uri_set (gpointer data);
@@ -188,14 +197,14 @@ _lsm_raid_type_to_str (lsm_volume_raid_type raid_type)
 }
 
 /*
- * Use libconfig.h to read config file _STD_LSM_CONF_PATH.
+ * Use libconfig.h to read config file.
  * Set these static variables
  *    GPtrArray _conf_lsm_uri_sets
  *    gint64 _conf_refresh_interval
  * Memory should be freed by
  */
 static void
-_load_module_conf (void)
+_load_module_conf (StoragedDaemon *daemon)
 {
   struct _LsmUriSet *lsm_uri_set = NULL;
   config_t *cfg = NULL;
@@ -204,17 +213,21 @@ _load_module_conf (void)
   config_setting_t *ext_pass = NULL;
   const char *uri = NULL;
   const char *password = NULL;
+  const char *conf_path = NULL;
   int i;
 
   storaged_debug ("LSM: loading configure");
 
+  /* Get the abs config file path. */
+  conf_path = _lsm_get_conf_path (daemon);
+
   cfg = (config_t *) g_malloc (sizeof (config_t));
   config_init (cfg);
-  if (CONFIG_TRUE != config_read_file (cfg, _STD_LSM_CONF_PATH))
+  if (CONFIG_TRUE != config_read_file (cfg, conf_path))
     {
       storaged_warning
         ("LSM: Failed to load config: %s, error: %s at line %d",
-         _STD_LSM_CONF_PATH, config_error_text (cfg), config_error_line (cfg));
+         conf_path, config_error_text (cfg), config_error_line (cfg));
       _conf_lsm_uri_sets = NULL;
       goto out;
     }
@@ -250,7 +263,7 @@ _load_module_conf (void)
   if (ext_uris && !config_setting_is_array (ext_uris))
     {
       storaged_warning ("LSM: Invalid setting of '%s' in %s",
-                        _STD_LSM_CONF_EXT_URIS_KEYNAME, _STD_LSM_CONF_PATH);
+                        _STD_LSM_CONF_EXT_URIS_KEYNAME, conf_path);
       goto out;
     }
 
@@ -258,7 +271,7 @@ _load_module_conf (void)
   if (ext_pass && !config_setting_is_array (ext_pass))
     {
       storaged_warning ("LSM: Invalid configure setting of '%s' in %s",
-                        _STD_LSM_CONF_EXT_PASS_KEYNAME, _STD_LSM_CONF_PATH);
+                        _STD_LSM_CONF_EXT_PASS_KEYNAME, conf_path);
       goto out;
     }
 
@@ -858,6 +871,20 @@ _lsm_vri_data_lookup (const char *vpd83)
   return _refresh_lsm_vri_data (lsm_conn_data, vpd83);
 }
 
+static const char *
+_lsm_get_conf_path (StoragedDaemon *daemon)
+{
+  gboolean uninstalled = storaged_daemon_get_uninstalled (daemon);
+
+  _std_lsm_conf_file_abs_path = g_build_path (G_DIR_SEPARATOR_S,
+                                              uninstalled ? BUILD_DIR : _STD_LSM_CONF_PATH_PREFIX,
+                                              _STD_LSM_CONF_PATH,
+                                              _STD_LSM_CONF_FILE,
+                                              NULL);
+
+  return (const char *) _std_lsm_conf_file_abs_path;
+}
+
 static void
 _free_lsm_connect (gpointer data)
 {
@@ -913,7 +940,7 @@ _free_lsm_vri_data (gpointer data)
 }
 
 void
-std_lsm_data_init (void)
+std_lsm_data_init (StoragedDaemon *daemon)
 {
   struct _LsmUriSet *lsm_uri_set = NULL;
   lsm_connect *lsm_conn = NULL;
@@ -922,11 +949,11 @@ std_lsm_data_init (void)
   guint i = 0;
   gboolean rc = FALSE;
 
-  _load_module_conf ();
+  _load_module_conf (daemon);
   if (_conf_lsm_uri_sets == NULL)
     {
       storaged_warning ("LSM: No URI found in config file %s",
-                        _STD_LSM_CONF_PATH);
+                        _lsm_get_conf_path (daemon));
       return;
     }
 
@@ -1059,6 +1086,9 @@ std_lsm_data_teardown (void)
 
   g_hash_table_unref (_pl_id_2_lsm_pl_data_hash);
   _pl_id_2_lsm_pl_data_hash = NULL;
+
+  g_free ((gpointer) _std_lsm_conf_file_abs_path);
+  _std_lsm_conf_file_abs_path = NULL;
 }
 
 void

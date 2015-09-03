@@ -1,0 +1,15 @@
+## Interval in seconds between every LibStorageMgmt data refresh. It define how
+## long will the monitor thread noticed state change before it happened.  Only
+## unsigned integer is supported.  If not define, then 30.
+refresh_interval = 30
+
+## Only for developers; Valid values are true or false.  If not defined, then
+## false is assumed.
+enable_sim = false
+
+## Load LibStorageMgmt HP Smart Array plugin. Valid values are true or false.
+## If not defined, then true is assumed.
+enable_hpsa = true
+
+## Extra URI and password to load.  Should be quoted and be splited by ','
+## By default, no extra URIs will be loaded.

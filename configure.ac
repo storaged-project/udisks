@@ -420,6 +420,8 @@ Makefile
 data/Makefile
 storaged/Makefile
 storaged/storaged.pc
+storaged/modules.conf.d/Makefile
+storaged/modules.conf.d/storaged_lsm.conf
 src/Makefile
 src/tests/Makefile
 tools/Makefile

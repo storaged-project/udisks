@@ -42,6 +42,8 @@ G_BEGIN_DECLS
 #define _MAX_RAID_TYPE_LEN 10
 #define _MAX_STATUS_INFO_LEN 255
 
+typedef struct _StoragedDaemon StoragedDaemon;
+
 struct StdLsmVolData
 {
   char raid_type[_MAX_RAID_TYPE_LEN];
@@ -56,7 +58,7 @@ struct StdLsmVolData
   uint32_t raid_disk_count;
 };
 
-void std_lsm_data_init (void);
+void std_lsm_data_init (StoragedDaemon *daemon);
 
 /*
  * The cached lsm volume/vpd83 list will not refresh automatically. This is
