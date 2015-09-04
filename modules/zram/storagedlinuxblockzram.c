@@ -22,7 +22,6 @@
 
 #include <src/storageddaemonutil.h>
 #include <src/storagedlinuxblockobject.h>
-#include <src/storagedlinuxdevice.h>
 #include <src/storagedlogging.h>
 #include <src/storageddaemon.h>
 #include <blockdev/kbd.h>
@@ -184,7 +183,6 @@ storaged_linux_block_zram_update (StoragedLinuxBlockZRAM    *zramblock,
                                   StoragedLinuxBlockObject  *object)
 {
   StoragedBlockZRAM *iface = STORAGED_BLOCK_ZRAM (zramblock);
-  StoragedLinuxDevice *device = NULL;
   GError *error = NULL;
   gchar *dev_file = NULL;
   gboolean rval = FALSE;
@@ -193,8 +191,7 @@ storaged_linux_block_zram_update (StoragedLinuxBlockZRAM    *zramblock,
   g_return_val_if_fail (STORAGED_IS_LINUX_BLOCK_ZRAM (zramblock), FALSE);
   g_return_val_if_fail (STORAGED_IS_LINUX_BLOCK_OBJECT (object), FALSE);
 
-  device = storaged_linux_block_object_get_device (STORAGED_LINUX_BLOCK_OBJECT (object));
-  dev_file = g_strdup (g_udev_device_get_device_file (device->udev_device));
+  dev_file = storaged_linux_block_object_get_device_file (object);
 
   zram_info = bd_kbd_zram_get_stats (dev_file, &error);
 
@@ -237,18 +234,9 @@ zram_device_activate (StoragedBlockZRAM      *zramblock_,
 {
   gchar *label = (gchar*) label_;
   StoragedLinuxBlockZRAM *zramblock = STORAGED_LINUX_BLOCK_ZRAM (zramblock_);
-  StoragedObject *object = NULL;
-  StoragedLinuxDevice *device = NULL;
+  StoragedLinuxBlockObject *object = NULL;
   gchar *dev_file = NULL;
   GError *error = NULL;
-
-  /* Policy check */
-  STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_block_zram_get_daemon(zramblock),
-                                       NULL,
-                                       zram_policy_action_id,
-                                       options,
-                                       N_("Authentication is required to enable zRAM device"),
-                                       invocation);
 
   object = storaged_daemon_util_dup_object (zramblock, &error);
   if (! object)
@@ -257,8 +245,15 @@ zram_device_activate (StoragedBlockZRAM      *zramblock_,
       goto out;
     }
 
-  device = storaged_linux_block_object_get_device (STORAGED_LINUX_BLOCK_OBJECT (object));
-  dev_file = g_strdup (g_udev_device_get_device_file (device->udev_device));
+  /* Policy check */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_block_zram_get_daemon(zramblock),
+                                       STORAGED_OBJECT (object),
+                                       zram_policy_action_id,
+                                       options,
+                                       N_("Authentication is required to enable zRAM device"),
+                                       invocation);
+
+  dev_file = storaged_linux_block_object_get_device_file (object);
 
   if (! bd_swap_mkswap (dev_file, label, &error))
   {
@@ -276,8 +271,9 @@ zram_device_activate (StoragedBlockZRAM      *zramblock_,
   storaged_block_zram_complete_activate(zramblock_,invocation);
 
 out:
-  g_free (dev_file);
   g_clear_object (&object);
+  g_free (dev_file);
+
   return TRUE;
 }
 
@@ -329,18 +325,9 @@ handle_deactivate (StoragedBlockZRAM      *zramblock_,
                    GVariant               *options)
 {
   StoragedLinuxBlockZRAM *zramblock = STORAGED_LINUX_BLOCK_ZRAM (zramblock_);
-  StoragedObject *object = NULL;
-  StoragedLinuxDevice *device = NULL;
+  StoragedLinuxBlockObject *object = NULL;
   gchar *dev_file = NULL;
   GError *error = NULL;
-
-  /* Policy check */
-  STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_block_zram_get_daemon(zramblock),
-                                       NULL,
-                                       zram_policy_action_id,
-                                       options,
-                                       N_("Authentication is required to disable zRAM device"),
-                                       invocation);
 
   object = storaged_daemon_util_dup_object (zramblock, &error);
   if (! object)
@@ -349,13 +336,20 @@ handle_deactivate (StoragedBlockZRAM      *zramblock_,
       goto out;
     }
 
+  /* Policy check */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_block_zram_get_daemon(zramblock),
+                                       STORAGED_OBJECT (object),
+                                       zram_policy_action_id,
+                                       options,
+                                       N_("Authentication is required to disable zRAM device"),
+                                       invocation);
+
   if (! storaged_block_zram_get_active (zramblock_))
     {
       return TRUE;
     }
 
-  device = storaged_linux_block_object_get_device (STORAGED_LINUX_BLOCK_OBJECT (object));
-  dev_file = g_strdup (g_udev_device_get_device_file (device->udev_device));
+  dev_file = storaged_linux_block_object_get_device_file (object);
 
   if (! bd_swap_swapoff (dev_file, &error))
   {
@@ -367,8 +361,9 @@ handle_deactivate (StoragedBlockZRAM      *zramblock_,
   storaged_block_zram_complete_deactivate(zramblock_,invocation);
 
 out:
-  g_free (dev_file);
   g_clear_object (&object);
+  g_free (dev_file);
+
   return TRUE;
 }
 
