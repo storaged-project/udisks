@@ -323,13 +323,21 @@ handle_set_label (StoragedFilesystemBTRFS  *fs_btrfs,
                   GVariant                 *arg_options)
 {
   StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
+  StoragedLinuxBlockObject *object = NULL;
   GError *error = NULL;
   gchar *dev_file = NULL;
   gchar *label = NULL;
 
+  object = storaged_daemon_util_dup_object (l_fs_btrfs, &error);
+  if (! object)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   /* Policy check. */
   STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
-                                       NULL,
+                                       STORAGED_OBJECT (object),
                                        btrfs_policy_action_id,
                                        arg_options,
                                        N_("Authentication is required to change label for BTRFS volume"),
@@ -357,6 +365,7 @@ handle_set_label (StoragedFilesystemBTRFS  *fs_btrfs,
   storaged_filesystem_btrfs_complete_set_label (fs_btrfs,
                                                 invocation);
 out:
+  g_clear_object (&object);
   g_free ((gpointer) dev_file);
   g_free ((gpointer) label);
   return TRUE;
@@ -371,13 +380,21 @@ btrfs_subvolume_perform_action (StoragedFilesystemBTRFS  *fs_btrfs,
                                 const gchar              *polkit_message)
 {
   StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
+  StoragedLinuxBlockObject *object = NULL;
   GError *error = NULL;
   gchar *name = NULL;
   gchar *mount_point = NULL;
 
+  object = storaged_daemon_util_dup_object (l_fs_btrfs, &error);
+  if (! object)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   /* Policy check. */
   STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
-                                       NULL,
+                                       STORAGED_OBJECT (object),
                                        btrfs_policy_action_id,
                                        arg_options,
                                        N_(polkit_message),
@@ -415,6 +432,7 @@ btrfs_subvolume_perform_action (StoragedFilesystemBTRFS  *fs_btrfs,
 
 out:
   /* Release the resources */
+  g_clear_object (&object);
   g_free ((gpointer) name);
   g_free ((gpointer) mount_point);
 
@@ -435,9 +453,16 @@ btrfs_device_perform_action (StoragedFilesystemBTRFS  *fs_btrfs,
   gchar *mount_point = NULL;
   gchar *device = NULL;
 
+  object = storaged_daemon_util_dup_object (fs_btrfs, &error);
+  if (! object)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   /* Policy check. */
   STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
-                                       NULL,
+                                       STORAGED_OBJECT (object),
                                        btrfs_policy_action_id,
                                        arg_options,
                                        N_("Authentication is required to add "
@@ -462,12 +487,6 @@ btrfs_device_perform_action (StoragedFilesystemBTRFS  *fs_btrfs,
     }
 
   /* Update the interface. */
-  object = storaged_daemon_util_dup_object (fs_btrfs, &error);
-  if (! object)
-    {
-      g_dbus_method_invocation_take_error (invocation, error);
-      goto out;
-    }
   storaged_linux_filesystem_btrfs_update (l_fs_btrfs, object);
 
   /* Complete DBus call. */
@@ -475,9 +494,9 @@ btrfs_device_perform_action (StoragedFilesystemBTRFS  *fs_btrfs,
 
 out:
   /* Release the resources */
+  g_clear_object (&object);
   g_free ((gpointer) mount_point);
   g_free ((gpointer) device);
-  g_clear_object (&object);
 
   /* Indicate that we handled the method invocation. */
   return TRUE;
@@ -546,15 +565,23 @@ handle_get_subvolumes (StoragedFilesystemBTRFS  *fs_btrfs,
                        GVariant                 *arg_options)
 {
   StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
+  StoragedLinuxBlockObject *object = NULL;
   BDBtrfsSubvolumeInfo **subvolumes_info = NULL;
   GVariant *subvolumes = NULL;
   GError *error = NULL;
   gchar *mount_point = NULL;
   gint subvolumes_cnt = 0;
 
+  object = storaged_daemon_util_dup_object (fs_btrfs, &error);
+  if (! object)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   /* Policy check. */
   STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
-                                       NULL,
+                                       STORAGED_OBJECT (object),
                                        btrfs_policy_action_id,
                                        arg_options,
                                        N_("Authentication is required to change label "
@@ -590,6 +617,7 @@ handle_get_subvolumes (StoragedFilesystemBTRFS  *fs_btrfs,
 
 out:
   /* Release the resources */
+  g_clear_object (&object);
   btrfs_free_subvolumes_info (subvolumes_info);
   g_free ((gpointer) mount_point);
 
@@ -606,14 +634,22 @@ handle_create_snapshot(StoragedFilesystemBTRFS  *fs_btrfs,
                        GVariant                 *arg_options)
 {
   StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
+  StoragedLinuxBlockObject *object = NULL;
   GError *error = NULL;
   gchar *source = NULL;
   gchar *dest = NULL;
   gchar *mount_point = NULL;
 
+  object = storaged_daemon_util_dup_object (fs_btrfs, &error);
+  if (! object)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   /* Policy check. */
   STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
-                                       NULL,
+                                       STORAGED_OBJECT (object),
                                        btrfs_policy_action_id,
                                        arg_options,
                                        N_("Authentication is required to create a new snapshot"),
@@ -644,6 +680,7 @@ handle_create_snapshot(StoragedFilesystemBTRFS  *fs_btrfs,
 
 out:
   /* Release the resources */
+  g_clear_object (&object);
   g_free ((gpointer) source);
   g_free ((gpointer) dest);
   g_free ((gpointer) mount_point);
@@ -658,12 +695,20 @@ handle_repair (StoragedFilesystemBTRFS  *fs_btrfs,
                GVariant                 *arg_options)
 {
   StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
+  StoragedLinuxBlockObject *object = NULL;
   GError *error = NULL;
   gchar *dev_file = NULL;
 
+  object = storaged_daemon_util_dup_object (l_fs_btrfs, &error);
+  if (! object)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   /* Policy check. */
   STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
-                                       NULL,
+                                       STORAGED_OBJECT (object),
                                        btrfs_policy_action_id,
                                        arg_options,
                                        N_("Authentication is required to check and repair the volume"),
@@ -689,6 +734,7 @@ handle_repair (StoragedFilesystemBTRFS  *fs_btrfs,
                                              invocation);
 
 out:
+  g_clear_object (&object);
   g_free ((gpointer) dev_file);
 
   /* Indicate that we handled the method invocation */
@@ -702,12 +748,20 @@ handle_resize (StoragedFilesystemBTRFS  *fs_btrfs,
                GVariant                 *arg_options)
 {
   StoragedLinuxFilesystemBTRFS *l_fs_btrfs = STORAGED_LINUX_FILESYSTEM_BTRFS (fs_btrfs);
+  StoragedLinuxBlockObject *object = NULL;
   GError *error = NULL;
   gchar *mount_point = NULL;
 
+  object = storaged_daemon_util_dup_object (l_fs_btrfs, &error);
+  if (! object)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
   /* Policy check. */
   STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_filesystem_btrfs_get_daemon (l_fs_btrfs),
-                                       NULL,
+                                       STORAGED_OBJECT (object),
                                        btrfs_policy_action_id,
                                        arg_options,
                                        N_("Authentication is required to resize the volume"),
@@ -733,6 +787,7 @@ handle_resize (StoragedFilesystemBTRFS  *fs_btrfs,
                                              invocation);
 
 out:
+  g_clear_object (&object);
   g_free ((gpointer) mount_point);
 
   /* Indicate that we handled the method invocation */
