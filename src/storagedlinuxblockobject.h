@@ -38,8 +38,9 @@ void                        storaged_linux_block_object_uevent     (StoragedLinu
                                                                     StoragedLinuxDevice       *device);
 StoragedDaemon             *storaged_linux_block_object_get_daemon (StoragedLinuxBlockObject  *object);
 StoragedLinuxDevice        *storaged_linux_block_object_get_device (StoragedLinuxBlockObject  *object);
+gchar                      *storaged_linux_block_object_get_device_file (StoragedLinuxBlockObject *object);
 
-void                        storaged_linux_block_object_trigger_uevent (StoragedLinuxBlockObject  *object);
+void                        storaged_linux_block_object_trigger_uevent  (StoragedLinuxBlockObject  *object);
 void                        storaged_linux_block_object_reread_partition_table (StoragedLinuxBlockObject *object);
 
 G_END_DECLS

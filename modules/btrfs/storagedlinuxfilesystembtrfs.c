@@ -210,32 +210,6 @@ storaged_linux_filesystem_btrfs_get_daemon (StoragedLinuxFilesystemBTRFS *l_fs_b
   return daemon;
 }
 
-static gchar *
-storaged_filesystem_btrfs_get_device_file (StoragedFilesystemBTRFS  *fs_btrfs,
-                                           GError                  **error)
-{
-  StoragedObject *object = NULL;
-  StoragedLinuxDevice *device = NULL;
-  gchar *device_file = NULL;
-
-  g_return_val_if_fail (STORAGED_IS_FILESYSTEM_BTRFS (fs_btrfs), NULL);
-  g_return_val_if_fail (error, NULL);
-
-  /* Get enclosing object for this interface. */
-  object = storaged_daemon_util_dup_object (fs_btrfs, error);
-  g_return_val_if_fail (object, NULL);
-
-  /* Return the device filename (eg.: /dev/sda1) */
-  device = storaged_linux_block_object_get_device (STORAGED_LINUX_BLOCK_OBJECT (object));
-  device_file = g_strdup (g_udev_device_get_device_file (device->udev_device));
-
-  /* Free resources. */
-  g_clear_object (&object);
-  g_object_unref (device);
-
-  return device_file;
-}
-
 /**
  * storaged_linux_filesystem_btrfs_update:
  * @l_fs_btrfs: A #StoragedLinuxFilesystemBTRFS.
@@ -258,7 +232,7 @@ storaged_linux_filesystem_btrfs_update (StoragedLinuxFilesystemBTRFS *l_fs_btrfs
   g_return_val_if_fail (STORAGED_IS_LINUX_FILESYSTEM_BTRFS (fs_btrfs), FALSE);
   g_return_val_if_fail (STORAGED_IS_LINUX_BLOCK_OBJECT (object), FALSE);
 
-  dev_file = storaged_filesystem_btrfs_get_device_file (fs_btrfs, &error);
+  dev_file = storaged_linux_block_object_get_device_file (object);
   if (! dev_file)
     {
       rval = FALSE;
@@ -365,7 +339,7 @@ handle_set_label (StoragedFilesystemBTRFS  *fs_btrfs,
   label = g_strdup (arg_label);
 
   /* Get the device filename (eg.: /dev/sda1) */
-  dev_file = storaged_filesystem_btrfs_get_device_file (fs_btrfs, &error);
+  dev_file = storaged_linux_block_object_get_device_file (object);
   if (! dev_file)
     {
       g_dbus_method_invocation_take_error (invocation, error);
@@ -696,7 +670,7 @@ handle_repair (StoragedFilesystemBTRFS  *fs_btrfs,
                                        invocation);
 
   /* Get the device filename (eg.: /dev/sda1) */
-  dev_file = storaged_filesystem_btrfs_get_device_file (fs_btrfs, &error);
+  dev_file = storaged_linux_block_object_get_device_file (object);
   if (! dev_file)
     {
       g_dbus_method_invocation_take_error (invocation, error);

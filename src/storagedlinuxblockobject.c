@@ -343,6 +343,32 @@ storaged_linux_block_object_get_device (StoragedLinuxBlockObject *object)
   return g_object_ref (object->device);
 }
 
+/**
+ * storaged_linux_block_object_get_device_file:
+ * @object: A #StoragedLinuxBlockObject.
+ *
+ * Gets the device path for this object (eg. /dev/sda1).
+ *
+ * Returns: A device path. Free with g_free().
+ */
+gchar *
+storaged_linux_block_object_get_device_file (StoragedLinuxBlockObject *object)
+{
+  StoragedLinuxDevice *device = NULL;
+  gchar *device_file = NULL;
+
+  g_return_val_if_fail (STORAGED_IS_LINUX_BLOCK_OBJECT (object), NULL);
+
+  /* Return the device filename (eg.: /dev/sda1) */
+  device = storaged_linux_block_object_get_device (object);
+  device_file = g_strdup (g_udev_device_get_device_file (device->udev_device));
+
+  /* Free resources. */
+  g_object_unref (device);
+
+  return device_file;
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
