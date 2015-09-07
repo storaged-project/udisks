@@ -4,6 +4,7 @@
 data/org.storaged.Storaged.policy.in
 modules/btrfs/data/org.storaged.Storaged.btrfs.policy.in
 modules/btrfs/storagedlinuxfilesystembtrfs.c
+modules/btrfs/storagedlinuxmanagerbtrfs.c
 modules/iscsi/data/org.storaged.Storaged.iscsi.policy.in
 modules/iscsi/storagedlinuxiscsisession.c
 modules/iscsi/storagedlinuxmanageriscsiinitiator.c

@@ -104,7 +104,7 @@ libstoraged_btrfs_la_LIBADD =                                                  \
 
 # ------------------------------------------------------------------------------
 
-CLEANFILES = storaged-generated-doc-*.xml storaged-generated.[ch]
+CLEANFILES = storaged-generated-doc-*.xml storaged-btrfs-generated.[ch]
 
 EXTRA_DIST =                                                                   \
 	$(NULL)
