@@ -372,11 +372,11 @@
       <xi:include href="../storaged/storaged-generated-doc-org.storaged.Storaged.Encrypted.xml"/>
       <xi:include href="../storaged/storaged-generated-doc-org.storaged.Storaged.Loop.xml"/>
       <xi:include href="../storaged/storaged-generated-doc-org.storaged.Storaged.Job.xml"/>
+      <!-- LSM_DBUS_INTERFACE -->
       <!-- LVM2_DBUS_INTERFACE -->
       <!-- ISCSI_DBUS_INTERFACE -->
       <!-- BTRFS_DBUS_INTERFACE -->
       <!-- ZRAM_DBUS_INTERFACE -->
-      <!-- LSM_DBUS_INTERFACE -->
     </chapter>
   </part>
 
@@ -401,6 +401,7 @@
       <xi:include href="xml/StoragedSwapspace.xml"/>
       <xi:include href="xml/StoragedEncrypted.xml"/>
       <xi:include href="xml/StoragedLoop.xml"/>
+      <!-- LSM_GENERATED_CODE -->
       <!-- LVM2_GENERATED_CODE -->
       <!-- ISCSI_GENERATED_CODE -->
       <!-- BTRFS_GENERATED_CODE -->

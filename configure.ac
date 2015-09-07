@@ -454,6 +454,10 @@ doc/storaged-docs.xml.iscsi.dbus
 doc/storaged-docs.xml.iscsi.generated
 doc/storaged-sections.txt.iscsi.sections
 doc/storaged.types.iscsi
+doc/storaged-docs.xml.lsm.dbus
+doc/storaged-docs.xml.lsm.generated
+doc/storaged-sections.txt.lsm.sections
+doc/storaged.types.lsm
 doc/storaged-docs.xml.lvm2.man
 doc/storaged-docs.xml.lvm2.dbus
 doc/storaged-docs.xml.lvm2.generated
@@ -467,7 +471,6 @@ doc/storaged-docs.xml.zram.dbus
 doc/storaged-docs.xml.zram.generated
 doc/storaged-sections.txt.zram.sections
 doc/storaged.types.zram
-doc/storaged-docs.xml.lsm.dbus
 po/Makefile.in
 ])
 

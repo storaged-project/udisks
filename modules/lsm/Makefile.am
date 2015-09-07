@@ -26,7 +26,7 @@ INCLUDES = \
 	$(NULL)
 
 $(dbus_built_sources): data/org.storaged.Storaged.lsm.xml Makefile.am
-	gdbus-codegen \
+	$(AM_V_GEN) gdbus-codegen \
 		--interface-prefix org.storaged.Storaged. \
 		--c-namespace Storaged \
 		--generate-c-code lsm_generated \
@@ -101,7 +101,7 @@ libstoraged_lsm_la_LIBADD = \
 
 # ------------------------------------------------------------------------------
 
-CLEANFILES = lsm_generated.[ch]
+CLEANFILES = doc_generated-*.xml lsm_generated.[ch]
 
 EXTRA_DIST = \
 	$(NULL)

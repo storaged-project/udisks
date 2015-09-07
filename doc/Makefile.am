@@ -89,6 +89,14 @@ else
 	$(AM_V_at) $(SED) -i "/<\!-- LVM2_GENERATED_SECTIONS -->/d" $(builddir)/$(STORAGED_SECTIONS)
 	$(AM_V_at) $(SED) -i "/\# LVM2_TYPES/d" $(builddir)/$(STORAGED_TYPES)
 endif # HAVE_LVM2
+if HAVE_LSM
+	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).lsm.sed $(builddir)/$(DOC_MAIN_SGML_FILE)
+	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(STORAGED_SECTIONS).lsm.sed $(builddir)/$(STORAGED_SECTIONS)
+	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(STORAGED_TYPES).lsm.sed $(builddir)/$(STORAGED_TYPES)
+else
+	$(AM_V_at) $(SED) -i "/<\!-- LSM_GENERATED_SECTIONS -->/d" $(builddir)/$(STORAGED_SECTIONS)
+	$(AM_V_at) $(SED) -i "/\# LSM_TYPES/d" $(builddir)/$(STORAGED_TYPES)
+endif # HAVE_LSM
 if HAVE_ISCSI
 	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).iscsi.sed $(builddir)/$(DOC_MAIN_SGML_FILE)
 	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(STORAGED_SECTIONS).iscsi.sed $(builddir)/$(STORAGED_SECTIONS)
@@ -131,11 +139,6 @@ CFILE_GLOB += $(top_srcdir)/modules/iscsi/*.c
 AM_CPPFLAGS += -I$(top_srcdir)/modules/iscsi
 GTKDOC_LIBS += $(top_builddir)/modules/iscsi/libstoraged_iscsi.la
 endif # HAVE_ISCSI
-if HAVE_LSM
-	$(AM_V_at) $(SED) -i -f $(DOC_DIR)/$(DOC_MAIN_SGML_FILE).lsm.sed $(builddir)/$(DOC_MAIN_SGML_FILE)
-else
-	$(AM_V_at) $(SED) -i "/<\!-- LSM_GENERATED_SECTIONS -->/d" $(builddir)/$(STORAGED_SECTIONS)
-endif # HAVE_LSM
 
 # GTKDOC for BTRFS
 if HAVE_BTRFS
@@ -177,6 +180,9 @@ EXTRA_DIST +=                                                                  \
 	$(DOC_MAIN_SGML_FILE).iscsi.dbus.in                                    \
 	$(DOC_MAIN_SGML_FILE).iscsi.generated.in                               \
 	$(DOC_MAIN_SGML_FILE).iscsi.sed                                        \
+	$(DOC_MAIN_SGML_FILE).lsm.dbus.in                                      \
+	$(DOC_MAIN_SGML_FILE).lsm.generated.in                                 \
+	$(DOC_MAIN_SGML_FILE).lsm.sed                                          \
 	$(DOC_MAIN_SGML_FILE).lvm2.dbus.in                                     \
 	$(DOC_MAIN_SGML_FILE).lvm2.generated.in                                \
 	$(DOC_MAIN_SGML_FILE).lvm2.sed                                         \
@@ -189,6 +195,8 @@ EXTRA_DIST +=                                                                  \
 	$(STORAGED_TYPES).btrfs.sed                                            \
 	$(STORAGED_TYPES).iscsi.in                                             \
 	$(STORAGED_TYPES).iscsi.sed                                            \
+	$(STORAGED_TYPES).lsm.in                                               \
+	$(STORAGED_TYPES).lsm.sed                                              \
 	$(STORAGED_TYPES).lvm2.in                                              \
 	$(STORAGED_TYPES).lvm2.sed                                             \
 	$(STORAGED_TYPES).zram.in                                              \
@@ -199,12 +207,13 @@ EXTRA_DIST +=                                                                  \
 	$(STORAGED_SECTIONS).btrfs.sed                                         \
 	$(STORAGED_SECTIONS).iscsi.sections.in                                 \
 	$(STORAGED_SECTIONS).iscsi.sed                                         \
+	$(STORAGED_SECTIONS).lsm.sections.in                                   \
+	$(STORAGED_SECTIONS).lsm.sed                                           \
 	$(STORAGED_SECTIONS).lvm2.sections.in                                  \
 	$(STORAGED_SECTIONS).lvm2.sed                                          \
 	$(STORAGED_SECTIONS).zram.sections.in                                  \
 	$(STORAGED_SECTIONS).zram.sed                                          \
 	$(STORAGED_SECTIONS).lsm.sections.in                                   \
-	$(STORAGED_SECTIONS).lsm.sed                                           \
 	version.xml.in                                                         \
 	TODO-ISCSI
 
