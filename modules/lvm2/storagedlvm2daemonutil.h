@@ -26,6 +26,8 @@
 
 G_BEGIN_DECLS
 
+extern const gchar  *lvm2_policy_action_id;
+
 gboolean storaged_daemon_util_lvm2_block_is_unused (StoragedBlock  *block,
                                                     GError        **error);
 
