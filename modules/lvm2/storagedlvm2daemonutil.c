@@ -59,8 +59,6 @@
  * Various utility routines.
  */
 
-const gchar  *lvm2_policy_action_id = "org.storaged.Storaged.lvm2.manage-lvm";
-
 gboolean
 storaged_daemon_util_lvm2_block_is_unused (StoragedBlock *block,
                                            GError       **error)
