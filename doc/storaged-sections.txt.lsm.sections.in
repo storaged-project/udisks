@@ -1,5 +1,11 @@
 <SECTION>
 <FILE>StoragedManagerLSM</FILE>
+StoragedManagerLSM
+StoragedManagerLSMIface
+StoragedManagerLSMProxy
+StoragedManagerLSMProxyClass
+StoragedManagerLSMSkeleton
+StoragedManagerLSMSkeletonClass
 storaged_manager_lsm_default_init
 storaged_manager_lsm_interface_info
 storaged_manager_lsm_override_properties
@@ -36,6 +42,12 @@ storaged_manager_lsm_skeleton_parent_class
 
 <SECTION>
 <FILE>StoragedDriveLSM</FILE>
+StoragedDriveLSM
+StoragedDriveLSMIface
+StoragedDriveLSMProxy
+StoragedDriveLSMProxyClass
+StoragedDriveLSMSkeleton
+StoragedDriveLSMSkeletonClass
 storaged_drive_lsm_default_init
 storaged_drive_lsm_dup_raid_type
 storaged_drive_lsm_dup_status_info
