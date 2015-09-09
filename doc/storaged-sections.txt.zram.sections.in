@@ -1,5 +1,11 @@
 <SECTION>
 <FILE>StoragedManagerZRAM</FILE>
+StoragedManagerZRAM
+StoragedManagerZRAMIface
+StoragedManagerZRAMProxy
+StoragedManagerZRAMProxyClass
+StoragedManagerZRAMSkeleton
+StoragedManagerZRAMSkeletonClass
 storaged_manager_zram_call_create_devices
 storaged_manager_zram_call_create_devices_finish
 storaged_manager_zram_call_create_devices_sync
@@ -21,6 +27,12 @@ storaged_manager_zram_skeleton_new
 
 <SECTION>
 <FILE>StoragedBlockZRAM</FILE>
+StoragedBlockZRAM
+StoragedBlockZRAMIface
+StoragedBlockZRAMProxy
+StoragedBlockZRAMProxyClass
+StoragedBlockZRAMSkeleton
+StoragedBlockZRAMSkeletonClass
 storaged_block_zram_call_activate
 storaged_block_zram_call_activate_finish
 storaged_block_zram_call_activate_labeled
