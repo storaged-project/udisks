@@ -210,7 +210,6 @@ handle_volume_group_create (StoragedManagerLVM2     *_object,
   uid_t caller_uid;
   GError *error = NULL;
   const gchar *message;
-  const gchar *action_id;
   GList *blocks = NULL;
   GList *l;
   guint n;
@@ -229,10 +228,9 @@ handle_volume_group_create (StoragedManagerLVM2     *_object,
     }
 
   message = N_("Authentication is required to create a volume group");
-  action_id = "org.storaged.Storaged.lvm2.manage-lvm";
   if (!storaged_daemon_util_check_authorization_sync (manager->daemon,
                                                       NULL,
-                                                      action_id,
+                                                      lvm2_policy_action_id,
                                                       arg_options,
                                                       message,
                                                       invocation))

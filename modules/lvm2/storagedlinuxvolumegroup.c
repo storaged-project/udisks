@@ -254,7 +254,6 @@ handle_delete (StoragedVolumeGroup   *_group,
   StoragedLinuxVolumeGroup *group = STORAGED_LINUX_VOLUME_GROUP (_group);
   StoragedLinuxVolumeGroupObject *object = NULL;
   StoragedDaemon *daemon;
-  const gchar *action_id;
   const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
@@ -305,10 +304,9 @@ handle_delete (StoragedVolumeGroup   *_group,
     }
 
   message = N_("Authentication is required to delete a volume group");
-  action_id = "org.storaged.Storaged.lvm2.manage-lvm";
   if (!storaged_daemon_util_check_authorization_sync (daemon,
                                                       STORAGED_OBJECT (object),
-                                                      action_id,
+                                                      lvm2_policy_action_id,
                                                       arg_options,
                                                       message,
                                                       invocation))
@@ -384,7 +382,6 @@ handle_rename (StoragedVolumeGroup   *_group,
   StoragedLinuxVolumeGroup *group = STORAGED_LINUX_VOLUME_GROUP (_group);
   StoragedLinuxVolumeGroupObject *object = NULL;
   StoragedDaemon *daemon;
-  const gchar *action_id;
   const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
@@ -416,10 +413,9 @@ handle_rename (StoragedVolumeGroup   *_group,
     }
 
   message = N_("Authentication is required to rename a volume group");
-  action_id = "org.storaged.Storaged.lvm2.manage-lvm";
   if (!storaged_daemon_util_check_authorization_sync (daemon,
                                                       STORAGED_OBJECT (object),
-                                                      action_id,
+                                                      lvm2_policy_action_id,
                                                       options,
                                                       message,
                                                       invocation))
@@ -487,7 +483,6 @@ handle_add_device (StoragedVolumeGroup      *_group,
   StoragedLinuxVolumeGroup *group = STORAGED_LINUX_VOLUME_GROUP (_group);
   StoragedDaemon *daemon;
   StoragedLinuxVolumeGroupObject *object;
-  const gchar *action_id;
   const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
@@ -539,10 +534,9 @@ handle_add_device (StoragedVolumeGroup      *_group,
     }
 
   message = N_("Authentication is required to add a device to a volume group");
-  action_id = "org.storaged.Storaged.lvm2.manage-lvm";
   if (!storaged_daemon_util_check_authorization_sync (daemon,
                                                       STORAGED_OBJECT (object),
-                                                      action_id,
+                                                      lvm2_policy_action_id,
                                                       options,
                                                       message,
                                                       invocation))
@@ -610,7 +604,6 @@ handle_remove_device (StoragedVolumeGroup      *_group,
   StoragedLinuxVolumeGroup *group = STORAGED_LINUX_VOLUME_GROUP (_group);
   StoragedDaemon *daemon;
   StoragedLinuxVolumeGroupObject *object;
-  const gchar *action_id;
   const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
@@ -662,10 +655,9 @@ handle_remove_device (StoragedVolumeGroup      *_group,
     }
 
   message = N_("Authentication is required to remove a device from a volume group");
-  action_id = "org.storaged.Storaged.lvm2.manage-lvm";
   if (!storaged_daemon_util_check_authorization_sync (daemon,
                                                       STORAGED_OBJECT (object),
-                                                      action_id,
+                                                      lvm2_policy_action_id,
                                                       options,
                                                       message,
                                                       invocation))
@@ -745,7 +737,6 @@ handle_empty_device (StoragedVolumeGroup      *_group,
   StoragedLinuxVolumeGroup *group = STORAGED_LINUX_VOLUME_GROUP (_group);
   StoragedDaemon *daemon;
   StoragedLinuxVolumeGroupObject *object;
-  const gchar *action_id;
   const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
@@ -796,10 +787,9 @@ handle_empty_device (StoragedVolumeGroup      *_group,
     }
 
   message = N_("Authentication is required to empty a device in a volume group");
-  action_id = "org.storaged.Storaged.lvm2.manage-lvm";
   if (!storaged_daemon_util_check_authorization_sync (daemon,
                                                       STORAGED_OBJECT (object),
-                                                      action_id,
+                                                      lvm2_policy_action_id,
                                                       options,
                                                       message,
                                                       invocation))
@@ -893,7 +883,6 @@ handle_create_plain_volume (StoragedVolumeGroup   *_group,
   StoragedLinuxVolumeGroup *group = STORAGED_LINUX_VOLUME_GROUP (_group);
   StoragedLinuxVolumeGroupObject *object = NULL;
   StoragedDaemon *daemon;
-  const gchar *action_id;
   const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
@@ -926,10 +915,9 @@ handle_create_plain_volume (StoragedVolumeGroup   *_group,
     }
 
   message = N_("Authentication is required to create a logical volume");
-  action_id = "org.storaged.Storaged.lvm2.manage-lvm";
   if (!storaged_daemon_util_check_authorization_sync (daemon,
                                                       STORAGED_OBJECT (object),
-                                                      action_id,
+                                                      lvm2_policy_action_id,
                                                       options,
                                                       message,
                                                       invocation))
@@ -996,7 +984,6 @@ handle_create_thin_pool_volume (StoragedVolumeGroup   *_group,
   StoragedLinuxVolumeGroup *group = STORAGED_LINUX_VOLUME_GROUP (_group);
   StoragedLinuxVolumeGroupObject *object = NULL;
   StoragedDaemon *daemon;
-  const gchar *action_id;
   const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
@@ -1029,10 +1016,9 @@ handle_create_thin_pool_volume (StoragedVolumeGroup   *_group,
     }
 
   message = N_("Authentication is required to create a logical volume");
-  action_id = "org.storaged.Storaged.lvm2.manage-lvm";
   if (!storaged_daemon_util_check_authorization_sync (daemon,
                                                       STORAGED_OBJECT (object),
-                                                      action_id,
+                                                      lvm2_policy_action_id,
                                                       options,
                                                       message,
                                                       invocation))
@@ -1100,7 +1086,6 @@ handle_create_thin_volume (StoragedVolumeGroup   *_group,
   StoragedLinuxVolumeGroup *group = STORAGED_LINUX_VOLUME_GROUP (_group);
   StoragedLinuxVolumeGroupObject *object = NULL;
   StoragedDaemon *daemon;
-  const gchar *action_id;
   const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
@@ -1135,10 +1120,9 @@ handle_create_thin_volume (StoragedVolumeGroup   *_group,
     }
 
   message = N_("Authentication is required to create a logical volume");
-  action_id = "org.storaged.Storaged.lvm2.manage-lvm";
   if (!storaged_daemon_util_check_authorization_sync (daemon,
                                                       STORAGED_OBJECT (object),
-                                                      action_id,
+                                                      lvm2_policy_action_id,
                                                       options,
                                                       message,
                                                       invocation))

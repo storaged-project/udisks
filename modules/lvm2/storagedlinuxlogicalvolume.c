@@ -357,7 +357,6 @@ handle_delete (StoragedLogicalVolume *_volume,
   StoragedLinuxLogicalVolume *volume = STORAGED_LINUX_LOGICAL_VOLUME (_volume);
   StoragedLinuxLogicalVolumeObject *object = NULL;
   StoragedDaemon *daemon;
-  const gchar *action_id;
   const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
@@ -392,10 +391,9 @@ handle_delete (StoragedLogicalVolume *_volume,
     }
 
   message = N_("Authentication is required to delete a logical volume");
-  action_id = "org.storaged.Storaged.lvm2.manage-lvm";
   if (!storaged_daemon_util_check_authorization_sync (daemon,
                                                       STORAGED_OBJECT (object),
-                                                      action_id,
+                                                      lvm2_policy_action_id,
                                                       options,
                                                       message,
                                                       invocation))
@@ -497,7 +495,6 @@ handle_rename (StoragedLogicalVolume   *_volume,
   StoragedLinuxLogicalVolume *volume = STORAGED_LINUX_LOGICAL_VOLUME (_volume);
   StoragedLinuxLogicalVolumeObject *object = NULL;
   StoragedDaemon *daemon;
-  const gchar *action_id;
   const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
@@ -531,10 +528,9 @@ handle_rename (StoragedLogicalVolume   *_volume,
     }
 
   message = N_("Authentication is required to rename a logical volume");
-  action_id = "org.storaged.Storaged.lvm2.manage-lvm";
   if (!storaged_daemon_util_check_authorization_sync (daemon,
                                                       STORAGED_OBJECT (object),
-                                                      action_id,
+                                                      lvm2_policy_action_id,
                                                       options,
                                                       message,
                                                       invocation))
@@ -600,7 +596,6 @@ handle_resize (StoragedLogicalVolume *_volume,
   StoragedLinuxLogicalVolume *volume = STORAGED_LINUX_LOGICAL_VOLUME (_volume);
   StoragedLinuxLogicalVolumeObject *object = NULL;
   StoragedDaemon *daemon;
-  const gchar *action_id;
   const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
@@ -634,10 +629,9 @@ handle_resize (StoragedLogicalVolume *_volume,
     }
 
   message = N_("Authentication is required to rename a logical volume");
-  action_id = "org.storaged.Storaged.lvm2.manage-lvm";
   if (!storaged_daemon_util_check_authorization_sync (daemon,
                                                       STORAGED_OBJECT (object),
-                                                      action_id,
+                                                      lvm2_policy_action_id,
                                                       options,
                                                       message,
                                                       invocation))
@@ -735,7 +729,6 @@ handle_activate (StoragedLogicalVolume *_volume,
   StoragedLinuxLogicalVolume *volume = STORAGED_LINUX_LOGICAL_VOLUME (_volume);
   StoragedLinuxLogicalVolumeObject *object = NULL;
   StoragedDaemon *daemon;
-  const gchar *action_id;
   const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
@@ -768,10 +761,9 @@ handle_activate (StoragedLogicalVolume *_volume,
     }
 
   message = N_("Authentication is required to activate a logical volume");
-  action_id = "org.storaged.Storaged.lvm2.manage-lvm";
   if (!storaged_daemon_util_check_authorization_sync (daemon,
                                                       STORAGED_OBJECT (object),
-                                                      action_id,
+                                                      lvm2_policy_action_id,
                                                       options,
                                                       message,
                                                       invocation))
@@ -840,7 +832,6 @@ handle_deactivate (StoragedLogicalVolume *_volume,
   StoragedLinuxLogicalVolume *volume = STORAGED_LINUX_LOGICAL_VOLUME (_volume);
   StoragedLinuxLogicalVolumeObject *object = NULL;
   StoragedDaemon *daemon;
-  const gchar *action_id;
   const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
@@ -872,10 +863,9 @@ handle_deactivate (StoragedLogicalVolume *_volume,
     }
 
   message = N_("Authentication is required to deactivate a logical volume");
-  action_id = "org.storaged.Storaged.lvm2.manage-lvm";
   if (!storaged_daemon_util_check_authorization_sync (daemon,
                                                       STORAGED_OBJECT (object),
-                                                      action_id,
+                                                      lvm2_policy_action_id,
                                                       options,
                                                       message,
                                                       invocation))
@@ -929,7 +919,6 @@ handle_create_snapshot (StoragedLogicalVolume *_volume,
   StoragedLinuxLogicalVolume *volume = STORAGED_LINUX_LOGICAL_VOLUME (_volume);
   StoragedLinuxLogicalVolumeObject *object = NULL;
   StoragedDaemon *daemon;
-  const gchar *action_id;
   const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
@@ -964,10 +953,9 @@ handle_create_snapshot (StoragedLogicalVolume *_volume,
     }
 
   message = N_("Authentication is required to create a snapshot of a logical volume");
-  action_id = "org.storaged.Storaged.lvm2.manage-lvm";
   if (!storaged_daemon_util_check_authorization_sync (daemon,
                                                       STORAGED_OBJECT (object),
-                                                      action_id,
+                                                      lvm2_policy_action_id,
                                                       options,
                                                       message,
                                                       invocation))
