@@ -1038,12 +1038,10 @@ handle_cache_attach (StoragedLogicalVolume  *volume_,
 {
 #ifndef HAVE_LVMCACHE
 
-  GError *error;
-  g_set_error (&error,
-               STORAGED_ERROR,
-               STORAGED_ERROR_FAILED,
-               "LVMCache not enabled at compile time.");
-  g_dbus_method_invocation_take_error (invocation,error);
+  g_dbus_method_invocation_return_error (invocation,
+                                         STORAGED_ERROR,
+                                         STORAGED_ERROR_FAILED,
+                                         N_("LVMCache not enabled at compile time."));
   return TRUE;
 
 #else
@@ -1053,7 +1051,6 @@ handle_cache_attach (StoragedLogicalVolume  *volume_,
   StoragedLinuxLogicalVolumeObject *object = NULL;
   StoragedDaemon *daemon;
   uid_t caller_uid;
-  gid_t caller_gid;
   StoragedLinuxVolumeGroupObject *group_object;
   GString *cmd;
   gchar *escaped_group_name = NULL;
@@ -1067,27 +1064,27 @@ handle_cache_attach (StoragedLogicalVolume  *volume_,
       goto out;
     }
 
+
   daemon = storaged_linux_logical_volume_object_get_daemon (object);
 
   if (!storaged_daemon_util_get_caller_uid_sync (daemon,
                                                  invocation,
-                                                 NULL,
+                                                 NULL /* GCancellable */,
                                                  &caller_uid,
-                                                 &caller_gid,
+                                                 NULL,
                                                  NULL,
                                                  &error))
-  {
-    g_dbus_method_invocation_take_error (invocation, error);
-    goto out;
-  }
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
 
-  if (!storaged_daemon_util_check_authorization_sync (daemon,
-                                                      STORAGED_OBJECT (object),
-                                                      "org.storaged.Storaged.lvm2.manage-lvm",
-                                                      options,
-                                                      "Authentication is required to convert logica volume to cache",
-                                                      invocation))
-    goto out;
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (daemon,
+                                       STORAGED_OBJECT (object),
+                                       lvm2_policy_action_id,
+                                       options,
+                                       N_("Authentication is required to convert logica volume to cache"),
+                                       invocation);
 
   group_object = storaged_linux_logical_volume_object_get_volume_group (object);
 
@@ -1117,7 +1114,7 @@ handle_cache_attach (StoragedLogicalVolume  *volume_,
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
-                                             "Error converting volume: %s",
+                                             N_("Error converting volume: %s"),
                                              error_message);
       goto out;
     }
@@ -1144,13 +1141,10 @@ handle_cache_split (StoragedLogicalVolume  *volume_,
 {
 #ifndef HAVE_LVMCACHE
 
-  GError *error;
-  g_set_error (&error,
-               STORAGED_ERROR,
-               STORAGED_ERROR_FAILED,
-               "LVMCache not enabled at compile time.");
-  g_dbus_method_invocation_take_error (invocation,error);
-
+  g_dbus_method_invocation_return_error (invocation,
+                                         STORAGED_ERROR,
+                                         STORAGED_ERROR_FAILED,
+                                         N_("LVMCache not enabled at compile time."));
   return TRUE;
 
 #else
@@ -1160,7 +1154,6 @@ handle_cache_split (StoragedLogicalVolume  *volume_,
   StoragedLinuxLogicalVolumeObject *object = NULL;
   StoragedDaemon *daemon;
   uid_t caller_uid;
-  gid_t caller_gid;
   StoragedLinuxVolumeGroupObject *group_object;
   GString *cmd;
   gchar *escaped_group_name = NULL;
@@ -1178,23 +1171,22 @@ handle_cache_split (StoragedLogicalVolume  *volume_,
 
   if (!storaged_daemon_util_get_caller_uid_sync (daemon,
                                                  invocation,
-                                                 NULL,
+                                                 NULL /* GCancellable */,
                                                  &caller_uid,
-                                                 &caller_gid,
+                                                 NULL,
                                                  NULL,
                                                  &error))
-  {
-    g_dbus_method_invocation_take_error (invocation, error);
-    goto out;
-  }
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
 
-  if (!storaged_daemon_util_check_authorization_sync (daemon,
-                                                      STORAGED_OBJECT (object),
-                                                      "org.storaged.Storaged.lvm2.manage-lvm",
-                                                      options,
-                                                      "Authentication is required to split cache pool LV off of a cache LV",
-                                                      invocation))
-    goto out;
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (daemon,
+                                       STORAGED_OBJECT (object),
+                                       lvm2_policy_action_id,
+                                       options,
+                                       N_("Authentication is required to split cache pool LV off of a cache LV"),
+                                       invocation);
 
   group_object = storaged_linux_logical_volume_object_get_volume_group (object);
 
@@ -1221,7 +1213,7 @@ handle_cache_split (StoragedLogicalVolume  *volume_,
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
-                                             "Error converting volume: %s",
+                                             N_("Error converting volume: %s"),
                                              error_message);
       goto out;
     }

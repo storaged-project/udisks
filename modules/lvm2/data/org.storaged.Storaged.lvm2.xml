@@ -523,6 +523,7 @@
     <!-- CacheAttach:
          @cache_name: The name of an existing volume.
          @options: Additional options.
+         @since: 2.3.0
 
          Creates cache LV. Logical volume which name is provided, will be formated, converted to cache type
          and attached to origin logical volume as a cache pool LV. Logical volumes must be in the same volume group.
@@ -536,6 +537,7 @@
 
     <!-- CacheSplit:
          @options: Additional options.
+         @since: 2.3.0
 
          Splits Cache LV to Cache pool LV and Origin LV, not afeecting its content.
 
