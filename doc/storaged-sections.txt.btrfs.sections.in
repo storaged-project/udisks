@@ -1,5 +1,11 @@
 <SECTION>
 <FILE>StoragedManagerBTRFS</FILE>
+StoragedManagerBTRFS
+StoragedManagerBTRFSIface
+StoragedManagerBTRFSProxy
+StoragedManagerBTRFSProxyClass
+StoragedManagerBTRFSSkeleton
+StoragedManagerBTRFSSkeletonClass
 storaged_manager_btrfs_call_create_volume
 storaged_manager_btrfs_call_create_volume_finish
 storaged_manager_btrfs_call_create_volume_sync
@@ -40,6 +46,12 @@ storaged_manager_btrfs_skeleton_parent_class
 
 <SECTION>
 <FILE>StoragedFilesystemBTRFS</FILE>
+StoragedFilesystemBTRFS
+StoragedFilesystemBTRFSIface
+StoragedFilesystemBTRFSProxy
+StoragedFilesystemBTRFSProxyClass
+StoragedFilesystemBTRFSSkeleton
+StoragedFilesystemBTRFSSkeletonClass
 storaged_filesystem_btrfs_call_add_device
 storaged_filesystem_btrfs_call_add_device_finish
 storaged_filesystem_btrfs_call_add_device_sync
