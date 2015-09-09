@@ -1043,6 +1043,7 @@ handle_cache_attach (StoragedLogicalVolume  *volume_,
   GString *cmd;
   gchar *escaped_group_name = NULL;
   gchar *escaped_origin_name = NULL;
+  gchar *escaped_cache_name = NULL;
   gchar *error_message;
 
   object = storaged_daemon_util_dup_object (volume, &error);
@@ -1078,13 +1079,13 @@ handle_cache_attach (StoragedLogicalVolume  *volume_,
 
   escaped_group_name = storaged_daemon_util_escape_and_quote (storaged_linux_volume_group_object_get_name (group_object));
   escaped_origin_name = storaged_daemon_util_escape_and_quote (storaged_linux_logical_volume_object_get_name (object));
-  cache_name = storaged_daemon_util_escape_and_quote (cache_name);
+  escaped_cache_name = storaged_daemon_util_escape_and_quote (cache_name);
 
   cmd = g_string_new ("");
   g_string_append_printf (cmd,
                           "lvconvert --type cache --cachepool %s/%s %s/%s -y",
                           escaped_group_name,
-                          cache_name,
+                          escaped_cache_name,
                           escaped_group_name,
                           escaped_origin_name);
 
@@ -1112,6 +1113,7 @@ out:
   g_free (error_message);
   g_free (escaped_group_name);
   g_free (escaped_origin_name);
+  g_free (escaped_cache_name);
   if (cmd)
     g_string_free (cmd, TRUE);
   g_clear_object (&object);
