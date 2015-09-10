@@ -5,21 +5,22 @@
 # Translators:
 # Piotr Drąg <piotrdrag@gmail.com>, 2012,2014
 # Peter Hatina <phatina@redhat.com>, 2015. #zanata
+# Piotr Drąg <piotrdrag@gmail.com>, 2015. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-04 14:26+0200\n"
+"POT-Creation-Date: 2015-09-10 14:34+0200\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2014-03-12 04:08-0400\n"
+"PO-Revision-Date: 2015-08-28 11:10-0400\n"
 "Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
+"Language-Team: Polish\n"
 "Language: pl\n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
 "|| n%100>=20) ? 1 : 2);\n"
-"Language-Team: Polish\n"
-"X-Generator: Zanata 3.6.2\n"
+"X-Generator: Zanata 3.7.1\n"
 
 #: ../data/org.storaged.Storaged.policy.in.h:1
 msgid "Mount a filesystem"
@@ -27,7 +28,7 @@ msgstr "Zamontowanie systemu plików"
 
 #: ../data/org.storaged.Storaged.policy.in.h:2
 msgid "Authentication is required to mount the filesystem"
-msgstr "Wymagane jest uwierzytelnienie, aby zamontować systemu plików"
+msgstr "Wymagane jest uwierzytelnienie, aby zamontować system plików"
 
 #: ../data/org.storaged.Storaged.policy.in.h:3
 msgid "Mount a filesystem on a system device"
@@ -44,7 +45,7 @@ msgid ""
 "option"
 msgstr ""
 "Zamontowanie/odmontowanie systemów plików określonych w pliku fstab za "
-"pomocą opcji x-storaged-auth"
+"pomocą opcji „x-storaged-auth”"
 
 #: ../data/org.storaged.Storaged.policy.in.h:6
 msgid "Authentication is required to mount/unmount the filesystem"
@@ -86,7 +87,7 @@ msgid ""
 "storaged-auth option"
 msgstr ""
 "Odblokowanie zaszyfrowanego urządzenia określonego w pliku crypttab za "
-"pomocą opcji x-storaged-auth"
+"pomocą opcji „x-storaged-auth”"
 
 #: ../data/org.storaged.Storaged.policy.in.h:14
 msgid "Lock an encrypted device unlocked by another user"
@@ -358,72 +359,263 @@ msgstr ""
 "Wymagane jest uwierzytelnienie, aby anulować zadanie rozpoczęte przez innego "
 "użytkownika"
 
+#: ../modules/btrfs/data/org.storaged.Storaged.btrfs.policy.in.h:1
+msgid "Manage BTRFS"
+msgstr ""
+
+#: ../modules/btrfs/data/org.storaged.Storaged.btrfs.policy.in.h:2
+#, fuzzy
+msgid "Authentication is required to manage BTRFS"
+msgstr "Wymagane jest uwierzytelnienie, aby zarządzać macierzami RAID"
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:343
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:587
+#, fuzzy
+msgid "Authentication is required to change label for BTRFS volume"
+msgstr "Wymagane jest uwierzytelnienie, aby anulować zadanie"
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:468
+#, fuzzy
+msgid "Authentication is required to add the device to the volume"
+msgstr "Wymagane jest uwierzytelnienie, aby dodać urządzenie do macierzy RAID"
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:655
+#, fuzzy
+msgid "Authentication is required to create a new snapshot"
+msgstr "Wymagane jest uwierzytelnienie, aby utworzyć macierz RAID"
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:714
+#, fuzzy
+msgid "Authentication is required to check and repair the volume"
+msgstr "Wymagane jest uwierzytelnienie, aby ponownie przeskanować urządzenie"
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:767
+#, fuzzy
+msgid "Authentication is required to resize the volume"
+msgstr "Wymagane jest uwierzytelnienie, aby wysunąć nośnik"
+
+#: ../modules/btrfs/storagedlinuxmanagerbtrfs.c:206
+#, fuzzy
+msgid "Authentication is required to create a new volume"
+msgstr "Wymagane jest uwierzytelnienie, aby ponownie przeskanować urządzenie"
+
 #: ../modules/iscsi/data/org.storaged.Storaged.iscsi.policy.in.h:1
 msgid "Manage iSCSI"
-msgstr ""
+msgstr "Zarządzanie iSCSI"
 
 #: ../modules/iscsi/data/org.storaged.Storaged.iscsi.policy.in.h:2
 msgid "Authentication is required to manage iSCSI"
+msgstr "Wymagane jest uwierzytelnienie, aby zarządzać iSCSI"
+
+#: ../modules/iscsi/storagedlinuxiscsisession.c:134
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:815
+#, fuzzy
+msgid "Authentication is required to perform iSCSI logout"
+msgstr "Wymagane jest uwierzytelnienie, aby sformatować urządzenie $(drive)"
+
+#: ../modules/iscsi/storagedlinuxiscsisession.c:164
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:837
+#, c-format
+msgid "Logout failed: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:276
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:382
+#, c-format
+msgid "Error opening %s: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:296
+#, c-format
+msgid "Error reading %s: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:354
+#, fuzzy
+msgid "Authentication is required change iSCSI initiator name"
+msgstr "Wymagane jest uwierzytelnienie, aby zarządzać macierzami RAID"
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:362
+msgid "Empty initiator name"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:399
+#, c-format
+msgid "Error writing to %s: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:544
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:603
+#, fuzzy
+msgid "Authentication is required to discover targets"
+msgstr "Wymagane jest uwierzytelnienie, aby wyłączyć napęd"
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:562
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:668
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:717
+#, c-format
+msgid "Discovery failed: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:615
+msgid "Username too long"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:626
+msgid "Password too long"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:637
+msgid "Reverse username too long"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:648
+msgid "Reverse password too long"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:702
+#, fuzzy
+msgid "Authentication is required to discover firmware targets"
+msgstr "Wymagane jest uwierzytelnienie, aby wyłączyć napęd"
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:754
+#, fuzzy
+msgid "Authentication is required to perform iSCSI login"
+msgstr "Wymagane jest uwierzytelnienie, aby wyłączyć napęd"
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:776
+#, c-format
+msgid "Login failed: %s"
 msgstr ""
 
 #: ../modules/lvm2/data/org.storaged.Storaged.lvm2.policy.in.h:1
 msgid "Manage LVM"
-msgstr ""
+msgstr "Zarządzanie LVM"
 
 #: ../modules/lvm2/data/org.storaged.Storaged.lvm2.policy.in.h:2
 msgid "Authentication is required to manage LVM"
-msgstr ""
+msgstr "Wymagane jest uwierzytelnienie, aby zarządzać LVM"
 
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:382
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:398
 msgid "Authentication is required to delete a logical volume"
-msgstr ""
+msgstr "Wymagane jest uwierzytelnienie, aby usunąć wolumin logiczny"
 
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:521
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:624
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:533
 msgid "Authentication is required to rename a logical volume"
-msgstr ""
+msgstr "Wymagane jest uwierzytelnienie, aby zmienić nazwę woluminu logicznego"
 
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:758
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:632
+#, fuzzy
+msgid "Authentication is required to resize a logical volume"
+msgstr "Wymagane jest uwierzytelnienie, aby ponownie przeskanować urządzenie"
+
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:762
 msgid "Authentication is required to activate a logical volume"
-msgstr ""
+msgstr "Wymagane jest uwierzytelnienie, aby aktywować wolumin logiczny"
 
 #: ../modules/lvm2/storagedlinuxlogicalvolume.c:862
 msgid "Authentication is required to deactivate a logical volume"
-msgstr ""
+msgstr "Wymagane jest uwierzytelnienie, aby dezaktywować wolumin logiczny"
 
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:954
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:950
 msgid "Authentication is required to create a snapshot of a logical volume"
 msgstr ""
+"Wymagane jest uwierzytelnienie, aby utworzyć migawkę woluminu logicznego"
 
-#: ../modules/lvm2/storagedlinuxmanagerlvm2.c:231
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1021
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1126
+msgid "LVMCache not enabled at compile time."
+msgstr ""
+
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1064
+#, fuzzy
+msgid "Authentication is required to convert logical volume to cache"
+msgstr "Wymagane jest uwierzytelnienie, aby otworzyć urządzenie"
+
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1095
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1195
+#, c-format
+msgid "Error converting volume: %s"
+msgstr ""
+
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1167
+#, fuzzy
+msgid "Authentication is required to split cache pool LV off of a cache LV"
+msgstr "Wymagane jest uwierzytelnienie, aby wyłączyć napęd"
+
+#: ../modules/lvm2/storagedlinuxmanagerlvm2.c:235
 msgid "Authentication is required to create a volume group"
-msgstr ""
+msgstr "Wymagane jest uwierzytelnienie, aby utworzyć grupę woluminów"
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:307
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:311
 msgid "Authentication is required to delete a volume group"
-msgstr ""
+msgstr "Wymagane jest uwierzytelnienie, aby usunąć grupę woluminów"
 
 #: ../modules/lvm2/storagedlinuxvolumegroup.c:418
 msgid "Authentication is required to rename a volume group"
-msgstr ""
+msgstr "Wymagane jest uwierzytelnienie, aby zmienić nazwę grupy woluminów"
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:541
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:537
 msgid "Authentication is required to add a device to a volume group"
 msgstr ""
+"Wymagane jest uwierzytelnienie, aby dodać urządzenie do grupy woluminów"
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:664
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:656
 msgid "Authentication is required to remove a device from a volume group"
 msgstr ""
+"Wymagane jest uwierzytelnienie, aby usunąć urządzenie z grupy woluminów"
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:798
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:786
 msgid "Authentication is required to empty a device in a volume group"
 msgstr ""
+"Wymagane jest uwierzytelnienie, aby usunąć zawartość urządzenia w grupie "
+"woluminów"
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:928
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:1031
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:1137
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:912
 msgid "Authentication is required to create a logical volume"
+msgstr "Wymagane jest uwierzytelnienie, aby utworzyć wolumin logiczny"
+
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:1011
+#, fuzzy
+msgid "Authentication is required to create a thin pool volume"
 msgstr ""
+"Wymagane jest uwierzytelnienie, aby utworzyć partycję na urządzeniu $(drive)"
+
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:1113
+#, fuzzy
+msgid "Authentication is required to create a thin volume"
+msgstr ""
+"Wymagane jest uwierzytelnienie, aby utworzyć partycję na urządzeniu $(drive)"
+
+#: ../modules/zram/data/org.storaged.Storaged.zram.policy.in.h:1
+#, fuzzy
+msgid "Manage zRAM"
+msgstr "Zarządzanie macierzami RAID"
+
+#: ../modules/zram/data/org.storaged.Storaged.zram.policy.in.h:2
+#, fuzzy
+msgid "Authentication is required to manage zRAM"
+msgstr "Wymagane jest uwierzytelnienie, aby zarządzać macierzami RAID"
+
+#: ../modules/zram/storagedlinuxmanagerzram.c:217
+#, fuzzy
+msgid "Authentication is required to add zRAM kernel module"
+msgstr "Wymagane jest uwierzytelnienie, aby anulować zadanie"
+
+#: ../modules/zram/storagedlinuxmanagerzram.c:247
+#, fuzzy
+msgid "Authentication is required to remove zRAM kernel module"
+msgstr "Wymagane jest uwierzytelnienie, aby otworzyć urządzenie"
+
+#: ../modules/zram/storagedlinuxblockzram.c:253
+#, fuzzy
+msgid "Authentication is required to enable zRAM device"
+msgstr "Wymagane jest uwierzytelnienie, aby otworzyć urządzenie"
+
+#: ../modules/zram/storagedlinuxblockzram.c:344
+#, fuzzy
+msgid "Authentication is required to disable zRAM device"
+msgstr "Wymagane jest uwierzytelnienie, aby zmodyfikować urządzenie"
 
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
@@ -477,7 +669,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby zmodyfikować plik /etc/crypttab"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxblock.c:2819 ../src/storagedlinuxdriveata.c:2283
+#: ../src/storagedlinuxblock.c:2819 ../src/storagedlinuxdriveata.c:2287
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby wykonać bezpieczne usunięcie zawartości "
@@ -494,12 +686,12 @@ msgstr ""
 msgid "Authentication is required to format $(drive)"
 msgstr "Wymagane jest uwierzytelnienie, aby sformatować urządzenie $(drive)"
 
-#: ../src/storagedlinuxblock.c:2873 ../src/storagedlinuxmdraid.c:1601
-#: ../src/storagedlinuxpartition.c:929
+#: ../src/storagedlinuxblock.c:2873 ../src/storagedlinuxmdraid.c:1609
+#: ../src/storagedlinuxpartition.c:877
 msgid "Authentication is required to modify the system configuration"
-msgstr ""
+msgstr "Wymagane jest uwierzytelnienie, aby zmodyfikować konfigurację systemu"
 
-#: ../src/storagedlinuxblock.c:2877 ../src/storagedlinuxdriveata.c:2295
+#: ../src/storagedlinuxblock.c:2877 ../src/storagedlinuxdriveata.c:2299
 msgid "Formatting Device"
 msgstr "Formatowanie urządzenia"
 
@@ -557,7 +749,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdrive.c:1022
+#: ../src/storagedlinuxdrive.c:1009
 msgid "Authentication is required to eject $(drive)"
 msgstr "Wymagane jest uwierzytelnienie, aby wysunąć urządzenie $(drive)"
 
@@ -567,7 +759,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby wysunąć urządzenie $(drive)"
 #. * Do not translate $(drive), it's a placeholder and will be
 #. * replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdrive.c:1110
+#: ../src/storagedlinuxdrive.c:1097
 msgid "Authentication is required to configure settings for $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby skonfigurować ustawienia dla urządzenia "
@@ -579,7 +771,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdrive.c:1439
+#: ../src/storagedlinuxdrive.c:1413
 msgid "Authentication is required to power off $(drive)"
 msgstr "Wymagane jest uwierzytelnienie, aby wyłączyć napęd $(drive)"
 
@@ -649,7 +841,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdriveata.c:1389
+#: ../src/storagedlinuxdriveata.c:1391
 msgid "Authentication is required to put $(drive) in standby mode"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby ustawić urządzenie $(drive) w trybie "
@@ -661,7 +853,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdriveata.c:1521
+#: ../src/storagedlinuxdriveata.c:1525
 msgid "Authentication is required to wake up $(drive) from standby mode"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby przebudzić urządzenie $(drive) ze stanu "
@@ -673,7 +865,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdriveata.c:2376
+#: ../src/storagedlinuxdriveata.c:2380
 msgid "Authentication is required to enable SMART on $(drive)"
 msgstr "Wymagane jest uwierzytelnienie, aby włączyć SMART w napędzie $(drive)"
 
@@ -683,7 +875,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby włączyć SMART w napędzie $(drive
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdriveata.c:2386
+#: ../src/storagedlinuxdriveata.c:2390
 msgid "Authentication is required to disable SMART on $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby wyłączyć SMART w napędzie $(drive)"
@@ -694,7 +886,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxencrypted.c:370 ../src/storagedlinuxencrypted.c:746
+#: ../src/storagedlinuxencrypted.c:357 ../src/storagedlinuxencrypted.c:733
 msgid "Authentication is required to unlock the encrypted device $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby odblokować zaszyfrowane urządzenie "
@@ -707,7 +899,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxencrypted.c:604
+#: ../src/storagedlinuxencrypted.c:591
 msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by "
 "another user"
@@ -721,7 +913,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxfilesystem.c:1264 ../src/storagedlinuxfilesystem.c:1426
+#: ../src/storagedlinuxfilesystem.c:1251 ../src/storagedlinuxfilesystem.c:1413
 msgid "Authentication is required to mount $(drive)"
 msgstr "Wymagane jest uwierzytelnienie, aby zamontować urządzenie $(drive)"
 
@@ -735,7 +927,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby zamontować urządzenie $(drive)"
 #. *
 #. * Do not translate /etc/fstab
 #. 
-#: ../src/storagedlinuxfilesystem.c:1333
+#: ../src/storagedlinuxfilesystem.c:1320
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
@@ -753,7 +945,7 @@ msgstr ""
 #. *
 #. * Do not translate /etc/fstab
 #. 
-#: ../src/storagedlinuxfilesystem.c:1680
+#: ../src/storagedlinuxfilesystem.c:1667
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
@@ -768,7 +960,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxfilesystem.c:1727
+#: ../src/storagedlinuxfilesystem.c:1714
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby odmontować urządzenie $(drive) "
@@ -780,7 +972,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxfilesystem.c:1972
+#: ../src/storagedlinuxfilesystem.c:1946
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby zmienić etykietę systemu plików na "
@@ -822,7 +1014,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby utworzyć macierz RAID"
 #. * attempts to start a RAID Array.
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:643
+#: ../src/storagedlinuxmdraid.c:651
 msgid "Authentication is required to start a RAID array"
 msgstr "Wymagane jest uwierzytelnienie, aby uruchomić macierz RAID"
 
@@ -830,7 +1022,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby uruchomić macierz RAID"
 #. * attempts to stop a RAID Array.
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:812
+#: ../src/storagedlinuxmdraid.c:820
 msgid "Authentication is required to stop a RAID array"
 msgstr "Wymagane jest uwierzytelnienie, aby zatrzymać macierz RAID"
 
@@ -838,7 +1030,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby zatrzymać macierz RAID"
 #. * attempts to remove a device from a RAID Array.
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:1040
+#: ../src/storagedlinuxmdraid.c:1048
 msgid "Authentication is required to remove a device from a RAID array"
 msgstr "Wymagane jest uwierzytelnienie, aby usunąć urządzenie z macierzy RAID"
 
@@ -846,7 +1038,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby usunąć urządzenie z macierzy RAID
 #. * attempts to add a device to a RAID Array.
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:1236
+#: ../src/storagedlinuxmdraid.c:1244
 msgid "Authentication is required to add a device to a RAID array"
 msgstr "Wymagane jest uwierzytelnienie, aby dodać urządzenie do macierzy RAID"
 
@@ -854,7 +1046,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby dodać urządzenie do macierzy RAID"
 #. * attempts to change whether it has a write-intent bitmap
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:1366
+#: ../src/storagedlinuxmdraid.c:1374
 msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
@@ -866,16 +1058,16 @@ msgstr ""
 #. * attempts to start/stop data scrubbing operations
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:1490
+#: ../src/storagedlinuxmdraid.c:1498
 msgid ""
 "Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby uruchomić/zatrzymać czyszczenie danych "
 "na macierzy RAID"
 
-#: ../src/storagedlinuxmdraid.c:1582
+#: ../src/storagedlinuxmdraid.c:1590
 msgid "Authentication is required to delete a RAID array"
-msgstr ""
+msgstr "Wymagane jest uwierzytelnienie, aby usunąć macierz RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
@@ -883,8 +1075,8 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxpartition.c:282 ../src/storagedlinuxpartition.c:447
-#: ../src/storagedlinuxpartition.c:789
+#: ../src/storagedlinuxpartition.c:269 ../src/storagedlinuxpartition.c:421
+#: ../src/storagedlinuxpartition.c:750
 msgid "Authentication is required to modify the partition on device $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby zmodyfikować partycję na urządzeniu "
@@ -896,7 +1088,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxpartition.c:903
+#: ../src/storagedlinuxpartition.c:851
 msgid "Authentication is required to delete the partition $(drive)"
 msgstr "Wymagane jest uwierzytelnienie, aby usunąć partycję $(drive)"
 
@@ -906,7 +1098,7 @@ msgstr "Wymagane jest uwierzytelnienie, aby usunąć partycję $(drive)"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxpartitiontable.c:399
+#: ../src/storagedlinuxpartitiontable.c:386
 msgid "Authentication is required to create a partition on $(drive)"
 msgstr ""
 "Wymagane jest uwierzytelnienie, aby utworzyć partycję na urządzeniu $(drive)"
@@ -998,49 +1190,49 @@ msgstr "Nieznane"
 #: ../storaged/storagedclient.c:1619
 msgctxt "byte-size-pow2"
 msgid "KiB"
-msgstr ""
+msgstr "KiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
 #: ../storaged/storagedclient.c:1625
 msgctxt "byte-size-pow2"
 msgid "MiB"
-msgstr ""
+msgstr "MiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
 #: ../storaged/storagedclient.c:1631
 msgctxt "byte-size-pow2"
 msgid "GiB"
-msgstr ""
+msgstr "GiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
 #: ../storaged/storagedclient.c:1637
 msgctxt "byte-size-pow2"
 msgid "TiB"
-msgstr ""
+msgstr "TiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
 #: ../storaged/storagedclient.c:1662
 msgctxt "byte-size-pow10"
 msgid "KB"
-msgstr ""
+msgstr "KB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
 #: ../storaged/storagedclient.c:1668
 msgctxt "byte-size-pow10"
 msgid "MB"
-msgstr ""
+msgstr "MB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
 #: ../storaged/storagedclient.c:1674
 msgctxt "byte-size-pow10"
 msgid "GB"
-msgstr ""
+msgstr "GB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
 #: ../storaged/storagedclient.c:1680
 msgctxt "byte-size-pow10"
 msgid "TB"
-msgstr ""
+msgstr "TB"
 
 #. Translators: The first %s is the size in power-of-2 units, e.g. '64 KiB'
 #. * the second %s is the size as a number e.g. '65,536' (always > 1)
@@ -1364,22 +1556,24 @@ msgstr "ZFS"
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member (version %s)"
 msgstr ""
+"Element macierzy RAID Rapid Storage Technology enterprise firmy Intel "
+"(wersja %s)"
 
 #: ../storaged/storagedclient.c:1951
 #, c-format
 msgctxt "fs-type"
 msgid "Intel RSTe RAID Member (%s)"
-msgstr ""
+msgstr "Element macierzy RAID RSTe firmy Intel (%s)"
 
 #: ../storaged/storagedclient.c:1952
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member"
-msgstr ""
+msgstr "Element macierzy RAID Rapid Storage Technology enterprise firmy Intel"
 
 #: ../storaged/storagedclient.c:1952
 msgctxt "fs-type"
 msgid "Intel RSTe RAID Member"
-msgstr ""
+msgstr "Element macierzy RAID RSTe firmy Intel"
 
 #: ../storaged/storagedclient.c:1953
 #, c-format
@@ -1832,7 +2026,7 @@ msgstr "Zastrzeżona partycja systemu ChromeOS"
 #: ../storaged/storagedclient.c:2298
 msgctxt "part-type"
 msgid "Intel FFS Reserved"
-msgstr ""
+msgstr "Zastrzeżona partycja FFS firmy Intel"
 
 #: ../storaged/storagedclient.c:2303
 msgctxt "part-type"
@@ -2398,7 +2592,7 @@ msgstr "Urządzenie blokowe"
 #, c-format
 msgctxt "part-block"
 msgid "Partition %u of %s"
-msgstr "Partycja %d z %s"
+msgstr "Partycja %u z %s"
 
 #. Translators: String used for one-liner description of a block device.
 #. *              The first %s is the description of the object (e.g. "50 GB Block Device").
@@ -2427,7 +2621,7 @@ msgstr "Urządzenie zwrotne"
 #, c-format
 msgctxt "part-loop"
 msgid "Partition %u of %s"
-msgstr "Partycja %d z %s"
+msgstr "Partycja %u z %s"
 
 #. Translators: String used for one-liner description of a loop device.
 #. *              The first %s is the description of the object (e.g. "2 GB Loop Device").
@@ -2493,7 +2687,7 @@ msgstr "%s %s"
 #, c-format
 msgctxt "part-raid"
 msgid "Partition %u of %s"
-msgstr "Partycja %d z %s"
+msgstr "Partycja %u z %s"
 
 #. Translators: String used for one-liner description of running RAID array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
@@ -2621,7 +2815,7 @@ msgstr "Czytnik kart %s"
 #, c-format
 msgctxt "drive-with-size-and-type"
 msgid "%s %s Drive"
-msgstr "Napęd o rozmiarze %s - %s"
+msgstr "Napęd o rozmiarze %s — %s"
 
 #. Translators: Used to describe drive. The first %s is the drive type e.g. 'Thumb'.
 #. 
@@ -2660,7 +2854,7 @@ msgstr "Dźwiękowa płyta %s"
 #, c-format
 msgctxt "part-drive"
 msgid "Partition %u of %s"
-msgstr "Partycja %d z %s"
+msgstr "Partycja %u z %s"
 
 #. Translators: String used for one-liner description of drive.
 #. *              The first %s is the description of the object (e.g. "80 GB Disk" or "Partition 2 of 2 GB Thumb Drive").

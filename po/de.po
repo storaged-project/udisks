@@ -13,16 +13,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-04 14:26+0200\n"
+"POT-Creation-Date: 2015-09-10 14:34+0200\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "PO-Revision-Date: 2014-09-22 11:34-0400\n"
 "Last-Translator: Ettore Atalan <atalanttore@googlemail.com>\n"
+"Language-Team: German\n"
 "Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"Language-Team: German\n"
-"X-Generator: Zanata 3.6.2\n"
+"X-Generator: Zanata 3.7.1\n"
 
 #: ../data/org.storaged.Storaged.policy.in.h:1
 msgid "Mount a filesystem"
@@ -366,12 +366,135 @@ msgstr ""
 "Legitimierung ist zum Abbrechen eines Auftrags notwendig, welcher von einem "
 "anderen Benutzer gestartet wurde"
 
+#: ../modules/btrfs/data/org.storaged.Storaged.btrfs.policy.in.h:1
+msgid "Manage BTRFS"
+msgstr ""
+
+#: ../modules/btrfs/data/org.storaged.Storaged.btrfs.policy.in.h:2
+#, fuzzy
+msgid "Authentication is required to manage BTRFS"
+msgstr "Legitimation ist zum Verwalten von RAID-Anordnungen erforderlich"
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:343
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:587
+#, fuzzy
+msgid "Authentication is required to change label for BTRFS volume"
+msgstr "Das Abbrechen eines Auftrags erfordert Legitimation"
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:468
+#, fuzzy
+msgid "Authentication is required to add the device to the volume"
+msgstr ""
+"Legitimierung ist zum Hinzufügen eines Geräts zu einer RAID-Anordnung "
+"notwendig"
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:655
+#, fuzzy
+msgid "Authentication is required to create a new snapshot"
+msgstr "Legitimierung ist zum Erstellen einer RAID-Anordnungen erforderlich"
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:714
+#, fuzzy
+msgid "Authentication is required to check and repair the volume"
+msgstr "Legitimation ist zum erneuten Einlesen eines Geräts erforderlich"
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:767
+#, fuzzy
+msgid "Authentication is required to resize the volume"
+msgstr "Legitimation ist zum Auswerfen von Medien erforderlich"
+
+#: ../modules/btrfs/storagedlinuxmanagerbtrfs.c:206
+#, fuzzy
+msgid "Authentication is required to create a new volume"
+msgstr "Legitimation ist zum erneuten Einlesen eines Geräts erforderlich"
+
 #: ../modules/iscsi/data/org.storaged.Storaged.iscsi.policy.in.h:1
 msgid "Manage iSCSI"
 msgstr ""
 
 #: ../modules/iscsi/data/org.storaged.Storaged.iscsi.policy.in.h:2
 msgid "Authentication is required to manage iSCSI"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxiscsisession.c:134
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:815
+#, fuzzy
+msgid "Authentication is required to perform iSCSI logout"
+msgstr "Legitimierung ist zum Formatieren von $(drive) notwendig"
+
+#: ../modules/iscsi/storagedlinuxiscsisession.c:164
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:837
+#, c-format
+msgid "Logout failed: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:276
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:382
+#, c-format
+msgid "Error opening %s: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:296
+#, c-format
+msgid "Error reading %s: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:354
+#, fuzzy
+msgid "Authentication is required change iSCSI initiator name"
+msgstr "Legitimation ist zum Verwalten von RAID-Anordnungen erforderlich"
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:362
+msgid "Empty initiator name"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:399
+#, c-format
+msgid "Error writing to %s: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:544
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:603
+#, fuzzy
+msgid "Authentication is required to discover targets"
+msgstr "Legitimierung ist zum Ausschalten eines Laufwerks notwendig"
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:562
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:668
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:717
+#, c-format
+msgid "Discovery failed: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:615
+msgid "Username too long"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:626
+msgid "Password too long"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:637
+msgid "Reverse username too long"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:648
+msgid "Reverse password too long"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:702
+#, fuzzy
+msgid "Authentication is required to discover firmware targets"
+msgstr "Legitimierung ist zum Ausschalten eines Laufwerks notwendig"
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:754
+#, fuzzy
+msgid "Authentication is required to perform iSCSI login"
+msgstr "Legitimierung ist zum Ausschalten eines Laufwerks notwendig"
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:776
+#, c-format
+msgid "Login failed: %s"
 msgstr ""
 
 #: ../modules/lvm2/data/org.storaged.Storaged.lvm2.policy.in.h:1
@@ -382,16 +505,20 @@ msgstr ""
 msgid "Authentication is required to manage LVM"
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:382
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:398
 msgid "Authentication is required to delete a logical volume"
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:521
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:624
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:533
 msgid "Authentication is required to rename a logical volume"
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:758
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:632
+#, fuzzy
+msgid "Authentication is required to resize a logical volume"
+msgstr "Legitimation ist zum erneuten Einlesen eines Geräts erforderlich"
+
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:762
 msgid "Authentication is required to activate a logical volume"
 msgstr ""
 
@@ -399,15 +526,36 @@ msgstr ""
 msgid "Authentication is required to deactivate a logical volume"
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:954
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:950
 msgid "Authentication is required to create a snapshot of a logical volume"
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxmanagerlvm2.c:231
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1021
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1126
+msgid "LVMCache not enabled at compile time."
+msgstr ""
+
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1064
+#, fuzzy
+msgid "Authentication is required to convert logical volume to cache"
+msgstr "Legitimierung ist zum Öffnen eines Geräts notwendig"
+
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1095
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1195
+#, c-format
+msgid "Error converting volume: %s"
+msgstr ""
+
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1167
+#, fuzzy
+msgid "Authentication is required to split cache pool LV off of a cache LV"
+msgstr "Legitimierung ist zum Ausschalten eines Laufwerks notwendig"
+
+#: ../modules/lvm2/storagedlinuxmanagerlvm2.c:235
 msgid "Authentication is required to create a volume group"
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:307
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:311
 msgid "Authentication is required to delete a volume group"
 msgstr ""
 
@@ -415,23 +563,63 @@ msgstr ""
 msgid "Authentication is required to rename a volume group"
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:541
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:537
 msgid "Authentication is required to add a device to a volume group"
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:664
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:656
 msgid "Authentication is required to remove a device from a volume group"
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:798
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:786
 msgid "Authentication is required to empty a device in a volume group"
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:928
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:1031
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:1137
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:912
 msgid "Authentication is required to create a logical volume"
 msgstr ""
+
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:1011
+#, fuzzy
+msgid "Authentication is required to create a thin pool volume"
+msgstr ""
+"Legitimierung ist zum Erstellen einer Partition auf $(drive) erforderlich"
+
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:1113
+#, fuzzy
+msgid "Authentication is required to create a thin volume"
+msgstr ""
+"Legitimierung ist zum Erstellen einer Partition auf $(drive) erforderlich"
+
+#: ../modules/zram/data/org.storaged.Storaged.zram.policy.in.h:1
+#, fuzzy
+msgid "Manage zRAM"
+msgstr "RAID-Anordnungen verwalten"
+
+#: ../modules/zram/data/org.storaged.Storaged.zram.policy.in.h:2
+#, fuzzy
+msgid "Authentication is required to manage zRAM"
+msgstr "Legitimation ist zum Verwalten von RAID-Anordnungen erforderlich"
+
+#: ../modules/zram/storagedlinuxmanagerzram.c:217
+#, fuzzy
+msgid "Authentication is required to add zRAM kernel module"
+msgstr "Das Abbrechen eines Auftrags erfordert Legitimation"
+
+#: ../modules/zram/storagedlinuxmanagerzram.c:247
+#, fuzzy
+msgid "Authentication is required to remove zRAM kernel module"
+msgstr "Legitimierung ist zum Öffnen eines Geräts notwendig"
+
+#: ../modules/zram/storagedlinuxblockzram.c:253
+#, fuzzy
+msgid "Authentication is required to enable zRAM device"
+msgstr "Legitimierung ist zum Öffnen eines Geräts notwendig"
+
+#: ../modules/zram/storagedlinuxblockzram.c:344
+#, fuzzy
+msgid "Authentication is required to disable zRAM device"
+msgstr "Legitimation ist zum Verändern eines Geräts erforderlich"
 
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
@@ -493,7 +681,7 @@ msgstr "Legitimierung ist zum Verändern der Datei /etc/crypttab notwendig"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxblock.c:2819 ../src/storagedlinuxdriveata.c:2283
+#: ../src/storagedlinuxblock.c:2819 ../src/storagedlinuxdriveata.c:2287
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr "Legitimation ist zum sicheren Löschen von $(drive) erforderlich"
 
@@ -508,13 +696,13 @@ msgstr "Legitimation ist zum sicheren Löschen von $(drive) erforderlich"
 msgid "Authentication is required to format $(drive)"
 msgstr "Legitimierung ist zum Formatieren von $(drive) notwendig"
 
-#: ../src/storagedlinuxblock.c:2873 ../src/storagedlinuxmdraid.c:1601
-#: ../src/storagedlinuxpartition.c:929
+#: ../src/storagedlinuxblock.c:2873 ../src/storagedlinuxmdraid.c:1609
+#: ../src/storagedlinuxpartition.c:877
 msgid "Authentication is required to modify the system configuration"
 msgstr ""
 "Legitimierung ist zum Verändern der systemweiten Konfiguration notwendig"
 
-#: ../src/storagedlinuxblock.c:2877 ../src/storagedlinuxdriveata.c:2295
+#: ../src/storagedlinuxblock.c:2877 ../src/storagedlinuxdriveata.c:2299
 msgid "Formatting Device"
 msgstr "Gerät wird formatiert"
 
@@ -564,7 +752,7 @@ msgstr "Legitimierung ist zum erneuten Einlesen von $(drive) notwendig"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdrive.c:1022
+#: ../src/storagedlinuxdrive.c:1009
 msgid "Authentication is required to eject $(drive)"
 msgstr "Legitimierung ist zum Auswerfen von $(drive) notwendig"
 
@@ -574,7 +762,7 @@ msgstr "Legitimierung ist zum Auswerfen von $(drive) notwendig"
 #. * Do not translate $(drive), it's a placeholder and will be
 #. * replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdrive.c:1110
+#: ../src/storagedlinuxdrive.c:1097
 msgid "Authentication is required to configure settings for $(drive)"
 msgstr ""
 "Legitimierung ist zum Festlegen von Einstellungen für $(drive) notwendig"
@@ -585,7 +773,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdrive.c:1439
+#: ../src/storagedlinuxdrive.c:1413
 msgid "Authentication is required to power off $(drive)"
 msgstr "Legitimierung ist zum Ausschalten von $(drive) notwendig"
 
@@ -652,7 +840,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdriveata.c:1389
+#: ../src/storagedlinuxdriveata.c:1391
 msgid "Authentication is required to put $(drive) in standby mode"
 msgstr "Legitimierung ist zum Aktivieren des Ruhemodus auf $(drive) notwendig"
 
@@ -662,7 +850,7 @@ msgstr "Legitimierung ist zum Aktivieren des Ruhemodus auf $(drive) notwendig"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdriveata.c:1521
+#: ../src/storagedlinuxdriveata.c:1525
 msgid "Authentication is required to wake up $(drive) from standby mode"
 msgstr ""
 "Legitimierung ist zum Aufwecken von $(drive) aus dem Ruhemodus notwendig"
@@ -673,7 +861,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdriveata.c:2376
+#: ../src/storagedlinuxdriveata.c:2380
 msgid "Authentication is required to enable SMART on $(drive)"
 msgstr "Legitimierung ist zum Aktivieren von SMART auf $(drive) notwendig"
 
@@ -683,7 +871,7 @@ msgstr "Legitimierung ist zum Aktivieren von SMART auf $(drive) notwendig"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdriveata.c:2386
+#: ../src/storagedlinuxdriveata.c:2390
 msgid "Authentication is required to disable SMART on $(drive)"
 msgstr "Legitimierung ist zum Deaktivieren von SMART auf $(drive) notwendig"
 
@@ -693,7 +881,7 @@ msgstr "Legitimierung ist zum Deaktivieren von SMART auf $(drive) notwendig"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxencrypted.c:370 ../src/storagedlinuxencrypted.c:746
+#: ../src/storagedlinuxencrypted.c:357 ../src/storagedlinuxencrypted.c:733
 msgid "Authentication is required to unlock the encrypted device $(drive)"
 msgstr ""
 "Legitimierung ist zum Entsperren des verschlüsselten Geräts $(drive) "
@@ -706,7 +894,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxencrypted.c:604
+#: ../src/storagedlinuxencrypted.c:591
 msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by "
 "another user"
@@ -720,7 +908,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxfilesystem.c:1264 ../src/storagedlinuxfilesystem.c:1426
+#: ../src/storagedlinuxfilesystem.c:1251 ../src/storagedlinuxfilesystem.c:1413
 msgid "Authentication is required to mount $(drive)"
 msgstr "Legitimierung ist zum Einhängen von $(drive) notwendig"
 
@@ -734,7 +922,7 @@ msgstr "Legitimierung ist zum Einhängen von $(drive) notwendig"
 #. *
 #. * Do not translate /etc/fstab
 #. 
-#: ../src/storagedlinuxfilesystem.c:1333
+#: ../src/storagedlinuxfilesystem.c:1320
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
@@ -752,7 +940,7 @@ msgstr ""
 #. *
 #. * Do not translate /etc/fstab
 #. 
-#: ../src/storagedlinuxfilesystem.c:1680
+#: ../src/storagedlinuxfilesystem.c:1667
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
@@ -767,7 +955,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxfilesystem.c:1727
+#: ../src/storagedlinuxfilesystem.c:1714
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr ""
 "Legitimierung ist zum Aushängen von $(drive) notwendig, welches von einem "
@@ -779,7 +967,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxfilesystem.c:1972
+#: ../src/storagedlinuxfilesystem.c:1946
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr ""
 "Legitimierung ist zum Ändern der Dateisystem-Bezeichnung auf $(drive) "
@@ -820,7 +1008,7 @@ msgstr "Legitimierung ist zum Erstellen einer RAID-Anordnungen erforderlich"
 #. * attempts to start a RAID Array.
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:643
+#: ../src/storagedlinuxmdraid.c:651
 msgid "Authentication is required to start a RAID array"
 msgstr "Legitimierung ist zum Starten einer RAID-Anordnung erforderlich"
 
@@ -828,7 +1016,7 @@ msgstr "Legitimierung ist zum Starten einer RAID-Anordnung erforderlich"
 #. * attempts to stop a RAID Array.
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:812
+#: ../src/storagedlinuxmdraid.c:820
 msgid "Authentication is required to stop a RAID array"
 msgstr "Legitimierung ist zum Anhalten einer RAID-Anordnung erforderlich"
 
@@ -836,7 +1024,7 @@ msgstr "Legitimierung ist zum Anhalten einer RAID-Anordnung erforderlich"
 #. * attempts to remove a device from a RAID Array.
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:1040
+#: ../src/storagedlinuxmdraid.c:1048
 msgid "Authentication is required to remove a device from a RAID array"
 msgstr ""
 "Legitimierung ist zum Entfernen eines Geräts aus einer RAID-Anordnung "
@@ -846,7 +1034,7 @@ msgstr ""
 #. * attempts to add a device to a RAID Array.
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:1236
+#: ../src/storagedlinuxmdraid.c:1244
 msgid "Authentication is required to add a device to a RAID array"
 msgstr ""
 "Legitimierung ist zum Hinzufügen eines Geräts zu einer RAID-Anordnung "
@@ -856,7 +1044,7 @@ msgstr ""
 #. * attempts to change whether it has a write-intent bitmap
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:1366
+#: ../src/storagedlinuxmdraid.c:1374
 msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
@@ -868,14 +1056,14 @@ msgstr ""
 #. * attempts to start/stop data scrubbing operations
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:1490
+#: ../src/storagedlinuxmdraid.c:1498
 msgid ""
 "Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr ""
 "Zum Starten/Anhalten der Datenbereinigung einer RAID-Anordnung ist eine "
 "Legitimierung erforderlich"
 
-#: ../src/storagedlinuxmdraid.c:1582
+#: ../src/storagedlinuxmdraid.c:1590
 msgid "Authentication is required to delete a RAID array"
 msgstr "Legitimierung ist zum Erstellen einer RAID-Anordnungen erforderlich"
 
@@ -885,8 +1073,8 @@ msgstr "Legitimierung ist zum Erstellen einer RAID-Anordnungen erforderlich"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxpartition.c:282 ../src/storagedlinuxpartition.c:447
-#: ../src/storagedlinuxpartition.c:789
+#: ../src/storagedlinuxpartition.c:269 ../src/storagedlinuxpartition.c:421
+#: ../src/storagedlinuxpartition.c:750
 msgid "Authentication is required to modify the partition on device $(drive)"
 msgstr "Legitimierung ist zum Ändern der Partition auf $(drive) notwendig"
 
@@ -896,7 +1084,7 @@ msgstr "Legitimierung ist zum Ändern der Partition auf $(drive) notwendig"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxpartition.c:903
+#: ../src/storagedlinuxpartition.c:851
 msgid "Authentication is required to delete the partition $(drive)"
 msgstr ""
 "Legitimierung ist zum Löschen einer Partition auf $(drive) erforderlich"
@@ -907,7 +1095,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxpartitiontable.c:399
+#: ../src/storagedlinuxpartitiontable.c:386
 msgid "Authentication is required to create a partition on $(drive)"
 msgstr ""
 "Legitimierung ist zum Erstellen einer Partition auf $(drive) erforderlich"
