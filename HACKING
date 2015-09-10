@@ -25,7 +25,7 @@ MAKING RELEASES
 
 Checklist for making a release:
 
- - Pull translations from Transfix ("tx pull -a")
+ - Pull translations from Zatana ("zanata-cli pull")
    - Remember to add new po/*.po files and update po/LINGUAS
    - Make sure that you pushed the POT file a couple of weeks before
      this and that no new strings has been added
@@ -68,6 +68,20 @@ For maintenance releases, the rules are simple
  - Do not add (or backport) any new API or features
  - Do not add, remove or change any translatable strings
  - Do not add new dependencies
+
+TRANSLATIONS
+============
+
+- Don't use VPATH build (To be fixed)
+
+- Push (new) translations to Zanata:
+  - Run 'make -C po update-po' to update translation strings
+  - Run 'zanata-cli push --push-type trans' to push new translations
+
+- Pull translations from Zanata:
+  - Run 'zanata-cli pull'
+
+- Commit those changes in po/
 
 COMMITTING CODE
 ===============
