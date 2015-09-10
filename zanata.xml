@@ -7,6 +7,7 @@
   <src-dir>po</src-dir>
   <trans-dir>po</trans-dir>
 
+  <!-- TODO: These are deprecated; remove someday!
   <locales>
     <locale>lv</locale>
     <locale>ro</locale>
@@ -71,5 +72,6 @@
     <locale>cs</locale>
     <locale map-from="en_GB">en-GB</locale>
   </locales>
+  -->
 
 </config>
