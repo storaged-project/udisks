@@ -484,6 +484,7 @@ doc/storaged-sections.txt.btrfs.sections
 doc/storaged.types.btrfs
 doc/storaged-docs.xml.zram.dbus
 doc/storaged-docs.xml.zram.generated
+doc/storaged-docs.xml.zram.block_devices
 doc/storaged-sections.txt.zram.sections
 doc/storaged.types.zram
 po/Makefile.in

@@ -71,6 +71,7 @@
           Such objects implement the
           <link linkend="gdbus-interface-org-storaged-Storaged-Block.top_of_page">org.storaged.Storaged.Block</link>
           D-Bus interface and may optionally implement other D-Bus interfaces such as
+          <!-- ZRAM_BLOCK_DEVICES_IFACE -->
           <link linkend="gdbus-interface-org-storaged-Storaged-Filesystem.top_of_page">org.storaged.Storaged.Filesystem</link>,
           <link linkend="gdbus-interface-org-storaged-Storaged-Partition.top_of_page">org.storaged.Storaged.Partition</link> or
           <link linkend="gdbus-interface-org-storaged-Storaged-Loop.top_of_page">org.storaged.Storaged.Loop</link> depending on the block device in question.

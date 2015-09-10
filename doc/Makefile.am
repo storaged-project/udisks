@@ -188,6 +188,7 @@ EXTRA_DIST +=                                                                  \
 	$(DOC_MAIN_SGML_FILE).lvm2.sed                                         \
 	$(DOC_MAIN_SGML_FILE).zram.dbus.in                                     \
 	$(DOC_MAIN_SGML_FILE).zram.generated.in                                \
+	$(DOC_MAIN_SGML_FILE).zram.block_devices.in                            \
 	$(DOC_MAIN_SGML_FILE).zram.sed                                         \
 	$(STORAGED_TYPES).in.in                                                \
 	$(STORAGED_TYPES).in                                                   \
