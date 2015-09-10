@@ -1061,7 +1061,7 @@ handle_cache_attach (StoragedLogicalVolume  *volume_,
                                        STORAGED_OBJECT (object),
                                        lvm2_policy_action_id,
                                        options,
-                                       N_("Authentication is required to convert logica volume to cache"),
+                                       N_("Authentication is required to convert logical volume to cache"),
                                        invocation);
 
   group_object = storaged_linux_logical_volume_object_get_volume_group (object);
