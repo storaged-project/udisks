@@ -54,7 +54,7 @@ starting the 2.0.0, 2.1.0, 2.2.0 etc. series), do the following
 
  - Update the date in man pages to "$MONTH $YEAR" e.g. "October 2012"
 
- - At some point after the release, create the udisks-X-Y branch
+ - At some point after the release, create the storaged-X-Y branch
    - Perform the post-release actions above on the created branch
    - This is for maintenance releases
    - Do this when focus is on new feature development
@@ -63,7 +63,7 @@ starting the 2.0.0, 2.1.0, 2.2.0 etc. series), do the following
 
 For maintenance releases, the rules are simple
 
- - Work on the udisks-X-Y branch
+ - Work on the storaged-X-Y branch
  - If possible, cherry-pick fixes from master ('git cherry-pick')
  - Do not add (or backport) any new API or features
  - Do not add, remove or change any translatable strings

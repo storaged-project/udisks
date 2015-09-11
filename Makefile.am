@@ -26,5 +26,8 @@ DISTCHECK_CONFIGURE_FLAGS =                                                    \
 sign: dist
 	gpg --armor --detach-sign --output storaged-$(VERSION).tar.bz2.sign storaged-$(VERSION).tar.bz2
 
+shortlog:
+	git shortlog -r $$(git tag -l | tail -n 1)..HEAD
+
 clean-local:
 	rm -f *~

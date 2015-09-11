@@ -82,3 +82,7 @@
 
  - SES2 Enclosure Management
    - In particular, we should do something with the LEDs
+
+ - make integration-test run in uninstalled mode
+
+ - LSM man page rewrite to docbook format
