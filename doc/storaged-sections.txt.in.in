@@ -1317,11 +1317,15 @@ storaged_loop_proxy_get_type
 storaged_loop_skeleton_get_type
 </SECTION>
 
+<!-- LSM_GENERATED_SECTIONS -->
+
 <!-- LVM2_GENERATED_SECTIONS -->
 
 <!-- ISCSI_GENERATED_SECTIONS -->
 
 <!-- BTRFS_GENERATED_SECTIONS -->
+
+<!-- ZRAM_GENERATED_SECTIONS -->
 
 <SECTION>
 <FILE>storagedfstabmonitor</FILE>

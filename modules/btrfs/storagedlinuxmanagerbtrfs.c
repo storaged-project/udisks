@@ -19,11 +19,16 @@
 
 #include "config.h"
 
+#include <glib/gi18n.h>
+#include <blockdev/btrfs.h>
+
 #include <src/storageddaemon.h>
+#include <src/storageddaemonutil.h>
 #include <src/storagedlogging.h>
 
 #include "storagedlinuxmanagerbtrfs.h"
 #include "storagedbtrfsstate.h"
+#include "storagedbtrfsutil.h"
 #include "storaged-btrfs-generated.h"
 
 /**
@@ -61,7 +66,8 @@ G_DEFINE_TYPE_WITH_CODE (StoragedLinuxManagerBTRFS, storaged_linux_manager_btrfs
 enum
 {
   PROP_0,
-  PROP_DAEMON
+  PROP_DAEMON,
+  N_PROPERTIES
 };
 
 static void
@@ -121,11 +127,26 @@ storaged_linux_manager_btrfs_class_init (StoragedLinuxManagerBTRFSClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-
   gobject_class->get_property = storaged_linux_manager_btrfs_get_property;
   gobject_class->set_property = storaged_linux_manager_btrfs_set_property;
   gobject_class->dispose = storaged_linux_manager_btrfs_dispose;
   gobject_class->finalize = storaged_linux_manager_btrfs_finalize;
+
+  /**
+   * StoragedLinuxManager:daemon
+   *
+   * The #StoragedDaemon for the object.
+   */
+  g_object_class_install_property (gobject_class,
+                                   PROP_DAEMON,
+                                   g_param_spec_object ("daemon",
+                                                        "Daemon",
+                                                        "The daemon for the object",
+                                                        STORAGED_TYPE_DAEMON,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -165,7 +186,47 @@ storaged_linux_manager_btrfs_get_daemon (StoragedLinuxManagerBTRFS *manager)
   return manager->daemon;
 }
 
+static gboolean
+handle_create_volume (StoragedManagerBTRFS  *manager,
+                      GDBusMethodInvocation *invocation,
+                      const gchar *const    *arg_devices,
+                      const gchar           *arg_label,
+                      const gchar           *arg_data_level,
+                      const gchar           *arg_md_level,
+                      GVariant              *arg_options)
+{
+  StoragedLinuxManagerBTRFS *l_manager = STORAGED_LINUX_MANAGER_BTRFS (manager);
+  GError *error = NULL;
+
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (storaged_linux_manager_btrfs_get_daemon (l_manager),
+                                       NULL,
+                                       btrfs_policy_action_id,
+                                       arg_options,
+                                       N_("Authentication is required to create a new volume"),
+                                       invocation);
+
+  if (! bd_btrfs_create_volume ((gchar **) arg_devices,
+                                (gchar *) arg_label,
+                                (gchar *) arg_data_level,
+                                (gchar *) arg_md_level,
+                                &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  /* Complete DBus call. */
+  storaged_manager_btrfs_complete_create_volume (manager, invocation);
+
+out:
+
+  /* Indicate that we handled the method invocation */
+  return TRUE;
+}
+
 static void
 storaged_linux_manager_btrfs_iface_init (StoragedManagerBTRFSIface *iface)
 {
+  iface->handle_create_volume = handle_create_volume;
 }

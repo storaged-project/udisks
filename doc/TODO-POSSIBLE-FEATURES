@@ -6,11 +6,8 @@ mentioned during a brainstorming.
 
 Add support for:
 
-- btrfs
 - raid in lvm2
 - raid tests
-- lvm cache
 - bcache
-- zram
 - glusterfs
 - ceph

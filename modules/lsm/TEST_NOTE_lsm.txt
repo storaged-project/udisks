@@ -1,0 +1,21 @@
+## NetApp ONTAP iSCSI Test
+
+ * New LUN attached after storaged(with module loaded) started.
+   `iscsiadm -m session -R`
+
+ * Exiting LUN removed from storage array. LSM dbus interface should be purged.
+    * iSCSI
+        * Got change uevent(size to 0) on next I/O, but /dev/sdX and sysfs
+          entries still exist.
+
+ * Delete certain disk via sysfs and scan it back:
+    echo 1 | sudo tee /sys/block/sdX/device/delete
+        # This is the a simulation of FC/FCoE dev_lose_tmo.
+    find /sys/class/scsi_host/*/scan -exec echo {} \;  \
+        -exec sudo bash -c "echo '- - -' > {}" \;
+
+ * Degrade the RAID to check dbus signal.
+    netapp shell:
+        disk simpull v5.32
+    linux dbus monitor:
+        dbus-monitor --system

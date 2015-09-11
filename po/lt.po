@@ -10,17 +10,17 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-04 14:26+0200\n"
+"POT-Creation-Date: 2015-09-10 14:34+0200\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "PO-Revision-Date: 2014-03-12 03:53-0400\n"
 "Last-Translator: davidz <zeuthen@gmail.com>\n"
+"Language-Team: Lithuanian\n"
 "Language: lt\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "(n%100<10 || n%100>=20) ? 1 : 2);\n"
-"Language-Team: Lithuanian\n"
-"X-Generator: Zanata 3.6.2\n"
+"X-Generator: Zanata 3.7.1\n"
 
 #: ../data/org.storaged.Storaged.policy.in.h:1
 msgid "Mount a filesystem"
@@ -347,12 +347,133 @@ msgstr "Atsisakyti kito naudotojo pradėto darbo"
 msgid "Authentication is required to cancel a job started by another user"
 msgstr "Kito naudotojo pradėto darbo atsisakyti reikia patvirtinti tapatybę"
 
+#: ../modules/btrfs/data/org.storaged.Storaged.btrfs.policy.in.h:1
+msgid "Manage BTRFS"
+msgstr ""
+
+#: ../modules/btrfs/data/org.storaged.Storaged.btrfs.policy.in.h:2
+#, fuzzy
+msgid "Authentication is required to manage BTRFS"
+msgstr "RAID masyvams tvarkyti reikia patvirtinti tapatybę"
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:343
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:587
+#, fuzzy
+msgid "Authentication is required to change label for BTRFS volume"
+msgstr "Darbo atsisakymui reikia patvirtinti tapatybę"
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:468
+#, fuzzy
+msgid "Authentication is required to add the device to the volume"
+msgstr "Įrenginio pridėjimui į RAID masyvą reikia patvirtinti tapatybę"
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:655
+#, fuzzy
+msgid "Authentication is required to create a new snapshot"
+msgstr "RAID masyvo sukūrimui reikia patvirtinti tapatybę"
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:714
+#, fuzzy
+msgid "Authentication is required to check and repair the volume"
+msgstr "Įrenginiui iš naujo perskaityti reikia patvirtinti tapatybę"
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:767
+#, fuzzy
+msgid "Authentication is required to resize the volume"
+msgstr "Laikmenai išstumti reikia patvirtinti tapatybę"
+
+#: ../modules/btrfs/storagedlinuxmanagerbtrfs.c:206
+#, fuzzy
+msgid "Authentication is required to create a new volume"
+msgstr "Įrenginiui iš naujo perskaityti reikia patvirtinti tapatybę"
+
 #: ../modules/iscsi/data/org.storaged.Storaged.iscsi.policy.in.h:1
 msgid "Manage iSCSI"
 msgstr ""
 
 #: ../modules/iscsi/data/org.storaged.Storaged.iscsi.policy.in.h:2
 msgid "Authentication is required to manage iSCSI"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxiscsisession.c:134
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:815
+#, fuzzy
+msgid "Authentication is required to perform iSCSI logout"
+msgstr "$(drive) formatavimui reikia patvirtinti tapatybę"
+
+#: ../modules/iscsi/storagedlinuxiscsisession.c:164
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:837
+#, c-format
+msgid "Logout failed: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:276
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:382
+#, c-format
+msgid "Error opening %s: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:296
+#, c-format
+msgid "Error reading %s: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:354
+#, fuzzy
+msgid "Authentication is required change iSCSI initiator name"
+msgstr "RAID masyvams tvarkyti reikia patvirtinti tapatybę"
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:362
+msgid "Empty initiator name"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:399
+#, c-format
+msgid "Error writing to %s: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:544
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:603
+#, fuzzy
+msgid "Authentication is required to discover targets"
+msgstr "Diskui išjungti reikia patvirtinti tapatybę"
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:562
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:668
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:717
+#, c-format
+msgid "Discovery failed: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:615
+msgid "Username too long"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:626
+msgid "Password too long"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:637
+msgid "Reverse username too long"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:648
+msgid "Reverse password too long"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:702
+#, fuzzy
+msgid "Authentication is required to discover firmware targets"
+msgstr "Diskui išjungti reikia patvirtinti tapatybę"
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:754
+#, fuzzy
+msgid "Authentication is required to perform iSCSI login"
+msgstr "Diskui išjungti reikia patvirtinti tapatybę"
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:776
+#, c-format
+msgid "Login failed: %s"
 msgstr ""
 
 #: ../modules/lvm2/data/org.storaged.Storaged.lvm2.policy.in.h:1
@@ -363,16 +484,20 @@ msgstr ""
 msgid "Authentication is required to manage LVM"
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:382
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:398
 msgid "Authentication is required to delete a logical volume"
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:521
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:624
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:533
 msgid "Authentication is required to rename a logical volume"
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:758
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:632
+#, fuzzy
+msgid "Authentication is required to resize a logical volume"
+msgstr "Įrenginiui iš naujo perskaityti reikia patvirtinti tapatybę"
+
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:762
 msgid "Authentication is required to activate a logical volume"
 msgstr ""
 
@@ -380,15 +505,36 @@ msgstr ""
 msgid "Authentication is required to deactivate a logical volume"
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:954
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:950
 msgid "Authentication is required to create a snapshot of a logical volume"
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxmanagerlvm2.c:231
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1021
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1126
+msgid "LVMCache not enabled at compile time."
+msgstr ""
+
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1064
+#, fuzzy
+msgid "Authentication is required to convert logical volume to cache"
+msgstr "Įrenginiui atverti reikia patvirtinti tapatybę"
+
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1095
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1195
+#, c-format
+msgid "Error converting volume: %s"
+msgstr ""
+
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1167
+#, fuzzy
+msgid "Authentication is required to split cache pool LV off of a cache LV"
+msgstr "Diskui išjungti reikia patvirtinti tapatybę"
+
+#: ../modules/lvm2/storagedlinuxmanagerlvm2.c:235
 msgid "Authentication is required to create a volume group"
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:307
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:311
 msgid "Authentication is required to delete a volume group"
 msgstr ""
 
@@ -396,23 +542,61 @@ msgstr ""
 msgid "Authentication is required to rename a volume group"
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:541
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:537
 msgid "Authentication is required to add a device to a volume group"
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:664
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:656
 msgid "Authentication is required to remove a device from a volume group"
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:798
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:786
 msgid "Authentication is required to empty a device in a volume group"
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:928
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:1031
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:1137
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:912
 msgid "Authentication is required to create a logical volume"
 msgstr ""
+
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:1011
+#, fuzzy
+msgid "Authentication is required to create a thin pool volume"
+msgstr "Skirsnio sukūrimui diske $(drive) reikia patvirtinti tapatybę"
+
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:1113
+#, fuzzy
+msgid "Authentication is required to create a thin volume"
+msgstr "Skirsnio sukūrimui diske $(drive) reikia patvirtinti tapatybę"
+
+#: ../modules/zram/data/org.storaged.Storaged.zram.policy.in.h:1
+#, fuzzy
+msgid "Manage zRAM"
+msgstr "Tvarkyti RAID masyvus"
+
+#: ../modules/zram/data/org.storaged.Storaged.zram.policy.in.h:2
+#, fuzzy
+msgid "Authentication is required to manage zRAM"
+msgstr "RAID masyvams tvarkyti reikia patvirtinti tapatybę"
+
+#: ../modules/zram/storagedlinuxmanagerzram.c:217
+#, fuzzy
+msgid "Authentication is required to add zRAM kernel module"
+msgstr "Darbo atsisakymui reikia patvirtinti tapatybę"
+
+#: ../modules/zram/storagedlinuxmanagerzram.c:247
+#, fuzzy
+msgid "Authentication is required to remove zRAM kernel module"
+msgstr "Įrenginiui atverti reikia patvirtinti tapatybę"
+
+#: ../modules/zram/storagedlinuxblockzram.c:253
+#, fuzzy
+msgid "Authentication is required to enable zRAM device"
+msgstr "Įrenginiui atverti reikia patvirtinti tapatybę"
+
+#: ../modules/zram/storagedlinuxblockzram.c:344
+#, fuzzy
+msgid "Authentication is required to disable zRAM device"
+msgstr "Įrenginiui keisti reikia patvirtinti tapatybę"
 
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
@@ -466,7 +650,7 @@ msgstr "/etc/crypttab failui pakeisti reikia patvirtinti tapatybę"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxblock.c:2819 ../src/storagedlinuxdriveata.c:2283
+#: ../src/storagedlinuxblock.c:2819 ../src/storagedlinuxdriveata.c:2287
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr "Saugiam $(drive) ištrynimui atlikti reikia patvirtinti tapatybę"
 
@@ -481,12 +665,12 @@ msgstr "Saugiam $(drive) ištrynimui atlikti reikia patvirtinti tapatybę"
 msgid "Authentication is required to format $(drive)"
 msgstr "$(drive) formatavimui reikia patvirtinti tapatybę"
 
-#: ../src/storagedlinuxblock.c:2873 ../src/storagedlinuxmdraid.c:1601
-#: ../src/storagedlinuxpartition.c:929
+#: ../src/storagedlinuxblock.c:2873 ../src/storagedlinuxmdraid.c:1609
+#: ../src/storagedlinuxpartition.c:877
 msgid "Authentication is required to modify the system configuration"
 msgstr ""
 
-#: ../src/storagedlinuxblock.c:2877 ../src/storagedlinuxdriveata.c:2295
+#: ../src/storagedlinuxblock.c:2877 ../src/storagedlinuxdriveata.c:2299
 msgid "Formatting Device"
 msgstr "Formatuojamas įrenginys"
 
@@ -536,7 +720,7 @@ msgstr "$(drive) perskaitymui reikia patvirtinti tapatybę"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdrive.c:1022
+#: ../src/storagedlinuxdrive.c:1009
 msgid "Authentication is required to eject $(drive)"
 msgstr "$(drive) išstūmimui reikia patvirtinti tapatybę"
 
@@ -546,7 +730,7 @@ msgstr "$(drive) išstūmimui reikia patvirtinti tapatybę"
 #. * Do not translate $(drive), it's a placeholder and will be
 #. * replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdrive.c:1110
+#: ../src/storagedlinuxdrive.c:1097
 msgid "Authentication is required to configure settings for $(drive)"
 msgstr "$(drive) nustatymams konfigūruoti reikia patvirtinti tapatybę"
 
@@ -556,7 +740,7 @@ msgstr "$(drive) nustatymams konfigūruoti reikia patvirtinti tapatybę"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdrive.c:1439
+#: ../src/storagedlinuxdrive.c:1413
 msgid "Authentication is required to power off $(drive)"
 msgstr "$(drive) išjungimui reikia patvirtinti tapatybę"
 
@@ -618,7 +802,7 @@ msgstr "$(drive) energijos būklei patikrinti reikia patvirtinti tapatybę"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdriveata.c:1389
+#: ../src/storagedlinuxdriveata.c:1391
 msgid "Authentication is required to put $(drive) in standby mode"
 msgstr "$(drive) užmigdymui reikia patvirtinti tapatybę"
 
@@ -628,7 +812,7 @@ msgstr "$(drive) užmigdymui reikia patvirtinti tapatybę"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdriveata.c:1521
+#: ../src/storagedlinuxdriveata.c:1525
 msgid "Authentication is required to wake up $(drive) from standby mode"
 msgstr "$(drive) pažadinimui reikia patvirtinti tapatybę"
 
@@ -638,7 +822,7 @@ msgstr "$(drive) pažadinimui reikia patvirtinti tapatybę"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdriveata.c:2376
+#: ../src/storagedlinuxdriveata.c:2380
 msgid "Authentication is required to enable SMART on $(drive)"
 msgstr "SMART įjungimui diske $(drive) reikia patvirtinti tapatybę"
 
@@ -648,7 +832,7 @@ msgstr "SMART įjungimui diske $(drive) reikia patvirtinti tapatybę"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdriveata.c:2386
+#: ../src/storagedlinuxdriveata.c:2390
 msgid "Authentication is required to disable SMART on $(drive)"
 msgstr "SMART išjungimui diske $(drive) reikia patvirtinti tapatybę"
 
@@ -658,7 +842,7 @@ msgstr "SMART išjungimui diske $(drive) reikia patvirtinti tapatybę"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxencrypted.c:370 ../src/storagedlinuxencrypted.c:746
+#: ../src/storagedlinuxencrypted.c:357 ../src/storagedlinuxencrypted.c:733
 msgid "Authentication is required to unlock the encrypted device $(drive)"
 msgstr "Šifruotam įrenginiui $(drive) atrakinti reikia patvirtinti tapatybę"
 
@@ -669,7 +853,7 @@ msgstr "Šifruotam įrenginiui $(drive) atrakinti reikia patvirtinti tapatybę"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxencrypted.c:604
+#: ../src/storagedlinuxencrypted.c:591
 msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by "
 "another user"
@@ -683,7 +867,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxfilesystem.c:1264 ../src/storagedlinuxfilesystem.c:1426
+#: ../src/storagedlinuxfilesystem.c:1251 ../src/storagedlinuxfilesystem.c:1413
 msgid "Authentication is required to mount $(drive)"
 msgstr "$(drive) prijungti reikia patvirtinti tapatybę"
 
@@ -697,7 +881,7 @@ msgstr "$(drive) prijungti reikia patvirtinti tapatybę"
 #. *
 #. * Do not translate /etc/fstab
 #. 
-#: ../src/storagedlinuxfilesystem.c:1333
+#: ../src/storagedlinuxfilesystem.c:1320
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
@@ -714,7 +898,7 @@ msgstr ""
 #. *
 #. * Do not translate /etc/fstab
 #. 
-#: ../src/storagedlinuxfilesystem.c:1680
+#: ../src/storagedlinuxfilesystem.c:1667
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
@@ -728,7 +912,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxfilesystem.c:1727
+#: ../src/storagedlinuxfilesystem.c:1714
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr ""
 "Kito naudotojo prijungtam $(drive) atjungti reikia patvirtinti tapatybę"
@@ -739,7 +923,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxfilesystem.c:1972
+#: ../src/storagedlinuxfilesystem.c:1946
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr ""
 "Failų sistemos etiketei pakeisti diske $(drive) reikia patvirtinti tapatybę"
@@ -778,7 +962,7 @@ msgstr "RAID masyvo sukūrimui reikia patvirtinti tapatybę"
 #. * attempts to start a RAID Array.
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:643
+#: ../src/storagedlinuxmdraid.c:651
 msgid "Authentication is required to start a RAID array"
 msgstr "RAID masyvo paleidimui reikia patvirtinti tapatybę"
 
@@ -786,7 +970,7 @@ msgstr "RAID masyvo paleidimui reikia patvirtinti tapatybę"
 #. * attempts to stop a RAID Array.
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:812
+#: ../src/storagedlinuxmdraid.c:820
 msgid "Authentication is required to stop a RAID array"
 msgstr "RAID masyvo sustabdymui reikia patvirtinti tapatybę"
 
@@ -794,7 +978,7 @@ msgstr "RAID masyvo sustabdymui reikia patvirtinti tapatybę"
 #. * attempts to remove a device from a RAID Array.
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:1040
+#: ../src/storagedlinuxmdraid.c:1048
 msgid "Authentication is required to remove a device from a RAID array"
 msgstr "Įrenginio pašalinimui iš RAID masyvo reikia patvirtinti tapatybę"
 
@@ -802,7 +986,7 @@ msgstr "Įrenginio pašalinimui iš RAID masyvo reikia patvirtinti tapatybę"
 #. * attempts to add a device to a RAID Array.
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:1236
+#: ../src/storagedlinuxmdraid.c:1244
 msgid "Authentication is required to add a device to a RAID array"
 msgstr "Įrenginio pridėjimui į RAID masyvą reikia patvirtinti tapatybę"
 
@@ -810,7 +994,7 @@ msgstr "Įrenginio pridėjimui į RAID masyvą reikia patvirtinti tapatybę"
 #. * attempts to change whether it has a write-intent bitmap
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:1366
+#: ../src/storagedlinuxmdraid.c:1374
 msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
@@ -822,12 +1006,12 @@ msgstr ""
 #. * attempts to start/stop data scrubbing operations
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:1490
+#: ../src/storagedlinuxmdraid.c:1498
 msgid ""
 "Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr ""
 
-#: ../src/storagedlinuxmdraid.c:1582
+#: ../src/storagedlinuxmdraid.c:1590
 msgid "Authentication is required to delete a RAID array"
 msgstr ""
 
@@ -837,8 +1021,8 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxpartition.c:282 ../src/storagedlinuxpartition.c:447
-#: ../src/storagedlinuxpartition.c:789
+#: ../src/storagedlinuxpartition.c:269 ../src/storagedlinuxpartition.c:421
+#: ../src/storagedlinuxpartition.c:750
 msgid "Authentication is required to modify the partition on device $(drive)"
 msgstr "Skirsnio pakeitimui diske $(drive) reikia patvirtinti tapatybę"
 
@@ -848,7 +1032,7 @@ msgstr "Skirsnio pakeitimui diske $(drive) reikia patvirtinti tapatybę"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxpartition.c:903
+#: ../src/storagedlinuxpartition.c:851
 msgid "Authentication is required to delete the partition $(drive)"
 msgstr "Skirsnio ištrynimui diske $(drive) reikia patvirtinti tapatybę"
 
@@ -858,7 +1042,7 @@ msgstr "Skirsnio ištrynimui diske $(drive) reikia patvirtinti tapatybę"
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxpartitiontable.c:399
+#: ../src/storagedlinuxpartitiontable.c:386
 msgid "Authentication is required to create a partition on $(drive)"
 msgstr "Skirsnio sukūrimui diske $(drive) reikia patvirtinti tapatybę"
 

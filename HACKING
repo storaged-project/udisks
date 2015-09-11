@@ -18,18 +18,14 @@ SOURCE CONTROL
 
 Anonymous checkouts:
 
-  $ git clone git://git.freedesktop.org/git/udisks
-
-Checkouts for ssh account holders
-
-  $ git clone ssh://[username@]git.freedesktop.org/git/udisks
+  $ git clone git@github.com:storaged-project/storaged.git
 
 MAKING RELEASES
 ===============
 
 Checklist for making a release:
 
- - Pull translations from Transfix ("tx pull -a")
+ - Pull translations from Zatana ("zanata-cli pull")
    - Remember to add new po/*.po files and update po/LINGUAS
    - Make sure that you pushed the POT file a couple of weeks before
      this and that no new strings has been added
@@ -45,11 +41,7 @@ Checklist for making a release:
    - Ensure newly added API is marked properly with "Since: X.Y"
    - Ensure that deprecated API is marked as such
 
- - Do the actual release (see Makefile.am, do it manually if not davidz)
-   - run 'make publish'
-   - run 'make publish-docs'
-
- - Tag the release: git tag -s -m X.Y.Z X.Y.Z
+ - Tag the release: git tag storaged-X.Y.Z
 
  - Post-release actions:
    - Bump the version in configure.in
@@ -76,6 +68,20 @@ For maintenance releases, the rules are simple
  - Do not add (or backport) any new API or features
  - Do not add, remove or change any translatable strings
  - Do not add new dependencies
+
+TRANSLATIONS
+============
+
+- Don't use VPATH build (To be fixed)
+
+- Push (new) translations to Zanata:
+  - Run 'make -C po update-po' to update translation strings
+  - Run 'zanata-cli push --push-type trans' to push new translations
+
+- Pull translations from Zanata:
+  - Run 'zanata-cli pull'
+
+- Commit those changes in po/
 
 COMMITTING CODE
 ===============
@@ -104,9 +110,3 @@ tracker reference if applicable) and so forth. Be concise but not too brief.
 
  - When committing code on behalf of others use the --author option, e.g.
    git commit -a --author "Joe Coder <joe@coder.org>"
-
- - If submitting (or commiting) patch in Bugzilla prefix the first
-   line with "Bug <Number> — <Bug Title>" (the dash is U+2014 EM DASH,
-   not '-') and include the bug URL in the commit message. Example:
-   "Bug 24885 — LVM LVs now have NOPOLICY=0" and
-   http://bugs.freedesktop.org/show_bug.cgi?id=24885.

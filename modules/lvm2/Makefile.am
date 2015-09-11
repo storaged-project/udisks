@@ -72,6 +72,7 @@ libstoraged_lvm2_la_SOURCES =                                                  \
 	storagedlinuxblocklvm2.h              storagedlinuxblocklvm2.c         \
 	storagedlvm2daemonutil.h              storagedlvm2daemonutil.c         \
 	storagedlvm2dbusutil.h                storagedlvm2dbusutil.c           \
+	storagedlvm2util.h                    storagedlvm2util.c               \
 	storagedlinuxmanagerlvm2.h            storagedlinuxmanagerlvm2.c       \
 	storagedlvm2state.h                   storagedlvm2state.c              \
 	$(NULL)

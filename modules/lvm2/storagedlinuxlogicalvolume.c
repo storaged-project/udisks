@@ -38,6 +38,7 @@
 
 #include "storagedlvm2daemonutil.h"
 #include "storagedlvm2dbusutil.h"
+#include "storagedlvm2util.h"
 #include "storaged-lvm2-generated.h"
 
 /**
@@ -357,8 +358,6 @@ handle_delete (StoragedLogicalVolume *_volume,
   StoragedLinuxLogicalVolume *volume = STORAGED_LINUX_LOGICAL_VOLUME (_volume);
   StoragedLinuxLogicalVolumeObject *object = NULL;
   StoragedDaemon *daemon;
-  const gchar *action_id;
-  const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
   gboolean teardown_flag = FALSE;
@@ -391,15 +390,13 @@ handle_delete (StoragedLogicalVolume *_volume,
       goto out;
     }
 
-  message = N_("Authentication is required to delete a logical volume");
-  action_id = "org.storaged.Storaged.lvm2.manage-lvm";
-  if (!storaged_daemon_util_check_authorization_sync (daemon,
-                                                      STORAGED_OBJECT (object),
-                                                      action_id,
-                                                      options,
-                                                      message,
-                                                      invocation))
-    goto out;
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (daemon,
+                                       STORAGED_OBJECT (object),
+                                       lvm2_policy_action_id,
+                                       options,
+                                       N_("Authentication is required to delete a logical volume"),
+                                       invocation);
 
   if (teardown_flag &&
       !teardown_logical_volume (_volume,
@@ -497,8 +494,6 @@ handle_rename (StoragedLogicalVolume   *_volume,
   StoragedLinuxLogicalVolume *volume = STORAGED_LINUX_LOGICAL_VOLUME (_volume);
   StoragedLinuxLogicalVolumeObject *object = NULL;
   StoragedDaemon *daemon;
-  const gchar *action_id;
-  const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
   StoragedLinuxVolumeGroupObject *group_object;
@@ -530,15 +525,13 @@ handle_rename (StoragedLogicalVolume   *_volume,
       goto out;
     }
 
-  message = N_("Authentication is required to rename a logical volume");
-  action_id = "org.storaged.Storaged.lvm2.manage-lvm";
-  if (!storaged_daemon_util_check_authorization_sync (daemon,
-                                                      STORAGED_OBJECT (object),
-                                                      action_id,
-                                                      options,
-                                                      message,
-                                                      invocation))
-    goto out;
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (daemon,
+                                       STORAGED_OBJECT (object),
+                                       lvm2_policy_action_id,
+                                       options,
+                                       N_("Authentication is required to rename a logical volume"),
+                                       invocation);
 
   group_object = storaged_linux_logical_volume_object_get_volume_group (object);
   escaped_group_name = storaged_daemon_util_escape_and_quote (storaged_linux_volume_group_object_get_name (group_object));
@@ -600,8 +593,6 @@ handle_resize (StoragedLogicalVolume *_volume,
   StoragedLinuxLogicalVolume *volume = STORAGED_LINUX_LOGICAL_VOLUME (_volume);
   StoragedLinuxLogicalVolumeObject *object = NULL;
   StoragedDaemon *daemon;
-  const gchar *action_id;
-  const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
   StoragedLinuxVolumeGroupObject *group_object;
@@ -633,15 +624,13 @@ handle_resize (StoragedLogicalVolume *_volume,
       goto out;
     }
 
-  message = N_("Authentication is required to rename a logical volume");
-  action_id = "org.storaged.Storaged.lvm2.manage-lvm";
-  if (!storaged_daemon_util_check_authorization_sync (daemon,
-                                                      STORAGED_OBJECT (object),
-                                                      action_id,
-                                                      options,
-                                                      message,
-                                                      invocation))
-    goto out;
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (daemon,
+                                       STORAGED_OBJECT (object),
+                                       lvm2_policy_action_id,
+                                       options,
+                                       N_("Authentication is required to resize a logical volume"),
+                                       invocation);
 
   group_object = storaged_linux_logical_volume_object_get_volume_group (object);
   escaped_group_name = storaged_daemon_util_escape_and_quote (storaged_linux_volume_group_object_get_name (group_object));
@@ -735,8 +724,6 @@ handle_activate (StoragedLogicalVolume *_volume,
   StoragedLinuxLogicalVolume *volume = STORAGED_LINUX_LOGICAL_VOLUME (_volume);
   StoragedLinuxLogicalVolumeObject *object = NULL;
   StoragedDaemon *daemon;
-  const gchar *action_id;
-  const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
   StoragedLinuxVolumeGroupObject *group_object;
@@ -767,15 +754,13 @@ handle_activate (StoragedLogicalVolume *_volume,
       goto out;
     }
 
-  message = N_("Authentication is required to activate a logical volume");
-  action_id = "org.storaged.Storaged.lvm2.manage-lvm";
-  if (!storaged_daemon_util_check_authorization_sync (daemon,
-                                                      STORAGED_OBJECT (object),
-                                                      action_id,
-                                                      options,
-                                                      message,
-                                                      invocation))
-    goto out;
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (daemon,
+                                       STORAGED_OBJECT (object),
+                                       lvm2_policy_action_id,
+                                       options,
+                                       N_("Authentication is required to activate a logical volume"),
+                                       invocation);
 
   group_object = storaged_linux_logical_volume_object_get_volume_group (object);
   escaped_group_name = storaged_daemon_util_escape_and_quote (storaged_linux_volume_group_object_get_name (group_object));
@@ -840,8 +825,6 @@ handle_deactivate (StoragedLogicalVolume *_volume,
   StoragedLinuxLogicalVolume *volume = STORAGED_LINUX_LOGICAL_VOLUME (_volume);
   StoragedLinuxLogicalVolumeObject *object = NULL;
   StoragedDaemon *daemon;
-  const gchar *action_id;
-  const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
   StoragedLinuxVolumeGroupObject *group_object;
@@ -871,15 +854,13 @@ handle_deactivate (StoragedLogicalVolume *_volume,
       goto out;
     }
 
-  message = N_("Authentication is required to deactivate a logical volume");
-  action_id = "org.storaged.Storaged.lvm2.manage-lvm";
-  if (!storaged_daemon_util_check_authorization_sync (daemon,
-                                                      STORAGED_OBJECT (object),
-                                                      action_id,
-                                                      options,
-                                                      message,
-                                                      invocation))
-    goto out;
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (daemon,
+                                       STORAGED_OBJECT (object),
+                                       lvm2_policy_action_id,
+                                       options,
+                                       N_("Authentication is required to deactivate a logical volume"),
+                                       invocation);
 
   group_object = storaged_linux_logical_volume_object_get_volume_group (object);
   escaped_group_name = storaged_daemon_util_escape_and_quote (storaged_linux_volume_group_object_get_name (group_object));
@@ -929,8 +910,6 @@ handle_create_snapshot (StoragedLogicalVolume *_volume,
   StoragedLinuxLogicalVolume *volume = STORAGED_LINUX_LOGICAL_VOLUME (_volume);
   StoragedLinuxLogicalVolumeObject *object = NULL;
   StoragedDaemon *daemon;
-  const gchar *action_id;
-  const gchar *message;
   uid_t caller_uid;
   gid_t caller_gid;
   StoragedLinuxVolumeGroupObject *group_object;
@@ -963,15 +942,13 @@ handle_create_snapshot (StoragedLogicalVolume *_volume,
       goto out;
     }
 
-  message = N_("Authentication is required to create a snapshot of a logical volume");
-  action_id = "org.storaged.Storaged.lvm2.manage-lvm";
-  if (!storaged_daemon_util_check_authorization_sync (daemon,
-                                                      STORAGED_OBJECT (object),
-                                                      action_id,
-                                                      options,
-                                                      message,
-                                                      invocation))
-    goto out;
+  /* Policy check. */
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (daemon,
+                                       STORAGED_OBJECT (object),
+                                       lvm2_policy_action_id,
+                                       options,
+                                       N_("Authentication is required to create a snapshot of a logical volume"),
+                                       invocation);
 
   escaped_volume_name = storaged_daemon_util_escape_and_quote (name);
   group_object = storaged_linux_logical_volume_object_get_volume_group (object);
@@ -1030,6 +1007,210 @@ handle_create_snapshot (StoragedLogicalVolume *_volume,
   return TRUE;
 }
 
+static gboolean
+handle_cache_attach (StoragedLogicalVolume  *volume_,
+                     GDBusMethodInvocation  *invocation,
+                     const gchar            *cache_name,
+                     GVariant               *options)
+{
+#ifndef HAVE_LVMCACHE
+
+  g_dbus_method_invocation_return_error (invocation,
+                                         STORAGED_ERROR,
+                                         STORAGED_ERROR_FAILED,
+                                         N_("LVMCache not enabled at compile time."));
+  return TRUE;
+
+#else
+
+  GError *error = NULL;
+  StoragedLinuxLogicalVolume *volume = STORAGED_LINUX_LOGICAL_VOLUME (volume_);
+  StoragedLinuxLogicalVolumeObject *object = NULL;
+  StoragedDaemon *daemon;
+  uid_t caller_uid;
+  StoragedLinuxVolumeGroupObject *group_object;
+  GString *cmd;
+  gchar *escaped_group_name = NULL;
+  gchar *escaped_origin_name = NULL;
+  gchar *escaped_cache_name = NULL;
+  gchar *error_message;
+
+  object = storaged_daemon_util_dup_object (volume, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+
+  daemon = storaged_linux_logical_volume_object_get_daemon (object);
+
+  if (!storaged_daemon_util_get_caller_uid_sync (daemon,
+                                                 invocation,
+                                                 NULL /* GCancellable */,
+                                                 &caller_uid,
+                                                 NULL,
+                                                 NULL,
+                                                 &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (daemon,
+                                       STORAGED_OBJECT (object),
+                                       lvm2_policy_action_id,
+                                       options,
+                                       N_("Authentication is required to convert logical volume to cache"),
+                                       invocation);
+
+  group_object = storaged_linux_logical_volume_object_get_volume_group (object);
+
+  escaped_group_name = storaged_daemon_util_escape_and_quote (storaged_linux_volume_group_object_get_name (group_object));
+  escaped_origin_name = storaged_daemon_util_escape_and_quote (storaged_linux_logical_volume_object_get_name (object));
+  escaped_cache_name = storaged_daemon_util_escape_and_quote (cache_name);
+
+  cmd = g_string_new ("");
+  g_string_append_printf (cmd,
+                          "lvconvert --type cache --cachepool %s/%s %s/%s -y",
+                          escaped_group_name,
+                          escaped_cache_name,
+                          escaped_group_name,
+                          escaped_origin_name);
+
+  if (!storaged_daemon_launch_spawned_job_sync (daemon,
+                                                STORAGED_OBJECT (object),
+                                                "lvm-lv-make-cache", caller_uid,
+                                                NULL,
+                                                0,
+                                                0,
+                                                NULL,
+                                                &error_message,
+                                                NULL,
+                                                "%s", cmd->str))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             STORAGED_ERROR,
+                                             STORAGED_ERROR_FAILED,
+                                             N_("Error converting volume: %s"),
+                                             error_message);
+      goto out;
+    }
+
+  storaged_logical_volume_complete_cache_attach (volume_, invocation);
+out:
+  g_free (error_message);
+  g_free (escaped_group_name);
+  g_free (escaped_origin_name);
+  g_free (escaped_cache_name);
+  if (cmd)
+    g_string_free (cmd, TRUE);
+  g_clear_object (&object);
+
+return TRUE;
+
+#endif /* HAVE_LVMCACHE */
+}
+
+
+static gboolean
+handle_cache_split (StoragedLogicalVolume  *volume_,
+                    GDBusMethodInvocation  *invocation,
+                    GVariant               *options)
+{
+#ifndef HAVE_LVMCACHE
+
+  g_dbus_method_invocation_return_error (invocation,
+                                         STORAGED_ERROR,
+                                         STORAGED_ERROR_FAILED,
+                                         N_("LVMCache not enabled at compile time."));
+  return TRUE;
+
+#else
+
+  GError *error = NULL;
+  StoragedLinuxLogicalVolume *volume = STORAGED_LINUX_LOGICAL_VOLUME (volume_);
+  StoragedLinuxLogicalVolumeObject *object = NULL;
+  StoragedDaemon *daemon;
+  uid_t caller_uid;
+  StoragedLinuxVolumeGroupObject *group_object;
+  GString *cmd;
+  gchar *escaped_group_name = NULL;
+  gchar *escaped_origin_name = NULL;
+  gchar *error_message;
+
+  object = storaged_daemon_util_dup_object (volume, &error);
+  if (object == NULL)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  daemon = storaged_linux_logical_volume_object_get_daemon (object);
+
+  if (!storaged_daemon_util_get_caller_uid_sync (daemon,
+                                                 invocation,
+                                                 NULL /* GCancellable */,
+                                                 &caller_uid,
+                                                 NULL,
+                                                 NULL,
+                                                 &error))
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
+
+  STORAGED_DAEMON_CHECK_AUTHORIZATION (daemon,
+                                       STORAGED_OBJECT (object),
+                                       lvm2_policy_action_id,
+                                       options,
+                                       N_("Authentication is required to split cache pool LV off of a cache LV"),
+                                       invocation);
+
+  group_object = storaged_linux_logical_volume_object_get_volume_group (object);
+
+  escaped_group_name = storaged_daemon_util_escape_and_quote (storaged_linux_volume_group_object_get_name (group_object));
+  escaped_origin_name = storaged_daemon_util_escape_and_quote (storaged_linux_logical_volume_object_get_name (object));
+
+  cmd = g_string_new ("");
+  g_string_append_printf (cmd,
+                          "lvconvert --splitcache %s/%s -y",
+                          escaped_group_name,
+                          escaped_origin_name);
+
+  if (!storaged_daemon_launch_spawned_job_sync (daemon,
+                                                STORAGED_OBJECT (object),
+                                                "lvm-lv-split-cache", caller_uid,
+                                                NULL,
+                                                0,
+                                                0,
+                                                NULL,
+                                                &error_message,
+                                                NULL,
+                                                "%s", cmd->str))
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             STORAGED_ERROR,
+                                             STORAGED_ERROR_FAILED,
+                                             N_("Error converting volume: %s"),
+                                             error_message);
+      goto out;
+    }
+
+  storaged_logical_volume_complete_cache_split (volume_, invocation);
+out:
+  g_free (error_message);
+  g_free (escaped_group_name);
+  g_free (escaped_origin_name);
+  if (cmd)
+    g_string_free (cmd, TRUE);
+  g_clear_object (&object);
+
+  return TRUE;
+
+#endif /* HAVE_LVMCACHE */
+}
+
 /* ---------------------------------------------------------------------------------------------------- */
 
 static void
@@ -1041,4 +1222,7 @@ logical_volume_iface_init (StoragedLogicalVolumeIface *iface)
   iface->handle_activate = handle_activate;
   iface->handle_deactivate = handle_deactivate;
   iface->handle_create_snapshot = handle_create_snapshot;
+
+  iface->handle_cache_attach = handle_cache_attach;
+  iface->handle_cache_split = handle_cache_split;
 }

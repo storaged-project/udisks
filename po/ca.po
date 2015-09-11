@@ -1,430 +1,628 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-#
-# Translators:
+# Peter Hatina <phatina@redhat.com>, 2015. #zanata
+# Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>, 2015. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: udisks\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-04 10:24+0200\n"
-"PO-Revision-Date: 2014-03-12 19:53+0000\n"
-"Last-Translator: davidz <zeuthen@gmail.com>\n"
-"Language: ca\n"
+"POT-Creation-Date: 2015-09-10 14:34+0200\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"PO-Revision-Date: 2015-09-07 06:02-0400\n"
+"Last-Translator: Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>\n"
+"Language-Team: Catalan\n"
+"Language: ca\n"
+"X-Generator: Zanata 3.7.1\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
 #: ../data/org.storaged.Storaged.policy.in.h:1
 msgid "Mount a filesystem"
-msgstr ""
+msgstr "Munta un sistema de fitxers"
 
 #: ../data/org.storaged.Storaged.policy.in.h:2
 msgid "Authentication is required to mount the filesystem"
-msgstr ""
+msgstr "Es requereix autenticació per muntar el sistema de fitxers"
 
 #: ../data/org.storaged.Storaged.policy.in.h:3
 msgid "Mount a filesystem on a system device"
-msgstr ""
+msgstr "Munta un sistema de fitxers en un dispositiu de sistema"
 
 #: ../data/org.storaged.Storaged.policy.in.h:4
 msgid "Mount a filesystem from a device plugged into another seat"
 msgstr ""
+"Munta un sistema de fitxers des d'un dispositiu endollat a un altre "
+"assentament"
 
 #: ../data/org.storaged.Storaged.policy.in.h:5
 msgid ""
 "Mount/unmount filesystems defined in the fstab file with the x-storaged-auth "
 "option"
 msgstr ""
+"Es necessària l'autentificació per muntar/desmuntar els sistemes de fitxers "
+"en el fitxer fstab amb l'opció x-storaged-auth"
 
 #: ../data/org.storaged.Storaged.policy.in.h:6
 msgid "Authentication is required to mount/unmount the filesystem"
-msgstr ""
+msgstr "Es requereix autenticació per muntar/desmuntar el sistema de fitxers"
 
 #: ../data/org.storaged.Storaged.policy.in.h:7
 msgid "Unmount a device mounted by another user"
-msgstr ""
+msgstr "Desmunta un dispositiu muntat per un altre usuari"
 
 #: ../data/org.storaged.Storaged.policy.in.h:8
 msgid ""
 "Authentication is required to unmount a filesystem mounted by another user"
 msgstr ""
+"Es requereix autenticació per desmuntar un dispositiu muntat per un altre "
+"usuari"
 
 #: ../data/org.storaged.Storaged.policy.in.h:9
 msgid "Unlock an encrypted device"
-msgstr ""
+msgstr "Desbloqueja un dispositiu xifrat"
 
 #: ../data/org.storaged.Storaged.policy.in.h:10
 msgid "Authentication is required to unlock an encrypted device"
-msgstr ""
+msgstr "Es requereix autenticació per desbloquejar un dispositiu xifrat"
 
 #: ../data/org.storaged.Storaged.policy.in.h:11
 msgid "Unlock an encrypted system device"
-msgstr ""
+msgstr "Desbloqueja un dispositiu xifrat de sistema"
 
 #: ../data/org.storaged.Storaged.policy.in.h:12
 msgid "Unlock an encrypted device plugged into another seat"
-msgstr ""
+msgstr "Desmunta un dispositiu xifrat endollat a un altre assentament"
 
 #: ../data/org.storaged.Storaged.policy.in.h:13
 msgid ""
 "Unlock an encrypted device specified in the crypttab file with the x-"
 "storaged-auth option"
 msgstr ""
+"Desbloqueja un dispositiu xifrat especificat al fitxer crypttab amb l'opció  "
+"x-storaged-auth"
 
 #: ../data/org.storaged.Storaged.policy.in.h:14
 msgid "Lock an encrypted device unlocked by another user"
-msgstr ""
+msgstr "Bloqueja un dispositiu xifrat desbloquejat per un altre usuari"
 
 #: ../data/org.storaged.Storaged.policy.in.h:15
 msgid ""
 "Authentication is required to lock an encrypted device unlocked by another "
 "user"
 msgstr ""
+"Es requereix autenticació per bloquejar un dispositiu xifrat desbloquejat "
+"per un altre usuari"
 
 #: ../data/org.storaged.Storaged.policy.in.h:16
 msgid "Change passphrase for an encrypted device"
-msgstr ""
+msgstr "Canvia la contrasenya per a un dispositiu xifrat"
 
 #: ../data/org.storaged.Storaged.policy.in.h:17
 msgid ""
 "Authentication is required to change the passphrase for an encrypted device"
 msgstr ""
+"Es requereix autenticació per canviar la contrasenya per a un dispositiu "
+"xifrat"
 
 #: ../data/org.storaged.Storaged.policy.in.h:18
 msgid "Manage loop devices"
-msgstr ""
+msgstr "Gestiona els dispositius de bucles"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests setting up a loop device.
-#.
+#. 
 #: ../data/org.storaged.Storaged.policy.in.h:19
 #: ../src/storagedlinuxmanager.c:338
 msgid "Authentication is required to set up a loop device"
-msgstr ""
+msgstr "Es requereix autenticació per gestionar els dispositius de bucles"
 
 #: ../data/org.storaged.Storaged.policy.in.h:20
 msgid "Delete loop devices"
-msgstr ""
+msgstr "Elimina els dispositius de bucles"
 
 #: ../data/org.storaged.Storaged.policy.in.h:21
 msgid ""
 "Authentication is required to delete a loop device set up by another user"
 msgstr ""
+"Es requereix autenticació per eliminar un dispositiu de bucles configurat "
+"per un altre usuari"
 
 #: ../data/org.storaged.Storaged.policy.in.h:22
 msgid "Modify loop devices"
-msgstr ""
+msgstr "Modifica els dispositius de bucles"
 
 #: ../data/org.storaged.Storaged.policy.in.h:23
 msgid ""
 "Authentication is required to modify a loop device set up by another user"
 msgstr ""
+"Es requereix autenticació per modificar un dispositiu de bucles configurat "
+"per un altre usuari"
 
 #: ../data/org.storaged.Storaged.policy.in.h:24
 msgid "Manage swapspace"
-msgstr ""
+msgstr "Gestiona l'àrea d'intercanvi"
 
 #: ../data/org.storaged.Storaged.policy.in.h:25
 msgid "Authentication is required to manage swapspace"
-msgstr ""
+msgstr "Es requereix autenticació per gestionar l'àrea d'intercanvi"
 
 #: ../data/org.storaged.Storaged.policy.in.h:26
 msgid "Manage RAID arrays"
-msgstr ""
+msgstr "Gestiona les matrius RAID"
 
 #: ../data/org.storaged.Storaged.policy.in.h:27
 msgid "Authentication is required to manage RAID arrays"
-msgstr ""
+msgstr "Es requereix autenticació per gestionar les matrius RAID"
 
 #: ../data/org.storaged.Storaged.policy.in.h:28
 msgid "Power off drive"
-msgstr ""
+msgstr "Apaga l'unitat"
 
 #: ../data/org.storaged.Storaged.policy.in.h:29
 msgid "Authentication is required to power off a drive"
-msgstr ""
+msgstr "Es requereix autenticació per apagar una unitat"
 
 #: ../data/org.storaged.Storaged.policy.in.h:30
 msgid "Power off a system drive"
-msgstr ""
+msgstr "Apaga una unitat de sistema"
 
 #: ../data/org.storaged.Storaged.policy.in.h:31
 msgid "Power off a drive attached to another seat"
-msgstr ""
+msgstr "Atura una unitat connectada a un altre assentament"
 
 #: ../data/org.storaged.Storaged.policy.in.h:32
 msgid ""
 "Authentication is required to power off a drive plugged into another seat"
 msgstr ""
+"Es requereix autenticació per apagar una unitat endollada a un altre "
+"assentament"
 
 #: ../data/org.storaged.Storaged.policy.in.h:33
 msgid "Eject media"
-msgstr ""
+msgstr "Expulsa el mitjà"
 
 #: ../data/org.storaged.Storaged.policy.in.h:34
 msgid "Authentication is required to eject media"
-msgstr ""
+msgstr "Es requereix autenticació per expulsar el mitjà"
 
 #: ../data/org.storaged.Storaged.policy.in.h:35
 msgid "Eject media from a system drive"
-msgstr ""
+msgstr "Expulsa el mitjà des d'una unitat de sistema"
 
 #: ../data/org.storaged.Storaged.policy.in.h:36
 msgid "Eject media from a drive attached to another seat"
-msgstr ""
+msgstr "Expulsa un mitjà des d'una unitat connectada a un altre assentament"
 
 #: ../data/org.storaged.Storaged.policy.in.h:37
 msgid ""
 "Authentication is required to eject media from a drive plugged into another "
 "seat"
 msgstr ""
+"Es requereix autenticació per expulsar un mitjà des d'una unitat endollada a "
+"un altre assentament"
 
 #: ../data/org.storaged.Storaged.policy.in.h:38
 msgid "Modify a device"
-msgstr ""
+msgstr "Modifica un dispositiu"
 
 #: ../data/org.storaged.Storaged.policy.in.h:39
 msgid "Authentication is required to modify a device"
-msgstr ""
+msgstr "Es requereix autenticació per modificar un dispositiu"
 
 #: ../data/org.storaged.Storaged.policy.in.h:40
 msgid "Modify a system device"
-msgstr ""
+msgstr "Modifica un dispositiu de sistema"
 
 #: ../data/org.storaged.Storaged.policy.in.h:41
-msgid "Authentication is required to modify a device plugged into another seat"
+msgid ""
+"Authentication is required to modify a device plugged into another seat"
 msgstr ""
+"Es requereix autenticació per modificar una unitat endollada a un altre "
+"assentament"
 
 #: ../data/org.storaged.Storaged.policy.in.h:42
 msgid "Rescan a device"
-msgstr ""
+msgstr "Reescaneja un dispositiu"
 
 #: ../data/org.storaged.Storaged.policy.in.h:43
 msgid "Authentication is required to rescan a device"
-msgstr ""
+msgstr "Es requereix autenticació per reescanejar un dispositiu"
 
 #: ../data/org.storaged.Storaged.policy.in.h:44
 msgid "Open a device"
-msgstr ""
+msgstr "Obre un dispositiu"
 
 #: ../data/org.storaged.Storaged.policy.in.h:45
 msgid "Authentication is required to open a device"
-msgstr ""
+msgstr "Es requereix autenticació per obrir un dispositiu"
 
 #: ../data/org.storaged.Storaged.policy.in.h:46
 msgid "Open a system device"
-msgstr ""
+msgstr "Obre un dispositiu de sistema"
 
 #: ../data/org.storaged.Storaged.policy.in.h:47
 msgid "Modify system-wide configuration"
-msgstr ""
+msgstr "Modifica la configuració sistèmica"
 
 #: ../data/org.storaged.Storaged.policy.in.h:48
 msgid "Authentication is required to modify system-wide configuration"
-msgstr ""
+msgstr "Es requereix autenticació per modificar la configuració sistèmica"
 
 #: ../data/org.storaged.Storaged.policy.in.h:49
 msgid ""
-"Authentication is required to retrieve secrets from system-wide configuration"
+"Authentication is required to retrieve secrets from system-wide "
+"configuration"
 msgstr ""
+"Es requereix autenticació per recobrar els secrets de la configuració "
+"sistèmica"
 
 #: ../data/org.storaged.Storaged.policy.in.h:50
 msgid "Modify drive settings"
-msgstr ""
+msgstr "Modifica els ajustos de la unitat"
 
 #: ../data/org.storaged.Storaged.policy.in.h:51
 msgid "Authentication is required to modify drive settings"
-msgstr ""
+msgstr "Es requereix autenticació per modificar els ajustos de la unitat"
 
 #: ../data/org.storaged.Storaged.policy.in.h:52
 msgid "Update SMART data"
-msgstr ""
+msgstr "Actualitza les dades del SMART"
 
 #: ../data/org.storaged.Storaged.policy.in.h:53
 msgid "Authentication is required to update SMART data"
-msgstr ""
+msgstr "Es requereix autenticació per actualitzar les dades del SMART"
 
 #: ../data/org.storaged.Storaged.policy.in.h:54
 msgid "Set SMART data from blob"
-msgstr ""
+msgstr "Estableix les dades SMART des de les notes"
 
 #: ../data/org.storaged.Storaged.policy.in.h:55
 msgid "Authentication is required to set SMART data from blob"
 msgstr ""
+"Es requereix autenticació per establir les dades SMART des de les notes"
 
 #: ../data/org.storaged.Storaged.policy.in.h:56
 msgid "Run SMART self-test"
-msgstr ""
+msgstr "Executa l'autocomprovació SMART"
 
 #: ../data/org.storaged.Storaged.policy.in.h:57
 msgid "Authentication is required to run a SMART self-test"
-msgstr ""
+msgstr "Es requereix autenticació per executar l'autocomprovació SMART"
 
 #: ../data/org.storaged.Storaged.policy.in.h:58
 msgid "Enable/Disable SMART"
-msgstr ""
+msgstr "Habilita/inhabilita el SMART"
 
 #: ../data/org.storaged.Storaged.policy.in.h:59
 msgid "Authentication is required to enable/disable SMART"
-msgstr ""
+msgstr "Es requereix autenticació per habilitar/inhabilitar el SMART"
 
 #: ../data/org.storaged.Storaged.policy.in.h:60
 msgid "Check power state"
-msgstr ""
+msgstr "Comprova el consum energètic"
 
 #: ../data/org.storaged.Storaged.policy.in.h:61
 msgid "Authentication is required to check the power state"
-msgstr ""
+msgstr "Es requereix autenticació per comprovar el consum energètic"
 
 #: ../data/org.storaged.Storaged.policy.in.h:62
 msgid "Send standby command"
-msgstr ""
+msgstr "Envia l'ordre de suspensió"
 
 #: ../data/org.storaged.Storaged.policy.in.h:63
 msgid "Authentication is required to put a drive into standby mode"
-msgstr ""
+msgstr "Es requereix autenticació per ficar una unitat en mode de suspensió"
 
 #: ../data/org.storaged.Storaged.policy.in.h:64
 msgid "Send standby command to a system drive"
-msgstr ""
+msgstr "Envia l'ordre de suspensió a una unitat de sistema"
 
 #: ../data/org.storaged.Storaged.policy.in.h:65
 msgid "Send standby command to drive on other seat"
-msgstr ""
+msgstr "Envia l'ordre de suspensió a una unitat en un altre assentament"
 
 #: ../data/org.storaged.Storaged.policy.in.h:66
 msgid "Securely erase a hard disk"
-msgstr ""
+msgstr "Esborra de forma segura un disc dur"
 
 #: ../data/org.storaged.Storaged.policy.in.h:67
 msgid "Authentication is required to securely erase a hard disk"
-msgstr ""
+msgstr "Es requereix autenticació per esborrar de forma segura un disc dur"
 
 #: ../data/org.storaged.Storaged.policy.in.h:68
 msgid "Cancel job"
-msgstr ""
+msgstr "Cancel·la el treball"
 
 #. Translators: Shown in authentication dialog when canceling a job.
-#.
+#. 
 #: ../data/org.storaged.Storaged.policy.in.h:69 ../src/storagedbasejob.c:404
 msgid "Authentication is required to cancel a job"
-msgstr ""
+msgstr "Es requereix autenticació per cancel·lar un treball"
 
 #: ../data/org.storaged.Storaged.policy.in.h:70
 msgid "Cancel job started by another user"
-msgstr ""
+msgstr "Cancel·la el treball iniciat per un altre usuari"
 
 #: ../data/org.storaged.Storaged.policy.in.h:71
 msgid "Authentication is required to cancel a job started by another user"
 msgstr ""
+"Es requereix autenticació per cancel·lar un treball iniciat per un altre "
+"usuari"
+
+#: ../modules/btrfs/data/org.storaged.Storaged.btrfs.policy.in.h:1
+msgid "Manage BTRFS"
+msgstr ""
+
+#: ../modules/btrfs/data/org.storaged.Storaged.btrfs.policy.in.h:2
+msgid "Authentication is required to manage BTRFS"
+msgstr ""
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:343
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:587
+msgid "Authentication is required to change label for BTRFS volume"
+msgstr ""
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:468
+msgid "Authentication is required to add the device to the volume"
+msgstr ""
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:655
+msgid "Authentication is required to create a new snapshot"
+msgstr ""
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:714
+msgid "Authentication is required to check and repair the volume"
+msgstr ""
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:767
+msgid "Authentication is required to resize the volume"
+msgstr ""
+
+#: ../modules/btrfs/storagedlinuxmanagerbtrfs.c:206
+msgid "Authentication is required to create a new volume"
+msgstr ""
 
 #: ../modules/iscsi/data/org.storaged.Storaged.iscsi.policy.in.h:1
 msgid "Manage iSCSI"
-msgstr ""
+msgstr "Gestiona l'iSCSI"
 
 #: ../modules/iscsi/data/org.storaged.Storaged.iscsi.policy.in.h:2
 msgid "Authentication is required to manage iSCSI"
+msgstr "Es requereix autenticació per gestionar l'iSCSI"
+
+#: ../modules/iscsi/storagedlinuxiscsisession.c:134
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:815
+msgid "Authentication is required to perform iSCSI logout"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxiscsisession.c:164
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:837
+#, c-format
+msgid "Logout failed: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:276
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:382
+#, c-format
+msgid "Error opening %s: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:296
+#, c-format
+msgid "Error reading %s: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:354
+msgid "Authentication is required change iSCSI initiator name"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:362
+msgid "Empty initiator name"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:399
+#, c-format
+msgid "Error writing to %s: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:544
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:603
+msgid "Authentication is required to discover targets"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:562
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:668
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:717
+#, c-format
+msgid "Discovery failed: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:615
+msgid "Username too long"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:626
+msgid "Password too long"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:637
+msgid "Reverse username too long"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:648
+msgid "Reverse password too long"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:702
+msgid "Authentication is required to discover firmware targets"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:754
+msgid "Authentication is required to perform iSCSI login"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:776
+#, c-format
+msgid "Login failed: %s"
 msgstr ""
 
 #: ../modules/lvm2/data/org.storaged.Storaged.lvm2.policy.in.h:1
 msgid "Manage LVM"
-msgstr ""
+msgstr "Gestiona el LVM"
 
 #: ../modules/lvm2/data/org.storaged.Storaged.lvm2.policy.in.h:2
 msgid "Authentication is required to manage LVM"
-msgstr ""
+msgstr "Es requereix autenticació per gestionar el LVM"
 
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:382
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:398
 msgid "Authentication is required to delete a logical volume"
-msgstr ""
+msgstr "Es requereix autenticació per eliminar un volum lògic"
 
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:521
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:624
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:533
 msgid "Authentication is required to rename a logical volume"
+msgstr "Es requereix autenticació per reanomenar un volum lògic"
+
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:632
+msgid "Authentication is required to resize a logical volume"
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:758
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:762
 msgid "Authentication is required to activate a logical volume"
-msgstr ""
+msgstr "Es requereix autenticació per activar un volum lògic"
 
 #: ../modules/lvm2/storagedlinuxlogicalvolume.c:862
 msgid "Authentication is required to deactivate a logical volume"
-msgstr ""
+msgstr "Es requereix autenticació per desactivar un volum lògic"
 
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:954
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:950
 msgid "Authentication is required to create a snapshot of a logical volume"
+msgstr "Es requereix autenticació per crear una instantànea d'un volum lògic"
+
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1021
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1126
+msgid "LVMCache not enabled at compile time."
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxmanagerlvm2.c:231
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1064
+msgid "Authentication is required to convert logical volume to cache"
+msgstr ""
+
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1095
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1195
+#, c-format
+msgid "Error converting volume: %s"
+msgstr ""
+
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1167
+msgid "Authentication is required to split cache pool LV off of a cache LV"
+msgstr ""
+
+#: ../modules/lvm2/storagedlinuxmanagerlvm2.c:235
 msgid "Authentication is required to create a volume group"
-msgstr ""
+msgstr "Es requereix autenticació per crear un grup de volums"
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:307
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:311
 msgid "Authentication is required to delete a volume group"
-msgstr ""
+msgstr "Es requereix autenticació per eliminar un grup de volums"
 
 #: ../modules/lvm2/storagedlinuxvolumegroup.c:418
 msgid "Authentication is required to rename a volume group"
-msgstr ""
+msgstr "Es requereix autenticació per reanomenar un grup de volums"
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:541
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:537
 msgid "Authentication is required to add a device to a volume group"
 msgstr ""
+"Es requereix autenticació per afegir un dispositiu a un grup de volums"
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:664
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:656
 msgid "Authentication is required to remove a device from a volume group"
 msgstr ""
+"Es requereix autenticació per treure un dispositiu d'un grup de volums"
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:798
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:786
 msgid "Authentication is required to empty a device in a volume group"
 msgstr ""
+"Es requereix autenticació per buidar un dispositiu en un grup de volums"
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:928
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:1031
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:1137
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:912
 msgid "Authentication is required to create a logical volume"
+msgstr "Es requereix autenticació per crear un volum lògic"
+
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:1011
+msgid "Authentication is required to create a thin pool volume"
+msgstr ""
+
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:1113
+msgid "Authentication is required to create a thin volume"
+msgstr ""
+
+#: ../modules/zram/data/org.storaged.Storaged.zram.policy.in.h:1
+#, fuzzy
+msgid "Manage zRAM"
+msgstr "Gestiona el LVM"
+
+#: ../modules/zram/data/org.storaged.Storaged.zram.policy.in.h:2
+msgid "Authentication is required to manage zRAM"
+msgstr ""
+
+#: ../modules/zram/storagedlinuxmanagerzram.c:217
+#, fuzzy
+msgid "Authentication is required to add zRAM kernel module"
+msgstr "Es requereix autenticació per cancel·lar un treball"
+
+#: ../modules/zram/storagedlinuxmanagerzram.c:247
+#, fuzzy
+msgid "Authentication is required to remove zRAM kernel module"
+msgstr "Es requereix autenticació per reanomenar un volum lògic"
+
+#: ../modules/zram/storagedlinuxblockzram.c:253
+msgid "Authentication is required to enable zRAM device"
+msgstr ""
+
+#: ../modules/zram/storagedlinuxblockzram.c:344
+msgid "Authentication is required to disable zRAM device"
 msgstr ""
 
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
 #. * passwords and secrets
-#.
+#. 
 #: ../src/storagedlinuxblock.c:1195
 msgid "Authentication is required to read system-level secrets"
-msgstr ""
+msgstr "Es requereix autenticació per llegir els secrets a nivell sistemàtic"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
 #: ../src/storagedlinuxblock.c:1865
 msgid "Authentication is required to add an entry to the /etc/fstab file"
-msgstr ""
+msgstr "Es requereix autenticació per afegir una entrada al fitxer /etc/fstab"
 
 #. Translators: shown in authentication dialog - do not tranlsate /etc/crypttab
 #: ../src/storagedlinuxblock.c:1883
 msgid "Authentication is required to add an entry to the /etc/crypttab file"
 msgstr ""
+"Es requereix autenticació per afegir una entrada al fitxer /etc/crypttab"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
 #: ../src/storagedlinuxblock.c:1942
 msgid "Authentication is required to remove an entry from /etc/fstab file"
 msgstr ""
+"Es requereix autenticació per treure una entrada del fitxer /etc/fstab"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
 #: ../src/storagedlinuxblock.c:1960
 msgid ""
 "Authentication is required to remove an entry from the /etc/crypttab file"
 msgstr ""
+"Es requereix autenticació per treure una entrada del fitxer /etc/crypttab"
 
 #. Translators: shown in authentication dialog - do not translate /etc/fstab
 #: ../src/storagedlinuxblock.c:2032
 msgid "Authentication is required to modify the /etc/fstab file"
-msgstr ""
+msgstr "Es requereix autenticació per modificar el fitxer /etc/fstab"
 
 #. Translators: shown in authentication dialog - do not translate /etc/crypttab
 #: ../src/storagedlinuxblock.c:2050
 msgid "Authentication is required to modify the /etc/crypttab file"
-msgstr ""
+msgstr "Es requereix autenticació per modificar el fitxer /etc/crypttab"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests erasing a hard disk using the SECURE ERASE UNIT
@@ -432,16 +630,17 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #. Translators: Shown in authentication dialog when the user
 #. * requests erasing a hard disk using the SECURE ERASE UNIT command.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/storagedlinuxblock.c:2819 ../src/storagedlinuxdriveata.c:2283
+#. 
+#: ../src/storagedlinuxblock.c:2819 ../src/storagedlinuxdriveata.c:2287
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr ""
+"Es requereix autenticació per realitzar un esborrament segur de $(drive)"
 
 #. Translators: Shown in authentication dialog when formatting a
 #. * device. This includes both creating a filesystem or partition
@@ -449,189 +648,197 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/storagedlinuxblock.c:2831
 msgid "Authentication is required to format $(drive)"
-msgstr ""
+msgstr "Es requereix autenticació per formatar $(drive)"
 
-#: ../src/storagedlinuxblock.c:2873 ../src/storagedlinuxmdraid.c:1601
-#: ../src/storagedlinuxpartition.c:929
+#: ../src/storagedlinuxblock.c:2873 ../src/storagedlinuxmdraid.c:1609
+#: ../src/storagedlinuxpartition.c:877
 msgid "Authentication is required to modify the system configuration"
-msgstr ""
+msgstr "Es requereix autenticació per modificar la configuració del sistema"
 
-#: ../src/storagedlinuxblock.c:2877 ../src/storagedlinuxdriveata.c:2295
+#: ../src/storagedlinuxblock.c:2877 ../src/storagedlinuxdriveata.c:2299
 msgid "Formatting Device"
-msgstr ""
+msgstr "Es dóna format al dispositiu"
 
 #. Translators: Shown in authentication dialog when creating a
 #. * disk image file.
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/storagedlinuxblock.c:3364
 msgid "Authentication is required to open $(drive) for reading"
-msgstr ""
+msgstr "Es requereix autenticació per obrir $(drive) per a la lectura"
 
 #. Translators: Shown in authentication dialog when restoring
 #. * from a disk image file.
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/storagedlinuxblock.c:3428
 msgid "Authentication is required to open $(drive) for writing"
-msgstr ""
+msgstr "Es requereix autenticació per obrir $(drive) per a l'escriptura"
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to benchmark a device.
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/storagedlinuxblock.c:3494
 msgid "Authentication is required to open $(drive) for benchmarking"
 msgstr ""
+"Es requereix autenticació per obrir $(drive) per a la prova de rendiment"
 
 #. Translators: Shown in authentication dialog when an application
 #. * wants to rescan a device.
 #. *
 #. * Do not translate $(drive), it's a placeholder and will
 #. * be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/storagedlinuxblock.c:3555
 msgid "Authentication is required to rescan $(drive)"
-msgstr ""
+msgstr "Es requereix autenticació per reescanejar $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests ejecting media from a drive.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/storagedlinuxdrive.c:1022
+#. 
+#: ../src/storagedlinuxdrive.c:1009
 msgid "Authentication is required to eject $(drive)"
-msgstr ""
+msgstr "Es requereix autenticació per expulsar $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * changes settings for a drive.
 #. *
 #. * Do not translate $(drive), it's a placeholder and will be
 #. * replaced by the name of the drive/device in question
-#.
-#: ../src/storagedlinuxdrive.c:1110
+#. 
+#: ../src/storagedlinuxdrive.c:1097
 msgid "Authentication is required to configure settings for $(drive)"
-msgstr ""
+msgstr "Es requereix autenticació per configurar els ajustos per a $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests ejecting media from a drive.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/storagedlinuxdrive.c:1439
+#. 
+#: ../src/storagedlinuxdrive.c:1413
 msgid "Authentication is required to power off $(drive)"
-msgstr ""
+msgstr "Es requereix autenticació per aturar $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * refreshes SMART data from a disk.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/storagedlinuxdriveata.c:808
 msgid "Authentication is required to update SMART data from $(drive)"
-msgstr ""
+msgstr "Es requereix autenticació per actualitzar les dades SMART de $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to simulate SMART data from a libatasmart blob.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/storagedlinuxdriveata.c:819
 msgid "Authentication is required to set SMART data from a blob on $(drive)"
 msgstr ""
+"Es requereix autenticació per establir les dades SMART des de les notes en "
+"$(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * aborts a running SMART self-test.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/storagedlinuxdriveata.c:953
 msgid "Authentication is required to abort a SMART self-test on $(drive)"
 msgstr ""
+"Es requereix autenticació per avortar l'autocomprovació SMART en $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * initiates a SMART self-test.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/storagedlinuxdriveata.c:1203
 msgid "Authentication is required to start a SMART self-test on $(drive)"
 msgstr ""
+"Es requereix autenticació per iniciar l'autocomprovació SMART en $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests the power state of a drive.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/storagedlinuxdriveata.c:1290
 msgid "Authentication is required to check power state for $(drive)"
 msgstr ""
+"Es requereix autenticació per comprovar el consum energètic per $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to put a drive into standby mode.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/storagedlinuxdriveata.c:1389
+#. 
+#: ../src/storagedlinuxdriveata.c:1391
 msgid "Authentication is required to put $(drive) in standby mode"
-msgstr ""
+msgstr "Es requereix autenticació per ficar $(drive) en mode de suspensió"
 
 #. Translators: Shown in authentication dialog when the user
 #. * tries to wake up a drive from standby mode.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/storagedlinuxdriveata.c:1521
+#. 
+#: ../src/storagedlinuxdriveata.c:1525
 msgid "Authentication is required to wake up $(drive) from standby mode"
 msgstr ""
+"Es requereix autenticació per despertar $(drive) del mode de suspensió"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests enabling SMART on a disk.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/storagedlinuxdriveata.c:2376
+#. 
+#: ../src/storagedlinuxdriveata.c:2380
 msgid "Authentication is required to enable SMART on $(drive)"
-msgstr ""
+msgstr "Es requereix autenticació per habilitar SMART en $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests enabling SMART on a disk.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/storagedlinuxdriveata.c:2386
+#. 
+#: ../src/storagedlinuxdriveata.c:2390
 msgid "Authentication is required to disable SMART on $(drive)"
-msgstr ""
+msgstr "Es requereix autenticació per inhabilitar SMART en $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests unlocking an encrypted device.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/storagedlinuxencrypted.c:370 ../src/storagedlinuxencrypted.c:746
+#. 
+#: ../src/storagedlinuxencrypted.c:357 ../src/storagedlinuxencrypted.c:733
 msgid "Authentication is required to unlock the encrypted device $(drive)"
 msgstr ""
+"Es requereix autenticació per desbloquejar el dispositiu xifrat $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests locking an encrypted device that was previously.
@@ -639,22 +846,24 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/storagedlinuxencrypted.c:604
+#. 
+#: ../src/storagedlinuxencrypted.c:591
 msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by "
 "another user"
 msgstr ""
+"Es requereix autenticació per desbloquejar el dispositiu xifrat $(drive) "
+"bloquejat per un altre usuari"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests mounting a filesystem.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/storagedlinuxfilesystem.c:1264 ../src/storagedlinuxfilesystem.c:1426
+#. 
+#: ../src/storagedlinuxfilesystem.c:1251 ../src/storagedlinuxfilesystem.c:1413
 msgid "Authentication is required to mount $(drive)"
-msgstr ""
+msgstr "Es requereix autenticació per muntar $(drive)"
 
 #. Translators: Shown in authentication dialog when the
 #. * user requests mounting a filesystem that is in
@@ -665,12 +874,14 @@ msgstr ""
 #. * the drive/device in question
 #. *
 #. * Do not translate /etc/fstab
-#.
-#: ../src/storagedlinuxfilesystem.c:1333
+#. 
+#: ../src/storagedlinuxfilesystem.c:1320
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
 msgstr ""
+"Es requereix autenticació per muntar $(drive) referenciant en el fitxer /etc/"
+"fstab"
 
 #. Translators: Shown in authentication dialog when the
 #. * user requests unmounting a filesystem that is in
@@ -681,12 +892,14 @@ msgstr ""
 #. * the drive/device in question
 #. *
 #. * Do not translate /etc/fstab
-#.
-#: ../src/storagedlinuxfilesystem.c:1680
+#. 
+#: ../src/storagedlinuxfilesystem.c:1667
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
 msgstr ""
+"Es requereix autenticació per desmuntar $(drive) referenciant en el fitxer /"
+"etc/fstab"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests unmounting a filesystem previously mounted by
@@ -694,20 +907,23 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/storagedlinuxfilesystem.c:1727
+#. 
+#: ../src/storagedlinuxfilesystem.c:1714
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr ""
+"Es requereix autenticació per desmuntar $(drive) muntat per un altre usuari"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing the filesystem label.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/storagedlinuxfilesystem.c:1972
+#. 
+#: ../src/storagedlinuxfilesystem.c:1946
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr ""
+"Es requereix autenticació per canviar l'etiqueta del sistema de fitxers en "
+"$(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a loop device previously set up by
@@ -715,10 +931,11 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/storagedlinuxloop.c:245
 msgid "Authentication is required to delete the loop device $(drive)"
 msgstr ""
+"Es requereix autenticació per eliminar el dispositiu de bucles $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests changing autoclear on a loop device set up by
@@ -726,56 +943,58 @@ msgstr ""
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/storagedlinuxloop.c:424
 msgid "Authentication is required to modify the loop device $(drive)"
 msgstr ""
+"Es requereix autenticació per modificar el dispositiu de bucles $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
-#.
+#. 
 #. TODO: variables
 #: ../src/storagedlinuxmanager.c:570
 msgid "Authentication is required to create a RAID array"
-msgstr ""
+msgstr "Es requereix autenticació per crear la matriu RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start a RAID Array.
-#.
+#. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:643
+#: ../src/storagedlinuxmdraid.c:651
 msgid "Authentication is required to start a RAID array"
-msgstr ""
+msgstr "Es requereix autenticació per iniciar la matriu RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to stop a RAID Array.
-#.
+#. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:812
+#: ../src/storagedlinuxmdraid.c:820
 msgid "Authentication is required to stop a RAID array"
-msgstr ""
+msgstr "Es requereix autenticació per aturar la matriu RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to remove a device from a RAID Array.
-#.
+#. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:1040
+#: ../src/storagedlinuxmdraid.c:1048
 msgid "Authentication is required to remove a device from a RAID array"
 msgstr ""
+"Es requereix autenticació per eliminar un dispositiu de la matriu RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to add a device to a RAID Array.
-#.
+#. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:1236
+#: ../src/storagedlinuxmdraid.c:1244
 msgid "Authentication is required to add a device to a RAID array"
-msgstr ""
+msgstr "Es requereix autenticació per afegir un dispositiu a la matriu RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to change whether it has a write-intent bitmap
-#.
+#. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:1366
+#: ../src/storagedlinuxmdraid.c:1374
 msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
@@ -783,84 +1002,88 @@ msgstr ""
 
 #. Translators: Shown in authentication dialog when the user
 #. * attempts to start/stop data scrubbing operations
-#.
+#. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:1490
-msgid "Authentication is required to start/stop data scrubbing of a RAID array"
+#: ../src/storagedlinuxmdraid.c:1498
+msgid ""
+"Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr ""
 
-#: ../src/storagedlinuxmdraid.c:1582
+#: ../src/storagedlinuxmdraid.c:1590
 msgid "Authentication is required to delete a RAID array"
-msgstr ""
+msgstr "Es requereix autenticació per eliminar una matriu RAID"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/storagedlinuxpartition.c:282 ../src/storagedlinuxpartition.c:447
-#: ../src/storagedlinuxpartition.c:789
+#. 
+#: ../src/storagedlinuxpartition.c:269 ../src/storagedlinuxpartition.c:421
+#: ../src/storagedlinuxpartition.c:750
 msgid "Authentication is required to modify the partition on device $(drive)"
 msgstr ""
+"Es requereix autenticació per modificar la partició en el dispositiu "
+"$(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deleting a partition.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/storagedlinuxpartition.c:903
+#. 
+#: ../src/storagedlinuxpartition.c:851
 msgid "Authentication is required to delete the partition $(drive)"
-msgstr ""
+msgstr "Es requereix autenticació per eliminar la partició $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests creating a new partition.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
-#: ../src/storagedlinuxpartitiontable.c:399
+#. 
+#: ../src/storagedlinuxpartitiontable.c:386
 msgid "Authentication is required to create a partition on $(drive)"
-msgstr ""
+msgstr "Es requereix autenticació per crear una partició en $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests activating a swap device.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/storagedlinuxswapspace.c:201
 msgid "Authentication is required to activate swapspace on $(drive)"
-msgstr ""
+msgstr "Es requereix autenticació per activar l'àrea d'intercanvi a $(drive)"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests deactivating a swap device.
 #. *
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
-#.
+#. 
 #: ../src/storagedlinuxswapspace.c:293
 msgid "Authentication is required to deactivate swapspace on $(drive)"
 msgstr ""
+"Es requereix autenticació per desactivar l'àrea d'intercanvi a $(drive)"
 
 #. Translators: Corresponds to the DOS/Master-Boot-Record "bootable" flag for a partition
 #: ../storaged/storagedclient.c:1098
 msgctxt "dos-part-flag"
 msgid "Bootable"
-msgstr ""
+msgstr "Arrencada"
 
 #. Translators: Corresponds to the GPT "system" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#.
+#. 
 #: ../storaged/storagedclient.c:1108
 msgctxt "gpt-part-flag"
 msgid "System"
-msgstr ""
+msgstr "Sistema"
 
 #. Translators: Corresponds to the GPT "legacy bios bootable" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#.
+#. 
 #: ../storaged/storagedclient.c:1115
 msgctxt "gpt-part-flag"
 msgid "Legacy BIOS Bootable"
@@ -868,274 +1091,274 @@ msgstr ""
 
 #. Translators: Corresponds to the GPT "read-only" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#.
+#. 
 #: ../storaged/storagedclient.c:1122
 msgctxt "gpt-part-flag"
 msgid "Read-only"
-msgstr ""
+msgstr "Només lectura"
 
 #. Translators: Corresponds to the GPT "hidden" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#.
+#. 
 #: ../storaged/storagedclient.c:1129
 msgctxt "gpt-part-flag"
 msgid "Hidden"
-msgstr ""
+msgstr "Oculta"
 
 #. Translators: Corresponds to the GPT "no automount" flag for a partition,
 #. * see http://en.wikipedia.org/wiki/GUID_Partition_Table
-#.
+#. 
 #: ../storaged/storagedclient.c:1136
 msgctxt "gpt-part-flag"
 msgid "No Automount"
-msgstr ""
+msgstr "Sense automuntatge"
 
 #. Translators: Partition info. First %s is the type, second %s is a list of flags
 #: ../storaged/storagedclient.c:1149
 #, c-format
 msgctxt "partition-info"
 msgid "%s (%s)"
-msgstr ""
+msgstr "%s (%s)"
 
 #. Translators: The Partition info when unknown
 #: ../storaged/storagedclient.c:1160
 msgctxt "partition-info"
 msgid "Unknown"
-msgstr ""
+msgstr "Desconeguda"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
 #: ../storaged/storagedclient.c:1619
 msgctxt "byte-size-pow2"
 msgid "KiB"
-msgstr ""
+msgstr "KiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
 #: ../storaged/storagedclient.c:1625
 msgctxt "byte-size-pow2"
 msgid "MiB"
-msgstr ""
+msgstr "MiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
 #: ../storaged/storagedclient.c:1631
 msgctxt "byte-size-pow2"
 msgid "GiB"
-msgstr ""
+msgstr "GiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
 #: ../storaged/storagedclient.c:1637
 msgctxt "byte-size-pow2"
 msgid "TiB"
-msgstr ""
+msgstr "TiB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
 #: ../storaged/storagedclient.c:1662
 msgctxt "byte-size-pow10"
 msgid "KB"
-msgstr ""
+msgstr "KB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
 #: ../storaged/storagedclient.c:1668
 msgctxt "byte-size-pow10"
 msgid "MB"
-msgstr ""
+msgstr "MB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
 #: ../storaged/storagedclient.c:1674
 msgctxt "byte-size-pow10"
 msgid "GB"
-msgstr ""
+msgstr "GB"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
 #: ../storaged/storagedclient.c:1680
 msgctxt "byte-size-pow10"
 msgid "TB"
-msgstr ""
+msgstr "TB"
 
 #. Translators: The first %s is the size in power-of-2 units, e.g. '64 KiB'
 #. * the second %s is the size as a number e.g. '65,536' (always > 1)
-#.
+#. 
 #: ../storaged/storagedclient.c:1723
 #, c-format
 msgctxt "byte-size-pow2"
 msgid "%s (%s bytes)"
-msgstr ""
+msgstr "%s (%s bytes)"
 
 #. Translators: The first %s is the size in power-of-10 units, e.g. '100 kB'
 #. * the second %s is the size as a number e.g. '100,000' (always > 1)
-#.
+#. 
 #: ../storaged/storagedclient.c:1733
 #, c-format
 msgctxt "byte-size-pow10"
 msgid "%s (%s bytes)"
-msgstr ""
+msgstr "%s (%s bytes)"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../storaged/storagedclient.c:1794
 msgctxt "media"
 msgid "CompactFlash"
-msgstr ""
+msgstr "CompactFlash"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../storaged/storagedclient.c:1799
 msgctxt "media"
 msgid "MemoryStick"
-msgstr ""
+msgstr "MemoryStick"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../storaged/storagedclient.c:1804
 msgctxt "media"
 msgid "SmartMedia"
-msgstr ""
+msgstr "SmartMedia"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../storaged/storagedclient.c:1809
 msgctxt "media"
 msgid "SecureDigital"
-msgstr ""
+msgstr "SecureDigital"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../storaged/storagedclient.c:1814
 msgctxt "media"
 msgid "SD High Capacity"
-msgstr ""
+msgstr "SD d'alta capacitat"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../storaged/storagedclient.c:1819
 msgctxt "media"
 msgid "Floppy"
-msgstr ""
+msgstr "Disquet"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../storaged/storagedclient.c:1824
 msgctxt "media"
 msgid "Zip"
-msgstr ""
+msgstr "Zip"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../storaged/storagedclient.c:1829
 msgctxt "media"
 msgid "Jaz"
-msgstr ""
+msgstr "Jaz"
 
 #. Translators: This word is used to describe the media inserted into a device
 #: ../storaged/storagedclient.c:1834
 msgctxt "media"
 msgid "Flash"
-msgstr ""
+msgstr "Flash"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#.
+#. 
 #: ../storaged/storagedclient.c:1868
 msgctxt "disc-type"
 msgid "CD"
-msgstr ""
+msgstr "CD"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#.
+#. 
 #: ../storaged/storagedclient.c:1877
 msgctxt "disc-type"
 msgid "DVD"
-msgstr ""
+msgstr "DVD"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#.
+#. 
 #: ../storaged/storagedclient.c:1886
 msgctxt "disc-type"
 msgid "Blu-Ray"
-msgstr ""
+msgstr "Blu-Ray"
 
 #. Translators: This word is used to describe the optical disc type, it may appear
 #. * in a slash-separated list e.g. 'CD/DVD/Blu-Ray'
-#.
+#. 
 #: ../storaged/storagedclient.c:1895
 msgctxt "disc-type"
 msgid "HDDVD"
-msgstr ""
+msgstr "HDDVD"
 
 #: ../storaged/storagedclient.c:1916
 msgctxt "fs-type"
 msgid "FAT (12-bit version)"
-msgstr ""
+msgstr "FAT (versió de 12 bits)"
 
 #: ../storaged/storagedclient.c:1916 ../storaged/storagedclient.c:1917
 #: ../storaged/storagedclient.c:1918 ../storaged/storagedclient.c:1919
 #: ../storaged/storagedclient.c:1920
 msgctxt "fs-type"
 msgid "FAT"
-msgstr ""
+msgstr "FAT"
 
 #: ../storaged/storagedclient.c:1917
 msgctxt "fs-type"
 msgid "FAT (16-bit version)"
-msgstr ""
+msgstr "FAT (versió de 16 bits)"
 
 #: ../storaged/storagedclient.c:1918
 msgctxt "fs-type"
 msgid "FAT (32-bit version)"
-msgstr ""
+msgstr "FAT (versió de 32 bits)"
 
 #: ../storaged/storagedclient.c:1919
 #, c-format
 msgctxt "fs-type"
 msgid "FAT (version %s)"
-msgstr ""
+msgstr "FAT (versió %s)"
 
 #: ../storaged/storagedclient.c:1921
 #, c-format
 msgctxt "fs-type"
 msgid "NTFS (version %s)"
-msgstr ""
+msgstr "NTFS (versió %s)"
 
 #: ../storaged/storagedclient.c:1921 ../storaged/storagedclient.c:1922
 msgctxt "fs-type"
 msgid "NTFS"
-msgstr ""
+msgstr "NTFS"
 
 #: ../storaged/storagedclient.c:1923
 msgctxt "fs-type"
 msgid "HFS"
-msgstr ""
+msgstr "HFS"
 
 #: ../storaged/storagedclient.c:1924
 msgctxt "fs-type"
 msgid "HFS+"
-msgstr ""
+msgstr "HFS+"
 
 #: ../storaged/storagedclient.c:1925
 #, c-format
 msgctxt "fs-type"
 msgid "Ext2 (version %s)"
-msgstr ""
+msgstr "Ext2 (versió %s)"
 
 #: ../storaged/storagedclient.c:1925 ../storaged/storagedclient.c:1926
 msgctxt "fs-type"
 msgid "Ext2"
-msgstr ""
+msgstr "Ext2"
 
 #: ../storaged/storagedclient.c:1927
 #, c-format
 msgctxt "fs-type"
 msgid "Ext3 (version %s)"
-msgstr ""
+msgstr "Ext3 (versió %s)"
 
 #: ../storaged/storagedclient.c:1927 ../storaged/storagedclient.c:1928
 msgctxt "fs-type"
 msgid "Ext3"
-msgstr ""
+msgstr "Ext3"
 
 #: ../storaged/storagedclient.c:1929
 #, c-format
 msgctxt "fs-type"
 msgid "Ext4 (version %s)"
-msgstr ""
+msgstr "Ext4 (versió %s)"
 
 #: ../storaged/storagedclient.c:1929 ../storaged/storagedclient.c:1930
 msgctxt "fs-type"
 msgid "Ext4"
-msgstr ""
+msgstr "Ext4"
 
 #: ../storaged/storagedclient.c:1931
 #, c-format
@@ -1146,7 +1369,7 @@ msgstr ""
 #: ../storaged/storagedclient.c:1931 ../storaged/storagedclient.c:1932
 msgctxt "fs-type"
 msgid "JDB"
-msgstr ""
+msgstr "JDB"
 
 #: ../storaged/storagedclient.c:1932
 msgctxt "fs-type"
@@ -1157,386 +1380,387 @@ msgstr ""
 #, c-format
 msgctxt "fs-type"
 msgid "XFS (version %s)"
-msgstr ""
+msgstr "XFS (versió %s)"
 
 #: ../storaged/storagedclient.c:1933 ../storaged/storagedclient.c:1934
 msgctxt "fs-type"
 msgid "XFS"
-msgstr ""
+msgstr "XFS"
 
 #. TODO: No ID_FS_VERSION yet for btrfs...
 #: ../storaged/storagedclient.c:1936
 msgctxt "fs-type"
 msgid "Btrfs"
-msgstr ""
+msgstr "Btrfs"
 
 #: ../storaged/storagedclient.c:1937
 #, c-format
 msgctxt "fs-type"
 msgid "ISO 9660 (version %s)"
-msgstr ""
+msgstr "ISO 9660 (versió %s)"
 
 #: ../storaged/storagedclient.c:1937 ../storaged/storagedclient.c:1938
 msgctxt "fs-type"
 msgid "ISO9660"
-msgstr ""
+msgstr "ISO9660"
 
 #: ../storaged/storagedclient.c:1938
 msgctxt "fs-type"
 msgid "ISO 9660"
-msgstr ""
+msgstr "ISO 9660"
 
 #: ../storaged/storagedclient.c:1939
 #, c-format
 msgctxt "fs-type"
 msgid "UDF (version %s)"
-msgstr ""
+msgstr "UDF (versió %s)"
 
 #: ../storaged/storagedclient.c:1939 ../storaged/storagedclient.c:1940
 msgctxt "fs-type"
 msgid "UDF"
-msgstr ""
+msgstr "UDF"
 
 #: ../storaged/storagedclient.c:1941 ../storaged/storagedclient.c:1942
 msgctxt "fs-type"
 msgid "exFAT"
-msgstr ""
+msgstr "exFAT"
 
 #: ../storaged/storagedclient.c:1942
 #, c-format
 msgctxt "fs-type"
 msgid "exFAT (version %s)"
-msgstr ""
+msgstr "exFAT (versió %s)"
 
 #: ../storaged/storagedclient.c:1943
 #, c-format
 msgctxt "fs-type"
 msgid "Swap (version %s)"
-msgstr ""
+msgstr "Intercanvi (versió %s)"
 
 #: ../storaged/storagedclient.c:1943 ../storaged/storagedclient.c:1944
 msgctxt "fs-type"
 msgid "Swap"
-msgstr ""
+msgstr "Intercanvi"
 
 #: ../storaged/storagedclient.c:1945
 #, c-format
 msgctxt "fs-type"
 msgid "LVM2 Physical Volume (%s)"
-msgstr ""
+msgstr "Volum físic LVM2 (%s)"
 
 #: ../storaged/storagedclient.c:1945 ../storaged/storagedclient.c:1946
 msgctxt "fs-type"
 msgid "LVM2 PV"
-msgstr ""
+msgstr "Volum físic LVM2"
 
 #: ../storaged/storagedclient.c:1946
 msgctxt "fs-type"
 msgid "LVM2 Physical Volume"
-msgstr ""
+msgstr "Volum físic LVM2"
 
 #: ../storaged/storagedclient.c:1947
 #, c-format
 msgctxt "fs-type"
 msgid "Linux RAID Member (version %s)"
-msgstr ""
+msgstr "Membre del RAID de Linux (versió %s)"
 
 #: ../storaged/storagedclient.c:1947 ../storaged/storagedclient.c:1948
 msgctxt "fs-type"
 msgid "Linux RAID Member"
-msgstr ""
+msgstr "Membre del RAID de Linux"
 
 #: ../storaged/storagedclient.c:1949
 #, c-format
 msgctxt "fs-type"
 msgid "ZFS Device (ZPool version %s)"
-msgstr ""
+msgstr "Dispositiu ZFS (versió %s de ZPool)"
 
 #: ../storaged/storagedclient.c:1949
 #, c-format
 msgctxt "fs-type"
 msgid "ZFS (v%s)"
-msgstr ""
+msgstr "ZFS (v%s)"
 
 #: ../storaged/storagedclient.c:1950
 msgctxt "fs-type"
 msgid "ZFS Device"
-msgstr ""
+msgstr "Dispositiu ZFS"
 
 #: ../storaged/storagedclient.c:1950
 msgctxt "fs-type"
 msgid "ZFS"
-msgstr ""
+msgstr "ZFS"
 
 #: ../storaged/storagedclient.c:1951
 #, c-format
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member (version %s)"
 msgstr ""
+"Membre del RAID Rapid Storage Technology enterprise d'Intel (versió %s)"
 
 #: ../storaged/storagedclient.c:1951
 #, c-format
 msgctxt "fs-type"
 msgid "Intel RSTe RAID Member (%s)"
-msgstr ""
+msgstr "Membre del RAID RSTe d'Intel (%s)"
 
 #: ../storaged/storagedclient.c:1952
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member"
-msgstr ""
+msgstr "Membre del RAID Rapid Storage Technology enterprise d'Intel"
 
 #: ../storaged/storagedclient.c:1952
 msgctxt "fs-type"
 msgid "Intel RSTe RAID Member"
-msgstr ""
+msgstr "Membre del RAID RSTe d'Intel"
 
 #: ../storaged/storagedclient.c:1953
 #, c-format
 msgctxt "fs-type"
 msgid "LUKS Encryption (version %s)"
-msgstr ""
+msgstr "Xifratge de LUKS (versió %s)"
 
 #: ../storaged/storagedclient.c:1953 ../storaged/storagedclient.c:1954
 msgctxt "fs-type"
 msgid "LUKS"
-msgstr ""
+msgstr "LUKS"
 
 #: ../storaged/storagedclient.c:1954
 msgctxt "fs-type"
 msgid "LUKS Encryption"
-msgstr ""
+msgstr "Xifratge de LUKS"
 
 #: ../storaged/storagedclient.c:1955
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS (version %s)"
-msgstr ""
+msgstr "VMFS (versió %s)"
 
 #: ../storaged/storagedclient.c:1955
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS (v%s)"
-msgstr ""
+msgstr "VMFS (v%s)"
 
 #: ../storaged/storagedclient.c:1956
 msgctxt "fs-type"
 msgid "VMFS"
-msgstr ""
+msgstr "VMFS"
 
 #: ../storaged/storagedclient.c:1957
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS Volume Member (version %s)"
-msgstr ""
+msgstr "Membre del volum VMFS (versió %s)"
 
 #: ../storaged/storagedclient.c:1957
 #, c-format
 msgctxt "fs-type"
 msgid "VMFS Member (v%s)"
-msgstr ""
+msgstr "Membre del VMFS (v%s)"
 
 #: ../storaged/storagedclient.c:1958
 msgctxt "fs-type"
 msgid "VMFS Volume Member"
-msgstr ""
+msgstr "Membre del volum VMFS"
 
 #: ../storaged/storagedclient.c:1958
 msgctxt "fs-type"
 msgid "VMFS Member"
-msgstr ""
+msgstr "Membre del VMFS"
 
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev, second %s is version.
-#.
+#. 
 #: ../storaged/storagedclient.c:2030
 #, c-format
 msgctxt "fs-type"
 msgid "Unknown (%s %s)"
-msgstr ""
+msgstr "Desconegut (%s %s)"
 
 #. Translators: Shown for unknown filesystem types.
 #. * First %s is the raw filesystem type obtained from udev.
-#.
+#. 
 #: ../storaged/storagedclient.c:2039
 #, c-format
 msgctxt "fs-type"
 msgid "Unknown (%s)"
-msgstr ""
+msgstr "Desconegut (%s)"
 
 #. Translators: Shown for unknown filesystem types.
-#.
+#. 
 #: ../storaged/storagedclient.c:2045 ../storaged/storagedclient.c:2059
 msgctxt "fs-type"
 msgid "Unknown"
-msgstr ""
+msgstr "Desconegut"
 
 #. Translators: name of partition table format
 #: ../storaged/storagedclient.c:2076
 msgid "Master Boot Record"
-msgstr ""
+msgstr "Registre d'inici mestre"
 
 #. Translators: name of partition table format
 #: ../storaged/storagedclient.c:2078
 msgid "GUID Partition Table"
-msgstr ""
+msgstr "Taula de partició GUID"
 
 #. Translators: name of partition table format
 #: ../storaged/storagedclient.c:2080
 msgid "Apple Partition Map"
-msgstr ""
+msgstr "Mapa de particions d'Apple"
 
 #. Translators: name of partition table format
 #: ../storaged/storagedclient.c:2123 ../storaged/storagedclient.c:2128
 msgctxt "partition-subtype"
 msgid "Generic"
-msgstr ""
+msgstr "Genèric"
 
 #: ../storaged/storagedclient.c:2124 ../storaged/storagedclient.c:2129
 msgctxt "partition-subtype"
 msgid "Linux"
-msgstr ""
+msgstr "Linux"
 
 #: ../storaged/storagedclient.c:2125 ../storaged/storagedclient.c:2130
 #: ../storaged/storagedclient.c:2135
 msgctxt "partition-subtype"
 msgid "Windows"
-msgstr ""
+msgstr "Windows"
 
 #: ../storaged/storagedclient.c:2126 ../storaged/storagedclient.c:2132
 msgctxt "partition-subtype"
 msgid "Other"
-msgstr ""
+msgstr "Altres"
 
 #: ../storaged/storagedclient.c:2131 ../storaged/storagedclient.c:2134
 msgctxt "partition-subtype"
 msgid "Mac OS X"
-msgstr ""
+msgstr "Mac OS X"
 
 #. see http://en.wikipedia.org/wiki/GUID_Partition_Table
 #. Not associated with any OS
 #: ../storaged/storagedclient.c:2222
 msgctxt "part-type"
 msgid "MBR Partition Scheme"
-msgstr ""
+msgstr "Esquema de particions MBR"
 
 #: ../storaged/storagedclient.c:2223
 msgctxt "part-type"
 msgid "EFI System"
-msgstr ""
+msgstr "Sistema EFI"
 
 #: ../storaged/storagedclient.c:2224
 msgctxt "part-type"
 msgid "BIOS Boot"
-msgstr ""
+msgstr "Arrencada BIOS"
 
 #. This is also defined in the Apple and Solaris section
 #: ../storaged/storagedclient.c:2226
 msgctxt "part-type"
 msgid "ZFS"
-msgstr ""
+msgstr "ZFS"
 
 #. Extended Boot Partition, see http://www.freedesktop.org/wiki/Specifications/BootLoaderSpec/
 #: ../storaged/storagedclient.c:2228
 msgctxt "part-type"
 msgid "Extended Boot Partition"
-msgstr ""
+msgstr "Partició d'arrencada estesa"
 
 #. Discoverable Linux Partitions, see http://www.freedesktop.org/wiki/Specifications/DiscoverablePartitionsSpec
 #: ../storaged/storagedclient.c:2230
 msgctxt "part-type"
 msgid "Linux Root Partition (x86)"
-msgstr ""
+msgstr "Partició arrel de Linux (x86)"
 
 #: ../storaged/storagedclient.c:2231
 msgctxt "part-type"
 msgid "Linux Root Partition (x86_64)"
-msgstr ""
+msgstr "Partició arrel de Linux (x86_64)"
 
 #: ../storaged/storagedclient.c:2232
 msgctxt "part-type"
 msgid "Linux Home Partition"
-msgstr ""
+msgstr "Partició del directori d'inici de Linux"
 
 #: ../storaged/storagedclient.c:2233
 msgctxt "part-type"
 msgid "Linux Server Data Partition"
-msgstr ""
+msgstr "Partició de dades del servidor de Linux"
 
 #. Linux
 #: ../storaged/storagedclient.c:2235
 msgctxt "part-type"
 msgid "Linux Swap"
-msgstr ""
+msgstr "Intercanvi de Linux"
 
 #: ../storaged/storagedclient.c:2236
 msgctxt "part-type"
 msgid "Linux Filesystem"
-msgstr ""
+msgstr "Sistema de fitxers de Linux"
 
 #: ../storaged/storagedclient.c:2237
 msgctxt "part-type"
 msgid "Linux RAID"
-msgstr ""
+msgstr "RAID de Linux"
 
 #: ../storaged/storagedclient.c:2238 ../storaged/storagedclient.c:2323
 msgctxt "part-type"
 msgid "Linux LVM"
-msgstr ""
+msgstr "LVM de Linux"
 
 #: ../storaged/storagedclient.c:2239
 msgctxt "part-type"
 msgid "Linux Reserved"
-msgstr ""
+msgstr "Reserva de Linux"
 
 #. Microsoft
 #: ../storaged/storagedclient.c:2241
 msgctxt "part-type"
 msgid "Basic Data"
-msgstr ""
+msgstr "Dades bàsiques"
 
 #: ../storaged/storagedclient.c:2242
 msgctxt "part-type"
 msgid "Microsoft Reserved"
-msgstr ""
+msgstr "Reserva de Microsoft"
 
 #: ../storaged/storagedclient.c:2243
 msgctxt "part-type"
 msgid "Microsoft LDM metadata"
-msgstr ""
+msgstr "Metadades LDM de Microsoft"
 
 #: ../storaged/storagedclient.c:2244
 msgctxt "part-type"
 msgid "Microsoft LDM data"
-msgstr ""
+msgstr "Dades LDM de Microsoft"
 
 #: ../storaged/storagedclient.c:2245
 msgctxt "part-type"
 msgid "Microsoft Windows Recovery Environment"
-msgstr ""
+msgstr "Entorn de recuperació de Microsoft Windows"
 
 #. Apple OS X
 #: ../storaged/storagedclient.c:2247
 msgctxt "part-type"
 msgid "Apple HFS/HFS+"
-msgstr ""
+msgstr "HFS/HFS+ d'Apple"
 
 #. see http://developer.apple.com/documentation/mac/devices/devices-126.html
 #. *     http://lists.apple.com/archives/Darwin-drivers/2003/May/msg00021.html
 #: ../storaged/storagedclient.c:2248 ../storaged/storagedclient.c:2302
 msgctxt "part-type"
 msgid "Apple UFS"
-msgstr ""
+msgstr "UFS d'Apple"
 
 #: ../storaged/storagedclient.c:2249
 msgctxt "part-type"
 msgid "Apple ZFS"
-msgstr ""
+msgstr "ZFS d'Apple"
 
 #. same as ZFS
 #: ../storaged/storagedclient.c:2250
 msgctxt "part-type"
 msgid "Apple RAID"
-msgstr ""
+msgstr "RAID d'Apple"
 
 #: ../storaged/storagedclient.c:2251
 msgctxt "part-type"
@@ -1546,17 +1770,17 @@ msgstr ""
 #: ../storaged/storagedclient.c:2252
 msgctxt "part-type"
 msgid "Apple Boot"
-msgstr ""
+msgstr "Arrencada d'Apple"
 
 #: ../storaged/storagedclient.c:2253
 msgctxt "part-type"
 msgid "Apple Label"
-msgstr ""
+msgstr "Etiqueta d'Apple"
 
 #: ../storaged/storagedclient.c:2254
 msgctxt "part-type"
 msgid "Apple TV Recovery"
-msgstr ""
+msgstr "Recuperació de l'Apple TV"
 
 #: ../storaged/storagedclient.c:2255
 msgctxt "part-type"
@@ -1567,80 +1791,80 @@ msgstr ""
 #: ../storaged/storagedclient.c:2257
 msgctxt "part-type"
 msgid "HP-UX Data"
-msgstr ""
+msgstr "Dades de HP-UX"
 
 #: ../storaged/storagedclient.c:2258
 msgctxt "part-type"
 msgid "HP-UX Service"
-msgstr ""
+msgstr "Servei de HP-UX"
 
 #. FreeBSD
 #: ../storaged/storagedclient.c:2260
 msgctxt "part-type"
 msgid "FreeBSD Boot"
-msgstr ""
+msgstr "Arrencada de FreeBSD"
 
 #: ../storaged/storagedclient.c:2261
 msgctxt "part-type"
 msgid "FreeBSD Data"
-msgstr ""
+msgstr "Dades de FreeBSD"
 
 #: ../storaged/storagedclient.c:2262
 msgctxt "part-type"
 msgid "FreeBSD Swap"
-msgstr ""
+msgstr "Intercanvi de FreeBSD"
 
 #: ../storaged/storagedclient.c:2263
 msgctxt "part-type"
 msgid "FreeBSD UFS"
-msgstr ""
+msgstr "UFS de FreeBSD"
 
 #: ../storaged/storagedclient.c:2264
 msgctxt "part-type"
 msgid "FreeBSD Vinum"
-msgstr ""
+msgstr "Vinum de FreeBSD"
 
 #: ../storaged/storagedclient.c:2265
 msgctxt "part-type"
 msgid "FreeBSD ZFS"
-msgstr ""
+msgstr "ZFS de FreeBSD"
 
 #. Solaris
 #: ../storaged/storagedclient.c:2267
 msgctxt "part-type"
 msgid "Solaris Boot"
-msgstr ""
+msgstr "Arrencada de Solaris"
 
 #: ../storaged/storagedclient.c:2268
 msgctxt "part-type"
 msgid "Solaris Root"
-msgstr ""
+msgstr "Arrel de Solaris"
 
 #: ../storaged/storagedclient.c:2269
 msgctxt "part-type"
 msgid "Solaris Swap"
-msgstr ""
+msgstr "Intercanvi de Solaris"
 
 #: ../storaged/storagedclient.c:2270
 msgctxt "part-type"
 msgid "Solaris Backup"
-msgstr ""
+msgstr "Còpia de seguretat de Solaris"
 
 #: ../storaged/storagedclient.c:2271
 msgctxt "part-type"
 msgid "Solaris /usr"
-msgstr ""
+msgstr "/usr de Solaris"
 
 #. same as ZFS
 #: ../storaged/storagedclient.c:2272
 msgctxt "part-type"
 msgid "Solaris /var"
-msgstr ""
+msgstr "/var de Solaris"
 
 #: ../storaged/storagedclient.c:2273
 msgctxt "part-type"
 msgid "Solaris /home"
-msgstr ""
+msgstr "/home de Solaris"
 
 #: ../storaged/storagedclient.c:2274
 msgctxt "part-type"
@@ -1650,90 +1874,90 @@ msgstr ""
 #: ../storaged/storagedclient.c:2275
 msgctxt "part-type"
 msgid "Solaris Reserved"
-msgstr ""
+msgstr "Reserva de Solaris"
 
 #: ../storaged/storagedclient.c:2276
 msgctxt "part-type"
 msgid "Solaris Reserved (2)"
-msgstr ""
+msgstr "Reserva de Solaris (2)"
 
 #: ../storaged/storagedclient.c:2277
 msgctxt "part-type"
 msgid "Solaris Reserved (3)"
-msgstr ""
+msgstr "Reserva de Solaris (3)"
 
 #: ../storaged/storagedclient.c:2278
 msgctxt "part-type"
 msgid "Solaris Reserved (4)"
-msgstr ""
+msgstr "Reserva de Solaris (4)"
 
 #: ../storaged/storagedclient.c:2279
 msgctxt "part-type"
 msgid "Solaris Reserved (5)"
-msgstr ""
+msgstr "Reserva de Solaris (5)"
 
 #. NetBSD
 #: ../storaged/storagedclient.c:2281
 msgctxt "part-type"
 msgid "NetBSD Swap"
-msgstr ""
+msgstr "Intercanvi de NetBSD"
 
 #: ../storaged/storagedclient.c:2282
 msgctxt "part-type"
 msgid "NetBSD FFS"
-msgstr ""
+msgstr "FFS de NetBSD"
 
 #: ../storaged/storagedclient.c:2283
 msgctxt "part-type"
 msgid "NetBSD LFS"
-msgstr ""
+msgstr "LFS de NetBSD"
 
 #: ../storaged/storagedclient.c:2284
 msgctxt "part-type"
 msgid "NetBSD RAID"
-msgstr ""
+msgstr "RAID de NetBSD"
 
 #: ../storaged/storagedclient.c:2285
 msgctxt "part-type"
 msgid "NetBSD Concatenated"
-msgstr ""
+msgstr "Concatenació de NetBSD"
 
 #: ../storaged/storagedclient.c:2286
 msgctxt "part-type"
 msgid "NetBSD Encrypted"
-msgstr ""
+msgstr "Xifrada de NetBSD"
 
 #. VMWare, see http://blogs.vmware.com/vsphere/2011/08/vsphere-50-storage-features-part-7-gpt.html
 #: ../storaged/storagedclient.c:2288
 msgctxt "part-type"
 msgid "VMWare VMFS"
-msgstr ""
+msgstr "VMFS de VMWare"
 
 #: ../storaged/storagedclient.c:2289
 msgctxt "part-type"
 msgid "VMWare vmkcore"
-msgstr ""
+msgstr "Vmkcore de VMWare"
 
 #. ChromeOS, see http://www.chromium.org/chromium-os/chromiumos-design-docs/disk-format
 #: ../storaged/storagedclient.c:2291
 msgctxt "part-type"
 msgid "ChromeOS Firmware"
-msgstr ""
+msgstr "Microprogramari de ChromeOS"
 
 #: ../storaged/storagedclient.c:2292
 msgctxt "part-type"
 msgid "ChromeOS Kernel"
-msgstr ""
+msgstr "Nucli del sistema de ChromeOS"
 
 #: ../storaged/storagedclient.c:2293
 msgctxt "part-type"
 msgid "ChromeOS Root Filesystem"
-msgstr ""
+msgstr "Sistema de fitxers arrel de ChromeOS"
 
 #: ../storaged/storagedclient.c:2294
 msgctxt "part-type"
 msgid "ChromeOS Reserved"
-msgstr ""
+msgstr "Reserva de ChromeOS"
 
 #. Intel Partition Types
 #. FFS = Fast Flash Standby, aka Intel Rapid start
@@ -1741,73 +1965,73 @@ msgstr ""
 #: ../storaged/storagedclient.c:2298
 msgctxt "part-type"
 msgid "Intel FFS Reserved"
-msgstr ""
+msgstr "Reserva de FFS d'Intel"
 
 #: ../storaged/storagedclient.c:2303
 msgctxt "part-type"
 msgid "Apple HFS/HFS"
-msgstr ""
+msgstr "HFS/HFS d'Apple"
 
 #: ../storaged/storagedclient.c:2304
 msgctxt "part-type"
 msgid "Apple Partition Map"
-msgstr ""
+msgstr "Mapa de particions d'Apple"
 
 #: ../storaged/storagedclient.c:2305
 msgctxt "part-type"
 msgid "Unused"
-msgstr ""
+msgstr "Sense utilitzar"
 
 #: ../storaged/storagedclient.c:2306
 msgctxt "part-type"
 msgid "Empty"
-msgstr ""
+msgstr "Buida"
 
 #: ../storaged/storagedclient.c:2307
 msgctxt "part-type"
 msgid "Driver"
-msgstr ""
+msgstr "Controlador"
 
 #: ../storaged/storagedclient.c:2308
 msgctxt "part-type"
 msgid "Driver 4.3"
-msgstr ""
+msgstr "Controlador 4.3"
 
 #: ../storaged/storagedclient.c:2309
 msgctxt "part-type"
 msgid "ProDOS file system"
-msgstr ""
+msgstr "Sistema de fitxers ProDOS"
 
 #: ../storaged/storagedclient.c:2310
 msgctxt "part-type"
 msgid "FAT 12"
-msgstr ""
+msgstr "FAT 12"
 
 #: ../storaged/storagedclient.c:2311
 msgctxt "part-type"
 msgid "FAT 16"
-msgstr ""
+msgstr "FAT 16"
 
 #: ../storaged/storagedclient.c:2312
 msgctxt "part-type"
 msgid "FAT 32"
-msgstr ""
+msgstr "FAT 32"
 
 #: ../storaged/storagedclient.c:2313
 msgctxt "part-type"
 msgid "FAT 16 (Windows)"
-msgstr ""
+msgstr "FAT 16 (Windows)"
 
 #: ../storaged/storagedclient.c:2314
 msgctxt "part-type"
 msgid "FAT 32 (Windows)"
-msgstr ""
+msgstr "FAT 32 (Windows)"
 
 #. see http://www.win.tue.nl/~aeb/partitions/partition_types-1.html
 #: ../storaged/storagedclient.c:2317
 msgctxt "part-type"
 msgid "Extended"
-msgstr ""
+msgstr "Estesa"
 
 #: ../storaged/storagedclient.c:2318
 msgctxt "part-type"
@@ -1817,62 +2041,62 @@ msgstr ""
 #: ../storaged/storagedclient.c:2319
 msgctxt "part-type"
 msgid "EFI (FAT-12/16/32)"
-msgstr ""
+msgstr "EFI (FAT-12/16/32)"
 
 #: ../storaged/storagedclient.c:2320
 msgctxt "part-type"
 msgid "Linux swap"
-msgstr ""
+msgstr "Intercanvi de Linux"
 
 #: ../storaged/storagedclient.c:2321
 msgctxt "part-type"
 msgid "Linux"
-msgstr ""
+msgstr "Linux"
 
 #: ../storaged/storagedclient.c:2322
 msgctxt "part-type"
 msgid "Linux Extended"
-msgstr ""
+msgstr "Estesa de linux"
 
 #: ../storaged/storagedclient.c:2324
 msgctxt "part-type"
 msgid "Linux RAID auto"
-msgstr ""
+msgstr "RAID automàtic de Linux"
 
 #: ../storaged/storagedclient.c:2325
 msgctxt "part-type"
 msgid "FAT12"
-msgstr ""
+msgstr "FAT12"
 
 #: ../storaged/storagedclient.c:2326
 msgctxt "part-type"
 msgid "FAT16 <32M"
-msgstr ""
+msgstr "FAT16 < 32 M"
 
 #: ../storaged/storagedclient.c:2327
 msgctxt "part-type"
 msgid "FAT16"
-msgstr ""
+msgstr "FAT16"
 
 #: ../storaged/storagedclient.c:2328
 msgctxt "part-type"
 msgid "HPFS/NTFS"
-msgstr ""
+msgstr "HPFS/NTFS"
 
 #: ../storaged/storagedclient.c:2329
 msgctxt "part-type"
 msgid "W95 FAT32"
-msgstr ""
+msgstr "FAT32 de W95"
 
 #: ../storaged/storagedclient.c:2330
 msgctxt "part-type"
 msgid "W95 FAT32 (LBA)"
-msgstr ""
+msgstr "FAT32 de W95 (LBA)"
 
 #: ../storaged/storagedclient.c:2331
 msgctxt "part-type"
 msgid "W95 FAT16 (LBA)"
-msgstr ""
+msgstr "FAT16 de W95 (LBA)"
 
 #: ../storaged/storagedclient.c:2332
 msgctxt "part-type"
@@ -1882,183 +2106,183 @@ msgstr ""
 #: ../storaged/storagedclient.c:2333
 msgctxt "part-type"
 msgid "Hidden FAT12"
-msgstr ""
+msgstr "FAT12 oculta"
 
 #: ../storaged/storagedclient.c:2334
 msgctxt "part-type"
 msgid "Hidden FAT16 <32M"
-msgstr ""
+msgstr "FAT16 oculta < 32 M"
 
 #: ../storaged/storagedclient.c:2335
 msgctxt "part-type"
 msgid "Hidden FAT16"
-msgstr ""
+msgstr "FAT16 oculta"
 
 #: ../storaged/storagedclient.c:2336
 msgctxt "part-type"
 msgid "Hidden HPFS/NTFS"
-msgstr ""
+msgstr "HPFS/NTFS oculta"
 
 #: ../storaged/storagedclient.c:2337
 msgctxt "part-type"
 msgid "Hidden W95 FAT32"
-msgstr ""
+msgstr "FAT32 de W95 oculta"
 
 #: ../storaged/storagedclient.c:2338
 msgctxt "part-type"
 msgid "Hidden W95 FAT32 (LBA)"
-msgstr ""
+msgstr "FAT32 de W95 oculta (LBA)"
 
 #: ../storaged/storagedclient.c:2339
 msgctxt "part-type"
 msgid "Hidden W95 FAT16 (LBA)"
-msgstr ""
+msgstr "FAT16 de W95 oculta (LBA)"
 
 #: ../storaged/storagedclient.c:2340
 msgctxt "part-type"
 msgid "OPUS"
-msgstr ""
+msgstr "OPUS"
 
 #: ../storaged/storagedclient.c:2341
 msgctxt "part-type"
 msgid "Compaq diagnostics"
-msgstr ""
+msgstr "Diagnòstics de Compaq"
 
 #: ../storaged/storagedclient.c:2342
 msgctxt "part-type"
 msgid "PartitionMagic"
-msgstr ""
+msgstr "PartitionMagic"
 
 #: ../storaged/storagedclient.c:2343
 msgctxt "part-type"
 msgid "Minix"
-msgstr ""
+msgstr "Minix"
 
 #. cf. http://en.wikipedia.org/wiki/MINIX_file_system
 #: ../storaged/storagedclient.c:2344 ../storaged/storagedclient.c:2345
 msgctxt "part-type"
 msgid "Hibernation"
-msgstr ""
+msgstr "Hibernation"
 
 #: ../storaged/storagedclient.c:2346
 msgctxt "part-type"
 msgid "FreeBSD"
-msgstr ""
+msgstr "FreeBSD"
 
 #: ../storaged/storagedclient.c:2347
 msgctxt "part-type"
 msgid "OpenBSD"
-msgstr ""
+msgstr "OpenBSD"
 
 #: ../storaged/storagedclient.c:2348 ../storaged/storagedclient.c:2349
 msgctxt "part-type"
 msgid "Mac OS X"
-msgstr ""
+msgstr "Mac OS X"
 
 #: ../storaged/storagedclient.c:2350
 msgctxt "part-type"
 msgid "Solaris boot"
-msgstr ""
+msgstr "Arrencada de Solaris"
 
 #: ../storaged/storagedclient.c:2351
 msgctxt "part-type"
 msgid "Solaris"
-msgstr ""
+msgstr "Solaris"
 
 #: ../storaged/storagedclient.c:2352
 msgctxt "part-type"
 msgid "BeOS BFS"
-msgstr ""
+msgstr "BFS de BeOS"
 
 #: ../storaged/storagedclient.c:2353
 msgctxt "part-type"
 msgid "SkyOS SkyFS"
-msgstr ""
+msgstr "SkyFS de SkyOS"
 
 #: ../storaged/storagedclient.c:2499
 msgctxt "job"
 msgid "SMART self-test"
-msgstr ""
+msgstr "Autocomprovació SMART"
 
 #: ../storaged/storagedclient.c:2500
 msgctxt "job"
 msgid "Ejecting Medium"
-msgstr ""
+msgstr "S'expulsa el mitjà"
 
 #: ../storaged/storagedclient.c:2501
 msgctxt "job"
 msgid "Unlocking Device"
-msgstr ""
+msgstr "Es desbloqueja el dispositiu"
 
 #: ../storaged/storagedclient.c:2502
 msgctxt "job"
 msgid "Locking Device"
-msgstr ""
+msgstr "Es bloqueja el dispositiu"
 
 #: ../storaged/storagedclient.c:2503
 msgctxt "job"
 msgid "Modifying Encrypted Device"
-msgstr ""
+msgstr "Es modifica el dispositiu xifrat"
 
 #: ../storaged/storagedclient.c:2504
 msgctxt "job"
 msgid "Starting Swap Device"
-msgstr ""
+msgstr "S'inicia el dispositiu d'intercanvi"
 
 #: ../storaged/storagedclient.c:2505
 msgctxt "job"
 msgid "Stopping Swap Device"
-msgstr ""
+msgstr "S'atura el dispositiu d'intercanvi"
 
 #: ../storaged/storagedclient.c:2506
 msgctxt "job"
 msgid "Mounting Filesystem"
-msgstr ""
+msgstr "Es munta el sistema de fitxers"
 
 #: ../storaged/storagedclient.c:2507
 msgctxt "job"
 msgid "Unmounting Filesystem"
-msgstr ""
+msgstr "Es desmunta el sistema de fitxers"
 
 #: ../storaged/storagedclient.c:2508
 msgctxt "job"
 msgid "Modifying Filesystem"
-msgstr ""
+msgstr "Es modifica el sistema de fitxers"
 
 #: ../storaged/storagedclient.c:2509
 msgctxt "job"
 msgid "Erasing Device"
-msgstr ""
+msgstr "S'esborra el dispositiu"
 
 #: ../storaged/storagedclient.c:2510
 msgctxt "job"
 msgid "Creating Filesystem"
-msgstr ""
+msgstr "Es crea el sistema de fitxers"
 
 #: ../storaged/storagedclient.c:2511
 msgctxt "job"
 msgid "Setting Up Loop Device"
-msgstr ""
+msgstr "Es prepara el dispositiu de bucles"
 
 #: ../storaged/storagedclient.c:2512
 msgctxt "job"
 msgid "Modifying Partition"
-msgstr ""
+msgstr "Es modifica la partició"
 
 #: ../storaged/storagedclient.c:2513
 msgctxt "job"
 msgid "Deleting Partition"
-msgstr ""
+msgstr "Se suprimeix la partició"
 
 #: ../storaged/storagedclient.c:2514
 msgctxt "job"
 msgid "Creating Partition"
-msgstr ""
+msgstr "Es crea la partició"
 
 #: ../storaged/storagedclient.c:2515
 msgctxt "job"
 msgid "Cleaning Up"
-msgstr ""
+msgstr "Es fa neteja"
 
 #: ../storaged/storagedclient.c:2516
 msgctxt "job"
@@ -2073,12 +2297,12 @@ msgstr ""
 #: ../storaged/storagedclient.c:2518
 msgctxt "job"
 msgid "Stopping RAID Array"
-msgstr ""
+msgstr "S'atura la matriu RAID"
 
 #: ../storaged/storagedclient.c:2519
 msgctxt "job"
 msgid "Starting RAID Array"
-msgstr ""
+msgstr "S'inicia la matriu RAID"
 
 #: ../storaged/storagedclient.c:2520
 msgctxt "job"
@@ -2088,12 +2312,12 @@ msgstr ""
 #: ../storaged/storagedclient.c:2521
 msgctxt "job"
 msgid "Removing Device from Array"
-msgstr ""
+msgstr "S'elimina el dispositiu de la matriu"
 
 #: ../storaged/storagedclient.c:2522
 msgctxt "job"
 msgid "Adding Device to Array"
-msgstr ""
+msgstr "S'afegeix el dispositiu a la matriu"
 
 #: ../storaged/storagedclient.c:2523
 msgctxt "job"
@@ -2103,97 +2327,97 @@ msgstr ""
 #: ../storaged/storagedclient.c:2524
 msgctxt "job"
 msgid "Creating RAID Array"
-msgstr ""
+msgstr "Es crea la matriu RAID"
 
 #: ../storaged/storagedclient.c:2532
 #, c-format
 msgctxt "unknown-job"
 msgid "Unknown (%s)"
-msgstr ""
+msgstr "Desconegut (%s)"
 
 #. Translators: 'Thumb' here refers to "USB thumb drive", see http://en.wikipedia.org/wiki/Thumb_drive
 #: ../storaged/storagedobjectinfo.c:162
 msgctxt "media-type"
 msgid "Thumb"
-msgstr ""
+msgstr "Llapis USB"
 
 #: ../storaged/storagedobjectinfo.c:164
 msgctxt "media-type"
 msgid "Floppy"
-msgstr ""
+msgstr "Disquet"
 
 #: ../storaged/storagedobjectinfo.c:165
 msgctxt "media-type"
 msgid "Zip"
-msgstr ""
+msgstr "Zip"
 
 #: ../storaged/storagedobjectinfo.c:166
 msgctxt "media-type"
 msgid "Jaz"
-msgstr ""
+msgstr "Jaz"
 
 #: ../storaged/storagedobjectinfo.c:168
 msgctxt "media-type"
 msgid "Flash"
-msgstr ""
+msgstr "Flash"
 
 #: ../storaged/storagedobjectinfo.c:169
 msgctxt "media-type"
 msgid "MemoryStick"
-msgstr ""
+msgstr "MemoryStick"
 
 #: ../storaged/storagedobjectinfo.c:170
 msgctxt "media-type"
 msgid "SmartMedia"
-msgstr ""
+msgstr "SmartMedia"
 
 #: ../storaged/storagedobjectinfo.c:171
 msgctxt "media-type"
 msgid "CompactFlash"
-msgstr ""
+msgstr "CompactFlash"
 
 #: ../storaged/storagedobjectinfo.c:172
 msgctxt "media-type"
 msgid "MMC"
-msgstr ""
+msgstr "MMC"
 
 #: ../storaged/storagedobjectinfo.c:172 ../storaged/storagedobjectinfo.c:173
 #: ../storaged/storagedobjectinfo.c:174 ../storaged/storagedobjectinfo.c:175
 msgctxt "media-type"
 msgid "SD"
-msgstr ""
+msgstr "SD"
 
 #: ../storaged/storagedobjectinfo.c:174
 msgctxt "media-type"
 msgid "SDXC"
-msgstr ""
+msgstr "SDXC"
 
 #: ../storaged/storagedobjectinfo.c:175
 msgctxt "media-type"
 msgid "SDHC"
-msgstr ""
+msgstr "SDHC"
 
 #: ../storaged/storagedobjectinfo.c:177
 msgctxt "media-type"
 msgid "CD-ROM"
-msgstr ""
+msgstr "CD-ROM"
 
 #: ../storaged/storagedobjectinfo.c:177 ../storaged/storagedobjectinfo.c:178
 #: ../storaged/storagedobjectinfo.c:179 ../storaged/storagedobjectinfo.c:194
 #: ../storaged/storagedobjectinfo.c:195 ../storaged/storagedobjectinfo.c:196
 msgctxt "media-type"
 msgid "CD"
-msgstr ""
+msgstr "CD"
 
 #: ../storaged/storagedobjectinfo.c:178
 msgctxt "media-type"
 msgid "CD-R"
-msgstr ""
+msgstr "CD-R"
 
 #: ../storaged/storagedobjectinfo.c:179
 msgctxt "media-type"
 msgid "CD-RW"
-msgstr ""
+msgstr "CD-RW"
 
 #: ../storaged/storagedobjectinfo.c:180 ../storaged/storagedobjectinfo.c:181
 #: ../storaged/storagedobjectinfo.c:182 ../storaged/storagedobjectinfo.c:183
@@ -2201,291 +2425,291 @@ msgstr ""
 #: ../storaged/storagedobjectinfo.c:186 ../storaged/storagedobjectinfo.c:187
 msgctxt "media-type"
 msgid "DVD"
-msgstr ""
+msgstr "DVD"
 
 #: ../storaged/storagedobjectinfo.c:181
 msgctxt "media-type"
 msgid "DVD-R"
-msgstr ""
+msgstr "DVD-R"
 
 #: ../storaged/storagedobjectinfo.c:182
 msgctxt "media-type"
 msgid "DVD-RW"
-msgstr ""
+msgstr "DVD-RW"
 
 #: ../storaged/storagedobjectinfo.c:183
 msgctxt "media-type"
 msgid "DVD-RAM"
-msgstr ""
+msgstr "DVD-RAM"
 
 #: ../storaged/storagedobjectinfo.c:184
 msgctxt "media-type"
 msgid "DVD+R"
-msgstr ""
+msgstr "DVD+R"
 
 #: ../storaged/storagedobjectinfo.c:185
 msgctxt "media-type"
 msgid "DVD+RW"
-msgstr ""
+msgstr "DVD+RW"
 
 #: ../storaged/storagedobjectinfo.c:186
 msgctxt "media-type"
 msgid "DVD+R DL"
-msgstr ""
+msgstr "DVD+R DL"
 
 #: ../storaged/storagedobjectinfo.c:187
 msgctxt "media-type"
 msgid "DVD+RW DL"
-msgstr ""
+msgstr "DVD+RW DL"
 
 #: ../storaged/storagedobjectinfo.c:188
 msgctxt "media-type"
 msgid "BD-ROM"
-msgstr ""
+msgstr "BD-ROM"
 
 #: ../storaged/storagedobjectinfo.c:188 ../storaged/storagedobjectinfo.c:189
 #: ../storaged/storagedobjectinfo.c:190
 msgctxt "media-type"
 msgid "Blu-Ray"
-msgstr ""
+msgstr "Blu-Ray"
 
 #: ../storaged/storagedobjectinfo.c:189
 msgctxt "media-type"
 msgid "BD-R"
-msgstr ""
+msgstr "BD-R"
 
 #: ../storaged/storagedobjectinfo.c:190
 msgctxt "media-type"
 msgid "BD-RE"
-msgstr ""
+msgstr "BD-RE"
 
 #: ../storaged/storagedobjectinfo.c:191 ../storaged/storagedobjectinfo.c:192
 #: ../storaged/storagedobjectinfo.c:193
 msgctxt "media-type"
 msgid "HDDVD"
-msgstr ""
+msgstr "HDDVD"
 
 #: ../storaged/storagedobjectinfo.c:192
 msgctxt "media-type"
 msgid "HDDVD-R"
-msgstr ""
+msgstr "HDDVD-R"
 
 #: ../storaged/storagedobjectinfo.c:193
 msgctxt "media-type"
 msgid "HDDVD-RW"
-msgstr ""
+msgstr "HDDVD-RW"
 
 #: ../storaged/storagedobjectinfo.c:194
 msgctxt "media-type"
 msgid "MO"
-msgstr ""
+msgstr "MO"
 
 #: ../storaged/storagedobjectinfo.c:195
 msgctxt "media-type"
 msgid "MRW"
-msgstr ""
+msgstr "MRW"
 
 #: ../storaged/storagedobjectinfo.c:196
 msgctxt "media-type"
 msgid "MRW-W"
-msgstr ""
+msgstr "MRW-W"
 
 #: ../storaged/storagedobjectinfo.c:252
 #, c-format
 msgid "%s Block Device"
-msgstr ""
+msgstr "Dispositiu de blocs %s"
 
 #: ../storaged/storagedobjectinfo.c:256
 msgid "Block Device"
-msgstr ""
+msgstr "Dispositiu de blocs"
 
 #. Translators: Used to describe a partition of a block device.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the block device (e.g. "5 GB Block Device").
-#.
+#. 
 #: ../storaged/storagedobjectinfo.c:265
 #, c-format
 msgctxt "part-block"
 msgid "Partition %u of %s"
-msgstr ""
+msgstr "Partició %u de %s"
 
 #. Translators: String used for one-liner description of a block device.
 #. *              The first %s is the description of the object (e.g. "50 GB Block Device").
 #. *              The second %s is the special device file (e.g. "/dev/sda2").
-#.
+#. 
 #: ../storaged/storagedobjectinfo.c:275
 #, c-format
 msgctxt "one-liner-block"
 msgid "%s (%s)"
-msgstr ""
+msgstr "%s (%s)"
 
 #: ../storaged/storagedobjectinfo.c:306
 #, c-format
 msgid "%s Loop Device"
-msgstr ""
+msgstr "Dispositiu de bucles %s"
 
 #: ../storaged/storagedobjectinfo.c:310
 msgid "Loop Device"
-msgstr ""
+msgstr "Dispositiu de bucles"
 
 #. Translators: Used to describe a partition of a loop device.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the loop device (e.g. "5 GB Loop Device").
-#.
+#. 
 #: ../storaged/storagedobjectinfo.c:319
 #, c-format
 msgctxt "part-loop"
 msgid "Partition %u of %s"
-msgstr ""
+msgstr "Partició %u de %s"
 
 #. Translators: String used for one-liner description of a loop device.
 #. *              The first %s is the description of the object (e.g. "2 GB Loop Device").
 #. *              The second %s is the name of the backing file (e.g. "/home/davidz/file.iso").
 #. *              The third %s is the special device file (e.g. "/dev/loop2").
-#.
+#. 
 #: ../storaged/storagedobjectinfo.c:330
 #, c-format
 msgctxt "one-liner-loop"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"
 
 #: ../storaged/storagedobjectinfo.c:348
 msgctxt "mdraid-desc"
 msgid "RAID-0 Array"
-msgstr ""
+msgstr "Matriu RAID-0"
 
 #: ../storaged/storagedobjectinfo.c:350
 msgctxt "mdraid-desc"
 msgid "RAID-1 Array"
-msgstr ""
+msgstr "Matriu RAID-1"
 
 #: ../storaged/storagedobjectinfo.c:352
 msgctxt "mdraid-desc"
 msgid "RAID-4 Array"
-msgstr ""
+msgstr "Matriu RAID-4"
 
 #: ../storaged/storagedobjectinfo.c:354
 msgctxt "mdraid-desc"
 msgid "RAID-5 Array"
-msgstr ""
+msgstr "Matriu RAID-5"
 
 #: ../storaged/storagedobjectinfo.c:356
 msgctxt "mdraid-desc"
 msgid "RAID-6 Array"
-msgstr ""
+msgstr "Matriu RAID-6"
 
 #: ../storaged/storagedobjectinfo.c:358
 msgctxt "mdraid-desc"
 msgid "RAID-10 Array"
-msgstr ""
+msgstr "Matriu RAID-10"
 
 #: ../storaged/storagedobjectinfo.c:360
 msgctxt "mdraid-desc"
 msgid "RAID Array"
-msgstr ""
+msgstr "Matriu RAID"
 
 #. Translators: Used to format the description for a RAID array.
 #. *              The first %s is the size (e.g. '42.0 GB').
 #. *              The second %s is the level (e.g. 'RAID-5 Array').
-#.
+#. 
 #: ../storaged/storagedobjectinfo.c:400
 #, c-format
 msgctxt "mdraid-desc"
 msgid "%s %s"
-msgstr ""
+msgstr "%s %s"
 
 #. Translators: Used to describe a partition of a RAID Array.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the drive (e.g. "2 TB RAID-5").
-#.
+#. 
 #: ../storaged/storagedobjectinfo.c:415
 #, c-format
 msgctxt "part-raid"
 msgid "Partition %u of %s"
-msgstr ""
+msgstr "Partició %u de %s"
 
 #. Translators: String used for one-liner description of running RAID array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#.
+#. 
 #: ../storaged/storagedobjectinfo.c:430
 #, c-format
 msgctxt "one-liner-mdraid-running"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"
 
 #. Translators: String used for one-liner description of non-running RAID array.
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
-#.
+#. 
 #: ../storaged/storagedobjectinfo.c:441
 #, c-format
 msgctxt "one-liner-mdraid-not-running"
 msgid "%s — %s"
-msgstr ""
+msgstr "%s — %s"
 
 #. Translators: String used for one-liner description of running RAID array w/o a name.
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#.
+#. 
 #: ../storaged/storagedobjectinfo.c:455
 #, c-format
 msgctxt "one-liner-mdraid-no-name-running"
 msgid "%s — %s"
-msgstr ""
+msgstr "%s — %s"
 
 #. Translators: String used for one-liner description of non-running RAID array w/o a name.
 #. *              The first %s is the array name (e.g. "AlphaGo").
 #. *              The second %s is the size and level (e.g. "2 TB RAID-5").
-#.
+#. 
 #: ../storaged/storagedobjectinfo.c:465
 #, c-format
 msgctxt "one-liner-mdraid-no-name-not-running"
 msgid "%s"
-msgstr ""
+msgstr "%s"
 
 #. Translators: Used to describe drive without removable media. The %s is the type, e.g. 'Thumb'
 #: ../storaged/storagedobjectinfo.c:591
 #, c-format
 msgctxt "drive-with-fixed-media"
 msgid "%s Drive"
-msgstr ""
+msgstr "Unitat %s"
 
 #. Translators: Used to describe generic media. The %s is the type, e.g. 'Zip' or 'Floppy'
 #: ../storaged/storagedobjectinfo.c:595
 #, c-format
 msgctxt "drive-with-generic-media"
 msgid "%s Disk"
-msgstr ""
+msgstr "Disc %s"
 
 #. Translators: Used to describe flash media. The %s is the type, e.g. 'SD' or 'CompactFlash'
 #: ../storaged/storagedobjectinfo.c:599
 #, c-format
 msgctxt "flash-media"
 msgid "%s Card"
-msgstr ""
+msgstr "Targeta %s"
 
 #. Translators: Used to describe optical discs. The %s is the type, e.g. 'CD-R' or 'DVD-ROM'
 #: ../storaged/storagedobjectinfo.c:603
 #, c-format
 msgctxt "optical-media"
 msgid "%s Disc"
-msgstr ""
+msgstr "Disc %s"
 
 #. Translators: Used to describe a drive. The %s is the size, e.g. '20 GB'
 #: ../storaged/storagedobjectinfo.c:623
 #, c-format
 msgctxt "drive-with-size"
 msgid "%s Drive"
-msgstr ""
+msgstr "Unitat de %s"
 
 #. Translators: Used to describe a drive we know very little about (removable media or size not known)
 #: ../storaged/storagedobjectinfo.c:628
 msgctxt "generic-drive"
 msgid "Drive"
-msgstr ""
+msgstr "Unitat"
 
 #. Translators: Used to describe a non-rotating drive (rotation rate either unknown
 #. * or it's a solid-state drive). The %s is the size, e.g. '20 GB'.
@@ -2493,7 +2717,7 @@ msgstr ""
 #, c-format
 msgctxt "disk-non-rotational"
 msgid "%s Disk"
-msgstr ""
+msgstr "Disc de %s"
 
 #. Translators: Used to describe a non-rotating drive (rotation rate either unknown
 #. * or it's a solid-state drive). The drive is either using removable media or its
@@ -2501,95 +2725,95 @@ msgstr ""
 #: ../storaged/storagedobjectinfo.c:646
 msgctxt "disk-non-rotational"
 msgid "Disk"
-msgstr ""
+msgstr "Disc"
 
 #. Translators: Used to describe a hard-disk drive (HDD). The %s is the size, e.g. '20 GB'.
 #: ../storaged/storagedobjectinfo.c:654
 #, c-format
 msgctxt "disk-hdd"
 msgid "%s Hard Disk"
-msgstr ""
+msgstr "Disc dur de %s"
 
 #. Translators: Used to describe a hard-disk drive (HDD) (removable media or size not known)
 #: ../storaged/storagedobjectinfo.c:659
 msgctxt "disk-hdd"
 msgid "Hard Disk"
-msgstr ""
+msgstr "Disc dur"
 
 #. Translators: Used to describe a card reader. The %s is the card type e.g. 'CompactFlash'.
 #: ../storaged/storagedobjectinfo.c:667
 #, c-format
 msgctxt "drive-card-reader"
 msgid "%s Card Reader"
-msgstr ""
+msgstr "Lector de targetes %s"
 
 #. Translators: Used to describe drive. The first %s is the size e.g. '20 GB' and the
 #. * second %s is the drive type e.g. 'Thumb'.
-#.
+#. 
 #: ../storaged/storagedobjectinfo.c:678
 #, c-format
 msgctxt "drive-with-size-and-type"
 msgid "%s %s Drive"
-msgstr ""
+msgstr "Unitat de %s %s"
 
 #. Translators: Used to describe drive. The first %s is the drive type e.g. 'Thumb'.
-#.
+#. 
 #: ../storaged/storagedobjectinfo.c:684
 #, c-format
 msgctxt "drive-with-type"
 msgid "%s Drive"
-msgstr ""
+msgstr "Unitat %s"
 
 #. Translators: String used for a blank disc. The %s is the disc type e.g. "CD-RW Disc"
 #: ../storaged/storagedobjectinfo.c:763
 #, c-format
 msgctxt "optical-media"
 msgid "Blank %s"
-msgstr ""
+msgstr "%s verge"
 
 #. Translators: String used for a mixed disc. The %s is the disc type e.g. "CD-ROM Disc"
 #: ../storaged/storagedobjectinfo.c:771
 #, c-format
 msgctxt "optical-media"
 msgid "Mixed %s"
-msgstr ""
+msgstr "%s mixt"
 
 #. Translators: String used for an audio disc. The %s is the disc type e.g. "CD-ROM Disc"
 #: ../storaged/storagedobjectinfo.c:779
 #, c-format
 msgctxt "optical-media"
 msgid "Audio %s"
-msgstr ""
+msgstr "%s d'àudio"
 
 #. Translators: Used to describe a partition of a drive.
 #. *              The %d is the partition number.
 #. *              The %s is the description for the drive (e.g. "2 GB Thumb Drive").
-#.
+#. 
 #: ../storaged/storagedobjectinfo.c:832
 #, c-format
 msgctxt "part-drive"
 msgid "Partition %u of %s"
-msgstr ""
+msgstr "Partició %u de %s"
 
 #. Translators: String used for one-liner description of drive.
 #. *              The first %s is the description of the object (e.g. "80 GB Disk" or "Partition 2 of 2 GB Thumb Drive").
 #. *              The second %s is the name of the object (e.g. "INTEL SSDSA2MH080G1GC").
 #. *              The third %s is the fw revision (e.g "45ABX21").
 #. *              The fourth %s is the special device file (e.g. "/dev/sda").
-#.
+#. 
 #: ../storaged/storagedobjectinfo.c:850
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s [%s] (%s)"
-msgstr ""
+msgstr "%s — %s [%s] (%s)"
 
 #. Translators: String used for one-liner description of drive w/o known fw revision.
 #. *              The first %s is the description of the object (e.g. "80 GB Disk").
 #. *              The second %s is the name of the object (e.g. "INTEL SSDSA2MH080G1GC").
 #. *              The third %s is the special device file (e.g. "/dev/sda").
-#.
+#. 
 #: ../storaged/storagedobjectinfo.c:863
 #, c-format
 msgctxt "one-liner-drive"
 msgid "%s — %s (%s)"
-msgstr ""
+msgstr "%s — %s (%s)"

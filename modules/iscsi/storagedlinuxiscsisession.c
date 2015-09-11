@@ -119,11 +119,16 @@ handle_logout_interface (StoragedISCSISession  *session,
   guint32 port;
 
   object = storaged_daemon_util_dup_object (session, &error);
+  if (! object)
+    {
+      g_dbus_method_invocation_take_error (invocation, error);
+      goto out;
+    }
   daemon = storaged_linux_iscsi_session_object_get_daemon (object);
 
   /* Policy check. */
   STORAGED_DAEMON_CHECK_AUTHORIZATION (daemon,
-                                       NULL,
+                                       STORAGED_OBJECT (object),
                                        iscsi_policy_action_id,
                                        arg_options,
                                        N_("Authentication is required to perform iSCSI logout"),
@@ -156,7 +161,7 @@ handle_logout_interface (StoragedISCSISession  *session,
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
-                                             "Logout failed: %s",
+                                             N_("Logout failed: %s"),
                                              errorstr);
       goto out;
     }
@@ -168,9 +173,9 @@ handle_logout_interface (StoragedISCSISession  *session,
   storaged_iscsi_state_unlock_libiscsi_context (state);
 
 out:
+  g_clear_object (&object);
   if (errorstr)
     g_free (errorstr);
-  g_clear_object (&object);
 
   /* Indicate that we handled the method invocation. */
   return TRUE;

@@ -273,7 +273,7 @@ handle_get_initiator_name (StoragedManagerISCSIInitiator  *object,
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
-                                             "Error opening %s: %s",
+                                             N_("Error opening %s: %s"),
                                              initiator_filename,
                                              strerror (errno));
 
@@ -293,7 +293,7 @@ handle_get_initiator_name (StoragedManagerISCSIInitiator  *object,
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
-                                             "Error reading %s: %s",
+                                             N_("Error reading %s: %s"),
                                              initiator_filename,
                                              strerror (errno));
 
@@ -359,7 +359,7 @@ handle_set_initiator_name (StoragedManagerISCSIInitiator  *object,
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
-                                             "Empty initiator name");
+                                             N_("Empty initiator name"));
       return TRUE;
     }
 
@@ -379,7 +379,7 @@ handle_set_initiator_name (StoragedManagerISCSIInitiator  *object,
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
-                                             "Error opening %s: %s",
+                                             N_("Error opening %s: %s"),
                                              initiator_filename,
                                              strerror (errno));
 
@@ -396,7 +396,7 @@ handle_set_initiator_name (StoragedManagerISCSIInitiator  *object,
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
-                                             "Error writing to %s: %s",
+                                             N_("Error writing to %s: %s"),
                                              initiator_filename,
                                              strerror (errno));
 
@@ -559,7 +559,7 @@ handle_discover_send_targets_no_auth (StoragedManagerISCSIInitiator  *object,
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
-                                             "Discovery failed: %s",
+                                             N_("Discovery failed: %s"),
                                              errorstr);
       goto out;
     }
@@ -612,7 +612,7 @@ handle_discover_send_targets_chap (StoragedManagerISCSIInitiator  *object,
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
-                                             "Username too long");
+                                             N_("Username too long"));
       goto out;
     }
   strcpy(auth_info.chap.username, arg_username);
@@ -623,7 +623,7 @@ handle_discover_send_targets_chap (StoragedManagerISCSIInitiator  *object,
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
-                                             "Password too long");
+                                             N_("Password too long"));
       goto out;
     }
   strcpy(auth_info.chap.password, arg_password);
@@ -632,9 +632,9 @@ handle_discover_send_targets_chap (StoragedManagerISCSIInitiator  *object,
   if (strlen (arg_reverse_username) > LIBISCSI_VALUE_MAXLEN)
     {
       g_dbus_method_invocation_return_error (invocation,
-                                            STORAGED_ERROR,
+                                             STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
-                                             "Reverse username too long");
+                                             N_("Reverse username too long"));
       goto out;
     }
   strcpy(auth_info.chap.reverse_username, arg_reverse_username);
@@ -643,9 +643,9 @@ handle_discover_send_targets_chap (StoragedManagerISCSIInitiator  *object,
   if (strlen (arg_reverse_password) > LIBISCSI_VALUE_MAXLEN)
     {
       g_dbus_method_invocation_return_error (invocation,
-                                            STORAGED_ERROR,
+                                             STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
-                                             "Reverse password too long");
+                                             N_("Reverse password too long"));
       goto out;
     }
   strcpy(auth_info.chap.reverse_password, arg_reverse_password);
@@ -665,7 +665,7 @@ handle_discover_send_targets_chap (StoragedManagerISCSIInitiator  *object,
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
-                                             "Discovery failed: %s",
+                                             N_("Discovery failed: %s"),
                                              errorstr);
       goto out;
     }
@@ -714,7 +714,7 @@ handle_discover_firmware (StoragedManagerISCSIInitiator  *object,
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
-                                             "Discovery failed: %s",
+                                             N_("Discovery failed: %s"),
                                              errorstr);
       g_free ((gpointer) errorstr);
       goto out;
@@ -773,7 +773,7 @@ handle_login(StoragedManagerISCSIInitiator  *object,
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
-                                             "Login failed: %s",
+                                             N_("Login failed: %s"),
                                              errorstr);
       goto out;
     }
@@ -834,7 +834,7 @@ handle_logout(StoragedManagerISCSIInitiator  *object,
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
                                              STORAGED_ERROR_FAILED,
-                                             "Logout failed: %s",
+                                             N_("Logout failed: %s"),
                                              errorstr);
       goto out;
     }

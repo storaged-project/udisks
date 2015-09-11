@@ -20,4 +20,12 @@ endif # HAVE_LVM2
 
 SUBDIRS += glusterfs
 
+if HAVE_ZRAM
+SUBDIRS += zram
+endif # HAVE_ZRAM
+
+if HAVE_LSM
+SUBDIRS += lsm
+endif # HAVE_LSM
+
 NULL =

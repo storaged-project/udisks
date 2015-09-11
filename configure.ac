@@ -1,7 +1,7 @@
 
 m4_define([storaged_major_version], [2])
-m4_define([storaged_minor_version], [2])
-m4_define([storaged_micro_version], [1])
+m4_define([storaged_minor_version], [3])
+m4_define([storaged_micro_version], [0])
 
 m4_define([storaged_version], [storaged_major_version.storaged_minor_version.storaged_micro_version])
 
@@ -245,6 +245,21 @@ fi
 AM_CONDITIONAL(HAVE_LVM2, [test "$have_lvm2" = "yes"])
 AM_CONDITIONAL(HAVE_DEVMAPPER, [test "$have_devmapper" = "yes"])
 
+# LVMCache
+have_lvmcache=no
+AC_ARG_ENABLE(lvmcache, AS_HELP_STRING([--enable-lvmcache], [enable LVMCache support]))
+if test "x$enable_lvmcache" = "xyes" \
+     -o "x$enable_modules" = "xyes" \
+     -o "x$enable_all_modules" = "xyes"; then
+
+  if test "x$have_lvm2" = "xno"; then
+    AC_MSG_ERROR([lvmcache support requested, but lvm2 module not enabled])
+  fi
+  have_lvmcache=yes
+  AC_DEFINE(HAVE_LVMCACHE, 1, [Define if lvmcache is available])
+fi
+AM_CONDITIONAL(HAVE_LVMCACHE, [test "$have_lvmcache" = "yes"])
+
 # iSCSI module
 have_iscsi=no
 have_libiscsi_session_info="no"
@@ -268,7 +283,6 @@ if test "x$enable_iscsi" = "xyes" \
                 AC_DEFINE([HAVE_LIBISCSI_GET_SESSION_INFOS], [1],
                           [libiscsi can retrieve session information])],
                [have_libiscsi_session_info_msg=", without iscsi sessions"])
-
 
   if test "x$have_iscsi" = "xno"; then
     AC_MSG_ERROR([iSCSI support requested but libraries not found])
@@ -332,6 +346,100 @@ if test "x$enable_btrfs" = "xyes" \
 fi
 AM_CONDITIONAL(HAVE_BTRFS, [test "x$have_btrfs" = "xyes"])
 
+# ZRAM module
+have_kbd="no"
+have_swap="no"
+have_zram="no"
+AC_ARG_ENABLE(zram, AS_HELP_STRING([--enable-zram], [enable ZRAM support]))
+if test "x$enable_zram" = "xyes" \
+     -o "x$enable_modules" = "xyes" \
+     -o "x$enable_all_modules" = "xyes"; then
+    # libblockdev
+    SAVE_CFLAGS=$CFLAGS
+    SAVE_LDFLAGS=$LDFLAGS
+    CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
+    LDFLAGS="$GLIB_LIBS"
+
+    # libblockdev-kbd
+    AC_MSG_CHECKING([libblockdev-kbd presence])
+    AC_TRY_COMPILE([#include <kbd.h>], [],
+                   [AC_MSG_RESULT([yes])
+                    have_kbd=yes],
+                   [AC_MSG_RESULT([no])
+                    have_kbd=no])
+
+    KBD_CFLAGS="-I/usr/include/blockdev"
+    KBD_LIBS="-lbd_kbd"
+
+    if test "x$have_kbd" = "xno"; then
+      AC_MSG_ERROR([KBD support requested but header or library not found])
+    fi
+
+    AC_SUBST([KBD_CFLAGS])
+    AC_SUBST([KBD_LIBS])
+
+    CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
+    LDFLAGS="$GLIB_LIBS"
+
+    # libblockdev-swap
+    AC_MSG_CHECKING([libblockdev-swap presence])
+    AC_TRY_COMPILE([#include <swap.h>], [],
+                   [AC_MSG_RESULT([yes])
+                   have_swap=yes],
+                   [AC_MSG_RESULT([no])
+                   have_swap=no])
+
+    CFLAGS=$SAVE_CFLAGS
+    LDFLAGS=$SAVE_LDFLAGS
+
+    SWAP_CFLAGS="-I/usr/include/blockdev"
+    SWAP_LIBS="-lbd_swap"
+
+    if test "x$have_swap" = "xno"; then
+      AC_MSG_ERROR([SWAP support requested but header or library not found])
+    fi
+
+    AC_SUBST([SWAP_CFLAGS])
+    AC_SUBST([SWAP_LIBS])
+
+    have_zram="yes"
+
+    if test "$have_kbd" = "yes" -a "$have_swap" = "yes"; then
+       AC_DEFINE(HAVE_ZRAM, 1, [Define, if libblockdev-kbd and libblockdev-swap are available])
+    fi
+fi
+
+
+# LSM module
+have_lsm=no
+AC_ARG_ENABLE(
+    lsm, AS_HELP_STRING([--enable-lsm], [enable LibStorageMgmt support]))
+if test "x$enable_lsm" = "xyes" \
+        -o "x$enable_modules" = "xyes" \
+        -o "x$enable_all_modules" = "xyes"; then
+    PKG_CHECK_MODULES(
+        [LIBLSM], [libstoragemgmt >= 1.2.0],
+        [AC_DEFINE(HAVE_LSM, 1, [Define if liblibstoragemgmt is available])
+            have_lsm=yes],
+        [AC_MSG_ERROR([libstoragemgmt 1.2.0 or newer not found.])
+            have_lsm=no])
+
+    PKG_CHECK_MODULES(
+        [LIBCONFIG], [libconfig >= 1.3.2],
+        [AC_DEFINE(HAVE_LSM, 1, [Define if libconfig is available])
+            have_lsm=yes],
+        [AC_MSG_ERROR([libconfig 1.3.2 or newer not found.])
+            have_lsm=no])
+
+  if test "x$have_lsm" = "xno"; then
+    AC_MSG_ERROR([LibStorageMgmt support requested but libraries not found])
+  fi
+fi
+AM_CONDITIONAL(HAVE_LSM, [test "x$have_lsm" = "xyes"])
+
+
+
+AM_CONDITIONAL(HAVE_ZRAM, [test "$have_kbd" = "yes" -a "$have_swap" = "yes"])
 # Internationalization
 #
 
@@ -349,6 +457,8 @@ Makefile
 data/Makefile
 storaged/Makefile
 storaged/storaged.pc
+storaged/modules.conf.d/Makefile
+storaged/modules.conf.d/storaged_lsm.conf
 src/Makefile
 src/tests/Makefile
 tools/Makefile
@@ -363,6 +473,10 @@ modules/lvm2/Makefile
 modules/lvm2/data/Makefile
 modules/glusterfs/Makefile
 modules/glusterfs/data/Makefile
+modules/zram/Makefile
+modules/zram/data/Makefile
+modules/lsm/Makefile
+modules/lsm/data/Makefile
 doc/Makefile
 doc/storaged-docs.xml.in
 doc/storaged-sections.txt.in
@@ -374,10 +488,15 @@ doc/man/storaged-project.xml
 doc/man/storaged.xml
 doc/man/storagedctl.xml
 doc/man/umount.storaged.xml
+doc/man/storaged_lsm.conf.5
 doc/storaged-docs.xml.iscsi.dbus
 doc/storaged-docs.xml.iscsi.generated
 doc/storaged-sections.txt.iscsi.sections
 doc/storaged.types.iscsi
+doc/storaged-docs.xml.lsm.dbus
+doc/storaged-docs.xml.lsm.generated
+doc/storaged-sections.txt.lsm.sections
+doc/storaged.types.lsm
 doc/storaged-docs.xml.lvm2.man
 doc/storaged-docs.xml.lvm2.dbus
 doc/storaged-docs.xml.lvm2.generated
@@ -387,6 +506,11 @@ doc/storaged-docs.xml.btrfs.dbus
 doc/storaged-docs.xml.btrfs.generated
 doc/storaged-sections.txt.btrfs.sections
 doc/storaged.types.btrfs
+doc/storaged-docs.xml.zram.dbus
+doc/storaged-docs.xml.zram.generated
+doc/storaged-docs.xml.zram.block_devices
+doc/storaged-sections.txt.zram.sections
+doc/storaged.types.zram
 po/Makefile.in
 ])
 
@@ -424,4 +548,7 @@ echo "
         iSCSI module:               ${have_iscsi}${have_libiscsi_session_info_msg}
         LVM2  module:               ${have_lvm2}
         GlusterFS module:           ${have_xml}
+        LVMCache:                   ${have_lvmcache}
+        Zram module:                ${have_zram}
+        LibStorageMgmt module:      ${have_lsm}
 "

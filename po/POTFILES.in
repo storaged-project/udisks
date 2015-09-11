@@ -4,6 +4,7 @@
 data/org.storaged.Storaged.policy.in
 modules/btrfs/data/org.storaged.Storaged.btrfs.policy.in
 modules/btrfs/storagedlinuxfilesystembtrfs.c
+modules/btrfs/storagedlinuxmanagerbtrfs.c
 modules/iscsi/data/org.storaged.Storaged.iscsi.policy.in
 modules/iscsi/storagedlinuxiscsisession.c
 modules/iscsi/storagedlinuxmanageriscsiinitiator.c
@@ -11,6 +12,9 @@ modules/lvm2/data/org.storaged.Storaged.lvm2.policy.in
 modules/lvm2/storagedlinuxlogicalvolume.c
 modules/lvm2/storagedlinuxmanagerlvm2.c
 modules/lvm2/storagedlinuxvolumegroup.c
+modules/zram/data/org.storaged.Storaged.zram.policy.in
+modules/zram/storagedlinuxmanagerzram.c
+modules/zram/storagedlinuxblockzram.c
 src/storagedbasejob.c
 src/storagedlinuxblock.c
 src/storagedlinuxdrive.c

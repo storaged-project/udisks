@@ -5,21 +5,22 @@
 # Translators:
 # Yuri Chornoivan <yurchor@ukr.net>, 2012,2014
 # Peter Hatina <phatina@redhat.com>, 2015. #zanata
+# Yuri Chornoivan <yurchor@ukr.net>, 2015. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-04 14:26+0200\n"
+"POT-Creation-Date: 2015-09-10 14:34+0200\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2014-03-12 03:55-0400\n"
+"PO-Revision-Date: 2015-06-08 02:13-0400\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
+"Language-Team: Ukrainian\n"
 "Language: uk\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"Language-Team: Ukrainian\n"
-"X-Generator: Zanata 3.6.2\n"
+"X-Generator: Zanata 3.7.1\n"
 
 #: ../data/org.storaged.Storaged.policy.in.h:1
 msgid "Mount a filesystem"
@@ -378,72 +379,271 @@ msgstr ""
 "Щоб скасувати завдання, розпочате іншим користувачем, слід пройти "
 "розпізнавання"
 
+#: ../modules/btrfs/data/org.storaged.Storaged.btrfs.policy.in.h:1
+msgid "Manage BTRFS"
+msgstr ""
+
+#: ../modules/btrfs/data/org.storaged.Storaged.btrfs.policy.in.h:2
+#, fuzzy
+msgid "Authentication is required to manage BTRFS"
+msgstr ""
+"Щоб отримати доступ до керування масивами RAID, слід пройти розпізнавання"
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:343
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:587
+#, fuzzy
+msgid "Authentication is required to change label for BTRFS volume"
+msgstr "Щоб скасувати завдання, слід пройти розпізнавання"
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:468
+#, fuzzy
+msgid "Authentication is required to add the device to the volume"
+msgstr ""
+"Щоб отримати доступ до додавання пристрою до масиву RAID, слід пройти "
+"розпізнавання"
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:655
+#, fuzzy
+msgid "Authentication is required to create a new snapshot"
+msgstr ""
+"Щоб отримати доступ до створення масиву RAID, слід пройти розпізнавання"
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:714
+#, fuzzy
+msgid "Authentication is required to check and repair the volume"
+msgstr ""
+"Для виконання повторного сканування пристрою слід пройти розпізнавання"
+
+#: ../modules/btrfs/storagedlinuxfilesystembtrfs.c:767
+#, fuzzy
+msgid "Authentication is required to resize the volume"
+msgstr ""
+"Щоб отримати доступ до від’єднання носія даних, слід пройти розпізнавання"
+
+#: ../modules/btrfs/storagedlinuxmanagerbtrfs.c:206
+#, fuzzy
+msgid "Authentication is required to create a new volume"
+msgstr ""
+"Для виконання повторного сканування пристрою слід пройти розпізнавання"
+
 #: ../modules/iscsi/data/org.storaged.Storaged.iscsi.policy.in.h:1
 msgid "Manage iSCSI"
-msgstr ""
+msgstr "Керування iSCSI"
 
 #: ../modules/iscsi/data/org.storaged.Storaged.iscsi.policy.in.h:2
 msgid "Authentication is required to manage iSCSI"
+msgstr "Щоб отримати доступ до керування iSCSI, слід пройти розпізнавання"
+
+#: ../modules/iscsi/storagedlinuxiscsisession.c:134
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:815
+#, fuzzy
+msgid "Authentication is required to perform iSCSI logout"
+msgstr ""
+"Щоб отримати доступ до форматування $(drive), слід пройти розпізнавання"
+
+#: ../modules/iscsi/storagedlinuxiscsisession.c:164
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:837
+#, c-format
+msgid "Logout failed: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:276
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:382
+#, c-format
+msgid "Error opening %s: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:296
+#, c-format
+msgid "Error reading %s: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:354
+#, fuzzy
+msgid "Authentication is required change iSCSI initiator name"
+msgstr ""
+"Щоб отримати доступ до керування масивами RAID, слід пройти розпізнавання"
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:362
+msgid "Empty initiator name"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:399
+#, c-format
+msgid "Error writing to %s: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:544
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:603
+#, fuzzy
+msgid "Authentication is required to discover targets"
+msgstr ""
+"Щоб отримати доступ до вимикання живлення диска, слід пройти розпізнавання"
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:562
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:668
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:717
+#, c-format
+msgid "Discovery failed: %s"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:615
+msgid "Username too long"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:626
+msgid "Password too long"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:637
+msgid "Reverse username too long"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:648
+msgid "Reverse password too long"
+msgstr ""
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:702
+#, fuzzy
+msgid "Authentication is required to discover firmware targets"
+msgstr ""
+"Щоб отримати доступ до вимикання живлення диска, слід пройти розпізнавання"
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:754
+#, fuzzy
+msgid "Authentication is required to perform iSCSI login"
+msgstr ""
+"Щоб отримати доступ до вимикання живлення диска, слід пройти розпізнавання"
+
+#: ../modules/iscsi/storagedlinuxmanageriscsiinitiator.c:776
+#, c-format
+msgid "Login failed: %s"
 msgstr ""
 
 #: ../modules/lvm2/data/org.storaged.Storaged.lvm2.policy.in.h:1
 msgid "Manage LVM"
-msgstr ""
+msgstr "Керування LVM"
 
 #: ../modules/lvm2/data/org.storaged.Storaged.lvm2.policy.in.h:2
 msgid "Authentication is required to manage LVM"
-msgstr ""
+msgstr "Щоб отримати доступ до керування LVM, слід пройти розпізнавання"
 
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:382
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:398
 msgid "Authentication is required to delete a logical volume"
-msgstr ""
+msgstr "Щоб вилучити логічний том, слід пройти розпізнавання"
 
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:521
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:624
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:533
 msgid "Authentication is required to rename a logical volume"
-msgstr ""
+msgstr "Щоб перейменувати логічний том, слід пройти розпізнавання"
 
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:758
-msgid "Authentication is required to activate a logical volume"
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:632
+#, fuzzy
+msgid "Authentication is required to resize a logical volume"
 msgstr ""
+"Для виконання повторного сканування пристрою слід пройти розпізнавання"
+
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:762
+msgid "Authentication is required to activate a logical volume"
+msgstr "Щоб активувати логічний том, слід пройти розпізнавання"
 
 #: ../modules/lvm2/storagedlinuxlogicalvolume.c:862
 msgid "Authentication is required to deactivate a logical volume"
-msgstr ""
+msgstr "Щоб дезактивувати логічний том, слід пройти розпізнавання"
 
-#: ../modules/lvm2/storagedlinuxlogicalvolume.c:954
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:950
 msgid "Authentication is required to create a snapshot of a logical volume"
+msgstr "Щоб створити знімок логічного тому, слід пройти розпізнавання"
+
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1021
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1126
+msgid "LVMCache not enabled at compile time."
 msgstr ""
 
-#: ../modules/lvm2/storagedlinuxmanagerlvm2.c:231
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1064
+#, fuzzy
+msgid "Authentication is required to convert logical volume to cache"
+msgstr "Щоб відкрити пристрій, слід пройти розпізнавання"
+
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1095
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1195
+#, c-format
+msgid "Error converting volume: %s"
+msgstr ""
+
+#: ../modules/lvm2/storagedlinuxlogicalvolume.c:1167
+#, fuzzy
+msgid "Authentication is required to split cache pool LV off of a cache LV"
+msgstr ""
+"Щоб отримати доступ до вимикання живлення диска, слід пройти розпізнавання"
+
+#: ../modules/lvm2/storagedlinuxmanagerlvm2.c:235
 msgid "Authentication is required to create a volume group"
-msgstr ""
+msgstr "Щоб створити групу томів, слід пройти розпізнавання"
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:307
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:311
 msgid "Authentication is required to delete a volume group"
-msgstr ""
+msgstr "Щоб вилучити групу томів, слід пройти розпізнавання"
 
 #: ../modules/lvm2/storagedlinuxvolumegroup.c:418
 msgid "Authentication is required to rename a volume group"
-msgstr ""
+msgstr "Щоб перейменувати групу томів, слід пройти розпізнавання"
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:541
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:537
 msgid "Authentication is required to add a device to a volume group"
-msgstr ""
+msgstr "Щоб додати пристрій до групи томів, слід пройти розпізнавання"
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:664
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:656
 msgid "Authentication is required to remove a device from a volume group"
-msgstr ""
+msgstr "Щоб вилучити пристрій із групи томів, слід пройти розпізнавання"
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:798
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:786
 msgid "Authentication is required to empty a device in a volume group"
-msgstr ""
+msgstr "Щоб спорожнити пристрій у групі томів, слід пройти розпізнавання"
 
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:928
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:1031
-#: ../modules/lvm2/storagedlinuxvolumegroup.c:1137
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:912
 msgid "Authentication is required to create a logical volume"
+msgstr "Щоб створити логічний том, слід пройти розпізнавання"
+
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:1011
+#, fuzzy
+msgid "Authentication is required to create a thin pool volume"
+msgstr "Щоб створити розділ на $(drive), слід пройти розпізнавання"
+
+#: ../modules/lvm2/storagedlinuxvolumegroup.c:1113
+#, fuzzy
+msgid "Authentication is required to create a thin volume"
+msgstr "Щоб створити розділ на $(drive), слід пройти розпізнавання"
+
+#: ../modules/zram/data/org.storaged.Storaged.zram.policy.in.h:1
+#, fuzzy
+msgid "Manage zRAM"
+msgstr "Керування масивами RAID"
+
+#: ../modules/zram/data/org.storaged.Storaged.zram.policy.in.h:2
+#, fuzzy
+msgid "Authentication is required to manage zRAM"
 msgstr ""
+"Щоб отримати доступ до керування масивами RAID, слід пройти розпізнавання"
+
+#: ../modules/zram/storagedlinuxmanagerzram.c:217
+#, fuzzy
+msgid "Authentication is required to add zRAM kernel module"
+msgstr "Щоб скасувати завдання, слід пройти розпізнавання"
+
+#: ../modules/zram/storagedlinuxmanagerzram.c:247
+#, fuzzy
+msgid "Authentication is required to remove zRAM kernel module"
+msgstr "Щоб відкрити пристрій, слід пройти розпізнавання"
+
+#: ../modules/zram/storagedlinuxblockzram.c:253
+#, fuzzy
+msgid "Authentication is required to enable zRAM device"
+msgstr "Щоб відкрити пристрій, слід пройти розпізнавання"
+
+#: ../modules/zram/storagedlinuxblockzram.c:344
+#, fuzzy
+msgid "Authentication is required to disable zRAM device"
+msgstr "Для внесення змін до параметрів пристрою слід пройти розпізнавання"
 
 #. Translators: This is shown in an authentcation dialog when
 #. * the user is editing settings that involve system-level
@@ -511,7 +711,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxblock.c:2819 ../src/storagedlinuxdriveata.c:2283
+#: ../src/storagedlinuxblock.c:2819 ../src/storagedlinuxdriveata.c:2287
 msgid "Authentication is required to perform a secure erase of $(drive)"
 msgstr ""
 "Щоб отримати доступ до безпечного витирання $(drive), слід пройти "
@@ -529,12 +729,12 @@ msgid "Authentication is required to format $(drive)"
 msgstr ""
 "Щоб отримати доступ до форматування $(drive), слід пройти розпізнавання"
 
-#: ../src/storagedlinuxblock.c:2873 ../src/storagedlinuxmdraid.c:1601
-#: ../src/storagedlinuxpartition.c:929
+#: ../src/storagedlinuxblock.c:2873 ../src/storagedlinuxmdraid.c:1609
+#: ../src/storagedlinuxpartition.c:877
 msgid "Authentication is required to modify the system configuration"
-msgstr ""
+msgstr "Щоб внести зміни до налаштувань системи, слід пройти розпізнавання"
 
-#: ../src/storagedlinuxblock.c:2877 ../src/storagedlinuxdriveata.c:2295
+#: ../src/storagedlinuxblock.c:2877 ../src/storagedlinuxdriveata.c:2299
 msgid "Formatting Device"
 msgstr "Форматування пристрою"
 
@@ -586,7 +786,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdrive.c:1022
+#: ../src/storagedlinuxdrive.c:1009
 msgid "Authentication is required to eject $(drive)"
 msgstr "Щоб від’єднати $(drive), слід пройти розпізнавання"
 
@@ -596,7 +796,7 @@ msgstr "Щоб від’єднати $(drive), слід пройти розпі�
 #. * Do not translate $(drive), it's a placeholder and will be
 #. * replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdrive.c:1110
+#: ../src/storagedlinuxdrive.c:1097
 msgid "Authentication is required to configure settings for $(drive)"
 msgstr ""
 "Щоб отримати доступ до налаштовування параметрів $(drive), слід пройти "
@@ -608,7 +808,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdrive.c:1439
+#: ../src/storagedlinuxdrive.c:1413
 msgid "Authentication is required to power off $(drive)"
 msgstr ""
 "Щоб отримати доступ до вимикання живлення диска $(drive), слід пройти "
@@ -678,7 +878,7 @@ msgstr "Щоб перевірити стан живлення $(drive), слід
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdriveata.c:1389
+#: ../src/storagedlinuxdriveata.c:1391
 msgid "Authentication is required to put $(drive) in standby mode"
 msgstr "Щоб перевести $(drive) у стан очікування, слід пройти розпізнавання"
 
@@ -688,7 +888,7 @@ msgstr "Щоб перевести $(drive) у стан очікування, с�
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdriveata.c:1521
+#: ../src/storagedlinuxdriveata.c:1525
 msgid "Authentication is required to wake up $(drive) from standby mode"
 msgstr ""
 "Щоб отримати доступ до пробудження $(drive) зі стану очікування, слід пройти "
@@ -700,7 +900,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdriveata.c:2376
+#: ../src/storagedlinuxdriveata.c:2380
 msgid "Authentication is required to enable SMART on $(drive)"
 msgstr ""
 "Щоб отримати доступ до вмикання SMART диска $(drive), слід пройти "
@@ -712,7 +912,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxdriveata.c:2386
+#: ../src/storagedlinuxdriveata.c:2390
 msgid "Authentication is required to disable SMART on $(drive)"
 msgstr ""
 "Щоб отримати доступ до вимикання SMART диска $(drive), слід пройти "
@@ -724,7 +924,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxencrypted.c:370 ../src/storagedlinuxencrypted.c:746
+#: ../src/storagedlinuxencrypted.c:357 ../src/storagedlinuxencrypted.c:733
 msgid "Authentication is required to unlock the encrypted device $(drive)"
 msgstr ""
 "Щоб отримати доступ до розблокування зашифрованого пристрою $(drive), слід "
@@ -737,7 +937,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxencrypted.c:604
+#: ../src/storagedlinuxencrypted.c:591
 msgid ""
 "Authentication is required to lock the encrypted device $(drive) unlocked by "
 "another user"
@@ -751,7 +951,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxfilesystem.c:1264 ../src/storagedlinuxfilesystem.c:1426
+#: ../src/storagedlinuxfilesystem.c:1251 ../src/storagedlinuxfilesystem.c:1413
 msgid "Authentication is required to mount $(drive)"
 msgstr "Щоб отримати доступ до монтування $(drive), слід пройти розпізнавання"
 
@@ -765,7 +965,7 @@ msgstr "Щоб отримати доступ до монтування $(drive),
 #. *
 #. * Do not translate /etc/fstab
 #. 
-#: ../src/storagedlinuxfilesystem.c:1333
+#: ../src/storagedlinuxfilesystem.c:1320
 msgid ""
 "Authentication is required to mount $(drive) referenced in the /etc/fstab "
 "file"
@@ -783,7 +983,7 @@ msgstr ""
 #. *
 #. * Do not translate /etc/fstab
 #. 
-#: ../src/storagedlinuxfilesystem.c:1680
+#: ../src/storagedlinuxfilesystem.c:1667
 msgid ""
 "Authentication is required to unmount $(drive) referenced in the /etc/fstab "
 "file"
@@ -798,7 +998,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxfilesystem.c:1727
+#: ../src/storagedlinuxfilesystem.c:1714
 msgid "Authentication is required to unmount $(drive) mounted by another user"
 msgstr ""
 "Щоб отримати доступ до демонтування $(drive), змонтованого іншим "
@@ -810,7 +1010,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxfilesystem.c:1972
+#: ../src/storagedlinuxfilesystem.c:1946
 msgid "Authentication is required to change the filesystem label on $(drive)"
 msgstr ""
 "Щоб змінити мітку файлової системи на $(drive), слід пройти розпізнавання"
@@ -852,7 +1052,7 @@ msgstr ""
 #. * attempts to start a RAID Array.
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:643
+#: ../src/storagedlinuxmdraid.c:651
 msgid "Authentication is required to start a RAID array"
 msgstr "Щоб отримати доступ до запуску масиву RAID, слід пройти розпізнавання"
 
@@ -860,7 +1060,7 @@ msgstr "Щоб отримати доступ до запуску масиву RA
 #. * attempts to stop a RAID Array.
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:812
+#: ../src/storagedlinuxmdraid.c:820
 msgid "Authentication is required to stop a RAID array"
 msgstr ""
 "Щоб отримати доступ до зупинення роботи масиву RAID, слід пройти "
@@ -870,7 +1070,7 @@ msgstr ""
 #. * attempts to remove a device from a RAID Array.
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:1040
+#: ../src/storagedlinuxmdraid.c:1048
 msgid "Authentication is required to remove a device from a RAID array"
 msgstr ""
 "Щоб отримати доступ до вилучення пристрою з масиву RAID, слід пройти "
@@ -880,7 +1080,7 @@ msgstr ""
 #. * attempts to add a device to a RAID Array.
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:1236
+#: ../src/storagedlinuxmdraid.c:1244
 msgid "Authentication is required to add a device to a RAID array"
 msgstr ""
 "Щоб отримати доступ до додавання пристрою до масиву RAID, слід пройти "
@@ -890,7 +1090,7 @@ msgstr ""
 #. * attempts to change whether it has a write-intent bitmap
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:1366
+#: ../src/storagedlinuxmdraid.c:1374
 msgid ""
 "Authentication is required to configure the write-intent bitmap on a RAID "
 "array"
@@ -902,16 +1102,17 @@ msgstr ""
 #. * attempts to start/stop data scrubbing operations
 #. 
 #. TODO: variables
-#: ../src/storagedlinuxmdraid.c:1490
+#: ../src/storagedlinuxmdraid.c:1498
 msgid ""
 "Authentication is required to start/stop data scrubbing of a RAID array"
 msgstr ""
 "Щоб отримати доступ до запуску або призупинення чищення даних масиву RAID, "
 "слід пройти розпізнавання"
 
-#: ../src/storagedlinuxmdraid.c:1582
+#: ../src/storagedlinuxmdraid.c:1590
 msgid "Authentication is required to delete a RAID array"
 msgstr ""
+"Щоб отримати доступ до вилучення масиву RAID, слід пройти розпізнавання"
 
 #. Translators: Shown in authentication dialog when the user
 #. * requests modifying a partition (changing type, flags, name etc.).
@@ -919,8 +1120,8 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxpartition.c:282 ../src/storagedlinuxpartition.c:447
-#: ../src/storagedlinuxpartition.c:789
+#: ../src/storagedlinuxpartition.c:269 ../src/storagedlinuxpartition.c:421
+#: ../src/storagedlinuxpartition.c:750
 msgid "Authentication is required to modify the partition on device $(drive)"
 msgstr ""
 "Щоб внести зміни до параметрів розділу на $(drive), слід пройти "
@@ -932,7 +1133,7 @@ msgstr ""
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxpartition.c:903
+#: ../src/storagedlinuxpartition.c:851
 msgid "Authentication is required to delete the partition $(drive)"
 msgstr "Щоб вилучити розділ на $(drive), слід пройти розпізнавання"
 
@@ -942,7 +1143,7 @@ msgstr "Щоб вилучити розділ на $(drive), слід пройт�
 #. * Do not translate $(drive), it's a placeholder and
 #. * will be replaced by the name of the drive/device in question
 #. 
-#: ../src/storagedlinuxpartitiontable.c:399
+#: ../src/storagedlinuxpartitiontable.c:386
 msgid "Authentication is required to create a partition on $(drive)"
 msgstr "Щоб створити розділ на $(drive), слід пройти розпізнавання"
 
@@ -1033,49 +1234,49 @@ msgstr "Невідомо"
 #: ../storaged/storagedclient.c:1619
 msgctxt "byte-size-pow2"
 msgid "KiB"
-msgstr ""
+msgstr "КіБ"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
 #: ../storaged/storagedclient.c:1625
 msgctxt "byte-size-pow2"
 msgid "MiB"
-msgstr ""
+msgstr "МіБ"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
 #: ../storaged/storagedclient.c:1631
 msgctxt "byte-size-pow2"
 msgid "GiB"
-msgstr ""
+msgstr "ГіБ"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
 #: ../storaged/storagedclient.c:1637
 msgctxt "byte-size-pow2"
 msgid "TiB"
-msgstr ""
+msgstr "ТіБ"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
 #: ../storaged/storagedclient.c:1662
 msgctxt "byte-size-pow10"
 msgid "KB"
-msgstr ""
+msgstr "кБ"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
 #: ../storaged/storagedclient.c:1668
 msgctxt "byte-size-pow10"
 msgid "MB"
-msgstr ""
+msgstr "МБ"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
 #: ../storaged/storagedclient.c:1674
 msgctxt "byte-size-pow10"
 msgid "GB"
-msgstr ""
+msgstr "ГБ"
 
 #. Translators: SI prefix and standard unit symbol, translate cautiously (or not at all)
 #: ../storaged/storagedclient.c:1680
 msgctxt "byte-size-pow10"
 msgid "TB"
-msgstr ""
+msgstr "ТБ"
 
 #. Translators: The first %s is the size in power-of-2 units, e.g. '64 KiB'
 #. * the second %s is the size as a number e.g. '65,536' (always > 1)
@@ -1398,23 +1599,23 @@ msgstr "ZFS"
 #, c-format
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member (version %s)"
-msgstr ""
+msgstr "Елемент Intel Rapid Storage Technology enterprise RAID (версія %s)"
 
 #: ../storaged/storagedclient.c:1951
 #, c-format
 msgctxt "fs-type"
 msgid "Intel RSTe RAID Member (%s)"
-msgstr ""
+msgstr "Елемент Intel RSTe RAID (%s)"
 
 #: ../storaged/storagedclient.c:1952
 msgctxt "fs-type"
 msgid "Intel Rapid Storage Technology enterprise RAID Member"
-msgstr ""
+msgstr "Елемент Intel Rapid Storage Technology enterprise RAID"
 
 #: ../storaged/storagedclient.c:1952
 msgctxt "fs-type"
 msgid "Intel RSTe RAID Member"
-msgstr ""
+msgstr "Елемент Intel RSTe RAID"
 
 #: ../storaged/storagedclient.c:1953
 #, c-format
@@ -1867,7 +2068,7 @@ msgstr "Резервний розділ ChromeOS"
 #: ../storaged/storagedclient.c:2298
 msgctxt "part-type"
 msgid "Intel FFS Reserved"
-msgstr ""
+msgstr "Intel FFS, зарезервований"
 
 #: ../storaged/storagedclient.c:2303
 msgctxt "part-type"
