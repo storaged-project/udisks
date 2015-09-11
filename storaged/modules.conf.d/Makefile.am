@@ -1,3 +1,4 @@
 ## Process this file with automake to produce Makefile.in
 
-sysconf_DATA = storaged_lsm.conf
+moduleconfdir = $(sysconfdir)/storaged/modules.conf.d
+moduleconf_DATA = storaged_lsm.conf
