@@ -347,7 +347,7 @@
 
   <refsect1><title>AUTHOR</title>
     <para>
-      Written by David Zeuthen
+      This man page was originally written for UDisks2 by David Zeuthen
       <email><![CDATA[zeuthen@gmail.com]]></email> with a lot of help
       from many others.
     </para>
