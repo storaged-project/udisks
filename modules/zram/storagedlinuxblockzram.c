@@ -232,11 +232,13 @@ zram_device_activate (StoragedBlockZRAM      *zramblock_,
                       const gchar            *label_,
                       GVariant               *options)
 {
-  gchar *label = (gchar*) label_;
   StoragedLinuxBlockZRAM *zramblock = STORAGED_LINUX_BLOCK_ZRAM (zramblock_);
   StoragedLinuxBlockObject *object = NULL;
   gchar *dev_file = NULL;
+  gchar *label;
   GError *error = NULL;
+
+  label = g_strdup (label_);
 
   object = storaged_daemon_util_dup_object (zramblock, &error);
   if (! object)
@@ -273,7 +275,7 @@ zram_device_activate (StoragedBlockZRAM      *zramblock_,
 out:
   g_clear_object (&object);
   g_free (dev_file);
-
+  g_free (label);
   return TRUE;
 }
 

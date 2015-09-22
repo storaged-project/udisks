@@ -386,6 +386,7 @@ if test "x$enable_zram" = "xyes" \
        AC_DEFINE(HAVE_ZRAM, 1, [Define, if libblockdev-kbd and libblockdev-swap are available])
     fi
 fi
+AM_CONDITIONAL(HAVE_ZRAM, [test "$have_kbd" = "yes" -a "$have_swap" = "yes"])
 
 
 # LSM module
@@ -417,7 +418,6 @@ AM_CONDITIONAL(HAVE_LSM, [test "x$have_lsm" = "xyes"])
 
 
 
-AM_CONDITIONAL(HAVE_ZRAM, [test "$have_kbd" = "yes" -a "$have_swap" = "yes"])
 # Internationalization
 #
 
