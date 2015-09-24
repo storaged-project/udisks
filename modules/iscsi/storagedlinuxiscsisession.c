@@ -146,14 +146,16 @@ handle_logout_interface (StoragedISCSISession  *session,
   storaged_iscsi_state_lock_libiscsi_context (state);
 
   /* Logout */
-  err = iscsi_perform_login_action (daemon,
-                                    ACTION_LOGOUT,
-                                    name,
-                                    tpgt,
-                                    address,
-                                    port,
-                                    arg_iface,
-                                    &errorstr);
+  err = iscsi_logout (daemon,
+                      name,
+                      tpgt,
+                      address,
+                      port,
+                      arg_iface,
+                      &errorstr);
+
+  /* Leave the critical section. */
+  storaged_iscsi_state_unlock_libiscsi_context (state);
 
   if (err != 0)
     {
@@ -169,13 +171,9 @@ handle_logout_interface (StoragedISCSISession  *session,
   storaged_iscsi_session_complete_logout (session,
                                           invocation);
 
-  /* Leave the critical section. */
-  storaged_iscsi_state_unlock_libiscsi_context (state);
-
 out:
   g_clear_object (&object);
-  if (errorstr)
-    g_free (errorstr);
+  g_free ((gpointer) errorstr);
 
   /* Indicate that we handled the method invocation. */
   return TRUE;

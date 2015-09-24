@@ -65,50 +65,28 @@
     </method>
 
     <!--
-        DiscoverSendTargetsNoAuth:
+        DiscoverSendTargets:
         @address: Hostname or IP-address to connect to.
         @port: Port to connect to, or 0 for the default port.
         @nodes: Discovered nodes.
         @nodes_cnt: The number of found nodes.
         @options: Additional options.
-        @since: 2.1.3
+        @since: 2.3.1
 
         Performs targets' discovery with no authentication data.
 
-        No additional options are currently defined.
+        If the option <parameter>username</parameter> is provided, then
+        the <parameter>username</parameter> and <parameter>password</parameter>
+        will be used for CHAP authentication.
+
+        If the option <parameter>reverse-username</parameter> is provided,
+        the the <parameter>reverse-username</parameter> and
+        <parameter>reverse-password</parameter> will be used for CHAP
+        authentication.
     -->
-    <method name="DiscoverSendTargetsNoAuth">
+    <method name="DiscoverSendTargets">
       <arg name="address" direction="in" type="s"/>
       <arg name="port" direction="in" type="q"/>
-      <arg name="nodes" direction="out" type="a(sisis)"/>
-      <arg name="nodes_cnt" direction="out" type="i"/>
-      <arg name="options" type="a{sv}" direction="in"/>
-    </method>
-
-    <!--
-        DiscoverSendTargetsChap:
-        @address: Hostname or IP-address to connect to.
-        @port: Port to connect to, or 0 for the default port.
-        @username: Authentication username.
-        @password: Authentication password.
-        @reverse_username: Reverse authentication username. May be empty in which case only forward authentication will be done.
-        @reverse_password: Reverse authentication password.
-        @nodes: Discovered nodes.
-        @nodes_cnt: The number of found nodes.
-        @options: Additional options.
-        @since: 2.1.3
-
-        Performs targets' discovery with CHAP authentication method.
-
-        No additional options are currently defined.
-    -->
-    <method name="DiscoverSendTargetsChap">
-      <arg name="address" direction="in" type="s"/>
-      <arg name="port" direction="in" type="q"/>
-      <arg name="username" direction="in" type="s"/>
-      <arg name="password" direction="in" type="s"/>
-      <arg name="reverse_username" direction="in" type="s"/>
-      <arg name="reverse_password" direction="in" type="s"/>
       <arg name="nodes" direction="out" type="a(sisis)"/>
       <arg name="nodes_cnt" direction="out" type="i"/>
       <arg name="options" type="a{sv}" direction="in"/>
@@ -143,7 +121,14 @@
 
         Login to the iSCSI node described by the given node properties.
 
-        No additional options are currently defined.
+        If the option <parameter>username</parameter> is provided, then
+        the <parameter>username</parameter> and <parameter>password</parameter>
+        will be used for CHAP authentication.
+
+        If the option <parameter>reverse-username</parameter> is provided,
+        the the <parameter>reverse-username</parameter> and
+        <parameter>reverse-password</parameter> will be used for CHAP
+        authentication.
     -->
     <method name="Login">
       <arg name="name" direction="in" type="s"/>

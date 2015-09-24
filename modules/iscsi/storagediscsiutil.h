@@ -35,16 +35,39 @@ struct libiscsi_node;
 
 extern const gchar      *iscsi_policy_action_id;
 
-gint                     iscsi_perform_login_action       (StoragedDaemon              *daemon,
-                                                           libiscsi_login_action        action,
-                                                           const gchar                 *name,
-                                                           const gint                   tpgt,
-                                                           const gchar                 *address,
-                                                           const gint                   port,
-                                                           const gchar                 *iface,
-                                                           gchar                      **errorstr);
-GVariant                *iscsi_libiscsi_nodes_to_gvariant (const struct libiscsi_node  *nodes,
-                                                           const gint                   nodes_cnt);
-void                     iscsi_libiscsi_nodes_free        (const struct libiscsi_node  *nodes);
+gint                     iscsi_login (StoragedDaemon   *daemon,
+                                      const gchar      *name,
+                                      const gint        tpgt,
+                                      const gchar      *address,
+                                      const gint        port,
+                                      const gchar      *iface,
+                                      const gchar      *username,
+                                      const gchar      *password,
+                                      const gchar      *reverse_username,
+                                      const gchar      *reverse_password,
+                                      gchar           **errorstr);
+
+gint                     iscsi_logout (StoragedDaemon  *daemon,
+                                       const gchar     *name,
+                                       const gint       tpgt,
+                                       const gchar     *address,
+                                       const gint       port,
+                                       const gchar     *iface,
+                                       gchar          **errorstr);
+
+gint      iscsi_discover_send_targets (StoragedDaemon  *daemon,
+                                       const gchar     *address,
+                                       const guint16    port,
+                                       const gchar     *username,
+                                       const gchar     *password,
+                                       const gchar     *reverse_username,
+                                       const gchar     *reverse_password,
+                                       GVariant       **nodes,
+                                       gint            *nodes_cnt,
+                                       gchar          **errorstr);
+
+GVariant *iscsi_libiscsi_nodes_to_gvariant (const struct libiscsi_node  *nodes,
+                                            const gint                   nodes_cnt);
+void     iscsi_libiscsi_nodes_free         (const struct libiscsi_node  *nodes);
 
 #endif /* __STORAGED_ISCSI_UTIL_H__ */
