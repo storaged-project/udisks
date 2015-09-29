@@ -290,7 +290,7 @@
       (for example, adopt a <quote>2</quote> suffix) to make room for
       the next major version. Therefore, applications can not rely on
       tools like e.g.
-      <link linkend="storagedctl.1"><citerefentry><refentrytitle>storagedctl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>
+      <link linkend="storagectl.1"><citerefentry><refentrytitle>storagectl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>
       to be available. Additionally, there is no guarantee that the
       options, command-line switches etc. of command-line tools or
       similar will remain stable.
@@ -390,7 +390,7 @@
         <refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum>
       </citerefentry>,
       <link linkend="storaged.8"><citerefentry><refentrytitle>storaged</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
-      <link linkend="storagedctl.1"><citerefentry><refentrytitle>storagedctl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>,
+      <link linkend="storagectl.1"><citerefentry><refentrytitle>storagectl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>,
       <link linkend="umount.storaged.8"><citerefentry><refentrytitle>umount.storaged</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
       <citerefentry><refentrytitle>gnome-disks</refentrytitle><manvolnum>1</manvolnum></citerefentry>
     </para>

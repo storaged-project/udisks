@@ -462,7 +462,7 @@ doc/man/Makefile
 doc/man/storaged-lvm.xml
 doc/man/storaged-project.xml
 doc/man/storaged.xml
-doc/man/storagedctl.xml
+doc/man/storagectl.xml
 doc/man/umount.storaged.xml
 doc/man/storaged_lsm.conf.5
 doc/storaged-docs.xml.iscsi.dbus

@@ -43,6 +43,6 @@ src/tests/storaged-test-helper
 src/storaged
 modules/lvm2/storaged-lvm
 stamp-*
-tools/storagedctl
+tools/storagectl
 tools/umount.storaged
 storaged/storaged-generated*

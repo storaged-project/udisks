@@ -34,14 +34,14 @@ rlJournalStart
     rlPhaseEnd
 
     rlPhaseStartTest "help"
-        rlRun "storagedctl help > help.txt"
+        rlRun "storagectl help > help.txt"
         if [ ! -s help.txt ]; then
             rlFail "No help displayed!"
         fi
     rlPhaseEnd
 
     rlPhaseStartTest "info"
-        rlRun "storagedctl info -b /dev/vda2 > vda2.txt"
+        rlRun "storagectl info -b /dev/vda2 > vda2.txt"
         # SIZE
         rlRun "cat vda2.txt | grep `lsblk -b | grep vda2 | awk {'print $4'}`"
         # IdType
@@ -50,13 +50,13 @@ rlJournalStart
         rlRun "cat vda2.txt | grep `lsblk -f | grep vda2 | awk {'print $2'}`"
         # Symlinks
         rlRun "SYMLINKS=`cat vda2.txt | grep Symlinks | awk {'print $2'}"
-        rlRun "diff `cat vda2.txt` `storagedctl info -b $SYMLINKS"
+        rlRun "diff `cat vda2.txt` `storagectl info -b $SYMLINKS"
         # UUID
         rlAssertGrep `lsblk --output-all | grep vda2 | awk {'print $6'}` vda2.txt
     rlPhaseEnd
 
     rlPhaseStartTest "dump"
-        rlRun "storagedctl dump > dump.txt"
+        rlRun "storagectl dump > dump.txt"
         for dev in `ll /dev/block/ | grep -v total | awk {'print $11'} | sed 's/..\///'`
         do
             rlAssertGrep " Device: /dev/$dev" dump.txt
@@ -64,7 +64,7 @@ rlJournalStart
     rlPhaseEnd
 
     rlPhaseStartTest "status"
-        rlRun "storagedctl status > status.txt"
+        rlRun "storagectl status > status.txt"
         rlRun "lsblk > lsblk.txt"
 
         for dev in `cat status.txt`
@@ -74,18 +74,18 @@ rlJournalStart
     rlPhaseEnd
 
     rlPhaseStartTest "monitor"
-        rlRun "storagedctl monitor &"
-        rlRun "ps -ax | grep storagedctl"
+        rlRun "storagectl monitor &"
+        rlRun "ps -ax | grep storagectl"
     rlPhaseEnd
 
     rlPhaseStartTest "mount"
         # not finished
-        rlRun "storagedctl mount -b /dev/vda3"
+        rlRun "storagectl mount -b /dev/vda3"
     rlPhaseEnd
 
     rlPhaseStartCleanup
         rlRun "rm -rf *.txt"
-        rlRun "pkill -9 storagedctl"
+        rlRun "pkill -9 storagectl"
     rlPhaseEnd
 
 rlJournalPrintText

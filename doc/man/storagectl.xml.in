@@ -2,15 +2,15 @@
 <!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
                "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
 [<!ENTITY version SYSTEM "../version.xml">]>
-<refentry id="storagedctl.1">
+<refentry id="storagectl.1">
   <refentryinfo>
-    <title>storagedctl</title>
+    <title>storagectl</title>
     <date>September 2015</date>
     <productname>storaged</productname>
   </refentryinfo>
 
   <refmeta>
-    <refentrytitle>storagedctl</refentrytitle>
+    <refentrytitle>storagectl</refentrytitle>
     <manvolnum>1</manvolnum>
     <refmiscinfo class="manual">User Commands</refmiscinfo>
     <refmiscinfo class="source">storaged</refmiscinfo>
@@ -18,18 +18,18 @@
   </refmeta>
 
   <refnamediv>
-    <refname>storagedctl</refname>
+    <refname>storagectl</refname>
     <refpurpose>The storaged command line tool</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv><title>SYNOPSIS</title>
     <cmdsynopsis>
-      <command>storagedctl</command>
+      <command>storagectl</command>
       <arg choice="plain">status</arg>
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>storagedctl</command>
+      <command>storagectl</command>
       <arg choice="plain">info</arg>
       <group choice="req">
         <arg choice="plain">--object-path <replaceable>OBJECT</replaceable></arg>
@@ -38,7 +38,7 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>storagedctl</command>
+      <command>storagectl</command>
       <arg choice="plain">mount </arg>
       <group choice="req">
         <arg choice="plain">--object-path <replaceable>OBJECT</replaceable></arg>
@@ -52,7 +52,7 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>storagedctl</command>
+      <command>storagectl</command>
       <arg choice="plain">unmount </arg>
       <group choice="req">
         <arg choice="plain">--object-path <replaceable>OBJECT</replaceable></arg>
@@ -63,7 +63,7 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>storagedctl</command>
+      <command>storagectl</command>
       <arg choice="plain">unlock </arg>
       <group choice="req">
         <arg choice="plain">--object-path <replaceable>OBJECT</replaceable></arg>
@@ -73,7 +73,7 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>storagedctl</command>
+      <command>storagectl</command>
       <arg choice="plain">lock </arg>
       <group choice="req">
         <arg choice="plain">--object-path <replaceable>OBJECT</replaceable></arg>
@@ -83,7 +83,7 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>storagedctl</command>
+      <command>storagectl</command>
       <arg choice="plain">loop-setup </arg>
       <arg choice="plain">--file <replaceable>PATH</replaceable></arg>
       <arg choice="opt">--read-only</arg>
@@ -93,7 +93,7 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>storagedctl</command>
+      <command>storagectl</command>
       <arg choice="plain">loop-delete </arg>
       <group choice="req">
         <arg choice="plain">--object-path <replaceable>OBJECT</replaceable></arg>
@@ -103,7 +103,7 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>storagedctl</command>
+      <command>storagectl</command>
       <arg choice="plain">power-off </arg>
       <group choice="req">
         <arg choice="plain">--object-path <replaceable>OBJECT</replaceable></arg>
@@ -113,7 +113,7 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>storagedctl</command>
+      <command>storagectl</command>
       <arg choice="plain">smart-simulate </arg>
       <arg choice="plain">--file <replaceable>PATH</replaceable></arg>
       <group choice="req">
@@ -124,24 +124,24 @@
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>storagedctl</command>
+      <command>storagectl</command>
       <arg choice="plain">monitor</arg>
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>storagedctl</command>
+      <command>storagectl</command>
       <arg choice="plain">dump</arg>
     </cmdsynopsis>
 
     <cmdsynopsis>
-      <command>storagedctl</command>
+      <command>storagectl</command>
       <arg choice="plain">help</arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 
   <refsect1><title>DESCRIPTION</title>
     <para>
-      <command>storagedctl</command> is a command-line program used
+      <command>storagectl</command> is a command-line program used
       to interact with the
       <citerefentry><refentrytitle>storaged</refentrytitle><manvolnum>8</manvolnum></citerefentry>
       daemon process.
@@ -340,7 +340,7 @@
 
   <refsect1><title>BASH COMPLETION</title>
     <para>
-      <command>storagedctl</command> ships with a bash completion script to
+      <command>storagectl</command> ships with a bash completion script to
       complete commands, objects, block devices and some options.
     </para>
   </refsect1>

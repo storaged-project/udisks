@@ -89,7 +89,7 @@
     <title>SEE ALSO</title>
     <para>
       <link linkend="storaged.8"><citerefentry><refentrytitle>storaged</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
-      <link linkend="storagedctl.1"><citerefentry><refentrytitle>storagedctl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>,
+      <link linkend="storagectl.1"><citerefentry><refentrytitle>storagectl</refentrytitle><manvolnum>1</manvolnum></citerefentry></link>,
       <link linkend="umount.storaged.8"><citerefentry><refentrytitle>umount.storaged</refentrytitle><manvolnum>8</manvolnum></citerefentry></link>,
       <citerefentry>
         <refentrytitle>polkit</refentrytitle><manvolnum>8</manvolnum>

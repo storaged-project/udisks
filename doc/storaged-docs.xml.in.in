@@ -18,7 +18,7 @@
     <xi:include href="man/storaged.xml"/>
     <!-- LVM2_MAN_PAGE -->
     <xi:include href="man/storaged-project.xml"/>
-    <xi:include href="man/storagedctl.xml"/>
+    <xi:include href="man/storagectl.xml"/>
     <xi:include href="man/umount.storaged.xml"/>
   </part>
 

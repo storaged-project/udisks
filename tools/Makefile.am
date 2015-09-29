@@ -15,20 +15,20 @@ AM_CPPFLAGS =                                                                  \
 	$(WARN_CFLAGS)                                                         \
 	$(NULL)
 
-bin_PROGRAMS = storagedctl
+bin_PROGRAMS = storagectl
 
-storagedctl_SOURCES =                                                          \
-	storagedctl.c                                                          \
+storagectl_SOURCES =                                                           \
+	storagectl.c                                                           \
 	$(NULL)
 
-storagedctl_CFLAGS =                                                           \
+storagectl_CFLAGS =                                                            \
 	$(GLIB_CFLAGS)                                                         \
 	$(GIO_CFLAGS)                                                          \
 	$(POLKIT_GOBJECT_1_CFLAGS)                                             \
 	$(POLKIT_AGENT_1_CFLAGS)                                               \
 	$(NULL)
 
-storagedctl_LDADD =                                                            \
+storagectl_LDADD =                                                             \
 	$(GLIB_LIBS)                                                           \
 	$(GIO_LIBS)                                                            \
 	$(POLKIT_GOBJECT_1_LIBS)                                               \
