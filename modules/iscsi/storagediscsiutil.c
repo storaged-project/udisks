@@ -121,17 +121,17 @@ iscsi_perform_login_action (StoragedDaemon             *daemon,
 }
 
 gint
-iscsi_login (StoragedDaemon        *daemon,
-             const gchar           *name,
-             const gint             tpgt,
-             const gchar           *address,
-             const gint             port,
-             const gchar           *iface,
-             const gchar           *username,
-             const gchar           *password,
-             const gchar           *reverse_username,
-             const gchar           *reverse_password,
-             gchar                **errorstr)
+iscsi_login (StoragedDaemon  *daemon,
+             const gchar     *name,
+             const gint       tpgt,
+             const gchar     *address,
+             const gint       port,
+             const gchar     *iface,
+             const gchar     *username,
+             const gchar     *password,
+             const gchar     *reverse_username,
+             const gchar     *reverse_password,
+             gchar          **errorstr)
 {
   struct libiscsi_auth_info auth_info;
 
@@ -157,13 +157,13 @@ iscsi_login (StoragedDaemon        *daemon,
 }
 
 gint
-iscsi_logout (StoragedDaemon        *daemon,
-              const gchar            *name,
-              const gint              tpgt,
-              const gchar            *address,
-              const gint              port,
-              const gchar            *iface,
-              gchar                 **errorstr)
+iscsi_logout (StoragedDaemon  *daemon,
+              const gchar     *name,
+              const gint       tpgt,
+              const gchar     *address,
+              const gint       port,
+              const gchar     *iface,
+              gchar          **errorstr)
 {
   g_return_val_if_fail (STORAGED_IS_DAEMON (daemon), 1);
 
@@ -180,16 +180,16 @@ iscsi_logout (StoragedDaemon        *daemon,
 }
 
 gint
-iscsi_discover_send_targets (StoragedDaemon             *daemon,
-                             const gchar                *address,
-                             const guint16               port,
-                             const gchar               *username,
-                             const gchar               *password,
-                             const gchar               *reverse_username,
-                             const gchar               *reverse_password,
-                             GVariant                  **nodes,
-                             gint                       *nodes_cnt,
-                             gchar                     **errorstr)
+iscsi_discover_send_targets (StoragedDaemon  *daemon,
+                             const gchar     *address,
+                             const guint16    port,
+                             const gchar     *username,
+                             const gchar     *password,
+                             const gchar     *reverse_username,
+                             const gchar     *reverse_password,
+                             GVariant       **nodes,
+                             gint            *nodes_cnt,
+                             gchar          **errorstr)
 {
   struct libiscsi_context *ctx;
   struct libiscsi_auth_info auth_info;
