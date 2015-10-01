@@ -416,7 +416,39 @@ if test "x$enable_lsm" = "xyes" \
 fi
 AM_CONDITIONAL(HAVE_LSM, [test "x$have_lsm" = "xyes"])
 
+# Bcache module
+have_bcache=no
+AC_ARG_ENABLE(bcache, AS_HELP_STRING([--enable-bcache], [enable Bcache support]))
+if test "x$enable_bcache" = "xyes" \
+     -o "x$enable_modules" = "xyes" \
+     -o "x$enable_all_modules" = "xyes"; then
+    # libblockdev
+    SAVE_CFLAGS=$CFLAGS
+    SAVE_LDFLAGS=$LDFLAGS
+    CFLAGS="$GLIB_CFLAGS -I/usr/include/blockdev"
+    LDFLAGS="$GLIB_LIBS"
 
+    # libblockdev-kbd
+    AC_MSG_CHECKING([libblockdev-kbd presence])
+    AC_TRY_COMPILE([#include <kbd.h>], [],
+                   [AC_MSG_RESULT([yes])
+                    have_bcache=yes],
+                   [AC_MSG_RESULT([no])
+                    have_bcache=no])
+    CFLAGS=$SAVE_CFLAGS
+    LDFLAGS=$SAVE_LDFLAGS
+
+    BCACHE_CFLAGS="-I/usr/include/blockdev"
+    BCACHE_LIBS="-lbd_kbd"
+
+    if test "x$have_bcache" = "xno"; then
+      AC_MSG_ERROR([Bcache support requested but header or library not found])
+    fi
+
+    AC_SUBST([BCACHE_CFLAGS])
+    AC_SUBST([BCACHE_LIBS])
+fi
+AM_CONDITIONAL(HAVE_BCACHE, [test "x$have_bcache" = "xyes"])
 
 # Internationalization
 #
@@ -453,6 +485,8 @@ modules/zram/Makefile
 modules/zram/data/Makefile
 modules/lsm/Makefile
 modules/lsm/data/Makefile
+modules/bcache/Makefile
+modules/bcache/data/Makefile
 doc/Makefile
 doc/storaged-docs.xml.in
 doc/storaged-sections.txt.in
@@ -487,6 +521,10 @@ doc/storaged-docs.xml.zram.generated
 doc/storaged-docs.xml.zram.block_devices
 doc/storaged-sections.txt.zram.sections
 doc/storaged.types.zram
+doc/storaged-docs.xml.bcache.dbus
+doc/storaged-docs.xml.bcache.generated
+doc/storaged-sections.txt.bcache.sections
+doc/storaged.types.bcache
 po/Makefile.in
 ])
 
@@ -526,4 +564,5 @@ echo "
         LVMCache:                   ${have_lvmcache}
         Zram module:                ${have_zram}
         LibStorageMgmt module:      ${have_lsm}
+        Bcache module:              ${have_bcache}
 "
