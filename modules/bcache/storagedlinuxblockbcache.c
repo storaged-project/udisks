@@ -294,7 +294,7 @@ handle_set_mode (StoragedBlockBcache    *block_,
   modestr = g_strdup (arg_mode);
   mode = bd_kbd_bcache_get_mode_from_str (modestr, &error);
   
-  if (mode == BD_KBD_MODE_UNKNOWN)
+  if (error != NULL)
     {
       g_dbus_method_invocation_take_error (invocation, error);
       goto out;
