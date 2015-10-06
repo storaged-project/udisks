@@ -1327,6 +1327,8 @@ storaged_loop_skeleton_get_type
 
 <!-- ZRAM_GENERATED_SECTIONS -->
 
+<!-- BCACHE_GENERATED_SECTIONS -->
+
 <SECTION>
 <FILE>storagedfstabmonitor</FILE>
 <TITLE>StoragedFstabMonitor</TITLE>
