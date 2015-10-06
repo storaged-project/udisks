@@ -264,21 +264,34 @@ AC_ARG_ENABLE(iscsi, AS_HELP_STRING([--enable-iscsi], [enable iSCSI support]))
 if test "x$enable_iscsi" = "xyes" \
      -o "x$enable_modules" = "xyes" \
      -o "x$enable_all_modules" = "xyes"; then
+  # libiscsi.h
   AC_CHECK_HEADER([libiscsi.h],
                   [AC_DEFINE(HAVE_ISCSI, 1, [Define if libiscsi from iscsi-initiator-utils is available])
                    have_iscsi=yes],
                   [have_iscsi=no])
+  if test "x$have_iscsi" = "xyes"; then
+    AC_MSG_CHECKING([whether libiscsi.h defines iscsi_err])
+    AC_TRY_COMPILE([libiscsi.h],
+                   [iscsi_err e = ISCSI_SUCCESS;],
+                   [AC_MSG_RESULT([yes])
+                    AC_DEFINE([HAVE_LIBISCSI_ERR], [1], [libiscsi error states])],
+                   [AC_MSG_RESULT([no])])
+  fi
+
+  # libiscsi
   AC_CHECK_LIB([iscsi],
                [libiscsi_init],
                [ISCSI_LIBS="-liscsi"],
                [have_iscsi="no"])
-  AC_CHECK_LIB([iscsi],
-               [libiscsi_get_session_info_by_id],
-               [have_libiscsi_session_info="yes"
-                have_libiscsi_session_info_msg=", with iscsi sessions"
-                AC_DEFINE([HAVE_LIBISCSI_GET_SESSION_INFOS], [1],
-                          [libiscsi can retrieve session information])],
-               [have_libiscsi_session_info_msg=", without iscsi sessions"])
+  if test "x$have_iscsi" = "xyes"; then
+    AC_CHECK_LIB([iscsi],
+                 [libiscsi_get_session_info_by_id],
+                 [have_libiscsi_session_info="yes"
+                  have_libiscsi_session_info_msg=", with iscsi sessions"
+                  AC_DEFINE([HAVE_LIBISCSI_GET_SESSION_INFOS], [1],
+                            [libiscsi can retrieve session information])],
+                 [have_libiscsi_session_info_msg=", without iscsi sessions"])
+  fi
 
   if test "x$have_iscsi" = "xno"; then
     AC_MSG_ERROR([iSCSI support requested but libraries not found])

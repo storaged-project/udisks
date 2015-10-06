@@ -68,6 +68,8 @@ gint      iscsi_discover_send_targets (StoragedDaemon  *daemon,
 
 GVariant *iscsi_libiscsi_nodes_to_gvariant (const struct libiscsi_node  *nodes,
                                             const gint                   nodes_cnt);
-void     iscsi_libiscsi_nodes_free         (const struct libiscsi_node  *nodes);
+void      iscsi_libiscsi_nodes_free        (const struct libiscsi_node  *nodes);
+
+StoragedError iscsi_error_to_storaged_error (const gint err);
 
 #endif /* __STORAGED_ISCSI_UTIL_H__ */

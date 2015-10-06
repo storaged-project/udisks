@@ -52,24 +52,35 @@ G_BEGIN_DECLS
  */
 typedef enum
 {
-  STORAGED_ERROR_FAILED,                     /* org.storaged.Storaged.Error.Failed */
-  STORAGED_ERROR_CANCELLED,                  /* org.storaged.Storaged.Error.Cancelled */
-  STORAGED_ERROR_ALREADY_CANCELLED,          /* org.storaged.Storaged.Error.AlreadyCancelled */
-  STORAGED_ERROR_NOT_AUTHORIZED,             /* org.storaged.Storaged.Error.NotAuthorized */
-  STORAGED_ERROR_NOT_AUTHORIZED_CAN_OBTAIN,  /* org.storaged.Storaged.Error.NotAuthorizedCanObtain */
-  STORAGED_ERROR_NOT_AUTHORIZED_DISMISSED,   /* org.storaged.Storaged.Error.NotAuthorizedDismissed */
-  STORAGED_ERROR_ALREADY_MOUNTED,            /* org.storaged.Storaged.Error.AlreadyMounted */
-  STORAGED_ERROR_NOT_MOUNTED,                /* org.storaged.Storaged.Error.NotMounted */
-  STORAGED_ERROR_OPTION_NOT_PERMITTED,       /* org.storaged.Storaged.Error.OptionNotPermitted */
-  STORAGED_ERROR_MOUNTED_BY_OTHER_USER,      /* org.storaged.Storaged.Error.MountedByOtherUser */
-  STORAGED_ERROR_ALREADY_UNMOUNTING,         /* org.storaged.Storaged.Error.AlreadyUnmounting */
-  STORAGED_ERROR_NOT_SUPPORTED,              /* org.storaged.Storaged.Error.NotSupported */
-  STORAGED_ERROR_TIMED_OUT,                  /* org.storaged.Storaged.Error.Timedout */
-  STORAGED_ERROR_WOULD_WAKEUP,               /* org.storaged.Storaged.Error.WouldWakeup */
-  STORAGED_ERROR_DEVICE_BUSY                 /* org.storaged.Storaged.Error.DeviceBusy */
+  STORAGED_ERROR_FAILED,                        /* org.storaged.Storaged.Error.Failed */
+  STORAGED_ERROR_CANCELLED,                     /* org.storaged.Storaged.Error.Cancelled */
+  STORAGED_ERROR_ALREADY_CANCELLED,             /* org.storaged.Storaged.Error.AlreadyCancelled */
+  STORAGED_ERROR_NOT_AUTHORIZED,                /* org.storaged.Storaged.Error.NotAuthorized */
+  STORAGED_ERROR_NOT_AUTHORIZED_CAN_OBTAIN,     /* org.storaged.Storaged.Error.NotAuthorizedCanObtain */
+  STORAGED_ERROR_NOT_AUTHORIZED_DISMISSED,      /* org.storaged.Storaged.Error.NotAuthorizedDismissed */
+  STORAGED_ERROR_ALREADY_MOUNTED,               /* org.storaged.Storaged.Error.AlreadyMounted */
+  STORAGED_ERROR_NOT_MOUNTED,                   /* org.storaged.Storaged.Error.NotMounted */
+  STORAGED_ERROR_OPTION_NOT_PERMITTED,          /* org.storaged.Storaged.Error.OptionNotPermitted */
+  STORAGED_ERROR_MOUNTED_BY_OTHER_USER,         /* org.storaged.Storaged.Error.MountedByOtherUser */
+  STORAGED_ERROR_ALREADY_UNMOUNTING,            /* org.storaged.Storaged.Error.AlreadyUnmounting */
+  STORAGED_ERROR_NOT_SUPPORTED,                 /* org.storaged.Storaged.Error.NotSupported */
+  STORAGED_ERROR_TIMED_OUT,                     /* org.storaged.Storaged.Error.Timedout */
+  STORAGED_ERROR_WOULD_WAKEUP,                  /* org.storaged.Storaged.Error.WouldWakeup */
+  STORAGED_ERROR_DEVICE_BUSY,                   /* org.storaged.Storaged.Error.DeviceBusy */
+  STORAGED_ERROR_ISCSI_DAEMON_TRANSPORT_FAILED, /* org.storaged.Storaged.Error.ISCSI.CommunicationFailed */
+  STORAGED_ERROR_ISCSI_HOST_NOT_FOUND,          /* org.storaged.Storaged.Error.ISCSI.HostNotFound */
+  STORAGED_ERROR_ISCSI_IDMB,                    /* org.storaged.Storaged.Error.ISCSI.IDMB */
+  STORAGED_ERROR_ISCSI_LOGIN_FAILED,            /* org.storaged.Storaged.Error.ISCSI.LoginFailed */
+  STORAGED_ERROR_ISCSI_LOGIN_AUTH_FAILED,       /* org.storaged.Storaged.Error.ISCSI.LoginAuthFailed */
+  STORAGED_ERROR_ISCSI_LOGIN_FATAL,             /* org.storaged.Storaged.Error.ISCSI.LoginFatal */
+  STORAGED_ERROR_ISCSI_LOGOUT_FAILED,           /* org.storaged.Storaged.Error.ISCSI.LogoutFailed */
+  STORAGED_ERROR_ISCSI_NO_OBJECTS_FOUND,        /* org.storaged.Storaged.Error.ISCSI.NoObjectsFound */
+  STORAGED_ERROR_ISCSI_NOT_CONNECTED,           /* org.storaged.Storaged.Error.ISCSI.NotConnected */
+  STORAGED_ERROR_ISCSI_TRANSPORT_FAILED,        /* org.storaged.Storaged.Error.ISCSI.TransportFailed */
+  STORAGED_ERROR_ISCSI_UNKNOWN_DISCOVERY_TYPE   /* org.storaged.Storaged.Error.ISCSI.UnknownDiscoveryType */
 } StoragedError;
 
-#define STORAGED_ERROR_NUM_ENTRIES  (STORAGED_ERROR_DEVICE_BUSY + 1)
+#define STORAGED_ERROR_NUM_ENTRIES  (STORAGED_ERROR_ISCSI_UNKNOWN_DISCOVERY_TYPE + 1)
 
 /**
  * StoragedPartitionTypeInfoFlags:

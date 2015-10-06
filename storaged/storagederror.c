@@ -48,6 +48,17 @@ static const GDBusErrorEntry dbus_error_entries[] =
   {STORAGED_ERROR_TIMED_OUT,                    "org.storaged.Storaged.Error.Timedout"},
   {STORAGED_ERROR_WOULD_WAKEUP,                 "org.storaged.Storaged.Error.WouldWakeup"},
   {STORAGED_ERROR_DEVICE_BUSY,                  "org.storaged.Storaged.Error.DeviceBusy"},
+  {STORAGED_ERROR_ISCSI_DAEMON_TRANSPORT_FAILED,"org.storaged.Storaged.Error.ISCSI.DaemonTransportFailed"},
+  {STORAGED_ERROR_ISCSI_HOST_NOT_FOUND,         "org.storaged.Storaged.Error.ISCSI.HostNotFound"},
+  {STORAGED_ERROR_ISCSI_IDMB,                   "org.storaged.Storaged.Error.ISCSI.IDMB"},
+  {STORAGED_ERROR_ISCSI_LOGIN_FAILED,           "org.storaged.Storaged.Error.ISCSI.LoginFailed"},
+  {STORAGED_ERROR_ISCSI_LOGIN_AUTH_FAILED,      "org.storaged.Storaged.Error.ISCSI.LoginAuthFailed"},
+  {STORAGED_ERROR_ISCSI_LOGIN_FATAL,            "org.storaged.Storaged.Error.ISCSI.LoginFatal"},
+  {STORAGED_ERROR_ISCSI_LOGOUT_FAILED,          "org.storaged.Storaged.Error.ISCSI.LogoutFailed"},
+  {STORAGED_ERROR_ISCSI_NO_OBJECTS_FOUND,       "org.storaged.Storaged.Error.ISCSI.NoObjectsFound"},
+  {STORAGED_ERROR_ISCSI_NOT_CONNECTED,          "org.storaged.Storaged.Error.ISCSI.NotConnected"},
+  {STORAGED_ERROR_ISCSI_TRANSPORT_FAILED,       "org.storaged.Storaged.Error.ISCSI.TransportFailed"},
+  {STORAGED_ERROR_ISCSI_UNKNOWN_DISCOVERY_TYPE, "org.storaged.Storaged.Error.ISCSI.UnknownDiscoveryType"},
 };
 
 GQuark

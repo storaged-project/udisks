@@ -523,7 +523,7 @@ handle_discover_send_targets (StoragedManagerISCSIInitiator  *object,
       /* Discovery failed. */
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
-                                             STORAGED_ERROR_FAILED,
+                                             iscsi_error_to_storaged_error (err),
                                              N_("Discovery failed: %s"),
                                              errorstr);
       goto out;
@@ -572,7 +572,7 @@ handle_discover_firmware (StoragedManagerISCSIInitiator  *object,
       /* Discovery failed. */
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
-                                             STORAGED_ERROR_FAILED,
+                                             iscsi_error_to_storaged_error (err),
                                              N_("Discovery failed: %s"),
                                              errorstr);
       g_free ((gpointer) errorstr);
@@ -647,7 +647,7 @@ handle_login (StoragedManagerISCSIInitiator  *object,
       /* Login failed. */
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
-                                             STORAGED_ERROR_FAILED,
+                                             iscsi_error_to_storaged_error (err),
                                              N_("Login failed: %s"),
                                              errorstr);
       goto out;
@@ -707,7 +707,7 @@ handle_logout(StoragedManagerISCSIInitiator  *object,
       /* Logout failed. */
       g_dbus_method_invocation_return_error (invocation,
                                              STORAGED_ERROR,
-                                             STORAGED_ERROR_FAILED,
+                                             iscsi_error_to_storaged_error (err),
                                              N_("Logout failed: %s"),
                                              errorstr);
       goto out;
