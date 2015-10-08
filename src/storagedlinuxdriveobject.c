@@ -869,7 +869,7 @@ storaged_linux_drive_object_should_include_device (GUdevClient          *client,
       const gchar *name;
       const gchar *vendor;
       const gchar *model;
-      const gchar *dm_name;
+      const gchar *dm_uuid;
       GUdevDevice *parent;
 
       name = g_udev_device_get_name (device->udev_device);
@@ -909,8 +909,8 @@ storaged_linux_drive_object_should_include_device (GUdevClient          *client,
         }
 
       /* dm-multipath */
-      dm_name = g_udev_device_get_sysfs_attr (device->udev_device, "dm/name");
-      if (dm_name != NULL && g_str_has_prefix (dm_name, "mpath"))
+      dm_uuid = g_udev_device_get_sysfs_attr (device->udev_device, "dm/uuid");
+      if (dm_uuid != NULL && g_str_has_prefix (dm_uuid, "mpath"))
         {
           gchar **slaves;
           guint n;
@@ -1189,4 +1189,3 @@ storaged_linux_drive_object_get_siblings (StoragedLinuxDriveObject *object)
   g_free (sibling_id);
   return ret;
 }
-
