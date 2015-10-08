@@ -620,8 +620,8 @@ handle_login (StoragedManagerISCSIInitiator  *object,
   /* Optional data for CHAP authentication */
   g_variant_lookup (arg_options, "username", "&s", &username);
   g_variant_lookup (arg_options, "password", "&s", &password);
-  g_variant_lookup (arg_options, "reverse-username", "&s", reverse_username);
-  g_variant_lookup (arg_options, "reverse-password", "&s", reverse_password);
+  g_variant_lookup (arg_options, "reverse-username", "&s", &reverse_username);
+  g_variant_lookup (arg_options, "reverse-password", "&s", &reverse_password);
 
   /* Enter a critical section. */
   storaged_iscsi_state_lock_libiscsi_context (state);
