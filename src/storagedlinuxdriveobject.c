@@ -232,6 +232,15 @@ strip_and_replace_with_uscore (gchar *s)
   ;
 }
 
+static gboolean
+is_dm_multipath (StoragedLinuxDevice *device)
+{
+  const gchar *dm_uuid;
+
+  dm_uuid = g_udev_device_get_sysfs_attr (device->udev_device, "dm/uuid");
+  return dm_uuid != NULL && g_str_has_prefix (dm_uuid, "mpath-");
+}
+
 static void
 storaged_linux_drive_object_constructed (GObject *_object)
 {
@@ -414,13 +423,18 @@ storaged_linux_drive_object_get_device (StoragedLinuxDriveObject   *object,
                                         gboolean                    get_hw)
 {
   StoragedLinuxDevice *ret = NULL;
-  /* TODO: actually look at @get_hw */
-  if (object->devices != NULL)
+
+  for (GList *devices = object->devices; devices; devices = devices->next)
     {
-      ret = object->devices->data;
-      if (ret != NULL)
-        g_object_ref (ret);
+      if (!get_hw || !is_dm_multipath (STORAGED_LINUX_DEVICE (devices->data)))
+        {
+          ret = devices->data;
+          break;
+        }
     }
+
+  if (ret != NULL)
+    g_object_ref (ret);
   return ret;
 }
 
@@ -443,8 +457,6 @@ storaged_linux_drive_object_get_block (StoragedLinuxDriveObject   *object,
   GList *objects;
   GList *l;
 
-  /* TODO: actually look at @get_hw */
-
   ret = NULL;
 
   object_manager = storaged_daemon_get_object_manager (object->daemon);
@@ -454,16 +466,17 @@ storaged_linux_drive_object_get_block (StoragedLinuxDriveObject   *object,
       GDBusObjectSkeleton *iter_object = G_DBUS_OBJECT_SKELETON (l->data);
       StoragedBlock *block;
       StoragedLinuxDevice *device;
-      gboolean is_disk;
+      gboolean skip;
 
       if (!STORAGED_IS_LINUX_BLOCK_OBJECT (iter_object))
         continue;
 
       device = storaged_linux_block_object_get_device (STORAGED_LINUX_BLOCK_OBJECT (iter_object));
-      is_disk = (g_strcmp0 (g_udev_device_get_devtype (device->udev_device), "disk") == 0);
+      skip = (g_strcmp0 (g_udev_device_get_devtype (device->udev_device), "disk") != 0
+              || (get_hw && is_dm_multipath (device)));
       g_object_unref (device);
 
-      if (!is_disk)
+      if (skip)
         continue;
 
       block = storaged_object_peek_block (STORAGED_OBJECT (iter_object));
@@ -909,8 +922,7 @@ storaged_linux_drive_object_should_include_device (GUdevClient          *client,
         }
 
       /* dm-multipath */
-      dm_uuid = g_udev_device_get_sysfs_attr (device->udev_device, "dm/uuid");
-      if (dm_uuid != NULL && g_str_has_prefix (dm_uuid, "mpath"))
+      if (is_dm_multipath (device))
         {
           gchar **slaves;
           guint n;
