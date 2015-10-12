@@ -637,6 +637,7 @@ handle_login (StoragedManagerISCSIInitiator  *object,
                      password,
                      reverse_username,
                      reverse_password,
+                     arg_options,
                      &errorstr);
 
   /* Leave the critical section. */
@@ -697,6 +698,7 @@ handle_logout(StoragedManagerISCSIInitiator  *object,
                       arg_address,
                       arg_port,
                       arg_iface,
+                      arg_options,
                       &errorstr);
 
   /* Leave the critical section. */

@@ -152,6 +152,7 @@ handle_logout_interface (StoragedISCSISession  *session,
                       address,
                       port,
                       arg_iface,
+                      arg_options,
                       &errorstr);
 
   /* Leave the critical section. */

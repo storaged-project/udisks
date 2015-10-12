@@ -45,6 +45,7 @@ gint                     iscsi_login (StoragedDaemon   *daemon,
                                       const gchar      *password,
                                       const gchar      *reverse_username,
                                       const gchar      *reverse_password,
+                                      GVariant         *params,
                                       gchar           **errorstr);
 
 gint                     iscsi_logout (StoragedDaemon  *daemon,
@@ -53,6 +54,7 @@ gint                     iscsi_logout (StoragedDaemon  *daemon,
                                        const gchar     *address,
                                        const gint       port,
                                        const gchar     *iface,
+                                       GVariant        *params,
                                        gchar          **errorstr);
 
 gint      iscsi_discover_send_targets (StoragedDaemon  *daemon,

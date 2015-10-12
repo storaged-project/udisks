@@ -149,47 +149,86 @@ iscsi_make_auth_info (struct libiscsi_auth_info *auth_info,
     }
 }
 
+static void
+iscsi_make_node (struct libiscsi_node *node,
+                 const gchar          *name,
+                 const gint            tpgt,
+                 const gchar          *address,
+                 const gint            port,
+                 const gchar          *iface)
+{
+  g_return_if_fail (node);
+
+  memset (node, 0, sizeof (struct libiscsi_node));
+
+  /* Fill libiscsi parameters. */
+  strncpy (node->name, name, LIBISCSI_VALUE_MAXLEN);
+  strncpy (node->address, address, NI_MAXHOST);
+  strncpy (node->iface, iface, LIBISCSI_VALUE_MAXLEN);
+  node->tpgt = tpgt;
+  node->port = port;
+}
+
 static gint
 iscsi_perform_login_action (StoragedDaemon             *daemon,
                             libiscsi_login_action       action,
-                            const gchar                *name,
-                            const gint                  tpgt,
-                            const gchar                *address,
-                            const gint                  port,
-                            const gchar                *iface,
+                            struct libiscsi_node       *node,
                             struct libiscsi_auth_info  *auth_info,
                             gchar                     **errorstr)
 {
   struct libiscsi_context *ctx;
-  struct libiscsi_node node;
   gint err;
 
   g_return_val_if_fail (STORAGED_IS_DAEMON (daemon), 1);
 
+  /* Get a libiscsi context. */
   ctx = iscsi_get_libiscsi_context (daemon);
-
-  /* Fill libiscsi parameters. */
-  strncpy (node.name, name, LIBISCSI_VALUE_MAXLEN);
-  strncpy (node.address, address, NI_MAXHOST);
-  strncpy (node.iface, iface, LIBISCSI_VALUE_MAXLEN);
-  node.tpgt = tpgt;
-  node.port = port;
 
   if (action == ACTION_LOGIN &&
       auth_info && auth_info->method == libiscsi_auth_chap)
     {
-      libiscsi_node_set_auth (ctx, &node, auth_info);
+      libiscsi_node_set_auth (ctx, node, auth_info);
     }
 
   /* Login or Logout */
   err = action == ACTION_LOGIN ?
-        libiscsi_node_login  (ctx, &node) :
-        libiscsi_node_logout (ctx, &node);
+        libiscsi_node_login  (ctx, node) :
+        libiscsi_node_logout (ctx, node);
 
   if (errorstr && err != 0)
     *errorstr = g_strdup (libiscsi_get_error_string (ctx));
 
   return err;
+}
+
+static gint
+iscsi_node_set_parameters (struct libiscsi_context *ctx,
+                           struct libiscsi_node    *node,
+                           GVariant                *params)
+{
+  GVariantIter  iter;
+  GVariant     *value;
+  gchar        *key;
+  gchar        *param_value;
+  gint          err = 0;
+
+  g_return_val_if_fail (ctx, ISCSI_ERR_INVAL);
+  g_return_val_if_fail (node, ISCSI_ERR_INVAL);
+  g_return_val_if_fail (params, ISCSI_ERR_INVAL);
+
+  g_variant_iter_init (&iter, params);
+  while (err == 0 && g_variant_iter_next (&iter, "{sv}", &key, &value))
+    {
+      g_variant_get (value, "&s", &param_value);
+
+      /* Update the node parameter value. */
+      err = libiscsi_node_set_parameter (ctx, node, key, param_value);
+
+      g_variant_unref (value);
+      g_free ((gpointer) key);
+    }
+
+  return 0;
 }
 
 gint
@@ -203,9 +242,13 @@ iscsi_login (StoragedDaemon  *daemon,
              const gchar     *password,
              const gchar     *reverse_username,
              const gchar     *reverse_password,
+             GVariant        *params,
              gchar          **errorstr)
 {
+  struct libiscsi_context *ctx;
   struct libiscsi_auth_info auth_info;
+  struct libiscsi_node node;
+  gint err;
 
   g_return_val_if_fail (STORAGED_IS_DAEMON (daemon), 1);
 
@@ -216,16 +259,26 @@ iscsi_login (StoragedDaemon  *daemon,
                         reverse_username,
                         reverse_password);
 
+  /* Create iscsi node. */
+  iscsi_make_node (&node, name, tpgt, address, port, iface);
+
+  /* Get iscsi context. */
+  ctx = iscsi_get_libiscsi_context (daemon);
+
   /* Login */
-  return iscsi_perform_login_action (daemon,
-                                     ACTION_LOGIN,
-                                     name,
-                                     tpgt,
-                                     address,
-                                     port,
-                                     iface,
-                                     &auth_info,
-                                     errorstr);
+  err = iscsi_perform_login_action (daemon,
+                                    ACTION_LOGIN,
+                                    &node,
+                                    &auth_info,
+                                    errorstr);
+
+  if (err == 0 && params)
+    {
+      /* Update node parameters. */
+      err = iscsi_node_set_parameters (ctx, &node, params);
+    }
+
+  return err;
 }
 
 gint
@@ -235,20 +288,36 @@ iscsi_logout (StoragedDaemon  *daemon,
               const gchar     *address,
               const gint       port,
               const gchar     *iface,
+              GVariant        *params,
               gchar          **errorstr)
 {
+  struct libiscsi_context *ctx;
+  struct libiscsi_node node;
+  gint err;
+
   g_return_val_if_fail (STORAGED_IS_DAEMON (daemon), 1);
 
+  /* Create iscsi node. */
+  iscsi_make_node (&node, name, tpgt, address, port, iface);
+
+  /* Get iscsi context. */
+  ctx = iscsi_get_libiscsi_context (daemon);
+
   /* Logout */
-  return iscsi_perform_login_action (daemon,
-                                     ACTION_LOGOUT,
-                                     name,
-                                     tpgt,
-                                     address,
-                                     port,
-                                     iface,
-                                     NULL,
-                                     errorstr);
+  err = iscsi_perform_login_action (daemon,
+                                    ACTION_LOGOUT,
+                                    &node,
+                                    NULL,
+                                    errorstr);
+
+  if (err == 0 && params)
+    {
+      /* Update node parameters. */
+      err = iscsi_node_set_parameters (ctx, &node, params);
+
+    }
+
+  return err;
 }
 
 gint

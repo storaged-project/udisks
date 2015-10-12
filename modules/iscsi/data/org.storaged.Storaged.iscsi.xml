@@ -129,6 +129,12 @@
         the the <parameter>reverse-username</parameter> and
         <parameter>reverse-password</parameter> will be used for CHAP
         authentication.
+
+        All the additional options are transformed into the interface
+        parameters.  For example, if an automatic node startup is desired, the
+        <parameter>node.startup</parameter> needs to be set to
+        '<emphasis>automatic</emphasis>' (default value is
+        '<emphasis>manual</emphasis>').
     -->
     <method name="Login">
       <arg name="name" direction="in" type="s"/>
@@ -151,7 +157,10 @@
 
         Logout of the iSCSI node described by the given node properties.
 
-        No additional options are currently defined.
+        All the additional options are transformed into the interface
+        parameters.  For example, if an automatic node startup is not desired,
+        the <parameter>node.startup</parameter> needs to be set to
+        '<emphasis>manual</emphasis>'.
     -->
     <method name="Logout">
       <arg name="name" direction="in" type="s"/>
@@ -180,7 +189,10 @@
 
         Logout iSCSI node in this session; default interface is used.
 
-        No additional options are currently defined.
+        All the additional options are transformed into the interface
+        parameters.  For example, if an automatic node startup is not desired,
+        the <parameter>node.startup</parameter> needs to be set to
+        '<emphasis>manual</emphasis>'.
     -->
     <method name="Logout">
       <arg name="options" type="a{sv}" direction="in"/>
@@ -194,7 +206,10 @@
 
         Logout iSCSI node in this session; @iface is used.
 
-        No additional options are currently defined.
+        All the additional options are transformed into the interface
+        parameters.  For example, if an automatic node startup is not desired,
+        the <parameter>node.startup</parameter> needs to be set to
+        '<emphasis>manual</emphasis>'.
     -->
     <method name="LogoutInterface">
       <arg name="iface" direction="in" type="s"/>
