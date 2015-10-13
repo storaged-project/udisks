@@ -8,6 +8,5 @@ Add support for:
 
 - raid in lvm2
 - raid tests
-- bcache
 - glusterfs
 - ceph
