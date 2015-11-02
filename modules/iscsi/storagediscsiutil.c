@@ -17,6 +17,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include "config.h"
+
 #include <string.h>
 #include <libiscsi.h>
 
@@ -96,7 +98,7 @@ enum {
 
   /* Always last. Indicates end of error code space */
   ISCSI_MAX_ERR_VAL,
-} iscsi_err;
+};
 #endif /* HAVE_LIBISCSI_ERR */
 
 const gchar *iscsi_nodes_fmt = "a(sisis)";

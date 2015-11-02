@@ -271,8 +271,8 @@ if test "x$enable_iscsi" = "xyes" \
                   [have_iscsi=no])
   if test "x$have_iscsi" = "xyes"; then
     AC_MSG_CHECKING([whether libiscsi.h defines iscsi_err])
-    AC_TRY_COMPILE([libiscsi.h],
-                   [iscsi_err e = ISCSI_SUCCESS;],
+    AC_TRY_COMPILE([#include <libiscsi.h>],
+                   [int err = ISCSI_SUCCESS;],
                    [AC_MSG_RESULT([yes])
                     AC_DEFINE([HAVE_LIBISCSI_ERR], [1], [libiscsi error states])],
                    [AC_MSG_RESULT([no])])
