@@ -479,10 +479,6 @@ handle_discover_send_targets (StoragedManagerISCSIInitiator  *object,
   StoragedISCSIState *state = storaged_linux_manager_iscsi_initiator_get_state (manager);
   GVariant *nodes = NULL;
   gchar *errorstr = NULL;
-  const gchar *username = NULL;
-  const gchar *password = NULL;
-  const gchar *reverse_username = NULL;
-  const gchar *reverse_password = NULL;
   gint err = 0;
   gint nodes_cnt = 0;
 
@@ -494,12 +490,6 @@ handle_discover_send_targets (StoragedManagerISCSIInitiator  *object,
                                        N_("Authentication is required to discover targets"),
                                        invocation);
 
-  /* Optional data for CHAP authentication */
-  g_variant_lookup (arg_options, "username", "&s", &username);
-  g_variant_lookup (arg_options, "password", "&s", &password);
-  g_variant_lookup (arg_options, "reverse-username", "&s", reverse_username);
-  g_variant_lookup (arg_options, "reverse-password", "&s", reverse_password);
-
   /* Enter a critical section. */
   storaged_iscsi_state_lock_libiscsi_context (state);
 
@@ -507,10 +497,7 @@ handle_discover_send_targets (StoragedManagerISCSIInitiator  *object,
   err = iscsi_discover_send_targets (manager->daemon,
                                      arg_address,
                                      arg_port,
-                                     username,
-                                     password,
-                                     reverse_username,
-                                     reverse_password,
+                                     arg_options,
                                      &nodes,
                                      &nodes_cnt,
                                      &errorstr);
@@ -603,10 +590,6 @@ handle_login (StoragedManagerISCSIInitiator  *object,
   StoragedLinuxManagerISCSIInitiator *manager = STORAGED_LINUX_MANAGER_ISCSI_INITIATOR (object);
   StoragedISCSIState *state = storaged_linux_manager_iscsi_initiator_get_state (manager);
   gint err = 0;
-  const gchar *username = NULL;
-  const gchar *password = NULL;
-  const gchar *reverse_username = NULL;
-  const gchar *reverse_password = NULL;
   gchar *errorstr = NULL;
 
   /* Policy check. */
@@ -616,12 +599,6 @@ handle_login (StoragedManagerISCSIInitiator  *object,
                                        arg_options,
                                        N_("Authentication is required to perform iSCSI login"),
                                        invocation);
-
-  /* Optional data for CHAP authentication */
-  g_variant_lookup (arg_options, "username", "&s", &username);
-  g_variant_lookup (arg_options, "password", "&s", &password);
-  g_variant_lookup (arg_options, "reverse-username", "&s", &reverse_username);
-  g_variant_lookup (arg_options, "reverse-password", "&s", &reverse_password);
 
   /* Enter a critical section. */
   storaged_iscsi_state_lock_libiscsi_context (state);
@@ -633,10 +610,6 @@ handle_login (StoragedManagerISCSIInitiator  *object,
                      arg_address,
                      arg_port,
                      arg_iface,
-                     username,
-                     password,
-                     reverse_username,
-                     reverse_password,
                      arg_options,
                      &errorstr);
 

@@ -231,6 +231,52 @@ iscsi_node_set_parameters (struct libiscsi_context *ctx,
   return 0;
 }
 
+static void
+iscsi_params_get_chap_data (GVariant      *params,
+                            const gchar  **username,
+                            const gchar  **password,
+                            const gchar  **reverse_username,
+                            const gchar  **reverse_password)
+{
+  g_return_if_fail (params);
+
+  g_variant_lookup (params, "username", "&s", username);
+  g_variant_lookup (params, "password", "&s", password);
+  g_variant_lookup (params, "reverse-username", "&s", reverse_username);
+  g_variant_lookup (params, "reverse-password", "&s", reverse_password);
+}
+
+static GVariant *
+iscsi_params_pop_chap_data (GVariant      *params,
+                            const gchar  **username,
+                            const gchar  **password,
+                            const gchar  **reverse_username,
+                            const gchar  **reverse_password)
+{
+  GVariantDict dict;
+
+  g_return_val_if_fail (params, NULL);
+
+  /* Pop CHAP parameters */
+  g_variant_dict_init (&dict, params);
+  g_variant_dict_lookup (&dict, "username", "&s", username);
+  g_variant_dict_lookup (&dict, "password", "&s", password);
+  g_variant_dict_lookup (&dict, "reverse-username", "&s", reverse_username);
+  g_variant_dict_lookup (&dict, "reverse-password", "&s", reverse_password);
+
+  if (username)
+    g_variant_dict_remove (&dict, "username");
+  if (password)
+    g_variant_dict_remove (&dict, "password");
+  if (reverse_username)
+    g_variant_dict_remove (&dict, "reverse-username");
+  if (reverse_password)
+    g_variant_dict_remove (&dict, "reverse-password");
+
+  /* Update the params, so that it doesn't contain CHAP parameters. */
+  return g_variant_dict_end (&dict);
+}
+
 gint
 iscsi_login (StoragedDaemon  *daemon,
              const gchar     *name,
@@ -238,19 +284,28 @@ iscsi_login (StoragedDaemon  *daemon,
              const gchar     *address,
              const gint       port,
              const gchar     *iface,
-             const gchar     *username,
-             const gchar     *password,
-             const gchar     *reverse_username,
-             const gchar     *reverse_password,
              GVariant        *params,
              gchar          **errorstr)
 {
   struct libiscsi_context *ctx;
   struct libiscsi_auth_info auth_info;
   struct libiscsi_node node;
+  GVariant *params_without_chap;
+  const gchar *username = NULL;
+  const gchar *password = NULL;
+  const gchar *reverse_username = NULL;
+  const gchar *reverse_password = NULL;
   gint err;
 
   g_return_val_if_fail (STORAGED_IS_DAEMON (daemon), 1);
+
+  /* Optional data for CHAP authentication. We pop these parameters from the
+   * dictionary; it then contains only iSCSI node parameters. */
+  params_without_chap = iscsi_params_pop_chap_data (params,
+                                                    &username,
+                                                    &password,
+                                                    &reverse_username,
+                                                    &reverse_password);
 
   /* Prepare authentication data */
   iscsi_make_auth_info (&auth_info,
@@ -275,8 +330,10 @@ iscsi_login (StoragedDaemon  *daemon,
   if (err == 0 && params)
     {
       /* Update node parameters. */
-      err = iscsi_node_set_parameters (ctx, &node, params);
+      err = iscsi_node_set_parameters (ctx, &node, params_without_chap);
     }
+
+  g_variant_unref (params_without_chap);
 
   return err;
 }
@@ -324,10 +381,7 @@ gint
 iscsi_discover_send_targets (StoragedDaemon  *daemon,
                              const gchar     *address,
                              const guint16    port,
-                             const gchar     *username,
-                             const gchar     *password,
-                             const gchar     *reverse_username,
-                             const gchar     *reverse_password,
+                             GVariant        *params,
                              GVariant       **nodes,
                              gint            *nodes_cnt,
                              gchar          **errorstr)
@@ -335,11 +389,22 @@ iscsi_discover_send_targets (StoragedDaemon  *daemon,
   struct libiscsi_context *ctx;
   struct libiscsi_auth_info auth_info;
   struct libiscsi_node *found_nodes;
+  const gchar *username = NULL;
+  const gchar *password = NULL;
+  const gchar *reverse_username = NULL;
+  const gchar *reverse_password = NULL;
   gint err;
 
   g_return_val_if_fail (STORAGED_IS_DAEMON (daemon), 1);
 
   ctx = iscsi_get_libiscsi_context (daemon);
+
+  /* Optional data for CHAP authentication. */
+  iscsi_params_get_chap_data (params,
+                              &username,
+                              &password,
+                              &reverse_username,
+                              &reverse_password);
 
   /* Prepare authentication data */
   iscsi_make_auth_info (&auth_info,
