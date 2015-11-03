@@ -74,6 +74,7 @@ typedef enum
   STORAGED_ERROR_ISCSI_LOGIN_AUTH_FAILED,       /* org.storaged.Storaged.Error.ISCSI.LoginAuthFailed */
   STORAGED_ERROR_ISCSI_LOGIN_FATAL,             /* org.storaged.Storaged.Error.ISCSI.LoginFatal */
   STORAGED_ERROR_ISCSI_LOGOUT_FAILED,           /* org.storaged.Storaged.Error.ISCSI.LogoutFailed */
+  STORAGED_ERROR_ISCSI_NO_FIRMWARE,             /* org.storaged.Storaged.Error.ISCSI.NoFirmware */
   STORAGED_ERROR_ISCSI_NO_OBJECTS_FOUND,        /* org.storaged.Storaged.Error.ISCSI.NoObjectsFound */
   STORAGED_ERROR_ISCSI_NOT_CONNECTED,           /* org.storaged.Storaged.Error.ISCSI.NotConnected */
   STORAGED_ERROR_ISCSI_TRANSPORT_FAILED,        /* org.storaged.Storaged.Error.ISCSI.TransportFailed */

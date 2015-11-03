@@ -252,6 +252,32 @@ storaged_linux_manager_iscsi_initiator_get_iscsi_context (StoragedLinuxManagerIS
 /* ---------------------------------------------------------------------------------------------------- */
 
 static gboolean
+handle_get_firmware_initiator_name (StoragedManagerISCSIInitiator  *object,
+                                    GDBusMethodInvocation          *invocation)
+{
+  gchar initiator_name[LIBISCSI_VALUE_MAXLEN];
+  gint rval;
+
+  rval = libiscsi_get_firmware_initiator_name (initiator_name);
+  if (rval == 0)
+    {
+      storaged_manager_iscsi_initiator_complete_get_firmware_initiator_name (object,
+                                                                             invocation,
+                                                                             initiator_name);
+    }
+  else
+    {
+      g_dbus_method_invocation_return_error (invocation,
+                                             STORAGED_ERROR,
+                                             STORAGED_ERROR_ISCSI_NO_FIRMWARE,
+                                             "No firmware found");
+    }
+
+  /* Indicate that we handled the method invocation */
+  return TRUE;
+}
+
+static gboolean
 handle_get_initiator_name (StoragedManagerISCSIInitiator  *object,
                            GDBusMethodInvocation          *invocation)
 {
@@ -704,6 +730,7 @@ out:
 static void
 storaged_linux_manager_iscsi_initiator_iface_init (StoragedManagerISCSIInitiatorIface *iface)
 {
+  iface->handle_get_firmware_initiator_name = handle_get_firmware_initiator_name;
   iface->handle_get_initiator_name = handle_get_initiator_name;
   iface->handle_set_initiator_name = handle_set_initiator_name;
   iface->handle_discover_send_targets = handle_discover_send_targets;

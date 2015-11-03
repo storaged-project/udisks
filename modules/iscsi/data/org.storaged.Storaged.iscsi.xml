@@ -39,6 +39,17 @@
     <annotation name="org.gtk.GDBus.C.Name" value="Manager_ISCSI_Initiator"/>
 
     <!--
+        GetFirmwareInitiatorName:
+        @result: The iSCSI firmware initiator name.
+        @since: 2.4.0
+
+        Returns the iSCSI firmware initiator name.
+    -->
+    <method name="GetFirmwareInitiatorName">
+      <arg name="result" direction="out" type="s"/>
+    </method>
+
+    <!--
          GetInitiatorName:
          @result: The iSCSI initiator name.
          @since: 2.0.1
